@@ -10,26 +10,19 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * The one lossy format we can offer, encoded by the platform.
+ * AAC export, encoded by Android's own MediaCodec, so there's no encoder
+ * code or licence of our own. (There's no MP3 because Android has no MP3
+ * encoder and the good ones are LGPL.)
  *
- * There is no AAC encoder in our own code and there does not need to be:
- * Android has shipped one since the beginning, and `MediaCodec` is the OS
- * rather than a dependency - nothing is vendored and no licence is adopted
- * to use it. (MP3 is the one everybody asks for and the one we cannot do
- * this way: Android ships no MP3 *encoder* at all, and the only real
- * encoders are LGPL.)
- *
- * It takes the 16-bit WAV the render already knows how to make, rather than
- * tapping the engine a second way. A transcode of a file we just wrote is a
- * few seconds of work on top of a render that took longer, and it keeps the
- * lossy path entirely out of the engine.
+ * It converts the 16-bit WAV the render already writes, which keeps lossy
+ * encoding out of the engine and only adds a few seconds.
  */
 object AacEncoder {
 
     private const val MIME = "audio/mp4a-latm"
     private const val TIMEOUT_US = 10_000L
 
-    /** "" on success, otherwise why not. */
+    /** "" on success, otherwise the reason it failed. */
     fun encode(wav: File, out: File, bitRate: Int = 256_000): String {
         val source = runCatching { PcmSource(wav) }.getOrElse { return "cannot read the render: ${it.message}" }
         source.use {
@@ -61,9 +54,8 @@ object AacEncoder {
                             codec.queueInputBuffer(inIndex, 0, 0, presentationUs, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                         } else {
                             codec.queueInputBuffer(inIndex, 0, read, presentationUs, 0)
-                            // Two bytes a sample per channel, so this many
-                            // frames, so this much time. The encoder needs
-                            // honest timestamps or the file plays at the
+                            // 16-bit samples, so this many frames and this much
+                            // time. Wrong timestamps make the file play at the
                             // wrong speed.
                             val frames = read / (2 * source.channels)
                             presentationUs += frames * 1_000_000L / source.sampleRate
@@ -105,9 +97,9 @@ object AacEncoder {
     }
 
     /**
-     * Just enough WAV reading to walk our own file: find `fmt ` and `data`,
-     * and hand out 16-bit frames. Not a general reader - `WavReader` in the
-     * engine is that - because this only ever sees what we just wrote.
+     * Just enough WAV reading for our own file: find `fmt ` and `data` and
+     * hand out 16-bit frames. It only reads what we just wrote, so it isn't a
+     * general reader (that's `WavReader` in the engine).
      */
     private class PcmSource(wav: File) : AutoCloseable {
         val sampleRate: Int

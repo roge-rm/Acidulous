@@ -8,35 +8,25 @@
 #include <engine/machine/manual/Rotary.h>
 #include <engine/machine/manual/Wheels.h>
 
-// Manual - the organ.
+// Manual is the organ. Upper and lower manuals each have their own drawbars
+// either side of a movable split, with pedals below them.
 //
-// One rack is a whole instrument, not one keyboard: upper and lower manuals
-// with their own drawbars either side of a movable split, and pedals below
-// them. That is the thing being emulated. An organ is played with both hands
-// on different registrations and the feet on a third, and a machine that
-// gives you one set of drawbars is giving you a third of an organ.
-//
-// Four instruments share one generator (see Wheels.h), because they are all
-// the same idea built four ways:
-//   tonewheel  - 91 wheels on a shaft, nine drawbars tapping them, harmonic
-//                percussion, contact click, leakage, a scanner vibrato.
+// Four models share one generator (see Wheels.h):
+//   tonewheel  - 91 wheels, nine drawbars, harmonic percussion, key click,
+//                leakage and a scanner vibrato.
 //   transistor - a combo organ dividing squares down from the top octave,
 //                footage tabs instead of drawbars, and a reedy filter.
-//   pipe       - ranks rather than harmonics: principal, flute, string, reed
-//                and a mixture, with chiff on the attack and tracker noise.
-//   reed       - free reeds under bellows pressure, with the buzz that comes
-//                of a reed beating against its frame.
+//   pipe       - ranks (principal, flute, string, reed, mixture) with chiff
+//                on the attack and tracker noise.
+//   reed       - free reeds under bellows pressure, with reed buzz.
 //
-// What no organ does, and this one does:
-//   - Two complete registrations at once, morphed between by anything - an
-//     LFO, an envelope, the mod wheel, the rotor. Drawbars that move under a
-//     held chord.
-//   - Wheel spray: per-drawbar detune and stereo spread. A hair of it is a
-//     worn generator beating; wound up it is an ensemble.
-//   - A shared wind supply, on every model and not only the pipes, so a big
-//     chord pulls the pitch and the level down and releasing breathes back.
-//   - The cabinet as a modulation source: horn and drum phase drive anything
-//     in the matrix, and the rotor can lock to the transport.
+// Extras:
+//   - Two registrations per manual, morphed between by any mod source.
+//   - Wheel spray: per-drawbar detune and stereo spread.
+//   - A shared wind supply on every model, so big chords sag in pitch and
+//     level.
+//   - Horn and drum phase are mod sources, and the rotor can sync to the
+//     transport.
 namespace acidulous::machine {
 
 class Manual final : public Machine {
@@ -149,8 +139,8 @@ class Manual final : public Machine {
     float wheelStep[WheelBank::kWheels] = {};
     float wheelTrim[WheelBank::kWheels] = {};
     float wheelOut[WheelBank::kWheels] = {};
-    // Gains are accumulated per wheel, not per voice, because that is how a
-    // generator is wired: one wheel, many keys drawing on it.
+    // Gains are summed per wheel rather than per voice, since many keys can
+    // draw on one wheel.
     static constexpr int kSlots = 5;
     float wheelGain[kSlots][WheelBank::kWheels] = {};
     float wheelPeak[kSlots][WheelBank::kWheels] = {};
@@ -165,7 +155,7 @@ class Manual final : public Machine {
     float sprayDrift = 0.0f;
     float modelAge = -1.0f;
     float modelSpray = -1.0f;
-    // The tuning table the wheels were last turned to; see rebuildTuning.
+    // The tuning table the wheels were last set to; see rebuildTuning.
     const float *modelTuning = nullptr;
 
     Rotary rotary;
@@ -182,7 +172,7 @@ class Manual final : public Machine {
     static constexpr uint32_t kClickSeed = 0x5eed1c1cu;
     uint32_t clickRng = kClickSeed;
     float clickBurst = 0.26f;
-    /** How much of the idle sounds - leakage, hum, blower - is up; see `render`. */
+    /** How much of the idle sounds (leakage, hum, blower) is up; see `render`. */
     float presence = 0.0f;
     float humPhase = 0.0f;
     float leakSum = 0.0f;

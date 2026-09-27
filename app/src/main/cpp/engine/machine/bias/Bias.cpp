@@ -8,10 +8,8 @@ namespace acidulous::machine {
 
 const ParamDef *Bias::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        // The four lanes. A level and a mute apiece, and both are parameters
-        // rather than fields on the recording - which is what puts them in the
-        // automation lane list, under a mapped pad, and into a recording pass,
-        // without any of that being written here.
+        // The four lanes, each with a level and a mute. They're parameters so
+        // they can be automated, mapped and recorded.
         {"lane1", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"lane2", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"lane3", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
@@ -21,13 +19,11 @@ const ParamDef *Bias::paramDefs(int32_t &count) const {
         {"mute3", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         {"mute4", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
-        // Off by default: a take plays at the speed it was recorded at, which
-        // is what somebody expects of a recording until they ask otherwise.
+        // Off by default, so a take plays at the speed it was recorded.
         {"stretch", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         {"monitor", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        // The medium. Every default is "nothing at all", so a fresh track
-        // plays a file back untouched and the Init patch is what the machine
-        // already is rather than a setting that undoes something.
+        // The tape colour. Every default does nothing, so a new track plays
+        // back untouched.
         {"hiss", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"hisstone", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"lowcut", 20.0f, 800.0f, 20.0f, Curve::Exponential, 0, "Hz"},
@@ -54,19 +50,18 @@ void Bias::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
     colour.prepare(sampleRate);
     for (auto &w : stretcher) w.prepare();
-    // A shelf that cuts everything below rather than a corner: what crosses
-    // between two strips of one tape thins out, it does not stop.
+    // A low shelf instead of a highpass, so the bleed gets thinner in the
+    // lows without cutting them off completely.
     bleedHp[0].lowShelf(300.0f, -18.0f, sampleRate);
     bleedHp[1].lowShelf(300.0f, -18.0f, sampleRate);
     reset();
 }
 
 /**
- * The medium, read off the knobs once a block.
+ * Reads the tape colour settings once a block.
  *
- * Smoothed values throughout: everything here either multiplies a sample - in
- * which case a stepped value clicks - or sets a coefficient that is only
- * recomputed when it has actually moved.
+ * Uses smoothed values, since these either scale samples (where a jump would
+ * click) or set coefficients that are only recomputed when they move.
  */
 bias::ColourSpec Bias::colourOf() {
     bias::ColourSpec s;
@@ -86,11 +81,9 @@ bias::ColourSpec Bias::colourOf() {
     s.rate = paramOfIndex(Rate);
     s.smear = paramOfIndex(Smear);
     s.width = paramOfIndex(Width);
-    // **Nothing at all to do is a state worth having.** Init is the default
-    // patch and the one the sample-identical stem export proves, so the whole
-    // chain is skipped rather than run with every control at its neutral
-    // value - which would still cost two biquads a sample and, worse, would
-    // still round.
+    // With every control at neutral the whole chain is skipped. Running it
+    // would cost CPU and change the samples through rounding, and the stem
+    // export test expects them to be identical.
     s.any = s.hiss > 0.0f || s.lowCut > 21.0f || s.highCut < 19500.0f ||
             s.bump != 0.0f || s.sat > 0.0f || s.comp > 0.0f || s.wow > 0.0f ||
             s.flutter > 0.0f || s.drop > 0.0f || s.bits < 23.5f || s.rate < 0.999f ||
@@ -113,10 +106,10 @@ void Bias::reset() {
 }
 
 void *Bias::swapObject(int32_t slot, void *object) {
-    if (slot != 0) return object; // nothing else is mounted here; retire it
+    if (slot != 0) return object; // nothing else is mounted here, so hand it back
     auto *old = const_cast<audio::Reel *>(reel);
     reel = static_cast<const audio::Reel *>(object);
-    // The cell is a pointer *into* the reel that just went away.
+    // The cell points into the old reel, so it's no longer valid.
     cell = nullptr;
     for (auto &c : cursors) c.invalidate();
     return old;
@@ -125,11 +118,9 @@ void *Bias::swapObject(int32_t slot, void *object) {
 void Bias::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted) {
     playing = isPlaying;
     muted = clipMuted;
-    // **A cycle that has come round is the only place a stretcher may be
-    // moved.** Seeking one mid-phrase throws away the overlap it is in the
-    // middle of, which is a click; free-running between cycles is safe because
-    // the clock is exact, so the musical position cannot drift even though
-    // which samples are copied moves about within a few milliseconds.
+    // A stretcher may only be moved at the start of a cycle. Seeking one
+    // mid-phrase clicks. Letting it run freely between cycles is safe since
+    // its clock is exact and the position can't drift.
     const bool wrapped = tick < lastCycleTick;
     lastCycleTick = tick;
     cycleTick = tick;
@@ -139,8 +130,8 @@ void Bias::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted
         return;
     }
     reseed = true;
-    // Crossing into another cell: every lane starts again from where the new
-    // cell says, rather than from where the last one had got to.
+    // Moving to another cell: every lane restarts from where the new cell
+    // says.
     cell = want;
     for (auto &c : cursors) c.invalidate();
 }
@@ -152,13 +143,11 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     if (colourBypass) spec.any = false;
     colour.setBlock(spec);
     if (cell == nullptr || !playing || muted) {
-        // A muted or empty cell still runs the medium, because a tape with
-        // nothing on it is not silent - it is hiss. Skipped entirely when
-        // there is no medium, which is the default.
+        // A muted or empty cell still runs the tape colour, since blank tape
+        // still hisses. It's skipped when there's no colour (the default).
         //
-        // **And it still monitors.** A track with nothing recorded on it yet is
-        // exactly the track somebody is about to plug a guitar into, so going
-        // deaf here would make the rig work only after the first take.
+        // It also still monitors, since an empty track is the one you're
+        // about to record onto.
         const float mon = paramOfIndex(Monitor);
         if (mon > 0.0001f) {
             const InputBus &bus = InputBus::get();
@@ -176,12 +165,9 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     }
 
     const float gain = dsp::dbToGain(paramOfIndex(Gain));
-    // **Crosstalk is why a lane is rendered even when it is muted.** The
-    // signal is on the tape whatever the monitor is doing, so it is also
-    // faintly on the head next door - which is the reason muting a track on a
-    // four-track never quite silences it, and the reason this is a parameter
-    // of the medium rather than a fault. Nothing extra is rendered when the
-    // patch has no bleed in it, which is every patch but two.
+    // Muted lanes are still rendered when there's bleed, since on a real
+    // four-track a muted track still leaks faintly onto its neighbours.
+    // Nothing extra is rendered when bleed is off.
     const float bleed = paramOfIndex(Bleed);
     const bool bleeding = bleed > 0.001f;
     const bool stretching = steppedTargetOf(Stretch) >= 1;
@@ -199,28 +185,24 @@ bool Bias::render(float *L, float *R, int32_t frames) {
         const audio::Reel::Region &r = cell->lanes[lane];
         const audio::Reel::Source &src = *r.source;
         const int64_t into = cycleTick - r.startTick;
-        if (into < 0) continue; // a punch-in the song has not reached yet
+        if (into < 0) continue; // a punch-in the song hasn't reached yet
 
-        // **The take follows the song, or the song leaves it behind.**
-        //
-        // Off, this is what M54 shipped: the entry lands on the bar and the
-        // take runs at the speed it was recorded at, so at another tempo it
-        // drifts and the cell says so in amber. On, the ratio between the two
-        // tempos is a rate, and `dsp::Wsola` reads the take at that rate
-        // without moving its pitch - so the take lasts exactly as long as the
-        // cell and sings the same notes.
+        // Stretch on: `dsp::Wsola` reads the take at the ratio of the two
+        // tempos without changing its pitch, so it lasts exactly as long as
+        // the cell. Off: the take starts on the bar and plays at its own
+        // speed, and the cell shows an amber warning at another tempo.
         if (stretching && r.bpm > 1.0f && std::fabs(songBpm / r.bpm - 1.0f) > 0.002f) {
             const float rate = songBpm / r.bpm;
-            // A loop goes round inside the stretcher, so its end joins its
-            // start like any two hops rather than losing its last window.
+            // Loops wrap inside the stretcher, so the end joins the start
+            // smoothly without losing the last window.
             const int64_t regionEnd =
                 r.offset + (r.frames < src.frames - r.offset ? r.frames : src.frames - r.offset);
             stretcher[lane].setLoop(r.loop);
-            // Seeded at the top of the cycle and free-running after it; the
-            // clock inside the stretcher is exact, so nothing drifts.
+            // Set at the start of the cycle and free-running after that. Its
+            // clock is exact, so nothing drifts.
             if (reseed) {
-                // Where in the take the cycle begins, at the *song's* tempo,
-                // because that is the clock the cell is measured in now.
+                // Where in the take the cycle starts, at the song's tempo,
+                // since that's what the cell is measured in.
                 const double perSongTick =
                     static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(songBpm) * kPPQN);
                 const auto out = static_cast<int64_t>(static_cast<double>(into) * perSongTick);
@@ -233,9 +215,8 @@ bool Bias::render(float *L, float *R, int32_t frames) {
             const int16_t *from2[2] = {src.lp, src.stereo && src.rp != nullptr ? src.rp : src.lp};
             const int32_t got = stretcher[lane].fill(taken, from2, r.offset, regionEnd, frames, rate);
             // The fade is measured in the take's own frames, so a stretched
-            // take fades over the same *audio* rather than the same seconds -
-            // which is what makes a crossfade hold together when the tempo
-            // moves.
+            // take fades over the same audio and crossfades still line up
+            // when the tempo changes.
             const int64_t base = stretcher[lane].sourcePosition() - r.offset;
             for (int32_t i = 0; i < got; ++i) {
                 int64_t at = base + static_cast<int64_t>(i * rate);
@@ -252,24 +233,15 @@ bool Bias::render(float *L, float *R, int32_t frames) {
             continue;
         }
 
-        // Where in the region this block begins, in **real time since the
-        // entry** - which is what not stretching means.
-        //
-        // **This used to use the take's own tempo and it juddered.** The
-        // anchor said "at song tick T you are at T times the take's frames a
-        // tick", while the cursor between anchors advances one frame per
-        // frame; at any other tempo those two disagree by the ratio, the drift
-        // passes `FrameCursor`'s 256 frames every couple of ticks, and the
-        // read position is yanked backwards over and over. The amber warning
-        // on the cell promised a drift and what it delivered was a stutter.
-        // The song's tempo is the right one here precisely *because* the audio
-        // does not stretch: seconds since the entry is the whole of it, and
-        // the take's own tempo now decides one thing only, which is the
-        // stretch ratio above.
+        // Where in the region this block starts, as real time since the entry,
+        // using the song's tempo. The take's tempo must not be used here: the
+        // cursor moves one frame per frame, so at another tempo the anchor
+        // and cursor would disagree and FrameCursor would keep jumping back,
+        // making it stutter.
         const double perTick =
             static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(songBpm) * kPPQN);
         const int64_t want = static_cast<int64_t>(static_cast<double>(into) * perTick);
-        if (!r.loop && want >= r.frames) continue; // past the end: silent, not wrapped
+        if (!r.loop && want >= r.frames) continue; // past the end: silent, no wrap
         cursors[lane].anchor(r.loop && r.frames > 0 ? want % r.frames : want);
 
         int64_t at = cursors[lane].at;
@@ -280,8 +252,8 @@ bool Bias::render(float *L, float *R, int32_t frames) {
             }
             const int64_t s = r.offset + at;
             if (s >= 0 && s < src.frames) {
-                // Through the pointers, so a take held in memory and a take
-                // mapped from a cache file are the same two lines here.
+                // Read through the pointers, so takes in memory and takes
+                // mapped from a cache file work the same.
                 const float env = r.fadeAt(at);
                 const float l = static_cast<float>(src.lp[static_cast<size_t>(s)]) * (1.0f / 32768.0f) * env;
                 const float rr = src.stereo
@@ -300,9 +272,8 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     }
 
     if (bleeding) {
-        // Thin, because what crosses between two strips of one tape is the
-        // top and not the bottom: a bleed with the bass in it is a second
-        // copy of the track, not a ghost of it.
+        // Thinned out, since bleed with full bass sounds like a second copy
+        // of the track.
         const float amount = bleed * bleed * 0.25f;
         for (int32_t i = 0; i < frames; ++i) {
             L[i] += bleedHp[0].process(bleedL[i]) * amount;
@@ -310,9 +281,8 @@ bool Bias::render(float *L, float *R, int32_t frames) {
         }
     }
 
-    // **What is coming in, before the inserts and before the medium.** The
-    // medium is a tape and a live guitar is not on it yet, so the monitor sits
-    // where the tape's output does and goes through everything after it.
+    // The live input, added before the tape colour and the inserts, so it
+    // goes through both.
     const float monitor = paramOfIndex(Monitor);
     if (monitor > 0.0001f) {
         const InputBus &bus = InputBus::get();
@@ -327,7 +297,7 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     }
     if (spec.any) colour.process(L, R, frames);
     reseed = false;
-    return true; // always stereo: four lanes may disagree about it
+    return true; // always stereo, since lanes can differ
 }
 
 } // namespace acidulous::machine

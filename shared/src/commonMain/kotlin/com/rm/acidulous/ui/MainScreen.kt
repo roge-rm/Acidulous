@@ -104,12 +104,11 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.res.*
 
 /**
- * The main screen, phone-sized: the song section (scene columns x track
- * rows, each cell a clip) with transport below. The mixer becomes a slide-up
- * panel in M5.
+ * The main screen: the song grid (scene columns x track rows, each cell a clip)
+ * with the transport below and the mixer as a slide-up panel.
  *
  * Gestures: tap a scene chip to audition it (that scene loops), long-press for
- * its menu; tap a cell to edit the clip, long-press for its settings; tap a
+ * its menu. Tap a cell to edit the clip, long-press for its settings. Tap a
  * track header for its menu.
  */
 @Composable
@@ -123,7 +122,7 @@ fun MainScreen(
     loopScene: Boolean,
     stopAtEnd: Boolean,
     queuedScene: Int,
-    /** Clip mode: the grid as a launcher. One state per track. */
+    /** Clip mode: the grid as a launcher, one state per track. */
     clipMode: Boolean,
     launchStates: List<LaunchState>,
     onClipMode: (Boolean) -> Unit,
@@ -131,19 +130,18 @@ fun MainScreen(
     diagnostics: String,
     rackPeaks: FloatArray,
     /**
-     * Whether the engine is missing its deadline **right now**, and what each
-     * track is costing as a fraction of one block's budget.
+     * Whether the engine is missing its deadline right now, and what each track
+     * costs as a fraction of one block's budget.
      *
-     * Together they are the whole of the warning: a track is only marked when
-     * the engine is actually in trouble *and* that track is a large part of
-     * why. On a phone that copes, nothing is ever marked - which is the point.
-     * Nothing about it interrupts: no dialog, no sound, no stopping.
+     * A track is only marked when the engine is in trouble and that track is a
+     * big part of why, so on a phone that copes nothing is ever marked. It
+     * never interrupts: no dialog, no sound, no stopping.
      */
     straining: Boolean = false,
     rackHot: BooleanArray = BooleanArray(16),
-    /** The track a performance on the perform page records into: the last one opened. */
+    /** The track a performance on the perform page records into, the last one opened. */
     performTrack: Int = 0,
-    /** Empty launcher cells record into themselves; see Looper. */
+    /** Empty launcher cells record into themselves, see Looper. */
     looper: Looper? = null,
     masterPeak: Float,
     clickOn: Boolean,
@@ -160,23 +158,22 @@ fun MainScreen(
     onExport: () -> Unit,
     /** A file from outside: a MIDI file, a song bundle, or a sound. */
     onImport: () -> Unit = {},
-    /** The open song, as a bundle, through the share sheet. */
+    /** The open song as a bundle, through the share sheet. */
     onShareSong: () -> Unit = {},
     onShareExport: (ExportState.Done) -> Unit = {},
     exportState: ExportState?,
     onExportCancel: () -> Unit,
     onExportDismiss: () -> Unit,
-    /** Render these clips to audio, or throw the renders away. */
+    /** Render these clips to audio, or discard the renders. */
     onFreeze: (List<Freeze.Target>) -> Unit,
     onThaw: (List<Freeze.Target>) -> Unit,
-    /** What freezing is doing at the moment, or null when it is not. */
+    /** What freezing is doing now, or null when it isn't. */
     freezeStatus: String?,
     modifier: Modifier = Modifier,
 ) {
     var dialog by remember { mutableStateOf<Dialog?>(null) }
     if (freezeStatus != null) {
-        // Modal on purpose: the audio stream is down while a render runs, so
-        // there is nothing useful to do until it comes back.
+        // Modal because the audio stream is down while a render runs.
         PlainDialog(title = stringResource(Res.string.main_freezing), onDismiss = {}, dismissLabel = "") {
             Readout(freezeStatus)
         }
@@ -185,20 +182,16 @@ fun MainScreen(
     var showMixer by remember { mutableStateOf(false) }
     // The slide-up panel's two pages: the mixer, and the held effects.
     var panelPage by rememberSaveable { mutableStateOf(0) }
-    // What a looper tap did, by cell, for its double tap to take back.
+    // What a looper tap did, by cell, so its double tap can undo it.
     val looperUndo = remember { mutableMapOf<Pair<Int, String>, () -> Unit>() }
-    // What the perform pages are holding, kept here so a latch survives a
-    // change of tab. A stop lets go of everything in the engine, so here too.
+    // What the perform pages are holding, kept here so a latch survives a tab
+    // change. A stop releases everything in the engine, so here too.
     val performState = remember { PerformState() }
     LaunchedEffect(playing) { if (!playing) performState.forgetHeld() }
     var panelH by remember { mutableStateOf(Dp.Unspecified) }
 
-    // **Sideways the transport stands in the header** - the same move the
-    // editor makes, and for the same reason: turned, a header is a song
-    // name and six hundred dp of nothing, while the bar at the foot costs
-    // the scene grid a row. Dan: "that will bring parity with the other
-    // screens". The readout stays at the bottom either way; it is two
-    // lines of numbers and there is no room for it up there.
+    // In landscape the transport goes in the header, like in the editor. The
+    // readout stays at the bottom either way, there's no room for it up there.
     val shape = screenShape()
     val landscape = shape == ScreenShape.Wide
     val scene = song.scenes.getOrNull(position.scene)
@@ -207,21 +200,18 @@ fun MainScreen(
     val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
     val tick = position.tickInIteration % PPQN
     /**
-     * Where the song is, and how the engine is coping.
+     * Song position and engine load.
      *
-     * Its own slot because upright it rides above the buttons in the
-     * bar and sideways the buttons are not there - they are in the
-     * header - so it is drawn at the foot on its own. Two lines of
-     * numbers is not something the header has room for beside a song
-     * name and eight pills.
+     * Its own slot because upright it sits above the buttons in the bar, and
+     * sideways the buttons are in the header so it's drawn at the bottom on its
+     * own.
      */
     val readoutSlot: @Composable ColumnScope.() -> Unit = {
             val where =
                 if (clipMode) {
-                    // One entry per sounding track: which scene it took its
-                    // clip from and how far through its own cycle it is. Every
-                    // track keeps its own count, which is the whole point, and
-                    // is the only place you can read that as a number.
+                    // One entry per sounding track: which scene its clip came
+                    // from and how far through its own cycle it is. Every track
+                    // keeps its own count.
                     val live = song.tracks.indices.mapNotNull { t ->
                         val st = launchStates.getOrElse(t) { LaunchState.idle }
                         if (!st.playing) {
@@ -238,10 +228,7 @@ fun MainScreen(
                     if (live.isEmpty()) stringResource(Res.string.main_where_clips_idle, quantiseShort(UiPrefs.launchQuantise))
                     else stringResource(Res.string.main_where_clips, live.joinToString("  "), quantiseShort(UiPrefs.launchQuantise))
                 } else if (countInBeats > 0) {
-                    // The count replaces the position rather than sitting
-                    // beside it: while it runs there is no position to read,
-                    // and a number counting down is the only thing worth
-                    // looking at.
+                    // The count-in replaces the position while it runs.
                     stringResource(Res.string.main_counting_in, countInBeats)
                 } else {
                     stringResource(
@@ -251,10 +238,9 @@ fun MainScreen(
                     )
                 }
             val whereColour = if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi
-            // **Square, the two lines are one.** A square screen is as short
-            // as a turned one and the grid is what pays for every line down
-            // here: the position first, the engine's numbers after it in the
-            // space that is left, cut where they run out.
+            // Square screens get one line instead of two, since the grid pays
+            // for every line here: the position first, then the engine's
+            // numbers cut where they run out.
             if (shape == ScreenShape.Square) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BarReadout(where, whereColour)
@@ -268,32 +254,25 @@ fun MainScreen(
             }
     }
 
-    /** What the *song* is doing, as against what the transport is doing. */
+    /** What the song is doing, as opposed to the transport. */
     val songSlot: @Composable BarScope.() -> Unit = {
-        // In clip mode stop is a two-stage thing: once to let every clip
-        // finish the cycle it is in, again to cut. A launcher that only ever
-        // cut would be useless for ending a piece.
+        // In clip mode stop has two stages: once to let every clip finish its
+        // cycle, again to cut.
         if (clipMode) {
-            // What a tap waits for. "end" is the musical default: the clip
-            // you are replacing finishes what it was doing.
-            // The "q:" goes before the word does: what the number means is
-            // guessable from a launcher's own corner, and the number is not.
+            // What a tap waits for. "end" is the default, the clip being
+            // replaced finishes what it was doing. "q:" goes before the value
+            // so it's clear what the number means.
             BarButton(
                 if (words) stringResource(Res.string.main_quantise_pill, quantiseShort(UiPrefs.launchQuantise)) else quantiseShort(UiPrefs.launchQuantise),
                 word,
             ) { dialog = Dialog.Quantise }
         } else {
-            // Narrow, it is the glyph alone: which of the two it is reads
-            // from the symbol being lit rather than from the word beside it,
-            // and a row that has run out of width has nowhere to put a word.
+            // Narrow, it's just the glyph.
             //
-            // **Two questions on one pill.** A tap says *what* repeats - the
-            // song or the scene you are in. A hold says *whether* it repeats
-            // at all, because a song that only ever loops has no ending, and
-            // an arrangement with a last scene is a thing you want to hear
-            // finish. The glyph carries it: ⟳ comes round, ⇥ runs to the
-            // end and stops, and the colour says the same thing again so it
-            // reads at a glance from across the room.
+            // Two things on one pill. A tap picks what repeats, the song or the
+            // current scene. A hold picks whether it repeats at all, so an
+            // arrangement can play to the end and stop. ⟳ repeats, ⇥ runs to
+            // the end and stops, and the colour shows the same.
             val repeating = song.loopSong
             BarButton(
                 label = when {
@@ -316,15 +295,14 @@ fun MainScreen(
                 onLongPress = {
                     val on = !repeating
                     editor.replace(song.copy(loopSong = on))
-                    // Playing through to the end and looping one scene for
-                    // ever are the same instruction twice, so choosing the
-                    // ending puts the scene loop down.
+                    // Playing to the end and looping one scene forever
+                    // contradict each other, so choosing the ending turns off
+                    // the scene loop.
                     if (!on) onLoopScene(false)
                 },
             ) {
-                // Choosing what repeats is also choosing to repeat: a tap on a
-                // pill that says "end" would otherwise change a word nobody
-                // can see the effect of.
+                // Choosing what repeats also turns repeat on, otherwise a tap
+                // while it says "end" would have no visible effect.
                 if (!repeating) editor.replace(song.copy(loopSong = true))
                 onLoopScene(!loopScene)
             }
@@ -333,48 +311,38 @@ fun MainScreen(
     val footerSlot: @Composable () -> Unit = {
             BottomBar(
                 inline = landscape,
-                // The readout sits above the buttons, not below them. It is the
-                // one thing that had to move for the two screens' rows to land at
-                // the same height, and of the two the row is what a thumb goes
-                // looking for.
+                // The readout sits above the buttons so the button row lands at
+                // the same height as on the other screens.
                 readout = readoutSlot,
             ) {
-                // In clip mode stop is a two-stage thing: once to let every
-                // clip finish the cycle it is in, again to cut. A launcher
-                // that only ever cut would be useless for ending a piece.
+                // In clip mode stop has two stages: once to let every clip
+                // finish its cycle, again to cut.
                 val anyLaunched = clipMode && launchStates.any { it.playing }
                 val anyStopping = clipMode && launchStates.any { it.stopping }
-                // Upright the whole row is one bar: panic and the song's own
-                // pill at the left end, the transport welded to the right,
-                // and the slack pooled between them.
+                // Upright the whole row is one bar: panic and the song pill at
+                // the left, the transport on the right, and the slack between
+                // them.
                 //
-                // `barWeight`, not `Modifier.weight`. This read the latter
-                // and compiled only because the footer stood inside the
-                // screen's outer `Column` - so it was ColumnScope's weight,
-                // applied to a child of a Row, working by the accident that
-                // both write the same parent data. Lifting the bar out of
-                // that Column turned the accident into an error, which is
-                // the better outcome.
+                // Use barWeight, not Modifier.weight. Modifier.weight here
+                // would be ColumnScope's weight on a Row child.
                 songSlot()
                 if (landscape) {
-                    // An island: what the song is doing, set the same
-                    // distance from the file menu on one side as from the
-                    // transport on the other, so it reads as neither.
+                    // The song pill, with the same gap to the file menu on one
+                    // side as to the transport on the other.
                     Spacer(Modifier.width(HeaderIslandGap))
                 } else {
                     Spacer(Modifier.barSpace())
                 }
-                // And the five that end every row in the app, in this order and
-                // at this width - see BarAnchor. Undo and redo are the song's
-                // here and the clip's in the editor, which is the same rule
-                // either way: the undo for whatever this screen edits.
+                // The five buttons that end every row in the app, in this order
+                // and at this width, see BarAnchor. Undo and redo are the
+                // song's here and the clip's in the editor: the undo for
+                // whatever this screen edits.
                 BarButton(
                     "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
                     description = stringResource(Res.string.a11y_undo),
                 ) { editor.undoSong() }
-                // Mapping mode hangs off a long press of redo rather than a
-                // button of its own. It is a mode you step into for a minute and
-                // nothing here has a button's width to spend on one.
+                // Mapping mode is on a long press of redo instead of its own
+                // button, there's no room for one.
                 BarButton(
                     "\u21B7",
                     Modifier.width(BarAnchor).onLongPress { UiPrefs.chooseMapMode(!UiPrefs.mapMode) },
@@ -394,13 +362,11 @@ fun MainScreen(
                     state = stringResource(if (showMixer) Res.string.a11y_open else Res.string.a11y_closed),
                 ) { showMixer = !showMixer }
                 BarButton(
-                    // The glyph carries two states, because the pill carries two
-                    // controls: a tap arms, a long press turns the click on, and
-                    // the red ring is already spoken for by the first of them.
-                    // Dan: "it's hard to tell whether just recording is on or
-                    // whether both record and metronome are on".
+                    // The glyph shows two states, since the pill has two
+                    // controls: a tap arms recording, a long press turns the
+                    // click on.
                     (if (armed) "\u25CF" else "\u25CB") + if (clickOn) "\u266A" else "",
-                    // Hold it for the click - see the same gesture in the editor.
+                    // Hold for the click, same as in the editor.
                     Modifier.width(BarAnchor).mappable(MapTargets.action(Action.RecordArm.name)),
                     border = if (armed) Acid.colors.red else null,
                     onLongPress = { if (!UiPrefs.mapMode) onClick(!clickOn) },
@@ -413,11 +379,9 @@ fun MainScreen(
                     if (playing) "\u25A0" else "\u25B6",
                     Modifier.width(BarAnchor).mappable(MapTargets.action(Action.PlayStop.name)),
                     colour = if (anyStopping) Acid.colors.red else Color.Unspecified,
-                    // Hold it to stop *everything* - every voice, every tail,
-                    // every held note - which is what the panic pill used to
-                    // be. Guarded on mapping mode, because `mappable` claims
-                    // a long press there to forget what drives a control, and
-                    // one gesture must not do both.
+                    // Hold to stop everything: every voice, tail and held note.
+                    // Skipped in mapping mode, where mappable uses long press
+                    // to clear a mapping.
                     onLongPress = { if (!UiPrefs.mapMode) panicEverything() },
                     description = stringResource(if (playing) Res.string.a11y_stop else Res.string.a11y_play),
                     holdName = stringResource(Res.string.a11y_stop_all),
@@ -431,8 +395,8 @@ fun MainScreen(
             }
     }
 
-    // The keyboard's shortcuts here: each does what its button on this screen
-    // does, so a key and a tap can never disagree. See ui/Keys.kt.
+    // Keyboard shortcuts here, each doing what its button on this screen does.
+    // See ui/Keys.kt.
     KeyScope(
         KeyAction.PlayStop to {
             val anyLaunched = clipMode && launchStates.any { it.playing }
@@ -463,42 +427,26 @@ fun MainScreen(
             spacing = 4.dp,
         ) {
             Text(song.name, color = Acid.colors.text, fontSize = 16.sp, modifier = Modifier.flexible(), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            // The tempo, in the slot undo and redo used to have. Plain text
-            // rather than a pill, like save and the file menu beside it: it
-            // is a reading you tap to change, which is what everything else
-            // in this row is, and a bordered pill among them looked like a
-            // transport control that had wandered up from the bar.
-            // Lit while the click is running: a long press of rec turns the
-            // metronome on and off, and this is where its settings live, so
-            // this is where it says so. Nothing else on the screen would.
+            // The tempo, as plain text like save and the file menu beside it,
+            // since it's a readout you tap to change. Lit while the click is
+            // running, since the metronome settings live there.
             HeaderTextButton(
                 "%.1f".format(bpm),
                 description = stringResource(Res.string.a11y_tempo, "%.1f".format(bpm)),
                 color = if (clickOn) Acid.colors.accent else Acid.colors.text,
             ) { dialog = Dialog.Tempo }
             HeaderTextButton(stringResource(Res.string.main_save), onClick = onSave)
-            // Button and menu in one box on purpose: a Popup anchors to its
-            // parent layout node, and left loose in the row that parent is
-            // the whole header - which opened the menu at the far left,
-            // nowhere near the button that was pressed. Boxed, the anchor is
-            // the button, and the menu drops under it against the right edge.
+            // Button and menu in one box because a Popup anchors to its parent
+            // layout node. Loose in the row, the parent is the whole header and
+            // the menu opens at the far left.
             Box {
                 HeaderTextButton(stringResource(Res.string.main_file), description = stringResource(Res.string.a11y_file_menu), color = Acid.colors.accent) { fileMenu = true }
-                // A position bar, because this menu scrolls - nine items is
-                // taller than a phone held sideways, and until it had one the
-                // last of them looked like the last there was. See
-                // ui/Scrollbar.kt; every scrolling list in the app has one.
+                // A scrollbar, because this menu is taller than a phone held
+                // sideways. See ui/Scrollbar.kt.
                 val fileScroll = rememberScrollState()
                 DropdownMenu(expanded = fileMenu, onDismissRequest = { fileMenu = false }) {
                     ScaledMenu(fileScroll) {
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_new_song)) }, onClick = { fileMenu = false; dialog = Dialog.NewSong })
-                        // **The only way back to it.** The demo was built on a
-                        // first run and never again - edit it, or simply open
-                        // something else, and the one song that demonstrates
-                        // the app was gone until the app's data was cleared.
-                        // No dialog and no confirmation, because this replaces
-                        // the open song exactly as loading one from Songs does,
-                        // and that has never asked either.
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_save_as)) }, onClick = { fileMenu = false; dialog = Dialog.SaveAs })
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_songs)) }, onClick = { fileMenu = false; dialog = Dialog.Songs })
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_import)) }, onClick = { fileMenu = false; onImport() })
@@ -507,50 +455,37 @@ fun MainScreen(
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_midi)) }, onClick = { fileMenu = false; dialog = Dialog.Midi })
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_sound)) }, onClick = { fileMenu = false; dialog = Dialog.Sound })
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_settings)) }, onClick = { fileMenu = false; dialog = Dialog.Settings })
-                        // Above About, because one of these is a thing you
-                        // need while using the app and the other is a thing you
-                        // read once.
+                        // Help goes above About.
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_help)) }, onClick = { fileMenu = false; dialog = Dialog.Help })
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_about)) }, onClick = { fileMenu = false; dialog = Dialog.About })
                     }
                 }
             }
-            // **The transport, sideways, and last.** Dan: the tempo, save and
-            // the file menu go to the left of the pills "so the pills are the
-            // same place in every screen" - which is the far right of the
-            // header, where the editor already puts them. Upright this is
-            // empty and the bar at the foot has them.
+            // In landscape the transport goes last in the header, at the far
+            // right, where the editor puts it too. Upright the bottom bar has
+            // it.
             if (landscape) Spacer(Modifier.width(HeaderIslandGap))
             if (landscape) footerSlot()
-            // Last, at the far edge, as it is on the editor and the patch
-            // editor: a reading rather than a control, so it sits past the
-            // things you press. This is the one header that never had it,
-            // because it had the panic pill with the meter drawn behind the
-            // word instead - see panicEverything in ui/BottomBar.kt.
+            // Last, at the far edge, like on the editors. It's a readout, so it
+            // goes after the things you press.
             LoadMeter()
         }
 
         // --- Song section -----------------------------------------------------------------
-        // Saveable, so a rotation keeps where you were and how close in - the
-        // grid lost both before, because these were plain `remember`.
+        // Saveable, so a rotation keeps the scroll position and zoom.
         val vScroll = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
         val hScroll = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
-        // **How close in the grid is, nought for "as stated".** Kept the way
-        // the roll keeps its own zoom - saved but not stored in `UiPrefs` -
-        // because it is how you are working rather than anything about the song.
+        // Grid zoom, 0 for the default size. Like the roll's zoom it survives
+        // rotation but isn't stored in UiPrefs.
         var gridZoom by rememberSaveable { mutableStateOf(0f) }
-        // The room the grid has, measured below.
+        // The grid's available width, measured below.
         var gridW by remember { mutableIntStateOf(0) }
         var gridH by remember { mutableIntStateOf(0) }
-        // **On a tablet, unpinched, the cells grow into the room.** At a
-        // phone's size the grid sat in one corner of a ten-inch screen with the
-        // rest of it empty. Each way is fitted on its own - a wide tablet has
-        // twice the width it needs and barely the height - between the stated
-        // size and three times it, and neither way may outgrow the other by more
-        // than [FitAspectMax], so a clip stays a tile rather than a sliver. A
-        // pinch takes over from wherever this left the width.
-        // A big screen's cells may grow further than a phone's, fitted or
-        // pinched: see [CellMaxWLarge].
+        // On a tablet, before any pinch, the cells grow to fill the room. Each
+        // axis is fitted separately between the base size and three times it,
+        // and neither may outgrow the other by more than [FitAspectMax] so a
+        // clip stays a tile. A pinch takes over from wherever this left the
+        // width. Big screens have a higher ceiling, see [CellMaxWLarge].
         val large = largeScreen()
         val cellMax = if (large) CellMaxWLarge else CellMaxW
         val fit: Pair<Float, Float>? = if (!large || gridZoom > 0f || gridW <= 0 || gridH <= 0) null else {
@@ -565,19 +500,18 @@ fun MainScreen(
         }
         val cellW = if (fit != null) CELL_W * fit.first
                     else (CELL_W * (if (gridZoom > 0f) gridZoom else 1f)).coerceIn(CellMinW, cellMax)
-        // The factor actually in force, which is the clamped width read back.
-        // Everything else follows it, so a cell keeps its shape - unless the
-        // tablet fit above gave the height a factor of its own.
+        // The zoom factor actually in use, which is the clamped width read
+        // back. Every other size follows it, so a cell keeps its shape, unless
+        // the tablet fit gave the height its own factor.
         val z = cellW / CELL_W
         val zy = fit?.second ?: z
         val cell = SongCell(TRACK_W * z, cellW, CELL_H * zy, SCENE_H * zy)
-        // **With TalkBack on, the scenes come a page at a time** rather than
-        // scrolling. TalkBack reads only what is on screen, and scrolls a
-        // container once it has read all of it - so in a grid that scrolls
-        // sideways under every row, it read the first row's hidden scenes and
-        // skipped them in every other. A page is as many scenes as fit, so
-        // nothing is off screen; and with no scroller between them, each
-        // track's header is read just before its own clips.
+        // With TalkBack on, scenes are shown a page at a time instead of
+        // scrolling. TalkBack only reads what's on screen and scrolls a
+        // container after reading it, so in a sideways-scrolling grid it
+        // skipped hidden scenes in every row but the first. A page is as many
+        // scenes as fit, and without a scroller between them each track header
+        // is read just before its clips.
         val talkBack = rememberTalkBack()
         var scenePage by rememberSaveable { mutableIntStateOf(0) }
         val sceneCount = song.scenes.size.coerceAtLeast(1)
@@ -587,9 +521,9 @@ fun MainScreen(
         val pages = (sceneCount + perPage - 1) / perPage
         val page = scenePage.coerceIn(0, pages - 1)
         val shownScenes = page * perPage until minOf(song.scenes.size, (page + 1) * perPage)
-        // + scene where there is room for it: always without TalkBack, and on
-        // the last page with it. A full last page leaves it out - each
-        // scene's own menu adds one after it as well.
+        // + scene where there's room: always without TalkBack, and on the last
+        // page with it. A full last page leaves it out, each scene's menu can
+        // add one too.
         val showAddScene = !talkBack || (page == pages - 1 && shownScenes.count() < perPage)
         if (pages > 1) {
             val first = shownScenes.first + 1
@@ -604,8 +538,8 @@ fun MainScreen(
                 Text(
                     stringResource(Res.string.main_scene_page, first, last, song.scenes.size),
                     color = Acid.colors.accent, fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
-                    // Said when it changes, so a press of either arrow is
-                    // answered with where it went.
+                    // Announced when it changes, so pressing either arrow says
+                    // where it went.
                     modifier = Modifier.semantics {
                         contentDescription = pageSaid
                         liveRegion = LiveRegionMode.Polite
@@ -617,10 +551,9 @@ fun MainScreen(
         Row(
             Modifier.fillMaxWidth().weight(1f)
                 .onSizeChanged { gridW = it.width; gridH = it.height }
-                // The wheel, on a desktop - see onWheel. Up and down is the
-                // column's own scroll; sideways moves a scene a notch, and Ctrl
-                // makes the cells bigger or smaller, as a pinch does - from
-                // whatever size a tablet's fit left them at.
+                // Mouse wheel on desktop (see onWheel). Up/down is the column's
+                // own scroll, sideways moves a scene per notch, and Ctrl zooms
+                // the cells like a pinch.
                 .onWheel { w ->
                     when {
                         w.zoom -> {
@@ -632,20 +565,17 @@ fun MainScreen(
                         else -> false
                     }
                 }
-                // **Two fingers move the grid; one still launches a clip.**
+                // Two fingers move the grid, one finger launches a clip.
                 //
-                // Watched on the Initial pass, which travels parent to child,
-                // for the drum grid's reason rather than the roll's: every cell
-                // here has a `combinedClickable` or a `detectTapGestures` and
-                // both axes scroll, so all of them would otherwise have taken
-                // the gesture before this saw it. From the moment it commits
-                // everything is eaten, so the finger that landed on a clip does
-                // not launch it on the way up.
+                // Watched on the Initial pass (parent to child), because every
+                // cell has a combinedClickable or detectTapGestures and both
+                // axes scroll, so they would otherwise take the gesture first.
+                // Once it commits everything is consumed, so the clip the
+                // finger landed on isn't launched on release.
                 //
-                // The vocabulary is M44's, unchanged: `TwoFingers` asks the
-                // same questions, and `decideTwoFinger` settles pan against
-                // pinch once one of them is winning by 24px and then holds that
-                // answer until the fingers lift.
+                // TwoFingers and decideTwoFinger are shared with the editors:
+                // pan vs pinch is decided once one wins by 24 px and held until
+                // the fingers lift.
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
@@ -660,13 +590,10 @@ fun MainScreen(
                         val start = TwoFingers.of(currentEvent) ?: return@awaitEachGesture
                         var last = start
                         var mode = TwoFingerMode.Undecided
-                        // The live factor, compounded here rather than read
-                        // back out of the composition: a pinch sends a dozen
-                        // events before the next frame, and multiplying a value
-                        // that has not been recomposed yet gives the same answer
-                        // a dozen times over. That is the fault M44 measured on
-                        // the roll - a doubled finger spread moving a row by
-                        // 1.7dp instead of 40.
+                        // The live factor, compounded here instead of read back
+                        // from composition. A pinch sends many events per frame,
+                        // and multiplying a value that hasn't been recomposed
+                        // yet would lose most of the gesture.
                         var live = z
                         while (true) {
                             val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -676,14 +603,14 @@ fun MainScreen(
                             if (mode == TwoFingerMode.Undecided) mode = decideTwoFinger(start, now)
                             when (mode) {
                                 TwoFingerMode.Pan -> {
-                                    // Both axes at once, unlike either editor:
-                                    // the grid is a plane and both of its
-                                    // scrolls are real.
+                                    // Both axes at once, unlike the editors,
+                                    // since both scroll directions are real
+                                    // here.
                                     hScroll.dispatchRawDelta(last.centre.x - now.centre.x)
                                     vScroll.dispatchRawDelta(last.centre.y - now.centre.y)
                                 }
-                                // Either direction drives the one factor - see
-                                // SongCell - so the two arms are one.
+                                // Either direction drives the one zoom factor
+                                // (see SongCell), so both are handled the same.
                                 TwoFingerMode.ZoomTime, TwoFingerMode.ZoomPitch -> {
                                     val wasSpread = if (mode == TwoFingerMode.ZoomTime) last.spreadX else last.spreadY
                                     val nowSpread = if (mode == TwoFingerMode.ZoomTime) now.spreadX else now.spreadY
@@ -736,14 +663,10 @@ fun MainScreen(
                 Row {
                     for (index in shownScenes) {
                         val scene = song.scenes[index]
-                        // In clip mode the arranger's playhead is stale - it
-                        // stopped where the song was when the mode changed -
-                        // so reading `position` here lit up whichever scene
-                        // had been playing rather than the one you launched.
-                        // A header is live when some rack is actually
-                        // sounding a clip from it, and its progress is that
-                        // rack's own cycle, which is the only clock a column
-                        // has in clip mode.
+                        // In clip mode the arranger's playhead is stale, so
+                        // reading position here would light the wrong scene. A
+                        // header is live when some rack is sounding a clip from
+                        // it, and its progress is that rack's own cycle.
                         val onThisScene = if (!clipMode) null else song.tracks.indices.firstNotNullOfOrNull { t ->
                             launchStates.getOrElse(t) { LaunchState.idle }
                                 .takeIf { it.playing && it.scene == index }?.let { t to it }
@@ -759,7 +682,8 @@ fun MainScreen(
                         SceneHeader(
                             index = index, name = scene.name, repeat = scene.repeat, bars = bars,
                             hasTempo = scene.tempo != null,
-                            // Which way the ramp goes, if the scene has one.
+                            // Which way the tempo ramp goes, if the scene has
+                            // one.
                             rampMark = scene.ramp?.let { r -> if (r.toBpm < (scene.tempo?.bpm ?: song.tempo)) "↘" else "↗" },
                             progress = when {
                                 onThisScene != null && cycleTicks > 0 ->
@@ -768,9 +692,9 @@ fun MainScreen(
                                     position.tickInIteration.toFloat() / iterTicks
                                 else -> null
                             },
-                            // Repeats, holding and finishing all belong to the
-                            // arranger; in clip mode a cell shows its own
-                            // queue and stop, so the header says nothing.
+                            // Repeats, holding and finishing are arranger
+                            // things. In clip mode each cell shows its own
+                            // queue and stop, so the header shows nothing.
                             repeatIdx = if (isCurrent && !clipMode) position.repeat else null,
                             holding = isCurrent && loopScene && playing && !clipMode,
                             finishing = isCurrent && playing && stopAtEnd && !clipMode,
@@ -779,25 +703,24 @@ fun MainScreen(
                             } else {
                                 playing && !isCurrent && queuedScene == index
                             },
-                            // A tap has always held the scene it starts; now it
-                            // says so, and the menu offers the other choice.
+                            // A tap holds the scene it starts, and the menu
+                            // offers the other choice.
                             onAudition = {
                                 when {
-                                    // Clip mode: a scene chip is a column
-                                    // launch - its clips in, every other
-                                    // track out, on one tick, which is how
-                                    // you move a whole arrangement.
+                                    // Clip mode: a scene chip launches the
+                                    // column. Its clips in, every other track
+                                    // out, on one tick.
                                     clipMode -> {
                                         NativeEngine.launchScene(scene.engineId)
                                         if (!playing) com.rm.acidulous.engine.EngineSync.play(0, clipMode)
                                     }
-                                    // Already running: a tap says "finish the
-                                    // repeats you owe and stop", and another
-                                    // tap takes it back.
+                                    // Already running: a tap means "finish the
+                                    // remaining repeats and stop", and another
+                                    // tap cancels that.
                                     playing && isCurrent -> NativeEngine.stopAtEnd = !stopAtEnd
-                                    // Something else is running: line this one
-                                    // up rather than cutting in. Tap again to
-                                    // take it out of the queue.
+                                    // Something else is running: queue this one
+                                    // instead of cutting in. Tap again to
+                                    // unqueue.
                                     playing -> NativeEngine.queuedScene = if (queuedScene == index) -1 else index
                                     else -> { onLoopScene(true); com.rm.acidulous.engine.EngineSync.play(index, clipMode) }
                                 }
@@ -835,18 +758,17 @@ fun MainScreen(
                                 ticksPerBar = song.signatureOf(scene).ticksPerBar,
                                 colour = trackColour(trackIndex, track.colour),
                                 playing = playing && live,
-                                // Whether it draws a playhead is a composition
-                                // decision and changes rarely; where the head
-                                // *is* changes constantly and is read in the
-                                // draw, so it costs no recomposition here.
+                                // Whether it draws a playhead is decided in
+                                // composition and rarely changes. Where the
+                                // head is changes all the time and is read in
+                                // the draw, so it costs no recomposition.
                                 progress = if (playing && live && clip != null && !clip.mute &&
                                     song.clipLengthTicks(scene.id, clip) > 0
                                 ) {
                                     {
                                         val len = song.clipLengthTicks(scene.id, clip)
-                                        // In clip mode the tick is the track's
-                                        // own, because every track is somewhere
-                                        // else.
+                                        // In clip mode each track has its own
+                                        // tick.
                                         val at = if (clipMode) launch.tickInCycle else position.tickInIteration
                                         (at % len).toFloat() / len
                                     }
@@ -869,17 +791,18 @@ fun MainScreen(
                                     if (undo != null) undo() else NativeEngine.cancelLaunch(trackIndex)
                                 },
                                 onLaunch = {
-                                    // An empty cell, or one looping: the looper's.
+                                    // An empty cell, or one looping, goes to the
+                                    // looper.
                                     val undo = looper?.tap(song, trackIndex, scene, sceneIndex, launch, playing)
                                     if (undo != null) {
                                         looperUndo[trackIndex to scene.id] = undo
                                     } else if (clip != null) {
                                         NativeEngine.launchClip(trackIndex, scene.engineId)
-                                        // The clip first, then the transport:
+                                        // The clip first, then the transport.
                                         // start() resets the launcher, and a
-                                        // tap already waiting is taken on the
-                                        // first block, so the first clip you
-                                        // touch sounds immediately.
+                                        // waiting tap is picked up on the first
+                                        // block, so the first clip you touch
+                                        // sounds immediately.
                                         if (!playing) com.rm.acidulous.engine.EngineSync.play(0, clipMode)
                                     }
                                 },
@@ -892,24 +815,20 @@ fun MainScreen(
         }
 
         if (showMixer) {
-            // The tabs are turned, down the left edge, so they cost the
-            // strips a little width rather than any of their height. The
-            // perform pages are made the mixer's height, so switching between
-            // them does not move the grid.
+            // The tabs are rotated down the left edge so they cost the strips a
+            // little width but no height. The perform pages get the mixer's
+            // height so switching doesn't move the grid.
             val density = androidx.compose.ui.platform.LocalDensity.current
-            // **Square, the mixer is given a ceiling.** It sizes itself from
-            // its strips, which upright is a third of the screen and on a
-            // square one is most of it: the grid went to nothing and the bar
-            // under it was squeezed to half its height. The strips already
-            // shorten their faders to the room they are given, so the room
-            // is what is set.
+            // On a square screen the mixer gets a ceiling, otherwise its strips
+            // take most of the screen. The strips shorten their faders to fit
+            // the room they're given.
             val mixerCap = if (shape == ScreenShape.Square) {
                 with(density) { androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp() } * SquareMixerShare
             } else {
                 Dp.Unspecified
             }
-            // TalkBack reads the tabs, then the page: without the groups it
-            // read across both, a tab between every row of pads.
+            // Grouped so TalkBack reads the tabs, then the page, instead of
+            // mixing them.
             Row(
                 Modifier.fillMaxWidth().background(Acid.colors.panelAlt)
                     .then(if (mixerCap != Dp.Unspecified) Modifier.heightIn(max = mixerCap) else Modifier)
@@ -936,12 +855,9 @@ fun MainScreen(
             }
         }
 
-        // Sideways the pills are up in the header and this is the readout
-        // alone - which still earns the bar behind it, because two lines of
-        // dim monospace on the same ground as the grid reads as part of it.
-        // Sideways every pill is up in the header and this is the readout
-        // alone - which still earns the bar behind it, because two lines of
-        // dim monospace on the grid's own ground read as part of the grid.
+        // In landscape the pills are in the header and this is just the
+        // readout, with the bar behind it so it doesn't read as part of the
+        // grid.
         if (landscape) {
             Column(
                 Modifier.fillMaxWidth().background(Acid.colors.bar)
@@ -992,8 +908,8 @@ fun MainScreen(
                 },
                 onPaste = {
                     dialog = null
-                    // The whole clip, not a merge: what was here is replaced,
-                    // which is why pasting over something asks first.
+                    // Pastes the whole clip, not a merge. That's why pasting
+                    // over a clip asks first.
                     ClipClipboard.take()?.let { pasted ->
                         editor.editClip(d.track, d.sceneId) { pasted }
                     }
@@ -1016,9 +932,8 @@ fun MainScreen(
         is Dialog.TrackSettings -> if (d.index in song.tracks.indices) {
             val tunings = remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot()) }
             TrackSettingsDialog(song, d.index, tunings, onDismiss = { dialog = null }) { edited ->
-                // A song edit, not the track's own: it is made from the grid,
-                // and the grid's undo is the song's. As a track edit it went
-                // into a history only that track's editor could reach.
+                // A song edit, not a track edit, since it's made from the grid
+                // and the grid's undo is the song's.
                 editor.editSong { s -> s.copy(tracks = s.tracks.mapIndexed { i, t -> if (i == d.index) edited else t }) }
                 dialog = null
             }
@@ -1031,8 +946,8 @@ fun MainScreen(
             song, onDismiss = { dialog = null },
             tunings = remember { com.rm.acidulous.model.TuningStore.all(com.rm.acidulous.engine.EngineAssets.userRoot()) },
         ) { edited ->
-            // The whole of the window's page comes back as one edit, so the
-            // tempo, the bar, the swing and the key are one undo between them.
+            // The whole page comes back as one edit, so tempo, bar, swing and
+            // key are one undo.
             editor.editSong { edited }
             dialog = null
         }
@@ -1043,10 +958,9 @@ fun MainScreen(
             onDismiss = { dialog = null },
         )
         Dialog.Midi -> MidiDialog(song, onDismiss = { dialog = null })
-        // From the menu there is no machine waiting for the file, so it opens
-        // on the library - which is the page that makes sense with no
-        // question to answer. A machine opens it on record or on library and
-        // supplies `onPick`.
+        // From the menu there's no machine waiting for a file, so it opens on
+        // the library. A machine opens it on record or library and supplies
+        // onPick.
         Dialog.Sound -> RecorderDialog(
             editor = editor,
             onDismiss = { dialog = null },
@@ -1118,8 +1032,8 @@ private fun SceneHeader(
             .clip(RoundedCornerShape(6.dp))
             .background(
                 when {
-                    // Both pending states pulse, so a scene about to end and
-                    // one about to start are never mistaken for settled ones.
+                    // Both pending states pulse, so a scene about to end or
+                    // start isn't mistaken for a settled one.
                     finishing -> Acid.colors.green.copy(alpha = pulse)
                     queued -> Acid.colors.sceneQueued.copy(alpha = pulse)
                     progress != null -> Acid.colors.green
@@ -1150,8 +1064,7 @@ private fun SceneHeader(
         }
         Column(Modifier.padding(horizontal = 6.dp, vertical = 2.dp)) {
             Text(
-                // The loop mark sits on the scene being held, so "which one
-                // is repeating" is answered where you are looking.
+                // The loop mark goes on the scene being held.
                 when {
                     finishing -> "${index + 1} $name ■"
                     queued -> "${index + 1} $name →"
@@ -1171,8 +1084,8 @@ private fun SceneHeader(
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
-        // A position bar, as every scrolling list in the app has - eleven items
-        // is taller than a phone held sideways. See ui/Scrollbar.kt.
+        // A scrollbar, since eleven items is taller than a phone held sideways.
+        // See ui/Scrollbar.kt.
         val menuScroll = rememberScrollState()
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             ScaledMenu(menuScroll) {
@@ -1197,20 +1110,21 @@ private fun SceneHeader(
 
 @Composable
 private fun TrackHeader(
-    /** Costing a large share of a block while the engine is late. Glows. */
+    /**
+     * Glows when this track costs a big share of a block while the engine is
+     * late.
+     */
     hot: Boolean = false,
     name: String, machine: String, colour: Color,
     onChangeMachine: () -> Unit, onRename: () -> Unit, onDuplicate: () -> Unit, onDelete: () -> Unit,
     freezable: Int, frozen: Int, onFreeze: () -> Unit, onThaw: () -> Unit,
-    /** The track's own settings: a hold on the header, or the menu. */
+    /** The track's settings, from a hold on the header or from the menu. */
     onSettings: () -> Unit = {},
 ) {
     val cell = LocalSongCell.current
     var menu by remember { mutableStateOf(false) }
-    // Breathing rather than blinking. A hard flash on a track you are looking
-    // at while playing is an alarm, and this is not an emergency - it is the
-    // app pointing at the track to freeze. It fades in and out so it reads as
-    // a state rather than an event, and it never stops anything.
+    // A slow fade in and out instead of a blink, so it reads as a state and not
+    // an alarm. It never stops anything.
     val glow by rememberInfiniteTransition(label = "hot").animateFloat(
         initialValue = 0.18f,
         targetValue = 0.42f,
@@ -1234,9 +1148,8 @@ private fun TrackHeader(
             Text(name, color = Acid.colors.text, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(machine, color = Acid.colors.textMid, fontSize = 10.sp, maxLines = 1)
         }
-        // A position bar, as every scrolling list in the app has. Shorter than
-        // the scene menu but freeze and thaw come and go, so how tall it is
-        // depends on the song. See ui/Scrollbar.kt.
+        // A scrollbar, since freeze and thaw come and go and the height depends
+        // on the song. See ui/Scrollbar.kt.
         val menuScroll = rememberScrollState()
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             ScaledMenu(menuScroll) {
@@ -1264,14 +1177,10 @@ private fun ClipCell(
     /**
      * How far through its own loop this clip is, 0..1, or null when silent.
      *
-     * **A lambda, read in the draw phase.** As a plain `Float` it changed on
-     * every position update - twelve times a second - and every visible cell
-     * recomposed and re-laid-out for it, because the two boxes that drew it
-     * used `fillMaxWidth(fraction)` and `offset(x: Dp)`, which are both layout
-     * modifiers. Nine tracks across four scenes is thirty-six cells doing that
-     * at once, on the same small cores the audio thread is trying to meet a
-     * four-millisecond deadline on. Deferred like this, a moving playhead
-     * costs a redraw and nothing above it.
+     * A lambda read in the draw phase. As a plain Float it changed on every
+     * position update and every visible cell recomposed and re-laid out, on the
+     * same cores the audio thread needs. Deferred like this, a moving playhead
+     * only costs a redraw.
      */
     progress: (() -> Float)?,
     onOpen: () -> Unit, onSettings: () -> Unit,
@@ -1282,17 +1191,17 @@ private fun ClipCell(
     audioLanes: Int = 0,
     audioStale: Boolean = false,
     clipMode: Boolean = false,
-    /** Waiting its turn, and playing-but-asking-to-be-let-go. */
+    /** Waiting to start, or playing but asked to stop. */
     queued: Boolean = false,
     stopping: Boolean = false,
     onLaunch: () -> Unit = {},
-    /** Where this cell's loop is, if it is one being recorded; see Looper. */
+    /** Where this cell's loop is, if it's being recorded. See Looper. */
     loopPhase: Looper.Phase? = null,
     onCancelLaunch: () -> Unit = {},
 ) {
-    // pointerInput keeps the lambdas it was built with, so they are read
-    // through rememberUpdatedState or a cell would launch whatever it held
-    // when it was first composed.
+    // pointerInput keeps the lambdas it was built with, so they're read through
+    // rememberUpdatedState, otherwise a cell would launch whatever it held when
+    // first composed.
     val cell = LocalSongCell.current
     val launchNow by rememberUpdatedState(onLaunch)
     val cancelNow by rememberUpdatedState(onCancelLaunch)
@@ -1305,7 +1214,7 @@ private fun ClipCell(
         animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "queuedclip",
     )
     val recording = loopPhase == Looper.Phase.Open || loopPhase == Looper.Phase.Overdub
-    // What TalkBack says: which cell, what is in it, and what it is doing.
+    // What TalkBack says: which cell, what's in it, and what it's doing.
     val said = listOfNotNull(
         name,
         if (clip == null) stringResource(Res.string.a11y_cell_empty)
@@ -1342,14 +1251,12 @@ private fun ClipCell(
             .border(if (queued || stopping || recording) 2.dp else 1.dp, edge, RoundedCornerShape(6.dp))
             .then(
                 if (clipMode) {
-                    // A tap launches and a double tap edits. Registering a
-                    // double-tap handler at all would make Compose sit on
-                    // every tap for the double-tap timeout before admitting
-                    // it was single - a third of a second of nothing on the
-                    // one gesture this screen exists for. So the launch goes
-                    // out on the first tap and a second tap *retracts* it:
-                    // queue, unqueue, open, and the net effect of a double
-                    // tap is that nothing changed and the editor opened.
+                    // A tap launches and a double tap edits. A double-tap
+                    // handler would make Compose delay every tap by the
+                    // double-tap timeout, so instead the launch goes out on the
+                    // first tap and the second tap undoes it: queue, unqueue,
+                    // open. A double tap ends up changing nothing and opening
+                    // the editor.
                     Modifier.pointerInput(clipMode) {
                         detectTapGestures(
                             onLongPress = { settingsNow() },
@@ -1370,20 +1277,19 @@ private fun ClipCell(
                     Modifier.combinedClickable(onClick = onOpen, onLongClick = onSettings)
                 },
             )
-            // A tap launches in the launcher, which the gesture detector does
-            // not tell TalkBack, so the click is stated here.
+            // A tap launches in the launcher, which the gesture detector
+            // doesn't tell TalkBack, so the click is declared here.
             .button(said, doing, a11yActions, onClick = if (clipMode) ({ launchNow() }) else null, keyFocus = false),
     ) {
         if (clip == null) {
             Text("+", color = Acid.colors.textFaint, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
         } else {
             ClipThumbnail(clip, ticksPerBar, colour, Modifier.fillMaxSize())
-            // A clip shorter than its scene comes round more than once, so
-            // the scene's progress bar cannot speak for it.
+            // A clip shorter than its scene comes round more than once, so the
+            // scene's progress bar can't show it.
             if (progress != null) {
-                // One draw, no layout: the shade behind the played part and
-                // the line at the head of it, both from a value read here
-                // rather than passed in.
+                // One draw and no layout: the shade behind the played part and
+                // the line at its head, from a value read here.
                 val overlay = Acid.colors.overlay
                 val head = Acid.colors.accent
                 Box(
@@ -1400,10 +1306,8 @@ private fun ClipCell(
                     append(stringResource(Res.string.main_bars_short, clip.bars))
                     if (clip.playMode == com.rm.acidulous.model.PlayMode.OneShot) append(" " + stringResource(Res.string.main_clip_once_short))
                     if (clip.mute) append(" " + stringResource(Res.string.main_clip_mute_short))
-                    // How many takes are layered here, and - in amber, the
-                    // colour this app uses for "this will sound, but not the
-                    // way you expect" - whether one of them was recorded at
-                    // another tempo. Audio does not stretch.
+                    // How many takes are layered here, in amber when one was
+                    // recorded at another tempo and the track isn't following it.
                     if (audioLanes > 0) {
                         append(" ")
                         withStyle(
@@ -1416,20 +1320,19 @@ private fun ClipCell(
                 color = Acid.colors.textHi, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
                 modifier = Modifier.align(Alignment.TopEnd).padding(3.dp),
             )
-            // A frozen clip is playing audio, not notes. It says so in the
-            // corner rather than by looking different, because what is in
-            // it - the notes - has not changed.
+            // A frozen clip plays audio, not notes. It gets a corner mark since
+            // the notes in it haven't changed.
             if (frozen) {
                 Text(
-                    // U+FE0E: the text presentation of the snowflake. Without
-                    // it Android draws the emoji, in its own blue, and the
-                    // teal-for-playing amber-for-stale distinction is lost.
+                    // U+FE0E asks for the text form of the snowflake. Without
+                    // it Android draws the blue emoji and the teal/amber
+                    // colours are lost.
                     "\u2744\uFE0E", color = if (stale) Acid.colors.accent else Acid.colors.teal, fontSize = 11.sp,
                     modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 3.dp),
                 )
             }
-            // A loop being recorded: over everything, so the playhead's
-            // shading cannot hide it.
+            // A loop being recorded is drawn over everything so the playhead
+            // shading can't hide it.
             if (recording) {
                 Text("\u25CF", color = Acid.colors.red, fontSize = 11.sp, modifier = Modifier.align(Alignment.TopStart).padding(4.dp))
             }
@@ -1459,18 +1362,17 @@ internal fun quantiseLabel(bars: Int): String =
     if (bars <= 0) stringResource(Res.string.quantise_clip_end) else stringResource(Res.string.quantise_bars, bars)
 
 /**
- * The same, for the places with no room to say it in full: a pill in the
- * bottom bar is about sixty dp wide and the readout is one ellipsised line.
- * "end" and "4b" - the vocabulary the scene chips already use.
+ * The short form, for places without room: a bottom bar pill is about 60 dp
+ * wide and the readout is one ellipsised line. "end" and "4b", like the scene
+ * chips.
  */
 @Composable
 internal fun quantiseShort(bars: Int): String =
     if (bars <= 0) stringResource(Res.string.quantise_end_short) else stringResource(Res.string.main_bars_short, bars)
 
 /**
- * How long a tapped clip waits. Zero is the musical answer - the clip being
- * replaced finishes the cycle it is in - and the rest are a plain grid for
- * when you want to cut across it.
+ * How long a tapped clip waits. 0 means the clip being replaced finishes its
+ * cycle, the rest are a grid for cutting in.
  */
 @Composable
 private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
@@ -1480,7 +1382,7 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
                 Choice(quantiseLabel(bars), bars == current) { onPick(bars); onDismiss() }
             }
         }
-        // An empty cell tapped here records into itself: this is how long.
+        // How long an empty cell records into itself when tapped.
         Section(stringResource(Res.string.quantise_loops_record)) {
             for (bars in listOf(0, 1, 2, 4, 8)) {
                 Choice(if (bars == 0) stringResource(Res.string.quantise_until_tapped, Res.string.quantise_until_tapped_mouse) else pluralStringResource(Res.plurals.bars, bars, bars), bars == UiPrefs.loopBars) {
@@ -1493,10 +1395,9 @@ private fun QuantiseDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () ->
 }
 
 /**
- * The corner where the scene row meets the track column, which has always
- * been a hole. It is the one place a mode switch belongs: it is part of the
- * grid, it is not part of either axis, and it is nowhere near anything that
- * makes a sound.
+ * The corner where the scene row meets the track column. The mode switch goes
+ * here: it's part of the grid but not either axis, and nowhere near anything
+ * that makes a sound.
  */
 @Composable
 private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
@@ -1514,11 +1415,9 @@ private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        // The same colour in both modes: the background says which one this
-        // is. `onAccent` is near black and goes on `accent`, and this is
-        // `accentDim`, which in the dark theme is a dark olive - so the label
-        // read as dark text on a dark ground and was the one thing on the
-        // button nobody could make out.
+        // The same colour in both modes, the background shows which. onAccent
+        // is near black and accentDim is dark olive in the dark theme, so
+        // onAccent here would be unreadable.
         Text(
             stringResource(if (clipMode) Res.string.main_mode_clip else Res.string.main_mode_song),
             color = Acid.colors.textMid,
@@ -1529,13 +1428,8 @@ private fun ModeToggle(clipMode: Boolean, onClipMode: (Boolean) -> Unit) {
 
 private val TRACK_W = 96.dp
 /**
- * What sets the song's own pill apart from its neighbours in the header.
- *
- * The same on both sides on purpose - Dan asked for "the gap between them and
- * the file pulldown the same as the gap between them and the transport
- * buttons" - so `⟳ song` reads as a thing of its own rather than as the last
- * of the file controls or the first of the transport. Four dp more than the
- * row's own spacing would not say it; sixteen does.
+ * The gap either side of the song pill in the header, the same on both sides so
+ * it reads as its own group. The row's normal spacing isn't enough.
  */
 private val HeaderIslandGap = 16.dp
 
@@ -1544,44 +1438,38 @@ private val CELL_H = 56.dp
 private val SCENE_H = 54.dp
 
 /**
- * How wide a clip cell may be drawn, which is what bounds the pinch.
+ * How wide a clip cell can be drawn, which limits the pinch.
  *
- * Stated as a width rather than as a range of multipliers, which is how
- * `DrumGrid` bounds its own rows (`MinRow`/`MaxRow` in ui/GridMetrics.kt): the
- * floor is where a cell stops being worth tapping, and the ceiling is where
- * one clip is taking a quarter of a phone and the grid has stopped being a
- * grid. Both scale with the interface setting, because both are `dp`.
+ * A width rather than a multiplier range, like DrumGrid's MinRow/MaxRow in
+ * ui/GridMetrics.kt. Below the floor a cell isn't worth tapping. Above the
+ * ceiling one clip takes a quarter of a phone. Both are dp, so they scale with
+ * the interface setting.
  */
 private val CellMinW = 48.dp
-/** How much wider than tall, in proportion, a tablet's fitted cell may grow (and the reverse). */
+/** How much wider than tall a tablet's fitted cell can get, and the reverse. */
 private const val FitAspectMax = 1.6f
 /**
- * How tall + track and + scene may grow with the cells. They are pills, and a
- * pill the height of a tablet's cell is an egg.
+ * How much + track and + scene grow with the cells. They're pills, and a pill
+ * the height of a tablet cell looks wrong.
  */
 private const val AddButtonMax = 1.25f
-/** The fit leaves a little over, so the last row is not cut by a rounding. */
+/** The fit leaves a little over so the last row isn't cut off by rounding. */
 private const val FitSlack = 0.98f
 private val CellMaxW = 168.dp
 /**
- * The ceiling on a big screen, fitted or pinched: three times the stated
- * size. At twice, a song of a few tracks on a desktop's 1080p window stopped
- * growing with most of the window still empty; a quarter of a phone is not a
- * quarter of a monitor.
+ * The ceiling on a big screen, fitted or pinched: three times the base size.
  */
 private val CellMaxWLarge = 252.dp
 
 /**
  * The four sizes the song grid is drawn at, after a pinch.
  *
- * One factor for all of them rather than one per axis, unlike the roll, whose
- * two axes are pitch and time and genuinely different. A cell here is a tile
- * with a thumbnail and a corner mark in it, and scaling one side alone turns a
- * clip into a sliver.
+ * One factor for all of them instead of one per axis like the roll, since a
+ * cell is a tile and scaling one side turns it into a sliver.
  *
- * A composition local rather than four more parameters because the readers are
- * the four cell composables below and nothing between here and them has an
- * opinion - the same reason `LocalHeaderBand` and `LocalPanelStacked` exist.
+ * A composition local instead of four more parameters because only the four
+ * cell composables below read it, same as LocalHeaderBand and
+ * LocalPanelStacked.
  */
 private data class SongCell(val trackW: Dp, val cellW: Dp, val cellH: Dp, val sceneH: Dp)
 
@@ -1589,10 +1477,10 @@ private val LocalSongCell = compositionLocalOf { SongCell(TRACK_W, CELL_W, CELL_
 
 private val PANEL_TAB_W = 26.dp
 private val PANEL_TAB_H = 64.dp
-/** The perform page's height before the mixer has been measured once: about a strip's. */
+/** The perform page's height before the mixer has been measured, about a strip's. */
 private val PERFORM_H = 320.dp
 
-/** One of the slide-up panel's pages, as a turned label. */
+/** One of the slide-up panel's pages, as a rotated label. */
 @Composable
 private fun PanelTab(label: String, on: Boolean, onClick: () -> Unit) {
     val c = Acid.colors

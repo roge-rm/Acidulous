@@ -1,18 +1,9 @@
 #!/bin/bash
-# Write each format with ours, read it back with ours, compare every sample.
-# Lossless is the one claim that can be settled rather than argued about, and
-# three of these formats make it. MP3 does not, so it is asked instead for the
-# right length at the right level.
+# Writes each format with our writers, reads it back with our readers and
+# compares every sample. WAV, AIFF and FLAC must match exactly. MP3 is lossy,
+# so it's checked for the right length and level instead.
 #
-# **It used to decode with ffmpeg.** That was the right answer while the app
-# could write four formats and read one: something else had to be the
-# authority. M49 ended that, and M49's own row said this loop should close
-# inside the repository once it had - so it has. The harness no longer needs a
-# program the machine may not have, and it checks twice as much, because the
-# decoder is now under test beside the encoder. What a shared bug could hide,
-# the FLAC md5 below still catches: the file carries a checksum of its own
-# payload, computed by the encoder and verified here by md5sum, which is
-# nobody's opinion.
+# The FLAC MD5 check below catches bugs shared by the encoder and decoder.
 set -u
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
@@ -20,9 +11,8 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
 LAME="$CPP/third_party/lame"
 
-# LAME on the host, built once and kept: twenty files of somebody else's C is
-# half a minute, and this harness runs after every change to a sink. The
-# archive is rebuilt when any of its sources is newer than it is.
+# LAME for the host, built once and kept. It's rebuilt when any of its
+# sources is newer than the archive.
 CACHE="$ROOT/build/lame-host"
 ARCHIVE="$CACHE/libmp3lame.a"
 mkdir -p "$CACHE"
@@ -31,9 +21,8 @@ if [ -z "$(find "$LAME" -name '*.[ch]' -newer "$ARCHIVE" -print -quit 2>/dev/nul
     :
 else
     echo "  .... building LAME for the host (once)"
-    # mpglib as well as libmp3lame: config.h defines HAVE_MPGLIB now, so
-    # mpglib_interface.c calls into the decoder rather than compiling to
-    # nothing, and the archive has to carry it or nothing links.
+    # mpglib as well as libmp3lame: config.h defines HAVE_MPGLIB, so
+    # mpglib_interface.c calls into the decoder and it has to be linked.
     for c in "$LAME"/libmp3lame/*.c "$LAME"/mpglib/*.c; do
         gcc -O1 -w -c -DHAVE_CONFIG_H -I "$LAME" -I "$LAME/include" -I "$LAME/libmp3lame" \
             -I "$LAME/mpglib" "$c" -o "$CACHE/$(basename "$c" .c).o" || exit 1
@@ -54,9 +43,8 @@ g++ -O2 -std=c++17 -I "$CPP" -I "$LAME/include" "$ROOT/tools/sink_test.cpp" \
 
 fail=0
 
-# FLAC carries an MD5 of its own payload, so the header can be checked
-# against the samples it claims to describe - a zeroed one would let the
-# comparison above pass while saying nothing.
+# FLAC stores an MD5 of its own samples, so check the header against the raw
+# samples. A zeroed MD5 would otherwise pass unnoticed.
 for bits in 24 16; do
     header=$(od -An -tx1 -j26 -N16 "$DIR/flac$bits.flac" | tr -d ' \n')
     payload=$(md5sum "$DIR/flac$bits.raw" | cut -d' ' -f1)

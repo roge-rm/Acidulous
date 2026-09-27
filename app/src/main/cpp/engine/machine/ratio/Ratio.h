@@ -6,21 +6,17 @@
 #include <engine/machine/Machine.h>
 #include <engine/machine/ratio/Algorithms.h>
 
-// Ratio - six-operator FM of the modern kind, where an operator is not
-// only an FM operator: it can ring-modulate, filter, fold, sync, distort its
-// own phase or crush whatever is fed into it.
+// Ratio is a six-operator FM synth. Besides FM, each operator can ring
+// modulate, filter, fold, sync, phase distort or crush its input.
 //
-// Where it goes past that model, and where the name comes from:
-//   - Two algorithms are loaded at once and *morphed* between, so the routing
-//     is a continuous space rather than a list of 32 places. Morph is a
-//     modulation destination, so an envelope can sweep the patch's topology.
-//   - Operator ratios are *snapped* - harmonic, subharmonic, odd, semitone or
-//     bell partials - and then *skewed* as a set, stretching or compressing
-//     the whole series the way a real string is stretched.
+//   - Two algorithms are loaded at once and morphed between. Morph is a
+//     modulation destination, so an envelope can sweep the routing.
+//   - Operator ratios are snapped (harmonic, subharmonic, odd, semitone or
+//     bell partials) and then skewed together, stretching or compressing the
+//     whole series.
 //
-// Every modulation input is read one sample late. That is what makes an
-// arbitrary matrix legal: any routing, including loops, stays stable, and it
-// is what FM feedback has always done anyway.
+// Every modulation input is read one sample late, so any routing, including
+// loops, is allowed and stays stable.
 namespace acidulous::machine {
 
 class Ratio final : public Machine {
@@ -61,10 +57,10 @@ class Ratio final : public Machine {
         MatrixParams = 4,
         VoiceBase = MatrixBase + kMatrixSlots * MatrixParams,
         VoiceMode = VoiceBase, Glide, GlideMode, BendRange, Octave, Transpose, Volume, Pan, VelocityAmount,
-        // Appended, and safe: parameters are addressed by name.
+        // Added later. Parameters are looked up by name, so this is safe.
         MpeTimbre,
-        // What a finger's pressure does when the matrix says nothing about
-        // it: opens the filter and leans on the level.
+        // What per-note pressure does outside the matrix: opens the filter
+        // and raises the level.
         MpePressure,
         Count
     };
@@ -98,7 +94,7 @@ class Ratio final : public Machine {
         float out = 0.0f;      // last sample, read by everything downstream
         float filterZ = 0.0f;  // the filter and filter-FM modes
         float syncArmed = 0.0f;
-        // The two noise waveforms need to remember something between samples.
+        // State for the two noise waveforms.
         float noiseHeld = 0.0f;
         float noisePhase = 0.0f;
         uint32_t noiseRng = 0x1234567u;
@@ -119,11 +115,9 @@ class Ratio final : public Machine {
         float mod[DestCount]{};
         static constexpr uint32_t kSeed = 0x7f4a7c15u;
         uint32_t rng = kSeed;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
-        // `pressure` and `timbre` are -1 until this finger sends them, so
-        // a voice with none of its own falls back to the channel and a
-        // keyboard plays exactly as it did.
+        // Per-note expression (MPE). `bend` is in semitones, added to the
+        // channel bend. `pressure` and `timbre` are -1 until the note sends
+        // them, so a normal keyboard falls back to the channel values.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
         float prsGlide = 0.0f; // see glidePressure
     };
@@ -153,7 +147,7 @@ class Ratio final : public Machine {
     Routing routing;
     float sampleRate = 48000.0f;
     float invSampleRate = 1.0f / 48000.0f;
-    /** Which of the three mod envelopes the matrix names. See Trinity's. */
+    /** Bit mask of the mod envelopes the matrix uses. See Trinity. */
     int32_t egUsed = 0x7;
     uint32_t ageCounter = 1;
     float modWheel = 0.0f, pressure = 0.0f, bend = 0.0f, bpm = 120.0f;

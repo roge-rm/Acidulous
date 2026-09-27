@@ -6,28 +6,19 @@
 
 namespace acidulous::machine {
 
-// What this machine's signal reaches before its drive stage, and so the level
-// that stage should treat as nominal. Measured, not guessed: after volume x1.4; peak -22.4 dB.
-// A nominal above what the signal reaches puts the whole sound on the steep
-// part of the curve, where the knob is a volume control again.
+// The level the signal reaches before the drive stage, measured after
+// volume x 1.4 (peak -22.4 dB). The drive is normalised to it. Set it too
+// high and the drive knob mostly changes the volume.
 constexpr float kNominal = 0.076f;
-// Where this bank sits in the volume knob's travel. It was an unnamed 1.4,
-// which left Init 2.3 dB under the line its own patches sit on once Init is
-// auditioned at a note the instrument actually plays - the 8.8 dB gap this
-// started from was mostly the harness measuring Init outside the range.
+// The house level. Sets where the bank sits on the volume knob, measured from
+// Init at a note in the instrument's range.
 constexpr float kHouse = 1.82f;
 
 /** How long a pad takes to close, in seconds. */
 constexpr float kKeyClick = 0.004f;
 /**
- * How loud a pad is at `keys` 1. A tenth, because the noise it is made
- * from peaks near half scale and the bank sets `keys` at 0.2 to 0.4: that
- * put a four-millisecond burst at -25 dB on the front of notes that take
- * fifty to two hundred and fifty milliseconds to get there themselves,
- * and Dan heard it as a click on every note of every instrument. Measured
- * as the largest second difference at a note-on against the level of the
- * fifty milliseconds after it: 5 to 13 times with the pads, 0.5 without.
- * A pad closing is a thing you notice under a note, not instead of one.
+ * How loud a pad is at `keys` 1. Kept low because the notes take 50 to 250 ms
+ * to speak, and a louder pad noise clicks on the front of every note.
  */
 constexpr float kKeyLevel = 0.1f;
 
@@ -39,12 +30,12 @@ Timber::Timber() { initParams(); }
 
 const ParamDef *Timber::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        // What starts the air moving, and what shape it is moving in. These
-        // two between them are the whole woodwind family.
+        // The exciter (single reed, double reed, jet) and the bore shape
+        // (cylinder, cone). Together they pick the woodwind family.
         {"family", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},
         {"bore", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
-        // The instrument, as the lowest note it has. Everything about the
-        // tube below your fingers follows from this and the note.
+        // The instrument's lowest note. The tube below the fingers follows
+        // from this and the note being played.
         {"body", 30.0f, 500.0f, 146.8f, Curve::Exponential, 0, "Hz"},
         {"lattice", 300.0f, 6000.0f, 1500.0f, Curve::Exponential, 0, "Hz"},
         {"holes", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
@@ -114,7 +105,7 @@ void Timber::reset() {
         v.pendingOff = false;
     }
     flutterPhase = 0.0f;
-    rng = kRngSeed; // the breath noise, from the top
+    rng = kRngSeed; // restart the breath noise
 }
 
 void Timber::allNotesOff() {
@@ -137,7 +128,7 @@ Timber::Voice *Timber::allocate() {
     return best;
 }
 
-/** How long a voice that is still sounding takes to go before it restarts. */
+/** How long a still-sounding voice fades out before it restarts. */
 constexpr int32_t kFadeFrames = 96;
 
 void Timber::noteOn(uint8_t note, uint8_t velocity) {
@@ -147,21 +138,15 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     Voice &v = *vp;
 
     const float glide = targetOf(Glide);
-    // A slur is a note that arrives without the tongue and without the
-    // instrument being restarted; a tongued note is stopped and started
-    // again. On a wind instrument that is the difference between two
-    // articulations, not two envelopes.
+    // A slurred note arrives without the tongue and without restarting the
+    // instrument. A tongued note is stopped and started again.
     const bool slurred = glide > 0.001f && v.used && v.gate && v.pendingNote < 0;
     if (!slurred && v.used && v.amp.value() > 0.0001f) {
-        // Still sounding - most often its own release, since every patch
-        // here is mono and the phrase's notes land inside it. Starting now
-        // would cut it to nothing in one sample, which was the click on the
-        // front of every note that followed another. Fade it for two
-        // milliseconds and start at the block after; the note is that
-        // much late, and nobody can hear two milliseconds.
-        // Nothing else changes yet - not even v.note, because render
-        // retunes the pipe from it and a full tube read at a new length is
-        // a step of its own. noteOff looks at pendingNote first.
+        // Still sounding (usually its own release, since the patches are
+        // mono). Cutting it now would click, so fade it over 2 ms and start
+        // the new note in the next block. Nothing else changes yet, not even
+        // v.note, because render retunes the pipe from it. noteOff checks
+        // pendingNote first.
         v.pendingNote = note;
         v.pendingVel = velocity;
         v.pendingOff = false;
@@ -185,26 +170,20 @@ void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) 
     v.age = ++ageCounter;
     v.vibratoPhase = 0.0f;
     v.vibratoLeft = targetOf(VibratoDelay);
-    // The pads of the keys hitting the body: a real instrument's other
-    // sound, and the one a sample library needs a separate layer for.
+    // The key pads closing on the body.
     v.keyLeft = targetOf(Keys) > 0.001f ? kKeyClick * sampleRate : 0.0f;
-    v.keyState = 0.0f; // or a reused voice starts on the last pad's residue
+    v.keyState = 0.0f; // clear the last pad's filter state
     if (!slurred) {
         v.tongueLeft = targetOf(TongueTime) * sampleRate;
-        // retrigger zeroes the envelope, and the output is the pipe times
-        // the envelope - so at this instant the voice is silent whatever
-        // its tube holds, and emptying the tube costs nothing audible. It
-        // buys a note that starts from its own breath rather than from the
-        // last note retuned: a reused voice used to carry the old pitch in
-        // its line for a round trip after the new length was set, and every
-        // patch here is mono, so that was every note but the first.
+        // retrigger zeroes the envelope, so the voice is silent and the tube
+        // can be cleared without a click. The new note then starts from its
+        // own breath instead of the old note's pitch still in the tube.
         v.amp.retrigger();
         v.pipe.clear();
-        v.breathScale = 0.0f; // the breath comes back up behind the tongue
-        // The loop gain this instrument asks for came down so the reed would
-        // stay off its stops and the thing would play in tune; a lower gain
-        // is a slower note, and this is what pays for it. Needs the note and
-        // a solved loop first, so it is acted on in render.
+        v.breathScale = 0.0f; // the breath ramps back up behind the tongue
+        // Boost the attack so the note speaks quickly despite the moderate
+        // loop gain. It needs the note and a solved loop, so it's applied in
+        // render.
         v.lift = true;
     } else {
         v.tongueLeft = 0.0f;
@@ -215,7 +194,7 @@ void Timber::noteOff(uint8_t note) {
     for (auto &v : voices) {
         if (!v.used) continue;
         if (v.pendingNote == note) {
-            v.pendingOff = true; // released before it even started: start it, then let go
+            v.pendingOff = true; // released before it started: start it, then release
             continue;
         }
         if (!v.gate || v.note != note) continue;
@@ -265,21 +244,17 @@ bool Timber::render(float *L, float *R, int32_t frames) {
     const float panL = std::cos((panKnob + 1.0f) * 0.25f * 3.14159265f);
     const float panR = std::sin((panKnob + 1.0f) * 0.25f * 3.14159265f);
 
-    // The register vent: the same fingering with a small hole opened to
-    // stop the fundamental, so the note sits on a higher partial of the
-    // tube. A cylinder has no second partial to sit on - which is exactly
-    // why a clarinet's register key gives a twelfth and not an octave, and
-    // why the instrument has a "break" in the middle of its range that no
-    // other woodwind has. Asking one for its octave anyway puts the note
-    // between two modes, where it plays whatever it likes.
+    // The register vent opens a small hole to stop the fundamental, so the
+    // note sits on a higher partial. A cylinder has no second partial, so its
+    // octave register gives a twelfth (the third partial) instead.
     const int32_t mode = reg == Natural ? 1 : (reg == Octave ? (cylinder ? 3 : 2) : 3);
 
     flutterPhase += flutterRate * dt * static_cast<float>(frames);
     while (flutterPhase >= 1.0f) flutterPhase -= 1.0f;
     const float flutterNow = flutter * 0.5f * (1.0f - std::cos(flutterPhase * kTwoPi));
 
-    // How long the tongue takes to leave the reed, and how long a pad is
-    // closing. Both are windows rather than gates; see the sample loop.
+    // How long the tongue takes to leave the reed, and how long a pad takes
+    // to close. Both are smooth windows; see the sample loop.
     const float tongueOff = std::min(0.003f * sampleRate, paramOf(TongueTime) * sampleRate);
     const float tongueOffInv = tongueOff > 1.0f ? 1.0f / tongueOff : 1.0f;
     const float keyInv = 1.0f / (kKeyClick * sampleRate);
@@ -291,8 +266,8 @@ bool Timber::render(float *L, float *R, int32_t frames) {
     for (auto &v : voices) {
         if (!v.used) continue;
         if (v.pendingNote >= 0 && v.fadeLeft <= 0) {
-            // The fade is done: start the note that was waiting, at a block
-            // boundary so the solve below sees it before a sample is made.
+            // The fade is done. Start the waiting note at the block boundary
+            // so the solve below sees it first.
             startVoice(v, static_cast<uint8_t>(v.pendingNote), v.pendingVel, false);
             v.pendingNote = -1;
             if (v.pendingOff) {
@@ -318,21 +293,16 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         while (v.vibratoPhase >= 1.0f) v.vibratoPhase -= 1.0f;
         const float vib = std::sin(v.vibratoPhase * kTwoPi) * vibratoDepth;
 
-        // What the player is blowing. **Not scaled by the envelope.** A
-        // wind player's breath is up before the note sounds - that is what a
-        // tongued attack *is*, full pressure behind a stopped reed - and
-        // taking the envelope through it here meant the mouthpiece was
-        // re-solved at a different pressure every block on the way up, so
-        // the loop gain climbed through one somewhere in the middle of the
-        // attack and the big reeds took a quarter of a second to speak. The
-        // envelope shapes what comes out of the instrument, which is where
-        // it belongs; the breath has its own short ramp below.
-        // Velocity does two things on a wind model: it blows - harder is brighter,
-        // at the depth this knob always had at its old default - and it sets the
-        // level, on the law every machine shares. Blowing alone could not make
-        // a note quiet: under a point the reed does not speak at all.
+        // The player's breath pressure. It isn't scaled by the envelope,
+        // because the breath is already up behind the tongue before the note
+        // sounds, and ramping it would slow the attack. The envelope shapes
+        // the output instead, and the breath has its own short ramp below.
+        //
+        // Velocity blows harder (brighter) and also sets the level with the
+        // shared velocity curve, since blowing softer alone can't make a
+        // note quiet without it failing to speak.
         const float vel = 1.0f - 0.5f * velAmount * (1.0f - v.velocity);
-        // Ramped across the block: a slurred note changes it mid-sound.
+        // Ramped across the block, since a slurred note changes it mid-sound.
         const float gainTo = velocityGain(v.velocity, velAmount);
         const float gainStep = (gainTo - v.outGain) / static_cast<float>(frames);
         const float at = v.pressure >= 0.0f ? v.pressure : aftertouch;
@@ -345,7 +315,7 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         v.pipe.setLattice(lattice, fingering, holes);
         v.pipe.setBelow(below);
         v.pipe.setFork(answer);
-        // Slide stiffens the reed, which is where a woodwind's brightness lives.
+        // Slide stiffens the reed, which brightens the tone.
         const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
         v.pipe.setReed(family, reed * (1.0f + slide * paramOf(MpeTimbre) * 0.8f), embouchure);
         v.pipe.setJet(jet, aim);
@@ -355,8 +325,8 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         v.pipe.setDrive(1.0f);
         v.pipe.tune();
         if (v.lift) {
-            // After the solve, so the lift is sized against the gain the
-            // loop actually arrived at.
+            // After the solve, so the lift is sized against the actual loop
+            // gain.
             v.pipe.tune();
             v.pipe.lift();
             v.lift = false;
@@ -366,16 +336,9 @@ bool Timber::render(float *L, float *R, int32_t frames) {
             const float env = v.amp.next();
             if (env <= 0.0000005f && !v.gate) { v.used = false; break; }
 
-            // The tongue: on the reed at the start of a note, and back on
-            // it however many times a second a flutter asks for.
-            //
-            // And it comes *off* the reed rather than vanishing off it. It
-            // used to be a rectangular gate - the reed fully damped for
-            // twenty milliseconds and fully free on the next sample - which
-            // is a step in the slope of the whole nonlinearity, and it was
-            // the loudest click in this machine: measured on the clarinet,
-            // a jump of 7.9e-2 against a level of 1.8e-2, once per note, at
-            // exactly tonguetime after each one started.
+            // The tongue: on the reed at the start of a note, and again as
+            // often as flutter asks for. It comes off with a raised cosine
+            // rather than a hard gate, which would click.
             float stop = flutterNow * tongueDepth;
             if (v.tongueLeft > 0.0f) {
                 v.tongueLeft -= 1.0f;
@@ -386,19 +349,14 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
             rng = rng * 1664525u + 1013904223u;
             const float white = static_cast<float>(rng >> 8) * (1.0f / 16777216.0f) * 2.0f - 1.0f;
-            // The breath itself: up in four milliseconds and away in
-            // twenty-five, which is a tongue rather than an envelope.
+            // The breath itself: up in 4 ms and down in 25 ms.
             v.breathScale += ((v.gate ? 1.0f : 0.0f) - v.breathScale) *
                              (v.gate ? breathRise : breathFall);
             const float breath = push * v.breathScale;
             float s = v.pipe.step(breath, white * breathNoise * 0.35f * breath);
 
-            // A pad closing on the body: a click, not a note - but a click
-            // with two ends, and the second one used to be a cliff. The
-            // noise was cut off after four milliseconds with the filter
-            // still ringing, so the deliberate click was followed by an
-            // accidental one. Windowed now, the way Filament's hammer is:
-            // sin squared is zero in value *and* slope at both ends.
+            // A pad closing on the body: a short burst of noise, windowed
+            // with sin squared like Filament's hammer so neither end clicks.
             if (v.keyLeft > 0.0f) {
                 v.keyLeft -= 1.0f;
                 v.keyState = v.keyState * 0.85f + white * 0.15f;
@@ -408,9 +366,9 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
             float out = v.filter.process(s) * env;
             if (v.pendingNote >= 0) {
-                // Fading, or faded and waiting for the block boundary: the
-                // rest of this block stays silent, or the old note comes
-                // back for thirty samples at full level and that is a click.
+                // Fading, or faded and waiting for the block boundary. Keep
+                // the rest of the block silent so the old note doesn't come
+                // back.
                 out *= v.fadeLeft > 0 ? static_cast<float>(v.fadeLeft) / static_cast<float>(kFadeFrames) : 0.0f;
                 if (v.fadeLeft > 0) --v.fadeLeft;
             }
@@ -426,9 +384,8 @@ bool Timber::render(float *L, float *R, int32_t frames) {
         float l = L[i] * volume * kHouse, r = R[i] * volume * kHouse;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 8.0f;
-            // Normalised on the nominal level. `/ sqrt(k)` boosts a quiet
-            // signal by up to ten decibels and holds a loud one ten below,
-            // so the knob moved the level rather than the character.
+            // Normalised on the nominal level, so drive changes the character
+            // and not the level.
             const float norm = kNominal / dsp::fastTanh(kNominal * k);
             l = dsp::fastTanh(l * k) * norm;
             r = dsp::fastTanh(r * k) * norm;

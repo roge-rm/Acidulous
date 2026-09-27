@@ -6,21 +6,17 @@
 #include <engine/dsp/MultiFilter.h>
 #include <engine/machine/Machine.h>
 
-// Mosaic - the multisample player: an instrument tiled out of many pieces.
-// Key and velocity zones, loops, root keys and tuning, loaded from a set of
-// WAVs or from one preset of a SoundFont.
+// Mosaic is the multisample player. Key and velocity zones, loops, root keys
+// and tuning, loaded from a set of WAVs or one preset of a SoundFont.
 //
-// Three things take it past a sampler, and the name covers all three:
-//   - Zone edges *crossfade* in both axes, by a width the panel sets, so the
-//     seams between tiles never click.
-//   - *Layer scan* drives the velocity axis from a modulator instead of from
-//     how hard you played, so which tile sounds comes off the keyboard.
-//   - Any zone can be played as a *grain cloud* rather than a one-shot:
-//     position, rate, size, density, spray and pitch spread. The tile is
-//     broken into far smaller pieces and reassembled as a texture.
+//   - Zone edges crossfade in both directions, by a width set on the panel.
+//   - Layer scan drives the velocity axis from a modulator instead of from
+//     how hard you played.
+//   - Any zone can be played as a grain cloud: position, rate, size,
+//     density, spray and pitch spread.
 //
-// The whole instrument arrives as a single object mount, built on a worker,
-// so the audio thread never touches a file or an allocator.
+// The whole instrument is built on a worker thread and mounted as one
+// object, so the audio thread never touches a file or allocates.
 namespace acidulous::machine {
 
 class Mosaic final : public Machine {
@@ -36,11 +32,10 @@ class Mosaic final : public Machine {
     enum EnvSource : int32_t { EnvPanel, EnvFile, EnvSourceCount };
 
     enum ModSource : int32_t {
-        // **Nothing may be appended to this.** `m##_src` is a stepped
-        // parameter normalised against `SourceCount`, so growing the list
-        // re-points every saved patch's matrix rows - and `Patch` carries no
-        // version to migrate on. Slide is therefore not a source here; it is
-        // a depth knob, as it is on the five machines that had it first.
+        // Don't add to this list. `m##_src` is a stepped parameter
+        // normalised against SourceCount, so growing it would change every
+        // saved patch's matrix rows, and patches have no version to migrate
+        // on. That's why slide is a depth knob here instead of a source.
         SrcOff, SrcOn, SrcModWheel, SrcPressure, SrcVelocity, SrcKeyTrack, SrcRandom,
         SrcAmpEg, SrcFilterEg, SrcEg1, SrcEg2, SrcLfo1, SrcLfo2, SourceCount
     };
@@ -65,9 +60,9 @@ class Mosaic final : public Machine {
         EgParams = 4,
         MatrixBase = EgBase + kModEgs * EgParams,
         MatrixParams = 4,
-        // Appended: parameters are addressed by name, so a patch that has
-        // never heard of these takes their defaults. A finger's slide opens
-        // the filter; its pressure opens it too and leans on the level.
+        // Added later. Parameters are looked up by name, so older patches get
+        // the defaults. Slide opens the filter, pressure opens it too and
+        // raises the level.
         MpeTimbre = MatrixBase + kMatrixSlots * MatrixParams,
         MpePressure,
         Count
@@ -107,72 +102,43 @@ class Mosaic final : public Machine {
         double inc = 1.0;      // source frames per engine frame, before modulation
         float gain = 0.0f;
         float pan = 0.0f;
-        // What the file's own modulators ask of this layer, recomputed per
+        // What the file's own modulators do to this layer, recomputed per
         // block because some of their sources are continuous controllers.
         float modGain = 1.0f;
         float modPan = 0.0f;
         /**
          * The playback rate's parts and the pan's two gains, worked out once
-         * a block by `cacheLayer` instead of on every sample.
-         *
-         * The rate was two `exp2` and a double divide per layer per sample,
-         * and the pan a `cos` and a `sin`, for numbers that only move when a
-         * knob, a modulator or the zone does. The rate is still recomputed
-         * whenever the note's frequency has moved - which is a glide - using
-         * the same expression in the same order, so nothing comes out
-         * different by so much as a bit.
+         * a block by `cacheLayer` instead of every sample. The rate is also
+         * recomputed whenever the note's frequency moves (a glide), using the
+         * same expression so the result is bit-identical.
          */
         float rootHz = 440.0f, tuneMul = 1.0f, incFreq = -1.0f;
         double rateRatio = 1.0, incNow = 1.0;
         float panC = 0.70710678f, panS = 0.70710678f;
         /**
-         * A short ramp to nothing when the sample runs off its end.
-         *
-         * A non-looping sample stopped dead wherever the playhead happened to
-         * be, with the amplitude envelope still wide open: Dan heard it as
-         * "pops between some of the notes... and at the end", and a held note
-         * went from 91% of full scale to silence in one sample. A player does
-         * not hear two milliseconds of fade, and does hear that step.
+         * A 2 ms fade out when a non-looping sample runs off its end, so it
+         * doesn't click.
          */
         float fade = 1.0f;
         /**
-         * And the same ramp at the *start* of a note.
-         *
-         * A sample whose `start` is anywhere but the very beginning opens
-         * part way through a waveform, at whatever value that sample happens
-         * to hold, and the amplitude envelope is the only thing hiding the
-         * jump. Broken Loop starts 55% in behind a six millisecond attack -
-         * less than two cycles at these pitches - and Dan heard the result as
-         * "quiet pops between some of the notes". Two milliseconds of ramp is
-         * shorter than any attack anybody sets and longer than any edge.
+         * The same 2 ms ramp at the start of a note, since a `start` point
+         * past the beginning lands mid-waveform and a short attack won't hide
+         * the jump.
          */
         float fadeIn = 1.0f;
         /**
-         * Where the playhead is going, once the old content has faded out.
+         * Where the playhead jumps to once the old content has faded out.
          *
-         * Retriggering a voice that is still sounding used to move `pos`
-         * immediately: the new note ramps in over `fadeIn`, but the old one
-         * stops on whatever sample it was on. In mono and legato that is
-         * every note, because they all land on voice zero - Dan on Reed: "a
-         * small popping noise at the start of some notes".
-         *
-         * The obvious fix - hold the last output and decay it - is wrong, and
-         * measurably so: the signal being replaced is mid-oscillation, so a
-         * held sample decayed to nothing is a DC thump, and it made the steps
-         * worse (35% of full scale to 61%). What is needed is to keep playing
-         * the old content while it fades, and only then jump. Two
-         * milliseconds out, two back in, and nothing in between to hear.
+         * When a sounding voice is retriggered (every note in mono and
+         * legato), the old content keeps playing while it fades over 2 ms,
+         * then the playhead jumps and the new note fades in. Holding and
+         * decaying the last output instead would thump.
          */
         double pendingPos = -1.0;
         /**
-         * And the zone it is going to, because a note can change zone.
-         *
-         * Deferring the playhead but not the sample under it is worse than
-         * not deferring at all: for two milliseconds the layer reads the
-         * *new* sample at the *old* position. The tune steps to +12 at seven
-         * seconds, which is exactly where the mid zone ends and the high one
-         * begins, and every mono lead cracked there - Dan reported it on
-         * Grind, Bright Lead, Glide Lead and Mono Lead in turn, "same spot".
+         * The zone and sample it's going to, since a new note can change
+         * zone. These are deferred along with the playhead, otherwise the
+         * fade out would read the new sample at the old position.
          */
         const MapZone *pendingZone = nullptr;
         const SampleData *pendingSample = nullptr;
@@ -196,14 +162,9 @@ class Mosaic final : public Machine {
         float freq = 440.0f, glideFrom = 440.0f, glidePos = 1.0f;
         float random = 0.0f;
         /**
-         * This note's own pressure and slide, or -1 for "never told".
-         *
-         * The sentinel is what keeps an ordinary keyboard working: one that
-         * sends a single channel aftertouch never calls `notePressure`, so
-         * every voice stays at -1 and the matrix falls through to the
-         * channel value. A controller that speaks per finger sets it, and
-         * from then on that voice answers to its own. Trinity has done it
-         * this way since M38; this is the same sentinel, not a new idea.
+         * This note's own pressure and slide, or -1 if never set. A normal
+         * keyboard never calls `notePressure`, so the voice stays at -1 and
+         * the matrix uses the channel value instead. Same as Trinity.
          */
         float pressure = -1.0f, timbre = -1.0f;
         float prsGlide = 0.0f; // see glidePressure
@@ -215,15 +176,8 @@ class Mosaic final : public Machine {
         dsp::Adsr amp, filterEg, modEg[kModEgs];
         dsp::LfoGen lfo[kLfos];
         /**
-         * One filter per channel, because a filter has state.
-         *
-         * There used to be one, processing left and then right through the
-         * same instance: the right channel came out filtered through history
-         * left behind by the left, the two blended, and the stereo image
-         * collapsed. Panning a patch hard left measured 0.0 dB between the
-         * channels - Dan, on stereo earbuds: "I cannot hear any panning in
-         * autopan, it sounds right in the middle to me." It was not the
-         * modulation, or the rate, or the patch. The machine was mono.
+         * One filter per channel, because a filter has state. Sharing one
+         * would blend the channels and collapse the stereo image.
          */
         dsp::MultiFilter filter, filterR;
         float mod[DestCount]{};
@@ -231,8 +185,7 @@ class Mosaic final : public Machine {
         bool fileDrivesLevel = false;
         static constexpr uint32_t kSeed = 0x31415926u;
         uint32_t rng = kSeed;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
+        // Per-note bend (MPE) in semitones, added to the channel bend.
         float bend = 0.0f;
     };
 
@@ -242,7 +195,7 @@ class Mosaic final : public Machine {
     void cacheLayer(Layer &L, float panBase);
     /** Every matrix row for one voice, into `v.mod`: once a block, and at note-on. */
     void evalMatrix(Voice &v);
-    /** Which of the mod envelopes a matrix row reads, once a block. See Ratio's. */
+    /** Bit mask of the mod envelopes a matrix row reads, once a block. See Ratio. */
     int32_t egUsed = (1 << kModEgs) - 1;
     void renderVoice(Voice &v, int32_t frames, float *outL, float *outR);
     float paramOf(int32_t index) const { return params_.get(index); }

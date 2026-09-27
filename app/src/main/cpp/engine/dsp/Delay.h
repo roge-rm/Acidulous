@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <vector>
 
-// A stereo delay on a send bus, synced to the clock. Time is a note value; the
-// tempo turns it into samples every block and the read position glides toward
-// it, so a tempo ramp bends the echoes rather than clicking. Feedback runs
-// through a one-pole tone filter; ping-pong crosses the channels.
+// A stereo delay on a send bus, synced to the clock. Time is a note value,
+// turned into samples every block. The read position glides toward it so a
+// tempo change bends the echoes instead of clicking. Feedback runs through a
+// one-pole tone filter, and ping-pong crosses the channels.
 namespace acidulous::dsp {
 
 class Delay {
@@ -43,17 +43,9 @@ class Delay {
     }
 
     /**
-     * Where to read, for a write head at [wr] and a delay of [samples].
-     *
-     * Its own function because of the second line. The wrap can land *on*
-     * the buffer's length rather than under it: at 48 kHz the buffer is
-     * 96000 samples, floats there are 0.0078 apart, and a position a
-     * hundredth of a sample below zero plus 96000.0f rounds to exactly
-     * 96000 - one past the end, and at a page boundary, a crash.
-     *
-     * It took Link to find it. A tempo nudged every single block keeps the
-     * read position gliding, and a gliding position eventually lands on that
-     * value; a tempo sitting still almost never does.
+     * Where to read, for a write head at [wr] and a delay of [samples]. Uses
+     * `wrappedReadIndex`, which guards against float rounding landing the
+     * index one past the end of the buffer.
      */
     static int readIndex(int32_t wr, float samples, int32_t size, float &frac) {
         return wrappedReadIndex(wr, samples, size, frac);
@@ -61,8 +53,8 @@ class Delay {
 
     // In: a mono send. Out: added to L/R (100% wet).
     void process(const float *in, float *outL, float *outR, int32_t frames) {
-        // Glide the read position over the block: at most ~1% per block, so a
-        // tempo change bends smoothly.
+        // Glide the read position by at most ~1% per block, so a tempo change
+        // bends smoothly.
         const float maxStep = 0.01f * readSamples + 1.0f;
         float delta = targetSamples - readSamples;
         if (delta > maxStep) delta = maxStep; else if (delta < -maxStep) delta = -maxStep;

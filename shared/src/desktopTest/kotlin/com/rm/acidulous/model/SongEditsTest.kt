@@ -75,8 +75,8 @@ class SongEditsTest {
         editor.undoSong()
         assertEquals(2, editor.song.scenes.size)
         assertTrue(editor.canRedoSong())
-        // the song-level undo restored the document as it was before the scene add,
-        // which is before the mute too - so the track history still applies on top
+        // the song-level undo went back to before the scene add, which is also
+        // before the mute, so the track history still applies on top
         editor.redoSong()
         assertEquals(3, editor.song.scenes.size)
         editor.undo(0)
@@ -115,9 +115,7 @@ class SongEditsTest {
         val blank = SongStore.blank("New")
         assertEquals(2f, blank.durationSeconds(), 1e-3f) // one empty bar at 120
         assertEquals(1, blank.tracks.size)
-        // Hexbeat, not Reflux: a new song is almost always a beat before it is
-        // anything else. `SongStore.blank`'s default moved when the settings
-        // window gained a machine to start with, and this line did not.
+        // A new song starts with Hexbeat, as most songs start with a beat.
         assertEquals("Hexbeat", blank.tracks[0].machine.type)
     }
 
@@ -171,8 +169,8 @@ class SongEditsTest {
         assertEquals(key(3), gone.master.sends[1].params[SIDECHAIN_PARAM])
         assertEquals(listOf(0f, key(3)), gone.tracks[1].clips["s"]!!.automation["effect1:sidechain"]!!.points.map { it.value })
 
-        // A track's output names a mixer group, not a track, so moving tracks
-        // leaves it alone.
+        // A track's output is a mixer group index, so moving tracks leaves it
+        // alone.
         val grouped = song.addGroup("Drums").updateTrack(3) { it.copy(mixer = it.mixer.copy(output = 1)) }
         assertEquals(1, grouped.deleteTrack(0).tracks[2].mixer.output)
         assertEquals(1, grouped.duplicateTrack(1).tracks[4].mixer.output)

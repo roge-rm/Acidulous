@@ -6,7 +6,7 @@
     <string name="export_confirm">Export</string>
     <string name="export_file">file</string>
     <string name="export_format">format</string>
-    <!-- The format that is the song and its samples in one zip. The other formats are their own names. -->
+    <!-- The format that is the song and its samples in one zip. The other formats go by their own names. -->
     <string name="export_format_bundle">bundle</string>
     <string name="export_what">what</string>
     <string name="export_what_song">song</string>
@@ -27,7 +27,7 @@
     <string name="export_loudness_lufs">%d LUFS</string>
     <string name="export_about_aiff">A WAV with a different header.</string>
     <string name="export_about_flac">Lossless, about half the size.</string>
-    <!-- LAME's licence asks that its use be acknowledged: keep the name. -->
+    <!-- LAME's licence asks for its use to be acknowledged, so keep the name. -->
     <string name="export_about_mp3">Lossy. Encoded by LAME.</string>
     <string name="export_about_aac">Lossy.</string>
     <string name="export_about_midi">The notes, not the sound.</string>
@@ -70,6 +70,6 @@
     <string name="patches_user">user</string>
     <string name="patches_other">other</string>
     <string name="patches_user_none">Nothing saved yet. Use \"save as…\" on the panel.</string>
-    <!-- Where a browser saves what is exported: the only folder a web page can write to. -->
+    <!-- Where a browser saves exports: the only folder a web page can write to. -->
     <string name="files_downloads_web">Downloads</string>
 </resources>

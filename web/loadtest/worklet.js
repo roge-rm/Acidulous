@@ -1,8 +1,7 @@
-// Plays the load test on the browser's audio thread, and times every callback.
+// Plays the load test on the browser's audio thread and times every callback.
 //
-// The budget is 128 frames: what the browser asks for each time, 2.67 ms at
-// 48 kHz. A callback that takes longer than that is a callback the browser
-// had to wait for, and enough of them is a crackle.
+// The budget is 128 frames, 2.67 ms at 48 kHz. A callback that takes longer
+// makes the browser wait, and enough of them cause crackles.
 class LoadTestProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();

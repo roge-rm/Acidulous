@@ -48,7 +48,7 @@ class TempoRampTest {
     fun aRampSurvivesBeingSavedAndOpened() {
         val s = song(TempoRamp(90f, 2))
         assertEquals(s, SongStore.decode(SongStore.encode(s)))
-        // And a scene without one says nothing about it.
+        // A scene without a ramp doesn't write one.
         assertEquals(false, SongStore.encode(song(null)).contains("\"ramp\""))
     }
 }

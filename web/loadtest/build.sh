@@ -10,7 +10,7 @@ OUT="$HERE/out"
 mkdir -p "$OUT/obj"
 if ! command -v em++ >/dev/null; then source "${EMSDK:-$HOME/.local/share/emsdk}/emsdk_env.sh" >/dev/null 2>&1; fi
 
-# The bank texts, compiled in: the browser has no files to open.
+# The bank texts are compiled in, since the browser has no files to open.
 {
     echo "// Written by web/loadtest/build.sh from tools/banks; do not edit."
     echo "#pragma once"
@@ -32,9 +32,9 @@ SRC=$(find "$CPP/engine" -name '*.cpp' ! -name 'Mp3Reader.cpp' ! -name 'Mp3Write
 # Native, for the comparison.
 g++ $FLAGS -march=native -o "$OUT/loadtest-native" "$HERE/LoadTest.cpp" $SRC -lpthread
 
-# WebAssembly: one standalone module, no Emscripten JS - it is loaded by hand,
-# in a worker for the benchmark and in the AudioWorklet to play, neither of
-# which can run Emscripten's usual loader.
+# WebAssembly: one standalone module with no Emscripten JS. It's loaded by
+# hand in a worker for the benchmark and in the AudioWorklet to play, and
+# neither can run Emscripten's usual loader.
 objs=""
 for src in $SRC "$HERE/LoadTest.cpp"; do
     obj="$OUT/obj/$(echo "${src#$ROOT/}" | tr '/' '_').o"

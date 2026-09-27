@@ -16,34 +16,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 
 /**
- * A line of text read bottom to top, for somewhere there is no width to spare.
+ * A line of text read bottom to top, for places with no width to spare.
  *
- * **Rotation is a draw-time transform, not a layout one.** The node is
- * measured flat and then spun, so three things follow and all three have cost
- * a morning at least once:
+ * The rotation happens at draw time, not in layout. The node is measured
+ * flat and then turned, so:
  *
- *  - the length has to be *demanded* before it turns, with `requiredWidth`
- *    rather than `width`. A plain `width` is clamped by the incoming
- *    constraint, and the incoming constraint here is the narrow thing that
- *    made vertical text necessary - a forty-four dp column, an eighteen dp
- *    gutter - so a plain width gives you one character;
- *  - the parent still reserves the *pre*-rotation box, so nothing that clips
- *    may wrap one. `Group` is a `clip(RoundedCornerShape(6.dp))`, which is
- *    why the turned knob puts its strips inside its row rather than the other
- *    way round;
- *  - and the bounds a tool reports are neither the flat box nor the turned
- *    one, which is how three device captures in a row drove taps at a y the
- *    lane was nowhere near.
+ *  - the length must be forced before turning with `requiredWidth`, not
+ *    `width`, which gets clamped by the narrow parent and leaves one
+ *    character;
+ *  - the parent still reserves the unrotated box, so nothing that clips may
+ *    wrap it. `Group` clips to its rounded shape, which is why the turned
+ *    knob puts its strips inside its row;
+ *  - the bounds tools report are neither the flat nor the turned box, so
+ *    don't trust them for tap positions.
  *
- * Two forms. [length] stated is for a strip whose parent is always the same
- * size - the note lane's gutter and the automation strip's are both always
- * eighty-eight dp, so a hundred and twenty is simply more than enough and the
- * overhang is harmless. [length] left null *measures*, which is what anything
- * in a column whose height is "whatever is left above the keyboard" has to
- * do: stated, a long patch name runs off the bottom of a short screen and
- * floats in the middle of a tall one.
- *
- * This was written out five times before it was written down once.
+ * [length] set is for a parent that's always the same size, like the note
+ * lane and automation strip gutters. [length] null measures the height it's
+ * given, which anything in a column of varying height needs, or long names
+ * run off short screens.
  */
 @Composable
 fun SideText(

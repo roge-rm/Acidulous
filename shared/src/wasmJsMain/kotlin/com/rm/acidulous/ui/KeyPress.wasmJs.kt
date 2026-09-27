@@ -9,13 +9,12 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 
-// A browser's keys, as the desktop's are: Android's codes, which saved
-// bindings hold, from Compose's own names for the keys.
+// Browser keys, handled like the desktop: Compose's key names are mapped to
+// Android key codes, which is what saved bindings use.
 
 actual val androidx.compose.ui.input.key.KeyEvent.press: KeyPress get() {
-    // One event is asked twice - the hub's preview, then its fallback - and
-    // the second asking must not find its own key already down and call it a
-    // repeat.
+    // Each event is read twice (the hub's preview, then its fallback). The
+    // second read mustn't see its own key already down and call it a repeat.
     last?.let { (event, press) -> if (event === nativeKeyEvent) return press }
     return pressOf(this).also { last = nativeKeyEvent to it }
 }
@@ -41,7 +40,7 @@ private fun pressOf(e: androidx.compose.ui.input.key.KeyEvent): KeyPress {
     )
 }
 
-/** Clear of Android's codes, for a key it has none for. */
+/** Added to keys Android has no code for, to keep them clear of Android's codes. */
 private const val OFFSET = 100_000
 
 private val ANDROID: Map<Key, Int> = buildMap {

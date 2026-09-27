@@ -2,27 +2,23 @@
 #include <cmath>
 #include <cstdint>
 
-// The domain per-note expression is stored in, shared by everything that
-// records it, writes it to a file, or plays it back.
+// How per-note expression is stored, used by everything that records it,
+// saves it or plays it back.
 //
-// Three curves belong to a note: bend, pressure and slide. All three are
-// kept as 0..1, the same normalised domain an automation lane uses, so the
-// document has one convention rather than three and the editor can draw them
-// with the code it already has.
+// A note has three curves: bend, pressure and slide. All three are stored as
+// 0..1, the same as an automation lane, so the editor can draw them with the
+// same code.
 //
-// **Bend is stored in semitones, scaled**, and not as the fourteen bits that
-// arrived. A controller's bend range is a property of the controller: one set
-// to 24 semitones and one set to the specification's 48 send the same bytes
-// for different music, so keeping the bytes would mean a take recorded on one
-// desk played back wrong on another. Scaling to the
-// specification's own maximum fixes the meaning of what is written down, and
-// costs nothing - a float over +/-48 semitones resolves to well under a cent.
+// Bend is stored as scaled semitones, not the raw 14-bit value. Controllers
+// set to different bend ranges send the same bytes for different pitches, so
+// the raw value would play back wrong on another controller. Scaling to MPE's
+// +/-48 semitone maximum still resolves to well under a cent.
 namespace acidulous {
 
 /** Full scale, either way. MPE's default bend range, and its widest. */
 constexpr float kExprBendSemis = 48.0f;
 
-/** Which of a note's three curves. Ordinals reach the document as an index. */
+/** Which of a note's three curves. The ordinals are saved in the song. */
 enum class Expr : int32_t { Bend = 0, Pressure = 1, Timbre = 2, Count = 3 };
 
 /** Signed semitones to 0..1, with the centre at a half. */

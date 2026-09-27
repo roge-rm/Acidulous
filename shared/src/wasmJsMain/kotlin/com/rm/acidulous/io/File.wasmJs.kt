@@ -1,10 +1,10 @@
 package com.rm.acidulous.io
 
-// Files in a browser: the engine's own file system (Emscripten's, as
-// globalThis.acid.FS), so a sample the app writes is the file the engine
-// loads by the same path. The page mounts browser storage under the app's
-// folder before the app starts and writes it back as it changes: see
-// web/app's index.html. Paths are Unix ones, as Emscripten's are.
+// Files in the browser live in the engine's own Emscripten file system
+// (globalThis.acid.FS), so a file the app writes is the same file the engine
+// loads by that path. The page mounts browser storage under the app's folder
+// before the app starts and saves it back when it changes (see web/app's
+// index.html). Paths are Unix style.
 
 private fun fsExists(p: String): Boolean = js("globalThis.acid.FS.analyzePath(p).exists")
 private fun fsKind(p: String): Int = js(
@@ -26,7 +26,7 @@ private fun fsList(p: String): String? = js(
 )
 private fun fsReadText(p: String): String = js("globalThis.acid.FS.readFile(p, { encoding: 'utf8' })")
 private fun fsWriteText(p: String, text: String): Unit = js("globalThis.acid.FS.writeFile(p, text)")
-/** A file's bytes as a string of chars 0-255: one crossing, not one a byte. */
+/** A file's bytes as a string of chars 0-255, so it crosses to Kotlin in one call. */
 private fun fsReadLatin1(p: String): String = js(
     "(() => { const a = globalThis.acid.FS.readFile(p); let s = ''; " +
         "for (let i = 0; i < a.length; i += 8192) s += String.fromCharCode.apply(null, a.subarray(i, i + 8192)); return s; })()",
@@ -35,13 +35,13 @@ private fun fsWriteLatin1(p: String, s: String): Unit = js(
     "(() => { const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); " +
         "globalThis.acid.FS.writeFile(p, a); })()",
 )
-/** Tells the page something changed, for it to write browser storage back soon. */
+/** Tells the page something changed so it saves browser storage soon. */
 private fun fsChanged(): Unit = js("globalThis.acidFsChanged && globalThis.acidFsChanged()")
 
 internal fun latin1(bytes: ByteArray): String = CharArray(bytes.size) { (bytes[it].toInt() and 0xff).toChar() }.concatToString()
 internal fun fromLatin1(s: String): ByteArray = ByteArray(s.length) { s[it].code.toByte() }
 
-/** Java's normalising of a path: no doubled separators, none at the end. */
+/** Normalises a path like Java does: no doubled separators, none at the end. */
 private fun normal(p: String): String {
     if (p.isEmpty()) return p
     val collapsed = p.replace(Regex("/+"), "/")
@@ -168,7 +168,7 @@ actual fun File.relativeTo(base: File): File {
 actual val File.invariantSeparatorsPath: String get() = p
 actual val FILE_SEPARATOR: String get() = "/"
 
-/** Written beside it and renamed over, as on the JVM; the durability is the browser storage's, when the page writes it back. */
+/** Writes beside it and renames over it, as on the JVM. It's only durable once the page saves browser storage. */
 actual fun File.writeBytesSafely(bytes: ByteArray) {
     val tmp = File(parentFile, ".$name.tmp")
     try {

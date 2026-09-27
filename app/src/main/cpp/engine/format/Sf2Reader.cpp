@@ -47,8 +47,8 @@ std::string trimmed(const char *raw, size_t max) {
     return std::string(raw, n);
 }
 
-// The whole file in memory. SoundFonts are chunky but this keeps the parser
-// simple, and the cap stops a silly file taking the process down.
+// Reads the whole file into memory to keep the parser simple. The size cap
+// stops a huge file from crashing the app.
 bool readFile(const std::string &path, std::vector<uint8_t> &bytes, std::string &error) {
     FILE *f = std::fopen(path.c_str(), "rb");
     if (f == nullptr) { error = "cannot open " + path; return false; }
@@ -145,10 +145,9 @@ Mod readMod(const uint8_t *p) { return {rd16(p), rd16(p + 2), rd16(p + 6), rd16(
 // --- Modulators -------------------------------------------------------------------
 //
 // A modulator is a controller, a curve and an amount aimed at a generator.
-// The spec also defines ten that are present in every instrument unless the
-// file overrides them, and those are where a SoundFont's velocity response
-// actually lives - a bank whose velocity layers all point at one sample is
-// relying on them entirely.
+// The spec defines ten default ones present in every instrument unless the
+// file overrides them. They're where a SoundFont's velocity response comes
+// from, so a bank whose velocity layers all use one sample depends on them.
 
 // The source field is a bitfield: index, a flag saying whether the index is a
 // MIDI CC, then direction, polarity and curve type.
@@ -173,17 +172,15 @@ enum GeneralController : uint8_t { CtrlNone = 0, CtrlVelocity = 2, CtrlKeyNumber
                                    CtrlChannelPressure = 13, CtrlPitchWheel = 14, CtrlPitchWheelSens = 16 };
 
 /**
- * Turns one file modulator into one this engine can evaluate, or reports
- * that it cannot. A modulator is dropped when its destination is something
- * the engine has no equivalent for - the SoundFont LFOs, the effect sends -
- * or when it has a second amount source, which nothing here needs.
+ * Converts a file modulator into one the engine can use, or returns false.
+ * It's dropped when the engine has nothing matching its destination (the
+ * SoundFont LFOs, effect sends) or when it has a second amount source.
  */
 bool resolveMod(const Mod &m, ZoneMod &out) {
     const ModSourceBits src = decodeSource(m.src);
     if (src.type > 3) return false;
-    // A second amount source multiplies two controllers together. Only the
-    // pitch-wheel default uses it, and that is handled by the machine's own
-    // bend, so it is not worth carrying.
+    // A second amount source multiplies two controllers. Only the pitch-wheel
+    // default uses it, and the machine's own bend handles that.
     if (m.amtSrc != 0) return false;
 
     if (src.isCc) {
@@ -215,7 +212,7 @@ bool resolveMod(const Mod &m, ZoneMod &out) {
     return true;
 }
 
-/** The spec's default modulators, minus the ones this engine cannot honour. */
+/** The spec's default modulators, minus the ones the engine can't use. */
 const Mod kDefaultMods[] = {
     // velocity -> attenuation, 960 cB, concave, decreasing, unipolar
     {0x0502, GenInitialAttenuation, 0, 0, 960},
@@ -326,7 +323,7 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
         const size_t pModEnd = (pb + 1 < pbagCount) ? readBag(c.pbag + (pb + 1) * 4).modNdx : pmodCount;
         GenSet pset;
         gensOf(c.pgen, pgenCount, bag.genNdx, genEnd, pset);
-        if (!pset.has(GenInstrument)) continue; // a global preset zone; its defaults are rare, skip
+        if (!pset.has(GenInstrument)) continue; // a global preset zone, rarely used, skip it
         const uint16_t instIndex = pset.raw(GenInstrument);
         if (instIndex + 1 >= instCount) continue;
 
@@ -375,8 +372,8 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
             const int16_t rootOverride = iset.sign(GenOverridingRootKey, -1);
             zone.rootKey = rootOverride >= 0 && rootOverride < 128 ? static_cast<uint8_t>(rootOverride)
                                                                    : sh.originalPitch;
-            // Tuning adds up across the levels, as the spec says relative
-            // generators do; the sample's own correction is always included.
+            // Tuning adds up across the levels, as the spec says for relative
+            // generators. The sample's own correction is always included.
             zone.tuneCents = static_cast<float>(sh.pitchCorrection) +
                              100.0f * static_cast<float>(iset.sign(GenCoarseTune) + pset.sign(GenCoarseTune)) +
                              static_cast<float>(iset.sign(GenFineTune) + pset.sign(GenFineTune));
@@ -414,9 +411,9 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
                 zone.release = timecentsToSeconds(iset.sign(GenReleaseVol, -12000));
             }
 
-            // Modulators: start from the ten the spec says are always there,
-            // then let the instrument's global zone, this zone, and the preset
-            // zone each replace one by target or add their own.
+            // Modulators: start from the ten defaults, then the instrument's
+            // global zone, this zone and the preset zone can each replace one
+            // by target or add their own.
             {
                 std::vector<Mod> effective(std::begin(kDefaultMods), std::end(kDefaultMods));
                 auto merge = [&effective](const Mod &m) {

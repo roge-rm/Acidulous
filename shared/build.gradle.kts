@@ -13,12 +13,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-// What the Android app, the desktop build and the browser share: the song
-// model, the UI and its strings, all in commonMain. The engine is C++ on all
-// three, reached through JNI on the two JVMs and through the same bridge
-// compiled to WebAssembly in a browser. jvmShared holds only the JVMs' side of
-// the few seams a browser answers differently - files, String.format, the
-// engine's calls, threads - each an expect in commonMain.
+// The code shared by the Android app, the desktop build and the browser: the
+// song model, the UI and its strings, all in commonMain. The engine is C++ on
+// all three, reached through JNI on the two JVMs and through the same bridge
+// compiled to WebAssembly in the browser. jvmShared only holds the JVM side
+// of the few things the browser does differently (files, String.format, the
+// engine calls, threads), each an expect in commonMain.
 kotlin {
     android {
         namespace = "com.rm.acidulous.shared"
@@ -26,13 +26,13 @@ kotlin {
         minSdk = 27
         androidResources { enable = true }
     }
-    // Java 21: what Debian Trixie and Raspberry Pi OS ship, and so what the
-    // desktop packages run on. Left alone it would be whatever JDK Gradle runs on.
+    // Java 21, which Debian Trixie and Raspberry Pi OS ship and the desktop
+    // packages run on. Otherwise it would be whatever JDK Gradle runs on.
     jvm("desktop") {
         compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) }
     }
     // The browser: Compose for Kotlin/Wasm, with the engine as WebAssembly
-    // beside it (web/).
+    // next to it (web/).
     wasmJs { browser() }
 
     sourceSets {
@@ -61,19 +61,18 @@ kotlin {
 }
 
 /**
- * The UI's strings, read the way Android reads them.
+ * Makes the UI strings read the way Android reads them.
  *
- * They are written in Android's format - src/commonMain/strings/values, which
- * is where to edit them - and Compose Multiplatform's resources do not follow
- * all of its rules: a string in quotes keeps its quotes, `\'` keeps its
- * backslash and a run of spaces stays a run. So this applies Android's rules
- * first (aapt2's: escapes, quoting, whitespace collapsed and trimmed outside
- * quotes) and hands Compose the plain text, and a string reads the same on
- * every platform as it did on Android.
+ * They're written in Android's format (edit them in
+ * src/commonMain/strings/values), but Compose Multiplatform's resources don't
+ * follow all of Android's rules: quotes are kept, `\'` keeps its backslash
+ * and runs of spaces aren't collapsed. So this applies aapt2's rules first
+ * (escapes, quoting, whitespace collapsed and trimmed outside quotes) and
+ * gives Compose the plain text, so strings read the same on every platform.
  */
 abstract class NormaliseStrings : DefaultTask() {
     @get:InputDirectory abstract val source: DirectoryProperty
-    /** Android vector drawables to hand over as they are, into drawable/. */
+    /** Android vector drawables to copy as they are into drawable/. */
     @get:InputFiles abstract val drawables: ConfigurableFileCollection
     @get:OutputDirectory abstract val output: DirectoryProperty
 
@@ -101,7 +100,7 @@ abstract class NormaliseStrings : DefaultTask() {
     }
 
     private fun androidText(raw: String): String {
-        // Each character, and whether it is a space that quoting did not protect.
+        // Each character, and whether it's a space that quoting didn't protect.
         val chars = ArrayList<Pair<Char, Boolean>>()
         var quoted = false
         var i = 0
@@ -135,8 +134,8 @@ abstract class NormaliseStrings : DefaultTask() {
 
 val normaliseStrings by tasks.registering(NormaliseStrings::class) {
     source.set(layout.projectDirectory.dir("src/commonMain/strings"))
-    // The logo the splash shows is the launcher icon's foreground, which has
-    // to stay in the app's own resources for the launcher; one copy, not two.
+    // The splash logo is the launcher icon's foreground, which has to stay in
+    // the app's own resources for the launcher, so it's copied from there.
     drawables.from(rootProject.file("app/src/main/res/drawable/ic_launcher_foreground.xml"))
     output.set(layout.buildDirectory.dir("generated/strings"))
 }
@@ -148,6 +147,6 @@ compose.resources {
     customDirectory("commonMain", normaliseStrings.flatMap { it.output })
 }
 
-// The tests of what lives here run on the desktop JVM - none of them needs
-// Android - and still answer to the name everybody types.
+// The shared tests run on the desktop JVM (none of them need Android), under
+// the task name everyone is used to typing.
 tasks.register("testDebugUnitTest") { dependsOn("desktopTest") }

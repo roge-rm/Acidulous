@@ -5,8 +5,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The fit button's arranging: that it follows the signal, that it takes the
- * window's shape, and that nothing lands on anything else.
+ * The fit button's layout: modules follow the signal, the layout takes the
+ * window's shape, and nothing overlaps.
  */
 class NexusLayoutTest {
     private val w = 150f
@@ -115,7 +115,7 @@ class NexusLayoutTest {
         val x = { s: Int -> p.moduleAt(s)!!.x }
         assertTrue("out should be right of the vca", x(0) > x(3) || p.moduleAt(0)!!.y > p.moduleAt(3)!!.y)
         assertEquals(p.flowColumns().last(), listOf(0))
-        // Places given are kept.
+        // Modules that were given a place keep it.
         val kept = NexusPatch.decode("v|1\nm|0|out|mono\np|00|500|40")
         assertEquals(500f, kept.moduleAt(0)!!.x, 0f)
     }

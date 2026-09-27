@@ -26,28 +26,22 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 
 /**
- * What the tuner is hearing: the note, and how far off it is.
- *
- * The whole readout is a note name and a needle, because that is the whole
- * job. A number of hertz is there for anybody who wants it and is not what
- * anybody tunes by.
+ * What the tuner is hearing: the note, and how far off it is, as a note
+ * name and a needle. The frequency is shown too, for anyone who wants it.
  */
-
 private val NOTE_NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
-/** A4, and the only tuning reference this offers. */
+/** A4, and the only tuning reference offered. */
 const val TUNING_REFERENCE = 440f
 
-/** How many cents off still counts as in tune, and turns the needle green. */
+/** How many cents off still counts as in tune and turns the needle green. */
 private const val IN_TUNE = 4f
 
 data class TunerReading(val name: String, val cents: Float, val hz: Float)
 
 /**
- * The nearest named note to [hz], and the distance to it in cents.
- *
- * Null when there is no note - which is most of the time, because a tuner
- * that names a note for a room is worse than one that names none.
+ * The nearest note to [hz] and the distance to it in cents. Null when there's
+ * no clear note, which is most of the time.
  */
 fun readingOf(hz: Float): TunerReading? {
     if (hz <= 0f) return null
@@ -69,7 +63,7 @@ fun TunerStrip(hz: Float, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // The name, at a size that can be read from where a guitar is held.
+        // The name, big enough to read while holding a guitar.
         Text(
             reading?.name ?: "--",
             color = when {
@@ -95,11 +89,8 @@ fun TunerStrip(hz: Float, modifier: Modifier = Modifier) {
 }
 
 /**
- * The needle: fifty cents either way, with the middle marked.
- *
- * Fifty is the whole of it, because at fifty-one cents the note next door is
- * nearer and the name above has already changed to it. A scale that ran
- * further would be showing a distance to a note nobody is playing.
+ * The needle: fifty cents either way, with the middle marked. Past fifty
+ * the next note is nearer and the name changes.
  */
 @Composable
 private fun Needle(cents: Float?, inTune: Boolean, modifier: Modifier) {
@@ -111,7 +102,7 @@ private fun Needle(cents: Float?, inTune: Boolean, modifier: Modifier) {
         val h = size.height
         val midY = h / 2f
         drawRect(track, topLeft = Offset(0f, midY - 5f), size = Size(size.width, 10f))
-        // Every ten cents, with the centre taller: something to judge against.
+        // Every ten cents, with a taller centre line.
         for (step in -5..5) {
             val x = size.width * (0.5f + step / 10f * 0.5f)
             val tall = if (step == 0) h * 0.5f else h * 0.25f

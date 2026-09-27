@@ -12,10 +12,10 @@ import com.rm.acidulous.util.Runnable
 private const val TAG = "Acidulous.MIDI"
 
 // The browser's Web MIDI, kept by the page in globalThis.acidMidi. Access is
-// the browser's to grant: asked for at once where it was granted before, and
-// otherwise at the first touch or key, as sound is - not with a prompt over a
-// page nobody has looked at yet. SysEx is asked for with it; a Launchpad is
-// put in Programmer mode by one.
+// requested straight away if it was granted before, otherwise at the first
+// touch or key press, like sound, so there's no prompt on a page nobody has
+// looked at yet. SysEx is requested too, since it puts a Launchpad in
+// Programmer mode.
 
 private fun midiStart(changed: () -> Unit): Unit = js(
     """(() => {
@@ -41,7 +41,7 @@ private fun midiStart(changed: () -> Unit): Unit = js(
 
 private fun midiHas(): Boolean = js("!!navigator.requestMIDIAccess")
 
-/** Every port: kind (i or o), id, name and maker, a field apart; ports a line apart. */
+/** Every connected port as kind (i or o), id, name and maker, separated by \u0001; ports separated by \u0000. */
 private fun midiPorts(): String = js(
     """(() => {
         const a = globalThis.acidMidi;
@@ -84,14 +84,13 @@ private fun clearTimer(id: Int): Unit = js("clearTimeout(id)")
 /** A port as Web MIDI lists it. */
 private class WebPort(val output: Boolean, val id: String, val name: String, val maker: String)
 
-/** Ports of one name, as the hub's device: those it hears from and those it sends to. */
+/** The ports with one name, as one device: the ones it sends from and the ones it receives on. */
 private class WebDevice(val desc: MidiDeviceDesc, val sources: List<String>, val destinations: List<String>)
 
 /**
- * MIDI in a browser. Web MIDI lists ports, not devices; a port the device
- * sends from and one it takes, under one name, are one device here, as a
- * phone would show it. Everything happens on the page's one thread, which is
- * the hub's worker too.
+ * MIDI in a browser. Web MIDI lists ports, not devices, so an input and an
+ * output with the same name become one device, like on a phone. Everything
+ * runs on the page's single thread, which is also the hub's worker.
  */
 class WebMidi : MidiSystem {
     override val supported: Boolean = midiHas()
@@ -121,10 +120,9 @@ class WebMidi : MidiSystem {
             val f = line.split('\u0001')
             if (f.size < 4) null else WebPort(f[0] == "o", f[1], f[2], f[3])
         }.filter { !it.name.startsWith("Midi Through") }
-        // Windows names a device's second and third ports after its first:
-        // "MIDIIN2 (LPProMK3 MIDI)", "MIDIOUT3 (LPProMK3 MIDI)". They are
-        // that device's ports, so they join it - after its own, which is port
-        // nought, the one the hub plays and sends to.
+        // Windows names a device's extra ports after its first, like
+        // "MIDIIN2 (LPProMK3 MIDI)" and "MIDIOUT3 (LPProMK3 MIDI)". They join
+        // that device, after its own port 0, which is the one the hub uses.
         val windowsPort = Regex("""^MIDI(?:IN|OUT)\d+ \((.+)\)$""")
         fun deviceOf(p: WebPort) = windowsPort.find(p.name)?.groupValues?.get(1) ?: p.name
         return ports.groupBy { deviceOf(it) }.map { (name, all) ->
@@ -140,8 +138,8 @@ class WebMidi : MidiSystem {
                     maker = maker,
                     inputPortCount = destinations.size,
                     outputPortCount = sources.size,
-                    // A browser does not say how a device is attached, and a
-                    // controller in a browser is a USB one as good as always.
+                    // Browsers don't say how a device is attached, and it's
+                    // nearly always USB.
                     usb = true,
                     bluetooth = false,
                 ),
@@ -163,14 +161,11 @@ class WebMidi : MidiSystem {
         var before = known.associateBy { it.desc.id }
         midiStart {
             val now = scan().associateBy { it.desc.id }
-            // **A device whose ports changed is gone and back.** Chrome on
-            // Windows can announce a device's ports one at a time, so a
-            // Launchpad could arrive with its inputs and no output yet: the
-            // hub took it for something that could not be sent to, and the
-            // output arriving a moment later - the same device - changed
-            // nothing. It listed, and never took Programmer mode or played
-            // until the page was reloaded (Dan). So the hub hears it leave and
-            // come back with every port it has.
+            // A device whose ports changed is reported as removed and added
+            // again. Chrome on Windows can announce a device's ports one at a
+            // time, so a Launchpad could arrive with inputs but no output yet,
+            // and the hub never set up Programmer mode when the output showed
+            // up. Re-adding it gives the hub every port at once.
             for ((id, d) in before) {
                 val then = now[id]
                 if (then == null || then.sources != d.sources || then.destinations != d.destinations) {
@@ -198,8 +193,8 @@ class WebMidi : MidiSystem {
             return object : MidiSendPort {
                 override fun send(bytes: ByteArray, offset: Int, count: Int) =
                     midiSend(id, latin1(bytes, offset, count), 0.0)
-                // Web MIDI waits for itself, on performance.now()'s clock;
-                // System.nanoTime here counts from 1970, the engine's base.
+                // Web MIDI schedules the send itself on performance.now()'s
+                // clock. System.nanoTime here counts from 1970, the engine's base.
                 override fun send(bytes: ByteArray, offset: Int, count: Int, timestamp: Long) =
                     midiSend(id, latin1(bytes, offset, count), timestamp / 1_000_000.0 - pageOrigin())
                 override fun close() {}

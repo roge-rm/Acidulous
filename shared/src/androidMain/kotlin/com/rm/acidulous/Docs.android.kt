@@ -29,9 +29,9 @@ actual fun rememberOpenDocuments(onResult: (List<Doc>) -> Unit): (Array<String>)
 }
 
 /**
- * CreateDocument with its MIME type set per launch: the contract is held
- * apart from the launcher because the type is per export, and a launcher
- * will not give its contract back.
+ * CreateDocument with the MIME type set on each launch. The contract is kept
+ * separately from the launcher because the type changes per export and a
+ * launcher doesn't give its contract back.
  */
 private class CreateAnyDocument : ActivityResultContracts.CreateDocument("*/*") {
     var mime: String = "*/*"

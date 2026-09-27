@@ -1,10 +1,9 @@
 #!/bin/bash
-# An effect on the input is printed into the recording. See
+# Checks an effect on the input ends up in the recording. See
 # tools/inputfx_test.cpp.
 #
-# The only harness here that builds a whole `Engine`: the claim is about the
-# *order* of the input chain, the input bus and the recorder, and nothing
-# smaller than the engine can be wrong about an order.
+# Builds a whole Engine, because the test is about the order of the input
+# chain, the input bus and the recorder.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

@@ -9,11 +9,9 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 /**
- * What a finger's two hundred messages a second come out as.
- *
- * The interesting property is not how few points survive but whether the
- * curve still passes through where it was: a thinning that loses the shape
- * has recorded something else.
+ * What a finger's two hundred messages a second turn into. What matters is
+ * that the thinned curve still passes where the original did, not how few
+ * points are left.
  */
 class CurveBuilderTest {
 
@@ -45,8 +43,8 @@ class CurveBuilderTest {
 
     @Test
     fun `a corner is kept`() {
-        // Up for a hundred ticks, then flat: the turn is the whole shape, and
-        // the flat that follows is free, because a lane holds its last value.
+        // Up for a hundred ticks, then flat. The turn is the whole shape, and the
+        // flat part costs nothing because a lane holds its last value.
         val lane = build {
             for (t in 0..100) add(t, t / 100f)
             for (t in 101..200) add(t, 1f)
@@ -60,7 +58,7 @@ class CurveBuilderTest {
 
     @Test
     fun `a corner in the middle is kept`() {
-        // Up and back down: nothing about this can be one straight line.
+        // Up and back down, which can't be one straight line.
         val lane = build {
             for (t in 0..100) add(t, t / 100f)
             for (t in 101..200) add(t, (200 - t) / 100f)
@@ -80,14 +78,14 @@ class CurveBuilderTest {
         assertNotNull(lane)
         assertTrue("kept ${lane!!.points.size} of ${samples.size}", lane.points.size < samples.size / 4)
         val worst = samples.indices.maxOf { t -> abs(lane.valueAt(t) - samples[t]) }
-        // A whole tone of full-scale bend is 1/48 here; a fiftieth of that is
-        // under a cent, which is the point of thinning rather than resampling.
+        // A whole tone of full-scale bend is 1/48 here, so a fiftieth of that is
+        // under a cent. That's why the curve is thinned, not resampled.
         assertTrue("worst error $worst", worst < 0.01f)
     }
 
     @Test
     fun `the point cap is honoured`() {
-        // Noise: nothing a line predicts, so only the cap can stop it.
+        // Noise: no line predicts it, so only the cap can stop it.
         val rng = java.util.Random(1)
         val lane = CurveBuilder(neutral = 0f, limit = 64)
             .apply { repeat(4000) { add(it, rng.nextFloat()) } }.build()

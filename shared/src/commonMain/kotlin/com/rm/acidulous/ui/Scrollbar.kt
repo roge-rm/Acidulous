@@ -14,11 +14,10 @@ import androidx.compose.ui.unit.dp
 import com.rm.acidulous.ui.theme.Acid
 
 /**
- * A thin position indicator along the far edge of a scrolling container.
- * Always visible while there is something to scroll to, so a list that
- * continues off-screen says so. Draws in the container's own (un-scrolled)
- * frame, so it must sit *before* the scroll modifier in the chain - use the
- * two helpers below rather than composing it by hand.
+ * A thin position bar along the far edge of a scrolling container, shown
+ * whenever there's something to scroll to. It draws in the container's
+ * unscrolled frame, so it must come before the scroll modifier in the chain.
+ * Use the two helpers below instead of composing it by hand.
  */
 fun Modifier.scrollbar(state: ScrollState, vertical: Boolean = true, color: Color): Modifier =
     drawWithContent {
@@ -31,9 +30,9 @@ fun Modifier.scrollbar(state: ScrollState, vertical: Boolean = true, color: Colo
         val thickness = 3.dp.toPx()
         val inset = 1.dp.toPx()
         val minThumb = 20.dp.toPx()
-        // Floor then ceiling. coerceIn(minThumb, viewport) throws outright
-        // when a container is shorter than the thumb's own minimum, which a
-        // squeezed one can be - see the same fix in PianoRoll.
+        // Floor then ceiling. coerceIn(minThumb, viewport) throws when the
+        // container is shorter than the minimum thumb, which a squeezed one can
+        // be. PianoRoll has the same fix.
         val thumb = (viewport * viewport / content).coerceAtLeast(minThumb).coerceAtMost(viewport)
         val travel = viewport - thumb
         val pos = travel * state.value / max
@@ -42,8 +41,8 @@ fun Modifier.scrollbar(state: ScrollState, vertical: Boolean = true, color: Colo
         else drawRoundRect(color, Offset(pos, size.height - thickness - inset), Size(thumb, thickness), radius)
     }
 
-// Composable so the bar can read the theme: a Modifier factory cannot, and
-// a bar that stayed pale grey would be the one thing invisible on paper.
+// Composable so the bar can read the theme, which a Modifier factory can't.
+// Otherwise it would stay pale grey and vanish on the light theme.
 @Composable
 fun Modifier.verticalScrollWithBar(state: ScrollState): Modifier =
     scrollbar(state, vertical = true, color = Acid.colors.scrollbar).verticalScroll(state)

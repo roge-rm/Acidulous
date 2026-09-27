@@ -6,32 +6,26 @@
 #include <engine/dsp/LfoGen.h>
 #include <engine/machine/Machine.h>
 
-// Cipher - the vocoder.
+// Cipher, a vocoder.
 //
-// A vocoder listens to one sound through a bank of filters, measures how
-// loud each band is, and imposes that shape on another. Everything
-// interesting about one is what you are allowed to do between the measuring
-// and the imposing, and most vocoders allow nothing: band one drives band
-// one, and that is the instrument.
+// It measures how loud each band of one sound is through a filter bank and
+// applies that shape to another sound. The analysis and synthesis banks are
+// connected through a map:
 //
-// Here the two banks are wired through a map, and the map is the machine:
-//
-//   - **Remap.** Band order can be reversed, mirrored, folded, spread odd
-//     against even, or shuffled from a seed. Speech through a reversed bank
-//     is still speech-shaped and completely unintelligible, which is a sound
-//     nothing else makes.
-//   - **Shift and stretch.** The synthesis bank can be read at an offset or
-//     with its spacing warped, which moves formants without moving pitch.
-//   - **Freeze.** The measured shape can be held, so a vowel sustains for as
-//     long as you play, and morphed back and forth against the live one.
-//   - **Smear.** Each band's release is scaled across the bank, so the top
-//     falls away before the bottom and the spectrum leaves a trail.
-//   - **Swap.** What is coming in can be the carrier rather than the
-//     modulator, with the internal oscillators doing the talking.
-//   - **Track.** The modulator's own pitch can drive the carrier, so a voice
-//     plays the synth rather than the keyboard.
-//   - **Feedback.** The output can be fed back into the analysis, which is a
-//     vocoder listening to itself.
+//   - Remap: band order can be reversed, mirrored, folded, split odd/even or
+//     shuffled from a seed. Speech through a reversed bank keeps its rhythm
+//     but can't be understood.
+//   - Shift and stretch: the synthesis bank can be offset or have its
+//     spacing warped, moving formants without changing pitch.
+//   - Freeze: holds the measured shape so a vowel sustains, and morphs
+//     between it and the live one.
+//   - Smear: each band's release is scaled across the bank, so the top fades
+//     before the bottom.
+//   - Swap: the input can be the carrier instead of the modulator, with the
+//     internal oscillators as the modulator.
+//   - Track: the modulator's pitch can drive the carrier, so your voice
+//     plays the synth.
+//   - Feedback: the output can be fed back into the analysis.
 namespace acidulous::machine {
 
 class Cipher final : public Machine {
@@ -101,8 +95,8 @@ class Cipher final : public Machine {
         float phaseA = 0.0f, phaseB = 0.0f, phaseSub = 0.0f;
         float freq = 220.0f, target = 220.0f;
         dsp::Adsr amp;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
+        // Per-note expression (MPE). `bend` is in semitones and adds to the
+        // channel bend.
         float bend = 0.0f;
     };
     struct Band {
@@ -124,10 +118,8 @@ class Cipher final : public Machine {
     /**
      * One sample of one voice's carrier.
      *
-     * [glideK] and [detuneMul] arrive worked out rather than as the knobs
-     * they come from: the first was a divide and the second a `pow`, both of
-     * numbers that cannot change inside a block, and both were being paid for
-     * per voice per sample.
+     * [glideK] and [detuneMul] are worked out once a block by the caller, so
+     * the divide and the pow aren't done per voice per sample.
      */
     float carrierSample(Voice &v, float glideK, float detuneMul, float pitchScale, int32_t waveA,
                         int32_t waveB, float mix, float pw, float sub);
@@ -136,9 +128,9 @@ class Cipher final : public Machine {
     float invSampleRate = 1.0f / 48000.0f;
     Band bands[kMaxBands];
     int32_t bandCount = 16;
-    /** What the band coefficients were last solved for; see `render`. NaN never matches. */
+    /** What the band coefficients were last solved for, see `render`. NaN never matches. */
     float lastBandKey[9] = {NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN};
-    /** Blocks in a row with no voice, no input and nothing over -120 dB; see `render`. */
+    /** Blocks in a row with no voice, no input and nothing over -120 dB, see `render`. */
     int32_t quietBlocks = 0;
     bool asleep = false;
     float lastLow = -1.0f, lastHigh = -1.0f, lastQ = -1.0f;
@@ -150,16 +142,15 @@ class Cipher final : public Machine {
     float lfoValue[2] = {0.0f, 0.0f};
     float mod[DestCount] = {};
 
-    // What the modulator is doing, published for the matrix: how loud it is,
-    // where its energy sits, and what note it is nearest.
+    // What the modulator is doing, for the matrix: how loud it is, where its
+    // energy sits, and the nearest note.
     float loudness = 0.0f, brightness = 0.0f, trackedHz = 0.0f, trackedNote = 0.0f;
     float zeroPrev = 0.0f;
     int32_t zeroCount = 0, zeroWindow = 0;
     float sibilanceEnv = 0.0f;
     dsp::Svf sibilanceFilter;
-    // The sibilance noise gets the same high-pass the detector uses. White
-    // noise added flat is mostly bottom and middle, which is not what an "s"
-    // is and is enough to bury the vocoder it is supposed to be helping.
+    // The sibilance noise gets the same high-pass the detector uses. Plain
+    // white noise doesn't sound like an "s" and buries the vocoder.
     dsp::Svf sibilanceShaper;
     float feedbackSample = 0.0f;
     float feedbackLp = 0.0f;

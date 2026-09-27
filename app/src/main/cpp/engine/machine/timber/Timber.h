@@ -5,25 +5,16 @@
 #include <engine/machine/Machine.h>
 #include <engine/machine/timber/Pipe.h>
 
-// Timber - woodwinds, modelled.
+// Timber is the physically modelled woodwind. A single reed, double reed or
+// air jet, in a cylinder or a cone. A clarinet is a reed on a cylinder (odd
+// partials, overblows a twelfth), a saxophone is a reed on a cone (every
+// partial, overblows an octave) and a flute has no reed.
 //
-// Three ways of starting a column of air and two shapes to start it in: a
-// single reed, a double reed or a ribbon of air, in a cylinder or a cone.
-// That grid is the whole family - a clarinet is a cylinder with a reed and
-// therefore hollow and overblowing a twelfth, a saxophone is the same reed
-// on a cone and therefore has every partial, a flute is no reed at all.
-//
-// The twist is **the tube below your fingers**. Every other modelled
-// woodwind is one delay line set to the pitch, as though the instrument
-// stopped where the note does. Here the note is a hole part way along, and
-// the rest of the instrument is still there: still reflecting under its own
-// cutoff, still letting the top of the sound past into the bore below, and
-// still radiating out of it. Nobody sets that second tube - it falls out of
-// where the note is and how big the instrument is, which is why this
-// machine sounds different at the bottom of its range than at the top
-// without a single crossfade, why the same pitch fingered two ways is two
-// sounds, and why the cutoff those holes make is a control rather than an
-// EQ afterwards.
+// The note is a hole part way along the tube, and the rest of the instrument
+// below it is modelled too. Its length follows from the note and the size of
+// the instrument, so the sound changes across the range, the same pitch
+// fingered two ways sounds different, and the tone hole cutoff is a
+// control. See Pipe.h.
 namespace acidulous::machine {
 
 class Timber final : public Machine {
@@ -42,8 +33,8 @@ class Timber final : public Machine {
         Cutoff, Resonance, FilterType,
         Mono, Glide, BendRange, Octave_, Transpose, Fine, VelocityAmount,
         Drive, Volume, Pan,
-        // Appended: parameters are addressed by name, so a patch that has
-        // never heard of this one simply takes its default.
+        // Added later. Parameters are looked up by name, so older patches get
+        // the default.
         MpeTimbre,
         Count
     };
@@ -80,23 +71,21 @@ class Timber final : public Machine {
         dsp::Adsr amp;
         dsp::MultiFilter filter;
         float vibratoPhase = 0.0f, vibratoLeft = 0.0f;
-        bool lift = false;         // acted on after the next tune, which needs the note
-        // A note struck on a voice that is still sounding fades it out for
-        // two milliseconds first, then starts. See noteOn.
+        bool lift = false;         // applied after the next tune, which needs the note
+        // A note on a voice that's still sounding fades it out over 2 ms
+        // first, then starts. See noteOn.
         int32_t fadeLeft = 0;
         int pendingNote = -1;
         uint8_t pendingVel = 0;
         bool pendingOff = false;
-        float breathScale = 0.0f;  // the breath itself, which the envelope does not touch
+        float breathScale = 0.0f;  // the breath level, not affected by the envelope
         float tongueLeft = 0.0f;   // the tongue is still on the reed
         float keyLeft = 0.0f;      // a pad is still closing
         float keyState = 0.0f;
         int64_t age = 0;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
-        // `pressure` and `timbre` are -1 until this finger sends them, so
-        // a voice with none of its own falls back to the channel and a
-        // keyboard plays exactly as it did.
+        // Per-note expression (MPE). `bend` is in semitones, added to the
+        // channel bend. `pressure` and `timbre` are -1 until the note sends
+        // them, so a normal keyboard falls back to the channel values.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
     };
 

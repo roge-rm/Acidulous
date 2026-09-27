@@ -4,7 +4,7 @@
     <string name="slot_fx">FX%d</string>
     <string name="slot_mod">MOD%d</string>
     <string name="slot_none">none</string>
-    <!-- The slot's menu button: what is in it, or none. -->
+    <!-- The slot's menu button: what's in it, or none. -->
     <string name="slot_menu">%s ▾</string>
     <string name="slot_on">on</string>
     <string name="slot_bypass">bypass</string>

@@ -1,17 +1,11 @@
-// Does the metronome sound when it is asked to, and stay inside its budget?
+// Checks the metronome sounds when asked and stays inside its headroom.
 //
-// Two things are being checked, and the second is why M35 exists at all.
+// The click is mixed in after the limiter so it never ducks the music, which
+// means it could push the sum over full scale and clip. The limiter leaves
+// exactly the headroom the click needs, so peak + ceiling must be <= 1.
 //
-// The click is mixed in *after* the limiter, so that a metronome can never
-// duck the music. That left it free to push the sum past full scale and into
-// the master's hard clamp, and it did: the limiter aims at 0.95 and a click
-// at its default adds 0.30 on top. Every beat over a loud mix clipped, and
-// what you heard was the song distorting rather than the metronome. The fix
-// is for the limiter to give up exactly the headroom the click is about to
-// use, so the arithmetic below is the whole point: peak + ceiling <= 1.
-//
-// The first is plainer: a click asked for at an offset past the end of a
-// block used to be thrown away, which a fast subdivision does constantly.
+// Also checks a click triggered past the end of a block is carried over, not
+// dropped. Fast subdivisions do that all the time.
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -48,8 +42,8 @@ float peakOver(Click &c, int32_t blocks, float volume) {
 
 int main() {
     printf("--- it stays inside the budget it is given ---\n");
-    // Every voice, every accent, every sane volume: nothing may exceed the
-    // peak the master reserved room for, or the reservation is a fiction.
+    // Every voice, accent and sensible volume must stay under the peak the
+    // master reserves room for.
     {
         float worst = 0.0f;
         for (int32_t voice = 0; voice <= Click::Cowbell; ++voice) {
@@ -67,8 +61,8 @@ int main() {
         ok("loudest, as a fraction of the reserved peak", worst, 0.0, 1.0);
     }
     {
-        // And the reservation leaves the sum under full scale, which is the
-        // arithmetic the master relies on.
+        // The reserved room keeps the sum under full scale, which the master
+        // relies on.
         const float volume = 1.0f;
         const float ceiling = 0.95f - Click::peakFor(volume);
         ok("limiter ceiling + click peak", ceiling + Click::peakFor(volume), 0.0, 1.0);
@@ -80,7 +74,7 @@ int main() {
         Click c;
         c.prepare(48000);
         c.setVoice(Click::Blip);
-        c.trigger(Click::Bar, kBlock + 10); // lands in the block after next
+        c.trigger(Click::Bar, kBlock + 10); // lands in the next block
         std::vector<float> L(kBlock), R(kBlock);
         for (int32_t i = 0; i < kBlock; ++i) L[i] = R[i] = 0.0f;
         c.process(L.data(), R.data(), kBlock, 1.0f);
@@ -121,9 +115,8 @@ int main() {
         Click c;
         c.prepare(48000);
         c.trigger(Click::Bar, 0);
-        // Far enough out to mean it: the blip's envelope is a one-pole with
-        // a 25 ms time constant, so at 50 ms it is still at a tenth of its
-        // peak and "has it gone" asked there answers no, correctly.
+        // Checked well after the hit. The blip's envelope has a 25 ms time
+        // constant, so at 50 ms it's still at a tenth of its peak.
         peakOver(c, 200, 1.0f);           // ~270 ms in
         ok("decayed away", peakOver(c, 40, 1.0f), 0.0, 0.001);
     }

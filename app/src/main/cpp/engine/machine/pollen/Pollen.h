@@ -6,28 +6,19 @@
 #include <engine/core/Take.h>
 #include <vector>
 
-// Pollen - granular, both ways round.
+// Pollen is the granular synth. Each note plays a grain cloud over a buffer,
+// which is either a sample or a live recording of the phone's input. 96
+// grains across eight voices, stereo, four window shapes, jittered births
+// and pan per grain.
 //
-// A cloud per note over a buffer, after the GR-1; and that buffer can be
-// what is coming into the phone, after the Texture Lab. Mosaic has a grain
-// *mode* - eight readers a voice, a metronomic birth timer, one window, mono
-// reads. This is the instrument: ninety-six grains across eight voices,
-// stereo, four window shapes, births that jitter, pan per grain - and four
-// things that are ours:
-//
-//   - **Pollination.** A dying grain can seed a child near where it was,
-//     with its position, pitch, size and pan mutated, and that child can
-//     seed another, to a depth you set. A cloud grows from a seed rather
-//     than being a fixed statistical spray, and each generation is quieter,
-//     so it settles instead of piling up.
-//   - **Harmonic scatter.** The per-grain pitch random is quantised - to
-//     octaves, fifths, a triad, or any of the thirty-three scales the
-//     modifiers already know. A spray becomes a chord.
-//   - **Onset snap.** The buffer's transients are found (on a worker for a
-//     file, as it records for the live ring) and grains land on them by an
-//     amount. A slicer feeding the cloud.
-//   - **Self-seeding feedback.** The machine's own output goes back into the
-//     live ring, so the texture eats itself.
+//   - Pollination: a dying grain can seed a child near it with mutated
+//     position, pitch, size and pan, down to a set number of generations.
+//     Each generation is quieter so the cloud settles.
+//   - Harmonic scatter: the random per-grain pitch can be quantised to
+//     octaves, fifths, a triad or any of the 33 scales.
+//   - Onset snap: grains are pulled towards transients in the buffer (found
+//     on a worker for a file, or while recording for the live ring).
+//   - Feedback: the output goes back into the live ring.
 namespace acidulous::machine {
 
 class Pollen final : public Machine {
@@ -73,7 +64,7 @@ class Pollen final : public Machine {
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
 
-    // What the cloud is doing, for the harness and for the panel's readout.
+    // Grain counts for the test harness and the panel's readout.
     int64_t grainsBorn() const { return births; }
     int32_t grainsAlive() const {
         int32_t n = 0;
@@ -90,7 +81,7 @@ class Pollen final : public Machine {
         int32_t age = 0, length = 1;
         float gainL = 0.5f, gainR = 0.5f;
         float skew = 0.0f;
-        /** `2^(-2 skew)`, the power the window's time is raised to - fixed at birth. */
+        /** `2^(-2 skew)`, the power the window's time is raised to, fixed at birth. */
         float skewK = 1.0f;
         int32_t generation = 0;
     };
@@ -102,22 +93,18 @@ class Pollen final : public Machine {
         double playhead = 0.0;   // where this voice is reading, in frames
         double scanOffset = 0.0; // how far the scan has carried it from the base
         float timer = 0.0f;    // frames until the next grain
-        /** This voice's envelope right now, for the grains it owns to read.
-         *  The pool is global and rendered in one pass, so a grain cannot
-         *  see the voice loop's local - and it has to read the envelope
-         *  *now* rather than the value it was born under, or a long grain
-         *  outlives the release that was supposed to end it. */
+        /** This voice's current envelope value, read by its grains. Grains
+         *  follow it live so a long grain can't outlast the release. */
         float envNow = 0.0f;
         int32_t living = 0;    // grains currently belonging to this voice
         dsp::Adsr amp;
         int64_t age = 0;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
+        // Per-note bend (MPE) in semitones, added to the channel bend.
         float bend = 0.0f;
     };
 
     float paramOf(int32_t p) const { return params_.get(p); }
-    /** The target, not the smoothed value: for momentary and switch controls. */
+    /** The target rather than the smoothed value, for momentary and switch controls. */
     float rawOf(int32_t p) const;
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
 
@@ -148,7 +135,7 @@ class Pollen final : public Machine {
 
     std::vector<float> window[WindowCount];
     Grain grains[kGrains];
-    /** How many of them the cloud may use this block: all, or half under lean. */
+    /** How many grains the cloud may use this block: all, or half in lean mode. */
     int32_t grainPool = kGrains;
     Voice voices[kVoices];
     int32_t grainCursor = 0;
@@ -159,8 +146,8 @@ class Pollen final : public Machine {
     float feedbackL = 0.0f, feedbackR = 0.0f;
     dsp::MultiFilter filterL, filterR;
     float crushAcc = 0.0f, heldL = 0.0f, heldR = 0.0f;
-    // The feedback path's own state: a loop needs somewhere for DC to go
-    // other than into the ring, where it would sit until a reset.
+    // DC blocker state for the feedback path, so DC doesn't build up in the
+    // ring.
     float dcInL = 0.0f, dcOutL = 0.0f, dcInR = 0.0f, dcOutR = 0.0f;
     static constexpr uint32_t kRngSeed = 0x51ed270bu;
     uint32_t rng = kRngSeed;

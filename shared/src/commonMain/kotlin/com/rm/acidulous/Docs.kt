@@ -3,9 +3,9 @@ package com.rm.acidulous
 import androidx.compose.runtime.Composable
 
 /**
- * A file or folder the platform handed over from its own picker: a content
- * Uri on Android, a path on the desktop. Only the platform reads what is in
- * it - through [AppHost] - so the app never has to know which.
+ * A file or folder from the platform's own picker: a content Uri on Android,
+ * a path on desktop. Only the platform reads it (through [AppHost]), so the
+ * app doesn't need to know which.
  */
 class Doc(val handle: Any)
 
@@ -13,7 +13,7 @@ class Doc(val handle: Any)
 @Composable
 expect fun rememberOpenDocument(onResult: (Doc?) -> Unit): (Array<String>) -> Unit
 
-/** The same, choosing several. */
+/** The same, but picking several files. */
 @Composable
 expect fun rememberOpenDocuments(onResult: (List<Doc>) -> Unit): (Array<String>) -> Unit
 
@@ -29,10 +29,10 @@ expect fun rememberOpenFolder(onResult: (Doc?) -> Unit): () -> Unit
 @Composable
 expect fun KeepScreenOn(on: Boolean)
 
-/** [action] when the app goes to the background, where a phone may end it without warning. */
+/** Run [action] when the app goes to the background, where a phone may close it without warning. */
 @Composable
 expect fun OnBackground(action: () -> Unit)
 
-/** The platform's own back - Android's button or gesture - while [enabled]. */
+/** Handle the platform's back (Android's button or gesture) while [enabled]. */
 @Composable
 expect fun SystemBack(enabled: Boolean, onBack: () -> Unit)

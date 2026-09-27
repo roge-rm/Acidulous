@@ -21,22 +21,21 @@ import androidx.compose.ui.semantics.stateDescription
 /**
  * What TalkBack is told about the app's own controls.
  *
- * Almost everything here is drawn - knobs, faders, the grids, the keys - so
- * none of it describes itself the way a Material control does. These give a
- * drawn control one node that says what it is, what it is set to and what can
- * be done with it, and replace whatever its insides would have said: a knob's
- * label and value as two separate stops, or a glyph read out by its Unicode
- * name. Hold gestures, which TalkBack cannot reach by touch, come back as
- * named actions in its menu.
+ * Most controls here are drawn (knobs, faders, grids, keys), so they don't
+ * describe themselves like Material controls do. These give a drawn control
+ * one node that says what it is, its value and what you can do with it,
+ * replacing whatever its parts would say (a knob's label and value as two
+ * stops, or a glyph read by its Unicode name). Hold gestures, which TalkBack
+ * can't reach by touch, become named actions in its menu.
  */
 
-/** A named action for TalkBack's actions menu: what a hold does, spelled out. */
+/** A named action for TalkBack's actions menu, spelling out what a hold does. */
 internal fun action(label: String, run: () -> Unit) = CustomAccessibilityAction(label) { run(); true }
 
 /**
- * A control with a value on a range: a knob or a fader. TalkBack reads [name]
- * and [state], and swiping up or down steps [value] through 0..1 - in [steps]
- * steps when it is stepped, or in twentieths when it is not.
+ * A control with a value on a range, like a knob or a fader. TalkBack reads
+ * [name] and [state], and swiping up or down steps [value] through 0..1, in
+ * [steps] steps if it's stepped or in twentieths if not.
  */
 internal fun Modifier.adjustable(
     name: String,
@@ -55,7 +54,7 @@ internal fun Modifier.adjustable(
 
 /**
  * A drawn button, or anything tapped: [name] instead of its glyph, and what a
- * hold would have done as [actions].
+ * hold does as [actions].
  */
 internal fun Modifier.button(
     name: String,
@@ -63,9 +62,9 @@ internal fun Modifier.button(
     actions: List<CustomAccessibilityAction> = emptyList(),
     onClick: (() -> Unit)? = null,
     /**
-     * Whether the keyboard reaches it through this: yes when [onClick] is the
-     * only way it is pressed, no when a `clickable` beside it already is and a
-     * second would make two focus stops for one control.
+     * Whether the keyboard reaches it through this. Yes when [onClick] is the
+     * only way to press it, no when a `clickable` next to it already handles
+     * that, since two would make two focus stops for one control.
      */
     keyFocus: Boolean = onClick != null,
 ): Modifier = clearAndSetSemantics {
@@ -76,7 +75,7 @@ internal fun Modifier.button(
     if (actions.isNotEmpty()) customActions = actions
 }.keyPress(if (keyFocus) onClick else null, actions)
 
-/** One of a set, where one is chosen: a switch's cell, a tab. */
+/** One of a set where one is chosen, like a switch's cell or a tab. */
 internal fun Modifier.choice(name: String, chosen: Boolean, tab: Boolean = false, onClick: (() -> Unit)? = null): Modifier =
     clearAndSetSemantics {
         contentDescription = name
@@ -86,13 +85,12 @@ internal fun Modifier.choice(name: String, chosen: Boolean, tab: Boolean = false
     }.keyPress(onClick, emptyList())
 
 /**
- * Controls TalkBack reads as one run before it moves on: a switch's cells, a
- * card, a mixer strip. Without it TalkBack reads a screen in lines, straight
- * across whatever sits side by side - the first row of the theme switch, then
- * the first row of the size switch beside it, then the second row of each; a
- * strip's name, then the next strip's name.
+ * Controls TalkBack reads together before moving on: a switch's cells, a
+ * card, a mixer strip. Without it TalkBack reads the screen in lines straight
+ * across whatever is side by side, like one strip's name then the next
+ * strip's name.
  */
 internal fun Modifier.together(): Modifier = semantics { isTraversalGroup = true }
 
-/** Nothing TalkBack should stop on: a decoration, or a reading said elsewhere. */
+/** Nothing TalkBack should stop on: a decoration, or a value read elsewhere. */
 internal fun Modifier.silent(): Modifier = clearAndSetSemantics { }

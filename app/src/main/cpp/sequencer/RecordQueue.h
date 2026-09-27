@@ -3,19 +3,18 @@
 #include <cstddef>
 #include <cstdint>
 
-// Live MIDI, stamped with where the transport was when it arrived, on its way
-// from the audio thread to the document.
+// Live MIDI stamped with the transport position it arrived at, passed from
+// the audio thread to the recorder.
 //
 // Single producer (the audio thread, in PlayerEngine::pollMidiIn), single
 // consumer (the UI's recorder draining through JNI). Wait-free on both sides.
-// The audio thread never waits; if the UI falls 256 events behind, events drop
-// and the recorder will simply miss them - preferable to a stall.
+// If the UI falls behind and the queue fills, events are dropped rather than
+// stalling the audio thread.
 
 namespace acidulous::seq {
 
-// Two of the `cmd` values are not MIDI status bytes at all. They sit above
-// 0xf0, where a status byte would be a system message and never reaches the
-// recorder, so there is nothing for them to collide with.
+// Two cmd values that aren't MIDI. They use the system message range, which
+// never reaches the recorder, so they can't collide with real MIDI.
 constexpr uint8_t kRecParam = 0xf0;         // a knob: p1 is the Unit
 constexpr uint8_t kRecNoteExpression = 0xf1; // a finger: p1 is the note, p2 the Expr
 
@@ -33,11 +32,8 @@ struct RecordedEvent {
 
 class RecordQueue {
   public:
-    // Power of two. A thousand and not the original two hundred and fifty
-    // six because per-note expression arrives per finger rather than per
-    // gesture: five fingers bending, pressing and sliding at a controller's
-    // own rate is thousands of events a second, and the UI drains twelve
-    // times a second.
+    // Power of two. Per-note expression from five fingers can be thousands of
+    // events a second and the UI only drains twelve times a second.
     static constexpr size_t kSize = 1024;
 
     // Audio thread.

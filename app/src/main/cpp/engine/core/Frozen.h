@@ -4,47 +4,40 @@
 #include <memory>
 #include <vector>
 
-// A clip rendered to audio, and what a rack needs to play it back instead of
-// running its machine.
+// A clip rendered to audio, played back by a rack instead of running its
+// machine.
 //
-// Freezing is the answer to sixteen tracks on a phone: a rack playing a
-// frozen clip costs a memory read and the channel strip, where the same bar
-// through Filament or Nexus costs a tenth of a core. The render is made
-// off-thread, by the offline path in EngineHost, and handed over as an
-// object like every other variable-length thing in this engine.
+// A frozen clip costs a memory read and the channel strip, much cheaper than
+// running a heavy machine. It's rendered off the audio thread by the offline
+// path in EngineHost and handed over as an object.
 namespace acidulous {
 
 struct FrozenClip {
     std::vector<float> left, right;
-    /** Exactly the clip's length: playback loops on this, seamlessly. */
+    /** Exactly the clip's length. Playback loops on this. */
     int32_t frames = 0;
     /**
-     * The tempo it was rendered at. A song played at another tempo cannot
-     * use it - audio does not stretch - so the rack falls back to playing
-     * the machine live rather than playing the wrong thing.
+     * The tempo it was rendered at. At any other tempo the rack plays the
+     * machine live instead (it only stretches through a scene's tempo ramp).
      */
     float bpm = 120.0f;
-    /** The clip length in ticks, which is what the tempo above turns into frames. */
+    /** The clip length in ticks, turned into frames using the tempo above. */
     int32_t ticks = 0;
     /**
-     * Frames of ring-out stored *after* the clip, and never part of the loop.
+     * Frames of ring-out stored after the clip, not part of the loop.
      *
-     * A clip that ends has to go on sounding, the way the machine would have:
-     * the rack reads this region with a second cursor, once at every loop
-     * point - where it lands over the next pass's beginning - and again when
-     * the clip stops, where it is the whole of what you hear.
+     * The rack plays this with a second cursor at every loop point, over the
+     * start of the next pass, and again when the clip stops.
      *
-     * Nought means a freeze written before this existed. Those have their tail
-     * already folded into their head, so `frames` is the whole file and the
-     * rack plays them exactly as it always did.
+     * 0 means an older freeze with the tail already mixed into the start, so
+     * `frames` is the whole file.
      */
     int32_t tail = 0;
 };
 
 /**
- * One rack's frozen clips, by scene. Keyed by the scene's stable id rather
- * than its index: scenes get inserted, moved and deleted, and a freeze must
- * not end up attached to a different scene because one was dragged.
+ * One rack's frozen clips, by scene. Keyed by the scene's stable id, not its
+ * index, so moving or deleting scenes doesn't attach a freeze to the wrong one.
  */
 struct FrozenSet {
     struct Entry {

@@ -17,17 +17,13 @@
 #include <engine/machine/manual/Wheels.h>
 #include <engine/machine/nexus/NexusModule.h>
 
-// The palette.
+// The modules. Many of them reuse the other machines: the string is
+// Filament's waveguide, the wheels are Manual's generator, the cabinet is
+// Manual's rotary and the wavetable is Trinity's bank.
 //
-// Half of these are the app's own instruments with a jack on each side: the
-// string is Filament's waveguide, the wheels are Manual's generator, the
-// cabinet is Manual's rotary, the wavetable is Trinity's bank. That is the
-// point of the machine - everything Acidulous can do becomes something you
-// can patch into something else.
-//
-// Every knob is 0..1 and every module maps its own. That keeps the 128 slot
-// parameters identical and interchangeable, which is what lets a slot keep
-// its automation when the module in it changes.
+// Every knob is 0..1 and each module maps its own ranges. That keeps the 128
+// slot parameters interchangeable, so a slot keeps its automation when its
+// module changes.
 namespace acidulous::machine::nexus {
 using namespace dsp;
 
@@ -37,7 +33,7 @@ enum Type : int32_t {
     TFilter, TVca, TMix, TMath, TDelay, TRotary, TBands,
     TEnv, TLfo, TSnh, TSlew,
     TClock, TEuclid, TProb, TRand, TQuant, TLogic,
-    // Appended: a patch names its modules, so new ones go on the end.
+    // New modules go on the end.
     TTouch,
     TypeCount
 };
@@ -82,9 +78,9 @@ class VoiceMod final : public Module {
 };
 
 /**
- * A finger, for an MPE controller: this voice's own pressure - the track's,
- * if the finger sends none - and its slide. The voice module was the place,
- * but seven jacks down one box would sit on top of each other.
+ * Per-note MPE input: this voice's pressure (or the track's if the note
+ * sends none) and its slide. It's separate from the voice module to keep
+ * that one's jacks from crowding.
  */
 class TouchMod final : public Module {
   public:
@@ -125,19 +121,9 @@ class MacroMod final : public Module {
 };
 
 /**
- * The sink. Everything that reaches here is what you hear.
- *
- * It has two audio inputs, and the second one is why the cabinet works. The
- * rotary block, like Cipher's and like anything else in here that images a
- * sound, produces a left and a right - and with one input on the sink there
- * was nowhere to put the right. "Leslie String" was a rotating speaker heard
- * through one microphone: the Doppler survived, the swirl that is the whole
- * point of the thing did not, and the patch measured `mono +0.0` with the two
- * channels bit-identical.
- *
- * Leave `in R` empty and it mirrors `in`, so every mono patch is untouched;
- * wire it and `pan` becomes a balance across the pair rather than a placement
- * of one signal.
+ * The output. It has left and right inputs so stereo modules like the rotary
+ * cabinet stay stereo. If `in R` is empty it mirrors `in`, so mono patches
+ * work as they are. When both are wired, `pan` acts as a balance.
  */
 class OutMod final : public Module {
   public:
@@ -146,9 +132,8 @@ class OutMod final : public Module {
     void setKnobs(const float *k) override { level = lin(k[0], 0.0f, 2.0f); pan = lin(k[1], -1.0f, 1.0f); }
     void setConnected(uint32_t mask) override { stereo = (mask & (1u << 2)) != 0; }
     void step(const float *in, float *out, const Context &) override {
-        // A patch can be wired to feed itself, and should be: that is what a
-        // modular is for. What it must not do is reach the speakers as an
-        // infinity, so the sink saturates the way a real output stage does.
+        // Feedback patches can blow up, so the output saturates to keep them
+        // from reaching the speakers as huge values.
         float l = in[0] * level;
         float r = (stereo ? in[2] : in[0]) * level;
         if (l > 1.0f || l < -1.0f) l = std::tanh(l);
@@ -157,11 +142,8 @@ class OutMod final : public Module {
         if (!std::isfinite(r)) r = 0.0f;
         const float p = clampf(pan + in[1], -1.0f, 1.0f);
         const float angle = (p + 1.0f) * 0.25f * 3.14159265f;
-        // Equal power, and it has to stay equal power in both cases: a mono
-        // source is one signal placed in the image, a stereo source is two
-        // signals balanced against each other, and the same pair of gains
-        // says both. A patch that does not touch `pan` gets 0.7071 * 1.4142,
-        // which is unity, on each side either way.
+        // Equal power pan for mono, balance for stereo, using the same gains.
+        // At centre each side gets 0.7071 * 1.4142, which is unity.
         out[0] = l * std::cos(angle) * 1.4142f;
         out[1] = r * std::sin(angle) * 1.4142f;
         last = 0.5f * (l + r);
@@ -431,7 +413,7 @@ class GrainMod final : public Module {
     float pitch = 0.0f, level = 1.0f;
 };
 
-/** What is coming in from outside, as a block. */
+/** The external audio input, as a module. */
 class AudioInMod final : public Module {
   public:
     void prepare(float, int32_t) override {}
@@ -548,8 +530,8 @@ class DelayMod final : public Module {
         const float wet = line.read(t);
         lp += (wet - lp) * tone;
         if (!std::isfinite(lp)) lp = 0.0f;
-        // Feedback above unity is allowed - it is a useful sound - but the
-        // line saturates rather than growing without bound.
+        // Feedback above unity is allowed, but the line saturates so it
+        // doesn't grow without limit.
         line.write(clampf(std::tanh(in[0] + lp * feedback), -2.0f, 2.0f));
         out[0] = in[0] * (1.0f - mix) + lp * mix;
     }
@@ -559,7 +541,7 @@ class DelayMod final : public Module {
     float rate = 48000.0f, timeSec = 0.25f, feedback = 0.3f, tone = 0.5f, mix = 0.5f, lp = 0.0f;
 };
 
-/** Manual's cabinet, for anything at all. */
+/** Manual's rotary cabinet. */
 class RotaryMod final : public Module {
   public:
     void prepare(float sr, int32_t) override { rotary.prepare(sr); }
@@ -588,14 +570,8 @@ class BandsMod final : public Module {
   public:
     static constexpr int kBands = 16;
     /**
-     * What sixteen correctly-scaled bands need to reach a usable level.
-     *
-     * Normalising the band-passes cost eleven decibels, and that is the
-     * *right* eleven decibels to lose - the old level came from sixteen
-     * filters each running three and a half times too loud, so the `width`
-     * knob was a volume control. Cipher carries a makeup constant for exactly
-     * this reason and so does this, rather than asking every patch that uses
-     * the block to find the level again with its own volume.
+     * Makeup gain for the sixteen normalised band passes, so the block comes
+     * out at a usable level. Cipher has the same constant.
      */
     static constexpr float kMakeup = 8.0f;
     void prepare(float sr, int32_t) override {
@@ -612,15 +588,9 @@ class BandsMod final : public Module {
         for (int i = 0; i < kBands; ++i) { analysis[i].reset(); synthesis[i].reset(); env[i] = 0.0f; }
     }
     /**
-     * The thirty-two filters are tuned here, once a block, and not per sample.
-     *
-     * Nothing in this loop depends on the signal: the band centres are fixed
-     * at `prepare`, and the resonance, the shift and the follower's
-     * coefficient come from knobs. Tuning them from inside `step()` meant
-     * thirty-two tangents, a power and an exponential *every sample* - and
-     * "Talking" rendered at three times realtime on a desktop, which is under
-     * one on a phone. It is the same mistake as the string next door, a
-     * sixteenth as often but sixteen times over.
+     * The 32 filters are tuned here once a block instead of in `step()`,
+     * since nothing depends on the signal. Doing it per sample was far too
+     * slow on a phone.
      */
     void setKnobs(const float *k) override {
         shift = lin(k[0], -12.0f, 12.0f);
@@ -633,10 +603,8 @@ class BandsMod final : public Module {
         for (int i = 0; i < kBands; ++i) {
             analysis[i].set(centre[i], res);
             synthesis[i].set(clampf(centre[i] * ratio, 20.0f, rate * 0.45f), res);
-            // A band-pass out of this filter comes back with its own Q as a
-            // gain, so sixteen of them summed is a resonance knob that sets
-            // the level. `width` should change what the thing sounds like and
-            // nothing else - the same correction Cipher needed.
+            // The band pass output is scaled by Q, so this normalises it and
+            // `width` doesn't change the level. Same as Cipher.
             aNorm[i] = analysis[i].bandNorm();
             sNorm[i] = synthesis[i].bandNorm();
         }
@@ -775,8 +743,8 @@ class EuclidMod final : public Module {
         if (high && !wasHigh) step_ = (step_ + 1) % steps;
         if (in[1] > 0.5f) step_ = 0;
         wasHigh = high;
-        // Bjorklund, evaluated directly: a step is on when the running count
-        // of pulses crosses an integer, which is the same pattern.
+        // Euclidean rhythm, worked out directly: a step is on when the running
+        // count of pulses crosses an integer. Same pattern as Bjorklund.
         const int idx = (step_ + rotate) % steps;
         const int p = pulses > steps ? steps : pulses;
         const bool on = p > 0 && ((idx * p) % steps) < p;
@@ -890,7 +858,7 @@ class LogicMod final : public Module {
     bool flip = false, wasA = false;
 };
 
-/** A slot whose type this build does not know: holds its place, passes nothing. */
+/** A module type this build doesn't know. Holds its place and outputs nothing. */
 class BlankMod final : public Module {
   public:
     void prepare(float, int32_t) override {}

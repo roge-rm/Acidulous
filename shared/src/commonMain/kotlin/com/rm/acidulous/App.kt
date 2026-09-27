@@ -80,31 +80,27 @@ import kotlinx.coroutines.withContext
 
 /**
  * Everything above [App]: the interface scale, the theme, the Scaffold and
- * the splash. The platform draws this and nothing else; [onLightTheme] is
- * told whether the theme is light, for whatever it draws around the app (on
+ * the splash. This is all the platform draws. [onLightTheme] is told whether
+ * the theme is light, for whatever the platform draws around the app (on
  * Android, the colour of the status and navigation bar icons).
  */
 @Composable
 fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
-    // **One density, above everything.**
+    // One density above everything.
     //
-    // The interface scale is a multiplier on the density rather than
-    // on each of the sizes: every `dp` and every `sp` in the tree
-    // resolves through this one `Density`, so the whole app grows
-    // together and no size has to learn about the setting. Composition
-    // locals reach into a `Dialog`'s subcomposition too, so the windows
-    // come with it.
+    // The interface scale multiplies the density rather than each size, so
+    // every `dp` and `sp` in the tree goes through this one `Density` and the
+    // whole app scales together. Composition locals reach into a `Dialog`'s
+    // subcomposition too, so windows scale with it.
     //
-    // Outside `AcidulousTheme` because the splash and the Scaffold's
-    // own insets are inside it and both are sizes somebody asked to be
-    // bigger. Read from `base` every time rather than from
-    // `LocalDensity` after the fact, or the multiplier would compound
-    // on itself on every recomposition.
+    // Outside `AcidulousTheme` because the splash and the Scaffold's insets
+    // are inside it and should scale too. Always computed from `base` rather
+    // than from `LocalDensity`, or the multiplier would compound on every
+    // recomposition.
     //
-    // What the app then believes is that it has *less* screen - at 1.3
-    // a Pixel 5 reports 302 x 655 dp instead of 393 x 851 - which is
-    // the shape M43 already made every screen survive at 393 dp of
-    // height. ui/UiScale.kt caps the wish against what there is.
+    // At a bigger scale the app just sees less screen (at 1.3 a Pixel 5
+    // reports 302 x 655 dp instead of 393 x 851), which every screen already
+    // handles. ui/UiScale.kt limits the scale to what the screen allows.
     val base = androidx.compose.ui.platform.LocalDensity.current
     // The window's size, whatever the platform calls its window.
     val windowPx = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
@@ -117,37 +113,33 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
         androidx.compose.ui.platform.LocalDensity provides
             androidx.compose.ui.unit.Density(base.density * scale, base.fontScale),
         com.rm.acidulous.ui.LocalUiScale provides scale,
-        // The unscaled one travels too, because every window drawn
-        // over this one is handed a fresh density by Compose and has
-        // to put the scale back itself - see ui/UiScale.kt.
+        // The unscaled density goes along too, because Compose gives every
+        // window drawn over this one a fresh density and it has to reapply
+        // the scale itself. See ui/UiScale.kt.
         com.rm.acidulous.ui.LocalBaseDensity provides base,
     ) {
     AcidulousTheme(com.rm.acidulous.ui.UiPrefs.theme) {
-        // What the platform's own bars need to know about the theme.
+        // For the platform's own bars.
         val light = !com.rm.acidulous.ui.theme.Acid.colors.dark
         androidx.compose.runtime.LaunchedEffect(light) { onLightTheme(light) }
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = com.rm.acidulous.ui.theme.Acid.colors.bg,
-            // The bars are hidden, so their insets are not space this
-            // app has to give up. A camera cutout is - but only the
-            // sides and the bottom are taken here, because the top
-            // strip is where each screen's header lays itself out
-            // around the hole rather than below it (see ui/Cutout.kt).
+            // The bars are hidden, so their insets aren't space the app has
+            // to give up. A camera cutout is, but only the sides and bottom
+            // are taken here, because each screen's header lays itself out
+            // around the hole in the top strip (see ui/Cutout.kt).
             contentWindowInsets = com.rm.acidulous.ui.AppContentInsets,
         ) { innerPadding ->
             App(Modifier.padding(innerPadding))
         }
-        // **Over the Scaffold, not inside it.** The splash is a
-        // screen rather than a window - see ui/SplashScreen.kt for
-        // why the system's own is made to show nothing - and a
-        // Scaffold's content slot takes one child, so a second one
-        // handed to it is measured and then not drawn. In a Box of
-        // its own it is plainly on top.
+        // Over the Scaffold, not inside it. The splash is a screen rather
+        // than a window (see ui/SplashScreen.kt for why the system's own
+        // shows nothing), and a Scaffold's content slot only draws one
+        // child. In a Box of its own it's on top.
         //
-        // The app is composed underneath it the whole time, so the
-        // three quarters of a second is spent on the engine starting
-        // rather than instead of it.
+        // The app is composed underneath the whole time, so the engine
+        // starts during the splash rather than after it.
         var splashing by androidx.compose.runtime.remember {
             androidx.compose.runtime.mutableStateOf(true)
         }
@@ -162,24 +154,22 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
 
 private const val TAG = "Acidulous.UI"
 
-/** Where the app remembers that the demo has been opened once: see the start of [App]. */
+/** Remembers that the demo has been opened once: see the start of [App]. */
 private const val FIRST_RUN = "first_run"
 private const val DEMO_OPENED = "demo_opened"
 
 /**
- * What the file picker offers when it is asked for audio.
+ * What the file picker offers when asked for audio.
  *
- * A match-anything wildcard was in this list - and inside this comment, until
- * it closed it - and is why the picker showed every file on the device, which
- * is not a chooser, it is a haystack. What is left is the four formats the app
- * can actually read, named specifically as well as by family because
- * providers disagree - `audio/wav` and `audio/x-wav` and `audio/vnd.wave` are
- * all the same file to three different pieces of Android.
+ * Only the four formats the app can read, with no match-anything wildcard
+ * (which made the picker show every file on the device). Each is named
+ * specifically as well as by family, because providers disagree: `audio/wav`,
+ * `audio/x-wav` and `audio/vnd.wave` are all the same file to different parts
+ * of Android.
  *
- * It is a *hint* and not a gate: a provider that reports nothing useful for a
- * file will hide it, and one that reports the wrong type will offer something
- * we cannot read. The gate is the decoder, which looks at the bytes - see
- * `sniff`. This only stops the picker wasting the player's time.
+ * It's a hint, not a check. A provider that reports nothing useful hides the
+ * file, and one that reports the wrong type offers something we can't read.
+ * The real check is the decoder, which looks at the bytes (see `sniff`).
  */
 private val AUDIO_TYPES = arrayOf(
     "audio/*",
@@ -192,15 +182,15 @@ private val AUDIO_TYPES = arrayOf(
 private sealed class Screen {
     object Main : Screen()
     data class Edit(val track: Int, val sceneId: String) : Screen()
-    // Nexus's graph needs a screen; a node canvas cannot live in the strip
-    // under the piano roll.
+    // Nexus's graph needs a whole screen. A node canvas can't fit in the
+    // strip under the piano roll.
     data class Patch(val track: Int, val sceneId: String) : Screen()
 
     companion object {
         /**
          * The activity keeps itself across a rotation (see the manifest), so
-         * this only runs if Android really did recreate us - process death,
-         * "don't keep activities". Either way the screen comes back.
+         * this only runs if Android really recreated it (process death, or
+         * "don't keep activities"). Either way the screen comes back.
          */
         val Saver: Saver<MutableState<Screen>, Any> = listSaver<MutableState<Screen>, Any>(
             save = { state ->
@@ -225,18 +215,18 @@ private sealed class Screen {
 
 @Composable
 fun App(modifier: Modifier = Modifier) {
-    // Read through this rather than the context, so words follow a change of language.
+    // Read through this rather than the context, so text follows a change of language.
     val resources = AppStrings
 
-    // Referential, not structural: Song equality is by value (rev is outside
-    // equals on purpose), so a value-equal load or edit would otherwise be a
-    // silently dropped write.
+    // Referential, not structural: Song equality is by value (rev is left out
+    // of equals on purpose), so a value-equal load or edit would otherwise be
+    // silently dropped.
     var song by remember { mutableStateOf(DemoSong.build(), referentialEqualityPolicy()) }
     var lastPushMs by remember { mutableStateOf(0L) }
     val editor = remember {
         SongEditor(song) { edited, pushNow ->
             song = edited
-            // Taps and gesture ends push at once; mid-gesture updates throttle to ~15 Hz.
+    // Taps and gesture ends push at once. Mid-gesture updates throttle to ~15 Hz.
             val now = System.nanoTime() / 1_000_000L
             if (pushNow || now - lastPushMs >= 66) {
                 EngineSync.sync(edited)
@@ -245,24 +235,23 @@ fun App(modifier: Modifier = Modifier) {
         }
     }
     val recorder = remember { Recorder() }
-    // Record quantise, as the tempo window's record card sets it.
+    // Record quantise, as set in the tempo window's record card.
     androidx.compose.runtime.SideEffect {
         recorder.quantise = com.rm.acidulous.ui.UiPrefs.recordQuantise
         recorder.strength = com.rm.acidulous.ui.UiPrefs.recordStrength / 100f
     }
     var screen by rememberSaveable(saver = Screen.Saver) { mutableStateOf<Screen>(Screen.Main) }
-    // Hardware notes go where the last opened clip was, which is the track
-    // the player is working on whether or not its editor is still in front.
+    // Hardware notes go to the track of the last opened clip, which is the
+    // one being worked on whether or not its editor is still open.
     var midiTrack by rememberSaveable { mutableStateOf(0) }
     LaunchedEffect(screen) {
         (screen as? Screen.Edit)?.let { midiTrack = it.track }
         com.rm.acidulous.midi.MidiHub.target = { midiTrack }
         com.rm.acidulous.ui.KeyHub.target = { midiTrack }
     }
-    // An Exquis shows the scale of the track it plays: the one the roll would
-    // show for that track - its own Scale modifier, or failing that the
-    // song's key. Which track is the routing's call, the same rule its notes
-    // follow, so a pinned track or a channel's own shows that one's.
+    // An Exquis shows the scale of the track it plays, the same one the roll
+    // would show: its own Scale modifier, or else the song's key. The routing
+    // decides which track, the same rule its notes follow.
     val exquisTrack = song.tracks.getOrNull(com.rm.acidulous.midi.MidiHub.trackForChannel(com.rm.acidulous.midi.MidiHub.exquisChannel))
     val exquisScale = exquisTrack?.let {
         com.rm.acidulous.model.Scales.rootFor(song, it) to com.rm.acidulous.model.Scales.activeFor(song, it)
@@ -270,7 +259,7 @@ fun App(modifier: Modifier = Modifier) {
     LaunchedEffect(exquisScale) {
         com.rm.acidulous.midi.MidiHub.showScale(exquisScale?.first, exquisScale?.second)
     }
-    // Typed notes go where hardware notes do; on a drum machine they are its
+    // Typed notes go where hardware notes do. On a drum machine they're its
     // pads in order rather than a scale.
     androidx.compose.runtime.SideEffect {
         com.rm.acidulous.ui.KeyHub.drumVoices = { rack ->
@@ -281,13 +270,13 @@ fun App(modifier: Modifier = Modifier) {
             }
         }
     }
-    // The keys every screen answers to the same way.
+    // The keys every screen handles the same way.
     com.rm.acidulous.ui.KeyScope(
         com.rm.acidulous.ui.KeyAction.PlayMode to { com.rm.acidulous.ui.KeyHub.togglePlayMode() },
         com.rm.acidulous.ui.KeyAction.Panic to { com.rm.acidulous.ui.panicEverything() },
         com.rm.acidulous.ui.KeyAction.KeysHelp to { com.rm.acidulous.ui.KeyHub.showingKeys = true },
-        // No Back here: at the song screen back leaves the app, and Esc is
-        // pressed too casually for that. The editor says what back means.
+        // No Back here: on the song screen back leaves the app, and Esc is
+        // pressed too casually for that. The editor decides what back does.
     )
     com.rm.acidulous.ui.KeyHub.actionMenu?.let { actions ->
         com.rm.acidulous.ui.KeyActionMenu(actions, onDismiss = { com.rm.acidulous.ui.KeyHub.actionMenu = null })
@@ -296,8 +285,8 @@ fun App(modifier: Modifier = Modifier) {
         com.rm.acidulous.ui.KeysOverlay(onDismiss = { com.rm.acidulous.ui.KeyHub.showingKeys = false })
     }
 
-    // Importing a sample: the system picker, a copy into user/samples/, and the
-    // pad's setting pointing at it. The engine loads it on the next sync.
+    // Importing a sample: the system picker, a copy into user/samples/, and
+    // the pad's setting pointing at it. The engine loads it on the next sync.
     // (track, settings key): Forage keys a sample per pad, Pollen has one.
     val scope = rememberCoroutineScope()
 
@@ -315,8 +304,8 @@ fun App(modifier: Modifier = Modifier) {
         return dest
     }
 
-    // Something the player did that did not work. The engine reports decode
-    // failures from a worker, so this hops to the main thread before it
+    // Something the user did that didn't work. The engine reports decode
+    // failures from a worker, so this switches to the main thread before it
     // touches Compose state.
     var problem by remember { mutableStateOf<String?>(null) }
     /** The file the microphone is writing to while a Bias lane is armed. */
@@ -345,25 +334,22 @@ fun App(modifier: Modifier = Modifier) {
     /**
      * What an import is doing, while it does it.
      *
-     * Decoding a long mp3 takes seconds, all of them off the main thread and
-     * none of them visible - Dan, on a long file: "it seems like nothing is
-     * happening". [done] and [total] are for a kit, which is thirteen of
-     * these one after another.
+     * Decoding a long mp3 takes seconds off the main thread, so this shows
+     * that something is happening. [done] and [total] are for a kit, which is
+     * thirteen of these in a row.
      */
     var converting by remember { mutableStateOf<Triple<String, Int, Int>?>(null) }
     converting?.let { (what, done, total) ->
         com.rm.acidulous.ui.PlainDialog(
             title = if (total > 1) stringResource(Res.string.app_converting_of, done, total) else stringResource(Res.string.app_converting),
-            onDismiss = {},           // it finishes or it fails; there is nothing to cancel
+            onDismiss = {},           // it finishes or fails; there is nothing to cancel
             dismissLabel = "",
             spacing = 10.dp,
         ) {
             Text(what, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
-            // Determinate for a kit, because files done out of files asked
-            // for is real progress. Indeterminate for one file, because it
-            // is one blocking decode and a bar that invented a position
-            // would be a bar that lies - all this one has to say is that
-            // something is still happening.
+            // A real progress bar for a kit, since files done out of files
+            // asked for is real progress. Indeterminate for one file, since
+            // it's one blocking decode with no position to show.
             if (total > 1) {
                 androidx.compose.material3.LinearProgressIndicator(
                     progress = { done.toFloat() / total.toFloat() },
@@ -378,13 +364,13 @@ fun App(modifier: Modifier = Modifier) {
     /**
      * One pad's sample, open over whatever is underneath.
      *
-     * A window rather than a screen so that trimming a sound does not take
-     * the editor away while you do it - see SampleDialog. Holds the track as
-     * well as the pad, because the track it was opened from is the one it
-     * belongs to even if the selection moves.
+     * A window rather than a screen so trimming a sound doesn't take the
+     * editor away (see SampleDialog). Holds the track as well as the pad,
+     * because it belongs to the track it was opened from even if the
+     * selection moves.
      */
     var sampleEdit by remember { mutableStateOf<Pair<Int, Int>?>(null) }
-    // A track deleted under an open window would leave it addressing nothing.
+    // A track deleted under an open window would leave it pointing at nothing.
     LaunchedEffect(song.tracks.size) {
         if (sampleEdit?.first?.let { it !in song.tracks.indices } == true) sampleEdit = null
     }
@@ -398,7 +384,7 @@ fun App(modifier: Modifier = Modifier) {
         )
     }
 
-    /** Say so when only the front of a long file arrived. */
+    /** Tell the user when only the start of a long file was imported. */
     fun noteTruncated(names: List<String>, seconds: Int = NativeEngine.PAD_SECONDS) {
         if (names.isEmpty()) return
         val long = if (seconds >= 120) AppStrings.getQuantityString(Res.plurals.app_minutes, seconds / 60, seconds / 60)
@@ -407,13 +393,12 @@ fun App(modifier: Modifier = Modifier) {
     }
 
     /**
-     * A file the player chose, copied in and made readable.
+     * A file the user chose, copied in and made readable.
      *
-     * Everything imported lands in `samples/` as a WAV whatever it arrived
-     * as, so nothing past this point has to know that four formats exist.
-     * Decoding a thirty-second FLAC is not instant, so it happens off the
-     * main thread and [then] is called back on it with the path to store -
-     * or not called at all, after saying why.
+     * Everything imported lands in `samples/` as a WAV whatever it was, so
+     * nothing after this needs to know about the other formats. Decoding
+     * takes a while, so it happens off the main thread and [then] is called
+     * back on it with the path to store, or not at all after saying why.
      */
     fun bringIn(uri: Doc, fallback: String, maxSeconds: Int = NativeEngine.PAD_SECONDS,
                 then: (String) -> Unit) {
@@ -428,8 +413,8 @@ fun App(modifier: Modifier = Modifier) {
                     }
                 }
             } finally {
-                // Whatever happened, the window goes: a modal that outlives
-                // its work is worse than no window at all.
+                // Whatever happened, close the window. A modal that outlives
+                // its work is worse than none.
                 converting = null
             }
             result
@@ -446,20 +431,15 @@ fun App(modifier: Modifier = Modifier) {
         val (track, key) = importTarget ?: return@rememberOpenDocument
         importTarget = null
         if (uri == null) return@rememberOpenDocument
-        // A slice source is one file for the whole machine rather than one of
-        // thirteen, so it is allowed to be a whole track. See SLICE_SECONDS.
+        // A slice source is one file for the whole machine, so it may be a
+        // whole track. See SLICE_SECONDS.
         val seconds = if (key == "slice_sample") NativeEngine.SLICE_SECONDS else NativeEngine.PAD_SECONDS
         bringIn(uri, "sample.wav", seconds) { rel -> editor.edit(track) { t -> t.withSetting(key, rel) } }
     }
 
-    // A whole kit in one trip.
-    //
-    // Building a Forage kit used to be thirteen round trips through the system
-    // picker, because this launcher took one document and the pads are filled
-    // one at a time. Mosaic's zones had been multi-select from the start; this
-    // is the same contract, filling pads from the one that is selected
-    // onwards, in the order the file names sort - which is the order a kit
-    // folder is almost always numbered in.
+    // A whole kit in one go: fills pads from the selected one onwards, in the
+    // order the file names sort, which is how kit folders are usually
+    // numbered. Works like Mosaic's multi-select zones.
     var kitTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val kitPicker = rememberOpenDocuments { uris ->
         val (track, firstPad) = kitTarget ?: return@rememberOpenDocuments
@@ -477,8 +457,8 @@ fun App(modifier: Modifier = Modifier) {
                 named.forEachIndexed { i, (display, uri) ->
                     val pad = firstPad + i
                     if (pad > 12) return@forEachIndexed
-                    // Set before each file rather than once, so a kit of
-                    // thirteen counts up instead of sitting on "1 of 13".
+                    // Set before each file, so a kit counts up instead of
+                    // sitting on "1 of 13".
                     converting = Triple(display, i + 1, wanted)
                     withContext(Dispatchers.IO) {
                         runCatching {
@@ -494,8 +474,8 @@ fun App(modifier: Modifier = Modifier) {
             } finally {
                 converting = null
             }
-            // One edit for the whole kit, so thirteen samples are one undo and
-            // one autosave rather than thirteen of each.
+            // One edit for the whole kit, so thirteen samples are one undo
+            // and one autosave.
             if (assigned.isNotEmpty()) {
                 editor.edit(track) { t ->
                     var next = t
@@ -503,8 +483,8 @@ fun App(modifier: Modifier = Modifier) {
                     next
                 }
             }
-            // A kit is loaded in one go, so one file being unreadable must not
-            // lose the other twelve - the rest land and this says which did not.
+            // Loading a kit shouldn't lose twelve files because one can't be
+            // read. The rest load and this says which one didn't.
             if (refused.isNotEmpty()) {
                 problem = AppStrings.getString(Res.string.app_files_refused, refused.joinToString(AppStrings.getString(Res.string.list_separator)))
             } else {
@@ -543,8 +523,8 @@ fun App(modifier: Modifier = Modifier) {
         val track = mapTarget ?: return@rememberOpenDocuments
         mapTarget = null
         if (uris.isEmpty()) return@rememberOpenDocuments
-        // Undispatched: on the phone this runs through to the end here and
-        // now, as it always has; in a browser it waits on the imports.
+        // Undispatched: on Android this runs straight through right here. In
+        // a browser it waits on the imports.
         scope.launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) { runCatching {
             val existing = com.rm.acidulous.model.Zones.decode(song.tracks[track].machine.settings["zones"])
             val added = uris.mapNotNull { uri ->
@@ -562,13 +542,13 @@ fun App(modifier: Modifier = Modifier) {
 
     // Where the playhead is, which is also what "this scene" means.
     var position by remember { mutableStateOf(Position(0, 0, 0)) }
-    // Beats left of a count-in, or 0 when the song is simply running.
+    // Beats left of a count-in, or 0 when not counting in.
     var countInBeats by remember { mutableStateOf(0) }
 
-    // Exporting: the dialog chooses what and as what, the system picker gives
-    // somewhere to put it, and the engine renders into the cache first. It
-    // renders to a path and SAF only hands out a stream, so the copy at the
-    // end is not a detour - it is the only way across.
+    // Exporting: the dialog chooses what and in which format, the system
+    // picker gives somewhere to put it, and the engine renders into the cache
+    // first. The engine renders to a path and SAF only gives a stream, so
+    // the copy at the end is the only way across.
     var exportState by remember { mutableStateOf<com.rm.acidulous.ui.ExportState?>(null) }
     var exportAsk by remember { mutableStateOf(false) }
     var exportWanted by remember { mutableStateOf(com.rm.acidulous.ui.ExportOptions()) }
@@ -576,12 +556,14 @@ fun App(modifier: Modifier = Modifier) {
     fun safeName(text: String): String =
         text.replace(Regex("[^A-Za-z0-9 _-]"), "_").trim().ifEmpty { "export" }
 
-    /** One pass of a scene, in seconds: its own length, repeats aside. */
-    // A scene export is its first pass, which is its last only when it
-    // plays once - and only the last pass carries a ramp.
+    /**
+     * One pass of a scene, in seconds, ignoring repeats. A scene export is
+     * its first pass, which is also its last only if it plays once, and only
+     * the last pass has the tempo ramp.
+     */
     fun sceneSeconds(scene: com.rm.acidulous.model.Scene): Float = song.passSeconds(scene, last = scene.repeat <= 1)
 
-    /** What the export will produce, before it produces it, for the progress bar. */
+    /** How long the export will be, for the progress bar. */
     fun expectedSeconds(options: com.rm.acidulous.ui.ExportOptions): Float {
         if (!options.format.audio) return 0.1f
         val body = if (options.what == com.rm.acidulous.ui.ExportWhat.Scene) {
@@ -593,7 +575,7 @@ fun App(modifier: Modifier = Modifier) {
     }
 
     // Renders or writes into the cache. Returns the files in the order they
-    // should be delivered, and an error if it did not get that far.
+    // should be delivered, and an error if it didn't get that far.
     suspend fun produceExport(options: com.rm.acidulous.ui.ExportOptions): Pair<List<File>, String> =
         withContext(Dispatchers.IO) {
             val base = safeName(song.name)
@@ -604,13 +586,13 @@ fun App(modifier: Modifier = Modifier) {
             } else {
                 0f
             }
-            // A normalised export measures first: the same render into no file,
-            // then a gain that brings it to the target - but never past a true
-            // peak of -1 dBTP, which is what a lossy encoder needs above it.
+            // A normalised export measures first: the same render into no
+            // file, then a gain to reach the target, but never past a true
+            // peak of -1 dBTP, which lossy encoders need as headroom.
             var gainDb = 0f
             if (options.normalise && options.format.audio) {
-                // See there: a render starts from the document. On the main
-                // thread, the only one that may send parameters.
+                // A render starts from the song (see pushForRender). Runs on
+                // the main thread, the only one that may send parameters.
                 withContext(Dispatchers.Main) { EngineSync.pushForRender(song) }
                 val m = NativeEngine.measureLoudness(options.tailSeconds, scene, limit)
                     ?: return@withContext emptyList<File>() to AppStrings.getString(Res.string.app_export_unmeasured)
@@ -618,7 +600,7 @@ fun App(modifier: Modifier = Modifier) {
                 Log.i(TAG, "normalise: measured %.1f LUFS, %.1f dBTP; gain %.1f dB".format(m[0], m[1], gainDb))
             }
             NativeEngine.setRenderGain(gainDb)
-            // After the measuring pass too, whose lanes moved things again.
+            // Again after the measuring pass, whose lanes moved things.
             if (options.format.audio) withContext(Dispatchers.Main) { EngineSync.pushForRender(song) }
             try { when (options.format) {
                 com.rm.acidulous.ui.ExportFormat.Midi -> {
@@ -634,8 +616,8 @@ fun App(modifier: Modifier = Modifier) {
                     }.getOrElse { emptyList<File>() to (it.message ?: AppStrings.getString(Res.string.app_export_bundle_failed)) }
                 }
                 com.rm.acidulous.ui.ExportFormat.Aac -> {
-                    // The platform encoder reads a file, so the render goes
-                    // to a 16-bit WAV first and is transcoded off it.
+                    // The platform encoder reads a file, so render to a
+                    // 16-bit WAV first and transcode that.
                     val pcm = File(cache, "export-pcm.wav")
                     val out = File(cache, "$base.m4a")
                     val rendered = NativeEngine.renderSong(
@@ -653,13 +635,13 @@ fun App(modifier: Modifier = Modifier) {
                 }
                 else -> {
                     val engineFormat = options.format.engineFormat
-                    // MP3 has no bit depth, so the number the sinks call
-                    // `bits` carries its bitrate instead - see Mp3Writer.
+                    // MP3 has no bit depth, so `bits` carries its bitrate
+                    // instead. See Mp3Writer.
                     val depth = if (options.format.lossy) options.rate else options.bits
                     if (options.what == com.rm.acidulous.ui.ExportWhat.Stems) {
                         // A stem is what reaches the master, so a track routed
-                        // into a group is in the group's stem and not also in
-                        // its own - or the stems would sum to more than the mix.
+                        // into a group is in the group's stem and not its own,
+                        // or the stems would add up to more than the mix.
                         val groups = song.master.groups
                         val racks = song.tracks.indices.filter {
                             val t = song.tracks[it]
@@ -668,12 +650,11 @@ fun App(modifier: Modifier = Modifier) {
                         if (racks.isEmpty()) {
                             emptyList<File>() to AppStrings.getString(Res.string.app_export_no_tracks)
                         } else {
-                            // The mix comes too, as file 00. It costs one
-                            // more sink in a pass that is happening anyway,
-                            // and stems without the mix they came from are
-                            // hard to check and easy to misalign.
-                            // And each group is a stem of its own, with its
-                            // tracks in it. -2 is the first group to the engine.
+                            // The mix comes too, as file 00. It costs one more
+                            // sink in a pass that's happening anyway, and stems
+                            // without their mix are hard to check. Each group
+                            // is also its own stem, with its tracks in it. -2
+                            // is the first group to the engine.
                             val files = listOf(File(cache, "00 Mix${options.format.extension}")) +
                                 racks.map {
                                     File(cache, "%02d %s%s".format(it + 1, safeName(song.tracks[it].name), options.format.extension))
@@ -748,7 +729,7 @@ fun App(modifier: Modifier = Modifier) {
         }
     }
 
-    /** Stems: several files, so the picker has to give up a folder instead. */
+    /** Stems: several files, so the picker gives a folder instead. */
     val folderPicker = rememberOpenFolder { tree ->
         if (tree == null) return@rememberOpenFolder
         val options = exportWanted
@@ -783,25 +764,25 @@ fun App(modifier: Modifier = Modifier) {
         EngineSync.sampleRoot = EngineAssets.userRoot()
         EngineSync.freezeRoot = EngineAssets.freezeRoot()
         NativeEngine.setCacheRoot(EngineAssets.reelCache().absolutePath)
-        // Trinity's wavetables take a moment to build; do it off the main
+        // Trinity's wavetables take a moment to build, so do it off the main
         // thread now rather than stalling the first mount.
         com.rm.acidulous.util.runInBackground("Acidulous.Prewarm") { NativeEngine.prewarm() }
         EngineSync.forgetEngine()
         if (NativeEngine.start()) {
-            // The engine keeps no preferences: the buffer depth, voice limit,
-            // quality and record format have to be pushed once the stream is
-            // up, and again whenever one of them changes.
+            // The engine keeps no preferences, so buffer size, voice limit,
+            // quality and record format are pushed once the stream is up and
+            // again whenever one changes.
             com.rm.acidulous.ui.UiPrefs.applyToEngine()
-            // Link is switched on here, apart from applyToEngine, because it
-            // takes the multicast lock; on if it was on when the app was
-            // last closed.
+            // Link is turned on here, separately from applyToEngine, because
+            // it takes the multicast lock. On if it was on when the app last
+            // closed.
             if (com.rm.acidulous.ui.UiPrefs.linkWanted) {
                 com.rm.acidulous.engine.LinkHub.chooseEnabled(true)
             }
-            // Come back to whatever was open. The demo comes up once, on the
-            // first run after installing, and is saved with the songs so it can
-            // be opened again from there; a session that will not load after
-            // that is a new song rather than the demo every time.
+            // Restore whatever was open. The demo opens once, on the first
+            // run after installing, and is saved with the songs so it can be
+            // opened again. After that, a session that won't load becomes a
+            // new song rather than the demo.
             val restored = runCatching { SongStore.loadSession() }.getOrNull()
             val firstRun = AppHost.current.prefs(FIRST_RUN)
             val loaded = when {
@@ -833,8 +814,8 @@ fun App(modifier: Modifier = Modifier) {
     var strainUntil by remember { mutableStateOf(0L) }
     /** True while the engine is missing its deadline, right now. */
     var straining by remember { mutableStateOf(false) }
-    // How long the automatic quality watcher has wanted each answer. Zero
-    // means "it does not want that one at the moment".
+    // How long the automatic quality watcher has wanted each setting. 0 means
+    // it doesn't want that one right now.
     var leanSince by remember { mutableStateOf(0L) }
     var fullSince by remember { mutableStateOf(0L) }
     /** Which tracks are a large enough share of a block to be worth freezing. */
@@ -847,8 +828,8 @@ fun App(modifier: Modifier = Modifier) {
     var loopScene by remember { mutableStateOf(false) }
     var stopAtEnd by remember { mutableStateOf(false) }
     var queuedScene by remember { mutableStateOf(-1) }
-    // One per rack, read back each poll while clip mode is on. The engine is
-    // the source of truth for what is playing, exactly as it is for queuedScene.
+    // One per rack, read back each poll while clip mode is on. The engine
+    // decides what's playing, like it does for queuedScene.
     val launchPacked = remember { LongArray(16) }
     var launchStates by remember { mutableStateOf(List(16) { LaunchState.idle }) }
     var notesOn by remember { mutableStateOf(0) }
@@ -867,33 +848,29 @@ fun App(modifier: Modifier = Modifier) {
         if (result.push) EngineSync.sync(editor.song)
     }
     /**
-     * Put a different song in front of the engine, from a standing start.
+     * Give the engine a different song, from a standing start.
      *
-     * **Stop before the swap, not after.** The scheduler is reading the old
-     * song's scenes and the swap is what pulls them out from under it; left
-     * running, the playhead carries straight on into a song it has never seen
-     * and plays whatever happens to be at those indices. Panic *after*,
-     * because that is what clears the tails the stop leaves ringing, and
-     * `forgetSounding` because a hub that still believes a note is down will
-     * never send its note-off.
+     * Stop before the swap, not after: the scheduler is reading the old
+     * song's scenes, and left running the playhead would carry on into the
+     * new song at whatever is at those indices. Panic after, to clear the
+     * tails the stop leaves ringing, and `forgetSounding` because a hub that
+     * thinks a note is held will never send its note-off.
      *
-     * The screen's own copies of the transport state are cleared too. They
-     * are polled from the engine and would catch up on their own within a
-     * frame, but a play button that shows a stop glyph for one frame at the
-     * exact moment a song changes is a flicker somebody will report.
+     * The screen's copies of the transport state are cleared too. They'd
+     * catch up from the engine within a frame, but the play button would
+     * flicker.
      */
     fun swapSong(next: com.rm.acidulous.model.Song) {
         NativeEngine.transportStop()
         NativeEngine.queuedScene = -1
         NativeEngine.stopAtEnd = false
         editor.replace(next)
-        // What the new song does not name goes back to default, or a rack
-        // that kept its machine keeps the last song's settings too.
+        // Whatever the new song doesn't name goes back to its default, or a
+        // rack that kept its machine would keep the last song's settings.
         EngineSync.pushUnnamedDefaults(next)
-        // And back to the top, which a stop deliberately does not do: a stop
-        // leaves the playhead where it stopped so you can read where that
-        // was, which is right until the song underneath it changes. Without
-        // this a brand new song opened reading bar 3 of the old one.
+        // And back to the start, which stop doesn't do (it leaves the
+        // playhead where it stopped). Without this a new song would open at
+        // the old one's bar.
         NativeEngine.transportRewind()
         NativeEngine.panic()
         com.rm.acidulous.midi.MidiHub.forgetSounding()
@@ -906,15 +883,15 @@ fun App(modifier: Modifier = Modifier) {
 
     // --- Import: a MIDI file, a song bundle, or a sound ------------------------------
 
-    /** What an import has to say: a title and a line. Not [problem], whose words are about audio. */
+    /** What an import has to say: a title and a line. Not [problem], which is about audio. */
     var notice by remember { mutableStateOf<Pair<String, String>?>(null) }
     notice?.let { (title, message) ->
         com.rm.acidulous.ui.PlainDialog(title = title, onDismiss = { notice = null }, dismissLabel = stringResource(Res.string.close)) {
             Text(message, fontSize = 13.sp, color = com.rm.acidulous.ui.theme.Acid.colors.textHi)
         }
     }
-    // The last run ended in a crash or a freeze: say so once, and offer the
-    // report to whoever can fix it. See CrashReports.
+    // The last run ended in a crash or a freeze: say so once and offer to
+    // share the report. See CrashReports.
     var crashed by remember { mutableStateOf(AppHost.current.unreadCrashReport()) }
     crashed?.let { report ->
         com.rm.acidulous.ui.PlainDialog(
@@ -934,7 +911,7 @@ fun App(modifier: Modifier = Modifier) {
             )
         }
     }
-    /** A MIDI file read and waiting for its import window: its name and its parts. */
+    /** A MIDI file that's been read and is waiting for its import window: its name and its parts. */
     var midiImport by remember { mutableStateOf<Pair<String, com.rm.acidulous.model.MidiFile.Parsed>?>(null) }
 
     /** A song name nothing saved already has: "Squelch", then "Squelch (2)". */
@@ -947,10 +924,10 @@ fun App(modifier: Modifier = Modifier) {
     }
 
     /**
-     * One door for everything that comes from outside, told apart by its
-     * name: the system picker offers every file, and a MIDI file, a bundle
-     * and a WAV go to three different places. Also where a file shared to
-     * the app, or opened with it, arrives.
+     * One entry point for everything from outside, sorted by file name: the
+     * system picker offers every file, and MIDI files, bundles and WAVs go to
+     * different places. Files shared to the app or opened with it arrive
+     * here too.
      */
     fun importFile(uri: Doc) {
         val name = AppHost.current.docName(uri, "file")
@@ -982,8 +959,8 @@ fun App(modifier: Modifier = Modifier) {
                     SongStore.save(named)
                 }
             }
-            // As long as any machine takes - the ten minutes a slicer can
-            // hold - since nobody has said yet what this sound is for.
+            // The longest any machine takes (the ten minutes a slicer can
+            // hold), since it's not known yet what this sound is for.
             "wav", "wave", "aif", "aiff", "aifc", "flac", "mp3" ->
                 bringIn(uri, "sample.wav", NativeEngine.SLICE_SECONDS) { rel ->
                     notice = AppStrings.getString(Res.string.app_sound_added_title) to AppStrings.getString(Res.string.app_sound_added, rel.substringAfterLast('/'))
@@ -1011,7 +988,7 @@ fun App(modifier: Modifier = Modifier) {
         if (uri != null) importFile(uri)
     }
     // Opened with the app or shared to it. Declared after the session is
-    // restored, so it runs after it and is not replaced by it.
+    // restored, so it runs after it and isn't replaced by it.
     LaunchedEffect(Incoming.doc) {
         val uri = Incoming.doc ?: return@LaunchedEffect
         Incoming.doc = null
@@ -1049,9 +1026,9 @@ fun App(modifier: Modifier = Modifier) {
 
 
     // --- Freeze ---------------------------------------------------------
-    // The render takes the audio stream down for as long as it runs, so it
-    // happens on a worker with the transport stopped, one clip at a time,
-    // and the model is only touched back on the main thread.
+    // The render stops the audio stream while it runs, so it happens on a
+    // worker with the transport stopped, one clip at a time, and the model is
+    // only changed back on the main thread.
     var freezeStatus by remember { mutableStateOf<String?>(null) }
     val onFreeze: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { targets ->
         if (targets.isNotEmpty() && freezeStatus == null) {
@@ -1063,7 +1040,7 @@ fun App(modifier: Modifier = Modifier) {
                 var done = 0
                 targets.forEachIndexed { i, t ->
                     freezeStatus = AppStrings.getString(Res.string.app_freezing, i + 1, targets.size)
-                    // A freeze is a render: it starts from the document too.
+                    // A freeze is a render, so it starts from the song too.
                     EngineSync.pushForRender(editor.song)
                     val frozen = withContext(Dispatchers.IO) {
                         com.rm.acidulous.model.Freeze.render(editor.song, t)
@@ -1087,23 +1064,22 @@ fun App(modifier: Modifier = Modifier) {
     }
 
     /**
-     * The record button, and - when a Bias lane is armed - the microphone too.
+     * The record button, which also starts the microphone when a Bias lane is
+     * armed.
      *
-     * **One button.** Arming a lane and then hunting for a second control to
-     * start it would be two ways of saying the same thing, and the one you
-     * press while the song is already playing has to be the one already under
-     * your thumb.
+     * One button, because the control you press while the song is already
+     * playing should be the one already under your thumb.
      *
-     * The capture runs from the moment it is armed rather than from the moment
-     * the transport starts, so nothing is lost while somebody is getting ready
-     * - the seconds before play belong to no cell, the engine stamps no mark
-     * for them, and the split simply leaves them out.
+     * The capture runs from when it's armed rather than from when the
+     * transport starts, so nothing is lost while getting ready. The seconds
+     * before play belong to no cell, the engine marks nothing for them, and
+     * the split leaves them out.
      */
     fun startBiasCapture() {
-        // The input has to be open before the capture will take it, and it is
-        // not open by default - the microphone is not something to hold when
-        // nobody asked. Opened here and left open; stopping the capture is
-        // what ends the recording, not closing the stream.
+        // The capture needs the input open, and it isn't open by default
+        // since the microphone shouldn't be held when nobody asked. Opened
+        // here and left open. Stopping the capture ends the recording, not
+        // closing the stream.
         NativeEngine.startInput(com.rm.acidulous.ui.UiPrefs.inputDevice)
         val root = com.rm.acidulous.io.File(EngineAssets.userRoot(), "samples").apply { mkdirs() }
         val target = com.rm.acidulous.io.File(root, uniqueIn(root, "take.wav"))
@@ -1119,10 +1095,10 @@ fun App(modifier: Modifier = Modifier) {
     /**
      * Stop the microphone and cut what was recorded into cells.
      *
-     * No audio is copied: one file, N cells, each a window into it. The shapes
-     * are taken out of one decode - see `TakePeaks.slice` - because a take
-     * across five scenes read five times is five peaks of a hundred megabytes
-     * to draw two hundred columns.
+     * No audio is copied: one file, N cells, each a window into it. The
+     * waveforms all come from one decode (see `TakePeaks.slice`), because
+     * reading a take across five scenes five times would be five peaks of
+     * 100 MB to draw two hundred columns.
      */
     fun finishBiasCapture() {
         val file = biasTakeFile ?: return
@@ -1134,9 +1110,9 @@ fun App(modifier: Modifier = Modifier) {
         val count = NativeEngine.captureMarks(raw)
         val frames = NativeEngine.capturedFrames
         if (count < 0) {
-            // The ring dropped frames, so every index after the drop names the
-            // wrong moment. The recording is kept - it is in the library and
-            // can be placed by hand - but it must not be cut up.
+            // The buffer dropped frames, so every index after the drop is
+            // wrong. The recording is kept (it's in the library and can be
+            // placed by hand) but mustn't be cut up.
             problem = AppStrings.getString(Res.string.app_record_gap)
             return
         }
@@ -1145,8 +1121,8 @@ fun App(modifier: Modifier = Modifier) {
             return
         }
         val rel = "samples/" + file.name
-        // Worth a line in the log: a split that goes wrong is silent, and the
-        // marks are the only place the answer can be read afterwards.
+        // Logged because a split that goes wrong is silent, and the marks are
+        // the only place to see what happened afterwards.
         Log.i(TAG, "bias split: $count mark(s) over $frames frames: " +
             marksFrom(raw, count).take(8)
                 .joinToString(" ") { "${it.frame}@${it.sceneId}+${it.tick}/${it.cycleTicks}" })
@@ -1165,20 +1141,17 @@ fun App(modifier: Modifier = Modifier) {
                     c.withTake(lane, drawn)
                 }
             }
-            // One document edit for the whole take, so undoing a recording is
-            // one press rather than one per scene it crossed.
+            // One song edit for the whole take, so undoing a recording is one
+            // press rather than one per scene it crossed.
             editor.edit(track, push = true) { next.tracks[track] }
             EngineSync.sync(editor.song)
         }
     }
 
     /**
-     * Asked for at the moment it is needed, which is the first time a lane is
-     * armed and record is pressed.
-     *
-     * The recorder window has its own button for this; arriving there to be
-     * told to go somewhere else is the version of this that does not respect
-     * anybody's time.
+     * Asks for the microphone permission when it's needed: the first time a
+     * lane is armed and record is pressed, rather than sending the user off
+     * to the recorder window.
      */
     val askToRecord = com.rm.acidulous.ui.rememberPermissions { ok ->
         if (ok) startBiasCapture()
@@ -1199,8 +1172,8 @@ fun App(modifier: Modifier = Modifier) {
             finishBiasCapture()
         }
     }
-    // Empty launcher cells record into themselves. It arms recording the way
-    // the ○ button does, and points MIDI in at the track it is looping.
+    // Empty launcher cells record into themselves. It arms recording like the
+    // ○ button does, and points MIDI in at the track it's looping.
     val looper = remember(editor) {
         com.rm.acidulous.ui.Looper(
             editor,
@@ -1214,15 +1187,15 @@ fun App(modifier: Modifier = Modifier) {
         NativeEngine.setLoopScene(on)
     }
 
-    // **A Launchpad Pro [MK3], played by the app.** The surface decides what
-    // it shows and what a press means (midi/launchpad/Surface.kt); here it is
-    // shown the app thirty times a second and its presses are carried out.
-    // Its notes go to the track it has selected whatever the MIDI routing
-    // says - it is part of the app, not a keyboard on a channel - and each
+    // A Launchpad Pro [MK3], played by the app. The surface decides what it
+    // shows and what a press means (midi/launchpad/Surface.kt). Here it gets
+    // a snapshot of the app thirty times a second and its presses are carried
+    // out. Its notes go to its selected track whatever the MIDI routing says,
+    // since it's part of the app rather than a keyboard on a channel, and each
     // note-off goes where its note-on went.
     val lpNoteRack = remember { IntArray(128) { -1 } }
-    // The device faders: a machine's first eight continuous knobs, looked
-    // up once a type rather than thirty times a second.
+    // The device faders: a machine's first eight continuous knobs, looked up
+    // once per type rather than thirty times a second.
     val lpKnobs = remember { HashMap<String, List<com.rm.acidulous.engine.ParamInfo>>() }
     fun lpDeviceKnobs(type: String) = lpKnobs.getOrPut(type) {
         NativeEngine.machineParamInfo(type).filter { it.curve != 2 }.take(8)
@@ -1243,8 +1216,8 @@ fun App(modifier: Modifier = Modifier) {
                 val rack = lpNoteRack[a.note]
                 if (rack >= 0) NativeEngine.midiEvent(rack, 0xa0, a.note, a.value, none)
             }
-            // The keyboard's own actions, so the surface agrees with the
-            // screen about what play, record and undo mean where it is.
+            // The app's own actions, so the surface and the screen agree on
+            // what play, record and undo do.
             com.rm.acidulous.midi.launchpad.LpAction.Play ->
                 if (!com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.PlayStop)) {
                     if (playing) NativeEngine.transportStop() else EngineSync.play(position.scene, com.rm.acidulous.ui.UiPrefs.clipMode)
@@ -1255,7 +1228,7 @@ fun App(modifier: Modifier = Modifier) {
             com.rm.acidulous.midi.launchpad.LpAction.Undo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Undo)
             com.rm.acidulous.midi.launchpad.LpAction.Redo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Redo)
             is com.rm.acidulous.midi.launchpad.LpAction.SelectTrack -> midiTrack = a.index
-            // As a tap on the scene in the grid does.
+            // Like tapping the scene in the grid.
             is com.rm.acidulous.midi.launchpad.LpAction.PlayScene -> song.scenes.getOrNull(a.index)?.let { scene ->
                 when {
                     com.rm.acidulous.ui.UiPrefs.clipMode -> {
@@ -1271,7 +1244,7 @@ fun App(modifier: Modifier = Modifier) {
                 NativeEngine.launchClip(a.track, scene.engineId)
                 if (!playing) EngineSync.play(0, true)
             }
-            // As the clip window's clear, cut, and the scene menu's duplicate.
+            // Like the clip window's clear and cut, and the scene menu's duplicate.
             is com.rm.acidulous.midi.launchpad.LpAction.ClearClip -> song.scenes.getOrNull(a.scene)?.let { scene ->
                 editor.editClip(a.track, scene.id) { it.cleared() }
             }
@@ -1288,8 +1261,8 @@ fun App(modifier: Modifier = Modifier) {
                 editor.edit(a.track) { t -> t.copy(mixer = t.mixer.copy(solo = !t.mixer.solo)) }
             com.rm.acidulous.midi.launchpad.LpAction.StopClips ->
                 if (com.rm.acidulous.ui.UiPrefs.clipMode && playing) NativeEngine.stopAllClips() else NativeEngine.transportStop()
-            // A step: the note starting in it at that pitch goes, or one a
-            // step long arrives. One undo each, as a tap in the roll.
+            // A step: removes the note starting there at that pitch, or adds
+            // one a step long. One undo each, like a tap in the roll.
             is com.rm.acidulous.midi.launchpad.LpAction.ToggleStep -> song.scenes.getOrNull(a.scene)?.let { scene ->
                 editor.editClip(a.track, scene.id) { clip ->
                     val i = clip.notes.indexOfFirst { it.pitch == a.pitch && it.tick >= a.tick && it.tick < a.tick + clip.grid }
@@ -1297,7 +1270,7 @@ fun App(modifier: Modifier = Modifier) {
                     else clip.copy(notes = (clip.notes + com.rm.acidulous.model.Note(a.tick, a.length, a.pitch, 100)).sortedBy { it.tick })
                 }
             }
-            // As the mixer's strips, the panels' knobs and the perform page send them.
+            // Like the mixer strips, the panel knobs and the perform page send them.
             is com.rm.acidulous.midi.launchpad.LpAction.SetMix -> {
                 val (name, update) = when (a.fader) {
                     com.rm.acidulous.midi.launchpad.LpFader.Level -> "gain" to { m: com.rm.acidulous.model.Mixer -> m.copy(volume = com.rm.acidulous.model.EngineParams.volumeFrom01(a.value)) }
@@ -1316,7 +1289,7 @@ fun App(modifier: Modifier = Modifier) {
             }
             is com.rm.acidulous.midi.launchpad.LpAction.PerformParam ->
                 NativeEngine.setParam(midiTrack, "perform", a.name, a.value, record = true)
-            // As the Quantise window was last set: the two mean the same thing.
+            // Uses the Quantise window's last settings, since they mean the same thing.
             is com.rm.acidulous.midi.launchpad.LpAction.QuantiseClip -> song.scenes.getOrNull(a.scene)?.let { scene ->
                 editor.editClip(a.track, scene.id) { clip ->
                     val len = song.clipLengthTicks(scene.id, clip)
@@ -1336,8 +1309,8 @@ fun App(modifier: Modifier = Modifier) {
             tracks = song.tracks.mapIndexed { i, t ->
                 com.rm.acidulous.midi.launchpad.LpTrack(
                     colour = com.rm.acidulous.midi.launchpad.Rgb.fromArgb(com.rm.acidulous.ui.trackColour(i, t.colour).toArgb()),
-                    // Lowest first for the sequencer, as the drum grid reads;
-                    // and as the pads are laid out on screen, for the note page.
+                    // Lowest first for the sequencer, like the drum grid, and in
+                    // the on-screen pad order for the note page.
                     drums = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine.type) == com.rm.acidulous.model.MachineKind.Drums) {
                         com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings).map { it.note }.sorted()
                     } else null,
@@ -1369,8 +1342,8 @@ fun App(modifier: Modifier = Modifier) {
             scene = position.scene,
             queuedScene = NativeEngine.queuedScene,
             seq = run {
-                // The played track's clip where it is: in clip mode the scene
-                // it is playing, otherwise the song's.
+                // The played track's clip: in clip mode the scene it's
+                // playing, otherwise the song's.
                 val t = song.tracks.getOrNull(midiTrack) ?: return@run null
                 val clipMode = com.rm.acidulous.ui.UiPrefs.clipMode
                 val ls = launchStates.getOrNull(midiTrack)
@@ -1408,36 +1381,32 @@ fun App(modifier: Modifier = Modifier) {
             launchpad.detach()
         }
     }
-    // Hoisted, so the chip on screen and a mapped pad press the same thing.
     /**
-     * Song to clip and back: flip the flag and get out of the way.
+     * Song to clip mode and back: just flip the flag. Hoisted, so the chip on
+     * screen and a mapped pad do the same thing.
      *
-     * The handover is the *scheduler's* - `SceneScheduler::process` watches
-     * the flag change and does the whole of it. Going in, `adoptPlayingScene`
-     * hands every rack the scene it is already playing at the phase it is
-     * already at, so nothing restarts and nothing stops; the only difference
-     * is that a clip now loops at the end of its cycle instead of the
-     * arranger moving on. Coming out, the launcher runs to the next bar line
-     * and `handBackToScenes` puts everyone on the scene most racks are
-     * already playing, in phase.
+     * The scheduler does the handover (`SceneScheduler::process` watches for
+     * the flag to change). Going in, `adoptPlayingScene` gives every rack the
+     * scene it's already playing at the phase it's already at, so nothing
+     * restarts or stops, and clips just loop instead of the arranger moving
+     * on. Coming out, the launcher runs to the next bar line and
+     * `handBackToScenes` puts everyone on the scene most racks are already
+     * playing, in phase.
      *
-     * So there is nothing for this to do but say which mode it is. Two
-     * previous versions of it did more and both broke the handover: one
-     * called `transportStop`, which silenced the thing the scheduler was
-     * about to adopt, and one queued fresh `launchClip` requests, which
-     * restarted every clip from its cycle boundary on top of an adoption
-     * that had already placed it correctly.
+     * So don't do anything else here. Calling `transportStop` would silence
+     * what the scheduler is about to adopt, and queuing `launchClip` requests
+     * would restart every clip on top of the adoption.
      */
     val onClipMode: (Boolean) -> Unit = { on ->
         com.rm.acidulous.ui.UiPrefs.chooseClipMode(on)
         NativeEngine.setLaunchQuantise(com.rm.acidulous.ui.UiPrefs.launchQuantise * song.signature.ticksPerBar)
     }
 
-    // An Exquis's play, record, loop, clips, undo and redo, when the app has
-    // them: the same actions the Launchpad's and the screen's buttons are,
-    // and lit as the app is - play green while playing and amber stopped, as
-    // the Exquis itself does, record red while armed, loop and clips lit
-    // while on.
+    // An Exquis's play, record, loop, clips, undo and redo buttons, when the
+    // app has them: the same actions as the Launchpad's and the screen's, and
+    // lit to match. Play is green while playing and amber when stopped, like
+    // the Exquis itself, record is red while armed, and loop and clips are
+    // lit while on.
     val exquisPress by rememberUpdatedState<(Int) -> Unit> { id ->
         val pl = com.rm.acidulous.midi.PadLights
         when (id) {
@@ -1468,10 +1437,10 @@ fun App(modifier: Modifier = Modifier) {
     }
 
     // Controller mappings. The hub offers every CC and note-on here before it
-    // reaches the engine; this decides whether it is being learned, drives
-    // something, or is nobody's business and carries on as MIDI. It sits
-    // here, below the transport's own handlers, so a mapped pad presses
-    // exactly the button the screen would have pressed.
+    // reaches the engine, and this decides whether it's being learned, drives
+    // something, or carries on as normal MIDI. It sits below the transport's
+    // own handlers so a mapped pad presses exactly the button the screen
+    // would.
     com.rm.acidulous.midi.MidiHub.onMappable = onMappable@{ cc, note, value, routedRack ->
         val waiting = com.rm.acidulous.ui.UiPrefs.mapWaiting
         if (com.rm.acidulous.ui.UiPrefs.mapMode && waiting != null) {
@@ -1483,8 +1452,8 @@ fun App(modifier: Modifier = Modifier) {
         ) ?: return@onMappable false
         val pressed = note != null || value >= com.rm.acidulous.model.Mappings.PRESS
         if (m.isAction) {
-            // Fill is the only action that is *held* rather than triggered, so
-            // it is the only one that wants the release as well as the press.
+            // Fill is the only action that's held rather than triggered, so
+            // it's the only one that needs the release as well as the press.
             if (m.action == com.rm.acidulous.model.Action.Fill.name) {
                 com.rm.acidulous.ui.UiPrefs.holdFill(pressed)
             } else if (pressed) {
@@ -1505,9 +1474,8 @@ fun App(modifier: Modifier = Modifier) {
         true
     }
 
-    // A take that dies because the screen locked is a take lost, so the
-    // window is held awake while the transport runs - and only while it
-    // runs, and only if the setting says so.
+    // Keep the screen on while the transport runs (if the setting says so),
+    // so a take isn't lost to the screen locking.
     KeepScreenOn(playing && com.rm.acidulous.ui.UiPrefs.keepAwake)
 
     LaunchedEffect(Unit) {
@@ -1515,15 +1483,14 @@ fun App(modifier: Modifier = Modifier) {
             peak = NativeEngine.readPeakLevel()
             playing = NativeEngine.isPlaying
             // The service follows the transport rather than the app's
-            // lifetime, so an app sitting on the grid is not holding a
-            // notification open for nothing. `wasPlaying` still holds the last
-            // poll's answer here - it is updated further down - and the call
-            // is made only on the change, because `startForegroundService`
-            // every eighty milliseconds is a binder call every eighty
-            // milliseconds.
+            // lifetime, so there's no notification while the app sits idle.
+            // `wasPlaying` still holds the last poll's value here (it's
+            // updated further down), and the call is only made on a change,
+            // since `startForegroundService` every 80 ms would be a binder
+            // call every 80 ms.
             if (playing != wasPlaying) {
                 // On Android: the playback service, and stopping for a call,
-                // another app's music, or headphones pulled out.
+                // another app's music, or unplugged headphones.
                 AppHost.current.transportChanged(playing) { NativeEngine.transportStop() }
             }
             position = Position.unpack(NativeEngine.positionPacked)
@@ -1533,14 +1500,11 @@ fun App(modifier: Modifier = Modifier) {
             notesOn = NativeEngine.notesOn(0)
             notesOff = NativeEngine.notesOff(0)
             load = NativeEngine.loadAvg
-            // Peak-hold, and reading clears them, so this is the only place
-            // that may ask. Held across polls rather than shown raw: at 80 ms
-            // a reading would flick past before it could be read off a screen.
-            // **Pressing play zeroes them.** They are cumulative and they were
-            // not, which made two readings taken in one session - the same
-            // song at two quality settings, say - impossible to compare: the
-            // second contained the first. A play-through is the unit somebody
-            // measures in, so it is the unit these count in.
+            // Peak-hold values, and reading clears them, so only this place
+            // may read them. Held across polls rather than shown raw, since
+            // at 80 ms a reading would flash past too fast to read.
+            // Pressing play zeroes them, so two runs in one session (say the
+            // same song at two quality settings) can be compared.
             if (playing && !wasPlaying) {
                 worstUs = 0
                 worstCpuUs = 0
@@ -1554,7 +1518,7 @@ fun App(modifier: Modifier = Modifier) {
             worstUs = maxOf(worstUs, NativeEngine.worstCallbackUs)
             worstCpuUs = maxOf(worstCpuUs, NativeEngine.worstCallbackCpuUs)
             // Ours are cumulative and Oboe's belongs to the stream, so all
-            // three are shown as a delta from the last time play was pressed.
+            // three are shown as the change since play was last pressed.
             lateCallbacks = NativeEngine.lateCallbacks - lateAt
             stalled = NativeEngine.stalledCallbacks - stalledAt
             xruns = NativeEngine.xRunCount - xrunsAt
@@ -1563,17 +1527,17 @@ fun App(modifier: Modifier = Modifier) {
             queuedScene = NativeEngine.queuedScene
             com.rm.acidulous.midi.MidiHub.readSync()
             com.rm.acidulous.engine.LinkHub.poll()
-            // A track in the launcher that has just come round to the top
-            // of its clip: what was recorded into it goes to the engine now,
-            // so a loop hears its last pass on its next. The arranger's own
-            // playhead is stale in clip mode and cannot say.
+            // A launcher track that has just looped to the start of its
+            // clip: what was recorded into it goes to the engine now, so a
+            // loop hears its last pass on the next one. The arranger's
+            // playhead is stale in clip mode and can't tell.
             var cycleWrapped = false
             if (com.rm.acidulous.ui.UiPrefs.clipMode) {
                 NativeEngine.launchStates(launchPacked)
                 val next = launchPacked.map { LaunchState.unpack(it) }
-                // Round the *clip*, not the cycle: a cycle is the clip times
+                // Around the clip, not the cycle: a cycle is the clip times
                 // the scene's repeats, and a loop has to hear its last pass on
-                // its next one, not two passes later.
+                // the next one, not two passes later.
                 cycleWrapped = next.indices.any { i ->
                     val scene = song.scenes.getOrNull(next[i].scene)
                     val clip = scene?.let { song.tracks.getOrNull(i)?.clips?.get(it.id) }
@@ -1585,42 +1549,38 @@ fun App(modifier: Modifier = Modifier) {
                 looper.poll(song, launchStates, playing)
             }
             rackPeaks = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
-            // **Struggling now, not struggling ever.** A cumulative count says
-            // a song dropped out once an hour ago; what a light on the screen
-            // has to answer is whether it is happening as you watch. So it is
-            // the change since the last poll, held for a moment so a single
-            // late callback is visible rather than a flicker too short to see - and
-            // long enough that a burst of them reads as one steady state and not
-            // as blinking, which on a track you are watching would be an alarm.
+            // Whether it's struggling now, not whether it ever did. It's the
+            // change since the last poll, held briefly so a single late
+            // callback is visible and a burst reads as one steady state
+            // rather than blinking.
             val lateNow = NativeEngine.lateCallbacks
             if (lateNow > lateSeen) strainUntil = System.currentTimeMillis() + 2500
             lateSeen = lateNow
             straining = playing && System.currentTimeMillis() < strainUntil
 
-            // **Choosing quality by the two signals, not by the one.**
+            // Choosing quality from two signals, not one.
             //
-            // A worst block over its budget is not on its own a reason to give
-            // anything up: the block may have been interrupted rather than
-            // slow, and lean cannot make the scheduler hand the core back. So
-            // lean is asked for only when the blocks that were *not*
-            // interrupted are the ones over budget - the song costing more
-            // than the device has - and full comes back when they are not.
+            // A worst block over budget isn't enough on its own: the block
+            // may have been interrupted rather than slow, and lean quality
+            // can't get the core back from the scheduler. So lean is only
+            // chosen when uninterrupted blocks are over budget (the song
+            // costs more than the device has), and full comes back when
+            // they aren't.
             //
-            // The hysteresis is wide on purpose. Flipping the amp's
-            // oversampling is audible, and a watcher that changed its mind at
-            // the edge of the budget would do it every few seconds; over is
-            // 100% of a block and back is 70%, and each has to hold for a
-            // stretch before anything moves.
+            // The hysteresis is wide on purpose. Switching the amp's
+            // oversampling is audible, and a watcher changing its mind at the
+            // edge of the budget would do it every few seconds. Over is 100%
+            // of a block and back is 70%, and each has to hold for a while
+            // before anything changes.
             if (com.rm.acidulous.ui.UiPrefs.autoQuality && playing) {
-                // **The decaying figure, not the peak-hold.** `worstBlockUs`
-                // is cleared by whoever reads it, and the Settings window is
-                // the reader it was written for - a watcher polling it every
-                // eighty milliseconds would leave that window showing nothing.
-                // `recentCallbackUs` decays instead of clearing, so there can
-                // be two readers, and the callback is the span with the
-                // deadline anyway.
+                // The decaying figure, not the peak-hold. `worstBlockUs` is
+                // cleared by whoever reads it and the Settings window reads
+                // it, so polling it here would leave that window empty.
+                // `recentCallbackUs` decays instead, so it can have two
+                // readers, and the callback is the span with the deadline
+                // anyway.
                 val budgetUs = NativeEngine.callbackBudgetUs.toFloat()
-                // The average where the peaks are not measured: a browser.
+                // The average where peaks aren't measured: a browser.
                 val recent = if (AppHost.current.timesAudioPrecisely) NativeEngine.recentCallbackUs.toFloat()
                              else NativeEngine.loadAvg / 100f * budgetUs
                 val interrupted = NativeEngine.interruptedPercent
@@ -1639,27 +1599,22 @@ fun App(modifier: Modifier = Modifier) {
                     }
                 }
             } else if (!com.rm.acidulous.ui.UiPrefs.autoQuality) {
-                // Switched off, or never on: what you chose is what runs.
+                // Switched off, or never on: what the user chose is what runs.
                 com.rm.acidulous.ui.UiPrefs.applyAutoQuality(com.rm.acidulous.ui.UiPrefs.fullQuality)
                 leanSince = 0L
                 fullSince = 0L
             }
-            // **Worked out here, not in composition.** As a `val` up there it
-            // was read once before the engine had opened a stream, when the
-            // sample rate is still nought - so the budget came out as sixty-four
-            // million microseconds and nothing was ever a large enough share of
-            // it to mark. A rate that is not known yet is not a rate to divide
-            // by.
+            // Worked out here, not in composition: before the engine opens a
+            // stream the sample rate is 0, and dividing by it made the budget
+            // huge so no track was ever marked.
             val rate = NativeEngine.sampleRate
             val blockBudgetUs = if (rate > 0) 1_000_000f * 64f / rate else 0f
-            // **Hysteresis, or it blinks.** The cost decays continuously, so a
-            // track sitting near the line crosses it several times a second
-            // and the grid flickers between different tracks - which reads as
-            // a fault in the app rather than as a fault in the song. It takes
-            // a third of a block to light and has to fall to under a quarter
-            // to go out again.
-            // A track's cost is its worst blocks, which a browser cannot time
-            // (AppHost.timesAudioPrecisely): there every track lit at once.
+            // Hysteresis, or it blinks: the cost decays continuously, so a
+            // track near the line would cross it several times a second. It
+            // takes a third of a block to light and has to fall under a
+            // quarter to go out.
+            // A track's cost is its worst blocks, which a browser can't time
+            // (AppHost.timesAudioPrecisely), so there every track would light.
             rackHot = BooleanArray(16) { i ->
                 if (blockBudgetUs <= 0f || i >= song.tracks.size || !AppHost.current.timesAudioPrecisely) {
                     false
@@ -1669,13 +1624,13 @@ fun App(modifier: Modifier = Modifier) {
                 }
             }
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf, cycleWrapped))
-            // A take is one pass of armed and playing; stopping either ends it.
+            // A take is one pass of armed and playing. Stopping either ends it.
             if (!(armed && playing)) editor.endTake()
             delay(80)
         }
     }
 
-    // Autosave: 1.2 s after the last edit, and again the moment the app goes
+    // Autosave: 1.2 s after the last edit, and again as soon as the app goes
     // to the background, because Android may kill the process from there.
     LaunchedEffect(song) {
         delay(1200)
@@ -1687,18 +1642,17 @@ fun App(modifier: Modifier = Modifier) {
             .onFailure { Log.w(TAG, "session save on stop failed", it) }
     }
 
-    // Load and xruns come first, after the stream's own description. They
-    // used to be fifth and sixth in a line that is one ellipsised row, so on
-    // a phone they were cut off the end - which mattered once the header
-    // stopped showing the number and this became the only place it lives.
-    // `worst` is the number a dropout is actually about: the longest a single
-    // callback took, against the time that callback had. `load` beside it is a
-    // smoothed average - useful for "is it working hard", useless for "why did
-    // it click", because a block over budget decays out of it in 27 ms and
-    // this line is redrawn every 80.
+    // Load and xruns come first, after the stream's own description, since
+    // this line is cut off on a phone and it's the only place they're shown.
+    // `worst` is the number a dropout is about: the longest a single callback
+    // took, against the time it had. `load` next to it is a smoothed average,
+    // useful for "is it working hard" but not for "why did it click", since a
+    // block over budget decays out of it in 27 ms and this line is redrawn
+    // every 80.
     val budgetUs = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
-    // In a browser the peaks are not measured - see AppHost.timesAudioPrecisely
-    // - and the line says the load and what is sounding.
+    // In a browser the peaks aren't measured (see
+    // AppHost.timesAudioPrecisely), so the line shows the load and what's
+    // playing.
     val timings = if (AppHost.current.timesAudioPrecisely) {
         " · worst %.1f/%.1fms cpu %.1f · late %d stall %d · xruns %d".format(
             worstUs / 1000f, budgetUs / 1000f, worstCpuUs / 1000f, lateCallbacks, stalled, xruns,
@@ -1709,8 +1663,7 @@ fun App(modifier: Modifier = Modifier) {
     val diagnostics = ("%s · load %.0f%%%s · peak %.3f · fade %.2f · on %d off %d%s")
         .format(
             status, load, timings, peak, fade, notesOn, notesOff,
-            // Only while Link is on, and only the number that matters when
-            // it is: how many machines are keeping this time.
+            // Only while Link is on: how many machines are sharing this tempo.
             if (com.rm.acidulous.engine.LinkHub.enabled) {
                 " · link %d".format(com.rm.acidulous.engine.LinkHub.peers)
             } else {
@@ -1738,18 +1691,17 @@ fun App(modifier: Modifier = Modifier) {
         com.rm.acidulous.ui.LocalSongMappings provides song.mappings,
     ) {
     /**
-     * The system back button goes back a screen, and only leaves from the top.
+     * The system back button goes back a screen, and only leaves the app from
+     * the top.
      *
-     * Nothing handled it at all, so back quit the app from wherever you were -
-     * from a machine editor, from a Nexus graph, with a take unsaved. Windows
-     * are not in here: a Compose Dialog is its own window and takes back for
-     * itself, which is why the conversion window (whose dismiss does nothing)
-     * cannot be dismissed out from under the work it is reporting.
+     * Windows aren't handled here: a Compose Dialog is its own window and
+     * handles back itself, which is also why the conversion window (whose
+     * dismiss does nothing) can't be closed during the work it reports.
      */
     SystemBack(enabled = screen !is Screen.Main) {
         screen = when (val s = screen) {
             // The graph belongs to a machine, so back goes to the machine
-            // rather than all the way out - the same place its own arrow goes.
+            // rather than all the way out, like its own arrow does.
             is Screen.Patch -> Screen.Edit(s.track, s.sceneId)
             else -> Screen.Main
         }
@@ -1778,13 +1730,9 @@ fun App(modifier: Modifier = Modifier) {
                 swapSong(fresh)
                 SongStore.save(fresh)
             },
-            // **The same swap, and for the same reason.** Loading had the
-            // identical fault a new song had: the transport carried straight
-            // on into a song it had never seen, playing whatever scenes
-            // happened to be at those indices, with the old song's tails
-            // ringing over the top. It was left alone when `onNew` was fixed
-            // because only new songs had been asked about; it is the same two
-            // lines and there was never a reason for them to differ.
+            // The same swap, for the same reason as a new song: otherwise the
+            // transport would carry on into the loaded song at whatever scenes
+            // are at those indices, with the old song's tails ringing.
             onLoad = { name ->
                 runCatching { SongStore.load(name) }
                     .onSuccess { swapSong(it) }
@@ -1812,11 +1760,9 @@ fun App(modifier: Modifier = Modifier) {
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
             onOpenSample = { pad -> sampleEdit = s.track to pad },
             patchNames = { PatchStore.list(song.tracks[s.track].machine.type) },
-            // The settings and not only the knobs: a Nexus patch without its
+            // Save the settings, not only the knobs: a Nexus patch without its
             // graph, a Mosaic without its zones or a Formulate without its
-            // formula is a bag of numbers wired to whatever happened to be
-            // loaded. Factory patches have always carried them; user ones
-            // never could, and nothing said so - it just came back wrong.
+            // formula would come back wrong.
             onSavePatch = { name, low, high ->
                 val m = song.tracks[s.track].machine
                 PatchStore.save(Patch(m.type, name, m.params, m.settings, low, high))
@@ -1838,8 +1784,8 @@ fun App(modifier: Modifier = Modifier) {
                 kitPicker(AUDIO_TYPES)
             },
             onImportSlice = { track ->
-                // One file for all thirteen pads; the slice points are worked
-                // out afterwards, in the panel.
+                // One file for all thirteen pads. The slice points are worked
+                // out afterwards in the panel.
                 importTarget = track to "slice_sample"
                 samplePicker(AUDIO_TYPES)
             },
@@ -1869,9 +1815,9 @@ fun App(modifier: Modifier = Modifier) {
     }
     }
 
-    // Choosing which preset of a SoundFont to play. Shown over either screen,
-    // because the import that raises it starts from the Edit screen but the
-    // listing finishes on a worker.
+    // Choosing which SoundFont preset to play. Shown over either screen,
+    // because the import starts from the Edit screen but the listing
+    // finishes on a worker.
     presetChoice?.let { (track, presets) ->
         fun label(line: String): String {
             val f = line.split('|')
@@ -1890,25 +1836,13 @@ fun App(modifier: Modifier = Modifier) {
 }
 
 /**
- * `CreateDocument` fixes its MIME type when it is built, and this window
- * writes six different kinds of file. Rather than six launchers, the type
- * is set per launch - the picker uses it to suggest a folder and to name
- * the file sensibly, so it is worth getting right.
- */
-/**
- * Ticks left of a count-in, as the number you would say out loud.
+ * A control was waiting to be learned and this is what arrived, so bind them.
  *
- * Rounded *up*, because the first beat of a four-beat count should read
- * "4" for the whole of that beat rather than flicking to 3 immediately.
- */
-/**
- * A control was waiting; this is what arrived. Bind them.
- *
- * The target is the string mapping mode parked there - `"rack:unit:name"`
- * for a parameter or `"action:Panic"` for a button. Learned mappings go to
- * the device, not the song: a controller is the room you are in, and the
- * commonest thing is to set one up once and forget it. A song may still
- * carry its own and they win; nothing in the UI writes those yet.
+ * The target is the string mapping mode left there: `"rack:unit:name"` for
+ * a parameter or `"action:Panic"` for a button. Learned mappings are saved
+ * to the device, not the song, since a controller usually gets set up once.
+ * A song can still carry its own and they take priority, though nothing in
+ * the UI writes those yet.
  */
 private fun learnMapping(target: String, cc: Int?, note: Int?) {
     val prefs = com.rm.acidulous.ui.UiPrefs
@@ -1927,13 +1861,12 @@ private fun learnMapping(target: String, cc: Int?, note: Int?) {
 }
 
 /**
- * Something mapped arrived. Do what it says.
+ * Something mapped arrived, so do what it says.
  *
- * A parameter takes the value; an action takes the press edge and nothing
- * else, so holding a footswitch does not fire it twice and letting go does
- * not fire it at all. A note on a two-step parameter toggles it, because
- * that is what a pad on a switch should do; on anything else it sets the
- * value from its velocity.
+ * A parameter takes the value. An action only fires on the press, so holding
+ * a footswitch doesn't fire it twice and releasing it doesn't fire it at
+ * all. A note on a two-step parameter toggles it, like a pad on a switch
+ * should. On anything else it sets the value from its velocity.
  */
 private fun fireMapping(
     m: com.rm.acidulous.model.Mapping,
@@ -1945,7 +1878,7 @@ private fun fireMapping(
 ) {
     val unit = m.unit ?: return
     val name = m.name ?: return
-    // The master has no rack; everything else takes the mapping's own, then
+    // The master has no rack. Everything else uses the mapping's own, then
     // whatever the MIDI routing chose, then the selected track.
     val rack = if (unit == "master") {
         0

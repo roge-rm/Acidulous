@@ -89,7 +89,7 @@
         <item>click</item>
         <item>link</item>
     </string-array>
-    <!-- The key's own tab, on a square phone where it does not fit beside the tempo. -->
+    <!-- The key's own tab, on a square phone where it doesn't fit beside the tempo. -->
     <string name="tempo_tab_key">key</string>
     <string name="tempo_tempo">tempo</string>
     <string name="tempo_bpm">bpm</string>

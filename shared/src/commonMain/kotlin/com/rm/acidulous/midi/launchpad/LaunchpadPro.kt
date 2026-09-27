@@ -1,23 +1,22 @@
 package com.rm.acidulous.midi.launchpad
 
 /**
- * A Novation Launchpad Pro [MK3], as its Programmer's Reference describes it.
+ * A Novation Launchpad Pro [MK3], as described in its Programmer's Reference.
  *
  * In Programmer mode every pad and button sends one message and is lit by
- * the same number: the grid's pads are notes 11..88 - ten times the row plus
- * the column, counted from 1 at the bottom left - and the buttons round the
- * edge are controllers. That is the mode Acidulous uses, because it is the
- * only one in which the surface is entirely the app's: the device's own
- * Note mode keeps a scale of its own, and nothing in the reference can set
- * it from outside.
+ * the same number. Grid pads are notes 11..88 (ten times the row plus the
+ * column, counting from 1 at the bottom left) and the edge buttons are
+ * controllers. Acidulous uses this mode because it's the only one where the
+ * app controls the whole surface. The device's own Note mode has its own
+ * scale, which can't be set from outside.
  *
- * Plain Kotlin: the arithmetic of the surface is tested without one.
+ * Plain Kotlin, so the surface's maths can be tested without a device.
  */
 object LaunchpadPro {
-    /** Every SysEx to and from it begins so. */
+    /** Every SysEx to and from it starts with this. */
     private val HEADER = intArrayOf(0xF0, 0x00, 0x20, 0x29, 0x02, 0x0E)
 
-    /** The buttons, by the controller each sends in Programmer mode. */
+    /** The buttons, by the controller number each sends in Programmer mode. */
     enum class Button(val cc: Int) {
         Shift(90),
         // The top row, left to right.
@@ -47,7 +46,7 @@ object LaunchpadPro {
         data class Scene(val index: Int) : Control()
     }
 
-    /** The LED - and the note or controller - of a control. */
+    /** The LED number of a control, which is also the note or controller it sends. */
     fun ledOf(c: Control): Int = when (c) {
         is Control.Pad -> 10 * (c.row + 1) + (c.col + 1)
         is Control.Key -> c.button.cc
@@ -55,14 +54,14 @@ object LaunchpadPro {
         is Control.Scene -> 89 - 10 * c.index
     }
 
-    /** What a note number from the grid is: a pad, or nothing. */
+    /** Which pad a grid note number is, or null. */
     fun padOf(note: Int): Control.Pad? {
         val row = note / 10 - 1
         val col = note % 10 - 1
         return if (row in 0..7 && col in 0..7) Control.Pad(row, col) else null
     }
 
-    /** What a controller number is: a button, a track select, a scene, or nothing. */
+    /** Which control a controller number is: a button, a track select, a scene, or null. */
     fun controlOfCc(cc: Int): Control? = when {
         cc in 101..108 -> Control.Track(cc - 101)
         cc in 19..89 && cc % 10 == 9 -> Control.Scene((89 - cc) / 10)
@@ -73,10 +72,10 @@ object LaunchpadPro {
     fun programmer(on: Boolean): ByteArray = sysex(0x0E, if (on) 1 else 0)
 
     /**
-     * LEDs set to exact colours, in as few messages as the device allows.
-     * Each colour is 0xRRGGBB with each part 0..127, the device's own range.
-     * Sixty-four to a message: the reference allows 106, and a smaller packet
-     * is kinder to a MIDI port's buffer.
+     * Set LEDs to exact colours in as few messages as possible. Each colour
+     * is 0xRRGGBB with each part 0..127, the device's own range. 64 per
+     * message: the reference allows 106, but smaller packets are easier on a
+     * MIDI port's buffer.
      */
     fun lights(changes: List<Pair<Int, Int>>): List<ByteArray> =
         changes.chunked(64).map { chunk ->
@@ -94,7 +93,7 @@ object LaunchpadPro {
             ByteArray(out.size) { out[it].toByte() }
         }
 
-    /** Whether a MIDI device is one, by what it calls itself. */
+    /** Whether a MIDI device is a Launchpad Pro MK3, going by its name. */
     fun isOne(name: String?, product: String?): Boolean {
         val all = listOfNotNull(name, product).joinToString(" ").lowercase()
         return "lppromk3" in all || ("launchpad pro" in all && "mk3" in all)

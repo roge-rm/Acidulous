@@ -100,8 +100,8 @@ internal fun incomingFrom(intent: android.content.Intent?) {
 }
 
 /**
- * The share sheet, with [uris] readable by whatever app is chosen - for the
- * length of that app's visit, not for ever.
+ * The share sheet, with [uris] readable by the chosen app for as long as it
+ * handles the share.
  */
 internal fun share(context: android.content.Context, uris: List<android.net.Uri>, mime: String, title: String) {
     if (uris.isEmpty()) return
@@ -112,8 +112,8 @@ internal fun share(context: android.content.Context, uris: List<android.net.Uri>
             .putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, ArrayList(uris))
     }
     send.type = mime
-    // The grant travels on the clip data; without it the chosen app is handed
-    // a link it may not open.
+    // The read grant goes with the clip data. Without it the chosen app may
+    // not be able to open the link.
     send.clipData = android.content.ClipData.newRawUri(title, uris[0]).apply {
         uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) }
     }
@@ -138,11 +138,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        // Leaving for good: the Exquis's pads go dark rather than going on
-        // showing a scale for an app that is not there.
+        // Closing for good: turn the Exquis pads off.
         if (isFinishing) {
             com.rm.acidulous.midi.MidiHub.clearPads()
-            // And a Launchpad goes back to being itself.
+            // And hand the Launchpad back to its own mode.
             com.rm.acidulous.midi.MidiHub.releaseLaunchpad()
         }
         super.onDestroy()
@@ -153,7 +152,7 @@ class MainActivity : ComponentActivity() {
         CrashReports.install(this)
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) CrashReports.collect(this)
-        // Only on a fresh start: a recreated activity has already taken it.
+        // Only on a fresh start. A recreated activity has already handled it.
         if (savedInstanceState == null) incomingFrom(intent)
         AppHost.current = AndroidHost(this)
         com.rm.acidulous.ui.UiPrefs.init(com.rm.acidulous.util.androidPrefs(getSharedPreferences("ui", MODE_PRIVATE)))
@@ -169,9 +168,8 @@ class MainActivity : ComponentActivity() {
         goFullScreen()
         setContent {
             AppRoot(onLightTheme = { light ->
-                // The bars are hidden, but a swipe brings them back, so their
-                // icons still have to be readable against whichever theme is
-                // running.
+                // The bars are hidden but come back on a swipe, so their icons
+                // need to match the theme.
                 WindowCompat.getInsetsController(window, window.decorView).run {
                     isAppearanceLightStatusBars = light
                     isAppearanceLightNavigationBars = light
@@ -181,10 +179,8 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * The screen is the instrument. A phone gives back two strips of height
-     * by hiding the status and navigation bars, which is a bar of piano roll
-     * or a row of pads, and nothing in this app needs a clock on top of it.
-     * The bars stay one swipe away and hide themselves again afterwards.
+     * Hide the status and navigation bars to give the app the full screen
+     * height. They come back on a swipe and hide again afterwards.
      */
     private fun goFullScreen() {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
@@ -193,11 +189,11 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * **Every key comes through here first**, whether or not anything on
-     * screen has focus - which a Compose modifier would need before it saw a
-     * key at all. Play mode's notes and the chords with a modifier are taken
-     * before the screen; whatever the focused control does not use comes
-     * back for the plain-letter shortcuts. See ui/Keys.kt.
+     * Every key comes through here first, whether or not anything has focus
+     * (a Compose modifier only sees keys when focused). Play mode notes and
+     * modifier chords are taken before the screen, and whatever the focused
+     * control doesn't use comes back for the single-letter shortcuts. See
+     * ui/Keys.kt.
      */
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
         if (com.rm.acidulous.ui.KeyHub.preview(event.toPress())) return true
@@ -210,7 +206,7 @@ class MainActivity : ComponentActivity() {
         return super.dispatchTouchEvent(ev)
     }
 
-    /** What Meta+/ lists on a USB keyboard: the shortcuts this screen answers to. */
+    /** What Meta+/ lists on a USB keyboard: the shortcuts this screen has. */
     override fun onProvideKeyboardShortcuts(
         data: MutableList<android.view.KeyboardShortcutGroup>,
         menu: android.view.Menu?,
@@ -231,11 +227,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        // A note held on a key whose key up now goes to another window would
-        // never end.
+        // Release held keys, since their key up would go to another window
+        // and the notes would never end.
         if (!hasFocus) com.rm.acidulous.ui.KeyHub.releaseAll()
-        // A dialog, a permission prompt or the recents screen brings them
-        // back; take the height again as soon as we have focus.
+        // Dialogs, permission prompts and the recents screen bring the bars
+        // back, so hide them again when we get focus.
         if (hasFocus) goFullScreen()
     }
 }

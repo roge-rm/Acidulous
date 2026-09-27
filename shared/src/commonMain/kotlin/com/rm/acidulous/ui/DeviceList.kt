@@ -29,13 +29,12 @@ import com.rm.acidulous.ui.theme.Acid
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * A choice of audio device, one to a line: a computer's outputs or inputs.
+ * A list of audio devices, one per line: a computer's outputs or inputs.
  *
- * [SwitchGrid] is a knob's height at most, which suits three or four choices
- * and not a desktop's list: Dan's Windows machine has a dozen outputs, and in
- * a switch they were a dozen slivers with no names left in them. Here each
- * device gets a line its name fits on (shortened with an ellipsis if not), and
- * past [DeviceRowsShown] the list scrolls, with its bar, the chosen one in view.
+ * [SwitchGrid] is at most a knob's height, which suits three or four choices
+ * but not a desktop with a dozen outputs. Here each device gets a line wide
+ * enough for its name (with an ellipsis if not), and past [DeviceRowsShown]
+ * the list scrolls, starting with the chosen one in view.
  */
 @Composable
 internal fun DeviceList(

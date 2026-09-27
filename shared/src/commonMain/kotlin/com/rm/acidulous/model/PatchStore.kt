@@ -7,10 +7,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * A machine's parameters, normalised 0..1, by name - and, where a machine
- * has one, the variable-length part of its state. A Nexus patch without its
- * graph would be a bag of knob values wired to nothing; the same is true of
- * a Mosaic patch without its zones.
+ * A machine's parameters, normalised 0..1, by name, plus the variable-length
+ * part of its state if it has one. A Nexus patch needs its graph and a
+ * Mosaic patch needs its zones, or the knob values are wired to nothing.
  */
 @Serializable
 data class Patch(
@@ -19,24 +18,17 @@ data class Patch(
     val params: Map<String, Float>,
     val settings: Map<String, String> = emptyMap(),
     /**
-     * The notes the patch is played in, or -1 for no opinion. A bassoon
-     * has a bottom and an oboe has a top, and a patch that knows its range
-     * can put the keyboard there when it is loaded - so the first note
-     * pressed is a note the instrument has, rather than middle C on a
-     * tuba. Factory patches carry the bank's `range=`; a saved patch
-     * carries where the keyboard was.
+     * The note range the patch is played in, or -1 for none. Loading a patch
+     * with a range moves the keyboard there, so the first note you press is
+     * one the instrument has. Factory patches use the bank's `range=`, and
+     * saved patches store where the keyboard was.
      */
     val low: Int = -1,
     val high: Int = -1,
     /**
-     * Which shelf of the bank this sits on - Mosaic's keys/pad/grain, Pollen's
-     * cloud/bloom/rhythm, Hexbeat's classic/room/metal. Empty for a patch the
-     * user saved, which belongs on its own shelf and nowhere else.
-     *
-     * The banks have carried `family=` since M45; until now it was read by the
-     * audition harness, used to name the demo wavs, and dropped on the floor
-     * on the way to the app. A bank of fifty-one in one list is a list nobody
-     * reads to the end of.
+     * Which group of the bank this patch is in, like Mosaic's keys/pad/grain
+     * or Hexbeat's classic/room/metal. Empty for patches the user saved, which
+     * go in their own group. Comes from the bank's `family=`.
      */
     val family: String = "",
 )
@@ -51,13 +43,11 @@ object PatchStore {
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
     /**
-     * The prefix that says a patch belongs to an effect rather than a machine.
+     * The prefix that marks a patch as an effect's rather than a machine's.
      *
-     * `Patch.machine` is only a string, and none of the nine effect names
-     * collides with any of the nineteen machine names today - `Filter` is not
-     * `Filament`. But the folder is built from that string, so a future
-     * machine sharing a name with an effect would silently share its user
-     * patches. One prefix now costs nothing and makes that impossible.
+     * `Patch.machine` is just a string and the folder is built from it. No
+     * effect and machine share a name today, but if one ever did they'd share
+     * user patches. The prefix rules that out.
      */
     const val FX = "fx."
 
@@ -81,44 +71,35 @@ object PatchStore {
     fun userList(machine: String): List<String> =
         directory(machine).listFiles { f -> f.extension == "json" }?.map { it.nameWithoutExtension }?.sorted() ?: emptyList()
 
-    /** User patches only; factory ones are code. */
+    /** User patches only. Factory ones are built in. */
     fun delete(machine: String, name: String): Boolean =
         File(directory(machine), "${safe(name)}.json").delete()
 
     /**
      * A unit's factory patches.
      *
-     * All but one come from [FactoryBanks], which `tools/gen_patches.sh`
-     * writes from the text in `tools/banks/`. They used to be written here by
-     * hand as normalised floats, with each object carrying its own copy of
-     * the engine's parameter ranges to convert with - copies that could drift
-     * from the engine with nothing to notice. A bank file says `cutoff 620 Hz`
-     * and the same ParamDef converts it for the audition harness and for
-     * this, so what somebody listened to is what plays.
+     * They come from [FactoryBanks], which `tools/gen_patches.sh` writes from
+     * the text in `tools/banks/`. A bank file says `cutoff 620 Hz` and the
+     * engine's own ParamDef converts it, for both the audition harness and
+     * the app, so what was auditioned is what plays.
      *
-     * Nexus used to be the exception, on the grounds that its patches needed
-     * [NexusPalette] and so the engine over JNI. They do not: a Nexus patch is
-     * a *graph*, and a graph is text. It lives in `tools/banks/Nexus.bank`
-     * with every other machine's, and the knobs a patch does not name take the
-     * module's own defaults rather than zero - which is what the code here was
-     * really for.
+     * Nexus patches are graphs stored as text in `tools/banks/Nexus.bank`
+     * like the rest. The knobs a patch doesn't set get the module's defaults
+     * rather than zero, see [seedNexusKnobs].
      */
     fun factory(machine: String): List<Patch> =
         if (machine == "Nexus") FactoryBanks.of(machine).map { seedNexusKnobs(it) }
         else FactoryBanks.of(machine)
 
     /**
-     * Fill in the knobs a Nexus patch did not name, from the modules it uses.
+     * Fills in the knobs a Nexus patch didn't set, from the modules it uses.
      *
-     * Every slot knob defaults to zero, so a graph that states only what it
-     * changes has an oscillator at zero level and makes no sound at all. The
-     * audition harness seeds these when it mounts a graph; the app has to do
-     * the same, and until it did every factory Nexus patch was silent on the
-     * device while measuring correctly on the desk - which is as clear a
-     * demonstration as one could want that a harness is not the product.
+     * Every slot knob defaults to zero, so a graph that only states what it
+     * changes would have an oscillator at zero level and make no sound. The
+     * audition harness does the same when it loads a graph.
      *
-     * The defaults come from the engine over JNI, which is exactly what the
-     * bank generator cannot do and why this is here rather than in the file.
+     * The defaults come from the engine over JNI, which the bank generator
+     * can't do, so it happens here instead of in the generated file.
      */
     private fun seedNexusKnobs(patch: Patch): Patch {
         val graph = NexusPatch.decode(patch.settings["nexus"])
@@ -132,17 +113,16 @@ object PatchStore {
             }
         } catch (e: Throwable) {
             if (!com.rm.acidulous.util.isEngineMissing(e)) throw e
-            // No engine here - a unit test, or a tool reading the banks. The
-            // patch is still a patch; it simply cannot be told what a module's
-            // knobs want until something can ask.
+            // No engine here, e.g. a unit test or a tool reading the banks.
+            // Return the patch without module defaults.
             //
-            // `LinkageError` rather than `UnsatisfiedLinkError`, because the
-            // palette asks the engine from a lazy initialiser: the first
-            // attempt throws the unsatisfied link, and every one after that
-            // throws NoClassDefFoundError for a class that failed to load.
+            // It's a `LinkageError` rather than `UnsatisfiedLinkError` because
+            // the palette asks the engine from a lazy initialiser: the first
+            // try throws the unsatisfied link, and later ones throw
+            // NoClassDefFoundError for the class that failed to load.
             return patch
         }
-        // What the patch said for itself wins over the module's default.
+        // Values the patch set itself win over the module's defaults.
         params.putAll(patch.params)
         return patch.copy(params = params)
     }
@@ -152,50 +132,21 @@ object PatchStore {
 
     private fun safe(name: String) = name.trim().replace(Regex("[^A-Za-z0-9 _-]"), "_").ifEmpty { "patch" }
 }
-
-
-
-
-
-
-
-
-
-
-/**
- * Nexus's factory patches. Each is a whole graph, which is why a patch had
- * to learn to carry settings: knob values alone would be a bag of numbers
- * wired to nothing.
- *
- * They are also the argument for the machine. Two of them are patches no
- * other modular could make, because two of the blocks are Filament's string
- * and Manual's cabinet.
- */
-
-
-
-
-
-
-
 /** How a machine remembers which patch it is on, in its settings. */
 object PatchMark {
-    /** Which patch a machine is showing. A name, not a reference to anything. */
+    /** Which patch a machine is showing. Just a name, not a reference. */
     const val NAME = "patch_name"
 
     /**
-     * What that patch's knobs were, so the name can admit when it is out of date.
+     * A stamp of that patch's knob values, so the name can show when it's
+     * out of date.
      *
-     * A hash rather than the values: the honest version of this is "are the
-     * parameters still the ones the patch set", and the only way to answer that
-     * after the app has been closed and reopened is to have written down what
-     * they were. Writing down two hundred floats per machine would put tens of
-     * kilobytes of nothing into every song file, so it is a 64-bit FNV of the
-     * same numbers in a fixed order.
+     * Storing every value would add tens of kilobytes to each song, so it's a
+     * 64-bit FNV hash of the same numbers in a fixed order.
      */
     const val STAMP = "patch_stamp"
 
-    /** The parameters as one comparable value. Sorted, so map order cannot lie. */
+    /** The parameters as one comparable value. Sorted so map order can't matter. */
     fun stampOf(params: Map<String, Float>): String =
         fnv1a64(params.entries.sortedBy { it.key }.joinToString(",") { "${it.key}=${it.value}" }).toString(16)
 }

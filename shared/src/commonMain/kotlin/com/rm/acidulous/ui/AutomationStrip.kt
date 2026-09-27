@@ -54,10 +54,11 @@ import com.rm.acidulous.ui.theme.AcidColors
 import com.rm.acidulous.res.*
 
 /**
- * The parameter strip under the piano roll: one lane at a time, drawn as
- * a graph the width of the clip. Drag to write points at grid ticks (absolute
- * from the gesture base, so a stroke is one undo step); the picker cycles the
- * clip's lanes, and its menu adds a lane for any parameter or clears one.
+ * The parameter strip under the piano roll: one lane at a time, drawn as a
+ * graph the width of the clip. Drag to write points at grid ticks (absolute
+ * from the gesture base, so a stroke is one undo step). The picker cycles
+ * through the clip's lanes, and its menu adds a lane for any parameter or
+ * clears one.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -65,13 +66,13 @@ fun AutomationStrip(
     clip: Clip,
     ticksPerBar: Int,
     playheadTick: Long?,
-    /** The same window the roll is showing, so the playheads agree. */
+    /** The same window the roll is showing, so the playheads line up. */
     firstTick: Int = 0,
     visibleTicks: Int = 0,
     laneKeys: List<String>,          // every parameter a lane could be added for
     /** "Mosaic · grains position" for the list. */
     nameOf: (String) -> String = { it },
-    /** "position" for the gutter, where one word fits. */
+    /** "position" for the gutter, where only one word fits. */
     shortOf: (String) -> String = { laneParam(it) },
     selected: String?,
     onSelect: (String?) -> Unit,
@@ -79,10 +80,10 @@ fun AutomationStrip(
     onDraw: (key: String, points: Map<Int, Float>) -> Unit, // all points of this stroke so far
     onGestureEnd: () -> Unit,
     onClear: (String) -> Unit,
-    /** Folded to a single row, with the height handed back to the roll. */
+    /** Folded to a single row, giving the height back to the roll. */
     collapsed: Boolean = false,
     onToggleCollapse: () -> Unit = {},
-    /** Where a lane's knob is, for step locks' "back to the knob" to be drawn there. */
+    /** Where a lane's knob is, so step locks' "back to the knob" can be drawn there. */
     baseOf: (String) -> Float? = { null },
     modifier: Modifier = Modifier,
 ) {
@@ -104,11 +105,10 @@ fun AutomationStrip(
 
     Row(modifier.background(c.sunken)) {
         // As narrow as the roll's name gutter, so a tick is at the same x in
-        // both and the two playheads line up. The upper part names the lane
-        // being drawn and cycles through the ones that exist; a long press
-        // opens the full list, where lanes are added and cleared. The lower
-        // part folds the whole strip away - the roll is what an editor wants
-        // the height for, and automation is not always being drawn.
+        // both and the playheads line up. The upper part names the current
+        // lane and cycles through the others, and a long press opens the full
+        // list where lanes are added and cleared. The lower part folds the
+        // strip away, since the roll usually needs the height more.
         Column(Modifier.width(GutterWidth).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
             if (!collapsed) {
                 Box(
@@ -129,10 +129,9 @@ fun AutomationStrip(
                     ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    // Turned on its side for the same reason the scale chip
-                    // is: the width belongs to the graph. A stated length
-                    // because this gutter is always eighty-eight dp tall, so
-                    // a hundred and twenty is simply more than enough.
+                    // Turned sideways like the scale chip, so the width goes to
+                    // the graph. The gutter is always 88dp tall, so 120 is
+                    // plenty.
                     SideText(
                         current?.let { shortOf(it) } ?: stringResource(Res.string.auto_none),
                         Acid.colors.accent, 9.sp, length = 120.dp, family = FontFamily.Monospace,
@@ -152,8 +151,8 @@ fun AutomationStrip(
                     for (k in laneKeys) {
                         DropdownMenuItem(
                             text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
-                            // A lane is cleared where it is listed, so every lane
-                            // that exists can be got rid of without selecting it first.
+                            // Lanes can be cleared from the list, so any lane
+                            // can be removed without selecting it first.
                             trailingIcon = if (k !in existing) null else ({
                                 Text(
                                     "✕", color = Acid.colors.red, fontSize = 13.sp,
@@ -169,10 +168,10 @@ fun AutomationStrip(
                 }
             }
         }
-        // **The keyboard's cursor**, as the roll's: focused the strip wears a
-        // ring, Enter starts editing, left and right walk the grid, and up
-        // and down set the lane's value there - a point, through the same
-        // stroke a finger draws, one undo step each. Esc stops editing.
+        // The keyboard cursor, like the roll's: when focused the strip shows
+        // a ring, Enter starts editing, left and right move along the grid,
+        // and up and down set the lane's value there as a point, one undo
+        // step each. Esc stops editing.
         var keyFocused by remember { mutableStateOf(false) }
         var keyEditing by remember { mutableStateOf(false) }
         var keyTick by remember { mutableStateOf(firstTick) }
@@ -216,11 +215,12 @@ fun AutomationStrip(
         Canvas(
             Modifier.fillMaxWidth().fillMaxHeight().then(stripKeys).pointerInput(Unit) {
                 awaitEachGesture {
-                    // Always consume a touch before bailing: a block that returns
-                    // without suspending makes awaitEachGesture spin the main thread.
+                    // Always consume a touch before returning. A block that
+                    // returns without suspending makes awaitEachGesture spin
+                    // the main thread.
                     val down = awaitFirstDown()
                     if (foldedState) {
-                        // Too short to draw on: a touch here asks for it back.
+                        // Too short to draw on, so a touch here unfolds it.
                         down.consume()
                         expand()
                         return@awaitEachGesture
@@ -256,7 +256,7 @@ fun AutomationStrip(
                 t += PPQN
             }
             if (lane != null && lane.points.isNotEmpty()) {
-                // sample the lane at every grid tick so step and linear both draw right
+                // Sample the lane at every grid tick so step and linear both draw right.
                 val step = clip.grid.coerceAtLeast(8)
                 var prev: Offset? = null
                 var tick = from
@@ -264,7 +264,7 @@ fun AutomationStrip(
                     val v = lane.valueAt(tick)
                     val p = Offset(xOf(tick), (1f - v) * (size.height - 4f) + 2f)
                     prev?.let {
-                        // A stepped lane - a switch's, or a step lock - holds
+                        // A stepped lane (a switch's, or a step lock) holds
                         // until its next point and then jumps: across, then up.
                         if (lane.linear) {
                             drawLine(c.accent, it, p, 2f)
@@ -303,8 +303,8 @@ fun AutomationStrip(
             }
         }
         if (collapsed) {
-            // The graph keeps drawing while folded, so the name needs a ground
-            // of its own or it reads as part of the curve.
+            // The graph keeps drawing while folded, so the name needs its own
+            // background or it looks like part of the curve.
             Text(
                 current?.let { shortOf(it) } ?: stringResource(Res.string.auto_none),
                 color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
@@ -320,9 +320,9 @@ fun AutomationStrip(
 }
 
 /**
- * A row of live parameter sliders for the mounted machine - the placeholder for
- * M7's panel. They follow the engine (so a lane moves them) except while being
- * dragged, and show their normalised value.
+ * A row of live parameter sliders for the loaded machine. They follow the
+ * engine (so a lane moves them) except while being dragged, and show their
+ * normalised value.
  */
 @Composable
 fun ParamStrip(rack: Int, machineType: String, modifier: Modifier = Modifier) {
@@ -371,8 +371,8 @@ fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
                 .map { laneKey(com.rm.acidulous.model.effectUnit(slot), it) }
         } +
         listOf("gain", "pan", "sendreverb", "senddelay").map { laneKey("channel", it) } +
-        // The performance strip, for machines that answer it. These are the
-        // only lanes that are not a unit's parameter: they leave as MIDI.
+        // The performance strip, for machines that use it. These are the only
+        // lanes that aren't a unit's parameter; they're sent as MIDI.
         (
             if (com.rm.acidulous.model.MachineUi.usesPerformance(track.machine.type)) {
                 listOf("mod", "pressure").map { laneKey("performance", it) }
@@ -380,8 +380,8 @@ fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
                 emptyList()
             }
             ) +
-        // The pedals, on anything melodic: a MIDI pedal plays them, and the
-        // lane can be drawn by hand.
+        // The pedals, on anything melodic. A MIDI pedal plays them, and the
+        // lane can also be drawn by hand.
         (
             if (com.rm.acidulous.model.MachineUi.takesTranspose(track.machine.type)) {
                 com.rm.acidulous.model.PEDAL_LANES.map { laneKey("performance", it) }

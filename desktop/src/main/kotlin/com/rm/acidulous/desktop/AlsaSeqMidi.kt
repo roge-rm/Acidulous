@@ -11,10 +11,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "Acidulous.MIDI"
 
-/** ALSA's sequencer, as alsa_seq.cpp opens it. */
+/** ALSA's sequencer, opened by alsa_seq.cpp. */
 internal object AlsaSeq {
     init {
-        // The engine's library, loaded already by NativeEngine; again is nothing.
+        // The engine's library. NativeEngine has already loaded it, so this does nothing.
         System.loadLibrary("acidulous")
     }
 
@@ -25,7 +25,7 @@ internal object AlsaSeq {
     @JvmStatic external fun nativeSend(client: Int, port: Int, bytes: ByteArray, offset: Int, count: Int): Boolean
     @JvmStatic external fun nativeRead(out: ByteArray, from: IntArray, timeoutMs: Int): Int
 
-    // A port's capabilities, as <alsa/seq.h> numbers them.
+    // Port capability flags, as numbered in <alsa/seq.h>.
     const val CAP_READ = 0x01
     const val CAP_WRITE = 0x02
     const val CAP_SUBS_READ = 0x20
@@ -34,7 +34,7 @@ internal object AlsaSeq {
     const val KERNEL_CLIENT = 2
 }
 
-/** One of the sequencer's ports, as nativePorts lists it. */
+/** One sequencer port, as listed by nativePorts. */
 internal data class SeqPort(
     val client: Int,
     val port: Int,
@@ -45,19 +45,18 @@ internal data class SeqPort(
     val portName: String,
 )
 
-/** A sequencer client as the hub's device: the ports it sends from and those it takes. */
+/** A sequencer client as a MIDI device: the ports it sends from and the ports it receives on. */
 internal class SeqDevice(val desc: MidiDeviceDesc, val client: Int, val sources: List<Int>, val destinations: List<Int>)
 
 /**
- * Which of the sequencer's clients are instruments, as devices.
+ * Which sequencer clients are instruments, as devices.
  *
- * Not the system's own client (0), nor this app's, nor "Midi Through" - a
- * loop back to itself that every Linux has and nobody plugged in - nor
- * PipeWire's bridge clients, nor a port its owner keeps to itself.
+ * Skips the system client (0), this app, "Midi Through" (a loopback every
+ * Linux has), PipeWire's bridge clients, and ports marked as private.
  *
- * A device's id is its name, so a controller plugged back in is the same one:
- * the sequencer gives it a new client number each time. Two with one name are
- * told apart by the order they are listed in.
+ * A device's id comes from its name, because the sequencer gives it a new
+ * client number each time it's plugged in. Devices with the same name are
+ * told apart by their order in the list.
  */
 internal fun seqDevices(ports: List<SeqPort>, ownClient: Int): List<SeqDevice> {
     val usable = ports.filter {
@@ -84,7 +83,7 @@ internal fun seqDevices(ports: List<SeqPort>, ownClient: Int): List<SeqDevice> {
                 maker = null,
                 inputPortCount = destinations.size,
                 outputPortCount = sources.size,
-                // A card behind it is hardware: USB, as good as always.
+                // A kernel client with a sound card is hardware, almost always USB.
                 usb = first.clientType == AlsaSeq.KERNEL_CLIENT && first.card >= 0,
                 bluetooth = false,
             ),
@@ -94,19 +93,19 @@ internal fun seqDevices(ports: List<SeqPort>, ownClient: Int): List<SeqDevice> {
 }
 
 /**
- * MIDI on Linux through ALSA's sequencer, which is what Linux's music
- * programs use: the USB devices Java Sound's raw MIDI sees, shared rather than
- * held, and besides them every other program's ports and BlueZ's Bluetooth
- * MIDI instruments.
+ * MIDI on Linux through ALSA's sequencer, which is what Linux music apps use.
+ * It sees the same USB devices as Java Sound's raw MIDI, but shares them
+ * instead of taking them over, and also sees other programs' ports and
+ * BlueZ's Bluetooth MIDI devices.
  *
- * As JavaSoundMidi: the list is read again every two seconds, since word of a
- * change would mean a subscription to the system's announcements for no
- * gain, and a timestamped send waits on the MIDI thread. What comes in is read
- * on a thread of its own and sorted by the port it came from.
+ * Like JavaSoundMidi, the device list is re-read every two seconds rather
+ * than subscribing to system announcements, and timestamped sends wait on the
+ * MIDI thread. Incoming messages are read on their own thread and routed by
+ * the port they came from.
  */
 class AlsaSeqMidi private constructor(private val ownClient: Int, private val pollMs: Long) : MidiSystem {
     companion object {
-        /** The sequencer, or null where there is none - no /dev/snd/seq, no libasound - for Java Sound instead. */
+        /** The sequencer, or null if there isn't one (no /dev/snd/seq or no libasound), so Java Sound is used instead. */
         fun open(pollMs: Long = 2000): AlsaSeqMidi? {
             val own = runCatching { AlsaSeq.nativeOpen() }.onFailure { Log.w(TAG, "no sequencer", it) }.getOrDefault(-1)
             return if (own >= 0) AlsaSeqMidi(own, pollMs) else null
@@ -132,7 +131,7 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
     private fun describe(d: SeqDevice) =
         "${d.desc.name} (client ${d.client}, in ${d.sources}, out ${d.destinations}${if (d.desc.usb) ", usb" else ""})"
 
-    /** Who hears each port: client and port, as one number. */
+    /** Listener for each port, keyed by client and port packed into one number. */
     private val listeners = ConcurrentHashMap<Long, (ByteArray, Int, Int, Long) -> Unit>()
     private fun keyOf(client: Int, port: Int) = (client.toLong() shl 32) or port.toLong()
 
@@ -146,18 +145,18 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
                 val n = AlsaSeq.nativeRead(buffer, from, 250)
                 if (n < 0) break
                 if (n == 0) continue
-                // Stamped on arrival: the hub wants System.nanoTime's base.
+                // Timestamped on arrival, using System.nanoTime like the hub expects.
                 val at = System.nanoTime()
                 val heard = listeners[keyOf(from[0], from[1])]
-                // The first few, heard or not, so a log says whether anything
-                // arrives at all and from where.
+                // Log the first few messages, handled or not, to show whether
+                // anything arrives and from where.
                 if (said < 8) {
                     said++
                     Log.i(TAG, "in from ${from[0]}:${from[1]}: ${buffer.take(n.coerceAtMost(6)).joinToString(" ") { "%02X".format(it) }}" +
                         if (heard == null) " (nothing connected to it)" else "")
                 }
-                // Whatever the hub does with it, the reading goes on: an
-                // exception here would end this thread, and every input with it.
+                // Keep reading whatever the hub does. An exception here would
+                // end this thread and stop every input.
                 if (heard != null) runCatching { heard(buffer.copyOf(n), 0, n, at) }
                     .onFailure { Log.w(TAG, "a message from ${from[0]}:${from[1]} could not be handled", it) }
             }
@@ -172,8 +171,8 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
     }
 
     override fun watch(added: (MidiDeviceDesc) -> Unit, removed: (MidiDeviceDesc) -> Unit) {
-        // By id and client both: plugged back in, a device keeps its id and
-        // gets a new client, and the hub's hold on the old one is dead.
+        // Compare both id and client: a replugged device keeps its id but
+        // gets a new client, and the hub's connection to the old one is dead.
         var before = known.associateBy { it.desc.id }
         before.values.forEach { Log.i(TAG, "device ${describe(it)}") }
         thread.every(pollMs) {
@@ -191,8 +190,8 @@ class AlsaSeqMidi private constructor(private val ownClient: Int, private val po
 
         override fun openInputPort(index: Int): MidiSendPort? {
             val port = device.destinations.getOrNull(index) ?: return null
-            // Connected first: a hardware port does not open its device's
-            // output for a message sent to it unasked. See nativeSpeak.
+            // Connect first, since a hardware port won't pass on messages sent
+            // to it without a connection. See nativeSpeak.
             if (!AlsaSeq.nativeSpeak(device.client, port, true)) return null
             synchronized(spoken) { spoken += port }
             return object : MidiSendPort {

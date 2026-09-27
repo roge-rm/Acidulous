@@ -85,9 +85,9 @@ import com.rm.acidulous.ui.theme.AcidColors
 import com.rm.acidulous.res.*
 
 /**
- * The mixer section as a slide-up panel: a strip per track, then the
- * master. Fader drags are one undo step (per track, or song-level for the
- * master) and also go straight to the engine for immediacy.
+ * The mixer as a slide-up panel: a strip per track, then the master. A fader
+ * drag is one undo step (per track, or song-level for the master) and also goes
+ * straight to the engine.
  */
 @Composable
 fun MixerPanel(
@@ -99,54 +99,31 @@ fun MixerPanel(
     onClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     /**
-     * Whether the strips may wrap into rows: in the editor's column, yes. Not
-     * under the song grid, where the mixer is a bar along the bottom - that
-     * box is everything under the header, which always has height for two
-     * rows, and they filled the screen and pushed the grid off it.
+     * Whether the strips may wrap into rows. Yes in the editor's column. Not
+     * under the song grid, where the mixer is a bar along the bottom and two
+     * rows would push the grid off the screen.
      */
     rows: Boolean = true,
 ) {
     val c = Acid.colors
-    // **The fader takes what is left, when there is a "left" to take.**
-    //
-    // A hundred and ten dp is a fair fader on a phone held upright, where the
-    // mixer slides up over a song grid that can spare it. It is not a fair
-    // fader in the editor's panel column turned sideways, which is about two
-    // hundred dp tall in total and also carries a name, a pan, two sends and
-    // two rows of chips - so the strip simply overhung and the bottom of it
-    // was not there.
-    //
-    // So the fader is worked out from the room there actually is, floored at
-    // a height you can still drag and capped at what it is upright. The
-    // branch is on the measurement rather than on the orientation, because
-    // the squeeze is a fact about the box this is in and not about which way
-    // the phone is held - the same panel is tight in a turned editor and
-    // roomy in an upright arranger.
+    // The fader height comes from the room available, floored at a height you
+    // can still drag and capped at FADER_H. In the editor's panel column turned
+    // sideways there's only about 200 dp for the whole strip. This goes by the
+    // measured size, not by orientation.
     BoxWithConstraints(modifier) {
-    // **A floor, and a scroll under it.** `weight(1f)` alone gave the fader
-    // whatever was left, and in the editor's panel column what was left came
-    // to about fifteen dp - everything visible and nothing draggable, which
-    // is the wrong half of the problem to solve. So the height is worked out
-    // instead, floored at something you can still move, and the strip scrolls
-    // when even that will not fit. The scroll is the safety net rather than
-    // the mechanism: at any ordinary size nothing scrolls at all.
-    // **Capped, not filled.** `fillMaxHeight` was the first answer and it was
-    // wrong in the ordinary case: a Column hands its children a bounded max
-    // height whether or not the space is tight, so upright - where there was
-    // never a problem - the strips stretched down the whole screen with a
-    // hand's width of nothing under the chips. What is wanted is a ceiling.
+    // The height is worked out instead of using weight(1f), which left about 15
+    // dp in the editor's column, and capped instead of fillMaxHeight, which
+    // stretched the strips down the whole screen. The strip only scrolls when
+    // even the floor doesn't fit.
     val room = if (constraints.hasBoundedHeight) maxHeight else Dp.Infinity
-    // The output row is there only in a song that has a group to route to.
+    // The output row only appears when the song has a group to route to.
     val groups = song.master.groups.map { it.name }
     val chrome = STRIP_CHROME + if (groups.isEmpty()) 0.dp else OUTPUT_ROW
-    // **Rows of strips where there is height for them.** The editor's column
-    // on a tablet or a desktop is several strips tall and one wide: a single
-    // row there showed four channels across the top and scrolled sideways
-    // for the rest, over a column of nothing (Dan, 2026-09-25). Where two
-    // rows fit even at the shortest fader, the strips wrap, right-aligned as
-    // the row is, the height is shared between two rows, and the column
-    // scrolls down for the rest. Strips that fit in one line lay out as they
-    // did, full height.
+    // Wrap into rows where there's height for them, like the editor's column on
+    // a tablet or desktop. When two rows fit at the shortest fader the strips
+    // wrap (right-aligned), the height is shared between two rows and the
+    // column scrolls for the rest. Strips that fit in one line lay out as
+    // usual.
     val count = song.tracks.size + song.master.groups.size + (if (song.master.groups.size < MAX_GROUPS) 1 else 0) + 1
     val across = (STRIP_W + 6.dp) * count + 6.dp
     val wrap = rows && room != Dp.Infinity && across > maxWidth && room >= (chrome + FADER_MIN) * 2 + 6.dp
@@ -157,32 +134,23 @@ fun MixerPanel(
     } else {
         (room - chrome).coerceIn(FADER_MIN, FADER_H)
     }
-    // Only once even the floor will not fit does anything scroll.
+    // Only scroll once even the floor won't fit.
     val tight = room != Dp.Infinity && room < chrome + FADER_MIN
-    // **Against the right edge, not the left.** The master is the last strip
-    // and the thing you reach for, and with three tracks in a song the row
-    // used to sit in the left third of the screen with two thirds of nothing
-    // beside it - Dan: "the mixer panel should snap to the right side of the
-    // screen, not the left".
-    //
-    // A minimum width of the viewport is what does it: the row is then at
-    // least as wide as what it is in, so `Alignment.End` has somewhere to push
-    // from. Once the strips are wider than that the minimum stops binding and
-    // it scrolls exactly as before.
+    // Aligned to the right edge, since the master is the last strip and the one
+    // you reach for. The row gets a minimum width of the viewport so
+    // Alignment.End has room to push. Once the strips are wider it scrolls as
+    // usual.
     val strips: @Composable () -> Unit = {
-        // What the two send sliders are called on every channel: whatever is
-        // on the send. They said "rev" and "dly" when that was all they could
-        // ever be, and went on saying it after the sends became slots, which
-        // is a label describing the send it used to be.
+        // The send sliders are labelled with whatever effect is on each send.
         val density = androidx.compose.ui.platform.LocalDensity.current
         var stripH by remember { mutableStateOf(Dp.Unspecified) }
         val sendNames = List(SEND_SLOTS) { slot ->
             song.master.sendAt(slot).type.lowercase().ifEmpty { stringResource(Res.string.mixer_send, slot + 1) }
         }
         song.tracks.forEachIndexed { index, track ->
-            // Which of this channel's controls a clip is driving. A lane wins
-            // over the fader on every pass, so a channel with one is a channel
-            // whose fader will not appear to work - and nothing here said so.
+            // Which of this channel's controls a clip is automating. A lane
+            // overrides the fader on every pass, so the fader would seem not to
+            // work without this.
             val automated = remember(track) {
                 track.clips.values
                     .flatMap { it.automation.keys }
@@ -191,15 +159,15 @@ fun MixerPanel(
                     .distinct()
                     .sorted()
             }
-            // The first strip is measured, and the groups and the master are
-            // made its height, so the whole row ends on one line.
+            // The first strip is measured and the groups and master are given
+            // its height, so the whole row ends level.
             Box(if (index == 0) Modifier.onSizeChanged { stripH = with(density) { it.height.toDp() } } else Modifier) {
                 ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index, track.colour), automated, faderH, room, tight, sendNames, groups)
             }
         }
         val fullH = if (song.tracks.isEmpty() || tight) Dp.Unspecified else stripH
-        // The groups: strips of their own between the tracks and the master,
-        // and a button to add one while there is room.
+        // The groups get their own strips between the tracks and the master,
+        // plus a button to add one while there's room.
         song.master.groups.forEachIndexed { g, group -> GroupStrip(g, group, song, editor, faderH, room, tight, fullH) }
         if (song.master.groups.size < MAX_GROUPS) AddGroupStrip(editor, room, fullH)
         MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight, fullH)
@@ -275,7 +243,7 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        // The name renames on a tap; the cross beside it removes the group.
+        // Tap the name to rename, the cross beside it removes the group.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 group.name, color = c.accent, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -312,7 +280,7 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
                 onEnd = { editor.endSongGesture() },
             )
         }
-        // What is routed here, in the room a channel spends on its sends.
+        // What's routed here, in the space a channel uses for its sends.
         val members = song.tracks.filter { it.mixer.output == g + 1 }.map { it.name }
         Text(
             if (members.isEmpty()) stringResource(Res.string.mixer_nothing_routed) else members.joinToString("\n"),
@@ -344,7 +312,7 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
     }
 }
 
-/** Where a new group comes from: a strip no wider than its turned label. */
+/** The button for a new group: a strip no wider than its rotated label. */
 @Composable
 private fun AddGroupStrip(editor: SongEditor, room: Dp, fullH: Dp) {
     val c = Acid.colors
@@ -360,21 +328,22 @@ private fun AddGroupStrip(editor: SongEditor, room: Dp, fullH: Dp) {
     ) { SideText(stringResource(Res.string.mixer_add_group), c.textMid, 11.sp) }
 }
 
-
 @Composable
 private fun ChannelStrip(
     track: Track, index: Int, peak: Float, editor: SongEditor, colour: Color,
-    /** Channel controls some clip of this track has a lane for. */
+    /** Channel controls that some clip of this track has a lane for. */
     automated: List<String> = emptyList(),
-    /** What the panel worked out this strip can spend on its fader. */
+    /** The fader height the panel worked out for this strip. */
     faderH: Dp = FADER_H,
-    /** The most the strip may be, or Infinity where nothing is pressing. */
+    /**
+     * The most height the strip can use, or Infinity when it's not constrained.
+     */
     room: Dp = Dp.Infinity,
-    /** Even the shortest usable strip will not fit, so this one scrolls. */
+    /** Even the shortest usable strip won't fit, so this one scrolls. */
     tight: Boolean = false,
-    /** What the two send sliders are called - the effects that are on them. */
+    /** The send sliders' labels, the effects on the sends. */
     sendNames: List<String> = List(2) { stringResource(Res.string.mixer_send, it + 1) },
-    /** The names of the mixer's groups, which this track can be routed into. */
+    /** The mixer's groups, which this track can be routed into. */
     groups: List<String> = emptyList(),
 ) {
     val c = Acid.colors
@@ -389,18 +358,17 @@ private fun ChannelStrip(
     fun map(name: String) = MapTargets.param(index, "channel", name)
 
     /**
-     * The strip as it was when the mixer opened, for a long press to go back
-     * to - the same gesture the panels' knobs have.
+     * The strip as it was when the mixer opened, for a long press to reset to,
+     * like the panels' knobs.
      *
-     * **Taken at composition, unlike a panel's.** A machine panel waits for
-     * its first poll because it reads the *engine* and knows nothing until it
-     * has asked. A strip reads the document, which is right here and already
-     * correct, so there is nothing to wait for. The mixer leaving composition
-     * when it closes is what makes reopening take a fresh reading.
+     * Taken at composition, unlike a machine panel which waits for its first
+     * poll of the engine. A strip reads the document, which is already correct.
+     * The mixer leaves composition when closed, so reopening takes a fresh
+     * copy.
      */
     val opened = remember(index) { m }
 
-    /** Put one value back, in the document and in the engine both. */
+    /** Put one value back, in the document and in the engine. */
     fun back(name: String, v01: Float, update: (Mixer) -> Mixer) {
         live(name, v01)
         tap(update)
@@ -413,8 +381,8 @@ private fun ChannelStrip(
             confirmLabel = stringResource(Res.string.mixer_clear),
             onConfirm = {
                 askClear = false
-                // Every clip on this track, because a lane in a scene you are
-                // not playing will bite you the moment that scene comes round.
+                // Every clip on this track, since a lane in another scene will
+                // kick in when that scene plays.
                 editor.edit(index) { t ->
                     t.copy(clips = t.clips.mapValues { (_, clip) ->
                         val kept = clip.automation.filterKeys { laneUnit(it) != "channel" }
@@ -441,18 +409,10 @@ private fun ChannelStrip(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        // A lane on this channel, said out loud. Without it a fader that is
-        // being overwritten every pass simply looks broken, which is exactly
-        // how it was found: "the level didn't seem to respond to my controls".
-        //
-        // **Beside the name, not above the fader.** It used to be its own
-        // full-width row, which meant the one strip that had automation stood
-        // a line lower than every strip beside it - the faders no longer
-        // started at the same height and the mixer stopped reading as a row of
-        // like things. A mark on the name line costs no height at all, so
-        // every strip still lines up, and the lanes themselves are named in
-        // the window a tap opens, which had more room to say it properly than
-        // a 9sp line ever did.
+        // Mark automated channels next to the name, otherwise a fader that's
+        // being overwritten every pass just looks broken. It's on the name line
+        // so it costs no height and the faders still line up. Tapping it opens
+        // a window listing the lanes.
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(track.name, color = c.text, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (automated.isNotEmpty()) {
@@ -518,10 +478,9 @@ private fun ChannelStrip(
             ToggleChip(stringResource(Res.string.mixer_mute_short), m.mute, c.red, Modifier.mappable(map("mute")), said = stringResource(Res.string.a11y_mute, track.name)) { tap { it.copy(mute = !it.mute) } }
             ToggleChip(stringResource(Res.string.mixer_solo_short), m.solo, c.accent, Modifier.mappable(map("solo")), said = stringResource(Res.string.a11y_solo, track.name)) { tap { it.copy(solo = !it.solo) } }
         }
-        // Where this track's notes go. Off, both, or out only - and at "out"
-        // the machine is not asked at all, which is how driving something
-        // else gives the CPU back. The channel sits beside it because one
-        // without the other is no use.
+        // Where this track's notes go: off, both, or out only. At out only the
+        // machine isn't run at all, which saves CPU when driving external gear.
+        // The MIDI channel sits next to it.
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             val label = stringResource(when (m.midiMode) { 1 -> Res.string.mixer_midi_both; 2 -> Res.string.mixer_midi_out; else -> Res.string.mixer_midi_off })
             ToggleChip(label, m.midiMode != 0, c.teal, said = stringResource(Res.string.a11y_midi_out, track.name), state = label) {
@@ -533,8 +492,8 @@ private fun ChannelStrip(
                 }
             }
         }
-        // Where the sound goes: the master, or one of the mixer's groups. A
-        // tap steps through them.
+        // Where the sound goes: the master, or one of the mixer's groups. A tap
+        // steps through them.
         if (groups.isNotEmpty()) {
             val to = groups.getOrNull(m.output - 1)
             ToggleChip(stringResource(Res.string.mixer_to, to ?: stringResource(Res.string.mixer_master)), to != null, c.teal, Modifier.width(STRIP_W - 8.dp).mappable(map("output")), padding = 3.dp,
@@ -559,7 +518,7 @@ private fun MasterStrip(
     faderH: Dp = FADER_H,
     room: Dp = Dp.Infinity,
     tight: Boolean = false,
-    /** A channel strip's height, to match; unspecified where there is none to match. */
+    /** A channel strip's height to match, unspecified when there's none. */
     fullH: Dp = Dp.Unspecified,
 ) {
     val c = Acid.colors
@@ -569,7 +528,7 @@ private fun MasterStrip(
         live(name, v01)
         editor.updateSongGesture(update)
     }
-    // The master is rack 0 by convention - it has no rack of its own, and a
+    // The master is rack 0 by convention. It has no rack of its own, and a
     // mapping to it never follows the routing.
     fun map(name: String) = MapTargets.param(0, "master", name)
 
@@ -580,8 +539,8 @@ private fun MasterStrip(
     editingInsert?.let { slot ->
         SongSlotDialog(stringResource(Res.string.mixer_master_insert, slot + 1), slot, ::masterInsertUnit, { s, i -> s.master.insertAt(i) },
                        Song::withMasterInsert, Song::withMasterInsertParam,
-                       // In series with the mix, like a track's insert, so a
-                       // dry blend is a real thing to want.
+                       // In series with the mix like a track insert, so a dry
+                       // blend makes sense.
                        hideMix = false, editor = editor) { editingInsert = null }
     }
 
@@ -596,9 +555,9 @@ private fun MasterStrip(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(stringResource(Res.string.mixer_master), color = c.text, fontSize = 11.sp)
-        // Loudness: integrated since play started, and the short-term and true
-        // peak under it. Polled while the mixer is open, which is also what
-        // keeps the engine measuring; a tap starts the integrated figure again.
+        // Loudness: integrated since play started, with short-term and true
+        // peak under it. Polled while the mixer is open, which also keeps the
+        // engine measuring. A tap resets the integrated figure.
         var lufs by remember { mutableStateOf(floatArrayOf(-120f, -120f, -120f, -120f)) }
         LaunchedEffect(Unit) {
             while (true) {
@@ -629,11 +588,9 @@ private fun MasterStrip(
                 onEnd = { editor.endSongGesture() },
                 name = stringResource(Res.string.a11y_limit_drive))
         }
-        // Under the limiter rather than over the fader, so the master's fader
-        // lines up with every channel's.
-        // It takes whatever height the strip has left between the limiter and
-        // the buttons, so the buttons always fit and the reading is as large as
-        // the room allows.
+        // Under the limiter rather than above the fader, so the master's fader
+        // lines up with every channel's. It takes the height left between the
+        // limiter and the buttons, so the buttons always fit.
         Column(
             Modifier.fillMaxWidth().then(if (fullH != Dp.Unspecified) Modifier.weight(1f) else Modifier)
                 .clip(RoundedCornerShape(4.dp)).background(c.cardAlt)
@@ -641,10 +598,9 @@ private fun MasterStrip(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // The unit small beside the number, and the two small readings
-            // side by side under it: "-14.8 LUFS" at one size is wider than
-            // the strip, and a line of its own is more than a song without
-            // groups leaves room for.
+            // The unit is small next to the number, and the two small readings
+            // sit side by side under it, since "-14.8 LUFS" at one size is
+            // wider than the strip.
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(fmt(lufs[2]), color = c.textHi, fontSize = 15.sp, lineHeight = 17.sp, maxLines = 1, softWrap = false,
                     modifier = Modifier.alignByBaseline())
@@ -656,10 +612,10 @@ private fun MasterStrip(
                 LoudnessFigure(stringResource(Res.string.mixer_true_peak), fmt(lufs[3]), if (lufs[3] > -1f) c.red else c.textMid)
             }
         }
-        // **Six buttons in a grid of three rows, so the strip is no taller
-        // than a channel's.** The two sends, the two master inserts, then the
-        // limiter and the click. Tap switches one off and on; hold opens a
-        // send or an insert to choose the effect and set it up.
+        // Six buttons in three rows so the strip is no taller than a channel's:
+        // the two sends, the two master inserts, then the limiter and the
+        // click. Tap toggles, hold opens a send or insert to choose and set up
+        // the effect.
         fun sendTap(slot: Int) {
             val send = master.sendAt(slot)
             if (send.isEmpty) { editing = slot; return }
@@ -702,7 +658,7 @@ private fun MasterStrip(
     }
 }
 
-/** An effect's name cut to fit half a strip. */
+/** An effect's name shortened to fit half a strip. */
 private fun shortFx(type: String): String = when (type) {
     "Reverb" -> "verb"
     "Delay" -> "dly"
@@ -724,7 +680,7 @@ private fun shortFx(type: String): String = when (type) {
 @Composable
 private fun GridChip(
     label: String, on: Boolean, colour: Color, modifier: Modifier = Modifier, height: Dp = 28.dp,
-    /** What TalkBack says, where [label] is short, and what a hold does there. */
+    /** What TalkBack says when [label] is short, and what a hold does. */
     said: String? = null,
     actions: List<androidx.compose.ui.semantics.CustomAccessibilityAction> = emptyList(),
     onClick: () -> Unit,
@@ -744,14 +700,14 @@ private fun GridChip(
 @Composable
 private fun Labeled(label: String, content: @Composable () -> Unit) {
     Column {
-        // The control under it says its own name, strip and all.
+        // The control under it announces its own name.
         Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.silent())
         content()
     }
 }
 
-// Material buttons carry a 40 dp minimum height; these have to stack four high
-// beside a fader, so they are plain boxes.
+// Material buttons have a 40 dp minimum height, and these stack four high next
+// to a fader, so they're plain boxes.
 @Composable
 private fun ToggleChip(
     label: String,
@@ -775,8 +731,8 @@ private fun ToggleChip(
             .padding(horizontal = padding),
         contentAlignment = Alignment.Center,
     ) {
-        // Never wrapped: a label that wraps at its space and is then cut to one
-        // line shows only its first word - "→ Rhythm" showed as "→".
+        // Never wrapped. A label that wraps at a space and is then cut to one
+        // line only shows its first word.
         Text(label, color = if (on) colour else c.textMid, fontSize = 11.sp, maxLines = 1,
              softWrap = false, overflow = TextOverflow.Ellipsis)
     }
@@ -786,9 +742,8 @@ private fun ToggleChip(
 fun trackColour(index: Int, chosen: Int? = null): Color = PALETTE[(chosen ?: index).mod(PALETTE.size)]
 internal val TRACK_COLOURS: Int get() = PALETTE.size
 
-// A track's stripe is how that track is recognised at a glance, so it is
-// the same colour in both themes - it belongs to the track, not to the
-// interface. Mid-saturation hues that hold up on white and on black.
+// A track's stripe is the same colour in both themes, since it belongs to the
+// track. Mid-saturation hues that work on white and on black.
 private val PALETTE = listOf(
     Color(0xFF3FA98D), Color(0xFFE09A3C), Color(0xFFD4688A), Color(0xFF5B8FE0),
     Color(0xFF8CC04E), Color(0xFFE0714A), Color(0xFF9B7BD4), Color(0xFF3FAFC0),
@@ -796,63 +751,52 @@ private val PALETTE = listOf(
 
 private val STRIP_W = 76.dp
 /**
- * The master strip is a strip.
- *
- * It was two hundred and thirty-two dp - a fader with a column of chips beside
- * it - which is three channels wide for one channel's worth of controls. Now
- * everything in it is stacked the way a channel stacks its own, so it is the
- * same width as its neighbours and the row is a row of equal strips.
+ * The master strip is the same width as a channel strip, with everything
+ * stacked the way a channel stacks its controls.
  */
 private val MASTER_W = STRIP_W
-/** What a fader is upright, and the most it is anywhere. */
+/** The fader height when there's room, and the maximum anywhere. */
 private val FADER_H = 110.dp
 
-/** Under this it stops being something you drag and becomes a readout. */
+/** Below this a fader is too short to drag. */
 private val FADER_MIN = 56.dp
 
 /**
- * What a channel strip spends on everything that is not the fader.
+ * Height a channel strip uses for everything except the fader: the name, three
+ * labelled sliders, the mute/solo row, the MIDI row, padding and gaps. None of
+ * that can shrink, so the fader does. Counted from the strip below. If you add
+ * a row, raise this.
  *
- * The name, three labelled sliders, the mute/solo row, the MIDI row, the
- * padding and the gaps between them - none of which has any give in it, which
- * is why the fader is the piece that gives. Counted off the strip below
- * rather than guessed; if a row is added to it, this goes up.
+ * It's for a channel strip, which decides the fader height. The master has a
+ * few more chips and scrolls if it must.
  */
 private val STRIP_CHROME = 204.dp
 
 /** The output row a strip grows when the song has a group to route to. */
 private val OUTPUT_ROW = 26.dp
-// It describes a *channel* strip, which is the one that decides how tall a
-// fader can be; the master carries a chip or two more and scrolls if it must.
-
 
 /**
- * What is on a send bus, and everything that effect can do.
+ * The effect on a send bus and all its settings.
  *
- * **The same window an insert slot opens, in the one place a send belongs
- * to.** A send is song-wide, so this is reached from the master strip rather
- * than from a track - hold the chip that names it - and it is the only control
- * in the mixer that is not a fader, a chip or a slider, which is why it is a
- * window and not another column of knobs in a strip that is already full.
+ * The same window an insert slot opens. Sends are song-wide, so it's opened
+ * from the master strip by holding the chip that names the send.
  *
- * `mix` is not offered. The engine pins it fully wet when the effect is
- * mounted, because a dry path through a send is the track arriving twice.
+ * mix isn't offered. The engine pins it fully wet on a send, since a dry path
+ * would play the track twice.
  */
 @Composable
 private fun SendDialog(slot: Int, editor: SongEditor, onDismiss: () -> Unit) =
     SongSlotDialog(stringResource(Res.string.mixer_send, slot + 1), slot, ::sendUnit, { s, i -> s.master.sendAt(i) },
                    Song::withSend, Song::withSendParam,
-                   // A send's dry path is the track arriving twice, so the mix
-                   // is pinned open and not offered.
+                   // A send's dry path would play the track twice, so mix is
+                   // pinned and hidden.
                    hideMix = true, editor = editor, onDismiss = onDismiss)
 
 /**
- * The two effects on the way **in**, as chips that open them.
+ * The two input effects, as chips that open them.
  *
- * Deliberately reachable from the one machine that records - the hand is
- * already there when somebody decides they want the amp on the take rather
- * than after it - even though the slots themselves belong to the song and not
- * to that track.
+ * Shown on the machine that records so they're at hand when recording, even
+ * though the slots belong to the song and not the track.
  */
 @Composable
 fun InputChainChips(editor: SongEditor) {
@@ -861,8 +805,8 @@ fun InputChainChips(editor: SongEditor) {
     editing?.let { slot ->
         SongSlotDialog(stringResource(Res.string.mixer_input, slot + 1), slot, ::inputUnit, { s, i -> s.inputAt(i) },
                        Song::withInputFx, Song::withInputFxParam,
-                       // An input effect is in series with the signal rather
-                       // than beside it, so a dry blend is a real thing to want.
+                       // An input effect is in series with the signal, so a dry
+                       // blend makes sense.
                        hideMix = false, editor = editor) { editing = null }
     }
     for (slot in 0 until INPUT_SLOTS) {
@@ -886,10 +830,9 @@ fun InputChainChips(editor: SongEditor) {
 /**
  * One song-level effect slot: pick the type, turn its knobs.
  *
- * Shared by the two sends and the two on the input, because they are the same
- * thing in two places - a slot that belongs to the song rather than to a rack,
- * addressed by a unit name, edited as one song gesture. What differs is only
- * *where the engine runs it*, and that is not this window's business.
+ * Shared by the two sends and the two input effects. They're all song slots
+ * addressed by a unit name and edited as one song gesture. Only where the
+ * engine runs them differs.
  */
 @Composable
 fun SongSlotDialog(
@@ -904,9 +847,9 @@ fun SongSlotDialog(
     onDismiss: () -> Unit,
 ) {
     val c = Acid.colors
-    // The editor's song is not state this window observes - it lives in its
-    // own Dialog window - so every edit here bumps this, and reading it is
-    // what makes the knobs redraw where the finger put them.
+    // The editor's song isn't state this window observes (it's in its own
+    // Dialog window), so every edit bumps this and reading it redraws the
+    // knobs.
     var edits by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val send = edits.let { at(editor.song, slot) }
     val types = remember { NativeEngine.effectTypes }
@@ -915,8 +858,8 @@ fun SongSlotDialog(
         if (send.isEmpty) emptyList()
         else NativeEngine.effectParamInfo(send.type).filter { !hideMix || it.name != "mix" }
     }
-    // Cancel puts back what the window found, as the track's effect window
-    // does: the type and every value, in one song edit.
+    // Cancel restores the type and every value as the window found them, in one
+    // song edit, like the track's effect window.
     val opened = remember { at(editor.song, slot) }
     fun revert() {
         val now = at(editor.song, slot)
@@ -960,10 +903,9 @@ fun SongSlotDialog(
                 }
             }
             if (!send.isEmpty) {
-                // The document is what the knobs read, not the engine: a slot
-                // like this has no other control anywhere to fight with, and a
-                // parameter the song has never touched is the effect's own
-                // default rather than nought.
+                // The knobs read the document, not the engine. Nothing else
+                // controls this slot, and a parameter the song never set shows
+                // the effect's default instead of 0.
                 SongSlotFace(
                     send.type, info,
                     value = { n -> send.params[n] ?: info.firstOrNull { it.name == n }?.defaultNormalized ?: 0f },
@@ -985,7 +927,7 @@ fun SongSlotDialog(
     }
 }
 
-/** A pan position the way TalkBack says it: centre, or how far left or right. */
+/** A pan position as TalkBack says it: centre, or how far left or right. */
 @Composable
 private fun panSaid(pan: Float): String {
     val amount = kotlin.math.round(kotlin.math.abs(pan) * 100f).toInt()

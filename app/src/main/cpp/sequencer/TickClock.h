@@ -24,11 +24,10 @@ class TickClock {
     float songTempoRequested() const { return songTempo.load(std::memory_order_relaxed); }
 
     /**
-     * Audio thread: run at somebody else's rate.
+     * Audio thread: follow an external clock.
      *
-     * The tempo is no longer a number the song chose, it is however long a
-     * tick is taking out there, so the period is set directly and the bpm
-     * is derived for the display rather than the other way round.
+     * The tick length is set directly from the incoming clock and the bpm
+     * is worked out from it for the display.
      */
     void setExternalFramesPerTick(double framesPerTick) {
         if (framesPerTick < 1.0) {
@@ -40,7 +39,7 @@ class TickClock {
                                               (framesPerTick * static_cast<double>(kPPQN))));
     }
 
-    /** Shift the phase without moving the tick count: for pulling into line. */
+    /** Shift the phase without moving the tick count, to pull into line. */
     void nudge(double frames) { sampleRemainder += frames; }
 
     // Audio thread: set the effective tempo now, cancelling any ramp.
@@ -51,7 +50,7 @@ class TickClock {
     }
 
     // Audio thread: glide from the current tempo to `toBpm` over `overTicks`
-    // ticks starting now. This is the "smooth" scene transition.
+    // ticks starting now. Used for smooth scene transitions.
     void rampTempo(float toBpm, int64_t overTicks) {
         if (overTicks <= 0) {
             setTempo(toBpm);
@@ -73,7 +72,7 @@ class TickClock {
     }
 
     // Advance by one engine block. Afterwards [blockStart, blockEnd) is the
-    // tick range this block covers - the range every player fires events in.
+    // tick range this block covers, which every player fires events in.
     void advance(int32_t frames) {
         if (ramping) {
             const double progress = static_cast<double>(tick - rampStart) / static_cast<double>(rampLength);
@@ -105,13 +104,11 @@ class TickClock {
 
     /**
      * How many frames into the block just advanced the tick boundary [t]
-     * falls. Exact, because `sampleRemainder` is the true sub-tick phase at
-     * the *end* of the block and the tempo is constant across it.
+     * falls. Exact, because `sampleRemainder` is the sub-tick phase at the
+     * end of the block and the tempo doesn't change within a block.
      *
-     * Without this the only thing a caller can do is pretend the block began
-     * on a tick boundary, which it almost never does - the metronome did
-     * exactly that and was late by up to a whole tick, 2 ms at 120 bpm, on
-     * every click it has ever played.
+     * Blocks almost never start on a tick boundary, so without this events
+     * like metronome clicks land up to a tick late.
      */
     double frameOffsetOfTick(int64_t t, int32_t frames) const {
         return static_cast<double>(frames) - sampleRemainder -

@@ -1,10 +1,8 @@
-// An AudioWorklet's global scope has no performance.now(), which Emscripten's
-// monotonic clock is built on - so the engine's first std::chrono::steady_clock
-// on the audio thread threw ("clock_gettime(CLOCK_MONOTONIC) failed") and the
-// worklet aborted. This stands in for it: the time a thread of the audio
-// driver's own writes every quarter millisecond (acid_clock_ms, in
-// drivers/AudioDriver.cpp), and Date.now()'s whole milliseconds until it has.
-// Both count from 1970, as Emscripten's clock does on every thread.
+// An AudioWorklet has no performance.now(), which Emscripten's monotonic
+// clock needs, so std::chrono::steady_clock on the audio thread would abort.
+// This replaces it with acid_clock_ms, which a driver thread updates every
+// quarter millisecond (see drivers/AudioDriver.cpp), and Date.now() until
+// that has started. Both count from 1970, like Emscripten's clock.
 if (typeof globalThis.performance === 'undefined') {
   globalThis.performance = {
     timeOrigin: 0,

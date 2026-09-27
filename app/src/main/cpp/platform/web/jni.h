@@ -1,20 +1,17 @@
 #pragma once
-// JNI, as much of it as platform/android/jni_bridge.cpp uses, for the browser
-// build: so the phone's bridge compiles to WebAssembly unchanged, and the page
-// calls the very functions Android's NativeEngine does.
+// Just enough JNI for the browser build to compile
+// platform/android/jni_bridge.cpp to WebAssembly unchanged, so the page calls
+// the same functions Android's NativeEngine does.
 //
-// A jstring is a std::string, a jfloatArray a std::vector<float> and so on,
-// on the WebAssembly heap. Everything the bridge makes during a call - the
-// strings it returns, the arrays it fills - goes into an arena, and so does
-// everything the page makes to pass in; the page reads what it wants and
-// then frees the arena (acid_jni_release, web_bridge.cpp). So DeleteLocalRef
-// frees nothing, which is what the bridge assumes of it anyway: a local
-// reference outlives nothing it still needs.
+// A jstring is a std::string, a jfloatArray a std::vector<float> and so on.
+// Everything made during a call, by the bridge or by the page passing
+// arguments in, goes into an arena. The page reads the results and then frees
+// the arena (acid_jni_release in web_bridge.cpp), so DeleteLocalRef frees
+// nothing.
 //
-// **An arena a thread.** A call the page hands to one of the engine's threads
-// (web_async.cpp) takes its arena with it - its arguments were made in it, and
-// its results are made there - while the page goes on making and freeing its
-// own. Each thread has one of its own until it is given another.
+// Each thread has its own arena. A call the page hands to an engine thread
+// (web_async.cpp) takes its arena with it, since its arguments and results
+// live there, while the page carries on with its own.
 
 #include <cstdint>
 #include <cstring>
@@ -76,7 +73,7 @@ namespace jniweb {
 /** What a call has made, freed together when the page has read it. */
 using Arena = std::vector<std::unique_ptr<_jobject>>;
 
-/** This thread's arena: its own, or the one a call it is running brought. */
+/** This thread's arena: its own, or the one the call it's running brought. */
 inline Arena *&current() {
     static thread_local Arena own;
     static thread_local Arena *in = nullptr;
@@ -84,14 +81,14 @@ inline Arena *&current() {
     return in;
 }
 inline Arena &arena() { return *current(); }
-/** Back to this thread's own. */
+/** Switch back to this thread's own arena. */
 inline void useOwn() { current() = nullptr; }
 template <class T> T *keep(T *made) {
     arena().emplace_back(made);
     return made;
 }
 
-/** A call handed to an engine thread: its arena, and its result once it has one. */
+/** A call handed to an engine thread: its arena, and its result once done. */
 struct Ticket {
     Arena *arena;
     int32_t i = 0; // an int, a boolean, or a JNI object
@@ -100,9 +97,9 @@ struct Ticket {
     double d = 0.0;
 };
 /**
- * [work] on a thread of its own, in [arena] - which the page made the call's
- * arguments in - and the page told when it is done (web_bridge.cpp). The
- * page's own arena is its own again from here. The ticket is the handle.
+ * Run [work] on its own thread using [arena], which holds the call's
+ * arguments, and tell the page when it's done (web_bridge.cpp). The page gets
+ * its own arena back. The ticket is the handle.
  */
 int runAsync(Arena *arena, std::function<void(Ticket &)> work);
 } // namespace jniweb
@@ -138,8 +135,8 @@ struct JNIEnv_ {
         a->items.assign(static_cast<size_t>(len), T{});                                             \
         return a;                                                                                   \
     }
-    // The element type and the array type apart: on 32-bit WebAssembly a C
-    // `long` is 32 bits, and a jlong is not.
+    // Element and array types are given separately because on 32-bit
+    // WebAssembly a C long is 32 bits and a jlong isn't.
     ACID_JNI_ARRAY(Float, jfloat, _jfloatArray)
     ACID_JNI_ARRAY(Int, jint, _jintArray)
     ACID_JNI_ARRAY(Long, jlong, _jlongArray)

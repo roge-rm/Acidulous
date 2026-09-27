@@ -1,6 +1,6 @@
 #!/bin/bash
-# The Link milestone, at a desk: the arithmetic of following, and the
-# vendored library actually finding a peer and agreeing with it.
+# Tests the Link tempo-following maths, and that the vendored library finds a
+# peer and agrees with it.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

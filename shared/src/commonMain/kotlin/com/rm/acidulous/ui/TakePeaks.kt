@@ -14,26 +14,21 @@ import kotlinx.coroutines.withContext
 import com.rm.acidulous.model.TAKE_PEAK_COLUMNS
 
 /**
- * The shape of a take, drawn from the document rather than from the disk.
+ * The shape of a take, stored in the document instead of read from disk.
  *
- * `NativeEngine.fileShape` decodes the whole file on every call, so a grid of
- * waveform cells that asked it per cell per scroll would decode hundreds of
- * megabytes to draw forty pixels. The coarse shape is therefore measured once,
- * when the take is made, and **stored on the take** - which is why `TakeRef`
- * carries `peaks`. A cell then costs no disk at all, survives a reopen, and is
- * right even for a file that has since been moved away.
+ * `NativeEngine.fileShape` decodes the whole file on every call, which is
+ * far too slow for a grid of waveform cells. So the coarse shape is measured
+ * once when the take is made and stored on it (`TakeRef.peaks`). A cell then
+ * reads no disk, and still draws if the file has been moved.
  *
- * Forty pairs is about what a cell can show and eighty floats is nothing next
- * to the notes in a clip. The editor wants far more than forty and asks for its
- * own, off-thread, against the region it is actually showing.
+ * Forty pairs is about what a cell can show. The editor wants more and
+ * fetches its own, off-thread, for the region it shows.
  */
 object TakePeaks {
     /**
-     * A file's length and coarse shape in one decode.
-     *
-     * Returns null when the file will not read. **Blocking**: the caller is on
-     * a worker, and for a five-minute file this is a second of work and a peak
-     * of over a hundred megabytes - see the note in `assemble`.
+     * A file's length and coarse shape in one decode, or null when it won't
+     * read. Blocking: call it on a worker. A five minute file takes about a
+     * second and peaks at over 100 MB, see the note in `assemble`.
      */
     suspend fun survey(root: File?, relative: String): Survey? {
         val out = FloatArray(TAKE_PEAK_COLUMNS * 2)
@@ -48,34 +43,25 @@ object TakePeaks {
     // --- The editor's copy ---------------------------------------------------
 
     /**
-     * How finely the lane editor draws a take. A phone is under four hundred dp
-     * wide, so this is more than a pixel each even turned sideways.
+     * How finely the lane editor draws a take. More than a pixel each on a
+     * phone, even turned sideways.
      */
     const val EDIT_COLUMNS = 512
 
     /**
-     * **Keyed on the file alone, and always the whole of it.**
+     * Cached per file, always the whole file, not per region. Trimming changes
+     * the region every frame of a drag, so keying on it would decode every
+     * frame. Keyed on the file, a trim is just arithmetic over columns already
+     * in hand.
      *
-     * The obvious cache key is the region - file, offset, frames - and it is
-     * the wrong one, because the gesture this cache exists for is *trimming*,
-     * which changes the region on every frame of a drag. Keyed on the region,
-     * a trim is a decode a frame; keyed on the file, a trim is arithmetic over
-     * columns that are already in hand, and nothing is read at all.
-     *
-     * Eight files, because that is two tapes' worth of lanes and each entry is
-     * four kilobytes.
+     * Eight files is two tapes' worth of lanes, at 4 KB each.
      */
     private const val KEEP = 8
     private val cache = com.rm.acidulous.util.LruMap<String, Survey>(KEEP)
 
     /**
-     * One region's coarse shape, taken out of the whole file's.
-     *
-     * A take split into five cells wants five shapes, and five calls to
-     * [survey] would decode the file five times - which for a five-minute
-     * recording is five seconds of work and five peaks of over a hundred
-     * megabytes, to draw two hundred columns. The file is read once and each
-     * cell's columns are averaged out of it.
+     * One region's coarse shape, taken from the whole file's. A take split into
+     * five cells would otherwise decode the file five times.
      */
     fun slice(whole: Survey, offset: Int, frames: Int, columns: Int = TAKE_PEAK_COLUMNS): List<Float> {
         if (whole.frames <= 0 || frames <= 0) return emptyList()
@@ -100,10 +86,10 @@ object TakePeaks {
         return out
     }
 
-    /** Cached, or null when it has not been read yet. Never reads here. */
+    /** The cached shape, or null if it hasn't been read yet. Never reads. */
     fun cached(relative: String): Survey? = com.rm.acidulous.util.locked(this) { cache[relative] }
 
-    /** Reads and caches. **Blocking**: a worker, never the main thread. */
+    /** Reads and caches. Blocking: call it on a worker, never the main thread. */
     suspend fun load(root: File?, relative: String): Survey? {
         cached(relative)?.let { return it }
         val out = FloatArray(EDIT_COLUMNS * 2)
@@ -116,11 +102,9 @@ object TakePeaks {
     }
 
     /**
-     * The shape of [relative], read off-thread the first time it is asked for.
-     *
-     * Recomposes once when it arrives; a lane draws a flat line until then
-     * rather than an empty box, so a slow file looks like a quiet one rather
-     * than a broken one.
+     * The shape of [relative], read off-thread the first time it's asked for.
+     * Recomposes once it arrives. Until then a lane draws a flat line, so a slow
+     * file looks quiet instead of broken.
      */
     @Composable
     fun rememberShape(root: File?, relative: String): Survey? {

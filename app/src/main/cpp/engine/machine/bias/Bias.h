@@ -5,30 +5,19 @@
 #include <engine/core/Reel.h>
 #include <engine/machine/Machine.h>
 
-// Bias - a four-track running the length of the song.
+// Bias, a four-track recorder that runs the length of the song.
 //
-// Every other machine here answers notes. This one answers the *arrangement*:
-// it is told which cell the rack is in and how far through that cell's cycle,
-// and it plays whatever was recorded there. That is the whole difference, and
-// it is why `Machine::onScene` exists.
+// Instead of playing notes it follows the arrangement. It's told which cell
+// the rack is in and how far through that cell's cycle (Machine::onScene),
+// and plays whatever was recorded there.
 //
-// **Four lanes, sounding together**, because a four-track is four tracks along
-// one length of tape and layering is the point: two takes of the same line is
-// a doubled vocal, and choosing between three is muting two of them. Each lane
-// has a level and a mute, and they are ordinary parameters rather than fields
-// on the recording - which is what makes them automatable, mappable to a pad,
-// and recordable into a lane, all of it for free and none of it written here.
+// Four lanes play together so takes can be layered. Each lane's level and
+// mute are ordinary parameters, so they can be automated, mapped and
+// recorded like any other.
 //
-// What it deliberately does not do:
-//
-//   - **Stretch.** Audio does not, and pretending otherwise inside a render is
-//     how a vocal ends up a chipmunk. At another tempo a region still enters
-//     on the bar line and runs at its own rate; the drift is bounded by one
-//     cycle because the anchor resets at every one. Molt's pulse machinery is
-//     where stretching will come from, and it is a milestone of its own.
-//   - **Loop by default.** Past the end of its region a lane goes silent. A
-//     cell that covers its whole cycle never reaches the end; one that does
-//     not was trimmed on purpose.
+// With Stretch off, a take starts on the bar and plays at its own speed, so
+// at another tempo it drifts by at most one cycle. Past the end of its region
+// a lane goes silent, it doesn't loop.
 namespace acidulous::machine {
 
 class Bias final : public Machine {
@@ -37,32 +26,26 @@ class Bias final : public Machine {
         Lane1, Lane2, Lane3, Lane4,
         Mute1, Mute2, Mute3, Mute4,
         Gain,
-        // The medium. See bias/Colour.h: these colour what comes *out* and
-        // never the recordings, which is what makes a Bias patch a way of
-        // listening rather than an edit.
+        // The tape colour, see bias/Colour.h. It changes the output, never
+        // the recordings.
         /**
-         * Whether the takes follow the song rather than their own tempo.
+         * Whether the takes follow the song's tempo.
          *
-         * Off, a take enters on the bar and runs at the speed it was recorded
-         * at, which is what M54 shipped and what "audio does not stretch"
-         * meant. On, each lane is read through `dsp::Wsola` at the ratio
-         * between the song's tempo and the take's, so the take lasts as long
-         * as the cell does **and sings the same notes**.
+         * Off, a take starts on the bar and plays at the speed it was
+         * recorded. On, each lane goes through `dsp::Wsola` at the ratio of
+         * song tempo to take tempo, so it lasts as long as the cell and keeps
+         * its pitch.
          */
         Stretch,
         /**
-         * Hear what is coming in, through this track.
+         * Plays the audio input through this track.
          *
-         * An effect processes its rack's *machine*, so without this the only
-         * way to put a guitar through `fx.Amp` was a Nexus patch with an audio
-         * input block - which works and is a silly thing to ask of anybody.
-         * Mixed in here, before the inserts, the whole rig falls out: plug in,
-         * arm a lane, hear the amp through the track's inserts and strip,
-         * record, and the **recording is dry**, because the capture takes the
-         * input bus and not the rack. So the amp can be changed afterwards.
+         * It's mixed in before the inserts, so you can play a guitar through
+         * the track's effects (like fx.Amp) while recording. The recording
+         * stays dry because capture takes the input bus, not the rack, so the
+         * effects can be changed afterwards.
          *
-         * Off by default. An open microphone nobody asked for is the fault
-         * `Capture::pushSilence` was written to expose.
+         * Off by default so the mic isn't open unless asked for.
          */
         Monitor,
         Hiss, HissTone, LowCut, HighCut, Bump, BumpFreq,
@@ -79,26 +62,22 @@ class Bias final : public Machine {
     void reset() override;
 
     void onScene(int64_t sceneId, int64_t cycleTick, bool playing, bool clipMuted) override;
-    /** The song's tempo, which is half of what a stretch ratio is made of. */
+    /** The song's tempo, used for the stretch ratio. */
     void onBlock(int64_t, int64_t, float bpm) override { songBpm = bpm; }
     bool render(float *L, float *R, int32_t frames) override;
 
     /**
-     * Render the lanes without the medium, for a comp.
+     * Renders the lanes without the tape colour, for a comp.
      *
-     * **A comp flattens the four lanes and not the tape they are played
-     * back through.** The medium is a way of listening - that is the whole of
-     * what a Bias patch is - so baking it into a comp would make it
-     * permanent *and* leave the patch applying it a second time on top. Set
-     * only offline, with the transport stopped.
+     * The colour is applied on playback, so baking it into a comp would apply
+     * it twice. Only set offline with the transport stopped.
      */
     void setColourBypass(bool on) { colourBypass = on; }
 
     /** Slot 0 is the reel. Nothing else is mounted here. */
     void *swapObject(int32_t slot, void *object) override;
 
-    // Bias is not played from the keyboard. The notes in its clip are not
-    // its business either - what it plays is decided by where the song is.
+    // Bias ignores notes. What it plays depends on where the song is.
     void noteOn(uint8_t, uint8_t) override {}
     void noteOff(uint8_t) override {}
     void allNotesOff() override {}
@@ -109,14 +88,14 @@ class Bias final : public Machine {
     bias::Colour colour;
     dsp::Biquad bleedHp[2];
     /**
-     * One stretcher a lane, seeded at the top of every cycle. Stereo, with
-     * one search for both sides, so a stereo loop keeps its image when it
-     * follows the song; a mono take reads its one channel on both.
+     * One stretcher per lane, reset at the start of every cycle. Stereo with
+     * one search for both sides so a stereo take keeps its image. A mono
+     * take uses its one channel on both.
      */
     dsp::Stretcher<int16_t, 2> stretcher[audio::kReelLanes];
     float songBpm = 120.0f;
     int64_t lastCycleTick = -1;
-    /** Set when a cycle comes round; the one moment a stretcher may be moved. */
+    /** Set when a new cycle starts, the only time a stretcher may be moved. */
     bool reseed = true;
     bool colourBypass = false;
     const audio::Reel *reel = nullptr;

@@ -9,31 +9,27 @@ import org.jetbrains.compose.resources.StringResource
 
 
 /**
- * What the editor needs to know about a machine type beyond its parameters:
- * whether it is played from a keyboard or pads, and what the pads are called.
- * Mirrors the voice order and base note in engine/machine/hexbeat/Hexbeat.h.
- */
-/**
  * What a track is played with, which decides what the editor shows.
  *
- * [Audio] is the odd one and the reason this is an enum rather than a boolean:
- * a tape has no keyboard, no pads and no notes at all. Every `== Drums` in
- * EditScreen used to mean "pads rather than keys", and each one had to be read
- * again as "pads, keys, or neither".
+ * It's an enum rather than a boolean because of [Audio]: a tape has no
+ * keyboard, no pads and no notes at all.
  */
 enum class MachineKind { Keyboard, Drums, Audio }
 
 /**
  * One pad, as the pads and the grid draw it.
  *
- * [loaded] is false only where a pad *can* be empty, which today is Forage:
- * its thirteen pads hold whatever the player imported, and an empty one used
- * to be labelled with its own number - indistinguishable from a pad holding a
- * sample whose name begins with a digit. A freshly added Forage track
- * therefore looked like a working drum machine and made no sound at all.
+ * [loaded] is only false where a pad can be empty, which is currently Forage.
+ * Its thirteen pads hold whatever the player imported, and an empty pad needs
+ * to look empty rather than like a sample named with a number.
  */
 data class DrumVoice(val note: Int, val name: String, val short: String, val loaded: Boolean = true)
 
+/**
+ * What the editor needs to know about a machine type beyond its parameters:
+ * whether it's played from a keyboard or pads, and what the pads are called.
+ * Matches the voice order and base note in engine/machine/hexbeat/Hexbeat.h.
+ */
 object MachineUi {
     fun kindOf(type: String): MachineKind = when {
         type == "Bias" -> MachineKind.Audio
@@ -43,30 +39,27 @@ object MachineUi {
     }
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
-    /** Machines whose notes are pitches, and so can be transposed: not drums, not tape. */
+    /** Machines whose notes are pitches and can be transposed: not drums or tape. */
     fun takesTranspose(type: String): Boolean = kindOf(type) == MachineKind.Keyboard
 
     /**
      * Machines that play a tuning: every melodic one. Drums and the audio
-     * track have no scale to tune. The organ tunes its wheels, each one a
-     * note; Nexus tunes the pitch its blocks are given.
+     * track have no scale to tune. The organ tunes each wheel as a note, and
+     * Nexus tunes the pitch its blocks are given.
      */
     fun takesTuning(type: String): Boolean = kindOf(type) == MachineKind.Keyboard
 
     /**
-     * Machines that hold one sample of their own, under the plain key
-     * "sample" - as against Forage, whose thirteen pads each have their own.
+     * Machines that hold one sample under the plain key "sample", unlike
+     * Forage where each of the thirteen pads has its own.
      */
     fun acceptsOneSample(type: String): Boolean =
         type == "Pollen" || type == "Dice" || type == "Molt"
 
     /**
-     * The machines, in groups, with a line each saying what they are.
-     *
-     * The picker was a list of names, and a name is no help when there are
-     * twelve of them and more coming: "Cipher" does not say vocoder. The
-     * order inside a group is the order they were built, which is also
-     * roughly simplest first.
+     * The machines in groups, each with a line saying what it is, since a
+     * name like "Cipher" doesn't tell you it's a vocoder. Within a group
+     * they're in the order they were built, which is roughly simplest first.
      */
     data class MachineGroup(val label: StringResource, val machines: List<String>)
 
@@ -77,8 +70,7 @@ object MachineUi {
         MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Bias")),
     )
 
-    /** One line per machine: what it is, not what it has. */
-    
+    /** One line per machine saying what it is. */
     fun describe(type: String): StringResource? = when (type) {
         "Reflux" -> Res.string.machine_about_reflux
         "Trinity" -> Res.string.machine_about_trinity
@@ -104,13 +96,11 @@ object MachineUi {
     }
 
     /**
-     * Parameters a patch does not own, by machine.
+     * Parameters a patch doesn't own, by machine.
      *
-     * Loading a patch replaces every parameter, which is right almost
-     * everywhere: what a preset does not mention it wants at the machine's
-     * default. Bias is the exception, because **a Bias patch is a medium and
-     * not a mix** - its four lane levels and four mutes are where your take
-     * sits against the others, and trying a different tape must not wipe that.
+     * Loading a patch normally replaces every parameter. Bias is the
+     * exception: its four lane levels and mutes are how your takes are mixed,
+     * and trying a different tape shouldn't wipe that.
      */
     fun patchKeeps(type: String): Set<String> =
         if (type != "Bias") emptySet()
@@ -120,16 +110,16 @@ object MachineUi {
     fun acceptsSampleMap(type: String): Boolean = type == "Mosaic"
 
     /**
-     * Whether the machine answers the performance controllers, and so whether
-     * the Edit screen shows the strip. A machine that ignores mod wheel and
-     * pressure gets no strip rather than a dead one.
+     * Whether the machine responds to the performance controllers, and so
+     * whether the Edit screen shows the strip. Machines that ignore mod wheel
+     * and pressure get no strip.
      */
     fun usesPerformance(type: String): Boolean =
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
             type == "Brazen" || type == "Timber" || type == "Molt"
 
-    /** Genesis's kit, mirroring engine/machine/genesis/Genesis.h's Voice order. */
+    /** Genesis's kit, in the Voice order of engine/machine/genesis/Genesis.h. */
     val genesisVoices: List<DrumVoice> = listOf(
         DrumVoice(36, "Kick", "BD"), DrumVoice(37, "Snare", "SD"), DrumVoice(38, "Clap", "CP"),
         DrumVoice(39, "Rim", "RS"), DrumVoice(40, "Low Tom", "LT"), DrumVoice(41, "Mid Tom", "MT"),
@@ -145,46 +135,40 @@ object MachineUi {
     )
 
     /**
-     * The order the *pads* are laid out in, which is deliberately not the order
-     * the grid lists them in.
+     * The order the pads are laid out in, which is intentionally different
+     * from the grid's order.
      *
-     * `DrumPads` puts the first half on the *bottom* row, where a hand rests,
-     * and gives it the wider cells when the count is odd - so whatever comes
-     * first here is both nearest the thumb and biggest. Left alone, Hexbeat's
-     * thirteen handed that row to `CH OH CY RD CB CL`: the hats and cymbals
-     * were wider than the kick and the snare, which is the wrong way round
-     * for every piece of music anybody plays.
+     * `DrumPads` puts the first half on the bottom row, where your hand rests,
+     * and gives it the wider cells when the count is odd. So whatever comes
+     * first here is nearest the thumb and biggest. Without this, Hexbeat's
+     * bottom row would be the hats and cymbals instead of the kick and snare.
      *
-     * The grid keeps ascending note order, because a drum grid is read with
-     * the kick at the top and that convention is older than this app.
+     * The grid keeps ascending note order, with the kick at the top, as drum
+     * grids usually do.
      *
-     * Looked up by short code rather than by index, because Genesis and
-     * Hexbeat do not agree on note order (Genesis is BD SD CP RS, Hexbeat is
-     * BD RS SD CP) and neither should break if a voice is ever added.
+     * Looked up by short code rather than index, because Genesis and Hexbeat
+     * order their notes differently (BD SD CP RS vs BD RS SD CP), and adding a
+     * voice shouldn't break either.
      */
     fun padOrder(type: String, voices: List<DrumVoice>): List<DrumVoice> {
-        // Numbered slices, objects and samples have no pecking order; moving
-        // pad 5 somewhere else would only make pad 5 hard to find.
+        // Numbered slices, objects and samples have no natural order, and
+        // moving pad 5 somewhere else would just make it hard to find.
         if (type != "Hexbeat" && type != "Genesis") return voices
         val core = listOf("BD", "RS", "SD", "CP", "CH", "OH")
         val hand = core.mapNotNull { code -> voices.firstOrNull { it.short == code } }
         return hand + voices.filter { it.short !in core }
     }
 
-    /** Forage pads are named after their samples; unloaded pads by number. */
+    /** Forage pads are named after their samples, and empty pads by number. */
     fun voicesOf(type: String, settings: Map<String, String> = emptyMap()): List<DrumVoice> = when (type) {
         "Hexbeat" -> hexbeatVoices
         "Genesis" -> genesisVoices
-        // Eight objects, and what each one is is a parameter rather than a
-        // name - so they are numbered here and named on the panel.
+        // Eight objects whose sound is set by a parameter rather than a name,
+        // so they're numbered here and named on the panel.
         "Resonance" -> (0 until 8).map { DrumVoice(36 + it, "Object ${it + 1}", "${it + 1}") }
         "Dice" -> (0 until 16).map { DrumVoice(36 + it, "Slice ${it + 1}", "${it + 1}") }
-        // A Forage pad plays its own sample, or a piece of the file the whole
-        // kit was sliced from, or nothing. All three have to be visible: the
-        // first version of slicing wrote the shared file and the start and end
-        // points and left every pad still drawn as empty, so the one thing the
-        // player had asked for was the one thing nothing on screen said had
-        // happened.
+        // A Forage pad plays its own sample, a slice of the file the kit was
+        // sliced from, or nothing. All three need to show on screen.
         "Forage" -> {
             val sliced = settings["slice_sample"]
             val sliceName = sliced?.substringAfterLast('/')?.substringBeforeLast('.').orEmpty()
@@ -215,22 +199,16 @@ object MachineUi {
 
 
 /**
- * One entry of a Mosaic map, as the document stores it. Zones live in
- * `Machine.settings["zones"]`, one per line, because they are a variable
- * length list rather than parameters - the same reason samples do.
- */
-/**
- * Every sample file the song refers to, relative to the user root.
+ * Every sample file the song uses, relative to the user root.
  *
- * What it is for is deleting: the browser lets a player clear out the sample
- * folder, and a file that a track is playing must not go quietly. Machines
- * name their samples in four shapes and this knows all of them - one `sample`
- * (Dice, Pollen, Molt), thirteen `pNN_sample` (Forage), the `slice_sample`
- * behind Forage's pads, and Mosaic's zones, which keep their paths inside an
- * encoded string rather than in a setting of their own.
+ * Used when deleting from the sample browser, so a file a track is playing
+ * isn't removed without a warning. Machines store samples in four ways and
+ * this checks all of them: one `sample` (Dice, Pollen, Molt), thirteen
+ * `pNN_sample` (Forage), Forage's `slice_sample`, and Mosaic's zones, which
+ * keep their paths inside an encoded string.
  *
- * Erring towards "in use": a path this misses is a file the player can delete
- * without being warned, which is the expensive direction to be wrong in.
+ * When unsure it errs towards "in use", since missing a path means a file can
+ * be deleted without a warning.
  */
 fun Song.samplesInUse(): Set<String> = buildSet {
     for (t in tracks) {
@@ -239,11 +217,9 @@ fun Song.samplesInUse(): Set<String> = buildSet {
             if (key == "sample" || key == "slice_sample" || key.endsWith("_sample")) add(value)
             if (key == "zones") Zones.decode(value).forEach { if (it.path.isNotEmpty()) add(it.path) }
         }
-        // **And the takes, which are not in settings.** Every other reference
-        // to a recording is a machine setting; a tape's are on its clips, one
-        // per lane per cell. Miss them and the library's delete page offers to
-        // remove the vocal the song is playing - which is the exact failure
-        // this set exists to prevent.
+        // Tape takes aren't in settings, they're on the clips, one per lane
+        // per cell. Without this the delete page would offer to remove a
+        // recording the song is playing.
         for (clip in t.clips.values) {
             val audio = clip.audio ?: continue
             for (take in audio.lanes) {
@@ -253,6 +229,10 @@ fun Song.samplesInUse(): Set<String> = buildSet {
     }
 }
 
+/**
+ * One entry of a Mosaic map. Zones live in `Machine.settings["zones"]`, one
+ * per line, because they're a variable length list rather than parameters.
+ */
 data class Zone(
     val path: String = "",
     val lowKey: Int = 0, val highKey: Int = 127, val rootKey: Int = 60,

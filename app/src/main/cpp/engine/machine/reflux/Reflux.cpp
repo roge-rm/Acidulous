@@ -4,27 +4,18 @@
 
 namespace acidulous::machine {
 
-// What this machine's signal reaches before its drive stage, and so the level
-// that stage should treat as nominal. Measured, not guessed: at the oscillator, before volume x kHouse.
-// A nominal above what the signal reaches puts the whole sound on the steep
-// part of the curve, where the knob is a volume control again.
+// The level the signal reaches before the drive stage, measured at the
+// oscillator before volume x kHouse. The drive is normalised to it. Set it too
+// high and the drive knob mostly changes the volume.
 constexpr float kNominal = 0.45f;
 
 namespace {
 
 /**
- * What this machine puts out at the volume knob's default, against the rest
- * of the app.
- *
- * Every machine here was levelled against its own bank and none against the
- * others, and the factory came to span twenty-five decibels: a kit was
- * twenty-two louder than a modelled string, so changing machine changed the
- * volume of the song. A bass is meant to sit forward in a mix and this one
- * was doing it by fourteen decibels, which is not forward, it is a different
- * gain structure. The house figure is about -21 dB on the harness's loudness
- * column - the loudest four hundred milliseconds of one note - and every
- * machine's output is scaled so its own default lands there. The knob then
- * means the same thing wherever you are.
+ * The house level. Every machine scales its output so its default patch lands
+ * at about -21 dB on the test harness's loudness measure (the loudest 400 ms
+ * of one note). That way switching machines doesn't change the song's volume
+ * and the volume knob means the same thing everywhere.
  */
 constexpr float kHouse = 0.2f;
 
@@ -38,10 +29,8 @@ const ParamDef kDefs[Reflux::Count] = {
     {"accent", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
     {"slide", 5.0f, 500.0f, 60.0f, Curve::Exponential, 0, "ms"},
     {"drive", 0.0f, 1.0f, 0.1f, Curve::Linear, 0, ""},
-    // To 1.5, as most machines do. Twenty-nine patches here set drive, and
-    // correcting the drive law took the level that law had been adding for
-    // free - three of them then sat six decibels under the bank with the
-    // knob already against a stop at 1.0.
+    // Up to 1.5, like most machines, so patches with drive have room to
+    // reach the bank's level.
     {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
     {"pw", 0.05f, 0.95f, 0.5f, Curve::Linear, 0, ""},          // pulse width, pulse wave only
     {"sub", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},           // square an octave down
@@ -82,16 +71,9 @@ void Reflux::reset() {
     ampEnv.kill();
     svf1.reset();
     svf2.reset();
-    // The oscillators too, and the pitch they were gliding toward.
-    //
-    // These free-run: nothing restarts them on a note, because an acid box's
-    // oscillator does not restart either, and that continuity is part of
-    // the sound. But it means a reset that leaves them alone is not a
-    // reset - the next note begins part way through a cycle, at whatever
-    // point the last one happened to stop. Live that is invisible. It is
-    // why rendering the same song twice gave two different files: the
-    // notes were identical, and the waveform under them began somewhere
-    // else each time.
+    // Reset the oscillators and the glide target too. The oscillators
+    // free-run and aren't restarted by notes, so without this two renders of
+    // the same song would differ.
     osc.reset();
     sub.reset();
     pitch = targetPitch = 48.0f;
@@ -109,7 +91,7 @@ void Reflux::startNote(uint8_t note, bool legato, bool accent, float level) {
         gliding = false;
         accented = accent;
         velLevel = level;
-        // An accented note snaps: shorter decay, so the sweep bites and gets out of the way.
+        // An accented note gets a shorter filter decay, so the sweep is snappier.
         filterEnv.setTimes(0.003f, params_.get(Decay) * 0.001f * (accent ? 0.6f : 1.0f));
         filterEnv.trigger();
         if (accent) accentEnv.trigger();
@@ -119,7 +101,7 @@ void Reflux::startNote(uint8_t note, bool legato, bool accent, float level) {
 
 void Reflux::noteOn(uint8_t note, uint8_t velocity) {
     const bool legato = stackSize > 0;
-    // Push (or move to top) on the held-note stack.
+    // Push onto the held-note stack, or move to the top.
     int32_t found = -1;
     for (int32_t i = 0; i < stackSize; ++i) {
         if (stack[i] == note) { found = i; break; }
@@ -148,7 +130,7 @@ void Reflux::noteOff(uint8_t note) {
     if (stackSize == 0) {
         ampEnv.gate(false);
     } else if (wasTop) {
-        // Fall back to the previous held note, sliding, as those boxes do.
+        // Slide back to the previous held note.
         startNote(stack[stackSize - 1], true, false);
     }
 }
@@ -178,13 +160,8 @@ bool Reflux::render(float *L, float * /*R*/, int32_t frames) {
     }
 
     const float driveGain = 1.0f + drive * 7.0f;
-    // Normalised on the nominal level rather than by a guessed divisor.
-    //
-    // `1 / (1 + drive * 1.5)` against a gain of `1 + drive * 7` hands a small
-    // signal about eleven decibels at the top of the knob and caps a loud one
-    // at four tenths - the same shape Cipher's output drive had. Twenty-nine
-    // patches in this bank set drive, more than any machine but Manual, so it
-    // is the one where this mattered most.
+    // Normalised on the nominal level so drive changes the tone and not the
+    // level.
     const float driveComp = kNominal / dsp::fastTanh(kNominal * driveGain);
 
     for (int32_t i = 0; i < frames; ++i) {
@@ -208,8 +185,8 @@ bool Reflux::render(float *L, float * /*R*/, int32_t frames) {
             svf2.set(fc, resonance * 0.3f);
             coeffCountdown = 3; // every 4 samples is plenty for a sweep
         }
-        // Two stages with a touch of saturation between them: the resonance
-        // rounds off instead of ringing clean, which is most of the bite.
+        // Two filter stages with a little saturation between them, so the
+        // resonance rounds off instead of ringing clean.
         s = bandpass ? svf1.bandpass(s) : svf1.lowpass(s);
         s = dsp::fastTanh(s * 1.3f) * 0.77f;
         s = svf2.lowpass(s);

@@ -12,9 +12,9 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * The desktop's [AppHost]. A [Doc] is a java.io.File here, so reading and
- * writing one is plain file I/O; sharing has no system sheet to hand to, so
- * it opens the folder the file is in instead.
+ * The desktop [AppHost]. A [Doc] is a java.io.File here, so reading and
+ * writing is plain file I/O. There's no share sheet, so sharing opens the
+ * folder the file is in.
  */
 class DesktopHost(private val configDir: File, private val crashes: CrashReports) : AppHost {
     override val versionName: String? = VERSION_NAME
@@ -23,8 +23,8 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override fun licenceText(path: String): String? =
         javaClass.classLoader.getResourceAsStream(path)?.bufferedReader()?.use { it.readText() }
 
-    // Crash reports: see CrashReports. Sharing one opens the folder it is in,
-    // as sharing anything does here.
+    // Crash reports: see CrashReports. Sharing one opens its folder, like any
+    // other share here.
     override fun latestCrashReport(): File? = crashes.latest()
     override fun shareCrashReport(report: File) = openFolder(report.parentFile)
     override fun unreadCrashReport(): File? = crashes.unread()
@@ -52,7 +52,7 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
         docs.firstOrNull()?.file?.parentFile?.let { openFolder(it) }
     }
 
-    /** Kept, where the phone would hand it to another app: in the config folder's "shared", which is opened. */
+    /** Where Android would share it: copied to "acidulous-shared" next to the config folder, which is then opened. */
     override fun shareFile(file: File, mime: String, title: String) {
         val kept = File(File(configDir.parentFile, "acidulous-shared").apply { mkdirs() }, file.name)
         file.copyTo(kept, overwrite = true)
@@ -61,7 +61,7 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
 
     override fun prefs(name: String): PrefStore = FilePrefs(File(configDir, "$name.properties"))
 
-    /** Nothing to hold: a desktop does not stop a playing app behind its back. */
+    /** Nothing to do: desktops don't stop a playing app in the background. */
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {}
 
     override val platformName: String = if (onWindows) "Windows" else "Linux"
@@ -69,7 +69,7 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override val hasDriverSdk: Boolean = onWindows
     override val usesMouse: Boolean = true
     override val onDesktop: Boolean = true
-    /** A desktop's screen saver is its own business: nothing here holds it off. */
+    /** The app doesn't hold off the screen saver on desktop. */
     override val canKeepScreenOn: Boolean = false
     override val canEncodeAac: Boolean = false
     override val audioStream = com.rm.acidulous.AudioStream.Miniaudio

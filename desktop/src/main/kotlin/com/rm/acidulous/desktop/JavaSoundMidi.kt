@@ -19,18 +19,18 @@ import javax.sound.midi.MidiSystem as JavaMidi
 private const val TAG = "Acidulous.MIDI"
 
 /**
- * MIDI on the desktop, through Java Sound: on Linux, ALSA's raw MIDI devices,
- * which is where anything plugged in over USB appears.
+ * MIDI on desktop through Java Sound. On Linux that's ALSA's raw MIDI
+ * devices, which is where USB devices show up.
  *
- * Java Sound lists a device's input and its output as two separate entries
- * with one name; they are put back together here, because the hub thinks of
- * a controller as one thing with ports both ways, as Android does. It says
- * nothing when a device comes or goes, so the list is read again every two
- * seconds. And it sends at once rather than at a time, so a timestamped send
- * waits on the MIDI thread until its moment - see MidiThread.
+ * Java Sound lists a device's input and output as two entries with the same
+ * name. They're joined back together here, because the hub treats a
+ * controller as one device with ports both ways, like Android does. Java
+ * Sound doesn't report devices coming and going, so the list is re-read
+ * every two seconds. It also sends immediately rather than at a set time, so
+ * timestamped sends wait on the MIDI thread (see MidiThread).
  *
- * The fallback: where ALSA's sequencer opens, AlsaSeqMidi is used instead,
- * which sees these devices and every other program's ports too.
+ * This is the fallback. When ALSA's sequencer opens, AlsaSeqMidi is used
+ * instead, which sees these devices and other programs' ports too.
  */
 class JavaSoundMidi(private val pollMs: Long = 2000) : MidiSystem {
     private val thread = MidiThread()
@@ -48,7 +48,7 @@ class JavaSoundMidi(private val pollMs: Long = 2000) : MidiSystem {
         val byName = LinkedHashMap<String, Pair<MidiDevice.Info?, MidiDevice.Info?>>()
         for (info in runCatching { JavaMidi.getMidiDeviceInfo() }.getOrDefault(emptyArray())) {
             val device = runCatching { JavaMidi.getMidiDevice(info) }.getOrNull() ?: continue
-            // The JVM's own software synth and sequencer are not instruments.
+            // The JVM's own software synth and sequencer aren't instruments.
             if (device is Synthesizer || device is Sequencer) continue
             val (from, to) = byName[info.name] ?: (null to null)
             byName[info.name] = when {
@@ -62,7 +62,7 @@ class JavaSoundMidi(private val pollMs: Long = 2000) : MidiSystem {
             val info = from ?: to!!
             Entry(
                 MidiDeviceDesc(
-                    // Stable across rescans, so the hub's open ports keep their ids.
+                    // Stays the same across rescans, so the hub's open ports keep their ids.
                     id = name.hashCode() and 0x7fffffff,
                     name = name.substringBefore(" [hw:").ifBlank { name },
                     product = info.description,
@@ -120,8 +120,8 @@ class JavaSoundMidi(private val pollMs: Long = 2000) : MidiSystem {
         override fun connectOutputPort(index: Int, onSend: (ByteArray, Int, Int, Long) -> Unit) {
             val transmitter = from?.transmitter ?: return
             transmitter.receiver = object : Receiver {
-                // Java Sound's own stamps count from when the device opened; the
-                // hub wants System.nanoTime's base, so the moment of arrival it is.
+                // Java Sound's timestamps count from when the device opened,
+                // and the hub wants System.nanoTime, so use the arrival time.
                 override fun send(message: MidiMessage, timeStamp: Long) {
                     onSend(message.message, 0, message.length, System.nanoTime())
                 }

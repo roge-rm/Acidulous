@@ -5,13 +5,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
 import com.rm.acidulous.io.File
 
-// A browser's pickers. What a page is given to open, it may read only
-// asynchronously, and the app reads a Doc when it likes - so a chosen file is
-// copied into the engine's file system first, and the Doc is that copy. What
-// the app saves goes to the browser's downloads: there is no folder to choose,
-// and a Doc to write to is a download waiting for its bytes.
+// File pickers for the browser. A picked file can only be read asynchronously,
+// but the app reads a Doc whenever it likes, so the file is copied into the
+// engine's file system first and the Doc points at that copy. Saving goes to
+// the browser's downloads, so a Doc to write to is a download waiting for its
+// bytes.
 
-/** What a [Doc] holds in a browser: the copy of a chosen file, or a download to make. */
+/** What a [Doc] holds in a browser: the copy of a picked file, or a download to make. */
 class WebDoc(val name: String, val copy: File?, val mime: String = "application/octet-stream")
 
 private fun pickFiles(accept: String, multiple: Boolean, done: (String) -> Unit): Unit = js(
@@ -53,7 +53,7 @@ private fun download(path: String, name: String, mime: String): Unit = js(
     })()""",
 )
 
-/** [file] saved by the browser as [name]: its downloads are the page's only way out. */
+/** Saves [file] as a download called [name]. Downloads are the only way to save from a page. */
 fun downloadFile(file: File, name: String, mime: String) = download(file.toString(), name, mime)
 
 private fun accepting(mimes: Array<String>): String =
@@ -80,7 +80,7 @@ actual fun rememberCreateDocument(onResult: (Doc?) -> Unit): (name: String, mime
     return { name, mime -> result.value(Doc(WebDoc(name, null, mime))) }
 }
 
-/** The downloads, which is the only folder a page may write to. */
+/** Always the downloads, the only folder a page can write to. */
 @Composable
 actual fun rememberOpenFolder(onResult: (Doc?) -> Unit): () -> Unit {
     val result = rememberUpdatedState(onResult)
@@ -113,7 +113,7 @@ private fun onHidden(action: () -> Unit): JsAny = js(
 )
 private fun offHidden(f: JsAny): Unit = js("document.removeEventListener('visibilitychange', f)")
 
-/** A tab put away may be closed without a word, as a phone's app may be ended. */
+/** Runs when the tab is hidden, since a hidden tab can be closed without warning. */
 @Composable
 actual fun OnBackground(action: () -> Unit) {
     val current = rememberUpdatedState(action)
@@ -123,6 +123,6 @@ actual fun OnBackground(action: () -> Unit) {
     }
 }
 
-/** The browser's back leaves the page; Esc is the app's back, as on the desktop. */
+/** Does nothing. The browser's back leaves the page, and Esc is the app's back, as on desktop. */
 @Composable
 actual fun SystemBack(enabled: Boolean, onBack: () -> Unit) {}

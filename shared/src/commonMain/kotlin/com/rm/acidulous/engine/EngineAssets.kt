@@ -3,38 +3,35 @@ package com.rm.acidulous.engine
 import com.rm.acidulous.io.*
 
 
-/** Where the app's own files live. Bundled content (kits, patches) returns with M8. */
+/** Where the app's own files live. */
 object EngineAssets {
 
     /**
      * The platform's two folders, set once by [install] before anything asks
-     * for a path: Android's filesDir and cacheDir, or their desktop
-     * equivalents.
+     * for a path: Android's filesDir and cacheDir, or the desktop equivalents.
      */
     private lateinit var filesDir: File
     private lateinit var cacheDir: File
 
-    /** Writable songs, patches and imported samples. */
+    /** User songs, patches and imported samples. */
     fun userRoot(): File = File(filesDir, "user").apply { mkdirs() }
 
     /**
-     * Frozen clips. Their own directory because they are derived, not
-     * authored: deleting the lot costs nothing but the time to freeze again.
+     * Frozen clips. They get their own folder because they can all be
+     * rebuilt, so deleting them only costs the time to freeze again.
      */
     fun freezeRoot(): File = File(filesDir, "freeze").apply { mkdirs() }
 
     /**
-     * Where a take too long to hold in memory is converted to, once.
+     * Where takes too long to hold in memory are converted to, once.
      *
-     * In `cacheDir` and not beside the songs, because that is exactly what it
-     * is: everything in here can be made again from the recording it came
-     * from, so the system may throw it away when it needs the space and
-     * nothing is lost but the second or two it takes to rebuild.
+     * It's in `cacheDir` because everything here can be rebuilt from the
+     * original recording, so the system may delete it when it needs space.
      */
     fun reelCache(): File =
         File(cacheDir, "reel").apply { mkdirs() }
 
-    /** The platform's cache folder: scratch space for renders and imports on their way through. */
+    /** The platform's cache folder: scratch space for renders and imports. */
     fun cacheRoot(): File = cacheDir
 
     fun install(files: File, cache: File) {
@@ -45,14 +42,13 @@ object EngineAssets {
     }
 
     /**
-     * Machines renamed since a build that could have saved patches.
+     * Machines renamed since a version that could save patches.
      *
-     * A user patch lives in a folder named after its machine, so a rename
-     * leaves the old folder behind and the machine's picker shows factory
-     * patches only - the user's own are still on the phone and unreachable.
-     * Moved one file at a time rather than by renaming the folder, so that a
+     * User patches live in a folder named after their machine, so after a
+     * rename the old folder has to be moved or the patches can't be found.
+     * Files are moved one at a time rather than renaming the folder, so a
      * name used by both (an old Subvert patch and a new Reflux one) keeps
-     * both instead of the move failing on a directory that already exists.
+     * both instead of failing on a folder that already exists.
      */
     private val RENAMED = mapOf("Subvert" to "Reflux")
 
@@ -72,25 +68,19 @@ object EngineAssets {
 }
 
 /**
- * A name somebody typed, as a file name.
+ * A typed name as a file name. Used everywhere a file is named, so the
+ * importer, the recorder and SongStore all agree.
  *
- * **One rule, in one place.** It was written three times with three different
- * rulesets: the importer allowed dots, the recorder allowed dots and appended
- * `.wav` itself, and `SongStore` stripped dots and called the result
- * "untitled". A file named by one and looked for by another is the kind of
- * fault that only shows up on somebody else's phone.
- *
- * Dots are kept because an extension is a dot; a leading one is not, because
- * a file beginning with a dot is hidden and nobody meant that.
+ * Dots are kept because extensions use them, but not a leading dot, which
+ * would hide the file.
  */
 fun safeFileName(typed: String, fallback: String): String =
     typed.trim().trimStart('.').replace(Regex("[^A-Za-z0-9 _.-]"), "_").ifEmpty { fallback }
 
 /**
- * [wanted] if nothing in [dir] has that name, else "name 2.wav", "name 3.wav".
- *
- * The importer overwrote silently, which means importing two different kits
- * that both contain `snare.wav` leaves one kit playing the other's snare.
+ * [wanted] if nothing in [dir] has that name, otherwise "name 2.wav",
+ * "name 3.wav" and so on. Stops imports from overwriting, for example two
+ * kits that both contain `snare.wav`.
  */
 fun uniqueIn(dir: File, wanted: String): String {
     if (!File(dir, wanted).exists()) return wanted
@@ -104,7 +94,7 @@ fun uniqueIn(dir: File, wanted: String): String {
     }
 }
 
-/** "take 1", "take 2" - the first that is not already in [dir]. */
+/** "take 1", "take 2" and so on: the first one not already in [dir]. */
 fun nextTakeName(dir: File): String {
     val used = (dir.listFiles() ?: emptyArray()).map { it.name.lowercase() }.toSet()
     var n = 1

@@ -1,30 +1,20 @@
 #!/bin/bash
-# Every host harness, in one go.
-#
-# Four of these had no runner and were built by hand each time they were
-# wanted, which meant they were rarely wanted. They take four seconds
-# together; there is no reason not to run them after touching the engine.
+# Runs every host harness in one go. Run it after touching the engine.
 set -u
-# **`pipefail`, and it is not decoration.**
-#
-# Every line below is `harness | tail -2 || fail=1`, and without this the
-# status of that pipeline is `tail`'s - which is nought whatever the harness
-# did. So `|| fail=1` never fired, `fail` was never set, and this script
-# printed "all ok" and exited 0 over the top of failing harnesses. It did
-# exactly that while sink_test was red about an MP3 coming back 2304 frames
-# short, which is how that went from a bug to "an unreproduced flake" in my
-# own notes: the runner was saying it was fine.
+# Needed: every line below is `harness | tail -2 || fail=1`, and without
+# pipefail the pipeline's status is tail's, which is always 0, so failures
+# would be missed.
 set -o pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-# Every g++ below through the compiler cache, where this machine has one:
-# the tests rebuild the same engine files again and again.
+# Use ccache if the machine has it, since the tests rebuild the same engine
+# files over and over.
 [ -d /usr/lib/ccache ] && export PATH="/usr/lib/ccache:$PATH"
 CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
 fail=0
 
-# The sequencer is header-only, so these need no other translation unit.
+# The sequencer is header-only, so these build from one file.
 for t in clockin clockout launcher songpos expr trig; do
     echo "--- $t"
     if ! g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/${t}_test.cpp" -o "$DIR/$t" 2>&1; then
@@ -42,7 +32,7 @@ else
     echo "  FAIL did not build"; fail=1
 fi
 
-# And the two that bring their own runner.
+# The ones with their own runner script.
 echo "--- reset"; "$ROOT/tools/reset_test.sh" | tail -3 || fail=1
 echo "--- mpe";   "$ROOT/tools/mpe_test.sh"   | tail -2 || fail=1
 echo "--- sched"; "$ROOT/tools/scheduler_test.sh" | tail -2 || fail=1
@@ -61,41 +51,37 @@ echo "--- gate";  "$ROOT/tools/gate_test.sh" | tail -2 || fail=1
 echo "--- tuner"; "$ROOT/tools/tuner_test.sh" | tail -2 || fail=1
 echo "--- swing"; "$ROOT/tools/swing_test.sh" | tail -2 || fail=1
 echo "--- inputmod"; "$ROOT/tools/inputmod_test.sh" | tail -2 || fail=1
-# Not a pass/fail: the cost table is read, not asserted, because a threshold
-# would only be true of the machine that set it. Run it when touching DSP.
+# Not pass/fail. The cost table is for reading, since a threshold would only
+# hold on the machine that set it. Check it when touching DSP.
 echo "--- cost"; "$ROOT/tools/cpu_test.sh" | tail -3 || fail=1
-# The banks: every factory patch names real parameters, makes a sound, does
-# not clip fifty times over, and plays the same twice.
+# Every factory patch names real parameters, makes a sound, doesn't clip
+# badly, and plays the same twice.
 echo "--- bank";  "$ROOT/tools/bank_test.sh"  | tail -2 || fail=1
 echo "--- sink";  "$ROOT/tools/sink_test.sh"  | tail -2 || fail=1
 echo "--- molt";  "$ROOT/tools/molt_test.sh"  | tail -2 || fail=1
-# Link takes half a minute: most of it is two sessions finding each other
-# over the machine's own network, which is the part worth waiting for.
+# Link takes about half a minute, mostly two sessions finding each other over
+# the local network.
 echo "--- link";  "$ROOT/tools/link_test.sh"  | tail -2 || fail=1
 echo "--- delay"; "$ROOT/tools/delay_test.sh" | tail -2 || fail=1
 echo "--- slice"; "$ROOT/tools/slice_test.sh" | tail -2 || fail=1
 echo "--- forage"; "$ROOT/tools/forage_test.sh" | tail -2 || fail=1
 echo "--- format"; "$ROOT/tools/format_test.sh" | tail -2 || fail=1
 echo "--- edit";  "$ROOT/tools/sampleedit_test.sh" | tail -2 || fail=1
-# Neither of these is a harness; both read the tree and ask it a question.
+# These two check the source tree rather than run the engine.
 #
-# noteon: does anything seed a note from a smoothed parameter? reset_test is
-# the harness for that class of bug and is structurally blind to this instance
-# of it - see the file.
+# noteon: does anything start a note from a smoothed parameter? reset_test
+# can't catch this case (see the file).
 echo "--- noteon"; python3 "$ROOT/tools/noteon_check.py" | tail -2 || fail=1
-# plan: does the milestone table still agree with the tree? Passes with
-# nothing to say where there is no docs/PLAN.md, which is every checkout but
-# Dan's.
+# plan: does the milestone table still match the tree? Passes quietly when
+# there's no docs/PLAN.md.
 echo "--- plan";  python3 "$ROOT/tools/plan_check.py" | tail -2 || fail=1
-# The manual and the app's Help window are the same words, and the only thing
-# keeping them that way is that this fails when they are not.
+# The manual and the app's Help window must have the same text.
 echo "--- manual"; (cd "$ROOT" && python3 tools/gen_manual.py --check) | tail -2 || fail=1
-# The engine's calls are one list, and each platform's half is written from
-# it; a call added to the list without re-running the script is a call one
-# platform does not have.
+# Each platform's engine bridge is generated from one list of calls. This
+# fails if the list changed and the script wasn't run again.
 echo "--- engine bridge"; (cd "$ROOT" && python3 tools/gen_engine_bridge.py --check) | tail -2 || fail=1
-# Every word a panel shows has a string to translate it into; a panel edited
-# without re-running the generator shows its new word in English everywhere.
+# Every word a panel shows needs a translatable string. This fails if a panel
+# changed and the generator wasn't run again.
 echo "--- words"; (cd "$ROOT" && python3 tools/panel_words.py --check) | tail -2 || fail=1
 
 exit $fail

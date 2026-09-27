@@ -6,11 +6,9 @@
 
 namespace acidulous::machine {
 
-// Where this bank sits in the volume knob's travel, set from Init - which
-// carries no `volume` line and so is the only patch that says what the machine
-// does at its defaults. A graph's own output level is a knob on its `out`
-// module, so without this every patch would have to spend that knob on
-// loudness rather than on balance.
+// The house level. Sets where the bank sits on the volume knob, measured
+// from Init. Without it every patch would have to use the `out` module's
+// level knob for loudness.
 constexpr float kHouse = 0.36f;
 using namespace nexus;
 
@@ -27,9 +25,8 @@ const ParamDef *Nexus::paramDefs(int32_t &count) const {
             defs[i] = ParamDef{names[i], mn, mx, df, c, steps, u};
         };
         char n[12];
-        // Every slot knob is the same 0..1 control, and that is the point:
-        // a slot keeps its automation when the module in it changes, because
-        // the name never depended on what the module was.
+        // Every slot knob is the same 0..1 control, so a slot keeps its
+        // automation when its module changes.
         for (int s = 0; s < kSlots; ++s) {
             for (int k = 0; k < kKnobs; ++k) {
                 std::snprintf(n, sizeof(n), "s%02d_p%d", s, k + 1);
@@ -184,10 +181,9 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
     int32_t activeCount = 0;
     for (int32_t i = 0; i < kVoices; ++i) {
         if (!voices[i].used) continue;
-        // In the track's tuning. The blocks work in semitones and turn them
-        // into hertz themselves, so the tuning goes in here, as the fraction
-        // of a semitone the tuned note is away from the equal one - and
-        // everything a cable adds to the pitch then moves from there.
+        // Apply the track's tuning. Modules work in semitones, so the tuning
+        // is added here as the offset from equal temperament, and cables add
+        // pitch on top of that.
         const float played = static_cast<float>(voices[i].note) + shift;
         const float tuned = tuningTable() != nullptr ? 69.0f + 12.0f * std::log2(noteHz(played) / 440.0f) : played;
         pitchOf[i] = tuned + voices[i].bend;
@@ -221,9 +217,8 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
         L[i] = (outL * gl) * volume;
         R[i] = (outR * gr) * volume;
 
-        // A modular has no amp envelope to end a note, so a voice is freed
-        // when what it is contributing has stayed below the floor for a
-        // while. Without this, a released voice holds a slot for ever.
+        // There's no amp envelope to end a note, so a released voice is freed
+        // once its output has stayed below the floor for a while.
         const float level = std::fabs(mono);
         for (int32_t a = 0; a < activeCount; ++a) {
             Voice &v = voices[active[a]];

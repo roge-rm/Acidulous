@@ -1,24 +1,18 @@
-// Do the render sinks write what they were given?
+// Checks the render sinks write what they were given.
 //
-// Lossless is the rare claim that can be checked absolutely: encode, let
-// somebody else's decoder read it back, and compare every byte. This writes
-// the .flac and, beside it, the exact PCM the encoder should have preserved;
-// the shell step then decodes with ffmpeg and runs cmp. Anything but an
-// identical file is a bug, with no judgement involved. WAV and AIFF get the
-// same treatment: they are trivially lossless, so the thing actually under
-// test is whether their headers say what the samples are - and a wrong
-// header is exactly what a listening test would not catch.
+// Lossless formats can be checked exactly: encode, decode, and compare every
+// sample. This writes each file and, next to it, the exact PCM the encoder
+// should have preserved. For WAV and AIFF the real test is whether the header
+// describes the samples correctly, which a listening test wouldn't catch.
 //
-// MP3 is the one sink here that cannot be held to that standard - it is
-// lossy by design - so it is asked the questions it can answer: that it
-// produces a file of about the size its bitrate promises, and (in the shell
-// step) that a decoder reads back the right length at the right level.
+// MP3 is lossy, so it's checked for a file size that matches its bitrate and
+// for decoding back to the right length at the right level.
 //
-// The signals are chosen to hit the corners: silence and a constant exercise
-// the CONSTANT subframe, a ramp suits a high fixed order, noise suits none of
-// them and should fall back gracefully, full-scale catches clipping, and a
-// length that is not a multiple of the block size forces the short final
-// frame - which is where encoders like this one usually break.
+// The signals hit the corners: silence and a constant use the CONSTANT
+// subframe, a ramp suits a high fixed order, noise suits none and should fall
+// back cleanly, full scale catches clipping, and a length that isn't a
+// multiple of the block size forces a short final frame, which is where
+// encoders like this usually break.
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -48,11 +42,10 @@ void ok(const char *what, bool good, const char *detail = "") {
     printf("  %s %-44s %s\n", good ? "ok  " : "FAIL", what, detail);
 }
 
-// The integer the encoder is required to preserve is `acidulous::quantise`
-// from AudioSink.h - the same function the writers use, rather than a second
-// copy of the rule that could agree with the wrong thing.
+// The integer the encoder must preserve is `acidulous::quantise` from
+// AudioSink.h, the same function the writers use.
 
-/** A mix-like signal: correlated channels, which is where FLAC earns its keep. */
+/** A mix-like signal with correlated channels, which is where FLAC does well. */
 std::vector<float> makeSignal(int32_t frames) {
     std::vector<float> out(static_cast<size_t>(frames) * 2);
     for (int32_t i = 0; i < frames; ++i) {
@@ -67,14 +60,14 @@ std::vector<float> makeSignal(int32_t frames) {
         } else if (i < 4 * frames / 5) {
             v = 0.4f * std::sin(2.0 * M_PI * 220.0 * t) + 0.2f * std::sin(2.0 * M_PI * 331.0 * t);
         } else {
-            v = 0.9f * frand(); // noise, which no predictor helps
+            v = 0.9f * frand(); // noise, which no predictor helps with
         }
         out[static_cast<size_t>(i) * 2] = v;
-        // The right channel is nearly the left, as a real mix is: this is
-        // what the stereo decorrelation is supposed to exploit.
+        // The right channel is nearly the left, like a real mix, which the
+        // stereo decorrelation should exploit.
         out[static_cast<size_t>(i) * 2 + 1] = v * 0.97f + 0.01f * frand();
     }
-    // A full-scale pair, to prove the clamp does not wrap.
+    // A full-scale pair, to check the clamp doesn't wrap.
     out[0] = 1.5f;
     out[1] = -1.5f;
     return out;
@@ -84,8 +77,8 @@ void writeRaw(const std::string &path, const std::vector<float> &pcm, int bits) 
     FILE *f = std::fopen(path.c_str(), "wb");
     for (float v : pcm) {
         if (bits == 32) {
-            // Floats go through untouched - not clamped, which is the whole
-            // reason a float render exists.
+            // Floats go through as they are, not clamped. That's why float
+            // renders exist.
             std::fwrite(&v, 1, 4, f);
             continue;
         }
@@ -97,17 +90,11 @@ void writeRaw(const std::string &path, const std::vector<float> &pcm, int bits) 
 }
 
 /**
- * Read it back with **our own** decoder and compare every sample.
- *
- * This was ffmpeg, in the shell step: decode to raw PCM and `cmp`. That was
- * the right answer when the app could write four formats and read one, and
- * M49 ended that - so the loop closes inside the repository, and the harness
- * stops needing a program the machine may not have. It also checks twice as
- * much as it did: the decoder is now under test alongside the encoder, and a
- * matched pair of bugs is the only thing that can hide.
+ * Reads the file back with our own decoder and compares every sample, so the
+ * decoder is tested along with the encoder.
  *
  * [bits] is what the file claims to hold, so the reference is the value the
- * encoder was required to preserve rather than the float that went in.
+ * encoder had to preserve, not the float that went in.
  */
 void readBack(const std::string &path, const std::vector<float> &pcm, int32_t frames, int bits,
               const char *name) {
@@ -123,9 +110,8 @@ void readBack(const std::string &path, const std::vector<float> &pcm, int32_t fr
     if (got->frames != frames) return;
     ok("comes back in stereo", got->stereo);
 
-    // The scale the writer used, so the comparison is exact rather than
-    // within a tolerance: both sides are the same integer over the same
-    // power of two.
+    // The scale the writer used, so the comparison is exact: both sides are
+    // the same integer over the same power of two.
     const auto scale = static_cast<float>(1 << (bits - 1));
     int32_t worstAt = -1;
     float worst = 0.0f;
@@ -144,9 +130,9 @@ void readBack(const std::string &path, const std::vector<float> &pcm, int32_t fr
             }
         }
     }
-    // Exactly nought, at every frame, including the deliberately over-range
-    // pair this signal starts with: the writers scale by 2^(b-1) and clamp,
-    // and every reader divides by 2^(b-1), so the two are inverses.
+    // Exactly zero at every frame, including the over-range pair at the
+    // start: the writers scale by 2^(b-1) and clamp, and every reader divides
+    // by 2^(b-1), so the two are inverses.
     snprintf(note, sizeof note, "worst %.9f at frame %d", static_cast<double>(worst), worstAt);
     ok("every sample comes back", worst == 0.0f, note);
 }
@@ -202,8 +188,8 @@ int main(int argc, char **argv) {
         std::unique_ptr<AudioSink> sink = makeSink(c.format);
         std::string error;
         ok("opens", sink && sink->open(path, 48000, c.bits, error), error.c_str());
-        // Fed in 64-frame blocks, exactly as the render loop does, so an
-        // encoder's own block boundary never lines up with ours.
+        // Fed in 64-frame blocks like the render loop, so the encoder's own
+        // block boundaries never line up with ours.
         for (int32_t at = 0; at < frames; at += 64) {
             const int32_t n = frames - at < 64 ? frames - at : 64;
             sink->write(pcm.data() + static_cast<size_t>(at) * 2, n);
@@ -219,9 +205,9 @@ int main(int argc, char **argv) {
         snprintf(note, sizeof note, "%ld vs %ld raw, %.1f%%", bytes, rawBytes,
                  100.0 * static_cast<double>(bytes) / static_cast<double>(rawBytes));
         if (c.format == AudioFormat::Mp3) {
-            // Constant bitrate, so the size is arithmetic: the bitrate times
-            // the duration, plus the Xing frame. A quarter either side allows
-            // for that frame and the encoder's own padding on a short file.
+            // Constant bitrate, so the size is the bitrate times the duration
+            // plus the Xing frame. A quarter either side allows for that frame
+            // and the encoder's padding on a short file.
             const double seconds = frames / 48000.0;
             const double expect = c.bits * 1000.0 / 8.0 * seconds;
             snprintf(note, sizeof note, "%ld bytes, %.0f expected at %d kbit", bytes, expect, c.bits);
@@ -236,11 +222,9 @@ int main(int argc, char **argv) {
         }
 
         if (c.format == AudioFormat::Mp3) {
-            // Lossy, so the questions are the ones it can answer: the right
-            // length, which is really a question about the Xing header the
-            // writer adds, and the right level, which a dropped channel or a
-            // gain wrong by a factor of two would fail and a file size would
-            // not.
+            // Lossy, so check the right length (really a check of the Xing
+            // header the writer adds) and the right level, which catches a
+            // dropped channel or a gain that's off by two.
             std::string error;
             const std::unique_ptr<SampleData> back = decodeAudio(path, 48000, error);
             if (back == nullptr) {
@@ -248,21 +232,18 @@ int main(int argc, char **argv) {
             } else {
                 char note2[128];
                 snprintf(note2, sizeof note2, "%d frames, wanted %d", back->frames, frames);
-                // One frame either way, which is the natural tolerance: an
-                // mp3 is made of 1152-sample frames and cannot end anywhere
-                // else. In practice this comes back *exact*, because
-                // `Mp3Reader` trims the encoder delay and padding the LAME
-                // tag declares - the thing that used to leave twenty-five
-                // milliseconds of silence on the front of every import.
+                // One frame either way, since an mp3 is made of 1152-sample
+                // frames. In practice it comes back exact, because
+                // `Mp3Reader` trims the encoder delay and padding the LAME tag
+                // declares.
                 ok("decodes to the right length",
                    back->frames > frames - 1152 && back->frames < frames + 1152, note2);
                 const float in = meanLevel(pcm, {});
                 const float out = meanLevel(back->left, back->right);
                 snprintf(note2, sizeof note2, "%.2f dB out, %.2f dB in", static_cast<double>(out),
                          static_cast<double>(in));
-                // A decibel and a half either way. The fifth of this signal
-                // that is noise loses its top octave at 128 kbit, which is
-                // the encoder working rather than failing.
+                // A decibel and a half either way. The noise part of this
+                // signal loses its top octave at 128 kbit, which is expected.
                 ok("comes back at the level it went in", std::fabs(out - in) < 1.5f, note2);
             }
         } else {

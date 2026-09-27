@@ -1,10 +1,8 @@
 #!/bin/bash
-# What a recording needs doing to it. See tools/sampleedit_test.cpp.
+# Tests the sample editing functions. See tools/sampleedit_test.cpp.
 #
-# Its own runner rather than a line in all_tests.sh's header-only loop,
-# because SampleEdit has a translation unit of its own. It is small enough to
-# compile here rather than linking the whole host engine: MultiFilter is a
-# header and Sample.h is a struct, so this is two files and no archive.
+# SampleEdit has its own .cpp, so it gets its own runner. It only needs that
+# one file, so it doesn't link the host engine.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

@@ -1,14 +1,12 @@
-// Does following a Link session work - and does Link itself, as vendored?
+// Tests following a Link session, and the vendored Link library itself.
 //
-// Two questions, and they are answered differently. The arithmetic of
-// following (LinkFollower) is pure and is checked against numbers that were
-// worked out by hand. The library is checked by running *two* sessions in
-// this one process and watching them agree: peers found, a tempo set on one
-// arriving at the other, and both reading the same beat at the same instant.
+// The following maths (LinkFollower) is checked against numbers worked out by
+// hand. The library is checked by running two sessions in this one process
+// and checking they find each other, share a tempo change and read the same
+// beat at the same instant.
 //
-// The second half needs a network interface that carries multicast, which a
-// build machine has and an Android emulator does not - which is why the
-// emulator proof of M40 is the plumbing and Dan's two phones are the rest.
+// The library half needs a network interface with multicast, which the
+// Android emulator doesn't have.
 #include <ableton/Link.hpp>
 #include <chrono>
 #include <cmath>
@@ -52,7 +50,7 @@ void followerTests() {
     const double bar = 4.0 * kPPQN; // 4/4 at 240 PPQN = 960 ticks
     const double perTick = 48000.0 * 60.0 / (120.0 * kPPQN); // 100 frames at 120 bpm
 
-    // In phase: nothing to correct, and the tempo is taken as it is.
+    // In phase: nothing to correct, and the tempo is taken as is.
     {
         const auto a = LinkFollower::advise(state(120.0, 8.0, 4.0, blockBeats(120.0)),
                                             0.0, bar, perTick, true);
@@ -61,7 +59,7 @@ void followerTests() {
     }
 
     // A quarter of a bar ahead: 240 ticks of error, clamped to eight, and
-    // the ticks get *longer* so we fall back towards them.
+    // the ticks get longer so we fall back towards them.
     {
         const auto a = LinkFollower::advise(state(120.0, 8.0, 4.0, blockBeats(120.0)),
                                             bar / 4.0, bar, perTick, true);
@@ -78,8 +76,8 @@ void followerTests() {
         ok("a quarter bar behind: ticks shorten", a.framesPerTick < perTick);
     }
 
-    // The wrap, which is the one that is easy to get wrong: a hair before
-    // the bar line against a hair after it is a small error, not a huge one.
+    // The wrap, which is easy to get wrong: just before the bar line against
+    // just after it is a small error, not a huge one.
     {
         const double tick = bar - 1.0;                    // one tick short of the bar
         const auto a = LinkFollower::advise(state(120.0, 8.0, 4.0, blockBeats(120.0)),
@@ -92,7 +90,7 @@ void followerTests() {
         near("just after their downbeat: error is +1 tick", a.errorTicks, 1.0, 1e-9);
     }
 
-    // Half a bar out is the one ambiguous case; it must not blow up.
+    // Half a bar out is the one ambiguous case, and it mustn't blow up.
     {
         const auto a = LinkFollower::advise(state(120.0, 8.0, 4.0, blockBeats(120.0)),
                                             bar / 2.0, bar, perTick, true);
@@ -101,7 +99,7 @@ void followerTests() {
                std::fabs(a.framesPerTick / perTick - 1.0) <= LinkFollower::kMaxPullTicks * LinkFollower::kPull + 1e-12);
     }
 
-    // Not pulling: stopped, or waiting to start. Tempo yes, phase no.
+    // Not following: stopped, or waiting to start. Tempo yes, phase no.
     {
         const auto a = LinkFollower::advise(state(140.0, 3.5, 4.0, blockBeats(140.0)),
                                             bar / 3.0, bar, perTick, false);
@@ -110,8 +108,8 @@ void followerTests() {
     }
 
     // The downbeat has to be caught in the block it lands in. At 120 bpm a
-    // block is 0.0032 beats, so a beat sat 0.001 before the line is caught
-    // and one sat 0.01 before it is not - yet.
+    // block is 0.0032 beats, so a beat 0.001 before the line is caught and
+    // one 0.01 before it isn't yet.
     {
         const double bb = blockBeats(120.0);
         ok("downbeat inside this block is caught",
@@ -122,10 +120,9 @@ void followerTests() {
            !LinkFollower::advise(state(120.0, 2.0, 4.0, bb), 0.0, bar, perTick, false).downbeat);
     }
 
-    // Whether to wait for that downbeat at all. Play held for the session's
-    // bar line is right with somebody out there and wrong on your own: Link
-    // left switched on alone made every press of play sit out up to a whole
-    // bar to come into phase with nobody.
+    // Whether to wait for that downbeat at all. Waiting for the session's bar
+    // line is right with other peers and wrong when alone, or every press of
+    // play would wait up to a bar for nobody.
     {
         Timebase::State alone = state(120.0, 2.0, 4.0, blockBeats(120.0));
         alone.peers = 0;
@@ -152,8 +149,8 @@ void followerTests() {
 void libraryTests() {
     printf("\n--- two Link peers, for real ---\n");
     ableton::Link a(120.0), b(120.0);
-    // Both ends have to want it: start and stop are only carried between
-    // peers that have asked for them, which is what LinkTimebase turns on.
+    // Start and stop are only shared between peers that ask for them, which
+    // LinkTimebase turns on.
     a.enableStartStopSync(true);
     b.enableStartStopSync(true);
     a.enable(true);
@@ -187,8 +184,8 @@ void libraryTests() {
         near("a tempo set on one reaches the other", b.captureAppSessionState().tempo(), 143.5, 0.01);
     }
 
-    // And they agree about where the beat is, at the same instant, to well
-    // under a millisecond - which at 143.5 bpm is 0.0024 of a beat.
+    // They agree where the beat is at the same instant, to well under a
+    // millisecond (0.0024 of a beat at 143.5 bpm).
     {
         const auto at = a.clock().micros();
         const double beatA = a.captureAppSessionState().beatAtTime(at, 4.0);

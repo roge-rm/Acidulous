@@ -39,10 +39,8 @@ import com.rm.acidulous.ui.theme.AcidColors
 import com.rm.acidulous.res.*
 
 /**
- * The map itself: key across, velocity up, one rectangle per zone. Tapping a
- * rectangle selects it. This is the one view a sampler cannot do without, and
- * it is the reason Mosaic's map section puts a picture above its knobs rather
- * than only knobs.
+ * The zone map: key across, velocity up, one rectangle per zone. Tapping a
+ * rectangle selects it.
  */
 @Composable
 fun ZoneMapView(
@@ -86,18 +84,16 @@ fun ZoneMapView(
             drawRect(if (on) c.teal else c.zoneOffEdge, Offset(x, y), Size(rw, rh),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = if (on) 2f else 1f))
         }
-        // Middle C, the reference everyone reads a map against.
+        // Middle C, as a reference.
         val mark = 1.5.dp.toPx()
         drawRect(c.accent, Offset(60 * w, size.height - mark), Size(w, mark))
     }
 }
 
 /**
- * Editing one zone: the fields a map needs and nothing else.
- *
- * The arp window's shape - cards of knobs, all of it in view - because this
- * is an editor window and Dan asked for every one of those to look alike.
- * Nothing is heard until OK; a zone is re-read from its file when it lands.
+ * Editing one zone. Laid out as cards of knobs like the other editor
+ * windows. Nothing is heard until OK; the zone is re-read from its file
+ * then.
  */
 @Composable
 fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onDelete: () -> Unit) {
@@ -110,7 +106,7 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
         spacing = 6.dp,
     ) {
         WindowCards {
-            // Which notes reach it, by key and by how hard.
+            // Which notes reach it, by key and velocity.
             ZoneCard(stringResource(Res.string.zone_range)) {
                 CountKnob(stringResource(Res.string.zone_low_key), z.lowKey, 0..127, noteName(z.lowKey), PanelAmber, choices = ZONE_KEYS) {
                     z = z.copy(lowKey = it, highKey = maxOf(it, z.highKey))
@@ -121,21 +117,19 @@ fun ZoneDialog(zone: Zone, onDismiss: () -> Unit, onConfirm: (Zone) -> Unit, onD
                 CountKnob(stringResource(Res.string.zone_low_vel), z.lowVel, 1..127) { z = z.copy(lowVel = it, highVel = maxOf(it, z.highVel)) }
                 CountKnob(stringResource(Res.string.zone_high_vel), z.highVel, 1..127) { z = z.copy(highVel = it, lowVel = minOf(it, z.lowVel)) }
             }
-            // What it sounds like once it does.
+            // What it sounds like.
             ZoneCard(stringResource(Res.string.zone_sound)) {
                 CountKnob(stringResource(Res.string.zone_root), z.rootKey, 0..127, noteName(z.rootKey), choices = ZONE_KEYS) { z = z.copy(rootKey = it) }
-                // Cents in steps of five: a zone is tuned to a sample, not
-                // swept, and 2400 stops on one knob is a dial nobody can land.
+                // Cents in steps of five: a zone is tuned to a sample, not swept, and
+                // 2400 steps on one knob would be impossible to land on.
                 CountKnob(stringResource(Res.string.zone_tune), (z.tuneCents / 5f).roundToInt(), -240..240, "%.0f¢".format(z.tuneCents)) {
                     z = z.copy(tuneCents = it * 5f)
                 }
                 CountKnob(stringResource(Res.string.zone_gain), (z.gain * 100f).roundToInt(), 0..200, "%.2f".format(z.gain)) { z = z.copy(gain = it / 100f) }
                 CountKnob(stringResource(Res.string.zone_pan), (z.pan * 100f).roundToInt(), -100..100, "%+.2f".format(z.pan)) { z = z.copy(pan = it / 100f) }
             }
-            // Deleting is not the window's action, so it is not the
-            // window's button - a third thing beside OK and Cancel is the
-            // one you hit by accident. It is a cell of its own, in a card
-            // of its own.
+            // Delete gets its own card instead of a button next to OK and Cancel,
+            // where it would be easy to hit by accident.
             ZoneCard(stringResource(Res.string.zone_zone)) {
                 SwitchGrid(stringResource(Res.string.zone_loop), stringArrayResource(Res.array.off_on).toList(), if (z.loop) 1 else 0) { z = z.copy(loop = it == 1) }
                 SwitchGrid(stringResource(Res.string.zone_remove), listOf(stringResource(Res.string.zone_delete)), -1) { onDelete() }

@@ -5,39 +5,25 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 
 /**
- * Is the long edge across?
+ * True when the window is wider than it is tall.
  *
- * **From the window, not from the configuration.** `Configuration.ORIENTATION`
- * describes the *device*, and there are two ordinary cases where the device
- * and the window disagree: a split-screen app is half a landscape phone and
- * is shaped like a portrait one, and a fold changes shape without the
- * orientation constant moving at all. `ui/Cutout.kt` has read the window size
- * for the camera hole since it was written, for exactly that reason, and this
- * is the same test.
- *
- * It lived as a local in `EditScreen` while the editor was the only screen
- * that knew the phone had turned. M43 turns all four, so it lives here.
+ * Uses the window size instead of `Configuration.ORIENTATION`, which is about
+ * the device and is wrong in split screen and on foldables.
  */
 @Composable
 fun isLandscape(): Boolean = screenShape() == ScreenShape.Wide
 
 /**
- * Three shapes, not two. A phone held upright is about twice as tall as it
- * is wide, and turned it is twice as wide as it is tall; the layouts for
- * those are [Tall] and [Wide]. A square screen - the Titan Pocket's 716 x 720,
- * the Clicks Communicator's 1080 x 1280 - is neither, and given either layout
- * it came out broken: upright the roll had no height left, and the Clicks
- * turned was too narrow for the turned editor's side columns.
+ * The window's shape. Square screens (the Titan Pocket's 716 x 720, the
+ * Clicks Communicator's 1080 x 1280) get their own layout since neither the
+ * tall nor the wide one fits them.
  */
 enum class ScreenShape { Tall, Wide, Square }
 
 /**
- * Which of the three this window is.
- *
- * **Square when the long side is less than [SquareRatio] times the short,
- * and the short side is phone-sized.** A 4:3 tablet is nearly as square as
- * the Clicks, but it has eight hundred dp each way and the two layouts it
- * already had work there; [SquareShortMax] keeps it on them.
+ * This window's shape. Square means the long side is less than [SquareRatio]
+ * times the short side and the short side is phone sized. [SquareShortMax]
+ * keeps 4:3 tablets on the normal layouts, which work fine there.
  */
 @Composable
 fun screenShape(): ScreenShape {
@@ -58,13 +44,8 @@ private const val SquareRatio = 1.4f
 private val SquareShortMax = 600.dp
 
 /**
- * A tablet, near enough: the short side is at least [LargeShortMin], the line
- * Android's own resources draw (`sw600dp`).
- *
- * Not a fourth [ScreenShape], because a tablet is still tall or wide and most
- * screens want only that. The two that care are the editor, which on a wide
- * tablet has the height for the stacked layout rather than the turned phone's
- * two panes, and the song grid, whose cells grow into the room.
+ * True on a tablet: the short side is at least [LargeShortMin], the same line
+ * as Android's `sw600dp`. Used by the editor and the song grid.
  */
 @Composable
 fun largeScreen(): Boolean {

@@ -1,16 +1,17 @@
 /*
- * Acidulous.exe: the app's jars on the Java runtime installed beside it, with
- * the engine's DLLs in app\ - what the Debian package's launcher script does
- * (deb/acidulous), as a Windows program, so there is no console window and
- * the Start menu and the taskbar have the app's own icon (launcher.rc).
+ * Acidulous.exe: runs the app's jars on the Java runtime installed next to
+ * it, with the engine's DLLs in app\. It does what the Debian package's
+ * launcher script does (deb/acidulous), but as a Windows program, so there's
+ * no console window and the Start menu and taskbar show the app's icon
+ * (launcher.rc).
  *
  *   Acidulous.exe
  *   runtime\bin\javaw.exe      Eclipse Temurin's Java runtime
  *   app\acidulous.dll          the engine, and LAME's mp3lame.dll
  *   app\lib\*.jar              the app
  *
- * If the JVM itself crashes - the engine's native code, say - its report goes
- * where the app looks for crash reports on the next start (Main.kt).
+ * If the JVM crashes (in the engine's native code, for example) its report
+ * goes where the app looks for crash reports on the next start (Main.kt).
  */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

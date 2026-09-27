@@ -22,9 +22,9 @@ android {
         applicationId = "com.rm.acidulous"
         minSdk = 27
         targetSdk = 37
-        // Bumped by hand, and the name is the tag. 0.1.0 is the first
-        // release put out for anybody else to install - see docs and the
-        // repository's tags.
+        // Bumped by hand, and the name is the tag. The minor number goes up
+        // when saved songs mean something different, e.g. a song that uses
+        // a new feature won't play the same in an older version.
         //
         // 0.1.1 because the 0.1.0 tag fell behind: twenty-eight commits
         // landed past it, among them a behaviour change anybody who installed
@@ -153,12 +153,11 @@ android {
         // header in clip mode starts its clips and stops the rest together; a
         // take plays with a playhead; a crash auditioning a sound is fixed.
         //
-        // **Two APKs a release**: the 64-bit one, and with -Parm32 a 32-bit
-        // one for tablets that run 32-bit Android on any processor - the Fire
-        // HD 8. A store offers each device the highest versionCode it can
-        // run, and nearly every 64-bit phone can run 32-bit code too, so the
-        // 64-bit APK must be the higher: the release number times ten, plus
-        // two for 64-bit and one for 32-bit. Bump [release], not the code.
+        // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
+        // tablets like the Fire HD 8. A store installs the highest versionCode
+        // a device can run, and most 64-bit phones can also run 32-bit code,
+        // so the 64-bit APK must be higher: the release number times ten,
+        // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
         val release = 23
         versionCode = release * 10 + if (arm32) 1 else 2
         versionName = "0.9.8"
@@ -173,8 +172,7 @@ android {
                     // unknown setting keys), so exceptions must stay on.
                     "-DANDROID_CPP_FEATURES=exceptions rtti",
                 )
-                // Through the compiler cache where this machine has one: an
-                // unchanged file is a hit rather than a compile (see desktop/).
+                // Use ccache if this machine has it (see desktop/).
                 if (File("/usr/bin/ccache").canExecute()) {
                     arguments += listOf("-DCMAKE_C_COMPILER_LAUNCHER=ccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
                 }
@@ -183,8 +181,7 @@ android {
 
         ndk {
             // See [release] for why there are two builds. The 32-bit one
-            // carries x86 as well as ARM, which costs little and lets it be
-            // run on the Android 8.1 x86 emulator.
+            // includes x86 so it runs on the Android 8.1 x86 emulator.
             abiFilters += if (arm32) listOf("armeabi-v7a", "x86") else listOf("arm64-v8a", "x86_64")
         }
     }
@@ -193,8 +190,8 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1+"
-            // The native staging (.cxx) with the rest of the build output, where
-            // this machine keeps it: see the root build.gradle.kts.
+            // Put the native staging (.cxx) with the rest of the build output
+            // if acidulous.buildRoot is set. See the root build.gradle.kts.
             providers.gradleProperty("acidulous.buildRoot").orNull?.let {
                 buildStagingDirectory = File(it, "${rootDir.name}/app-cxx")
             }
@@ -202,24 +199,15 @@ android {
     }
 
     /**
-     * Release signing, from a file that is not in the repository *or beside
-     * it*.
+     * Release signing. The keystore and its properties live in a sibling
+     * `Keys/` directory outside the repository, so they can never be
+     * committed.
      *
-     * Both the keystore and the properties that name it live in a sibling
-     * `Keys/` directory - outside the tree entirely, so there is no version
-     * of this repository, public or private, in which a slip could commit
-     * them. Dan: "the old method is not safe enough for me". Gitignoring a
-     * password file that sits in the working tree relies on the ignore rule
-     * holding for the life of the project; a file one directory up does not.
+     * Without that file (a fresh clone, CI) no signing config is created and
+     * the release build comes out unsigned instead of failing.
      *
-     * The path is relative, so it is a true statement about a layout rather
-     * than about one machine, and it resolves to nothing for anybody who
-     * clones this. Absent - a fresh clone, CI, somebody else's machine - no
-     * config is created and a release build comes out unsigned rather than
-     * failing. Anybody can build this; only one person can sign it.
-     *
-     * **Losing the keystore means never being able to update an installed
-     * copy**, so it is Dan's to keep and back up, not the build's.
+     * Losing the keystore means installed copies can never be updated, so
+     * keep it backed up.
      */
     val keystoreProps = rootProject.file("../Keys/acidulous-keystore.properties")
     val signing: Properties? = if (keystoreProps.exists()) {
@@ -235,9 +223,7 @@ android {
                 storePassword = signing.getProperty("storePassword")
                 keyAlias = signing.getProperty("keyAlias")
                 keyPassword = signing.getProperty("keyPassword")
-                // v1 as well, because minSdk is 27 and v2-only APKs are not
-                // installable below 24 - and a phone that verifies v1 is one
-                // fewer thing to explain to somebody sideloading a release.
+                // v1 as well as v2, for older phones and sideloading.
                 enableV1Signing = true
                 enableV2Signing = true
             }
@@ -246,8 +232,8 @@ android {
 
     buildTypes {
         release {
-            // Shrunk and optimised: the debug APK is 22 MB, most of it code
-            // nothing calls. What must survive is in proguard-rules.pro.
+            // Shrunk and optimised, since most of the code is unused. What
+            // must be kept is in proguard-rules.pro.
             optimization {
                 enable = true
                 keepRules {
@@ -257,9 +243,8 @@ android {
             if (signing != null) signingConfig = signingConfigs.getByName("release")
         }
         debug {
-            // A phone set to English (XA) shows every string resource
-            // [ŵîţĥ åççéñţš], so a word on screen without them is one that
-            // is still written in the code.
+            // A phone set to English (XA) shows string resources
+            // [ŵîţĥ åççéñţš], so any plain text on screen is still hardcoded.
             isPseudoLocalesEnabled = true
         }
     }
@@ -274,23 +259,19 @@ android {
 }
 
 /**
- * The licence texts the About window shows, staged into the assets from
- * wherever they actually live: the GPL the app is under is the repository's
- * own LICENSE, and the LGPL is the one that came in LAME's tarball. Copies
- * checked in beside the code would drift from them; this cannot.
+ * Copies the licence texts shown in the About window into the assets from
+ * their real locations (the repository's LICENSE, LAME's COPYING and so on),
+ * so they can't drift.
  *
- * A task of its own rather than a `Copy`, because the assets are wired
- * through the variant API - which needs an output `DirectoryProperty`, and a
- * `Copy` has a plain `File`. See licences/README.md.
+ * Its own task instead of a `Copy` because the variant API needs an output
+ * `DirectoryProperty`. See licences/README.md.
  */
 abstract class StageLicences : DefaultTask() {
     @get:InputFiles abstract val texts: ConfigurableFileCollection
 
     /**
-     * What each input is called once it is in the app, keyed by the name it
-     * has on disk. Keyed rather than paired by position, because the first
-     * cut of this paired two lists by path order and quietly shipped the
-     * GPL under the LGPL's name.
+     * The name each input gets in the app, keyed by its file name on disk.
+     * A map, not two lists, so the names can't get paired with the wrong file.
      */
     @get:Input abstract val names: MapProperty<String, String>
 

@@ -3,47 +3,41 @@
 #include <cstdint>
 #include <engine/core/Constants.h>
 
-// Clip mode: what each rack is playing, what it has been asked to play next,
-// and exactly when the swap happens.
+// Clip mode: what each rack is playing, what it's queued to play next, and
+// exactly when the swap happens.
 //
-// The arranger walks one scene column and points all sixteen racks at it, so
-// it needs one position: (scene, repeat, origin). A launcher needs sixteen of
-// everything, because the whole point is that the Verse bass can run under the
-// Chorus drums. This holds those sixteen, and nothing else - no racks, no
-// snapshot, no clock. It is pure arithmetic over ticks, which is why it can be
-// proven by a standalone harness before a note of it is wired in.
+// The arranger plays one scene on all sixteen racks, so it needs one position.
+// The launcher needs one per rack so, for example, the verse bass can play
+// under the chorus drums. This only holds those sixteen positions (no racks,
+// snapshot or clock), so it's plain maths over ticks and easy to test alone.
 //
 // Two rules decide every launch:
 //
-//   - a rack that is playing swaps at the end of the cycle it is in;
-//   - a rack that is silent starts on the next multiple of the incoming
-//     clip's *own* cycle, counted from the start of the transport, so an
-//     eight-bar clip can only ever begin on an eight-bar line and a stack of
-//     clips stays in phase however it was assembled.
+//   - a playing rack swaps at the end of its current cycle;
+//   - a silent rack starts on the next multiple of the new clip's own cycle,
+//     counted from the start of the transport, so an eight-bar clip always
+//     starts on an eight-bar line and clips stay in phase.
 //
 // A fixed launch quantise overrides both with a plain grid.
 //
-// A clip's "cycle" is bars x repeat: the clip still loops every `bars`, but
-// the cycle is what a swap waits for and what re-arms a OneShot. That is the
-// "x2 1b" already written on the scene chip.
+// A clip's cycle is bars x repeat (the "x2 1b" on the scene chip). The clip
+// still loops every bars, but a swap waits for the cycle and a OneShot
+// re-arms on it.
 
 namespace acidulous::seq {
 
 class Launcher {
   public:
-    // Scene ids are FNV-1a hashes of the document's scene id, so zero is free
-    // to mean "nothing" and a negative value is free to mean "stop".
+    // Scene ids are FNV-1a hashes of the song's scene ids, so 0 can mean
+    // "nothing" and negative values can mean "stop".
     static constexpr int64_t kNone = 0;
     static constexpr int64_t kStopId = -1;
     /**
-     * "Whatever is queued on this rack, forget it" - and nothing else.
+     * Cancel whatever is queued on this rack, and nothing else.
      *
-     * A second tap could be left to mean cancel by itself, since tapping a
-     * queued clip toggles it off. But if the first tap has already landed in
-     * the intervening quarter second, that same toggle reads as "stop the
-     * clip that is now playing", and a double tap meant to open the editor
-     * would leave a stop queued behind it. An explicit cancel cannot be
-     * misread whatever happened in between.
+     * A second tap on a queued clip would toggle it off, but if the first tap
+     * has already landed by then it would queue a stop instead (e.g. on a
+     * double tap to open the editor). An explicit cancel can't be misread.
      */
     static constexpr int64_t kCancelId = -2;
 
@@ -54,18 +48,17 @@ class Launcher {
         changed = 0;
     }
 
-    /** 0 launches at the end of the playing clip's cycle; otherwise a grid. */
+    /** 0 launches at the end of the playing clip's cycle, otherwise a grid in ticks. */
     void setQuantise(int32_t ticks) { quantise = ticks < 0 ? 0 : ticks; }
     int32_t quantiseTicks() const { return quantise; }
 
     /**
-     * A cell was tapped. The rule is here rather than in the UI so that it is
-     * decided against what the audio thread is actually playing, and so that
-     * one tap cannot be interpreted against a stale readback.
+     * A cell was tapped. Decided here rather than in the UI so it's based on
+     * what the audio thread is actually playing, not a stale readback.
      *
-     * Tapping a queued clip cancels the queue; tapping the clip that is
-     * playing queues it to stop; tapping anything else queues it to start.
-     * [cycle] is the tapped clip's own cycle in ticks.
+     * Tapping a queued clip cancels it, tapping the playing clip queues a
+     * stop, and tapping anything else queues it to start. [cycle] is the
+     * tapped clip's cycle in ticks.
      */
     void request(int32_t rack, int64_t sceneId, int64_t cycle, int64_t now) {
         if (!valid(rack) || sceneId == kNone) {
@@ -73,7 +66,7 @@ class Launcher {
         }
         Slot &s = slots[rack];
         if (s.pendingId == sceneId || (s.pendingId == kStopId && s.sceneId == sceneId)) {
-            s.pendingId = kNone; // tapped twice: never mind
+            s.pendingId = kNone; // tapped twice, cancel
             s.pendingCycle = 0;
             return;
         }
@@ -85,16 +78,14 @@ class Launcher {
     }
 
     /**
-     * A scene's header was pressed: its clips on the tracks that have one,
-     * and every other track stopped - all on one tick, as a scene change is
-     * in song mode. Dan: a track with nothing in the new scene went on
-     * playing an old scene's clip, which is not what moving to a scene means.
+     * A scene header was pressed. Tracks with a clip in the scene play it and
+     * every other track stops, all on the same tick like a scene change in
+     * song mode.
      *
-     * The tick is the next grid line where there is a grid; otherwise the end
-     * of the longest clip now playing - its own cycle end, the latest of them,
-     * so nobody is cut short - and with nothing playing, now. A track already
-     * playing this scene's clip carries on untouched, where a tap on the cell
-     * would have stopped it.
+     * That tick is the next grid line if there's a grid, otherwise the latest
+     * cycle end of the clips playing so nothing is cut short, or now if
+     * nothing is playing. A track already playing this scene's clip carries on
+     * (a tap on the cell would stop it).
      *
      * [cycles] is each rack's clip length in this scene, 0 where it has none.
      */
@@ -128,18 +119,12 @@ class Launcher {
     }
 
     /**
-     * Take up a clip that is already sounding, in phase, without queueing.
+     * Take over a clip that's already playing, in phase, without queueing.
      *
-     * For the moment the grid becomes a launcher while the song is playing.
-     * Scene mode has every rack on the same scene and the same iteration; clip
-     * mode has each rack on its own. Going from one to the other used to hand
-     * the launcher nothing, so every track fell silent until it was tapped -
-     * which is no use at all if the point is to start remixing something that
-     * is already running. Dan: "keep the currently playing clips going ... this
-     * would allow for live remixing and going back and forth".
-     *
-     * The origin is passed in rather than taken as `now`, so the clip carries
-     * on from where the scene had already got to instead of restarting.
+     * Used when the grid switches to clip mode while the song plays, so the
+     * current clips keep going and can be remixed live. The origin is passed
+     * in so the clip carries on from where the scene was instead of
+     * restarting.
      */
     void adopt(int32_t rack, int64_t sceneId, int64_t cycle, int64_t origin) {
         if (!valid(rack) || sceneId == kNone) {
@@ -154,7 +139,7 @@ class Launcher {
         changed |= (1u << rack);
     }
 
-    /** Forget what this rack had queued; leave what it is playing alone. */
+    /** Clear this rack's queue but leave what it's playing alone. */
     void cancel(int32_t rack) {
         if (valid(rack)) {
             slots[rack].pendingId = kNone;
@@ -162,7 +147,7 @@ class Launcher {
         }
     }
 
-    /** Every rack that is sounding is queued to stop at its own boundary. */
+    /** Queue every playing rack to stop at its own boundary. */
     void requestStopAll(int64_t now) {
         for (auto &s : slots) {
             if (s.sceneId != kNone) {
@@ -174,7 +159,7 @@ class Launcher {
         }
     }
 
-    /** Nothing is queued and nothing sounds. Used by a hard stop. */
+    /** Clear everything, queued and playing. Used by a hard stop. */
     void clearAll() {
         for (auto &s : slots) {
             s.sceneId = kNone;
@@ -186,16 +171,16 @@ class Launcher {
     }
 
     /**
-     * Everything due exactly at [tick]: cycles that have run out, and launches
-     * whose boundary has come. Call it before rendering any span that starts
-     * at `tick`, so a clip that begins here begins with its own origin here.
+     * Apply everything due at [tick]: cycles that have run out and launches
+     * that have reached their boundary. Call it before rendering any span that
+     * starts at tick so a clip starting here gets its origin here.
      */
     void applyDue(int64_t tick) {
         for (int32_t r = 0; r < kRackCount; ++r) {
             Slot &s = slots[r];
             if (s.sceneId != kNone && s.cycle > 0) {
-                // A cycle that has run out moves its origin up. This is what
-                // re-arms OneShot clips and re-anchors automation lanes.
+                // A finished cycle moves the origin up. This re-arms OneShot
+                // clips and restarts automation lanes.
                 const int64_t past = tick - s.origin;
                 if (past >= s.cycle) {
                     s.origin += (past / s.cycle) * s.cycle;
@@ -209,8 +194,8 @@ class Launcher {
                 } else {
                     s.sceneId = s.pendingId;
                     s.cycle = std::max<int64_t>(1, s.pendingCycle);
-                    // The boundary, not `tick`: if a block ever starts past a
-                    // boundary the clip still keeps the phase it was promised.
+                    // Use the boundary, not tick, so the clip keeps its phase
+                    // even if a block starts past the boundary.
                     s.origin = s.pendingAt;
                 }
                 s.pendingId = kNone;
@@ -221,9 +206,9 @@ class Launcher {
     }
 
     /**
-     * The next tick at which anything changes, strictly after [now]: a cycle
-     * ending or a launch landing. The scheduler renders up to here and no
-     * further, which is what makes a swap sample-accurate.
+     * The next tick after [now] where anything changes: a cycle ending or a
+     * launch landing. The scheduler renders up to here and no further, which
+     * makes swaps sample-accurate.
      */
     int64_t nextEvent(int64_t now) const {
         int64_t best = INT64_MAX;
@@ -241,7 +226,7 @@ class Launcher {
         return best;
     }
 
-    // --- what the scheduler and the UI need to read ---------------------------
+    // --- read by the scheduler and the UI ---------------------------------------
 
     bool playing(int32_t rack) const { return valid(rack) && slots[rack].sceneId != kNone; }
     int64_t sceneId(int32_t rack) const { return valid(rack) ? slots[rack].sceneId : kNone; }
@@ -292,9 +277,9 @@ class Launcher {
 
   private:
     struct Slot {
-        int64_t sceneId = kNone;   // what is sounding, by stable scene id
-        int64_t pendingId = kNone; // what is queued, or kStopId
-        int64_t pendingAt = 0;     // the tick it lands on, decided when queued
+        int64_t sceneId = kNone;   // what's playing, by stable scene id
+        int64_t pendingId = kNone; // what's queued, or kStopId
+        int64_t pendingAt = 0;     // the tick it lands on, set when queued
         int64_t pendingCycle = 0;
         int64_t origin = 0; // absolute tick this rack's cycle began
         int64_t cycle = 0;  // bars x repeat x ticksPerBar
@@ -318,22 +303,17 @@ class Launcher {
             return nextMultiple(now, quantise);
         }
         if (s.sceneId != kNone && s.cycle > 0) {
-            // The end of the cycle this rack is in - never this instant, or a
-            // tap landing exactly on a boundary would swallow a whole cycle.
+            // The end of the current cycle. Never now, or a tap exactly on a
+            // boundary would skip a whole cycle.
             const int64_t past = std::max<int64_t>(0, now - s.origin);
             return s.origin + (past / s.cycle + 1) * s.cycle;
         }
-        // Silent, with something else sounding: the next line this clip's own
-        // length falls on, counted from the transport's zero, so a stack of
-        // clips stays in phase however it was assembled.
+        // Silent while other racks play: the next multiple of this clip's
+        // length from the transport's zero, so clips stay in phase.
         //
-        // Silent with *nothing* sounding: now. There is no phase to keep, and
-        // waiting for a grid that nobody can hear is indistinguishable from
-        // the app ignoring the tap. Dan, having stopped every clip and tapped
-        // the scene again: "it seems to wait to start, like the transport was
-        // still running even though I stopped all clips" - which is exactly
-        // what was happening, because the transport *was* still running and
-        // the line was measured from a zero several bars back.
+        // Silent with nothing playing at all: start now. There's no phase to
+        // keep, and waiting for an unheard grid feels like the tap was ignored
+        // (the transport is still running after stopping all clips).
         if (!anyPlaying()) return now;
         return incoming > 0 ? nextMultiple(now, incoming) : now;
     }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# The engine test page in headless Chromium, with what it says printed.
+# Runs the engine test page in headless Chromium and prints its output.
 cd "$(dirname "$0")/.."
 LOG=$(mktemp)
 python3 test/serve.py 8765 > "$LOG" 2>&1 & SERVER=$!

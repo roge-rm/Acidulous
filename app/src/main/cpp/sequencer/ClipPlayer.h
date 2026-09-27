@@ -6,14 +6,14 @@
 #include <cstdint>
 #include <limits>
 
-// Plays one rack's clip. Lives inside the Rack and emits into
+// Plays one rack's clip. Lives inside the Rack and sends into
 // Rack::handleMidi(), ahead of the modifiers, so sequenced and live notes are
-// treated identically.
+// treated the same.
 //
-// Positions are absolute transport ticks. The clip loops by arithmetic from the
-// scene iteration's origin (pass k covers [origin + k·len, origin + (k+1)·len)),
-// and pending note-offs are stored as absolute ticks, so a note that runs past a
-// loop point or a scene boundary simply ends when it ends.
+// Positions are absolute transport ticks. The clip loops from the scene
+// iteration's origin (pass k covers [origin + k*len, origin + (k+1)*len)) and
+// pending note-offs are absolute ticks, so a note running past a loop point
+// or scene boundary just ends when it ends.
 //
 // Audio thread only, apart from the diagnostic counters.
 
@@ -25,31 +25,23 @@ class ClipPlayer {
     static constexpr int kExprKinds = static_cast<int>(acidulous::Expr::Count);
 
     // Audio thread, at a block boundary (ObjectManager does this). Pending
-    // note-offs are deliberately kept: they belong to notes already sounding.
+    // note-offs are kept on purpose since those notes are still sounding.
     void setClip(const Clip *newClip) {
         clip_ = newClip;
         for (float &v : lastLane) v = -1.0f;
         lastOrigin = -1;
-        // A different clip is a different pattern. `pointLaunched` calls this
-        // on every launch, so a clip you fire starts its conditions from that
-        // bar rather than inheriting the phase of whatever was there.
+        // pointLaunched calls this on every launch, so a launched clip's
+        // conditions start counting from that bar.
         passIndex_ = 0;
         lastBase_ = kNoBase;
     }
 
     /**
-     * Back to the beginning, for a render.
+     * Back to the beginning, for a render, so rendering the same song twice
+     * gives the same result (like Arp::reset()).
      *
-     * The three things below are the only state the player carries that a
-     * performance can move, and nothing rewound them until there was
-     * something to rewind: `allNotesOff` clears the pending table and that was
-     * all there was. This is the lesson `Arp::reset()` wrote down - an arp
-     * carried its RNG from one playing to the next and made an offline render
-     * of the same song come out differently. A reset means from the beginning.
-     *
-     * Deliberately *not* part of `allNotesOff`, which runs on every ordinary
-     * stop: re-seeding there would make a free-rolling clip repeat, which is
-     * the one thing free is for.
+     * Not part of allNotesOff, which runs on every normal stop. Re-seeding
+     * there would make a free-rolling clip repeat itself.
      */
     void reset() {
         freeSeed_ = kFreeSeed;
@@ -58,30 +50,27 @@ class ClipPlayer {
         lastBase_ = kNoBase;
     }
 
-    /** Whether Fill trigs may sound. The transport owns it; the gate reads it. */
+    /** Whether Fill trigs play. Set by the transport, read by gate(). */
     void setFill(bool on) { fill_ = on; }
 
     /**
-     * How this track's offbeats sit, set once a block like the fill.
+     * This track's swing, set once a block like the fill.
      *
-     * Applied to the *clip-relative* tick, so a clip swings the same way
-     * wherever it is launched and whatever bar the song has reached - and so
-     * that a scene whose origin is not a whole number of pairs cannot put a
-     * track's swing out of phase with the one next to it.
+     * Applied to the clip-relative tick so a clip swings the same wherever
+     * it's launched, and tracks can't swing out of phase with each other.
      */
     void setSwing(float percent, int64_t pair) { swingPercent_ = percent; swingPair_ = pair; }
     const Clip *clip() const { return clip_; }
 
-    // Fire everything due in absolute tick range [start, end). `origin` is the
-    // absolute tick at which the current scene iteration began: the clip's
-    // tick 0 sits there, and it loops from there. Because the origin moves on
-    // every iteration, a OneShot clip (which fires only in its first pass)
-    // re-arms on each scene repeat without any extra state.
+    // Fire everything due in the absolute tick range [start, end). origin is
+    // the tick the current scene iteration began at, where the clip's tick 0
+    // is and where it loops from. The origin moves every iteration, so a
+    // OneShot clip (first pass only) re-arms on each scene repeat.
     // Sink signature: void(uint8_t cmd, uint8_t p1, uint8_t p2).
     template <class Sink>
     void process(int64_t start, int64_t end, int64_t origin, Sink &&sink) {
-        // Note-offs first, so a note ending where another begins retriggers
-        // cleanly. Anything overdue (tick < start) fires now rather than never.
+        // Note-offs first so a note ending where another begins retriggers
+        // cleanly. Anything overdue (tick < start) fires now.
         for (PendingOff &p : pending) {
             if (p.active && p.tick < end) {
                 sink(0x80, p.pitch, 0);
@@ -103,27 +92,18 @@ class ClipPlayer {
                 break;
             }
             const int64_t base = origin + k * len;
-            // Which pass of this clip this is.
-            //
-            // Counted rather than derived. `base / len` looks free and is
-            // wrong twice: a three-bar clip in a four-bar scene returns the
-            // same index for two consecutive passes, because the scene's
-            // iteration length is not a multiple of the clip's; and a OneShot
-            // never leaves k = 0, so its index steps by the scene's length
-            // instead of its own. Counting distinct origins gets both right -
-            // a pass split over two blocks counts once, a block covering
-            // three counts three - at the price of one field, which the reset
-            // above pays for anyway.
+            // Which pass of this clip this is. Counted rather than worked out
+            // from base / len, which is wrong when the scene length isn't a
+            // multiple of the clip's, and for a OneShot (k stays 0). A pass
+            // split over two blocks counts once.
             if (base != lastBase_) {
                 if (lastBase_ != kNoBase) ++passIndex_;
                 lastBase_ = base;
             }
             const int64_t pass = passIndex_;
-            // Free mode re-draws the seed word once per pass. Not per note and
-            // not per block: within a pass the roll has to stay a pure
-            // function of who and when, or a ratchet whose sub-hits land in
-            // the next block, and a Prev chain cut by a block boundary, would
-            // both get a different answer the second time they asked.
+            // Free mode redraws the seed once per pass, not per block, so
+            // within a pass a ratchet or Prev chain split across blocks gets
+            // the same answer both times.
             if (clip_->freeRoll && pass != lastFreePass_) {
                 lastFreePass_ = pass;
                 freeSeed_ = freeSeed_ * 1664525u + 1013904223u;
@@ -131,17 +111,16 @@ class ClipPlayer {
 
             bool prevPlayed = false; // the chain starts again every pass
             for (const ClipNote &note : clip_->notes) {
-                // Swung, and still sorted: the map is monotonic, so the break
-                // below is as safe as it was when this was an addition.
+                // Swing is monotonic, so the notes stay sorted and the break
+                // below is safe.
                 const int64_t t = base + swung(note.tick);
                 if (t >= end) {
-                    break; // notes are sorted, and no sub-hit precedes its note
+                    break; // notes are sorted and no sub-hit comes before its note
                 }
                 const int32_t rat = note.ratchet();
-                // A note this block will not fire still had a verdict, and the
-                // note after it may be asking what that verdict was - so the
-                // gate runs above the skip, not below it. Only clips that
-                // actually contain a Prev pay for the replay.
+                // A skipped note still has a result the next note's Prev may
+                // need, so gate() runs before the skip. Only clips with a Prev
+                // pay for this.
                 if (!clip_->hasPrevCond && rat <= 1 && t < start) {
                     continue;
                 }
@@ -152,22 +131,18 @@ class ClipPlayer {
                 if (!play || (rat <= 1 && t < start)) {
                     continue;
                 }
-                // A ratchet subdivides a note; it does not spill into the next
-                // bar. Without the clamp, a note near the end of the clip asks
-                // for sub-hits in a pass the loop above will never walk again,
-                // and they vanish silently.
+                // A ratchet subdivides the note within the clip. Without the
+                // clamp, sub-hits past the clip end would silently vanish.
                 const int32_t full = note.length > 0 ? note.length : 1;
                 const int32_t span = std::min<int32_t>(full, static_cast<int32_t>(len) - note.tick);
                 const int32_t step = rat > 1 ? std::max(1, span / rat) : span;
-                // The end of the note goes through the same map as its start,
-                // so a note written to meet the next one still meets it. Put
-                // the raw length on a swung start instead and every legato
-                // join in a swung part opens or overlaps by the swing amount.
+                // The note's end is swung the same as its start, so legato
+                // notes still meet instead of gapping or overlapping.
                 const int64_t tail = base + swung(note.tick + span);
                 for (int32_t j = 0; j < rat; ++j) {
                     const int64_t h = base + swung(note.tick + static_cast<int64_t>(j) * step);
                     if (h >= end) break;
-                    if (h < start) continue; // an earlier block fired it
+                    if (h < start) continue; // fired in an earlier block
                     const int64_t next = base + swung(note.tick + static_cast<int64_t>(j + 1) * step);
                     const int64_t off = rat > 1
                                             ? std::max<int64_t>(h + 1, std::min<int64_t>(next, tail))
@@ -175,8 +150,8 @@ class ClipPlayer {
                     releaseIfSounding(note.pitch, sink);
                     sink(0x90, note.pitch, note.velocity);
                     onCount.fetch_add(1, std::memory_order_relaxed);
-                    // `t`, not `h`: a curve belongs to the note, so it runs
-                    // across the whole ratchet instead of restarting on each.
+                    // t, not h: the curve runs across the whole ratchet
+                    // instead of restarting on each hit.
                     schedule(note, t, off, sink);
                 }
             }
@@ -185,8 +160,8 @@ class ClipPlayer {
 
     // Automation: before the notes, set every lane's value at the block's end
     // position. Setter signature: void(Unit, int32_t index, float value,
-    // bool jump) - a stepped lane jumps, so a step lock is in place, whole,
-    // for the note struck on its own step.
+    // bool jump). A stepped lane jumps so a step lock is fully in place for
+    // the note on that step.
     // Skips lanes the live UI has touched during this pass while recording.
     template <class Setter, class Touched>
     void processLanes(int64_t end, int64_t origin, Setter &&set, Touched &&touched) {
@@ -195,7 +170,7 @@ class ClipPlayer {
         if (len <= 0 || end < origin) return;
         if (origin != lastOrigin) {
             lastOrigin = origin;
-            for (float &v : lastLane) v = -1.0f; // a new pass re-sends from the top
+            for (float &v : lastLane) v = -1.0f; // a new pass resends everything
         }
         const auto t = static_cast<int32_t>((end - origin) % len);
         const size_t n = clip_->lanes.size() < kMaxLanes ? clip_->lanes.size() : kMaxLanes;
@@ -212,13 +187,9 @@ class ClipPlayer {
     bool originChanged(int64_t origin) const { return origin != lastOrigin; }
 
     /**
-     * Per-note expression: for every note still sounding, where its curves
-     * have got to by the end of this block.
-     *
-     * Read at the block's end position like a lane, and sent only when the
-     * value has moved, so a curve that is flat between two distant points
-     * costs one call and a glide costs one call a block - which at 64 frames
-     * is finer than any controller sends in the first place.
+     * Per-note expression: each sounding note's curve values at the end of
+     * this block. Only sent when the value changes, so a flat curve costs one
+     * call and a glide one call a block.
      *
      * Sink signature: void(uint8_t note, int32_t kind, float value01).
      */
@@ -226,10 +197,8 @@ class ClipPlayer {
     void processExpression(int64_t end, Sink &&sink) {
         if (clip_ == nullptr) return;
         for (PendingOff &p : pending) {
-            // A clip swapped underneath a sounding note takes its curves with
-            // it - the old Clip is on its way to the destructor queue, and the
-            // points were never ours. The note keeps sounding and holds the
-            // last value it was given, which is the quiet answer.
+            // If the clip was swapped under a sounding note, its curves went
+            // with the old Clip. The note keeps sounding at its last value.
             if (!p.active || !p.hasExpr || p.exprRev != clip_->rev) continue;
             const auto rel = static_cast<int32_t>(end > p.startTick ? end - p.startTick : 0);
             for (int32_t k = 0; k < kExprKinds; ++k) {
@@ -242,7 +211,7 @@ class ClipPlayer {
         }
     }
 
-    // Stop: release everything that is sounding.
+    // Stop: release everything that's sounding.
     template <class Sink>
     void allNotesOff(Sink &&sink) {
         for (PendingOff &p : pending) {
@@ -259,7 +228,7 @@ class ClipPlayer {
     uint32_t notesOff() const { return offCount.load(std::memory_order_relaxed); }
 
   private:
-    /** Where a clip-relative tick sounds. The identity while the song is straight. */
+    /** Where a clip-relative tick sounds after swing. Unchanged with no swing. */
     int64_t swung(int64_t tick) const { return Swing::at(tick, swingPercent_, swingPair_); }
 
     float swingPercent_ = Swing::kStraight;
@@ -269,11 +238,9 @@ class ClipPlayer {
         int64_t tick = 0;
         uint8_t pitch = 0;
         bool active = false;
-        // The note's expression, resolved once when it fires: where it
-        // started, which clip it came from, and each curve's own range
-        // within that clip's expr array. Resolved here and not per block
-        // because the ranges never change while the note sounds, and this
-        // is the one moment we are already looking at the ClipNote.
+        // The note's expression, worked out once when it fires: its start,
+        // which clip it came from, and each curve's range in that clip's expr
+        // array. The ranges can't change while the note sounds.
         int64_t startTick = 0;
         int64_t exprRev = 0;
         int32_t exprFirst[kExprKinds] = {};
@@ -282,8 +249,8 @@ class ClipPlayer {
         bool hasExpr = false;
     };
 
-    // Same pitch already sounding: end it before restarting it, so a voice is
-    // never left with an off it will never receive.
+    // End the same pitch if it's already sounding so no voice is left without
+    // a note-off.
     template <class Sink>
     void releaseIfSounding(uint8_t pitch, Sink &sink) {
         for (PendingOff &p : pending) {
@@ -306,15 +273,14 @@ class ClipPlayer {
                 return;
             }
         }
-        // Table full - more than kMaxPending notes sounding at once. Degrade to
-        // a zero-length note rather than a stuck one.
+        // Table full (more than kMaxPending notes at once). Make it a
+        // zero-length note rather than a stuck one.
         sink(0x80, note.pitch, 0);
         offCount.fetch_add(1, std::memory_order_relaxed);
     }
 
-    // Split the note's slice of the clip's expr array into one range per
-    // kind. The slice is sorted by kind and then by tick, so this is one walk
-    // of the note's own points - typically none, and never many.
+    // Split the note's slice of the clip's expr array into one range per kind.
+    // The slice is sorted by kind then tick, so this is one short pass.
     void bindExpression(PendingOff &p, const ClipNote &note, int64_t onTick) {
         p.startTick = onTick;
         p.exprRev = clip_ != nullptr ? clip_->rev : 0;
@@ -322,14 +288,12 @@ class ClipPlayer {
         for (int32_t k = 0; k < kExprKinds; ++k) {
             p.exprFirst[k] = 0;
             p.exprCount[k] = 0;
-            // Nothing has been sent for this note yet, and a NaN differs from
-            // every value there is, so the first read always reaches the
-            // machine even when it happens to be the neutral one.
+            // NaN never equals anything, so the first value is always sent.
             p.exprLast[k] = std::numeric_limits<float>::quiet_NaN();
         }
         if (clip_ == nullptr || note.exprCount <= 0) return;
         const auto total = static_cast<int32_t>(clip_->expr.size());
-        if (note.exprFirst < 0 || note.exprFirst + note.exprCount > total) return; // malformed; ignore it
+        if (note.exprFirst < 0 || note.exprFirst + note.exprCount > total) return; // malformed, ignore it
         for (int32_t i = 0; i < note.exprCount; ++i) {
             const int32_t kind = clip_->expr[static_cast<size_t>(note.exprFirst + i)].kind;
             if (kind < 0 || kind >= kExprKinds) continue;
@@ -340,12 +304,9 @@ class ClipPlayer {
     }
 
     /**
-     * The roll: a pure function of the dice, the pass and which note this is.
-     *
-     * Identity is (tick, pitch) rather than the note's index in the list,
-     * because inserting a note at the top of a clip must not reroll every
-     * note after it. The mixing is Dice's, which is the house's answer to
-     * "random, but the same twice".
+     * The random roll, from the seed, the pass and the note. The note is
+     * identified by (tick, pitch), not its index, so inserting a note doesn't
+     * reroll every note after it. Same hash mixing as Dice.
      */
     uint32_t roll(const ClipNote &note, int64_t pass) const {
         uint32_t h = clip_->freeRoll ? freeSeed_ : static_cast<uint32_t>(clip_->seed);
@@ -377,7 +338,7 @@ class ClipPlayer {
 
     static constexpr size_t kMaxLanes = 32;
     static constexpr int64_t kNoBase = std::numeric_limits<int64_t>::min();
-    static constexpr uint32_t kFreeSeed = 0x9E3779B9u; // as Arp's, and for the same reason
+    static constexpr uint32_t kFreeSeed = 0x9E3779B9u; // same as Arp's
     const Clip *clip_ = nullptr;
     float lastLane[kMaxLanes]{};
     int64_t lastOrigin = -1;

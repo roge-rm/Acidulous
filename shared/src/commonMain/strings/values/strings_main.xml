@@ -74,7 +74,7 @@
     <string name="quantise_title">Launch quantise</string>
     <string name="quantise_clips_start">clips start on</string>
     <string name="quantise_clips_start_note">A tapped clip waits for this line.</string>
-    <!-- Its twin where the pointer is a mouse: the desktop build. -->
+    <!-- The same for the desktop build, where the pointer is a mouse. -->
     <string name="quantise_clips_start_note_mouse">A clicked clip waits for this line.</string>
     <string name="quantise_clip_end">clip end</string>
     <!-- A line every so many bars; one word whatever the number. -->

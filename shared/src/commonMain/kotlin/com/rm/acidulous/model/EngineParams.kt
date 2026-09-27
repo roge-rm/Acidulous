@@ -1,9 +1,9 @@
 package com.rm.acidulous.model
 
 /**
- * How document units become the engine's normalised 0..1 parameters. These
- * mirror the ParamDef tables in engine/rack/Rack.cpp and MasterBus.cpp; if a
- * range changes there it changes here.
+ * Turns song units into the engine's normalised 0..1 parameters. These match
+ * the ParamDef tables in engine/rack/Rack.cpp and MasterBus.cpp, so change
+ * both together.
  */
 object EngineParams {
     const val VOLUME_MAX = 1.5f

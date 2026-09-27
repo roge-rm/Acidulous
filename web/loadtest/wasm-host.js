@@ -1,11 +1,9 @@
 // Runs the load test's WebAssembly module without Emscripten's JavaScript.
 //
-// The module is built standalone, so what it asks of its host is a handful of
-// WASI calls - a clock, somewhere to print, random bytes - and nothing else it
-// will actually use. Anything not provided here is a stub that returns 0, so a
-// call that was never going to be made (a file open) costs nothing to satisfy.
-// Shared by the benchmark worker and the AudioWorklet, which is why it is a
-// classic script with one global rather than a module.
+// The module is standalone, so it only needs a few WASI calls: a clock,
+// printing and random bytes. Every other import is a stub that returns 0.
+// Shared by the benchmark worker and the AudioWorklet, so it's a classic
+// script with one global, not a module.
 globalThis.loadTestInstance = function (module) {
   let memory = null;
   const now = (globalThis.performance && performance.now) ? () => performance.now() : () => Date.now();

@@ -12,7 +12,7 @@ class AlsaSeqMidiTest {
     private val user = 1
     private val kernel = AlsaSeq.KERNEL_CLIENT
 
-    /** What `aconnect -l` shows on a machine with a pad controller, a software synth and an on-screen keyboard, and this app. */
+    /** Roughly what `aconnect -l` shows with a pad controller, a software synth, an on-screen keyboard and this app. */
     private val ports = listOf(
         SeqPort(0, 0, readOnly, kernel, -1, "System", "Timer"),
         SeqPort(0, 1, readOnly, kernel, -1, "System", "Announce"),
@@ -40,7 +40,7 @@ class AlsaSeqMidiTest {
         assertEquals(listOf(0, 1, 2), pads.destinations)
         assertEquals(3, pads.desc.inputPortCount)
         assertEquals(3, pads.desc.outputPortCount)
-        // A synth only takes; a keyboard only sends.
+        // A synth only receives and a keyboard only sends.
         assertEquals(1 to 0, synth.desc.inputPortCount to synth.desc.outputPortCount)
         assertEquals(0 to 1, keyboard.desc.inputPortCount to keyboard.desc.outputPortCount)
     }

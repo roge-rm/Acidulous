@@ -18,9 +18,9 @@ actual fun rememberTopCutout(): TopCutout? {
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
     val insets = WindowInsets.displayCutout
-    // All four sides and the window size are keys: a fold, a multi-window
-    // resize or a rotation can move the hole in window coordinates without
-    // changing the value this row happens to care about.
+    // All four sides and the window size are keys, because a fold, a
+    // multi-window resize or a rotation can move the hole in window
+    // coordinates without changing the top inset.
     val top = insets.getTop(density)
     val bottom = insets.getBottom(density)
     val left = insets.getLeft(density, direction)
@@ -34,17 +34,17 @@ actual fun rememberTopCutout(): TopCutout? {
         var r = Int.MIN_VALUE
         var b = 0
         for (rect in cutout.boundingRects) {
-            // Only the top edge; a side cutout is left to the ordinary window
-            // insets. Two holes on one edge are covered as one span, which is
-            // conservative and, with one elastic child, loses nothing.
+            // Only the top edge. Side cutouts are left to the normal window
+            // insets. Two holes on the top edge are treated as one span,
+            // which is safe and costs nothing with one stretchy child.
             if (rect.top > 0 || rect.isEmpty) continue
             l = min(l, rect.left)
             r = max(r, rect.right)
             b = max(b, rect.bottom)
         }
         // The rectangles are in display coordinates and the inset is in window
-        // coordinates. They agree for a full-screen window, and when they do
-        // not, the rectangles are describing some other frame of reference.
+        // coordinates. They match for a full-screen window. If they don't,
+        // the rectangles can't be trusted, so block the whole row.
         if (r <= l || b != cutout.safeInsetTop) blocked else TopCutout(l, r, b)
     }
 }

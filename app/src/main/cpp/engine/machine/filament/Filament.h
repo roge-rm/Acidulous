@@ -9,31 +9,22 @@
 #include <engine/machine/filament/Waveguide.h>
 #include <vector>
 
-// Filament - strings, by modelling rather than by recording.
+// Filament, a modelled string instrument.
 //
-// Everything else in this app makes sound by generating a waveform. This
-// one makes none: it disturbs something and lets it ring. What you hear is
-// the resonator's answer, which is why the same string sounds different
-// plucked, struck, bowed or blown at, and why nothing about it needs a
-// sample.
+// It excites a string and lets it ring, so the same string sounds different
+// plucked, struck, bowed or blown. The basic model is simple. On top of it:
 //
-// The classic is four lines of code. All of the instrument is in the rest:
-//
-//   - **Six ways to disturb it.** Pluck, pick, hammer, bow, breath - and the
-//     audio input, so you can excite a string with your own voice or with
-//     whatever is plugged in. That one exists because M17 gave the engine
-//     ears, and no sampled string library can do it at all.
-//   - **Sympathetic strings.** Six more, undamped, tuned to a chord, a scale
-//     or the harmonic series, ringing at whatever the played string feeds
-//     them. Hold the pedal and play: the instrument answers itself.
-//   - **Preparation.** A damper anywhere along the string, and a rattle that
-//     buzzes when it is driven hard - the prepared piano, but the object can
-//     be moved while a note sustains.
-//   - **Stiffness.** Dispersion turns a guitar into a piano, because that is
-//     literally the difference: a stiff string's partials run sharp.
-//   - **Tension.** Hit it hard and it is sharp, settling as it dies.
-//   - **Two strings a voice**, slightly apart, coupled - the beating of a
-//     course, and at wider detunings something no luthier would allow.
+//   - Six exciters: pluck, pick, hammer, bow, breath and the audio input, so
+//     you can excite a string with your voice or whatever is plugged in.
+//   - Sympathetic strings: six more, undamped, tuned to a chord, a scale or
+//     the harmonic series, ringing from what the played string feeds them.
+//   - Preparation: a damper anywhere along the string and a rattle that
+//     buzzes when driven hard, like a prepared piano, movable while a note
+//     sustains.
+//   - Stiffness: dispersion makes the partials run sharp, turning a guitar
+//     into a piano.
+//   - Tension: hit it hard and it goes sharp, settling as it dies.
+//   - Two strings per voice, slightly detuned and coupled, like a course.
 namespace acidulous::machine {
 
 class Filament final : public Machine {
@@ -72,11 +63,11 @@ class Filament final : public Machine {
         MatrixBase,
         VoiceBase = MatrixBase + kMatrixSlots * kMatrixParams,
         VoiceMode = VoiceBase, Glide, BendRange, Octave, Transpose, Fine, VelocityAmount, Release,
-        // Appended: parameters are addressed by name, so a patch that has
-        // never heard of this one simply takes its default.
+        // Added later. Parameters are saved by name, so older patches just
+        // get the default.
         MpeTimbre,
-        // What a finger's pressure does when the matrix says nothing about
-        // it: leans on the bow or the breath, brightens, and lifts the level.
+        // What MPE pressure does when the matrix doesn't use it: pushes the
+        // bow or breath, brightens and raises the level.
         MpePressure,
         Count
     };
@@ -113,32 +104,24 @@ class Filament final : public Machine {
         int32_t exciteLeft = 0;  // samples of excitation remaining
         float exciteGain = 0.0f;
         float exciteDc = 0.0f;   // the slow part of the drive, kept out of the string
-        float lastPick = 0.0f;   // a pick differentiates what a finger does not
-        // The excitation as it was a moment ago, for the pick-position comb.
+        float lastPick = 0.0f;   // a pick differentiates the excitation
+        // Recent excitation, for the pick-position comb.
         std::vector<float> pick;
         int32_t pickWrite = 0;
         float bowPhase = 0.0f;
         float pan = 0.0f;
         float damp = 0.0f;       // release damping, 0 while held
         /**
-         * This voice's matrix, refreshed on the sixteen-sample stride.
-         *
-         * It has to be the voice's own. It was one array on the machine, which
-         * was right while every voice rebuilt it on every sample - and wrong
-         * the moment the rebuild moved to the stride, because for fifteen
-         * samples in sixteen every voice then read whichever voice had been
-         * rebuilt last. Anything per note - key, velocity - routed to the pick
-         * position, the bow or the pan flipped between two answers three
-         * thousand times a second.
+         * This voice's matrix values, refreshed every 16 samples. Each voice
+         * needs its own copy since they hold per-note sources like key and
+         * velocity.
          */
         float mod[DestCount] = {};
-        /** Where the pan puts this voice, worked out with the matrix. */
+        /** This voice's pan gains, worked out with the matrix. */
         float panL = 1.0f, panR = 1.0f;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
-        // `pressure` and `timbre` are -1 until this finger sends them, so
-        // a voice with none of its own falls back to the channel and a
-        // keyboard plays exactly as it did.
+        // Per-note expression (MPE). `bend` is in semitones and adds to the
+        // channel bend. `pressure` and `timbre` are -1 until this note sends
+        // them, and until then the channel's values are used.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
         float prsGlide = 0.0f; // see glidePressure
     };
@@ -161,14 +144,13 @@ class Filament final : public Machine {
     dsp::LfoGen lfo[2];
     float lfoValue[2] = {0.0f, 0.0f};
     float stringLevel = 0.0f;
-    /** Blocks in a row with no voice and nothing over -120 dB; see `render`. */
+    /** Blocks in a row with no voice and nothing over -120 dB, see `render`. */
     int32_t quietBlocks = 0;
     bool asleep = false;
     /**
-     * The sustain pedal: dampers off the strings, so the sympathetic bank
-     * rings whether or not "sympathy" is on - a piano with the pedal down
-     * answers itself. [damperMix] follows it over thirty milliseconds, so the
-     * bank fades in and out rather than switching.
+     * The sustain pedal lifts the dampers, so the sympathetic bank rings
+     * even with "sympathy" off, like a piano with the pedal down. [damperMix]
+     * follows it over 30 ms so the bank fades in and out.
      */
     bool dampersUp = false;
     float damperMix = 0.0f;

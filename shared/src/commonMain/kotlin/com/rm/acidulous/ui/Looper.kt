@@ -17,23 +17,22 @@ import com.rm.acidulous.model.SongEditor
 /**
  * The launcher as a looper: tap an empty cell and play into it.
  *
- * The cell becomes a clip, launched on the next line like any other, and
- * recording arms the moment it starts. With a length chosen in the q: window
- * it closes itself after that many bars; with none, the next tap closes it on
- * the nearest bar line. After that it goes on recording on top of itself each
- * time round until the cell is tapped, and a tap starts that again. What it
- * makes is an ordinary clip: there is no second kind of loop to keep track of.
+ * The cell becomes a clip that launches on the next line like any other, and
+ * recording arms as it starts. With a length set in the q: window it closes
+ * itself after that many bars, otherwise the next tap closes it on the nearest
+ * bar line. After that it overdubs each time round until the cell is tapped,
+ * and another tap starts overdubbing again. The result is an ordinary clip.
  *
- * Every tap hands back how to undo itself, because a cell's double tap is a
- * tap followed by its own retraction - that is how a double tap opens the
- * editor, where the keys are, without the first tap having done anything.
+ * Every tap returns how to undo itself, because a double tap on a cell is a tap
+ * followed by its undo. That's how a double tap opens the editor without the
+ * first tap doing anything.
  */
 class Looper(
     private val editor: SongEditor,
-    /** Arm or disarm recording, as the ○ button does. */
+    /** Arm or disarm recording, like the ○ button. */
     private val arm: (Boolean) -> Unit,
     private val armed: () -> Boolean,
-    /** Point MIDI in, and the editor's keys, at this track. */
+    /** Point MIDI in and the editor's keys at this track. */
     private val focus: (Int) -> Unit,
 ) {
     enum class Phase {
@@ -43,17 +42,17 @@ class Looper(
         Open,
         /** Recording on top of itself every time round. */
         Overdub,
-        /** Just playing; a tap overdubs again. */
+        /** Just playing, a tap overdubs again. */
         Playing,
     }
 
     class Loop(val sceneId: String, val sceneIndex: Int, val fixed: Boolean, phase: Phase) {
         var phase by mutableStateOf(phase)
         /**
-         * When it was tapped. For the first moments the engine may not yet
-         * say the transport is running or the clip is queued - the request
-         * lands on the next block and is read back on the next poll - and a
-         * loop must not be forgotten for that.
+         * When it was tapped. For the first moments the engine may not report
+         * the transport running or the clip queued yet (the request lands on
+         * the next block and is read back on the next poll), so the loop
+         * mustn't be dropped then.
          */
         val since = System.currentTimeMillis()
         val young: Boolean get() = System.currentTimeMillis() - since < GRACE_MS
@@ -67,7 +66,7 @@ class Looper(
 
     /**
      * A tap on [track]'s cell in [scene]. Returns how to undo it, or null if
-     * this is not a looper tap and the cell should do what it always did.
+     * it's not a looper tap and the cell should behave as usual.
      */
     fun tap(song: Song, track: Int, scene: Scene, sceneIndex: Int, launch: LaunchState, playing: Boolean): (() -> Unit)? {
         val loop = loops[track]?.takeIf { it.sceneId == scene.id }
@@ -100,14 +99,14 @@ class Looper(
         }
     }
 
-    /** A free loop's length, decided: the nearest bar line to where it is now. */
+    /** Set a free loop's length to the nearest bar line from now. */
     private fun close(song: Song, track: Int, scene: Scene, launch: LaunchState) {
         val tpb = song.signatureOf(scene).ticksPerBar.toLong()
-        // Within the clip's first pass: a launcher cycle is the clip times the
-        // scene's repeats, and the loop is only ever the clip.
+        // Within the clip's first pass. A launcher cycle is the clip times the
+        // scene's repeats, and the loop is only the clip.
         val t = launch.tickInCycle % (PROVISIONAL_BARS * tpb)
-        // Leaning forward: a tap just after a downbeat meant that downbeat,
-        // anything later the next one.
+        // A tap just after a downbeat means that downbeat, anything later means
+        // the next one.
         val whole = (t / tpb).toInt()
         val bars = (if (t % tpb < tpb / 8 && whole >= 1) whole else whole + 1).coerceIn(1, PROVISIONAL_BARS)
         editor.editClip(track, scene.id) { it.copy(bars = bars) }
@@ -122,15 +121,15 @@ class Looper(
         focus(track)
         NativeEngine.launchClip(track, scene.engineId)
         if (!playing) EngineSync.play(0, launcher = true)
-        // A double tap is this tap taken back, and it opens the editor. It
-        // must not leave the song playing because the first tap started it.
+        // Undo for a double tap, which opens the editor. It must not leave the
+        // song playing just because the first tap started it.
         return {
             cancel(track, scene.id)
             if (!playing) NativeEngine.transportStop()
         }
     }
 
-    /** Take a loop back before it has begun: no clip, no launch. */
+    /** Undo a loop before it has started: no clip, no launch. */
     private fun cancel(track: Int, sceneId: String): () -> Unit {
         loops.remove(track)
         NativeEngine.cancelLaunch(track)
@@ -140,14 +139,14 @@ class Looper(
     }
 
     /**
-     * Once a poll: start recording as a loop's clip begins, close a free loop
-     * that has run to the longest a loop can be, and forget loops whose track
-     * has moved on or stopped.
+     * Called every poll. Starts recording as a loop's clip begins, closes a
+     * free loop that has reached the maximum length, and drops loops whose
+     * track has moved on or stopped.
      */
     fun poll(song: Song, launchStates: List<LaunchState>, playing: Boolean) {
         if (loops.isEmpty()) return
-        // Recording turned off with ○ while a loop recorded: that is a tap on
-        // every recording loop, not something to fight by arming again.
+        // Recording was turned off with ○ while a loop recorded. Treat it as a
+        // tap on every recording loop instead of arming again.
         if (armedHere && !armed()) {
             armedHere = false
             for ((track, loop) in loops) {
@@ -171,9 +170,9 @@ class Looper(
                 }
                 loop.phase == Phase.Waiting -> if (!launch.queued && !loop.young) loops.remove(track)
                 !sounding -> loops.remove(track)
-                // Nobody closed it: it has become a loop of the longest length.
-                // Counted against the clip, not the cycle, which is the clip
-                // times the scene's repeats.
+                // Nobody closed it, so it becomes a loop of the maximum length.
+                // Counted against the clip, not the cycle (clip times the
+                // scene's repeats).
                 loop.phase == Phase.Open && launch.tickInCycle >=
                     PROVISIONAL_BARS.toLong() * (song.scenes.getOrNull(loop.sceneIndex)?.let { song.signatureOf(it).ticksPerBar } ?: 960) ->
                     loop.phase = Phase.Overdub
@@ -185,7 +184,7 @@ class Looper(
 
     private val lastTick = LongArray(16)
 
-    /** Recording is on while any loop records, and was not ours to turn off otherwise. */
+    /** Recording is on while any loop records. Only turns it off if we turned it on. */
     private fun refreshArm() {
         val wanted = loops.values.any { it.phase == Phase.Open || it.phase == Phase.Overdub }
         if (wanted && !armed()) {

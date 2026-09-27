@@ -1,4 +1,5 @@
-// Does the follower lock, hold, and follow - and how badly does jitter hurt?
+// Checks the clock follower locks, holds and follows, and how much jitter
+// hurts.
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -125,12 +126,10 @@ int main() {
         ok("stale a second later", r.f.stale((int64_t)(r.frame + 48000)) ? 1 : 0, 1, 1);
     }
 
-    // The regression that mattered. Seeding the period from a *single*
-    // first interval reads half the true tempo whenever that one interval
-    // happens to fall long, and the guard that catches a runaway is itself
-    // scaled to the period, so it shrinks with the bad estimate and the
-    // loop never recovers. One seed in seven diverged, always downward, and
-    // one seed's worth of testing would have missed it. So: every seed.
+    // Seeding the period from a single first interval can read half the
+    // tempo if that interval is long, and the runaway guard scales with the
+    // bad estimate so it never recovers. It only happens on some seeds, so
+    // every seed is tested.
     printf("--- forty cold starts into BLE-ish jitter ---\n");
     {
         int worst = 0; double furthest = 0.0;

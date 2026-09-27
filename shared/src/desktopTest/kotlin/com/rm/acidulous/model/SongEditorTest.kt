@@ -41,7 +41,7 @@ class SongEditorTest {
         s.editor.updateGestureClip(verse) { c -> c.copy(notes = c.notes.map { it.copy(tick = it.tick + 120) }) }
         s.editor.endGesture()
 
-        // absolute, not cumulative: the second update replaced the first
+        // the second update replaced the first rather than adding to it
         assertEquals(120, s.editor.song.tracks[0].clips[verse]!!.notes[0].tick)
         assertEquals(listOf(false, false, true), s.pushes)
 

@@ -78,17 +78,13 @@ import com.rm.acidulous.ui.theme.AcidColors
 import androidx.compose.ui.layout.onSizeChanged
 import com.rm.acidulous.res.*
 
-// The patch editor.
-//
-// Every other machine in this app is knobs, and a strip of knobs under the
-// piano roll is the right shape for knobs. A graph is not: it needs room,
-// two fingers, and somewhere to put a cable down. So Nexus gets a screen.
+// The patch editor for Nexus. A graph needs more room than a knob strip, so
+// it gets its own screen.
 //
 // One gesture loop handles everything, because two pointerInput modifiers
-// fight over who consumes the first touch and a one-finger drag on a node
-// must not pan the canvas. Down on a jack pulls a cable, down on a node
-// moves it, down on nothing moves the view, and a second finger anywhere
-// takes over as a pinch.
+// fight over the first touch and a one-finger drag on a node must not pan the
+// canvas. Down on a jack pulls a cable, down on a node moves it, down on
+// nothing pans, and a second finger anywhere starts a pinch.
 
 private const val NODE_W = NEXUS_NODE_W
 private const val NODE_H = NEXUS_NODE_H
@@ -127,11 +123,9 @@ fun PatchScreen(
     val palette = remember { NexusPalette.placeable }
     var selection by remember { mutableStateOf<Selection>(Selection.None) }
     var pan by remember { mutableStateOf(Offset(-40f, -40f)) }
-    // In dp per unit of the patch's own space, not pixels. It was pixels,
-    // which drew the modules a third the size on a dense screen as on a
-    // plain one while their labels, in sp, stayed the same - so on the
-    // densest the labels overran the modules they name. [scale] is what the
-    // drawing and the gestures use; the labels are sized from zoom alone.
+    // In dp per patch unit, not pixels, so modules and their sp labels scale
+    // together on every screen density. [scale] is what drawing and gestures
+    // use; the labels are sized from zoom alone.
     var zoom by remember { mutableStateOf(0.9f) }
     val density = androidx.compose.ui.platform.LocalDensity.current.density
     val scale = zoom * density
@@ -139,7 +133,7 @@ fun PatchScreen(
     var adding by remember { mutableStateOf(false) }
     var scope by remember { mutableStateOf(FloatArray(0)) }
     var activity by remember { mutableStateOf(FloatArray(NEXUS_SLOTS + NEXUS_CABLES)) }
-    // The canvas's size in pixels, which is what fit fits the patch to.
+    // The canvas size in pixels, which Fit fits the patch to.
     var canvasPx by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
 
     val info = remember(track.machine.settings["nexus"]) { NativeEngine.nexusPalette() }
@@ -153,10 +147,7 @@ fun PatchScreen(
         editor.edit(trackIndex) { t -> t.withSetting("nexus", next.encode()) }
     }
 
-    // The patch lights up as it plays, which is why this polls at something
-    // like a frame rate rather than the scope's old sixteen times a second: a
-    // meter that updates every sixty milliseconds reads as a stutter, and the
-    // whole point is to watch the signal move through the cables.
+    // Polled at about frame rate so the lit cables and meters move smoothly.
     LaunchedEffect(trackIndex) {
         val buffer = FloatArray(512)
         val levels = FloatArray(NEXUS_SLOTS + NEXUS_CABLES)
@@ -168,8 +159,8 @@ fun PatchScreen(
         }
     }
 
-    // The keyboard: undo is the track's, as the editor's is, and back goes
-    // to the editor, as the arrow does. See ui/Keys.kt.
+    // Undo is the track's, like in the editor, and back returns to the editor.
+    // See ui/Keys.kt.
     KeyScope(
         KeyAction.Undo to { if (editor.canUndo(trackIndex)) { selection = Selection.None; editor.undo(trackIndex) } },
         KeyAction.Redo to { if (editor.canRedo(trackIndex)) { selection = Selection.None; editor.redo(trackIndex) } },
@@ -195,23 +186,21 @@ fun PatchScreen(
                 modifier = Modifier.flexible().padding(horizontal = 4.dp), maxLines = 1,
             )
             HeaderTextButton(stringResource(Res.string.patch_add)) { adding = true }
-            // **Fit rearranges**, to the canvas's own shape, and then shows
-            // all of it: panning to the first module left a patch laid out in
-            // one long row just as far off the edge of an upright phone. The
-            // new places are one step of undo. See NexusPatch.arranged.
+            // Fit rearranges the modules to the canvas's shape and then shows all of
+            // it. The new layout is one undo step. See NexusPatch.arranged.
             HeaderTextButton(stringResource(Res.string.patch_fit)) {
                 if (patch.modules.isNotEmpty() && canvasPx.width > 0 && canvasPx.height > 0) {
                     val next = patch.arranged(canvasPx.width / canvasPx.height.toFloat(), NODE_W, NODE_H)
                     if (next != patch) write(next)
-                    // The boxes and the cables: one wrapping to the next band
-                    // bows out past the modules at either end.
+                    // Includes the cables, since one wrapping to the next row bows out past
+                    // the modules at either end.
                     val box = patchBounds(next)
                     val left = box.left - FIT_MARGIN
                     val top = box.top - FIT_MARGIN
                     val w = box.width + 2 * FIT_MARGIN
                     val h = box.height + 2 * FIT_MARGIN
                     zoom = (min(canvasPx.width / w, canvasPx.height / h) / density).coerceIn(0.35f, 2.6f)
-                    // Centred, in whichever direction there is room to spare.
+                    // Centred in whichever direction there's room to spare.
                     val s = zoom * density
                     pan = Offset(left - (canvasPx.width / s - w) / 2f, top - (canvasPx.height / s - h) / 2f)
                 }
@@ -221,14 +210,8 @@ fun PatchScreen(
 
         // --- canvas and inspector ----------------------------------------------
         //
-        // **Sideways they stand side by side.** The canvas is the thing being
-        // worked on and the only child here that can give up any size, so
-        // stacking them hands it the least room exactly when the screen is
-        // shortest - three hundred and ninety-three dp less a header less an
-        // inspector is not a patch you can see. Turned, the inspector takes a
-        // column against the right edge instead and the canvas keeps the
-        // height; it already has its own pan and zoom, so it needs nothing
-        // else from this.
+        // In landscape the inspector is a column on the right so the canvas keeps
+        // the full height. Stacked, it would leave the canvas almost no room.
         val patchState by rememberUpdatedState(patch)
         val landscape = isLandscape()
         val canvasAndInspector: @Composable () -> Unit = {
@@ -236,8 +219,8 @@ fun PatchScreen(
             Canvas(
                 Modifier.fillMaxSize()
                     .onSizeChanged { canvasPx = it }
-                    // One picture to TalkBack, with a way into each module:
-                    // selecting one puts its knobs in the inspector below.
+                    // One node for TalkBack. Selecting a module puts its knobs in the
+                    // inspector below.
                     .button(
                         pluralStringResource(
                             Res.plurals.a11y_patch, patch.modules.size, patch.modules.size,
@@ -254,8 +237,8 @@ fun PatchScreen(
                         val start = world(down.position)
                         val current = patchState
 
-                        // What is under the finger, in the order that reads best:
-                        // a jack beats the node it sits on, a node beats the canvas.
+                        // What's under the finger: a jack beats the node it sits on, a node
+                        // beats the canvas.
                         var jack: Jack? = null
                         for (m in current.modules) {
                             val meta = NexusPalette.of(m.type) ?: continue
@@ -286,7 +269,7 @@ fun PatchScreen(
                                 change.consume()
                                 if (!change.pressed) break
                             }
-                            // Landed on a jack of the opposite kind? Then it is a cable.
+                            // Landed on a jack of the opposite kind? Then it's a cable.
                             var target: Jack? = null
                             for (m in patchState.modules) {
                                 val meta = NexusPalette.of(m.type) ?: continue
@@ -405,9 +388,8 @@ fun PatchScreen(
             val slot = patch.freeSlot()
             if (slot >= 0) {
                 val meta = NexusPalette.of(type)
-                // Placing a module writes its defaults into the slot, so the
-                // knobs mean what the module says they mean rather than
-                // whatever the last module in that slot left behind.
+                // Placing a module writes its defaults into the slot, so the knobs
+                // don't keep whatever the last module in that slot left behind.
                 meta?.defaults?.forEachIndexed { i, d ->
                     if (i < NEXUS_KNOBS) NativeEngine.setParam(trackIndex, "machine", nexusKnob(slot, i), d)
                 }
@@ -427,16 +409,16 @@ fun PatchScreen(
     }
 }
 
-/** Where a cable runs, from an output at [a] to an input at [b]: the curve drawPatch draws. */
+/** The curve drawPatch draws for a cable from an output at [a] to an input at [b]. */
 private fun cablePath(a: Offset, b: Offset, bend: Float): Path = Path().apply {
     moveTo(a.x, a.y)
     cubicTo(a.x + bend, a.y, b.x - bend, b.y, b.x, b.y)
 }
 
-/** How far a cable's ends bend out, in whatever units [a] and [b] are in; [unit] is one patch unit in them. */
+/** How far a cable's ends bend out, in the units of [a] and [b]; [unit] is one patch unit in them. */
 private fun cableBend(a: Offset, b: Offset, unit: Float) = abs(b.x - a.x) * 0.4f + 24f * unit
 
-/** Everything the patch draws, in its own units: the modules and the cables' curves. */
+/** The bounds of everything the patch draws, in patch units: modules and cable curves. */
 private fun patchBounds(patch: NexusPatch): androidx.compose.ui.geometry.Rect {
     var left = patch.modules.minOf { it.x }
     var top = patch.modules.minOf { it.y }
@@ -447,8 +429,8 @@ private fun patchBounds(patch: NexusPatch): androidx.compose.ui.geometry.Rect {
         val to = patch.moduleAt(c.toSlot) ?: continue
         val a = jackPosition(from, c.fromPort, true, NexusPalette.of(from.type)?.outputs?.size ?: 1)
         val b = jackPosition(to, c.toPort, false, NexusPalette.of(to.type)?.inputs?.size ?: 1)
-        // Walked along rather than asked of a Path, whose bounds are its
-        // control points' - a whole bend's width past the curve itself.
+        // Walks the curve, since a Path's bounds include its control points,
+        // which reach well past the curve itself.
         val bend = cableBend(a, b, 1f)
         val p1 = Offset(a.x + bend, a.y)
         val p2 = Offset(b.x - bend, b.y)
@@ -483,7 +465,7 @@ private fun DrawScope.drawPatch(
     pan: Offset,
     /** Pixels per unit of patch space: the drawing's scale. */
     zoom: Float,
-    /** The zoom a person set, which is what the words are sized from. */
+    /** The zoom the user set, which text is sized from. */
     textZoom: Float,
     selection: Selection,
     pulling: Pair<Jack, Offset>?,
@@ -491,20 +473,16 @@ private fun DrawScope.drawPatch(
     activity: FloatArray,
     measurer: TextMeasurer,
     col: AcidColors,
-    /** What a module that plays one voice says after its name. */
+    /** Shown after the name of a module that plays one voice. */
     monoTag: String,
-    /** A jack's name in the phone's language: see PanelText.kt. */
+    /** Translates a jack's name, see PanelText.kt. */
     word: (String) -> String,
 ) {
     fun screen(w: Offset) = Offset((w.x - pan.x) * zoom, (w.y - pan.y) * zoom)
 
-    // A level, as something to draw with.
-    //
-    // Linear amplitude is the wrong scale for this: half the interesting life
-    // of a patch happens below a tenth of full scale - an envelope's tail, a
-    // slow LFO, a filter that has nearly closed - and on a linear map all of
-    // that is indistinguishable from off. Sixty decibels of range, so a signal
-    // forty decibels down still shows as a third lit.
+    // A level as a 0 to 1 brightness, over a 60 dB range. On a linear scale
+    // envelope tails, slow LFOs and nearly closed filters would all look off.
+    // A signal 40 dB down still shows as a third lit.
     fun lit(level: Float): Float {
         if (level <= 1e-5f) return 0f
         return ((20f * log10(level) + 60f) / 60f).coerceIn(0f, 1f)
@@ -513,7 +491,7 @@ private fun DrawScope.drawPatch(
     fun cableLit(index: Int) =
         if (index in 0 until NEXUS_CABLES) lit(activity[NEXUS_SLOTS + index]) else 0f
 
-    // A grid, so panning has something to push against.
+    // A grid, so panning is visible.
     val step = 50f * zoom
     if (step > 8f) {
         var x = -((pan.x * zoom) % step)
@@ -522,7 +500,7 @@ private fun DrawScope.drawPatch(
         while (y < size.height) { drawLine(col.canvasGrid, Offset(0f, y), Offset(size.width, y), 1f); y += step }
     }
 
-    // Cables behind the boxes, as they are in life.
+    // Cables behind the boxes.
     patch.cables.forEachIndexed { index, c ->
         val from = patch.moduleAt(c.fromSlot) ?: return@forEachIndexed
         val to = patch.moduleAt(c.toSlot) ?: return@forEachIndexed
@@ -530,10 +508,9 @@ private fun DrawScope.drawPatch(
         val b = screen(jackPosition(to, c.toPort, false, NexusPalette.of(to.type)?.inputs?.size ?: 1))
         val selected = (selection as? Selection.Cable)?.index == index
         val path = cablePath(a, b, cableBend(a, b, zoom))
-        // The dark cable is always there, so an idle patch still reads as a
-        // patch; what is carrying something is drawn over the top of it. Two
-        // passes rather than one interpolated colour, because a glow wants to
-        // be both brighter *and* thicker and a single stroke can only be one.
+        // The dark cable is always drawn so an idle patch still shows its cables.
+        // Signal is drawn over it in a second pass, since the glow is both brighter
+        // and thicker.
         drawPath(path, if (selected) col.accent else col.cable, style = Stroke(if (selected) 3.5f else 2.2f))
         val glow = cableLit(index)
         if (glow > 0.01f) {
@@ -561,10 +538,8 @@ private fun DrawScope.drawPatch(
         val h = NODE_H * zoom
         if (at.x > size.width || at.y > size.height || at.x + w < 0f || at.y + h < 0f) continue
         val selected = (selection as? Selection.Module)?.slot == m.slot
-        // A band of colour across the top, by what kind of module it is.
-        // Thirty types all drawn the same grey is thirty identical boxes, and
-        // the thing you want from a glance at a patch is its shape: where the
-        // sound starts, where it is shaped, what is moving it.
+        // A colour band across the top by module family, so you can see at a
+        // glance where the sound starts, where it's shaped and what moves it.
         val family = nexusFamilyOf(m.type)
         val tint = when (family) {
             NexusFamily.Source -> col.accent
@@ -574,10 +549,8 @@ private fun DrawScope.drawPatch(
             NexusFamily.Time -> col.sceneQueued
             NexusFamily.Io -> col.textDim
         }
-        // How hard this module is working, which is what the colour band and
-        // the halo below are both saying. A module that is silent keeps its
-        // family colour at the old fixed strength, so the patch looks the same
-        // as it always did when nothing is playing.
+        // How hard this module is working, shown by the colour band and the halo
+        // below. A silent module keeps its family colour at the normal strength.
         val live = slotLit(m.slot)
         if (live > 0.01f) {
             drawRoundRect(
@@ -604,9 +577,7 @@ private fun DrawScope.drawPatch(
             )
             drawText(title, topLeft = at + Offset(6f * zoom, 2f * zoom))
         }
-        // Jacks, and what they are called. A cable is drawn between two dots
-        // and until now there was no way to know which dot was "pitch" and
-        // which was "fm" without selecting the module and reading the panel.
+        // Jacks and their names.
         val labels = textZoom > 0.85f
         meta?.inputs?.forEachIndexed { i, name ->
             val pos = screen(jackPosition(m, i, false, meta.inputs.size))
@@ -630,7 +601,7 @@ private fun DrawScope.drawPatch(
                 drawText(t, topLeft = pos - Offset(t.size.width + JACK_R * zoom + 2f * zoom, t.size.height / 2f))
             }
         }
-        // A scope draws its own trace: it is the one module that is a picture.
+        // A scope draws its own trace.
         if (m.type == "scope" && scope.isNotEmpty() && textZoom > 0.5f) {
             val path = Path()
             scope.forEachIndexed { i, v ->
@@ -649,17 +620,15 @@ private fun Inspector(
     selection: Selection,
     binding: ParamBinding,
     scope: FloatArray,
-    /** A column against the right edge rather than a strip under the canvas. */
+    /** Show as a column on the right edge instead of a strip under the canvas. */
     vertical: Boolean = false,
     onDelete: () -> Unit,
     onTogglePoly: () -> Unit,
 ) {
     val c = Acid.colors
-    // The body is `GroupRow` and `Group`, the same two the machine panels are
-    // built from - so a column of them is a thing the app already knows how
-    // to draw. `LocalPanelStacked` turns the row of cards into a column of
-    // them and the knobs two to a line; without it the cards went on
-    // scrolling sideways inside two hundred dp, which shows one and a half.
+    // Built from `GroupRow` and `Group` like the machine panels.
+    // `LocalPanelStacked` turns the row of cards into a column with two knobs
+    // to a line, so the cards don't scroll sideways in a narrow column.
     androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides vertical) {
     Box(
         (if (vertical) {
@@ -751,9 +720,8 @@ private fun AddModuleDialog(
         maxBodyHeight = 420.dp,
         spacing = 3.dp,
     ) {
-        // A fixed three-across grid rather than a FlowRow: the names are
-        // very different lengths and wrapping them left ragged rows that
-        // were hard to scan for the one you wanted.
+        // A fixed three-across grid, since the names vary a lot in length and a
+        // FlowRow left ragged rows that were hard to scan.
         palette.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 row.forEach { info ->
@@ -773,10 +741,7 @@ private fun AddModuleDialog(
 }
 
 /**
- * How wide the inspector stands when it is a column.
- *
- * The same hundred and eighty the editor gives the machine panel sideways,
- * because it is the same thing: a column of `Group` cards with the knobs two
- * to a line. One number, one shape, both screens.
+ * How wide the inspector is as a column. Same as the machine panel's width
+ * in the landscape editor, since it's the same kind of column.
  */
 private val INSPECTOR_W = 180.dp

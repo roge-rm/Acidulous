@@ -18,7 +18,7 @@
     <string name="quantise_feel">feel</string>
     <string name="quantise_straight">straight</string>
     <string name="quantise_humanise">humanise</string>
-    <!-- A press of the first rolls new variations; the second takes them away. -->
+    <!-- The first rolls new variations; the second takes them away. -->
     <string-array name="quantise_humanise_choices">
         <item>humanise</item>
         <item>none</item>

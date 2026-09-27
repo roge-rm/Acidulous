@@ -12,15 +12,15 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-// The microphone, on the page's side: globalThis.acidInput holds the stream
-// (which the app's permission request may already have got - see
-// Platform.wasmJs.kt), whether it is wanted, and the context and node to
-// connect it to. Whichever of the three arrives last connects it.
+// The microphone on the page's side. globalThis.acidInput holds the stream
+// (the app's permission request may already have it, see Platform.wasmJs.kt),
+// whether it's wanted, and the context and node to connect it to. Whichever
+// of the three arrives last connects it.
 EM_JS_DEPS(acid_input, "$emscriptenGetAudioObject");
 
 EM_JS(void, acid_input_attach, (int context, int node), {
     const s = (globalThis.acidInput ??= {});
-    // A reopened stream: the microphone goes to the new context, not the old.
+    // After a reopen the microphone moves to the new context.
     if (s.source) { s.source.disconnect(); s.source = null; }
     s.context = emscriptenGetAudioObject(context);
     s.node = emscriptenGetAudioObject(node);
@@ -42,14 +42,14 @@ EM_JS(void, acid_input_want, (int on), {
             .then((stream) => { s.stream = stream; s.connect(); })
             .catch((e) => console.warn('W/Acidulous.Audio: no microphone', e));
     } else {
-        // Off is off: the tracks stopped, so the browser's recording light goes out.
+        // Stop the tracks so the browser's recording indicator goes out.
         if (s.source) { s.source.disconnect(); s.source = null; }
         if (s.stream) { s.stream.getTracks().forEach((t) => t.stop()); s.stream = null; }
     }
 });
 
-// The context's own latency, which only the page's thread can read: written
-// to the driver every second until the context closes.
+// The context's latency, which only the page's thread can read. Written to
+// the driver every second until the context closes.
 EM_JS(void, acid_latency_watch, (int context, double *out), {
     const c = emscriptenGetAudioObject(context);
     const read = () => {
@@ -61,20 +61,19 @@ EM_JS(void, acid_latency_watch, (int context, double *out), {
 });
 
 /**
- * Really closed. Emscripten's destroy only suspends, which keeps the device
- * open - and called after a close it throws, suspending a closed context - so
- * this stands in for it; the handle stays in Emscripten's table, a closed
- * context's worth for each reopen.
+ * Actually closes the context. Emscripten's destroy only suspends it, which
+ * keeps the device open, and throws if called after a close. The handle stays
+ * in Emscripten's table, one closed context per reopen.
  */
 EM_JS(void, acid_context_close, (int context), {
     const c = emscriptenGetAudioObject(context);
     c && c.state !== 'closed' && c.close().catch(() => {});
 });
 
-// The output, on the page's side: globalThis.acidOutput holds the device the
-// app chose (WebHost.kt), and apply() sends the live context there - called
-// here for each new context, and by the page when the choice changes. A
-// browser without setSinkId plays where it plays.
+// The output on the page's side. globalThis.acidOutput holds the device the
+// app chose (WebHost.kt) and apply() moves the live context to it. Called here
+// for each new context and by the page when the choice changes. Browsers
+// without setSinkId just use their default.
 EM_JS(void, acid_output_attach, (int context), {
     const o = (globalThis.acidOutput ??= {});
     const c = emscriptenGetAudioObject(context);
@@ -96,23 +95,20 @@ extern "C" EMSCRIPTEN_KEEPALIVE void acid_latency_set(double *out, double second
 namespace {
 
 /**
- * The time, for the audio thread, which has no clock of its own worth the name:
- * an AudioWorklet's scope has no performance.now(), and the stand-in
- * (worklet-clock.js) had Date.now()'s whole milliseconds - so a callback of
- * 0.7 ms read as 0, 1 or 2, and the load meter, the late count and every
- * cost in Settings were rounded to a tick bigger than what they measured.
- * A thread of the driver's own writes the time here every quarter
- * millisecond, from a worker that has the real clock; the audio thread's
- * performance.now() reads it (acid_clock_ms).
+ * The time for the audio thread. An AudioWorklet has no performance.now() and
+ * Date.now() only has whole milliseconds, which is too coarse for the load
+ * meter and timings. A driver thread with the real clock writes the time here
+ * every quarter millisecond and the worklet's performance.now() reads it
+ * (acid_clock_ms, worklet-clock.js).
  */
 std::atomic<double> clockMs{0.0};
 constexpr auto kClockTick = std::chrono::microseconds(250);
 
 /**
- * The audio thread's own stack, which Emscripten needs handed to it - two, so
- * a reopened stream's worklet starts on a stack the old one is not on. With
- * each, what the worklet's callbacks are handed: the driver, and the context
- * they belong to, so one a reopen left behind leaves the driver alone.
+ * The audio thread's stack, which Emscripten needs us to provide. There are
+ * two so a reopened stream's worklet doesn't share a stack with the old one.
+ * Each also holds what the worklet's callbacks get: the driver and their
+ * context, so a leftover worklet from before a reopen leaves the driver alone.
  */
 constexpr int kStreams = 2;
 alignas(16) uint8_t workletStacks[kStreams][128 * 1024];
@@ -122,7 +118,7 @@ struct Stream {
 };
 Stream streams[kStreams];
 
-/** The buffer setting as a latency hint: see the top of AudioDriver.h. */
+/** The buffer setting as a latency hint (see the top of AudioDriver.h). */
 const char *latencyHint(int32_t bursts) { return bursts <= 1 ? "interactive" : bursts <= 2 ? "balanced" : "playback"; }
 
 int64_t nowNanos() { return static_cast<int64_t>(emscripten_get_now() * 1e6); }
@@ -134,7 +130,7 @@ bool onProcess(int numInputs, const AudioSampleFrame *inputs, int numOutputs, Au
     const int n = out.samplesPerChannel;
     float *left = out.data;
     float *right = out.numberOfChannels > 1 ? out.data + n : nullptr;
-    // Nothing connected is no channels; a microphone is often one.
+    // No input connected means no channels. A microphone is often mono.
     const float *inLeft = nullptr;
     const float *inRight = nullptr;
     if (numInputs > 0 && inputs[0].numberOfChannels > 0 && inputs[0].samplesPerChannel == n) {
@@ -144,7 +140,7 @@ bool onProcess(int numInputs, const AudioSampleFrame *inputs, int numOutputs, Au
     auto *stream = static_cast<Stream *>(user);
     if (!stream->driver->isCurrent(stream->context)) {
         std::fill(out.data, out.data + static_cast<size_t>(n) * out.numberOfChannels, 0.0f);
-        return false; // left behind by a reopen: let it go
+        return false; // left over from a reopen, let it go
     }
     stream->driver->render(inLeft, inRight, left, right, n);
     return true; // keep the node alive
@@ -246,8 +242,8 @@ void AudioDriver::setBufferBursts(int32_t bursts) {
 }
 
 void AudioDriver::reopen() {
-    // The old stream let go of the engine as stop() does, then closed; the
-    // stand-in renders until the new worklet's first quantum, as at start-up.
+    // Detach the engine like stop() does, then close. The stand-in renders
+    // until the new worklet's first quantum, same as at startup.
     const bool wasDetached = detached.exchange(true);
     while (inCallback.load() || standbyBusy.load()) {
     }
@@ -263,7 +259,7 @@ void AudioDriver::reopen() {
     carryOffset = 0;
     detached.store(wasDetached);
     if (!openContext()) return;
-    // Sound was already allowed: no need to wait for the next touch.
+    // Sound was already allowed, so don't wait for another click.
     if (playing) emscripten_resume_audio_context_sync(context);
 }
 
@@ -291,9 +287,9 @@ void AudioDriver::standby() {
     std::vector<float> in(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
     std::vector<float> out(in.size(), 0.0f);
     int blocks = 0;
-    // Dekker's hand-over, sequentially consistent: busy is raised before the
-    // worklet's flag is read, and the worklet raises its flag before it reads
-    // busy - so a block is never rendered on both threads at once.
+    // Dekker-style hand-over with sequentially consistent atomics: busy is set
+    // before reading the worklet's flag, and the worklet sets its flag before
+    // reading busy, so a block is never rendered on both threads at once.
     while (!standbyStop.load()) {
         standbyBusy.store(true);
         const bool mine = !workletOwns.load();
@@ -323,7 +319,7 @@ void AudioDriver::pushInput(const float *left, const float *right, int32_t frame
     const int32_t capacity = kInputRingFrames;
     float peak = 0.0f;
     for (int32_t i = 0; i < frames; ++i) {
-        if (inputRingFrames == capacity) { // behind: the oldest goes
+        if (inputRingFrames == capacity) { // full: drop the oldest
             inputRingRead = (inputRingRead + 1) % capacity;
             --inputRingFrames;
         }
@@ -354,8 +350,9 @@ const float *AudioDriver::nextInputBlock() {
 }
 
 void AudioDriver::stop() {
-    // Every block the engine renders is the caller's from here: the stream
-    // goes on, silent, and neither the worklet nor the stand-in is inside one.
+    // From here the caller renders the engine's blocks. The stream keeps
+    // running silently, and we wait until neither the worklet nor the stand-in
+    // is inside a block.
     detached.store(true);
     while (inCallback.load() || standbyBusy.load()) {
     }
@@ -378,16 +375,16 @@ void AudioDriver::close() {
     LOGI("stream stopped");
 }
 
-// On the audio worklet's thread. The engine renders interleaved blocks; the
-// worklet wants the channels apart.
+// On the audio worklet's thread. The engine renders interleaved blocks and the
+// worklet wants separate channels.
 void AudioDriver::render(const float *inLeft, const float *inRight, float *left, float *right, int32_t numFrames) {
     if (!workletOwns.load(std::memory_order_relaxed)) {
         workletOwns.store(true);
         while (standbyBusy.load()) {
         }
     }
-    // Detached for a render or a freeze: silence, and the engine left alone.
-    // Raised before the flag is read, as the stand-in's busy is: see stop().
+    // Detached for a render or freeze: output silence and leave the engine
+    // alone. Set before reading the flag, like the stand-in's busy (see stop()).
     inCallback.store(true);
     if (detached.load()) {
         std::fill(left, left + numFrames, 0.0f);
@@ -438,5 +435,5 @@ void AudioDriver::render(const float *inLeft, const float *inRight, float *left,
     inCallback.store(false);
 }
 
-/** The time the clock thread last wrote, in ms from 1970, or 0 before it has: see worklet-clock.js. */
+/** The time the clock thread last wrote, in ms since 1970, or 0 before it has (see worklet-clock.js). */
 extern "C" EMSCRIPTEN_KEEPALIVE double acid_clock_ms() { return clockMs.load(std::memory_order_relaxed); }

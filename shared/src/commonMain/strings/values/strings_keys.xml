@@ -32,7 +32,7 @@
     <!-- The list of keys a question mark opens. -->
     <string name="keys_title">Keys</string>
     <string name="keys_notes_line">In play mode: A S D F G H J K L are white keys, W E T Y U O P black. Z X move the octave, C V the velocity. Shift plays an octave up.</string>
-    <!-- The shortcuts list on a computer: what is not a binding. -->
+    <!-- The shortcuts list on a computer: things that aren't bindings. -->
     <string name="keys_group_desktop">with a mouse and a keyboard</string>
     <string name="keys_full_screen">full screen, and back</string>
     <string name="keys_right_click">a hold, as a long press is</string>

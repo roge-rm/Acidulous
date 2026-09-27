@@ -1,14 +1,12 @@
-// Where a recording's boundaries fall, which is the whole of splitting a take.
+// Tests where a recording's boundaries fall when a take is split.
 //
-// The highest-value harness in M54, because a wrong mark does not crash or
-// crackle: it silently puts somebody's second verse underneath their first,
-// and they find out by listening. Everything it checks is exact arithmetic, so
-// there is no reason to find any of it on a phone.
+// A wrong mark doesn't crash or crackle, it quietly puts the second verse
+// under the first. It's all exact arithmetic, so it's tested here instead of
+// on a phone.
 //
-// It drives a real SceneScheduler block by block, exactly as `Engine` does,
-// and stamps a CaptureMark after each block with a frame count that advances
-// by the block - which is what the capture's own `pushed()` does when nothing
-// is dropped.
+// It drives a real SceneScheduler block by block like `Engine` does, and
+// stamps a CaptureMark after each block with a frame count that advances by
+// the block, as the capture's `pushed()` does when nothing is dropped.
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -93,12 +91,12 @@ struct Rig {
         frames = 0;
     }
 
-    /** One block, exactly as Engine::renderBlock takes it. */
+    /** One block, the same way Engine::renderBlock does it. */
     void block() {
         clock.advance(kBlockFrames);
         scheduler.process(clock.blockStart(), clock.blockEnd());
-        // The count *before* this block's frames go in - see the note in
-        // Engine.cpp. A mark names the frame its cell begins at.
+        // The count before this block's frames go in (see the note in
+        // Engine.cpp). A mark names the frame its cell begins at.
         marks.observe(frames, scheduler.rackSceneId(armed), scheduler.rackCycleTick(armed),
                       scheduler.rackCycleTicks(armed), clock.bpm());
         frames += kBlockFrames;
@@ -120,7 +118,7 @@ struct Rig {
     }
 };
 
-/** Within a block of where it should be: a boundary lands to the block. */
+/** Within a block of where it should be, since boundaries land on block edges. */
 bool near(int64_t got, int64_t want) { return std::llabs(got - want) <= kBlockFrames; }
 
 // --- The cases ------------------------------------------------------------------
@@ -129,9 +127,8 @@ bool near(int64_t got, int64_t want) { return std::llabs(got - want) <= kBlockFr
  * Intro(4 x2), Verse(8), Chorus(4 x2): three scenes, three cycles of sixteen
  * seconds each, and then round again.
  *
- * The repeats are the point. A scene played twice is **one** cell of audio, so
- * it makes one mark, not two - which is the same claim `rackCycleTick` makes
- * and the reason a take does not restart half way through.
+ * A scene played twice is one cell of audio, so it makes one mark, not two.
+ * That matches `rackCycleTick` and is why a take doesn't restart half way.
  */
 void aSongWalkedThrough() {
     printf("- Intro(4 x2) / Verse(8) / Chorus(4 x2), recorded straight through\n");
@@ -163,10 +160,10 @@ void aSongWalkedThrough() {
 }
 
 /**
- * Recording started part way through a cell - a punch-in.
+ * Recording started part way through a cell, a punch-in.
  *
- * The first mark is not at tick nought, and that is exactly what `startTick`
- * on a take is for. Getting this wrong puts the whole recording a bar early.
+ * The first mark isn't at tick zero, which is what a take's `startTick` is
+ * for. Getting this wrong puts the whole recording a bar early.
  */
 void aPunchIn() {
     printf("- the recording starts half way through the Verse\n");
@@ -177,7 +174,7 @@ void aPunchIn() {
     r.clip(0, 1, 8);
     r.commit();
     r.play();
-    // Run into the Verse *before* arming, then start the marks from there.
+    // Run into the Verse before arming, then start the marks from there.
     r.run(20.0);
     r.marks.reset();
     r.frames = 0;
@@ -194,11 +191,11 @@ void aPunchIn() {
 }
 
 /**
- * A scene with a tempo of its own.
+ * A scene with its own tempo.
  *
  * The mark carries the bpm, so a take recorded in a 90bpm middle eight is
- * stamped with ninety and plays at ninety. Nothing in Kotlin has to know that
- * scene tempos exist.
+ * stamped with ninety and plays at ninety. Kotlin doesn't need to know about
+ * scene tempos.
  */
 void aSceneWithItsOwnTempo() {
     printf("- a scene that plays at another tempo stamps that tempo\n");
@@ -220,9 +217,9 @@ void aSceneWithItsOwnTempo() {
 }
 
 /**
- * Clip mode: the same rule, which is the point of there being one rule.
+ * Clip mode follows the same rule.
  *
- * Nothing is launched at first, so nothing is recorded against a cell; once a
+ * Nothing is launched at first, so nothing is recorded against a cell. Once a
  * clip is launched, every cycle of it is a mark.
  */
 void aLauncherSequence() {
@@ -244,10 +241,9 @@ void aLauncherSequence() {
        near(r.marks.at(1).frame - r.marks.at(0).frame, 2 * kBarFrames) &&
            near(r.marks.at(2).frame - r.marks.at(1).frame, 2 * kBarFrames),
        r.report());
-    // Within a block of the top, not exactly on it, and for the same reason
-    // the frame is: the launcher's own clock is read once a block, so a cycle
-    // that turns over inside one is seen a tick or two late. A tick at 120bpm
-    // is 2ms and a block is 1.3ms, so "one or two" is the whole error.
+    // Within a block of the top, not exactly on it. The launcher's clock is
+    // read once a block, so a cycle that turns over inside one is seen a tick
+    // or two late. A tick at 120bpm is 2ms and a block is 1.3ms.
     ok("and each at the top of its cycle",
        r.marks.at(1).tick <= 2 && r.marks.at(2).tick <= 2, r.report());
 }
@@ -255,12 +251,11 @@ void aLauncherSequence() {
 /**
  * Recording across scenes the track has nothing in yet.
  *
- * Which is the ordinary case, not an edge one: you add an audio track, you
- * sing over the whole song, and the cells are made *by* the recording. The
- * scheduler's `cycleTicks` answers nought for a rack with no clip - right for
- * the launcher, which must not launch a clip that is not there - and taking
- * that at face value here made a take sung over a whole song land entirely in
- * whichever scene the track happened to have a clip in.
+ * This is the normal case: you add an audio track and sing over the whole
+ * song, and the recording makes the cells. The scheduler's `cycleTicks` is
+ * zero for a rack with no clip (right for the launcher, which mustn't launch
+ * a missing clip), so taken at face value it put the whole take in whichever
+ * scene already had a clip.
  */
 void recordingOntoScenesWithNoClipYet() {
     printf("- a take sung across scenes the track has nothing in yet\n");

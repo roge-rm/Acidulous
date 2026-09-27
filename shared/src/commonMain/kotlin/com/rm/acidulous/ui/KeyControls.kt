@@ -30,21 +30,20 @@ import kotlinx.coroutines.launch
 import com.rm.acidulous.res.*
 
 /**
- * The keyboard's side of the controls the TalkBack helpers describe.
+ * Keyboard handling for the controls the TalkBack helpers describe.
  *
- * Arrows move between controls - they have to, on a phone whose only way
- * round is a touchpad that swipes as a d-pad - so a knob does not take them
- * until it is *grabbed*: Enter grabs it, the arrows then turn it (Shift for
- * fine, Page Up and Down for big steps), and Enter or Esc lets go. A full
- * keyboard can skip the grab with + and -. Alt+Enter, or the Menu key, opens
- * whatever a hold would have done, from the same list TalkBack reads.
+ * Arrows move between controls (a phone touchpad swipes as a d-pad), so a knob
+ * only takes them once it's grabbed. Enter grabs it, the arrows turn it (Shift
+ * for fine, Page Up/Down for big steps), and Enter or Esc lets go. + and - turn
+ * it without grabbing. Alt+Enter or the Menu key lists the long-press actions,
+ * the same list TalkBack reads.
  */
 
-/** Whether a key down is Enter by any of its names. */
+/** Whether a key is Enter, by any of its key codes. */
 private fun isEnter(code: Int) =
     code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER || code == KeyCodes.KEYCODE_DPAD_CENTER
 
-/** Alt+Enter or the Menu key: the hold's actions, if there are any. */
+/** Alt+Enter or the Menu key: the long-press actions, if there are any. */
 private fun opensActions(e: KeyPress, actions: List<CustomAccessibilityAction>): Boolean {
     if (actions.isEmpty()) return false
     val asked = e.keyCode == KeyCodes.KEYCODE_MENU || (isEnter(e.keyCode) && e.isAltPressed)
@@ -52,7 +51,10 @@ private fun opensActions(e: KeyPress, actions: List<CustomAccessibilityAction>):
     return asked
 }
 
-/** Keyboard focus and turning for a knob, a fader or a slider. See the file's note. */
+/**
+ * Keyboard focus and turning for a knob, fader or slider. See the note at the top of
+ * the file.
+ */
 internal fun Modifier.keyAdjust(
     value: Float,
     steps: Int,
@@ -70,7 +72,8 @@ internal fun Modifier.keyAdjust(
             val e = ev.press
             if (ev.type != KeyEventType.KeyDown) return@onKeyEvent false
             if (opensActions(e, actions)) return@onKeyEvent true
-            // One step: a stepped control's, or a twentieth - a fiftieth with Shift.
+            // One step: a stepped control's step, otherwise 1/20, or 1/100 with
+            // Shift.
             val step = if (steps > 0) 1f / (steps + 1) else if (e.isShiftPressed) 0.01f else 0.05f
             fun nudge(by: Float) { onSet((value + by).coerceIn(0f, 1f)) }
             when (e.keyCode) {
@@ -94,10 +97,9 @@ internal fun Modifier.keyAdjust(
 }
 
 /**
- * Keyboard focus and Enter for a drawn control that takes its taps itself
- * rather than through `clickable` - a pad, a key - or, with [onClick] null,
- * only the hold's actions for one that is clickable already and so focusable
- * already.
+ * Keyboard focus and Enter for a control that handles its own taps instead of
+ * using clickable (a pad, a key). With [onClick] null it only adds the
+ * long-press actions, for a control that's already clickable and focusable.
  */
 internal fun Modifier.keyPress(
     onClick: (() -> Unit)?,
@@ -124,8 +126,8 @@ internal fun Modifier.keyPress(
 }
 
 /**
- * A focused control's hold actions as a list: Alt+Enter's answer to "what
- * does holding this do", from the same actions TalkBack offers.
+ * A focused control's long-press actions as a list for Alt+Enter, the same
+ * actions TalkBack offers.
  */
 @androidx.compose.runtime.Composable
 fun KeyActionMenu(actions: List<CustomAccessibilityAction>, onDismiss: () -> Unit) {

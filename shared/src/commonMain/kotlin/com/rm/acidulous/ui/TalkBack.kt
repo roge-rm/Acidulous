@@ -3,10 +3,9 @@ package com.rm.acidulous.ui
 import androidx.compose.runtime.Composable
 
 /**
- * Whether TalkBack is on - or any screen reader that explores by touch - and
- * read again when it is turned on or off, which can happen with the app open.
- * For the few places a screen is laid out differently for it, not for what
- * anything says.
+ * Whether TalkBack (or any touch-exploring screen reader) is on. Updates
+ * when it's turned on or off with the app open. Only for the few places
+ * where the layout changes for it.
  */
 @Composable
 expect fun rememberTalkBack(): Boolean

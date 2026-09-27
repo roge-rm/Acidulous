@@ -1,24 +1,21 @@
 #!/bin/bash
-# Play a factory patch on a desk, write a wav, and print what it measures.
+# Plays a factory patch, writes a wav, and prints what it measures.
 #
-# Not a test and not in all_tests.sh: nothing here passes or fails. The
-# assertions about the banks live in bank_test.sh next door.
+# Not a test, so it's not in all_tests.sh. The bank checks are in
+# bank_test.sh.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
 BIN="$ROOT/build/audition-bin"
 
-# Where the wavs land. Under build/ by default, because that is the only
-# place this repo may assume exists - but the person listening to them is
-# usually not at this machine, so tools/local.env (untracked, and the only
-# place a path outside the repo belongs) can point them somewhere fetchable.
+# Where the wavs go. build/ by default, but tools/local.env (untracked) can
+# point them somewhere else, e.g. a folder you can download from:
 #
 #   ACIDULOUS_AUDITION_OUT=/srv/downloads/temp/debug/audition
 #
-# A --out on the command line still wins; this only supplies the default.
+# --out on the command line still wins over this.
 OUT="$ROOT/build/audition"
-# The environment beats the file, so one run can be sent elsewhere without
-# editing anything.
+# The environment variable wins over the file.
 FROM_ENV="${ACIDULOUS_AUDITION_OUT:-}"
 [ -z "$FROM_ENV" ] && [ -f "$ROOT/tools/local.env" ] && . "$ROOT/tools/local.env"
 [ -n "${ACIDULOUS_AUDITION_OUT:-}" ] && OUT="$ACIDULOUS_AUDITION_OUT"
@@ -29,29 +26,25 @@ fi
 mkdir -p "$OUT" "$BIN"
 LIB=$("$ROOT/tools/host_engine.sh") || exit 1
 
-# Relinked only when something changed: the inner loop here is edit a bank
-# file and listen, and it must not pay for a compile.
+# Only rebuilds when something changed, so editing a bank file and listening
+# again doesn't wait for a compile.
 if [ ! -x "$BIN/audition" ] || [ "$ROOT/tools/audition.cpp" -nt "$BIN/audition" ] ||
    [ "$LIB" -nt "$BIN/audition" ] ||
    [ -n "$(find "$ROOT/tools" -name '*.h' -newer "$BIN/audition" 2>/dev/null | head -1)" ]; then
     g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/audition.cpp" "$LIB" -o "$BIN/audition" || exit 1
 fi
 
-# A real recording on the input bus, for the machines that want one.
-#
-# tools/local.env can name a file the repository does not contain:
+# A real recording for the input bus, for machines that use one.
+# tools/local.env can point at a file outside the repo:
 #
 #   ACIDULOUS_INPUT_FILE=/home/you/acidulous-material/voice.wav
 #
-# Cipher is levelled against a real voice, because a vocoder voiced on
-# synthetic speech is voiced on the wrong thing - but a repository is the wrong
-# place to keep somebody's voice, so the file stays outside it and the harness
-# falls back to `speechPhrase()` when there is none. What that costs is
-# reproducibility of the exact numbers; what it buys is a bank levelled against
-# speech that has real consonants in it.
+# Cipher is levelled against a real voice, since synthetic speech is missing
+# real consonants. Without the file the harness uses `speechPhrase()`, so the
+# exact numbers depend on which one was used.
 export ACIDULOUS_INPUT_FILE="${ACIDULOUS_INPUT_FILE:-}"
 
-# The tool's own --out wins, so only supply one when the caller did not.
+# Only add --out if the caller didn't pass one.
 want_out=1
 for a in "$@"; do [ "$a" = "--out" ] && want_out=0; done
 if [ "$want_out" = 1 ]; then

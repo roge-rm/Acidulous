@@ -41,13 +41,13 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.res.*
 
 /**
- * A drum machine's step grid: a row per voice, a column per grid step. Tap
- * toggles a hit; long-press toggles its accent. It is a view over the
- * ordinary clip, so the piano roll shows the same hits.
+ * A drum machine's step grid, a row per voice and a column per grid step. Tap
+ * toggles a hit, long-press toggles its accent. It edits the same clip as the
+ * piano roll.
  *
- * It looks at the same window of the clip the roll does - a first tick and a
- * span - rather than at a bar number, so the two editors scroll and zoom
- * together and one set of state in the Edit screen drives both.
+ * It shows the same window of the clip as the roll (a first tick and a span),
+ * so both editors scroll and zoom together from one set of state in the Edit
+ * screen.
  */
 @Composable
 fun DrumGrid(
@@ -59,9 +59,9 @@ fun DrumGrid(
     firstTick: Int,
     visibleTicks: Int,
     onSetHit: (tick: Int, note: Int, hit: Note?) -> Unit, // null clears
-    /** Two fingers sideways: the window moves by this many ticks. */
+    /** Two-finger sideways drag moves the window by this many ticks. */
     onScrollTime: (ticks: Float) -> Unit = {},
-    /** A pinch. Sideways changes the span; the other way is this grid's own. */
+    /** A pinch. Sideways changes the span, the other way the row height. */
     onZoomTime: (scale: Float) -> Unit = {},
     /** Lock mode: a tap on a hit selects its step instead of taking the hit away. */
     lockMode: Boolean = false,
@@ -74,27 +74,19 @@ fun DrumGrid(
     val grid = clip.grid.coerceAtLeast(1)
     val steps = (visibleTicks / grid).coerceIn(1, 64)
     val scroll = rememberScrollState()
-    // How tall a voice's row is.
-    //
-    // Nought means nobody has pinched, and then the rows are sized to fill
-    // whatever height this has been given: a fixed 24 left a phone with most
-    // of a row's worth of empty space under the grid and a tablet with far
-    // more, and the right height was never a constant anyway - it depends on
-    // the screen and on how many voices the machine has. A pinch still wins
-    // once there has been one, because which compromise you want is a matter
-    // of what you are doing, and it survives a rotation.
+    // Row height per voice. 0 means nobody has pinched yet, so the rows are
+    // sized to fill the height this is given. After a pinch the pinched height
+    // is used, and it survives a rotation.
     var pinched by rememberSaveable { mutableStateOf(0f) }
 
-    // The height on offer, shared out. Measured rather than assumed: the slot
-    // is a weight(1f) of whatever is left after the header, the automation
-    // strip, the machine panel and the pads, so only the layout knows it.
-    // Below the floor there is no point growing the rows - the grid scrolls
-    // instead, which is what it is for - and the ceiling only applies to the
-    // fit, not to a pinch.
+    // The height available, measured because the slot is a weight(1f) of
+    // whatever is left after the rest of the screen. Below the floor the grid
+    // scrolls instead of shrinking rows. The ceiling only applies to the fit,
+    // not to a pinch.
     var slotPx by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     // The cells start after the name column, so a step is this much narrower
-    // than the row - which is what a finger dragging the view moves by.
+    // than the row. That's what a two-finger drag moves by.
     val gutterPx = with(density) { GutterWidth.toPx() }
     val ceiling = if (largeScreen()) MaxRowLarge else MaxRow
     val fitted = if (voices.isEmpty() || slotPx == 0) 24f else {
@@ -105,20 +97,15 @@ fun DrumGrid(
     val resources = AppStrings
 
     Column(
-        // **Vertical only.** A horizontal inset here put the cells on a
-        // different tick axis from everything else in the editor: the lane,
-        // the automation strip, the roll and the playhead all map a tick
-        // across the full width after the gutter, and four dp either side
-        // moved the cells eleven pixels in from that at both ends. A bar
-        // under a drum step then drifted by up to a quarter of a cell by the
-        // end of the bar, which is the drum half of Dan's "these bars should
-        // be directly under the centre of their notes".
+        // Vertical padding only. Horizontal padding would put the cells on a
+        // different tick axis from the lane, automation strip, roll and
+        // playhead, which all map ticks across the full width after the gutter.
         modifier.background(Acid.colors.bg).padding(vertical = 4.dp)
             .onSizeChanged { slotPx = it.height }
-            // The wheel, on a desktop - see onWheel. Up and down is left to the
-            // column, which scrolls its rows itself; sideways moves time a
-            // tenth of the window a notch, Ctrl zooms it, and Ctrl with Shift
-            // makes the rows taller or shorter, as a pinch across them does.
+            // Mouse wheel on desktop (see onWheel). Up/down is left to the
+            // column, which scrolls itself. Sideways moves time a tenth of the
+            // window per notch, Ctrl zooms, and Ctrl+Shift changes the row
+            // height like a pinch.
             .onWheel { w ->
                 when {
                     w.zoom && w.shift -> {
@@ -130,10 +117,9 @@ fun DrumGrid(
                     else -> false
                 }
             }
-            // Two fingers move the view; one still edits. Watched on the
-            // Initial pass, which travels parent to child, because the cells
-            // below have a clickable each and the column scrolls - both would
-            // otherwise have taken the gesture before this saw it.
+            // Two fingers move the view, one finger edits. This watches the
+            // Initial pass (parent to child) because the clickable cells and
+            // the scrolling column would otherwise take the gesture first.
             .pointerInput(Unit) {
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
@@ -151,8 +137,8 @@ fun DrumGrid(
                     var mode = TwoFingerMode.Undecided
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Initial)
-                        // From here everything is eaten, so the finger that
-                        // landed on a pad does not toggle it on the way up.
+                        // From here everything is consumed, so the pad the
+                        // finger landed on isn't toggled on release.
                         event.changes.forEach { it.consume() }
                         val now = TwoFingers.of(event) ?: break
                         if (mode == TwoFingerMode.Undecided) mode = decideTwoFinger(start, now)
@@ -186,17 +172,13 @@ fun DrumGrid(
             for (voice in voices) {
                 Row(
                     Modifier.fillMaxWidth().height(rowHeight.dp),
-                    // **No arrangement spacing.** The name is a child of this
-                    // row like the cells are, so `spacedBy` put a gap before
-                    // the first cell as well as between them - half a step of
-                    // offset that nothing else in the editor has. The gap
-                    // between cells is now padding inside each one, so a
-                    // cell's pitch is exactly the lane's step and the gap
-                    // still looks the same.
+                    // No arrangement spacing. spacedBy would also put a gap
+                    // before the first cell and shift the cells off the lane's
+                    // step. The gap between cells is padding inside each cell
+                    // instead.
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Same width and size as the roll's pitch gutter: the
-                    // two editors show the same clip and are read as one.
+                    // Same width and size as the roll's pitch gutter.
                     Text(
                         voice.short, color = Acid.colors.textMid,
                         fontSize = NameTextSize, fontFamily = FontFamily.Monospace,
@@ -204,8 +186,7 @@ fun DrumGrid(
                         // Every step says its voice's full name.
                         modifier = Modifier.width(GutterWidth).silent(),
                     )
-                    // Read out here: a draw lambda is not a composable and
-                    // cannot reach the theme from inside itself.
+                    // Read here because a draw lambda can't reach the theme.
                     val mark = Acid.colors.teal
                     val lockMark = Acid.colors.pink
                     val selectEdge = Acid.colors.text
@@ -215,7 +196,7 @@ fun DrumGrid(
                         val accent = hit != null && hit.velocity >= 100
                         val active = playheadTick != null && playheadTick >= tick && playheadTick < tick + grid
                         val beat = ((tick / grid) % 4) == 0
-                        // What TalkBack says: the voice and step, and what is on it.
+                        // What TalkBack says: the voice, the step and what's on it.
                         val said = resources.getString(Res.string.a11y_step, resources.panelWord(voice.name), tick / grid + 1)
                         val state = resources.getString(
                             when {
@@ -260,8 +241,8 @@ fun DrumGrid(
                                     },
                                 )
                                 .button(said, state, accentAction)
-                                // A locked step says so in the corner opposite
-                                // the trig's, a diamond for the knob's ◆.
+                                // A locked step gets a diamond in the corner
+                                // opposite the trig mark.
                                 .then(
                                     if (hit == null || tick !in lockedTicks) Modifier else Modifier.drawBehind {
                                         val w = size.minDimension * 0.22f
@@ -275,13 +256,11 @@ fun DrumGrid(
                                         )
                                     },
                                 )
-                                // A trig that decides something says so where
-                                // it lives. A corner wedge and not a readout:
-                                // the lane under the grid is where these are
-                                // set, and this only has to stop a silent kick
-                                // looking like a broken one. The grid takes no
-                                // new gesture for it - long press is already
-                                // spent on accent.
+                                // A step with a trig condition gets a corner
+                                // wedge. The lane under the grid is where
+                                // conditions are set, this just shows there is
+                                // one. No new gesture here since long press is
+                                // already used for accent.
                                 .then(
                                     if (hit?.hasTrig != true) Modifier else Modifier.drawBehind {
                                         val w = size.minDimension * 0.34f

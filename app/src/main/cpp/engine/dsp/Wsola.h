@@ -3,35 +3,26 @@
 #include <cstdint>
 #include <vector>
 
-// Changing how long a take is without changing what it sings.
+// Changes the length of audio without changing its pitch.
 //
-// **Why not the PSOLA already in the tree.** `engine/core/Utterance.h` finds a
-// voice's glottal pulses and Molt lays them down at a new spacing, which is a
-// better answer than this one *for a voice* - and it is a worse answer for a
-// guitar, a room, a drum loop or a band, none of which have glottal pulses. It
-// also costs a few hundred milliseconds of analysis for ten seconds of audio,
-// which on a half-hour take is minutes. An audio track holds whatever somebody
-// recorded, so what it needs is the algorithm that asks the material nothing.
+// The PSOLA in `engine/core/Utterance.h` (used by Molt) is better for voices,
+// but it needs glottal pulses and a slow analysis pass. Audio tracks can hold
+// anything, so they use WSOLA, which works on any material.
 //
-// WSOLA: lay the output down in overlapping hops, and for each one **search
-// the source near where the clock says, for the window that joins best onto
-// what has already been written**. The join is what the search is for; without
-// it, overlap-add at an arbitrary phase cancels the very frequencies it is
-// carrying and the result warbles.
+// WSOLA lays the output down in overlapping hops. For each hop it searches the
+// source near the nominal position for the window that best lines up with
+// what's already been written. Without the search, overlap-add at a random
+// phase cancels frequencies and warbles.
 //
-// Deliberately int16 and mono-at-a-time, because that is exactly how a reel
-// holds a take (`engine/core/Reel.h`) and converting a half-hour file to float
-// to stretch it would undo what the mapping was for.
+// Reads int16 directly, since that's how a reel holds a take
+// (`engine/core/Reel.h`).
 namespace acidulous::dsp {
 
 /**
- * How a sample type becomes a float, and nothing else.
+ * Converts a sample type to float.
  *
- * A reel is int16 because that is how a half-hour take is held. A frozen clip
- * is float **and stereo**, and float deliberately: the tap is pre-fader, so it
- * can sit above full scale - the demo's Hexbeat bar peaks at 1.84 - and
- * converting it to int16 to stretch it would clip exactly what the float
- * format is there to keep.
+ * A reel is int16. A frozen clip is stereo float, because it's pre-fader and
+ * can go above full scale, so converting it to int16 would clip it.
  */
 template <class Sample> struct SampleScale;
 template <> struct SampleScale<int16_t> {
@@ -42,42 +33,30 @@ template <> struct SampleScale<float> {
 };
 
 /**
- * [Channels] is where a stereo stretch is won or lost.
- *
- * Two independent stretchers on a stereo pair each pick their own join, and
- * the offsets differ by up to half a hop - so the image wanders and anything
- * centred comes apart. **The search runs once, on the sum of the channels,
- * and the offset it finds is applied to all of them.** That is the whole of
- * what makes this stereo rather than two monos.
+ * The search runs once on the sum of all [Channels] and the offset is used
+ * for every channel. Two separate mono stretchers would pick different
+ * offsets and the stereo image would wander.
  */
 template <class Sample, int32_t Channels> class Stretcher {
   public:
     /**
-     * The hop, the overlap and how far the search may look.
+     * The window, hop and maximum search distance.
      *
-     * 30 ms of window is long enough to carry a low male voice's period four
-     * times over - so the correlation has something periodic to lock to - and
-     * short enough that a transient is smeared by less than a drummer would
-     * notice. The search is half a hop either way, which covers a full period
-     * of anything above 70 Hz.
+     * A 30 ms window holds several periods of a low voice for the correlation
+     * to lock onto, while keeping transient smearing small. The search goes up
+     * to half a hop either way, a full period of anything above 70 Hz.
      */
     static constexpr int32_t kWindow = 1440; // 30 ms at 48k
     static constexpr int32_t kHop = kWindow / 2;
     static constexpr int32_t kSearch = kHop / 2;
 
-    /**
-     * The Hann window, built once for the whole app.
-     *
-     * Every stretcher's window is the same numbers, and four lanes across
-     * sixteen racks is sixty-four copies of an identical table - a third of a
-     * megabyte of cosine nobody needs twice.
-     */
+    /** The Hann window, built once and shared by every stretcher. */
     static const float *hann() {
         static const std::vector<float> w = [] {
             std::vector<float> v(static_cast<size_t>(kWindow));
             for (int32_t i = 0; i < kWindow; ++i) {
-                // The halves sum to one at this overlap, so a rate of exactly
-                // one with no search is the input back again.
+                // Overlapping halves sum to one, so a rate of 1 with no search
+                // gives back the input.
                 v[static_cast<size_t>(i)] = 0.5f - 0.5f * std::cos(6.2831853f * static_cast<float>(i) /
                                                                   static_cast<float>(kWindow));
             }
@@ -108,9 +87,8 @@ template <class Sample, int32_t Channels> class Stretcher {
         readPos = 0.0;
         anchor = 0;
         primed = false;
-        // No search is in flight, and `primed` means the next hop would not
-        // use one anyway - but a stale `searchLag` would let `stepSearch`
-        // correlate against an `out` that has been zeroed.
+        // Clear the search too, or `stepSearch` would correlate against the
+        // zeroed `out`.
         searchLag = 1;
         searchReach = 0;
         searchLags = 0;
@@ -121,22 +99,19 @@ template <class Sample, int32_t Channels> class Stretcher {
     int64_t sourcePosition() const { return static_cast<int64_t>(readPos); }
 
     /**
-     * Read [first, last) as a loop: past `last` is `first` again.
-     *
-     * Without it a stretcher stops a window short of the end - its last hop
-     * needs thirty milliseconds of source it does not have - so a loop lost
-     * its tail every pass and came round early. Looping, the windows at the
-     * seam straddle it and join the end onto the start the way any other two
-     * hops are joined. The source has to be longer than two windows.
+     * Reads [first, last) as a loop, wrapping past `last` back to `first`.
+     * Windows at the seam join the end onto the start like any other hops,
+     * so a loop doesn't lose its tail. The source must be longer than two
+     * windows.
      */
     void setLoop(bool on) { looping = on; }
 
     /**
-     * Fill [n] output frames from [src], which holds [first, last) of a take.
+     * Fills [n] output frames from [src], which holds [first, last) of a take.
      *
-     * [rate] is how fast the source is consumed: 1.0 is real time, 2.0 plays
-     * it in half the time **at the same pitch**. Returns how many frames were
-     * written; short means the source ran out.
+     * [rate] is how fast the source is used up: 1.0 is real time, 2.0 plays it
+     * in half the time at the same pitch. Returns the frames written, fewer
+     * than [n] if the source ran out.
      */
     int32_t fill(float *const dst[Channels], const Sample *const src[Channels], int64_t first, int64_t last,
                  int32_t n, float rate) {
@@ -157,14 +132,14 @@ template <class Sample, int32_t Channels> class Stretcher {
             }
             made += k;
             taken += k;
-            // A slice of the next hop's search, proportional to what was just
-            // handed out, so it is finished by the time the hop is due.
+            // Do part of the next hop's search, in proportion to what was just
+            // output, so it's done by the time the hop is due.
             stepSearch(src, first, last, k);
         }
         return made;
     }
 
-    /** The one-channel call, which is how a reel asks and how it always asked. */
+    /** The mono version, used by reels. */
     int32_t fill(float *dst, int32_t n, const Sample *src, int64_t first, int64_t last, float rate) {
         static_assert(Channels == 1, "a stereo stretch needs both channels, or the image wanders");
         float *dsts[1] = {dst};
@@ -176,14 +151,13 @@ template <class Sample, int32_t Channels> class Stretcher {
     /**
      * One hop: find where the source joins best, overlap-add it, and shift.
      *
-     * The first hop has nothing to join onto, so it is laid down where the
-     * clock says and the search starts from the second - which is also why
-     * `seek` must be called at a cycle boundary rather than the position
-     * nudged, or the join is searched against audio from somewhere else.
+     * The first hop has nothing to join onto, so it goes at the nominal
+     * position and searching starts from the second. Call `seek` at a cycle
+     * boundary instead of nudging the position, or the search compares
+     * against unrelated audio.
      */
     bool lay(const Sample *const src[Channels], int64_t first, int64_t last, float rate) {
-        // Shift the overlap down: what has been consumed goes, what has been
-        // written into the tail becomes the head of the next window.
+        // Shift the overlap down: the tail becomes the head of the next window.
         for (int32_t ch = 0; ch < Channels; ++ch) {
             for (int32_t i = 0; i < kWindow - kHop; ++i) {
                 out[ch][static_cast<size_t>(i)] = out[ch][static_cast<size_t>(i + kHop)];
@@ -193,17 +167,13 @@ template <class Sample, int32_t Channels> class Stretcher {
         have = kHop;
         taken = 0;
 
-        // **The clock is not moved by the search.** This is the one mistake a
-        // WSOLA can make that still sounds fine: feed the chosen offset back
-        // into the read position and every hop's join nudges the next hop's
-        // starting point, so the offsets accumulate and the rate is not the
-        // rate. Measured here before it was fixed: asked for half speed, it
-        // read a third. The search decides *which* samples are copied and
-        // nothing about *where the clock is*.
+        // The search chooses which samples are copied but never moves readPos.
+        // Feeding the offset back into it would let offsets pile up and play
+        // at the wrong rate.
         int64_t want = static_cast<int64_t>(readPos);
         if (primed) {
-            // Whatever of the search is left, which on a steady stream is
-            // nothing: it was spread across the blocks since the last hop.
+            // Finish whatever's left of the search. Usually nothing, since it
+            // was spread over the blocks since the last hop.
             finishSearch(src, first, last);
             want = searchBest;
         }
@@ -224,41 +194,23 @@ template <class Sample, int32_t Channels> class Stretcher {
                 }
             }
         }
-        // The *output* advances by a hop; the *source* advances by a hop times
-        // the rate. That difference is the whole of the stretch.
+        // The output advances by a hop and the source by a hop times the rate.
+        // That's the stretch.
         readPos += static_cast<double>(kHop) * static_cast<double>(rate);
         if (looping && readPos >= static_cast<double>(last)) readPos -= static_cast<double>(last - first);
         primed = true;
-        // And the next hop's search opens here, because everything it needs is
-        // known now: its nominal source position is the read position just
-        // advanced, and what it must join onto is the half of this window that
-        // the next shift will bring down to the front of `out`.
+        // Start the next hop's search now, since its position and the audio it
+        // joins onto are both known.
         beginSearch(rate);
         return true;
     }
 
     /**
-     * Cross-correlate what we are about to overlap against what is already
-     * written, and take the offset that agrees best.
+     * How far the search needs to look, based on the rate.
      *
-     * Decimated by four: a join good to four samples is good to eighty
-     * microseconds, which is far below where a phase error is audible, and it
-     * is four times less work in the one loop here that is O(search x window).
-     */
-    /**
-     * How far the search has to look, which depends on the rate.
-     *
-     * ±half a hop is what it takes to *acquire* alignment from nothing - a
-     * full period of anything above 70 Hz. But after the first hop this is not
-     * acquiring, it is **tracking**: the previous hop was already aligned, and
-     * one hop of a rate r slips the source by `(r - 1) * kHop` against the
-     * output. So the correction needed is that slip and not a whole period.
-     *
-     * At the 1.065 a demo tempo ramp asks for, that is 47 samples rather than
-     * 360 - and the search is the whole cost of a hop. Measured on a phone
-     * before this: 1.07 ms for one stretching rack, three of them in lockstep,
-     * against a 1.33 ms block. A take at half speed still gets the full range,
-     * because there the slip really is a period and more.
+     * After the first hop the previous one is already aligned, so the search
+     * only has to cover the slip of one hop, `(r - 1) * kHop`, not a whole
+     * period. At rates near 1 that's far cheaper. It's capped at [kSearch].
      */
     int32_t searchFor(float rate) const {
         const float slip = std::fabs(rate - 1.0f) * static_cast<float>(kHop);
@@ -267,22 +219,14 @@ template <class Sample, int32_t Channels> class Stretcher {
     }
 
     /**
-     * The search, spread across the blocks between two hops instead of paid in
-     * one of them.
+     * Starts a search that's spread over the blocks between two hops, so the
+     * cost is flat instead of a spike every hop (which several racks in
+     * lockstep would stack into one block).
      *
-     * A hop lands once every `kHop` output frames - one block in eleven at 64
-     * frames - and the search is the whole of its cost. So the mean was never
-     * the number: on a phone, three stretching racks seeded at the same cycle
-     * boundary hop in lockstep and put three of those spikes in a single
-     * block. Spreading it makes the cost flat and the lockstep harmless,
-     * because there is no longer a spike to coincide.
-     *
-     * It can be opened as soon as the previous hop is laid, because both of
-     * its inputs are known then: the nominal source position is the read
-     * position that hop just advanced, and what it has to join onto is the
-     * second half of that window - which is precisely what the next shift
-     * brings down to the front of `out`. Hence the `kHop` offset below.
-     * Nothing writes `out` between hops, so the reference is stable.
+     * It can start as soon as the previous hop is laid. It joins onto the
+     * second half of that window, which the next shift brings to the front of
+     * `out` (hence the `kHop` offset in scoreLags). Nothing writes `out`
+     * between hops.
      */
     void beginSearch(float rate) {
         searchWant = static_cast<int64_t>(readPos);
@@ -291,11 +235,11 @@ template <class Sample, int32_t Channels> class Stretcher {
         searchReach = searchFor(rate);
         searchLag = -searchReach;
         searchCredit = 0.0f;
-        // Lags of four, hence the eight: two lag positions per step of four.
+        // Lags step by four from -reach to +reach, so there are reach / 2 + 1.
         searchLags = searchReach / 2 + 1;
     }
 
-    /** Take the slice of the search that [frames] of output has paid for. */
+    /** Runs the share of the search that [frames] of output pays for. */
     void stepSearch(const Sample *const src[Channels], int64_t first, int64_t last, int32_t frames) {
         if (searchLag > searchReach) return; // done
         searchCredit += static_cast<float>(searchLags) * static_cast<float>(frames) / static_cast<float>(kHop);
@@ -305,7 +249,7 @@ template <class Sample, int32_t Channels> class Stretcher {
         scoreLags(src, first, last, lags);
     }
 
-    /** Whatever is left, when the hop is due and will not wait. */
+    /** Runs whatever is left of the search, when the hop is due. */
     void finishSearch(const Sample *const src[Channels], int64_t first, int64_t last) {
         scoreLags(src, first, last, searchLags * 2 + 2);
     }
@@ -316,9 +260,9 @@ template <class Sample, int32_t Channels> class Stretcher {
             const int64_t at = looping ? wrapped(searchWant + searchLag, first, last) : searchWant + searchLag;
             if (!looping && (at < first || at + kWindow > last)) continue;
             float score = 0.0f;
-            // On the sum of the channels, so every channel is laid at the one
-            // offset. Scale is irrelevant here - this only ever picks a winner
-            // - so the source is correlated raw and unconverted.
+            // Correlated on the sum of the channels, every fourth sample (four
+            // samples is well under an audible phase error). Scale doesn't
+            // matter for picking a winner, so the source isn't converted.
             for (int32_t i = 0; i < overlap; i += 4) {
                 float written = 0.0f, coming = 0.0f;
                 for (int32_t ch = 0; ch < Channels; ++ch) {
@@ -334,7 +278,7 @@ template <class Sample, int32_t Channels> class Stretcher {
         }
     }
 
-    /** [i] folded into [first, last), which it is never more than one length outside. */
+    /** [i] wrapped into [first, last). It's never more than one length outside. */
     static int64_t wrapped(int64_t i, int64_t first, int64_t last) {
         if (i >= last) return i - (last - first);
         if (i < first) return i + (last - first);
@@ -357,19 +301,12 @@ template <class Sample, int32_t Channels> class Stretcher {
     float searchCredit = 0.0f;
 };
 
-/** A reel lane: one channel of int16, which is what Bias has always asked for. */
+/** A reel lane: one channel of int16, used by Bias. */
 using Wsola = Stretcher<int16_t, 1>;
 
 /**
- * A frozen clip: float, stereo, and stretched to follow a tempo it was not
- * rendered at.
- *
- * A freeze is tempo-bound because audio does not stretch - and it does, for
- * about nine microseconds a rack against a block's thirteen hundred. Measured
- * against the alternative it replaces: a scene with a smooth tempo change
- * cannot match any clip's rendered tempo while it is ramping, so every frozen
- * clip in it fell back to its machine for a bar - 87 us a rack for Trinity,
- * in the scene most likely to be why anything was frozen at all.
+ * A frozen clip: stereo float, stretched to follow a tempo it wasn't rendered
+ * at, e.g. during a tempo ramp. Much cheaper than falling back to the machine.
  */
 using StereoStretch = Stretcher<float, 2>;
 

@@ -9,9 +9,8 @@ namespace acidulous::dsp {
 class DelayLine {
   public:
     void prepare(int32_t maxSamples) { buf.assign(static_cast<size_t>(maxSamples < 2 ? 2 : maxSamples), 0.0f); wr = 0; }
-    // The buffer *and* the write head: clear() used to leave wr wherever
-    // the last render stopped, so a line that had been used was not in the
-    // state a freshly prepared one is in.
+    // Resets the write head as well as the buffer, so a used line ends up the
+    // same as a freshly prepared one.
     void clear() {
         for (auto &v : buf) v = 0.0f;
         wr = 0;
@@ -19,13 +18,11 @@ class DelayLine {
     int32_t capacity() const { return static_cast<int32_t>(buf.size()); }
     void write(float v) { buf[static_cast<size_t>(wr)] = v; if (++wr >= capacity()) wr = 0; }
     /**
-     * `samples` back from the write position, 1 <= samples < capacity.
+     * Reads `samples` back from the write position, 1 <= samples < capacity.
      *
-     * The wrap is `wrappedReadIndex` and not a subtraction done here, because
-     * doing it here is wrong in a way that takes weeks to find: see the note
-     * on that function. This line had its own copy of the arithmetic, without
-     * the correction the send delay had already needed, and read one float
-     * past the end of the buffer on the first read of every reverb render.
+     * Always wrap with `wrappedReadIndex` rather than subtracting here. Doing
+     * it by hand is easy to get wrong and can read past the end of the buffer
+     * (see the note on that function).
      */
     float read(float samples) const {
         const int32_t cap = capacity();

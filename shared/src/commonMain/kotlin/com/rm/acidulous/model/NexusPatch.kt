@@ -5,22 +5,21 @@ import com.rm.acidulous.util.format
 import com.rm.acidulous.engine.NativeEngine
 
 /**
- * A Nexus patch, as the document stores it.
+ * A Nexus patch, as the song stores it.
  *
- * Two kinds of thing live here and they behave differently. The **topology**
- * - which modules exist and what is wired to what - changes only when the
- * player adds or removes something, and changing it rebuilds the graph. The
- * **layout** - where the nodes sit on the canvas - changes constantly while
- * dragging and must never rebuild anything, which is why [topology] exists
- * and why the engine is only ever asked to reload when that string changes.
+ * The topology (which modules exist and what's wired to what) only changes
+ * when the player adds or removes something, and changing it rebuilds the
+ * graph. The layout (where nodes sit on the canvas) changes all the time
+ * while dragging and must never rebuild anything. That's why [topology]
+ * exists: the engine only reloads when that string changes.
  *
- * A module's type is text, never a number, so adding module types in a later
- * version cannot scramble an existing patch. A slot whose type this build
- * does not know keeps its place and its cables rather than being dropped.
+ * A module's type is stored as text, not a number, so new module types in a
+ * later version can't scramble an existing patch. A slot with a type this
+ * build doesn't know keeps its place and its cables.
  *
- * Slot numbers are permanent. Deleting a module leaves a hole and the next
- * one takes the lowest free number: renumbering would silently repoint every
- * automation lane and every stored knob value at once.
+ * Slot numbers never change. Deleting a module leaves a hole and the next one
+ * takes the lowest free number, since renumbering would repoint every
+ * automation lane and stored knob value.
  */
 data class NexusModule(
     val slot: Int,
@@ -54,7 +53,7 @@ data class NexusPatch(
         modules.sortedBy { it.slot }.forEach { append("p|%02d|%.0f|%.0f\n".format(it.slot, it.x, it.y)) }
     }
 
-    /** The part the engine cares about: everything but where the boxes sit. */
+    /** The part the engine cares about: everything except where the boxes sit. */
     fun topology(): String = encode().lineSequence().filterNot { it.startsWith("p|") }.joinToString("\n")
 
     fun freeSlot(): Int = (0 until NEXUS_SLOTS).firstOrNull { slot -> modules.none { it.slot == slot } } ?: -1
@@ -87,17 +86,14 @@ data class NexusPatch(
                     }
                 }
             }
-            // A module with no `p|` line is laid out rather than left at the
-            // origin. A patch written as text - a bank file, or a graph typed
-            // by hand - says what is wired to what and has no opinion about
-            // where the boxes sit; without this every module stacked on the
-            // same point, so the canvas showed one box and no cables at all
-            // while the header cheerfully counted six modules and five cables.
+            // Modules with no `p|` line are laid out rather than left at the
+            // origin. Patches written as text, like bank files, say what's
+            // wired to what but not where the boxes go, and would otherwise
+            // all stack on one point.
             //
-            // With no places at all - every factory patch - it is laid out as
-            // the fit button would, along the signal, for a square window
-            // since the phone's is not known here; four to a row in slot
-            // order put a patch's output wherever its slot number fell.
+            // With no positions at all (every factory patch) it's laid out
+            // the way the fit button does, along the signal, for a square
+            // window since the screen size isn't known here.
             if (positions.isEmpty()) return NexusPatch(modules, cables).arranged(1f, NEXUS_NODE_W, NEXUS_NODE_H)
             var placed = 0
             return NexusPatch(
@@ -132,20 +128,18 @@ data class NexusModuleInfo(
 )
 
 /**
- * The palette, read from the engine once.
+ * The module palette, read from the engine once.
  *
- * Every other machine in this app keeps a Kotlin list of labels aligned by
- * eye with a C++ enum. With thirty module types, eight knobs each and jacks
- * to name as well, that would be several hundred strings to keep in step by
- * hand. So this comes over the wire instead, and there is one copy of the
- * truth.
+ * With thirty module types, eight knobs each and named jacks, keeping a
+ * Kotlin copy in step with the C++ by hand would be hundreds of strings, so
+ * the engine sends it over instead.
  */
 object NexusPalette {
     val types: List<NexusModuleInfo> by lazy { parse(NativeEngine.nexusPalette()) }
 
     fun of(name: String): NexusModuleInfo? = types.firstOrNull { it.name == name }
 
-    /** Everything a player can place: not the blank placeholder. */
+    /** Everything a player can place, i.e. not the blank placeholder. */
     val placeable: List<NexusModuleInfo> get() = types.filter { it.name != "blank" }
 
     private fun parse(text: String): List<NexusModuleInfo> = text.lineSequence()
@@ -168,21 +162,19 @@ object NexusPalette {
 }
 
 /**
- * What kind of thing a module is, for the eye rather than for the engine.
+ * What kind of thing a module is, used for colour on the canvas.
  *
- * Thirty module types on a canvas all drawn the same colour is thirty
- * identical grey boxes, and a patch of a dozen of them is unreadable at the
- * zoom a phone gives you. The engine has no notion of a category and does not
- * need one - this is entirely about being able to glance at a patch and see
- * its shape: where the sound starts, where it is shaped, what is moving it.
+ * With thirty module types all drawn the same, a patch is hard to read on a
+ * phone. The engine doesn't use categories. This is just so you can see at a
+ * glance where the sound starts, where it's shaped and what's moving it.
  */
 enum class NexusFamily { Source, Shape, Mod, Time, Voice, Io }
 
 /** Which family a module belongs to. */
 fun nexusFamilyOf(type: String): NexusFamily = when (type) {
     "osc", "wtosc", "noise", "op", "audioin" -> NexusFamily.Source
-    // The app's own instruments, which are the point of this machine: a
-    // string, a tonewheel generator, a grain cloud, a Leslie, a vocoder.
+    // The app's own instruments: a string, a tonewheel generator, a grain
+    // cloud, a Leslie and a vocoder.
     "string", "wheels", "grain", "rotary", "bands" -> NexusFamily.Voice
     "filter", "vca", "mix", "math", "delay", "slew" -> NexusFamily.Shape
     "env", "lfo", "snh", "rand", "macro", "perf", "touch" -> NexusFamily.Mod
@@ -190,7 +182,7 @@ fun nexusFamilyOf(type: String): NexusFamily = when (type) {
     else -> NexusFamily.Io // voice, out, scope, blank
 }
 
-/** The parameter name for one slot knob, which never depends on what is in the slot. */
+/** The parameter name for one slot knob. It doesn't depend on what's in the slot. */
 fun nexusKnob(slot: Int, knob: Int): String = "s%02d_p%d".format(slot, knob + 1)
 fun nexusCableA(index: Int): String = "c%02d_a".format(index)
 fun nexusCableB(index: Int): String = "c%02d_b".format(index)

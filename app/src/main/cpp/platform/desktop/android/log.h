@@ -1,7 +1,7 @@
 #pragma once
-// Android's log call, for the desktop build: the engine's host code logs
-// through __android_log_print, and here that is stderr. On the include path
-// only for the desktop build (see desktop/native/CMakeLists.txt).
+// Android's log call for the desktop build. The engine logs through
+// __android_log_print and here it goes to stderr. Only on the include path
+// for the desktop build (see desktop/native/CMakeLists.txt).
 #include <cstdarg>
 #include <cstdio>
 

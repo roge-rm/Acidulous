@@ -22,17 +22,14 @@ import com.rm.acidulous.ui.theme.Acid
 import kotlinx.coroutines.delay
 
 /**
- * How hard the audio thread is working, and whether it has just failed.
+ * How hard the audio thread is working, and whether it just dropped out.
  *
- * [level] is the share of each block's 1333 µs that rendering it actually
- * took, 0..1 - the figure that says how much room is left before the phone
- * starts dropping blocks. [dropped] is a dropout: it lights when the xrun
- * counter moves and stays lit for a few seconds, because the sound of one
- * is gone before you look up.
+ * [level] is the share of each block's 1333 µs that rendering took, 0..1.
+ * [dropped] lights when the xrun counter moves and stays lit for a few seconds
+ * so you have time to see it.
  *
- * Shared rather than duplicated, because two things show it now: the
- * panic button fills with it, and the editors carry a bar. The smoothing
- * has to be the same in both or they disagree on screen.
+ * Shared because the panic button and the editors' bar both show it, and they
+ * need the same smoothing to agree.
  */
 @Immutable
 data class EngineLoad(val level: Float, val dropped: Boolean)
@@ -45,28 +42,18 @@ fun rememberEngineLoad(): EngineLoad {
         var lastXruns = NativeEngine.xRunCount
         var lit = 0
         while (true) {
-            // **The worse of the average and the worst case.**
+            // Take the worse of the average and the worst case. The engine's
+            // average is a one-pole with a 27 ms memory, so a spike has decayed
+            // out of it long before the 200 ms poll and the meter would read
+            // low while the audio breaks up. The worst callback since the last
+            // poll is measured against its budget and used if it's higher.
             //
-            // The average alone was what this meter showed, and on a phone
-            // dropping audio it read six per cent - because it is a one-pole
-            // with a 27 ms memory and a spike has decayed out of it long
-            // before a 200 ms poll arrives. A meter that says "comfortable"
-            // while the sound breaks up is worse than no meter.
-            //
-            // So the worst callback since the last look is measured against
-            // its own budget and taken if it is higher. That number is the one
-            // a dropout is actually about, and on a device with room to spare
-            // it sits below the average and changes nothing.
-            //
-            // Where the audio thread cannot time itself (a browser: see
-            // AppHost.timesAudioPrecisely) the worst case is not a number, and
-            // the average is all there is.
+            // Where the audio thread can't time itself (a browser, see
+            // AppHost.timesAudioPrecisely) only the average is available.
             val budget = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
             val worst = if (com.rm.acidulous.AppHost.current.timesAudioPrecisely) NativeEngine.recentCallbackUs * 100f / budget else 0f
             val now = maxOf(NativeEngine.loadAvg, worst)
-            // A slow follower upward and a slower one down: the raw figure
-            // flickers by several percent a block, and a meter that will
-            // not sit still cannot be read at all.
+            // Smooth it, faster up than down, so the meter is readable.
             load += (now - load) * (if (now > load) 0.6f else 0.2f)
             val xruns = NativeEngine.xRunCount
             if (xruns != lastXruns) { lastXruns = xruns; lit = 15 }
@@ -79,9 +66,8 @@ fun rememberEngineLoad(): EngineLoad {
 }
 
 /**
- * Teal to about half, amber past that, red past four fifths - which is
- * roughly where a phone with anything else running starts to miss. A
- * dropout is red whatever the load, because it has already happened.
+ * Teal to about half, amber past that, red past 80%, which is roughly where a
+ * busy phone starts to drop blocks. A dropout is always red.
  */
 @Composable
 fun loadColour(load: EngineLoad): Color {
@@ -95,27 +81,20 @@ fun loadColour(load: EngineLoad): Color {
 }
 
 /**
- * The bar. It is in every header now, last, at the far edge.
+ * The load bar, at the far end of every header.
  *
- * The number that used to sit beside this is gone. It was the widest thing
- * in a run that the header packs around the camera hole, and it changed
- * width as it ticked past 99, which moved the buttons; and what it answered
- * - "how much room is left" - the status line answers too, without costing
- * the header anything. What is left is the part you read at a glance.
+ * There's no number next to it. It changed width past 99 and moved the header
+ * buttons, and the status line shows the figure anyway.
  *
- * The arranger used to have the panic pill instead, with this same reading
- * drawn as a ladder behind the word. That pill is gone and this took its
- * place, so it also took its one behaviour that was not just colour: **a
- * dropout fills the bar.** Without that, a block dropped at low load is a
- * short red stub, which is less visible than the thing it replaced - and a
- * dropout is the one reading here that has already cost you something.
+ * A dropout fills the whole bar, otherwise a dropout at low load would only be
+ * a short red stub.
  */
 @Composable
 fun LoadMeter(modifier: Modifier = Modifier) {
     val c = Acid.colors
     val load = rememberEngineLoad()
     val colour = loadColour(load)
-    // A reading that moves many times a second; the tracks that glow say what matters.
+    // Changes many times a second, so TalkBack skips it.
     Canvas(modifier.padding(horizontal = 3.dp).width(5.dp).height(22.dp).silent()) {
         val radius = CornerRadius(2.dp.toPx())
         drawRoundRect(c.raised, Offset.Zero, size, radius)

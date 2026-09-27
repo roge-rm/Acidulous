@@ -1,9 +1,9 @@
 #pragma once
 #include "Math.h"
 
-// Topology-preserving state-variable filter (Simper). Stable under fast
-// modulation, which is the whole point for an acid line: the cutoff moves
-// every sample and must not blow up or zipper.
+// Topology-preserving state-variable filter (Simper). Stays stable when the
+// cutoff moves every sample, as it does on an acid line, without blowing up
+// or zippering.
 namespace acidulous::dsp {
 
 class Svf {
@@ -23,14 +23,11 @@ class Svf {
     void reset() { ic1eq = ic2eq = 0.0f; }
 
     /**
-     * What to multiply the band-pass output by for a peak gain of one.
+     * Multiply the band-pass output by this for a peak gain of one.
      *
-     * `lp` and `hp` peak at unity; `bp` peaks at 1/k, so at no resonance it
-     * arrives six decibels under its neighbours for no reason anybody asked
-     * for. Cascade two for a 12 dB slope and it is twelve. That is a filter
-     * *type* costing level rather than changing character, and it is why
-     * Mosaic's band-passed patches measured twenty decibels under the rest
-     * of the bank. The narrowness is real and stays; the scaling was not.
+     * `lp` and `hp` peak at unity but `bp` peaks at 1/k, so with no resonance
+     * it's 6 dB quieter (12 dB with two in series). Use this so switching to
+     * band-pass doesn't drop the level.
      */
     float bandNorm() const { return k; }
 

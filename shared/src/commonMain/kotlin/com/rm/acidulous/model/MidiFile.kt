@@ -5,39 +5,33 @@ import com.rm.acidulous.io.*
 import com.rm.acidulous.util.ByteArrayOutputStream
 
 /**
- * The song as a standard MIDI file - the notes, not the sound.
+ * Exports the song as a standard MIDI file: the notes, not the sound.
  *
- * Format 1: a first track carrying tempo and time signature, then one track
- * per instrument. The division goes into the header as **240**, which is
- * `PPQN` unchanged, so nothing is re-quantised on the way out and a note
- * that sat exactly on a sixteenth still does in the other program. Getting
- * that for free is the whole reason the engine runs at 240 rather than the
- * more usual 96 or 480.
+ * Format 1: a first track with tempo and time signature, then one track per
+ * instrument. The division is 240, the same as `PPQN`, so nothing gets
+ * re-quantised and a note on a sixteenth stays on it in other programs. That's
+ * why the engine runs at 240 rather than the more usual 96 or 480.
  *
- * The arrangement is *unrolled*: a scene that repeats four times writes its
- * notes four times, and a one-bar clip under a four-bar scene is written
- * four times too, because a MIDI file has no idea what a scene or a loop is.
- * What comes out is what you would hear playing the song from the top.
+ * The arrangement is unrolled: a scene that repeats four times writes its
+ * notes four times, and a one-bar clip in a four-bar scene is written four
+ * times too, because MIDI files have no scenes or loops. The result is what
+ * you'd hear playing the song from the start.
  *
- * **The modifiers need no applying.** What is written is what is in the clips,
- * and since M59 that is already what you hear: a part played through the
- * arpeggiator was written down as the run, not as the chord that made it. The
- * note reading "the export is the chord you drew rather than the run you hear"
- * belonged to the old arrangement and is gone with it.
+ * Modifiers don't need applying, because the clips already hold what you
+ * hear (an arpeggiated part is stored as the run, not the chord).
  *
- * Entirely offline, entirely ours, and it shares nothing with the live paths
- * but the song itself.
+ * It all runs offline and shares nothing with the live paths except the song.
  */
 object MidiFile {
 
-    /** Channel per track, which is the same rule the MIDI input routing uses. */
+    /** One channel per track, the same rule the MIDI input routing uses. */
     private const val MAX_CHANNELS = 16
 
     fun write(song: Song, file: File) {
         val tracks = mutableListOf<ByteArray>()
         tracks += tempoTrack(song)
-        // Drums on channel 10, where every other program looks for them, and
-        // the rest in order around it.
+        // Drums go on channel 10, where other programs expect them, and the
+        // rest fill the other channels in order.
         var next = 0
         song.tracks.forEach { track ->
             val channel = if (MachineUi.kindOf(track.machine.type) == MachineKind.Drums) {
@@ -77,19 +71,18 @@ object MidiFile {
     // --- reading -------------------------------------------------------------------
 
     /**
-     * A standard MIDI file's notes, ready to become a song: every track's
-     * notes on every channel, in this engine's ticks, with the first tempo and
-     * time signature the file states.
+     * Reads a standard MIDI file's notes, ready to become a song: every
+     * track's notes on every channel, in our ticks, with the file's first
+     * tempo and time signature.
      *
-     * Format 0 keeps everything on one track and tells instruments apart by
-     * channel, and a format 1 file may do the same inside a track - so the
-     * parts come out split by track *and* channel, which is what a person
-     * means by "the bass". Tempo and signature changes after the first are
-     * left out: a song here has one of each per scene, and the file has not
-     * said where its scenes are.
+     * Format 0 keeps everything on one track and uses channels to separate
+     * instruments, and format 1 files can do the same within a track, so
+     * parts are split by track and channel. Tempo and signature changes after
+     * the first are left out, since a song here has one per scene and the file
+     * doesn't say where its scenes are.
      *
-     * Throws [IllegalArgumentException] for anything that is not a MIDI file,
-     * or is one timed in SMPTE frames rather than beats, which no song is.
+     * Throws [IllegalArgumentException] for anything that isn't a MIDI file,
+     * or one timed in SMPTE frames rather than beats.
      */
     fun read(bytes: ByteArray): Parsed {
         val r = Reader(bytes)
@@ -104,14 +97,14 @@ object MidiFile {
 
         var tempo: Float? = null
         var signature: Signature? = null
-        // By (track, channel), in the order they were first heard.
+        // By (track, channel), in the order they first appear.
         val parts = LinkedHashMap<Pair<Int, Int>, MutableList<Note>>()
         val names = HashMap<Int, String>()
-        // The first General MIDI program each part asks for, which is how a
-        // file that never names its tracks still says what they are.
+        // The first General MIDI program each part asks for, so a file that
+        // never names its tracks still says what they are.
         val programs = HashMap<Pair<Int, Int>, Int>()
-        // What a part does besides notes: its controllers as lane points,
-        // its bends, and the bend range it asked for, if it did.
+        // A part's controllers as lane points, its bends, and its bend range
+        // if it set one.
         val controls = HashMap<Pair<Int, Int>, MutableMap<String, MutableList<LanePoint>>>()
         val bends = HashMap<Pair<Int, Int>, MutableList<Pair<Int, Int>>>()
         val bendRange = HashMap<Pair<Int, Int>, Int>()
@@ -133,15 +126,15 @@ object MidiFile {
             val end = r.pos + length
             var at = 0L
             var status = 0
-            // A note is open from its note-on until the matching note-off -
-            // or a note-on at velocity nought, which is the same thing.
+            // A note is open from its note-on until the matching note-off, or
+            // a note-on with velocity 0, which means the same.
             val open = HashMap<Int, ArrayDeque<Pair<Long, Int>>>()
             while (r.pos < end) {
                 at += r.varLen()
                 var b = r.byte()
                 if (b < 0x80) {
-                    // Running status: the data byte is the first of the last
-                    // message's kind, which is how most files save space.
+                    // Running status: this data byte belongs to a message of
+                    // the same kind as the last one. Most files use it.
                     require(status != 0) { "running status with nothing to run" }
                     r.pos--
                     b = status
@@ -178,12 +171,12 @@ object MidiFile {
                         val where = t to channel
                         if (kind == 0xb0) when (d1) {
                             1 -> control(where, "mod", ticks(at), d2 / 127f)
-                            // The pedals are switches: down from the middle up.
+                            // The pedals are switches: 64 and up is down.
                             64 -> control(where, "sustain", ticks(at), if (d2 >= 64) 1f else 0f)
                             66 -> control(where, "sostenuto", ticks(at), if (d2 >= 64) 1f else 0f)
                             67 -> control(where, "soft", ticks(at), if (d2 >= 64) 1f else 0f)
                             // Registered parameter 0 is the bend range, set
-                            // by data entry once 101 and 100 have chosen it.
+                            // by data entry after 101 and 100 have picked it.
                             101 -> rpn[where] = (d2 shl 7) or ((rpn[where] ?: 0) and 0x7f)
                             100 -> rpn[where] = ((rpn[where] ?: 0) and (0x7f shl 7)) or d2
                             6 -> if (rpn[where] == 0) bendRange[where] = d2
@@ -207,11 +200,11 @@ object MidiFile {
         val out = parts.map { (where, notes) ->
             val (track, channel) = where
             val name = names[track]?.takeIf { it.isNotEmpty() }
-            // Two parts from one named track are told apart by channel.
+            // Parts from the same named track are told apart by channel.
             val split = parts.keys.count { it.first == track } > 1
             val program = programs[where]
-            // Unnamed parts are called what their instrument is, and told
-            // apart by channel only when two would share a name.
+            // Unnamed parts are named after their instrument, with the
+            // channel added.
             val family = program?.let { GM_FAMILIES[(it / 8).coerceIn(0, 15)] }
             val range = (bendRange[where] ?: 2).coerceIn(1, 48).toFloat()
             val bendEvents = bends[where].orEmpty()
@@ -234,10 +227,9 @@ object MidiFile {
     }
 
     /**
-     * A channel's bend, as the curve of one note under it: the bend in force
-     * when the note starts, then every change while it sounds, in the note's
-     * own ticks. Null where the note never leaves the centre, so a file with
-     * no bend at all adds nothing to its notes.
+     * A channel's bend as one note's curve: the bend when the note starts,
+     * then every change while it plays, in the note's own ticks. Null if the
+     * note never leaves the centre, so a file with no bends adds nothing.
      */
     private fun bendCurve(note: Note, events: List<Pair<Int, Int>>, range: Float): Lane? {
         if (events.isEmpty()) return null
@@ -252,10 +244,10 @@ object MidiFile {
     private val PERFORMANCE_CC = mapOf("mod" to 1, "pressure" to -1, "sustain" to 64, "sostenuto" to 66, "soft" to 67)
     private val PEDAL_CCS = setOf(64, 66, 67)
 
-    /** Channel 10, counted from nought: where General MIDI keeps the drums. */
+    /** Channel 10, counting from 0. General MIDI puts drums here. */
     const val DRUM_CHANNEL = 9
 
-    /** Our drum machines' sounds, by name, as General MIDI's notes for them. */
+    /** Our drum machines' sounds, by name, mapped to General MIDI notes. */
     val GM_DRUM_NOTE: Map<String, Int> = mapOf(
         "Kick" to 36, "Rim" to 37, "Snare" to 38, "Clap" to 39,
         "Low Tom" to 45, "Mid Tom" to 47, "Hi Tom" to 50,
@@ -263,7 +255,7 @@ object MidiFile {
         "Cowbell" to 56, "Clave" to 75,
     )
 
-    /** [program] is the General MIDI instrument the file asked for, if it asked. */
+    /** [program] is the General MIDI instrument the file asked for, if any. */
     data class Part(
         val name: String, val channel: Int, val notes: List<Note>, val program: Int? = null,
         /** The part's mod wheel, pressure and pedals, by performance lane name, in song ticks. */
@@ -276,7 +268,7 @@ object MidiFile {
         "Reed", "Pipe", "Lead", "Pad", "Synth FX", "Ethnic", "Percussion", "Effects",
     )
 
-    /** [tempos] is every tempo the file states, where it states it; [tempo] is the first. */
+    /** [tempos] is every tempo the file sets and where; [tempo] is the first. */
     data class Parsed(
         val tempo: Float?, val signature: Signature?, val parts: List<Part>,
         val tempos: List<Pair<Int, Float>> = emptyList(),
@@ -294,7 +286,7 @@ object MidiFile {
             return b.copyOfRange(pos, pos + n).also { pos += n }
         }
         fun skip(n: Int) { pos = (pos + n.coerceAtLeast(0)).coerceAtMost(b.size) }
-        // US-ASCII as Java decodes it: a byte past 127 is the replacement character.
+        // US-ASCII as Java decodes it: bytes over 127 become the replacement character.
         fun ascii(n: Int) = bytes(n).let { b -> CharArray(b.size) { if (b[it] < 0) '\uFFFD' else b[it].toInt().toChar() }.concatToString() }
         fun int16() = (byte() shl 8) or byte()
         fun int32() = (byte() shl 24) or (byte() shl 16) or (byte() shl 8) or byte()
@@ -323,15 +315,15 @@ object MidiFile {
             val bpm = scene.tempo?.bpm ?: song.tempo
             val sceneTicks = song.barsOf(scene) * signature.ticksPerBar
             for (repeat in 0 until scene.repeat) {
-                // Only write a change when it *is* one: a tempo event every
-                // scene would make the map unreadable in another program.
+                // Only write a tempo event when it changes. One every scene
+                // would make the tempo map hard to read in other programs.
                 if (bpm != lastBpm) {
                     events += tempoEvent(at, bpm)
                     lastBpm = bpm
                 }
-                // A ramp, on the last pass, as a step every beat: a MIDI file
-                // has no glide, and a beat is fine enough that nobody hears
-                // the stairs.
+                // A ramp is written on the last pass as a step every beat,
+                // since MIDI files have no glide. Steps that small aren't
+                // audible.
                 val ramp = scene.ramp
                 if (ramp != null && repeat == scene.repeat - 1 && ramp.toBpm > 0f && ramp.bars > 0) {
                     val length = minOf(sceneTicks, ramp.bars * signature.ticksPerBar)
@@ -345,9 +337,9 @@ object MidiFile {
                     lastBpm = ramp.toBpm
                 }
                 if (signature != lastSignature) {
-                    // The denominator is stored as its power of two, and the
-                    // last two bytes are the metronome's business: 24 clocks
-                    // to a click, 8 thirty-seconds to a quarter, both normal.
+                    // The denominator is stored as a power of two. The last
+                    // two bytes are for the metronome: 24 clocks per click and
+                    // 8 thirty-seconds per quarter, both standard.
                     var power = 0
                     var unit = signature.unit
                     while (unit > 1) { unit = unit shr 1; power++ }
@@ -363,16 +355,16 @@ object MidiFile {
     }
 
     private fun noteTrack(song: Song, track: Track, channel: Int): ByteArray? {
-        // A drum machine's sounds sit on notes of its own; another program
-        // expects General MIDI's, so each is written as the one of those
-        // with its name. A machine with numbered pads keeps its notes.
+        // Our drum machines use their own notes, but other programs expect
+        // General MIDI's, so each sound is written as the GM note with the
+        // same name. Machines with numbered pads keep their notes.
         val drumNames = if (channel == DRUM_CHANNEL) {
             MachineUi.voicesOf(track.machine.type).associate { it.note to it.name }
         } else {
             emptyMap()
         }
-        // And as the track plays them: its transpose and its fixed velocity,
-        // so the file is what was heard rather than what was written.
+        // Apply the track's transpose and fixed velocity, so the file matches
+        // what you hear.
         val shift = if (MachineUi.takesTranspose(track.machine.type)) track.transpose else 0
         fun out(pitch: Int) = drumNames[pitch]?.let { GM_DRUM_NOTE[it] } ?: (pitch + shift)
         val events = mutableListOf<Event>()
@@ -388,16 +380,14 @@ object MidiFile {
                 if (clip != null && !clip.mute && clip.notes.isNotEmpty()) {
                     val clipTicks = (clip.bars * signature.ticksPerBar).coerceAtLeast(1)
                     // A clip shorter than its scene loops to fill it, unless
-                    // it is a one-shot, which is exactly what the scheduler
-                    // does with the same two numbers.
+                    // it's a one-shot, same as the scheduler does.
                     val passes = if (clip.playMode == PlayMode.OneShot) 1
                     else (sceneTicks + clipTicks - 1) / clipTicks
                     for (pass in 0 until passes) {
                         val origin = at + pass * clipTicks
-                        // The same decisions the engine makes, so the file is
-                        // the performance rather than an idea of it. Fill is
-                        // false here for the reason it is false in a render:
-                        // nobody is holding a button while a file is written.
+                        // Same decisions the engine makes, so the file matches
+                        // the playback. Fill is off here, as in a render,
+                        // since nobody is holding the button.
                         var prevPlayed = false
                         for (note in clip.notes) {
                             val plays = trigPlays(note, pass, clip.seed, prevPlayed)
@@ -406,12 +396,11 @@ object MidiFile {
                             val start = origin + note.tick + note.nudge
                             if (start >= at + sceneTicks) continue // past the scene's end
                             if (start < at) continue // nudged off the front of the scene
-                            // A note is not allowed to ring past its scene:
-                            // the next scene's notes start there, and a
-                            // hanging note is the classic export bug.
-                            // A ratchet is the note struck several times
-                            // inside its own length, clamped to its own pass
-                            // exactly as the player clamps it.
+                            // Notes can't ring past their scene, since a
+                            // hanging note would overlap the next scene.
+                            // A ratchet strikes the note several times within
+                            // its length, clamped to its pass like the player
+                            // does.
                             val span = minOf(note.length, clipTicks - note.tick).coerceAtLeast(1)
                             val rat = note.ratchet.coerceIn(1, 8)
                             val step = if (rat > 1) (span / rat).coerceAtLeast(1) else span
@@ -431,8 +420,8 @@ object MidiFile {
                             }
                             any = true
                         }
-                        // The mod wheel, pressure and the pedals, as the
-                        // controllers they arrived as.
+                        // The mod wheel, pressure and pedals, as the
+                        // controllers they came in as.
                         for ((key, lane) in clip.automation) {
                             if (laneUnit(key) != "performance") continue
                             val cc = PERFORMANCE_CC[laneParam(key)] ?: continue
@@ -447,9 +436,9 @@ object MidiFile {
                             }
                         }
                     }
-                    // A pedal is let up where its scene ends: the next scene
-                    // may not mention it, and another program would hold
-                    // every note after it for ever.
+                    // Pedals are released at the end of the scene, since the
+                    // next scene may not mention them and other programs would
+                    // hold every note after that forever.
                     for (name in clip.automation.keys.filter { laneUnit(it) == "performance" }.map { laneParam(it) }) {
                         val cc = PERFORMANCE_CC[name]?.takeIf { it in PEDAL_CCS } ?: continue
                         events += Event(at + sceneTicks, 0, byteArrayOf((0xb0 or channel).toByte(), cc.toByte(), 0))
@@ -471,9 +460,9 @@ object MidiFile {
     // --- the bytes ----------------------------------------------------------------
 
     /**
-     * [order] breaks ties at the same tick: note-offs before note-ons, so a
-     * repeated note is released before it is struck again rather than the
-     * other way round, which would silence it.
+     * [order] breaks ties at the same tick: note-offs go before note-ons, so
+     * a repeated note is released before it's struck again. The other way
+     * round would silence it.
      */
     private class Event(val tick: Int, val order: Int, val bytes: ByteArray)
 
@@ -494,7 +483,7 @@ object MidiFile {
     private fun meta(type: Int, payload: ByteArray): ByteArray =
         byteArrayOf(0xff.toByte(), type.toByte()) + varLen(payload.size) + payload
 
-    /** Seven bits a byte, high bit set on every one but the last. */
+    /** Seven bits per byte, with the high bit set on all but the last. */
     private fun varLen(value: Int): ByteArray {
         var v = if (value < 0) 0 else value
         val bytes = ArrayDeque<Byte>()

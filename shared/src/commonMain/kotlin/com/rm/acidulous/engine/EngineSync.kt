@@ -47,17 +47,18 @@ import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * The one place the document meets the engine.
+ * The one place the song meets the engine.
  *
- * The engine plays immutable snapshots; it never sees the [Song] itself. [push]
- * builds one through the native builder and commits it - one constructor-queue
- * record, applied at a block boundary. Call it after every edit.
+ * The engine plays immutable snapshots and never sees the [Song] itself.
+ * [push] builds one through the native builder and commits it as one
+ * constructor-queue record, applied at a block boundary. Call it after every
+ * edit.
  */
 object EngineSync {
 
     private const val TAG = "Acidulous.Sync"
     private const val RACKS = 16
-    /** Most clips carry no per-note expression; they can all share this. */
+    /** Most clips have no per-note expression, so they can all share this. */
     private val EMPTY_FLOATS = FloatArray(0)
 
     private val mounted = arrayOfNulls<String>(RACKS)
@@ -73,9 +74,9 @@ object EngineSync {
     private val loadedReels = arrayOfNulls<String>(RACKS)    // the spec a rack's Bias was built from
 
     /**
-     * What the last compile said, by rack: empty when it read, the reason
-     * when it did not. The panel shows it - a typed formula that fails
-     * quietly is a trap.
+     * The result of the last formula compile, by rack: empty if it worked,
+     * otherwise the reason. The panel shows it so a typed formula never
+     * fails silently.
      */
     val formulaErrors = androidx.compose.runtime.mutableStateMapOf<Int, String>()
     // Building a multisample means parsing and decoding, sometimes tens of
@@ -95,15 +96,14 @@ object EngineSync {
         private set
 
     /**
-     * A new engine has nothing in it: forget everything this remembers
-     * having sent, so the next push sends all of it.
+     * A new engine is empty, so forget everything this remembers sending and
+     * the next push sends it all.
      *
-     * The engine is stopped and started again whenever the activity is -
-     * a change of language, a keyboard plugged in, Android bringing the app
-     * back - but this object lives as long as the process. It went on
-     * believing every rack had its machine, sent nothing but parameters to
-     * racks that were empty, and the song came back silent. Called before
-     * every start.
+     * The engine is restarted whenever the activity is (a language change, a
+     * keyboard plugged in, Android bringing the app back), but this object
+     * lives as long as the process. Without this it would skip mounting
+     * machines and the song would come back silent. Called before every
+     * start.
      */
     fun forgetEngine() {
         mounted.fill(null)
@@ -126,29 +126,25 @@ object EngineSync {
     }
 
     /**
-     * Pads reference samples by a path relative to [sampleRoot] in
-     * `Machine.settings` ("p03_sample"). Loads what changed, clears what went.
-     */
-    /**
-     * Something the player did that did not work, in words they can act on.
-     *
-     * Everything here used to end at `Log.w`, which is the right place for a
-     * mount queue being full and the wrong place for "that file is an mp3".
-     * Dan: "loading anything other than a wav silently fails, we need some
-     * kind of error message on an error." The host sets this; nothing else
-     * reads it.
+     * Reports something the user did that didn't work, in words they can act
+     * on, like a file that isn't a supported format. Set by the host.
      */
     var onProblem: ((StringResource, Array<out Any>) -> Unit)? = null
 
-    /** A string resource and what goes in it, so the host says it in the phone's language. */
+    /** A string resource and its arguments, so the host shows it in the user's language. */
     private fun problem(message: StringResource, vararg args: Any) {
         Log.w(TAG, "problem $message: ${args.joinToString(" | ")}")
         onProblem?.invoke(message, args)
     }
 
-    /** A file's own name, which is what the player recognises. */
+    /** A file's own name, which is what the user recognises. */
     private fun shortName(rel: String) = rel.substringAfterLast('/')
 
+    /**
+     * Pads reference samples by a path relative to [sampleRoot] in
+     * `Machine.settings` ("p03_sample"). Loads what changed and clears what
+     * was removed.
+     */
     fun ensureSamples(song: Song) {
         val root = sampleRoot ?: return
         song.tracks.forEachIndexed { rack, track ->
@@ -160,24 +156,23 @@ object EngineSync {
                 if (mounted[rack] != track.machine.type) continue // machine not mounted yet
                 if (rel.isEmpty() && loadedSamples[key] == null) { loadedSamples[key] = ""; continue } // never loaded: nothing to clear
                 val err = NativeEngine.loadSample(rack, pad, if (rel.isEmpty()) "" else com.rm.acidulous.io.File(root, rel).absolutePath)
-                // The key is set either way, so a file that will not read is
-                // reported once rather than on every sync for the rest of the
-                // session. Changing the setting is what asks again.
+                // The key is set either way, so a file that won't load is
+                // reported once, not on every sync. Changing the setting
+                // tries again.
                 loadedSamples[key] = rel
                 if (err.isNotEmpty()) problem(Res.string.sync_pad_failed, pad + 1, shortName(rel), err)
             }
-            // And the shared file the pads slice, in the slot above them. One
-            // copy for all thirteen: mounting it per pad would decode an
-            // eleven megabyte file thirteen times - and since there is only
-            // ever one of it, it may be far longer than a pad sample.
+            // The shared file the pads slice, in the slot above them. One copy
+            // for all thirteen pads, instead of decoding a large file thirteen
+            // times. It can also be much longer than a pad sample.
             val sliceKey = "$rack:shared"
             val sliceRel = track.machine.settings["slice_sample"] ?: ""
             if (loadedSamples[sliceKey] != sliceRel && mounted[rack] == track.machine.type &&
                 !(sliceRel.isEmpty() && loadedSamples[sliceKey] == null)) {
                 val err = NativeEngine.loadSample(
                     rack, 13, if (sliceRel.isEmpty()) "" else com.rm.acidulous.io.File(root, sliceRel).absolutePath,
-                    // The long ceiling: one file for the whole machine, so it
-                    // is allowed to be a whole track rather than a break.
+                    // The longer limit: one file for the whole machine, so it
+                    // can be a whole track rather than a break.
                     maxSeconds = NativeEngine.SLICE_SECONDS,
                 )
                 loadedSamples[sliceKey] = sliceRel
@@ -187,9 +182,10 @@ object EngineSync {
     }
 
     /**
-     * Makes the racks match the tracks: mounts what is missing or changed,
-     * unmounts racks whose track is gone. Index is rack id, so deleting a track
-     * shifts the ones after it - their machines remount on their new racks.
+     * Makes the racks match the tracks: mounts what's missing or changed and
+     * unmounts racks whose track is gone. The index is the rack id, so
+     * deleting a track shifts the ones after it and their machines remount on
+     * their new racks.
      */
     fun ensureMachines(song: Song) {
         song.tracks.forEachIndexed { rack, track ->
@@ -213,9 +209,9 @@ object EngineSync {
     }
 
     /**
-     * Same for the insert slots: a slot whose type changed gets a fresh effect
-     * (or nothing), so its state starts clean; a slot whose type is unchanged
-     * keeps its effect and only has its parameters pushed.
+     * The same for insert slots: a slot whose type changed gets a new effect
+     * (or none), so its state starts clean. A slot with the same type keeps
+     * its effect and only has its parameters pushed.
      */
     fun ensureEffects(song: Song) {
         for (rack in 0 until RACKS) {
@@ -232,8 +228,8 @@ object EngineSync {
     /**
      * The two send buses, the same way.
      *
-     * One array rather than sixteen, because a send belongs to the song and
-     * not to a rack - which is also why nothing here takes a rack index.
+     * One array rather than sixteen, because sends belong to the song, not a
+     * rack.
      */
     private val mountedSends = arrayOfNulls<String>(SEND_SLOTS)
 
@@ -244,7 +240,7 @@ object EngineSync {
             if (NativeEngine.mountSend(slot, want ?: "")) mountedSends[slot] = want
             else Log.w(TAG, "could not mount send ${want ?: "(none)"} on slot $slot")
         }
-        // The master's inserts, the same way.
+        // The master inserts, the same way.
         for (slot in 0 until MASTER_INSERT_SLOTS) {
             val want = song.master.insertAt(slot).type.ifEmpty { null }
             if (mountedMasterInserts[slot] == want) continue
@@ -255,7 +251,7 @@ object EngineSync {
     private val mountedMasterInserts = arrayOfNulls<String>(MASTER_INSERT_SLOTS)
     private val mountedGroupInserts = Array(MAX_GROUPS) { arrayOfNulls<String>(GROUP_INSERT_SLOTS) }
 
-    /** The mixer groups' inserts; a group that is not there has empty slots. */
+    /** The mixer groups' inserts. A group that doesn't exist has empty slots. */
     fun ensureGroups(song: Song) {
         for (g in 0 until MAX_GROUPS) for (slot in 0 until GROUP_INSERT_SLOTS) {
             val want = song.master.groups.getOrNull(g)?.insertAt(slot)?.type?.ifEmpty { null }
@@ -266,12 +262,11 @@ object EngineSync {
     }
 
     /**
-     * What the incoming audio goes through before anything hears it.
+     * Effects on the incoming audio.
      *
-     * The same shape as [ensureSends] and mounted the same way; what differs
-     * is only where the engine runs it, which is before the input is
-     * published - so an effect here is **printed into a recording** rather
-     * than applied to a playback.
+     * Same shape as [ensureSends] and mounted the same way. The difference is
+     * that the engine runs them before the input is published, so they're
+     * recorded into the take rather than applied on playback.
      */
     fun ensureInputFx(song: Song) {
         for (slot in 0 until INPUT_SLOTS) {
@@ -284,7 +279,7 @@ object EngineSync {
 
     /**
      * Mosaic's instrument: a SoundFont preset or a list of WAV zones. The
-     * source string is the identity, so nothing reloads unless it changed.
+     * source string is the identity, so nothing reloads unless it changes.
      */
     fun ensureSampleMaps(song: Song) {
         val root = sampleRoot ?: return
@@ -334,12 +329,10 @@ object EngineSync {
         }
     }
 
-    /** Everything the engine needs after any edit: machines, effects, modifiers, then the snapshot. */
     /**
-     * The frozen clips a rack should be holding. The identity is the whole
-     * list, so adding or thawing one clip reloads that rack's set and leaves
-     * the other fifteen alone - and nothing reloads when a song is merely
-     * being edited around a freeze.
+     * The frozen clips a rack should have. The identity is the whole list, so
+     * freezing or thawing one clip reloads that rack's set and leaves the
+     * other racks alone, and nothing reloads while editing around a freeze.
      */
     fun ensureFrozen(song: Song) {
         val root = freezeRoot ?: return
@@ -374,16 +367,16 @@ object EngineSync {
     }
 
     /**
-     * What an audio track is holding: a window into a file per scene, per lane.
+     * What an audio track holds: a window into a file per scene, per lane.
      *
-     * Unlike every other machine's sample, a tape's material lives in the
-     * *clips* rather than in `Machine.settings`, so there is nothing for
-     * [ensureSamples] or [ensureTakes] to find. The spec is built from the whole
-     * track and is its own identity - see `model/Bias.kt` for why - so this
-     * sends nothing at all until a take is added, trimmed or moved.
+     * Unlike other machines, a tape's audio lives in the clips rather than in
+     * `Machine.settings`, so [ensureSamples] and [ensureTakes] don't see it.
+     * The spec is built from the whole track and is its own identity (see
+     * `model/Bias.kt`), so nothing is sent until a take is added, trimmed or
+     * moved.
      *
-     * Off-thread for the same reason as a sample map, and more so: five minutes
-     * of audio is the largest decode in the app.
+     * Runs off-thread like sample maps: five minutes of audio is the biggest
+     * decode in the app.
      */
     fun ensureReels(song: Song) {
         val root = sampleRoot ?: return
@@ -394,8 +387,8 @@ object EngineSync {
                 mounted[rack] != BIAS_MACHINE -> continue // wait for the machine
                 else -> reelSpec(song, track, root)
             }
-            // Never loaded and nothing to load: the fifteen racks that are not
-            // tapes must not each send an empty spec on the first sync.
+            // Never loaded and nothing to load: don't send an empty spec to
+            // every non-tape rack on the first sync.
             if (loadedReels[rack] == null && wanted.isEmpty()) { loadedReels[rack] = ""; continue }
             if (loadedReels[rack] == wanted) continue
             loadedReels[rack] = wanted
@@ -414,12 +407,11 @@ object EngineSync {
     }
 
     /**
-     * Cumulus's tables. Its spectrum parameters are not knobs in the usual
-     * sense - each one means an inverse transform of a quarter of a million
-     * points - so they are watched here and rebuilt off-thread when they
-     * settle, rather than being smoothed on the audio thread like everything
-     * else. Everything from `morph` on is live and goes through the ordinary
-     * parameter path.
+     * Cumulus's tables. Its spectrum parameters each mean an inverse
+     * transform of about a quarter of a million points, so they're watched
+     * here and rebuilt off-thread once they settle, rather than smoothed on
+     * the audio thread. Everything from `morph` on is live and goes through
+     * the normal parameter path.
      */
     fun ensureClouds(song: Song) {
         for (rack in 0 until RACKS) {
@@ -446,8 +438,8 @@ object EngineSync {
     }
 
     /**
-     * Formulate's expression and step tables. Text, like Nexus's patch and
-     * Mosaic's zones: parsed on a worker, handed over as one object.
+     * Formulate's expression and step tables. Text, like Nexus patches and
+     * Mosaic zones: parsed on a worker and handed over as one object.
      */
     fun ensureFormulas(song: Song) {
         for (rack in 0 until RACKS) {
@@ -471,9 +463,9 @@ object EngineSync {
     }
 
     /**
-     * A machine's one take: a WAV decoded with its transients found, mounted
-     * as one object - Pollen granulates it, Dice cuts it up. Pollen's live
-     * ring is the machine's own and needs nothing from here.
+     * A machine's single take: a WAV decoded with its transients found and
+     * mounted as one object. Pollen granulates it and Dice cuts it up.
+     * Pollen's live buffer is the machine's own and needs nothing from here.
      */
     fun ensureTakes(song: Song) {
         val root = sampleRoot ?: return
@@ -487,44 +479,43 @@ object EngineSync {
             if (loadedTakes[rack] == wanted) continue
             loadedTakes[rack] = wanted
             if (wanted == null) continue
-            // Molt asks a different question of the same file - where the
-            // glottal pulses are rather than where the transients are - so it
-            // gets its own decode. Both are a worker's job either way.
+            // Molt needs something different from the same file (glottal
+            // pulses rather than transients), so it gets its own decode. Both
+            // run on a worker.
             val sung = track?.machine?.type == "Molt"
             mapLoader.execute {
                 val path = if (wanted.isEmpty()) "" else com.rm.acidulous.io.File(root, wanted).absolutePath
                 val error = if (sung) NativeEngine.loadUtterance(rack, path)
                             else NativeEngine.loadTake(rack, path)
-                // Reported and not retried: a file that will not decode will
-                // not decode the second time either, and `loadedTakes` is
-                // already set, so asking again means changing the setting.
+                // Reported and not retried: a file that won't decode won't
+                // decode the second time either. `loadedTakes` is already set,
+                // so changing the setting is what tries again.
                 if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(wanted), error)
             }
         }
     }
 
-    /** The song as last synced, for [play] to put its automated values back from. */
+    /** The song as last synced, for [play] to reset automated values from. */
     private var synced: Song? = null
 
     /**
-     * Play, with every automated parameter back where the song says first.
+     * Play, with every automated parameter reset to the song's value first.
      *
-     * A lane leaves its parameter where it finished, and a scene with no lane
-     * of its own for it plays on from there - so the second time through, the
-     * top of the song did not sound like the first. Starting the arranger now
-     * puts them back, the way an export starts (see [pushForRender]). Nothing
-     * is said on screen: the knob moves back, which is its own notice, and
-     * `PanelKnob` marks the ones a lane moves.
+     * A lane leaves its parameter where it finished, and a scene without a
+     * lane for it carries on from there, so the second time through the
+     * start of the song would sound different. Resetting here matches what
+     * an export does (see [pushForRender]). The knob moving back is notice
+     * enough, and `PanelKnob` marks the knobs a lane moves.
      *
-     * Not in the launcher: a clip launched mid-set carries on from where the
-     * last one left things, which is what launching live is for.
+     * Not in the launcher, where a clip launched mid-set carries on from
+     * where the last one left things.
      */
     fun play(sceneIdx: Int = -1, launcher: Boolean = false) {
         if (!launcher) synced?.let { resetAutomated(it) }
         NativeEngine.transportPlay(sceneIdx)
     }
 
-    /** Every parameter a lane moves, back to the document's value or its default. */
+    /** Reset every parameter a lane moves to the song's value or its default. */
     fun resetAutomated(song: Song) {
         song.tracks.forEachIndexed { rack, track ->
             if (rack >= RACKS) return@forEachIndexed
@@ -542,11 +533,10 @@ object EngineSync {
     }
 
     /**
-     * Where the document puts the parameter a lane key names: the knob, or
-     * the parameter's default where the song has never touched it. Null for
-     * the ones that are not the song's to say - the channel is pushed as a
-     * whole, the held effects are let go by a stop, and the wheel and
-     * pressure are a controller's.
+     * The song's value for the parameter a lane key names: the knob, or the
+     * default if the song never set it. Null for ones the song doesn't
+     * control: the channel is pushed as a whole, held effects are released by
+     * stop, and the wheel and pressure come from the controller.
      */
     fun documentValue(track: Track, key: String): Float? {
         val unit = laneUnit(key)
@@ -564,19 +554,19 @@ object EngineSync {
                 if (name == "bypass") EngineParams.bool01(mod.bypass)
                 else mod.params[name] ?: modifierTable(mod.type).firstOrNull { it.name == name }?.defaultNormalized
             }
-            // A pedal's document value is up: play starts with it up, and
-            // its lane puts it down where it says.
+            // A pedal's song value is up. Play starts with it up and its lane
+            // puts it down where it says.
             com.rm.acidulous.model.isPedalLane(key) -> 0f
             else -> null
         }
     }
 
     /**
-     * A clip's step locks go back to the knob between steps, and the knob is
-     * read when the clip is sent - so a clip whose locks' knobs have moved is
-     * a different clip to the engine even though its own rev has not. This
-     * folds the knobs' values into the rev the engine caches on; nought, and
-     * the rev unchanged, for a clip with no locks.
+     * Step locks go back to the knob between steps, and the knob is read when
+     * the clip is sent, so if a locked knob moves the clip is different to
+     * the engine even though its rev hasn't changed. This folds the knobs'
+     * values into the rev the engine caches on. Returns the rev unchanged for
+     * a clip with no locks.
      */
     private fun lockedRev(track: Track, clip: Clip): Long {
         var h = 0L
@@ -588,6 +578,7 @@ object EngineSync {
         return if (h == 0L) clip.rev else clip.rev xor (h shl 24) xor Long.MIN_VALUE
     }
 
+    /** Everything the engine needs after any edit: machines, effects, modifiers, then the snapshot. */
     fun sync(song: Song): Boolean {
         synced = song
         ensureMachines(song)
@@ -608,13 +599,13 @@ object EngineSync {
         return push(song)
     }
 
-    /** What each rack was last told about its tuning, so a push is only a change. */
+    /** What each rack was last told about its tuning, so only changes are pushed. */
     private val pushedTuning = arrayOfNulls<String>(RACKS)
 
     /**
-     * Every melodic track's tuning - its own, or the song's - from the song's
-     * key. Drums and tape are left in equal temperament: a drum's note picks
-     * a sound, and a tape's pitch is the recording's.
+     * Every melodic track's tuning (its own or the song's), from the song's
+     * key. Drums and tape stay in equal temperament: a drum note picks a
+     * sound, and a tape's pitch is the recording's.
      */
     private fun ensureTunings(song: Song) {
         val root = song.key?.root ?: 0
@@ -656,14 +647,14 @@ object EngineSync {
         var marshalled = 0
         song.tracks.forEachIndexed { rack, track ->
             if (rack >= RACKS) return@forEachIndexed
-            // The pedals this track uses anywhere. A clip that does not
-            // mention one is sent a lane that holds it up from its first tick,
-            // or a pedal the last clip left down would stay down through it.
+            // The pedals this track uses anywhere. A clip that doesn't use
+            // one gets a lane holding it up from its first tick, or a pedal
+            // left down by the last clip would stay down.
             val pedals = track.clips.values.flatMap { it.automation.keys }.filter { isPedalLane(it) }.toSet()
             song.scenes.forEachIndexed forEachIndexedInner@{ sceneIdx, scene ->
                 val clip = track.clips[scene.id] ?: return@forEachIndexedInner
                 val implicit = pedals - clip.automation.keys
-                // Unchanged since the last push? Then it is one lookup, not a marshal.
+                // Unchanged since the last push? Then it's one lookup, not a marshal.
                 val rev = lockedRev(track, clip).let { r ->
                     if (implicit.isEmpty()) r else r xor (implicit.sorted().hashCode().toLong() shl 20) xor 0x5a5a
                 }
@@ -673,19 +664,16 @@ object EngineSync {
                 }
                 marshalled++
                 val flat = IntArray(clip.notes.size * 6)
-                // The curves of every note end to end, each note saying how
-                // many of them are its own. One array rather than a call per
-                // curve: a clip of expressive chords would otherwise be
-                // hundreds of JNI crossings where it is now one.
+                // The curves of every note end to end, with each note saying
+                // how many are its own. One array instead of a call per curve,
+                // which for expressive chords would be hundreds of JNI calls.
                 val expr = ArrayList<Float>()
                 clip.notes.forEachIndexed { i, n ->
-                    // The nudge is applied here and nowhere else. "When does
-                    // this note play" is a field the engine already has, so
-                    // micro-timing costs it no property, no wire slot and no
-                    // gate; the host re-sorts by tick afterwards, which is
-                    // what keeps the sorted-notes contract true. A note nudged
-                    // off the front of the clip lands on the downbeat rather
-                    // than wrapping, which the host's own clamp decides.
+                    // The nudge is applied here and nowhere else, so
+                    // micro-timing needs no extra engine property. The host
+                    // re-sorts by tick afterwards, keeping notes sorted. A note
+                    // nudged before the start of the clip lands on the downbeat
+                    // rather than wrapping (the host's clamp decides that).
                     flat[i * 6] = n.tick + n.nudge
                     flat[i * 6 + 1] = n.length
                     flat[i * 6 + 2] = n.pitch
@@ -705,7 +693,7 @@ object EngineSync {
                 NativeEngine.snapshotSetClip(
                     handle, rack, sceneIdx, rev, clip.bars,
                     // Bit 0 is the play mode, bit 1 is whether the dice roll
-                    // free: one word rather than a tenth argument for one bool.
+                    // freely. One word rather than a tenth argument for a bool.
                     playMode = (if (clip.playMode == PlayMode.OneShot) 1 else 0) or
                         (if (clip.freeRoll) 2 else 0),
                     mute = clip.mute,
@@ -714,8 +702,8 @@ object EngineSync {
                     expr = if (expr.isEmpty()) EMPTY_FLOATS else expr.toFloatArray(),
                 )
                 for ((key, stored) in clip.automation) {
-                    // Step locks say "back to the knob" between steps; the
-                    // engine is told where the knob is.
+                    // Step locks say "back to the knob" between steps, so tell
+                    // the engine where the knob is.
                     val lane = if (Locks.isLocks(stored)) {
                         Locks.resolve(stored, documentValue(track, key) ?: continue)
                     } else {
@@ -739,8 +727,8 @@ object EngineSync {
         }
 
         NativeEngine.tempo = song.tempo
-        // The unit is the song's; the amount is per track and rides the
-        // channel, resolved here so the engine never sees "follow the song".
+        // The swing unit is the song's. The amount is per track and goes with
+        // the channel, resolved here so the engine never sees "follow the song".
         NativeEngine.setSwingUnit(song.swingUnit)
         NativeEngine.setLoopSong(song.loopSong)
         Log.d(TAG, "push: ${song.scenes.size} scenes, $cached clips cached, $marshalled marshalled")
@@ -759,26 +747,25 @@ object EngineSync {
         return ok
     }
 
-    /** Each unit type's parameter table, asked for once. */
+    /** Each unit type's parameter table, fetched once. */
     private val tables = HashMap<String, List<ParamInfo>>()
     private fun machineTable(type: String) = tables.getOrPut("machine:$type") { NativeEngine.machineParamInfo(type) }
     private fun effectTable(type: String) = tables.getOrPut("effect:$type") { NativeEngine.effectParamInfo(type) }
     private fun modifierTable(type: String) = tables.getOrPut("mod:$type") { NativeEngine.inputModParamInfo(type) }
 
     /**
-     * Every parameter a song's units have and the document does not name, set
-     * to its default.
+     * Sets every parameter a song's units have but the song doesn't name to
+     * its default.
      *
-     * A patch names only what it changes - Rimshot names eleven of Genesis's
-     * forty-nine - and a song only ever sent what was named. A rack whose
-     * machine is the same type as in the song open before keeps its instance,
-     * so the other thirty-eight kept that song's values: a song sounded
-     * different depending on what had been open first, and so did its export.
-     * Loading a patch already fills the rest in; opening a song did not.
+     * A patch only names what it changes (Rimshot names 11 of Genesis's 49
+     * parameters). A rack that keeps the same machine type keeps its instance,
+     * so without this the unnamed parameters would keep the previous song's
+     * values, and a song and its export would sound different depending on
+     * what was open before.
      *
-     * Main thread only, like every other parameter push: the engine's queue
-     * has one producer. It pauses every couple of hundred messages so that
-     * the queue, which holds five hundred and twelve, can drain.
+     * Main thread only, like every other parameter push, since the engine's
+     * queue has one producer. It pauses every couple of hundred messages so
+     * the queue (512 entries) can drain.
      */
     fun pushUnnamedDefaults(song: Song) {
         var sent = 0
@@ -814,16 +801,13 @@ object EngineSync {
     }
 
     /**
-     * Every parameter back to what the song says, before a render.
+     * Resets every parameter to what the song says before a render.
      *
-     * An automation lane moves a parameter and leaves it where it finished:
-     * the document never hears of it. So a render started from wherever the
-     * last playing had left things - the demo's bass filter ends its Dub scene
-     * at a different cutoff from the patch's, its first scene has no lane to
-     * put it back, and the first export after opening the song and every one
-     * after that differed on the bass. Two exports of one song must be the same
-     * file, so each render starts from the document: every named value, and
-     * every default for the rest (see [pushUnnamedDefaults]).
+     * Automation lanes move parameters and leave them where they finished,
+     * without the song knowing. So without this a render would start from
+     * wherever the last playback left things, and two exports of the same
+     * song could differ. Each render starts from the song: every named value,
+     * and the default for everything else (see [pushUnnamedDefaults]).
      *
      * Main thread only, for the reason given there.
      */
@@ -858,7 +842,7 @@ object EngineSync {
         NativeEngine.setParam(rack, unit, "bypass", EngineParams.bool01(slot.bypass), record = false)
     }
 
-    // --- Mixer parameters: cheap enough to send whole on every push ------------------
+    // --- Mixer parameters: cheap enough to send in full on every push --------------
 
     /** The channel, and what the track itself does to its notes on the way to the machine. */
     fun pushChannel(rack: Int, track: com.rm.acidulous.model.Track, swing: Float) {
@@ -878,7 +862,7 @@ object EngineSync {
         NativeEngine.setParam(rack, "channel", "solo", EngineParams.bool01(m.solo), record = false)
         NativeEngine.setParam(rack, "channel", "sendreverb", EngineParams.unit01(m.sendReverb), record = false)
         NativeEngine.setParam(rack, "channel", "senddelay", EngineParams.unit01(m.sendDelay), record = false)
-        // 50..75 as 0..1, the range the engine's own table states.
+        // 50..75 as 0..1, the range the engine's own table uses.
         NativeEngine.setParam(
             rack, "channel", "swing",
             ((swing - SWING_STRAIGHT) / (SWING_MAX - SWING_STRAIGHT)).coerceIn(0f, 1f), record = false,
@@ -887,7 +871,7 @@ object EngineSync {
 
     fun pushMaster(m: Master) {
         NativeEngine.setParam(0, "master", "volume", EngineParams.volume01(m.volume), record = false)
-        // Every group's fader, and unity for the ones that are not there.
+        // Every group's fader, and unity for groups that don't exist.
         for (g in 0 until MAX_GROUPS) {
             val group = m.groups.getOrNull(g) ?: MixGroup()
             NativeEngine.setParam(0, "master", "g${g + 1}gain", EngineParams.volume01(group.volume), record = false)
@@ -897,31 +881,31 @@ object EngineSync {
         }
         NativeEngine.setParam(0, "master", "limiteron", EngineParams.bool01(m.limiter.on), record = false)
         NativeEngine.setParam(0, "master", "limiterdrive", EngineParams.unit01(m.limiter.drive), record = false)
-        // The held effects' settings. Addressed at a rack like everything on
-        // this unit, though they belong to the master.
+        // The held performance effects' settings. Addressed to a rack like
+        // everything on this unit, though they belong to the master.
         NativeEngine.setParam(0, "perform", "stoplen", m.perform.stopLen / (STOP_LENGTHS - 1f), record = false)
         NativeEngine.setParam(0, "perform", "throwtime", m.perform.throwTime / (THROW_TIMES.size - 1f), record = false)
         NativeEngine.setParam(0, "perform", "feedback", (m.perform.feedback / 0.9f).coerceIn(0f, 1f), record = false)
         NativeEngine.setParam(0, "perform", "riserlen", m.perform.riserLen / (RISER_LENGTHS - 1f), record = false)
         NativeEngine.setParam(0, "perform", "xmode", m.perform.xMode.toFloat(), record = false)
         NativeEngine.setParam(0, "perform", "ymode", m.perform.yMode.toFloat(), record = false)
-        // A target past the groups there are is the whole mix; the engine falls
-        // back too, but only for a group with nothing in it.
+        // A target past the existing groups means the whole mix. The engine
+        // falls back too, but only for a group with nothing in it.
         val target = m.perform.target.takeIf { it in 1..m.groups.size } ?: 0
         NativeEngine.setParam(0, "perform", "target", target / MAX_GROUPS.toFloat(), record = false)
     }
 
-    /**
-     * The parameters of whatever is on each send.
-     *
-     * Mounting is [ensureSends]' job and has already happened by here: until
-     * the effect is there its parameter names have nothing to resolve against,
-     * which is the same order every other slot is pushed in.
-     */
+    /** The input effects' parameters. */
     fun pushInputFx(song: Song) {
         for (slot in 0 until INPUT_SLOTS) pushSlot(0, inputUnit(slot), song.inputAt(slot))
     }
 
+    /**
+     * The parameters of whatever is on each send and master insert.
+     *
+     * [ensureSends] has already mounted them by now, as for every other slot,
+     * since an effect's parameter names can't be resolved until it's there.
+     */
     fun pushSends(m: Master) {
         for (slot in 0 until SEND_SLOTS) pushSlot(0, sendUnit(slot), m.sendAt(slot))
         for (slot in 0 until MASTER_INSERT_SLOTS) pushSlot(0, masterInsertUnit(slot), m.insertAt(slot))
@@ -934,7 +918,7 @@ object EngineSync {
     fun setMetronome(on: Boolean, volume: Float = 0.5f, voice: Int = 0, division: Int = 1, whenOn: Int = 0) {
         NativeEngine.setParam(0, "master", "clickon", EngineParams.bool01(on), record = false)
         NativeEngine.setParam(0, "master", "clickvolume", EngineParams.unit01(volume), record = false)
-        // Both are stepped, and the engine reads them as an index off the
+        // Both are stepped, and the engine reads them as an index from the
         // normalised value: three voices and five divisions.
         NativeEngine.setParam(0, "master", "clickvoice", EngineParams.unit01(voice / 2f), record = false)
         NativeEngine.setParam(0, "master", "clickdiv", EngineParams.unit01(division / 4f), record = false)
@@ -942,12 +926,10 @@ object EngineSync {
     }
 
     /**
-     * The click's shape, without touching whether it is on.
+     * The click's settings, without changing whether it's on.
      *
-     * Its own call because the settings and the on/off switch are in
-     * different places: changing the voice used to reach the engine only
-     * when the metronome was next toggled, so a chosen voice sat there
-     * doing nothing until you switched the click off and on again.
+     * A separate call because the settings and the on/off switch are in
+     * different places, and a changed voice should apply straight away.
      */
     fun setClickSettings(voice: Int, division: Int, whenOn: Int, volume: Float) {
         NativeEngine.setParam(0, "master", "clickvoice", EngineParams.unit01(voice / 2f), record = false)
@@ -957,9 +939,9 @@ object EngineSync {
     }
 
     /**
-     * Nexus patches. Gated on the *topology* only - dragging a node around
-     * the canvas changes the saved patch several times a second, and
-     * rebuilding the graph for that would cut every delay tail in it.
+     * Nexus patches. Only rebuilt when the topology changes: dragging a node
+     * around the canvas changes the saved patch several times a second, and
+     * rebuilding the graph for that would cut off every delay tail in it.
      */
     fun ensureNexusPatches(song: Song) {
         for (rack in 0 until RACKS) {
@@ -968,9 +950,8 @@ object EngineSync {
                 track == null || track.machine.type != "Nexus" -> null
                 mounted[rack] != "Nexus" -> null // wait for the machine
                 else -> {
-                    // An empty rack is not an error: a Nexus with nothing in
-                    // it has nothing to build, and asking the engine to parse
-                    // that only produces a warning nobody can act on.
+                    // An empty Nexus has nothing to build, and asking the
+                    // engine to parse it would only log a useless warning.
                     val p = com.rm.acidulous.model.NexusPatch.decode(track.machine.settings["nexus"])
                     if (p.modules.isEmpty()) null else p.topology()
                 }
@@ -989,8 +970,8 @@ object EngineSync {
     }
 
     /**
-     * The parameters that decide what is in the tables. Mirrors the block at
-     * the top of Cumulus::P - if one moves there, it moves here.
+     * The parameters that decide what's in the tables. Mirrors the block at
+     * the top of Cumulus::P, so keep the two in step.
      */
     private val CLOUD_PARAMS = listOf(
         "partials", "tilt", "odd", "comb", "combperiod", "vowel", "vowelamount",

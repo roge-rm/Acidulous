@@ -8,8 +8,7 @@
 namespace acidulous {
 
 namespace {
-// Four seconds of stereo slack. The writer only has to keep up on average;
-// this absorbs a filesystem that stalls.
+// Four seconds of stereo slack, so a filesystem stall doesn't drop audio.
 constexpr int64_t kRingFrames = 48000 * 4;
 } // namespace
 
@@ -18,7 +17,7 @@ bool Capture::start(const std::string &path, int32_t sampleRate, Source source, 
         error = "already recording";
         return false;
     }
-    // Prove the file can be written before the audio thread starts pushing.
+    // Check the file can be written before the audio thread starts pushing.
     WavWriter probe;
     const int32_t bits = EngineSettings::get().recordBits.load(std::memory_order_relaxed);
     if (!probe.open(path, sampleRate, bits, error)) return false;

@@ -38,26 +38,19 @@ import com.rm.acidulous.ui.theme.ThemeMode
 import com.rm.acidulous.res.*
 
 /**
- * Everything that belongs to the person and the device rather than to the
- * song: how it looks, how hard it is allowed to work, and what a new song
- * starts as.
+ * Settings that belong to the user and the device, not the song: how it
+ * looks, how hard it works, and what a new song starts as.
  *
- * Five tabs rather than one long scroll, because settings only ever
- * accumulate and a list of everything is a list nobody reads. They use the
- * same chips a machine panel uses for its sections, so the app has one idea
- * of what a tab looks like.
- *
- * It is also its own Dialog rather than an AlertDialog: Material caps a
- * dialog at 560dp and pads it off both edges, which on a phone left every
- * explanatory line wrapping three times over for no reason. This one takes
- * the screen's width, minus a margin, up to a tablet-sized limit.
+ * Split into tabs using the same chips as the machine panels. It's its own
+ * Dialog instead of an AlertDialog because Material caps dialogs at 560dp
+ * and pads both edges. This one takes the screen width minus a margin, up
+ * to a tablet sized limit.
  */
 @Composable
 fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit) {
     var tab by rememberSaveable { mutableStateOf(0) }
-    // The same shell as the machine picker, and for the same reason: the
-    // body is as tall as the tallest tab, so the window does not resize and
-    // the Done button does not move when you change tab.
+    // The same shell as the machine picker: the body is as tall as the
+    // tallest tab so the window and the Done button don't move between tabs.
     TabbedDialog(
         title = stringResource(Res.string.settings_title),
         selected = tab,
@@ -74,17 +67,13 @@ fun SettingsDialog(trackNames: List<String> = emptyList(), onDismiss: () -> Unit
     )
 }
 
-// **No midi tab.** It held one section - where an arriving note lands - and
-// that same section is the first thing in the MIDI window's own `in` tab,
-// which is where somebody goes when a keyboard is not playing what they
-// expect. Two places to change one setting is one place too many, and the
-// other four chips are wider for it.
+// There's no midi tab. Where an arriving note lands is set in the MIDI
+// window's `in` tab instead.
 
 @Composable
 private fun DisplayTab() {
     var showKeys by remember { mutableStateOf(false) }
-    // Cards of switches, the arp window's shape, like every window with
-    // settings in it (Dan, 2026-09-23).
+    // Cards of switches, like every settings window.
     WindowCards {
         WindowCard(stringResource(Res.string.settings_screen)) {
             SwitchGrid(
@@ -92,58 +81,56 @@ private fun DisplayTab() {
                 when (UiPrefs.theme) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2; ThemeMode.HighContrast -> 3 },
                 columns = 2,
             ) { UiPrefs.chooseTheme(listOf(ThemeMode.Auto, ThemeMode.Light, ThemeMode.Dark, ThemeMode.HighContrast)[it]) }
-            // The one setting whose effect is the window it is being read in:
-            // the cells grow under the finger that taps them.
+            // Changes the size of this window too, as you tap it.
             SwitchGrid(stringResource(Res.string.settings_size), stringArrayResource(Res.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
                 UiPrefs.chooseUiScale(UiScaleSteps[it])
             }
-            // A computer's screen: how many pixels a dp is. The phone knows.
+            // On a computer: how many pixels a dp is. The phone knows its own.
             if (com.rm.acidulous.AppHost.current.onDesktop) {
                 SwitchGrid(
                     stringResource(Res.string.settings_screen_scale), stringArrayResource(Res.array.settings_screen_scale_choices).toList(),
                     ScreenScaleSteps.indexOf(UiPrefs.screenScale).coerceAtLeast(0), columns = 2,
                 ) { UiPrefs.chooseScreenScale(ScreenScaleSteps[it]) }
             }
-            // Only where it can be kept: a desktop's screen saver is its own.
+            // Only where the app can keep the screen on; not on desktop.
             if (com.rm.acidulous.AppHost.current.canKeepScreenOn) {
                 SwitchGrid(stringResource(Res.string.settings_while_playing), stringArrayResource(Res.array.settings_while_playing_choices).toList(), if (UiPrefs.keepAwake) 0 else 1) {
                     UiPrefs.chooseKeepAwake(it == 0)
                 }
             }
-            // The numbers kept for finding faults, everywhere they appear.
+            // Show the diagnostics numbers everywhere they appear.
             SwitchGrid(stringResource(Res.string.settings_diagnostics), stringArrayResource(Res.array.settings_diagnostics_choices).toList(), if (UiPrefs.showDiagnostics) 0 else 1) {
                 UiPrefs.chooseDiagnostics(it == 0)
             }
-            // Its own window: twenty actions would make every page this tall.
+            // Its own window, since twenty actions would make every page this tall.
             SwitchGrid(stringResource(Res.string.settings_keyboard), listOf(stringResource(Res.string.settings_keys_button)), -1) { showKeys = true }
         }
     }
     if (showKeys) KeysDialog { showKeys = false }
-    // A line only when the screen cannot give what was asked for, which is
-    // the one thing the switch cannot show - see ui/UiScale.kt for the cap.
+    // Only shown when the screen can't give the size asked for. See
+    // ui/UiScale.kt for the cap.
     val applied = LocalUiScale.current
     if (applied < UiPrefs.uiScale - 0.001f) {
         Text(stringResource(Res.string.settings_size_capped, applied), color = Acid.colors.textDim, fontSize = 11.sp)
     }
 }
 
-/** Mirrors the engine's own two, which are not exported to Kotlin. */
+/** Mirrors the engine's own two, which aren't exported to Kotlin. */
 private const val RACKS = 16
 private const val BLOCK_FRAMES = 64
 
 @Composable
 private fun AudioTab(trackNames: List<String>) {
-    // The numbers are the point here: a buffer is a promise about how late
-    // the engine may be, and only this phone knows whether it can keep it.
+    // The actual numbers matter here, since only the device can say if it
+    // keeps up with a given buffer.
     val burst = NativeEngine.framesPerBurst.coerceAtLeast(1)
     val frames = NativeEngine.bufferFrames
     val ms = frames * 1000f / NativeEngine.sampleRate.coerceAtLeast(1)
     val drops = NativeEngine.xRunCount
-    // The three things to set, in a card; everything under it is a reading.
+    // The three settings in one card; everything below is a reading.
     WindowCards {
-        // Where the sound goes, where there is a choice: the desktop, and a
-        // browser that names its outputs. The phone routes its own, and says
-        // nothing here.
+        // The output device, where there's a choice: desktop, and a browser that
+        // lists its outputs. On a phone the system routes it.
         val outputs = androidx.compose.runtime.remember { com.rm.acidulous.AppHost.current.audioOutputs() }
         if (outputs.isNotEmpty()) {
             WindowCard(stringResource(Res.string.settings_output)) {
@@ -165,8 +152,8 @@ private fun AudioTab(trackNames: List<String>) {
                 stringResource(Res.string.settings_voices), li, 0 until limits.size, if (UiPrefs.voiceLimit == 0) all else "${UiPrefs.voiceLimit}",
                 choices = limits.map { if (it == 0) all else "$it" },
             ) { UiPrefs.chooseVoiceLimit(limits[it]) }
-            // Auto decides between the other two, so while it is on they
-            // show which one it chose rather than being chosen.
+            // Auto picks between the other two, so while it's on they show which
+            // one it chose.
             SwitchGrid(
                 stringResource(Res.string.settings_quality), stringArrayResource(Res.array.settings_quality_choices).toList(),
                 if (UiPrefs.autoQuality) 2 else if (UiPrefs.fullQuality) 0 else 1,
@@ -179,16 +166,14 @@ private fun AudioTab(trackNames: List<String>) {
             }
         }
     }
-    // **Where the time actually went.** The buffer above says how long the
-    // engine has; this says how long it took, worst case, and which part of it
-    // was slow. Both peaks are cleared by reading, and this is a second reader
-    // after the diagnostics line - which is fine and deliberate: opening this
-    // page zeroes them, so what it shows is "since you opened it", which is
-    // the window somebody looking at it means.
+    // Where the time actually went: the worst case and which part was slow.
+    // Reading clears both peaks, and this is a second reader after the
+    // diagnostics line. That's deliberate: opening this page zeroes them, so
+    // it shows the worst since you opened it.
     var worst by remember { mutableStateOf(0) }
     var phases by remember { mutableStateOf(IntArray(NativeEngine.Phase.entries.size)) }
     var racks by remember { mutableStateOf(IntArray(RACKS)) }
-    // Whether each one was playing frozen audio when it set that peak.
+    // Whether each track was playing frozen audio when it set that peak.
     var rackFrozen by remember { mutableStateOf(BooleanArray(RACKS)) }
     var interrupted by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) {
@@ -202,9 +187,8 @@ private fun AudioTab(trackNames: List<String>) {
             val byRack = racks.copyOf()
             val wasFrozen = rackFrozen.copyOf()
             for (r in 0 until RACKS) {
-                // The flag and the peak are still read - the peak is what the
-                // snowflake hangs off - but what is *shown* is the percentile,
-                // which is not a running maximum and so is simply assigned.
+                // The flag and the peak are still read (the snowflake needs the
+                // peak) but the percentile is what's shown, and it's just assigned.
                 val frozen = NativeEngine.worstRackWasFrozen(r)
                 if (NativeEngine.worstRackUs(r) > 0) wasFrozen[r] = frozen
                 byRack[r] = NativeEngine.rackPercentileUs(r)
@@ -215,19 +199,16 @@ private fun AudioTab(trackNames: List<String>) {
             delay(120)
         }
     }
-    // **Against the block's budget, not the callback's.** This read "2.46 ms
-    // of 4.00" and meant 2.46 of 1.33: the worst *block* is one 64-frame
-    // render and 4 ms is what a whole 192-frame callback gets, so the figure
-    // that mattered was being flattered by a factor of three.
+    // Against one 64-frame block's budget, not the whole callback's. The worst
+    // block is one render, so the callback's budget overstated the headroom
+    // by a factor of three.
     val blockBudgetMs = 1000f * BLOCK_FRAMES / NativeEngine.sampleRate.coerceAtLeast(1)
-    // The readings, in a card of their own under the one you set things in.
-    // Every figure comes from a block that ran without being interrupted,
-    // which is the only kind whose parts can be believed: a thread taken off
-    // its core mid-block hands that whole absence to whatever it was timing.
-    // The percentage is how many blocks were thrown away for that reason -
-    // and it is the answer to "is this the DSP or the scheduler" by itself.
-    // In a browser there are no peaks to read (AppHost.timesAudioPrecisely):
-    // the buffer, and a line saying why the rest is not here.
+    // The readings, in a card under the settings. Every figure comes from a
+    // block that ran without being interrupted, since a thread taken off its
+    // core mid-block adds that whole gap to what it was timing. The percentage
+    // is how many blocks were thrown away for that, which tells DSP load from
+    // scheduler trouble. A browser has no peaks (AppHost.timesAudioPrecisely),
+    // so it shows the buffer and a line saying why.
     val precise = com.rm.acidulous.AppHost.current.timesAudioPrecisely
     val lines = if (!precise) mutableListOf(
         "buffer  %d frames · %.0f ms · burst %d".format(frames, ms, burst),
@@ -243,33 +224,27 @@ private fun AudioTab(trackNames: List<String>) {
             if (interrupted >= 0.5f) " · %.0f%% interrupted".format(interrupted) else "",
         ),
     )
-    // **Which track**, because "the racks are most of it" is half an answer.
-    // Only the ones with a machine, sorted by cost, so the list says what to
-    // freeze rather than making somebody work it out.
+    // Which tracks cost the most, only those with a machine, sorted by cost,
+    // so you know what to freeze.
     //
-    // **The worst block in a hundred, not the worst block.** A peak over a
-    // whole song is set by one unlucky block and nothing afterwards can lower
-    // it, which made this the least repeatable number on the page: three runs
-    // of one build on one phone put these up to 26% apart, so a change worth
-    // twenty per cent could not be told from the same build measured twice.
-    // The engine keeps a histogram instead. `worst block` above stays a true
-    // peak, because that one is about a deadline and a deadline is missed by
-    // one block.
+    // Uses the worst block in a hundred from the engine's histogram, not the
+    // single worst, which was set by one unlucky block and varied too much
+    // between runs to compare builds. `worst block` above stays a true peak,
+    // since a deadline is missed by one block.
     val named = (0 until RACKS)
         .filter { it < trackNames.size && racks[it] > 0 }
         .sortedByDescending { racks[it] }
     if (precise && named.isNotEmpty()) {
-        // A snowflake means that cost was paid while the track was playing
-        // frozen audio - which should be next to nothing, so it is the
-        // readout saying the freeze is not doing its job.
+        // A snowflake means the cost was paid while the track was playing
+        // frozen audio, which should be near zero, so the freeze isn't working.
         lines += "worst track  " + named.take(6).joinToString("  ") {
             val mark = if (rackFrozen[it]) " ❄" else ""
             "${trackNames[it]}$mark %.2f".format(racks[it] / 1000f)
         }
     }
 
-    // No control for the scheduler hint, because there is nothing to
-    // choose: the device either takes hints or it does not.
+    // No control for the scheduler hint: the device either takes hints or
+    // it doesn't.
     lines += "scheduler hint  " + when (NativeEngine.hintState) {
         0 -> "not available on this device"
         1 -> "waiting for the audio thread"
@@ -279,15 +254,12 @@ private fun AudioTab(trackNames: List<String>) {
     }
     if (UiPrefs.showDiagnostics) WindowCards {
         WindowCard("readings · since opened") {
-            // Lines of prose in a card of controls: a column of a set width
-            // when the cards are side by side, where filling the row would
-            // squeeze each line to a letter wide.
+            // Text in a card of controls: a fixed width column when the cards
+            // are side by side, so the lines aren't squeezed.
             //
-            // **One size, whatever they say.** A wide window is as wide as its
-            // cards, and these were as wide as their longest line and as tall
-            // as their lines wrapped - so the window changed size as the
-            // figures changed (Dan). Wide, they are the line's full width and a
-            // fixed seven lines; upright the window is the screen's width anyway.
+            // Fixed size too, so the window doesn't resize as the numbers
+            // change: full width and [ReadingLines] tall when wide. Upright the
+            // window is the screen's width anyway.
             if (LocalDialogWide.current) {
                 Text(
                     lines.joinToString("\n"), color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
@@ -316,7 +288,7 @@ private fun AudioTab(trackNames: List<String>) {
 @Composable
 private fun RecordTab() {
     WindowCards {
-        // 48 kHz either way; only the depth is a choice.
+        // Always 48 kHz; only the bit depth is a choice.
         WindowCard(stringResource(Res.string.settings_recording)) {
             SwitchGrid(stringResource(Res.string.settings_depth), stringArrayResource(Res.array.settings_depth_choices).toList(), if (UiPrefs.recordBits == 24) 0 else 1) {
                 UiPrefs.chooseRecordBits(if (it == 0) 24 else 16)
@@ -339,14 +311,13 @@ private fun NewSongSection() {
                 stringResource(Res.string.settings_signature), sigIndex, 0 until SIGNATURES.size, "${sig.beats}/${sig.unit}",
                 choices = SIGNATURES.map { "${it.beats}/${it.unit}" },
             ) { UiPrefs.chooseNewSignature(SIGNATURES[it]) }
-            // What the one track of a new song holds, behind the same picker
-            // the arranger's "+ track" uses: nineteen machines is not a switch.
+            // The machine on a new song's first track, picked with the same
+            // picker as the arranger's "+ track".
             SwitchGrid(stringResource(Res.string.settings_machine), listOf(UiPrefs.newMachine), -1) { pickingMachine = true }
         }
-        // The scale a new track starts in: a Scale modifier is fitted to it,
-        // so the keyboard and the roll agree with the song from the first
-        // note. Root and scale are knobs that open as lists on a hold, which
-        // retires the window of its own this used to open.
+        // The scale a new track starts in. A Scale modifier is set to it, so the
+        // keyboard and roll match the song from the first note. Root and scale
+        // are knobs that open as lists on a hold.
         WindowCard(stringResource(Res.string.settings_new_scale)) {
             SwitchGrid(stringResource(Res.string.settings_use), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.newScaleOn) 1 else 0) { UiPrefs.chooseNewScale(it == 1) }
             if (UiPrefs.newScaleOn) {
@@ -389,8 +360,7 @@ internal fun MidiRoutingSection(trackNames: List<String>, more: @Composable () -
     }
 }
 
-// Section and Choice live in ui/Dialogs.kt: they are the shared vocabulary
-// of every window here, not a settings idea.
+// Section and Choice are shared by every window and live in ui/Dialogs.kt.
 
-/** The readings' height in a wide window: the most their lines wrap to at a card line's width. */
+/** The readings' height in a wide window: the most lines they wrap to at a card's width. */
 private const val ReadingLines = 7

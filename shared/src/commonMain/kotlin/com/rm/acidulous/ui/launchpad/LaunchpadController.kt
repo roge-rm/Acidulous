@@ -12,19 +12,19 @@ import com.rm.acidulous.midi.launchpad.LpView
 import com.rm.acidulous.midi.launchpad.Surface
 
 /**
- * The Launchpad's half in the app: its presses in, its lights out.
+ * Connects the Launchpad to the app: presses in, lights out.
  *
- * Everything that decides anything is in [Surface]; this carries bytes. A
- * press arrives on the MIDI thread and is handed to the main thread, where
- * the state lives and the app's actions are safe to call; a frame is drawn
- * from the latest [view] and only what changed since the last is sent.
+ * All the logic is in [Surface]; this only moves bytes. A press arrives on
+ * the MIDI thread and is handed to the main thread, where the state lives
+ * and app actions are safe to call. Each frame is drawn from the latest
+ * [view] and only what changed since the last one is sent.
  */
 class LaunchpadController(private val act: (LpAction) -> Unit) {
     /** The app as last sampled; set by the composition before each frame. */
     @Volatile var view = LpView()
     var state = LpState()
         private set
-    /** What the surface is showing now, or null when it has to be drawn whole. */
+    /** What the surface shows now, or null when it has to be redrawn whole. */
     private var shown: IntArray? = null
 
     fun attach() {
@@ -48,7 +48,7 @@ class LaunchpadController(private val act: (LpAction) -> Unit) {
                 val c = LaunchpadPro.controlOfCc(d1) ?: return
                 if (d2 > 0) apply(Surface.press(view, state, c, 127)) else apply(Surface.release(state, c))
             }
-            // Pressure, per pad or for the whole surface: the device can be set to either.
+            // Pressure, per pad or for the whole surface; the device can be set to either.
             0xa0 -> LaunchpadPro.padOf(d1)?.let { pad -> Surface.pressure(state, pad, d2).forEach(act) }
             0xd0 -> state.sounding.values.flatten().forEach { act(LpAction.Pressure(it, d1)) }
         }
@@ -59,7 +59,7 @@ class LaunchpadController(private val act: (LpAction) -> Unit) {
         r.second.forEach(act)
     }
 
-    /** Draw the surface as it should be now: only what changed goes out. */
+    /** Draws the surface as it should be now, sending only what changed. */
     fun frame() {
         val leds = Surface.render(view, state)
         val before = shown

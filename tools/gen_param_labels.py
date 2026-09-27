@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Harvest the human wording the machine panels already use.
+"""Collects the wording the machine panels use into model/ParamLabels.kt.
 
-Every control on a machine panel is written as PanelKnob(b, "gpos",
-"position") inside a Group("grains"), so the panel source already says, in
-the words the app shows a player, what "gpos" is. The automation lane list
-needs those same words, and a second hand-written table would drift from the
-panels within a release - so this lifts them out of ui/MachinePanel.kt and
-writes model/ParamLabels.kt.
+Every control on a machine panel is written like PanelKnob(b, "gpos",
+"position") inside a Group("grains"), so the panel source already says what
+"gpos" is in the words the user sees. The automation lane list needs the same
+words, so this pulls them from ui/MachinePanel.kt instead of keeping a second
+table by hand.
 
 Re-run after editing a panel:  python3 tools/gen_param_labels.py
 """
@@ -24,15 +23,15 @@ PANELS = {
     "BrazenPanel": "Brazen", "TimberPanel": "Timber", "MoltPanel": "Molt",
     "BiasPanel": "Bias",
 }
-# Some panels name every control for the *selected* pad, so one panel
-# describes a whole machine's worth of parameters.
+# Some panels name every control for the selected pad, so one panel covers
+# all the pads' parameters.
 PAD_COUNTS = {"Forage": 13, "Resonance": 8, "Dice": 16}
-# And what the per-pad keys are called in each.
+# The per-pad key prefix for each.
 PAD_PREFIX = {"Forage": "p%02d_", "Resonance": "p%02d_", "Dice": "s%02d_"}
 
 
 def split_args(text, start):
-    """The argument list of a call whose '(' is at `start`, split at depth 1."""
+    """Splits the argument list of a call whose '(' is at `start`, at depth 1."""
     depth, args, cur, i = 0, [], "", start
     while i < len(text):
         c = text[i]
@@ -68,21 +67,21 @@ def calls(text):
 
 
 def label_of(args):
-    """The first bare string after the name; a list or `accent =` is not one."""
+    """Returns the first bare string after the name; a list or `accent =` doesn't count."""
     for a in args[2:]:
         if re.fullmatch(r'"[^"]*"', a):
             return a[1:-1]
     return None
 
 
-# Constants a loop bound may be written as, rather than as a number. Kept here
-# rather than parsed out of Kotlin because there are two of them.
+# Constants a loop bound may use instead of a number. Listed here instead of
+# parsed from Kotlin because there are only a few.
 LOOP_CONSTS = {"BIAS_LANES": 4}
 
 
 def expand(text, var, value):
-    # "${lane + 1}" as well as "${lane}": a loop that counts from nought and a
-    # control that counts from one is the ordinary case, not a special one.
+    # Handles "${lane + 1}" as well as "${lane}", for a loop counting from 0
+    # and a control numbered from 1.
     out = re.sub(r"\$\{%s\s*\+\s*(\d+)\}" % var,
                  lambda m: str(value + int(m.group(1))), text)
     out = out.replace("${%s}" % var, str(value)).replace("$" + var, str(value))
@@ -102,8 +101,8 @@ def harvest():
             fm = re.search(r'for\s*\(\s*(\w+)\s+in\s+(\d+)\.\.(\d+)\s*\)', stripped)
             if fm:
                 loop = (fm.group(1), int(fm.group(2)), int(fm.group(3)))
-            # `for (lane in 0 until BIAS_LANES)` - the half-open form, which is
-            # what a loop over slots rather than over musical numbers looks like.
+            # `for (lane in 0 until BIAS_LANES)`, the half-open form used for
+            # loops over slots.
             um = re.search(r'for\s*\(\s*(\w+)\s+in\s+(\d+)\s+until\s+(\w+)\s*\)', stripped)
             if um:
                 hi = LOOP_CONSTS.get(um.group(3))
@@ -129,7 +128,7 @@ def harvest():
                         var, lo, hi = loop
                         for v in range(lo, hi + 1):
                             # The label is a template too: "macro $i" has to
-                            # become "macro 3", or the list shows the source.
+                            # become "macro 3".
                             put(labels, fn, expand(stem, var, v), expand(title, var, v),
                                 expand(label or stem, var, v))
                     else:
@@ -152,14 +151,14 @@ def harvest():
 
 
 def put(labels, fn, stem, title, label, lead=None):
-    """The full name's words for the list, and the bare label for the folded gutter."""
+    """Stores the full label's words for the list, and the bare label for the narrow gutter."""
     labels["%s:%s" % (fn, stem)] = (([lead] if lead else []) + join(title, label), label.strip())
 
 
 def join(title, label):
-    # "filter" + "freq" reads as "filter freq"; "op 3" + "fb" as "op 3 fb".
-    # A label that already repeats the section adds nothing. Kept as words,
-    # not joined, so the app can put each into the phone's language.
+    # "filter" + "freq" gives "filter freq", "op 3" + "fb" gives "op 3 fb".
+    # A label that already starts with the section skips it. Kept as separate
+    # words so the app can translate each one.
     title, label = title.strip(), label.strip()
     if not title or title == label or label.startswith(title + " "):
         return [label]
@@ -168,11 +167,11 @@ def join(title, label):
 
 def main():
     labels = harvest()
-    # A key that still carries a template never matches a real parameter, so
-    # it is a parsing failure, not a label.
+    # A key with a template left in it never matches a real parameter, so it's
+    # a parsing failure.
     bad = [k for k in labels if "$" in k or "%" in k]
-    # A label that still carries a template is as wrong as a key that does,
-    # and it is the half a player actually reads.
+    # An unexpanded template in a label is just as wrong, and it's what the
+    # user reads.
     bad += ["%s -> %s" % (k, v[0]) for k, v in labels.items() if any("$" in w or "%" in w for w in v[0])]
     if bad:
         print("unexpanded: %s" % bad[:6], file=sys.stderr)

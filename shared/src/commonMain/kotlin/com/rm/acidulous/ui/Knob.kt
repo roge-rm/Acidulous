@@ -46,20 +46,18 @@ import com.rm.acidulous.res.*
 
 /**
  * A knob: 270° arc, vertical drag (200 px for the full range), label above,
- * value below. Value is 0..1; the caller formats it. Reports gesture start
- * and end so the document can coalesce a turn into one undo step.
+ * value below. Value is 0..1, the caller formats it. Reports gesture start and
+ * end so a turn becomes one undo step.
  */
 /**
- * Was this press a hold, or the beginning of a move?
+ * Whether this press is a hold or the start of a move.
  *
- * The only thing that separates them is whether the finger travelled before
- * the clock ran out, so **nothing is decided until one of the two wins** -
- * which is why no `onStart` fires first and no undo entry is opened for a
- * thumb somebody rested on a control. Lifting early is a tap and is neither.
+ * Nothing is decided until the finger moves past the slop or the timeout runs
+ * out, so no onStart fires and no undo entry is opened for a resting thumb.
+ * Lifting early is a tap and is neither.
  *
- * Shared by the knob and the fader because the fader needs it more: it jumps
- * to wherever you touched it, so a hold that had not been ruled out first
- * would move the value before putting it back.
+ * Shared by the knob and the fader. The fader jumps to where it's touched, so
+ * without this a hold would move the value before resetting it.
  */
 internal suspend fun AwaitPointerEventScope.wasHeld(
     down: PointerInputChange,
@@ -75,7 +73,10 @@ internal suspend fun AwaitPointerEventScope.wasHeld(
     true // travelled: a move
 } == null
 
-/** Eat the rest of a gesture we have already acted on, so the release lands nowhere. */
+/**
+ * Consume the rest of a gesture that's already been handled, so the release does
+ * nothing.
+ */
 internal suspend fun AwaitPointerEventScope.swallowRest() {
     while (true) {
         val event = awaitPointerEvent()
@@ -96,28 +97,27 @@ fun Knob(
     onChange: (Float) -> Unit,
     onEnd: () -> Unit = {},
     /**
-     * Hold it to put it back where it was when this panel opened.
+     * Hold to put it back where it was when this panel opened. Null when
+     * there's nothing to go back to.
      *
-     * Null on a knob that has nothing to go back to. It is the same gesture
-     * `Modifier.mappable` uses to clear a control's mapping, and there is no
-     * argument between them: while mapping mode is on, `mappable` consumes the
-     * touch on the Initial pass and this loop never runs at all.
+     * Modifier.mappable uses the same gesture to clear a mapping, but they
+     * don't conflict: in mapping mode mappable consumes the touch on the
+     * Initial pass and this never runs.
      */
     onReset: (() -> Unit)? = null,
-    /** A lane in the open clip moves this one: marked with a ∿ on the dial. */
+    /** Automated by a lane in the open clip, marked with ∿ on the dial. */
     automated: Boolean = false,
-    /** Steps in the open clip lock this one: marked with a ◆. */
+    /** Locked by steps in the open clip, marked with ◆. */
     locked: Boolean = false,
-    /** How many values it has, for TalkBack to step through; 0 for a continuous one. */
+    /** How many values it has, for TalkBack to step through. 0 for continuous. */
     steps: Int = 0,
-    /** A hold that opens a list rather than resetting: named for TalkBack. */
+    /** A hold opens a list instead of resetting, named for TalkBack. */
     holdOpensList: Boolean = false,
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
     val current by rememberUpdatedState(value)
-    // `c` is the centre point inside the Canvas below, so the palette takes
-    // the other name here.
+    // c is the centre point in the Canvas below, so the palette is col here.
     val col = Acid.colors
     val dial: @Composable () -> Unit = {
         Canvas(
@@ -126,15 +126,10 @@ fun Knob(
                     val down = awaitFirstDown()
                     val startValue = current
                     val startY = down.position.y
-                    // **The long press is decided before the gesture begins.**
-                    //
-                    // A hold has to be told from a turn, and the only thing
-                    // that separates them is whether the finger moved before
-                    // the timeout. So nothing is opened - no `onStart`, no
-                    // undo entry - until one of the two has won: a movement
-                    // past the touch slop, or the clock. Calling `onStart`
-                    // first and taking it back later would leave a gesture on
-                    // the editor for every knob anybody rested a thumb on.
+                    // Decide hold vs turn before starting the gesture. Nothing
+                    // is opened (no onStart, no undo entry) until the finger
+                    // moves past the slop or the timeout runs out, otherwise
+                    // every resting thumb would leave a gesture on the editor.
                     if (reset != null &&
                         wasHeld(down, viewConfiguration.touchSlop, viewConfiguration.longPressTimeoutMillis)
                     ) {
@@ -203,25 +198,25 @@ fun Knob(
 }
 
 /**
- * A knob over a whole number, for a window rather than a machine: it reports
- * only when the number changes, so whatever it drives moves a step at a time
- * rather than on every pixel of the drag.
+ * A knob for a whole number, for windows rather than machines. It only reports
+ * when the number changes, so what it drives moves a step at a time.
  *
- * With [choices] - one name per step, from the bottom of [range] - holding it
- * opens them as a list. A knob is the right shape for a feel and the wrong one
- * for an exact answer out of thirty: Dan, on the tempo window's scale knob,
- * asked for the list so a precise choice is easy.
+ * With [choices] (one name per step from the bottom of [range]) holding it
+ * opens them as a list, so an exact value is easy to pick.
  */
 @Composable
 internal fun CountKnob(
     label: String, value: Int, range: IntRange, display: String = "$value", accent: Color = Acid.colors.teal,
-    /** Wider than a knob, for a value that is a word - a scale's name. */
+    /** Wider than a knob, for a value that's a word like a scale name. */
     width: Dp? = null,
     choices: List<String>? = null,
     /** Around a drag, for a caller that makes the drag one undo step. */
     onStart: () -> Unit = {},
     onEnd: () -> Unit = {},
-    /** A pick from the list, where it must differ from a step of a drag. */
+    /**
+     * A pick from the list, when it needs handling differently from a drag
+     * step.
+     */
     pick: ((Int) -> Unit)? = null,
     set: (Int) -> Unit,
 ) {
@@ -256,8 +251,7 @@ internal fun CountKnob(
                     }
                 }
             }
-            // Open where the current value is rather than at the top of a
-            // list of a hundred and twenty-eight.
+            // Open scrolled to the current value, not the top of a list of 128.
             androidx.compose.runtime.LaunchedEffect(open) {
                 if (!open) return@LaunchedEffect
                 val max = androidx.compose.runtime.snapshotFlow { scroll.maxValue }.first { it > 0 && it < Int.MAX_VALUE }

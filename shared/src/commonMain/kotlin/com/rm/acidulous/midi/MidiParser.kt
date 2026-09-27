@@ -1,23 +1,22 @@
 package com.rm.acidulous.midi
 
 /**
- * A MIDI byte stream, turned back into messages.
+ * Turns a MIDI byte stream back into messages.
  *
- * A port does not hand over whole messages. It hands over whatever arrived,
- * which may be half of one, three and a half of the next, or a status byte
- * that is not there at all because the sender is using running status and
- * assumes we remember. Bluetooth makes this worse: a packet carries its own
- * header and timestamp bytes, and several messages are bundled behind them.
+ * A port doesn't deliver whole messages, just whatever arrived: half of one,
+ * three and a half of the next, or data with no status byte because the
+ * sender uses running status. Bluetooth adds header and timestamp bytes and
+ * bundles several messages per packet.
  *
- * So the bytes go through here and come out as complete channel messages.
- * Real-time bytes (clock, start, stop) can arrive *inside* another message
- * and must not disturb it, which is the one rule that catches people out.
+ * So bytes go through here and come out as complete channel messages.
+ * Real-time bytes (clock, start, stop) can arrive in the middle of another
+ * message and mustn't disturb it.
  */
 class MidiParser(
     private val onMessage: (status: Int, data1: Int, data2: Int) -> Unit,
-    /** Clock, start, continue, stop and song position - the bytes a master
-     *  sends to be followed. Given the timestamp they arrived with, because
-     *  the whole value of them is *when* they were. */
+    /** Clock, start, continue, stop and song position: what a clock master
+     *  sends. Passed with their arrival timestamp, since their timing is what
+     *  matters. */
     private val onRealtime: (status: Int, data1: Int, data2: Int, stamp: Long) -> Unit = { _, _, _, _ -> },
     /** A whole SysEx message, the bytes between F0 and F7. One cut short by
      *  another status byte, or longer than any device here sends, is dropped. */
@@ -48,13 +47,11 @@ class MidiParser(
 
     private fun feed(b: Int) {
         when {
-            // Real time: a single byte, legal anywhere, even mid-message,
-            // and passed straight out without disturbing anything half read.
-            // These used to be dropped on the floor, which is why nothing
-            // could follow an external clock.
+            // Real time: a single byte, allowed anywhere, even mid-message,
+            // and passed straight out without disturbing a half-read message.
             b >= 0xf8 -> onRealtime(b, 0, 0, timestamp)
-            // Any status byte that is not real time cancels running status,
-            // and a half-finished message with it.
+            // Any other status byte cancels running status and any
+            // half-finished message.
             b == 0xf0 -> { inSysex = true; sysex.reset(); runningStatus = 0; wanted = 0; data1 = -1 }
             b == 0xf7 -> {
                 if (inSysex) onSysex(sysex.toByteArray())
@@ -73,9 +70,9 @@ class MidiParser(
                 if (sysex.size() < MAX_SYSEX) sysex.write(b) else inSysex = false
             }
             else -> {
-                // A data byte with no status of its own belongs to the last
-                // one: that is running status, and a keyboard sending fast
-                // will use it for every note after the first.
+                // A data byte without its own status uses the last one
+                // (running status). Keyboards sending fast use it for every
+                // note after the first.
                 if (wanted == 0) {
                     if (runningStatus == 0) return
                     pending = runningStatus
@@ -89,9 +86,9 @@ class MidiParser(
                 } else if (data1 < 0) {
                     data1 = b
                 } else {
-                    // Song position is the one two-byte message that is not
-                    // for a rack: it says where the master is, so it goes
-                    // out with the clock and not with the notes.
+                    // Song position is the only two-byte message that isn't
+                    // for a rack. It says where the clock master is, so it goes
+                    // out with the clock, not the notes.
                     if (pending == 0xf2) onRealtime(0xf2, data1, b, timestamp) else onMessage(pending, data1, b)
                     if (runningStatus == 0) wanted = 0
                     data1 = -1
@@ -101,7 +98,7 @@ class MidiParser(
     }
 
     private companion object {
-        /** An Exquis snapshot is the longest this app is sent: 255 bytes and its header. */
+        /** The longest message this app gets is an Exquis snapshot: 255 bytes plus its header. */
         const val MAX_SYSEX = 1024
     }
 

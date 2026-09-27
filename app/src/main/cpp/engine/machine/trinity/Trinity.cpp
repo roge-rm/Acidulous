@@ -14,8 +14,8 @@ using dsp::WavetableBank;
 
 namespace {
 
-// PolyBLEP, as in dsp::Osc, but free-standing: a density stack keeps its own
-// phases, so it cannot use the class.
+// PolyBLEP like dsp::Osc, but standalone because a density stack keeps its
+// own phases and can't use the class.
 inline float polyBlep(float t, float dt) {
     if (dt <= 0.0f) return 0.0f;
     if (t < dt) { t /= dt; return t + t - t * t - 1.0f; }
@@ -157,12 +157,12 @@ const ParamDef *Trinity::paramDefs(int32_t &count) const {
         putN(Volume, "volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, "");
         putN(Pan, "pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, "");
         putN(VelocityAmount, "velamt", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, "");
-        // How far a finger's slide opens the filters. Zero by default,
-        // so every patch written before MPE sounds exactly as it did.
+        // How far a finger's slide opens the filters. 0 by default so patches
+        // made before MPE sound the same.
         putN(MpeTimbre, "mpetimbre", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
         putN(MpePressure, "mpepressure", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
-        // How far the mod wheel - a controller's tilt, often - opens the
-        // filters, whatever the matrix says.
+        // How far the mod wheel (often a controller's tilt) opens the filters,
+        // regardless of the matrix.
         putN(WheelFilter, "wheel", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, "");
         built = true;
     }
@@ -203,7 +203,7 @@ void Trinity::reset() {
 Trinity::Voice *Trinity::allocate() {
     Voice *best = nullptr;
     for (auto &v : voices) if (!v.used) return &v;
-    // Nothing free: take the oldest released voice, else the oldest of all.
+    // Nothing free: take the oldest released voice, otherwise the oldest.
     for (auto &v : voices) {
         if (v.gate) continue;
         if (best == nullptr || v.age < best->age) best = &v;
@@ -242,9 +242,9 @@ void Trinity::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigge
             if (targetOf(b + LKeySync) >= 0.5f) v.lfo[l].trigger(targetOf(b + LPhase), targetOf(b + LDelay));
         }
         for (int k = 0; k < kOscs; ++k) {
-            // Random start phases, not evenly spread ones: evenly spaced saws
-            // cancel their own fundamental until the detune pulls them apart,
-            // so a stack would begin thin and only then fatten.
+            // Random start phases, not evenly spread. Evenly spaced saws cancel
+            // their fundamental until the detune pulls them apart, so a stack
+            // would start thin.
             for (int c = 0; c < kDensity; ++c) v.osc[k].phase[c] = rnd(v.rng);
             v.osc[k].syncPhase = 0.0f;
         }
@@ -324,7 +324,7 @@ float Trinity::sourceValue(const Voice &v, int src) const {
     switch (src) {
     case SrcOn: return 1.0f;
     case SrcModWheel: return modWheel;
-    // A finger's own pressure if it sent any, the channel's otherwise.
+    // A finger's own pressure if it sent any, otherwise the channel's.
     case SrcAftertouch: return v.pressure >= 0.0f ? v.pressure : aftertouch;
     case SrcVelocity: return static_cast<float>(v.velocity) / 127.0f;
     case SrcKeyTrack: return (static_cast<float>(v.note) - 60.0f) / 48.0f;
@@ -343,8 +343,8 @@ float Trinity::sourceValue(const Voice &v, int src) const {
 }
 
 int32_t Trinity::envMask() const {
-    // The first two are always read by name - amplitude and filter - and the
-    // rest only exist if a matrix slot names them.
+    // The first two (amp and filter) are always used. The rest only run if
+    // a matrix slot uses them.
     int32_t mask = 0x3;
     for (int s = 0; s < kMatrixSlots; ++s) {
         const int32_t b = MatrixBase + s * MatrixParams;
@@ -393,12 +393,12 @@ void Trinity::updateVoiceMod(Voice &v, float blockSeconds) {
         const float bmul = src2 == SrcOff ? 1.0f : sourceValue(v, src2);
         v.mod[dest] += a * bmul * paramOf(b + XDepth);
     }
-    // A finger pressing, whatever the matrix says: brighter and louder.
+    // A finger's pressure makes it brighter and louder, whatever the matrix says.
     const float prs = glidePressure(v.prsGlide, v.pressure, aftertouch) * paramOf(MpePressure);
     v.mod[DstF1Freq] += prs * 0.4f;
     v.mod[DstF2Freq] += prs * 0.4f;
     v.mod[DstAmp] += prs * 0.4f;
-    // The wheel, likewise: opens both filters, up to about five octaves.
+    // The mod wheel opens both filters, up to about five octaves.
     const float wheel = modWheel * paramOf(WheelFilter) * 0.8f;
     v.mod[DstF1Freq] += wheel;
     v.mod[DstF2Freq] += wheel;
@@ -407,25 +407,21 @@ void Trinity::updateVoiceMod(Voice &v, float blockSeconds) {
 // --- Render ----------------------------------------------------------------------
 
 float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
-    // Block-rate reads. Everything the sample loop needs is resolved once,
-    // including the pitch multipliers - an exp2 per sample per oscillator is
-    // the difference between eight voices and sixteen on a phone.
+    // Block-rate reads. Everything the sample loop needs is worked out once
+    // here, including the pitch multipliers. An exp2 per sample per
+    // oscillator is the difference between eight voices and sixteen on a phone.
     struct OscCfg {
         int wave, table, density, mip, frame;
         bool needed;
         float frac, level, pw, sync, hardK, drift, pitchMul, detuneMul[kDensity];
         /**
-         * `1 / sqrt(density)`, and the reason it is here rather than there.
-         *
-         * It was computed inside the sample loop, so a stacked oscillator paid
-         * for a square root on every sample - up to three a voice, sixteen
-         * voices, forty-eight thousand times a second. It depends on nothing
-         * that changes inside a block.
+         * 1 / sqrt(density), worked out once a block rather than per sample
+         * since it can't change inside a block.
          */
         float densityNorm;
-        /** The phase increment, refreshed with the mip rather than per sample. */
+        /** The phase increment, updated with the mip rather than per sample. */
         float baseInc, inc;
-        /** The pair `WavetableBank::between` reads, refreshed with the mip. */
+        /** The pair WavetableBank::between reads, updated with the mip. */
         const float *rowA;
         const float *rowB;
     } cfg[kOscs];
@@ -445,22 +441,17 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
         OscCfg &c = cfg[k];
         c.wave = stepOf(b + OWave);
         c.table = c.wave - WFirstTable;
-        // **Half the unison stack when the note was born lean.**
+        // Half the unison stack when the note was started in lean mode.
         //
-        // The stack is the one thing on this machine that multiplies the whole
-        // oscillator - `for (d < density)` around every sample of every
-        // oscillator of every voice - so it is where the cost is and where
-        // lean has to reach. Trinity is the dearest machine here and the
-        // setting could not touch it at all.
+        // The stack multiplies the cost of every oscillator of every voice,
+        // so it's where lean mode has to cut on this machine.
         //
-        // Halved rather than flattened, and never below two: a stack of eight
-        // thinned to four is the same sound narrower, where one voice is a
-        // different patch. Detail, not identity. A density of one or two is
-        // left alone - there is nothing there to halve, and a pad that was
-        // never wide should not get narrower.
+        // Halved rather than flattened, and never below two, so an eight-voice
+        // stack at four sounds the same but narrower. Densities of one or two
+        // are left alone.
         //
-        // `densityNorm` follows from whatever survives, so the level does not
-        // jump: it is `1 / sqrt(n)` of the stack actually being summed.
+        // densityNorm is 1 / sqrt(n) of the stack actually summed, so the level
+        // doesn't jump.
         const int32_t asked = stepOf(b + ODensity);
         c.density = (v.bornLean && asked > 2) ? std::max(2, asked / 2) : asked;
         c.densityNorm = c.density > 1 ? 1.0f / std::sqrt(static_cast<float>(c.density)) : 1.0f;
@@ -480,12 +471,12 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
                           static_cast<float>(WavetableBank::kFrames - 1);
         c.frame = static_cast<int>(pos);
         c.frac = pos - static_cast<float>(c.frame);
-        // Warp turns the crossfade between frames into a switch: smooth to glitchy.
+        // Warp turns the crossfade between frames into a switch, smooth to glitchy.
         const float warp = paramOf(b + OWarp);
         if (warp > 0.0f) c.frac += ((c.frac < 0.5f ? 0.0f : 1.0f) - c.frac) * warp;
         c.mip = 0;
     }
-    // An oscillator earns its cycles if it is heard or if something reads it.
+    // An oscillator only runs if it's heard or something reads it.
     cfg[0].needed = cfg[0].level > 0.0001f || ring12 > 0.0f;
     cfg[1].needed = cfg[1].level > 0.0001f || ring12 > 0.0f || ring23 > 0.0f || fm21 > 0.0f;
     cfg[2].needed = cfg[2].level > 0.0001f || ring23 > 0.0f || fm32 > 0.0f;
@@ -509,10 +500,8 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
     }
 
     const float velAmp = velocityGain(static_cast<float>(v.velocity) / 127.0f, paramOf(VelocityAmount));
-    // The app's house level, so this machine's default lands where every
-    // other machine's does. See Reflux's kHouse for why: the factory had
-    // come to span twenty-five decibels because every bank was levelled
-    // against its own patches and none against the others.
+    // The app's common level, so this machine's default is as loud as every
+    // other machine's (see Reflux's kHouse).
     constexpr float kHouse = 0.61f;
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * kHouse;
     const float glideSeconds = paramOf(Glide);
@@ -520,9 +509,9 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
     const float targetFreq = noteHz(static_cast<float>(v.note));
     const float glideOctaves = v.glidePos < 1.0f ? std::log2(targetFreq / v.glideFrom) : 0.0f;
     float peak = 0.0f;
-    // Nought means every sample, which is what this did before it was
-    // measured; fifteen is one in sixteen. Kept as a variable only so the
-    // paired harness can time the two against each other in one process.
+    // A bit mask: pitch is updated when (i & pitchStride) is 0, so 15 is one
+    // sample in 16 and 0 is every sample. Keep it one less than a power of two.
+    // A variable so the paired harness can time both in one process.
     const int32_t pitchStride = 15;
 
     for (int32_t i = 0; i < frames; ++i) {
@@ -540,8 +529,8 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
             v.freq = targetFreq;
         }
 
-        // Filter coefficients at 1/16 of the sample rate: the envelope cannot
-        // move meaningfully inside sixteen samples, and tan() is not cheap.
+        // Filter coefficients at 1/16 of the sample rate. The envelope can't
+        // move much in 16 samples and tan() is expensive.
         if ((i & 15) == 0) {
             const float envOct = envFilter * 4.0f;
             v.filter[0].set(fFreq[0] * std::exp2(fEnvAmt[0] * envOct), fRes[0], fType[0], fDriveType[0], fDrive[0]);
@@ -554,27 +543,21 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
             OscCfg &c = cfg[k];
             if (!c.needed) continue;
             OscState &st = v.osc[k];
-            // **The pitch is resolved sixteen samples at a time**, on the same
-            // stride the filter coefficients already use.
+            // Pitch is updated every 16 samples, the same as the filter
+            // coefficients. Nothing here moves at audio rate: drift is a slow
+            // random walk and v.freq only changes while gliding, where a 3 kHz
+            // update rate is inaudible. It saves a clamp, three multiplies and a
+            // compare per oscillator per voice per sample.
             //
-            // Nothing in here moves at audio rate. Drift is a random walk with
-            // a coefficient of thirty parts in a million - seconds to cross a
-            // few cents - and `v.freq` is a constant unless the note is
-            // gliding, where sixteen samples is a step of three kilohertz that
-            // no glide can be heard through. What it was costing was a clamp,
-            // three multiplies and a compare per oscillator, per voice, per
-            // sample, in the innermost loop there is.
-            //
-            // The drift coefficient is multiplied by the stride, so the walk
-            // takes the same time as it did.
+            // The drift coefficient is multiplied by the stride so the walk takes
+            // the same time.
             if ((i & pitchStride) == 0) {
                 st.drift += (st.driftTarget - st.drift) * 0.00048f;
                 if (std::fabs(st.drift - st.driftTarget) < 0.01f) st.driftTarget = rnd(v.rng) * 2.0f - 1.0f;
                 const float hz = clampf(v.freq * c.pitchMul * (1.0f + st.drift * c.drift * 0.0046f), 1.0f,
                                         sampleRate * 0.49f);
-                // Multiply by the reciprocal, not divide. A divide is several
-                // times the cost of a multiply on the cores this has to run
-                // on.
+                // Multiply by the reciprocal rather than divide, since divides are
+                // much slower on phone CPUs.
                 c.baseInc = hz * invSampleRate;
                 c.inc = c.baseInc * (1.0f + c.sync * 3.0f);
             }
@@ -625,7 +608,7 @@ float Trinity::renderVoice(Voice &v, int32_t frames, float *out) {
         float filtered;
         if (route == 1) { // parallel: the same signal through both
             filtered = v.filter[0].process(mix) * (1.0f - balance) + v.filter[1].process(mix) * balance;
-        } else if (route == 2) { // split: filter 2 hangs off filter 1
+        } else if (route == 2) { // split: filter 2 fed from filter 1
             const float a = v.filter[0].process(mix);
             filtered = a * (1.0f - balance) + v.filter[1].process(a) * balance;
         } else { // serial

@@ -1,16 +1,12 @@
-// Bias, asked where it is and made to say what it read.
+// Tests where Bias reads from. A region is a window into a file: a take sung
+// across four scenes is one file at four offsets, and an offset a bar out
+// puts the vocal on the wrong word. A cell covers bars x repeat, so the
+// second pass of a repeated scene must carry on through the take, not
+// restart it.
 //
-// Two things here are worth a harness rather than an ear. The first is that a
-// region is a *window*: a take sung across four scenes is one file and four
-// offsets, and an offset that is wrong by a bar is a vocal that comes in on
-// the wrong word - inaudible as a bug, obvious as a disaster. The second is
-// that a cell covers bars x repeat, so the second pass of a scene played twice
-// must carry on through the take rather than start it again.
-//
-// Both are answerable exactly, because a reel can be built out of a ramp: put
-// the frame's own index in the sample and whatever comes out says where it was
-// read from. Everything outside a region carries a sentinel, so a read that
-// wanders off the end of one announces itself instead of sounding plausible.
+// The reel is built from a ramp, so each sample holds its own frame index and
+// the output says exactly where it was read from. Everything outside a region
+// holds a sentinel value, so reading past the end shows up.
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -51,16 +47,12 @@ constexpr int32_t kFramesPerTick = 100;    // at 48 kHz and 120 bpm
 constexpr int32_t kBarFrames = static_cast<int32_t>(kBarTicks) * kFramesPerTick; // 96000
 
 /**
- * What a frame at index [i] holds, so a reading says where it came from.
- *
- * **Offset by one, because frame nought must not be silence.** Ramped from
- * nought, four of the assertions below compared a reading against 0.0 and
- * would have passed just as well on a machine that rendered nothing at all -
- * which is the failure they exist to catch.
+ * What frame [i] holds, so a reading says where it came from. Offset by one
+ * so frame 0 isn't silence, or a machine that renders nothing would pass.
  */
 int16_t ramp(int32_t i) { return static_cast<int16_t>(i % 30000 + 1); }
 
-/** Anything a region does not cover. Loud, and nothing a ramp can produce. */
+/** Fills anything a region doesn't cover. Loud, and never produced by the ramp. */
 constexpr int16_t kPoison = -30001;
 
 float expectRamp(int32_t frame) { return static_cast<float>(ramp(frame)) / 32768.0f; }
@@ -68,9 +60,9 @@ float expectRamp(int32_t frame) { return static_cast<float>(ramp(frame)) / 32768
 /** A source of [frames], ramped inside [from, to) and poisoned everywhere else. */
 std::shared_ptr<Reel::Source> ramped(int32_t frames, int32_t from, int32_t to) {
     auto s = std::make_shared<Reel::Source>();
-    // Through `hold`, as the host builds it: a source is read through its
-    // pointers now, because the same two lines in the render have to serve a
-    // take held in memory and one mapped from a converted file.
+    // Built through `hold`, like the host does. Sources are read through
+    // pointers so the same render code serves takes in memory and takes
+    // mapped from a file.
     std::vector<int16_t> planes(static_cast<size_t>(frames), kPoison);
     for (int32_t i = from; i < to && i < frames; ++i) planes[static_cast<size_t>(i)] = ramp(i);
     s->hold(std::move(planes), frames, false);
@@ -123,22 +115,14 @@ Reel::Region region(std::shared_ptr<const Reel::Source> src, int32_t offset, int
     return r;
 }
 
-/**
- * Tight enough to tell one frame from the next.
- *
- * A single frame of the ramp is 1/32768, about 3e-5, so the 1e-4 this started
- * at was looser than the thing being measured: it could not have told frame
- * 500 from frame 502, nor either of them from silence.
- */
+/** Tight enough to tell one frame from the next (one ramp step is about 3e-5). */
 bool near(float a, float b) { return std::fabs(a - b) < 1e-6f; }
 
 // --- the tests ------------------------------------------------------------
 
 /**
- * A take sung across three scenes is one file at three offsets.
- *
- * The arithmetic this asserts is the whole of "split at the scene lines": get
- * the offset wrong and the Verse cell sings the Intro's words.
+ * A take sung across three scenes is one file at three offsets. Get the
+ * offset wrong and the Verse cell plays the Intro's words.
  */
 void aRegionIsAWindowIntoItsFile() {
     Rig rig;
@@ -163,11 +147,9 @@ void aRegionIsAWindowIntoItsFile() {
 }
 
 /**
- * The second pass of a repeated scene carries on through the take.
- *
- * This is the machine's half of `rackCycleTick`: the scheduler counts the
- * repeats, and Bias has to read that far into the region rather than
- * treating the bar as the whole of it.
+ * The second pass of a repeated scene carries on through the take. The
+ * scheduler counts the repeats (`rackCycleTick`) and Bias has to read that
+ * far into the region.
  */
 void aRepeatedSceneCarriesOn() {
     Rig rig;
@@ -182,14 +164,13 @@ void aRepeatedSceneCarriesOn() {
     ok("and the fifth bar is five bars in",
        near(rig.probe(1, kBarTicks * 4), expectRamp(kBarFrames * 4)),
        "wanted frame " + std::to_string(kBarFrames * 4));
-    // The one that catches the mistake rather than the arithmetic: anything
-    // that treats an iteration as the whole cycle reads the head of the take
-    // again on the second pass, and that is a vocal singing verse one twice.
+    // Treating one pass as the whole cycle would read the start of the take
+    // again on the second pass.
     ok("and it has not started the take again",
        !near(rig.probe(1, kBarTicks * 4), expectRamp(0)));
 }
 
-/** Four lanes sum, at their levels, and a muted one is not in the sum. */
+/** Four lanes sum at their levels, and a muted one is left out. */
 void fourLanesSum() {
     Rig rig;
     Reel::Cell cell{1, {}};
@@ -232,7 +213,7 @@ void aMutedClipIsSilent() {
 void pastTheEnd() {
     Rig rig;
     const int32_t total = kBarFrames * 4;
-    // The region is one bar of a four-bar file: everything past it is poison.
+    // The region is one bar of a four-bar file. Everything past it is the sentinel.
     auto src = ramped(total, 0, kBarFrames);
     Reel::Cell once{1, {}};
     once.lanes[0] = region(src, 0, kBarFrames, kBarTicks * 4);
@@ -275,11 +256,8 @@ void nothingToPlay() {
 // --- The medium ------------------------------------------------------------------
 
 /**
- * The colour section, which is what a Bias patch is.
- *
- * Four claims, and the first is the one the whole design rests on: **Direct
- * changes nothing**. A patch here is a way of listening, so there has to be a
- * way of not listening that way, and it has to be exact rather than nearly.
+ * The colour section, which is what a Bias patch sets. Most important,
+ * Direct must leave the sound exactly unchanged.
  */
 void theMediumColoursAndDirectDoesNot() {
     printf("- the medium: what a patch does, and what Direct does not\n");
@@ -294,8 +272,7 @@ void theMediumColoursAndDirectDoesNot() {
     machine::bias::Colour colour;
     colour.prepare(static_cast<float>(kRate));
 
-    // Nothing at all: bit for bit, which is what the sample-identical stem
-    // export depends on.
+    // Bit for bit unchanged, which the sample-identical stem export relies on.
     {
         float l[kN], r[kN];
         std::memcpy(l, in, sizeof(in));
@@ -308,9 +285,8 @@ void theMediumColoursAndDirectDoesNot() {
         ok("Init is bit for bit what went in", same);
     }
 
-    // A noise floor, and the same noise floor twice: two exports of one song
-    // have to match, and a generator seeded from anything that moves is the
-    // one way to break that silently.
+    // A noise floor, the same both times, since two exports of one song have
+    // to match.
     {
         float a[kN] = {0.0f}, b[kN] = {0.0f}, a2[kN] = {0.0f}, b2[kN] = {0.0f};
         machine::bias::ColourSpec spec;
@@ -332,7 +308,7 @@ void theMediumColoursAndDirectDoesNot() {
         ok("and identical after a reset, so two exports match", identical);
     }
 
-    // The band is most of what tells a telephone from a reel.
+    // The bandwidth is most of what makes a telephone sound unlike a reel.
     {
         float l[kN], r[kN];
         std::memcpy(l, in, sizeof(in));
@@ -343,9 +319,8 @@ void theMediumColoursAndDirectDoesNot() {
         colour.reset();
         colour.setBlock(spec);
         colour.process(l, r, kN);
-        // The 9 kHz half should be gone; measure what is left above the
-        // fundamental by differencing against a one-sample delay, which is a
-        // crude high pass and enough to tell an octave of difference.
+        // The 9 kHz part should be gone. A one-sample difference is a crude
+        // high-pass, enough to see what's left above the fundamental.
         double before = 0.0, after = 0.0;
         for (int32_t i = 256; i < kN; ++i) {
             before += std::fabs(in[i] - in[i - 1]);
@@ -355,8 +330,7 @@ void theMediumColoursAndDirectDoesNot() {
            std::to_string(after) + " against " + std::to_string(before));
     }
 
-    // The digital media quantise, and a quantiser that does not is a knob
-    // that does nothing.
+    // The digital media must actually quantise.
     {
         float l[kN], r[kN];
         std::memcpy(l, in, sizeof(in));
@@ -378,12 +352,9 @@ void theMediumColoursAndDirectDoesNot() {
 }
 
 /**
- * A take too long to hold, converted and mapped - and reading the same numbers.
- *
- * This is the whole of step 10 in one check. The resident path and the mapped
- * path must be indistinguishable to the render, because the render has two
- * lines and no idea which it is looking at; anything else here would be a
- * fault nobody finds until they record something long.
+ * A take too long to hold in memory is converted and mapped, and must read
+ * back the same numbers. The render can't tell the two apart, so they have
+ * to match exactly.
  */
 void aLongTakeIsMappedAndReadsTheSame() {
     printf("- a take too long to hold, converted once and mapped\n");
@@ -392,7 +363,7 @@ void aLongTakeIsMappedAndReadsTheSame() {
     const std::string cache = dir + "/reelsrc.i16";
     std::remove(cache.c_str());
 
-    // Three seconds of something with a shape to it, written as a real file.
+    // Three seconds of a shaped signal, written as a real file.
     constexpr int32_t kFrames = kRate * 3;
     {
         WavWriter w;
@@ -434,7 +405,7 @@ void aLongTakeIsMappedAndReadsTheSame() {
     ok("it maps", map->open(cache) && mapped.point(map, static_cast<int32_t>(frames), stereo));
     if (mapped.lp == nullptr) return;
 
-    // And says what the reader everybody trusts says.
+    // Matches what WavReader reads.
     const auto whole = WavReader::read(wav, kRate, error, kMaxSliceSeconds);
     if (!whole) {
         ok("the reader read it too", false, error);
@@ -453,12 +424,12 @@ void aLongTakeIsMappedAndReadsTheSame() {
     ok("and reads what the reader read, both channels", worst < 1.0 / 32768.0,
        "worst " + std::to_string(worst) + " at frame " + std::to_string(worstAt));
 
-    // The right plane is the right plane and not a copy of the left, which a
-    // planar layout gets wrong silently if the two offsets are confused.
+    // The right plane isn't a copy of the left, which happens silently if
+    // the two offsets are mixed up.
     ok("the channels are not the same plane", mapped.rp == mapped.lp + frames);
 
-    // Converting again reuses nothing here, but the *name* must be stable for
-    // the same file and different once it changes.
+    // The converted file's name must be the same for the same file and
+    // change when the file does.
     const std::string first = ReelCache::nameFor(wav);
     ok("the cache name is stable for one file", first == ReelCache::nameFor(wav), first);
     ok("and is not the name of another file", first != ReelCache::nameFor(cache));
@@ -468,20 +439,15 @@ void aLongTakeIsMappedAndReadsTheSame() {
 }
 
 /**
- * A take that follows the song rather than its own tempo.
+ * A take that follows the song's tempo covers the same musical length at any
+ * tempo.
  *
- * The claim in one sentence: **a take recorded at one tempo covers the same
- * musical length at any other**, which is the whole of why the stretch is
- * here.
+ * One second at 120 bpm is two beats. At 60 bpm two beats last two seconds,
+ * so without stretching the take stops halfway and leaves a gap. With it the
+ * take fills the whole time.
  *
- * One second recorded at 120 bpm is two beats. Played at 60, two beats last
- * two seconds - so off, the take stops half way through and leaves a hole;
- * on, it covers the whole of it and sings the same notes while doing so.
- *
- * **The tick and the frame count have to agree**, or the test proves nothing:
- * an earlier version of this walked the tick fast and rendered few frames, so
- * the stretcher never got near the end of the take and the assertion passed
- * for no reason at all.
+ * The tick and frame count have to agree, or the stretcher never reaches the
+ * end of the take and the test proves nothing.
  */
 float playForSeconds(Rig &rig, double seconds, float songBpm, bool stretch) {
     rig.bias->onBlock(0, 0, songBpm);
@@ -515,7 +481,7 @@ void aTakeCanFollowTheSong() {
     printf("- a take that follows the song rather than its own tempo\n");
     const float want = 8000.0f / 32768.0f;
 
-    // At the tempo it was recorded at, both answers are the same answer.
+    // At the recorded tempo, both give the same result.
     {
         auto rig = oneSecondTakeAt120();
         const float at120 = playForSeconds(*rig, 0.8, 120.0f, true);
@@ -538,8 +504,7 @@ void aTakeCanFollowTheSong() {
            std::to_string(on) + ", wanted about " + std::to_string(want));
     }
 
-    // And the other way: at twice the tempo the cell is half as long, so a
-    // take that used to overrun now ends with it.
+    // At twice the tempo the cell is half as long, and the take ends with it.
     {
         auto rig = oneSecondTakeAt120();
         const float on = playForSeconds(*rig, 0.45, 240.0f, true);
@@ -555,12 +520,8 @@ void aTakeCanFollowTheSong() {
 }
 
 /**
- * Fades, and the crossfade that is two of them.
- *
- * The claim worth testing is the *equal-power* one: two lanes, one going out
- * while the other comes in, must hold a steady level between them. A linear
- * pair dips three decibels in the middle, and that dip is the sound of an
- * edit - which is exactly what a crossfade exists to hide.
+ * Fades, and crossfades made of two of them. A crossfade must be equal power
+ * so the level holds steady. A linear pair dips 3 dB in the middle.
  */
 void fadesAreEqualPowerSoACrossfadeHolds() {
     printf("- a fade, and the crossfade that is two of them\n");
@@ -576,8 +537,7 @@ void fadesAreEqualPowerSoACrossfadeHolds() {
        a.fadeAt(kLen) < 1e-6f && std::fabs(a.fadeAt(0) - 1.0f) < 1e-6f,
        std::to_string(a.fadeAt(0)) + " .. " + std::to_string(a.fadeAt(kLen)));
 
-    // The two together, everywhere: the squares sum to one, which is what
-    // equal power means and what keeps the level up.
+    // The squares sum to one everywhere, which is what equal power means.
     double worst = 0.0;
     int32_t worstAt = -1;
     for (int32_t i = 0; i <= kLen; i += 37) {
@@ -588,8 +548,7 @@ void fadesAreEqualPowerSoACrossfadeHolds() {
     ok("and two of them crossing hold a steady level", worst < 0.002,
        "worst " + std::to_string(worst) + " at " + std::to_string(worstAt));
 
-    // A take with no fades is untouched, which is every take until somebody
-    // drags a handle.
+    // A take with no fades is untouched.
     Reel::Region plain;
     plain.frames = kLen;
     ok("a take with no fades is not touched",

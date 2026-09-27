@@ -1,12 +1,11 @@
-// Every name the engine can put on a screen, one per line, for
+// Prints every name the engine can put on screen, one per line, for
 // tools/panel_words.py to check against the strings the app translates.
 //
 //   machine|<type>|<param>     effect|<type>|<param>     mod|<type>|<param>
 //   nexus|<module>|knob|<label>     nexus|<module>|in|<jack>     nexus|<module>|out|<jack>
 //
-// A parameter's name is a key as well as a label - a patch, a lane and a
-// mapping all address it - so it cannot change to suit a language. What the
-// app shows for it can, and this is the list of what there is to show.
+// A parameter's name is also its key (patches, lanes and mappings use it), so
+// it can't be translated. What the app shows for it can, and this lists them.
 #include <cstdio>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/inputmod/InputModRegistry.h>

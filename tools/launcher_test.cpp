@@ -1,4 +1,4 @@
-// Does a launch land on exactly the tick it was promised?
+// Checks a launch lands on exactly the tick it was promised.
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -162,8 +162,7 @@ int main() {
         eq("...and the playing clip is untouched", t.l.sceneId(0), 111);
     }
     {
-        // The case the toggle could not handle: the first tap has already
-        // landed by the time the second arrives.
+        // The first tap has already landed by the time the second arrives.
         Timeline t;
         t.l.request(0, 111, 1 * kBar, 0);
         t.run(3 * kBar);
@@ -208,8 +207,8 @@ int main() {
         t.l.request(2, 333, 8 * kBar, 0);
         t.run(64 * 8 * kBar + 17);   // a few ticks past the line, not on it
         // After 512 bars each origin must still be an exact multiple of that
-        // rack's own cycle - one tick of drift anywhere and this fails - and
-        // must be the *current* cycle, not one left behind.
+        // rack's own cycle (one tick of drift fails this), and must be the
+        // current cycle.
         eq("1-bar rack is still on a 1-bar line", t.l.origin(0) % kBar, 0);
         eq("2-bar rack is still on a 2-bar line", t.l.origin(1) % (2 * kBar), 0);
         eq("8-bar rack is still on an 8-bar line", t.l.origin(2) % (8 * kBar), 0);
@@ -234,7 +233,7 @@ int main() {
     {
         // Scene mode hands the launcher what every rack is already playing, in
         // phase. The origin is the scene's, not "now", or a clip half way
-        // through would restart at the moment the mode changed.
+        // through would restart when the mode changed.
         Launcher l;
         const int64_t origin = 3 * kBar;   // the scene started three bars ago
         const int64_t now = origin + kBar / 2;  // and is half a bar in
@@ -259,11 +258,10 @@ int main() {
 
     printf("--- a tap with nothing sounding starts now, not on the next line ---\n");
     {
-        // Stop everything, let the clock run on, tap again. The grid a silent
-        // launch is measured against is the transport's zero, so after a few
-        // bars of nothing the next line can be most of a cycle away - and a
-        // tap that does nothing audible for four bars reads as a tap that was
-        // missed.
+        // Stop everything, let the clock run on, tap again. With nothing
+        // playing, a launch starts at once. Measured against the transport's
+        // zero, the next line could be most of a cycle away, and a tap that's
+        // silent for four bars feels missed.
         Timeline t;
         t.l.request(0, 100, kBar, 0);
         t.run(2 * kBar);
@@ -277,8 +275,8 @@ int main() {
         eq("a tap into silence lands at once", t.l.playing(0) ? 1 : 0, 1);
         eq("and takes that moment as its origin", t.l.origin(0), late);
 
-        // But a rack joining others that *are* sounding still waits, because
-        // there is a phase to keep.
+        // But a rack joining others that are playing still waits, to keep
+        // their phase.
         t.l.request(1, 200, kBar, late + 10);
         t.l.applyDue(late + 10);
         eq("joining something already playing still waits", t.l.playing(1) ? 1 : 0, 0);

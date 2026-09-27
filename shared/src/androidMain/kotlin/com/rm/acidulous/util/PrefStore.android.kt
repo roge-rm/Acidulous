@@ -2,7 +2,7 @@ package com.rm.acidulous.util
 
 import android.content.SharedPreferences
 
-/** SharedPreferences as a [PrefStore]: every call is the one it was. */
+/** SharedPreferences as a [PrefStore], passing every call straight through. */
 fun androidPrefs(p: SharedPreferences): PrefStore = object : PrefStore {
     override fun getBoolean(key: String, default: Boolean) = p.getBoolean(key, default)
     override fun getInt(key: String, default: Int) = p.getInt(key, default)

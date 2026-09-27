@@ -6,19 +6,17 @@ import com.rm.acidulous.io.*
 /**
  * A song and everything it needs, in one file.
  *
- * A saved song is only the JSON: every sample, SoundFont and multisample it
- * uses is named by a path relative to the user folder and lives outside it.
- * That is right for working - one copy of a drum hit serves forty songs -
- * and useless for moving a song to another device, where the JSON arrives
- * and every pad is silent. So a bundle is the old answer: the document plus
- * its media, zipped, and unzipped back into place at the other end.
+ * A saved song is just JSON. Its samples, SoundFonts and multisamples are
+ * referenced by paths relative to the user folder, which is good for sharing
+ * one drum hit between forty songs but means a song moved to another device
+ * arrives with every pad silent. A bundle zips the song with its media and
+ * unzips them back into place at the other end.
  *
- * **Which files come along is decided by looking, not by guessing.** Sample
- * paths hide in several shapes - a plain setting, one field of a
- * pipe-separated zone line, one of sixteen numbered pad settings - and a
- * list of the keys that are paths today is a list that will be wrong after
- * the next machine. So every token of every setting is resolved against the
- * user folder, and whatever turns out to be a real file is a real file.
+ * Which files to include is found by looking rather than by a list of keys.
+ * Sample paths show up in several forms (a plain setting, a field in a zone
+ * line, numbered pad settings), and a key list would go wrong with the next
+ * machine. So every token of every setting is checked against the user
+ * folder, and anything that's a real file goes in.
  */
 object SongBundle {
 
@@ -42,19 +40,16 @@ object SongBundle {
     }
 
     /**
-     * Unpacks a bundle: the media go back under [userRoot] at the same
-     * relative paths the song already refers to, so it simply works.
+     * Unpacks a bundle. The media go back under [userRoot] at the same
+     * relative paths the song already uses, so it just works.
      *
-     * **Unless one of your own files is already there.** A bundle from
-     * somebody else is quite likely to hold a `samples/take 1.wav`, and so is
-     * your phone - and writing theirs over yours would change every song of
-     * yours that used it, silently. A file that is already there with the
-     * same bytes is simply used; one that differs comes in under a new name,
-     * and the song is pointed at that name instead.
+     * Unless you already have a different file at that path. A bundle and
+     * your phone could both have a `samples/take 1.wav`, and overwriting
+     * yours would change your songs without telling you. An identical file
+     * is reused. A different one is saved under a new name and the song is
+     * pointed at that instead.
      *
-     * A zip entry naming its way out of the folder is refused. Nothing here
-     * makes hostile bundles likely, but an archive is somebody else's file
-     * and ".." is the oldest trick there is.
+     * Zip entries with paths leading outside the folder are skipped.
      */
     fun read(bundle: File, userRoot: File): Song? {
         var song: Song? = null
@@ -81,7 +76,7 @@ object SongBundle {
         return song?.let { if (renamed.isEmpty()) it else repoint(it, renamed) }
     }
 
-    /** "take 1.wav" is taken: "take 1 (2).wav", then (3), and so on. */
+    /** If "take 1.wav" is taken, tries "take 1 (2).wav", then (3), and so on. */
     private fun freeName(taken: File): File {
         var n = 2
         while (true) {
@@ -91,12 +86,12 @@ object SongBundle {
         }
     }
 
-    /** The song, with every setting that named a renamed file naming its new name. */
+    /** The song, with every setting that named a renamed file pointing at its new name. */
     fun repoint(song: Song, renamed: Map<String, String>): Song = song.copy(
         tracks = song.tracks.map { t ->
             t.copy(machine = t.machine.copy(settings = t.machine.settings.mapValues { (_, value) ->
-                // Token by token, on the same separators `referenced` reads,
-                // so "samples/a.wav" is never found inside "samples/a.wav2".
+                // Token by token, on the same separators `referenced` uses, so
+                // "samples/a.wav" is never matched inside "samples/a.wav2".
                 Regex("[^\n|,]+").replace(value) { m ->
                     val token = m.value
                     val trimmed = token.trim()
@@ -106,7 +101,7 @@ object SongBundle {
         },
     )
 
-    /** Every file under [userRoot] that some setting in [song] names. */
+    /** Every file under [userRoot] that a setting in [song] names. */
     fun referenced(song: Song, userRoot: File): List<String> {
         val found = linkedSetOf<String>()
         for (track in song.tracks) {

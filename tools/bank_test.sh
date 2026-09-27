@@ -1,5 +1,5 @@
 #!/bin/bash
-# Is every factory patch a patch? The floor under the banks.
+# Checks every factory patch is valid and makes a sound.
 #
 # Pass a unit name to check one: tools/bank_test.sh Trinity, or fx.Delay.
 set -u

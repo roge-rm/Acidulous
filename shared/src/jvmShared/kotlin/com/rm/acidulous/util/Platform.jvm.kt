@@ -10,7 +10,7 @@ actual object System {
     actual fun nanoTime(): Long = java.lang.System.nanoTime()
 }
 
-/** The member: kotlinx.coroutines' own on the JVM. */
+/** On the JVM this is kotlinx.coroutines' own Dispatchers.IO. */
 actual val Dispatchers.IO: CoroutineDispatcher get() = this.IO
 
 actual typealias Runnable = java.lang.Runnable
@@ -21,8 +21,8 @@ actual class SerialWorker actual constructor(name: String) {
     private val executor = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
         Thread(r, name).apply { isDaemon = true }
     }
-    // Nothing here suspends for long - the engine's calls are made on this
-    // thread - so a task still runs to its end before the next begins.
+    // Tasks don't suspend for long (engine calls happen on this thread), so
+    // each task runs to the end before the next one starts.
     actual fun execute(task: suspend () -> Unit) = executor.execute { kotlinx.coroutines.runBlocking { task() } }
 }
 

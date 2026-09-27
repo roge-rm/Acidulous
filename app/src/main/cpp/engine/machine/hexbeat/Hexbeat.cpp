@@ -45,57 +45,23 @@ const ParamDef kDefs[Hexbeat::Count] = {
     {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""},
     {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
 };
-// The classic six, as ratios of the lowest.
+// The classic six metal frequencies, as ratios of the lowest.
 const float kMetalRatios[6] = {1.0f, 1.483f, 1.800f, 2.546f, 2.634f, 3.902f};
 constexpr float kMetalBase = 205.0f;
 
-// How hard the thirteen voices drive the output stage.
-//
-// This is the same fault the saturators in Formulate, Manual and Resonance
-// had, wearing different clothes: a tanh normalised on a point the signal
-// routinely passes. Thirteen voices each carrying a gain of their own summed
-// straight into `tanh` with nothing before it, so every kit in the bank
-// peaked at -0.0 dB - not because the kits were balanced but because the
-// output stage was clamping all of them flat against the ceiling. Eleven
-// kits measured within a tenth of a decibel of each other and the bank's own
-// header wrote that up as the number that mattered for a kit. It was the
-// number that mattered for the clipper.
-//
-// The tanh stays: a box that clips when the whole kit lands on one beat is
-// the sound, and the small boxes all did it. What changes is that it is now
-// something the loud hits reach rather than something every hit lives in.
-// A single voice at full accent comes out around a third of full scale and
-// stays straight; it takes several at once to bend.
+// How hard the voices drive the output tanh. A single voice at full accent
+// comes out around a third of full scale and stays clean. It takes several
+// hits at once to saturate.
 constexpr float kDrive = 0.375f; // -8.5 dB into the clipper
 
-// And the house level, which is a different question from the one above and
-// is why they are two constants rather than one. `kDrive` decides how dirty
-// the box is; this decides where in the volume knob's travel a kit sits, so
-// that a levelled bank lands near the middle of the fader rather than at the
-// bottom of it. Chosen against the Init kit at the -11 dB peak the struck
-// machines level to.
-//
-// It was 0.45 before the per-voice trims below went in, and *raising* it was
-// the correction: taking the loud voices down took the whole machine down
-// with them, and six kits ended up pinned at the top of a 1.5 fader and
-// still short of the line. A house level set too low reads as patches that
-// cannot get loud enough, which is the opposite of how it feels from here.
+// The house level. kDrive sets how dirty the kit is, this sets where a kit
+// sits on the volume knob so a levelled bank lands near the middle. Chosen
+// against the Init kit at the -11 dB peak the drum machines level to.
 constexpr float kHouse = 0.96f; // -0.4 dB
 
-// What one unit of `level` is worth, per voice.
-//
-// It was worth nine decibels more on the clap than on the kick. Measured on
-// the Init kit, the four voices that are oscillators - kick, toms, snare, rim
-// - all delivered -16.6 dB at unit level and agreed with each other to within
-// two tenths; the six built out of noise and band-passed metal ran 3 to 9 dB
-// hot, because each one's gain constant was set by ear on its own and never
-// against the others. So a kit left at its defaults came out with the *clap*
-// seven decibels louder than the kick, and every kit in the old bank spent
-// its level knobs undoing that before it could say anything of its own.
-//
-// These bring the six onto the line the four already sat on, so `level` now
-// means one thing everywhere and the defaults read as what they say: kick at
-// 0.9 loudest, hats 0.6 four decibels down, cymbals 0.5 six.
+// Per-voice level trims so `level` means the same on every voice. The
+// oscillator voices (kick, toms, snare, rim) all give -16.6 dB at level 1,
+// and these bring the noise and metal voices down to match.
 constexpr float kVoiceTrim[Hexbeat::VoiceCount] = {
     1.0f,   // Kick
     1.0f,   // Rim
@@ -125,9 +91,8 @@ void Hexbeat::prepare(int32_t sampleRate) {
 }
 
 void Hexbeat::reset() {
-    // Assigning a fresh struct rather than clearing fields one at a time:
-    // the oscillator phases were the state this used to miss, and the next
-    // member somebody adds would have been missed the same way.
+    // Assign fresh structs so every field is cleared, including ones added
+    // later.
     for (int32_t v = 0; v < VoiceCount; ++v) {
         amp[v] = Env();
         pitchEnv[v] = Env();
@@ -309,8 +274,8 @@ bool Hexbeat::render(float *L, float * /*R*/, int32_t frames) {
     for (int32_t v = 0; v < VoiceCount; ++v) {
         if (amp[v].active || aux[v].active) renderVoice(v, L, frames);
     }
-    // Drive before the clipper, fader after it: turning a kit down must not
-    // also clean it up, and driving it harder must not also make it louder.
+    // Drive before the clipper and volume after it, so the volume doesn't
+    // change how dirty the kit sounds.
     for (int32_t i = 0; i < frames; ++i) L[i] = dsp::fastTanh(L[i] * kDrive) * volume * kHouse;
     return false;
 }

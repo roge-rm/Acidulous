@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-"""Turn manual/*.md into the manual the app carries.
+"""Turns manual/*.md into the manual the app carries.
 
-**One source, two places it appears.** The manual is Markdown in `manual/`, so
-it is read on the git and reviewed in a diff like everything else here, and the
-app's Help window shows the same words. A manual that disagrees with the app is
-worse than no manual, and two hand-kept copies disagree within a release - so
-the app holds no second copy. This lifts the Markdown into
-`model/Manual.kt`, the way gen_param_labels.py lifts the panels' own wording
-into ParamLabels.kt, and for the same reason.
+The manual is Markdown in `manual/`, so it can be read on the git host and
+reviewed in a diff, and the app's Help window shows the same words. This
+turns the Markdown into `model/Manual.kt` so there's no second copy to keep
+in step, the same way gen_param_labels.py builds ParamLabels.kt from the
+panels.
 
-Not a Markdown renderer: the app has none and does not need one. The subset the
-manual is written in is the subset a manual needs -
+It isn't a full Markdown renderer. The manual uses this subset:
 
     # Title              the section, one per file (and one per sub-page)
     > summary            the line under it in the contents (optional)
@@ -21,10 +18,9 @@ manual is written in is the subset a manual needs -
     1. step              a numbered item
     `code` and **bold**  left in the text, drawn by the reader
 
-Two things are written from it and neither is ever edited by hand: the app's
-`model/Manual.kt`, and the contents list in `manual/README.md` - because a
-contents page typed out beside the sections it lists is a second copy of every
-title and every summary, which is the drift this whole script exists to stop.
+Two files are written from it and neither is edited by hand: the app's
+`model/Manual.kt`, and the contents list in `manual/README.md`, so titles and
+summaries aren't typed out twice.
 
 Re-run after editing the manual:  python3 tools/gen_manual.py
 Check both are in step (this is what all_tests.sh runs):
@@ -41,18 +37,10 @@ OPEN, CLOSE = "<!-- contents -->", "<!-- /contents -->"
 
 HEADING, PARA, BULLET, STEP, SUBHEADING = 0, 1, 2, 3, 4
 
-# A Markdown link, which the manual is written with and the app's reader has
-# no way to draw.
-#
-# The reader's subset is deliberately small, and a link is the one piece of
-# Markdown where that costs the *source* something: written plainly, a section
-# page cannot point at its own sub-pages, so anybody reading the manual as
-# files has to guess that `05-effects-and-mixing/delay.md` exists. Written as a
-# link it came out in the app as a literal `[Delay](05-...)`, brackets and all.
-#
-# So the link is resolved here instead: the file keeps it, the app gets the
-# text. The app has its own way to reach a sub-page - the tappable rows under
-# "in detail" - and does not need the link, only the words.
+# A Markdown link. The app's reader can't draw links, so they're resolved
+# here: the file keeps the link so section pages can point at their
+# sub-pages, and the app just gets the text. The app reaches sub-pages through
+# the rows under "in detail".
 LINK = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 
 
@@ -61,35 +49,31 @@ def unlink(text):
     return LINK.sub(r"\1", text)
 
 
-# --- The same manual on a computer -----------------------------------------
+# --- The manual on a computer ----------------------------------------------
 #
-# The manual is written for the phone, which is the app's home: it says "tap",
-# "this phone", "the share sheet". The desktop build shows the same manual in a
-# computer's words: a second text for a block, written here only where it
-# differs, and chosen by the Help window on a desktop. The Markdown stays one
-# text - Android's, as it reads on the git.
+# The manual is written for the phone ("tap", "this phone", "the share
+# sheet"). The desktop build shows it in a computer's words: a second text for
+# a block, only where it differs, chosen by the Help window on a desktop. The
+# Markdown stays one text, the Android one.
 #
-# Five pieces, all small enough to read at a glance:
+# - DESKTOP_WORDS, applied to every block: tap becomes click, phone becomes
+#   computer. Other words stay, since "hold" works the same with a mouse
+#   button (and right-click, see 01).
+# - KEEP, phrases the word rules leave alone: tap tempo, and phones that
+#   really are phones (someone else's, or a speaker).
+# - TOUCH_ONLY, headings whose blocks are left as they are, since the taps
+#   there are on a controller's pads.
+# - PHONE_ONLY, headings the desktop leaves out with everything under them:
+#   TalkBack and the square screen layout.
+# - DESKTOP_SENTENCES, whole sentences a word swap can't fix: two-finger
+#   gestures and pinching (the mouse wheel on desktop), and things a desktop
+#   doesn't do like the share sheet, AAC and keeping the screen awake. An
+#   empty one leaves the sentence out. Each must still be found in the
+#   manual, or --check fails, so rewording one can't quietly drop it.
 #
-# - DESKTOP_WORDS, applied to every block: tap becomes click, a phone a
-#   computer. Nothing else a finger does changes its name - "hold" is a mouse
-#   button held down just the same (and a right-click too: see 01), and
-#   "touching the file" was never about a finger.
-# - KEEP, phrases the words leave alone: tap tempo is tapped with whatever you
-#   have, and a phone that is somebody else's, or a speaker, is still a phone.
-# - TOUCH_ONLY, headings whose blocks are left as they are: the taps there are
-#   on a controller's own pads.
-# - PHONE_ONLY, headings the desktop leaves out, with everything under them:
-#   TalkBack, and the square phone's layout.
-# - DESKTOP_SENTENCES, whole sentences a word could not fix: two fingers and a
-#   pinch, which a mouse does with its wheel, and what a desktop does not do -
-#   the share sheet, AAC, keeping the screen awake. An empty one leaves the
-#   sentence out. Each must still be found in the manual, or --check says so,
-#   so rewriting one cannot quietly drop it.
-#
-# And lines only a computer needs are written in the Markdown as a comment -
-# `<!-- desktop: text -->`, or `<!-- desktop: - a bullet -->` - which the git
-# does not show and the phone's manual does not have.
+# Lines only a computer needs are written in the Markdown as a comment,
+# `<!-- desktop: text -->` or `<!-- desktop: - a bullet -->`, which git hosts
+# don't show and the phone's manual doesn't include.
 DESKTOP_WORDS = [
     (re.compile(r"\b([Dd])ouble tap\b"), lambda m: m.group(1) + "ouble-click"),
     (re.compile(r"\b([Tt])ap(s|ped|ping)?\b"),
@@ -153,9 +137,9 @@ DESKTOP_SENTENCES = {
 
 
 def for_desktop(text, headings, used):
-    """[text] as the desktop says it, or None where it says the same; "" leaves it out.
+    """Returns [text] as the desktop says it, None if it's the same, or "" to leave it out.
 
-    [headings] are the ones it is under, the section's and a subheading's:
+    [headings] are the section heading and subheading it's under. For example
     MPE, the Exquis and the Launchpad are all under "Playing from a keyboard".
     """
     if any(h in PHONE_ONLY for h in headings if h):
@@ -164,8 +148,8 @@ def for_desktop(text, headings, used):
         return None
     out = text
     kept = {}
-    # A replaced sentence is already the desktop's words, and the word rules
-    # must not have it: "the phone's own encoder" means the phone.
+    # A replaced sentence is already in desktop words, so keep the word rules
+    # off it: "the phone's own encoder" really means the phone.
     for n, (phone, desktop) in enumerate(DESKTOP_SENTENCES.items()):
         if phone in out:
             kept[f"\x01{n}\x01"] = desktop
@@ -187,7 +171,7 @@ DESKTOP_LINE = re.compile(r"^<!-- desktop: (.+) -->$")
 
 
 def parse(path):
-    """One file into (title, summary, blocks)."""
+    """Parses one file into (title, summary, blocks)."""
     title, summary, blocks = None, "", []
     para = []
 
@@ -219,8 +203,7 @@ def parse(path):
             flush()
             blocks.append((HEADING, line[3:].strip(), False))
         elif line.startswith("### "):
-            # Printed as a paragraph, hashes and all, until this line: ten of
-            # them across four pages read "### MPE".
+            # A subheading.
             flush()
             blocks.append((SUBHEADING, line[4:].strip(), False))
         elif line.startswith("- "):
@@ -230,7 +213,7 @@ def parse(path):
             flush()
             blocks.append((STEP, line.split(". ", 1)[1].strip(), False))
         elif line.startswith("  ") and blocks and blocks[-1][0] in (BULLET, STEP) and not para and not blocks[-1][2]:
-            # A continuation line of the item above, indented.
+            # An indented continuation of the item above.
             kind, text, only = blocks[-1]
             blocks[-1] = (kind, text + " " + line.strip(), only)
         else:
@@ -242,12 +225,10 @@ def parse(path):
 
 
 def children_of(path):
-    """The sub-pages of a section: `04-the-machines/` beside `04-the-machines.md`.
+    """Returns a section's sub-pages: `04-the-machines/` next to `04-the-machines.md`.
 
-    A machine deserves more than a line and the machines page would be
-    unreadable at twenty times that length, so a section may have pages of its
-    own. Everything else is unchanged: they are the same Markdown, parsed by
-    the same parser, and they appear in the same contents.
+    Sub-pages are the same Markdown, parsed the same way, and listed in the
+    same contents.
     """
     folder = path.with_suffix("")
     if not folder.is_dir():
@@ -305,7 +286,7 @@ def kotlin(sections, used):
                 shown, desktop = "", unlink(text)
             else:
                 shown = unlink(text)
-                # A heading is judged by itself: PHONE_ONLY names the heading.
+                # A heading is judged on its own, since PHONE_ONLY names the heading.
                 under = (heading, None) if kind == HEADING else (heading, sub)
                 desktop = for_desktop(shown, under, used)
             extra = f", {q(desktop)}" if desktop is not None else ""
@@ -327,12 +308,12 @@ def kotlin(sections, used):
 
 
 def lowered(summary):
-    """ - and the summary, begun in lower case; nothing where a page has none (Dan took the chapters' out)."""
+    """Returns " - " and the summary starting in lower case, or nothing if the page has none."""
     return f" - {summary[0].lower() + summary[1:]}" if summary else ""
 
 
 def contents(files, sections):
-    """The numbered list, between the markers in manual/README.md."""
+    """Builds the numbered list that goes between the markers in manual/README.md."""
     rows = []
     for i, (path, ((title, summary, _), kids)) in enumerate(zip(files, sections), 1):
         rows.append(f"{i}. [{title}]({path.name})" + lowered(summary))
@@ -343,7 +324,7 @@ def contents(files, sections):
 
 
 def indexed(files, sections):
-    """manual/README.md with its contents list brought up to date."""
+    """Returns manual/README.md with its contents list brought up to date."""
     text = INDEX.read_text(encoding="utf-8")
     a, b = text.find(OPEN), text.find(CLOSE)
     if a < 0 or b < 0:

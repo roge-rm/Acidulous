@@ -1,9 +1,9 @@
 #!/bin/bash
-# Round trip: write each format with ours, read it back with ours.
+# Round trip: write each format with our writers and read it back with our
+# readers.
 #
-# sink_test proves the *writers* against somebody else's decoder (ffmpeg).
-# This proves the readers against our own writers, which is the other half and
-# the one that needs no tools installed - the whole loop is inside the tree.
+# sink_test checks the writers against ffmpeg. This checks the readers against
+# our own writers and needs no other tools installed.
 set -u
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT

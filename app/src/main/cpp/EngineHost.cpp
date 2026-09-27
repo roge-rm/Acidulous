@@ -50,7 +50,7 @@ namespace acidulous {
 namespace {
 Engine sEngine;
 AudioDriver sAudio;
-/** Link, made once and kept: the audio thread holds a pointer to it. */
+/** Link, created once and kept, since the audio thread holds a pointer to it. */
 LinkTimebase sLink;
 
 Unit unitFromName(const std::string &u) {
@@ -108,7 +108,7 @@ bool EngineHost::start() {
 void EngineHost::stop() {
     if (!running) return;
     running = false;
-    sAudio.stop(); // once the callback is gone nothing else touches the racks
+    sAudio.stop(); // once the callback has stopped nothing else touches the racks
     sEngine.stop();
     for (auto &t : mountedType) t.clear();
     for (auto &r : mountedEffectType) for (auto &t : r) t.clear();
@@ -119,8 +119,8 @@ void EngineHost::stop() {
 bool EngineHost::mountObjectWithRetry(Mount &m) { return mountWithRetry(m, m.deleter); }
 
 bool EngineHost::mountWithRetry(Mount &m, void (*deleter)(void *)) {
-    // The audio thread applies a bounded burst of mounts per block (1.33 ms); a full queue is a
-    // burst, not a fault.
+    // The audio thread applies a limited number of mounts per block (1.33 ms), so a full
+    // queue just means waiting a little.
     for (int attempt = 0; attempt < 50; ++attempt) {
         if (sEngine.mount(m)) return true;
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -153,21 +153,10 @@ void EngineHost::unmountMachine(int rack) {
     Mount m;
     m.kind = Mount::Kind::Machine;
     m.rack = rack;
-    m.object = nullptr; // swap in nothing; the old machine is retired
+    m.object = nullptr; // swap in nothing, and the old machine is retired
     if (mountWithRetry(m, [](void *) {})) mountedType[rack].clear();
 }
 
-/**
- * Put an effect on one of the two send buses, or empty it.
- *
- * `mountEffect` for the master, and deliberately the same shape: built here,
- * prepared here, handed over on the audio thread, the old one retired off it.
- *
- * **The mix is pinned open.** Every effect carries a wet/dry, and on a send a
- * dry path is the track arriving in the mix twice - once through the channel
- * and once through the return. So if this effect has a `mix`, it is set to
- * fully wet as it is built, and the editor does not offer it.
- */
 bool EngineHost::mountInputEffect(int slot, const std::string &typeName) {
     if (slot < 0 || slot >= kInputSlots) return false;
     Effect *fx = nullptr;
@@ -188,6 +177,13 @@ bool EngineHost::mountInputEffect(int slot, const std::string &typeName) {
     return true;
 }
 
+/**
+ * Puts an effect on one of the two send buses, or empties it. Same as
+ * `mountEffect`: built and prepared here, mounted on the audio thread.
+ *
+ * The mix is set fully wet, since any dry signal on a send would reach the
+ * mix twice. The editor doesn't show the mix knob for sends.
+ */
 bool EngineHost::mountSend(int slot, const std::string &typeName) {
     if (slot < 0 || slot >= kSendSlots) return false;
     Effect *fx = nullptr;
@@ -201,7 +197,7 @@ bool EngineHost::mountSend(int slot, const std::string &typeName) {
         const int32_t mix = fx->params().indexOf("mix");
         if (mix >= 0) {
             fx->params().set(mix, 1.0f);
-            fx->params().jumpAll(); // wet from the first block, not smoothed up to it
+            fx->params().jumpAll(); // fully wet from the first block
         }
     }
     Mount m;
@@ -314,9 +310,8 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
     if (rack < 0 || rack >= kRackCount) { error = "bad rack"; return false; }
     SampleData *sample = nullptr;
     if (!path.empty()) {
-        // Through the front door, so a document that still names a .flac or
-        // an .mp3 - one imported before the conversion existed, or edited by
-        // hand - plays rather than failing.
+        // Use the general decoder, so a song that still names a .flac or .mp3
+        // (imported before conversion existed, or edited by hand) still plays.
         auto decoded = decodeAudio(path, kSampleRate, error, maxSeconds > 0 ? maxSeconds : kMaxDecodeSeconds);
         if (!decoded) return false;
         sample = decoded.release();
@@ -335,18 +330,14 @@ bool EngineHost::loadSample(int rack, int slot, const std::string &path, std::st
 namespace {
 
 /**
- * A sample as min/max pairs, one per column.
- *
- * Shared by the mounted-pad shape and the file shape below, because two
- * pictures of the same sound drawn by two loops is one of them being subtly
- * different and nobody knowing which.
+ * A sample as min/max pairs, one per column. Shared by the pad shape and the
+ * file shape so both draw the same.
  */
 int32_t shapeOf(const SampleData &s, float *dest, int32_t columns, int32_t fromFrame,
                 int32_t toFrame) {
     if (dest == nullptr || columns <= 0 || s.frames <= 0) return 0;
 
-    // An empty or nonsensical range is the whole sample, so every caller that
-    // does not care about a window says nothing and gets what it always got.
+    // An empty or invalid range means the whole sample.
     int64_t first = std::clamp<int64_t>(fromFrame, 0, s.frames - 1);
     int64_t last = toFrame > fromFrame ? std::clamp<int64_t>(toFrame, 1, s.frames) : s.frames;
     if (last <= first) {
@@ -362,8 +353,7 @@ int32_t shapeOf(const SampleData &s, float *dest, int32_t columns, int32_t fromF
         if (to > s.frames) to = s.frames;
         float lo = 0.0f, hi = 0.0f;
         for (int64_t i = from; i < to; ++i) {
-            // Both channels, because a waveform that shows only the left is a
-            // waveform that lies about anything panned.
+            // Both channels, so anything panned still shows.
             const float l = s.left[static_cast<size_t>(i)];
             const float r = s.stereo ? s.right[static_cast<size_t>(i)] : l;
             lo = std::min(lo, std::min(l, r));
@@ -424,8 +414,8 @@ std::string EngineHost::auditionFile(const std::string &path) {
     std::string error;
     const std::unique_ptr<SampleData> s = WavReader::read(path, kSampleRate, error, kMaxSliceSeconds);
     if (s == nullptr || s->frames <= 0) return error.empty() ? "that file couldn't be read" : error;
-    // Interleaved here, on this thread, so the audio thread has nothing to do
-    // but add two numbers per frame.
+    // Interleave here so the audio thread only has to add two numbers per
+    // frame.
     std::vector<float> pcm(static_cast<size_t>(s->frames) * 2, 0.0f);
     for (int32_t i = 0; i < s->frames; ++i) {
         const float l = s->left[static_cast<size_t>(i)];
@@ -446,9 +436,8 @@ std::string EngineHost::editSample(const std::string &src, const std::string &ds
     if (s == nullptr) return error.empty() ? "that file couldn't be read" : error;
     if (!audio::applyEdit(*s, ops, error)) return error;
 
-    // **Through a temporary, always.** The common case is overwriting the file
-    // that was just read, and a writer that failed halfway through that would
-    // leave a recording that is half of itself with nothing to go back to.
+    // Always write to a temporary file first. Usually we're overwriting the
+    // source, and a failure halfway would otherwise lose the recording.
     const std::string tmp = dst + ".part";
     {
         WavWriter writer;
@@ -477,21 +466,20 @@ std::string EngineHost::editSample(const std::string &src, const std::string &ds
 }
 
 /**
- * Two lines: a word, then a path or a reason.
+ * Returns two lines: a status word, then a path or a reason.
  *
  *     ok\n/some/where.wav     converted, all of it
  *     cut\n/some/where.wav    converted, but only the first thirty seconds
  *     err\nwhat went wrong
  *
- * One string crosses the boundary, and the caller has somewhere to put the
- * one thing it could not otherwise find out - that a long file was shortened.
+ * "cut" lets the caller tell the user a long file was shortened.
  */
 std::string EngineHost::importAudio(const std::string &path, std::string &error, int maxSeconds) const {
     const int seconds = maxSeconds > 0 ? maxSeconds : kMaxDecodeSeconds;
     const AudioFormat format = sniff(path);
     if (format == AudioFormat::Wav) {
-        // A WAV is taken as it is, and a long one is truncated when it is
-        // read rather than here, so there is nothing to say yet.
+        // A WAV is used as is. A long one is truncated when it's read, not
+        // here.
         return "ok\n" + path;
     }
     if (format == AudioFormat::Unknown) {
@@ -503,16 +491,15 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error,
     auto decoded = decodeAudio(path, kSampleRate, error, seconds);
     if (!decoded) return "";
 
-    // Alongside, with the extension replaced: `break.flac` becomes
-    // `break.wav`, which is the name a player will look for.
+    // Next to the original with the extension replaced: `break.flac` becomes
+    // `break.wav`.
     const size_t dot = path.find_last_of('.');
     const size_t slash = path.find_last_of('/');
     const std::string stem = (dot != std::string::npos && (slash == std::string::npos || dot > slash))
                                  ? path.substr(0, dot)
                                  : path;
-    // Never the file we are reading from: a source called "break.wav" that
-    // turned out not to be a WAV would otherwise be overwritten and then
-    // removed, leaving nothing at all where the import used to be.
+    // Never write over the source. A "break.wav" that isn't really a WAV
+    // would otherwise be overwritten and then deleted.
     std::string out = stem + ".wav";
     if (out == path) out = stem + " converted.wav";
     for (int n = 2; n < 1000; ++n) {
@@ -524,9 +511,8 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error,
 
     WavWriter writer;
     if (!writer.open(out, kSampleRate, 24, error)) return "";
-    // Interleaved, which is what a sink takes; a mono file is written to both
-    // sides rather than kept mono, because every other WAV the app writes is
-    // stereo and one shape downstream is worth a little disk.
+    // Interleaved for the sink. Mono is written to both sides so every WAV
+    // the app writes is stereo.
     std::vector<float> interleaved(static_cast<size_t>(decoded->frames) * 2);
     for (int32_t i = 0; i < decoded->frames; ++i) {
         const float l = decoded->left[static_cast<size_t>(i)];
@@ -536,9 +522,9 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error,
     }
     writer.write(interleaved.data(), decoded->frames);
     if (!writer.close()) { error = "couldn't write the converted file"; return ""; }
-    std::remove(path.c_str()); // the original was a copy of the player's own file
-    // Everything a report of a bad conversion needs, in one line: the format
-    // it decided on, what came out of the decoder, and how loud it was.
+    std::remove(path.c_str()); // the original was a copy of the user's file
+    // Log everything needed to debug a bad conversion: the detected format,
+    // what the decoder produced, and the peak.
     LOGI("converted %s (%s) to %s: %d frames at %d Hz, %s, peak %.3f%s", path.c_str(), formatName(format),
          out.c_str(), decoded->frames, decoded->rate, decoded->stereo ? "stereo" : "mono",
          static_cast<double>(decoded->peak), decoded->truncated ? ", truncated" : "");
@@ -546,8 +532,7 @@ std::string EngineHost::importAudio(const std::string &path, std::string &error,
 }
 
 std::string EngineHost::slicePoints(const std::string &path, int mode, int count, std::string &error) const {
-    // The long ceiling: this is only ever asked about a slice source, which
-    // is the one file a whole machine shares.
+    // The longer slice limit, since this is only used for a slice source.
     auto decoded = decodeAudio(path, kSampleRate, error, kMaxSliceSeconds);
     if (!decoded) return "";
     const std::vector<float> points = audio::slicePoints(
@@ -567,8 +552,7 @@ std::string EngineHost::slicePoints(const std::string &path, int mode, int count
 std::string EngineHost::loopShape(const std::string &path, std::string &error) const {
     auto decoded = decodeAudio(path, kSampleRate, error, kMaxSliceSeconds);
     if (!decoded || decoded->frames <= 0) return "";
-    // The same detection Dice runs on the loop it is given, so the panel says
-    // what the machine will do.
+    // The same detection Dice runs, so the panel matches what the machine does.
     audio::Take take;
     take.frames = decoded->frames;
     take.left = decoded->left;
@@ -624,7 +608,7 @@ bool EngineHost::loadZoneMap(int rack, const std::string &spec, const std::strin
         auto known = loaded.find(f[0]);
         if (known == loaded.end()) {
             std::string readError;
-            auto data = WavReader::read(f[0], 0, readError); // 0: keep the file's own rate
+            auto data = WavReader::read(f[0], 0, readError); // 0: keep the file's rate
             if (!data) { error = f[0] + ": " + readError; return false; }
             built->samples.push_back(std::move(*data));
             known = loaded.emplace(f[0], static_cast<int32_t>(built->samples.size()) - 1).first;
@@ -669,8 +653,8 @@ std::string EngineHost::loadNexusPatch(int rack, const std::string &spec) {
     Machine *m = sEngine.racks[rack].currentMachine();
     if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return "that rack is not a Nexus";
     std::string error;
-    // Parsed and allocated here, on whatever worker called us, and handed
-    // over as one object - the audio thread never builds a graph.
+    // Parsed and allocated here on the calling worker and mounted as one
+    // object. The audio thread never builds a graph.
     machine::nexus::Graph *graph = machine::nexus::Graph::parse(spec, static_cast<float>(kSampleRate), error);
     if (graph == nullptr) return error.empty() ? "the patch couldn't be read" : error;
     const std::string warn = graph->warning();
@@ -777,15 +761,9 @@ void EngineHost::noteOff(int rack, uint8_t note) {
 
 namespace {
 /**
- * Mod and pressure go in as parameters rather than as MIDI.
- *
- * They come out the far end as MIDI again - Rack::setParam turns them back -
- * so the machine cannot tell the difference. What the detour buys is
- * everything the parameter path already does: the move is recorded into a
- * lane, it marks the control touched so its own lane cannot fight it for
- * the rest of the pass, and on playback the lane drives it. Sending them
- * straight through as MIDI, which is what they used to do, is why they were
- * the one gesture in the app that nothing remembered.
+ * Mod and pressure are sent as parameters instead of MIDI. Rack::setParam
+ * turns them back into MIDI, so the machine sees no difference, but this way
+ * they're recorded into lanes and played back like any other control.
  */
 void pushPerformance(int rack, int32_t index, uint8_t value, bool record) {
     ParamMessage p;
@@ -804,8 +782,7 @@ void EngineHost::controlChange(int rack, uint8_t cc, uint8_t value, bool record)
         pushPerformance(rack, kPerfMod, value, record);
         return;
     }
-    // The pedals take the same detour as the wheel, so they are recorded
-    // into a lane and played back from it.
+    // The pedals go the same way as the wheel, so they're recorded into lanes.
     if (cc == 64 || cc == 66 || cc == 67) {
         pushPerformance(rack, cc == 64 ? kPerfSustain : cc == 66 ? kPerfSostenuto : kPerfSoft, value, record);
         return;
@@ -838,19 +815,15 @@ int EngineHost::mpeHeldMask() const { return sEngine.mpeHeldMask(); }
 void EngineHost::midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2, uint8_t channel) {
     if (rack < 0 || rack >= kRackCount) return;
     const uint8_t kind = status & 0xf0;
-    // On a member channel the wheel and the pressure strip are not the
-    // channel's, they are one finger's - so they must not be diverted into
-    // the performance lane, which has no idea which note it belongs to.
-    // They go through as MIDI and the rack works out whose they are.
+    // On an MPE member channel, bend and pressure belong to one note, so they
+    // go through as MIDI and the rack works out which note.
     if (mpeMemberChannel(channel)) {
         sEngine.pushMidi({static_cast<uint8_t>(kind | rack), d1, d2, channel});
         return;
     }
-    // A wheel on a controller is the same gesture as the wheel on screen and
-    // is recorded the same way - by going down the same path, not by a
-    // parallel one that has to be kept in step with it. Everything else
-    // still goes straight through as MIDI: the machine hears it, and nothing
-    // yet knows what a lane for it would mean.
+    // A controller's mod wheel and pedals take the same path as the on-screen
+    // ones, so they're recorded the same way. Everything else goes straight
+    // through as MIDI.
     if (kind == 0xb0 && (d1 == 1 || d1 == 64 || d1 == 66 || d1 == 67)) {
         controlChange(rack, d1, d2);
         return;
@@ -871,10 +844,8 @@ int EngineHost::paramIndex(const std::string &machineType, const std::string &un
         return -1;
     }
     if (u == Unit::Channel) {
-        // From the channel's own table, not a list of names kept here: the
-        // list had stopped at `midichannel`, so `swing` - added to the table
-        // in M58 - and `output` never resolved, and a per-track swing set in
-        // the app never reached the scheduler at all.
+        // Look it up in the channel's own table so new channel parameters
+        // resolve without changes here.
         return sEngine.racks[0].channelIndexOf(name.c_str());
     }
     if (u == Unit::Master) return sEngine.master.params().indexOf(name.c_str());
@@ -965,14 +936,7 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
     } else if (u == Unit::Effect1 || u == Unit::Effect2) {
         index = paramIndex(mountedEffectType[rack][u == Unit::Effect1 ? 0 : 1], unit, name);
     } else if (u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3) {
-        // Three slots, not two - see the same correction in `paramNormalized`.
-        // Here it was worse than a wrong readout: the name was looked up
-        // against slot 1's mounted type, did not resolve, and `setParam`
-        // returned false. So **no parameter of the third modifier had ever
-        // reached the engine** - not from a knob, and not from the snapshot
-        // push either, since that goes through here too. The arp ran on its
-        // defaults whatever the document said, which is why turning its knobs
-        // changed nothing you could hear.
+        // Three modifier slots (see `paramNormalized`).
         index = paramIndex(mountedModifierType[rack][u == Unit::Mod1 ? 0 : u == Unit::Mod2 ? 1 : 2], unit, name);
     }
     if (index == -1) return false;
@@ -989,14 +953,9 @@ bool EngineHost::setParam(int rack, const std::string &unit, const std::string &
 namespace {
 
 /**
- * Says "this is a render" for as long as it is alive.
- *
- * A scope guard rather than two stores, because both render paths return early
- * in a dozen places - a file that will not open, a scene that does not exist,
- * a mount queue that is full - and a flag left set would silently pin the
- * *live* engine to full quality until the app was restarted, which is the
- * opposite of what the setting is for and would look like the lean switch
- * being broken.
+ * Sets the offline render flag for as long as it exists. A scope guard, since
+ * both render paths return early in many places and a flag left set would
+ * keep the live engine at full quality.
  */
 struct OfflineRender {
     OfflineRender() { EngineSettings::get().offlineRender.store(true, std::memory_order_relaxed); }
@@ -1011,10 +970,8 @@ struct OfflineRender {
 
 bool EngineHost::renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
                             std::string &error, int32_t startScene, float maxSeconds) {
-    // The same flag the audio thread sets, on the thread that renders
-    // offline: a tail that flushed live and did not flush here would make
-    // an export differ from the performance in the last few dB of every
-    // decay. Inaudible, and still a difference this engine does not allow.
+    // Flush denormals on this thread too, the same as the audio thread, so
+    // an offline render matches live playback exactly.
     dsp::flushDenormals();
 
     return renderTargets({RenderTarget{path, -1}}, tailSeconds, format, bits, error, startScene, maxSeconds);
@@ -1049,9 +1006,8 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     renderSeconds.store(0.0f, std::memory_order_relaxed);
     renderPeak.store(0.0f, std::memory_order_relaxed);
 
-    // Every file is opened before a block is rendered: finding out on the
-    // ninth stem that the directory is not writable, having already taken
-    // the engine off the device, would be a poor way to learn it.
+    // Open every file before rendering anything, so a write error shows up
+    // before the engine is taken off the device.
     std::vector<std::unique_ptr<AudioSink>> sinks;
     sinks.reserve(targets.size());
     for (const RenderTarget &t : targets) {
@@ -1069,18 +1025,14 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
         sinks.push_back(std::move(sink));
     }
 
-    // Take the engine off the device: from here every block is ours to pull.
-    //
-    // And at full quality, whatever the setting says: a render has no deadline
-    // to miss, so there is nothing for lean to buy, and a file that quietly
-    // came out lean because the automatic watcher had chosen it a minute ago
-    // is not a file anybody asked for.
+    // Take the engine off the device so we can pull every block ourselves,
+    // at full quality whatever the setting says, since there's no deadline.
     const OfflineRender renderingAtFullQuality;
     sAudio.stop();
     const bool loopSongBefore = sEngine.transport.loopSong();
     const bool loopSceneBefore = sEngine.transport.loopScene();
-    // These paths drive the scheduler by hand through one scene. Clip mode
-    // would have every rack somewhere else, so it sits out and comes back.
+    // This drives the scheduler through one scene by hand, so clip mode is
+    // turned off and restored afterwards.
     const bool launcherBefore = sEngine.transport.launcherMode();
     sEngine.transport.setLauncher(false);
     const float clickBefore = sEngine.master.params().normalized(sEngine.master.params().indexOf("clickon"));
@@ -1088,27 +1040,17 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     sEngine.transport.setLoopScene(false);
     sEngine.transport.requestStop();
     float silent[kBlockFrames * 2];
-    sEngine.renderBlock(nullptr, silent); // apply the stop, settle
+    sEngine.renderBlock(nullptr, silent); // apply the stop
 
-    // Start from silence.
+    // Start from silence, so nothing from before (filter and delay state,
+    // tails) bleeds into the start of the file.
     //
-    // Without this a render carries in whatever the engine was holding when
-    // it was asked - filter and delay state, the tail of the last thing
-    // played - and the top of the file has the previous take bleeding over
-    // it. freezeClip already reset the one rack it renders, for this reason.
-    //
-    // It does *not* make a render reproducible, and it was written in the
-    // belief that it would: three renders of the demo peaked at 0.947,
-    // 0.838 and 0.897, and they still do. The files agree for their first
-    // 0.376 s and then diverge, which points at per-note randomness - a
-    // breath or noise source seeded afresh each time - that reset() does
-    // not put back. Making an export repeatable means every machine's RNG
-    // starting from a known seed, which is its own job across every
-    // machine rather than a line here.
+    // On its own this doesn't make renders repeatable. That also needs every
+    // machine's random sources to reset to a known seed.
     sEngine.panicFlag.store(true, std::memory_order_release);
     sEngine.renderBlock(nullptr, silent);
-    // Nothing to the hardware from here: what the render plays goes in the
-    // file. After the panic above, so a note held live was let go first.
+    // Stop sending MIDI to hardware while rendering. After the panic above,
+    // so held notes get their note-offs first.
     sEngine.midiOut.hold(true);
 
     ParamMessage click;
@@ -1118,8 +1060,8 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
 
     float block[kBlockFrames * 2];
     float stem[kBlockFrames * 2];
-    // An hour, as a guard - or the caller's own limit, which is how one
-    // scene is rendered without the song running on into the next.
+    // An hour as a safety limit, or the caller's limit, which is how a
+    // single scene is rendered.
     int64_t maxBlocks = static_cast<int64_t>(kSampleRate) * 60 * 60 / kBlockFrames;
     if (maxSeconds > 0.0f) {
         maxBlocks = static_cast<int64_t>(maxSeconds * kSampleRate / kBlockFrames);
@@ -1136,8 +1078,8 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
             for (int32_t f = 0; f < kBlockFrames; ++f) { ml[f] = block[f * 2]; mr[f] = block[f * 2 + 1]; }
             measure->process(ml, mr, kBlockFrames);
         }
-        // A normalised export: the gain its measuring pass asked for, on the
-        // mix and every stem alike so the stems still sum to the mix.
+        // For a normalised export, apply the measured gain to the mix and
+        // every stem alike, so the stems still sum to the mix.
         const float renderGain = renderGainDb == 0.0f ? 1.0f : std::pow(10.0f, renderGainDb / 20.0f);
         if (renderGain != 1.0f) for (float &v : block) v *= renderGain;
         for (size_t i = 0; i < targets.size(); ++i) {
@@ -1158,7 +1100,7 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
                 sinks[i]->write(stem, kBlockFrames);
                 continue;
             }
-            // A rack's two buffers are separate; a file wants them laced.
+            // A rack's two buffers are separate, so interleave them for the file.
             const Rack &source = sEngine.racks[rack];
             for (int32_t f = 0; f < kBlockFrames; ++f) {
                 stem[f * 2] = source.bufL[f] * renderGain;
@@ -1168,10 +1110,8 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
         }
         for (float v : block) { const float a = v < 0 ? -v : v; if (a > peak) peak = a; }
         ++blocks;
-        // Two ways to reach the end - the song running out, or the caller's
-        // own limit, which is how one scene is rendered without running on
-        // into the next. Either way the tail then gets its chance, rather
-        // than the file stopping dead on the last note.
+        // The end is either the song finishing or the caller's limit. Either
+        // way the tail is rendered after it.
         if (!ended && !sEngine.transport.isPlaying()) ended = true;
         if (!ended && blocks >= maxBlocks) ended = true;
         if (ended && --tailBlocks < 0) break;
@@ -1182,10 +1122,8 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     }
     renderSeconds.store(static_cast<float>(blocks) * kBlockFrames / kSampleRate, std::memory_order_relaxed);
     renderPeak.store(peak, std::memory_order_relaxed);
-    // Stopped, and then silenced: a stop is only note-offs, and the stream
-    // reopens onto whatever the song's last notes and effects left ringing -
-    // the same blip a freeze made, and for the same reason. A render panics
-    // on the way in; it panics on the way out as well.
+    // Stop and then panic. A stop only sends note-offs, so without the panic
+    // the stream would reopen onto whatever was still ringing.
     sEngine.transport.requestStop();
     sEngine.renderBlock(nullptr, silent);
     sEngine.panicFlag.store(true, std::memory_order_release);
@@ -1196,7 +1134,7 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
         if (!sink->close()) closed = false;
     }
 
-    // Hand the device back exactly as it was.
+    // Restore everything as it was.
     sEngine.transport.setLoopSong(loopSongBefore);
     sEngine.transport.setLoopScene(loopSceneBefore);
     sEngine.transport.setLauncher(launcherBefore);
@@ -1219,7 +1157,7 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
 // --- Transport ---------------------------------------------------------------
 
 void EngineHost::transportPlay(int sceneIdx) {
-    sEngine.master.resetLoudness(); // integrated loudness is of this playing
+    sEngine.master.resetLoudness(); // integrated loudness covers this playback only
     sEngine.transport.requestPlay(sceneIdx);
 }
 void EngineHost::transportStop() { sEngine.transport.requestStop(); }
@@ -1235,11 +1173,9 @@ int EngineHost::queuedScene() const { return sEngine.transport.queuedSceneIndex(
 bool EngineHost::isRecordArmed() const { return sEngine.transport.isRecordArmed(); }
 void EngineHost::setTempo(float bpm) {
     sEngine.clock.requestSongTempo(bpm);
-    // Somebody *asking* for a tempo is the one thing worth telling a Link
-    // session about. Everything else the song does to its own tempo - a
-    // scene override, a smooth ramp - stands down while Link owns it, the
-    // same way it does under a MIDI clock, so that opening a song cannot
-    // quietly re-tempo everybody else in the room.
+    // Only a tempo the user sets is sent to Link. Scene overrides and ramps
+    // are ignored while Link is in charge, like under MIDI clock, so opening
+    // a song doesn't change everyone else's tempo.
     if (sEngine.transport.followingLink()) sLink.tempoFromApp(static_cast<double>(bpm));
 }
 float EngineHost::tempo() const { return sEngine.clock.bpm(); }
@@ -1254,9 +1190,8 @@ void EngineHost::stopAllClips() { sEngine.transport.requestStopAll(); }
 void EngineHost::setClockOut(bool on) { sEngine.transport.setClockOut(on); }
 
 /**
- * Two longs per event: the frame it belongs on, and the bytes. Bulk, like
- * drainRecorded, because one JNI call per MIDI byte at 24 pulses a beat is
- * a call every twenty milliseconds that need not happen.
+ * Two longs per event: the frame and the bytes. Drained in bulk like
+ * drainRecorded, to avoid a JNI call per MIDI clock pulse.
  */
 int EngineHost::drainMidiOut(int64_t *out, int maxEvents) {
     int n = 0;
@@ -1283,27 +1218,21 @@ void EngineHost::setTuning(int rack, const float *ratios) {
 
 // --- Ableton Link -----------------------------------------------------------
 //
-// The timebase is handed to the engine once and never taken back: it lives
-// as long as the host does, so the audio thread can read the pointer without
-// wondering whether the object under it is still there. What switches is the
-// transport's sync *source*, which every tempo-setting site already asks
-// about - so turning Link on stands the song's own tempo down, and turning
-// it off gives it back, without either of them knowing Link exists.
+// The timebase is given to the engine once and lives as long as the host, so
+// the audio thread's pointer is always valid. Turning Link on or off switches
+// the transport's sync source, which every tempo change already checks.
 void EngineHost::setLinkEnabled(bool on) {
     sLink.setEnabled(on);
     if (on) {
         sEngine.timebase.store(&sLink, std::memory_order_release);
-        // A burst of silence at the head of the buffer is the only latency
-        // guess available until the stream has presented enough frames to
-        // have a real anchor.
+        // One burst is the best latency guess until the stream has a real
+        // timestamp anchor.
         const int32_t rate = sAudio.getSampleRate() > 0 ? sAudio.getSampleRate() : kSampleRate;
         sLink.setFallbackLatency(static_cast<int64_t>(sAudio.getBufferFrames()) * 1000000LL / rate);
         sLink.setBlockFrames(kBlockFrames, rate);
-        // Switching on alone means *our* tempo becomes the session's. It is
-        // only when a session is already out there that the tempo is theirs,
-        // and Link settles that itself the moment discovery finds one: the
-        // peer that joins adopts. Without this, turning Link on at the start
-        // of the day dropped a 140 bpm song to Link's own default of 120.
+        // Offer our tempo. If a session already exists Link adopts its tempo
+        // when it finds it. Without this, Link's default of 120 would replace
+        // the song's tempo.
         sLink.tempoFromApp(static_cast<double>(sEngine.clock.bpm()));
         sEngine.transport.setSyncSource(seq::Transport::SyncLink);
     } else if (sEngine.transport.followingLink()) {
@@ -1318,9 +1247,8 @@ void EngineHost::setLinkStartStop(bool on) {
 }
 
 int64_t EngineHost::linkStatus() {
-    // The anchor goes down the same call that fetches the readout: it needs
-    // refreshing while Link is on, the UI polls this once a second anyway,
-    // and one caller is one thing to forget rather than two.
+    // Refresh the anchor here, since the UI polls this once a second while
+    // Link is on.
     int64_t frame = 0, nanos = 0;
     if (sAudio.presentationAnchor(frame, nanos)) {
         sLink.setAnchor(frame, nanos, sAudio.getSampleRate() > 0 ? sAudio.getSampleRate() : kSampleRate);
@@ -1402,18 +1330,16 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
     clip->rev = rev;
     clip->bars = std::clamp(bars, 1, 16);
     clip->ticksPerBar = snap->scenes[scene].ticksPerBar;
-    // Bit 0 is the play mode; bit 1 is whether the dice roll free. They share
-    // a word because the alternative was a tenth argument for one bool.
+    // Bit 0 is the play mode, bit 1 is whether the dice roll freely.
     clip->playMode = (playMode & 1) == 1 ? PlayMode::OneShot : PlayMode::Loop;
     clip->freeRoll = (playMode & 2) != 0;
     clip->seed = seed;
     clip->mute = mute;
     clip->notes.reserve(static_cast<size_t>(std::max(0, noteCount)));
     clip->expr.reserve(static_cast<size_t>(std::max(0, exprCount)));
-    // The expression array is consumed in step with the notes: each note says
-    // how many of the points that follow are its own. Ranges are recorded
-    // before the sort, and travel with the note through it, because the flat
-    // array is never reordered - only pointed into.
+    // The expression array is read in step with the notes: each note says how
+    // many of the following points are its own. Ranges are recorded before
+    // the sort and move with the notes, since the flat array isn't reordered.
     int taken = 0;
     for (int n = 0; n < noteCount; ++n) {
         const int32_t *rec = notes + n * 6;
@@ -1423,8 +1349,7 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
         note.pitch = static_cast<uint8_t>(std::clamp<int32_t>(rec[2], 0, 127));
         note.velocity = static_cast<uint8_t>(std::clamp<int32_t>(rec[3], 1, 127));
         note.trig = static_cast<uint16_t>(static_cast<uint32_t>(rec[5]) & 0xFFFFu);
-        // Asked once, here, so the player does not have to compute a verdict
-        // for notes it is about to skip on every clip in the song.
+        // Worked out once here, so the player doesn't have to per note.
         if (note.condition() == static_cast<int32_t>(TrigCond::Prev) ||
             note.condition() == static_cast<int32_t>(TrigCond::NotPrev)) {
             clip->hasPrevCond = true;
@@ -1440,8 +1365,8 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
             p.value = std::clamp(pt[2], 0.0f, 1.0f);
             clip->expr.push_back(p);
         }
-        // By kind, then by tick: the player takes one contiguous range per
-        // curve out of this and never searches again.
+        // By kind, then by tick, so each curve is one contiguous range for
+        // the player.
         std::stable_sort(clip->expr.begin() + note.exprFirst, clip->expr.end(),
                          [](const ExprPoint &a, const ExprPoint &b) {
                              return a.kind != b.kind ? a.kind < b.kind : a.tick < b.tick;
@@ -1506,10 +1431,8 @@ namespace {
 
 
 /**
- * A machine is mounted through a queue the audio thread drains, so a worker
- * that asks for it in the same breath as the UI mounted it can arrive
- * first. Wait a few blocks for it rather than failing a load that is only
- * early - 100 ms is thousands of blocks, and the UI is not waiting on us.
+ * Machines are mounted through a queue, so a worker can ask for one just
+ * before it arrives. Waits up to 100 ms for it instead of failing.
  */
 Machine *awaitMachine(Engine &engine, int rack, const char *type) {
     for (int attempt = 0; attempt < 20; ++attempt) {
@@ -1522,33 +1445,11 @@ Machine *awaitMachine(Engine &engine, int rack, const char *type) {
 } // namespace
 
 /**
- * What an audio track is holding, as a line per region.
+ * One file as a source: held in memory if it's shorter than
+ * `kResidentSeconds`, otherwise converted once into `cache/reel` and mapped.
  *
- *   sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop
- *
- * The house's own shape for anything that is a list rather than a number - the
- * zone map and the Nexus patch arrive the same way. One line per lane per
- * cell, so a take sung across four scenes is four lines naming one file.
- *
- * **Each distinct file is decoded once**, however many lines mention it. A
- * take that runs the length of a song is a dozen regions, and decoding it a
- * dozen times is the difference between twenty-nine megabytes and three
- * hundred and fifty. They are converted to int16 here, and a mono file stays
- * mono; see engine/core/Reel.h for why that is the decision the feature rests
- * on.
- *
- * An empty spec clears the reel.
- */
-/**
- * One file, as a source: held if it is short, mapped if it is long.
- *
- * The ceiling is `kResidentSeconds`. Under it nothing changes and nothing new
- * happens; over it the file is converted once into `cache/reel` and mapped, so
- * what a twenty-minute vocal costs in memory is the part of it the song is
- * actually playing rather than the whole of it.
- *
- * Returns null and logs when a file cannot be read, so one bad line in a spec
- * loses one lane rather than the reel.
+ * Returns null and logs when a file can't be read, so one bad line in a spec
+ * only loses one lane.
  */
 std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::string &path,
                                                                 int64_t &residentFrames,
@@ -1570,8 +1471,8 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
         int64_t frames = 0;
         struct stat st {};
         if (::stat(dest.c_str(), &st) == 0 && st.st_size > 0) {
-            // Converted before. The name carries the source's size and mtime,
-            // so a file that has been edited since has a different one.
+            // Already converted. The name includes the source's size and
+            // mtime, so an edited file gets a new one.
             WavStream again;
             if (again.open(path, error)) {
                 stereo = again.channels() == 2;
@@ -1596,7 +1497,7 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
         LOGE("reel: %s: %s", path.c_str(), error.c_str());
         return nullptr;
     }
-    // Planar, in one allocation, in the layout `Source` reads: left then right.
+    // Planar in one allocation, left then right, as `Source` reads it.
     const int32_t n = data->frames;
     std::vector<int16_t> planes(static_cast<size_t>(n) * (data->stereo ? 2 : 1));
     for (int32_t i = 0; i < n; ++i) planes[static_cast<size_t>(i)] = audio::toI16(data->left[static_cast<size_t>(i)]);
@@ -1610,19 +1511,24 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
     return made;
 }
 
+/**
+ * Loads an audio track's regions, one line per lane per cell:
+ *
+ *   sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop
+ *
+ * Each distinct file is decoded once however many lines use it, as int16
+ * with mono kept mono (see engine/core/Reel.h). An empty spec clears the reel.
+ */
 std::string EngineHost::loadReel(int rack, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
-    // An empty reel is a clear, and it arrives after an audio track is
-    // deleted - by when the rack has let the Bias go. Its reel went with it,
-    // so there is nothing to clear, and saying so was an error on every
-    // deletion.
+    // An empty spec arrives after an audio track is deleted, when the Bias is
+    // already gone, so that's not an error.
     if (awaitMachine(sEngine, rack, "Bias") == nullptr) return spec.empty() ? "" : "that rack is not a Bias";
 
     auto reel = std::make_unique<audio::Reel>();
     std::string error;
-    // Distinct paths, decoded once each. Not a member: a reel owns its
-    // sources, and two racks holding the same file is two decodes rather than
-    // a cache that has to outlive both of them.
+    // Distinct paths, decoded once each. Local, since each reel owns its
+    // sources and racks don't share them.
     std::unordered_map<std::string, std::shared_ptr<const audio::Reel::Source>> decoded;
     int64_t totalFrames = 0;
     int mapped = 0;
@@ -1666,19 +1572,14 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
         r.ticks = std::atoi(f[6].c_str());
         r.bpm = static_cast<float>(std::atof(f[7].c_str()));
         r.loop = f[8] == "1";
-        // Older specs stop at `loop`; a take with no fades is the ordinary
-        // case and nought is what it means.
+        // Older specs stop at `loop`, meaning no fades.
         r.fadeIn = f.size() > 9 ? std::atoi(f[9].c_str()) : 0;
         r.fadeOut = f.size() > 10 ? std::atoi(f[10].c_str()) : 0;
     }
 
-    // **Ask for the head of every region while still on the loader thread.**
-    //
-    // A mapped take's first block is the one that can take a major page fault,
-    // and a major fault on the audio thread is an xrun. A second of each
-    // region is bounded - it is per cell, not per file - and `MADV_WILLNEED`
-    // is a hint, so it costs nothing at all when the kernel declines or when
-    // the cell is never reached.
+    // Prefetch the start of every region while still on the loader thread,
+    // so the audio thread doesn't take a page fault on a mapped take's first
+    // block. It's only a hint, so it costs nothing if the kernel ignores it.
     for (const auto &cell : reel->cells) {
         for (const auto &r : cell.lanes) {
             if (r.source) r.source->willNeed(r.offset, kSampleRate);
@@ -1725,13 +1626,13 @@ std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t co
 
 std::string EngineHost::loadTake(int rack, const std::string &path) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
-    // Either machine that plays one piece of audio with its transients.
+    // Either of the machines that play a take with transients.
     if (awaitMachine(sEngine, rack, "Pollen") == nullptr && awaitMachine(sEngine, rack, "Dice") == nullptr) {
         return "that rack takes no sample";
     }
     if (path.empty()) {
-        // An empty path clears the take: the machine falls back to whatever
-        // is in its live ring.
+        // An empty path clears the take, and the machine falls back to its
+        // live ring.
         Mount clear;
         clear.kind = Mount::Kind::Object;
         clear.rack = rack;
@@ -1748,8 +1649,8 @@ std::string EngineHost::loadTake(int rack, const std::string &path) {
     take->frames = data->frames;
     take->left = std::move(data->left);
     take->right = data->stereo ? std::move(data->right) : take->left;
-    // The transients are found here, on a worker, once - the live ring finds
-    // its own as it records, with the same detector.
+    // Find the transients here on a worker. The live ring finds its own as it
+    // records, with the same detector.
     take->detect(static_cast<float>(kSampleRate));
     LOGI("take on rack %d: '%s', %d frames (%.2f s), %zu onsets", rack, take->name.c_str(), take->frames,
          static_cast<double>(take->frames) / kSampleRate, take->onsets.size());
@@ -1766,7 +1667,7 @@ std::string EngineHost::loadTake(int rack, const std::string &path) {
 
 namespace {
 
-/** Mount an analysed take on a Molt, or say why not. */
+/** Mounts an analysed take on a Molt. Returns "" or the reason it failed. */
 std::string mountUtterance(EngineHost &host, int rack, std::unique_ptr<audio::Utterance> utterance) {
     LOGI("molt take on rack %d: '%s', %d frames (%.2f s), %zu marks, root %.1f Hz", rack,
          utterance->name.c_str(), utterance->frames,
@@ -1804,14 +1705,13 @@ std::string EngineHost::loadUtterance(int rack, const std::string &path) {
     utterance->name = data->name;
     utterance->mono.resize(static_cast<size_t>(data->frames));
     for (int32_t i = 0; i < data->frames; ++i) {
-        // A voice is mono, and two channels of one are the same voice twice.
+        // Sum to mono.
         utterance->mono[static_cast<size_t>(i)] =
             data->stereo ? 0.5f * (data->left[static_cast<size_t>(i)] + data->right[static_cast<size_t>(i)])
                          : data->left[static_cast<size_t>(i)];
     }
-    // The pitch marks are found here, on a worker, once. It is a few hundred
-    // milliseconds for a ten second take and must never be on the audio
-    // thread; the machine only ever reads what comes out of this.
+    // Find the pitch marks here on a worker. It takes a few hundred ms for a
+    // ten second take, so it must never run on the audio thread.
     utterance->analyse(static_cast<float>(kSampleRate));
     return mountUtterance(*this, rack, std::move(utterance));
 }
@@ -1850,9 +1750,8 @@ std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, floa
     std::string error;
     if (!writer.open(path, kSampleRate, 24, error)) return error;
 
-    // The medium is a way of listening and a comp is an edit, so the two must
-    // not be baked together - and the patch will still be applied to what this
-    // writes, which would be the cassette twice over.
+    // Bypass the tape colour, since it'll still be applied when the comp
+    // plays back.
     bias->setColourBypass(true);
     bias->reset();
     bias->params().jumpAll();
@@ -1888,10 +1787,8 @@ std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, floa
 std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
                                    int32_t &framesOut, int32_t &tailOut, int32_t &ticksOut, float &bpmOut,
                                    float &peakOut) {
-    // The same flag the audio thread sets, on the thread that renders
-    // offline: a tail that flushed live and did not flush here would make
-    // an export differ from the performance in the last few dB of every
-    // decay. Inaudible, and still a difference this engine does not allow.
+    // Flush denormals on this thread too, the same as the audio thread, so
+    // an offline render matches live playback exactly.
     dsp::flushDenormals();
 
     if (!running) return "engine not running";
@@ -1921,17 +1818,14 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     if (clipFrames <= 0) return "that clip is too short to render";
     const int64_t tailFrames = static_cast<int64_t>(std::max(0.0f, tailSeconds) * kSampleRate);
 
-    // Off the device: from here every block is ours to pull, at whatever
-    // speed the CPU manages - and at full quality, for the reason the song
-    // render gives. A freeze is baked in and then plays back beside machines
-    // running at full, so a lean freeze would be audible as one track being
-    // thinner than the rest.
+    // Take the engine off the device and render at full quality, so the
+    // frozen track matches the others.
     const OfflineRender renderingAtFullQuality;
     sAudio.stop();
     const bool loopSongBefore = sEngine.transport.loopSong();
     const bool loopSceneBefore = sEngine.transport.loopScene();
-    // These paths drive the scheduler by hand through one scene. Clip mode
-    // would have every rack somewhere else, so it sits out and comes back.
+    // This drives the scheduler through one scene by hand, so clip mode is
+    // turned off and restored afterwards.
     const bool launcherBefore = sEngine.transport.launcherMode();
     sEngine.transport.setLauncher(false);
     sEngine.transport.setLoopSong(false);
@@ -1940,24 +1834,13 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     float scratch[kBlockFrames * 2];
     sEngine.renderBlock(nullptr, scratch);
 
-    // A clean start: nothing ringing from whatever was played before.
+    // Start clean, with nothing ringing from before.
     //
-    // This resets by hand rather than through the panic flag, so everything a
-    // panic would have rewound has to be named here - and two things were
-    // missing. The clip player carries a pass count and, in a free-rolling
-    // clip, the dice; and the modifiers carry a step, which is exactly the
-    // fault Engine::renderBlock records for song renders. Without them a
-    // freeze captures whatever the track happened to be part way through.
-    //
-    // **And the third thing, which was missing too: the parameters jump.**
-    // Every one of them is smoothed, so a `reset()` on its own leaves them
-    // sliding in from wherever they had been - and the first few milliseconds
-    // of the render then depend on what was playing before it. `Engine`'s
-    // panic path says this in its own comment and does both; this said only
-    // half of it, and the cost was a freeze that was **not repeatable**:
-    // rendering the demo's bass twice, with nothing changed between, gave two
-    // files differing from the first block. A frozen clip is supposed to be
-    // the clip, not the clip plus whatever knob was still gliding.
+    // This resets by hand instead of through the panic flag, so everything a
+    // panic resets has to be done here too: the clip player's pass count and
+    // dice, the modifiers' step, and jumping every parameter to its value so
+    // nothing is still gliding. Without all of these a freeze isn't
+    // repeatable.
     Rack &r = sEngine.racks[rack];
     r.allNotesOff();
     r.clipPlayer.reset();
@@ -1979,8 +1862,8 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     left.reserve(static_cast<size_t>(clipFrames + tailFrames));
     right.reserve(static_cast<size_t>(clipFrames + tailFrames));
 
-    // Nothing to the hardware while the scene plays into the file - see
-    // MidiOutQueue. After the clean start, so a note held live was let go.
+    // No MIDI to hardware while rendering (see MidiOutQueue). After the clean
+    // start, so held notes get their note-offs first.
     sEngine.midiOut.hold(true);
     r.tapDry = true;
     sEngine.transport.requestPlay(sceneIdx);
@@ -1992,25 +1875,12 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
         done += n;
     }
 
-    // Then the ring-out - and the transport has to be stopped first, or there
-    // is no ring-out to render.
+    // Then the ring-out. Stop the transport first, since the scene is looping
+    // and would otherwise just play the clip again. Stopping sends note-offs,
+    // so voices release and effects ring on.
     //
-    // The scene is set to loop, so that the clip plays to its end without the
-    // arrangement moving on. Which means everything past the clip's end is the
-    // clip **coming round again**, at full level, for as long as we care to
-    // render it. The old two-second tail was two seconds of the clip playing a
-    // second time, folded onto its own opening: measured on the demo's pad,
-    // 0.14 RMS across all of it against the clip's own 0.11, and no decay
-    // anywhere in it. Stopping is what turns that into a tail - a stop is
-    // note-offs, note-offs are releases, and the effects ring on over them,
-    // which is exactly what a clip leaves behind when the next scene has
-    // nothing for this track.
-    //
-    // It then runs until the sound has actually gone - a hundredth of a
-    // decibel short of nothing, held for three blocks so a gap between two
-    // echoes cannot end it early - and the asked-for length is the cap rather
-    // than the answer. A flat two seconds was never long enough for a hall nor
-    // worth storing for a closed hat.
+    // It runs until the sound is below -80 dB for three blocks in a row (so a
+    // gap between echoes doesn't end it early), up to the requested length.
     sEngine.transport.requestStop();
     constexpr float kSilence = 1.0e-4f; // -80 dB
     constexpr int32_t kQuietBlocks = 3;
@@ -2027,11 +1897,8 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
         right.insert(right.end(), r.dryR, r.dryR + n);
         done += n;
     }
-    // Whatever the last blocks were, they were under -80 dB; dropping them
-    // keeps a file from carrying a tenth of a second of nothing per freeze.
-    // One is kept, always: a tail of nought frames is how a freeze says it was
-    // written before any of this existed, and a clip that really does end in
-    // silence must not be mistaken for one of those.
+    // Drop the final quiet blocks, but always keep one, since a tail of 0
+    // frames marks an old-style freeze.
     if (quiet >= kQuietBlocks) {
         const size_t drop = static_cast<size_t>(kQuietBlocks - 1) * kBlockFrames;
         if (left.size() >= drop + static_cast<size_t>(clipFrames) + kBlockFrames) {
@@ -2042,20 +1909,10 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     const int64_t tailOutFrames = static_cast<int64_t>(left.size()) - clipFrames;
     r.tapDry = false;
 
-    // And a clean finish, for the same reason as the clean start above.
-    //
-    // Stopping only sends note-offs, so at this point voices are in their
-    // release stages and inserts are full of the render. The stream is down
-    // while all of that happens, so none of it is heard until the line below
-    // reopens it - and then it is, as a blip, once per clip.
-    //
-    // **Every rack, not just this one.** The render plays the whole scene -
-    // it has to, since a sidechain can hang this track's sound on another's -
-    // so every track in it was left ringing, not only the one being frozen.
-    // Resetting this rack and the master was the first fix, and it left the
-    // rest: freezing the demo's arp in Break still reopened the stream onto
-    // 0.42 of the pad's release and the others' tails. The engine's own panic
-    // is the thing that names everything, so it is what runs here.
+    // Finish clean too, or reopening the stream plays a blip of whatever is
+    // still ringing. The render plays the whole scene (a sidechain can depend
+    // on another track), so every rack needs resetting, which the engine's
+    // panic does.
     sEngine.panicFlag.store(true, std::memory_order_release);
     sEngine.renderBlock(nullptr, scratch);
     sEngine.midiOut.hold(false);
@@ -2065,13 +1922,9 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     sEngine.transport.setLauncher(launcherBefore);
     if (!sAudio.start()) LOGE("audio failed to restart after a freeze");
 
-    // The tail is kept as its own region after the clip, not folded into its
-    // head. Folding it was cheaper and wrong in three ways at once: the last
-    // pass lost its ring entirely, because a frozen clip is exactly its own
-    // length and simply stopped; the first pass gained a ring that no pass had
-    // played yet; and a clip shorter than its own tail wrapped it on twice.
-    // The rack overlaps it with a second cursor instead, which reproduces all
-    // three cases rather than trading one for another.
+    // The tail is stored after the clip instead of mixed into its start. The
+    // rack plays it with a second cursor, so the first pass has no tail, the
+    // last pass keeps its tail, and a clip shorter than its tail works.
     const int64_t storedFrames = clipFrames + tailOutFrames;
     float peak = 0.0f;
     std::vector<float> inter(static_cast<size_t>(storedFrames) * 2);
@@ -2084,10 +1937,8 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
 
     WavWriter wav;
     std::string error;
-    // Float, not PCM: this is the rack's output before its fader, which can
-    // sit above full scale perfectly legitimately - the mixer is what brings
-    // it down. Clamping here would bake in distortion that the live track
-    // does not have. Measured on the demo: Hexbeat's bar peaks at 1.84.
+    // Float, since the rack's output before its fader can go above full
+    // scale, and clamping would add distortion the live track doesn't have.
     if (!wav.open(path, kSampleRate, 32, error)) return error;
     wav.write(inter.data(), static_cast<int32_t>(storedFrames));
     if (!wav.close()) return "couldn't finish the file";
@@ -2114,9 +1965,8 @@ std::string EngineHost::loadFrozenSet(int rack, const std::vector<std::pair<int6
         auto data = WavReader::read(clips[i].second, kSampleRate, error);
         if (!data) return clips[i].second + ": " + error;
         auto fc = std::make_shared<FrozenClip>();
-        // The file is the clip and then its ring-out. `frames` is the loop, so
-        // the tail comes off the end of it - and a freeze written before tails
-        // existed reports nought and is the whole file, exactly as it was.
+        // The file is the clip then its ring-out. `frames` is the loop length.
+        // Old freezes have a tail of 0 and the whole file is the loop.
         const int32_t tail = i < tails.size() ? tails[i] : 0;
         fc->tail = tail > 0 && tail < data->frames ? tail : 0;
         fc->frames = data->frames - fc->tail;
@@ -2183,10 +2033,8 @@ float EngineHost::masterFade() const { return sEngine.master.currentFade(); }
 bool EngineHost::startInput(int32_t deviceId) { return sAudio.startInput(deviceId); }
 bool EngineHost::stopInput() {
     sAudio.stopInput();
-    // Closing the ear stops a capture that was listening through it. That is
-    // the right thing to do and the wrong thing to do quietly: the take is
-    // cut short, and whoever asked should be told rather than find a file
-    // that ends in the middle of a word.
+    // Closing the input stops a capture that was recording from it. Return
+    // whether that happened so the user can be told the take was cut short.
     const bool wasRecording = sEngine.capture.armed() &&
                               sEngine.capture.source() == Capture::FromInput;
     sEngine.capture.stop();
@@ -2211,8 +2059,7 @@ float EngineHost::tunerHz() {
 
 std::string EngineHost::startCapture(const std::string &path, int source) {
     const auto which = source == 1 ? Capture::FromMaster : Capture::FromInput;
-    // Recording the input with nothing open would write a silent file and
-    // look like a bug at the other end, so say so here.
+    // Recording with no input open would write a silent file, so refuse.
     if (which == Capture::FromInput && !sAudio.isInputRunning()) return "audio input is not open";
     std::string error;
     if (!sEngine.capture.start(path, kSampleRate, which, error)) return error;
@@ -2267,11 +2114,7 @@ float EngineHost::paramNormalized(int rack, const std::string &unit, const std::
     const Unit u = unitFromName(unit);
     const bool isFx = u == Unit::Effect1 || u == Unit::Effect2;
     const bool isEv = u == Unit::Mod1 || u == Unit::Mod2 || u == Unit::Mod3;
-    // **Three modifier slots, two effect slots.** This read `Effect1 || Mod1 ?
-    // 0 : 1`, which is right for a pair and wrong for a trio: `mod3` - where
-    // the arp lives, because the chips are chord, scale, arp - was answered
-    // about slot 1. So the arp's window asked the engine what it held and was
-    // told about the scale, every time, and showed its defaults instead.
+    // Three modifier slots but only two effect slots.
     const int slot = isFx ? (u == Unit::Effect1 ? 0 : 1)
                           : (u == Unit::Mod1 ? 0 : u == Unit::Mod2 ? 1 : 2);
     const int index = paramIndex(isFx ? mountedEffectType[rack][slot] : (isEv ? mountedModifierType[rack][slot] : mountedType[rack]), unit, name);

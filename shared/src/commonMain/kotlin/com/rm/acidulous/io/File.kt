@@ -1,13 +1,13 @@
 package com.rm.acidulous.io
 
 /**
- * A file, as the shared code uses one: java.io.File on Android and the desktop
- * (an actual typealias - the very same class, so nothing there changes), and
- * on a file system the engine shares in a browser, where the samples it loads
- * by path are the files the app wrote.
+ * A file as the shared code uses it. On Android and desktop it's a typealias
+ * for java.io.File, so nothing changes there. In a browser it's a file system
+ * shared with the engine, so samples loaded by path are the files the app
+ * wrote.
  *
- * Only what the app uses is here. Java's own methods are members; what Kotlin
- * adds to java.io.File (readText, extension and the rest) are extensions,
+ * Only what the app uses is here. Java's own methods are members, and what
+ * Kotlin adds to java.io.File (readText, extension and so on) are extensions,
  * which on the JVM are Kotlin's own.
  */
 expect class File(pathname: String) {
@@ -48,21 +48,21 @@ expect fun File.walk(): Sequence<File>
 expect val File.canonicalFile: File
 expect fun File.relativeTo(base: File): File
 expect val File.invariantSeparatorsPath: String
-/** Between a folder and what is in it: java.io.File.separator. */
+/** The separator between a folder and its contents: java.io.File.separator. */
 expect val FILE_SEPARATOR: String
 
 /**
- * Replace a file's contents so that it is either the old file or the new one,
- * never half of each: written beside it, made durable, then renamed over it.
+ * Replace a file's contents so it's always either the old file or the new
+ * one, never half of each: written next to it, synced, then renamed over it.
  */
 expect fun File.writeBytesSafely(bytes: ByteArray)
 
-/** Writing a zip, an entry at a time. */
+/** Writes a zip, one entry at a time. */
 expect class ZipWriter(out: File) {
     fun add(name: String, bytes: ByteArray)
     fun addFile(name: String, file: File)
     fun close()
 }
 
-/** Every entry of a zip in order: its name, whether it is a folder, and its bytes on asking. */
+/** Every entry of a zip in order: its name, whether it's a folder, and its bytes on request. */
 expect fun readZip(zip: File, each: (name: String, isDirectory: Boolean, bytes: () -> ByteArray) -> Unit)

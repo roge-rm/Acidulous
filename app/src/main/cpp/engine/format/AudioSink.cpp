@@ -35,9 +35,7 @@ const char *extensionFor(AudioFormat format) {
 }
 
 bool supportsFloat(AudioFormat format) {
-    // FLAC is integer by definition - it is lossless *about integers*, and
-    // there is nowhere in the format to put an exponent. MP3 has no bit
-    // depth at all, so the question does not arise and the answer is no.
+    // FLAC only stores integers, and MP3 has no bit depth at all.
     return format != AudioFormat::Flac && format != AudioFormat::Mp3;
 }
 

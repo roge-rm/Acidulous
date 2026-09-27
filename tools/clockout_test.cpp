@@ -1,5 +1,5 @@
-// Does a tick land on the frame the clock says it does, and does a 24-PPQN
-// pulse train stay put over an hour?
+// Checks a tick lands on the frame the clock says, and a 24 PPQN pulse train
+// doesn't drift over an hour.
 #include <cmath>
 #include <cstdio>
 #include <vector>
@@ -25,8 +25,8 @@ int main() {
         TickClock c;
         c.setTempo(bpm);
         const double spt = c.samplesPerTickNow();
-        // Walk blocks; whenever a tick boundary falls inside one, the frame it
-        // claims must match the tick's true frame, which is simply t * spt.
+        // Walk blocks. Whenever a tick falls inside one, its frame must match
+        // the true frame, t * spt.
         double worst = 0;
         int64_t framesDone = 0;
         for (int b = 0; b < 20000; ++b) {

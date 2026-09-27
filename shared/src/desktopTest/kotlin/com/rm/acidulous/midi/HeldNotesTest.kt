@@ -5,11 +5,9 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * A note goes back to where it came from.
- *
- * Every case here is one that was wrong or could be: the target moving under a
- * held note, the same note number down on two MPE channels at once, and a
- * controller vanishing with a finger on it.
+ * A note-off goes to the same place its note-on went: when the target
+ * changes under a held note, when the same note number is down on two MPE
+ * channels, and when a controller disappears with a finger down.
  */
 class HeldNotesTest {
 

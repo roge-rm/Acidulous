@@ -11,7 +11,7 @@ import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 
-/** The Android app's [AppHost]: the package manager, the assets, and the crash reports. */
+/** The Android app's [AppHost]: package info, assets, files and crash reports. */
 class AndroidHost(private val context: Context) : AppHost {
     private val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
 
@@ -52,8 +52,8 @@ class AndroidHost(private val context: Context) : AppHost {
     }
 
     /**
-     * A tree has no display name to query - asking gives back the whole
-     * document id - so the folder's own name is taken off the end of it.
+     * Tree URIs have no display name (querying one returns the whole document
+     * id), so the folder name is taken from the end of the id.
      */
     override fun placeName(doc: Doc): String = runCatching {
         val uri = doc.uri
@@ -99,8 +99,8 @@ class AndroidHost(private val context: Context) : AppHost {
 
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {
         PlaybackService.follow(context, playing)
-        // Stop for a call, another app's music, or headphones pulled out -
-        // see media/AudioFocus.
+        // Stop for a call, another app's music, or unplugged headphones. See
+        // media/AudioFocus.
         com.rm.acidulous.media.AudioFocus.follow(context, playing, stop)
     }
 

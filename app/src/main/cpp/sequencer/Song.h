@@ -6,34 +6,33 @@
 #include <memory>
 #include <vector>
 
-// The engine's view of a song: what the SceneScheduler plays.
+// The engine's view of a song, which the SceneScheduler plays.
 //
-// The document of record lives on the Kotlin side (it is what the editor edits,
-// what undo/redo operates on, and what is serialised). What the engine gets is
-// this immutable snapshot, built on the UI thread and handed over through the
-// constructor queue as a single "song.snapshot" record - one pointer swap, so
-// scenes and clips can never disagree mid-swap, and no burst of records that
-// could overflow the queue when a scene is inserted across sixteen racks.
+// The real song lives on the Kotlin side (editing, undo and saving). The
+// engine gets this immutable snapshot, built on the UI thread and sent through
+// the constructor queue as one "song.snapshot" record. That makes it a single
+// pointer swap, so scenes and clips always match and inserting a scene across
+// sixteen racks can't overflow the queue.
 //
-// Live editing while playing is safe because nothing that gives playback its
-// continuity lives here: position belongs to the SceneScheduler, sounding notes
-// to each ClipPlayer. A swap is a pointer exchange and sixteen setClip() calls.
+// Editing while playing is safe because playback state isn't kept here: the
+// position is in the SceneScheduler and sounding notes are in each ClipPlayer.
+// A swap is a pointer exchange and sixteen setClip() calls.
 
 namespace acidulous::seq {
 
 struct SceneInfo {
-    int64_t id = 0;                  // stable across edits; how the scheduler finds "the scene I was playing" after a swap
+    int64_t id = 0;                  // stable across edits so the scheduler finds its scene again after a swap
     int32_t ticksPerBar = 4 * kPPQN; // from the scene's signature
-    int32_t bars = 1;                // DERIVED: longest clip in the scene, never less than 1
+    int32_t bars = 1;                // set by finalize(): longest clip in the scene, at least 1
     int32_t repeat = 1;
     float bpmOverride = 0.0f; // 0 = follow the song tempo
     bool smooth = false;      // glide into bpmOverride over the first bar
-    // A tempo change inside the scene: to this, over the last rampBars bars of
-    // its last pass. 0 = none. The next scene sets its own tempo as ever.
+    // Ramp to this tempo over the last rampBars bars of the scene's last pass.
+    // 0 = none. The next scene still sets its own tempo.
     float rampToBpm = 0.0f;
     int32_t rampBars = 0;
-    bool fadeIn = false;      // honoured once the mixer exists (M5)
-    bool fadeOut = false;
+    bool fadeIn = false;      // over the first bar of the first pass (see Engine.cpp)
+    bool fadeOut = false;     // over the last bar of the last pass
 
     int64_t iterationTicks() const { return static_cast<int64_t>(bars) * ticksPerBar; }
 };
@@ -41,8 +40,8 @@ struct SceneInfo {
 struct SongSnapshot {
     std::vector<SceneInfo> scenes;
     // rack-major: clips[rack * scenes.size() + scene]; nullptr = no clip there.
-    // Shared, not owned: unchanged clips are the same object in consecutive
-    // snapshots. The audio thread only ever reads the raw pointer.
+    // Shared, so unchanged clips are the same object in consecutive snapshots.
+    // The audio thread only reads the raw pointer.
     std::vector<std::shared_ptr<const Clip>> clips;
     int32_t rackCount = kRackCount;
 
@@ -65,13 +64,11 @@ struct SongSnapshot {
     }
 
     /**
-     * Where a position sits on the whole arrangement's timeline, in ticks.
+     * A position on the whole song's timeline, in ticks.
      *
-     * The scheduler's position is scene-relative and resets at every repeat,
-     * which is all playback ever needed. A Song Position Pointer is absolute,
-     * so it needs this - in both directions, which is why the inverse is here
-     * too. Neither existed before; a prefix sum over the scenes is all they
-     * are, but nothing was keeping one.
+     * The scheduler's position is relative to the scene and resets every
+     * repeat. MIDI Song Position Pointer is absolute, so it needs this and
+     * locate() (the inverse).
      */
     int64_t songTickAt(int32_t scene, int32_t repeat, int64_t tickIn) const {
         int64_t t = 0;
@@ -120,8 +117,8 @@ struct SongSnapshot {
         return true;
     }
 
-    // Scene length is derived from its clips: the longest one wins and shorter
-    // ones loop (or one-shot) against it. An empty scene still lasts one bar.
+    // A scene is as long as its longest clip. Shorter ones loop (or play once)
+    // within it. An empty scene lasts one bar.
     void finalize() {
         const size_t needed = static_cast<size_t>(rackCount) * scenes.size();
         if (clips.size() != needed) {

@@ -1,8 +1,8 @@
 <resources>
     <!--
-        The words every window shares. Everything else a screen says is in
-        strings_<area>.xml beside it, named for where it appears: the same
-        English word in two places can want two words in another language.
+        Words every window shares. Everything else is in strings_<area>.xml,
+        named for where it appears, since the same English word in two places
+        may need two different words in another language.
     -->
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>

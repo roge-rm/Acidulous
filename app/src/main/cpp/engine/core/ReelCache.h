@@ -2,30 +2,26 @@
 #include <cstdint>
 #include <string>
 
-// Turning a take too long to hold into a file the engine can map.
+// Converts a take too long to hold in memory into a file the engine can map.
 //
-// Its own translation unit rather than a corner of EngineHost, because it is
-// the one piece of the long-take path that is pure arithmetic over a file and
-// so the one piece a harness can drive: `tools/bias_test.sh` converts a wav,
-// maps it, and asks whether it reads what the ordinary reader read.
+// Kept separate from EngineHost so tools/bias_test.sh can test it on its own:
+// it converts a wav, maps it and checks it reads the same as the normal reader.
 namespace acidulous::audio {
 
 struct ReelCache {
     /**
-     * [path] converted once into [dest] as planar int16 at the engine rate.
+     * Converts [path] into [dest] as planar int16 at the engine rate.
      *
-     * Returns the frame count written, or 0 and why not in [error]. Chunked
-     * throughout: nothing here is proportional to the length of the file.
+     * Returns the frame count written, or 0 with the reason in [error]. Works
+     * in chunks, so memory use doesn't grow with the length of the file.
      */
     static int64_t convert(const std::string &path, const std::string &dest, bool &stereoOut,
                            std::string &error);
 
     /**
-     * What a converted file is called: a hash of the source, its size and when
-     * it changed.
-     *
-     * A re-import of the same file reuses the conversion; a file edited in
-     * place does not, which is the whole of the cache's correctness.
+     * The converted file's name: a hash of the source path, size and modified
+     * time. Re-importing the same file reuses the conversion, and a file
+     * edited in place gets a new one.
      */
     static std::string nameFor(const std::string &path);
 };

@@ -1,8 +1,5 @@
-// Loudness against the numbers the standard publishes.
-//
-// A meter that reads a figure nobody can check is a meter nobody should mix
-// to, so these are the EBU's own test signals (Tech 3341) and what they must
-// read, to a tenth of a LU.
+// Tests the loudness meter against the EBU test signals (Tech 3341), to a
+// tenth of a LU.
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -55,15 +52,15 @@ int main() {
     sine(m, -33.0f, 20.0f, ph);
     ok("at -33 dBFS, -33.0", std::fabs(m.integrated() + 33.0f) <= 0.1f, lu(m.integrated()));
 
-    // Case 3 of Tech 3341: quiet, loud, quiet - the quiet parts are more than
-    // 10 LU under and the relative gate leaves them out.
+    // Case 3 of Tech 3341: quiet, loud, quiet. The quiet parts are more than
+    // 10 LU under, so the relative gate leaves them out.
     m.reset();
     sine(m, -36.0f, 10.0f, ph);
     sine(m, -23.0f, 60.0f, ph);
     sine(m, -36.0f, 10.0f, ph);
     ok("-36, -23, -36: the relative gate leaves the quiet out", std::fabs(m.integrated() + 23.0f) <= 0.1f, lu(m.integrated()));
 
-    // Silence is under the absolute gate, so a pause does not drag it down.
+    // Silence is under the absolute gate, so a pause doesn't pull it down.
     m.reset();
     sine(m, -23.0f, 10.0f, ph);
     sine(m, -200.0f, 10.0f, ph);
@@ -74,15 +71,15 @@ int main() {
     sine(m, -23.0f, 10.0f, ph, 1000.0f, false);
     ok("the same sine in one channel is 3 LU quieter", std::fabs(m.integrated() + 26.01f) <= 0.1f, lu(m.integrated()));
 
-    // True peak: a full-scale sine at a quarter of the rate, started at 45
-    // degrees, is sampled at +-0.707 every time - a sample peak of -3 dB
-    // for a waveform that reaches 0.
+    // True peak: a full-scale sine at a quarter of the rate, starting at 45
+    // degrees, is sampled at +-0.707 every time. The sample peak is -3 dB but
+    // the waveform reaches 0.
     m.reset();
     ph = 3.141592653589793 / 4.0;
     sine(m, 0.0f, 1.0f, ph, kSr / 4.0f);
     ok("a peak between the samples is found: ~0 dBTP", std::fabs(m.truePeakDb()) <= 0.3f, lu(m.truePeakDb()) + " dBTP");
 
-    // And a meter that has heard nothing says so.
+    // A meter that has heard nothing reads silence.
     m.reset();
     ok("silence reads as silence", m.integrated() <= Loudness::kSilent, lu(m.integrated()));
 

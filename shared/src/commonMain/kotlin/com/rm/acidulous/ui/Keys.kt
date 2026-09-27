@@ -19,24 +19,22 @@ import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * The keyboard: a hardware one, played and driven.
+ * The hardware keyboard, for playing and for shortcuts.
  *
- * Two jobs share the keys. **Play mode** turns the letters into a piano - the
- * home row the white keys, the row above it the black - the way Ableton's
- * computer keyboard does, and sends the notes where hardware MIDI goes, so
- * recording and the chord, scale and arp chips apply unchanged. Out of it the
- * same letters are shortcuts. A shortcut with a modifier, and Space for play,
- * work in both.
+ * In play mode the letters are a piano like Ableton's computer keyboard: the
+ * home row is the white keys and the row above it the black ones. Notes go
+ * where hardware MIDI goes, so recording and the chord, scale and arp chips
+ * work the same. Outside play mode the letters are shortcuts. Shortcuts with a
+ * modifier, and Space for play, work in both.
  *
  * Every shortcut is a [KeyAction] with up to two [KeyChord]s: one for a full
- * keyboard (Ctrl, brackets, Esc) and one for a phone's built-in keyboard,
- * which has letters, Alt and Sym and a touchpad that swipes as a d-pad and
- * nothing else. The chords are the person's and live in [UiPrefs].
+ * keyboard (Ctrl, brackets, Esc) and one for a phone's built-in keyboard, which
+ * only has letters, Alt, Sym and a touchpad that swipes as a d-pad. The user's
+ * bindings live in [UiPrefs].
  *
- * What an action *does* depends on the screen. Each screen, and each window,
- * says so with [KeyScope]; the innermost one that knows the action runs it, so
- * undo is the song's on the grid and the clip's in the editor, exactly as the
- * undo pill on each is.
+ * What an action does depends on the screen. Each screen and window registers a
+ * [KeyScope], and the innermost one that handles the action runs it, so undo is
+ * the song's on the grid and the clip's in the editor.
  */
 enum class KeyAction(val label: StringResource, val group: KeyGroup) {
     PlayStop(Res.string.keys_play_stop, KeyGroup.Transport),
@@ -71,9 +69,9 @@ enum class KeyGroup(val label: StringResource) {
 }
 
 /**
- * Actions that go through a window: play and stop, panic and the rest of the
- * things you reach for mid-take. A window stops everything else, so a letter
- * pressed in Settings does not arm the record behind it.
+ * Actions that still work with a window open: play and stop, panic and the
+ * other things you need mid-take. Everything else is blocked, so a letter typed
+ * in Settings doesn't arm recording behind it.
  */
 private val THROUGH_WINDOWS = setOf(
     KeyAction.PlayStop, KeyAction.Panic, KeyAction.PlayMode, KeyAction.KeysHelp, KeyAction.Back,
@@ -87,7 +85,7 @@ data class KeyChord(
     val shift: Boolean = false,
     val meta: Boolean = false,
 ) {
-    /** Letters and digits with nothing held, which only mean anything out of play mode. */
+    /** No modifier held. These only do anything outside play mode. */
     val plain: Boolean get() = !ctrl && !alt && !meta
 
     fun encode(): String = buildString {
@@ -138,9 +136,8 @@ internal fun keyName(code: Int): String = when (code) {
 }
 
 /**
- * The shipped keys. The first of each pair is a full keyboard's; the second
- * is for one with letters, Alt and Sym and nothing else, which is what the
- * square phones have.
+ * The default keys. The first of each pair is for a full keyboard, the second
+ * for a keyboard with only letters, Alt and Sym, like the square phones have.
  */
 val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
     fun k(code: Int, ctrl: Boolean = false, alt: Boolean = false, shift: Boolean = false) = KeyChord(code, ctrl, alt, shift)
@@ -172,9 +169,8 @@ val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
 }
 
 /**
- * The note keys, Ableton's layout: A to ; are the white keys from C, the
- * row above them the black ones, as a piano's black keys sit above and
- * between its white ones. Semitones from the octave's C.
+ * The note keys in Ableton's layout: A to ; are the white keys from C, the row
+ * above them the black keys. Values are semitones from the octave's C.
  */
 internal val NOTE_KEYS: Map<Int, Int> = mapOf(
     KeyCodes.KEYCODE_A to 0, KeyCodes.KEYCODE_W to 1, KeyCodes.KEYCODE_S to 2, KeyCodes.KEYCODE_E to 3,
@@ -185,10 +181,10 @@ internal val NOTE_KEYS: Map<Int, Int> = mapOf(
 )
 
 /**
- * A tracker's layout, for a full keyboard: two octaves on two rows, Z to /
- * and Q to P, with the rows above each as the black keys - the number row
- * for the upper octave. Z, X, C and V are notes here, so the octave is on -
- * and = and the velocity on [ and ].
+ * A tracker layout for a full keyboard: two octaves on two rows, Z to / and Q
+ * to P, with the row above each as the black keys (the number row for the upper
+ * octave). Z, X, C and V are notes here, so the octave is on - and = and
+ * velocity on [ and ].
  */
 internal val TRACKER_KEYS: Map<Int, Int> = mapOf(
     KeyCodes.KEYCODE_Z to 0, KeyCodes.KEYCODE_S to 1, KeyCodes.KEYCODE_X to 2, KeyCodes.KEYCODE_D to 3,
@@ -213,20 +209,19 @@ enum class NoteLayout(
     Tracker(TRACKER_KEYS, KeyCodes.KEYCODE_MINUS, KeyCodes.KEYCODE_EQUALS, KeyCodes.KEYCODE_LEFT_BRACKET, KeyCodes.KEYCODE_RIGHT_BRACKET),
 }
 
-/** The chord an event is, if it is one of [bindings]'s; the action it runs. */
+/** The action [bindings] has for this chord, if any. */
 internal fun actionFor(chord: KeyChord, bindings: Map<KeyAction, List<KeyChord>>): KeyAction? =
     bindings.entries.firstOrNull { (_, chords) -> chord in chords }?.key
 
 /**
- * The note a play-mode key sounds: [semitone] above the octave's C, or - on
- * a drum machine, whose pads are not a scale - the [semitone]th of its
- * [voices], wrapping round.
+ * The note a play-mode key sounds: [semitone] above the octave's C, or on a
+ * drum machine the [semitone]th of its [voices], wrapping round.
  */
 internal fun noteFor(semitone: Int, octave: Int, voices: List<Int>?): Int =
     if (!voices.isNullOrEmpty()) voices[semitone % voices.size]
     else ((octave + 1) * 12 + semitone).coerceIn(0, 127)
 
-/** One registered set of handlers: a screen's or a window's. */
+/** One registered set of handlers, a screen's or a window's. */
 class KeyScopeHandle internal constructor(
     val window: Boolean,
     internal var handlers: Map<KeyAction, () -> Unit>,
@@ -237,15 +232,15 @@ object KeyHub {
     var playMode by mutableStateOf(false)
         private set
     /**
-     * The octave the A key is C of, as MIDI counts it: 4 is middle C. In the
-     * editor it is the on-screen keyboard's own, so typing starts where the
-     * keys on screen do and Z and X move both - see [follow].
+     * The octave the A key plays C of, MIDI numbering (4 is middle C). In the
+     * editor it follows the on-screen keyboard, so Z and X move both. See
+     * [follow].
      */
     var octave by mutableIntStateOf(4)
         private set
     private var octaveSink: ((Int) -> Unit)? = null
 
-    /** The editor's keyboard octave, and where Z and X should put a new one. Null lets go. */
+    /** The editor's keyboard octave, and where Z and X send a new one. Null disconnects. */
     fun follow(octaveNow: Int, sink: ((Int) -> Unit)?) {
         octaveSink = sink
         if (sink != null) octave = octaveNow
@@ -259,10 +254,16 @@ object KeyHub {
         private set
     /** The shortcuts overlay. */
     var showingKeys by mutableStateOf(false)
-    /** A focused control's hold actions, open as a menu (Alt+Enter), or null. */
+    /**
+     * A focused control's long-press actions open as a menu (Alt+Enter), or
+     * null.
+     */
     var actionMenu by mutableStateOf<List<androidx.compose.ui.semantics.CustomAccessibilityAction>?>(null)
 
-    /** Waiting for a key to assign in the keys window; the next key goes here. */
+    /**
+     * Set while the keys window waits for a key to assign. The next key goes
+     * here.
+     */
     var learning by mutableStateOf<((KeyChord) -> Unit)?>(null)
 
     private fun isModifier(code: Int) = code in setOf(
@@ -271,25 +272,28 @@ object KeyHub {
         KeyCodes.KEYCODE_FUNCTION,
     )
 
-    /** A text field has focus: every key is its. */
+    /** A text field has focus, so it gets every key. */
     internal var typing = false
 
     /**
-     * The last thing the player did was press a key rather than touch the
-     * screen. A window opened then puts the focus on its first control, so
-     * the keys go on working; opened by a touch it does not, or every window
-     * would open wearing a ring nobody asked for.
+     * True when the last input was a key press, not a touch. A window opened
+     * then focuses its first control so the keys keep working. Opened by touch
+     * it doesn't, so windows don't show a focus ring for no reason.
      */
     var usingKeys = false
 
-    /** Where typed notes go: set by the app to the track hardware MIDI plays. */
+    /**
+     * Where typed notes go. The app sets it to the track hardware MIDI plays.
+     */
     var target: () -> Int = { 0 }
-    /** A drum machine's voice notes in pad order, for the track [target] names; null for anything melodic. */
+    /**
+     * A drum machine's voice notes in pad order for the [target] track, null for melodic machines.
+     */
     var drumVoices: (Int) -> List<Int>? = { null }
 
-    /** Keys sounding now and what each sent, so a key up releases what its key down played. */
+    /** Keys sounding now and what each sent, so key up releases what key down played. */
     private val sounding = HashMap<Int, Pair<Int, Int>>()
-    /** Key downs this took, so their key ups are taken too and do not wander into a control. */
+    /** Key downs this consumed, so their key ups are consumed too and don't reach a control. */
     private val taken = HashSet<Int>()
 
     private val scopes = mutableStateListOf<KeyScopeHandle>()
@@ -297,7 +301,10 @@ object KeyHub {
     internal fun push(handle: KeyScopeHandle) { scopes += handle }
     internal fun remove(handle: KeyScopeHandle) { scopes -= handle }
 
-    /** The actions something on screen would run now, for the overlay and Android's shortcut list. */
+    /**
+     * The actions something on screen handles right now, for the overlay and Android's shortcut
+     * list.
+     */
     fun live(): List<KeyAction> = KeyAction.entries.filter { a -> handlerFor(a) != null }
 
     private fun handlerFor(action: KeyAction): (() -> Unit)? {
@@ -319,20 +326,19 @@ object KeyHub {
         playMode = !playMode
     }
 
-    /** Let go of every note a key is holding: a mode change, a lost window, a screen left behind. */
+    /** Release every note a key is holding, on a mode change, lost window or screen change. */
     fun releaseAll() {
         for ((_, sent) in sounding) NativeEngine.noteOff(sent.first, sent.second)
         sounding.clear()
     }
 
     /**
-     * Before anything on screen sees the key: play mode's notes, and every
-     * chord with a modifier or on Space. True when it was taken.
+     * Runs before anything on screen sees the key: play mode's notes, and every
+     * chord with a modifier or on Space. Returns true when it was consumed.
      */
     fun preview(e: KeyPress): Boolean {
         usingKeys = true
-        // Learning a key for the keys window: the next real key is the answer,
-        // whatever it would otherwise have done.
+        // Learning a key for the keys window: the next real key is the answer.
         learning?.let { learn ->
             if (e.action == KeyCodes.ACTION_DOWN && !isModifier(e.keyCode)) {
                 learning = null
@@ -350,8 +356,8 @@ object KeyHub {
         if (e.action != KeyCodes.ACTION_DOWN) return false
         val chord = KeyChord.of(e)
         val layout = UiPrefs.noteLayout
-        // Shift plays an octave up, unless the chord is a shortcut: Shift+/
-        // is the list of keys, and the tracker layout has / as a note.
+        // Shift plays an octave up, unless the chord is a shortcut: Shift+/ is
+        // the key list and the tracker layout has / as a note.
         val shortcut = chord.shift && actionFor(chord, UiPrefs.keyBindings) != null
         if (playMode && chord.plain && !shortcut) {
             layout.notes[code]?.let { semitone ->
@@ -370,16 +376,18 @@ object KeyHub {
                 layout.velocityUp -> { if (e.repeatCount == 0) velocity = (velocity + 20).coerceAtMost(127); taken += code; return true }
             }
         }
-        // Chords with a modifier, and the keys that are never a control's own.
-        // Not Esc: a grabbed knob or the roll's cursor lets go on it first,
-        // and only an Esc nothing wanted comes back as back - see [fallback].
+        // Chords with a modifier, and keys no control uses. Not Esc: a grabbed
+        // knob or the roll's cursor handles it first, and only an unused Esc
+        // comes back as back (see [fallback]).
         val always = !chord.plain || shortcut || code == KeyCodes.KEYCODE_SPACE || code == KeyCodes.KEYCODE_SYM ||
             code == KeyCodes.KEYCODE_GRAVE || code in KeyCodes.KEYCODE_F1..KeyCodes.KEYCODE_F12
         if (!always) return false
         return dispatch(e, chord)
     }
 
-    /** After the focused control has passed on it: the plain letters, out of play mode. */
+    /**
+     * After the focused control has passed on it: the plain letters, outside play mode.
+     */
     fun fallback(e: KeyPress): Boolean {
         if (typing || e.action != KeyCodes.ACTION_DOWN) return false
         val chord = KeyChord.of(e)
@@ -389,7 +397,7 @@ object KeyHub {
 
     private fun dispatch(e: KeyPress, chord: KeyChord): Boolean {
         val action = actionFor(chord, UiPrefs.keyBindings) ?: return false
-        if (e.repeatCount > 0) return handlerFor(action) != null // held: taken, not repeated
+        if (e.repeatCount > 0) return handlerFor(action) != null // held: consumed, not repeated
         if (!run(action)) return false
         taken += e.keyCode
         return true
@@ -398,14 +406,13 @@ object KeyHub {
 
 /**
  * What the keys do while this is on screen. [window] is for a window over a
- * screen: it stops the screen's letters reaching through it, all but
- * play and stop and the other things in [THROUGH_WINDOWS].
+ * screen, it stops the screen's keys except for the ones in [THROUGH_WINDOWS].
  */
 @Composable
 fun KeyScope(vararg handlers: Pair<KeyAction, () -> Unit>, window: Boolean = false) {
     val handle = androidx.compose.runtime.remember { KeyScopeHandle(window, emptyMap()) }
-    // This composition's lambdas, every time: the screen's state moves on and
-    // the handlers with it, while the scope keeps its place in the stack.
+    // Update the handlers every composition since the screen's state changes,
+    // while the scope keeps its place in the stack.
     androidx.compose.runtime.SideEffect { handle.handlers = handlers.toMap() }
     DisposableEffect(handle) {
         KeyHub.push(handle)
@@ -414,16 +421,19 @@ fun KeyScope(vararg handlers: Pair<KeyAction, () -> Unit>, window: Boolean = fal
 }
 
 /**
- * A text field: while it has focus every key is its own. A field that leaves
- * the screen with the focus still in it - a window closed on Enter - lets go
- * too, or every shortcut would stay dead.
+ * A text field gets every key while it has focus. A field that leaves the
+ * screen while focused (a window closed on Enter) releases it too, otherwise
+ * every shortcut would stay dead.
  */
 fun Modifier.typing(): Modifier = composed {
     DisposableEffect(Unit) { onDispose { KeyHub.typing = false } }
     onFocusChanged { KeyHub.typing = it.isFocused }
 }
 
-/** "PlayStop=:62;Undo=c:54,a:54": by name, so a reordered enum cannot move anybody's keys. */
+/**
+ * "PlayStop=:62;Undo=c:54,a:54": stored by name, so reordering the enum can't move anybody's
+ * keys.
+ */
 internal fun encodeKeys(bindings: Map<KeyAction, List<KeyChord>>): String =
     bindings.entries.joinToString(";") { (a, chords) -> a.name + "=" + chords.joinToString(",") { it.encode() } }
 
@@ -435,8 +445,8 @@ internal fun decodeKeys(s: String): Map<KeyAction, List<KeyChord>> =
     }.toMap()
 
 /**
- * The keys the screen answers to now, grouped, with the note layout and the
- * way round the controls above them. A question mark opens it.
+ * The keys the screen handles now, grouped, with the note layout and the
+ * navigation keys above them. ? opens it.
  */
 @Composable
 fun KeysOverlay(onDismiss: () -> Unit) {
@@ -479,8 +489,8 @@ fun KeysOverlay(onDismiss: () -> Unit) {
                 }
             }
         }
-        // What a computer adds that is not a binding: the window's own key,
-        // and what the mouse does in place of a finger.
+        // Desktop extras that aren't bindings: the window's own key, and what
+        // the mouse does instead of a finger.
         if (com.rm.acidulous.AppHost.current.onDesktop) {
             androidx.compose.material3.Text(
                 stringResource(Res.string.keys_group_desktop), color = c.teal, fontSize = 11.sp,

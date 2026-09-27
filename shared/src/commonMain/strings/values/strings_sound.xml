@@ -33,7 +33,7 @@
     <string name="sound_input">input</string>
     <string name="sound_bits">bits</string>
     <string name="sound_input_card">input · monitor on headphones only</string>
-    <!-- The input's own tab, on a square phone where the record page cannot hold it. -->
+    <!-- The input's own tab, on a square phone where the record page can't fit it. -->
     <string name="sound_tab_input">input</string>
     <string name="sound_gain">gain</string>
     <string name="sound_monitor">monitor</string>
@@ -82,7 +82,7 @@
     <!-- The library -->
     <string name="sound_library_none">Nothing here yet. Record one, or import a WAV.</string>
     <string name="sound_delete_armed">delete this? tap the cross again</string>
-    <!-- Its twin where the pointer is a mouse: the desktop build. -->
+    <!-- The same for the desktop build, where the pointer is a mouse. -->
     <string name="sound_delete_armed_mouse">delete this? click the cross again</string>
     <!-- When the file was made, and its size. -->
     <string name="sound_file_info">%1$s · %2$.0f kB</string>

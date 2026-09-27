@@ -1,16 +1,9 @@
-// Play a factory patch on a desk, write a wav, and print what it measures.
+// Plays a factory patch, writes a wav, and prints what it measures.
 //
-// Every factory bank in this app was written on paper. The plan says so in
-// almost every machine's section - "voiced on paper; tuned by ear from the
-// debug build" - and the tuning pass never happened, because tuning by ear
-// meant a build, an install, a track, a machine, a patch and a held note, per
-// patch, of which there are a hundred and twenty-four.
-//
-// This is the other half. It mounts a machine exactly as the app does, plays
-// it a phrase appropriate to what it is, writes a file to listen to and
-// prints eight numbers about what came out. It is an instrument, not a test:
-// nothing here passes or fails, and tools/all_tests.sh does not run it. The
-// assertions live next door in bank_test.
+// It sets up a machine the same way the app does, plays it a phrase that
+// suits it, writes a file to listen to and prints eight measurements. It's
+// for tuning patches without a device. Nothing here passes or fails and
+// tools/all_tests.sh doesn't run it. The bank checks are in bank_test.
 //
 //   audition params  <Machine|fx.Effect>
 //   audition list    [<Machine>]
@@ -18,7 +11,7 @@
 //   audition bank    <Machine> [options]
 //
 // See tools/patchbank.h for the bank format and tools/audition_material.h for
-// what gets mounted into the machines that need something to chew on.
+// the material loaded into machines that need input.
 
 #include <algorithm>
 #include <cmath>
@@ -56,7 +49,7 @@ namespace {
 
 constexpr int32_t kBlock = kBlockFrames;
 std::string gBankDir;
-// The repo root, for material that lives in a file rather than in a header.
+// The repo root, for material kept in files rather than headers.
 std::string gRootDir = ".";
 std::string gOutDir = "build/audition";
 
@@ -74,27 +67,20 @@ struct Phrase {
     int64_t lastOff = 0;  // where the tail starts, for measuring it
     int measuredNote = 0; // what the pitch reading should be compared against
     /**
-     * Keep rendering past `frames` until the sound has actually stopped.
+     * Keep rendering past `frames` until the sound has actually stopped. A
+     * phrase knows when the playing stops but not how long the patch rings,
+     * and a fixed tail cut long sounds off.
      *
-     * A phrase knows when the *playing* stops; it cannot know when the sound
-     * does, because that is the patch's business. Every tail here was a fixed
-     * guess - two seconds after the last drum, three after the last bell - and
-     * Dan caught the guess being wrong by ear: Hexbeat's long kits were still
-     * ten decibels above their floor when the file ended, and Enormous, whose
-     * crash is set to 3.8 seconds, was cut off less than halfway down. The
-     * harness had been saying so all along in the `+` on the tail column, and
-     * it went unread for seventeen banks.
-     *
-     * Off for the per-voice probe, which bounds each voice to one window on
-     * purpose so the thirteen can be compared against each other.
+     * Off for the per-voice probe, which gives each voice the same window so
+     * they can be compared.
      */
     bool ringOut = true;
 };
 
 int64_t secondsToFrames(float s) { return static_cast<int64_t>(kSr * s); }
 
-/** The longest a ring-out may add. Twelve seconds covers the longest thing
- *  any machine here can be set to and still ends a runaway patch. */
+/** The longest a ring-out may add. 12 seconds covers the longest setting of
+ *  any machine and still stops a patch that never goes quiet. */
 constexpr float kMaxRingOut = 12.0f;
 
 /** How long each voice of a kit gets to itself, in the `voices` phrase. */
@@ -110,17 +96,12 @@ int64_t hit(Phrase &p, float atSeconds, float forSeconds, int note, int vel) {
 }
 
 /**
- * The phrases, and why there are nine of them.
+ * The phrases. A pad and a bass need different things to judge them: a pad
+ * wants a long held note, a bass wants eighths with a few overlapping so glide
+ * and voice stealing show. The bank file says which phrase each patch wants.
  *
- * A pad and a bass cannot be judged on the same thing: one wants eight
- * seconds of a held note and the other wants eighths with a couple of them
- * overlapping so the glide and the voice stealing show up. The bank file says
- * which a patch wants, so `audition bank Trinity` plays each of its patches
- * the way that patch is meant to be played.
- *
- * `note` is special: it is always rendered whatever else is, because it is
- * the phrase the measurements are taken from. Comparing the brightness of a
- * chord against the brightness of a bass line says nothing at all.
+ * `note` is always rendered as well, because the measurements are taken from
+ * it so patches can be compared.
  */
 /** The notes a patch is played in, from the bank's `range=`; -1 for none. */
 struct Range {
@@ -135,23 +116,13 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
     const float beat = 60.0f / bpm;
 
     if (kind == "vocode") {
-        // For the vocoder, and shaped by what it is being judged on.
+        // For the vocoder. It's only heard while the carrier plays, so the
+        // chords are held for the whole of the speech. Four chords so you can
+        // hear the same words over different harmony.
         //
-        // A vocoder is only audible while its carrier is sounding, and the
-        // usual phrases let go after a couple of seconds - the modulator then
-        // runs for another nine with nothing to shape, so the demo is two
-        // seconds of speech and twelve of noise floor. Dan, hearing exactly
-        // that: "the samples are mostly static".
-        //
-        // So: chords, held, covering the whole of the modulator. Four of them
-        // rather than one, because a held triad under a voice is also static
-        // in the other sense - the point of a vocoder is that the *same* words
-        // over a different chord are a different sound, and a bank of
-        // twenty-seven patches should let you hear that at least once.
-        //
-        // Cm - Ab - Eb - Bb, three seconds each, each voiced root-fifth-octave
-        // so there is something in every part of the bank to impose a shape
-        // on. Twelve seconds of carrier under an eleven-second recording.
+        // Cm, Ab, Eb, Bb, three seconds each, voiced root-fifth-octave so
+        // every band has something to shape. 12 seconds of carrier under an
+        // 11 second recording.
         static const int kChords[][3] = {{0, 7, 12}, {-4, 3, 8}, {-9, -2, 3}, {-2, 5, 10}};
         for (int c = 0; c < 4; ++c) {
             const float at = static_cast<float>(c) * 3.0f;
@@ -164,9 +135,8 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(4.0f);
     } else if (kind == "bass") {
-        // Two bars of eighths. Two of them overlap, which is the only way to
-        // see a glide or a mono machine stealing from itself, and two are at
-        // 120 so accent has something to do.
+        // Two bars of eighths. Two overlap to show glide and mono voice
+        // stealing, and a few are accented.
         static const int kSteps[] = {0, 0, 12, 0, 7, 0, 3, 5, 0, 0, 12, 10, 7, 0, 3, 0};
         float t = 0.0f;
         for (int i = 0; i < 16; ++i) {
@@ -177,17 +147,12 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(2.0f);
     } else if (kind == "acid") {
-        // **Two bars of sixteenths, which is what this machine is for.**
+        // Two bars of sixteenths with rests, slides and accents. An acid
+        // line's sound comes from what the filter does between notes, so a
+        // plain bass line doesn't show it.
         //
-        // A bass line of eighths shows a bass machine works. It does not show
-        // an acid machine at all: the sound is made by what the filter does
-        // *between* notes, and that needs the rests, the slides that tie one
-        // step into the next so the filter never re-triggers, and the accents
-        // that open it further on the steps that carry the line. A demo has
-        // to be the thing the instrument is for.
-        //
-        // -1 is a rest. A step that slides runs 1.6 sixteenths, so it is still
-        // sounding when the next one starts, which is how a slide is played.
+        // -1 is a rest. A sliding step lasts 1.6 sixteenths so it's still
+        // sounding when the next one starts.
         static const int kNote[32] = {0,  -1, 0,  12, -1, 0,  -1, 3,
                                       -1, 0,  0,  -1, 7,  -1, 10, 12,
                                       0,  -1, 0,  12, -1, 0,  -1, 3,
@@ -211,7 +176,7 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         static const int kMaj7[] = {0, 4, 7, 11};
         static const int kMin7[] = {-3, 0, 4, 7};
         for (int i = 0; i < 4; ++i) {
-            // Staggered, because four note-ons in one block is not how hands work.
+            // Staggered slightly, like a real hand.
             p.lastOff = hit(p, 0.0f + 0.02f * static_cast<float>(i), 3.0f, note + 12 + kMaj7[i], velocity);
         }
         for (int i = 0; i < 4; ++i) {
@@ -219,23 +184,16 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "tune") {
-        // One melody, an octave and a fifth wide, placed inside the range
-        // the instrument is played in. Almost everything that has been wrong
-        // with these machines has been wrong at one end of a range and not
-        // the other - how long a note takes to speak, how much of the
-        // fundamental the DC blocker eats, whether the tuning holds, whether
-        // the thing makes a note at all - and a phrase that stays in one
-        // octave hides all of it. But a phrase that wanders *out* of the
-        // range hides worse: the woodwinds were auditioned two octaves
-        // around centres that were themselves below the instruments' lowest
-        // notes, and what was heard down there was the model with its tube
-        // clamped to nothing, reported as the model.
+        // One melody, an octave and a fifth wide, kept inside the
+        // instrument's range. Most problems show at one end of a range
+        // (slow attack, weak fundamental, tuning drift), so the tune covers
+        // both ends, but it never goes outside the range where the model
+        // isn't meant to play.
         //
-        // So: a statement low, an answer high, in Dorian so it reads as a
-        // tune rather than an exercise. The bottom, the top and the end are
-        // held, so each register is heard sustained; two repeated notes
-        // expose the tonguing on its own; one pair overlaps, which is where
-        // a slur and a mono voice show. It ends where it started.
+        // A phrase low, an answer high, in Dorian. The bottom, top and last
+        // notes are held, two repeated notes show the tonguing, and one
+        // overlapping pair shows slurs and mono voices. It ends where it
+        // started.
         struct Step { float at; float len; int step; int vel; };
         static const Step kTune[] = {
             { 0.0f, 0.90f,  0,  96}, { 1.0f, 0.45f,  3,  90}, { 1.5f, 0.45f,  5,  92},
@@ -247,9 +205,9 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             {15.0f, 2.50f,  0, 100},
         };
         constexpr int kSpan = 19;
-        // Where the window sits. With a range, inside it - and centred on the
-        // note when there is room, so --note still moves it. Without one,
-        // where the old two-octave phrase had its middle.
+        // Where the tune sits. With a range it stays inside it, centred on
+        // the note when there's room so --note still moves it. Without a
+        // range it's centred on the note.
         int bottom = note - 10;
         if (range.set()) {
             bottom = range.high - range.low >= kSpan ? std::clamp(note - 10, range.low, range.high - kSpan)
@@ -257,16 +215,16 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         for (const Step &st : kTune) {
             int n = bottom + st.step;
-            // A range narrower than the tune folds its top back down an
-            // octave rather than leaving the range.
+            // If the range is narrower than the tune, high notes drop an
+            // octave to stay inside it.
             if (range.set()) while (n > range.high) n -= 12;
             p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, n, st.vel));
         }
         p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "arp") {
-        // A broken chord over a progression rather than one triad forever.
-        // Sixteenths, up and back down, so a pluck's attack is heard thirty
-        // times and its tail is heard against the next note.
+        // A broken chord in sixteenths, up and down over a progression, so a
+        // pluck's attack is heard many times and its tail runs into the next
+        // note.
         static const int kRoot[4] = {0, -4, -7, -5};
         static const int kShape[8] = {0, 4, 7, 12, 16, 12, 7, 4};
         float t = 0.0f;
@@ -279,10 +237,8 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         p.frames = p.lastOff + secondsToFrames(2.0f);
     } else if (kind == "pad") {
         // Four chords, each held four seconds and overlapping the next by
-        // half of one. A pad is judged on what happens *while* it is held -
-        // the attack arriving, the filter moving, two oscillators drifting
-        // apart - and on whether the release of one chord sits properly
-        // under the attack of the next. A single held note shows none of it.
+        // half a second. A pad is judged on how it moves while held and how
+        // one chord's release sits under the next one's attack.
         static const int kChord[4][4] = {
             {0, 7, 12, 15},   // i
             {-4, 5, 8, 12},   // VI
@@ -292,16 +248,15 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         for (int c = 0; c < 4; ++c) {
             const float at = static_cast<float>(c) * 3.5f;
             for (int n = 0; n < 4; ++n) {
-                // Staggered, because four note-ons in one block is not hands.
+                // Staggered slightly, like a real hand.
                 p.lastOff = hit(p, at + 0.025f * static_cast<float>(n), 4.0f,
                                 note + kChord[c][n], velocity);
             }
         }
         p.frames = p.lastOff + secondsToFrames(4.0f);
     } else if (kind == "lead") {
-        // One line, played the way a lead is: two long notes to hear the
-        // tone settle, a run to hear it move, and an interval leap at the
-        // end that a mono voice has to glide or step across.
+        // A lead line: two long notes to hear the tone settle, a fast run,
+        // and a leap at the end that a mono voice has to glide across.
         struct Step { float at; float len; int step; int vel; };
         static const Step kLine[] = {
             {0.00f, 1.10f,  0, 100}, {1.20f, 0.45f,  3,  92}, {1.70f, 0.45f,  5,  96},
@@ -313,10 +268,9 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         for (const Step &st : kLine) p.lastOff = hit(p, st.at, st.len, note + st.step, st.vel);
         p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "keys") {
-        // Left hand and right hand: a root underneath, chords on the off
-        // beats above it. What this shows that a chord alone does not is
-        // whether the machine has the voices for both, and what its note-off
-        // does when they overlap.
+        // A root in the left hand and chords on the off beats above it.
+        // Shows whether the machine has enough voices for both and how
+        // note-offs behave when they overlap.
         static const int kRoot[4] = {0, -4, -7, -5};
         static const int kStab[3] = {12, 16, 19};
         for (int bar = 0; bar < 4; ++bar) {
@@ -332,11 +286,9 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "bell") {
-        // A bell is its tail. Every other phrase here starts the next note
-        // before the last one has finished, which is exactly the part of a
-        // struck sound that matters - so this one leaves room: five strikes
-        // with a second and a half between them, a pair together to hear two
-        // tails beat, and the last one left to ring on its own.
+        // A bell is mostly its tail, so this leaves room between strikes:
+        // about a second and a half apart, one pair together to hear two
+        // tails beat, and the last one left to ring out.
         struct Hit { float at; int step; int vel; };
         static const Hit kHits[] = {
             {0.0f, 0, 110}, {1.6f, 7, 96}, {3.2f, 12, 104}, {4.8f, 4, 92},
@@ -345,16 +297,10 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         for (const Hit &h : kHits) p.lastOff = hit(p, h.at, 0.25f, note + h.step, h.vel);
         p.frames = p.lastOff + secondsToFrames(5.0f);
     } else if (kind == "mallets" && kit != nullptr) {
-        // **Every pad, and played rather than programmed.**
-        //
-        // `beat` is a drum pattern and uses voices 0, 2, 3, 5, 7, 8 and 9 -
-        // which on an eight-pad machine means pads 1, 4 and 6 never sound at
-        // all. It is also a *kit* pattern: kick, snare, hats. Resonance's
-        // kits are as often tuned as they are drums - a marimba, a set of
-        // bells, a steel pan - and those want playing up and down, with
-        // rolls, and with two pads struck together to hear them ring into
-        // each other, which is the thing this machine has that no drum
-        // machine does.
+        // Plays every pad like a tuned instrument. `beat` only uses some
+        // voices, and Resonance kits are often tuned (marimba, bells, steel
+        // pan), so this plays up and down, with a roll and with pairs struck
+        // together to hear them ring into each other.
         struct Step { float at; int voice; int vel; };
         static const Step kPattern[] = {
             // up the kit, one at a time
@@ -362,14 +308,13 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             {1.00f, 4, 108}, {1.25f, 5, 96}, {1.50f, 6, 104}, {1.75f, 7, 100},
             // and back down, quieter, so the decay of each is heard under it
             {2.00f, 7,  88}, {2.25f, 5, 84}, {2.50f, 3,  88}, {2.75f, 1, 84},
-            // a roll on one pad: how a struck thing behaves when it is
-            // struck again before it has finished
+            // a roll on one pad, struck again before it has finished
             {3.00f, 2, 104}, {3.12f, 2, 84}, {3.25f, 2, 96}, {3.37f, 2, 80},
             {3.50f, 2, 108}, {3.62f, 2, 84}, {3.75f, 2, 92}, {3.87f, 2, 78},
-            // two together, twice - the coupling is loudest here
+            // two together, twice, where the coupling is loudest
             {4.25f, 0, 110}, {4.25f, 6, 100},
             {4.75f, 1, 106}, {4.75f, 7,  96},
-            // and one struck hard and left, with nothing after it
+            // and one struck hard and left to ring
             {5.50f, 4, 120},
         };
         const int n = static_cast<int>(kit->voices.size());
@@ -380,19 +325,12 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(5.0f);
     } else if (kind == "chip") {
-        // **Fast, short and jumpy, because that is how the music is written.**
+        // Fast, short and jumpy, the way chip music is written. The tables
+        // run at 50 steps a second, so long or slurred notes hide them. One
+        // voice carries both harmony and tune, hence the leaps.
         //
-        // Every other melodic phrase here is too legato for a chip machine.
-        // The tables run at fifty steps a second, so a four-step arpeggio
-        // turns over in eighty milliseconds and a volume shape is done inside
-        // a fifth of one - on a phrase of half-second notes the tables have
-        // finished long before the note has, and on a phrase with slurs the
-        // retrigger never happens at all. One voice also has to carry the
-        // harmony *and* the tune, which is what the leaps are for.
-        //
-        // Sixteenths at the demo tempo, mostly staccato, with two held notes
-        // late on so a duty sweep and a looping volume table have somewhere
-        // to be heard.
+        // Mostly staccato sixteenths, with two held notes at the end so a
+        // duty sweep or looping volume table can be heard.
         struct Step { float at; float len; int step; int vel; };
         static const Step kLine[] = {
             { 0.00f, 0.20f,  0, 116}, { 0.25f, 0.20f, 12, 100}, { 0.50f, 0.20f,  7, 104},
@@ -400,14 +338,12 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             { 1.50f, 0.20f, 10, 104}, { 1.75f, 0.20f, 15,  96}, { 2.00f, 0.20f,  5, 112},
             { 2.25f, 0.20f, 17, 100}, { 2.50f, 0.20f, 12, 104}, { 2.75f, 0.20f, 17,  96},
             { 3.00f, 0.45f,  7, 114}, { 3.50f, 0.20f, 19, 104}, { 3.75f, 0.20f, 12,  98},
-            // a bar of the same shape a fourth down, so a table that depends
-            // on the note shows that it does
+            // the same shape a fourth down, for tables that depend on the note
             { 4.00f, 0.20f, -5, 116}, { 4.25f, 0.20f,  7, 100}, { 4.50f, 0.20f,  2, 104},
             { 4.75f, 0.20f,  7,  96}, { 5.00f, 0.20f, -2, 110}, { 5.25f, 0.20f, 10, 100},
             { 5.50f, 0.20f,  5, 104}, { 5.75f, 0.20f, 10,  96}, { 6.00f, 0.45f,  0, 112},
             { 6.50f, 0.20f, 12, 104}, { 6.75f, 0.20f,  7,  98},
-            // and two long ones, which is where a duty sweep or a looping
-            // volume table lives
+            // two long notes for duty sweeps and looping volume tables
             { 7.00f, 1.40f, 12, 118}, { 8.50f, 1.90f,  0, 110},
         };
         for (const Step &st : kLine) {
@@ -415,63 +351,37 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(2.0f);
     } else if (kind == "drone") {
-        // **One chord, held far longer than anything else here.**
-        //
-        // A spectral pad's whole argument is what happens while nothing is
-        // being played: the cloud drifting, each voice reading a different
-        // part of a second and a half of table, the morph walking from one
-        // spectrum to another. All of that is slower than any phrase in this
-        // file - the pad chords turn over every three and a half seconds,
-        // which is faster than a drift rate of 0.07 Hz completes a cycle -
-        // so on every existing demo the machine's best feature is a still
-        // photograph.
-        //
-        // The chord also changes *under* itself rather than being replaced:
-        // notes join and leave a sound that never restarts, because a pad
-        // that is re-struck every bar never shows what it does on the third
-        // bar. Nothing here is faster than a whole note.
+        // One chord held much longer than any other phrase. A spectral pad
+        // is about slow movement (drift, morph) that's slower than the pad
+        // phrase's chord changes. Notes join and leave a chord that never
+        // restarts, and nothing is shorter than a whole note.
         struct Voice { float at; float len; int step; int vel; };
         static const Voice kVoices[] = {
             { 0.0f, 21.0f,  0,  92}, // the root, the whole way
-            { 0.0f, 21.0f,  7,  88}, // and the fifth
+            { 0.0f, 21.0f,  7,  88}, // the fifth
             { 4.0f, 17.0f,  4,  84}, // the third joins
-            { 9.0f, 12.0f, 14,  80}, // and the ninth, an octave up
+            { 9.0f, 12.0f, 14,  80}, // the ninth, an octave up
             {13.0f,  4.0f, 11,  76}, // a seventh, which leaves again
-            {17.0f,  4.0f, 12,  80}, // and an octave that does not
+            {17.0f,  4.0f, 12,  80}, // an octave, held to the end
         };
         for (const Voice &v : kVoices) {
             p.lastOff = std::max(p.lastOff, hit(p, v.at, v.len, note + v.step, v.vel));
         }
         p.frames = p.lastOff + secondsToFrames(6.0f);
     } else if (kind == "gospel" || kind == "chorale" || kind == "combo" || kind == "swell") {
-        // **The organ phrases, and the only ones here written in absolute
-        // notes rather than as steps above a moving centre.**
-        //
-        // An organ rack is not one keyboard. The split decides which manual
-        // a key belongs to and the pedal split decides whether it is a foot,
-        // and both of those are MIDI notes: a phrase written relative to a
-        // patch's centre would drag its bass line across them and play a
-        // hymn's pedal part on the swell. So these are written for the
-        // machine's own defaults - the feet below 48, the lower manual below
-        // 60, the upper above it - and `--note` moves them by whole octaves
-        // only, which is the one transposition that leaves every part on the
-        // manual it was written for.
-        //
-        // They are also the four instruments this machine is, played four
-        // different ways, because a hymn says nothing about a combo organ
-        // and a gospel turnaround says nothing about a harmonium.
+        // The organ phrases, written in absolute notes. The organ's splits
+        // decide which manual or the pedals a note goes to, so these are
+        // written for the default splits (pedals below 48, lower manual below
+        // 60, upper above) and `--note` only moves them by whole octaves.
+        // There's one phrase for each kind of organ the machine does.
         struct Step { float at; float len; int note; int vel; };
-        // Whole octaves, and *truncated* rather than rounded: a patch
-        // measured at G4 is not an octave away from middle C, but rounding
-        // 0.58 up said it was and moved its entire demo up twelve semitones.
-        // Two of the brightest patches in Manual's bank were being auditioned
-        // an octave above the rest of it for that reason alone.
+        // Whole octaves, truncated rather than rounded, so a patch centred on
+        // G4 isn't moved up an octave.
         const int shift = 12 * ((note - 60) / 12);
 
-        // Gospel: right hand above the split, left hand comping under it,
-        // and the feet on the roots. Grace notes into the chords and one
-        // run of sixteenths, which is where the percussion's one-shot rule
-        // and the contact clicks are heard. Times are in beats.
+        // Gospel: right hand above the split, left hand comping below it,
+        // pedals on the roots. Grace notes and a run of sixteenths show off
+        // the percussion and key clicks. Times are in beats.
         static const Step kGospel[] = {
             // feet
             { 0.0f, 3.6f, 29, 100}, { 4.0f, 3.6f, 34, 100}, { 8.0f, 1.8f, 31,  98},
@@ -499,7 +409,7 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             { 6.00f, 1.60f, 70,  96}, { 6.00f, 1.60f, 74,  96}, { 6.00f, 1.60f, 77,  96},
             { 8.00f, 1.60f, 71,  98}, { 8.00f, 1.60f, 74,  98}, { 8.00f, 1.60f, 79,  98},
             {10.00f, 1.60f, 72, 100}, {10.00f, 1.60f, 76, 100}, {10.00f, 1.60f, 79, 100},
-            // the run: eight sixteenths down, every one a fresh key
+            // the run: eight sixteenths down, each a new key
             {12.00f, 0.22f, 84, 104}, {12.25f, 0.22f, 82,  98}, {12.50f, 0.22f, 81, 100},
             {12.75f, 0.22f, 79,  96}, {13.00f, 0.22f, 77,  98}, {13.25f, 0.22f, 76,  94},
             {13.50f, 0.22f, 74,  96}, {13.75f, 0.22f, 72,  92},
@@ -511,12 +421,10 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             {22.00f, 2.50f, 81, 108},
         };
 
-        // The hymn: four parts held, doubled in the feet an octave down, and
-        // a breath in the middle. Everything an organ does that a synthesizer
-        // does not is in the held part - the wind sagging under eight notes,
-        // the chiff on each attack, the release of one chord under the next -
-        // so the notes are long and there are no fast ones at all. Seconds,
-        // not beats: a hymn is not at the demo's tempo.
+        // The hymn: four held parts, doubled in the pedals an octave down,
+        // with a breath in the middle. Long notes only, to hear the wind sag,
+        // the chiff and each release under the next chord. Times are in
+        // seconds, not beats.
         static const Step kChorale[] = {
             { 0.00f, 1.70f, 72, 96}, { 0.00f, 1.70f, 67, 92}, { 0.00f, 1.70f, 64, 92}, { 0.00f, 1.70f, 48, 96}, { 0.00f, 1.70f, 36, 100},
             { 1.80f, 1.70f, 71, 96}, { 1.80f, 1.70f, 67, 92}, { 1.80f, 1.70f, 62, 92}, { 1.80f, 1.70f, 47, 96}, { 1.80f, 1.70f, 35, 100},
@@ -529,10 +437,9 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             {13.40f, 3.60f, 72,104}, {13.40f, 3.60f, 67, 96}, {13.40f, 3.60f, 64, 94}, {13.40f, 3.60f, 48,100}, {13.40f, 3.60f, 36, 104},
         };
 
-        // The combo: a riff, played hard and short. This one is about the
-        // attack and the release - tabs rather than drawbars, a reedy filter,
-        // and notes that stop - so it is eighths at the demo's tempo with a
-        // two-note vamp under them and nothing held except the last chord.
+        // The combo organ: a riff played hard and short, to hear the attack
+        // and release. Eighths at the demo tempo over a two-note vamp, with
+        // only the last chord held.
         static const Step kCombo[] = {
             { 0.0f, 0.42f, 69,110}, { 0.5f, 0.42f, 72, 96}, { 1.0f, 0.42f, 76,104}, { 1.5f, 0.42f, 72, 94},
             { 2.0f, 0.42f, 74,102}, { 2.5f, 0.42f, 72, 94}, { 3.0f, 0.42f, 69,100}, { 3.5f, 0.42f, 67, 92},
@@ -551,11 +458,10 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             {15.0f, 2.20f, 57, 96}, {15.0f, 2.20f, 64, 92},
         };
 
-        // The reed organ: everything slow and everything held, with the
-        // dynamic coming from how hard the bellows are worked rather than
-        // from any note. Five chords rising to the loudest and falling away,
-        // one inner voice moving each time, and a drone underneath that never
-        // lets the wind supply recover. Seconds.
+        // The reed organ: slow and held, with dynamics coming from the
+        // bellows rather than the notes. Chords swell up and fall away with
+        // one inner voice moving each time, over a drone that keeps the wind
+        // supply under load. Times are in seconds.
         static const Step kSwell[] = {
             { 0.0f, 16.5f, 38, 96},  // the drone, under the feet the whole way
             { 0.0f, 2.60f, 50, 72}, { 0.0f, 2.60f, 57, 70}, { 0.0f, 2.60f, 62, 70}, { 0.0f, 2.60f, 65, 74},
@@ -573,10 +479,8 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         else if (kind == "combo") { steps = kCombo; count = sizeof(kCombo) / sizeof(kCombo[0]); }
         else if (kind == "swell") { steps = kSwell; count = sizeof(kSwell) / sizeof(kSwell[0]); unit = 1.0f; }
 
-        // Notes that land together are staggered a few milliseconds apart,
-        // because two hands and two feet do not arrive in the same block -
-        // and because an organ's contact clicks all landing on one sample is
-        // the one thing that makes a chord sound like a machine.
+        // Notes that start together are staggered by a few milliseconds, like
+        // real hands and feet. Key clicks all on one sample sound mechanical.
         float lastAt = -1.0f;
         int together = 0;
         for (size_t i = 0; i < count; ++i) {
@@ -600,27 +504,20 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         }
         p.frames = p.lastOff + secondsToFrames(2.0f);
     } else if (kind == "voices" && kit != nullptr) {
-        // A second apart, which is longer than it needs to be for most of a
-        // kit and is set by the ones it is not: a crash or an open hat has to
-        // have room to decay inside its own window or the tail column reads
-        // the window rather than the sound.
+        // A second apart, so a crash or open hat can decay inside its own
+        // window. Otherwise the tail column measures the window, not the
+        // sound.
         for (size_t i = 0; i < kit->voices.size(); ++i) {
             p.lastOff = hit(p, kVoiceWindow * static_cast<float>(i), 0.1f, kit->baseNote + static_cast<int>(i),
                             velocity);
         }
         p.frames = secondsToFrames(kVoiceWindow * static_cast<float>(kit->voices.size()));
     } else if (kind == "beat" && kit != nullptr) {
-        // Two bars. Voices past what the kit has simply do not fire.
+        // Two bars. Voices the kit doesn't have are skipped.
         const int n = static_cast<int>(kit->voices.size());
         struct Step { int voice; int sixteenth; int vel; };
-        // The crash is on the downbeat, where a crash goes. It was on the
-        // second-to-last sixteenth, which meant every kit with a long one
-        // ended in a solo cymbal: Dan heard it as "a crash overwhelming
-        // everything else in the kit" across the whole room family, and the
-        // measurement agreed - under one per cent of the energy but nine and
-        // a half seconds of tail, all of it after the kit had stopped. On the
-        // downbeat it rings *under* the two bars instead, which is both the
-        // musical place for it and the only way to hear it against the kit.
+        // The crash is on the downbeat so it rings under the two bars. Near
+        // the end, a long crash would ring on alone after the kit stopped.
         static const Step kPattern[] = {
             {0, 0, 120}, {9, 0, 65},  {7, 2, 70},  {2, 4, 110}, {7, 6, 70},  {0, 8, 100},
             {0, 10, 80}, {2, 12, 110}, {8, 14, 80}, {0, 16, 120}, {7, 18, 70}, {2, 20, 110},
@@ -644,9 +541,9 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
 // --- What gets mounted -------------------------------------------------------
 
 /**
- * The material a machine needs before it makes any sound, and the audio put
- * on the input bus. Held here for as long as the render runs, because
- * swapObject takes a borrowed pointer and the machine keeps reading it.
+ * The material a machine needs before it makes any sound, and the audio for
+ * the input bus. Kept alive for the whole render, because swapObject borrows
+ * the pointer and the machine keeps reading it.
  */
 struct Material {
     std::vector<std::unique_ptr<SampleData>> samples;
@@ -660,11 +557,9 @@ struct Material {
 };
 
 /**
- * Cumulus renders silence until somebody hands it a table, and the table is
- * built off the audio thread from the machine's own spectrum parameters -
- * which is what EngineHost::buildCloud does when a knob moves. A harness that
- * skipped this would report every Cumulus patch as silent and be wrong about
- * all of them, so it does the same two calls.
+ * Cumulus is silent until it's given a table, built off the audio thread from
+ * its spectrum parameters. This makes the same two calls EngineHost::buildCloud
+ * makes when a knob moves.
  */
 void buildCumulusCloud(Machine *m, Material &mat) {
     auto *cum = static_cast<::acidulous::machine::Cumulus *>(m);
@@ -701,21 +596,15 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
 }
 
 /**
- * The half of a patch that is not knobs.
- *
- * Formulate's sound is a string, not a number: without its formula compiled
- * and mounted it plays its plain oscillator, which is why "Formula Buzz"
- * measured as silence. Cumulus's table is the same shape of problem and is
- * built from the machine's own parameters above. Both are what EngineHost
- * does when the setting changes, done here for the same reason.
+ * The parts of a patch that aren't knobs. Formulate's formula is a string
+ * that has to be compiled and mounted, or it plays a plain oscillator. This
+ * does what EngineHost does when the setting changes.
  */
 void applySettings(Machine *m, const std::string &machine,
                    const std::vector<std::pair<std::string, std::string>> &settings, Material &mat,
                    const std::set<std::string> &named = {}) {
-    // Nexus's patch *is* its graph: a line per module and a line per cable,
-    // parsed on a worker in the app and handed over with swapObject. Without
-    // this the harness mounted nothing and every Nexus patch measured -200 dB,
-    // which is what "graphs have to be built on the device" amounted to.
+    // A Nexus patch is its graph, a line per module and per cable. The app
+    // parses it on a worker and hands it over with swapObject.
     if (machine == "Nexus") {
         for (const auto &kv : settings) {
             if (kv.first == "nexus") mountNexusGraph(m, kv.second, kSr, named, mat.graph);
@@ -741,23 +630,15 @@ void applySettings(Machine *m, const std::string &machine,
 }
 
 /**
- * A real recording on the input bus, looped to fill the render.
+ * A real recording on the input bus, looped to fill the render. Synthetic
+ * speech is fine for checking a vocoder's wiring but lacks the detail needed
+ * to judge how a patch sounds.
  *
- * Synthetic speech is good enough to prove a vocoder's bands are wired to the
- * right places and no good at all for judging whether a patch sounds like
- * anything - the thing a vocoder does is impose the *detail* of one sound on
- * another, and detail is exactly what a synthesised modulator does not have.
- * Dan supplied the file. It lives in the repo so the audition is reproducible
- * rather than depending on a path on one machine.
- *
- * Looped with a short crossfade, because a recording that stops dead in the
- * middle of a render puts a step in every patch's demo at the same moment and
- * the whole bank appears to share a fault.
+ * Looped with a short crossfade so there's no click where it wraps.
  */
 std::vector<float> fileInput(const std::string &path, float seconds) {
-    // The read, the mono fold, the rumble filter and the level all live in
-    // audition_material.h now, because Molt wants a real voice too and wanted
-    // exactly this treatment of it.
+    // Reading, mono fold, rumble filter and level are in audition_material.h,
+    // shared with Molt.
     std::string error;
     std::vector<float> src = fileMono(path.c_str(), error);
     if (src.empty()) {
@@ -801,11 +682,9 @@ void loadInput(const std::string &kind, Material &mat) {
 std::string defaultMaterial(const std::string &machine) {
     if (machine == "Forage") return "kit";
     if (machine == "Dice") return "break";
-    // Pollen granulates music by default. A break is the right seed for a
-    // slicer and the wrong one for a cloud: it proves onset snap and says
-    // nothing about the pitch, bloom and cloud families, which are two
-    // thirds of the bank. The four rhythm patches ask for the break
-    // themselves, because they are the ones that are about transients.
+    // Pollen granulates music by default. A break only tests onset snap,
+    // not the pitch, bloom and cloud patches that make up most of the bank.
+    // The rhythm patches ask for the break themselves.
     if (machine == "Pollen") return "seed";
     if (machine == "Mosaic") return "map";
     if (machine == "Molt") return "voice";
@@ -813,19 +692,10 @@ std::string defaultMaterial(const std::string &machine) {
 }
 
 std::string defaultInput(const std::string &machine) {
-    // A vocoder on a steady vowel tells you nothing: the band map only shows
-    // what it does when what goes through it moves.
-    // A real recording when this machine has one, and synthetic speech when it
-    // does not.
-    //
-    // A vocoder voiced on synthetic speech is voiced on the wrong thing: the
-    // fricatives here are a couple of hundred milliseconds of band-passed
-    // noise where a real "s" is fifty and has a shape, so they read as bursts
-    // of static rather than as consonants. But a repository is the wrong place
-    // to keep somebody's voice, so the file is named in tools/local.env, which
-    // is untracked, and anyone without it gets `speechPhrase()` instead. The
-    // levels that ship are the ones a real voice produced; the harness still
-    // runs for anyone who has only the synthetic one.
+    // A vocoder needs moving input. Use the real recording named in
+    // tools/local.env if there is one (the shipped levels came from a real
+    // voice), otherwise synthetic speech. Synthetic consonants are long
+    // noise bursts that sound like static.
     if (machine == "Cipher") {
         const char *file = std::getenv("ACIDULOUS_INPUT_FILE");
         if (file != nullptr && *file != '\0') return std::string("file:") + file;
@@ -837,13 +707,10 @@ std::string defaultInput(const std::string &machine) {
 // --- Applying a patch --------------------------------------------------------
 
 /**
- * Exactly what the app does, in the same order.
- *
- * Every index in the table is written, not just the ones the patch names -
- * ParamBinding.applyAll pushes each machine parameter's default for anything
- * a patch leaves out, and that is what makes "a patch lists only what it
- * changes" true. Do less here and a patch will measure well only because the
- * one before it left something behind.
+ * Does what the app does, in the same order. Every parameter is written, not
+ * just the ones the patch names, like ParamBinding.applyAll which sets
+ * defaults for anything a patch leaves out. Otherwise a patch could inherit
+ * values from the one before it.
  */
 void applyTo(ParamSet &params, const std::vector<float> &norm) {
     for (size_t i = 0; i < norm.size(); ++i) params.set(static_cast<int32_t>(i), norm[i]);
@@ -858,23 +725,19 @@ struct Take {
 };
 
 /**
- * The single held note every patch is also given, whatever else it is played.
- *
- * Measurements come from here rather than from the phrase, so a bass and a pad
- * in the same bank can be compared at all - and so can the harmonic ladder,
- * which on a melody would be read halfway through a note change.
+ * The single held note every patch also plays. Measurements come from this
+ * rather than the phrase, so different kinds of patch can be compared and the
+ * harmonic readings aren't taken mid note change.
  */
 Take gMeasureTake;
 
 /**
- * Play a machine a phrase and collect what comes out.
+ * Plays a phrase on a machine and collects the output.
  *
- * The tick clock is the part to get right. reset_test advances four ticks a
- * block, which at 240 PPQN and 64 frames is about 750 bpm - harmless there,
- * because it only asks whether two renders match, but fatal here: every
- * tempo-synced LFO, Manual's rotary and Nexus's clock would run six times too
- * fast and every patch would be voiced against a lie. So it is accumulated in
- * double from the frame count, which at 120 bpm is 0.64 ticks a block.
+ * Ticks are worked out in double from the frame count (0.64 ticks a block at
+ * 120 bpm) so tempo-synced LFOs, Manual's rotary and Nexus's clock run at the
+ * right speed. A fixed ticks-per-block step like reset_test's would run them
+ * about six times too fast.
  */
 Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
     Take out;
@@ -914,13 +777,11 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
         }
     }
 
-    // The ring-out. Sixty decibels under the loudest sample is the same floor
-    // the tail measurement uses, so what is written and what is measured agree
-    // about when a sound has ended. Held for a tenth of a second, because a
-    // decaying oscillator passes through zero twice a cycle and one quiet
-    // block is not silence. Capped, because a machine with a noise floor or a
-    // patch left self-oscillating never reaches any floor at all - and a cap
-    // hit is visible as the `+` that started this.
+    // The ring-out. It stops 60 dB under the peak, the same floor the tail
+    // measurement uses. It has to stay quiet for a tenth of a second, since a
+    // decaying wave crosses zero and one quiet block isn't silence. Capped,
+    // because a noisy or self-oscillating patch never gets that quiet. Hitting
+    // the cap shows as a `+` in the tail column.
     if (phrase.ringOut) {
         float peak = 0.0f;
         for (float v : out.stereo) peak = std::max(peak, std::fabs(v));
@@ -953,14 +814,13 @@ std::vector<float> effectSource(float seconds) {
     const auto n = static_cast<size_t>(kSr * seconds);
     std::vector<float> out(n * 2, 0.0f);
     Rng rng(0xeffec7u);
-    // The source stops at two thirds, and the rest is silence: a delay's
-    // tail and a reverb's are most of what there is to judge about them, and
-    // fed a signal to the last sample there is nowhere for either to show.
+    // The source stops at two thirds and the rest is silence, so delay and
+    // reverb tails can be heard.
     const size_t stop = n * 2 / 3;
     for (size_t i = 0; i < stop; ++i) {
         const float t = static_cast<float>(i) / kSr;
-        // A note every half second so a delay, a gate and a compressor all
-        // have an edge to work on, over a bed of noise for the filters.
+        // A note every half second gives delays, gates and compressors an
+        // edge to work on, over some noise for the filters.
         const float phase = std::fmod(t, 0.5f);
         const float env = std::exp(-phase / 0.12f);
         const float tone = (std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * t) +
@@ -1003,14 +863,9 @@ Take renderEffect(Effect *fx, float bpm, float seconds) {
 // --- Output ------------------------------------------------------------------
 
 /**
- * The shortest decimal that reads back as exactly this float.
- *
- * Seven significant figures is enough for a value nobody can hear the last
- * digit of, and not enough for a render to repeat bit for bit - which this
- * app does care about, and proves in two harnesses. So the short form is
- * tried first and kept when it survives the trip, and nine figures are used
- * when it does not: most values come out as `0.62f` and only the ones that
- * need it are long.
+ * The shortest decimal that reads back as exactly this float. Tries 7
+ * significant figures first and falls back to 9, so renders stay bit exact
+ * but most values still come out short like `0.62f`.
  */
 std::string floatLiteral(float v) {
     char buf[48];
@@ -1025,10 +880,8 @@ std::string floatLiteral(float v) {
 std::string kotlinString(const std::string &in) {
     std::string out;
     for (char c : in) {
-        // A newline has to become an escape, not a newline: a Nexus patch *is*
-        // a document - a line per module and a line per cable - and writing it
-        // raw put a line break inside a Kotlin string literal and would not
-        // compile.
+        // Newlines are escaped. A Nexus patch has one line per module and
+        // cable, and a raw line break in a Kotlin string won't compile.
         if (c == '\n') { out += "\\n"; continue; }
         if (c == '\r') continue;
         if (c == '\\' || c == '"' || c == '$') out += '\\';
@@ -1038,11 +891,8 @@ std::string kotlinString(const std::string &in) {
 }
 
 /**
- * Where a unit's wavs go: one folder each.
- *
- * A hundred and fifty files in one directory is a directory nobody can find
- * anything in, and these get copied to another machine to be listened to -
- * one folder per machine is one thing to fetch.
+ * Each unit's wavs go in their own folder, so they're easy to find and copy
+ * to another machine.
  */
 std::string folderFor(const std::string &unit);
 
@@ -1060,11 +910,8 @@ std::string folderFor(const std::string &unit) {
 }
 
 /**
- * Float, always.
- *
- * WavWriter clamps to +/-1 for PCM and says so - "the point of float is that
- * it does not need one" - and a tool whose job includes finding the patches
- * that clip must not be the thing that hides them.
+ * Always writes float wavs. WavWriter clamps PCM to +/-1, which would hide the
+ * patches that clip.
  */
 bool writeWav(const std::string &path, const std::vector<float> &stereo) {
     WavWriter w;
@@ -1078,11 +925,8 @@ bool writeWav(const std::string &path, const std::vector<float> &stereo) {
 }
 
 /**
- * A kit's voices, measured one at a time out of a `voices` render.
- *
- * A drum patch is not one sound, so one row for it says nothing. What a kit
- * is judged on is the balance between its pieces - is the hat too loud - and
- * that is the `rel` column: each voice against the loudest in the same patch.
+ * One row per kit voice. A kit is judged on the balance between its pieces,
+ * which is the `rel` column: each voice against the loudest in the patch.
  */
 struct VoiceRow {
     std::string name;
@@ -1090,14 +934,8 @@ struct VoiceRow {
 };
 
 /**
- * Each voice on its own, with the machine reset in between.
- *
- * Not by slicing one render into windows, which is what this did first and
- * what it measured was wrong: a Hexbeat kick at its default settings is still
- * at a fifth of its peak a second later, so every row after the first was
- * reading its own hit sitting on the previous one's tail - and changing the
- * *kick's* decay moved the *rim's* numbers. Thirteen short renders cost
- * nothing and each one measures only what it is for.
+ * Renders each voice on its own with a fresh machine. Slicing one render
+ * into windows would measure each hit on top of the previous one's tail.
  */
 std::vector<VoiceRow> measureVoices(const Kit &kit, const std::vector<float> &norm, const std::string &machine,
                                     const std::string &material, float bpm, int velocity) {
@@ -1115,7 +953,7 @@ std::vector<VoiceRow> measureVoices(const Kit &kit, const std::vector<float> &no
         Phrase one;
         one.lastOff = hit(one, 0.0f, 0.1f, kit.baseNote + static_cast<int>(v), velocity);
         one.frames = secondsToFrames(kVoiceWindow);
-        one.ringOut = false; // bounded on purpose: the thirteen share a window
+        one.ringOut = false; // every voice gets the same window
         const Take take = render(m.get(), one, bpm, mat);
         rows.push_back({kit.voices[v], measure(take.stereo, 0, 0)});
     }
@@ -1130,7 +968,7 @@ void printVoices(const std::vector<VoiceRow> &rows) {
     for (const VoiceRow &r : rows) {
         const bool silent = r.m.peakDb < -100.0f;
         if (!silent) quietest = std::min(quietest, r.m.peakDb);
-        // A tail that fills its window has not been measured, only bounded.
+        // A tail that fills its window was cut off, not measured.
         const bool clipped = r.m.tailSeconds >= kVoiceWindow - 0.02f;
         std::printf("    %-13s %+6.1f %+7.1f %5.2f%ss %8.0fHz%s\n", r.name.c_str(),
                     static_cast<double>(r.m.peakDb), static_cast<double>(r.m.peakDb - loudest),
@@ -1144,15 +982,10 @@ void printVoices(const std::vector<VoiceRow> &rows) {
 }
 
 /**
- * The first twelve harmonics, in decibels against the strongest.
- *
- * Because for some machines the centroid is the wrong question, and Brazen's
- * own section of the plan says so: "the centroid moves only 614 to 645 Hz,
- * because the fundamental grows with everything else; the ladder is the
- * evidence, not the centroid". It is also the difference between one brass
- * instrument and another - a tuba is a fundamental and a few partials over
- * it, a trumpet is a long even rolloff - which a single number for
- * brightness cannot tell you and cannot be voiced against.
+ * The first twelve harmonics, in dB against the strongest. For some machines
+ * (Brazen, for example) the centroid barely moves because the fundamental
+ * grows with everything else. The harmonic ladder shows the difference, e.g.
+ * a tuba has a few partials while a trumpet has a long, even rolloff.
  */
 void printLadder(const std::vector<float> &stereo, float f0) {
     if (f0 <= 0.0f) {
@@ -1175,8 +1008,7 @@ void printLadder(const std::vector<float> &stereo, float f0) {
     for (int h = 0; h < 12; ++h) std::printf(" %5.0f", static_cast<double>(dB(mags[h] / loudest)));
     std::printf("\n      ");
     for (int h = 0; h < 12; ++h) std::printf(" %5d", h + 1);
-    // How far up the series there is still something worth hearing, and how
-    // evenly it falls away: a tuba runs out early, a trumpet does not.
+    // The highest harmonic still above -30 dB.
     int reach = 1;
     for (int h = 0; h < 12; ++h) {
         if (dB(mags[h] / loudest) > -30.0f) reach = h + 1;
@@ -1185,10 +1017,9 @@ void printLadder(const std::vector<float> &stereo, float f0) {
 }
 
 /**
- * Pitch against time over the front of the measured note: the attack, in
- * numbers. Dense over the first hundred milliseconds, where a glide or a
- * mode fight lives, and sparse after. `?` marks a reading whose three
- * periods disagreed by more than a tenth - noise, or a note not yet decided.
+ * Pitch over time at the start of the measured note. Readings are every 5 ms
+ * for the first 100 ms, where glides and unstable attacks show, then sparser.
+ * `?` marks a reading whose three periods disagreed by more than a tenth.
  */
 void printTrack(const std::vector<float> &stereo, float f0, int note) {
     if (f0 <= 0.0f) {
@@ -1290,12 +1121,12 @@ struct Options {
     std::string phrase;
     std::string material;
     std::string input;
-    int note = -1; // -1: whatever the patch or the phrase wants
+    int note = -1; // -1: whatever the patch or phrase wants
     int velocity = 100;
     float bpm = 120.0f;
     bool ladder = false;
     bool track = false;
-    bool quiet = false; // sweep: no row, no wav, just the numbers back
+    bool quiet = false; // sweep: no row, no wav, just return the numbers
     std::vector<std::pair<std::string, double>> sets;
 };
 
@@ -1349,9 +1180,8 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
                                                  : defaultInput(bank.unit);
         if (!opt.material.empty()) material = opt.material;
         if (!opt.input.empty()) input = opt.input;
-        // Everything a patch needs before it can sound, in one place - because
-        // it has to happen twice. The listen render below resets the machine,
-        // and a reset undoes all of this.
+        // Everything a patch needs before it can sound. It runs twice because
+        // the listen render below resets the machine, which undoes it.
         std::set<std::string> named;
         for (const BankValue &v : patch.values) named.insert(v.name);
         const auto dress = [&] {
@@ -1362,21 +1192,18 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         loadInput(input, mat);
 
         const Kit *kit = kitFor(bank.unit);
-        // An explicit --note wins over the bank's, which wins over the middle
-        // of the bank's range, which wins over the default: the flag is how
-        // you ask what a patch does somewhere else.
+        // --note wins over the patch's note, then the middle of its range,
+        // then the default.
         const Range range{patch.low, patch.high};
         const int note = opt.note > 0    ? opt.note
                          : patch.note > 0 ? patch.note
                          : range.set()    ? (range.low + range.high) / 2
                                           : 48;
 
-        // What is *measured* and what is *listened to* are two different
-        // phrases on purpose. A bank holds a bass and a pad side by side, and
-        // comparing the brightness of eighths against the brightness of a
-        // held chord says nothing - so every patch is also played one plain
-        // note, and that is the render the numbers come from. A kit gets its
-        // voices one at a time instead, for the same reason.
+        // The measured phrase and the listened-to phrase are different on
+        // purpose. Every patch is measured on one plain note so patches of
+        // different kinds can be compared. A kit is measured one voice at a
+        // time instead.
         const std::string measureKind = kit != nullptr ? "voices" : "note";
         const Phrase measurePhrase = buildPhrase(measureKind, note, opt.velocity, opt.bpm, kit);
         const Take measureTake = render(m.get(), measurePhrase, opt.bpm, mat);
@@ -1386,12 +1213,10 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         measuredAlready = true;
         if (kit != nullptr) {
             voices = measureVoices(*kit, r.norm, bank.unit, material, opt.bpm, opt.velocity);
-            // A kit's summary row cannot come from the render the way a
-            // synth's does: the measurement is taken a tenth of a second in,
-            // which for `voices` is inside the first voice, so every kit in
-            // the bank reported its kick's brightness and they all looked
-            // alike. Take the loudness-weighted mean across the voices for
-            // brightness, and the longest thing in the kit for the tail.
+            // A kit's summary row can't come from the render, since the
+            // measurement window would only see the first voice. Use the
+            // loudness-weighted mean of the voices' brightness and the
+            // longest tail in the kit.
             double num = 0.0, den = 0.0;
             float longest = 0.0f;
             for (const VoiceRow &v : voices) {
@@ -1416,36 +1241,27 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             m->allNotesOff();
             m->reset();
             applyTo(m->params(), r.norm);
-            // And mount the patch again. Parameters are not the whole patch:
-            // Nexus keeps its graph in a *setting*, and mounting that graph is
-            // what seeds every knob the patch did not name from its module's
-            // own default. Re-applying only `r.norm` put all of those back to
-            // zero - so a vca sat at zero gain and the render was digital
-            // silence, while the measured row beside it, taken before the
-            // reset, read a healthy -32 dB. Every Nexus wav in the audition
-            // folder was wrong in exactly the places nobody would check: the
-            // number said the patch was fine and the file you listened to was
-            // empty.
+            // Mount the patch again too. Nexus keeps its graph in a setting,
+            // and mounting it sets every knob the patch didn't name to the
+            // module's default. Without this those knobs go back to zero and
+            // the render can be silent.
             dress();
             take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range), opt.bpm, mat);
         }
     }
 
-    // An effect has no note to hold, so what it was given is what it is
-    // measured on - and its tail is where one preset differs from the next,
-    // so brightness and pitch are read from just after the source stops. A
-    // machine reaches this line only when it made no measure take of its
-    // own, and then the body of the note is still what it is: the default
-    // window starts past the attack and averages over what is sounding.
+    // An effect has no note to hold, so it's measured on its own render.
+    // Presets differ mostly in their tails, so brightness and pitch are read
+    // just after the source stops. A machine only gets here without a
+    // measure take, and then the default window is used.
     if (!measuredAlready) {
         measured = bank.isEffect()
                        ? measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f))
                        : measure(take.stereo, take.offAt, 0);
     }
     if (opt.quiet) return true;
-    // Named "<family>-<patch>.wav", so a folder of forty sorts into the
-    // groups a person is actually comparing: every bell next to every other
-    // bell rather than next to whatever starts with the same letter.
+    // Named "<family>-<patch>.wav" so a folder sorts by family, with all the
+    // bells together and so on.
     const std::string family = !patch.family.empty() ? patch.family
                              : !patch.role.empty()   ? patch.role
                                                      : bank.role;
@@ -1485,9 +1301,8 @@ int cmdBank(const std::string &unit, const Options &opt) {
     if (rms.size() > 1) {
         const float lo = *std::min_element(rms.begin(), rms.end());
         const float hi = *std::max_element(rms.begin(), rms.end());
-        // The column to flatten. A bank whose patches are twelve decibels
-        // apart is the commonest factory-bank fault there is, and the one the
-        // ear is worst at catching patch by patch.
+        // Patches far apart in loudness are a common bank fault and hard to
+        // hear one patch at a time.
         std::printf("\n  loudness spread %.1f dB%s\n", static_cast<double>(hi - lo),
                     hi - lo > 12.0f ? "   <- wide; level these against each other" : "");
     }
@@ -1495,23 +1310,12 @@ int cmdBank(const std::string &unit, const Options &opt) {
 }
 
 /**
- * Every note of a patch's range, one line each.
+ * Every note of a patch's range, one line each. Problems usually show at the
+ * ends of a range, not the middle, so the whole range is checked.
  *
- * The single measured note says nothing about the twenty-four either side of
- * it, and those are what a player will use. Everything this machine family
- * has got wrong has been wrong at one end of a range and right in the middle:
- * a note the loop cannot hold, a mode above the one that was asked for, a
- * pitch that walks as the tube below the fingers grows. So the acceptance
- * test is the range, not the centre.
- *
- * `dead` is a note that never reaches a tenth of the patch's own loudest;
- * `mode` is one whose pitch is a long way from what was asked for, which on
- * these models means another partial won; `atonal` is one the harness could
- * find no pitch in at all. Those last two are not the same thing and the
- * first version of this said they were - a bowed string that read "41 of 41
- * notes wrong, worst tuning +0 cents" was forty-one notes with no reading,
- * which is a different fault from forty-one notes on the wrong partial and
- * wants a different fix.
+ * `dead` is a note 20 dB below the patch's loudest. `mode` (wrong partial)
+ * means another partial is loudest and the fundamental is missing. `atonal`
+ * means no pitch was found at all, which is a different fault from `mode`.
  */
 int cmdSweep(const std::string &unit, const std::string &patchName, const Options &opt) {
     Bank bank;
@@ -1534,14 +1338,11 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
             one.note = n;
             Measured m;
             if (!auditionOne(bank, p, one, m)) break;
-            // Anchored: the note is known, so "how far out" and "which
-            // partial" are separate questions and neither needs a guess.
+            // The note is known, so tuning and partial are measured against it.
             rmsAt.push_back(m.loudnessDb);
-            // Either the note's series is there, or its own fundamental is -
-            // a sub-octave patch puts most of its energy an octave below the
-            // note, so it scores almost nothing on the note's harmonics while
-            // being perfectly pitched. Asking for the series alone called
-            // fifteen notes of a sub bass atonal.
+            // Counts as pitched if the note's harmonics or its fundamental are
+            // there. A sub-octave patch puts most of its energy an octave down
+            // and scores low on harmonics while being in tune.
             centsAt.push_back(m.tuned && (m.harmonicity > 0.15f || m.fundamentalDb > -12.0f)
                                   ? m.tuneCents
                                   : -9999.0f);
@@ -1558,10 +1359,9 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
             const int n = p.low + static_cast<int>(i);
             const bool none = centsAt[i] < -9000.0f;
             const bool dead = rmsAt[i] < loudest - 20.0f;
-            // Another partial is loudest *and* the note itself is not there:
-            // a saxophone sounding its octave. A plucked string whose fourth
-            // harmonic is the loudest is not this - it still has a
-            // fundamental, and that is a tone colour rather than a fault.
+            // Another partial is loudest and the fundamental is missing, like
+            // a sax jumping to its octave. A string with a loud fourth
+            // harmonic but a present fundamental is fine.
             const bool mode = partAt[i] > 1.5f && rootAt[i] < -30.0f;
             if (none) ++atonal;
             if (dead || mode || none) ++bad;
@@ -1575,8 +1375,7 @@ int cmdSweep(const std::string &unit, const std::string &patchName, const Option
                         dead ? "  <- dead" : "", mode ? "  <- wrong partial" : "",
                         none && !dead ? "  <- atonal" : "");
         }
-        // What a player would notice: how far the loudest note is from the
-        // quietest, and how far out of tune the worst one is.
+        // The level spread across the range and the worst tuning.
         const float quietest = *std::min_element(rmsAt.begin(), rmsAt.end());
         float worstCents = 0.0f;
         for (float c : centsAt) if (c > -9000.0f && std::fabs(c) > std::fabs(worstCents)) worstCents = c;
@@ -1601,17 +1400,14 @@ int cmdList(const std::string &unit) {
 }
 
 /**
- * Turn the JVM dump of what ships today into bank files.
+ * Turns a JVM dump of the shipped patches into bank files.
  *
- * The patches are normalised floats in Kotlin and the ranges that give them
- * meaning are ParamDef tables here, so only this side can write them back out
- * in units a person can read - and only the Kotlin side can enumerate them,
- * which is why there is a throwaway unit test producing the dump.
+ * The patches are normalised floats in Kotlin and the ranges are in the
+ * ParamDef tables here, so only this side can write readable units. The dump
+ * comes from a unit test on the Kotlin side.
  *
- * Every value is round-tripped as it is written and any that does not come
- * back is reported, because the whole point of seeding rather than hand-
- * porting is that a transcription error in a preset is invisible: it sounds
- * exactly like a patch somebody voiced badly.
+ * Every value is round-tripped as it's written and any that doesn't come back
+ * is reported, since a wrong value in a preset just sounds like a bad patch.
  */
 int cmdSeed(const std::string &dumpPath) {
     std::ifstream in(dumpPath);
@@ -1671,22 +1467,19 @@ int cmdSeed(const std::string &dumpPath) {
             }
         }
         if (index < 0) {
-            // Already worth the exercise: a name that is not in the engine's
-            // table has never done anything in the app either, silently.
+            // A name the engine doesn't have has never done anything in the
+            // app either.
             std::printf("  %s: no parameter named '%s' - dropped\n", bank->machine.c_str(), name.c_str());
             ++dropped;
             continue;
         }
         const ParamDef &d = defs[index];
-        // A patch lists only what it changes; anything sitting at the default
-        // is noise in the file and behaves identically when left out.
+        // A patch lists only what it changes, so defaults are left out.
         //
-        // "Sitting at the default" needs care. A stepped parameter has to be
-        // compared as a step, because the Kotlin literals are rounded to four
-        // places - Dice's `"slices" to 0.4286f` is step 6 exactly as the
-        // default is, and comparing the numbers keeps a line that changes
-        // nothing. And a continuous one is compared at the precision those
-        // literals actually carry, not at the precision a float can hold.
+        // Stepped parameters are compared as steps, because the Kotlin
+        // literals are rounded to four places (Dice's `"slices" to 0.4286f`
+        // is the default step 6). Continuous ones are compared at the
+        // precision of those literals.
         bool isDefault;
         if (d.curve == Curve::Stepped) {
             const auto step = [&](float v) { return static_cast<int>(v * static_cast<float>(d.steps - 1) + 0.5f); };
@@ -1697,10 +1490,9 @@ int cmdSeed(const std::string &dumpPath) {
         if (isDefault) continue;
         ++values;
 
-        // Cipher has parameters called "wave a" and "wave b". A name with a
-        // space in it has to be quoted or the file says one thing and parses
-        // as another, so it is quoted here rather than the engine renamed:
-        // the name is the key a saved patch is written under.
+        // Names with a space (Cipher's "wave a" and "wave b") are quoted so
+        // they parse. The engine's names can't change because saved patches
+        // use them as keys.
         const std::string key = name.find(' ') != std::string::npos ? "\"" + name + "\"" : name;
         char buf[192];
         if (d.curve == Curve::Stepped) {
@@ -1708,8 +1500,7 @@ int cmdSeed(const std::string &dumpPath) {
             std::snprintf(buf, sizeof(buf), "  %-14s #%d\n", key.c_str(), step);
         } else {
             const float value = d.map(v01);
-            // Written and read back as text, here and now, rather than hoped
-            // about: what is checked has to be the digits that reach the file.
+            // Checks the exact digits that go in the file.
             char digits[48];
             std::snprintf(digits, sizeof(digits), "%.6g", static_cast<double>(value));
             const float back = d.unmap(static_cast<float>(std::atof(digits)));
@@ -1744,19 +1535,15 @@ int cmdSeed(const std::string &dumpPath) {
 }
 
 /**
- * The banks as the Kotlin that ships.
+ * Writes the banks out as the Kotlin the app ships.
  *
- * The generated file is what the app reads; the bank files are what a person
- * edits and what the harness auditions. That is the whole point of the
- * arrangement - the thing that was listened to and the thing that plays are
- * the same numbers, converted once, here, by the engine's own ParamDef rather
- * than by a table hand-copied into Kotlin beside every preset object.
+ * The app reads the generated file. The bank files are what you edit and
+ * what the harness auditions, so what you listened to is exactly what plays.
+ * Values are converted once here using the engine's own ParamDef tables.
  *
- * One small function per patch and a lazy list, rather than one enormous
- * `listOf(...)`. A patch costs about 1,356 bytes of bytecode - Resonance's
- * spell out all eight objects - and a class initialiser is capped at 65,535,
- * so the old shape would have hit `Method too large` somewhere around the
- * forty-eighth Resonance patch. Split like this it is thousands.
+ * One small function per patch and a lazy list, not one big `listOf(...)`. A
+ * patch is about 1.3 KB of bytecode and a method is capped at 64 KB, so one
+ * list would hit `Method too large` after about 48 Resonance patches.
  */
 int cmdEmit(const std::string &outPath) {
     std::vector<std::string> units;
@@ -1770,14 +1557,14 @@ int cmdEmit(const std::string &outPath) {
     for (const std::string &unit : units) {
         Bank bank;
         std::string error;
-        if (!readBank(bankPath(unit), bank, error)) continue; // not written yet
+        if (!readBank(bankPath(unit), bank, error)) continue; // no bank for this unit yet
         int32_t count = 0;
         const ParamDef *defs = defsFor(unit, count);
         if (defs == nullptr || count == 0) {
             std::fprintf(stderr, "%s: the engine has no unit by that name\n", unit.c_str());
             return 1;
         }
-        // A Kotlin identifier, and unique: "fx.Delay" cannot be one as it is.
+        // A unique Kotlin identifier, since "fx.Delay" isn't valid as is.
         std::string tag;
         for (char c : unit) tag += (c == '.' ? '_' : static_cast<char>(std::tolower(c)));
 
@@ -1795,9 +1582,8 @@ int cmdEmit(const std::string &outPath) {
 
             body += "\n    private fun " + std::string(fn) + "() = Patch(\"" + unit + "\", \"" +
                     kotlinString(patch.name) + "\",";
-            // Only what differs from the default, in the table's own order:
-            // the app fills in the rest, and a file that repeats every
-            // default is a file nobody can read a diff of.
+            // Only values that differ from the default, in table order. The
+            // app fills in the rest, and it keeps diffs readable.
             std::string params;
             int written = 0;
             for (int32_t i = 0; i < count; ++i) {
@@ -1817,8 +1603,8 @@ int cmdEmit(const std::string &outPath) {
                 }
                 body += ",\n        mapOf(" + sets + ")";
             }
-            // The range, named so it reads the same whether or not there
-            // were settings before it. The app puts the keyboard here.
+            // Named arguments, so they work whether or not settings came
+            // before. The app uses the range to place the keyboard.
             if (!patch.family.empty()) {
                 body += ",\n        family = \"" + kotlinString(patch.family) + "\"";
             }
@@ -1917,7 +1703,7 @@ int main(int argc, char **argv) {
         else if (a == "--note") opt.note = std::atoi(next().c_str());
         else if (a == "--vel") opt.velocity = std::atoi(next().c_str());
         else if (a == "--bpm") opt.bpm = static_cast<float>(std::atof(next().c_str()));
-        else if (a == "--join") { /* what `bank` does anyway; kept so old command lines run */ }
+        else if (a == "--join") { /* ignored: `bank` always does this. Kept so old command lines work */ }
         else if (a == "--ladder") opt.ladder = true;
         else if (a == "--track") opt.track = true;
         else if (a == "--banks") gBankDir = next();
@@ -1945,9 +1731,8 @@ int main(int argc, char **argv) {
     if (cmd == "sweep" && positional.size() >= 2)
         return cmdSweep(positional[1], positional.size() >= 3 ? positional[2] : std::string(), opt);
     if (cmd == "selftest") {
-        // Before the tracker is believed about an instrument it is asked
-        // about a tone whose pitch is known. Two cents is the bar; a real
-        // fault in these machines has never been under ten.
+        // Checks the pitch tracker against tones of known pitch. The limit
+        // is 2 cents, well under the 10+ cents of a real tuning fault.
         const float worst = trackSelfTest(true);
         std::printf("  worst error %.2f cents: %s\n", static_cast<double>(worst), worst < 2.0f ? "ok" : "FAILED");
         return worst < 2.0f ? 0 : 1;

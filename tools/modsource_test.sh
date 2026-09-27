@@ -1,5 +1,5 @@
 #!/bin/bash
-# Does every modulation source actually reach the sound? See tools/modsource_test.cpp.
+# Checks every modulation source actually changes the sound. See tools/modsource_test.cpp.
 #
 #   tools/modsource_test.sh [Machine]
 set -u

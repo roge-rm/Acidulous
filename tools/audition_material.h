@@ -13,19 +13,15 @@
 #include <engine/core/Take.h>
 #include <engine/core/Utterance.h>
 
-// The material six machines need before they make any sound at all.
+// The material six machines need before they make any sound.
 //
-// Forage wants thirteen samples, Mosaic a zone map, Dice a loop, Molt a sung
-// take, Pollen either a file or the live ring, and Cipher wants something on
-// the input bus or it is a vocoder with nothing to vocode. The app ships no
-// samples and never should - users bring their own - so the harness makes its
-// own, from oscillators and noise, deterministically from a fixed seed.
+// Forage needs thirteen samples, Mosaic a zone map, Dice a loop, Molt a sung
+// take, Pollen a file or the live buffer, and Cipher needs input to vocode.
+// The app ships no samples, so the harness makes its own from oscillators and
+// noise with fixed seeds. molt_test also uses `vowel`, `noise` and `resonate`
+// from here, since their pitch and formants are known exactly.
 //
-// That is molt_test.cpp's answer, which is why `vowel`, `noise` and
-// `resonate` live here now and molt_test includes them: a source whose pitch
-// and formants are known exactly beats a recording somebody has to make.
-//
-// None of this is ever compiled into the app.
+// None of this is compiled into the app.
 
 namespace acidulous::audition {
 
@@ -44,7 +40,7 @@ class Rng {
     uint32_t state;
 };
 
-/** A two-pole resonator, which is all a formant is. */
+/** A two-pole resonator, used as a formant. */
 inline void resonate(const std::vector<float> &in, std::vector<float> &out, float hz, float q, float gain,
                      float sr = kMatSr) {
     const float w = 2.0f * static_cast<float>(M_PI) * hz / sr;
@@ -85,11 +81,8 @@ inline std::vector<float> noise(float seconds, float level = 0.5f, uint32_t seed
 }
 
 /**
- * A phrase, not a note: "ah", a fricative, then "ee".
- *
- * Cipher cannot be judged on a steady vowel. Its band map is the instrument,
- * and a map only shows what it does when the thing going through it moves -
- * a sustained "ah" through any map at all sounds like an "ah".
+ * A short phrase: "ah", a fricative, then "ee". Cipher can't be judged on a
+ * steady vowel, since its band map only shows when the input moves.
  */
 inline std::vector<float> voicePhrase() {
     std::vector<float> out;
@@ -99,8 +92,8 @@ inline std::vector<float> voicePhrase() {
     out.insert(out.end(), ah.begin(), ah.end());
     out.insert(out.end(), ss.begin(), ss.end());
     out.insert(out.end(), ee.begin(), ee.end());
-    // Ten milliseconds of fade at each join, or the steps are the loudest
-    // transients in the file and every onset detector finds them first.
+    // 10 ms fades at each end, or the steps would be the loudest transients
+    // and onset detectors would find them first.
     const size_t fade = static_cast<size_t>(kMatSr * 0.01f);
     for (size_t i = 0; i < fade && i < out.size(); ++i) {
         const float g = static_cast<float>(i) / static_cast<float>(fade);
@@ -111,29 +104,17 @@ inline std::vector<float> voicePhrase() {
 }
 
 /**
- * Twelve seconds of synthetic speech, for the vocoder.
+ * Twelve seconds of synthetic speech for the vocoder. `voicePhrase` is too
+ * short and too steady to voice a bank with.
  *
- * `voicePhrase` above is two vowels and a fricative, two and a half seconds
- * long, at a fixed pitch. It is enough to prove Cipher's bands are wired to
- * the right places and no use at all for voicing a bank: a map only shows what
- * it does when what goes through it moves, and a vocoder is only audible while
- * its carrier sounds, so the material has to keep going for as long as the
- * phrase holds.
+ * Modelled on measurements of a real recording, whose median pitch was
+ * 125 Hz with a quarter of it below 80 Hz. That's low enough to fall under a
+ * vocoder bank starting at 110 Hz, so this is kept low and varied too: the
+ * pitch moves between 70 and 190 Hz.
  *
- * Built to the measurements taken from a real recording rather than to a guess
- * about what a voice is like, because the guess was wrong in a way that
- * mattered. That recording's median fundamental was 125 Hz with a quarter of
- * its voiced frames below 80 - low enough to sing underneath a vocoder bank
- * that started at 110 Hz, which is the fault that found Cipher's `low`
- * default. A synthetic modulator pitched at a comfortable 200 Hz would have
- * hidden it again, so this one is deliberately low and deliberately varied:
- * the pitch walks between 70 and 190 Hz across the utterance.
- *
- * Nine syllables over twelve seconds, each a vowel with its own two formants,
- * separated by fricatives and by silence - about a tenth of the whole, which
- * is what the real recording measured. Each syllable's pitch glides, because a
- * flat pitch is the one thing no speaker does and the thing a pitch tracker
- * most needs to see.
+ * Nine syllables, each a vowel with two formants, separated by fricatives and
+ * silence (about a tenth of the total, like the recording). Each syllable's
+ * pitch glides, as real speech does.
  */
 inline std::vector<float> speechPhrase() {
     struct Syllable {
@@ -160,9 +141,7 @@ inline std::vector<float> speechPhrase() {
     std::vector<float> out;
     Rng rng(0xc1fe42u);
     for (const Syllable &sy : kLine) {
-        // A glottal pulse train whose period changes as it goes. Written here
-        // rather than reusing `vowel`, which holds one pitch for its whole
-        // length - and a held pitch is the thing `track` cannot be judged on.
+        // A pulse train with a gliding pitch. `vowel` only holds one pitch.
         const auto n = static_cast<int32_t>(kMatSr * sy.seconds);
         std::vector<float> pulses(static_cast<size_t>(n), 0.0f);
         for (float pos = 0.0f; pos < static_cast<float>(n);) {
@@ -174,14 +153,14 @@ inline std::vector<float> speechPhrase() {
         std::vector<float> body(static_cast<size_t>(n), 0.0f);
         resonate(pulses, body, sy.f1, 12.0f, 1.0f);
         resonate(pulses, body, sy.f2, 12.0f, 0.5f);
-        // A third formant, quiet and high, so there is something for the top
-        // of the bank to measure that is not the consonant path.
+        // A quiet high third formant, so the top bands get something besides
+        // the consonants.
         resonate(pulses, body, 2900.0f, 10.0f, 0.15f);
         float peak = 1e-9f;
         for (float v : body) peak = std::max(peak, std::fabs(v));
         for (float &v : body) v *= 0.7f / peak;
-        // Ten milliseconds on and forty off, so a syllable arrives with an
-        // edge and leaves without one.
+        // 10 ms fade in and 40 ms fade out, so a syllable starts with an edge
+        // and ends softly.
         const auto in = static_cast<size_t>(kMatSr * 0.01f);
         const auto off = static_cast<size_t>(kMatSr * 0.04f);
         for (size_t i = 0; i < in && i < body.size(); ++i) {
@@ -194,9 +173,8 @@ inline std::vector<float> speechPhrase() {
 
         if (sy.fricative > 0.0f) {
             const auto fn = static_cast<int32_t>(kMatSr * sy.fricative);
-            // Shaped, not flat: an "s" is a band around four kilohertz, and
-            // flat noise here would be the same mistake the machine's own
-            // sibilance path was making.
+            // Shaped noise, since an "s" is a band around 4 kHz rather than
+            // flat noise.
             float z1 = 0.0f, z2 = 0.0f;
             for (int32_t i = 0; i < fn; ++i) {
                 const float w = rng.next();
@@ -211,10 +189,9 @@ inline std::vector<float> speechPhrase() {
             out.insert(out.end(), static_cast<size_t>(kMatSr * sy.silence), 0.0f);
         }
     }
-    // Normalised to -20 dBFS rms, the same nominal recording level a file on
-    // the input bus is held to. A vocoder's output follows its input, so the
-    // machine's house level only means anything if every modulator arrives at
-    // the same size.
+    // Normalised to -20 dBFS rms, the same level used for input files. A
+    // vocoder's output follows its input, so every modulator needs the same
+    // level for the bank levels to mean anything.
     double sum = 0.0;
     for (float v : out) sum += static_cast<double>(v) * v;
     const auto rms = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, out.size())));
@@ -227,11 +204,9 @@ inline std::vector<float> speechPhrase() {
 
 // --- A thirteen-piece kit ----------------------------------------------------
 //
-// In Hexbeat's voice order, because that is the order Forage's pads are laid
-// out in and the order the drum grid draws. Each piece is given a distinctly
-// different spectrum and length on purpose: a pad envelope or filter that is
-// doing nothing should be audible as doing nothing, and it will not be if
-// every sample underneath is the same click.
+// In Hexbeat's voice order, which is Forage's pad order and the drum grid's.
+// Each piece has a clearly different spectrum and length, so a pad envelope
+// or filter that isn't doing anything can be heard not doing it.
 
 enum class Piece {
     Kick, Rim, Snare, Clap, TomLo, TomMid, TomHi, HatClosed, HatOpen, Cymbal, Ride, Cowbell, Clave, Count
@@ -268,7 +243,7 @@ inline std::vector<float> drum(Piece piece) {
             out[static_cast<size_t>(i)] = sample(static_cast<float>(i) / kMatSr);
         }
     };
-    // Band-passed noise: two resonators is enough to place a hat or a cymbal.
+    // Band-passed noise. Two resonators are enough for a hat or cymbal.
     auto metallic = [&](float seconds, float hz, float q, float decay) {
         const int32_t n = static_cast<int32_t>(kMatSr * seconds);
         std::vector<float> src(static_cast<size_t>(n), 0.0f);
@@ -283,9 +258,9 @@ inline std::vector<float> drum(Piece piece) {
     switch (piece) {
     case Piece::Kick:
         make(0.55f, [&](float t) {
-            const float hz = 52.0f + 130.0f * env(t, 0.020f); // the sweep is the kick
+            const float hz = 52.0f + 130.0f * env(t, 0.020f); // pitch sweep
             return std::sin(2.0f * static_cast<float>(M_PI) * hz * t) * env(t, 0.16f) +
-                   rng.next() * env(t, 0.003f) * 0.4f;        // and the click is the beater
+                   rng.next() * env(t, 0.003f) * 0.4f;        // beater click
         });
         break;
     case Piece::Rim:
@@ -303,7 +278,7 @@ inline std::vector<float> drum(Piece piece) {
         break;
     case Piece::Clap:
         make(0.35f, [&](float t) {
-            // Four bursts and a tail - a clap is several hands, slightly apart.
+            // Four bursts and a tail, like several hands slightly apart.
             float g = 0.0f;
             for (float d : {0.0f, 0.011f, 0.022f, 0.033f}) {
                 if (t >= d) g = std::max(g, env(t - d, 0.008f));
@@ -357,11 +332,9 @@ inline std::unique_ptr<SampleData> pieceSample(Piece piece) {
 }
 
 /**
- * Two bars at 120 bpm of the kit above, as a Take with its onsets found.
- *
- * Dice slices this and Pollen reads it. Real onsets rather than a grid, so
- * the detector has something to detect and slicing is being tested rather
- * than the fallback that divides evenly.
+ * Two bars at 120 bpm of the kit above, as a Take with its onsets detected.
+ * Dice slices it and Pollen reads it. The onsets are real so the detector is
+ * tested, not the even-split fallback.
  */
 inline std::unique_ptr<audio::Take> breakLoop(float bpm = 120.0f) {
     const float beat = 60.0f / bpm;
@@ -400,41 +373,31 @@ inline std::unique_ptr<audio::Take> breakLoop(float bpm = 120.0f) {
 }
 
 /**
- * Eight seconds of music, for the machines that granulate a buffer.
+ * Eight seconds of music for machines that granulate a buffer. A drum break
+ * only tests onset snap, not the clouds and pitch sprays that make up most of
+ * Pollen's bank.
  *
- * A drum break is the right seed for a slicer and the wrong one for almost
- * everything else: it proves onset snap and says nothing at all about what a
- * cloud, a pitch spray or a pollination sounds like, which between them are
- * two thirds of Pollen's bank. Dan asked for something musical, and this is
- * it - four chords in C Dorian, two seconds each, the mode the `scale`
- * patches are set to so a cloud quantised to it agrees with the source.
+ * Four chords in C Dorian (Cm, F, Bb, Gm), two seconds each. That's the mode
+ * the `scale` patches use, so a quantised cloud agrees with the source.
  *
- * Each chord is plucked: a short filtered-noise attack so `detect` has a real
- * onset to find, then a bass root and a triad above it, every note a small
- * harmonic stack whose upper partials die first. The notes are struck a few
- * milliseconds apart, the way a hand does, which gives the attack width; and
- * left and right take slightly different detunings, so the seed has a little
- * of its own stereo before any grain is panned.
- *
- * Cm - F - Bb - Gm, which is Dorian's own progression: the major fourth is
- * what makes it Dorian rather than minor, and it is the chord change worth
- * hearing a scan travel through.
+ * Each chord is plucked: a short noise attack so `detect` finds a real onset,
+ * then a bass root and a triad, each note a small harmonic stack whose upper
+ * partials die first. Notes are struck a few ms apart like a hand, and left
+ * and right are detuned slightly for some stereo.
  */
 inline std::unique_ptr<audio::Take> musicSeed() {
     auto take = std::make_unique<audio::Take>();
     take->name = "seed";
     const float chordSeconds = 2.0f;
-    // Two seconds of tail past the last chord, so the buffer's own end is
-    // silence. A granular read wraps round it, and a buffer that stops while
-    // it is still sounding puts a cliff in the middle of the cloud.
+    // Two seconds of silence at the end. Granular reads wrap around, and a
+    // buffer that ends mid-sound puts a click in the cloud.
     const float tailSeconds = 2.0f;
     const int32_t frames = static_cast<int32_t>(kMatSr * (chordSeconds * 4.0f + tailSeconds));
     take->frames = frames;
     take->left.assign(static_cast<size_t>(frames), 0.0f);
     take->right.assign(static_cast<size_t>(frames), 0.0f);
 
-    // Cm, F, Bb, Gm - bass root, then the triad. Hertz, so the tuning is
-    // stated rather than computed from a table nobody can check.
+    // Cm, F, Bb, Gm: bass root, then the triad, in Hz.
     struct Chord { float note[4]; };
     static const Chord kChords[] = {
         {{ 65.41f, 130.81f, 155.56f, 196.00f }},   // Cm  : C2  C3  Eb3 G3
@@ -447,7 +410,7 @@ inline std::unique_ptr<audio::Take> musicSeed() {
         const auto chordAt = static_cast<size_t>(kMatSr * chordSeconds * static_cast<float>(c));
         for (int n = 0; n < 4; ++n) {
             const float hz = kChords[c].note[n];
-            // A hand does not strike four notes at the same instant.
+            // Stagger the notes slightly, like a hand.
             const auto at = chordAt + static_cast<size_t>(kMatSr * 0.006f * static_cast<float>(n));
             const int partials = n == 0 ? 10 : 7;          // the bass is richer
             const float amp = n == 0 ? 0.5f : 0.34f;
@@ -457,20 +420,17 @@ inline std::unique_ptr<audio::Take> musicSeed() {
                 float lp = 0.0f;
                 for (size_t i = 0; at + i < static_cast<size_t>(frames); ++i) {
                     const float t = static_cast<float>(i) / kMatSr;
-                    // No cutting the note short: it used to stop at 2.6 s,
-                    // where its fundamental is still at 18% - sixteen hard
-                    // steps buried in the buffer, and a click from every
-                    // grain that read across one. Dan heard them as
-                    // "scratching sort of noises throughout", in every patch.
-                    // The exponential is what ends a note here.
+                    // Notes aren't cut off. The exponential decay ends them,
+                    // since a hard stop leaves a step that every grain
+                    // reading across it would click on.
                     float v = 0.0f;
                     for (int h = 1; h <= partials; ++h) {
-                        // The top of a plucked note goes first.
+                        // Higher partials decay faster, like a pluck.
                         const float tau = 1.5f / std::sqrt(static_cast<float>(h));
                         v += std::sin(2.0f * static_cast<float>(M_PI) * hz * det * static_cast<float>(h) * t) *
                              std::exp(-t / tau) / static_cast<float>(h);
                     }
-                    // The pluck: brief, filtered, and only on the attack.
+                    // The pluck: a short burst of filtered noise on the attack.
                     const float hit = std::exp(-t / 0.004f);
                     lp += (rng.next() - lp) * 0.25f;
                     v += lp * hit * 0.8f;
@@ -482,17 +442,10 @@ inline std::unique_ptr<audio::Take> musicSeed() {
     float peak = 1e-9f;
     for (float v : take->left) peak = std::max(peak, std::abs(v));
     for (float v : take->right) peak = std::max(peak, std::abs(v));
-    // Silence at both edges, so wrapping from the end to the start is a join
-    // between two zeros rather than a step.
-    // A long way in, not ten milliseconds.
-    //
-    // `position` defaults to the start of the buffer, so every note of every
-    // patch that does not move it begins by granulating whatever is at sample
-    // zero - and in a musical phrase that is a pluck. Dan: "a little pop to
-    // the start of every or almost every sample". A buffer that is read from
-    // its own beginning has to begin gently; the chord is barely touched,
-    // because its attack is four milliseconds and this is a fade over a
-    // hundred and eighty.
+    // Fade both ends to silence so wrapping from the end to the start doesn't
+    // click. The fade in is long (180 ms) because `position` defaults to the
+    // start of the buffer, and a pluck there would pop at the start of every
+    // note.
     const auto fadeIn = static_cast<int32_t>(kMatSr * 0.18f);
     const auto fadeOut = static_cast<int32_t>(kMatSr * 0.25f);
     for (int32_t i = 0; i < frames; ++i) {
@@ -518,41 +471,31 @@ inline std::unique_ptr<audio::Take> voiceTake() {
     return take;
 }
 
-/** A modulator at nominal level: -20 dBFS rms, which is a healthy recording. */
+/** Nominal input level: -20 dBFS rms, a typical recording level. */
 constexpr float kInputNominalRms = 0.1f;
 
 /**
- * A recording off disk as one channel, cleaned and levelled.
- *
- * Shared by the two things that want a real voice - the vocoder's input bus
- * and Molt's take - because they want exactly the same treatment and two
- * copies of a rumble filter is two places for it to be wrong. An empty or
- * missing path returns nothing, which is every caller's cue to fall back to
- * the synthetic phrase.
+ * Reads a recording as mono, filters out rumble and sets its level. Used for
+ * both the vocoder's input and Molt's take. An empty or missing path returns
+ * nothing, and callers then fall back to the synthetic phrase.
  */
 inline std::vector<float> fileMono(const char *path, std::string &error) {
     if (path == nullptr || *path == '\0') return {};
     const std::unique_ptr<SampleData> s = WavReader::read(path, static_cast<int32_t>(kMatSr), error);
     if (s == nullptr || s->frames <= 0) return {};
 
-    // Folded to mono: a spectrum is one thing, so the two channels have to
-    // become one before anything is analysed. The width belongs to the
-    // recording, not to what is measured from it.
+    // Fold to mono before analysis.
     std::vector<float> src(s->left.begin(), s->left.end());
     if (!s->right.empty()) {
         for (size_t i = 0; i < src.size() && i < s->right.size(); ++i) {
             src[i] = (src[i] + s->right[i]) * 0.5f;
         }
     }
-    // DC and rumble first, then the level. A hand-held recording carries a
-    // lot under the voice - this one has eight per cent of its energy below
-    // 20 Hz - and levelling on the whole signal puts the part that matters
-    // twelve decibels under where it was aimed.
+    // Remove DC and rumble before setting the level, or the rumble throws
+    // the level off. Hand-held recordings can have a lot of it.
     //
-    // The corner is 45 Hz and not 100, which was the first guess and was
-    // wrong: this speaker's median fundamental is 125 Hz but a quarter of his
-    // voiced frames are under 80, and a hundred-hertz corner would have cut
-    // the fundamental out of nearly half the speech and called it rumble.
+    // The corner is 45 Hz because a low voice can have its fundamental
+    // under 80 Hz, and a higher corner would cut it.
     const float a = std::exp(-2.0f * 3.14159265f * 45.0f / kMatSr);
     for (int pass = 0; pass < 3; ++pass) {
         float px = 0.0f, py = 0.0f;
@@ -573,37 +516,15 @@ inline std::vector<float> fileMono(const char *path, std::string &error) {
 }
 
 /**
- * A voice, analysed, for Molt.
+ * An analysed voice take for Molt.
  *
- * **The real recording where there is one.** Dan, hearing the synthetic take:
- * "there's a strange noise in the middle of these samples". There is, and
- * this file already had the diagnosis written down for Cipher a fortnight
- * earlier - the synthetic fricatives are a couple of hundred milliseconds of
- * band-passed noise where a real "s" is fifty and has a shape, so they land
- * as bursts of static rather than as consonants. Molt makes that worse than a
- * vocoder does, because an unvoiced stretch has no glottal pulses to lay down
- * and is copied at its own rate: a long burst of static is copied as a long
- * burst of static, in the middle of every demo in the bank.
+ * Uses the recording named in `tools/local.env` if there is one, like Cipher.
+ * The synthetic fricatives sound like bursts of static, and Molt copies
+ * unvoiced parts as they are, so they stand out more than in a vocoder.
  *
- * So the file named in `tools/local.env` is used when it is there, and the
- * synthetic phrase when it is not - exactly what Cipher does, and for the
- * same reason. A repository is the wrong place to keep somebody's voice, and
- * the harness still runs for anyone who has only the synthetic one.
- *
- * `speechPhrase` and not `voicePhrase`, and the reason is the same one this
- * file already gives twice. A vocoder cannot be judged on a held vowel
- * because a band map only shows what it does when what goes through it
- * moves; a sampler cannot be judged on a signal with no attack. A machine
- * whose whole instrument is *pitch pulled onto what you wrote* cannot be
- * judged on a take at a fixed pitch: `tune` at nought and `tune` at one
- * differ by a constant offset and nothing else, and `rate` - how long the
- * pull takes - has nothing at all to act on.
- *
- * The fallback is the twelve second phrase whose pitch walks between 70 and
- * 190 Hz across nine syllables, and not the two and a half second one at a
- * fixed pitch that was here before: against a flat take, `tune` at nought and
- * `tune` at one differ by a constant offset and `rate` has nothing at all to
- * act on.
+ * The fallback is `speechPhrase`, not `voicePhrase`. Molt pulls the pitch
+ * onto the written notes, so on a take with a fixed pitch `tune` would only
+ * shift it and `rate` would have nothing to do.
  */
 inline std::unique_ptr<audio::Utterance> voiceUtterance() {
     auto u = std::make_unique<audio::Utterance>();
@@ -612,31 +533,14 @@ inline std::unique_ptr<audio::Utterance> voiceUtterance() {
     u->mono = fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
     if (u->mono.empty()) u->mono = speechPhrase();
     u->frames = static_cast<int32_t>(u->mono.size());
-    // The marks, and the rumble out of the take itself on the way - which
-    // has to happen before the level is set, because on this recording the
-    // rumble was *holding the peaks down*. See below.
+    // Finds the marks and removes rumble. This has to happen before the
+    // level is set, since removing rumble can change the peaks a lot.
     u->analyse(kMatSr);
 
-    // **Levelled by what it reaches, not by its worst sample.**
-    //
-    // This was a peak normalise to 0.9, on the reasoning that Molt lays the
-    // take's own samples down as audio while a vocoder only reads a spectrum.
-    // The second half of that is right and the first half is not: the peak is
-    // scaled by the patch's `volume` like everything else in the signal, so
-    // what peak-levelling actually buys is that a single sample sets the
-    // level of the whole take.
-    //
-    // Which is what happened. The recording is clipped - 0.3% of it at full
-    // scale - and the rumble under it was subtracting from those peaks, so
-    // taking the rumble out *raises* the loudest sample from 1.0 to 1.8. It
-    // sits fourteen decibels above the take's own 99.9th percentile. Levelled
-    // against it the take arrived at -34 dBFS rms and the whole bank measured
-    // fourteen decibels under every other bank, for one sample's sake.
-    //
-    // `[[normalise-on-a-nominal-level]]`: against the level the signal
-    // reaches. Peaks over one are then possible and are the material's own;
-    // a patch's `volume` is where they are answered, which is what voicing a
-    // bank against a take means.
+    // Levelled by rms, not by peak. With peak normalising a single loud
+    // sample sets the level of the whole take, and a clipped recording can
+    // end up far too quiet. Peaks over 1 are possible after this and are
+    // handled by the limiter below.
     double sum = 0.0;
     for (float v : u->mono) sum += static_cast<double>(v) * v;
     const auto rms = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, u->mono.size())));
@@ -645,24 +549,10 @@ inline std::unique_ptr<audio::Utterance> voiceUtterance() {
         for (float &v : u->mono) v *= gain;
     }
 
-    // And a ceiling over the handful that are nothing like the rest.
-    //
-    // Levelling by rms is right and it leaves the crest factor alone, which
-    // for a clipped recording is thirty-three decibels - the peaks the
-    // rumble filter uncovered. A grain landing on one of those is a patch
-    // eight decibels hot for the sake of 0.01% of the take, and a bank
-    // cannot be voiced against a level that one grain in a thousand ignores.
-    //
-    // The knee is above the take's own 99.99th percentile, so the body of it
-    // is untouched and only the outliers bend. A limiter rather than another
-    // normalise, because the whole point is not to let the outliers set the
-    // level of everything else.
-    //
-    // The ceiling is full scale, because a take is audio and audio does not
-    // go above it. That also makes the worst case a patch can reach its own
-    // `volume` and nothing more, which is what lets a bank be levelled at
-    // all: with the ceiling at two, `Wide Bend` peaked at +2.1 dBFS while
-    // measuring the same loudness as everything around it.
+    // A soft limiter for the few samples far above the rest, so one grain
+    // landing on them doesn't make a patch much louder. The knee is above the
+    // take's 99.99th percentile, so the rest is untouched. The ceiling is full
+    // scale, so the loudest a patch can get is its own `volume`.
     constexpr float kKnee = 0.7f, kCeiling = 1.0f;
     for (float &v : u->mono) {
         const float m = std::fabs(v);
@@ -676,62 +566,41 @@ inline std::unique_ptr<audio::Utterance> voiceUtterance() {
 /**
  * A small multisampled instrument: three key zones at two velocity layers.
  *
- * Built by hand rather than read from a SoundFont, so the harness needs no
- * file and no Sf2Reader. The top of the keyboard is deliberately left
- * uncovered - a Mosaic patch that only works because every key happens to
- * find a zone is not proven, and `--phrase chromatic` walks straight off the
- * end of the map to show it.
+ * Built in code so the harness needs no SoundFont file. The top of the
+ * keyboard is left uncovered on purpose, and `--phrase chromatic` plays off
+ * the end of the map to show what happens.
  *
- * **Each zone is a struck note, not a tone.** It used to be a sum of
- * harmonics at constant amplitude, looped, and against that map half of
- * Mosaic did nothing measurable: `reverse` moved the centroid two hertz,
- * `start` twelve, and the three loop modes were identical to each other. Of
- * course they were - a signal with no attack sounds the same from either end
- * and from anywhere in the middle, and a sampler fed one cannot be voiced,
- * only assumed. The same mistake as judging Cipher on a held vowel.
+ * Each zone is a struck note rather than a steady tone, since a steady tone
+ * sounds the same from any point and gives `start`, `reverse` and the loop
+ * modes nothing to change. A zone has:
  *
- * So a zone now has the three parts a real sampled note has, and each one is
- * there because some control needs it:
- *
- *   - a **transient**: a noise burst through a low-pass, 12 ms, which is what
- *     `start` scrubs past and what `reverse` puts at the end;
- *   - a **body** whose upper partials die faster than its lower ones, so the
- *     note gets darker as it goes - that is what makes a grain's position
- *     audible, and what `scan` and `gpos` have to have to mean anything;
- *   - a **sustain** that is level and loops cleanly over whole periods, very
- *     slightly detuned against itself so it breathes rather than sits.
+ *   - a transient: 12 ms of low-passed noise, which `start` skips past and
+ *     `reverse` puts at the end;
+ *   - a body whose upper partials die faster, so the note darkens over time
+ *     and grain position (`scan`, `gpos`) can be heard;
+ *   - a steady sustain that loops cleanly over whole periods.
  */
-/** How long a zone takes to arrive. See the note at the write, below. */
+/** The fade-in time of each zone. See where it's applied below. */
 constexpr float kOnset = 0.004f;
 
 inline std::unique_ptr<SampleMap> zoneMap() {
     auto map = std::make_unique<SampleMap>();
     map->name = "audition";
-    // Three roots two octaves apart, each a different harmonic mix, and each
-    // velocity layer brighter than the one below it - which is what a
-    // velocity crossfade has to have to be worth testing.
+    // Three roots two octaves apart, each with a different harmonic mix. The
+    // upper velocity layer is brighter, so velocity crossfades can be heard.
     struct Layer { int root; int lo; int hi; int loVel; int hiVel; int partials; float odd; };
     static const Layer kLayers[] = {
-        // Partial counts sized so that a zone played at the top of its range
-        // - eleven semitones above its root, so read 1.89x faster - still has
-        // its highest partial under Nyquist. The low zone can afford forty;
-        // the high one cannot afford more than twelve.
+        // Partial counts keep the top partial under Nyquist even when a zone
+        // is played 11 semitones above its root (1.89x speed).
         {36, 24, 47, 1, 79, 24, 1.0f},  {36, 24, 47, 80, 127, 40, 0.6f},
         {60, 48, 71, 1, 79, 16, 1.0f},  {60, 48, 71, 80, 127, 28, 0.6f},
         {84, 72, 95, 1, 79, 8, 1.0f},   {84, 72, 95, 80, 127, 12, 0.6f},
     };
     Rng rng(0x5a3c19u);
-    // Every partial gets a phase of its own, fixed for the life of the sample.
-    //
-    // Starting them all at zero is the additive-synthesis mistake: they align
-    // perfectly at t=0, so the note opens on an impulse the size of the sum of
-    // every harmonic and then thrashes for a few milliseconds as they beat
-    // apart. Dan heard it on patch after patch - "a clapping/chopping sound
-    // every note", "gated noise at the beginning of each note", "very choppy
-    // with a distinct percussive sound" - and it survived every change to the
-    // hammer, because it was never the hammer: the lumpiness of the first
-    // twenty milliseconds sat at 0.45 whatever the noise burst was set to.
-    // A random phase is still an exact harmonic, so the loop stays seamless.
+    // Each partial gets its own fixed random phase. If they all start at
+    // zero they line up into a big impulse at the start of every note, which
+    // sounds choppy. Random phases are still exact harmonics, so the loop
+    // stays seamless.
     float phase[33];
     for (float &ph : phase) ph = (rng.next() + 1.0f) * static_cast<float>(M_PI);
     for (const Layer &l : kLayers) {
@@ -739,16 +608,12 @@ inline std::unique_ptr<SampleMap> zoneMap() {
         s.name = "zone";
         s.rate = static_cast<int32_t>(kMatSr);
         const float hz = 440.0f * std::pow(2.0f, (static_cast<float>(l.root) - 69.0f) / 12.0f);
-        // Three seconds, so `start` has somewhere to go and a grain cloud has
-        // more than one thing to find.
+        // Three seconds, so `start` and grain clouds have room to move.
         const int32_t n = static_cast<int32_t>(kMatSr * 3.0f);
         const auto period = static_cast<int32_t>(kMatSr / hz);
-        // The sustain begins after the body has finished getting darker, and
-        // is where the loop lives.
-        // Late enough that the body has all but stopped moving. At 1.2 s the
-        // fundamental was still falling about two per cent across one loop,
-        // so every time round it stepped back up - inaudible on its own, a
-        // buzz at the sixteen to sixty loops a second this runs at.
+        // The sustain, where the loop is, starts once the body has almost
+        // stopped changing. Earlier than that the level still drops across
+        // one loop, and the step back up each time round buzzes.
         const int32_t sustainAt = period * ((static_cast<int32_t>(kMatSr * 2.1f)) / period);
         s.left.assign(static_cast<size_t>(n), 0.0f);
         float lp = 0.0f;
@@ -757,82 +622,49 @@ inline std::unique_ptr<SampleMap> zoneMap() {
             float v = 0.0f;
             for (int h = 1; h <= l.partials; ++h) {
                 const float amp = (h % 2 == 1 ? 1.0f : l.odd) / static_cast<float>(h);
-                // A partial's own decay, shorter the higher it is, down to a
-                // floor it holds through the sustain. The floor is what lets
-                // the loop be seamless: past the body every partial is steady.
-                //
-                // Both fall as the *square root* of the partial, not as the
-                // partial. With 1/h either way, the sustain came out at
-                // 1/h-squared - a spectrum no sampled instrument has, and one
-                // nothing could be high-passed out of: Mosaic's Glass Pad
-                // measured forty decibels down through an 18 dB slope at 1400
-                // Hz, because at 1400 Hz there was nothing. A map is material,
-                // and material that is too dark cannot show what a filter does
-                // any more than a steady tone can show what a start point does.
+                // Each partial decays faster the higher it is, down to a floor
+                // it holds through the sustain. The floor keeps the loop
+                // seamless. Decay time goes with the square root of the
+                // partial number, which keeps enough top end for filters to
+                // have something to work on.
                 const float rootH = std::sqrt(static_cast<float>(h));
                 const float tau = 0.9f / rootH;
-                // Flat across the partials, so the sustain keeps a 1/h
-                // spectrum - what a sustained instrument actually has. Scaled
-                // by the square root it was 1/h-to-the-three-halves, and the
-                // whole bank came out with no bright patches in it at all:
-                // Mosaic's centroids topped out at 1.9 kHz where Trinity
-                // reaches 3.8 and Cumulus 5.0, and Dan heard the pads as
-                // "very dark and hard to hear".
+                // The same floor for every partial, so the sustain keeps a
+                // 1/h spectrum like a real sustained instrument. Anything
+                // steeper makes the whole bank too dark.
                 const float held = 0.5f;
                 const float env = held + (1.0f - held) * std::exp(-t / tau);
-                // Every partial is an exact multiple of the fundamental, and
-                // it has to be: the loop is a whole number of the
-                // fundamental's periods, so anything that is not a harmonic
-                // of it arrives at the loop point with the wrong phase and
-                // clicks, once per loop. There used to be a hair of detune
-                // here - 0.06% per partial, to make the sustain breathe - and
-                // Dan heard the result as "many smaller pops" in Late Start,
-                // the one patch in the bank that loops. Measured at 37 Hz,
-                // which is the loop rate of the notes it was playing.
+                // Every partial must be an exact harmonic. The loop is a whole
+                // number of periods, so any detune arrives at the loop point
+                // with the wrong phase and clicks once per loop.
                 v += amp * env * std::sin(2.0f * static_cast<float>(M_PI) * hz * static_cast<float>(h) * t +
                                           phase[h & 31]);
             }
-            // The transient: a short noise burst, low-passed so it reads as a
-            // hammer rather than as a click, and gone before the loop starts.
+            // The transient: a short low-passed noise burst, so it sounds like
+            // a hammer rather than a click. It's gone before the loop starts.
             const float hit = std::exp(-t / 0.012f);
-            // Darker than it was by a long way. At 0.35 the burst kept most
-            // of its top and read as a tick of noise on the front of every
-            // note - Dan heard it on Scan Layers, Grind and Reed in turn, and
-            // the harness put every patch that starts at zero at six to eight
-            // times brighter on the attack than in the tone, against a
-            // threshold of four. A hammer is a thump with an edge, not an
-            // edge on its own.
+            // Filtered fairly dark. A brighter burst sounds like a tick of
+            // noise on every note.
             lp += (rng.next() - lp) * 0.20f;
-            // Six was a sixteen-decibel crest on a sustained instrument, and
-            // it put the Init patch within a decibel of full scale once the
-            // house level was set from its loudness. A hammer is louder than
-            // the note it starts, but not by that.
+            // Kept moderate. A louder hammer gives a sustained sound a huge
+            // crest factor and pushes patches near full scale.
             v += lp * hit * 1.0f;
-            // And a breath of it through the body, because every real
-            // instrument has some and it is most of what survives a
-            // high-pass. Gone before the loop starts: noise is the one thing
-            // here that is not periodic, so a loop that contains any repeats
-            // the same 60 ms of it and jumps at the seam every time round.
+            // A little noise through the body, like a real instrument, which
+            // is most of what survives a high-pass. It dies away before the
+            // loop starts, since noise isn't periodic and would click at the
+            // loop seam.
             v += lp * 0.012f * std::exp(-t / 0.35f);
-            // A real sample does not switch its whole spectrum on in one
-            // frame. Every partial here began at full amplitude at t=0, so
-            // the tone arrived fully formed and instantly - and no amount of
-            // amp attack hides that, because what clicks is the spectrum
-            // appearing, not the level. Dan heard it on ten patches in a row
-            // as "a hard chk sound at the start of every note", and it
-            // survived taking the hammer out altogether: onset 115% of the
-            // body with the noise burst, 114% without it.
-            //
-            // Four milliseconds of raised cosine. Short enough that a lead
-            // still speaks immediately, long enough that the partials arrive
-            // rather than appear.
+            // A 4 ms raised-cosine fade in. Without it every partial starts at
+            // full level on the first frame and clicks, whatever the amp
+            // attack is. 4 ms is still short enough for a lead to speak at
+            // once.
             const float in = t < kOnset ? 0.5f - 0.5f * std::cos(static_cast<float>(M_PI) * t / kOnset) : 1.0f;
             s.left[static_cast<size_t>(i)] = v * 0.12f * in;
         }
         s.frames = n;
         s.stereo = false;
-        // A loop over whole periods inside the sustain, so a held note does
-        // not click and does not fade either.
+        // Loop over whole periods inside the sustain, so a held note neither
+        // clicks nor fades.
         s.loopStart = sustainAt;
         s.loopEnd = sustainAt + period * 16;
         map->samples.push_back(std::move(s));

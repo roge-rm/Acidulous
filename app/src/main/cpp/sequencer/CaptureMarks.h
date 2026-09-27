@@ -2,27 +2,24 @@
 #include <atomic>
 #include <cstdint>
 
-// Where the song was when each part of a recording was made.
+// Where the song was during each part of a recording.
 //
-// `Capture` streams the input to a file and has no idea where the song is; the
-// scheduler knows where the song is and has no idea a recording is happening.
-// This is the join: **the audio thread stamps a boundary as it crosses it**,
-// carrying the frame it has written so far and the cell it has just entered.
+// Capture writes the input to a file without knowing where the song is, and
+// the scheduler doesn't know a recording is happening. The audio thread joins
+// them by stamping a mark at each cell boundary with the frames written so far
+// and the cell just entered.
 //
-// That is the whole of splitting a take. Kotlin does no scene-length or repeat
-// arithmetic, so a per-scene tempo override, a scene played twice, a clip
-// shorter than its scene and a punch-in half way through all come out right
-// without anybody thinking about them: consecutive marks pair into segments,
-// and each segment is one cell's region of one file.
+// That's all splitting a take needs. Consecutive marks pair into segments,
+// each one cell's region of the file, so Kotlin doesn't need to work out scene
+// lengths, repeats or tempo overrides.
 //
-// Two limits, stated rather than engineered away:
+// Limits:
 //
-//   - a boundary lands to the block, which at 64 frames is 1.3 ms;
-//   - if the capture ring overflowed, every frame index after the drop names
-//     the wrong moment, so the marks are poisoned and the split refuses. A
-//     recording with a hole in it can still be kept; it cannot be cut up.
+//   - a boundary is only accurate to the block (64 frames, 1.3 ms);
+//   - if the capture ring overflowed, frame indexes after the drop are wrong,
+//     so the marks are poisoned and the take can be kept but not split.
 //
-// Header-only so `tools/` can drive it without the engine archive.
+// Header-only so tools/ can use it without the engine library.
 namespace acidulous::seq {
 
 /** One boundary: where in the file, and where in the song. */
@@ -30,18 +27,16 @@ struct CaptureMark {
     int64_t frame = 0;       // frames written to the capture file at this moment
     int64_t sceneId = 0;     // the cell being entered
     int32_t tick = 0;        // how far into that cell's cycle it starts
-    int32_t cycleTicks = 0;  // the cycle itself - bars x repeat
+    int32_t cycleTicks = 0;  // the cycle length, bars x repeat
     float bpm = 120.0f;      // the tempo it was recorded at
 };
 
 class CaptureMarks {
   public:
     /**
-     * How many boundaries one take may cross.
-     *
-     * Five minutes of two-second cells is a hundred and fifty, so this is
-     * generous; it exists so that a pathological song poisons the split rather
-     * than silently losing the end of it.
+     * How many boundaries one take may cross. Five minutes of two-second
+     * cells is 150, so this is generous. Going over poisons the split rather
+     * than silently losing the end.
      */
     static constexpr int32_t kMax = 512;
 
@@ -56,17 +51,13 @@ class CaptureMarks {
     /**
      * Audio thread, once a block while a recording is armed.
      *
-     * A mark is written when the cell changes, when the cycle starts again -
-     * which the tick going backwards is the only honest sign of - and once at
-     * the start. Nothing else: a block that carries on where the last one left
-     * off has nothing to say.
+     * Writes a mark at the start, when the cell changes, and when the cycle
+     * starts again (the tick going backwards).
      */
     void observe(int64_t frame, int64_t sceneId, int64_t cycleTick, int32_t cycleTicks, float bpm) {
-        // **No cycle, no cell.** In clip mode a rack with nothing launched is
-        // not anywhere, and the seconds recorded before a clip is tapped belong
-        // to no cell at all - so they are left out rather than stamped onto
-        // whatever the scheduler happened to answer. The same skip covers the
-        // blocks before the transport has started.
+        // No cycle means no cell. In clip mode a rack with nothing launched
+        // isn't in any cell, so audio recorded before a clip is tapped isn't
+        // marked. The same applies before the transport starts.
         if (cycleTicks <= 0) return;
         const bool fresh = lastScene == kNoScene;
         const bool moved = sceneId != lastScene;
@@ -88,7 +79,7 @@ class CaptureMarks {
         n.store(at + 1, std::memory_order_release);
     }
 
-    /** The ring dropped frames: every index after it names the wrong moment. */
+    /** The ring dropped frames, so every frame index after it is wrong. */
     void poison() { bad.store(true, std::memory_order_relaxed); }
 
     bool poisoned() const { return bad.load(std::memory_order_relaxed); }
@@ -101,7 +92,7 @@ class CaptureMarks {
     CaptureMark marks[kMax];
     std::atomic<int32_t> n{0};
     std::atomic<bool> bad{false};
-    // Audio thread only: never read from anywhere else.
+    // Audio thread only.
     int64_t lastScene = kNoScene;
     int64_t lastTick = -1;
 };

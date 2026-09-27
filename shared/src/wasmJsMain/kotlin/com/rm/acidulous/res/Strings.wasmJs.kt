@@ -5,10 +5,9 @@ import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringArrayResource
 import org.jetbrains.compose.resources.StringResource
 
-// A browser's page cannot wait for a resource on its one thread, so every
-// string is read once before the app starts ([preloadStrings]) and looked up
-// from here after. Plurals are kept in English's two forms, one and other:
-// the strings are English's.
+// A page can't block its only thread waiting for a resource, so every string
+// is loaded once before the app starts ([preloadStrings]) and looked up here
+// after that. Plurals only have English's two forms, one and other.
 
 private val strings = HashMap<String, String>()
 private val arrays = HashMap<String, List<String>>()
@@ -21,7 +20,7 @@ internal actual fun loadPlural(res: PluralStringResource, count: Int): String =
 
 internal actual fun loadStringArray(res: StringArrayResource): List<String> = arrays[res.key] ?: emptyList()
 
-/** Every string, read before the app draws anything. */
+/** Loads every string before the app draws anything. */
 @OptIn(ExperimentalResourceApi::class)
 suspend fun preloadStrings() {
     for (res in Res.allStringResources.values) strings[res.key] = org.jetbrains.compose.resources.getString(res)

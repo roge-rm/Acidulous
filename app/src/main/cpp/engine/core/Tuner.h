@@ -4,66 +4,50 @@
 #include <cstdint>
 #include <vector>
 
-// Naming the note somebody is playing, from the input, while they tune it.
+// A tuner: names the note being played into the input.
 //
-// The app has had an input since M17 and an amp since M56, and the one thing
-// between a guitar and a song that neither of those covers is that the guitar
-// is out of tune. This is a readout and not an effect: nothing it does reaches
-// the audio, and it costs nothing at all until the record window asks for it.
+// It's only a readout and never touches the audio. It costs nothing until the
+// record window turns it on.
 //
-// **It listens before the input chain.** You tune an instrument, not a
-// recording, and the chain may well hold a gate that has shut on a string
-// somebody is plucking gently and an amp that has buried the fundamental.
+// It listens before the input chain, since a gate or amp there could hide
+// the note.
 namespace acidulous::audio {
 
 /**
- * How the pitch is found, kept out of the ring so the harness can drive it on
- * a buffer it made itself.
+ * The pitch detector, kept separate from the ring so the harness can test it
+ * on its own buffers.
  *
- * Two stages, because one cannot do both jobs:
+ * Two stages:
  *
- *   - **Coarse**, decimated to six kilohertz: normalised autocorrelation over
- *     every lag from the top of the range to the bottom. Cheap enough to
- *     search the whole range - a guitar's bottom B is 31 Hz and its top fret
- *     is over 1.3 kHz, which is five and a half octaves - and far too coarse
- *     to report in cents. At 6 kHz one sample of lag at 440 Hz is 73 cents.
- *   - **Fine**, at the full rate, over the handful of lags around what the
- *     coarse stage found, with a parabola through the winning peak. At 48 kHz
- *     one sample of lag at 440 Hz is 9 cents and the parabola is good for a
- *     small fraction of that.
+ *   - Coarse: normalised autocorrelation over every lag in range at a
+ *     decimated rate. Cheap enough to search five and a half octaves, but
+ *     too coarse to give cents.
+ *   - Fine: at the full rate, over the few lags around the coarse result,
+ *     with a parabola through the best peak for sub-sample accuracy.
  *
- * The **octave error** is the classic fault of every autocorrelation pitch
- * detector and it is worth naming: the correlation at twice the true lag is
- * nearly as strong as at the true one, and on a string with a weak
- * fundamental - a bridge pickup, a bass through a small speaker - it is
- * stronger. Picking the largest peak therefore reports an octave low perhaps
- * one time in five. The fix is to take the *shortest* lag whose peak is
- * within a margin of the best rather than the best itself, which is what
- * every detector that works does.
+ * Autocorrelation often finds a peak at twice the true lag that's as strong
+ * or stronger, which reads an octave low. To avoid that it takes the shortest
+ * lag whose peak is within a margin of the best one.
  */
 struct PitchFinder {
-    /** The range worth searching: a five-string bass's low B to well past a guitar's top fret. */
+    /** Search range: a five-string bass's low B to past a guitar's top fret. */
     static constexpr float kMinHz = 27.0f;
     static constexpr float kMaxHz = 1400.0f;
-    /** What the coarse stage runs at. Two and a half times kMaxHz, and a whole divisor of 48 kHz. */
+    /** The coarse stage's rate. Well above 2 x kMaxHz, and divides 48 kHz evenly. */
     static constexpr float kCoarseRate = 12000.0f;
     /**
-     * How periodic it has to be before a note is named.
-     *
-     * A plucked string is above 0.9 for its whole useful life. A room, a hum
-     * and a hand on the strings are under 0.5. Naming a note for something
-     * this is unsure about is worse than naming none: a tuner that twitches
-     * is a tuner nobody trusts.
+     * How periodic the signal must be before a note is named. A plucked
+     * string stays above 0.9, and room noise or hum is under 0.5. Showing no
+     * note is better than a readout that jumps around.
      */
     static constexpr float kClarity = 0.72f;
     /** How close to the best peak a shorter lag has to be to win it. */
     static constexpr float kOctaveMargin = 0.86f;
 
     /**
-     * The frequency in [mono], or 0 when there is no note in it.
+     * The frequency in [mono], or 0 when there's no note.
      *
-     * [clarity], when given, comes back with the winning correlation, which
-     * is what the harness asserts against and what a meter could show.
+     * If [clarity] is given it's set to the winning correlation.
      */
     static float find(const float *mono, int32_t frames, float sampleRate, float *clarity = nullptr);
 };
@@ -72,10 +56,8 @@ struct PitchFinder {
  * The ring the audio thread fills and the reader analyses.
  *
  * Single producer on the audio thread, single consumer on whichever thread
- * polls. The consumer copies the newest window out and checks that the write
- * index has not run past it; a window torn across a wrap is not a small error
- * in the answer but a discontinuity in the middle of it, and a discontinuity
- * has its own period.
+ * polls. The consumer copies the newest window out and checks the write
+ * index hasn't overtaken it, since a torn window would add a false period.
  */
 class Tuner {
   public:
@@ -94,10 +76,8 @@ class Tuner {
     void push(const float *interleaved, int32_t frames);
 
     /**
-     * Reader thread. The note in the last half second, or 0.
-     *
-     * Does the analysis itself rather than handing back audio, so the cost
-     * lands on whoever asked and at whatever rate they ask.
+     * Reader thread. The note in the last half second, or 0. The analysis
+     * runs here, on the caller's thread.
      */
     float analyse(float sampleRate);
 

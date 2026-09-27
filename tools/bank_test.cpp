@@ -1,22 +1,15 @@
-// Is every factory patch a patch?
+// Checks every factory patch. The audition tool is for voicing and doesn't
+// pass or fail. This runs in all_tests.sh and fails a patch that names a
+// parameter the engine doesn't have, makes no sound, clips badly, or plays
+// differently the second time.
 //
-// The audition harness next door is for voicing - it renders, it measures, it
-// has no opinion. This is the floor underneath it, and it runs in
-// all_tests.sh: a patch that names a parameter the engine does not have, or
-// makes no sound, or clips fifty times over, or plays differently the second
-// time cannot be committed.
+// Unknown parameter names matter most: the app silently ignores them
+// (ParamBinding.applyAll just uses the default), so a typo in a preset does
+// nothing. Some machines build their parameter names with printf, so they
+// can only be checked against the engine like this.
 //
-// The first of those is the one that could not be checked before and matters
-// most. A patch key that does not match any ParamDef does *nothing* in the
-// app - ParamBinding.applyAll fills in the default and moves on - so a typo
-// in a hand-written preset has always been completely silent. Eight machines
-// build their parameter tables with printf format strings and cannot be
-// checked from outside the engine at all, and they are the eight with the
-// most parameters.
-//
-// Warnings are for taste and failures are for faults, and the line between
-// them is whether a person could have meant it. A patch peaked at -0.5 dBFS
-// is hot; a patch peaked at +34 is an error.
+// Warnings are for things someone might have meant, failures for faults. A
+// patch peaking at -0.5 dBFS is hot; one peaking at +34 is an error.
 
 #include <algorithm>
 #include <cmath>
@@ -54,13 +47,9 @@ int gPatches = 0;
 int gTodo = 0;
 
 /**
- * What is known to be outstanding, so that everything else can fail loudly.
- *
- * A suite that is red for a whole milestone is a suite nobody reads, and the
- * point of this harness is that a new fault is visible the day it arrives.
- * So the faults that were already here are named, one line each, and counted
- * separately - and a name that no longer needs to be on the list is itself
- * reported, because a list like this rots the moment it stops being checked.
+ * Known outstanding faults, one line each, counted as "todo" instead of
+ * failures so new faults stand out. An entry that's no longer needed is
+ * reported, so the list doesn't go stale.
  */
 struct Known {
     const char *unit;
@@ -69,10 +58,7 @@ struct Known {
 };
 
 const Known kKnown[] = {
-    // No bank written yet. These are the milestone's own acceptance test:
-    // when the list is empty, M45 is done.
-    // Everything else that was here has been written. One machine left, and
-    // then this list is empty and M45 is done.
+    // Nothing outstanding right now.
 };
 
 constexpr size_t kKnownCount = sizeof(kKnown) / sizeof(kKnown[0]);
@@ -111,9 +97,7 @@ void warn(const std::string &who, const std::string &what) {
 
 // --- Rendering, shorter than the audition harness's -------------------------
 //
-// A second and a bit rather than four seconds. This runs on every commit
-// beside nine other harnesses; the audition tool is where a patch is listened
-// to at length.
+// About two seconds per patch, since this runs with all the other harnesses.
 
 constexpr float kHold = 1.2f;
 constexpr float kTail = 0.8f;
@@ -149,8 +133,8 @@ void mountMaterial(Machine *m, const std::string &machine, Material &mat) {
         mat.utterance = voiceUtterance();
         m->swapObject(0, mat.utterance.get());
     }
-    // Something on the input bus for everything that reads it, so a patch
-    // built around an external exciter is not called silent for wanting one.
+    // Put something on the input bus for machines that read it, so a patch
+    // that needs input isn't reported as silent.
     if (machine == "Cipher" || machine == "Filament" || machine == "Molt" || machine == "Pollen" ||
         machine == "Nexus") {
         mat.input = voicePhrase();
@@ -159,13 +143,9 @@ void mountMaterial(Machine *m, const std::string &machine, Material &mat) {
 
 
 /**
- * The half of a patch that is not knobs.
- *
- * Formulate's sound is a string, not a number: without its formula compiled
- * and mounted it plays its plain oscillator, which is why "Formula Buzz"
- * measured as silence. Cumulus's table is the same shape of problem and is
- * built from the machine's own parameters above. Both are what EngineHost
- * does when the setting changes, done here for the same reason.
+ * The parts of a patch that aren't knobs: Nexus's graph and Formulate's
+ * formula, which has to be compiled and mounted or it plays a plain
+ * oscillator. This does what EngineHost does when the setting changes.
  */
 void applySettings(Machine *m, const std::string &machine,
                    const std::vector<std::pair<std::string, std::string>> &settings, Material &mat,
@@ -211,22 +191,17 @@ std::vector<float> renderMachine(const std::string &machine, const std::vector<f
     const Kit *kit = kitFor(machine);
     const auto total = static_cast<int64_t>(kSr * (kHold + kTail));
 
-    // A kit is silent on any one note if that voice happens to be - a Dice
-    // slice with no onset behind it, an empty Forage pad - so four are played
-    // across whatever it has. Spread in time, not together: struck together
-    // they were all silent, because a slicer takes the newest note and the
-    // newest happened to be an empty slice. Four notes at once is not how a
-    // kit is played anyway.
+    // Any single kit voice might be silent (an empty slice or pad), so
+    // several are played across the kit. They're spread out in time, since a
+    // slicer only plays the newest note and that could be an empty slice.
     struct Fire {
         int64_t at;
         int note;
     };
     std::vector<Fire> ons;
     if (kit != nullptr) {
-        // Six, spread across the whole kit rather than four across the front
-        // of it. Four reached the kick, the clap, a tom and a cymbal, and
-        // three kits that differ mostly in their rim, cowbell and clave
-        // measured as the same sound - which they are not.
+        // Six voices spread across the whole kit, so kits that differ mostly
+        // in their higher voices don't measure the same.
         const int n = 6;
         for (int i = 0; i < n; ++i) {
             ons.push_back({static_cast<int64_t>(kSr * 0.18f) * i,
@@ -283,23 +258,16 @@ std::vector<float> effectSource() {
     const auto n = static_cast<size_t>(kSr * (kHold + kTail));
     std::vector<float> out(n * 2, 0.0f);
     Rng rng(0xeffec7u);
-    // The source stops at two thirds, and the rest is silence: a delay's
-    // tail and a reverb's are most of what there is to judge about them, and
-    // fed a signal to the last sample there is nowhere for either to show.
+    // The source stops at two thirds and the rest is silence, so delay and
+    // reverb tails can be measured.
     const size_t stop = n * 2 / 3;
     for (size_t i = 0; i < stop; ++i) {
         const float t = static_cast<float>(i) / kSr;
         const float env = std::exp(-std::fmod(t, 0.5f) / 0.12f);
         const float tone = (std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * t) +
                             0.5f * std::sin(2.0f * static_cast<float>(M_PI) * 331.0f * t)) * 0.35f;
-        // **The floor is a floor.** It was 0.04 - twenty-eight decibels under
-        // full scale, and only nineteen under the tone, which is not a noise
-        // floor but a layer of grit. Nothing noticed until the gate arrived
-        // and two patches with thresholds thirty decibels apart rendered
-        // identically, because the harness's own hiss held every one of them
-        // wide open for the whole take. At -54 dB it is what a converter and
-        // an amplifier actually leave behind, and a threshold set anywhere a
-        // person would set one now has something to be above and below.
+        // A noise floor at about -54 dB, like real gear. Louder noise holds
+        // gates open, so different thresholds would all sound the same.
         const float v = tone * env + rng.next() * 0.002f;
         out[i * 2] = v;
         out[i * 2 + 1] = v * 0.97f;
@@ -399,9 +367,8 @@ void checkBank(const Bank &bank) {
         }
 
         Rendered out;
-        // The note the patch says it is for. A piccolo trumpet's preset
-        // played at C3 is not the preset, and comparing it with a tuba's at
-        // the same pitch says nothing about either.
+        // Play the note the patch is meant for, since e.g. a piccolo trumpet
+        // preset at C3 isn't representative.
         const int note = patch.note > 0 ? patch.note : 48;
         out.audio = bank.isEffect() ? renderEffect(bank.typeName(), r.norm)
                                     : renderMachine(bank.unit, r.norm, note, r.settings);
@@ -419,8 +386,8 @@ void checkBank(const Bank &bank) {
         if (!out.m.finite) fail(who, "the output is not a number");
         if (out.m.peakDb < -60.0f) fail(who, "silent, with its material mounted");
         if (out.m.peakDb > 6.0f) {
-            // A machine feeds a fader and a limiter, so hot is a matter of
-            // taste. Twice full scale is not taste, it is arithmetic.
+            // A machine feeds a fader and a limiter, so a hot patch is a
+            // choice, but twice full scale is a fault.
             char buf[80];
             std::snprintf(buf, sizeof(buf), "peaks at %+.1f dBFS", static_cast<double>(out.m.peakDb));
             if (unitKnown) todo(who, buf); else fail(who, buf);
@@ -429,9 +396,9 @@ void checkBank(const Bank &bank) {
         }
         if (runaway(out.audio)) fail(who, "louder at the end of its tail than before it");
 
-        // Panic and play it again: the same numbers or something is carrying
-        // state that a reset does not reach. reset_test asks this of every
-        // machine at its *defaults*; a patch can hide state behind a value.
+        // Reset and play again. Different output means some state survives a
+        // reset. reset_test checks this at default settings, but a patch can
+        // hide state behind a value.
         const std::vector<float> again = bank.isEffect() ? renderEffect(bank.typeName(), r.norm)
                                                          : renderMachine(bank.unit, r.norm, note, r.settings);
         if (again != out.audio) fail(who, "played differently the second time");
@@ -439,26 +406,16 @@ void checkBank(const Bank &bank) {
         if (out.m.dcDb > -40.0f) warn(who, "carries a DC offset");
         if (out.m.monoLossDb > 6.0f) warn(who, "loses more than 6 dB summed to mono");
         if (out.m.tailSeconds > 6.0f) warn(who, "rings for more than six seconds");
-        // Three that Manual's bank cost five rounds of listening to find,
-        // because nothing printed them. Each is about what a note does while
-        // it is held rather than what it averages to.
+        // Checks on what a note does while it's held, which averages hide.
         char warnText[96];
-        // Only where 45 Hz is nowhere near the note being played. A bass
-        // machine's sub patches live down there on purpose - Reflux's Sub
-        // Drop is 79% below 45 Hz and is called Sub Drop - so this asks
-        // whether the *note* is up out of the cellar while a quarter of the
-        // sound is still in it. That was Manual's fault exactly: a patch
-        // measured at middle C with 28% of itself six octaves down.
-        // Not for the machines where `note` picks a *voice* rather than a
-        // pitch - a kit's kick is meant to be under 45 Hz, and asking what
-        // note it is playing is a category error. Nor for effects, whose
-        // output is whatever was put into them.
+        // Too much energy below 45 Hz, but only when the note played is well
+        // above that (bass patches are meant to be down there). Skipped for
+        // machines where the note picks a voice rather than a pitch, and for
+        // effects.
         const bool notePicksVoice = kitFor(bank.typeName()) != nullptr ||
                                     (!bank.material.empty() && bank.material != "none");
-        // ...and only where there is a note to be below. A noise burst on a
-        // melodic machine - Formulate's snare and hat - has no pitch at all,
-        // so "how much of it is under the note" has no answer. Harmonicity
-        // says whether a patch stands on a series or not.
+        // Also skipped for unpitched sounds like Formulate's snare and hat,
+        // which harmonicity tells apart.
         if (!notePicksVoice && !bank.isEffect() && note >= 48 && out.m.harmonicity > 0.1f &&
             out.m.subDb > -7.0f) {
             std::snprintf(warnText, sizeof(warnText), "%.0f%% of it is below 45 Hz, playing %s",
@@ -466,52 +423,33 @@ void checkBank(const Bank &bank) {
                           noteName(note).c_str());
             warn(who, warnText);
         }
-        // A swing is a swell or a chop depending on how fast it goes: the
-        // same five decibels is a cabinet coming round at 0.8 Hz and a
-        // tremolo at 6.6. Only the fast ones are worth a word - and not on an
-        // effect, where moving the level about is the entire job.
-        // Not on a struck machine either: its measure take is one strike per
-        // second, and the envelope of eight decaying hits has harmonics at
-        // five and ten hertz that this locks onto. A kit's level going up and
-        // down *is* the kit.
+        // Only fast level swings count, since a slow one is a swell. Skipped
+        // for effects, where moving the level is often the point, and for
+        // kits, whose repeated hits look like a fast swing.
         if (!bank.isEffect() && kitFor(bank.typeName()) == nullptr &&
             out.m.swingDb > 8.0f && out.m.swingHz > 3.0f) {
             std::snprintf(warnText, sizeof(warnText), "wobbles %.0f dB at %.1f Hz inside one note",
                           static_cast<double>(out.m.swingDb), static_cast<double>(out.m.swingHz));
             warn(who, warnText);
         }
-        // Likewise the stereo: a ping-pong delay is *supposed* to swing
-        // sixteen decibels between the channels.
+        // Same for stereo swing, since e.g. a ping-pong delay is meant to.
         if (!bank.isEffect() && out.m.panSwingDb > 9.0f) {
             std::snprintf(warnText, sizeof(warnText), "swings %.0f dB between the channels",
                           static_cast<double>(out.m.panSwingDb));
             warn(who, warnText);
         }
-        // A quarter of a second is an eighth note at 120. A patch slower than
-        // that is fine held and produces almost nothing in a phrase - which
-        // is how Brazen's low brass shipped: excitation with no tube behind
-        // it, heard as a click and a missing note.
-        // A click on the front of a note. Not an overshoot - these measure
-        // under the tone they settle into - but a burst of high frequency the
-        // body of the sound never has.
-        // A click is a corner in the waveform, which is what the second
-        // difference sees. It used to be this line reading `onsetEdge` -
-        // brightness, attack against tone - which says a flute has a chiff
-        // and a plucked string has a bright attack and a long dull tail.
-        // Both are true and neither is a fault, and the column read twenty
-        // on a perfectly clean string.
-        // Not on a struck machine: a drum *is* a click, and this measures the
-        // discontinuity at the onset against what follows it - which on a
-        // woodblock is the whole sound.
+        // A click at the start of a note: a sharp corner in the waveform,
+        // measured by clickRatio (a bright attack is fine and isn't counted).
+        // Skipped for kits, where a click is the sound.
         if (kitFor(bank.typeName()) == nullptr && (out.m.clickRatio > 4.0f)) {
             char buf[80];
             std::snprintf(buf, sizeof(buf), "starts with a click, %.0fx the corner of its own tone",
                           static_cast<double>(out.m.clickRatio));
             warn(who, buf);
         }
-        // Not on a struck machine: `speaks` is note-on to half the level it
-        // *settles* at, and a struck thing never settles - it decays from its
-        // loudest moment, so the question has no answer.
+        // Slower than 250 ms (an eighth note at 120) means a patch that's
+        // fine held can go missing in a phrase. Skipped for kits, which never
+        // settle to a level.
         if (kitFor(bank.typeName()) == nullptr && (out.m.speaksMs > 250.0f)) {
             char buf[80];
             std::snprintf(buf, sizeof(buf), "takes %.0f ms to speak", static_cast<double>(out.m.speaksMs));
@@ -520,7 +458,7 @@ void checkBank(const Bank &bank) {
         rendered.push_back(std::move(out));
     }
 
-    // Two patches that are bit-identical are a copy-paste, not a variation.
+    // Two bit-identical patches are a copy-paste mistake.
     for (size_t a = 0; a < rendered.size(); ++a) {
         for (size_t b = a + 1; b < rendered.size(); ++b) {
             if (rendered[a].audio == rendered[b].audio) {
@@ -530,19 +468,13 @@ void checkBank(const Bank &bank) {
             }
         }
     }
-    // And two that measure the same probably sound the same.
+    // Two that measure the same probably sound the same.
     for (size_t a = 0; a < rendered.size(); ++a) {
         for (size_t b = a + 1; b < rendered.size(); ++b) {
             const Measured &x = rendered[a].m, &y = rendered[b].m;
-            // ...including how hollow each one is, because a bank that has
-            // been levelled on purpose has the same rms all the way down,
-            // and a centroid cannot tell a clarinet from a saxophone: the
-            // two read within a percent of each other with thirteen
-            // decibels between their second harmonics.
-            // ...and which partial each one is actually sounding, because two
-            // patches an octave apart are not the same sound however alike
-            // their brightness reads. Formulate's Crunch and Bit Melody sit
-            // 3.8% apart on centroid and an octave apart on pitch.
+            // Also compares hollowness (a levelled bank has the same loudness
+            // throughout, and centroid can't tell a clarinet from a sax) and
+            // pitch (two patches an octave apart aren't the same sound).
             const bool samePitch = x.partialRatio > 0.0f && y.partialRatio > 0.0f &&
                                    std::fabs(x.partialRatio - y.partialRatio) < 0.25f * x.partialRatio;
             if (samePitch && std::fabs(x.loudnessDb - y.loudnessDb) < 1.0f && x.centroidHz > 0.0f &&
@@ -554,11 +486,8 @@ void checkBank(const Bank &bank) {
         }
     }
 
-    // On a struck machine the level that matters is the *peak*: `loud` is the
-    // loudest four hundred milliseconds, so a kit of dry hits spends most of
-    // that window silent and a kit of bells fills every one. Levelled to
-    // match by peak - which is what a drum actually presents - such a bank
-    // reads seventeen decibels apart on loudness and is correct.
+    // For kits compare peaks, not loudness. `loud` is the loudest 400 ms, and
+    // dry hits leave most of that window silent while bells fill it.
     const bool struck = kitFor(bank.typeName()) != nullptr;
     float lo = 200.0f, hi = -200.0f;
     for (const Rendered &r : rendered) {
@@ -582,26 +511,16 @@ int main(int argc, char **argv) {
     const std::string dir = std::string(root != nullptr ? root : ".") + "/tools/banks";
     const std::string only = argc > 1 ? argv[1] : "";
 
-    // Every machine and every effect the registries know, so a new one is
-    // covered the day it is written rather than the day somebody remembers.
+    // Every machine and effect in the registries, so new ones are covered
+    // automatically.
     std::vector<std::string> units;
     for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
         const std::string name = MachineRegistry::name(i);
-        // **Bias has no sound of its own**, and `tools/banks/Bias.bank` does
-        // not change that. Every other machine here makes a sound out of
-        // nothing and can be judged on what it does the first time you tap it,
-        // which is what this harness measures. Bias plays what you recorded
-        // onto it, and its patches are *recording media* - so with nothing
-        // mounted, Init, DAT and Disc render exact silence, which is
-        // correct and which this would report as seven dead patches.
-        //
-        // What the bank is worth is still measurable: `tools/audition.sh bank
-        // Bias` reads each medium's noise floor and its colour, which is the
-        // one thing a medium has without a recording in it.
-        //
-        // Deliberately not on the known-fault list above: that list means "a
-        // bank somebody still has to write", and it is empty because M45
-        // finished. This is a bank this harness cannot judge.
+        // Bias has no sound of its own. It plays what was recorded onto it
+        // and its patches are recording media, so with nothing recorded some
+        // are silent, correctly. `tools/audition.sh bank Bias` measures each
+        // medium's noise floor and colour instead. Not on the known list,
+        // since it's not a fault.
         if (name == "Bias") continue;
         units.emplace_back(name);
     }
@@ -623,9 +542,8 @@ int main(int argc, char **argv) {
         checkBank(bank);
     }
 
-    // A list of known faults that is never re-checked is a list that lies.
-    // Anything on it that did not come up has been fixed, and saying so is
-    // the only thing that keeps the list honest as the milestone shortens it.
+    // Anything on the known list that didn't come up has been fixed and
+    // should be removed.
     if (only.empty()) {
         for (size_t i = 0; i < kKnownCount; ++i) {
             if (gKnownUsed[i]) continue;

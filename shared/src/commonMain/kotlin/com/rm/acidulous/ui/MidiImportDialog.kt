@@ -35,12 +35,11 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.res.*
 
 /**
- * A MIDI file, before it becomes a song: which machine each part goes to,
- * and how long a scene is.
+ * Importing a MIDI file: which machine each part goes to, and how long a scene
+ * is.
  *
- * It comes in as a new song, never into the open one (Dan's choice): the
- * file's tempo, signature and length are its own, and a song with them
- * forced onto it is a different song.
+ * It always becomes a new song, never merged into the open one, since the
+ * file's tempo, time signature and length are its own.
  */
 @Composable
 fun MidiImportDialog(
@@ -49,8 +48,8 @@ fun MidiImportDialog(
     onDismiss: () -> Unit,
     onImport: (Song) -> Unit,
 ) {
-    // A machine per part, or null to leave it out. Past sixteen there are no
-    // tracks left, so those start left out and say so.
+    // A machine per part, or null to leave it out. Past 16 there are no tracks
+    // left, so those start out left out and say so.
     val machines = remember {
         mutableStateListOf<String?>().apply {
             parsed.parts.forEachIndexed { i, p -> add(if (i < 16) MidiImport.defaultMachine(p) else null) }
@@ -88,7 +87,7 @@ fun MidiImportDialog(
                 }
             }
             WindowCard(stringResource(Res.string.import_tracks)) {
-                // A list, one part a line, however the cards are laid.
+                // One part per line, however the cards are laid out.
                 Column(Modifier.cardLine(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     parsed.parts.forEachIndexed { i, part ->
                         PartRow(part, machines[i]) { machines[i] = it }
@@ -99,7 +98,7 @@ fun MidiImportDialog(
     }
 }
 
-/** Machines a MIDI part can go to: the ones that play notes with no file of their own. */
+/** Machines a MIDI part can go to: the ones that play notes without needing a file. */
 private val PLAYABLE = MachineUi.machineGroups.flatMap { it.machines }
     .filter { it !in setOf("Forage", "Mosaic", "Pollen", "Dice", "Molt", "Bias", "Cipher") }
 

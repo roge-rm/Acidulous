@@ -1,10 +1,9 @@
 package com.rm.acidulous.util
 
 /**
- * Where the app's settings live: the part of Android's SharedPreferences the
- * app uses, shaped the same so the code that reads and writes them reads the
- * same too. SharedPreferences on Android ([androidPrefs]); a properties file
- * on the desktop.
+ * Where the app's settings live. Shaped like the part of Android's
+ * SharedPreferences the app uses: SharedPreferences on Android
+ * ([androidPrefs]), a properties file on desktop.
  */
 interface PrefStore {
     fun getBoolean(key: String, default: Boolean): Boolean
@@ -19,7 +18,7 @@ interface PrefStore {
         fun putFloat(key: String, value: Float): Editor
         fun putString(key: String, value: String?): Editor
         fun remove(key: String): Editor
-        /** Keep the changes; like SharedPreferences.apply, it may write them later. */
+        /** Keeps the changes; like SharedPreferences.apply, it may write them later. */
         fun apply()
     }
 }

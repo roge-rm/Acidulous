@@ -3,19 +3,15 @@ package com.rm.acidulous.model
 import kotlinx.serialization.Serializable
 
 /**
- * A thing on a controller, pointed at a thing in the app.
+ * A control on a MIDI controller, pointed at something in the app.
  *
- * Both halves come in two kinds, and that is the whole of the feature: a
- * knob or a pad on one side, a parameter or a transport action on the other.
- * A knob to a knob is what anyone expects; a pad to *play* is what makes
- * mapping reach past the things that have values.
+ * The source is a knob or a pad, and the target is a parameter or a transport
+ * action, so a pad can be mapped to play as well as to a value.
  *
- * A parameter target is the same address an automation lane uses -
- * `machine:cutoff`, `channel:gain` - which is why nothing here has to know
- * about recording. Whatever moves a parameter records it, so a mapped knob
- * records for the same reason a real one does. An action has no value and no
- * lane, and firing one is never recorded: a "play" written into a lane would
- * play the song from inside the song.
+ * A parameter target uses the same address as an automation lane
+ * (`machine:cutoff`, `channel:gain`), so a mapped knob records just like the
+ * real one. Actions have no value or lane and are never recorded, since a
+ * recorded "play" would start the song from inside the song.
  */
 @Serializable
 data class Mapping(
@@ -27,7 +23,7 @@ data class Mapping(
     val name: String? = null,
     /** An [Action] by name, when this fires something instead of setting it. */
     val action: String? = null,
-    /** The track it acts on; null follows whatever MIDI routing says. */
+    /** The track it acts on. Null follows the MIDI routing. */
     val rack: Int? = null,
 ) {
     val isAction: Boolean get() = action != null
@@ -41,7 +37,7 @@ data class Mapping(
         else -> "?"
     }
 
-    /** And the target. [track] only to name the unit it belongs to. */
+    /** How the target is named. [track] is only used to name the unit. */
     fun targetLabel(track: Track?, word: (String) -> String = { it }): String = when {
         action != null -> action.lowercase()
         unit != null && name != null && track != null -> laneLabel(track, laneKey(unit, name), word)
@@ -51,31 +47,28 @@ data class Mapping(
 }
 
 /**
- * The transport's verbs: things that happen rather than things with a value.
+ * Transport actions: things that happen rather than things with a value.
  *
- * Stored by name, not ordinal, because this list will grow and a song is not
- * going to be re-saved to keep up with it.
+ * Stored by name rather than ordinal, because this list will grow and old
+ * songs won't be re-saved to keep up.
  */
 enum class Action { PlayStop, Play, Stop, RecordArm, LoopScene, ClipMode, Panic, Fill }
 
 object Mappings {
 
     /**
-     * Anything at or above this is a press; below it, a release.
+     * At or above this is a press, below it a release.
      *
-     * The MIDI convention, and it makes a momentary footswitch and a
-     * latching one behave the same - both send something over 64 when they
-     * go down, and only one of them sends anything when it comes up.
+     * This is the MIDI convention, and it makes momentary and latching
+     * footswitches behave the same.
      */
     const val PRESS = 64
 
     /**
-     * The mapping for an arriving controller, or null.
+     * The mapping for an incoming controller, or null.
      *
-     * The song wins over the device. Device mappings are the ones for the
-     * hardware sitting in front of you; a song's are the ones that belong to
-     * the music, and if a song has an opinion about CC 74 it is the one that
-     * knows what CC 74 is for here.
+     * Song mappings win over device mappings, since a song's mappings belong
+     * to that music.
      */
     fun find(song: Song, device: List<Mapping>, cc: Int? = null, note: Int? = null): Mapping? {
         val matches: (Mapping) -> Boolean = { m ->
@@ -84,16 +77,16 @@ object Mappings {
         return song.mappings.firstOrNull(matches) ?: device.firstOrNull(matches)
     }
 
-    /** Every note a mapping has claimed, so the UI can say which are spoken for. */
+    /** Every note a mapping has claimed, so the UI can show which are taken. */
     fun claimedNotes(song: Song, device: List<Mapping>): List<Int> =
         (song.mappings + device).mapNotNull { it.note }.distinct().sorted()
 
-    /** Replaces any mapping on the same source, so a source drives one thing. */
+    /** Replaces any mapping on the same source, so each source drives one thing. */
     fun set(existing: List<Mapping>, mapping: Mapping): List<Mapping> =
         existing.filterNot { (mapping.cc != null && it.cc == mapping.cc) ||
             (mapping.note != null && it.note == mapping.note) } + mapping
 
-    /** Forgets whatever drives this target. */
+    /** Removes whatever drives this target. */
     fun clearTarget(existing: List<Mapping>, unit: String?, name: String?, action: String?): List<Mapping> =
         existing.filterNot {
             if (action != null) it.action == action else it.unit == unit && it.name == name
@@ -101,9 +94,8 @@ object Mappings {
 }
 
 /**
- * What the engine says about a mapped parameter, or null when it has no
- * table entry - a bypass pseudo-parameter, or a name from a machine that is
- * no longer mounted.
+ * The engine's info for a mapped parameter, or null when it has none, like a
+ * bypass pseudo-parameter or a machine that's no longer loaded.
  */
 fun mappedParamInfo(track: Track, unit: String, name: String): com.rm.acidulous.engine.ParamInfo? {
     val engine = com.rm.acidulous.engine.NativeEngine
@@ -117,8 +109,8 @@ fun mappedParamInfo(track: Track, unit: String, name: String): com.rm.acidulous.
 }
 
 /**
- * What that parameter is set to now, normalised - so a note can toggle a
- * switch rather than only ever turning it on.
+ * The parameter's current value, normalised, so a note can toggle a switch
+ * off as well as on.
  */
 fun currentMapped(track: Track, unit: String, name: String): Float = when {
     unit == "machine" -> track.machine.params[name]
@@ -137,21 +129,19 @@ fun currentMapped(track: Track, unit: String, name: String): Float = when {
 } ?: mappedParamInfo(track, unit, name)?.defaultNormalized ?: 0f
 
 /**
- * The mixer's two-step parameters, by name.
+ * The mixer's on/off parameters, by name.
  *
- * A machine's parameter table comes back over the bridge and says whether a
- * parameter is a switch; the channel and master tables do not, because they
- * are fixed rather than per-machine and nothing has needed to ask before.
- * A note mapped to one of these has to toggle rather than set from velocity,
- * and that is the only thing the mapping needs to know about them. The names
- * are the engine's own, from Rack.cpp and MasterBus.cpp.
+ * Machine parameter tables say whether a parameter is a switch, but the
+ * channel and master tables don't. A note mapped to one of these toggles it
+ * instead of setting it from velocity. The names come from Rack.cpp and
+ * MasterBus.cpp.
  */
 private val mixerSwitches = setOf(
     "mute", "solo",                                   // channel
     "limiteron", // master
 )
 
-/** Would a note on this target toggle it, rather than set it from velocity? */
+/** Whether a note on this target toggles it instead of setting it from velocity. */
 fun mappedIsSwitch(track: Track?, unit: String, name: String): Boolean = when {
     unit == "channel" || unit == "master" -> name in mixerSwitches
     track != null -> mappedParamInfo(track, unit, name)?.let { it.curve == 2 && it.steps == 2 } ?: false
@@ -159,11 +149,10 @@ fun mappedIsSwitch(track: Track?, unit: String, name: String): Boolean = when {
 }
 
 /**
- * What a send's parameter is set to now, normalised, or its own default.
+ * A send parameter's current value, normalised.
  *
- * A slot's map only holds what has been touched, which is what lets an effect
- * gain a parameter without every saved song having to know - so a name that is
- * not in the map is not "nought", it is "whatever the effect says".
+ * A slot's map only holds parameters that have been touched, so a missing name
+ * reads as 0 here, even where the effect's own default is something else.
  */
 fun currentSend(master: Master, slot: Int, name: String): Float {
     val send = master.sendAt(slot)
@@ -171,7 +160,7 @@ fun currentSend(master: Master, slot: Int, name: String): Float {
     return send.params[name] ?: 0f
 }
 
-/** What a master parameter is set to now, normalised. */
+/** A master parameter's current value, normalised. */
 fun currentMaster(master: Master, name: String): Float = when (name) {
     "volume" -> EngineParams.volume01(master.volume)
     "limiteron" -> if (master.limiter.on) 1f else 0f

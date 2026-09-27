@@ -7,22 +7,21 @@
 namespace acidulous {
 
 /**
- * A MIDI byte on its way *out*, stamped with the frame it belongs on.
+ * An outgoing MIDI message, stamped with the frame it belongs on.
  *
- * A frame, not a tick and not a sample offset, because it is the only
- * quantity that survives the trip to Java: there it becomes a wall-clock
- * nanosecond through the audio stream's own presentation anchor, and Android
- * schedules the send. Which means the sender has to be *early*, not fast.
+ * On the Java side the frame is turned into a wall-clock time using the audio
+ * stream's timestamp, and Android schedules the send. So events need to be
+ * sent early, not just quickly.
  */
 struct MidiOutEvent {
     int64_t frame = 0;
     uint8_t status = 0;
     uint8_t data1 = 0;
     uint8_t data2 = 0;
-    uint8_t rack = 0xff; // 0xff: the transport's own, belonging to no track
+    uint8_t rack = 0xff; // 0xff: from the transport, not a track
 };
 
-/** A realtime byte arriving from outside, on the frame it was heard. */
+/** An incoming realtime byte, stamped with the frame it arrived on. */
 struct MidiInEvent {
     int64_t frame = 0;
     uint8_t status = 0;
@@ -35,66 +34,49 @@ struct MidiMessage {
     uint8_t data1 = 0;
     uint8_t data2 = 0;
     /**
-     * The channel it actually arrived on, 0-15, or [kNoChannel].
-     *
-     * The status nibble is spoken for - it carries the rack - and MPE is
-     * entirely about which channel a message came in on, so the channel
-     * needs a byte of its own. Everything the app generates itself has no
-     * channel and says so.
+     * The channel it arrived on, 0-15, or [kNoChannel] for messages the app
+     * made itself. The status nibble holds the rack, and MPE needs the real
+     * channel, so it has its own byte.
      */
     uint8_t channel = 0xff;
 };
 
 constexpr uint8_t kNoChannel = 0xff;
 
-// The ordinal crosses the queue and the JNI boundary but is never written
-// to a file - lanes are keyed by unit *name* - so inserting here is safe,
-// as long as Recorder.UNITS on the Kotlin side is kept in the same order.
-// Appended, never inserted: the ordinal crosses the queue and the JNI
-// boundary, and Recorder.UNITS on the Kotlin side is this list by position.
-// Automation lanes are keyed by unit *name* in the document, so a new unit
-// costs nothing to songs already written.
+// Only append to this list. The ordinal crosses the queue and JNI, and
+// Recorder.UNITS on the Kotlin side must be in the same order. Automation
+// lanes are saved by unit name, so adding a unit doesn't affect old songs.
 enum class Unit : uint8_t {
     Machine, Effect1, Effect2, Mod1, Mod2, Mod3, Channel, Master,
     /**
-     * The two send buses' effects.
-     *
-     * Addressed like an insert rather than like the master, because that is
-     * now what they are: a slot holding any effect, with that effect's own
-     * parameter table. They belong to the song rather than to a rack, so the
-     * rack on the message is ignored.
+     * The two send buses' effects. Addressed like an insert: a slot holding
+     * any effect with its own parameter table. They belong to the song, so
+     * the message's rack is ignored.
      */
     Send1, Send2,
     /**
-     * The two effects on the way *in*.
-     *
-     * The same shape as a send's - a slot holding any effect, with that
-     * effect's own table, belonging to the song rather than to a rack - and
-     * the same reason the rack on the message is ignored. What makes them
-     * different is where they run: before the input is published, so what they
-     * do is **printed into a recording** rather than applied to a playback.
+     * The two input effects. Same as the sends (song-level slots, rack
+     * ignored), but they run before the input is published, so they're
+     * recorded into the take.
      */
     Input1, Input2,
     /**
-     * The performance strip: mod and pressure.
-     *
-     * Not a unit with parameters of its own - a pseudo-unit, so that the
-     * mod wheel and aftertouch can be recorded into a lane and played back
-     * by the same machinery every knob already uses. What comes out the
-     * other end is MIDI again, which is how they arrived.
+     * The performance strip: mod wheel, pressure and pedals. A pseudo-unit so
+     * they can be recorded into lanes like any knob. They're played back as
+     * MIDI.
      */
     Performance,
     /**
-     * The master's two inserts: after the sends come back, before the fader
-     * and the limiter. The same slot shape as a send; the rack is ignored.
+     * The master's two inserts, after the sends return and before the fader
+     * and limiter. Same slot shape as a send, and the rack is ignored.
      */
     MasterFx1, MasterFx2,
     /** The four mixer groups' two inserts each, group-major. The rack is ignored. */
     Group1Fx1, Group1Fx2, Group2Fx1, Group2Fx2, Group3Fx1, Group3Fx2, Group4Fx1, Group4Fx2,
     /**
-     * The held effects on the master: repeat, tape stop and the pad. Carried
-     * on a rack only so that a press can be recorded into that track's clip
-     * and played back from it; what it moves is the master's.
+     * The held effects on the master: repeat, tape stop and the pad. Sent
+     * with a rack only so a press can be recorded into that track's clip.
+     * They always act on the master.
      */
     Perform,
 };
@@ -102,8 +84,7 @@ enum class Unit : uint8_t {
 /** Indices within Unit::Performance. */
 constexpr int32_t kPerfMod = 0;      // CC 1
 constexpr int32_t kPerfPressure = 1; // channel aftertouch
-// The three pedals, appended: a lane keyed by name costs old songs nothing,
-// but the index crosses the record queue, so these never move.
+// The pedals. The index crosses the record queue, so these never move.
 constexpr int32_t kPerfSustain = 2;   // CC 64, the dampers
 constexpr int32_t kPerfSostenuto = 3; // CC 66, the keys already down
 constexpr int32_t kPerfSoft = 4;      // CC 67, una corda
@@ -113,26 +94,20 @@ struct ParamMessage {
     Unit unit = Unit::Machine;
     int32_t index = 0; // into the unit's ParamDef table
     float value = 0.0f; // normalised 0..1
-    bool record = false; // a user gesture: may be recorded into a lane and wins over its lane this pass
+    bool record = false; // a user gesture: may be recorded into a lane and overrides that lane this pass
     /**
-     * Ticks, or nought for now. While playing, a rack's message waits for its
-     * rack's next multiple of this - a bar, say - and lands there. How the
-     * perform page's mutes wait for the bar.
+     * In ticks, or 0 for now. While playing, the message waits for the rack's
+     * next multiple of this (e.g. a bar). Used by the perform page's mutes.
      */
     int32_t quantise = 0;
 };
 
-/** Sixteen tracks of notes plus a clock pulse every ten ticks; 1024 is
- *  minutes of headroom if the sender is ever late. */
+/** 1024 events is plenty of headroom for sixteen tracks of notes plus a
+ *  clock pulse every ten ticks, if the sender is ever late. */
 /**
- * The queue to the hardware, with a hold.
- *
- * An offline render - a freeze, an export - plays the song faster than time
- * into a file, and every note a MIDI-out track played on the way, with the
- * clock and its start and stop, went into this queue as well: the sender
- * then played the lot on the synthesizer at the other end of the cable, in
- * a burst. What a render plays belongs in the file, so while it runs
- * nothing is queued at all.
+ * The MIDI out queue, with a hold. While an offline render (freeze or
+ * export) runs, nothing is queued, so the render doesn't also play on the
+ * external hardware.
  */
 class MidiOutQueue {
   public:

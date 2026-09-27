@@ -6,16 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 /**
- * Ableton Link, from Kotlin's side of the wall.
+ * Ableton Link, Kotlin side.
  *
- * The session itself lives in the engine; what has to happen up here is the
- * part Android insists on. **Multicast is off by default on a sleeping
- * Wi-Fi chip**: without a `MulticastLock` the discovery packets that find
- * peers are dropped by the hardware before anything in the app sees them,
- * and Link sits there with nought peers and no error - which is why the lock
- * is reported on screen rather than quietly taken.
+ * The session runs in the engine. What's needed up here is Android's
+ * multicast lock: Wi-Fi chips drop multicast while asleep by default, so
+ * without a `MulticastLock` Link finds no peers and reports no error. That's
+ * why the lock's state is shown on screen.
  *
- * The lock costs battery, so it is held only while Link is switched on.
+ * The lock costs battery, so it's only held while Link is on.
  */
 object LinkHub {
     var enabled by mutableStateOf(false)
@@ -23,19 +21,19 @@ object LinkHub {
     /** Other machines in the session. */
     var peers by mutableStateOf(0)
         private set
-    /** What the session's tempo is, or 0 when nothing is running. */
+    /** The session's tempo, or 0 when nothing is running. */
     var sessionTempo by mutableStateOf(0f)
         private set
-    /** Does a peer's play and stop move our transport too? */
+    /** Whether a peer's play and stop also start and stop our transport. */
     var startStop by mutableStateOf(true)
         private set
-    /** Is the Wi-Fi chip letting multicast through? */
+    /** Whether the Wi-Fi chip is letting multicast through. */
     var multicast by mutableStateOf(false)
         private set
     /**
      * How far our bar line is from the session's, in milliseconds. Positive
-     * is us ahead. It is the number that says whether this is really
-     * working: a tempo can read right while the phase wanders.
+     * means we're ahead. This shows whether sync really works, since the
+     * tempo can look right while the phase drifts.
      */
     var phaseMs by mutableStateOf(0f)
         private set
@@ -43,7 +41,7 @@ object LinkHub {
     /**
      * What lets multicast through while Link is on: Android's Wi-Fi
      * MulticastLock, set by the platform at startup. Null where nothing
-     * filters it (a desktop), which counts as always let through.
+     * filters it (desktop), which counts as always let through.
      */
     var multicastLock: MulticastLock? = null
 
@@ -71,16 +69,15 @@ object LinkHub {
         NativeEngine.setLinkStartStop(on)
     }
 
-    /** From the main poll, every 80 ms. Cheap: two atomics and a count. */
+    /** Called from the main poll every 80 ms. Cheap: two atomics and a count. */
     fun poll() {
         if (!enabled) return
         val packed = NativeEngine.linkStatus()
         peers = (packed shr 32).toInt()
         sessionTempo = (packed and 0xffffffffL).toInt() / 100f
         multicast = multicastLock?.isHeld ?: true
-        // The engine publishes the phase error in the same packing the MIDI
-        // follower uses, because it is the same question asked of a
-        // different master.
+        // The engine publishes the phase error packed the same way as the
+        // MIDI clock follower's.
         phaseMs = (NativeEngine.syncState() and 0xffffffffL).toInt() / 1000f
     }
 

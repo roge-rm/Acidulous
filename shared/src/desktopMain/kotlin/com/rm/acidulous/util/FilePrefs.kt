@@ -4,10 +4,10 @@ import java.io.File
 import java.util.Properties
 
 /**
- * A [PrefStore] in a properties file, for the desktop. Read once; each apply
- * writes the whole file, which for a few dozen settings changed by hand is
- * nothing. Written beside itself and renamed over, so a crash mid-write
- * leaves the old settings rather than half of them.
+ * A [PrefStore] in a properties file, for desktop. Read once; each apply
+ * writes the whole file, which is cheap for a few dozen settings. Written to
+ * a temporary file and renamed over, so a crash mid-write keeps the old
+ * settings.
  */
 class FilePrefs(private val file: File) : PrefStore {
     private val values = Properties().apply {

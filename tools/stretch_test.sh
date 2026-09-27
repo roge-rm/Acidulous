@@ -1,8 +1,7 @@
 #!/bin/bash
-# Time-stretch, on its own. See tools/stretch_test.cpp.
+# Tests time-stretch on its own. See tools/stretch_test.cpp.
 #
-# Header-only and dependency-free: `dsp::Wsola` asks the material nothing, so
-# the harness needs neither the engine archive nor a file on disk.
+# Header-only, so no engine library or file on disk is needed.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

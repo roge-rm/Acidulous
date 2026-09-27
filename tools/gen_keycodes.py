@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Android's key codes, as a Kotlin object the desktop build can use too.
+"""Writes Android's key codes as a Kotlin object the desktop build can use.
 
-Key bindings are saved as Android key codes, and the keyboard code compares
-against android.view.KeyEvent's constants. Off Android there is no such
-class, so this copies its KEYCODE_, META_ and ACTION_ constants - values and
-names - out of the SDK's android.jar into ui/KeyCodes.kt. Android keeps
-sending its own codes; the desktop maps its keys onto them.
+Key bindings are saved as Android key codes and the keyboard code compares
+against android.view.KeyEvent's constants. That class doesn't exist off
+Android, so this copies its KEYCODE_, META_ and ACTION_ constants (values and
+names) from the SDK's android.jar into ui/KeyCodes.kt. The desktop maps its
+keys onto them.
 
 Run: python3 tools/gen_keycodes.py   (needs javap and the SDK in ~/Android/Sdk)
 """

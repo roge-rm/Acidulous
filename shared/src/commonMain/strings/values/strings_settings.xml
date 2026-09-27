@@ -20,9 +20,9 @@
     <string name="settings_output">output</string>
     <string name="settings_output_device">play through</string>
     <string name="settings_output_default">system default</string>
-    <!-- An interface's own driver in the list of outputs (a computer's): its maker's name for it, marked as the fast way to it. -->
+    <!-- An audio interface's own driver in a computer's list of outputs: its maker's name for it, marked as the fast option. -->
     <string name="settings_output_driver">%1$s · low latency</string>
-    <!-- The desktop build only: how big a dp is on this screen. "system" is what the computer says. -->
+    <!-- Desktop build only: how big a dp is on this screen. "system" uses the computer's own value. -->
     <string name="settings_screen_scale">screen scale</string>
     <string-array name="settings_screen_scale_choices">
         <item>system</item>

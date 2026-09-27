@@ -64,26 +64,24 @@ import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * The four-track's editor: four lanes under one ruler, along this cell's cycle.
+ * The four-track editor: four lanes under one ruler, across this cell's cycle.
  *
- * **The axis is the cycle, not one pass of the clip.** A scene set to repeat
- * twice plays a tape straight through both passes - that is what
- * `SceneScheduler::rackCycleTick` is for - so an editor drawn against
- * `clip.bars` would show the first half of what the cell sounds and hide the
- * rest. Every tick in here is a tick of the cycle.
+ * The axis is the whole cycle, not one pass of the clip. A tape plays straight
+ * through a scene's repeats (that's what `SceneScheduler::rackCycleTick` is
+ * for), so drawing against `clip.bars` would hide part of what the cell
+ * plays. Every tick in here is a tick of the cycle.
  *
- * What a lane can be told:
+ * On each lane you can:
  *
- *   - **where it enters**, by dragging its body, snapped to the clip's grid;
- *   - **where it starts and stops**, by dragging either end - which trims the
- *     recording rather than moving it, so the audio stays where it was put;
- *   - **whether it sounds**, by its mute, which is a machine parameter and so
- *     automates and records like every other.
+ *   - set where it starts, by dragging its body, snapped to the clip's grid;
+ *   - trim its start and end, by dragging either end, which trims the
+ *     recording without moving the audio;
+ *   - mute it, which is a machine parameter and so automates and records
+ *     like any other.
  *
- * **Nothing is written until a finger lifts.** The reel is diffed on a string
- * built from exactly these numbers, so an edit per frame of a drag is a decode
- * per frame of a drag - which for a five-minute take is a second of work and a
- * hundred megabytes, fifteen times a second.
+ * Nothing is written until the finger lifts. The reel is compared using a
+ * string built from these numbers, so writing every frame of a drag would
+ * decode the take every frame, which is far too slow for a long take.
  */
 private val GutterW = 34.dp
 private val RulerH = 16.dp
@@ -92,13 +90,11 @@ private val HandleGrab = 22.dp
 /**
  * Which lane the next recording goes onto, if any.
  *
- * **One capture exists, so one lane records at a time.** That is an engine
- * fact rather than a interface choice - see `Engine::armedRack` - and arming a
- * second lane disarms the first rather than being refused, because being
- * refused is the answer nobody wants when they have already decided.
+ * There's only one capture in the engine, so only one lane records at a time
+ * (see `Engine::armedRack`). Arming a second lane disarms the first instead
+ * of refusing.
  *
- * Session state, not a preference: what you were about to record is not
- * something to remember until tomorrow.
+ * Only kept for the session, not saved as a preference.
  */
 object BiasArm {
     var track by mutableStateOf(-1)
@@ -123,7 +119,7 @@ object BiasArm {
     }
 }
 
-/** Which end of which lane a finger has hold of. */
+/** Which part of which lane a finger is holding. */
 private data class LaneDrag(val lane: Int, val part: Part, val take: TakeRef) {
     enum class Part { Body, Head, Tail, FadeIn, FadeOut }
 }
@@ -132,9 +128,9 @@ private data class LaneDrag(val lane: Int, val part: Part, val take: TakeRef) {
 fun AudioLanes(
     clip: Clip,
     ticksPerBar: Int,
-    /** Bars times the scene's repeat, in ticks: the whole of what this cell plays. */
+    /** Bars times the scene's repeat, in ticks: everything this cell plays. */
     cycleTicks: Int,
-    /** Where the rack is in that cycle, or null when it is not playing this cell. */
+    /** Where the rack is in that cycle, or null when it isn't playing this cell. */
     playheadTick: Int?,
     trackIndex: Int,
     sceneId: String,
@@ -147,12 +143,9 @@ fun AudioLanes(
     var drag by remember { mutableStateOf<LaneDrag?>(null) }
     var picking by remember { mutableStateOf(-1) }
     val scope = rememberCoroutineScope()
-    // **The mute is the machine's parameter, reached the way every parameter
-    // is reached.** Not a second switch that happens to do the same thing: it
-    // is the one in the panel below, so automating it, mapping it to a pad and
-    // recording it while you play all work here and none of it is written
-    // twice. The binding is built here rather than passed in because these
-    // lanes are the only thing that is ever composed for a tape.
+    // The mute is the machine's own parameter, the same one as in the panel
+    // below, so automating, mapping and recording it all work here. The
+    // binding is built here because these lanes are the only UI for a tape.
     val info = remember { NativeEngine.machineParamInfo(BIAS_MACHINE) }
     val b = rememberParamBinding(trackIndex, BIAS_MACHINE, info, editor)
     val commit: (Int, TakeRef?) -> Unit = { lane, take ->
@@ -160,7 +153,7 @@ fun AudioLanes(
     }
 
     Column(modifier.background(c.bgDeep)) {
-        // The ruler: bar numbers along the cycle, so a repeat is visibly a
+        // The ruler: bar numbers along the cycle, so a repeat shows as a
         // second pass rather than a longer bar.
         Row(Modifier.fillMaxWidth().height(RulerH)) {
             Box(Modifier.width(GutterW))
@@ -177,8 +170,8 @@ fun AudioLanes(
         }
         for (lane in 0 until BIAS_LANES) {
             val stored = clip.audio?.lane(lane)
-            // While a finger is down the lane draws what the finger says, and
-            // the document has not heard about it yet.
+            // While a finger is down the lane draws the drag, which hasn't
+            // been written to the song yet.
             val take = if (drag?.lane == lane) drag?.take else stored
             val shape = TakePeaks.rememberShape(root, take?.file.orEmpty())
             val isMuted = (b.value("mute${lane + 1}") ?: 0f) >= 0.5f
@@ -186,10 +179,9 @@ fun AudioLanes(
                 Modifier.fillMaxWidth().weight(1f).padding(bottom = 1.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // **The gutter is two buttons, not one with a mode.** The top
-                // half is the lane and mutes it; the bottom half is the record
-                // dot and arms it. Both are things you reach for while a song
-                // is playing, so neither may be behind the other.
+                // The gutter is two buttons. The top half is the lane number
+                // and mutes it, the bottom half is the record dot and arms it.
+                // You need both while a song is playing, so neither is hidden.
                 val isArmed = BiasArm.armed(trackIndex, lane)
                 Column(Modifier.width(GutterW).fillMaxHeight()) {
                     Box(
@@ -259,40 +251,36 @@ fun AudioLanes(
                             )
                             val survey = shape
                             if (survey != null && survey.frames > 0) {
-                                // Which columns of the *file* this region is,
-                                // which is why the cache holds the whole file:
-                                // trimming moves these two numbers and reads
-                                // nothing.
+                                // Which columns of the file this region covers.
+                                // The cache holds the whole file, so trimming
+                                // just changes these two numbers.
                                 val columns = survey.peaks.size / 2
                                 val c0 = (columns.toLong() * take.offset / survey.frames).toInt()
                                 val c1 = (columns.toLong() * (take.offset + take.frames) / survey.frames)
                                     .toInt().coerceIn(c0 + 1, columns)
                                 // Past the right edge the region is cut off by
-                                // its own cycle; draw only what is heard.
+                                // its cycle, so only draw what's heard.
                                 val shown = if (span > 0f) ((c1 - c0) * (to - from) / span).toInt() else 0
                                 drawShape(survey.peaks, c0, (c0 + shown).coerceIn(c0 + 1, c1),
                                     from, to, mid, half, colour)
                             } else {
                                 drawLine(colour.copy(alpha = 0.4f), Offset(from, mid), Offset(to, mid), 2f)
                             }
-                            // **Both handles stay in the cell.** A take longer
-                            // than the cycle has its end off the right of the
-                            // screen, and a handle you cannot reach is a take
-                            // you cannot shorten - which is precisely the case
-                            // this editor is for, since a whole recording
-                            // dropped on a lane is nearly always longer than
-                            // the cell it lands in. Clamped, the end reads as
-                            // "it goes on past here" and can still be dragged
-                            // back.
+                            // Both handles stay inside the cell. A take longer
+                            // than the cycle has its end off screen, and you
+                            // need to reach it to shorten it, which is common
+                            // since a whole recording dropped on a lane is
+                            // usually longer than the cell. Clamped, the end
+                            // shows it carries on past here and can still be
+                            // dragged back.
                             for (x in listOf(from.coerceIn(0f, size.width - 1f),
                                              to.coerceIn(1f, size.width - 1f))) {
                                 drawLine(c.teal, Offset(x, 0f), Offset(x, size.height), 2f)
                             }
-                            // The fades, drawn as the slopes they are: a line
-                            // from the corner of the region up to where the
-                            // envelope reaches full. Dragged from the bottom
-                            // half of the same two edges, which is why they
-                            // are drawn from the bottom corners.
+                            // The fades, drawn as slopes from the region's
+                            // bottom corners up to where it reaches full level.
+                            // They're dragged from the bottom half of the same
+                            // two edges.
                             val perFrame = if (take.frames > 0) span / take.frames else 0f
                             if (take.fadeIn > 0) {
                                 val x = from + take.fadeIn * perFrame
@@ -326,22 +314,21 @@ fun AudioLanes(
 }
 
 /**
- * Four lanes into one: a comp.
+ * Mixes the four lanes into one: a comp.
  *
- * **What it flattens is the lanes, their levels, their mutes and their fades -
- * and not the medium.** A patch is a way of listening and a comp is an edit;
- * baking the cassette in would make it permanent *and* leave the patch
- * applying it a second time on top of itself.
+ * It flattens the lanes, their levels, mutes and fades, but not the tape
+ * patch. The patch is how you listen, so baking it in would make it
+ * permanent and then apply it a second time.
  *
- * The four takes are replaced by one, in lane 1, and the file goes into the
- * sound library under its own name - so the original recordings are still
- * there and a comp you did not want is undone by putting them back.
+ * The four takes are replaced by one in lane 1, and the file is saved in the
+ * sound library under its own name. The original recordings are still there,
+ * so you can put them back if you don't want the comp.
  */
 @Composable
 fun CompButton(
     trackIndex: Int, sceneId: String, editor: SongEditor,
     scope: kotlinx.coroutines.CoroutineScope,
-    /** A string resource and what goes in it, as `EngineSync.onProblem` takes them. */
+    /** A string resource and its arguments, as `EngineSync.onProblem` takes them. */
     onProblem: (StringResource, Array<out Any>) -> Unit,
 ) {
     val c = Acid.colors
@@ -376,8 +363,8 @@ fun CompButton(
                     TakePeaks.survey(EngineSync.sampleRoot, rel)
                 } ?: return@launch
                 editor.editClip(trackIndex, sceneId) { cl ->
-                    // One take, in the first lane, and the other three emptied:
-                    // what the comp says is that these four are now this one.
+                    // One take in the first lane and the other three emptied:
+                    // the four are now this one.
                     var next = cl
                     for (l in 0 until BIAS_LANES) next = next.withTake(l, null)
                     next.withTake(
@@ -395,9 +382,8 @@ fun CompButton(
 }
 
 /**
- * Where a finger landed decides what it does: the two ends trim, the middle
- * moves. There is no mode and no tool - a region has three parts and each one
- * means the thing you would expect it to mean.
+ * Where the finger lands decides what it does: the ends trim and the middle
+ * moves. No modes or tools.
  */
 private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGestures(
     lane: Int,
@@ -412,23 +398,18 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
     awaitEachGesture {
         val down = awaitFirstDown()
         val w = size.width.toFloat().coerceAtLeast(1f)
-        // Clamped exactly as they are drawn, or the end of a take that runs
-        // past the cell would be grabbable off the edge of the screen and
-        // nowhere else.
+        // Clamped the same way they're drawn, or the end of a take that runs
+        // past the cell could only be grabbed off screen.
         val from = (w * stored.startTick / total).coerceIn(0f, w - 1f)
         val to = (w * stored.startTick / total + w * stored.lengthTicks() / total).coerceIn(1f, w - 1f)
-        // **Which half of the lane a finger is in decides what the ends do.**
-        // The top half trims and the bottom half fades, so both live on the
-        // same two edges without a mode anywhere: a take has two ends and two
-        // things you do at each of them, and the one you want is the one you
-        // reach for.
+        // Which half of the lane the finger is in decides what the ends do:
+        // the top half trims and the bottom half fades, so both work on the
+        // same two edges without a mode.
         val fading = down.position.y > size.height * 0.5f
-        // **A fade-out needs an end you can see.** A take longer than the cell
-        // has its end off the right of the screen, and a fade measured from
-        // there is a control that slams to its limit on the first drag and is
-        // inaudible if it does not - the take is cut off by the cycle long
-        // before the fade begins. So on an overrunning take both halves of the
-        // right edge trim, which is the thing to do first anyway.
+        // A fade-out needs a visible end. If the take runs past the cell, a
+        // fade measured from its real end would jump to its limit on the
+        // first drag or be cut off by the cycle before it starts. So on an
+        // overrunning take both halves of the right edge trim.
         val endsInView = w * (stored.startTick + stored.lengthTicks()) / total <= w - 1f
         val part = when {
             abs(down.position.x - from) <= handleGrabPx ->
@@ -440,13 +421,11 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
         }
         down.consume()
         var latest = stored
-        // **The ends follow the finger; the body follows the drag.** A handle
-        // asked to move by *how far the finger went* is unusable the moment it
-        // has been clamped into the cell - the take's real end is off the
-        // screen, so half a screen of drag takes half a screen off a take that
-        // is two screens long and nothing appears to happen. Asked instead for
-        // *where the finger is*, it ends where you put it, clamped or not. The
-        // body has no such end to stand at, so it moves by the drag.
+        // The ends follow the finger's position, the body follows the drag
+        // distance. A clamped handle moved by drag distance would barely seem
+        // to move on a take much longer than the screen. Following the
+        // finger, it ends up where you put it. The body has no end to follow,
+        // so it moves by the drag.
         val head = stored.startTick
         val tail = stored.startTick + stored.lengthTicks()
         drag(down.id) { change ->
@@ -465,11 +444,11 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
 }
 
 /**
- * A fade can never be longer than the take it is on.
+ * Keeps fades within the take.
  *
- * `fadeAt` is safe either way - it takes the smaller of the two ramps - but a
- * trim that leaves a two-second fade on a one-second take is a number nobody
- * can make sense of afterwards, so a trim brings them with it.
+ * `fadeAt` handles it either way by taking the smaller ramp, but a trim that
+ * leaves a two-second fade on a one-second take makes no sense afterwards,
+ * so trimming shortens the fades too.
  */
 private fun TakeRef.withFadesInside(): TakeRef {
     val half = (frames / 2).coerceAtLeast(0)
@@ -477,24 +456,23 @@ private fun TakeRef.withFadesInside(): TakeRef {
     else copy(fadeIn = fadeIn.coerceAtMost(half), fadeOut = fadeOut.coerceAtMost(half))
 }
 
-/** The arithmetic of one drag, kept apart from the gesture so it can be read. */
+/** The maths of one drag, kept apart from the gesture code so it's easier to read. */
 private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, grid: Int, fileFrames: Int): TakeRef {
-    /** Ticks into frames at the take's own tempo - audio does not stretch. */
+    /** Ticks to frames at the take's own tempo. */
     fun frames(ticks: Int): Int =
         (ticks.toDouble() / PPQN * 60.0 / take.bpm * ENGINE_RATE).roundToInt()
 
     return when (part) {
-        // Where it enters, snapped to the grid the notes use. Never before the
-        // start of the cycle: a cell cannot play what happened before it.
+        // Where it starts, snapped to the notes' grid. Never before the start
+        // of the cycle, since a cell can't play what came before it.
         LaneDrag.Part.Body -> {
             val step = grid.coerceAtLeast(1)
             val want = ((take.startTick + dTicks).toDouble() / step).roundToInt() * step
             take.copy(startTick = want.coerceIn(0, total))
         }
-        // **The head trims; it does not move.** Dragging right hides the first
-        // of the recording and the rest stays where it was put, which is what
-        // trimming a take in front of a vocal entry means. Both numbers move
-        // together, and the entry moves with them.
+        // The head trims rather than moves. Dragging right hides the start of
+        // the recording and the rest stays in place, like trimming the lead-in
+        // before a vocal. Offset and start move together.
         LaneDrag.Part.Head -> {
             val d = frames(dTicks).coerceIn(-take.offset, take.frames - frames(PPQN / 8))
             take.copy(
@@ -503,17 +481,16 @@ private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, g
                 startTick = (take.startTick + dTicks).coerceAtLeast(0),
             ).withFadesInside()
         }
-        // The tail is the end of the recording, and cannot pass the end of the
-        // file: there is nothing there to play.
+        // The tail is the end of the recording and can't go past the end of
+        // the file.
         LaneDrag.Part.Tail -> {
             val room = (fileFrames - take.offset).coerceAtLeast(1)
             take.copy(frames = (take.frames + frames(dTicks)).coerceIn(frames(PPQN / 8), room))
                 .withFadesInside()
         }
-        // **A fade is dragged inwards from the end it belongs to**, so the
-        // handle starts where the take does and the distance is the length.
-        // Neither may eat more than half the take, because two fades that
-        // overlap is an envelope with no take in the middle of it.
+        // A fade is dragged inwards from its end, so the handle starts at the
+        // take's edge and the distance is the fade length. Neither can be more
+        // than half the take, or the two fades would overlap.
         LaneDrag.Part.FadeIn ->
             take.copy(fadeIn = frames(dTicks).coerceIn(0, take.frames / 2))
         LaneDrag.Part.FadeOut ->
@@ -522,23 +499,21 @@ private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, g
 }
 
 /**
- * The library, and what it leaves behind on a lane.
+ * The sound library, and picking a take from it for a lane.
  *
- * Shared by the panel and the lanes because it is the same act in both: pick a
- * recording, measure it once off the main thread, and write one take into this
- * cell. The measurement is the reason it is worth sharing - see `TakePeaks`.
+ * Shared by the panel and the lanes because both do the same thing: pick a
+ * recording, measure it once off the main thread, and write one take into
+ * this cell. See `TakePeaks` for the measuring.
  */
 @Composable
 fun TakePicker(
     trackIndex: Int, sceneId: String, lane: Int, editor: SongEditor,
     /**
-     * **The caller's scope, not this window's.**
+     * The caller's scope, not this window's.
      *
-     * Picking dismisses the window, and a scope from `rememberCoroutineScope`
-     * here would be cancelled by that dismissal - which is exactly what
-     * happened: the dialog closed, the survey was cancelled mid-decode, and the
-     * lane stayed empty with nothing said. The work outlives the window that
-     * asked for it, so the scope has to as well.
+     * Picking closes the window, which would cancel a scope from
+     * `rememberCoroutineScope` here and stop the survey mid-decode, leaving the
+     * lane empty. The work has to outlive the window.
      */
     scope: kotlinx.coroutines.CoroutineScope,
     onDone: () -> Unit,
@@ -554,19 +529,18 @@ fun TakePicker(
                 val survey = withContext(Dispatchers.Default) {
                     TakePeaks.survey(EngineSync.sampleRoot, rel)
                 } ?: return@launch
-                // **A loop fits the song.** Its tempo is worked out from how
-                // long it is and where its hits fall, and the track is set to
-                // follow the song if it did not already, so a 90 bpm break
-                // dropped into a 126 bpm scene plays at 126 rather than
-                // drifting off the grid. A file that is not a loop has no
-                // tempo to find and is stamped with the scene's, as before.
+                // Loops fit the song. The tempo is worked out from the loop's
+                // length and where its hits fall, and the track is set to
+                // follow the song tempo, so a 90 bpm break in a 126 bpm scene
+                // plays at 126 instead of drifting. A file that isn't a loop
+                // gets the scene's tempo.
                 val loopBpm: Float? = withContext(Dispatchers.Default) {
                     val root = EngineSync.sampleRoot ?: return@withContext null
                     loopTempo(NativeEngine.loopShape(com.rm.acidulous.io.File(root, rel).absolutePath))
                 }
                 editor.edit(trackIndex) { track ->
                     val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
-                    // And a loop loops: two bars in a four-bar cell plays twice.
+                    // Loops loop: two bars in a four-bar cell play twice.
                     val take = song.takeForWholeFile(sceneId, clip, rel, survey.frames, loopBpm)
                         .copy(peaks = survey.peaks, loop = loopBpm != null)
                     val follow = loopBpm != null && kotlin.math.abs(loopBpm - song.bpmOf(sceneId)) > 0.05f

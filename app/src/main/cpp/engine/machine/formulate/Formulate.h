@@ -5,30 +5,16 @@
 #include <engine/machine/Machine.h>
 #include <engine/machine/formulate/Program.h>
 
-// Formulate - the chip, and the equation.
+// Formulate is a chip oscillator (pulse, 16-step triangle, saw, shift
+// register noise) combined with a bytebeat style formula.
 //
-// An equation solver - type an expression, hear it - is half of what made
-// chip music sound the way it does. The
-// other half is the hardware it was written for - a pulse whose duty jumps
-// in four steps, a triangle quantised to sixteen levels, a shift register
-// for noise - and the *tables* a tracker clocked at the video frame rate,
-// which is where chiptune's arpeggios and its blips actually come from.
-//
-// This machine is both, and the twist is that they are not separate:
-//
-//   - **The formula can read the oscillator.** `x` is the chip's own sample,
-//     so an expression can shape what the hardware made rather than only
-//     replacing it - ring, gate, xor, or whatever the arithmetic says.
-//   - **The formula is pitched and polyphonic.** Bytebeat has one global
-//     clock and no notes; here every voice has its own `t`, advancing with
-//     the note it is playing, so the same expression is an instrument
-//     rather than a track.
-//   - **Three tables, clocked together.** Arpeggio, duty and volume, in the
-//     tracker's own notation ("0 4 7 | 12"), at a rate in Hz or locked to
-//     the transport.
-//   - **The macros are in the language.** `a`, `b` and `c` are knobs, so an
-//     expression can be played rather than only typed - and they automate
-//     like any other parameter.
+//   - The formula can read the oscillator's sample as `x`, and its result
+//     can replace it, ring it, gate it or xor it.
+//   - Every voice has its own `t` that runs with the note's pitch, so a
+//     formula plays like an instrument.
+//   - Arpeggio, duty and volume tables step together in tracker notation
+//     ("0 4 7 | 12"), at a rate in Hz or synced to the transport.
+//   - The knobs `a`, `b` and `c` can be read by the formula and automated.
 namespace acidulous::machine {
 
 class Formulate final : public Machine {
@@ -84,8 +70,7 @@ class Formulate final : public Machine {
         dsp::Adsr amp;
         dsp::MultiFilter filter;
         int64_t age = 0;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending.
+        // Per-note bend (MPE) in semitones, added to the channel bend.
         float bend = 0.0f;
     };
 

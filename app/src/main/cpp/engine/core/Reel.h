@@ -6,55 +6,41 @@
 #include <memory>
 #include <vector>
 
-// What an audio track is holding: recordings, and where in the song each of
-// them plays.
+// An audio track's recordings, and where in the song each one plays.
 //
-// **The shape is FrozenSet's**, one level along. Frozen audio is a rendered
-// clip keyed by scene, per rack, mounted whole and swapped at a block
-// boundary; this is a recording keyed by scene, per rack, mounted whole and
-// swapped at a block boundary. The differences are the two that matter for a
-// performance rather than a render:
+// Works like FrozenSet: keyed by scene, per rack, mounted whole and swapped
+// at a block boundary. The differences:
 //
-//   - **A region is a window into a file, not the whole of one.** A take sung
-//     across four scenes is one file and four regions at four offsets, which
-//     is what lets the split at the scene lines cost no audio.
-//   - **Four of them sound at once.** A four-track holds four tracks along one
-//     length of tape, so a cell has four lanes and they are summed.
+//   - A region is a window into a file. A take sung across four scenes is one
+//     file and four regions at different offsets, so splitting at scene lines
+//     loses no audio.
+//   - Four lanes play at once, like a four-track, and are summed.
 //
-// Built on a worker and never mutated: the audio thread only ever reads, and a
-// new one arrives by being swapped in.
+// Built on a worker and never changed. The audio thread only reads it, and a
+// new one is swapped in.
 namespace acidulous::audio {
 
 /**
- * How long a take may be **and be held in memory**: two minutes.
- *
- * Under this it is decoded into vectors as it always was, which is the simple
- * path and covers a verse, a chorus and nearly every overdub anybody makes.
+ * The longest take that's held in memory: two minutes. Shorter takes are
+ * decoded into vectors.
  */
 constexpr int32_t kResidentSeconds = 120;
 
 /**
- * How long a take may be at all: half an hour, and it is mapped rather than
- * held.
- *
- * The point of an audio track is a voice that runs the length of a song, and a
- * song is longer than five minutes - which is what this used to say. Above
- * [kResidentSeconds] a take is converted once to the engine's own flat format
- * and memory-mapped, so what it costs in RAM is what the song is actually
- * playing rather than the whole of it. See `audio::Mapping`.
+ * The longest take allowed: half an hour. Takes longer than
+ * [kResidentSeconds] are converted once to the engine's flat format and
+ * memory-mapped, so only the part being played uses RAM. See `audio::Mapping`.
  */
 constexpr int32_t kMaxReelSeconds = 1800;
 
-/** How many lanes Bias has. Four, because that is what a four-track is. */
+/** How many lanes Bias has, like a four-track. */
 constexpr int32_t kReelLanes = 4;
 
 /**
- * Float to int16, clamped, with the rounding a converter owes its input.
+ * Float to int16, clamped and rounded.
  *
- * A take can legitimately sit above full scale - the channel strip is what
- * brings it down, which is the same argument the freeze render makes for
- * writing float - so this clamps rather than wrapping, because wrapping is a
- * click and clamping is a loud moment.
+ * A take can go above full scale (the channel strip brings it down), so this
+ * clamps instead of wrapping, which would click.
  */
 inline int16_t toI16(float v) {
     const float x = v < -1.0f ? -1.0f : (v > 1.0f ? 1.0f : v);
@@ -65,31 +51,21 @@ struct Reel {
     /**
      * One decoded file, shared by every region that reads it.
      *
-     * **int16, and mono stays mono**, which is what makes this fit a phone. A
-     * five-minute take is 115 MB as the stereo float everything else here
-     * keeps, and 29 MB this way; three audio tracks over a five-minute song
-     * are 345 MB against 86. A phone microphone's noise floor is far above
-     * sixteen bits and everything downstream of this is float, so what is
-     * given up is nothing anybody can hear and what is bought is the feature
-     * existing on hardware people own.
+     * Stored as int16, and mono stays mono, so a five-minute take is 29 MB
+     * instead of 115 MB as stereo float. A phone mic's noise floor is well
+     * above 16 bits, so nothing audible is lost.
      *
-     * Shared by `shared_ptr` because a take that runs the length of the song
-     * is one file and a dozen regions, and decoding it a dozen times is the
-     * difference between 29 MB and 350.
+     * Shared with `shared_ptr` so a long take split into many regions is
+     * only decoded once.
      */
     struct Source {
         /**
-         * **Read through the pointers, never through the vectors.**
+         * Always read through these pointers, not the storage below. A source
+         * is either decoded into `own` or mapped from a cache file, and `lp`
+         * and `rp` point into whichever one is used.
          *
-         * A source is held one of two ways - decoded into `own` under the
-         * resident ceiling, or mapped from a converted cache file above it -
-         * and the render must not care which. So the two pointers are the
-         * interface and the storage below them is an implementation detail;
-         * `lp` and `rp` are set by whichever of the two filled it.
-         *
-         * Planar, and mono stays mono, which is why the mapped file is planar
-         * too: one layout means one access path, and a mono take is half the
-         * file rather than a duplicated channel.
+         * Planar, with mono kept as one channel. The mapped file uses the
+         * same layout.
          */
         const int16_t *lp = nullptr;
         const int16_t *rp = nullptr;
@@ -120,7 +96,7 @@ struct Reel {
             return true;
         }
 
-        /** Ask the kernel for the frames a cell is about to play. A hint. */
+        /** Hints to the kernel which frames a cell is about to play. */
         void willNeed(int32_t from, int32_t count) const {
             if (!map) return;
             const size_t unit = sizeof(int16_t);
@@ -137,17 +113,15 @@ struct Reel {
         std::shared_ptr<const Source> source;
         int32_t offset = 0;    // frames into the source where this cell starts
         int32_t frames = 0;    // how many of them are this cell's
-        int32_t startTick = 0; // where in the cycle it begins; a punch-in is not nought
+        int32_t startTick = 0; // where in the cycle it begins, non-zero for a punch-in
         int32_t ticks = 0;     // the cycle it was recorded against
         float bpm = 120.0f;    // the tempo it was recorded at
-        bool loop = false;     // wrap within the region rather than falling silent
+        bool loop = false;     // wrap within the region instead of going silent
         /**
-         * How long this take takes to arrive and to go, in frames.
+         * Fade in and out lengths, in frames.
          *
-         * Equal-power, so **one lane fading out under another fading in holds
-         * a steady level** - which is what makes a crossfade between two takes
-         * nothing more than two of these overlapping. A linear pair would dip
-         * three decibels in the middle, and that dip is the sound of an edit.
+         * Equal-power, so two overlapping takes crossfade at a steady level.
+         * A linear fade would dip 3 dB in the middle.
          */
         int32_t fadeIn = 0;
         int32_t fadeOut = 0;
@@ -162,8 +136,7 @@ struct Reel {
             }
             if (g <= 0.0f) return 0.0f;
             if (g >= 1.0f) return 1.0f;
-            // Equal power: sin of a quarter turn, whose square sums to one
-            // against its mirror.
+            // Equal power: the squares of this and its mirror sum to one.
             return std::sin(g * 1.5707963f);
         }
     };
@@ -180,7 +153,7 @@ struct Reel {
 
     std::vector<Cell> cells;
 
-    /** Audio thread: a handful of cells, so a scan beats anything cleverer. */
+    /** Audio thread. Only a handful of cells, so a linear scan is fine. */
     const Cell *find(int64_t sceneId) const {
         if (sceneId == 0) return nullptr;
         for (const Cell &c : cells) {
@@ -191,12 +164,10 @@ struct Reel {
 };
 
 /**
- * A read position that runs free between blocks and is pulled back only when
- * it has drifted audibly.
- *
- * Lifted from `Rack::syncFrozen`, whose note is the reason it is not simply
- * recomputed every block: *"recomputing it from the tick every block would
- * step the read position by a sample or two each time, which clicks."*
+ * A read position that runs free between blocks and only resyncs when it has
+ * drifted more than 256 frames. Recomputing it from the tick every block
+ * would step it by a sample or two each time, which clicks. Same idea as
+ * `Rack::syncFrozen`.
  */
 struct FrameCursor {
     int64_t at = -1;

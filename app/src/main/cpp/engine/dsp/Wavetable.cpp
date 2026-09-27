@@ -9,8 +9,8 @@ namespace {
 
 constexpr int kH = WavetableBank::kMaxHarmonics;
 
-// Harmonic amplitudes per mip: stop where the harmonic would pass Nyquist for
-// the highest fundamental that mip serves.
+// How many harmonics a mip gets: up to Nyquist for the highest fundamental
+// that mip serves.
 int harmonicsForMip(int mip) {
     float top = 40.0f;
     for (int i = 0; i < mip; ++i) top *= 2.0f;
@@ -29,7 +29,7 @@ struct Spectrum {
     float phase[kH + 1]{}; // in turns
 };
 
-// --- The eight recipes. All original; the brief is character, not emulation.
+// --- The eight recipes. All original designs.
 
 // Saw at frame 0, then pulses narrowing from square to a thin spike.
 void sweep(int frame, Spectrum &s) {
@@ -90,8 +90,8 @@ void comb(int frame, Spectrum &s) {
     }
 }
 
-// A sine folded harder and harder. Defined in time and analysed, because a
-// fold is a shape, not a spectrum.
+// A sine folded harder and harder. Drawn as a waveform and then analysed into
+// harmonics.
 void fold(int frame, Spectrum &s) {
     const float gain = 1.0f + static_cast<float>(frame) * 0.9f;
     float shape[WavetableBank::kSize];
@@ -160,10 +160,9 @@ WavetableBank::WavetableBank() {
                 float *out = const_cast<float *>(row(t, f, m));
                 for (int n = 1; n <= top; ++n) {
                     if (spec.amp[n] <= 1e-6f) continue;
-                    // Rotate a phasor rather than calling sin() per sample: the
-                    // whole bank is 53 million harmonic samples, and a
-                    // multiply-add each is the difference between half a
-                    // second and a tenth of one.
+                    // Rotate a phasor instead of calling sin() per sample. The
+                    // bank has 53 million harmonic samples, so this cuts the
+                    // build from about half a second to a tenth.
                     const double a = spec.amp[n];
                     const double step = 2.0 * 3.14159265358979 * static_cast<double>(n) / static_cast<double>(kSize);
                     const double cs = std::cos(step), sn = std::sin(step);
@@ -189,7 +188,7 @@ WavetableBank::WavetableBank() {
 }
 
 const WavetableBank &WavetableBank::instance() {
-    static const WavetableBank bank; // thread-safe init; mount thread pays the cost
+    static const WavetableBank bank; // thread-safe init, built on the mount thread
     return bank;
 }
 

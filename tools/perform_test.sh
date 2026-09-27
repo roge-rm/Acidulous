@@ -1,5 +1,5 @@
 #!/bin/bash
-# The held effects on the master, sample by sample. See tools/perform_test.cpp.
+# Checks the held effects on the master, sample by sample. See tools/perform_test.cpp.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DIR=$(mktemp -d)

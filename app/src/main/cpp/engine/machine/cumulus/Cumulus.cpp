@@ -6,10 +6,9 @@
 
 namespace acidulous::machine {
 
-// What this machine's signal reaches before its drive stage, and so the level
-// that stage should treat as nominal. Measured, not guessed: after volume; peak -8.0 dB.
-// A nominal above what the signal reaches puts the whole sound on the steep
-// part of the curve, where the knob is a volume control again.
+// The level the signal reaches before the drive stage, used as its nominal
+// level. Measured after volume, peak -8.0 dB. Set it too high and the drive
+// knob acts like a volume knob.
 constexpr float kNominal = 0.12f;
 
 using cumulus::CloudSet;
@@ -78,7 +77,7 @@ const ParamDef *Cumulus::paramDefs(int32_t &count) const {
         {"lfo2cutoff", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"lfo2pan", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"drive", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"volume", 0.0f, 1.5f, 1.07f, Curve::Linear, 0, ""}, // Init lands on the house line
+        {"volume", 0.0f, 1.5f, 1.07f, Curve::Linear, 0, ""}, // puts Init at the standard level
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"glide", 0.0f, 2.0f, 0.0f, Curve::Linear, 0, "s"},
         {"bendrange", 0.0f, 24.0f, 2.0f, Curve::Stepped, 25, ""},
@@ -100,8 +99,8 @@ cumulus::CloudSpec Cumulus::spec(const float *norm01, int32_t count) const {
     const ParamDef *defs = paramDefs(n);
     auto at = [&](int32_t p) {
         const bool given = norm01 != nullptr && p < count && !std::isnan(norm01[p]);
-        // The target value, never the smoothed one: a smoother that has not
-        // arrived yet would build last second's spectrum.
+        // The target value, not the smoothed one, or the build could use an
+        // old value.
         return defs[p].map(given ? norm01[p] : params_.normalized(p));
     };
     cumulus::CloudSpec s;
@@ -146,10 +145,8 @@ void Cumulus::reset() {
     }
     lfo[0].reset(0.0f);
     lfo[1].reset(0.25f);
-    // Where each copy starts reading and how it drifts both come from this,
-    // and it was never put back: with a cloud mounted, every export of a
-    // song with a pad in it scattered its reads differently. The harness
-    // never saw it because it plays Cumulus with no cloud.
+    // Reset the rng, since it sets where each reader starts and how it
+    // drifts. Otherwise two exports of the same song would differ.
     rng = kRngSeed;
     ageCounter = 0;
     for (auto &v : voices) v.age = 0;
@@ -157,7 +154,7 @@ void Cumulus::reset() {
 
 void *Cumulus::swapObject(int32_t slot, void *object) {
     if (slot != 0) return object;
-    // Voices read straight out of the old tables, so they stop with them.
+    // Voices read directly from the old tables, so they stop with them.
     for (auto &v : voices) {
         v.used = v.gate = false;
         v.amp.kill();
@@ -208,9 +205,9 @@ void Cumulus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         const float offset = unison == 1 ? 0.0f : (static_cast<float>(i) / (unison - 1) * 2.0f - 1.0f);
         r.rateMul = std::pow(2.0f, offset * detune / 1200.0f);
         r.pan = i < unison ? offset * spreadWidth : 0.0f;
-        // Scatter: where in the cloud this copy starts. The table is over a
-        // second long, so two voices starting in different places are two
-        // different chorusing textures, not the same one twice.
+        // Scatter: where in the cloud this reader starts. The table is over a
+        // second long, so different start points sound like different
+        // textures.
         r.pos = scatter > 0.0001f ? nextRandom() * scatter * static_cast<float>(size) : 0.0f;
         r.drift = 0.0f;
         r.driftTarget = nextRandom() * 2.0f - 1.0f;
@@ -257,9 +254,9 @@ float Cumulus::readTable(const CloudTable &t, float pos) const {
     const int32_t i = static_cast<int32_t>(pos);
     const float f = pos - static_cast<float>(i);
     const float *d = t.data.data();
-    // Linear, not cubic: at these table lengths a voice reads roughly one
-    // sample per sample, where the error is inaudible, and the saving buys
-    // four more voices.
+    // Linear interpolation. At these table lengths a voice reads about one
+    // sample per sample, so the error is inaudible, and it's much cheaper
+    // than cubic.
     return d[i] + (d[i + 1] - d[i]) * f;
 }
 
@@ -305,7 +302,7 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
     const int32_t unison = std::clamp(steppedOf(Spread), 1, kUnison);
     const float unisonNorm = 1.0f / std::sqrt(static_cast<float>(unison));
 
-    // LFOs, once a block: one on the morph, one on the filter and pan.
+    // LFOs, once a block. One for the morph, one for the filter and pan.
     const float sync1 = steppedOf(Lfo1Sync) != 0 ? bpm / 60.0f : 1.0f;
     lfoValue[0] = lfo[0].advance(steppedOf(Lfo1Wave), paramOf(Lfo1Rate) * sync1, dt * frames, 0.0f, false);
     const float sync2 = steppedOf(Lfo2Sync) != 0 ? bpm / 60.0f : 1.0f;
@@ -322,16 +319,15 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
         v.amp.set(0.0f, ampA, ampD, ampS, ampR, false);
         v.fenv.set(0.0f, fA, fD, fS, fR, false);
 
-        // A finger's own, if it sent any: slide walks the morph, pressure
-        // opens the filter and lifts the level.
+        // Per-note MPE, if sent: slide moves the morph, pressure opens the
+        // filter and raises the level.
         const float slide = (v.timbre >= 0.0f ? v.timbre : 0.0f) * paramOf(MpeTimbre);
         const float prs = glidePressure(v.prsGlide, v.pressure, pressure) * paramOf(MpePressure);
 
         const CloudTable *frames4 = cloud->tables[v.zone];
         const int32_t size = frames4[0].size;
-        // Where this voice sits in the morph: the knob, the LFO, and a
-        // keyboard tilt so the top of the keyboard can be a different cloud
-        // from the bottom.
+        // This voice's morph position: the knob, the LFO, and key tracking so
+        // the top of the keyboard can use a different cloud from the bottom.
         const float m = std::clamp(morphBase + morphKey * (v.key01 - 0.5f) * 2.0f + slide, 0.0f, 1.0f) *
                         static_cast<float>(CloudSet::kFrames - 1);
         const int f0 = std::min(static_cast<int>(m), CloudSet::kFrames - 1);
@@ -369,15 +365,12 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
             float l = 0.0f, r = 0.0f;
             for (int u = 0; u < unison; ++u) {
                 Reader &rd = v.readers[u];
-                // Drift: a slow walk toward a new random detune. What makes
-                // a table that never changes sound like it is breathing.
+                // Drift: a slow walk toward a new random detune, so the static
+                // table sounds alive.
                 //
-                // **On a sixteen-sample stride**, as Trinity's pitch and the
-                // filters' coefficients are. The walk moves by `driftRate * dt`
-                // a sample - seconds to cross a few cents - and it was paying
-                // for a `pow` per reader, per voice, per sample to find out.
-                // The coefficient carries the stride so the walk takes the
-                // same time it did.
+                // Updated every 16 samples to save a pow per reader per
+                // sample. The coefficient includes the stride so the walk
+                // takes the same time.
                 if ((i & 15) == 0) {
                     rd.drift += (rd.driftTarget * driftCents - rd.drift) * driftRate * dt * 96.0f;
                     if (std::fabs(rd.driftTarget * driftCents - rd.drift) < 0.05f) rd.driftTarget = nextRandom() * 2.0f - 1.0f;
@@ -388,8 +381,8 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
                 float p = rd.pos;
                 float pr = p + widthOffset;
                 if (pr >= static_cast<float>(size)) pr -= static_cast<float>(size);
-                // Parked on a frame - which is where the morph sits most of
-                // the time - is one table read instead of two.
+                // When the morph sits exactly on a frame (most of the time),
+                // only one table is read.
                 float sl, sr2;
                 if (mf < 0.0005f) {
                     sl = readTable(ta, p);
@@ -431,9 +424,8 @@ bool Cumulus::render(float *L, float *R, int32_t frames) {
         float l = L[i] * volume, r = R[i] * volume;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 8.0f;
-            // Normalised on the nominal level. `/ sqrt(k)` boosts a quiet
-            // signal by up to ten decibels and holds a loud one ten below,
-            // so the knob moved the level rather than the character.
+            // Normalised on the nominal level so the drive knob changes the
+            // character and not the level.
             const float norm = kNominal / dsp::fastTanh(kNominal * k);
             l = dsp::fastTanh(l * k) * norm;
             r = dsp::fastTanh(r * k) * norm;

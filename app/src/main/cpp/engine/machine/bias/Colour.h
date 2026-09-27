@@ -5,30 +5,20 @@
 #include <engine/dsp/DelayLine.h>
 #include <engine/dsp/Math.h>
 
-// What a recording medium does to a sound, and never to the recording.
+// The sound of a recording medium (tape, lo-fi digital), applied to Bias's
+// output. The recordings on disk are never changed. Freeze can print it.
 //
-// **Bias is the high-frequency signal a tape machine mixes into the record
-// head**, and setting it is exactly how you choose between a clean transfer
-// and a compressed, rolled-off, saturated one. A machine of that name whose
-// patches are recording media is the thing the name already promised.
+// One medium per machine, not per lane, like one tape in a four-track. Bleed
+// is the exception and is taken between lanes before they're summed (in
+// Bias.cpp).
 //
-// It colours the *output*: a patch is a way of listening, so it is free,
-// reversible and comparable, and the files on disk never change. Printing it
-// is a separate act, and one that already exists - the freeze render.
-//
-// **One medium per machine, not per lane.** A four-track has one transport and
-// one set of heads; the tape is the tape. Two media means two Bias tracks.
-// Crosstalk is the exception and is taken between the lanes before they sum,
-// because bleed is what adjacent tracks on one tape do to each other.
-//
-// Four traps this tree already knows about, and each is answered in place
-// below: noise must be deterministic or two exports differ; saturation must
-// normalise on the level the signal reaches rather than full scale; per-block
-// values applied per sample click; and a fractional read that wraps belongs to
-// `dsp::wrappedReadIndex`.
+// Things to keep right here: noise must be deterministic or two exports
+// differ, saturation is scaled on the nominal level and not full scale,
+// per-block values applied per sample must be interpolated or they click,
+// and wrapped fractional reads go through `dsp::wrappedReadIndex`.
 namespace acidulous::machine::bias {
 
-/** The whole medium, as numbers. Every one of these is a parameter. */
+/** The medium settings. Each one is a parameter. */
 struct ColourSpec {
     float hiss = 0.0f;      // 0..1, the noise floor
     float hissTone = 0.5f;  // 0 dark, 1 bright
@@ -46,23 +36,22 @@ struct ColourSpec {
     float rate = 1.0f;      // sample-and-hold ratio, 1 is off
     float smear = 0.0f;     // codec diffusion
     float width = 1.0f;     // 0 mono, 1 as recorded, >1 wider
-    bool any = false;       // nothing at all to do, and the check is one bool
+    bool any = false;       // false when there's nothing to do
 };
 
 /**
- * One medium's worth of processing, stereo.
+ * The medium's processing, stereo.
  *
- * `prepare` allocates; nothing after it does. `reset` puts it back exactly as
- * `prepare` left it, **including the noise generator's seed** - two exports of
- * one song have to match sample for sample, and a noise floor seeded from
- * anything that moves is the one way to break that silently.
+ * Only `prepare` allocates. `reset` puts it back exactly as `prepare` left
+ * it, including the noise seed, so two exports of a song match sample for
+ * sample.
  */
 class Colour {
   public:
     void prepare(float sampleRate) {
         sr = sampleRate;
-        // 60 ms is far more than any wobble asks for, and leaves room for the
-        // smear to read behind the wobble without either running into the other.
+        // 60 ms is more than any wobble needs, and leaves room for the smear
+        // to read behind the wobble without overlapping.
         wobbleL.prepare(static_cast<int32_t>(sr * 0.06f));
         wobbleR.prepare(static_cast<int32_t>(sr * 0.06f));
         reset();
@@ -78,7 +67,7 @@ class Colour {
         smearR.reset();
         hissL.reset();
         hissR.reset();
-        // The seed, and everything derived from it. See the note above.
+        // The seed and everything derived from it. See the note above.
         noise = kSeed;
         wowPhase = 0.0f;
         flutterPhase = 0.25f;
@@ -92,20 +81,16 @@ class Colour {
     }
 
     /**
-     * Coefficients once a block, values per sample.
-     *
-     * A filter recalculated per sample would cost more than the rest of this
-     * put together and change nothing anybody can hear; a *gain* held for a
-     * block and stepped is the onset-click fault class. So the split is:
-     * anything that is a coefficient is set here when it has actually moved,
-     * anything that multiplies a sample is interpolated in [process].
+     * Coefficients are set here once a block, only when they've moved.
+     * Anything that multiplies a sample is interpolated in [process]
+     * instead, since stepping a gain once a block clicks.
      */
     void setBlock(const ColourSpec &s) {
         spec = s;
         if (std::fabs(s.highCut - cutNow) > 0.5f || std::fabs(s.lowCut - lowNow) > 0.5f) {
             cutNow = s.highCut;
             lowNow = s.lowCut;
-            // Two poles each way: one is not a medium, it is a tone control.
+            // Two poles each way. One pole would sound like a tone control.
             band[0].lowpass(s.highCut, 0.707f, sr);
             band[1].lowpass(s.highCut, 0.707f, sr);
             band[2].peak(s.lowCut, 0.0f, 0.707f, sr); // placeholder, set below
@@ -146,8 +131,8 @@ class Colour {
             float l = L[i];
             float r = R[i];
 
-            // --- Wow and flutter: a modulated delay, read through the one
-            // wrap in the app that is known to be right.
+            // --- Wow and flutter: a modulated delay, read with
+            // dsp::wrappedReadIndex.
             if (wowDepth > 0.0f || flutDepth > 0.0f) {
                 wowPhase += wowRate / sr;
                 flutterPhase += flutRate / sr;
@@ -157,14 +142,13 @@ class Colour {
                                   std::sin(dsp::kTwoPi * flutterPhase) * flutDepth;
                 wobbleL.write(l);
                 wobbleR.write(r);
-                // The two channels read a hair apart, because a tape's two
-                // tracks do not wobble in lockstep and one that does sounds
-                // like an effect rather than a transport.
+                // The two channels read slightly apart, since a tape's tracks
+                // don't wobble in lockstep.
                 l = wobbleL.read(base + mod);
                 r = wobbleR.read(base - mod * 0.85f);
             }
 
-            // --- The band, which is most of what tells a telephone from a reel.
+            // --- The frequency band, the biggest difference between media.
             l = band[2].process(band[0].process(l));
             r = band[3].process(band[1].process(r));
 
@@ -174,8 +158,8 @@ class Colour {
                 r = bumpR.process(r);
             }
 
-            // --- The medium's own compression, one envelope for both ears so
-            // it never pulls the image about.
+            // --- Compression, with one envelope for both channels so the
+            // stereo image doesn't shift.
             if (spec.comp > 0.0f) {
                 const float peak = std::fmax(std::fabs(l), std::fabs(r));
                 const float coeff = peak > env ? attack : release;
@@ -188,11 +172,9 @@ class Colour {
                 }
             }
 
-            // --- Saturation, **against the level the signal reaches**.
-            //
-            // Scaled on kNominal rather than on full scale: against full scale
-            // a quiet take stays clean and a loud one is destroyed by the same
-            // setting, which is a drive control that does not work.
+            // --- Saturation, scaled on kNominal instead of full scale.
+            // Otherwise the same setting leaves quiet takes clean and wrecks
+            // loud ones.
             if (spec.sat > 0.0f) {
                 const float drive = 1.0f + spec.sat * 8.0f;
                 const float norm = 1.0f / std::tanh(drive);
@@ -200,11 +182,11 @@ class Colour {
                 r = std::tanh(r * drive / kNominal) * norm * kNominal;
             }
 
-            // --- Dropouts: the tape lifting off the head for a moment.
+            // --- Dropouts, like tape lifting off the head for a moment.
             if (spec.drop > 0.0f) {
                 if (dropCountdown <= 0) {
-                    // A Poisson-ish gap, so they do not arrive in step with
-                    // anything in the music.
+                    // Roughly Poisson timing, so they don't line up with the
+                    // music.
                     const float rate = 0.05f + spec.drop * 3.0f; // per second
                     dropCountdown = static_cast<int32_t>((0.2f + random()) * sr / rate);
                     dropDepth = 1.0f;
@@ -235,23 +217,22 @@ class Colour {
                 r = holdR;
             }
 
-            // --- Codec smear: a short diffusion that thickens a transient
-            // rather than sharpening it. Named for what it does; nothing here
-            // claims to be a codec.
+            // --- Smear: a short diffusion that softens transients, a bit
+            // like a lossy codec.
             if (spec.smear > 0.0f) {
                 l += (smearL.process(l) - l) * spec.smear;
                 r += (smearR.process(r) - r) * spec.smear;
             }
 
-            // --- Hiss, deterministic, and under the band it belongs to.
+            // --- Hiss. Deterministic, and added after the band filter.
             if (spec.hiss > 0.0f) {
                 const float a = spec.hiss * spec.hiss * 0.05f;
                 l += hissL.process(random2()) * a;
                 r += hissR.process(random2()) * a;
             }
 
-            // --- Width: the same control heard twice, as azimuth error on a
-            // tape and as joint stereo on a codec.
+            // --- Width, like azimuth error on tape or joint stereo on a
+            // codec.
             if (std::fabs(spec.width - 1.0f) > 0.001f) {
                 const float m = (l + r) * 0.5f;
                 const float s = (l - r) * 0.5f * spec.width;
@@ -265,13 +246,13 @@ class Colour {
     }
 
   private:
-    /** Nought dB on this desk: what a mixed signal actually reaches. */
+    /** The nominal level a mixed signal reaches, used as 0 dB here. */
     static constexpr float kNominal = 0.3f;
     static constexpr uint32_t kSeed = 0x1f35c0deu;
 
     void highPass(dsp::Biquad &b, float hz) {
-        // A high shelf cutting everything below, which is what a transport's
-        // low end loss is: not a corner, a slope that keeps going.
+        // A low shelf cutting everything below, since tape's low end loss is
+        // a slope that keeps going and not a sharp corner.
         b.lowShelf(dsp::clampf(hz, 20.0f, sr * 0.45f), -24.0f, sr);
     }
 

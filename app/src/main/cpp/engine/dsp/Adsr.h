@@ -3,9 +3,8 @@
 #include "Math.h"
 
 // Delay / attack / decay / sustain / release, with an optional repeat that
-// loops back to the delay instead of holding. Per sample; exponential
-// segments with a small overshoot, which is what makes them sound analogue
-// rather than mathematical.
+// loops back to the delay instead of holding. Runs per sample, with
+// exponential segments that overshoot a little so they sound analogue.
 namespace acidulous::dsp {
 
 class Adsr {
@@ -25,23 +24,16 @@ class Adsr {
     void release() { if (stage != Stage::Idle) stage = Stage::Release; }
     void kill() { stage = Stage::Idle; level = 0.0f; }
     /**
-     * Finish a release that is already under way, over [seconds].
-     *
-     * The curve carries on from wherever it is, only faster, so a tail that
-     * has to go is faded rather than cut - `kill()` would be a click. Only the
-     * release coefficient moves; the next `set()` puts it back.
+     * Speeds up a release that's already running so it finishes in about
+     * [seconds]. Fades the tail instead of clicking like `kill()`. Only the
+     * release coefficient changes, and the next `set()` restores it.
      */
     void hasten(float seconds) {
         if (stage == Stage::Release) rCoeff = onePoleCoeff(seconds * 0.35f, sampleRate);
     }
     /**
-     * Back to new, for a panic.
-     *
-     * kill() silences the envelope but leaves its coefficients, its sustain
-     * and its delay counter where the last patch put them, which is right
-     * for a note-off and wrong for a reset: a render would start with the
-     * shape of whatever was playing before it. The sample rate survives
-     * because prepare() set it, not a patch.
+     * Resets everything for a panic, unlike kill() which keeps the last
+     * patch's settings. The sample rate is kept since prepare() set it.
      */
     void reset() {
         const float sr = sampleRate;

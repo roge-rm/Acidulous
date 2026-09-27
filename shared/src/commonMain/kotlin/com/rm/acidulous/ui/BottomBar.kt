@@ -56,95 +56,68 @@ import com.rm.acidulous.res.*
 /**
  * The bar along the bottom of a screen, and the pills in it.
  *
- * Both screens have one and they used to be written separately, which is
- * exactly how they drifted: the arranger put play at the far left and its
- * readout *below* the buttons, the editor put play seventh of nine and had
- * no bar behind it at all. Opening a clip therefore moved the two controls
- * you reach for without looking to the other end of the phone.
+ * The layout lives here rather than on each screen, so every screen's bar
+ * looks the same and the controls you reach for without looking stay in the
+ * same place. A screen says what goes in the row, not how tall it is, what's
+ * behind it or where it sits.
  *
- * So the arrangement lives here rather than at either call site. A screen
- * says what goes in the row; it does not get to say how tall it is, what is
- * behind it, or where it sits.
- *
- * The grammar every row follows:
+ * Every row follows this layout:
  *
  *     [ leading ] [ ....... middle, weighted ....... ] [ mix ] [ rec ] [ play ]
  *
  * The three on the right are the same controls in the same order on every
- * screen, at their natural width - which for a one-glyph pill is
- * ButtonDefaults.MinWidth - so they land in the same place without either
- * screen knowing a number. Play is last because the corner is the easiest
- * target on a phone held one-handed, and rec sits inboard of it where a
- * thumb reaching for the edge cannot catch it.
+ * screen, at a fixed width, so they land in the same place. Play is last
+ * because the corner is the easiest target one-handed, and rec is just
+ * inside it where a thumb reaching for the edge won't hit it.
  *
- * Everything in between takes weight(1f). That is not only for looks: a row
- * of natural-width pills can be asked for more width than the screen has,
- * and when that happened the last child measured silently came out narrower
- * than the rest. A weighted middle cannot over-fill.
+ * Everything in between is weighted, so the middle can't overfill the row
+ * and squash the last pills.
  */
 
 /**
  * How wide an anchored pill is, on every screen.
  *
- * Material's own minimum is 58dp, and five anchors at that is 291dp of a
- * phone's 377 - which leaves the arranger's loop button four. So the anchors
- * state their own width instead. Forty-four is now a target size rather than
- * a label size: every anchor carries one glyph, so what sets the floor is
- * the finger and not the text.
+ * Material's minimum is 58dp, and five anchors at that leave almost nothing
+ * on a phone, so the anchors set their own width. Every anchor holds one
+ * glyph, so the width is set by finger size rather than text.
  *
- * It is one number because that is the whole point - the same five controls
- * end every row in the app at the same size and in the same order, packed
- * against the right edge, so the one you want is where you left it whichever
- * screen you are on. Undo and redo lead that group rather than standing
- * apart from it: what they undo is whatever this screen edits, which makes
- * them as much a part of the row's right-hand end as stop is.
+ * It's one number so the same controls end every row at the same size and in
+ * the same order, packed against the right edge. Undo and redo lead that
+ * group, since they undo whatever the current screen edits.
  */
 val BarAnchor = 44.dp
 
 /**
- * A pill carrying a word rather than a glyph.
+ * A pill that shows a word rather than a glyph.
  *
- * Wide enough for the longest label it will ever show and no wider - the
- * arranger's loop button says "⟳ song" and "⟳ scene" and the wider of those
- * measures 56.5dp with its padding. It used to take a weighted share, which
- * meant it swallowed every spare dp on the screen and came out two hundred
- * wide on a large phone, dwarfing everything beside it.
+ * Wide enough for its longest label and no wider: the arranger's loop button
+ * says "⟳ song" or "⟳ scene", and the wider one measures 56.5dp with padding.
  *
- * Fixed, so the row now has a minimum: everything in it is a stated width,
- * and below a screen of about 382dp the weighted spacer that holds the
- * transport to the right edge runs out. That is narrower than any phone this
- * has been built for, but it is the number to check if one turns up.
+ * Because it's fixed, the row has a minimum width. Below about 382dp the
+ * weighted spacer that holds the transport to the right runs out, so check
+ * this if a narrower phone turns up.
  */
 val BarWord = 58.dp
 /**
  * What a screen lays its controls out with, whichever way the bar runs.
  *
- * The bar is a row on a phone held upright and a column against the right
- * edge when it is turned, and **the screen should not have to know which**.
- * That was already half true: this file's own note says a screen says what
- * goes in the row and does not get to say how tall it is or where it sits.
- * It was only half true because the content lambda had a `RowScope`, so
- * every call site wrote `Modifier.width(BarAnchor)` and `Modifier.weight(1f)`
- * - two statements about the axis, in the one place that is not supposed to
- * have an opinion about it. The editor's footer had grown three `if
- * (landscape)` branches saying so.
- *
- * Now a pill asks for what it *is* - anchored, a word wide, or sharing what
- * is left - and the bar turns it into the right axis.
+ * The bar is a row on an upright phone and a column on the right edge when
+ * it's turned, and the screen shouldn't need to know which. So a pill asks
+ * for what it is (anchored, a word wide, or sharing what's left) and the bar
+ * turns that into the right axis.
  */
 @Stable
 class BarScope internal constructor(
     /** True when the bar runs down the screen. Rarely needed; glyphs use it. */
     val vertical: Boolean,
     /**
-     * False when the row is too narrow to spell things out, and a pill that
-     * carries a word should show its glyph alone.
+     * False when the row is too narrow to spell things out, so a pill with a
+     * word shows its glyph alone.
      *
-     * The row has a minimum - everything in it is a stated width - and an
-     * interface scale walks it into that minimum on any phone: at 1.3 a Pixel
-     * 5 lays out in 302 dp and the arranger's row wants 318. A word is the
-     * cheapest thing in it to give up, so this is asked first and the row only
-     * shrinks for whatever is still missing. See [BottomBar].
+     * Everything in the row has a fixed width, so a larger interface scale can
+     * push it below its minimum (at 1.3 a Pixel 5 has 302dp and the arranger's
+     * row wants 318). Words are the cheapest thing to drop, so they go first
+     * and the row only shrinks for whatever is still missing. See [BottomBar].
      */
     val words: Boolean = true,
     private val weigh: (Modifier, Float) -> Modifier,
@@ -153,44 +126,32 @@ class BarScope internal constructor(
     /**
      * A pill that shares what the fixed ones leave.
      *
-     * **Not the same thing as [barSpace], though both are a weight.** A pill
-     * sharing the slack still *wants* an anchor's width, and the row's fitting
-     * has to know that or it hands the three view toggles whatever is left
-     * after the transport has taken its five - which at a large interface scale
-     * is a few dp each, and reads as three slivers where three buttons were.
+     * Different from [barSpace] even though both are weights. A pill sharing
+     * the slack still wants an anchor's width, and the row's fitting has to
+     * know that, or at a large interface scale the view toggles end up as
+     * slivers.
      */
     fun Modifier.barWeight(weight: Float = 1f): Modifier = weigh(this, weight)
 
     /**
-     * The slack between the two ends of the row, which may be nothing at all.
+     * The slack between the two ends of the row, which may be nothing.
      *
-     * What holds the transport against the right edge. Unlike [barWeight] it
-     * is not a control and wants no width of its own, so the row is allowed to
-     * take all of it back before it starts making anything smaller.
+     * Holds the transport against the right edge. Unlike [barWeight] it isn't
+     * a control and needs no width, so the row can use all of it before it
+     * starts shrinking anything.
      */
     fun Modifier.barSpace(weight: Float = 1f): Modifier = space(this, weight)
 
     /**
-     * The anchored size, across the bar's own axis.
-     *
-     * **Sideways it is a share rather than a stated height.** Anchoring is a
-     * portrait rule: upright the bar is the width of the phone and there is
-     * room for every pill at 44 dp with space to spare. Turned, the column
-     * has whatever is left above the keyboard - about 270 dp on a phone - and
-     * eight pills at 44 dp is 380. Stating the height there does not make
-     * them 44 dp, it makes the last three fall off the bottom.
-     *
-     * So they share it, which is what the 300 dp landscape row did before
-     * this and for the same reason. A pill comes out about 34 dp tall and the
-     * full width of the column, which is the same target area the row gave
-     * it at 37 dp wide.
+     * The anchored size across the bar's axis. When the bar runs down the
+     * screen the pill also gets [BarPillH] as its height.
      */
     val anchor: Modifier
         get() = if (vertical) Modifier.width(BarAnchor).height(BarPillH) else Modifier.width(BarAnchor)
 
     /**
-     * Wide enough for a word - see [BarWord] - or an anchor's width when
-     * [words] says there is no room for one.
+     * Wide enough for a word (see [BarWord]), or an anchor's width when
+     * [words] says there's no room.
      */
     val word: Modifier
         get() {
@@ -202,26 +163,18 @@ class BarScope internal constructor(
 /**
  * How tall a pill is when the bar runs down the screen.
  *
- * **Portrait's proportions, not a share of the column.** The first turned bar
- * gave every pill a weighted share of the height, which is how eight of them
- * fitted two hundred and seventy dp - and it made each one forty-six by
- * thirty, a flat oval where upright it is a forty-four by forty rounded
- * rectangle with room for the word "fx" in it. Dan, looking at the two side
- * by side: the portrait elements had not been faithfully ported.
- *
- * So a pill is the shape it is upright, and the *column* gives way instead:
- * see [BottomBar], which takes another column of pills when they do not all
- * fit down one. Forty rather than forty-four because that is what Material's
- * own button measures upright, which is what the portrait row actually shows.
+ * Pills keep their upright shape instead of sharing the column's height,
+ * which would squash them into flat ovals. If they don't all fit, [BottomBar]
+ * adds another column. 40 because that's the height of Material's button
+ * upright.
  */
 val BarPillH = 40.dp
 
 /**
  * [vertical] runs the bar down the screen instead of across it.
  *
- * The [readout] is **not drawn when vertical**: it is two lines of position
- * and diagnostics, and the column is about as wide as one pill. A screen that
- * wants it sideways places it itself, where there is width for it.
+ * The [readout] isn't drawn when vertical, since the column is only about one
+ * pill wide. A screen that wants it sideways places it somewhere else.
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -229,18 +182,16 @@ fun BottomBar(
     modifier: Modifier = Modifier,
     vertical: Boolean = false,
     /**
-     * The same pills, standing in somebody else's row.
+     * The same pills inside another row.
      *
-     * Sideways the editor puts its transport in the header beside the clip's
-     * name rather than in a bar of its own - Dan, over a screenshot with an
-     * arrow drawn from the right edge to the top corner: "that's wasted space
-     * in landscape". So: no background, no width taken, no readout, and the
-     * caller owns where it sits. Everything else - which pills, in what
-     * order, at what size - is still this file's, which is the whole point
-     * of the file.
+     * Sideways, the editor puts its transport in the header next to the clip
+     * name instead of in its own bar, to save space. So there's no
+     * background, no width taken and no readout, and the caller decides
+     * where it goes. Which pills, their order and their size still come from
+     * here.
      */
     inline: Boolean = false,
-    /** Lines above the buttons - the arranger's position and diagnostics. */
+    /** Lines above the buttons, like the arranger's position and diagnostics. */
     readout: @Composable ColumnScope.() -> Unit = {},
     content: @Composable BarScope.() -> Unit,
 ) {
@@ -250,29 +201,25 @@ fun BottomBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            // **No weights in here.** A weighted child of a row that was
-            // measured with an unbounded width gets nothing, and "nothing" is
-            // a pill that is not drawn: fx, the view toggle and the draw/select
-            // toggle all vanished from the header, leaving undo onwards. The
-            // header is not a bar across the screen - it is a row as wide as
-            // what is in it - so every pill here is its anchored size.
+            // No weights here. A weighted child of a row measured with
+            // unbounded width gets no space and isn't drawn. The header row is
+            // only as wide as its contents, so every pill gets its anchored
+            // size.
             BarScope(false, true, { m, _ -> m.width(BarAnchor) }).content()
         }
         return
     }
     if (vertical) {
-        // **The pills keep their shape and the column takes another column.**
+        // The pills keep their shape and the bar adds another column.
         //
-        // A `FlowColumn` fills top to bottom and then starts again to the
-        // right, so the reading order down the bar is the reading order along
-        // the row upright, and the last pill - play, always play - lands in
-        // the bottom corner nearest the thumb, which is where the row's own
-        // note says it belongs.
+        // A `FlowColumn` fills top to bottom and then starts a new column to
+        // the right, so the order down the bar matches the order along the
+        // upright row, and play always ends up in the bottom corner nearest
+        // the thumb.
         //
-        // How many fit down one is measured rather than counted, because it
-        // depends on what the keyboard divider was dragged to. `maxItemsInMainAxis`
-        // is the whole mechanism: say how many go in a column and the flow
-        // decides how many columns that needs.
+        // How many fit in a column is measured, because it depends on where
+        // the keyboard divider is. `maxItemsInEachColumn` sets that and the
+        // flow works out how many columns it needs.
         BoxWithConstraints(modifier.fillMaxHeight().background(Acid.colors.bar)) {
             val perColumn = ((maxHeight - 16.dp) / (BarPillH + 4.dp)).toInt().coerceAtLeast(1)
             FlowColumn(
@@ -297,37 +244,28 @@ fun BottomBar(
 }
 
 /**
- * The pill row, at its stated widths if they fit and as close to them as it
- * can get if they do not. **One line, always.**
+ * The pill row, at its set widths if they fit and as close as it can get if
+ * they don't. Always one line.
  *
- * Everything in the row is a stated width, so the row has a minimum, and this
- * file already names it: "below a screen of about 382dp the weighted spacer
- * that holds the transport to the right edge runs out". A 393 dp phone clears
- * that by eleven, which means an interface scale of any size at all puts the
- * row under it - at 1.3 a Pixel 5 lays itself out in 302 dp and the arranger's
- * row wants 318. What over-filling a `Row` looks like is the last children
- * measured - mix, rec and play - walking off the right edge, and what wrapping
- * looks like is the transport on a line of its own. Neither is acceptable for
- * the one row you reach for without looking.
+ * Everything in the row has a fixed width, so the row has a minimum (about
+ * 382dp). A larger interface scale can push any phone below it. An
+ * overfilled `Row` pushes mix, rec and play off the right edge, and wrapping
+ * puts the transport on its own line. Neither is OK for these controls.
  *
  * So it gives things up in order, cheapest first:
  *
- * 1. **The words.** A pill carrying a word is fourteen dp wider than an anchor
- *    and there is only ever one of them in a row, so this is asked first: the
- *    loop pill becomes its glyph alone.
- * 2. **The rest, proportionally.** Whatever is still missing comes off the
- *    whole row at once, by drawing it at a smaller density - so the pills, the
- *    gaps and the glyphs inside them all shrink together and nothing clips.
- *    The bar therefore grows with the interface scale as far as there is room
- *    and then stops growing, rather than breaking.
+ * 1. The words. A word pill is 14dp wider than an anchor and there's only one
+ *    per row, so the loop pill drops to its glyph first.
+ * 2. Everything, proportionally. Whatever is still missing comes off the
+ *    whole row by drawing it at a smaller density, so pills, gaps and glyphs
+ *    all shrink together and nothing clips.
  *
- * **Nothing here binds at 1.0**: every phone this has been built for fits the
- * row with its words, both tests pass in the first pass and the body is the
- * row it has always been.
+ * At a scale of 1.0 every supported phone fits the row with words, so none
+ * of this kicks in.
  *
- * The natural width is taken by measuring with **no width at all**: a weighted
- * child of an unbounded row takes nothing, which is exactly the question being
- * asked - how much do the *fixed* pills need between them.
+ * The natural width is measured with no width constraint at all, since a
+ * weighted child of an unbounded row takes nothing. That gives exactly what
+ * the fixed pills need.
  */
 @Composable
 private fun FittedBarRow(content: @Composable BarScope.() -> Unit) {
@@ -368,12 +306,11 @@ private fun BarPillRow(words: Boolean, content: @Composable BarScope.() -> Unit)
 }
 
 /**
- * The same row, with every pill at the width it wants and the slack at none.
+ * The same row, with every pill at the width it wants and the slack at zero.
  *
- * This is what gets measured to decide whether the row fits: a weighted child
- * of an unbounded row takes nothing, so asking the real row how wide it would
- * like to be answers with the fixed pills alone and says the three view
- * toggles cost nothing. They cost an anchor each, and here they say so.
+ * This is what's measured to see if the row fits. Measuring the real row
+ * unbounded would give the weighted view toggles no width, but they need an
+ * anchor each, and here they get it.
  */
 @Composable
 private fun BarProbeRow(words: Boolean, content: @Composable BarScope.() -> Unit) {
@@ -387,14 +324,12 @@ private fun BarProbeRow(words: Boolean, content: @Composable BarScope.() -> Unit
 }
 
 /**
- * A pill that is *held* rather than pressed.
+ * A pill that's held rather than pressed.
  *
- * The only one in the app, and it exists because fill is the only control
- * whose whole meaning is "while my finger is down". A BarButton fires on
- * release, which for this would mean the fill landed after the bar it was
- * meant for. Built on the same OutlinedButton so it is its neighbours' shape
- * by construction rather than by arithmetic, with the click disabled and the
- * gesture taken directly.
+ * Only used for fill, the only control that means "while my finger is
+ * down". A BarButton fires on release, which would make the fill land late.
+ * Built on the same OutlinedButton so it matches its neighbours, with the
+ * click disabled and the gesture handled directly.
  */
 @Composable
 fun BarHoldButton(
@@ -404,7 +339,7 @@ fun BarHoldButton(
     onHold: (Boolean) -> Unit,
 ) {
     val hold by rememberUpdatedState(onHold)
-    // TalkBack cannot hold a button down, so holding becomes a pair of actions.
+    // TalkBack can't hold a button down, so holding becomes a pair of actions.
     val press = stringResource(Res.string.a11y_fill_start)
     val release = stringResource(Res.string.a11y_fill_stop)
     OutlinedButton(
@@ -415,9 +350,8 @@ fun BarHoldButton(
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false)
                 hold(true)
-                // Cancelled counts as released: a finger that slides off the
-                // pill has stopped asking for a fill, and a fill left on
-                // because of one is a bar nobody can explain.
+                // Cancelled counts as released. A finger that slides off the
+                // pill has stopped asking for a fill.
                 waitForUpOrCancellation()
                 hold(false)
             }
@@ -436,10 +370,9 @@ fun BarHoldButton(
 /**
  * One pill.
  *
- * Four dp of padding rather than Material's twenty-four: a weighted middle
- * share is about sixty dp on a phone, and "⟳ scene" wants fifty-six of it.
- * The label is one line and never wraps - a pill that grew a second line
- * would take the row's height with it.
+ * 4dp of padding rather than Material's 24, since a weighted middle share is
+ * about 60dp on a phone and "⟳ scene" needs 56 of it. The label is one line
+ * and never wraps, or the pill would make the row taller.
  */
 @Composable
 fun BarButton(
@@ -448,34 +381,28 @@ fun BarButton(
     /** Unspecified keeps the button's own content colour. */
     colour: Color = Color.Unspecified,
     /**
-     * Colours the outline instead of the label, for a state that is about
-     * the button rather than about what it says. Arming the transport is
-     * one: a red ring round the whole pill carries further than a red glyph
-     * inside it, and it leaves the glyph free to go on saying which state
-     * you are in rather than doubling as the alarm.
+     * Colours the outline instead of the label, for a state that's about the
+     * button rather than its label. Arming the transport uses it: a red ring
+     * round the pill stands out more than a red glyph, and the glyph can keep
+     * showing which state you're in.
      */
     border: Color? = null,
     enabled: Boolean = true,
     fontFamily: FontFamily? = null,
     /**
-     * A second gesture on the same pill, and the reason it lives here rather
-     * than as a `Modifier.onLongPress` at the call site.
-     *
-     * Two detectors on one button both fire: the modifier's long press ran,
-     * and then the button's own `onClick` ran on release as well - so holding
-     * the record pill for the metronome *also armed the transport*, every
-     * time. It was invisible until the click got an indicator of its own, and
-     * it is exactly why "record on" and "record and click on" were hard to
-     * tell apart. One detector owning both gestures cannot do that.
+     * A long press on the same pill. It's handled here rather than with a
+     * `Modifier.onLongPress` at the call site, because two detectors on one
+     * button both fire: holding the record pill for the metronome would also
+     * arm the transport on release. One detector owning both avoids that.
      */
     onLongPress: (() -> Unit)? = null,
-    /** What TalkBack calls it, where [label] is a glyph. */
+    /** What TalkBack calls it, when [label] is a glyph. */
     description: String? = null,
-    /** What it is set to, for TalkBack. */
+    /** Its current state, for TalkBack. */
     state: String? = null,
     /** What a hold does, named for TalkBack's actions menu. */
     holdName: String? = null,
-    /** Actions a hold elsewhere does - a `Modifier.onLongPress` at the call site. */
+    /** Actions for a hold handled elsewhere, like a `Modifier.onLongPress` at the call site. */
     actions: List<androidx.compose.ui.semantics.CustomAccessibilityAction> = emptyList(),
     onClick: () -> Unit,
 ) {
@@ -494,9 +421,8 @@ fun BarButton(
         onClick = { if (suppressClick) suppressClick = false else onClick() },
         enabled = enabled,
         contentPadding = PaddingValues(horizontal = 4.dp),
-        // Falling back to Material's own outline, not to null: null means
-        // *no* border, and passing it quietly stripped the outline from every
-        // pill in the app the day this parameter was added.
+        // Fall back to Material's outline, not null. Null means no border
+        // at all and would strip the outline from every pill.
         border = border?.let { BorderStroke(1.dp, it) } ?: ButtonDefaults.outlinedButtonBorder,
     ) {
         Text(label, color = colour, fontSize = 12.sp, fontFamily = fontFamily, maxLines = 1)
@@ -513,40 +439,25 @@ fun BarReadout(text: String, colour: Color, size: Int = 12) {
 }
 
 /**
- * Stop everything, and mean it.
+ * Stops everything.
  *
- * **There is no longer a button for this.** There was: a pill on the
- * arranger's bar with the load meter drawn behind the word, on the argument
- * that the thing filling up is the thing you would press. That argument held
- * while panic was a pill on a bar, and stopped holding the moment the
- * transport moved into the header - Dan, looking at it up there, "it looks
- * out of place on the top", and then the better question, why is it a button
- * at all. So the meter went to every header on its own (`ui/LoadMeter.kt`)
- * and this became a long press on play/stop: the control your thumb is
- * already on when something goes wrong, in the same corner of every screen.
+ * There's no button for this on the bar. It's a long press on play/stop, the
+ * control your thumb is already on when something goes wrong, in the same
+ * corner of every screen. The load meter is in each header on its own
+ * (`ui/LoadMeter.kt`). It's also in the About window, on a keyboard
+ * shortcut, on the Launchpad, and on `Action.Panic` from a mapped controller.
  *
- * The two calls belong together and must not drift apart. Panic means nothing
- * is held any more, so a hub that still believes a note is down will never
- * send its note-off - and a synth on the other end of a cable would hold that
- * note until something else happened to it.
- *
- * Four callers now: the two play pills, the arranger's file menu, and
- * `Action.Panic` from a mapped controller, which is the real escape hatch for
- * anybody performing and is unaffected by any of the above.
+ * The calls below belong together. After a panic nothing is held, so the
+ * MIDI hub's list of sounding notes is cleared too. A hub that still thinks
+ * a note is down would never send its note-off, and a synth on the other end
+ * of a cable would hold it.
  */
 fun panicEverything() {
-    // **And it stops the transport, which the old button did not.** Panic
-    // only ever set the engine's flag - reset every machine, drop every tail
-    // - and left the sequencer running, so holding this while a song played
-    // would silence the rack for a block and then be handed the same notes
-    // again on the next one. That was defensible for a button sitting on its
-    // own; it is not for a gesture on the stop pill, where the whole meaning
-    // is "stop, and mean it".
+    // It also stops the transport. Otherwise the sequencer would keep
+    // running and send the same notes again on the next block.
     //
-    // The mapped action goes through here too, so `Action.Panic` from a
-    // controller now stops as well. That is the same word meaning the same
-    // thing in both places, which is worth more than the old reading - and
-    // `Action.Stop` is still there for a pad that should only stop.
+    // `Action.Panic` from a controller goes through here too, so it stops as
+    // well. `Action.Stop` is still there for a pad that should only stop.
     com.rm.acidulous.engine.NativeEngine.transportStop()
     com.rm.acidulous.engine.NativeEngine.panic()
     com.rm.acidulous.midi.MidiHub.forgetSounding()

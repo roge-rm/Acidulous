@@ -1,7 +1,7 @@
 package com.rm.acidulous.util
 
 actual object Log {
-    /** The last lines said, for a crash report: what a phone's log keeps for the dead process. */
+    /** The most recent lines, for a crash report, like a phone's log keeps for a dead process. */
     private val recent = ArrayDeque<String>()
     private const val KEEP = 300
 
@@ -16,7 +16,7 @@ actual object Log {
         return 0
     }
 
-    /** What was logged lately, oldest first. */
+    /** Recent log lines, oldest first. */
     fun recent(): String = synchronized(recent) { recent.joinToString("\n") }
 
     actual fun d(tag: String, message: String): Int = say('D', tag, message)

@@ -1,31 +1,17 @@
 #!/usr/bin/env python3
-"""Does the milestone table still agree with the tree?
+"""Checks the milestone table in docs/PLAN.md still agrees with the tree.
 
-The table in docs/PLAN.md is written by hand, and twice now it has been wrong
-in the same direction: a milestone was built, committed and shipped, and its
-row was never ticked. M49 and M50 both sat unticked with their own commits in
-the log - `0c496d6 M49: read everything we can write` and `41b754b M50: what a
-trig is allowed to decide` - and M47 was reported as unstarted when the code
-had been in the app for weeks. Each time the mistake was reading the tick
-column instead of the tree.
+The table is written by hand and has fallen behind before: milestones built
+and committed but never ticked. This reports two things:
 
-So this reads both and says where they disagree. Two questions:
+  An unticked row with a commit that names it. Milestone commits are titled
+  with their number, so a commit naming it means the table is behind.
 
-  **A row with no tick, and a commit that names it.** The strong signal, and
-  the one that caught all three: milestone commits here are titled with their
-  number, so a search of the log for the milestone's own name is evidence the
-  table has fallen behind.
+  A ticked row naming a file that isn't there. Paths are taken from the row's
+  own backticks, so a rename that leaves the row out of date is caught.
 
-  **A ticked row naming a file that is not there.** The other direction, and
-  the one that will bite later: a finished milestone whose row cites
-  `ui/RecorderDialog.kt` is a row that becomes a lie the day somebody renames
-  it. Paths are taken from the row's own backticks, so the row is checked
-  against what it claims rather than against a list kept somewhere else -
-  a second hand-written list would drift exactly as the first one did.
-
-docs/ is not in the repository - it is deliberately untracked - so with no
-plan to read this says so and passes, which is what lets it live in
-all_tests.sh without failing for anybody who does not have one.
+docs/ is deliberately untracked. With no plan to read this says so and
+passes, so all_tests.sh doesn't fail for people who don't have one.
 """
 
 import os
@@ -79,7 +65,7 @@ def main():
     log = commits()
     print("%d milestone rows\n" % len(rows))
 
-    # --- the drift that has actually happened -------------------------------
+    # --- unticked rows with a commit naming them ----------------------------
     for number, line in rows:
         if "✅" in line:
             continue
@@ -91,21 +77,18 @@ def main():
             named[0] if named else "",
         )
 
-    # --- and the drift that will --------------------------------------------
+    # --- ticked rows citing files that no longer exist ----------------------
     for number, line in rows:
         if "✅" not in line:
             continue
         cited = [t for t in re.findall(r"`([^`]+)`", line) if looks_like_a_path(t)]
-        # Most rows name no files at all, and forty lines of "ok, nothing to
-        # check" is how a report stops being read.
+        # Most rows name no files. Skip them to keep the report short.
         if not cited:
             continue
         missing = []
         for path in cited:
-            # Rows cite paths relative to whichever source root they are in,
-            # so the basename is what can actually be looked for. A file that
-            # exists anywhere in the tree counts: this is about a row naming
-            # something gone, not about the row's path being exact.
+            # Rows cite paths relative to different source roots, so look for
+            # the basename anywhere in the tree.
             base = os.path.basename(path)
             found = subprocess.run(
                 ["git", "-C", ROOT, "ls-files", "--", "*/" + base, base],

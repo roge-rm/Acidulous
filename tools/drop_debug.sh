@@ -1,24 +1,15 @@
 #!/bin/bash
-# Put the debug build where Dan can fetch it, and leave nothing else behind.
+# Copies the debug build to the downloads folder as `acidulous-debug.apk`,
+# overwriting the old one, and deletes any older commit-named copies.
 #
-# **One file: `acidulous-debug.apk`, overwritten.** Not a sha-named copy
-# beside it. Dan asked for that on 2026-09-11, asked again on 2026-09-14 when
-# the habit came back - "please just replace the acidulous-debug.apk without
-# the extra commit-specific apk" - and on 2026-09-18 had to clear out the
-# twenty-eight that had piled up since: "delete all the older debug files ...
-# and every time you make a debug build now just delete the older ones".
-#
-# So this deletes any sha-named build it finds. What it does not touch is
-# `audition/` next door: two gigabytes of rendered demos, which are the point
-# of that folder and nothing to do with builds. The find below is maxdepth 1
-# for exactly that reason.
+# The find is maxdepth 1 so it doesn't touch the `audition/` folder next to it.
 #
 #   tools/drop_debug.sh
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DEST="${ACIDULOUS_DEBUG_DROP:-/srv/downloads/temp/debug}"
-# The build output is where this machine keeps it (the acidulous.buildRoot
-# Gradle property: see the root build.gradle.kts), or app/build.
+# The build output is under acidulous.buildRoot if it's set (see the root
+# build.gradle.kts), otherwise app/build.
 BUILD_ROOT=$(sed -n 's/^acidulous\.buildRoot=//p' "$HOME/.gradle/gradle.properties" 2>/dev/null | tail -1)
 APP_BUILD="${BUILD_ROOT:+$BUILD_ROOT/$(basename "$ROOT")/app}"
 APK="${APP_BUILD:-$ROOT/app/build}/outputs/apk/debug/app-debug.apk"

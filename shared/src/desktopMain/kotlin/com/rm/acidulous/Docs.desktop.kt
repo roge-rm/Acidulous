@@ -6,9 +6,9 @@ import java.awt.Frame
 import java.io.File
 import javax.swing.JFileChooser
 
-// The desktop's pickers: AWT's native file dialog (GTK on Linux), which
-// ignores MIME types - it shows every file, and the decoder is the gate, as
-// on Android. A Doc here is a java.io.File.
+// The desktop's file pickers use AWT's native file dialog (GTK on Linux),
+// which ignores MIME types and shows every file. The decoder decides what
+// loads, as on Android. A Doc here is a java.io.File.
 
 private fun chooseFiles(multiple: Boolean): List<File> {
     val dialog = FileDialog(null as Frame?, "Acidulous", FileDialog.LOAD)
@@ -41,11 +41,11 @@ actual fun rememberOpenFolder(onResult: (Doc?) -> Unit): () -> Unit = {
     onResult(picked?.let { Doc(it) })
 }
 
-/** Nothing to do yet: a desktop does not sleep a window that is playing. */
+/** Nothing to do yet: a desktop doesn't put a playing window to sleep. */
 @Composable
 actual fun KeepScreenOn(on: Boolean) {}
 
-/** A desktop app is not killed for being in the background; the session saves on edits and on close. */
+/** A desktop app isn't killed in the background; the session saves on edits and on close. */
 @Composable
 actual fun OnBackground(action: () -> Unit) {}
 

@@ -5,40 +5,36 @@ import com.rm.acidulous.io.*
 import com.rm.acidulous.engine.EngineAssets
 import kotlinx.serialization.json.Json
 
-/** One JSON document per song under the engine's writable user root. */
+/** One JSON file per song under the engine's writable user root. */
 object SongStore {
 
     val json: Json = Json {
         prettyPrint = true
         encodeDefaults = true
-        ignoreUnknownKeys = true // a newer file opened by an older build loses only what it cannot understand
+        ignoreUnknownKeys = true // a newer file opened by an older build only loses what it can't read
     }
 
     fun encode(song: Song): String = json.encodeToString(Song.serializer(), song)
     fun decode(text: String): Song = normalise(json.decodeFromString(Song.serializer(), text))
 
     /**
-     * Put each modifier in the slot its control owns.
+     * Brings an old song up to date as it's read, and puts each modifier in
+     * the slot its control owns.
      *
-     * Modifiers used to go wherever there was room, because only two of the
-     * three could run at once. Now chord, scale and arp have a chip each and
-     * a slot each, and a song written before that has, say, an Arp sitting
-     * in the chord's slot - where the chord chip would read it as absent and
-     * the first tap would quietly replace it. Moving them on the way in is
-     * cheaper than teaching every control to look everywhere, and it costs
-     * nothing for a song that is already in order.
+     * Older songs put modifiers in any free slot, so an Arp could be in the
+     * chord's slot, where the chord chip wouldn't see it and the first tap
+     * would replace it. Moving them on load is simpler than making every
+     * control search all slots, and does nothing for songs already in order.
      */
     private fun normalise(song: Song): Song {
-        // The sends were two fixed boxes before they were slots; an old song
-        // still carries them that way and is brought forward here, where every
-        // other shape change to a saved song is.
+        // The sends were two fixed effects before they were slots. Old songs
+        // are updated here with every other change to the saved format.
         @Suppress("NAME_SHADOWING") var song = song.copy(master = song.master.migrated())
-        // Groups were Bus tracks in 0.7.0; they are mixer strips now.
+        // Groups were Bus tracks in 0.7.0 and are mixer strips now.
         song = song.busTracksToGroups()
         song = renamed(song)
-        // A song written before swing existed carries the old default of
-        // nought in a field that now means a percentage, and nought is not a
-        // swing at all - fifty is. Read on the way in, like the rest.
+        // Songs from before swing worked have 0 here, which now means a
+        // percentage. 50 is straight.
         if (song.swing < SWING_STRAIGHT) song = song.copy(swing = SWING_STRAIGHT)
         val home = mapOf("Chord" to 0, "Scale" to 1, "Arp" to 2)
         if (song.tracks.none { t -> (0 until MODIFIER_SLOTS).any { home[t.modifierAt(it).type]?.let { h -> h != it } == true } }) {
@@ -58,13 +54,11 @@ object SongStore {
     }
 
     /**
-     * Machines that have been renamed since a song could have been saved.
+     * Machines that have been renamed.
      *
-     * A type string is the only thing a saved track says about its machine,
-     * so a rename with nothing here opens the song with a dead track: the
-     * registry does not know the name, no engine machine is made, and the
-     * part is silent with its notes still on the screen. The map is the whole
-     * migration, and it is read on the way in and never written.
+     * A saved track only knows its machine by this name, so without an entry
+     * here a renamed machine opens as a silent track with its notes still
+     * showing. Only used when reading.
      */
     private val RENAMED = mapOf("Subvert" to "Reflux")
 
@@ -88,14 +82,14 @@ object SongStore {
     fun load(name: String): Song = decode(fileFor(name).readText())
 
     /**
-     * The working song, saved continuously and reloaded on the next start.
-     * Separate from the named songs in [directory]: this is "what was open",
-     * not "what was saved", so minimising the app never loses an edit.
+     * The working song, saved all the time and reloaded on the next start.
+     * Separate from the named songs in [directory]: this is what was open,
+     * not what was saved, so leaving the app never loses an edit.
      */
     fun sessionFile(): File = File(EngineAssets.userRoot(), "session.json")
 
     fun saveSession(song: Song) {
-        // A kill mid-write leaves the previous session intact.
+        // If the app is killed mid-write, the previous session is kept.
         sessionFile().writeTextSafely(encode(song))
     }
 
@@ -107,14 +101,11 @@ object SongStore {
     fun exists(name: String): Boolean = fileFor(name).isFile
 
     /**
-     * A new song: one scene, one track, nothing in it.
+     * A new song: one scene, one empty track.
      *
-     * The machine is the caller's - `UiPrefs.newSong` passes whatever the
-     * settings say, which is Hexbeat unless it has been changed - and the
-     * track takes the machine's own name, which is what `uniqueTrackName`
-     * gives the first track that uses a machine. So the first track of a new
-     * song and the second track of an old one are named by the same rule,
-     * rather than one of them being called "Bass" whatever is in it.
+     * The caller picks the machine (`UiPrefs.newSong` passes the one from
+     * settings, Hexbeat by default). The track is named after the machine,
+     * the same rule `uniqueTrackName` uses for the first track of a machine.
      */
     fun blank(
         name: String,

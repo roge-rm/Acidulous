@@ -1,19 +1,18 @@
-// How much of the engine a browser can run: the load test.
+// The load test: how much of the engine a browser can run.
 //
-// The question the browser build turns on is not whether the engine compiles
-// for WebAssembly - it does, untouched - but whether it runs fast enough there,
-// and on a phone in particular. This answers it the only way that means
-// anything: the demo song's tracks, built here in C++ the way render_test
-// builds its fixture, played through the real Engine, and timed.
+// The engine compiles for WebAssembly unchanged. What matters is whether it
+// runs fast enough there, especially on a phone. This builds the demo song's
+// tracks in C++ like render_test builds its fixture, plays them through the
+// real Engine and times it.
 //
-// The same file builds natively (main() at the bottom), so the browser's figure
-// can be set beside this machine's own for the same work.
+// The same file builds natively (main() at the bottom), so the browser's
+// figure can be compared with this machine's for the same work.
 //
-// Tracks 1-9 are the demo's nine - the drums, percussion, both acid lines, the
-// stabs, the arp, the pad, the bleeps and the riser - with the demo's patches,
-// inserts, sends, group and master chain, all playing at once: more than any
-// one scene of the demo asks for. 10-16 are more of the dearer ones, to find
-// where the headroom ends.
+// Tracks 1-9 are the demo's nine (drums, percussion, both acid lines, stabs,
+// arp, pad, bleeps and riser) with the demo's patches, inserts, sends, group
+// and master chain, all playing at once, which is more than any one scene of
+// the demo uses. Tracks 10-16 are more of the heavier ones, to find where the
+// headroom ends.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -187,7 +186,7 @@ void track(Built &b, int32_t rack, const char *machineType, const char *patch, c
     b.snap->setClip(rack, 0, c);
 }
 
-// --- the demo's drop, note for note where it matters ---------------------------------
+// --- the demo's drop ---------------------------------------------------------------
 
 std::vector<Note> drums() {
     std::vector<Note> out;
@@ -327,7 +326,7 @@ EXPORT int lt_build(int tracks) {
         {"Cumulus", "Deep Wash", +padChords, 0.44f, -0.1f, 0.30f, 0.0f, 0},
         {"Nexus", "Subtractive", bleeps, 0.36f, 0.25f, 0.28f, 0.40f, 0},
         {"Trinity", "Noise Sweep", riser, 0.34f, 0.0f, 0.36f, 0.0f, 0},
-        // More of the dearer ones, quieter so sixteen tracks do not simply clip.
+        // More of the heavier ones, quieter so sixteen tracks don't clip.
         {"Trinity", "Pluck Wide", +arpChords, 0.2f, 0.3f, 0.2f, 0.1f, 0},
         {"Ratio", "Sync Stab", stabs, 0.2f, -0.2f, 0.2f, 0.1f, 0},
         {"Cumulus", "Deep Wash", +padChords, 0.2f, 0.1f, 0.2f, 0.0f, 0},
@@ -347,7 +346,7 @@ EXPORT int lt_build(int tracks) {
         if (arp != nullptr) { arp->reset(); arp->params().jumpAll(); }
         engine.racks[r].swapInputMod(2, arp);
     }
-    // Acid gets its distortion and delay, the answer its ping-pong.
+    // Acid gets its distortion and delay, the answer line its ping-pong.
     if (b->tracks > 2) {
         engine.racks[2].swapEffect(0, effect("Distortion", "Warm"));
         engine.racks[2].swapEffect(1, effect("Delay", "Eighth Sync"));
@@ -380,10 +379,10 @@ EXPORT void lt_play(int play) {
     else gBuilt->engine.transport.requestStop();
 }
 
-/** 128 frames, interleaved stereo: what one AudioWorklet callback wants. */
+/** Renders 128 frames, interleaved stereo, what one AudioWorklet callback needs. */
 EXPORT float *lt_render128() {
-    // As the app's audio thread does. On WebAssembly this does nothing - it has
-    // no flush-to-zero mode - which is one of the things this test measures.
+    // Same as the app's audio thread. On WebAssembly this does nothing, since
+    // it has no flush-to-zero mode, which is one of the things being measured.
     dsp::flushDenormalsOnce();
     if (!gBuilt) {
         std::fill(std::begin(gOut), std::end(gOut), 0.0f);
@@ -397,9 +396,9 @@ EXPORT float *lt_render128() {
 EXPORT int lt_tracks() { return gBuilt ? gBuilt->tracks : 0; }
 
 #ifndef __EMSCRIPTEN__
-// The native side of the comparison: the same song, timed the same way the
-// browser's benchmark times it - wall clock per 128-frame callback, on a
-// thread with nothing else to do.
+// Native side of the comparison: the same song, timed the same way as the
+// browser benchmark, wall clock per 128-frame callback on an otherwise idle
+// thread.
 int main(int argc, char **argv) {
     const int blocks = argc > 1 ? std::atoi(argv[1]) : 3000;
     const double budgetUs = 1e6 * 128.0 / kSampleRate;

@@ -40,19 +40,11 @@ import kotlin.math.min
 import com.rm.acidulous.res.*
 
 /**
- * One pad's sample, with its start and end set against the picture.
+ * One pad's sample, with its start and end set by dragging handles on the
+ * waveform. Easier than setting them with the panel's knobs by ear.
  *
- * The two numbers this exists for have always been on the panel as knobs, and
- * a knob is the wrong instrument for them: `start` and `end` are *places in a
- * sound*, and setting a place by turning a dial and listening is guesswork
- * with an audible cost each time round. Here they are where they are.
- *
- * A window rather than a screen. It began as a screen, on the grounds that a
- * waveform wants height - but everything else in the app that opens over what
- * you are doing is a window, and this is the same kind of errand: you come to
- * it from a pad, move two handles and go back. Being a screen also cost the
- * editor underneath, which vanished while you were trimming the sound you
- * were trimming *for* it. See [[dialog-style]].
+ * A window like the rest of the app's, opened from a pad, so the editor
+ * stays visible underneath.
  */
 @Composable
 fun SampleDialog(
@@ -67,11 +59,9 @@ fun SampleDialog(
     val b = rememberParamBinding(trackIndex, track.machine.type, info, editor)
     fun n(name: String) = "p%02d_%s".format(pad, name)
 
-    // The shape, fetched when the pad or its file changes and not per frame:
-    // it walks the whole sample, which for thirty seconds is three million
-    // reads. `columns` is generous and fixed - resampling a drawn waveform to
-    // the exact pixel width would be a redraw on every rotation for a
-    // difference nobody can see.
+    // The shape, fetched when the pad or its file changes, not per frame,
+    // since it walks the whole sample. `columns` is fixed and generous;
+    // matching the exact pixel width would mean a refetch on every rotation.
     val columns = 900
     var shape by remember(trackIndex, pad) { mutableStateOf(FloatArray(0)) }
     val rel = track.machine.settings[n("sample")] ?: track.machine.settings["slice_sample"]
@@ -79,24 +69,19 @@ fun SampleDialog(
     val frames = meta.split('|').getOrNull(1)?.toIntOrNull() ?: 0
 
     /**
-     * Which slice of the sample the waveform is showing, as fractions of it.
+     * The slice of the sample the waveform shows, as fractions of it.
      *
-     * Doubles, not floats. At twenty-eight million frames a float fraction
-     * resolves to about two of them, and this is the number that decides how
-     * far in you can go - going blunt at the deep end is the wrong end to go
-     * blunt at.
+     * Doubles, because at 28 million frames a float fraction only resolves to
+     * about two frames, which limits how far you can zoom in.
      */
     var viewFrom by remember(trackIndex, pad) { mutableStateOf(0.0) }
     var viewSpan by remember(trackIndex, pad) { mutableStateOf(1.0) }
     val zoomed = viewSpan < 0.999
 
     LaunchedEffect(trackIndex, pad, rel, viewFrom, viewSpan) {
-        // Off the main thread: it walks every frame in the window, and a
-        // slice source may be a ten minute track - twenty-eight million of
-        // them, which is a visible stall if it runs where the frames are
-        // drawn. Re-fetched on a zoom, which is the whole point: the engine
-        // shapes the window, so the detail arrives with the magnification
-        // instead of the same blur getting bigger.
+        // Off the main thread: it walks every frame in the window, and a slice
+        // source may be a ten minute track, which would stall drawing.
+        // Re-fetched on zoom so the engine gives real detail at every zoom level.
         val out = FloatArray(columns * 2)
         val total = NativeEngine.sampleInfo(trackIndex, pad).split('|').getOrNull(1)?.toIntOrNull() ?: 0
         val a = (viewFrom * total).toInt().coerceIn(0, maxOf(0, total - 1))
@@ -139,9 +124,7 @@ fun SampleDialog(
                 if (startDef != null) b.set(startDef.name, startDef.unmap(0f))
                 if (endDef != null) b.set(endDef.name, endDef.unmap(1f))
             }) { Text(stringResource(Res.string.pad_all), color = c.accent, fontSize = 12.sp) }
-            // Only where there is something to come back from. A zoom with no
-            // way out but pinching back is a trap, and a permanent button for
-            // it would be a word on the row saying nothing most of the time.
+            // Only shown when zoomed, so there's always a way back out.
             if (zoomed) {
                 androidx.compose.material3.TextButton(onClick = { viewFrom = 0.0; viewSpan = 1.0 }) {
                     Text(stringResource(Res.string.pad_fit), color = c.teal, fontSize = 12.sp)
@@ -150,11 +133,9 @@ fun SampleDialog(
         }
 
         // --- the waveform ---------------------------------------------------
-        // --- the waveform ---------------------------------------------------
         //
-        // Drawn by `ui/Waveform.kt`, which the recording screen draws with
-        // too. What stays here is where the numbers come from: a mounted pad,
-        // through parameters, rather than a file.
+        // Drawn by `ui/Waveform.kt`, which the recorder uses too. The numbers
+        // come from a mounted pad's parameters, not a file.
         Waveform(
             shape = shape,
             frames = frames,
@@ -168,8 +149,7 @@ fun SampleDialog(
             empty = stringResource(Res.string.pad_empty),
         )
 
-        // Where the trim actually falls, in seconds - the number a player
-        // needs when they are matching a slice to a beat.
+        // Where the trim falls in seconds, for matching a slice to a beat.
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -183,9 +163,7 @@ fun SampleDialog(
             Text(stringResource(Res.string.pad_plays, (to - from) * seconds), color = c.textHi, fontSize = 11.sp,
                  fontFamily = FontFamily.Monospace)
             if (zoomed) {
-                // How far in, and how much of the sound is on screen. The
-                // multiple is the number that answers "am I looking at the
-                // attack or at the bar"; the seconds answer "of what".
+                // Zoom as a multiple, and how many seconds are on screen.
                 Text(
                     "×%.0f · %.3fs".format(1.0 / viewSpan, viewSpan * seconds),
                     color = c.teal, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
@@ -193,7 +171,7 @@ fun SampleDialog(
             }
         }
 
-        // --- the rest of the pad, so this is a page and not a detour --------
+        // --- the rest of the pad's settings ---------------------------------
         Row(
             Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp),

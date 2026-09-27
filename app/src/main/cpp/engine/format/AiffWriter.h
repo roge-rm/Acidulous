@@ -3,18 +3,14 @@
 #include <cstdio>
 #include <engine/format/AudioSink.h>
 
-// Writes stereo AIFF, header patched on close. Ours; no dependency.
+// Writes stereo AIFF and fills in the header on close.
 //
-// The same job WavWriter does, the other way round: AIFF is big-endian, its
-// chunks live inside a FORM, and its sample rate is stored as an 80-bit IEEE
-// extended float, which is the only genuinely odd corner of the format.
+// Like WavWriter but big-endian, with chunks inside a FORM and the sample rate
+// stored as an 80-bit IEEE extended float.
 //
-// 16- and 24-bit PCM write plain AIFF. 32-bit float cannot: the original
-// format has no way to say "these are floats", so that case writes AIFF-C
-// instead, which is the same file with a FORM type of AIFC, a format-version
-// chunk, and a compression type of 'fl32' meaning "not compressed at all,
-// just floats". Both extensions stay .aiff, which is what every reader
-// expects.
+// 16 and 24-bit PCM write plain AIFF. Plain AIFF can't store floats, so 32-bit
+// writes AIFF-C: FORM type AIFC, a format version chunk and compression type
+// 'fl32' (uncompressed floats). The extension stays .aiff either way.
 
 namespace acidulous {
 

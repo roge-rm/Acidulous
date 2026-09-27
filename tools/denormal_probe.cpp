@@ -1,14 +1,13 @@
-// What a decaying tail costs, for every machine and every effect: the question
-// of what a browser pays for denormals, which WebAssembly cannot flush.
+// What a decaying tail costs for every machine and effect, to see what a
+// browser pays for denormals, since WebAssembly can't flush them.
 //
-// Each unit plays two bars and is stopped, and the twenty seconds after the
-// first are timed - the stretch where filter states and feedback lines are
-// decaying through the smallest floats there are. Built and run three ways by
-// denormal_probe.sh: as shipped with the CPU's flush-to-zero off (what a
-// browser gets without the guards), with ACID_SOFT_DENORMALS (what a browser
-// gets), and with flush-to-zero on (what a phone gets). A unit whose middle
-// column is well over its last is a filter or a feedback path that still needs
-// dsp::guardDenormal.
+// Each unit plays two bars and stops, and the twenty seconds after the first
+// second of tail are timed, while filter states and feedback lines decay
+// through the smallest floats. denormal_probe.sh builds and runs it three
+// ways: with flush-to-zero off (a browser without the guards), with
+// ACID_SOFT_DENORMALS (what a browser gets), and with flush-to-zero on (a
+// phone). A unit whose middle column is well over its last still needs
+// dsp::guardDenormal somewhere.
 //
 // Output is one line a unit: type|effect|idle|playing|tail, in us a block.
 #include <chrono>

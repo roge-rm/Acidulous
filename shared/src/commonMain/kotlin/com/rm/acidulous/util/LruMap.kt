@@ -1,8 +1,8 @@
 package com.rm.acidulous.util
 
 /**
- * A map that keeps the [keep] entries used last: an access-ordered
- * LinkedHashMap trimming its eldest, which is a JVM class, done in the open.
+ * A map that keeps the [keep] most recently used entries, like an
+ * access-ordered LinkedHashMap that trims its eldest (which is JVM only).
  * Not locked; callers that share one lock it themselves.
  */
 class LruMap<K, V>(private val keep: Int) {

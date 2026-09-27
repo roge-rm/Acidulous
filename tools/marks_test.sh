@@ -1,12 +1,9 @@
 #!/bin/bash
-# Where a recording's boundaries fall - the arithmetic behind splitting a take.
-# tools/marks_test.cpp.
+# Tests where a recording's boundaries fall when a take is split.
+# See tools/marks_test.cpp.
 #
-# Its own runner rather than a line in all_tests.sh's header-only loop,
-# because this is the first sequencer harness that is *not* header-only: a
-# SceneScheduler wants live Racks, a Rack wants a Machine, and a Machine wants
-# the registry. So it links the same host-engine archive reset_test and
-# bank_test use, plus the rack and the modifier chain a note travels down.
+# Not header-only: it needs live Racks, Machines and the registry, so it links
+# the host engine archive plus the rack and the modifier chain.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

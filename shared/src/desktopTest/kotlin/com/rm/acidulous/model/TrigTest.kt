@@ -7,14 +7,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The Kotlin rule has to decide what the engine decides.
+ * The Kotlin trig rule has to match the engine's.
  *
- * It exists twice because a MIDI export is Kotlin walking the passes itself
- * and must write the file the app plays. Two copies of a rule drift, so
+ * MIDI export walks the passes in Kotlin, so the rule exists in both places.
  * `tools/trig_test --table` prints every decision the C++ gate makes over a
- * grid of chances, conditions, passes, seeds and prev states, and this asserts
+ * grid of chances, conditions, passes, seeds and prev states, and this checks
  * `trigPlays` agrees with all of it. Regenerate the table whenever either side
- * changes and the diff will say whether the change was meant.
+ * changes.
  */
 class TrigTest {
 
@@ -37,16 +36,15 @@ class TrigTest {
             assertEquals("row: $line", plays == 1, got)
             rows++
         }
-        // If the table ever comes back nearly empty the assertions above pass
-        // vacuously, which is the one way this test could stop meaning
-        // anything without failing.
+        // A nearly empty table would let the checks above pass without
+        // testing anything.
         assertTrue("only $rows rows in the table", rows > 1000)
     }
 
     @Test
     fun `the packed word is what the engine unpacks`() {
-        // chance | cond shl 7 | (ratchet - 1) shl 13, and nothing may overflow
-        // into anything else - a chance of 100 is seven bits exactly.
+        // chance | cond shl 7 | (ratchet - 1) shl 13, with no field overflowing
+        // into the next. A chance of 100 fits in seven bits.
         for (m in 2..8) {
             for (n in 1..m) {
                 val t = Trig.nth(n, m)
@@ -58,7 +56,7 @@ class TrigTest {
                 assertEquals(4, (note.trigWord shr 13) and 7)
             }
         }
-        // Thirty-five of them, and none colliding with the five named ones.
+        // 35 codes, none clashing with the five named ones.
         val codes = (2..8).flatMap { m -> (1..m).map { n -> Trig.codeOf(Trig.nth(n, m)) } }
         assertEquals(35, codes.toSet().size)
         assertTrue(codes.min() >= Trig.NTH_BASE)
@@ -67,8 +65,8 @@ class TrigTest {
 
     @Test
     fun `an ordinary note writes none of it down`() {
-        // The whole point of @EncodeDefault(NEVER): a song of plain notes must
-        // not grow four lines a note saying nothing.
+        // @EncodeDefault(NEVER) keeps plain notes from writing four empty
+        // fields each.
         val json = Json { encodeDefaults = true; ignoreUnknownKeys = true }
         val plain = json.encodeToString(Note.serializer(), Note(0, 60, 60, 100))
         assertFalse(plain, plain.contains("chance"))
@@ -76,8 +74,8 @@ class TrigTest {
         assertFalse(plain, plain.contains("ratchet"))
         assertFalse(plain, plain.contains("nudge"))
 
-        // And one that does carry them survives the round trip by name, so a
-        // vocabulary that grows in the middle cannot re-point a saved song.
+        // Trigs are saved by name, so adding new ones can't change what a
+        // saved song means.
         val fancy = Note(0, 60, 60, 100, chance = 40, trig = Trig.nth(3, 4), ratchet = 3, nudge = -20)
         val text = json.encodeToString(Note.serializer(), fancy)
         assertTrue(text, text.contains("N3of4"))
@@ -98,7 +96,7 @@ class TrigTest {
     fun `fill is down unless somebody is holding it`() {
         val fill = Note(0, 60, 60, 100, trig = Trig.Fill)
         val notFill = Note(0, 60, 60, 100, trig = Trig.NotFill)
-        // The export case, which is the one that has to be deterministic.
+        // The export case, which has to be deterministic.
         assertFalse(trigPlays(fill, 0, 0, prevPlayed = false, fill = false))
         assertTrue(trigPlays(notFill, 0, 0, prevPlayed = false, fill = false))
         assertTrue(trigPlays(fill, 0, 0, prevPlayed = false, fill = true))

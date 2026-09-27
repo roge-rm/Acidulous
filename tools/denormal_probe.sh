@@ -1,9 +1,9 @@
 #!/bin/bash
 # What each machine and effect costs in a decaying tail: without flush-to-zero,
 # with the web build's guards, and with flush-to-zero. See denormal_probe.cpp.
-# Not a pass/fail - a timing on a busy machine is noise at the edges - but a
-# unit marked << is one a browser still pays for. Run it after adding a filter,
-# an envelope follower or a feedback path.
+# Not pass/fail, since timings on a busy machine are noisy, but a unit marked
+# << is one a browser still pays for. Run it after adding a filter, an
+# envelope follower or a feedback path.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

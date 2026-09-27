@@ -9,21 +9,18 @@
 #include <cstdint>
 #include <engine/rack/Rack.h>
 
-// Walks the scene chain, or - in clip mode - lets every rack walk its own.
+// Plays through the scenes, or in clip mode lets every rack play its own.
 //
-// The arranger owns the playback position as
+// The arranger keeps the playback position as
 //   (sceneIdx, repeatIdx, iterationOrigin)
-// where iterationOrigin is the absolute clock tick at which the current pass
-// through the current scene began. Everything else - which clip each rack
-// plays, when OneShot clips re-arm, where the UI's bar.beat comes from - falls
-// out of that triple.
+// where iterationOrigin is the absolute clock tick the current pass through
+// the current scene began at. Which clip each rack plays, when OneShot clips
+// re-arm and the UI's bar.beat all come from that.
 //
-// Clip mode replaces that triple with sixteen of them, held in the Launcher.
-// Everything downstream already copes, because ClipPlayer was always given its
-// origin as a parameter rather than reading a shared one: pointing each rack at
-// a clip from a different scene and handing it its own origin is the whole
-// change. The arranger path below is untouched and still selected whenever
-// clip mode is off.
+// Clip mode has one of those per rack, kept in the Launcher. ClipPlayer is
+// always given its origin as a parameter, so each rack can play a clip from
+// a different scene with its own origin. The arranger path below is used
+// whenever clip mode is off.
 //
 // Audio thread only.
 
@@ -31,7 +28,7 @@ namespace acidulous::seq {
 
 class SceneScheduler {
   public:
-    /** Sixteenths or eighths: which pair the swing bends. Song-wide. */
+    /** Sixteenths or eighths: which notes the swing moves. Song-wide. */
     void setSwingPair(int64_t pair) { swingPair = pair >= 2 ? pair : Swing::kSixteenths; }
 
     void bind(Rack *racks, int32_t rackCount, TickClock *clock, Transport *transport) {
@@ -43,12 +40,11 @@ class SceneScheduler {
 
     // Returns the previous snapshot for the caller to queue for destruction.
     //
-    // The scene we were playing is found again by *id*, not index, so inserting
-    // or deleting scenes ahead of it while playing does not yank playback
-    // somewhere else. If it was deleted, playback moves to the next scene that
-    // survived (or the last one). If it merely got shorter than the playhead's
-    // offset into it, the origin is re-anchored so the phase within the shorter
-    // loop is kept, instead of stepping through phantom iterations to catch up.
+    // The playing scene is found again by id, not index, so inserting or
+    // deleting scenes before it doesn't move playback. If it was deleted,
+    // playback moves to the next remaining scene (or the last one). If it got
+    // shorter than the playhead's offset, the origin is moved so the phase in
+    // the shorter loop is kept.
     const SongSnapshot *swapSnapshot(const SongSnapshot *next) {
         const SongSnapshot *old = snap;
         snap = next;
@@ -63,10 +59,8 @@ class SceneScheduler {
             return old;
         }
         if (transport != nullptr && transport->launcherMode()) {
-            // Clip mode holds what it is playing by scene *id*, so an edit
-            // that inserts or deletes scenes ahead of a launched clip cannot
-            // re-point a rack at somebody else's clip. A scene that was
-            // deleted outright takes its rack silent with it.
+            // Clip mode tracks scenes by id, so inserting or deleting scenes can't
+            // point a rack at a different clip. A deleted scene silences its rack.
             for (int32_t r = 0; r < rackCount; ++r) {
                 const int64_t id = launcher.sceneId(r);
                 if (id == Launcher::kNone) {
@@ -94,7 +88,7 @@ class SceneScheduler {
             // Same scene, wherever it moved to.
             resolved = snap->indexOfScene(old->scenes[sceneIdx].id);
             if (resolved < 0) {
-                // Deleted: the first later scene that still exists.
+                // Deleted: use the next scene that still exists.
                 for (size_t i = sceneIdx + 1; i < old->scenes.size() && resolved < 0; ++i) {
                     resolved = snap->indexOfScene(old->scenes[i].id);
                 }
@@ -122,8 +116,8 @@ class SceneScheduler {
     const SongSnapshot *snapshot() const { return snap; }
 
     // On play. Call after the clock has been reset. kCurrentScene restarts
-    // whichever scene we are on from its top.
-    /** 0xFB: pick up where the playhead is, without restarting anything. */
+    // the current scene from its start.
+    /** 0xFB (MIDI Continue): carry on from the playhead without restarting. */
     void resume() {
         beginning();
         if (snap == nullptr || snap->scenes.empty()) {
@@ -133,7 +127,7 @@ class SceneScheduler {
         pointClipPlayers();
     }
 
-    /** Put the playhead at a song-absolute tick, for an incoming locate. */
+    /** Move the playhead to an absolute song tick, for an incoming Song Position Pointer. */
     void locateTo(int64_t songTick) {
         if (snap == nullptr || snap->scenes.empty()) {
             return;
@@ -152,9 +146,8 @@ class SceneScheduler {
     void start(int32_t requestedScene) {
         beginning();
         if (transport != nullptr && transport->launcherMode()) {
-            // Nothing plays until a clip is tapped, so the clock simply runs
-            // from zero and the grid stays silent - which is what a launcher
-            // does when you press play with nothing armed.
+            // Nothing plays until a clip is tapped. The clock runs from zero and
+            // the grid stays silent.
             launcher.reset();
             lastTickInIteration = 0;
             for (int32_t r = 0; r < rackCount; ++r) {
@@ -175,11 +168,9 @@ class SceneScheduler {
     }
 
     /**
-     * Every rack takes up the scene that is playing, at the phase it is at.
-     *
-     * The origin is the scene's own iteration origin rather than now, so a
-     * clip half way through stays half way through: the point is that the
-     * listener hears nothing happen at the moment the mode changes.
+     * Every rack takes over the playing scene at its current phase. The origin
+     * is the scene's iteration origin rather than now, so a clip half way
+     * through stays half way through and switching modes is inaudible.
      */
     void adoptPlayingScene() {
         if (snap == nullptr || snap->scenes.empty() || sceneIdx < 0 ||
@@ -187,15 +178,14 @@ class SceneScheduler {
             return;
         }
         const SceneInfo &sc = snap->scenes[sceneIdx];
-        // The tempo comes with it. Taken from the scene's own override rather
-        // than from `clock->bpm()`, which may be part way through a ramp into
-        // it and would latch a value that belongs to neither scene.
+        // Keep the tempo. Use the scene's own override rather than clock->bpm(),
+        // which may be part way through a ramp.
         launcherTempo = sc.bpmOverride > 0.0f ? sc.bpmOverride : clock->songTempoRequested();
         launcherTempoFrom = clock->songTempoRequested();
         const int64_t id = sc.id;
         for (int32_t r = 0; r < rackCount; ++r) {
             if (snap->clipFor(r, sceneIdx) == nullptr) {
-                continue; // a track with nothing here stays silent, as it was
+                continue; // a track with nothing here stays silent
             }
             launcher.adopt(r, id, cycleTicks(r, sceneIdx), iterationOrigin);
             racks[r].clipPlayer.setClip(snap->clipFor(r, sceneIdx));
@@ -203,18 +193,16 @@ class SceneScheduler {
     }
 
     /**
-     * Clip mode ends: everyone onto one scene, at the bar line, in phase.
+     * Leaving clip mode: every rack moves onto one scene at the bar line, in
+     * phase.
      *
-     * Scene mode can only play one scene, so something has to move - the
-     * question is only how much and how audibly. The scene most racks are
-     * already playing wins, because that is the choice that moves the fewest
-     * of them: those racks carry on untouched, and only the minority
-     * re-align. Ties go to the lowest scene index so the answer is stable
-     * rather than dependent on which rack was asked first.
+     * The scene most racks are already playing wins, so the fewest racks change
+     * and those carry on untouched. Ties go to the lowest scene index so the
+     * result is stable.
      *
-     * The phase is taken from a rack that is already on that scene, so the
-     * arrangement continues from where those tracks had got to instead of
-     * restarting or resuming the stale playhead scene mode was frozen at.
+     * The phase comes from a rack already on that scene, so the arrangement
+     * continues from there instead of restarting or jumping back to where scene
+     * mode left off.
      */
     void handBackToScenes(int64_t at) {
         if (snap == nullptr || snap->scenes.empty()) {
@@ -236,11 +224,11 @@ class SceneScheduler {
             }
         }
         if (best < 0) {
-            return; // nothing was playing; scene mode resumes where it was
+            return; // nothing was playing, scene mode resumes where it was
         }
         enterScene(best, /*allowSmooth=*/false);
-        // Keep the phase those racks already had. The origin may be well
-        // behind `at`; the scene path's own arithmetic walks it forward.
+        // Keep the phase those racks had. The origin may be well behind the
+        // handover tick, and the scene path moves it forward.
         iterationOrigin = bestOrigin;
         lastTickInIteration = at - bestOrigin;
         launcher.clearAll();
@@ -253,17 +241,16 @@ class SceneScheduler {
         }
     }
 
-    /** Stopped: nothing is launched, nothing is queued, the grid goes dark. */
+    /** Stopped: nothing launched, nothing queued, the grid goes dark. */
     void stopLauncher() {
         launcher.clearAll();
         launcher.takeChanged();
         launcherNow = 0;
-        // A stop ends any handover that was in flight. The flag itself is
-        // latched where a playing begins - see `beginning()` - because that
-        // is the moment that can tell "the mode changed while running" from
-        // "we are starting in this mode".
+        // A stop ends any handover in progress. The flag itself is set in
+        // beginning(), where we can tell "mode changed while running" from
+        // "starting in this mode".
         returnPending = false;
-        launcherTempo = 0.0f; // nothing was adopted, so nothing is held
+        launcherTempo = 0.0f; // nothing adopted, so no tempo is held
         if (transport != nullptr) {
             for (int32_t r = 0; r < rackCount; ++r) {
                 transport->publishLaunch(r, Transport::packLaunch(Transport::kNoScene, Transport::kNoScene, 0));
@@ -281,17 +268,13 @@ class SceneScheduler {
     }
 
     /**
-     * A playing is beginning, so no mode change is in flight.
+     * Playback is starting, so no mode change is in progress.
      *
-     * `process` treats the launcher flag differing from what it was as
-     * "somebody just pressed clip", and answers it by handing the launcher
-     * the scene that was playing. That is right in the middle of a song and
-     * wrong at the start of one: with the latch left over from whenever the
-     * transport last ran, pressing clip while stopped and then pressing play
-     * looked exactly like a switch mid-song, and the whole first scene
-     * started - which `start()` had just finished saying it would not do.
-     *
-     * So the latch is taken here, where a playing begins, and nowhere else.
+     * process() treats a change in the launcher flag as "clip mode was just
+     * pressed" and hands the launcher the playing scene. That's right mid-song
+     * but wrong at the start: pressing clip while stopped and then play would
+     * otherwise start the whole first scene. So the flag is latched here, when
+     * playback begins, and nowhere else.
      */
     void beginning() {
         rampHeld = false;
@@ -302,12 +285,11 @@ class SceneScheduler {
     }
 
     /**
-     * Every clip player back to its beginning: the dice, the pass count.
+     * Resets every clip player's random seed and pass count.
      *
-     * Deliberately not part of `allNotesOff`, which runs on every ordinary
-     * stop. A free-rolling clip that re-seeded whenever the transport stopped
-     * would play the same variation every time somebody pressed play, which is
-     * the one thing free is for. This is the panic path only.
+     * Not part of allNotesOff, which runs on every normal stop. Re-seeding
+     * there would make a free-rolling clip play the same variation every
+     * time. This is for the panic path only.
      */
     void resetClipPlayers() {
         for (int32_t r = 0; r < rackCount; ++r) {
@@ -318,7 +300,7 @@ class SceneScheduler {
     // While stopped the song tempo from the UI applies directly.
     void applyIdleTempo() {
         if (transport != nullptr && transport->externalSync()) {
-            return; // somebody else owns the tempo
+            return; // something else controls the tempo
         }
         const float want = clock->songTempoRequested();
         if (!clock->isRamping() && want != clock->bpm()) {
@@ -327,37 +309,31 @@ class SceneScheduler {
     }
 
     // Fire everything in [blockStart, blockEnd). Returns false when the song
-    // has run out and loopSong is off: the caller stops the transport.
+    // has run out and loopSong is off, and the caller stops the transport.
     bool process(int64_t blockStart, int64_t blockEnd) {
         if (snap == nullptr || snap->scenes.empty()) {
             return true;
         }
-        // One read of the button a block, handed to every player, so a fill
-        // means the same thing on every track within a block rather than
-        // whatever each of them happened to see.
+        // Read the fill button once a block and give it to every player, so all
+        // tracks agree for the whole block.
         const bool filling = transport != nullptr && transport->fill();
         for (int32_t r = 0; r < rackCount; ++r) {
             racks[r].clipPlayer.setFill(filling);
-            // And the swing, from the same place and for the same reason: one
-            // read a block, so every track agrees about where the beat is for
-            // the whole of it. `target` rather than the smoothed value - a
-            // swing that ramps would slide the offbeats across a bar, which
-            // is a thing nobody asked for and an export could not repeat.
+            // Swing too, once a block, so every track agrees on where the beat is.
+            // Uses the target rather than the smoothed value, since ramping swing
+            // would slide the offbeats across a bar and exports couldn't repeat it.
             racks[r].clipPlayer.setSwing(racks[r].channelTarget(Rack::Swing), swingPair);
         }
-        // Entering clip mode while the song is running: hand the launcher the
-        // scene every rack is already playing, in phase, so nothing stops.
-        // Without this the launcher starts empty and the whole song falls
-        // silent until each clip is tapped, which is the opposite of what
-        // switching to a launcher mid-performance is for.
+        // Entering clip mode while playing: hand the launcher the scene every
+        // rack is already playing, in phase, so nothing stops. Otherwise the
+        // song would go silent until each clip is tapped.
         const bool launching = transport->launcherMode();
         if (launching && !launcherWas) {
             adoptPlayingScene();
             returnPending = false;
         }
-        // Leaving clip mode is not immediate: the launcher keeps running until
-        // the next bar line, and the handover happens there. Switching on the
-        // block the button was pressed would land mid-bar every time.
+        // Leaving clip mode waits for the next bar line. The launcher keeps
+        // running until then and hands over there, rather than mid-bar.
         if (!launching && launcherWas && launcher.anyPlaying()) {
             const int64_t bar = std::max<int64_t>(1, songTicksPerBar());
             returnAt = ((blockStart / bar) + 1) * bar;
@@ -366,10 +342,10 @@ class SceneScheduler {
         launcherWas = launching;
         if (returnPending) {
             if (blockEnd <= returnAt) {
-                return processLauncher(blockStart, blockEnd); // still counting down
+                return processLauncher(blockStart, blockEnd); // not there yet
             }
-            // The line falls inside this block: play the launcher up to it,
-            // hand over, and let the scene path take the rest.
+            // The bar line is inside this block: play the launcher up to it, hand
+            // over, and let the scene path do the rest.
             if (returnAt > blockStart) {
                 processLauncher(blockStart, returnAt);
             }
@@ -394,16 +370,16 @@ class SceneScheduler {
                 cur = segEnd;
             }
             if (cur >= iterEnd) {
-                // Iteration boundary. The origin moves, which is what re-arms
-                // OneShot clips and keeps loop arithmetic honest.
+                // Iteration boundary. Moving the origin re-arms OneShot clips and
+                // keeps the loop maths right.
                 iterationOrigin = iterEnd;
                 if (++repeatIdx >= sc.repeat) {
                     repeatIdx = 0;
-                    // A scene that plays again - looped, or the only one -
-                    // starts again at its own tempo, not where its ramp ended.
+                    // A scene that plays again (looped, or the only one) starts at its
+                    // own tempo, not where its ramp ended.
                     rampHeld = false;
-                    // This boundary is where everything queued from the UI
-                    // lands: a scene waiting its turn, or an armed finish.
+                    // Anything queued from the UI lands at this boundary: a waiting
+                    // scene or an armed finish.
                     const int32_t queued = transport->takeQueuedScene();
                     if (queued >= 0 && queued < static_cast<int32_t>(snap->scenes.size())) {
                         enterScene(queued, /*allowSmooth=*/true);
@@ -451,11 +427,9 @@ class SceneScheduler {
     bool launcherActive() const { return transport != nullptr && transport->launcherMode(); }
 
     /**
-     * The scene a *rack* is playing, and how far through its own cycle it is.
-     * In the arranger these are the same for all sixteen; in clip mode they
-     * are not, and everything that stamps or syncs per rack - recording,
-     * frozen audio - has to ask this rather than the scheduler's own
-     * position, or it lands in the wrong clip.
+     * The scene a rack is playing. In the arranger it's the same for every
+     * rack, in clip mode it isn't, so anything per rack (recording, frozen
+     * audio) must ask this rather than use the scheduler's own position.
      */
     int64_t rackSceneId(int32_t rack) const {
         if (!launcherActive()) {
@@ -472,19 +446,15 @@ class SceneScheduler {
     }
 
     /**
-     * How far into this rack's *cell* it is, counting the repeats.
+     * How far into this rack's cell it is, counting repeats.
      *
-     * [rackTick] resets to nought at every repeat, which is right for notes -
-     * a one-bar clip in a four-bar scene should come round four times - and
-     * wrong for audio. A take sung across a scene played twice is eight bars
-     * of one performance, and restarting it at the second pass would play the
-     * first four bars again.
+     * rackTick resets every repeat, which is right for notes (a one-bar clip
+     * in a four-bar scene plays four times) but wrong for audio. A take sung
+     * across a scene played twice is one eight-bar performance.
      *
-     * So: the same question the launcher already answers. Its origin is the
-     * start of a **cycle of bars x repeat**, which is exactly this, so clip
-     * mode needs no arithmetic at all and the arranger's line is that same
-     * sentence written out. Both modes then agree on what "how far into this
-     * cell" means, which is what lets one recording serve them both.
+     * This counts from the start of a cycle of bars x repeat, which is what
+     * the launcher's origin already is. Both modes agree on it, so one
+     * recording works in both.
      */
     int64_t rackCycleTick(int32_t rack) const {
         if (!launcherActive()) {
@@ -492,18 +462,14 @@ class SceneScheduler {
             const SceneInfo &sc = snap->scenes[static_cast<size_t>(sceneIdx)];
             const int64_t iter = std::max<int64_t>(1, sc.iterationTicks());
             const int64_t absolute = static_cast<int64_t>(repeatIdx) * iter + lastTickInIteration;
-            // **Wrapped onto the clip's own cycle, which is what the launcher
-            // counts.** The two modes disagree about what a cycle is the moment
-            // a clip is shorter than its scene: the launcher gives that clip
-            // `lengthTicks() * repeat` and the arranger would give it the whole
-            // scene, so the same cell would read different frames in each mode
-            // - and "one recording serves both" is the whole design. Taking the
-            // clip's cycle here makes the arranger say what the launcher says.
+            // Wrapped onto the clip's own cycle, which is what the launcher
+            // counts. When a clip is shorter than its scene the launcher's cycle
+            // is lengthTicks() * repeat and the arranger's would be the whole
+            // scene, so without this the same cell would read different frames in
+            // each mode.
             //
-            // A cell as long as its scene - which is every cell nobody has
-            // deliberately shortened, since a clip is created at its scene's
-            // length - has `len == iter * repeat`, so `absolute` never reaches
-            // it and the wrap costs nothing.
+            // For a clip as long as its scene (the usual case) len == iter *
+            // repeat, so the wrap does nothing.
             const int64_t len = cycleTicks(rack, sceneIdx);
             return len > 0 ? absolute % len : absolute;
         }
@@ -511,36 +477,27 @@ class SceneScheduler {
     }
 
     /**
-     * How long the cycle [rackCycleTick] counts within is, in ticks.
-     *
-     * The other half of the same answer, and needed wherever the tick alone is
-     * not enough to say *where* - a recording being split has to write down
-     * the cell it was made against as well as how far into it, because a
-     * region outlives the song's current shape.
+     * The length of the cycle rackCycleTick counts within, in ticks. A
+     * recording being split needs both, since it records the cell and how far
+     * into it.
      */
     int32_t rackCycleTicks(int32_t rack) const {
         if (!launcherActive()) {
             if (snap == nullptr || snap->scenes.empty()) return 0;
             const int64_t own = cycleTicks(rack, sceneIdx);
             if (own > 0) return static_cast<int32_t>(own);
-            // **A cell that does not exist yet still has a length.**
-            //
-            // `cycleTicks` answers nought for a rack with no clip in this
-            // scene, which is right where it is used - the launcher must not
-            // launch a clip that is not there. It is wrong here: a recording
-            // being made across a song reaches scenes the track has nothing in
-            // *yet*, and those are exactly the cells the split is about to
-            // create. Answering nought made the marks skip them, so a take
-            // sung over a whole song landed entirely in whichever scene the
-            // track happened to have a clip in. Found on 2026-09-20 by
-            // recording over the demo song and getting one cell back.
+            // A cell that doesn't exist yet still has a length. cycleTicks returns
+            // 0 for a rack with no clip in this scene, which the launcher needs.
+            // But a recording across the song reaches scenes the track has no clip
+            // in yet, and the split is about to create those cells. Returning 0
+            // would put the whole take in one cell.
             const SceneInfo &sc = snap->scenes[static_cast<size_t>(sceneIdx)];
             return static_cast<int32_t>(sc.iterationTicks() * std::max(1, sc.repeat));
         }
         return launcher.playing(rack) ? static_cast<int32_t>(launcher.cycle(rack)) : 0;
     }
 
-    /** The bar a phase is measured against: the scene's, or the song's. */
+    /** The bar a phase is measured against: the scene's or the song's. */
     int32_t barTicks() const {
         if (snap == nullptr || snap->scenes.empty() || launcherActive() ||
             sceneIdx >= static_cast<int32_t>(snap->scenes.size())) {
@@ -549,7 +506,7 @@ class SceneScheduler {
         return snap->scenes[sceneIdx].ticksPerBar;
     }
 
-    /** Clip mode has no one scene to take a signature from, so the song's. */
+    /** Clip mode has no single scene to take a signature from, so use the song's. */
     int32_t songTicksPerBar() const {
         return (snap != nullptr && !snap->scenes.empty()) ? snap->scenes[0].ticksPerBar : 4 * kPPQN;
     }
@@ -577,25 +534,22 @@ class SceneScheduler {
 
   private:
     /**
-     * Clip mode. The block is cut at every tick where something changes - a
-     * cycle ending, a launch landing - so a swap is as sample-accurate as the
-     * arranger's, and each rack is fired against its own origin.
+     * Clip mode. The block is split at every tick where something changes (a
+     * cycle ending, a launch landing) so swaps are as sample-accurate as the
+     * arranger's, and each rack plays from its own origin.
      */
     bool processLauncher(int64_t blockStart, int64_t blockEnd) {
-        // No scene owns the tempo when clips come from four of them, so the
-        // song tempo rules and scene overrides, ramps and fades sit this out.
+        // With clips from several scenes no scene owns the tempo, so the song
+        // tempo applies and scene overrides, ramps and fades are skipped.
         //
-        // With one exception, and it is the handover. Switching into clip
-        // mode out of a scene running its own tempo used to drop straight
-        // back to the song's - 140 to 120 in the middle of a bar, which is
-        // the loudest thing a "seamless" switch could possibly do. So the
-        // tempo that was playing is latched when the launcher adopts, and
-        // held until the player asks for something else.
+        // Except after switching into clip mode from a scene with its own
+        // tempo. That tempo is latched when the launcher adopts the scene, so
+        // the tempo doesn't jump in the middle of a bar, and held until the
+        // player changes it.
         if (!clock->isRamping() && !(transport != nullptr && transport->externalSync())) {
             const float song = clock->songTempoRequested();
-            // A hand on the tempo control wins: the moment the song's own
-            // tempo differs from what it was when the latch was taken, that
-            // is somebody asking for it, and the latch is done.
+            // Once the song tempo differs from when the latch was taken, the
+            // player has changed it, so drop the latch.
             if (launcherTempo > 0.0f && song != launcherTempoFrom) {
                 launcherTempo = 0.0f;
             }
@@ -609,7 +563,7 @@ class SceneScheduler {
         if (transport->takeStopAll()) {
             launcher.requestStopAll(blockStart);
         }
-        // A scene before any single taps, so a tap made after it still wins.
+        // A scene launch before single taps, so a tap after it still wins.
         if (const int64_t scene = transport->takeLaunchedScene(); scene != 0) {
             const int32_t idx = snap->indexOfScene(scene);
             if (idx >= 0) {
@@ -631,11 +585,9 @@ class SceneScheduler {
             }
             const int32_t idx = snap->indexOfScene(id);
             if (idx < 0 || snap->clipFor(r, idx) == nullptr) {
-                // An empty cell is not a launch. The grid only ever queues
-                // cells that hold a clip, so this is unreachable from the UI
-                // - but a rack launched into nothing took a one-tick cycle
-                // and reported itself as playing for ever, which is a lit
-                // cell with no sound in it and nobody to blame.
+                // An empty cell isn't a launch. The grid only queues cells with a
+                // clip, but launching into nothing would leave a lit cell playing
+                // silence forever.
                 continue;
             }
             launcher.request(r, id, cycleTicks(r, idx), blockStart);
@@ -658,7 +610,7 @@ class SceneScheduler {
         return true;
     }
 
-    /** bars x repeat: what a swap waits for, and what re-arms a OneShot. */
+    /** bars x repeat: what a swap waits for and what re-arms a OneShot. */
     int64_t cycleTicks(int32_t rack, int32_t sceneIdx_) const {
         const Clip *c = snap->clipFor(rack, sceneIdx_);
         if (c == nullptr) {
@@ -688,14 +640,14 @@ class SceneScheduler {
                 continue;
             }
             Rack &rack = racks[r];
-            // A silenced rack is still walked, because process() flushes the
-            // note-offs it still owes before it looks at the clip at all.
+            // A silent rack is still processed because process() sends the
+            // note-offs it owes before looking at the clip.
             const int64_t origin = launcher.playing(r) ? launcher.origin(r) : from;
             if (rack.clipPlayer.originChanged(origin)) {
                 rack.clearTouched();
             }
-            // Lanes first: a parameter that changes on a note's own step
-            // has to have changed before that note is struck.
+            // Lanes first, so a parameter change on a note's step is in place
+            // before the note plays.
             if (launcher.playing(r)) {
                 rack.clipPlayer.processLanes(
                     to, origin,
@@ -710,10 +662,10 @@ class SceneScheduler {
     }
 
     /**
-     * The scene's ramp, started when its last pass comes within the ramp's
-     * bars of the end. The clock's own glide does the work, timed to arrive
-     * exactly at the scene's end; from then until the next scene the tempo
-     * is held at the target, or [followTempo] would put it back.
+     * Starts the scene's tempo ramp when its last pass gets within the ramp's
+     * bars of the end. The clock's glide does the work, timed to arrive at the
+     * scene's end. After that the tempo is held at the target until the next
+     * scene, otherwise followTempo would put it back.
      */
     void startRamp(const SceneInfo &sc, int64_t iterEnd, int64_t segEnd) {
         if (rampHeld || sc.rampToBpm <= 0.0f || sc.rampBars <= 0 || repeatIdx != sc.repeat - 1) return;
@@ -731,7 +683,7 @@ class SceneScheduler {
         pointClipPlayers();
         const SceneInfo &sc = snap->scenes[idx];
         if (transport != nullptr && transport->externalSync()) {
-            return; // the tempo, and the ramp into it, are not ours to set
+            return; // something else controls the tempo
         }
         const float want = sc.bpmOverride > 0.0f ? sc.bpmOverride : clock->songTempoRequested();
         if (allowSmooth && sc.smooth && want != clock->bpm()) {
@@ -741,12 +693,11 @@ class SceneScheduler {
         }
     }
 
-    // A scene without a tempo of its own follows the UI's song tempo live.
+    // A scene without its own tempo follows the UI's song tempo live.
     void followTempo() {
-        // Four places assert a tempo every block - here, applyIdleTempo,
-        // the launcher's own, and enterScene. Miss one while slaved and it
-        // stamps over the follower thirteen hundred times a second, which
-        // looks exactly like the follower failing.
+        // Four places set the tempo every block: here, applyIdleTempo, the
+        // launcher and enterScene. Each must skip when synced to an external
+        // clock, or it overwrites the follower every block.
         if (transport != nullptr && transport->externalSync()) {
             return;
         }
@@ -769,9 +720,8 @@ class SceneScheduler {
 
     void fire(int64_t from, int64_t to) {
         for (int32_t r = 0; r < rackCount; ++r) {
-            // A frozen rack is sent nothing: its notes and its automation are
-            // both already in the audio, and running them again would cost
-            // the CPU that freezing was meant to give back.
+            // Frozen racks get nothing. Their notes and automation are already in
+            // the audio, and running them again would waste the CPU freezing saves.
             if (racks[r].isActive() && !racks[r].frozenActive()) {
                 Rack &rack = racks[r];
                 if (rack.clipPlayer.originChanged(iterationOrigin)) rack.clearTouched();
@@ -798,8 +748,8 @@ class SceneScheduler {
     int64_t launcherNow = 0;
     /** Whether the last block was in launcher mode, to catch the change. */
     bool launcherWas = false;
-    // The tempo clip mode holds because it was playing when clip mode began;
-    // 0 means it is following the song's own. See processLauncher.
+    // The tempo clip mode holds because it was playing when clip mode began.
+    // 0 means it follows the song tempo. See processLauncher.
     float launcherTempo = 0.0f;
     float launcherTempoFrom = 0.0f;
     /** Clip mode has been switched off and is playing out to the bar line. */
@@ -808,7 +758,7 @@ class SceneScheduler {
     int32_t sceneIdx = 0;
     int32_t repeatIdx = 0;
     int64_t iterationOrigin = 0;
-    /** The scene's ramp has begun this pass; see [startRamp]. */
+    /** The scene's ramp has started this pass (see startRamp). */
     bool rampHeld = false;
     int64_t swingPair = Swing::kSixteenths;
     int64_t lastTickInIteration = 0;

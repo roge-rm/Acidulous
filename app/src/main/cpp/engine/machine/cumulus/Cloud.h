@@ -3,19 +3,17 @@
 #include <memory>
 #include <vector>
 
-// Cumulus's clouds: the tables a voice reads, and the recipe they are built
+// Cumulus's clouds: the tables a voice reads and the settings they're built
 // from.
 //
-// The idea in one paragraph, as Paul Nasca published it: put each harmonic
-// into the spectrum not as a single line but as a *band* of lines with random
-// phases, then inverse transform the whole thing into one very long table.
-// What comes out loops seamlessly, never repeats audibly, and sounds like
-// twenty detuned oscillators for the cost of reading an array. This is our
-// own implementation of it, and what it does with it afterwards is where the
-// instrument is.
+// Based on Paul Nasca's PADsynth idea: each harmonic goes into the spectrum
+// as a band of lines with random phases, and the whole thing is inverse
+// transformed into one very long table. It loops seamlessly, doesn't audibly
+// repeat, and sounds like many detuned oscillators for the cost of reading
+// an array.
 namespace acidulous::machine::cumulus {
 
-/** What the tables are made of. Everything here is a build-time choice. */
+/** The settings the tables are built from. All used at build time. */
 struct CloudSpec {
     int32_t partials = 48;
     float tilt = -9.0f;        // dB per octave of the partial series
@@ -27,8 +25,7 @@ struct CloudSpec {
     float bandwidth = 40.0f;   // cents, at the fundamental
     float bwScale = 1.0f;      // exponent: how the band grows up the series
     float stretch = 0.0f;      // inharmonicity: partial n sits at n^(1+stretch)
-    // The far end of the morph, as differences from the above. One knob's
-    // worth of panel for a second spectrum.
+    // The B end of the morph, as offsets from the values above.
     float bTilt = 0.0f, bBandwidth = 0.0f, bStretch = 0.0f, bComb = 0.0f, bFormant = 0.0f, bOdd = 0.0f;
     uint32_t seed = 1;
 
@@ -36,13 +33,12 @@ struct CloudSpec {
 };
 
 /**
- * One playable table: a band of the keyboard, at one morph position.
+ * One playable table for a range of the keyboard at one morph position.
  *
- * Tables are per key range because reading one faster moves everything in it
- * up, and what was at 11 kHz two octaves up is not there any more - it is
- * folded back down as noise. Three ranges, each built with only the partials
- * that survive being played an octave above their own base, is the whole of
- * the anti-aliasing.
+ * Playing a table higher moves everything up, and partials past Nyquist fold
+ * back as noise. So there are three key ranges, each built with only the
+ * partials that still fit an octave above its base. That's all the
+ * anti-aliasing.
  */
 struct CloudTable {
     std::vector<float> data; // size + 1 samples; the last repeats the first
@@ -65,9 +61,9 @@ struct CloudSet {
 };
 
 /**
- * Build a set. Slow (tens of milliseconds), allocates, and must therefore be
- * called on a worker - never from the audio thread. The result is handed over
- * as an object, like a sample map.
+ * Builds a set. It's slow (tens of milliseconds) and allocates, so call it
+ * on a worker, never the audio thread. The result is handed over as an
+ * object, like a sample map.
  */
 std::unique_ptr<CloudSet> buildCloud(const CloudSpec &spec, int32_t sampleRate);
 

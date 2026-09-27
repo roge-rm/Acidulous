@@ -14,16 +14,16 @@ import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-/** The ring a focused control wears: accent, or pink while a knob is grabbed. */
+/** The ring a focused control gets: accent, or pink while a knob is grabbed. */
 fun ContentDrawScope.focusRing(color: Color) {
     val w = 2.dp.toPx()
     drawRoundRect(color, cornerRadius = CornerRadius(4.dp.toPx()), style = Stroke(w))
 }
 
 /**
- * The app's press indication - Material's ripple - with a focus ring on top,
- * so every `clickable` in the app shows where the keyboard is without each
- * one being told. Provided in AcidulousTheme.
+ * The app's press indication (Material's ripple) with a focus ring on top, so
+ * every clickable shows keyboard focus without extra code. Provided in
+ * AcidulousTheme.
  */
 class FocusRingIndication(private val base: IndicationNodeFactory, private val color: Color) : IndicationNodeFactory {
     override fun create(interactionSource: InteractionSource): DelegatableNode =

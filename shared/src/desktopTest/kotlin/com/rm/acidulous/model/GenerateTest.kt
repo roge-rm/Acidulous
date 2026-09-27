@@ -9,13 +9,13 @@ class GenerateTest {
 
     private fun pattern(k: Int, n: Int, r: Int = 0) = Generate.euclid(k, n, r).joinToString("") { if (it) "x" else "." }
 
-    /** The same necklace: equal under some rotation. */
+    /** True if one pattern is a rotation of the other. */
     private fun sameNecklace(a: String, b: String) = a.length == b.length && (a + a).contains(b)
 
     @Test
     fun euclidMatchesTheKnownRhythms() {
-        // Toussaint's examples, as necklaces: the tresillo, the cinquillo,
-        // and the rest of the usual suspects.
+        // Toussaint's examples (tresillo, cinquillo and so on), compared as
+        // rotations.
         assertTrue(sameNecklace(pattern(3, 8), "x..x..x."))
         assertTrue(sameNecklace(pattern(5, 8), "x.xx.xx."))
         assertTrue(sameNecklace(pattern(4, 12), "x..x..x..x.."))
@@ -40,8 +40,8 @@ class GenerateTest {
 
     @Test
     fun euclidRepeatsAcrossTheClipOnItsOwnCycle() {
-        // Three over five against a bar of sixteen sixteenths: it does not
-        // start over at the bar line.
+        // Three hits over five steps in a bar of sixteen: the pattern doesn't
+        // restart at the bar line.
         val notes = Generate.euclidNotes(Generate.Euclid(hits = 3, steps = 5, stepTicks = PPQN / 4, pitch = 38), 4 * PPQN)
         val steps = notes.map { it.tick / (PPQN / 4) }
         val p = Generate.euclid(3, 5)
@@ -76,9 +76,8 @@ class GenerateTest {
 
     @Test
     fun moreDensityAddsNotesWithoutMovingTheOthers() {
-        // The dice are drawn for every step whatever the density, so a step
-        // that sounded at a lower density sounds at a higher one - and, with
-        // no leaps, the only thing that can differ is the walk to it.
+        // Every step rolls its dice whatever the density, so a step that plays
+        // at a lower density also plays at a higher one.
         val thin = Generate.lineNotes(Generate.Line(density = 0.3f, length = 1, seed = 9), null, 8 * PPQN).map { it.tick }
         val thick = Generate.lineNotes(Generate.Line(density = 0.7f, length = 1, seed = 9), null, 8 * PPQN).map { it.tick }
         assertTrue(thick.size > thin.size)

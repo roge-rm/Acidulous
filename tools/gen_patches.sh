@@ -1,12 +1,9 @@
 #!/bin/bash
-# The bank files, as the Kotlin that ships.
+# Turns the bank files into the Kotlin the app ships.
 #
-# tools/banks/<Unit>.bank is what a person edits and what tools/audition.sh
-# plays; this turns it into shared/src/commonMain/kotlin/com/rm/acidulous/model/
-# FactoryBanks.kt, which is what the app reads. Run it after touching a bank.
-#
-# The same shape as tools/gen_param_labels.py: a generated Kotlin file with a
-# header naming the command that regenerates it.
+# tools/banks/<Unit>.bank is what you edit and what tools/audition.sh plays.
+# This writes shared/src/commonMain/kotlin/com/rm/acidulous/model/
+# FactoryBanks.kt, which the app reads. Run it after changing a bank.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 exec "$ROOT/tools/audition.sh" emit "$@"

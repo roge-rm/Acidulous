@@ -18,9 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.rm.acidulous.res.*
 
 /**
- * What the Quantise window was last set to, for this run of the app: the
- * window opens where it was left, and a Launchpad's Quantise button uses it
- * too, so the two mean the same thing.
+ * What the Quantise window was last set to, for this run of the app. The
+ * window opens with it and a Launchpad's Quantise button uses it too.
  */
 object QuantiseMemory {
     /** The grid in ticks, or null for the clip's own. */
@@ -46,20 +45,20 @@ object QuantiseMemory {
         return QuantiseSpec(grid = g, strength = strength, ends = ends, groove = groove)
     }
 
-    /** [clip]'s notes - those in [which], or all - quantised, or put back, as these settings say. */
+    /** Quantises [clip]'s notes (those in [which], or all), or puts them back, per these settings. */
     fun applyTo(song: Song, clip: Clip, clipTicks: Int, which: Set<Int>? = null) =
         if (asPlayed) Quantise.asPlayed(clip.notes, which, clipTicks)
         else Quantise.apply(clip.notes, which, spec(song, clip), clipTicks)
 }
 
 /**
- * The Quantise window: the selection, or the whole clip, onto a grid - all
- * the way or part of it, starts or ends too, straight or to another clip's
- * groove - or back to where it was played; and humanised on top.
+ * The Quantise window: moves the selection, or the whole clip, onto a grid
+ * (fully or partly, starts or ends too, straight or to another clip's
+ * groove) or back to where it was played, with optional humanise.
  *
- * Heard as it is set, like Generate: a gesture is opened as the window is,
- * each change redraws the clip from how it was when the window opened, OK
- * keeps it as one undo step, and anything else throws it away.
+ * You hear it as you change it, like Generate: a gesture opens with the
+ * window, each change redraws the clip from how it was when the window
+ * opened, OK keeps it as one undo step, anything else throws it away.
  */
 @Composable
 fun QuantiseDialog(
@@ -79,9 +78,9 @@ fun QuantiseDialog(
     var ends by remember { mutableStateOf(m.ends) }
     var asPlayed by remember { mutableStateOf(m.asPlayed) }
     var human by remember { mutableStateOf((m.human * 100).toInt()) }
-    /** The roll of the dice for humanise, or null for none; a press of the button rolls again. */
+    /** The humanise seed, or null for none. Pressing the button rolls again. */
     var seed by remember { mutableStateOf<Long?>(null) }
-    // Every clip in the song with notes, as a groove to lean on.
+    // Every clip in the song with notes, to use as a groove.
     val grooves = remember(song) {
         song.tracks.flatMap { t ->
             song.scenes.mapNotNull { sc -> t.clips[sc.id]?.takeIf { it.notes.isNotEmpty() }?.let { Triple(t.id, sc.id, "${t.name} · ${sc.name}") } }
@@ -91,7 +90,7 @@ fun QuantiseDialog(
 
     DisposableEffect(Unit) {
         editor.beginGesture(trackIndex)
-        // Leaving any other way than OK - back, a tap outside - is Cancel.
+        // Closing any other way than OK (back, a tap outside) cancels.
         onDispose { editor.cancelGesture() }
     }
 
@@ -106,7 +105,7 @@ fun QuantiseDialog(
         seed?.let { notes = Quantise.humanise(notes, which, m.human, it, clipTicks) }
         editor.updateGestureClip(sceneId, pushNow = true) { it.copy(notes = notes.sortedBy { n -> n.tick }) }
     }
-    // Heard from the moment it opens, as it was last set.
+    // Apply the last settings as soon as it opens.
     LaunchedEffect(Unit) { apply() }
 
     PlainDialog(
@@ -135,7 +134,7 @@ fun QuantiseDialog(
                     asPlayed = it == 1; apply()
                 }
             }
-            // How it feels: another clip's timing, and a player's unevenness.
+            // Feel: another clip's timing, and humanise.
             WindowCard(stringResource(Res.string.quantise_feel)) {
                 val names = listOf(stringResource(Res.string.quantise_straight)) + grooves.map { it.third }
                 CountKnob(
@@ -143,7 +142,7 @@ fun QuantiseDialog(
                     width = 140.dp, choices = names,
                 ) { grooveAt = it; apply() }
                 CountKnob(stringResource(Res.string.quantise_humanise), human, 0..100, "$human%") { human = it; if (seed != null) apply() }
-                // A press rolls the dice again; none takes it away.
+                // A press rolls again; none turns it off.
                 SwitchGrid("", stringArrayResource(Res.array.quantise_humanise_choices).toList(), if (seed == null) 1 else -1) {
                     seed = if (it == 0) System.nanoTime() else null
                     apply()

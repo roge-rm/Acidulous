@@ -1,8 +1,8 @@
 <resources>
-    <!-- MainActivity.kt: what the app says about files coming in and going out, recording, and a crash. -->
+    <!-- MainActivity.kt: messages about files coming in and going out, recording, and crashes. -->
     <string name="app_crash_report_subject">Acidulous crash report</string>
 
-    <!-- A sound that would not load -->
+    <!-- A sound that wouldn't load -->
     <string name="app_load_failed_title">That didn\'t load</string>
     <string name="app_load_formats">Acidulous can import WAV, AIFF, FLAC and MP3, mono or stereo, at any sample rate. It can\'t read M4A, Ogg or WMA.</string>
     <string name="app_converting">Converting</string>
@@ -27,7 +27,7 @@
     <string name="app_export_no_tracks">no tracks to render</string>
     <string name="app_export_copy_failed">copy failed</string>
     <string name="app_export_create_failed">couldn\'t create %s</string>
-    <!-- Where an export went, when the system will not name it. -->
+    <!-- Where an export went, when the system won't say. -->
     <string name="app_the_folder">the folder</string>
     <string name="app_the_file">the file</string>
 
@@ -35,7 +35,7 @@
     <string name="app_crashed_title">Acidulous stopped</string>
     <string name="app_crashed_share">Share report</string>
     <string name="app_crashed_note">Acidulous closed unexpectedly last time. A report was saved on this phone, and sharing it helps me fix it.</string>
-    <!-- Its twin in the desktop build. -->
+    <!-- The same for the desktop build. -->
     <string name="app_crashed_note_desktop">Acidulous closed unexpectedly last time. A report was saved on this computer, and sharing it helps me fix it.</string>
 
     <!-- Importing -->

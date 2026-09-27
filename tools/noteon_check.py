@@ -1,34 +1,22 @@
 #!/usr/bin/env python3
-"""Does anything seed a note from a smoothed parameter?
+"""Checks that no machine seeds a note from a smoothed parameter.
 
-`paramOf` is the smoothed value. It is the right thing to make audio from -
-a cutoff that jumped to its new value on the block a knob moved would click,
-which is what the smoother is for - and the wrong thing to read **once, at
-note-on, to seed per-note state**: a glide time, an envelope stage, a voice
-count, a spread. Seeded from the smoothed value, a note depends on how long
-ago the knob moved, so the same song exported twice can differ - once from a
-panic, once carrying on from whatever was played before it.
+`paramOf` is the smoothed value. That's right for making audio, since a jump
+would click, but wrong for seeding per-note state at note-on (a glide time,
+an envelope stage, a voice count, a spread). Seeded from the smoothed value, a
+note depends on how long ago the knob moved, so the same song exported twice
+can sound different.
 
-`Machine::targetOf` and `Machine::steppedTargetOf` are where a parameter is
-going, and are what those reads must use.
+Use `Machine::targetOf` and `Machine::steppedTargetOf` for those reads.
 
-**This exists because `tools/reset_test.sh` cannot see the fault.** That
-harness renders, panics, renders the same performance again and requires the
-two to be identical - which is exactly the shape of this bug - but its
-performance never moves a *parameter*, so the smoothed value and the target
-are equal throughout and both its passes agree. The harness that exists for
-this class of bug is blind to this instance of it, which is how five reads in
-Brazen survived from 2026-09-13 to 2026-09-20.
+tools/reset_test.sh can't catch this because its performance never moves a
+parameter. An audio comparison can't catch it either, since a parameter read
+per block is supposed to sound different while it's smoothing. So this is a
+static check: read the note-on functions and report any smoothed read.
 
-Teaching reset_test to move a knob mid-render does not fix that. A parameter
-read per block is *supposed* to sound different while its smoother is in
-flight, so an audio comparison cannot tell a bad seed from a good smooth.
-Hence a static check: read the note-on bodies, and say so if a smoothed read
-appears in one.
-
-A body is anything named startVoice, noteOn, strike, trigger or startNote.
-That is where per-note state gets seeded; if a machine grows another such
-function under a different name, add it to FUNCTIONS.
+A note-on function is anything named startVoice, noteOn, strike, trigger or
+startNote. If a machine seeds per-note state in a function with another name,
+add it to FUNCTIONS.
 """
 
 import glob
@@ -50,7 +38,7 @@ OPENS = re.compile(
 
 
 def body_of(src, match):
-    """The braces of the function `match` opens, balanced."""
+    """Returns the balanced braces of the function `match` opens."""
     start = src.rindex("{", match.start(), match.end())
     depth = 0
     for i in range(start, len(src)):

@@ -4,28 +4,20 @@
 #include <cstring>
 #include <lame.h>
 
-// The only reader here that is not ours, and the only one that should not be.
+// Decodes MP3 with LAME's mpglib, which ships with the LAME encoder we
+// already include. Having `mpglib/` in the build (HAVE_MPGLIB) is what makes
+// `hip_decode` work. It's in the same .so under the same LGPL licence.
 //
-// An mp3 decoder is a large and fiddly thing - Huffman tables, a hybrid
-// filter bank, bit reservoirs across frames - and we already ship the encoder
-// that comes with one. `mpglib_interface.c` has been in the build all along
-// doing nothing, gated on HAVE_MPGLIB; vendoring `mpglib/` beside it is what
-// turns `hip_decode` from a declaration into a decoder. Same library, same
-// .so, same LGPL story as the encoder.
-//
-// It is also the only lossy format here, so a round trip will not come back
-// sample for sample and no test should ask it to.
+// MP3 is lossy, so a round trip won't come back sample for sample.
 namespace acidulous {
 
 namespace {
 /**
- * mpglib hands back interleaved 16-bit, in whatever sized pieces it likes.
+ * mpglib returns 16-bit samples in pieces of any size.
  *
- * It needs the stream fed to it and drained repeatedly: one call in can
- * produce several frames out or none at all, because a frame's data may
- * finish in a later one than it started in. So every push is followed by
- * draining to empty, and the end of the file by one last drain - `hip_decode`
- * with nothing new holds whatever is still inside.
+ * One call in can give several frames out or none, since a frame's data can
+ * span several calls. So every push is followed by draining until empty, and
+ * the end of the file by one last drain.
  */
 constexpr int kOutSamples = 16384; // per channel, which is far more than a frame
 } // namespace
@@ -33,28 +25,22 @@ constexpr int kOutSamples = 16384; // per channel, which is far more than a fram
 namespace {
 
 /**
- * The samples an encoder added and expects a decoder to throw away.
+ * The padding an encoder added at each end, which the decoder should remove.
  *
- * **Every mp3 starts late otherwise.** An encoder has to prime its filter
- * bank before the first real sample can come out, so a file holds a few
- * hundred samples of nothing at the front and a few hundred more at the back
- * to fill the last frame. LAME writes both numbers into an `Info`/`Xing`
- * frame at the head of the file, and a decoder that ignores them hands back
- * about twenty-five milliseconds of silence followed by the music - which on
- * an imported break is a loop that does not start on the one.
+ * An encoder adds a few hundred silent samples at the front to prime its
+ * filter bank and more at the back to fill the last frame. Without removing
+ * them a loop starts about 25 ms late. LAME writes both counts into an
+ * `Info`/`Xing` frame at the start of the file.
  *
- * The tag sits at the top of the first frame, past the side information,
- * whose length depends on the version and whether it is mono. Then four bytes
- * of flags say which of the optional fields are present, and the LAME
- * extension follows them; the delay and padding are three bytes twenty-one
- * into it, twelve bits each.
+ * The tag sits in the first frame after the side information, whose length
+ * depends on the version and on mono or stereo. Four bytes of flags say which
+ * optional fields follow, then comes the LAME extension. Delay and padding are
+ * 12 bits each, 21 bytes into it.
  *
- * The 529 is the decoder's own share and is a constant of the format rather
- * than of this decoder: it is what mpglib, ffmpeg and LAME's own frontend all
- * add to the encoder's number.
+ * 529 is the decoder's delay, a constant of the format. mpglib, ffmpeg and
+ * LAME's frontend all add it to the encoder's number.
  *
- * Leaves both at nought - which is what every mp3 without the tag gets, and
- * what this did for all of them until now.
+ * Leaves both at 0 when there's no tag.
  */
 void lameTrim(const unsigned char *b, size_t n, size_t at, int32_t &skip, int32_t &trim) {
     skip = 0;
@@ -79,8 +65,8 @@ void lameTrim(const unsigned char *b, size_t n, size_t at, int32_t &skip, int32_
 
     const int32_t delay = (static_cast<int32_t>(b[lame + 21]) << 4) | (b[lame + 22] >> 4);
     const int32_t padding = ((static_cast<int32_t>(b[lame + 22]) & 0x0F) << 8) | b[lame + 23];
-    // A tag can say anything; a delay of half a second is a tag that is wrong
-    // and trimming by it would take the start of the music with it.
+    // Ignore values that are clearly wrong, or we'd cut the start of the
+    // music.
     if (delay < 0 || delay > 3000 || padding < 0 || padding > 3000) return;
     skip = delay + 529;
     trim = padding > 529 ? padding - 529 : 0;
@@ -90,13 +76,12 @@ void lameTrim(const unsigned char *b, size_t n, size_t at, int32_t &skip, int32_
 
 size_t Mp3Reader::audioStart(const unsigned char *b, size_t n) {
     if (n < 10 || std::memcmp(b, "ID3", 3) != 0) return 0;
-    // A syncsafe length: four bytes of seven bits each, not counting the ten
-    // byte header it sits in - and ten more if the footer flag is set.
+    // A syncsafe length: four bytes of seven bits each, not counting the
+    // 10-byte header, plus 10 more if the footer flag is set.
     const size_t size = (static_cast<size_t>(b[6] & 0x7Fu) << 21) | (static_cast<size_t>(b[7] & 0x7Fu) << 14) |
                         (static_cast<size_t>(b[8] & 0x7Fu) << 7) | static_cast<size_t>(b[9] & 0x7Fu);
     const size_t at = 10 + size + ((b[5] & 0x10u) != 0 ? 10u : 0u);
-    // A tag claiming to be longer than the file is a tag that is lying, and
-    // starting at nought is a better guess than starting past the end.
+    // If the tag claims to be longer than the file, start at 0 instead.
     return at < n ? at : 0;
 }
 
@@ -131,34 +116,18 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
         }
     };
 
-    // Fed in pieces and drained after each.
-    //
-    // Not all at once: a call returns *one* frame's worth at most, and zero
-    // whenever it has taken data without finishing a frame - which the very
-    // first call always does, since it has a header to read first. A loop
-    // that stops at zero therefore stops before any audio at all, which is
-    // what "no audio in it" meant the first time this was written.
+    // Fed in pieces and drained after each. A call returns at most one frame,
+    // and 0 when it took data without finishing a frame (always the case on
+    // the first call), so a loop can't stop at the first 0.
     int errors = 0;
-    // **A kilobyte at a time, and it matters.**
-    //
-    // mpglib copies what it is given into `bsspace[2][MAXFRAMESIZE + 1024]`,
-    // which is 3904 bytes, and quietly drops whatever does not fit. Measured
-    // against a 22 kB file of 30000 frames: pushing 1024 at a time decoded
-    // 32256 samples, 4096 decoded 29952 - two thousand samples gone with no
-    // error returned at all - and 16384 decoded *nothing*, which is what "no
-    // audio in it" meant the first time this was written. LAME's own frontend
-    // reads 1024 and so does this.
+    // Feed 1 KB at a time. mpglib copies input into a 3904-byte buffer
+    // (`bsspace[2][MAXFRAMESIZE + 1024]`) and silently drops what doesn't
+    // fit, so bigger chunks lose audio or decode nothing at all. LAME's own
+    // frontend also uses 1024.
     const size_t chunk = 1024;
-    // The drain, which has to happen after the *last* chunk as well.
-    //
-    // **This is where a frame went missing.** The feed below used to end with
-    // `off <= bytes.size()` and rely on one extra pass with nothing to give
-    // to flush what mpglib still held - and that pass only happens when the
-    // audio is an exact multiple of the chunk. It usually is not, so the
-    // final frame stayed inside the decoder and the file came back 1152
-    // frames short. It looked like a flake because whether it bites depends
-    // on the file's length, which depends on the bitrate: at 48 kHz stereo,
-    // 128 kbit was short every time and 192, 256 and 320 never were.
+    // Drains decoded frames. It also has to run once after the last chunk,
+    // or the final frame stays inside the decoder and the file comes back
+    // 1152 frames short.
     auto drain = [&](int n) {
         while (n > 0) {
             take(n);
@@ -167,25 +136,18 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
         }
         return n;
     };
-    // From the audio, not from the front of the file - see audioStart.
+    // Start where the audio starts, after any tag. See audioStart.
     for (size_t off = audioStart(bytes.data(), bytes.size()); off < bytes.size(); off += chunk) {
         const size_t len = std::min(chunk, bytes.size() - off);
         int n = drain(hip_decode1_headers(hip, bytes.data() + off, len, left.data(), right.data(), &info));
-        // **An error is not the end.**
-        //
-        // A file off the internet is not a clean stream of frames: it carries
-        // album art inside its ID3 tag, an APE or Lyrics3 block on the end,
-        // a partial frame where somebody cut it. mpglib says -1 at each of
-        // those and carries on perfectly well afterwards, so giving up on the
-        // first one means giving up on most real mp3s - which is what "not
-        // readable as MPEG audio" was, in front of a file that played
-        // everywhere else. Keep feeding; judge it at the end by whether any
-        // audio came out.
+        // Keep going after an error. Real files often have album art, APE or
+        // Lyrics3 tags or a cut-off frame, and mpglib returns -1 on those but
+        // carries on fine. Whether the file worked is judged at the end by
+        // whether any audio came out.
         if (n < 0) ++errors;
         if (cap > 0 && static_cast<int64_t>(got.ch[0].size()) >= cap) break;
     }
-    // And once more with nothing, unconditionally, for whatever the last
-    // chunk left inside.
+    // One last drain for whatever the last chunk left inside.
     if (cap <= 0 || static_cast<int64_t>(got.ch[0].size()) < cap) {
         if (drain(hip_decode1_headers(hip, nullptr, 0, left.data(), right.data(), &info)) < 0) ++errors;
     }
@@ -195,7 +157,7 @@ std::unique_ptr<SampleData> Mp3Reader::read(const std::string &path, int32_t tar
         return nullptr;
     }
 
-    // The encoder's own padding, off both ends - see lameTrim.
+    // Remove the encoder's padding from both ends. See lameTrim.
     {
         int32_t skip = 0, trim = 0;
         lameTrim(bytes.data(), bytes.size(), audioStart(bytes.data(), bytes.size()), skip, trim);

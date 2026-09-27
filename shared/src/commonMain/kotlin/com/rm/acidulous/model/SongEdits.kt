@@ -3,8 +3,8 @@ package com.rm.acidulous.model
 import kotlin.math.roundToInt
 
 /**
- * Pure edits on the document. Each returns a new [Song]; nothing here touches
- * the engine. The command/undo layer (M3 part 3) wraps these.
+ * Pure edits on the song. Each returns a new [Song] and nothing here touches
+ * the engine. [SongEditor] wraps these with undo.
  */
 
 fun Song.updateTrack(index: Int, f: (Track) -> Track): Song {
@@ -19,7 +19,7 @@ fun Song.updateClip(trackIndex: Int, sceneId: String, create: () -> Clip, f: (Cl
         track.copy(clips = track.clips + (sceneId to f(current)))
     }
 
-/** A clip sized to the scene it lands in - the recorder's default when none exists yet. */
+/** A clip sized to its scene. The recorder uses this when there's no clip yet. */
 fun Song.emptyClipFor(sceneId: String): Clip {
     val scene = scenes.firstOrNull { it.id == sceneId } ?: return Clip()
     return Clip(bars = barsOf(scene))
@@ -92,9 +92,8 @@ fun Song.addTrack(machineType: String, name: String? = null): Song {
 }
 
 /**
- * The machine's own name for the first track that uses it, then 2, 3 and so
- * on. One Reflux is just "Reflux"; a number only appears once it means
- * something.
+ * The machine's name for the first track that uses it, then 2, 3 and so on.
+ * One Reflux is just "Reflux".
  */
 fun Song.uniqueTrackName(base: String): String {
     val taken = tracks.map { it.name }.toSet()
@@ -106,9 +105,9 @@ fun Song.uniqueTrackName(base: String): String {
 
 fun Song.deleteTrack(index: Int): Song {
     val track = tracks.getOrNull(index) ?: return this
-    // Every sidechain names its source by position, so the tracks after this
-    // one move up a place - and one that listened to *this* track goes back to
-    // its own input, which is what no sidechain means.
+    // Sidechains point at tracks by position, so the tracks after this one
+    // move up a place, and a sidechain that listened to this track goes back
+    // to its own input.
     return copy(tracks = tracks - track).remapSidechains { k ->
         when {
             k - 1 == index -> 0
@@ -122,25 +121,25 @@ fun Song.duplicateTrack(index: Int): Song {
     val source = tracks.getOrNull(index) ?: return this
     if (tracks.size >= MAX_TRACKS) return this
     val dup = source.copy(id = newId("t"), name = Names.copyOf(source.name), clips = source.clips.mapValues { it.value.copy() })
-    // The copy goes in after its source, so everything past it moves down one.
+    // The copy goes in after its source, so everything after it moves down one.
     return copy(tracks = tracks.toMutableList().also { it.add(index + 1, dup) })
         .remapSidechains { k -> if (k - 1 > index) k + 1 else k }
 }
 
-/** The one parameter that holds a track's position: see [remapSidechains]. */
+/** The parameter that holds a track's position; see [remapSidechains]. */
 const val SIDECHAIN_PARAM = "sidechain"
-/** Its steps: nought for the effect's own input, then the sixteen tracks. */
+/** Its steps: 0 for the effect's own input, then the sixteen tracks. */
 const val SIDECHAIN_STEPS = 17
 
 /**
- * Re-point every sidechain after the tracks have moved.
+ * Re-points every sidechain after tracks have moved.
  *
- * A compressor, gate or filter that listens to another track names it by
- * position - `sidechain` is 0 for its own input and 1..16 for a track, because
- * that is what the engine, a lane and a controller mapping all address. So an
- * edit that moves tracks has to move what points at them, in every place a
- * value can live: the inserts, the send buses, and any automation lane drawn
- * on it. [f] takes and returns the 1-based track, or 0.
+ * A compressor, gate or filter that listens to another track stores it by
+ * position: `sidechain` is 0 for its own input and 1..16 for a track, since
+ * that's how the engine, lanes and controller mappings address it. So moving
+ * tracks has to update it everywhere it can live: the inserts, the send
+ * buses, and any automation lane on it. [f] takes and returns the 1-based
+ * track, or 0.
  */
 fun Song.remapSidechains(f: (Int) -> Int): Song {
     val last = (SIDECHAIN_STEPS - 1).toFloat()
@@ -160,7 +159,7 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
                 clips = t.clips.mapValues { (_, c) ->
                     if (c.automation.keys.none { it.endsWith(lane) }) c
                     else c.copy(automation = c.automation.mapValues { (key, l) ->
-                        // A lock's "back to the knob" is not a track number.
+                        // A lock's "back to the knob" isn't a track number.
                         if (!key.endsWith(lane)) l
                         else l.copy(points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remap(it.value)) })
                     })
@@ -180,14 +179,13 @@ fun Song.changeMachine(index: Int, machineType: String): Song =
 
 fun Song.renameTrack(index: Int, name: String): Song = updateTrack(index) { it.copy(name = name) }
 
-// --- Machine parameters (document side of a knob) ----------------------------------
+// --- Machine parameters (song side of a knob) --------------------------------------
 
 /**
- * A mixer value by the name the engine and the lanes use for it.
+ * Sets a mixer value by the name the engine and the lanes use.
  *
- * The strip's own fields are in musical units - a gain of 0..1.5, a pan of
- * -1..1 - while everything that addresses it by name speaks normalised, so
- * the conversion belongs here rather than at each caller.
+ * The strip stores musical units (gain 0..1.5, pan -1..1) but everything that
+ * uses names works normalised, so the conversion happens here.
  */
 fun Track.withMixerParam(name: String, v01: Float): Track = copy(
     mixer = when (name) {
@@ -218,15 +216,9 @@ private fun Track.withEffectSlot(slot: Int, f: (EffectSlot) -> EffectSlot): Trac
     return copy(effects = list)
 }
 
-/** Puts a fresh effect of [type] in [slot]; empty clears it. Parameters start at the effect's defaults. */
 /**
- * Put [type] in the slot - and **changing it to what it already is is not a
- * change**, so its settings survive.
- *
- * Without that guard this is a wipe dressed as an assignment: any caller that
- * says "make sure this slot holds an Arp" to a slot that already holds one
- * takes its parameters with it. One did, and the arp lost every setting
- * anybody made.
+ * Puts a fresh effect of [type] in [slot], or clears it when empty. Setting
+ * the type it already has changes nothing, so its settings are kept.
  */
 fun Track.withEffect(slot: Int, type: String): Track =
     withEffectSlot(slot) { if (it.type == type) it else EffectSlot(type = type) }
@@ -237,24 +229,23 @@ fun Track.withEffectParam(slot: Int, name: String, v01: Float): Track =
 fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(slot) { it.copy(bypass = bypass) }
 
 /**
- * A whole preset onto one slot, replacing what was there.
+ * Puts a whole preset on one slot, replacing what was there.
  *
- * The same shape as [withPatch] for a machine, and replacing rather than
- * merging for the same reason: what a preset does not mention it wants at the
- * effect's own default, and the panel pushes those defaults itself.
+ * Like [withPatch] for a machine: anything the preset doesn't mention goes to
+ * the effect's default, and the panel pushes those defaults itself.
  */
 fun Track.withEffectPatch(slot: Int, params: Map<String, Float>): Track =
     withEffectSlot(slot) { it.copy(params = params) }
 
-/** The unit name the engine addresses a slot by: "effect1", "effect2". */
+/** The unit name the engine uses for a slot: "effect1", "effect2". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"
 
-/** The unit a send bus's parameters are addressed under. */
+/** The unit a send bus's parameters use. */
 fun sendUnit(slot: Int): String = "send${slot + 1}"
 
 // --- Groups in the mixer ------------------------------------------------------------
 
-/** The unit a group insert's parameters are addressed under: "group1fx1" .. "group4fx2". */
+/** The unit a group insert's parameters use: "group1fx1" .. "group4fx2". */
 fun groupInsertUnit(group: Int, slot: Int): String = "group${group + 1}fx${slot + 1}"
 
 private fun Song.withGroup(group: Int, f: (MixGroup) -> MixGroup): Song {
@@ -263,7 +254,7 @@ private fun Song.withGroup(group: Int, f: (MixGroup) -> MixGroup): Song {
     return copy(master = master.copy(groups = list.toMutableList().also { it[group] = f(it[group]) }))
 }
 
-/** A new group at the end, if there is room. */
+/** Adds a new group at the end, if there's room. */
 fun Song.addGroup(name: String): Song {
     if (master.groups.size >= MAX_GROUPS) return this
     return copy(master = master.copy(groups = master.groups + MixGroup(name = name)))
@@ -291,14 +282,14 @@ fun Song.withGroupInsertBypass(group: Int, slot: Int, bypass: Boolean): Song =
     withGroupInsertSlot(group, slot) { it.copy(bypass = bypass) }
 
 /**
- * Remove group [group]. Its tracks go back to the master, and the tracks of
- * the groups after it follow their group down a place.
+ * Removes group [group]. Its tracks go back to the master, and tracks in the
+ * groups after it move down with their group.
  */
 fun Song.deleteGroup(group: Int): Song {
     if (group !in master.groups.indices) return this
     val n = group + 1
-    // The perform pages' target follows its group, or goes back to the
-    // whole mix if its group is the one going.
+    // The perform pages' target follows its group, or goes back to the whole
+    // mix if its group is the one being removed.
     val target = master.perform.target
     val retarget = when {
         target == n -> 0
@@ -322,8 +313,8 @@ fun Song.deleteGroup(group: Int): Song {
 }
 
 /**
- * Songs saved in 0.7.0 had groups as tracks whose machine was a Bus. Each of
- * those becomes a mixer group, its tracks routed to it, and the Bus track goes.
+ * Songs saved in 0.7.0 had groups as tracks with a Bus machine. Each becomes a
+ * mixer group with its tracks routed to it, and the Bus track is removed.
  */
 fun Song.busTracksToGroups(): Song {
     val buses = tracks.withIndex().filter { it.value.machine.type == "Bus" }.map { it.index }
@@ -351,7 +342,7 @@ fun Song.busTracksToGroups(): Song {
     return song
 }
 
-/** The unit a master insert's parameters are addressed under: "master1", "master2". */
+/** The unit a master insert's parameters use: "master1", "master2". */
 fun masterInsertUnit(slot: Int): String = "master${slot + 1}"
 
 private fun Song.withMasterInsertSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Song {
@@ -370,7 +361,7 @@ fun Song.withMasterInsertParam(slot: Int, name: String, v01: Float): Song =
 fun Song.withMasterInsertBypass(slot: Int, bypass: Boolean): Song =
     withMasterInsertSlot(slot) { it.copy(bypass = bypass) }
 
-/** [slot]'s send with [type] on it, keeping nothing of what was there. */
+/** Puts [type] on [slot]'s send. A different type starts fresh; the same type keeps its settings. */
 fun Song.withSend(slot: Int, type: String): Song {
     if (slot !in 0 until SEND_SLOTS) return this
     val list = List(SEND_SLOTS) { master.sendAt(it) }.toMutableList()
@@ -378,7 +369,7 @@ fun Song.withSend(slot: Int, type: String): Song {
     return copy(master = master.copy(sends = list))
 }
 
-/** One parameter of [slot]'s send, by the effect's own name for it. */
+/** Sets one parameter of [slot]'s send, by the effect's own name for it. */
 fun Song.withSendParam(slot: Int, name: String, v01: Float): Song {
     if (slot !in 0 until SEND_SLOTS) return this
     val list = List(SEND_SLOTS) { master.sendAt(it) }.toMutableList()
@@ -397,10 +388,10 @@ fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -
 
 // --- The input chain ---------------------------------------------------------------
 
-/** The unit an input effect's parameters are addressed under: "input1", "input2". */
+/** The unit an input effect's parameters use: "input1", "input2". */
 fun inputUnit(slot: Int): String = "input${slot + 1}"
 
-/** [slot]'s input effect with [type] on it, keeping nothing of what was there. */
+/** Puts [type] on [slot]'s input effect. A different type starts fresh; the same type keeps its settings. */
 fun Song.withInputFx(slot: Int, type: String): Song {
     if (slot !in 0 until INPUT_SLOTS) return this
     val list = List(INPUT_SLOTS) { inputAt(it) }.toMutableList()
@@ -432,7 +423,7 @@ private fun Track.withModifierSlot(slot: Int, f: (UnitSlot) -> UnitSlot): Track 
     return copy(modifiers = list)
 }
 
-/** As [withEffect]: the type it already is is not a change, so the settings stay. */
+/** Like [withEffect]: setting the type it already has keeps its settings. */
 fun Track.withModifier(slot: Int, type: String): Track =
     withModifierSlot(slot) { if (it.type == type) it else UnitSlot(type = type) }
 fun Track.withModifierParam(slot: Int, name: String, v01: Float): Track =
@@ -442,7 +433,7 @@ fun Track.withModifierBypass(slot: Int, bypass: Boolean): Track = withModifierSl
 fun modifierUnit(slot: Int): String = "mod${slot + 1}"
 fun modifierSlotOf(unit: String): Int? = when (unit) { "mod1" -> 0; "mod2" -> 1; "mod3" -> 2; else -> null }
 
-/** How long the song plays once through: per-scene tempo and ramps honoured, glides into a scene ignored. */
+/** How long the song plays once through, with scene tempos and ramps but ignoring glides into a scene. */
 fun Song.durationSeconds(): Float {
     var total = 0f
     for (scene in scenes) {
@@ -452,9 +443,9 @@ fun Song.durationSeconds(): Float {
 }
 
 /**
- * One pass of [scene], in seconds. A ramp happens on the last pass only, and
- * a tempo moving evenly from b0 to b1 over n beats takes 60 n ln(b1/b0) /
- * (b1 - b0) seconds - the time is the integral of one over the tempo.
+ * One pass of [scene], in seconds. Ramps only happen on the last pass. A
+ * tempo moving evenly from b0 to b1 over n beats takes
+ * 60 n ln(b1/b0) / (b1 - b0) seconds (the integral of one over the tempo).
  */
 fun Song.passSeconds(scene: Scene, last: Boolean): Float {
     val bpm = scene.tempo?.bpm ?: tempo
@@ -470,20 +461,17 @@ fun Song.passSeconds(scene: Scene, last: Boolean): Float {
 }
 
 /**
- * The master section by parameter name, so a mapped controller reaches it
- * the same way a mapped controller reaches a track.
+ * Sets a master parameter by name, so a mapped controller reaches it the same
+ * way it reaches a track.
  *
- * The names are the engine's own ([MasterBus]'s table), which is what makes
- * this the mirror of [Track.withMixerParam] rather than a second vocabulary.
+ * The names are the engine's own ([MasterBus]'s table), matching
+ * [Track.withMixerParam].
  */
 fun Song.withMasterParam(name: String, v01: Float): Song = copy(
     master = when (name) {
         "volume" -> master.copy(volume = EngineParams.volumeFrom01(v01))
-        // The reverb and delay names that used to be here are gone: those
-        // parameters belong to whatever is on the send now, and are reached
-        // under the units `send1` and `send2` by the effect's own names for
-        // them - see [Song.withSendParam], which is this function's opposite
-        // number for a slot.
+        // Send effect parameters are reached under the units `send1` and
+        // `send2` by the effect's own names; see [Song.withSendParam].
         "limiteron" -> master.copy(limiter = master.limiter.copy(on = v01 >= 0.5f))
         "limiterdrive" -> master.copy(limiter = master.limiter.copy(drive = v01))
         else -> master

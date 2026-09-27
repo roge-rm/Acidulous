@@ -8,22 +8,17 @@
 #include <string>
 #include <vector>
 
-// Mounting a Nexus graph, in one place.
-//
-// `audition` and `bank_test` each had their own applySettings, and each only
-// knew about Formulate - so when `audition` learned to mount a Nexus graph,
-// `bank_test` did not, and reported every Nexus patch silent while `audition
-// play` measured the same patch at -10.5 dB. Two copies of one rule is one
-// copy too many.
+// Mounts a Nexus graph. Shared by `audition` and `bank_test` so they can't
+// drift apart.
 namespace acidulous::audition {
 
 /**
- * Build the graph a Nexus patch describes and hand it to the machine.
+ * Builds the graph a Nexus patch describes and hands it to the machine.
  *
- * Returns false and says why if the text will not parse. [named] is the set of
- * parameters the patch stated for itself: everything else takes the module's
- * own default rather than zero, because every slot knob defaults to zero and a
- * graph whose oscillator level is nought makes no sound at all.
+ * Returns false and prints why if the text won't parse. [named] is the set of
+ * parameters the patch sets itself. Everything else takes the module's own
+ * default, since slot knobs default to zero and an oscillator at level zero
+ * makes no sound.
  */
 inline bool mountNexusGraph(Machine *m, const std::string &text, float sampleRate,
                             const std::set<std::string> &named,
@@ -50,12 +45,9 @@ inline bool mountNexusGraph(Machine *m, const std::string &text, float sampleRat
         m->params().set(i, defs[i].unmap(knobs[static_cast<size_t>(slot) * nx::kKnobs + knob]));
     }
     m->params().jumpAll();
-    // Swap first, *then* release what was there. `swapObject` carries the
-    // sounding instances over from the old graph - it dereferences it - so
-    // `store.reset(g)` before the swap freed the very graph the machine was
-    // still pointing at, and the second mount of a patch segfaulted inside
-    // `adoptFrom`. The engine gets this right (Engine.cpp retires the pointer
-    // the swap hands back, and not before); the harness did not.
+    // Swap first, then release the old graph. `swapObject` reads the old
+    // graph to carry playing voices over, so freeing it first would crash.
+    // Engine.cpp does the same.
     m->swapObject(0, g);
     store.reset(g);
     return true;

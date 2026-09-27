@@ -3,10 +3,8 @@
 #include <cstdint>
 #include <vector>
 
-// A radix-2 complex FFT, iterative and in place. Ours, because the one thing
-// the engine needed a transform for - building Cumulus's clouds - wants a
-// single inverse transform of a quarter of a million points on a worker
-// thread, and that is sixty lines rather than a dependency.
+// A radix-2 complex FFT, iterative and in place. Used to build Cumulus's
+// clouds on a worker thread, which only needs one large inverse transform.
 //
 // Not used on the audio thread. No allocation inside transform().
 namespace acidulous::dsp {

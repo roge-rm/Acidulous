@@ -72,18 +72,14 @@ import com.rm.acidulous.res.*
 /**
  * The scene's "4/4 × 1" chip, expanded: name, signature, repeat, tempo, fades.
  *
- * Rebuilt in the same vocabulary as every other window here. It used to be
- * a Material `AlertDialog` full of switches and outlined buttons, and its
- * signatures sat in two fixed `Row`s - which do not wrap, so 2/4 and 5/4
- * were crushed to slivers and 12/8 came out stacked vertically as "1 2 / 8".
- * A `FlowRow` of chips fits them at any width.
+ * Built from the same cards and knobs as the other windows here.
  */
 @Composable
 fun SceneSettingsDialog(
     scene: Scene, songSignature: Signature, onDismiss: () -> Unit,
-    /** How long the scene is, which is as far as a ramp can reach back. */
+    /** How long the scene is, which is as far back as a ramp can reach. */
     bars: Int = 16,
-    /** The tempo it starts from when it has none of its own. */
+    /** The starting tempo when the scene has none of its own. */
     songTempo: Float = 120f,
     onConfirm: (Scene) -> Unit,
 ) {
@@ -122,10 +118,9 @@ fun SceneSettingsDialog(
             )
         }
 
-        // Cards of knobs and switches below the name, the arp window's shape:
-        // Dan wants every editor window to look like that one. Nine
-        // signatures are a stepped knob that names its step - as chips they
-        // wrapped, and as a slider they were a dotted line.
+        // Cards of knobs and switches below the name, laid out like the arp
+        // window, as every editor window is. The nine signatures are a stepped
+        // knob that shows its value.
         WindowCards {
             WindowCard(stringResource(Res.string.scene_time)) {
                 val sigIndex = signature?.let { SIGNATURES.indexOf(it) + 1 } ?: 0
@@ -144,13 +139,13 @@ fun SceneSettingsDialog(
             WindowCard(stringResource(Res.string.scene_tempo)) {
                 SwitchGrid(stringResource(Res.string.scene_tempo_from), stringArrayResource(Res.array.scene_tempo_from_choices).toList(), if (ownTempo) 1 else 0) { ownTempo = it == 1 }
                 if (ownTempo) {
-                    // Whole beats a minute, set only when the knob moves, so
-                    // a scene written at 72.5 keeps it until it is turned.
+                    // Whole bpm, only set when the knob moves, so a scene
+                    // saved at 72.5 keeps it until you turn it.
                     CountKnob(stringResource(Res.string.scene_bpm), bpm.roundToInt(), 40..240, "%.0f".format(bpm), PanelAmber) { bpm = it.toFloat() }
                     SwitchGrid(stringResource(Res.string.scene_change), stringArrayResource(Res.array.scene_change_choices).toList(), if (smooth) 1 else 0) { smooth = it == 1 }
                 }
-                // A tempo change inside the scene, on its last pass:
-                // slowing into what comes next, or speeding up across it.
+                // A tempo change on the scene's last pass: slowing into the
+                // next scene, or speeding up across it.
                 val start = if (ownTempo) bpm else songTempo
                 SwitchGrid(stringResource(Res.string.scene_ramp), stringArrayResource(Res.array.off_on).toList(), if (ramp != null) 1 else 0) {
                     ramp = if (it == 1) (ramp ?: com.rm.acidulous.model.TempoRamp((start * 0.75f).roundToInt().toFloat(), minOf(2, bars))) else null
@@ -174,17 +169,17 @@ fun SceneSettingsDialog(
 fun ClipSettingsDialog(
     clip: Clip,
     onDismiss: () -> Unit,
-    /** The song's tempo here, to say whether a freeze can still be used. */
+    /** The song's tempo here, to tell whether a freeze can still be used. */
     tempo: Float = 0f,
-    /** Render this clip to audio, or throw the render away. Both dismiss. */
+    /** Renders this clip to audio, or throws the render away. Both dismiss. */
     onFreeze: () -> Unit = {},
     onThaw: () -> Unit = {},
-    /** Empty it of notes and automation, keeping how it is set up. Dismisses. */
+    /** Empties it of notes and automation, keeping its settings. Dismisses. */
     onClear: () -> Unit = {},
-    /** Put this clip on the clipboard. [onCut] copies and then clears. Both dismiss. */
+    /** Puts this clip on the clipboard. [onCut] copies and then clears. Both dismiss. */
     onCopy: () -> Unit = {},
     onCut: () -> Unit = {},
-    /** Replace this clip with what is on the clipboard. Dismisses. */
+    /** Replaces this clip with the clipboard. Dismisses. */
     onPaste: () -> Unit = {},
     onConfirm: (Clip) -> Unit,
 ) {
@@ -196,8 +191,7 @@ fun ClipSettingsDialog(
     var free by remember { mutableStateOf(clip.freeRoll) }
     var confirmClear by remember { mutableStateOf(false) }
     var confirmPaste by remember { mutableStateOf(false) }
-    // Only where the clip actually gambles. A control for a feature this clip
-    // is not using is clutter, and most clips never will be.
+    // Only shown when the clip uses chance. Most clips never do.
     val rolls = clip.notes.any { it.chance < 100 }
 
     PlainDialog(
@@ -208,16 +202,13 @@ fun ClipSettingsDialog(
             onConfirm(clip.copy(bars = bars, playMode = mode, mute = mute, grid = grid, seed = seed, freeRoll = free))
         },
     ) {
-        // **The actions first.** They are what you opened this window to do -
-        // the settings under them are the ones you set once and leave - and a
-        // control you reach for often does not belong at the bottom. `clear`
-        // sits with them because it is the same kind of thing, and it asks
-        // before it does anything; so does pasting over a clip that has
-        // something in it. `cut` does not ask, because what it takes is on
-        // the clipboard rather than gone.
+        // The actions come first, since they're what you usually open this
+        // window for, and the settings below are set once and left. Clear is
+        // with them and asks first, as does pasting over a clip that isn't
+        // empty. Cut doesn't ask, because what it takes is on the clipboard.
         //
-        // Cards of knobs and switches, the arp window's shape: Dan wants every
-        // editor window to look like that one, all of it in view at once.
+        // Cards of knobs and switches laid out like the arp window, all in
+        // view at once.
         val held = ClipClipboard.clip
         val what = listOfNotNull(
             if (clip.notes.isNotEmpty()) pluralStringResource(Res.plurals.clip_notes, clip.notes.size, clip.notes.size) else null,
@@ -227,8 +218,8 @@ fun ClipSettingsDialog(
         val frozen = clip.frozen
         val stale = frozen != null && tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
         WindowCards {
-            // The card's title says what is in it, which is what the
-            // actions in it act on.
+            // The card's title says what's in the clip, which is what its
+            // actions act on.
             WindowCard(stringResource(Res.string.clip_card, what)) {
                 SwitchGrid(
                     if (held != null) stringResource(Res.string.clip_clipboard_has, ClipClipboard.from) else stringResource(Res.string.clip_clipboard),
@@ -242,8 +233,8 @@ fun ClipSettingsDialog(
                         else -> confirmClear = true
                     }
                 }
-                // Freeze is an action rather than a setting, so it does
-                // its own thing and closes; everything else waits for OK.
+                // Freeze is an action, not a setting, so it runs and closes
+                // straight away. Everything else waits for OK.
                 if (frozen != null) {
                     SwitchGrid(stringResource(if (stale) Res.string.clip_stale else Res.string.clip_audio), listOf(stringResource(Res.string.clip_thaw)), -1) { onThaw() }
                 } else if (clip.notes.isNotEmpty()) {
@@ -259,17 +250,14 @@ fun ClipSettingsDialog(
                     mode = if (it == 1) PlayMode.OneShot else PlayMode.Loop
                 }
                 SwitchGrid(stringResource(Res.string.clip_mute), stringArrayResource(Res.array.off_on).toList(), if (mute) 1 else 0) { mute = it == 1 }
-                // Only where the clip actually gambles. A control for a
-                // feature this clip is not using is clutter, and most
-                // clips never will be.
+                // Only shown when the clip uses chance.
                 if (rolls) {
                     SwitchGrid(stringResource(Res.string.clip_dice), stringArrayResource(Res.array.clip_dice_choices).toList(), if (free) 1 else 0) { free = it == 1 }
                     if (!free) CountKnob(stringResource(Res.string.clip_seed), seed, 0..63) { seed = it }
                 }
             }
         }
-        // The one line nothing else can say: a freeze at another tempo is not
-        // what is playing.
+        // Explains that a freeze at another tempo isn't what's playing.
         if (frozen != null && stale) {
             Text(
                 stringResource(Res.string.clip_stale_note, frozen.bpm, tempo),
@@ -311,12 +299,12 @@ fun ClipSettingsDialog(
 internal fun WindowCard(title: String, content: @Composable () -> Unit) =
     Group(title, perLine = 4, centred = true, background = com.rm.acidulous.ui.theme.Acid.colors.cardAlt, content = content)
 
-/** A name and its line, at a height every row shares. */
+/** The height every machine row shares: a name and its line. */
 private val MACHINE_ROW_H = 68.dp
 
 /**
- * A group's name, with the hedge set in italic: "realish" is doing a
- * qualifier's job, and it should look like one.
+ * A group's name with the "ish" in italics, since in "realish" it's a
+ * qualifier and should look like one.
  */
 private fun chipLabel(label: String): androidx.compose.ui.text.AnnotatedString =
     androidx.compose.ui.text.buildAnnotatedString {
@@ -331,8 +319,7 @@ private fun chipLabel(label: String): androidx.compose.ui.text.AnnotatedString =
 
 /**
  * The machine picker: four groups behind chips, each machine with a line
- * saying what it is. A flat list of twelve names told you nothing unless you
- * already knew, which defeats the point of having twelve.
+ * saying what it is.
  */
 @Composable
 fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String) -> Unit) {
@@ -342,8 +329,8 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
         mutableStateOf(groups.indexOfFirst { current in it.machines }.coerceAtLeast(0))
     }
     val c = com.rm.acidulous.ui.theme.Acid.colors
-    // Anything the engine offers that no group claims still has to be
-    // reachable, so it lands in the last group.
+    // Anything the engine has that no group lists still needs to be
+    // reachable, so it goes in the last group.
     val listed = groups.flatMap { it.machines }.toSet()
     val contents = groups.mapIndexed { i, g ->
         g.machines.filter { it in known } +
@@ -413,18 +400,14 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
 
 /**
  * A number set by dragging: the name, its value on the right, a line saying
- * what it is, and the slider under them.
+ * what it is, and the slider underneath.
  *
- * This is the shape for anything continuous. Chips are right for a handful
- * of named choices and wrong for a range - thirty-two repeat counts is not
- * a set of chips, and even eight of them wrap onto a second row and push
- * everything below them down the screen. A slider is one row whatever the
- * range, which is how a settings page stays short enough to read without
- * scrolling.
+ * For anything continuous. Chips suit a few named choices, but a range like
+ * thirty-two repeat counts would wrap onto several rows. A slider is one row
+ * whatever the range, which keeps settings pages short.
  *
- * It must be given a Column, not a `Section` - a Section's content is a
- * FlowRow, which hands a slider constraints it cannot make sense of and
- * draws it as a bar, a gap and a stray dot.
+ * Put it in a Column, not a `Section`. A Section's content is a FlowRow,
+ * which gives a slider constraints it can't handle and draws it broken.
  */
 @Composable
 internal fun SliderSection(
@@ -433,7 +416,7 @@ internal fun SliderSection(
     note: String,
     position: Float,
     range: ClosedFloatingPointRange<Float>,
-    /** Stops to draw. 0 for a plain slider - see the note in the body. */
+    /** Stops to draw. 0 for a plain slider; see the note in the body. */
     steps: Int = 0,
     onChange: (Float) -> Unit,
 ) {
@@ -443,13 +426,13 @@ internal fun SliderSection(
             Text(title, color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
             Text(value, color = c.accent, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
         }
-        // Tight leading: these lines are the bulk of a settings page, and at
-        // the default they were spaced like prose.
+        // Tight line spacing, since these lines make up most of a settings
+        // page.
         if (note.isNotEmpty()) {
             Text(note, color = c.textDim, fontSize = 11.sp, lineHeight = 14.sp)
         }
-        // Ticks only when you could count them. A stop on each of eight
-        // signatures helps; two hundred dots along a tempo is a dotted line.
+        // Tick marks only when there are few enough to count. Eight stops
+        // help, two hundred are just a dotted line.
         Slider(
             value = position,
             onValueChange = onChange,
@@ -461,27 +444,23 @@ internal fun SliderSection(
 }
 
 /**
- * Tempo, and everything that counts against it.
+ * Tempo, and everything that goes with it.
  *
- * The metronome used to live in the settings window, a tab away from
- * anything it relates to. It belongs here: the tempo, the click and the
- * count-in are one thought - how fast, what am I hearing it against, and
- * how long before it starts - and you reach for them in the same moment.
- * Settings is for what you set once.
+ * The tempo, the click and the count-in are all about how fast, what you
+ * hear it against and how long before it starts, so they're together here
+ * rather than in settings, which is for things you set once.
  *
- * Two tabs rather than one long scroll, for the same reason the settings
- * window has them, and it opens on the tempo because that is what the
- * button you pressed says.
+ * Split into tabs like the settings window, opening on tempo since that's
+ * what the button says.
  *
- * The window mixes two lifetimes on purpose: the **tempo waits for OK**,
- * being the song's and an edit every time, while the **click settings apply
- * as you touch them**, being the device's - which is why Cancel says
- * nothing about them.
+ * The tempo is part of the song, so it waits for OK. The click settings
+ * belong to the device and apply as you touch them, so Cancel doesn't undo
+ * them.
  */
 @Composable
 fun TempoDialog(
     song: Song, onDismiss: () -> Unit,
-    /** The tunings there are to choose from: built in, and imported. */
+    /** The tunings to choose from: built in and imported. */
     tunings: List<com.rm.acidulous.model.Tuning> = com.rm.acidulous.model.Tunings.builtIn,
     onConfirm: (Song) -> Unit,
 ) {
@@ -492,10 +471,10 @@ fun TempoDialog(
     var key by remember { mutableStateOf(song.key) }
     var tuning by remember { mutableStateOf(song.tuning) }
     var tab by rememberSaveable { mutableStateOf(0) }
-    // On a square phone the key is a page of its own: tempo, bar and key are
-    // half a card more than its window. See [compactWindow].
+    // On a square phone the key gets its own page, since tempo, bar and key
+    // don't quite fit. See [compactWindow].
     val keyPage = compactWindow()
-    // Link last, and only where there is one: see AppHost.hasLink.
+    // Link goes last, and only when it's available; see AppHost.hasLink.
     val hasLink = com.rm.acidulous.AppHost.current.hasLink
     val tabNames = stringArrayResource(Res.array.tempo_tabs).toList().let {
         if (keyPage) listOf(it[0], stringResource(Res.string.tempo_tab_key)) + it.drop(1) else it
@@ -541,13 +520,11 @@ fun TempoDialog(
 }
 
 /**
- * Ableton Link: everybody on this Wi-Fi at one tempo, with one bar line.
+ * Ableton Link: everyone on this Wi-Fi at one tempo, with one bar line.
  *
- * Here, behind the tempo, rather than with the MIDI clock in the MIDI
- * window - because this is the other answer to "who decides the tempo", and
- * the two are alternatives. Following a clock down a cable and following a
- * session over the air at the same time is two masters; switching this on
- * stands the other down, in the engine and on the screen.
+ * It's here with the tempo rather than with MIDI clock in the MIDI window,
+ * because both decide who sets the tempo and only one can. Turning this on
+ * turns clock following off, in the engine and on screen.
  */
 @Composable
 private fun LinkPage() {
@@ -558,8 +535,8 @@ private fun LinkPage() {
                 val on = i == 1
                 UiPrefs.chooseLink(on)
                 hub.chooseEnabled(on)
-                // One master at a time; the engine enforces it and the screen
-                // should not go on claiming otherwise.
+                // Only one tempo source at a time. The engine enforces it and
+                // the screen should match.
                 if (on && com.rm.acidulous.midi.MidiHub.follow != com.rm.acidulous.midi.MidiHub.Follow.Off) {
                     UiPrefs.chooseFollow(com.rm.acidulous.midi.MidiHub.Follow.Off)
                 }
@@ -567,8 +544,8 @@ private fun LinkPage() {
             SwitchGrid(stringResource(Res.string.link_start_stop), stringArrayResource(Res.array.link_start_stop_choices).toList(), if (hub.startStop) 0 else 1) { UiPrefs.chooseLinkStartStop(it == 0) }
         }
     }
-    // What neither switch can say: what following a session costs, and
-    // whether one is there.
+    // What the switches can't show: what following a session costs, and
+    // whether there is one.
     if (hub.enabled) {
         ListSection(
             stringResource(Res.string.link_session),
@@ -596,13 +573,12 @@ private fun TempoPage(
     tuning: com.rm.acidulous.model.Tuning? = null,
     tunings: List<com.rm.acidulous.model.Tuning> = emptyList(),
     onTuning: (com.rm.acidulous.model.Tuning?) -> Unit = {},
-    /** Whether the key is on this page, or a page of its own. */
+    /** Whether the key is on this page or on its own page. */
     withKey: Boolean = true,
 ) {
-    // Cards, the arp window's shape, so this reads like every other window a
-    // player reaches for mid-song. The tempo itself stays a field with a step
-    // either side - see BpmRow - because a knob over two hundred values
-    // cannot land on one of them.
+    // Cards laid out like the arp window, like every other window. The tempo
+    // itself stays a field with a step button either side (see BpmRow),
+    // since a knob over two hundred values can't land on one exactly.
     WindowCards {
         WindowCard(stringResource(Res.string.tempo_tempo)) {
             BpmRow(bpm, onBpm)
@@ -619,8 +595,8 @@ private fun TempoPage(
                 if (swing <= SWING_STRAIGHT + 0.05f) stringResource(Res.string.tempo_straight) else "%.0f%%".format(swing), PanelAmber,
             ) { onSwing(it.toFloat()) }
             SwitchGrid(stringResource(Res.string.tempo_swing_on), listOf("1/16", "1/8"), unit(swingUnit)) { onSwingUnit(it) }
-            // The two feels worth a name. Neither is lit between them, which
-            // is what a knob set to 58% is.
+            // The two feels worth naming. Neither is lit in between, like a
+            // knob at 58%.
             SwitchGrid(
                 stringResource(Res.string.tempo_feel), stringArrayResource(Res.array.tempo_feel_choices).toList(),
                 when {
@@ -637,29 +613,25 @@ private fun TempoPage(
 private fun unit(u: Int) = if (u == 1) 1 else 0
 
 /**
- * A window's cards: stacked down it upright, each wrapping its controls;
- * side by side when the phone is turned, each a row, the way a machine's
- * panel lays them - a turned window is wide and about four hundred dp tall,
- * and a column of cards in it was a scroll by the second card.
+ * A window's cards: stacked upright, each wrapping its controls, and side by
+ * side when the phone is turned, each a row, like a machine's panel. A turned
+ * window is wide but short, so a column of cards would need scrolling.
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun WindowCards(content: @Composable () -> Unit) {
-    // **A square phone packs them.** Stacked, a card of three knobs took a
-    // whole line with room for three more beside it, and the arp's five did
-    // not fit the window. Here a card is as wide as its controls, cards that
-    // fit side by side share a line, and a busy one still takes a line and
-    // wraps its controls as it does upright.
+    // On a square phone the cards are packed. Each card is as wide as its
+    // controls, cards that fit side by side share a line, and a busy one
+    // still takes a line and wraps its controls like it does upright.
     if (LocalDialogCompact.current && !LocalDialogWide.current) {
         androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true, LocalCardsPacked provides true) {
             PackedCards(4.dp, content)
         }
         return
     }
-    // **Wide, the cards share each line too**, stretched to fill it, as the
-    // square phone's do: a line of two small cards centred in eleven hundred
-    // dp read as two islands in an empty window. And the window is only as
-    // wide as its widest line wants - see DialogFit.
+    // Wide, the cards also share each line, stretched to fill it, so two
+    // small cards don't float in an empty window. The window is only as
+    // wide as its widest line needs; see DialogFit.
     if (LocalDialogWide.current) {
         androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides false) {
             PackedCards(6.dp, content)
@@ -672,18 +644,16 @@ internal fun WindowCards(content: @Composable () -> Unit) {
 }
 
 /**
- * Cards in lines, as many to a line as fit at their own widths, each line's
- * then stretched to fill it and made as tall as its tallest - so two small
- * cards read as a pair of equal halves and a lone one as the full line,
- * rather than a ragged row of whatever widths their knobs came to.
+ * Cards in lines, as many per line as fit at their own widths. Each line is
+ * then stretched to fill the width and made as tall as its tallest card, so
+ * two small cards read as equal halves and a lone one fills the line.
  *
- * **Measured, not asked.** The first version took each card's intrinsic
- * width and height, and a card is a flow row and sometimes a
- * BoxWithConstraints: the heights came back short and the Settings and MIDI
- * windows lost their bottom rows, clipped off. So the content is composed
- * three times - once measured loose for the widths, once at those widths for
- * the heights, once to show - as [TallestOf] does for pages. Only the last
- * is placed, so only its state is the one a finger changes.
+ * Measured rather than asked. A card is a flow row and sometimes a
+ * BoxWithConstraints, and their intrinsic heights come back too short, which
+ * clips the bottom rows. So the content is composed three times: once loose
+ * for the widths, once at those widths for the heights, and once to show,
+ * as [TallestOf] does for pages. Only the last is placed, so only its state
+ * is what a finger changes.
  */
 @Composable
 private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
@@ -695,10 +665,10 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
         val space = gap.roundToPx()
         val loose = androidx.compose.ui.unit.Constraints(maxWidth = maxOf(width, fit?.probe ?: 0))
         val parts = subcompose("widths", content)
-        // The narrowest each card can be laid without cutting anything - a
-        // switch, a knob, a word - asked only when a page is being tried
-        // beside another. A card Compose cannot answer for (one built on a
-        // SubcomposeLayout) is taken to fit.
+        // The narrowest each card can be without cutting anything off (a
+        // switch, a knob, a word). Only asked when a page is being tried next
+        // to another. A card Compose can't answer for (one built on a
+        // SubcomposeLayout) is assumed to fit.
         val least = if ((fit?.probe ?: 0) > 0) parts.map { m ->
             runCatching { m.minIntrinsicWidth(androidx.compose.ui.unit.Constraints.Infinity) }.getOrDefault(0)
         } else null
@@ -715,8 +685,8 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
                 line += i; used += space + w
             }
         }
-        // What the widest line would take unstretched: the window's to know.
-        // Each line's cards share out what is left over, in proportion.
+        // Each line's cards share out the leftover width in proportion. The
+        // widest unstretched line is reported to the window below.
         val widths = IntArray(natural.size)
         for (line in lines) {
             val sum = line.sumOf { natural[it] }.coerceAtLeast(1)
@@ -757,10 +727,9 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
 }
 
 /**
- * A row of text or readings inside a card: the card's whole width when the
- * cards are stacked, and its own width, up to a limit, when they stand side
- * by side - where filling the row would give it everything or nothing, and a
- * line of text given nothing comes out one letter wide.
+ * A row of text or readings inside a card: the card's full width when cards
+ * are stacked, and its own width up to a limit when they're side by side,
+ * where filling the row could leave text one letter wide.
  */
 @Composable
 internal fun Modifier.cardLine(): Modifier =
@@ -768,35 +737,34 @@ internal fun Modifier.cardLine(): Modifier =
 
 private val CardLineW = 480.dp
 
-/** A card line that is always that width in a wide window, whatever is in it: text that changes as it is read. */
+/** A card line that's always that width in a wide window, for text that changes while you read it. */
 internal fun Modifier.cardLineFull(): Modifier = this.widthIn(max = CardLineW).fillMaxWidth()
 
-/** Whether this window is laid out turned: see [DialogShell] and [WindowCards]. */
+/** Whether this window is laid out sideways; see [DialogShell] and [WindowCards]. */
 internal val LocalDialogWide = androidx.compose.runtime.compositionLocalOf { false }
 
 /**
- * How wide a window's cards would like to be, told to the window by the cards.
+ * How wide a window's cards want to be, reported by the cards to the window.
  *
- * A window laid wide was always the full 1100 dp, and a window of one small
- * card was a small card in a wide empty frame. Compose will not ask a
- * [PackedCards] - a SubcomposeLayout - for its intrinsic width, so each one
- * says here what its widest line comes to, and [DialogShell] makes the window
- * as wide as the widest of them. A window with none - text, a list - is as
- * wide as it always was.
+ * Compose won't ask a [PackedCards] (a SubcomposeLayout) for its intrinsic
+ * width, so each one reports its widest line here and [DialogShell] makes the
+ * window as wide as the widest. Otherwise a wide window would always be the
+ * full 1100dp even for one small card. A window with no cards (text, a list)
+ * keeps its usual width.
  */
 internal class DialogFit(
     /**
-     * How wide a card may say it is, beyond the width it is laid in: a page
-     * beside another measures its cards against the whole window, so one that
-     * does not wrap says how wide it really is. Nought: the width it is in.
+     * How wide a card may say it is beyond the width it's laid out in. A page
+     * next to another measures its cards against the whole window, so one that
+     * doesn't wrap reports its real width. 0 means the width it's in.
      */
     val probe: Int = 0,
 ) {
     private val widths = androidx.compose.runtime.mutableStateMapOf<Any, Int>()
     private val cramped = androidx.compose.runtime.mutableStateMapOf<Any, Boolean>()
-    /** The widest line any of the window's card blocks wants, in px; nought when none has said. */
+    /** The widest line any of the window's card blocks wants, in px; 0 when none has reported. */
     val natural: Int get() = widths.values.maxOrNull() ?: 0
-    /** Some card was laid narrower than the narrowest it can be without cutting something. */
+    /** Whether some card was laid out narrower than it can be without cutting something off. */
     val squeezed: Boolean get() = cramped.values.any { it }
     fun tell(who: Any, px: Int, cut: Boolean = false) {
         if (widths[who] != px) widths[who] = px
@@ -808,9 +776,9 @@ internal class DialogFit(
 internal val LocalDialogFit = androidx.compose.runtime.compositionLocalOf<DialogFit?> { null }
 
 /**
- * How wide a window of text or a list reads best, told to the window as its
- * cards tell theirs: a manual page ran eleven hundred dp to a line on a
- * desktop, which is a line nobody finds the start of the next one after.
+ * How wide a window of text or a list reads best, reported to the window like
+ * the cards do. Otherwise a manual page on a desktop would run 1100dp per
+ * line, which is too long to read comfortably.
  */
 @Composable
 internal fun WindowWidth(width: Dp) {
@@ -823,27 +791,25 @@ internal fun WindowWidth(width: Dp) {
     }
 }
 
-/** Whether the window is on a square phone's screen, short and narrow: see [DialogShell]. */
+/** Whether the window is on a square phone's screen, short and narrow; see [DialogShell]. */
 internal val LocalDialogCompact = androidx.compose.runtime.compositionLocalOf { false }
 
-/** Whether the window's header carries the body's own row (its `wideHeader`), so the body leaves it out. */
+/** Whether the window's header shows the body's own row (its `wideHeader`), so the body leaves it out. */
 internal val LocalDialogHeaderRow = androidx.compose.runtime.compositionLocalOf { false }
 
 /**
- * The tempo: a number you can type, with a step either side.
+ * The tempo: a number you can type, with a step button either side.
  *
- * It was a slider and eight preset chips. A slider over two hundred values
- * cannot reliably land on one of them, which is what the chips were for - and
- * chips only cover the tempos somebody thought of. A field types any of them
- * and the arrows walk to the one next door, which between them is every way
- * anybody sets a tempo.
+ * A slider over two hundred values can't reliably land on one, and preset
+ * chips only cover some tempos. Typing gets any tempo and the arrows step to
+ * the next one.
  */
 @Composable
 private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
-    // What has been typed, while it is being typed. Held separately so a
-    // half-finished number - "1", or an empty field mid-delete - does not
-    // become the tempo and snap the field back under the finger.
+    // What's been typed, kept separately so a half-finished number ("1", or
+    // an empty field mid-delete) doesn't become the tempo and snap the field
+    // back while you type.
     var typed by remember(bpm) { mutableStateOf(formatBpm(bpm)) }
     val fieldSaid = stringResource(Res.string.a11y_tempo_field)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -878,13 +844,11 @@ private fun StepButton(label: String, said: String, onClick: () -> Unit) {
 }
 
 /**
- * Four taps in time, and the tempo is the average of the gaps between them.
+ * Tap in time and the tempo is the average gap between the taps.
  *
- * The average rather than the last gap: a person's taps scatter by twenty
- * milliseconds either way, which at 120 is four beats a minute of jitter, and
- * a tempo that jumps around while you are still tapping is one you cannot
- * aim. Gaps longer than two seconds start again, because that is somebody
- * coming back to it rather than counting thirty.
+ * The average rather than the last gap, because taps scatter by around 20ms
+ * either way, which at 120 bpm is four bpm of jitter. A gap over two seconds
+ * starts again.
  */
 @Composable
 private fun TapTempo(onBpm: (Float) -> Unit) {
@@ -921,12 +885,11 @@ private fun TapTempo(onBpm: (Float) -> Unit) {
 }
 
 /**
- * The key the song is in - which nothing is forced into.
+ * The song's key, which nothing is forced into.
  *
- * It shades the rows a note cannot use in the roll and fits a new track with
- * a matching scale. It deliberately does not move anything already written or
- * reach into a track that has chosen its own: a song setting that silently
- * retuned sixteen tracks would be a thing people turned off and left off.
+ * It shades the rows outside the key in the roll and gives new tracks a
+ * matching scale. It doesn't move existing notes or change tracks that have
+ * their own scale.
  */
 @Composable
 private fun KeySection(
@@ -936,10 +899,9 @@ private fun KeySection(
     onTuning: (com.rm.acidulous.model.Tuning?) -> Unit = {},
 ) {
     WindowCard(stringResource(Res.string.tempo_key)) {
-        // Nought is no key; then the twelve roots, spelled against the chosen
-        // scale, so E flat major is E♭ and not D♯: `Scales.rootName` is the
-        // same walk the roll's own labels use, and a chooser that disagreed
-        // with the notes it sets would be its own bug.
+        // 0 is no key, then the twelve roots spelled for the chosen scale, so
+        // E flat major is E♭ and not D♯. `Scales.rootName` is the same logic
+        // the roll's labels use, so they always agree.
         val scale = key?.scale ?: 0
         CountKnob(
             stringResource(Res.string.tempo_root), key?.let { it.root + 1 } ?: 0, 0..12, key?.let { Scales.rootName(it.root, scale) } ?: stringResource(Res.string.none), PanelAmber,
@@ -952,17 +914,17 @@ private fun KeySection(
                 onKey(key.copy(scale = it))
             }
         }
-        // How the notes are tuned, counted from the root. A song's own tuning
-        // that this phone has no file for - one that came in a bundle - is
-        // kept, at the top of the list.
+        // How the notes are tuned, counted from the root. A song's tuning
+        // that this phone has no file for (say from a bundle) is kept at the
+        // top of the list.
         if (tunings.isNotEmpty()) TuningKnob(tuning, tunings, onTuning)
     }
 }
 
 /**
- * Which tuning, as a knob that names it and opens the list on a hold.
- * [followLabel] adds a first choice meaning "none of my own" - a track's
- * "song", following the song's tuning.
+ * Which tuning, as a knob that shows its name and opens the list on a hold.
+ * [followLabel] adds a first choice meaning "none of its own", like a
+ * track's "song" that follows the song's tuning.
  */
 @Composable
 internal fun TuningKnob(
@@ -989,8 +951,8 @@ private fun formatBpm(bpm: Float): String =
 
 @Composable
 private fun ClickPage() {
-    // Every one of these applies as it is touched - they are the device's,
-    // not the song's - so Cancel leaves them as they are.
+    // These all apply as you touch them, since they belong to the device and
+    // not the song, so Cancel doesn't undo them.
     WindowCards {
         WindowCard(stringResource(Res.string.click_card)) {
             SwitchGrid(stringResource(Res.string.click_sound), stringArrayResource(Res.array.click_voices).toList(), UiPrefs.clickVoice, columns = 3) { UiPrefs.chooseClickVoice(it) }
@@ -1000,8 +962,8 @@ private fun ClickPage() {
                 UiPrefs.chooseClickVolume(it / 100f)
             }
         }
-        // What recording does: counts in, and moves what is played onto
-        // the clip's grid, all the way or part of it.
+        // Recording settings: count-in, and quantising what's played onto
+        // the clip's grid, fully or partly.
         WindowCard(stringResource(Res.string.click_record)) {
             SwitchGrid(stringResource(Res.string.click_count_in), listOf(stringResource(Res.string.none), "1", "2", "3", "4"), UiPrefs.countInBars, columns = 5) { UiPrefs.chooseCountInBars(it) }
             SwitchGrid(stringResource(Res.string.click_quantise), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.recordQuantise) 1 else 0) {
@@ -1024,16 +986,13 @@ internal val SIGNATURES = listOf(
 internal val GRIDS = listOf("1/4" to PPQN, "1/8" to PPQN / 2, "1/16" to PPQN / 4, "1/32" to PPQN / 8, "1/8T" to PPQN / 3, "1/16T" to PPQN / 6)
 
 /**
- * The shape every window with tabs takes, so that none of them can drift
- * from the others: a card the width of the screen, a title, a row of chips,
- * a body, and one button on the right.
+ * The layout every tabbed window uses, so they all match: a card the width of
+ * the screen, a title, a row of chips, a body, and one button on the right.
  *
- * **The body is as tall as the tallest page, not as tall as the page you are
- * looking at.** Every page is composed and measured; only the chosen one is
- * placed. A window that resizes when you change tab moves its own button out
- * from under your thumb, and you have to find it again - and a settings
- * window is exactly where that is most annoying, because you are usually
- * changing one thing and leaving.
+ * The body is as tall as the tallest page, not the current one. Every page
+ * is composed and measured and only the chosen one is placed. Otherwise
+ * changing tab would resize the window and move its button out from under
+ * your thumb.
  */
 @Composable
 fun TabbedDialog(
@@ -1043,17 +1002,16 @@ fun TabbedDialog(
     onDismiss: () -> Unit,
     dismissLabel: String = stringResource(Res.string.done),
     maxBodyHeight: Dp = 560.dp,
-    /** Between whatever a page puts in itself. */
+    /** Spacing between the items a page puts in itself. */
     spacing: Dp = 6.dp,
     confirmLabel: String = "",
     onConfirm: (() -> Unit)? = null,
-    /** The body's own row, for the header where there is room: see [PlainDialog]. */
+    /** The body's own row, for the header when there's room; see [PlainDialog]. */
     wideHeader: (@Composable () -> Unit)? = null,
     /**
-     * The tabs' names, with [onSelectPage], for a window that has the tabs
-     * drawn for it rather than bringing its own [chips]. One page shows either
-     * way: for a day a wide window showed as many side by side as fitted, and
-     * Dan wants one tab's contents at a time, everywhere.
+     * The tab names, with [onSelectPage], for a window that has its tabs drawn
+     * for it rather than bringing its own [chips]. Only one page shows at a
+     * time, in every layout.
      */
     pageNames: List<String>? = null,
     onSelectPage: ((Int) -> Unit)? = null,
@@ -1073,13 +1031,12 @@ fun TabbedDialog(
 }
 
 /**
- * The same window without tabs, for the ones that are a single page.
+ * The same window without tabs, for single-page windows.
  *
- * It exists so that a one-page window cannot drift from a tabbed one by
- * being written out again from scratch - they are the same `DialogShell`,
- * and the only difference is whether there is a row of chips in it.
- * [confirm] adds an action to the left of the dismiss button, for a window
- * that *does* something rather than just changing settings as you touch them.
+ * It uses the same `DialogShell` as a tabbed window, so the two can't drift
+ * apart. [confirmLabel] adds an action to the left of the dismiss button, for
+ * a window that does something rather than just changing settings as you
+ * touch them.
  */
 @Composable
 fun PlainDialog(
@@ -1092,9 +1049,9 @@ fun PlainDialog(
     maxBodyHeight: Dp = 560.dp,
     spacing: Dp = 16.dp,
     /**
-     * Something that belongs in the header row when the window is turned,
-     * between the title and the buttons - a unit's bypass. Upright there is
-     * no header row, and the window draws it in its body instead.
+     * Something for the header row when the window is sideways, between the
+     * title and the buttons, like a unit's bypass. Upright there's no header
+     * row, so the window draws it in its body instead.
      */
     wideHeader: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
@@ -1123,39 +1080,21 @@ private fun DialogShell(
     body: @Composable () -> Unit,
 ) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
-    // **The cap is the smaller of what was asked for and what there is.**
-    //
-    // `maxBodyHeight` is a statement about how tall a window should be
-    // allowed to get, and five hundred and sixty dp is a fair answer on a
-    // phone held upright, where there are eight hundred and fifty. Turned,
-    // there are three hundred and ninety-three - so the cap never bound, the
-    // body took its full natural height, and the window came out taller than
-    // the screen with its Done button below the bottom edge. The body
-    // scrolls, so nothing was unreachable; the button that closes it was.
-    //
-    // The pieces are counted rather than guessed at because they are known
-    // here: whether there is a chip row, and whether there is a footer, are
-    // both arguments to this function.
+    // The height cap is the smaller of what was asked for and the screen.
+    // 560dp suits an upright phone, but a turned phone has less than that,
+    // and the window's Done button would end up off screen.
     val windowHeight = with(androidx.compose.ui.platform.LocalDensity.current) {
         androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp()
     }
-    // **The card is capped, and the body is what gives.** Counting the chrome
-    // and subtracting it was the first answer and it was arithmetic about a
-    // layout rather than the layout itself - it came out short by a footer,
-    // which is the one piece that had to survive. So the *card* is told how
-    // tall it may be, the title, the chips and the footer take what they
-    // need, and the body takes what is left by weight. Nothing has to be
-    // counted, and nothing can be pushed off the bottom.
-    // **And the floor may not be taller than the window either.** Two hundred
-    // dp is a fair smallest useful window, but a floor that outranks the cap
-    // re-creates the very fault the cap was written for: below about 224 dp -
-    // a turned phone at the largest interface scale - the card was allowed to
-    // be taller than the screen again, with its Done button off the bottom.
+    // The card is capped and the body gives way. The title, chips and footer
+    // take what they need and the body gets the rest by weight, so nothing
+    // needs counting and nothing gets pushed off the bottom.
     //
-    // **A square phone gets every dp back.** Its window is about 490 dp tall
-    // and the chrome - edge, padding, a title row sized to a 48 dp touch
-    // target, the tabs, the gaps - came to 150 of them, so the densest windows
-    // scrolled a card. See [compact] below for the rest.
+    // The floor (200dp) can't be taller than the window either, or on a very
+    // short screen the card would again be taller than the screen.
+    //
+    // A square phone uses a smaller edge, since its window is short and the
+    // chrome would otherwise take a big share. See `compact` below.
     val compactScreen = compactWindow()
     val cardMax = (windowHeight - if (compactScreen) DialogEdgeCompactH else DialogEdgeH)
         .coerceAtLeast(minOf(200.dp, windowHeight))
@@ -1163,27 +1102,26 @@ private fun DialogShell(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        // **A window lays itself out.** One opened from the editor's side
-        // column - Bias's "audio..." - inherited the column's turned layout,
-        // and its tabs stood on their side down the middle of an empty window.
-        // The window's own cards say how they stack (WindowCards).
+        // A window lays itself out rather than inheriting the layout of what
+        // opened it (like the editor's side column). Its cards decide how
+        // they stack (WindowCards).
         androidx.compose.runtime.CompositionLocalProvider(
             LocalPanelStacked provides false,
             LocalStackedPerLine provides StackedPerLine,
         ) {
-        // **A window is a window of its own**, so its keys never pass through
-        // MainActivity: the hub is asked here instead, before and after the
-        // window's controls, as it is there for the screen. Esc is left to
-        // the window, which closes on it. And the screen's letter shortcuts
-        // stop at the window - see KeyScope's `window`.
+        // A dialog is its own window, so its keys don't pass through
+        // MainActivity. The hub is asked here instead, before and after the
+        // window's controls. Esc is left to the window, which closes on it,
+        // and the screen's letter shortcuts stop at the window (see
+        // KeyScope's `window`).
         KeyScope(window = true)
         WindowKeys()
-        // Opened from the keyboard, the window takes the focus onto its first
-        // control, so the next key lands in it rather than hunting for it.
+        // Opened from the keyboard, the window moves focus to its first
+        // control so the next key goes there.
         val bodyFocus = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
         androidx.compose.runtime.LaunchedEffect(Unit) {
-            // Until it takes: the window's controls are not there to focus
-            // until it has been laid out, which is a frame or two.
+            // Keep trying, since the controls aren't there to focus until the
+            // window has been laid out, a frame or two later.
             if (KeyHub.usingKeys) {
                 for (attempt in 0 until 10) {
                     kotlinx.coroutines.delay(32)
@@ -1192,35 +1130,31 @@ private fun DialogShell(
             }
         }
         ScaledWindow {
-            // **Turned, the header is one row**: the title, the tabs and the
-            // buttons across the top, and the body the rest of the height.
-            // Upright the three are stacked and the footer is its own row;
-            // turned that cost a window of four hundred dp over half its
-            // height, and every window of cards scrolled by its second card.
-            // Square too: a square phone is as short as a turned one.
+            // Sideways, the header is one row with the title, tabs and
+            // buttons across the top and the body below. Upright they're
+            // stacked with the footer on its own row, which would take too
+            // much height sideways. Square phones count too, since they're
+            // as short as a turned phone.
             val wide = screenShape() != ScreenShape.Tall
-            // **Side by side only where two cards fit side by side.** A square
-            // phone is short like a turned one but narrow like an upright one,
-            // and cards laid in rows there could never pair: each stood alone
-            // and a busy one was squeezed rather than wrapped. Below this
-            // width the cards stack and wrap as they do upright, and the
-            // tabs, which would not fit beside the title and the buttons,
-            // have a row of their own.
+            // Cards only go side by side where two fit. A square phone is
+            // short like a turned one but narrow like an upright one, so
+            // below this width the cards stack and wrap as they do upright,
+            // and the tabs get their own row.
             val roomy = with(androidx.compose.ui.platform.LocalDensity.current) {
                 androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
             } >= WideCardsMinW
-            // Short and narrow: a square phone. The chrome gives way here - a
-            // smaller edge, tighter padding and gaps, and header buttons at
-            // 40 dp rather than 48 - and a unit's own row goes up beside the
-            // title when there are no tabs to share the line with.
+            // Short and narrow means a square phone. The chrome shrinks: a
+            // smaller edge, tighter padding and gaps, and 40dp header buttons
+            // instead of 48. A unit's own row goes next to the title when
+            // there are no tabs sharing the line.
             val compact = wide && !roomy
-            // Roomy, the tabs have the header's middle; compact, they have a
-            // row of their own and the header's middle is free.
+            // When roomy, the tabs go in the header's middle. When compact,
+            // they get their own row and the middle is free.
             val headerRow = wideHeader != null && wide && (chips == null || !roomy)
-            // **As wide as the cards want, laid wide** - see DialogFit - and
-            // never narrower than the header needs for its title, its tabs and
-            // its buttons. The first frame is laid out before any card has
-            // said, so the window is not shown until the second has been.
+            // Sideways, the window is as wide as its cards want (see
+            // DialogFit) but never narrower than the header needs. The first
+            // frame is laid out before any card has reported, so the window
+            // stays hidden until the second.
             val fit = androidx.compose.runtime.remember { DialogFit() }
             var settled by androidx.compose.runtime.remember { mutableStateOf(false) }
             androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -1234,9 +1168,9 @@ private fun DialogShell(
                 (fit.natural.toDp() + FitChromeW).coerceIn(if (chips != null) FitMinTabsW else FitMinW, 1100.dp)
             }
             androidx.compose.material3.Surface(
-                // The cap before the fill: after it, as this was, the fill had
-                // already fixed the width and the cap could not lower it, so no
-                // window was ever narrower than the screen.
+                // The width cap goes before fillMaxWidth. After it, the fill
+                // would already have fixed the width and the cap couldn't
+                // lower it.
                 Modifier.padding(horizontal = 10.dp).widthIn(max = maxW).fillMaxWidth()
                     .heightIn(max = cardMax)
                     .graphicsLayer { alpha = if (settled || !wide || !roomy) 1f else 0f },
@@ -1265,8 +1199,8 @@ private fun DialogShell(
                                 modifier = Modifier.widthIn(max = 280.dp).padding(end = 12.dp),
                             )
                             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                                // The unit's own row comes up here only when its
-                                // body is laid wide and leaves it out - see SlotRow.
+                                // The unit's own row only goes here when its
+                                // body is laid out wide and leaves it out; see SlotRow.
                                 if (roomy && chips != null) chips() else if (headerRow) wideHeader?.invoke()
                             }
                             if (footer) {
@@ -1285,14 +1219,11 @@ private fun DialogShell(
                         }
                     }
                     Box(
-                        // The position bar is drawn on the outer edge of this
-                        // box, so the content is inset to leave it a gutter -
-                        // without it a chip that reaches the full width has the
-                        // bar drawn straight through it.
-                        // `fill = false` so it is only ever *smaller* than its
-                        // content, never stretched to fill a tall window: a
-                        // short page in a tabbed dialog must not push the button
-                        // to the bottom of the screen.
+                        // The scroll bar is drawn on the outer edge of this
+                        // box, so the content is inset to leave it room.
+                        // `fill = false` so it can only be smaller than its
+                        // content, never stretched, or a short page would push
+                        // the button to the bottom of the screen.
                         Modifier.weight(1f, fill = false)
                             .heightIn(max = maxBodyHeight)
                             .verticalScrollWithBar(rememberScrollState())
@@ -1309,9 +1240,9 @@ private fun DialogShell(
                             LocalDialogFit provides (if (wide && roomy) fit else null),
                         ) { body() }
                     }
-                    // An empty dismiss label and no action means no footer at
-                    // all - for a window that is reporting rather than asking,
-                    // and that must not be dismissed while it works.
+                    // No dismiss label and no action means no footer at all,
+                    // for a window that's showing progress and mustn't be
+                    // dismissed while it works.
                     if (footer && !wide) {
                         Row(
                             Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -1327,20 +1258,17 @@ private fun DialogShell(
 }
 
 /**
- * How much of the screen's height a window leaves alone.
- *
- * Twenty-four dp, so the card reads as a card rather than as the screen: an
- * edge flush against the top and bottom of the display is how a dialog stops
- * looking like one.
+ * How much of the screen's height a window leaves free, so the card still
+ * looks like a card rather than the whole screen.
  */
 private val DialogEdgeH = 24.dp
 
-/** The same on a square phone, where every dp of height counts: see [DialogShell]. */
+/** The same on a square phone, where every dp of height counts; see [DialogShell]. */
 private val DialogEdgeCompactH = 8.dp
 
 /**
- * Whether a window opened now is on a square phone - short, and too narrow to
- * lay cards side by side - where the chrome is trimmed and the densest
+ * Whether a window opened now is on a square phone (short, and too narrow
+ * for cards side by side), where the chrome is trimmed and the busiest
  * windows split into pages. See [DialogShell].
  */
 @Composable
@@ -1349,7 +1277,7 @@ internal fun compactWindow(): Boolean =
         androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
     } < WideCardsMinW
 
-/** What a wide window adds around its cards: the body's padding either side and the position bar's gutter. */
+/** What a wide window adds around its cards: the body's padding either side and the scroll bar's gutter. */
 private val FitChromeW = 42.dp
 
 /** The narrowest a fitted window may be: a title and two buttons. */
@@ -1366,11 +1294,9 @@ private val WideCardsMinW = 600.dp
 private fun TallestOf(selected: Int, pages: List<@Composable () -> Unit>, spacing: Dp) {
     androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
         val loose = constraints.copy(minHeight = 0)
-        // Each page is wrapped in a column *here* rather than being trusted
-        // to be one box. A page that emits three sections as siblings would
-        // otherwise be measured as three children and placed at the same
-        // spot, one on top of another - which is exactly what happened the
-        // first time this was written.
+        // Each page is wrapped in a column here rather than trusted to be one
+        // box. Otherwise a page with three sibling sections would be measured
+        // as three children and placed on top of each other.
         val measured = pages.indices.map { i ->
             subcompose(i) {
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing)) {
@@ -1388,7 +1314,7 @@ private fun TallestOf(selected: Int, pages: List<@Composable () -> Unit>, spacin
 
 /**
  * A titled group of chips: the name in teal monospace, the chips under it,
- * and one line saying what the current choice actually *means*.
+ * and one line saying what the current choice means.
  */
 @Composable
 internal fun Section(title: String, note: String = "", content: @Composable () -> Unit) {
@@ -1419,12 +1345,11 @@ internal fun ListSection(
 }
 
 /**
- * One of a set: filled when it is the one in force.
+ * One of a set, filled when it's the current one.
  *
- * [enabled] is for the chips that are *actions* rather than choices - pasting
- * with nothing on the clipboard, clearing a clip with nothing in it - where
- * the honest thing is to show the control and say it has nothing to do, rather
- * than to hide it and leave somebody hunting for where it went.
+ * [enabled] is for chips that are actions rather than choices (pasting with
+ * an empty clipboard, clearing an empty clip). They're shown disabled rather
+ * than hidden, so you don't go looking for them.
  */
 @Composable
 internal fun Choice(
@@ -1458,8 +1383,8 @@ internal fun Choice(
 
 /**
  * A row in a list: a mark, a name with an optional line under it, and a word
- * on the right saying what tapping it would do. `on` fills it, the way a
- * chosen machine is filled in the picker.
+ * on the right saying what tapping does. `on` fills it, like the chosen
+ * machine in the picker.
  */
 @Composable
 internal fun DialogRow(
@@ -1469,7 +1394,7 @@ internal fun DialogRow(
     trailing: String = "",
     on: Boolean = false,
     monoUnder: Boolean = false,
-    /** A second action at the end of the row - deleting, usually. */
+    /** A second action at the end of the row, usually delete. */
     onRemove: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
@@ -1507,7 +1432,7 @@ internal fun DialogRow(
     }
 }
 
-/** A line of numbers: the readouts that say whether something is working. */
+/** A line of numbers showing whether something is working. */
 @Composable
 internal fun Readout(text: String, good: Boolean = false) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
@@ -1515,11 +1440,11 @@ internal fun Readout(text: String, good: Boolean = false) {
 }
 
 /**
- * The window's keys, asked of the hub at the window itself rather than from a
- * control in it: a window opened by a tap has nothing focused, and a key goes
- * to Compose's focused control or nowhere - so Space, Ctrl+S, or the key the
- * keys window is waiting to learn, did nothing until something was tabbed to.
- * A touch here is a touch, as it is on the screen: see KeyHub.usingKeys.
+ * Handles the window's keys at the window itself rather than in a control.
+ * A window opened by a tap has nothing focused, and keys only go to the
+ * focused control, so without this Space, Ctrl+S or a key being learned in
+ * the keys window would do nothing until something was tabbed to. A touch
+ * works as it does on the screen; see KeyHub.usingKeys.
  */
 @Composable
 internal expect fun WindowKeys()

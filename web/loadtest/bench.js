@@ -1,9 +1,8 @@
-// The benchmark: the same song, rendered as fast as it will go on a worker, so
-// the figure is the engine's cost and not the audio system's.
+// Renders the same song as fast as it can on a worker, so the figure is the
+// engine's cost and not the audio system's.
 //
-// Timed in batches of eight callbacks because browsers coarsen performance.now()
-// (to 0.1 ms or even 1 ms), which is too blunt for one 2.67 ms callback but
-// fine for eight of them.
+// Timed in batches of eight callbacks because browsers round performance.now()
+// to 0.1 ms or 1 ms, too coarse for one 2.67 ms callback.
 importScripts('wasm-host.js');
 onmessage = (event) => {
   const { module, counts, callbacks } = event.data;

@@ -1,34 +1,31 @@
 package com.rm.acidulous.midi
 
 /**
- * Where every sounding note went, so its release can follow it there.
+ * Remembers which rack every held note went to, so its note-off goes there
+ * too.
  *
- * The hub works out a destination rack per message, and under the default
- * routing that destination is "whichever track is selected". A note held while
- * you leave the machine screen therefore has its note-on delivered to one rack
- * and its note-off to another, and the first machine is left holding a note
- * nobody will ever release. The rule the hub already applied to notes a mapping
- * swallowed - that an off must go wherever its on went - simply had not been
- * applied to the target.
+ * The hub picks a rack for each message, and by default that's the selected
+ * track. If the selection changes while a note is held, the note-off would
+ * go to a different rack and the first one would hang, so an off always
+ * follows its on.
  *
- * Notes are keyed by channel *and* number, because MPE gives every finger its
- * own channel and the same note can be down on two of them. The port is kept
- * alongside, because a controller that is unplugged or runs out of battery
- * never sends its offs, and the notes that die with it are only its own: a
- * second controller still has fingers down.
+ * Notes are keyed by channel and number, because MPE gives every finger its
+ * own channel and the same note can be held on two of them. The port is kept
+ * too, because an unplugged or flat controller never sends its note-offs, and
+ * only its own notes should be released (another controller may still be
+ * held).
  *
- * No Android here on purpose - this is the part that was wrong, so it is the
- * part that should be testable on its own.
+ * No Android code here, so it can be tested on its own.
  */
 class HeldNotes {
-    /** rack, by (channel, note). */
+    /** Rack, by (channel, note). */
     private val rackOf = HashMap<Int, Int>()
-    /** port, by (channel, note). */
+    /** Port, by (channel, note). */
     private val portOf = HashMap<Int, Int>()
     /** The rack a member channel's expression belongs to. */
     private val channelRack = IntArray(16) { -1 }
 
-    /** One note, held. */
+    /** One held note. */
     data class Held(val rack: Int, val channel: Int, val note: Int)
 
     private fun key(channel: Int, note: Int) = (channel shl 8) or (note and 0xff)
@@ -40,7 +37,7 @@ class HeldNotes {
         if (channel in channelRack.indices) channelRack[channel] = rack
     }
 
-    /** Where this note-off belongs, or null if nothing by that name is down. */
+    /** Where this note-off belongs, or null if that note isn't held. */
     fun rackForOff(channel: Int, note: Int): Int? = rackOf[key(channel, note)]
 
     /** Where a member channel's bend, pressure and slide belong. */
@@ -57,7 +54,7 @@ class HeldNotes {
     }
 
     /**
-     * Everything this port was holding, forgotten and handed back so the caller
+     * Forgets everything this port was holding and returns it, so the caller
      * can send the note-offs the device never will.
      */
     fun release(port: Int): List<Held> {
@@ -71,7 +68,7 @@ class HeldNotes {
         return out
     }
 
-    /** A panic: nothing is held any more, whatever this thought. */
+    /** A panic: forget every held note. */
     fun clear() {
         rackOf.clear()
         portOf.clear()

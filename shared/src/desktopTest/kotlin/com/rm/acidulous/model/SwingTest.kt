@@ -5,13 +5,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The Kotlin swing map, against the numbers the C++ harness prints.
+ * Checks the Kotlin swing map against the numbers the C++ harness prints.
  *
  * The two copies have to agree exactly. The engine uses its copy to decide
- * where a note *sounds*; this one uses the inverse to decide where a note
- * somebody played should be *written*. If they ever drifted apart, a part
- * played in would be stored a little away from where it was heard, and the
- * error would be silent, small, and permanent.
+ * where a note plays, and this one uses the inverse to decide where a
+ * recorded note is written. If they drift, recorded notes get stored slightly
+ * away from where they were heard.
  */
 class SwingTest {
 
@@ -65,9 +64,9 @@ class SwingTest {
         for (pct in listOf(55f, 60f, SWING_TRIPLET, 70f, SWING_MAX)) {
             for (t in 0 until PPQN * 4) {
                 val round = Swing.from(Swing.at(t, pct, Swing.SIXTEENTHS), pct, Swing.SIXTEENTHS)
-                // Not exact and cannot be: the compressed half of the pair has
-                // fewer ticks to land on, so two straight ticks can share a
-                // swung one. Three ticks at 240 PPQN is under a millisecond.
+                // This can't be exact: the shorter half of the pair has fewer
+                // ticks, so two straight ticks can map to one swung tick.
+                // Three ticks at 240 PPQN is under a millisecond.
                 assertTrue("off by ${Math.abs(round - t)} at $t, $pct%", Math.abs(round - t) <= 3)
             }
         }
@@ -80,14 +79,14 @@ class SwingTest {
         assertEquals(SWING_TRIPLET, song.swingOf(follower))
         val straight = follower.copy(swing = SWING_STRAIGHT)
         assertEquals(SWING_STRAIGHT, song.swingOf(straight))
-        // And a track that follows moves when the song does, which is the
-        // whole reason it holds null rather than a copy of the number.
+        // A track that follows the song changes with it. That's why it holds
+        // null instead of a copy of the value.
         assertEquals(60f, song.copy(swing = 60f).swingOf(follower))
     }
 
     @Test
     fun anOldSongOpensStraight() {
-        // Nought was the dead field's default, and nought is not a swing.
+        // 0 was the old field's default and isn't a valid swing.
         val old = """{"name":"Old","swing":0.0,"tracks":[],"scenes":[{"id":"s","name":"S"}]}"""
         assertEquals(SWING_STRAIGHT, SongStore.decode(old).swing)
     }

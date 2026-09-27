@@ -60,18 +60,17 @@ enum class EditMode { Draw, Select }
 enum class ScaleView { Chromatic, Dim, Fold }
 
 /**
- * The clip editor: one Canvas, notes drawn by hand, hit-tested by hand.
- * A composable per note would crawl on a 16-bar clip with chords.
+ * The clip editor: one Canvas, with notes drawn and hit tested by hand. A
+ * composable per note would be far too slow on a 16 bar clip with chords.
  *
- * The conventions kept: in Draw mode a tap on empty adds a note of one
- * grid unit and a tap on a note deletes it; dragging a note moves it, dragging
- * its right edge resizes it; dragging on empty draws a note and stretches it.
- * In Select mode dragging on empty rubber-bands, tapping toggles a note,
- * dragging a selected note moves the whole selection. Velocity shows as the
- * brighter region inside each note.
+ * Draw mode: a tap on empty adds a one grid note, a tap on a note deletes
+ * it, dragging a note moves it, dragging its right edge resizes it, dragging
+ * on empty draws and stretches a note. Select mode: dragging on empty
+ * rubber-bands, a tap toggles a note, dragging a selected note moves the
+ * selection. Velocity is the brighter region inside each note.
  *
- * Every drag reports the *total* change since it began, so the caller can
- * derive from a gesture base (see SongEditor) rather than accumulate.
+ * Every drag reports the total change since it began, so the caller works
+ * from a gesture base (see SongEditor) instead of accumulating.
  */
 @Composable
 fun PianoRoll(
@@ -83,7 +82,7 @@ fun PianoRoll(
     lowestPitch: Int,
     rows: Int,
     scalePitchClasses: Set<Int>?,
-    /** How the running scale writes its notes; empty is chromatic. */
+    /** How the running scale spells its notes; empty is chromatic. */
     noteSpelling: Map<Int, String> = emptyMap(),
     scaleView: ScaleView,
     onCycleScaleView: () -> Unit,
@@ -98,25 +97,21 @@ fun PianoRoll(
     onResize: (index: Int, newLength: Int) -> Unit,
     onDraw: (tick: Int, pitch: Int, length: Int) -> Unit,
     onGestureEnd: () -> Unit,
-    /** Tapping a name in the gutter sounds that pitch, as a keyboard would. */
+    /** Tapping a name in the gutter plays that pitch. */
     onAudition: (pitch: Int) -> Unit = {},
-    /** Where a step's parameter lock starts: notes there are marked. */
+    /** Ticks where a step's parameter lock starts; notes there are marked. */
     lockedTicks: Set<Int> = emptySet(),
     /**
-     * Dragging the gutter moves the pitch window, by this many semitones.
-     * The roll shows sixteen rows of a hundred and twenty-eight notes, and
-     * this is how you reach the rest: the two header buttons that used to do
-     * it were forty-two dp each in a row that had to fit around a camera
-     * hole, and the pitch axis already had a column of its own.
+     * Dragging the gutter moves the pitch window by this many semitones, to
+     * reach the notes outside the sixteen rows shown.
      */
     onScrollPitch: (delta: Int) -> Unit = {},
-    /** Two fingers sideways: the window moves by this many ticks. */
+    /** Two fingers sideways move the window by this many ticks. */
     onScrollTime: (ticks: Float) -> Unit = {},
     /**
-     * A pinch. Each axis is a multiplier on what is shown - under one is
-     * fewer rows or fewer ticks, which is closer in - and an axis the fingers
-     * are not spread along reports 1, so a sideways pinch zooms time and
-     * leaves the pitch alone.
+     * A pinch. Each axis is a multiplier on what's shown, below 1 zooms in. An
+     * axis the fingers aren't spread along reports 1, so a sideways pinch only
+     * zooms time.
      */
     onZoom: (pitchScale: Float, timeScale: Float) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
@@ -126,8 +121,8 @@ fun PianoRoll(
         stringResource(Res.string.roll_scale_none), stringResource(Res.string.roll_scale_chromatic),
         stringResource(Res.string.roll_scale_dim), stringResource(Res.string.roll_scale_fit),
     )
-    // The pointer handler must survive the clip changing under it mid-drag
-    // (every updateGesture commits a new clip), so it reads through these.
+    // The pointer handler must survive the clip changing mid-drag (every
+    // updateGesture commits a new clip), so it reads through these.
     val clipState by rememberUpdatedState(clip)
     val modeState by rememberUpdatedState(mode)
     val selectionState by rememberUpdatedState(selection)
@@ -137,8 +132,8 @@ fun PianoRoll(
         Callbacks(onTapEmpty, onTapNote, onSelectionChange, onGestureBegin, onMove, onResize, onDraw, onGestureEnd,
             onAudition, onCycleScaleView, onScrollPitch, onScrollTime, onZoom),
     )
-    // Which pitch each row carries. Chromatic and Dim step by semitone; Fold
-    // keeps only what the scale allows, so a row is always a playable note.
+    // The pitch of each row. Chromatic and Dim step by semitone; Fold keeps
+    // only the scale's notes, so every row is playable.
     val scale = scalePitchClasses?.takeIf { it.isNotEmpty() && scaleView != ScaleView.Chromatic }
     val rowPitches = remember(lowestPitch, rows, scale, scaleView) {
         if (scale == null || scaleView != ScaleView.Fold) {
@@ -156,15 +151,15 @@ fun PianoRoll(
     }
     val rowsState2 by rememberUpdatedState(rowPitches)
 
-    // Read here and captured by the Canvas below: drawing is not
-    // composition, so the lambda cannot reach the theme on its own.
+    // Read here because the Canvas draw lambda isn't composition and can't
+    // read the theme itself.
     val c = Acid.colors
 
     var rubberBand by remember { mutableStateOf<Rect?>(null) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
 
-    // TalkBack hears the roll as a summary: one picture cannot be walked
-    // note by note. Notes go in by playing the keys while recording.
+    // TalkBack gets a summary, since one picture can't be walked note by
+    // note. Notes go in by playing the keys while recording.
     val resources = AppStrings
     val summary = if (clip.notes.isEmpty()) resources.getString(Res.string.a11y_roll_empty) else {
         val low = clip.notes.minOf { it.pitch }
@@ -174,15 +169,12 @@ fun PianoRoll(
             spokenNote(low, noteSpelling, resources), spokenNote(high, noteSpelling, resources),
         )
     }
-    // **The keyboard's cursor.** Focused, the roll wears a ring; Enter starts
-    // editing and a cell-sized cursor appears, one grid step wide on one
-    // pitch. Arrows move it, and the page and the pitch window follow it.
-    // Enter adds a note there or takes the one there away - the same two
-    // callbacks a tap uses - Shift and the arrows lengthen or shorten it, Alt
-    // and the arrows move it, Delete removes it, and Esc stops editing so the
-    // arrows move between controls again. Editing is a mode for the same
-    // reason a knob is grabbed: a phone whose only arrows are a touchpad has
-    // no other way out of a control that keeps them.
+    // Keyboard editing. Enter starts editing and shows a one grid step cursor
+    // on one pitch. Arrows move it, and the page and pitch window follow. Enter
+    // adds or removes a note there, Shift+arrows change its length, Alt+arrows
+    // move it, Delete removes it, and Esc stops editing so the arrows move
+    // between controls again. It's a mode so a phone whose only arrows are a
+    // touchpad can still leave the roll.
     var keyFocused by remember { mutableStateOf(false) }
     var keyEditing by remember { mutableStateOf(false) }
     var curTick by remember { mutableIntStateOf(firstTick) }
@@ -201,7 +193,7 @@ fun PianoRoll(
             if (!keyEditing) {
                 if (!enter) return@onKeyEvent false
                 keyEditing = true
-                // Start where the player is looking.
+                // Start where the user is looking.
                 val lo = lowestState
                 if (curTick !in firstState until firstState + visibleState) curTick = firstState
                 if (curPitch !in lo until lo + rowsState) curPitch = lo + rowsState / 2
@@ -255,9 +247,9 @@ fun PianoRoll(
                 else -> false
             }
         }
-    // The wheel does what two fingers do, on a desktop: see onWheel. Rows move
-    // three a notch and time a tenth of the window, with the remainder carried
-    // so a touchpad's small steps add up rather than each jumping a row.
+    // On desktop the wheel does what two fingers do, see onWheel. Rows move
+    // three per notch and time a tenth of the window, with the remainder
+    // carried so small touchpad steps add up.
     val wheelCarry = remember { floatArrayOf(0f) }
     val wheel = Modifier.onWheel { w ->
         when {
@@ -276,9 +268,7 @@ fun PianoRoll(
         true
     }
     Canvas(
-        // Clipped: a note a row above the window is drawn at a y above the
-        // canvas, and without the clip it lay over the header - the ruler
-        // covers what is inside, and nothing covered what was outside.
+        // Clipped, or notes just above the window draw over the header.
         modifier = modifier.clipToBounds().semantics { contentDescription = summary }.then(keyMod).then(wheel).pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
@@ -288,34 +278,29 @@ fun PianoRoll(
                 )
                 val press = down.position
 
-                // Two fingers move the view and never the notes - and the
-                // check comes first, before the gutter, the ruler or a note,
-                // because a pinch puts its fingers down a few milliseconds
-                // apart and whatever the first one landed on must not act in
-                // the meantime.
+                // Two fingers move the view, never the notes. Checked first, because
+                // a pinch's fingers land a few milliseconds apart and whatever the
+                // first one hit must not act in the meantime.
                 if (currentEvent.changes.count { it.pressed } >= 2) {
                     twoFingers(geo, cb)
                     return@awaitEachGesture
                 }
 
-                // The gutter plays the row it names and scrolls the window;
-                // the ruler is a legend and takes no edits; the corner
-                // between them cycles the scale view. None of the three can
-                // draw a note by accident.
+                // The gutter plays the row it names and scrolls the window, the
+                // ruler takes no edits, and the corner between them cycles the scale
+                // view. None of them can draw a note.
                 if (press.x < geo.originX || press.y < geo.originY) {
                     if (press.y < geo.originY) {
                         if (press.x < geo.originX) cb.onCycleScaleView()
                         down.consume()
                         return@awaitEachGesture
                     }
-                    // The down is *not* consumed here, unlike the ruler and
-                    // the corner: awaitTouchSlopOrCancellation gives up the
-                    // moment it sees a consumed change, so consuming first
-                    // meant the drag below could never begin.
+                    // Don't consume the down here: awaitTouchSlopOrCancellation
+                    // gives up as soon as it sees a consumed change, so the drag
+                    // below could never start.
                     //
-                    // The audition waits for the finger to lift rather than
-                    // firing on the way down, or every scroll would begin
-                    // with a note nobody asked for.
+                    // The note plays on release, not on down, so a scroll doesn't
+                    // start with a stray note.
                     val gate = slopOrSecondFinger(down.id, viewConfiguration.touchSlop, press)
                     if (gate.second) {
                         twoFingers(geo, cb)
@@ -326,16 +311,12 @@ fun PianoRoll(
                         if (currentEvent.changes.none { it.pressed }) cb.onAudition(geo.pitchAt(press.y))
                         return@awaitEachGesture
                     }
-                    // The window follows the finger: drag down and the rows
-                    // come down with it, which brings higher notes in at the
-                    // top - the way a list scrolls, and the way every other
-                    // drag in this app already behaves.
+                    // Drag down and the rows come down with it, like a list scrolls.
                     //
-                    // Measured from where the press began rather than summed
-                    // from each event's delta, because positionChange() is
-                    // zero on a change that has been consumed and everything
-                    // here consumes. The rest of this file reads absolute
-                    // positions for the same reason.
+                    // Measured from where the press began, not summed from deltas,
+                    // because positionChange() is zero once a change is consumed.
+                    // The rest of this file uses absolute positions for the same
+                    // reason.
                     var applied = 0
                     drag(slop.id) { change ->
                         change.consume()
@@ -375,7 +356,7 @@ fun PianoRoll(
                     return@awaitEachGesture
                 }
 
-                // A drag. Decide what it is from where it started.
+                // A drag. What it does depends on where it started.
                 when {
                     hit != null && hit.onEdge -> {
                         val note = clipState.notes[hit.index]
@@ -434,7 +415,7 @@ fun PianoRoll(
             firstTick, visibleTicks)
 
         // Rows: black keys darker, C rows marked, and rows the scale would
-        // move pushed further back when Dim is on.
+        // move pushed further back in Dim.
         for (r in 0 until rows) {
             val pitch = geo.pitchOfRow(r)
             val inScale = scale?.contains(((pitch % 12) + 12) % 12) ?: true
@@ -468,7 +449,7 @@ fun PianoRoll(
 
         // Notes, with velocity as the bright inner region.
         clip.notes.forEachIndexed { i, note ->
-            // Off this page entirely: nothing to draw.
+            // Off this page entirely.
             if (note.tick + max(1, note.length) <= geo.firstTick || note.tick >= geo.lastTick) return@forEachIndexed
             val rect = geo.noteRect(note)
             if (rect.bottom < 0f || rect.top > size.height) return@forEachIndexed
@@ -481,9 +462,8 @@ fun PianoRoll(
                 Size(max(0f, rect.width - 4f), velH),
             )
             drawBend(note, rect, c)
-            // The same wedge the drum grid draws, for the same reason and with
-            // the same restraint: a mark saying "this note decides something",
-            // not a readout of what. The lane below is the readout.
+            // The same wedge the drum grid draws: a mark that the note has a
+            // condition. The note lane below shows which.
             if (note.hasTrig) {
                 val w = minOf(rect.width, rect.height) * 0.4f
                 drawPath(
@@ -496,7 +476,7 @@ fun PianoRoll(
                     c.teal,
                 )
             }
-            // A locked note: the knob's ◆, in the corner the trig's is not.
+            // A locked note gets the knob's ◆, in the other corner from the trig's.
             if (note.tick in lockedTicks) {
                 val w = minOf(rect.width, rect.height) * 0.22f
                 val cx = rect.left + w * 1.4f
@@ -544,18 +524,11 @@ fun PianoRoll(
 }
 
 /**
- * A recorded bend, drawn inside the note it belongs to.
- *
- * Inside, and not in a lane of its own, because the roll's height is the
- * thing the editor is short of and a note is already exactly as wide as the
- * time its curve covers. Full deflection is the note's own row: a bend that
- * fills the box is a semitone, which is the reading a player wants at a
- * glance, and anything wider simply pins to the edge rather than drawing over
- * the neighbours.
+ * A recorded bend, drawn inside its note. Full deflection is the note's own
+ * row height and means a semitone; anything wider pins to the edge.
  *
  * Only bend is drawn. Pressure and slide are recorded and played, but three
- * lines in a box sixteen pixels tall is not a readout, it is a smudge - and
- * pitch is the one of the three that has a direction on this screen already.
+ * lines in one small box can't be read.
  */
 private fun DrawScope.drawBend(note: Note, rect: Rect, c: AcidColors) {
     val bend = note.bend ?: return
@@ -563,8 +536,7 @@ private fun DrawScope.drawBend(note: Note, rect: Rect, c: AcidColors) {
     val len = max(1, note.length)
     val mid = rect.center.y
     val half = (rect.height - 3f) / 2f
-    // One sample per pixel of the note's own width, capped: a two-point glide
-    // needs two and a vibrato needs the note.
+    // One sample per pixel of the note's width, capped.
     val steps = rect.width.toInt().coerceIn(2, 96)
     var prev: Offset? = null
     for (i in 0..steps) {
@@ -578,16 +550,9 @@ private fun DrawScope.drawBend(note: Note, rect: Rect, c: AcidColors) {
 }
 
 /**
- * Where the sixteen rows on screen sit in the hundred and twenty-eight.
- *
- * Every scrolling thing in this app carries a position bar, and since the
- * octave buttons left the header the roll is plainly one of them. It does
- * two jobs: it answers "where am I" the way the buttons never did, and it is
- * the only thing on screen that says the gutter can be dragged at all.
- *
- * Drawn to `ui/Scrollbar.kt`'s measurements - three dp thick, one dp in, a
- * twenty dp floor under the thumb - because a bar that matched the lists
- * everywhere else is the point of having a rule about it.
+ * A position bar showing where the sixteen rows sit in the 128 pitches. It
+ * also hints that the gutter can be dragged. Drawn to the sizes in
+ * `ui/Scrollbar.kt` so it matches the lists.
  */
 private fun DrawScope.drawPitchPosition(geo: Geometry, c: AcidColors) {
     val top = geo.pitchOfRow(0)
@@ -597,34 +562,30 @@ private fun DrawScope.drawPitchPosition(geo: Geometry, c: AcidColors) {
     val track = geo.fieldH
     val thickness = 3.dp.toPx()
     val inset = 1.dp.toPx()
-    // Floor first, then ceiling, and never coerceIn between the two: the roll
-    // can be squeezed to nothing - open the fx panel with a Filter in it and
-    // the weighted grid gets zero - and a twenty dp floor above a one pixel
-    // track is an empty range, which throws rather than clamping.
+    // Floor first, then ceiling, never coerceIn: the roll can be squeezed to
+    // nothing (the fx panel with a Filter in it) and a 20 dp floor over a one
+    // pixel track is an empty range, which throws.
     val thumb = (track * shown / 128f).coerceAtLeast(20.dp.toPx()).coerceAtMost(track)
-    // Pitch runs up the screen and the bar runs down it, so the top of the
-    // thumb is measured from the highest note, not the lowest.
+    // Pitch runs up the screen and the bar runs down, so the thumb is measured
+    // from the highest note.
     val travel = track - thumb
     val pos = geo.originY + travel * ((127 - top).coerceIn(0, 127) / (128f - shown).coerceAtLeast(1f))
     drawRoundRect(c.scrollbar, Offset(inset, pos), Size(thickness, thumb), CornerRadius(thickness / 2f))
 }
 
 /**
- * The left gutter names every row rather than drawing a keyboard: this app
- * reads its values in monospace everywhere else, and a column of names is
- * both easier to read on a phone and easier to hit than a drawn key. Black
- * keys keep their darker fill so the shape of the octave is still there, and
- * every C is called out in the accent colour.
- *
- * When rows are too short for a label, only the C rows keep one.
+ * The left gutter names every row instead of drawing a keyboard, which is
+ * easier to read and to hit on a phone. Black keys keep a darker fill and
+ * every C is in the accent colour. When rows are too short, only the C rows
+ * keep a label.
  */
 private fun DrawScope.drawNameGutter(
     geo: Geometry, measurer: TextMeasurer, scale: Set<Int>?, c: AcidColors,
     noteSpelling: Map<Int, String>,
 ) {
     drawRect(c.bg, Offset.Zero, Size(geo.originX, size.height))
-    // A 10sp line is about 12dp tall, so below this the names would collide
-    // and only the Cs keep one. The measured guard below is the real stop.
+    // A 10sp line is about 12dp tall, so below this only the Cs are named.
+    // The measured check below is the real limit.
     val labelEveryRow = geo.rowH >= 13.dp.toPx()
     for (r in 0 until geo.rows) {
         val pitch = geo.pitchOfRow(r)
@@ -662,17 +623,14 @@ private fun DrawScope.drawNameGutter(
 }
 
 /**
- * The ruler counts bars, with a tick per beat between them. Bar numbers sit
- * just right of their line so a number always belongs to the bar that starts
- * under it, and the playhead shows as a wedge rather than a full-height line
- * so it never hides a number.
+ * The ruler counts bars, with a tick per beat. Bar numbers sit just right of
+ * their line, and the playhead is a wedge so it never hides a number.
  */
 private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeasurer, playheadTick: Long?, c: AcidColors) {
     drawRect(c.sunken, Offset.Zero, Size(size.width, geo.originY))
     val beats = max(1, geo.ticksPerBar / PPQN)
     val barW = geo.pxPerTick * geo.ticksPerBar
-    // Number the beats too when a bar is wide enough to read them; otherwise
-    // they stay as ticks and only the bars are named.
+    // Number the beats too when a bar is wide enough.
     val nameBeats = barW / beats > 56.dp.toPx()
     val barStyle = TextStyle(color = c.textHi, fontSize = RulerTextSize, fontFamily = FontFamily.Monospace)
     val beatStyle = TextStyle(color = c.textDim, fontSize = TickTextSize, fontFamily = FontFamily.Monospace)
@@ -688,8 +646,8 @@ private fun DrawScope.drawBarRuler(geo: Geometry, size: Size, measurer: TextMeas
             val bx = geo.xOf(barTick + beat * PPQN)
             drawLine(c.gridBeat, Offset(bx, geo.originY * 0.45f), Offset(bx, geo.originY), 1.5f)
             if (nameBeats) {
-                // Beats read ".2" against the bar's plain "2", the same way
-                // the transport writes 1.1.000, so the two never look alike.
+                // Beats read ".2" and bars "2", like the transport's 1.1.000, so they
+                // don't look alike.
                 val bl = measurer.measure(AnnotatedString(".${beat + 1}"), beatStyle)
                 drawText(bl, topLeft = Offset(bx + 3f, (geo.originY - bl.size.height) / 2f))
             }
@@ -727,31 +685,24 @@ private class Callbacks(
 )
 
 /**
- * What two fingers are doing: where their middle is, and how far apart.
- *
- * Shared with the drum grid, which asks the same questions of the same
- * gesture over the same clip.
+ * Where two fingers' middle is and how far apart they are. Shared with the
+ * drum grid.
  */
 internal class TwoFingers(val centre: Offset, val spreadX: Float, val spreadY: Float) {
-    /** How far apart the fingers are, for telling a pinch from a push. */
+    /** How far apart the fingers are, to tell a pinch from a push. */
     val distance: Float get() = kotlin.math.hypot(spreadX, spreadY)
 
     companion object {
         /**
-         * How far apart two fingers must be on an axis before a pinch along
-         * it is believed.
-         *
-         * A pinch is almost never square to the grid, so both axes report
-         * *some* change and zooming on both would wobble the one you did not
-         * mean. Below this the axis reports no change at all, which is what
-         * makes a sideways pinch zoom time and leave the pitch where it was.
+         * How far apart two fingers must be on an axis before a pinch along it
+         * counts. A pinch is never square to the grid, so without this both axes
+         * would zoom. It's what makes a sideways pinch zoom only time.
          */
         const val MinSpread = 48f
 
         /**
-         * How far a gesture must go before it is called one thing or the
-         * other. The same slop a drag uses: below it nobody knows what you
-         * meant yet, and guessing early is what made a pinch scroll.
+         * How far a gesture must go before it's decided. Same as a drag's slop;
+         * deciding earlier made pinches scroll.
          */
         const val LockSlop = 24.0f
 
@@ -769,19 +720,14 @@ internal class TwoFingers(val centre: Offset, val spreadX: Float, val spreadY: F
 }
 
 /**
- * What a two-finger gesture turned out to be. One of them, and never two.
- *
- * Moving the fingers apart also moves their middle a little, and sliding them
- * across also changes how far apart they are a little, so a handler that acts
- * on both at once scrolls while it zooms and zooms while it scrolls - which
- * reads as the grid squirming rather than as either thing being done. So the
- * gesture is watched until one of the two is plainly winning, and from then
- * on it is only that until the fingers come up. Zoom also takes one axis, the
- * one the fingers are lined up along, for the same reason.
+ * What a two-finger gesture turned out to be, only ever one. Spreading the
+ * fingers also moves their middle a bit and vice versa, so the gesture is
+ * watched until one is clearly winning and then stays that until the fingers
+ * lift. Zoom also takes only the axis the fingers are lined up along.
  */
 internal enum class TwoFingerMode { Undecided, Pan, ZoomTime, ZoomPitch }
 
-/** Which of them this is, once it is far enough along to tell. */
+/** Which mode this is, once it's far enough along to tell. */
 internal fun decideTwoFinger(start: TwoFingers, now: TwoFingers): TwoFingerMode {
     val panned = (now.centre - start.centre).getDistance()
     val pinched = abs(now.distance - start.distance)
@@ -793,15 +739,14 @@ internal fun decideTwoFinger(start: TwoFingers, now: TwoFingers): TwoFingerMode 
     }
 }
 
-/** The result of waiting for a drag: past the slop, or outvoted by a second finger. */
+/** The result of waiting for a drag: past the slop, or a second finger arrived. */
 private class Gate(val past: PointerInputChange?, val second: Boolean)
 
 /**
  * Touch slop, unless a second finger arrives first.
  *
- * `awaitTouchSlopOrCancellation` cannot say why it gave up, and here the
- * difference matters: a cancelled gesture leaves the notes alone, a second
- * finger starts moving the view. So this is the same loop with one more exit.
+ * `awaitTouchSlopOrCancellation` can't say why it gave up, and here it
+ * matters: a cancel leaves the notes alone, a second finger moves the view.
  */
 private suspend fun AwaitPointerEventScope.slopOrSecondFinger(
     pointer: PointerId,
@@ -821,12 +766,10 @@ private suspend fun AwaitPointerEventScope.slopOrSecondFinger(
 }
 
 /**
- * Two fingers: the window moves and zooms, and nothing is edited.
+ * Two fingers move and zoom the window and edit nothing.
  *
- * Panning follows the fingers, as the gutter's drag does - push the grid
- * right and you are looking further back. Zoom is the ratio of how far apart
- * they were to how far apart they are, taken per axis so that one gesture can
- * do either or both without the two being tangled together.
+ * Panning follows the fingers like the gutter drag. Zoom is the ratio of the
+ * old spread to the new, per axis.
  */
 private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbacks) {
     val start = TwoFingers.of(currentEvent) ?: return
@@ -843,7 +786,7 @@ private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbac
             TwoFingerMode.Pan -> {
                 cb.onScrollTime(-(now.centre.x - last.centre.x) / geo.pxPerTick)
                 // Whole rows only, with the remainder carried, so a slow drag
-                // moves one row at a time rather than stalling.
+                // moves one row at a time.
                 rowCarry += (now.centre.y - last.centre.y) / geo.rowH
                 val rows = rowCarry.toInt()
                 if (rows != 0) {
@@ -868,18 +811,16 @@ private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbac
 private class Hit(val index: Int, val onEdge: Boolean)
 
 /**
- * The corner where the gutter meets the ruler was empty; it now cycles how
- * the roll treats the scale. It greys out and stops responding when no scale
- * is running, because there would be nothing to cycle through.
+ * The corner where the gutter meets the ruler cycles the scale view. It
+ * greys out and does nothing when no scale is running.
  */
 private fun DrawScope.drawScaleCorner(
     geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView, c: AcidColors,
-    /** What the corner says: no scale, then [ScaleView]'s three, in order. */
+    /** The corner's labels: no scale, then [ScaleView]'s three, in order. */
     words: List<String>,
 ) {
     drawRect(c.bg, Offset.Zero, Size(geo.originX, geo.originY))
-    // Drawn as a key, not as a label: the corner of a table reads as blank
-    // unless something in it says otherwise, and this one is a button.
+    // Drawn as a key so it looks like a button.
     val pad = 2f
     drawRoundRect(
         c.controlAlt, Offset(pad, pad),
@@ -912,17 +853,15 @@ private fun DrawScope.drawScaleCorner(
 internal fun isBlackKey(pitch: Int): Boolean = (((pitch % 12) + 12) % 12) in intArrayOf(1, 3, 6, 8, 10)
 
 /**
- * Ticks and pitches ↔ pixels. Rebuilt per event; it is just arithmetic.
+ * Converts ticks and pitches to pixels and back. Rebuilt per event.
  *
- * The note area starts at [originX] and [originY]: everything left of the
- * first is the name gutter, everything above the second is the bar ruler.
- * Both live in the same Canvas as the notes, so there is one coordinate
- * system and one thing to keep in step.
+ * The note area starts at [originX] and [originY]. Left of it is the name
+ * gutter, above it the bar ruler, all in the same Canvas.
  */
 private class Geometry(
     size: Size, val clip: Clip, val ticksPerBar: Int, val rows: Int,
     val originX: Float = 0f, val originY: Float = 0f,
-    /** The pitch each row carries, top first. Not always chromatic. */
+    /** The pitch of each row, top first. Not always chromatic. */
     private val rowPitches: IntArray = IntArray(0),
     val firstTick: Int = 0,
     windowTicks: Int = 0,
@@ -943,17 +882,10 @@ private class Geometry(
     /**
      * The row a pitch belongs on, which may be off the top or the bottom.
      *
-     * When the rows are folded to a scale, a note the scale does not contain
-     * takes the row nearest to where it will actually sound, which is the
-     * truth the modifier will impose anyway. That search used to run over
-     * every row without a bound, so a note *scrolled out of view* also took
-     * the nearest row - the last one - and was drawn there: scroll a bass
-     * line up two semitones and the C2s reappeared as D2s, sitting on the
-     * bottom edge and answering taps meant for the row they had landed on.
-     *
-     * Nearest-row is for notes between rows, not for notes outside the
-     * window. A pitch past either end returns a row past that end, by the
-     * semitones it is out by, and the callers' own culling does the rest.
+     * With rows folded to a scale, a note outside the scale takes the nearest
+     * row, which is where it will sound. That only applies between rows: a
+     * pitch past either end returns a row past that end by the semitones it's
+     * out by, so scrolled-out notes aren't drawn on the edge row.
      */
     fun rowOfPitch(pitch: Int): Int {
         if (rowPitches.isEmpty()) return topPitch - pitch

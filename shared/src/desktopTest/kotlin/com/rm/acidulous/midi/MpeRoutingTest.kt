@@ -6,13 +6,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Which arriving channels are fingers.
- *
- * Off by one here is the whole feature failing quietly: a zone that thinks
- * its master channel is a member will treat the controller's own bends as a
- * note's, and one that stops a channel short will drop the last finger.
- * Channels are 0-based in the code and 1-based everywhere a musician reads
- * them, which is the other way this goes wrong.
+ * Which incoming channels are fingers. Easy to get off by one: a zone that
+ * counts its master channel as a member treats the controller's own bends
+ * as a note's, and one that stops a channel short drops the last finger.
+ * Channels are 0-based in the code and 1-based for musicians.
  */
 class MpeRoutingTest {
 
@@ -26,7 +23,7 @@ class MpeRoutingTest {
 
     @Test
     fun `the lower zone keeps channel 1 for itself`() {
-        // Master channel 1 carries what belongs to the whole zone, so it is
+        // Master channel 1 carries what belongs to the whole zone, so it's
         // never a finger; 2 to 16 are.
         assertFalse("ch 1 is the master", member(1, 15, 0))
         for (c in 1..15) assertTrue("ch ${c + 1}", member(1, 15, c))

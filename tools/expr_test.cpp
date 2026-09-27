@@ -1,8 +1,6 @@
-// Does a note's expression play back as the note's, and only while it sounds?
-//
-// The half that matters is ownership, as it was for M38: a curve belongs to
-// one note, so a second note sounding at the same time must be untouched by
-// it, and the moment a note ends its curve must stop being read.
+// Checks a note's expression curves play back on that note only, and only
+// while it sounds. A second note at the same time must be untouched, and the
+// curve stops being read as soon as its note ends.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -28,7 +26,7 @@ static void near(const char *what, float got, float want, float tol = 1e-4f) {
 
 constexpr int32_t kBar = 4 * kPPQN; // 960
 
-/** What the rack would have been told, in the order it was told. */
+/** What the rack would have been sent, in order. */
 struct Heard {
     struct Item { uint8_t note; int32_t kind; float value; };
     std::vector<Item> items;

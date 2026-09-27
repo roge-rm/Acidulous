@@ -14,27 +14,23 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * What is left behind when the app dies, so a crash on somebody's phone is
- * something that can be fixed rather than a thing that happened once.
+ * Crash reports, so a crash on someone's phone can be fixed.
  *
  * Two sources:
  *
- * - **A Kotlin crash** is caught by the default handler and written out on
- *   the spot, stack and all, before the crash carries on exactly as it would
- *   have.
- * - **Everything else** - a native crash in the engine, the app frozen long
- *   enough for Android to kill it - is asked about on the next start. From
- *   Android 11 the system keeps the reasons a process ended; a crash or a
- *   freeze since the last one we saw becomes a report with the system's
- *   description, the freeze's trace, what the dead process last logged, and
- *   on 12 and up the readable parts of the crash record.
+ * - A Kotlin crash is caught by the default handler and written out with its
+ *   stack, then passed on as normal.
+ * - Anything else (a native crash in the engine, or Android killing a frozen
+ *   app) is picked up on the next start. From Android 11 the system keeps the
+ *   reason each process ended, and new crashes or freezes become a report
+ *   with the system's description, the freeze trace, the dead process's last
+ *   log lines and, from Android 12, the readable parts of the crash record.
  *
- * No signal handler of our own: the runtime uses its own for null checks,
- * and a second one in an audio app is a risk taken to learn nothing the
- * system does not already keep.
+ * There's no native signal handler of our own. The runtime already uses one
+ * for null checks, and the system keeps the same information anyway.
  *
- * Reports stay on the phone, the last ten of them, and go nowhere unless the
- * person shares one.
+ * The last ten reports are kept on the phone and only leave it if the user
+ * shares one.
  */
 object CrashReports {
     private const val TAG = "Acidulous.Crash"
@@ -66,7 +62,7 @@ object CrashReports {
 
     /**
      * On start: turn the system's record of how the last runs ended into
-     * reports. Crashes our handler already wrote up are not written twice.
+     * reports. Crashes our handler already wrote aren't written twice.
      */
     fun collect(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
@@ -85,7 +81,7 @@ object CrashReports {
                     ApplicationExitInfo.REASON_CRASH -> "crash"
                     else -> continue
                 }
-                // A Kotlin crash the handler caught is already written, whole.
+                // A Kotlin crash the handler caught is already written.
                 if (x.reason == ApplicationExitInfo.REASON_CRASH && alreadyWritten(context, x.pid)) continue
                 val body = buildString {
                     append("The app ended: $kind (pid ${x.pid}) at ${stamp(x.timestamp)}.\n")
@@ -100,7 +96,7 @@ object CrashReports {
         }.onFailure { Log.w(TAG, "could not read how the last run ended", it) }
     }
 
-    /** The newest report nobody has seen the notice for, if any. */
+    /** The newest report the user hasn't been told about, if any. */
     fun unread(context: Context): File? {
         val name = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(UNREAD, null) ?: return null
         return File(directory(context), name).takeIf { it.isFile }
@@ -110,7 +106,7 @@ object CrashReports {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove(UNREAD).apply()
     }
 
-    /** The newest report there is, read or not: for About. */
+    /** The newest report, read or not. Used by About. */
     fun latest(context: Context): File? =
         directory(context).listFiles { f -> f.extension == "txt" }?.maxByOrNull { it.name }
 
@@ -137,9 +133,9 @@ object CrashReports {
         directory(context).listFiles()?.any { it.readText().contains("(pid $pid)") } == true
 
     /**
-     * What the system kept: a freeze's trace is text; a native crash's record
-     * from Android 12 is a protocol buffer, of which the runs of readable text
-     * - the libraries, the functions, the abort message - are the useful part.
+     * What the system kept. A freeze's trace is text. A native crash record
+     * (Android 12+) is a protocol buffer, and its runs of readable text (the
+     * libraries, functions and abort message) are the useful part.
      */
     @androidx.annotation.RequiresApi(Build.VERSION_CODES.R)
     private fun trace(x: ApplicationExitInfo): String? = runCatching {
@@ -167,7 +163,7 @@ object CrashReports {
         return out.toString()
     }
 
-    /** The dead process's own last log lines, while the log still has them. */
+    /** The dead process's last log lines, if the log still has them. */
     private fun logOf(pid: Int): String? = runCatching {
         val p = ProcessBuilder("logcat", "-d", "-t", "300", "--pid=$pid").redirectErrorStream(true).start()
         p.inputStream.bufferedReader().use { it.readText() }.takeIf { it.isNotBlank() }?.takeLast(40_000)

@@ -61,12 +61,10 @@ void Delay::reset() {
     lp[0] = lp[1] = 0.0f;
     duckEnv = 0.0f;
     readSamples = clampf(kDelayBeats[3] * 60.0f / bpm * sr, 1.0f, sr * kMaxDelaySeconds);
-    // And the first block after a reset starts at the length it is asked
-    // for, rather than gliding there from one worked out at whatever tempo
-    // played before it - a render began with a swoop that depended on it.
+    // Jump straight to the requested length on the first block after a reset
+    // instead of gliding there, so a render always starts the same.
     snapRead = true;
-    // The tape's flutter, which ran on from wherever the last song left it:
-    // the Tape and Seasick patches were the two delays that did not repeat.
+    // Reset the flutter too, so renders repeat exactly.
     wobblePhase = 0.0f;
 }
 
@@ -78,7 +76,7 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const bool pingPong = p.get(PingPong) >= 0.5f;
     const float toneCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * p.get(Tone)), sr);
     const float duckAtk = dsp::onePoleCoeff(0.002f, sr), duckRel = dsp::onePoleCoeff(0.25f, sr);
-    // The read position glides to a new note value: a pitch swoop, not a splice.
+    // The read position glides to a new note value, giving a pitch swoop instead of a click.
     const float glide = dsp::onePoleCoeff(0.05f, sr);
     const float wobbleInc = 0.9f / sr, wobbleDepth = wobble * 70.0f;
     const bool wobbling = wobbleDepth > 0.0f;
@@ -89,9 +87,8 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
         readSamples += (target - readSamples) * glide;
         wobblePhase += wobbleInc;
         if (wobblePhase >= 1.0f) wobblePhase -= 1.0f;
-        // Two incommensurate sines: tape flutter rather than a vibrato. Skipped
-        // entirely at nought, where they were computed and then multiplied to
-        // nothing - two sines a sample for a control that was off.
+        // Two unrelated sines, so it sounds like tape flutter, not vibrato.
+        // Skipped entirely when the control is at 0.
         const float drift = wobbling ? wobbleDepth * (0.6f * std::sin(wobblePhase * dsp::kTwoPi) +
                                                       0.4f * std::sin(wobblePhase * dsp::kTwoPi * 2.71f))
                                      : 0.0f;
@@ -106,7 +103,7 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
             line[0].write(inL + lp[0] * fb);
             line[1].write(inR + lp[1] * fb);
         }
-        // Duck: echoes sit under the dry signal and swell up in the gaps.
+        // Duck: echoes stay under the dry signal and swell up in the gaps.
         const float env = peakEnvelope(duckEnv, (std::fabs(inL) + std::fabs(inR)) * 1.5f, duckAtk, duckRel);
         const float wet = mix * (1.0f - duck * clampf(env, 0.0f, 1.0f));
         L[i] = inL + tapL * wet;
@@ -118,49 +115,24 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
 // --- Reverb -----------------------------------------------------------------------
 
 namespace {
-// Freeverb's tunings at 44.1 kHz, scaled in prepare(); right channel offset by
-// 23 samples for width.
+// Freeverb's tunings at 44.1 kHz, scaled in prepare(). The right channel is
+// offset by 23 samples for width.
 constexpr int kCombBase[8] = {1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617};
 constexpr int kAllpassBase[4] = {556, 441, 341, 225};
 constexpr float kSizeStretchMax = 1.9f;
 
-/**
- * Keep a decaying feedback path out of denormal numbers.
- *
- * A comb filter's store falls toward zero for as long as the tail lasts, and
- * somewhere down there it crosses into denormals - where arithmetic is orders
- * of magnitude slower on some processors, and where the *result* depends on
- * the FPU's flush-to-zero flag rather than only on the input. That made this
- * reverb render differently the second time in `bank_test`, but not under the
- * sanitiser at -O1 and not on its own: the failing patches changed depending
- * on what had run before it, which is what a flag rather than a bug looks
- * like. Freeverb has had this exact line since 2000.
- *
- * Adding a tiny constant and taking it away again leaves the number where it
- * was to every bit a listener could hear, and never lets it get small enough
- * to become a denormal.
- */
-/** What the tail reaches, so the bit crusher has something true to quantise
- *  against rather than a full scale it never sees. */
+/** The tail's typical level, which the bit crusher quantises against. */
 constexpr float kReverbNominal = 0.25f;
 /**
- * How much of the shifted tail goes back into each comb.
- *
- * Found by sweeping rather than derived: the shimmer is injected into all
- * eight combs and each has its own resonance, so the loop gain is not
- * something a single line of arithmetic gets right. Undivided the output
- * reached six times full scale; at an eighth it was stable and inaudible,
- * moving the tail's centroid from 270 Hz to 317.
- *
- * The worst case is not the largest room, which is the trap this fell into
- * twice: `fb` is `0.72 + 0.26 * size`, so a *small* room has more headroom
- * under unity and therefore gets injected harder. Swept against every size
- * with the lo-fi and the wobble on, a half peaks at 13.7 and a quarter at
- * 3.9; 0.15 peaks at 0.72 and still lifts the tail's centroid from 337 Hz to
- * 878, which is a shimmer anyone can hear.
+ * How much of the shifted tail goes back into each comb. Found by testing
+ * every room size. The worst case is the smallest room, since it has the most
+ * headroom under unity and so gets injected hardest. 0.15 stays stable and
+ * still gives a clearly audible shimmer.
  */
 constexpr float kCombInject = 0.15f;
 
+// Keeps the comb stores out of denormals, so the reverb renders the same
+// whatever the FPU's flush-to-zero flag is set to.
 inline float undenormal(float v) {
     static constexpr float kTiny = 1.0e-20f;
     return v + kTiny - kTiny;
@@ -199,8 +171,8 @@ void Reverb::prepare(int32_t sampleRate) {
             aps[c][i].line.prepare(aps[c][i].len + 8);
         }
         pre[c].prepare(static_cast<int32_t>(sr * 0.21f));
-        // A tenth of a second is far more window than the shimmer needs and
-        // leaves room for the read point to slide without catching the head.
+        // Longer than the shimmer window, so the read point can slide without
+        // catching the write head.
         shimmerLine[c].prepare(static_cast<int32_t>(sr * 0.12f));
     }
     reset();
@@ -245,26 +217,19 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int32_t bits = static_cast<int32_t>(p.get(Bits) + 0.5f);
     const float crush = p.get(Crush);
     const float wobble = p.get(Wobble);
-    // The shimmer window, and how far the read point slides per sample to come
-    // out an octave up. Half a window either side keeps the crossfade honest.
+    // The shimmer window. The read point slides through it to come out an
+    // octave up, with two taps half a window apart for the crossfade.
     const float shimWin = sr * 0.045f;
-    // The shimmer's own damping: brighter rooms let the ladder climb further.
+    // The shimmer's own damping. Brighter rooms let it climb further.
     const float shimDamp = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * (1200.0f + 2400.0f * (1.0f - damp))), sr);
-    // Combs drift by up to a couple of milliseconds, each at its own speed, so
-    // the tail never settles into a fixed comb pattern.
+    // Combs drift by up to a couple of ms each, so the tail never settles into
+    // a fixed comb pattern.
     const float wobbleInc = 0.23f / sr;
     const float wobbleDepth = wobble * sr * 0.0015f;
     const bool wobbling = wobbleDepth > 0.0f;
 
-    // **Half the room at lean quality**, which is what the setting has claimed
-    // in the interface for a long time and has never done: the reverb with the
-    // branch in it was `dsp/Reverb.h`, which nothing has included since the
-    // sends became ordinary effect slots. Half the combs and half the
-    // allpasses is a thinner tail and a cheaper one, and the density it loses
-    // is the density a small phone was never going to pay for.
-    //
-    // The sum is scaled by how many combs are in it, or a lean room would
-    // arrive four decibels quieter than a full one and read as a bug.
+    // Lean quality uses half the combs and allpasses, for a thinner but
+    // cheaper tail. The sum is scaled up so a lean room isn't quieter.
     const int32_t nCombs = fullQuality() ? kCombs : kCombs / 2;
     const int32_t nAps = fullQuality() ? kAps : kAps / 2;
     const float combScale = static_cast<float>(kCombs) / static_cast<float>(nCombs);
@@ -281,16 +246,9 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
             int combIndex = 0;
             for (int32_t ci = 0; ci < nCombs; ++ci) {
                 Comb &comb = combs[c][ci];
-                // Each comb wobbles on its own phase; without the offset they
-                // would all lengthen together, which is a pitch bend rather
-                // than a room that will not sit still.
-                // **Only when there is wobble to compute.** This is sixteen
-                // sines and sixteen floors a sample - a thousand of each per
-                // block per channel - and it ran at every setting including
-                // nought, where `wobbleDepth` multiplied the answer away and
-                // the arithmetic had already been paid for. A reverb is on a
-                // send for the whole song, so this was a fixed slice of every
-                // block in every song that has one.
+                // Each comb wobbles on its own phase. Without the offset they'd
+                // all lengthen together, which is a pitch bend. Only computed
+                // when wobble is on, since it's sixteen sines a sample.
                 float drift = 0.0f;
                 if (wobbling) {
                     const float ph = wobblePhase + static_cast<float>(combIndex) * 0.125f +
@@ -299,20 +257,10 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
                 }
                 const float y = comb.line.read(static_cast<float>(comb.len) * stretch + drift);
                 comb.store = undenormal(y * (1.0f - damp) + comb.store * damp);
-                // The shimmer is fed back out of the room's own gain budget,
-                // not on top of it. The combs already run at `fb`, which is
-                // close to unity for a long tail; adding a second path that
-                // also derives from the combs makes the loop gain exceed one
-                // and the whole thing reaches infinity in about a second. It
-                // did, the first time. Scaling by what is left under unity
-                // keeps the room stable at every size - and means a frozen
-                // reverb, where fb *is* one, cannot shimmer, which is correct:
-                // there is no headroom left to climb with.
-                // Divided by the comb count, because it goes into every one
-                // of them: the shimmer should add the same energy to the room
-                // whether the room is built from eight combs or eighty, and
-                // forgetting that made the injected gain eight times what the
-                // arithmetic above said it was.
+                // The shimmer uses only the headroom left under unity
+                // (1 - fb), or the loop gain goes above one and blows up. So
+                // a frozen reverb (fb = 1) can't shimmer. kCombInject accounts
+                // for the shimmer going into every comb.
                 comb.line.write(x + comb.store * fb +
                                 shimmerFb[c] * shimmer * (1.0f - fb) * kCombInject);
                 acc += y;
@@ -328,8 +276,8 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
             lp[c] += (acc - lp[c]) * toneCoeff;
             float t = lp[c];
 
-            // The tail as cheap memory. Quantised and sample-held *after* the
-            // room and before the mix, so the dry signal never sees it.
+            // Lo-fi tail: quantised and sample-held after the room and before
+            // the mix, so the dry signal isn't affected.
             if (bits < 16) {
                 const float step = kReverbNominal / static_cast<float>(1 << bits);
                 t = std::round(t / step) * step;
@@ -343,14 +291,9 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
             // Shimmer: the tail read back an octave up, into the combs.
             if (shimmer > 0.0f) {
                 shimmerLine[c].write(t);
-                // *Minus* one sample of delay per sample, so the read point
-                // catches the write head at twice the rate and the tail comes
-                // back an octave up. Plus, which is what this said first, makes
-                // the read point stand still - the line stops being a pitch
-                // shifter and becomes a hold, and a hold inside a feedback
-                // path accumulates DC until it is the only thing left. The
-                // tail's centroid read zero hertz, which is what that looks
-                // like from outside.
+                // The delay shrinks by one sample per sample, so the read
+                // point moves at twice the rate and the tail comes back an
+                // octave up. Adding instead would hold the read point still.
                 shimmerPhase[c] -= 1.0f / shimWin;
                 while (shimmerPhase[c] < 0.0f) shimmerPhase[c] += 1.0f;
                 float ph2 = shimmerPhase[c] + 0.5f;
@@ -359,39 +302,20 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
                 const float g2 = std::sin(ph2 * 3.14159265f);
                 const float shifted = shimmerLine[c].read(shimmerPhase[c] * shimWin + 2.0f) * g1 +
                                       shimmerLine[c].read(ph2 * shimWin + 2.0f) * g2;
-                // A feedback path that can carry a NaN carries it forever.
-                // DC out, before it goes round again.
-                //
-                // A shifter that doubles every frequency also doubles nothing:
-                // whatever direct current it is handed comes back as direct
-                // current, is added to the combs, and is handed back bigger
-                // next time. Left in, the tail's centroid fell to one hertz
-                // and the output reached twenty-three times full scale - the
-                // room had become a battery. A one-pole blocker at about five
-                // hertz costs nothing a listener can hear and breaks the only
-                // frequency the loop can run away at.
+                // Remove DC before it goes round again. The shifter passes DC
+                // unchanged, so it would build up in the loop. A one-pole
+                // blocker at about 5 Hz stops it.
                 const float dc = shifted - shimDcX[c] + 0.9995f * shimDcY[c];
                 shimDcX[c] = shifted;
                 shimDcY[c] = dc;
-                // And the top off, every time round.
-                //
-                // Each pass moves the tail up an octave; with nothing taken
-                // away it climbs forever and the output reached eight times
-                // full scale. A real shimmer converges because the shifted
-                // signal goes back through the room's own damping - so this
-                // one does too, and the ladder runs out of rungs where the
-                // room stops being bright.
+                // Low-pass it every time round. Each pass moves the tail up an
+                // octave, so without damping it would climb forever. NaNs are
+                // dropped here too, since a feedback path would keep them.
                 const float bounded = std::isfinite(dc) ? clampf(dc, -2.0f, 2.0f) : 0.0f;
                 shimLp[c] += (bounded - shimLp[c]) * shimDamp;
-                // Soft-limited, which is the only thing that actually holds.
-                //
-                // Scaling the injection by what is left under unity makes
-                // *small* rooms shimmer hardest, because they have the most
-                // headroom; scaling by a constant instead makes large ones
-                // worst, because their combs resonate longest. Neither end can
-                // be fixed by choosing a better number, so the regeneration
-                // path is limited instead - which is what a shimmer pedal
-                // does, and it bounds the loop whatever the room is doing.
+                // Soft-limit the feedback. No fixed injection amount is safe
+                // for every room size, so the limiter is what keeps the loop
+                // bounded, like a shimmer pedal.
                 shimmerFb[c] = undenormal(fastTanh(shimLp[c] * 1.6f) * 0.55f);
             } else {
                 shimmerFb[c] = 0.0f;
@@ -400,8 +324,8 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
         }
         wobblePhase += wobbleInc;
         if (wobblePhase >= 1.0f) wobblePhase -= 1.0f;
-        // Gate: the tail is let through for a hold after each hit, then cut -
-        // the drum-room trick, without needing a second effect.
+        // Gate: lets the tail through for a hold time after each hit, then
+        // cuts it. The classic gated drum room.
         float g = 1.0f;
         if (gate > 0.0f) {
             const float env = peakEnvelope(inputEnv, (std::fabs(inL) + std::fabs(inR)), envAtk, envRel);
@@ -492,15 +416,12 @@ bool Distortion::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float drive = p.get(Drive), mix = p.get(Mix), bias = p.get(Bias) * 0.6f;
     const int mode = static_cast<int>(p.get(Mode) + 0.5f);
     for (int c = 0; c < 2; ++c) tone[c].lowpass(p.get(Tone), 0.707f, sr);
-    // Level roughly follows the input: a loud drive is a texture change, not a jump.
+    // Compensate for the drive so the output level roughly follows the input.
     const float comp = 1.0f / std::sqrt(drive);
     const int chans = stereoIn ? 2 : 1;
-    // A waveshaper makes harmonics above the ones it is fed, and anything
-    // past half the sample rate folds back down as something inharmonic -
-    // which is what makes a hard clip sound like a cheap plugin. At full
-    // quality the shaper runs at twice the rate and the extra octave is
-    // filtered off before the result is thinned back out; at lean quality
-    // it runs once, as it always did.
+    // At full quality the shaper runs at twice the rate and the top octave is
+    // filtered off before decimating, to reduce aliasing. Lean quality runs
+    // it once per sample.
     const bool oversample = fullQuality();
     for (int c = 0; c < 2; ++c) halfband[c].lowpass(std::min(19000.0f, sr * 0.45f), 0.707f, sr * 2.0f);
     auto shape = [&](float x) {
@@ -521,7 +442,7 @@ bool Distortion::process(float *L, float *R, int32_t frames, bool stereoIn) {
             float y;
             if (oversample) {
                 // Two sub-samples: the midpoint of the last input and this
-                // one, then this one. Both are filtered; the second is kept.
+                // one, then this one. Both are filtered and the second is kept.
                 const float mid = (prevIn[c] + in) * 0.5f;
                 halfband[c].process(shape(mid * drive + bias));
                 y = halfband[c].process(shape(in * drive + bias));
@@ -574,8 +495,8 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float slope = 1.0f - 1.0f / ratio;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
-        // The detector hears the sidechain when there is one - the kick, not
-        // the bass it is pushing down - and this track's own sound otherwise.
+        // The detector listens to the sidechain if there is one, otherwise
+        // this track.
         const float a = key_ != nullptr ? std::fabs(key_[i])
                                         : (std::fabs(inL) > std::fabs(inR) ? std::fabs(inL) : std::fabs(inR));
         env += (a - env) * (a > env ? atk : rel);
@@ -584,8 +505,8 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
             const float over = 20.0f * std::log10(env) - thr;
             if (over > 0.0f) g = dbToGain(-over * slope);
         }
-        // Pump: a sidechain-shaped dip on every beat of the chosen note value,
-        // no routing needed. Exponential recovery like a kick would give.
+        // Pump: a sidechain-style dip on every beat of the chosen note value,
+        // with no routing needed. Recovers exponentially like a kick would.
         if (pump > 0.0f) {
             g *= 1.0f - pump * std::exp(-phase * 6.0f);
             phase += inc;
@@ -634,15 +555,13 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int chans = stereoIn ? 2 : 1;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
-        // The follower hears the sidechain when there is one, so a negative
-        // envelope depth closes this track's filter on another track's hits.
+        // The follower listens to the sidechain if there is one, so a negative
+        // envelope depth closes this filter on another track's hits.
         const float a = key_ != nullptr ? std::fabs(key_[i]) * 2.4f : (std::fabs(inL) + std::fabs(inR)) * 1.2f;
         follower += (a - follower) * (a > follower ? atk : rel);
-        // **The coefficients on a sixteen-sample stride, and only when they
-        // moved.** `Svf::set` is a `tan`, and it was called per sample per
-        // channel - for a cutoff that, with both depths at nought, never
-        // moves at all. Sixteen samples is what every filter in the machines
-        // has always used for a moving cutoff.
+        // Update the coefficients every sixteen samples, and only when the
+        // cutoff has moved, since `Svf::set` calls `tan`. Sixteen samples
+        // matches the machines' filters.
         if ((i & 15) == 0) {
             // Both modulators move the cutoff in octaves: the LFO up to +-3, the
             // follower up to 4 (an auto-wah when positive, a duck when negative).
@@ -651,7 +570,7 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
             if (fc != fcSet || reso != resoSet) {
                 fcSet = fc;
                 resoSet = reso;
-                for (auto &f : svf) f.set(fc, reso); // both, or a mono input turning stereo finds the second unsolved
+                for (auto &f : svf) f.set(fc, reso); // both, in case a mono input turns stereo
             }
         }
         phase += inc;
@@ -681,8 +600,7 @@ const ParamDef *Bitcrusher::paramDefs(int32_t &count) const {
 }
 
 void Bitcrusher::prepare(int32_t sampleRate) { sr = static_cast<float>(sampleRate); reset(); }
-// The jitter's generator goes back to its seed too: Unstable and Broken are
-// the two patches that use it, and they were the two that did not repeat.
+// The jitter's generator goes back to its seed too, so renders repeat.
 void Bitcrusher::reset() {
     hold[0] = hold[1] = 0.0f;
     phase = 0.0f;
@@ -702,7 +620,7 @@ bool Bitcrusher::process(float *L, float *R, int32_t frames, bool stereoIn) {
         phase += inc;
         if (phase >= period) {
             phase -= period;
-            // Jitter: each hold lasts a random length, so the aliasing smears
+            // Jitter: each hold is a random length, so the aliasing smears
             // into noise instead of ringing at one pitch.
             period = 1.0f + jitter * (xorshift01(rng) * 1.8f - 0.9f);
             for (int c = 0; c < chans; ++c) {
@@ -803,7 +721,7 @@ bool Flanger::process(float *L, float *R, int32_t frames, bool stereoIn) {
             const float d = base + range * (0.5f + 0.5f * Lfo::triangle(ph));
             const float tap = line[c].read(d);
             line[c].write(in[c] + tap * feedback);
-            // Negative feedback with the wet inverted: the hollow, through-zero flavour.
+            // Negative feedback with the wet inverted, for a hollow, through-zero sound.
             const float wet = feedback < 0.0f ? -tap : tap;
             (c == 0 ? L : R)[i] = in[c] + wet * mix;
         }
@@ -833,8 +751,7 @@ const ParamDef *Chorus::paramDefs(int32_t &count) const {
 
 void Chorus::prepare(int32_t sampleRate) {
     sr = static_cast<float>(sampleRate);
-    // Fifty milliseconds is more than any chorus needs and leaves room for the
-    // drift to wander without running off the end of the line.
+    // 50 ms is more than a chorus needs, leaving room for the drift.
     for (auto &l : line) l.prepare(static_cast<int32_t>(sr * 0.05f));
     reset();
 }
@@ -852,13 +769,12 @@ bool Chorus::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int voices = static_cast<int>(p.get(Voices) + 0.5f) + 2;
     const float phase = Lfo::phaseAt(tick, static_cast<int>(p.get(Rate) + 0.5f));
 
-    // A chorus is short delays, not long ones: 8 ms at the centre, swept by up
-    // to 5 either way. Past about 15 ms it stops doubling and starts flanging.
+    // 8 ms at the centre, swept by up to 5 ms either way. Much past 15 ms it
+    // stops sounding like a chorus.
     const float centre = sr * 0.008f;
     const float swing = sr * 0.005f * depth;
-    // One step of the random walk per block, which at 64 samples is about
-    // 750 Hz - far faster than anything audible as pitch, and slow enough that
-    // it reads as tuning rather than as noise.
+    // One step of the random walk per block (about 750 Hz), slow enough to
+    // sound like tuning drift instead of noise.
     for (int v = 0; v < 4; ++v) {
         rng = rng * 1664525u + 1013904223u;
         const float step = (static_cast<float>(rng >> 9) * (1.0f / 4194304.0f) - 1.0f) * 0.02f;
@@ -872,14 +788,13 @@ bool Chorus::process(float *L, float *R, int32_t frames, bool stereoIn) {
         line[1].write(mono);
         float wet[2] = {0.0f, 0.0f};
         for (int v = 0; v < voices; ++v) {
-            // Each voice sits at its own point in the cycle, and the pair of
-            // them lands at opposite ends of the image.
+            // Each voice sits at its own point in the cycle.
             const float vp = phase + static_cast<float>(v) / static_cast<float>(voices);
             const float ph = vp - std::floor(vp);
             const float d = centre + swing * Lfo::sine(ph) + drift[v] * driftAmt * sr * 0.002f;
             const float s = line[0].read(clampf(d, 2.0f, sr * 0.045f));
-            // Voices alternate sides, by `spread`; at nothing they all arrive
-            // in the middle and it is a mono chorus in stereo.
+            // Voices alternate sides by `spread`. At 0 they're all in the
+            // middle.
             const float side = (v % 2 == 0 ? -1.0f : 1.0f) * spread;
             wet[0] += s * (1.0f - 0.5f * (1.0f + side));
             wet[1] += s * (0.5f * (1.0f + side));
@@ -916,19 +831,17 @@ bool Tremolo::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int shape = static_cast<int>(p.get(Shape) + 0.5f);
     const int rateIdx = static_cast<int>(p.get(Rate) + 0.5f);
     const float base = Lfo::phaseAt(tick, rateIdx);
-    // The phase walks on per sample between blocks, from the same table the
-    // block phase came from, so the two agree and the depth does not step at a
-    // block boundary. Derived from the tempo rather than assumed: `kBeats` is
-    // in quarter notes, so a cycle is `beats * 60 / bpm` seconds, and writing
-    // it as a constant would have pinned every sync rate to 120 bpm.
+    // The phase advances per sample between blocks, using the same table as
+    // the block phase so there's no step at block boundaries. `kBeats` is in
+    // quarter notes, so a cycle is `beats * 60 / bpm` seconds.
     const float hz = bpm / (60.0f * Lfo::kBeats[rateIdx]);
     const float inc = hz / sr;
 
     for (int32_t i = 0; i < frames; ++i) {
         float ph = base + inc * static_cast<float>(i);
         ph -= std::floor(ph);
-        // Skew bends the duty: at a half it is symmetrical, away from it the
-        // dip is either a stab or a swell.
+        // Skew bends the duty: symmetrical at 0.5, a stab or a swell either
+        // side.
         const float k = clampf(skew, 0.05f, 0.95f);
         const float warped = ph < k ? 0.5f * ph / k : 0.5f + 0.5f * (ph - k) / (1.0f - k);
         float w;
@@ -937,8 +850,8 @@ bool Tremolo::process(float *L, float *R, int32_t frames, bool stereoIn) {
         case 2: w = warped < 0.5f ? 1.0f : -1.0f; break;
         default: w = Lfo::sine(warped); break;
         }
-        // Pan slides the two channels apart in phase: together is a tremolo,
-        // opposite is an auto-pan, and the space between belongs to neither.
+        // Pan offsets the channels' phases: 0 is a tremolo, fully opposite is
+        // an auto-pan.
         float wR;
         {
             float ph2 = ph + 0.5f * pan;
@@ -989,8 +902,8 @@ bool Width::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float amount = p.get(Amount), below = p.get(Below), rotate = p.get(Rotate);
     const float haas = p.get(Haas) * 0.001f * sr;
-    // The crossover the bass is folded back through. At the bottom of its
-    // range there is nothing under it and the control is off.
+    // The crossover below which the bass is made mono. At the bottom of its
+    // range it's off.
     const bool folding = below > 21.0f;
     if (folding) {
         lowL.lowpass(below, 0.707f, sr);
@@ -1007,8 +920,8 @@ bool Width::process(float *L, float *R, int32_t frames, bool stereoIn) {
         }
         float lowSum = 0.0f;
         if (folding) {
-            // Take the bottom out of both, sum it, and put it back in the
-            // middle. What is left above the crossover is what gets widened.
+            // Take the lows out of both, sum them to mono and put them back.
+            // Only what's above the crossover gets widened.
             const float ll = lowL.process(l), lr = lowR.process(r);
             l -= ll;
             r -= lr;
@@ -1028,10 +941,9 @@ bool Width::process(float *L, float *R, int32_t frames, bool stereoIn) {
 // --- Shifter ----------------------------------------------------------------------
 
 namespace {
-// A Hilbert pair: two four-section allpass chains whose phase responses stay
-// about ninety degrees apart from some tens of hertz to most of Nyquist. The
-// coefficients are the standard ones; the Q chain is read one sample late,
-// which is what makes the quadrature come out right.
+// A Hilbert pair: two four-section allpass chains whose phases stay about 90
+// degrees apart from tens of Hz to most of Nyquist. Standard coefficients.
+// The Q chain is read one sample late, which is needed for the quadrature.
 constexpr float kHilbertI[4] = {0.6923877778065f, 0.9360654322959f, 0.9882295226860f, 0.9987488452737f};
 constexpr float kHilbertQ[4] = {0.4021921162426f, 0.8561710882420f, 0.9722909545651f, 0.9952884791278f};
 } // namespace
@@ -1086,11 +998,10 @@ bool Shifter::process(float *L, float *R, int32_t frames, bool stereoIn) {
             float qi = x, qq = x;
             for (int k = 0; k < 4; ++k) qi = apI[ch][k].process(qi);
             for (int k = 0; k < 4; ++k) qq = apQ[ch][k].process(qq);
-            // The Q chain is a sample behind, which is part of the network.
+            // The Q chain is a sample behind, as the network needs.
             const float q = delayed[ch];
             delayed[ch] = qq;
-            // The right channel turns the other way when `spread` is up, which
-            // is the thing no acoustic process does.
+            // With `spread` up, the right channel shifts the other way.
             const float sign = (ch == 1) ? (1.0f - 2.0f * spread) : 1.0f;
             const float wet = qi * c - q * s * sign;
             fb[ch] = dsp::guardDenormal(wet);
@@ -1104,8 +1015,8 @@ bool Shifter::process(float *L, float *R, int32_t frames, bool stereoIn) {
 
 const ParamDef *Harmonizer::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        // Degrees of the scale, not semitones: +2 is "a third" whatever a
-        // third happens to be on this note.
+        // Scale degrees, not semitones: +2 is a third, major or minor
+        // depending on the note.
         {"interval", -7.0f, 7.0f, 2.0f, Curve::Stepped, 15, ""},
         {"interval2", -7.0f, 7.0f, 0.0f, Curve::Stepped, 15, ""},
         {"scale", 0.0f, 32.0f, 0.0f, Curve::Stepped, music::kScaleCount, ""},
@@ -1145,12 +1056,11 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int key = std::clamp(static_cast<int>(p.get(Key) + 0.5f), 0, 11);
     const float win = clampf(p.get(Window) * 0.001f * sr, 64.0f, sr * 0.25f);
     const float feedback = p.get(Feedback), mix = p.get(Mix);
-    // A new interval glides rather than jumps, over about thirty milliseconds.
+    // A new interval glides over about 30 ms instead of jumping.
     const float glide = dsp::onePoleCoeff(0.03f, sr);
 
-    // What semitone shift each requested degree comes to, given the note
-    // currently arriving. Recomputed per block: often enough to follow a line,
-    // rarely enough to cost nothing.
+    // The semitone shift for each degree, given the current input note.
+    // Recomputed once per block.
     float semis[2];
     for (int v = 0; v < 2; ++v) {
         if (confidence > 0.25f && trackedHz > 40.0f) {
@@ -1158,14 +1068,14 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
             const int midi = static_cast<int>(std::lround(note));
             const int pc = music::floorMod(midi - key, 12);
             const int deg = music::degreeAtOrBelow(scale, pc);
-            // Where that degree sits, and where the one N above it sits. The
-            // difference is the interval this note actually wants.
+            // The difference between this note's degree and the one N above
+            // it is the interval to shift by.
             const int here = music::degreeInterval(scale, deg);
             const int there = music::degreeInterval(scale, deg + degrees[v]);
             semis[v] = static_cast<float>(there - here);
         } else {
-            // No confident pitch: the plain chromatic reading of the degree,
-            // which at least keeps the shift the size it was asked for.
+            // No confident pitch, so use a plain chromatic reading of the
+            // degree.
             semis[v] = static_cast<float>(music::degreeInterval(scale, degrees[v]));
         }
     }
@@ -1176,15 +1086,14 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
         const float in[2] = {L[i], stereoIn ? R[i] : L[i]};
         const float mono = (in[0] + in[1]) * 0.5f;
 
-        // Track on the dry input, never on the output: a harmonizer listening
-        // to its own harmony would chase itself up the scale.
+        // Track pitch on the dry input, never the output, or it would chase
+        // its own harmony.
         if ((zeroPrev <= 0.0f) != (mono <= 0.0f)) ++zeroCount;
         zeroPrev = mono;
         if (++zeroWindow >= 1024) {
             const float hz = static_cast<float>(zeroCount) * sr / (2.0f * 1024.0f);
-            // A steady pitch crosses zero twice a cycle and no more. Noise
-            // crosses far more often, so a count that implies something absurd
-            // is the tracker saying it does not know.
+            // A steady pitch crosses zero twice a cycle. Noise crosses far more
+            // often, so an unlikely count means there's no clear pitch.
             if (hz > 40.0f && hz < 2000.0f) {
                 trackedHz = trackedHz > 0.0f ? trackedHz + (hz - trackedHz) * 0.4f : hz;
                 confidence += (1.0f - confidence) * 0.3f;
@@ -1203,16 +1112,15 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
             for (int v = 0; v < (second ? 2 : 1); ++v) {
                 Voice &vo = voice[c][v];
                 vo.ratio += (target[v] - vo.ratio) * glide;
-                // The read point slides against the write head at the rate the
-                // shift asks for, and wraps inside one window.
+                // The read point slides against the write head at the shift's
+                // rate and wraps inside one window.
                 vo.phase += (1.0f - vo.ratio) / win;
                 while (vo.phase >= 1.0f) vo.phase -= 1.0f;
                 while (vo.phase < 0.0f) vo.phase += 1.0f;
                 float ph2 = vo.phase + 0.5f;
                 if (ph2 >= 1.0f) ph2 -= 1.0f;
-                // Two taps half a window apart, crossfaded so the wrap always
-                // happens where that tap is silent. sin over the window is
-                // constant power against its partner.
+                // Two taps half a window apart, crossfaded so each wraps while
+                // it's silent. The sine crossfade keeps the power constant.
                 const float g1 = std::sin(vo.phase * 3.14159265f);
                 const float g2 = std::sin(ph2 * 3.14159265f);
                 const float t1 = line[c].read(vo.phase * win + 2.0f);
@@ -1257,9 +1165,7 @@ void Gate::prepare(int32_t sampleRate) {
 
 void Gate::reset() {
     env = 0.0f;
-    // **Closed, not open.** A gate that resets open passes whatever is
-    // sitting in the input for as long as its release takes, which on a
-    // panic is the one moment the engine has promised silence.
+    // Reset closed, so a panic is silent.
     gain = 0.0f;
     holdLeft = 0.0f;
     open = false;
@@ -1282,33 +1188,21 @@ bool Gate::process(float *L, float *R, int32_t frames, bool stereoIn) {
     }
 
     /**
-     * How fast the *detector* lets go, which is not how fast the gate does.
+     * How fast the detector falls, which isn't the gate's release.
      *
-     * This was thirty milliseconds first, reasoning that a rectified sine
-     * falls to nothing twice a cycle and a follower quicker than the lowest
-     * note's period would decide the string had stopped. It does stop the
-     * chatter, and it also makes **`hold` do nothing below about 30 ms**: a
-     * 20 ms gap never got the envelope down to the threshold at all, so a
-     * gate set to close immediately held on through it just as one set to
-     * wait did. A control that cannot be heard over the bottom half of its
-     * range is worse than the fault it was hiding.
-     *
-     * Two milliseconds, then, and the dips are `hold`'s problem - which is
-     * what hold is for and how a real gate does it. Every peak over the
-     * threshold re-arms the timer, so a note at 82 Hz re-arms every 12 ms
-     * and the default 40 ms never runs out, while a gate set to zero shuts
-     * the moment a drum stops.
+     * Kept short (2 ms) so `hold` works across its whole range. The dips
+     * between cycles of a low note are covered by `hold`: every peak over
+     * the threshold restarts the timer, so an 82 Hz note restarts it every
+     * 12 ms and the default 40 ms never runs out.
      */
     static constexpr float kDetectRelease = 0.002f;
     const float detRel = dsp::onePoleCoeff(kDetectRelease, sr);
 
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
-        // The key filter runs on the audio, per channel, and the rectifier
-        // comes after it: filtering a signal that has already been rectified
-        // would be filtering the envelope, which is a different instrument.
-        // With a sidechain the key filter runs on *that*: the gate opens on
-        // another track's hits, filtered the same way, and shuts this one.
+        // The key filter runs on the audio, per channel, before the rectifier.
+        // With a sidechain it filters that instead, so the gate opens on
+        // another track's hits.
         const float srcL = key_ != nullptr ? key_[i] : inL;
         const float srcR = key_ != nullptr ? key_[i] : inR;
         const float kL = std::fabs(key[0].step(srcL).hp);
@@ -1323,9 +1217,8 @@ bool Gate::process(float *L, float *R, int32_t frames, bool stereoIn) {
             if (holdLeft > 0.0f) holdLeft -= 1.0f;
             else open = false;
         }
-        // Between the two thresholds nothing is decided: that band is the
-        // hysteresis, and it is there because a signal sitting on one number
-        // crosses it hundreds of times a second.
+        // Between the two thresholds nothing changes. The hysteresis stops a
+        // signal near the threshold from chattering.
 
         const float want = open ? 1.0f : shut;
         const float c = want > gain ? atk : rel;

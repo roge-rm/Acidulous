@@ -25,15 +25,13 @@ void Engine::start() {
 void Engine::stop() { retirer.stop(); }
 
 /**
- * The input chain, on the interleaved block that is about to be published.
+ * The input chain, on the interleaved block about to be published. Separate
+ * from renderBlock because it's the one place that deinterleaves and puts
+ * back.
  *
- * Split out of `renderBlock` because it is the one place in the engine that
- * deinterleaves and puts back, and burying that in the first ten lines of the
- * render would make them unreadable.
- *
- * The tick range is the *previous* block's, because the clock has not advanced
- * yet - so a tempo-synced effect on the input is one block behind the same
- * effect on a track, which is 1.3 ms and not worth reordering the render for.
+ * The tick range is the previous block's since the clock hasn't advanced
+ * yet, so a tempo-synced effect on the input is one block (1.3 ms) behind
+ * the same effect on a track.
  */
 void Engine::runInputChain() {
     float L[kBlockFrames], R[kBlockFrames];
@@ -54,15 +52,11 @@ void Engine::runInputChain() {
 }
 
 /**
- * This thread's own CPU time, in microseconds.
+ * This thread's CPU time in microseconds. Copied from AudioDriver so the
+ * engine doesn't depend on the platform layer.
  *
- * Duplicated from `AudioDriver` rather than shared, so the engine keeps no
- * dependency on the platform layer for five lines of clock.
- *
- * **Not a substitute for the wall clock, a companion to it.** The deadline is
- * wall time - the speaker does not care why we were late. What this answers is
- * the second question, which the per-track list could not: of that wall time,
- * how much did we spend computing?
+ * Used alongside the wall clock, not instead of it. The deadline is wall
+ * time. This tells how much of it was spent computing.
  */
 static int64_t threadCpuUs() {
     timespec ts{};
@@ -74,12 +68,12 @@ void Engine::renderBlock(const float *in, float *out) {
     const auto t0 = std::chrono::steady_clock::now();
     const int64_t cpu0 = threadCpuUs();
 
-    // The tuner hears it first, at the level it arrived at and with nothing
-    // applied. Costs one branch when it is off, which is almost always.
+    // The tuner hears the input first, as it arrived. Costs one branch when
+    // it's off, which is almost always.
     tuner.push(in, in != nullptr ? kBlockFrames : 0);
 
     // Publish the input before anything renders, so a machine reading it
-    // sees this block's audio and not the last one's.
+    // gets this block's audio and not the last one's.
     const float gain = inputGain.load(std::memory_order_relaxed);
     const bool chained = inputFx[0] != nullptr || inputFx[1] != nullptr;
     if (in != nullptr && (gain != 1.0f || chained)) {
@@ -92,49 +86,37 @@ void Engine::renderBlock(const float *in, float *out) {
 
     const auto tInput = std::chrono::steady_clock::now();
 
-    // Panic first, before anything else runs: whatever is happening, the
-    // next thing that leaves this engine should be silence.
+    // Panic first, so the next thing out of the engine is silence.
     if (panicFlag.exchange(false, std::memory_order_acq_rel)) {
         transport.stopFromAudioThread();
         playing = false;
         startPending = false;
         scheduler.allNotesOff();
-        // And the clip players' own beginning: a pass count and, in a
-        // free-rolling clip, the dice. Same reason the modifiers are reset
-        // below - a render panics first, so this is where "from the
-        // beginning" has to mean it.
+        // Reset the clip players' pass count and free-roll seed. A render
+        // panics first, so this is where "from the beginning" happens.
         scheduler.resetClipPlayers();
-        // Panic means silence, and a file being auditioned is a sound this
-        // engine is making. It is not part of the song, which is exactly why
-        // it would otherwise be the one thing still playing afterwards.
+        // Panic means silence, so stop any audition too.
         audition.stop();
         for (auto &n : mpeChannelNote) n = -1;
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].allNotesOff();
-            // Parameters jump rather than glide. Every one of them is
-            // smoothed, so after a reset they were still sliding in from
-            // wherever they had been - which left the first few
-            // milliseconds of a render depending on what had been playing
-            // before it. A panic is a discontinuity by definition; there
-            // is nothing here to be smooth about.
+            // Parameters jump rather than glide, so the start of a render doesn't
+            // depend on what was playing before it.
             if (Machine *m = racks[r].currentMachine()) panicMachine(*m);
             racks[r].jumpChannel();
             for (int32_t s = 0; s < kEffectSlots; ++s) {
                 if (Effect *e = racks[r].currentEffect(s)) { e->reset(); e->params().jumpAll(); }
             }
-            // The input chain too, once. A delay on the way in would otherwise
-            // keep repeating into a song that has been panicked silent.
+            // The input chain too, once. A delay on the input would otherwise
+            // keep repeating after a panic.
             if (r == 0) {
                 for (Effect *e : inputFx) {
                     if (e != nullptr) { e->reset(); e->params().jumpAll(); }
                 }
             }
-            // The modifiers too. They were missed here from the start, and
-            // the cost was not obvious: an arpeggiator keeps a step, so a
-            // panic - or an offline render, which panics first - left it
-            // part way through its pattern and the next notes to arrive
-            // came out somewhere else in the run. It is why exporting the
-            // same song twice gave two different files.
+            // The modifiers too. An arpeggiator keeps a step, so without this
+            // a render (which panics first) would start part way through its
+            // pattern and two exports of the same song would differ.
             for (int32_t s = 0; s < kInputModSlots; ++s) {
                 if (InputMod *e = racks[r].currentInputMod(s)) e->reset();
             }
@@ -142,45 +124,34 @@ void Engine::renderBlock(const float *in, float *out) {
         master.panic();
     }
 
-    // Transport: apply a play/stop the UI asked for, only ever between blocks.
+    // Transport: apply a play/stop the UI asked for, only between blocks.
     if (transport.applyRequests()) {
         if (transport.isPlaying()) {
             clock.reset();
-            // A count-in is a number of bars of clicks before the song
-            // moves at all. The clock runs through them - it is what the
-            // clicks are counted by - but the scheduler is not started, so
-            // nothing sounds and nothing is recorded until the count is
-            // out. The bars are the song's own, so 7/8 counts seven.
+            // A count-in is some bars of clicks before the song moves. The
+            // clock runs through them (it counts the clicks) but the scheduler
+            // isn't started, so nothing sounds or records until it's done. The
+            // bars are the song's, so 7/8 counts seven.
             //
-            // Only when armed. A count-in counts you in to a take; pressing
-            // play to hear where you are should not make you sit through
-            // four bars of clicks first. The setting stays on - it is how
-            // you record - and simply has nothing to do on a plain play.
+            // Only when armed. A count-in is for recording, so a plain play
+            // doesn't make you sit through four bars of clicks.
             const int32_t bars = transport.isRecordArmed() ? transport.countInBarsWanted() : 0;
             const int64_t ticks = bars > 0 ? static_cast<int64_t>(bars) * scheduler.songTicksPerBar() : 0;
-            // Counted in frames rather than ticks, and as a double.
-            //
-            // A block is 0.64 ticks at 120 bpm, and rounding that to a whole
-            // tick per block drained a two-bar count in 2.56 seconds instead
-            // of four - and at some tempos would round to nought and never
-            // drain at all. Frames divide exactly into blocks; ticks do not.
+            // Counted in frames, as a double. A block is 0.64 ticks at 120 bpm,
+            // so counting whole ticks per block would drain the count too fast
+            // and at some tempos never drain at all.
             countInFrames = static_cast<double>(ticks) * clock.samplesPerTickNow();
             countInPerTick = clock.samplesPerTickNow();
             preRollFrames = countInPerTick * static_cast<double>(kPreRollTicks);
             earlyCount = 0;
             startPending = countInFrames <= 0.0;
-            // Under Link, a plain play waits for the session's next downbeat
-            // instead of starting where the finger landed - which is the
-            // whole point of a shared phase. A count-in is its own bar line
-            // and keeps its meaning, so the two do not both apply; the pull
-            // brings the count-in's bar into line over the following one.
+            // With Link, a plain play waits for the session's next downbeat so
+            // we join its phase. A count-in has its own bar line, so it doesn't
+            // wait. The pull brings its bar into line over the next one.
             //
-            // **Only when somebody is out there.** Link left switched on with
-            // no peers is the common case, not the exotic one: it persists
-            // across launches and nothing on screen says it is on, so every
-            // press of play sat waiting up to a whole bar to come into phase
-            // with a session of one. There is no phase to join on your own,
-            // and the wait reads as the transport being broken.
+            // Only when there are peers. Link is often left on with nobody else
+            // in the session, and waiting up to a bar alone just looks like play
+            // is broken.
             linkWaiting = startPending && transport.followingLink() &&
                           timebase.load(std::memory_order_acquire) != nullptr && linkInSession;
             if (linkWaiting) startPending = false;
@@ -189,21 +160,17 @@ void Engine::renderBlock(const float *in, float *out) {
             scheduler.stopLauncher();
             transport.clearLaunchRequests();
             linkWaiting = false;
-            // A lane that pressed repeat and was stopped before it let go
-            // would otherwise leave the song looping a beat in silence.
+            // If a lane pressed repeat and playback stopped before release, the
+            // song would keep looping a beat in silence.
             master.perform.release();
-            // And a mute waiting for a bar that will not come now.
+            // And any mute waiting for a bar that won't come now.
             for (PendingParam &waiting : pendingParams) waiting.waiting = false;
-            // **Stop means stop, not pause.** The playhead stayed where it
-            // was, and the header's play button starts from the scene the
-            // readout is showing - so a stop half way through a song and a
-            // press of play carried on from there. There is no separate
-            // pause, so the one control has to be the one people expect, and
-            // what they expect of a stop button is the top of the song.
+            // Stop goes back to the start of the song. There's no separate
+            // pause, and a stop button is expected to go back to the top.
             //
-            // The launcher is left alone: there is no "beginning" to go back
-            // to when every track is somewhere of its own, and stopping there
-            // already has its own two-stage meaning.
+            // Not in clip mode: every track is somewhere different so there's no
+            // start to go back to, and stopping there has its own two-step
+            // behaviour.
             if (!transport.launcherMode()) {
                 clock.reset();
                 scheduler.start(0);
@@ -212,23 +179,22 @@ void Engine::renderBlock(const float *in, float *out) {
         playing = transport.isPlaying();
         emitTransport(playing);
     }
-    // Counting. The clock is advanced by hand here, because the scheduler -
-    // which normally drives it - is deliberately not running yet.
+    // Counting in. The clock is advanced by hand here because the
+    // scheduler, which normally drives it, isn't running yet.
     if (countInFrames > 0.0) {
         countInFrames -= static_cast<double>(kBlockFrames);
         if (countInFrames <= 0.0) {
             countInFrames = 0.0;
-            startPending = true; // the bar line the count was counting to
+            startPending = true; // the bar line the count-in was counting to
         }
     }
     transport.publishCountIn(countInPerTick > 0.0
                                  ? static_cast<int64_t>(countInFrames / countInPerTick)
                                  : 0);
 
-    // A rewind while stopped: put the playhead back at the top of the song so
-    // the readout says so. Between blocks like everything else here, and
-    // before the start below, so a play that arrives in the same block still
-    // decides where it starts from.
+    // A rewind while stopped: move the playhead to the start of the song so
+    // the readout shows it. Before the start below, so a play in the same
+    // block starts from there.
     if (transport.takeRewind()) {
         clock.reset();
         scheduler.start(0);
@@ -253,21 +219,21 @@ void Engine::renderBlock(const float *in, float *out) {
     for (int32_t r = 0; r < kRackCount; ++r) racks[r].updateMidiOut(framesRendered);
 
     clock.advance(kBlockFrames);
-    // Mounts before parameters: the UI queues a unit and then its values, so
-    // draining in that order lands the values on the new unit, not the old one.
+    // Mounts before parameters. The UI queues a unit and then its values, so
+    // this order puts the values on the new unit, not the old one.
     applyMounts();
     drainMidi();
     drainParams();
 
-    // Does any rack play audio it made earlier? Decided before the scheduler
-    // fires, because a frozen rack is sent no notes.
+    // Does any rack play frozen audio? Decided before the scheduler fires,
+    // since a frozen rack gets no notes.
     {
-        // Per rack, because in clip mode every rack may be on a different
-        // scene and frozen audio is stored per (track, scene).
+        // Per rack, because in clip mode racks can be on different scenes
+        // and frozen audio is stored per track and scene.
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].updateFrozen(scheduler.rackSceneId(r), clock.bpm(), playing, clock.isRamping());
-            // And the same question asked of the machine, for one that plays
-            // the arrangement rather than notes out of it.
+            // And tell the machine, for machines that play the arrangement
+            // rather than notes.
             racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing);
         }
     }
@@ -277,12 +243,12 @@ void Engine::renderBlock(const float *in, float *out) {
     const seq::SceneInfo *sceneBefore = scheduler.currentSceneInfo();
     const int32_t repeatBefore = scheduler.currentRepeat();
 
-    // While counting, the transport is "playing" - the clock runs and the
-    // clicks are counted by it - but the scheduler must not, or the song
-    // would sound underneath its own count-in.
+    // While counting in, the transport is playing (the clock runs and
+    // counts the clicks) but the scheduler mustn't, or the song would
+    // play under its own count-in.
     const bool counting = countInFrames > 0.0;
-    // The bus renders the count's clicks even with the metronome switched off,
-    // and borrows the limiter's headroom for them while it does.
+    // The bus renders count-in clicks even with the metronome off, and
+    // borrows the limiter's headroom for them.
     master.setCountingIn(counting);
     if (playing && !counting) {
         scheduler.setSwingPair(swingPair.load(std::memory_order_relaxed));
@@ -295,18 +261,15 @@ void Engine::renderBlock(const float *in, float *out) {
         scheduler.applyIdleTempo();
     }
 
-    // Twenty-four pulses a quarter note, which at 240 PPQN is every tenth
-    // tick exactly, at every tempo. The clock runs whether or not the
-    // transport does, because that is what the specification asks for and
-    // what the engine's free-running clock already did.
+    // 24 pulses per quarter note, which at 240 PPQN is exactly every tenth
+    // tick at any tempo. The clock runs whether or not the transport does,
+    // as the MIDI spec asks.
     emitClock(clock.blockStart(), clock.blockEnd());
 
     // Metronome: every click boundary this block crossed, at its own sample
-    // offset. The step is a bar or a division of the beat; the accent says
-    // which of the three it is, because a metronome ticking sixteenths all
-    // at one level is a buzz you cannot find the beat in.
-    // A count-in always clicks - that is the whole of what it is - so it
-    // does not ask whether the metronome is switched on.
+    // offset. The step is a bar or a division of the beat, and the accent
+    // marks which, so fast divisions don't hide the beat.
+    // A count-in always clicks, even with the metronome off.
     if ((playing && master.clickEnabled() && master.clickAllowed(transport.isRecordArmed())) || counting) {
         const int64_t stepTicks = master.clickStepTicks();
         auto accentFor = [](int64_t tickInBar, int64_t ticksPerBar) {
@@ -316,12 +279,10 @@ void Engine::renderBlock(const float *in, float *out) {
         };
 
         if (counting || scheduler.launcherActive()) {
-            // No scene owns the bar line here, so the song's signature
-            // counts from the transport's own zero.
+            // No scene owns the bar line in clip mode, so the song's
+            // signature counts from the transport's zero.
             const int64_t ticksPerBar = scheduler.songTicksPerBar();
             // A count-in counts beats, whatever the metronome is set to.
-            // "One, two, three, four" is the entire point of it, and
-            // counting sixteenths would not be counting.
             const int64_t step = counting ? kPPQN
                                           : (stepTicks > 0 ? stepTicks : (ticksPerBar > 0 ? ticksPerBar : kPPQN));
             const int64_t from = clock.blockStart(), to = clock.blockEnd();
@@ -338,12 +299,9 @@ void Engine::renderBlock(const float *in, float *out) {
             const int64_t iterLen = sceneBefore->iterationTicks() > 0 ? sceneBefore->iterationTicks() : ticksPerBar;
             const int64_t step = stepTicks > 0 ? stepTicks : (ticksPerBar > 0 ? ticksPerBar : kPPQN);
             // The offset comes from the clock, which knows the sub-tick
-            // phase. Worked out here instead, from the block's start as
-            // though it began on a tick boundary, every click was late by up
-            // to a whole tick - two milliseconds at 120 bpm - and any offset
-            // past the block was clamped to its end. It had been doing that
-            // since M2. Nothing is clamped now: an offset past this block is
-            // carried into the next one, which a fast division needs.
+            // phase. Working it out from the block start would make clicks
+            // up to a tick late (2 ms at 120 bpm). An offset past this block
+            // carries into the next one, which fast divisions need.
             const int64_t absStart = clock.blockStart();
             auto clicksIn = [&](int64_t from, int64_t to, int64_t baseOffsetTicks) {
                 int64_t t = (from / step) * step;
@@ -364,7 +322,7 @@ void Engine::renderBlock(const float *in, float *out) {
     }
 
     // Scene fades: in over the first bar of the first pass, out over the last
-    // bar of the last pass. Stateless - derived from the position each block.
+    // bar of the last pass. Worked out from the position each block.
     float fade = 1.0f;
     if (playing && sceneBefore != nullptr && !scheduler.launcherActive()) {
         const int64_t tpb = sceneBefore->ticksPerBar;
@@ -378,27 +336,23 @@ void Engine::renderBlock(const float *in, float *out) {
 
     const auto tSeq = std::chrono::steady_clock::now();
 
-    // And the sound itself. This loop and the master call under it were
-    // deleted by an over-long slice edit in M35, which took the scene fade
-    // with them: `out` was then never written at all, so every block handed
-    // back whatever the caller's stack happened to hold.
+    // Render the racks, then the master.
     int32_t rackUsThisBlock[kRackCount]{};
     bool rackFrozenThisBlock[kRackCount]{};
-    // **Sources before listeners.** A rack whose compressor, gate or filter
-    // listens to another is rendered after it, so the duck lands on the same
-    // block as the kick that caused it rather than one block late. Worked out
-    // every block because a sidechain is a parameter and can be automated.
-    // A loop - two racks each listening to the other - cannot be satisfied;
-    // the lower-numbered one goes first and hears the other a block late.
+    // Sources before listeners. A rack whose compressor, gate or filter
+    // listens to another is rendered after it, so the duck lands in the same
+    // block as the kick. Worked out every block because a sidechain is a
+    // parameter and can be automated. If two racks listen to each other, the
+    // lower-numbered one goes first and hears the other a block late.
     settleRouting();
     int32_t order[kRackCount];
     sidechainOrder(order);
     for (int32_t n = 0; n < kRackCount; ++n) {
         const int32_t r = order[n];
         if (racks[r].isActive()) {
-            // Hand each detector its key for this block: the source's tap,
-            // which is this block's if it has rendered and the last one's if
-            // it has not, or silence for a rack with nothing on it.
+            // Give each detector its key for this block: the source's tap
+            // (this block's if it has rendered, otherwise the last one's), or
+            // silence for an empty rack.
             for (int32_t s = 0; s < kEffectSlots; ++s) {
                 if (Effect *e = racks[r].currentEffect(s)) e->setKey(keyFor(e->sidechainRack(), r));
             }
@@ -412,9 +366,8 @@ void Engine::renderBlock(const float *in, float *out) {
             const auto rackUs = static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
                                                          std::chrono::steady_clock::now() - tRack)
                                                          .count());
-            // Held, not published: whether this is a cost or an interruption
-            // is not known until the whole block has been timed in both
-            // clocks, and the answer is the same for every rack in it.
+            // Held rather than published, since whether it was a cost or an
+            // interruption isn't known until the whole block is timed.
             rackUsThisBlock[r] = rackUs;
             rackFrozenThisBlock[r] = racks[r].frozenActive();
         }
@@ -422,10 +375,9 @@ void Engine::renderBlock(const float *in, float *out) {
 
     const auto tRacks = std::chrono::steady_clock::now();
 
-    // The same tick range the racks hand their own inserts, so a tempo-synced
-    // effect behaves the same whether it is on a track or on a send.
-    // The sends listen too: every rack has rendered by now, so theirs is
-    // always this block's.
+    // The same tick range the racks give their inserts, so a tempo-synced
+    // effect behaves the same on a track or a send. Every rack has rendered
+    // by now, so the sends' sidechain keys are always this block's.
     for (int32_t s = 0; s < kSendSlots; ++s) {
         if (Effect *e = master.send(s)) e->setKey(keyFor(e->sidechainRack(), -1));
     }
@@ -437,8 +389,8 @@ void Engine::renderBlock(const float *in, float *out) {
             if (Effect *e = master.groupInsert(g, s)) e->setKey(keyFor(e->sidechainRack(), -1));
         }
     }
-    // Where this block began, to a fraction of a tick: the tick at the
-    // block's end, less the frames between the block's start and that tick.
+    // Where this block began to a fraction of a tick: the tick at the
+    // block's end minus the frames between the block's start and that tick.
     master.perform.setTransport(
         playing, static_cast<double>(clock.blockEnd()) -
                      clock.frameOffsetOfTick(clock.blockEnd(), kBlockFrames) / clock.samplesPerTickNow());
@@ -446,9 +398,8 @@ void Engine::renderBlock(const float *in, float *out) {
 
     const auto tMaster = std::chrono::steady_clock::now();
 
-    // Monitoring is after the master so it is heard at the master's level,
-    // and deliberately not recorded when capturing the input: nobody wants
-    // their own monitor path printed into the sample.
+    // Monitoring is after the master so it's heard at the master's level,
+    // and isn't recorded when capturing the input.
     const InputBus &bus = InputBus::get();
     if (capture.armed()) {
         const int64_t framesBefore = capture.pushed();
@@ -457,29 +408,19 @@ void Engine::renderBlock(const float *in, float *out) {
         } else if (bus.live()) {
             capture.push(bus.block(), kBlockFrames);
         } else {
-            // **Silence, and say so.** This used to fall through to `out`,
-            // so a capture armed for the microphone with no input stream open
-            // recorded the speakers instead - which is not a near miss, it is
-            // the one recording nobody wanted, and it arrived named as the
-            // one they asked for. The screen reads `deaf()` and can tell them.
+            // No input open: record silence, and the screen can show it via
+            // deaf(). Never fall back to recording the output.
             capture.pushSilence(kBlockFrames);
         }
-        // **Where the song was, stamped as the frames go in.**
+        // Stamp where the song was. The mark uses the frame count from
+        // before this block's push, which is the frame the cell starts at.
         //
-        // After the push, not before it: a mark names the frame the cell
-        // *starts* at, and that is the ring's index once this block has been
-        // accepted into it minus this block - which is to say the index as it
-        // was. Taken before the push it would be right; taken after, it would
-        // be one block late on every boundary. So the count is read first.
+        // If the ring dropped anything, every frame index after it is wrong,
+        // so the marks are poisoned.
         //
-        // The ring dropping anything ends the matter: every frame index after
-        // a drop names the wrong moment in the song, and a split built on them
-        // would put somebody's second verse under their first.
-        // **Not while counting in, and not while stopped.** The scheduler is
-        // deliberately idle through a count-in, so its tick stands still - a
-        // mark taken there would say the cell begins at the first click and
-        // put four beats of nothing at the top of somebody's vocal. It is the
-        // same trap the performance lanes hit, in a different recorder.
+        // Not while counting in or stopped. The scheduler's tick stands still
+        // during a count-in, so a mark there would put the count-in's silence
+        // at the top of the take.
         const int32_t armed = armedRack.load(std::memory_order_relaxed);
         if (playing && !counting && armed >= 0 && armed < kRackCount) {
             if (capture.overflowed()) marks.poison();
@@ -488,8 +429,8 @@ void Engine::renderBlock(const float *in, float *out) {
                           clock.bpm());
         }
     }
-    // After the capture, like the monitor and for the same reason: hearing
-    // what a file is should not print it into the take being recorded.
+    // After the capture, like the monitor, so auditioning a file doesn't
+    // get recorded into the take.
     audition.mix(out, kBlockFrames);
 
     const float monitor = monitorLevel.load(std::memory_order_relaxed);
@@ -507,39 +448,29 @@ void Engine::renderBlock(const float *in, float *out) {
     const float pct = static_cast<float>(us) / 1333.3f * 100.0f;
     load.store(load.load(std::memory_order_relaxed) * 0.95f + pct * 0.05f, std::memory_order_relaxed);
 
-    // And the same span again, kept rather than averaged. The EMA above has a
-    // 27 ms memory and is read every 80 ms, so the block that caused a dropout
-    // has decayed out of it before anybody looks; this is the one that answers
-    // "how bad did it get".
-    // **Was this block interrupted, or was it slow?**
+    // The same span again as a peak rather than an average. The EMA above
+    // decays before anyone reads it, so this shows how bad a dropout got.
     //
-    // Every span above is wall time, and a thread that is taken off its core
-    // mid-block hands the whole of that absence to whatever it happened to be
-    // measuring. That is not a hypothetical: the per-track list reported
-    // `Pad 0.92` for a rack that was playing frozen audio, which costs 1.5 us
-    // measured off-device, and the same readout claimed 19.91 ms in the
-    // sequencer - a phase that does bookkeeping and nothing else. Both were
-    // the same 20 ms of being descheduled, billed to whoever held the clock.
-    //
-    // Comparing the block's two clocks catches it for two reads rather than
-    // the twenty-two it would take to time every rack on the CPU clock - and
-    // `CLOCK_THREAD_CPUTIME_ID` is a real syscall on this platform, not a vDSO
-    // call, so twenty-two of them a block is not a diagnostic, it is a cost.
-    // If the block as a whole ran uninterrupted then nothing inside it was
-    // interrupted either, and every span in it can be believed.
+    // Was this block interrupted, or slow? Every span above is wall time, so
+    // if the thread is taken off its core mid-block, whatever was being timed
+    // gets blamed for it (a frozen rack showing 0.92 ms, or 20 ms in the
+    // sequencer). Comparing the block's wall and CPU time catches this with
+    // two clock reads. Timing every rack on the CPU clock would take 22, and
+    // CLOCK_THREAD_CPUTIME_ID is a real syscall here. If the whole block ran
+    // uninterrupted, every span inside it can be trusted.
     const int64_t cpuUs = threadCpuUs() - cpu0;
     const bool interrupted = us - cpuUs > kPreemptedUs;
-    // An EMA of how often that happens, because a per-track list that is never
-    // updated looks the same as one with nothing to say. This is the per-block
-    // twin of the driver's stall counter, and it is the number that says
-    // whether to optimise the DSP or go after the scheduler.
+    // An EMA of how often blocks are interrupted, so a per-track list that
+    // never updates can be told apart from one with nothing to report. Like
+    // the driver's stall counter, it says whether to optimise the DSP or
+    // look at scheduling.
     const float wasInterrupted = interrupted ? 100.0f : 0.0f;
     interruptedPct.store(interruptedPct.load(std::memory_order_relaxed) * 0.99f + wasInterrupted * 0.01f,
                          std::memory_order_relaxed);
     if (interrupted) return;
 
-    // The cost, not the elapsed time. They are the same on a clean block, and
-    // this is only ever reached on a clean block.
+    // CPU time rather than elapsed time. They're the same on a clean block,
+    // and this only runs on clean blocks.
     keepPeak(blockPeak, static_cast<int32_t>(cpuUs));
     const auto span = [](auto a, auto b) {
         return static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(b - a).count());
@@ -555,8 +486,8 @@ void Engine::renderBlock(const float *in, float *out) {
         }
         keepPeak(rackPeak[r], rackUsThisBlock[r]);
         keepDecaying(rackRecent[r], rackUsThisBlock[r]);
-        // Only blocks where this rack did something: a track that plays in one
-        // scene should report what it costs while playing.
+        // Only blocks where this rack did something, so a track playing in
+        // one scene reports what it costs while playing.
         if (rackUsThisBlock[r] > 0) {
             std::atomic<int32_t> &bin = rackHist[r][bucketOf(rackUsThisBlock[r])];
             bin.store(bin.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
@@ -565,7 +496,7 @@ void Engine::renderBlock(const float *in, float *out) {
 }
 
 void Engine::settleRouting() {
-    // `output` 1..4 is a group in the mixer; anything else is the master.
+    // output 1..4 is a mixer group, anything else is the master.
     for (int32_t r = 0; r < kRackCount; ++r) {
         Rack &rack = racks[r];
         const int32_t g = rack.outputRequested();
@@ -600,7 +531,7 @@ void Engine::sidechainOrder(int32_t *order) const {
             progressed = true;
         }
         if (progressed) continue;
-        // A loop: take the lowest rack still waiting and let it go first.
+        // A loop: let the lowest rack still waiting go first.
         for (int32_t r = 0; r < kRackCount; ++r) {
             if (placed[r]) continue;
             placed[r] = true;
@@ -619,9 +550,9 @@ int32_t Engine::rackPercentileUs(int32_t rack, int32_t perMille) const {
         total += counts[i];
     }
     if (total == 0) return 0;
-    // From the top down: the bucket the tail reaches into. `perMille` of 990
-    // means the worst one block in a hundred, which needs a hundred blocks to
-    // exist at all - a tenth of a second - before it means anything.
+    // From the top down: the bucket the tail reaches. perMille 990 means the
+    // worst block in a hundred, so it needs at least a hundred blocks (a
+    // tenth of a second) to mean anything.
     const int64_t want = total - total * perMille / 1000;
     int64_t seen = 0;
     for (int32_t i = kCostBuckets - 1; i >= 0; --i) {
@@ -638,8 +569,8 @@ void Engine::resetRackCosts() {
 }
 
 /**
- * A pulse at every tenth tick this block crossed, on the frame it truly
- * falls on rather than the frame the block began on.
+ * A MIDI clock pulse at every tenth tick this block crossed, on the exact
+ * frame it falls on rather than the block's first frame.
  */
 void Engine::emitClock(int64_t blockStartTick, int64_t blockEndTick) {
     if (!transport.clockOut()) {
@@ -659,9 +590,9 @@ void Engine::emitClock(int64_t blockStartTick, int64_t blockEndTick) {
 }
 
 /**
- * Start, stop, and - when the playhead is not at the top of the song -
- * a song position followed by continue, which is what a hardware sequencer
- * needs in order to join in at the right bar rather than from its own start.
+ * Start and stop. When the playhead isn't at the start of the song, a Song
+ * Position Pointer followed by Continue, so a hardware sequencer joins at
+ * the right bar.
  */
 void Engine::emitTransport(bool nowPlaying) {
     if (!transport.clockOut()) return;
@@ -687,9 +618,8 @@ void Engine::emitTransport(bool nowPlaying) {
 }
 
 /**
- * What a master is telling us. The frame each byte carries was worked out
- * on the far side from the audio stream's own anchor, so it is in the same
- * time base the clock counts in.
+ * Incoming MIDI clock. Each byte's frame was worked out from the audio
+ * stream's anchor, so it's on the same timeline the clock counts in.
  */
 void Engine::drainClockIn() {
     MidiInEvent e;
@@ -705,7 +635,7 @@ void Engine::drainClockIn() {
                 transport.requestPlay(0);
             }
             break;
-        case 0xfb: // continue: from wherever the locate left us
+        case 0xfb: // continue: from wherever the Song Position Pointer left us
             if (transport.followingMidi()) {
                 transport.requestContinue();
             }
@@ -731,13 +661,12 @@ void Engine::drainClockIn() {
 }
 
 /**
- * Run the clock at the follower's rate, and lean on it gently until the
- * engine's own position agrees with the master's.
+ * Run the clock at the follower's rate and pull it gently until the
+ * engine's position agrees with the master's.
  *
- * The rate alone would keep time but drift in phase, because nothing would
- * ever correct where the two started. The pull is deliberately slow - a few
- * per cent of the error a block - so it shows up as the engine easing into
- * line rather than as a tempo that wavers.
+ * The rate alone keeps time but drifts in phase. The pull is slow (a few
+ * percent of the error a block) so it sounds like easing into line rather
+ * than a wavering tempo.
  */
 void Engine::followExternal() {
     if (!transport.followingMidi() || !follower.running()) {
@@ -768,18 +697,15 @@ void Engine::followExternal() {
 }
 
 /**
- * Following a Link session: the tempo is theirs, and the bar line is theirs.
+ * Following a Link session: the tempo and the bar line are the session's.
  *
- * The shape is the MIDI follower's, one floor up. What arrives is not a
- * stream of pulses to be smoothed but a session state that is already
- * smooth - Link does that work - so there is no loop here, only the two
- * things that have to happen every block: run at their tempo, and lean
- * gently until our bar line sits on theirs.
+ * Like the MIDI follower, but Link's state is already smooth so there's no
+ * loop. Every block we run at the session tempo and pull gently until our
+ * bar line matches theirs.
  *
- * Phase, not position. A Link session has no idea what a song is, so there
- * is nothing to locate to; what is shared is *where in the bar* everyone is.
- * Two machines playing different songs at the same tempo are in time with
- * each other, which is the whole idea.
+ * Phase, not position. Link doesn't know about songs, only where in the
+ * bar everyone is, so two devices playing different songs at the same tempo
+ * are in time.
  */
 void Engine::followTimebase() {
     Timebase *tb = timebase.load(std::memory_order_acquire);
@@ -790,8 +716,8 @@ void Engine::followTimebase() {
         linkInSession = false;
         return;
     }
-    // Our bar, in beats, before anything is asked of the session: a phase is
-    // only meaningful against a bar both sides agree on.
+    // Our bar length, before asking the session anything, since a phase only
+    // means something against a bar both sides agree on.
     const double barTicks = static_cast<double>(scheduler.barTicks());
     if (barTicks > 0.0) tb->setQuantum(barTicks / static_cast<double>(kPPQN));
 
@@ -800,10 +726,9 @@ void Engine::followTimebase() {
         linkInSession = false;
         return;
     }
-    // Read every block, because the decision that needs it - whether to hold
-    // play for a downbeat - is taken at the top of a block, before this runs.
-    // A block old is close enough for something that changes when a machine
-    // joins the network.
+    // Read every block, because the decision that uses it (whether play
+    // waits for a downbeat) is made at the top of a block before this runs.
+    // A block old is close enough.
     linkInSession = seq::LinkFollower::waitsForDownbeat(s);
 
     const double perTick = clock.framesPerTickAt(s.bpm);
@@ -818,18 +743,13 @@ void Engine::followTimebase() {
         linkWaiting = false;
     }
 
-    // Start and stop travel both ways, when the setting says so - and both
-    // ways on the **edge**, not on the level.
+    // Start and stop go both ways when the setting is on, and only on
+    // changes, not on the current state. Otherwise a session nobody has
+    // started reads as stopped, so pressing play would be undone every block
+    // and the playhead would never move.
     //
-    // On the level it cannot work, and the way it fails is instructive: a
-    // session nobody has started yet reads as stopped, so the moment we
-    // press play we are told to stop, thirteen hundred times a second, and
-    // the transport sits there saying it is playing while the playhead never
-    // leaves the first tick. On the edge, only somebody actually pressing
-    // something moves anybody.
-    //
-    // Waiting for the downbeat is not playing yet, so it is not announced as
-    // such: a peer that followed it would start a bar before we did.
+    // Waiting for the downbeat isn't playing yet, so it isn't announced, or a
+    // peer following it would start a bar before we did.
     const bool reallyPlaying = playing && !linkWaiting;
     if (!linkSeen) {
         linkSawPlaying = s.playing;
@@ -853,8 +773,8 @@ void Engine::followTimebase() {
     }
     linkSawPlaying = s.playing;
 
-    // The same packing the MIDI follower publishes, so one readout reads
-    // both: locked, the tempo in hundredths, and the error in microseconds.
+    // Same packing as the MIDI follower so one readout handles both: locked,
+    // the tempo in hundredths, and the error in microseconds.
     const int32_t bpmMilli = static_cast<int32_t>(s.bpm * 100.0);
     const double errMs = advice.errorTicks * perTick * 1000.0 / static_cast<double>(clock.rate());
     const int32_t errMicro = static_cast<int32_t>(errMs * 1000.0);
@@ -864,9 +784,8 @@ void Engine::followTimebase() {
 }
 
 void Engine::drainMidi() {
-    // The notes played just before the downbeat, filed now that there is a
-    // scene to file them against. They land on tick zero: the player meant
-    // the start of the bar, and was early by less than a thirty-second.
+    // Record the notes played just before the downbeat, now that there's a
+    // scene. They go on tick 0, since the player meant the start of the bar.
     if (recordingNow() && earlyCount > 0) {
         for (int32_t i = 0; i < earlyCount; ++i) {
             const EarlyNote &e = earlyNotes[i];
@@ -890,34 +809,27 @@ void Engine::drainMidi() {
         if (status == 0x90 && d2 == 0) status = 0x80;
         if (!racks[rack].isActive()) continue;
 
-        // **Poly aftertouch is a finger's pressure without MPE**: the message
-        // names its note, so it needs no zone and no channel to find it. It
-        // was dropped - a machine's MIDI handler had no case for it - so a
-        // controller that presses per key outside MPE mode pressed nothing.
+        // Poly aftertouch is per-key pressure without MPE. The message names
+        // its note, so it needs no zone or channel lookup.
         if (status == 0xa0) {
             racks[rack].noteExpression(0xd0, m.data1, d2, 0, mpeBendSemis);
             recordExpression(rack, 0xff, m.data1, 0xd0, d2, 0);
             continue;
         }
-        // A member channel is one finger. Its note goes down the ordinary
-        // path, through the modifiers like any other; its bend, pressure and
-        // slide belong to that note alone and go straight to the machine.
-        // A controller other than slide is not a finger's, even sent on a
-        // finger's channel: an MPE controller sends everything a note does
-        // on that note's channel, the mod wheel and the sustain pedal too,
-        // and they were dropped here. They go to the whole track, as they
-        // would on the master channel.
+        // A member channel is one finger. Its note goes the normal way,
+        // through the modifiers. Its bend, pressure and slide belong to that
+        // note and go straight to the machine. Other controllers on a
+        // member channel (mod wheel, sustain) aren't per finger and go to the
+        // whole track, as they would on the master channel.
         const bool fingerCc = status == 0xb0 && m.data1 == 74;
-        // **Which note each channel is holding is kept whether or not it is a
-        // finger yet.** A zone found from the fingers themselves is switched
-        // on at the second one, and the first went in as an ordinary note:
-        // kept only for members, its bend would have had nowhere to go until
-        // it was played again.
+        // Track which note each channel holds even before MPE is on. An auto
+        // zone switches on at the second finger, and the first finger's bend
+        // needs to find its note.
         if (m.channel < 16) {
             if (status == 0x90 && d2 > 0) {
                 mpeChannelNote[m.channel] = m.data1;
-                // A new finger on the channel starts a new curve: whatever the
-                // last one left behind must not be mistaken for a repeat.
+                // A new finger starts a new curve, so clear what the last one
+                // left so it isn't mistaken for a repeat.
                 for (float &v : lastExprSent[m.channel]) v = -1.0f;
             } else if (status == 0x80 && mpeChannelNote[m.channel] == m.data1) {
                 mpeChannelNote[m.channel] = -1;
@@ -926,7 +838,7 @@ void Engine::drainMidi() {
         if (mpeMember(m.channel) && (status != 0xb0 || fingerCc)) {
             if (status != 0x90 && status != 0x80) {
                 const int32_t held = mpeChannelNote[m.channel];
-                // Expression for a finger that is not down has nowhere to go.
+                // Expression for a finger that isn't down has nowhere to go.
                 if (held < 0) continue;
                 racks[rack].noteExpression(status, static_cast<uint8_t>(held), m.data1, d2,
                                            mpeBendSemis);
@@ -934,27 +846,25 @@ void Engine::drainMidi() {
                 continue;
             }
         }
-        // Into the modifiers, and out the far end into `onModifiedNote` -
-        // which is where it is written down, if it is being written down at
-        // all. Nothing is recorded here any more: what a finger sent is not
-        // what the song keeps once a chord or an arp is in the way.
+        // Into the modifiers, and out the other end into onModifiedNote,
+        // which records it if recording. What comes out of a chord or arp
+        // is what the song keeps, not what the finger sent.
         racks[rack].handleMidi(status, m.data1, d2);
     }
 }
 
 /**
- * A note that has come out of a rack's modifier chain.
+ * A note that came out of a rack's modifier chain.
  *
- * On the audio thread, inside the rack's own delivery. Everything the chain
- * produces arrives here - the key itself when nothing is enabled, the three
- * notes of a chord, each step of an arpeggio - and while recording, that is
- * what goes into the clip.
+ * On the audio thread, inside the rack's delivery. Everything the chain
+ * produces arrives here (the key itself, each note of a chord, each step
+ * of an arpeggio) and while recording that's what goes into the clip.
  */
 void Engine::onModifiedNote(int32_t rack, uint8_t status, uint8_t d1, uint8_t d2) {
     if (rack < 0 || rack >= kRackCount) return;
-    // Played just before the downbeat, with the scheduler not yet running:
-    // hold it rather than lose it. Flushed at the top of the first block that
-    // is actually recording, where the scene is known.
+    // Played just before the downbeat while the scheduler isn't running yet:
+    // hold it rather than lose it. Flushed at the start of the first block
+    // that's actually recording, when the scene is known.
     if (!recordingNow()) {
         if (countInPreRoll() && earlyCount < kMaxEarlyNotes) {
             earlyNotes[earlyCount++] = {rack, status, d1, d2};
@@ -963,8 +873,8 @@ void Engine::onModifiedNote(int32_t rack, uint8_t status, uint8_t d1, uint8_t d2
     }
     seq::RecordedEvent ev;
     ev.absTick = clock.position();
-    // The rack's own clip, not the scheduler's: in clip mode a take recorded
-    // onto a launched clip must land in *that* cell.
+    // The rack's own clip, not the scheduler's, so in clip mode a take lands
+    // in the launched clip's cell.
     ev.sceneId = scheduler.rackSceneId(rack);
     ev.tickInIteration = scheduler.rackTick(rack);
     ev.rack = rack;
@@ -975,15 +885,12 @@ void Engine::onModifiedNote(int32_t rack, uint8_t status, uint8_t d1, uint8_t d2
 }
 
 /**
- * A finger's bend, press or slide, on its way to the clip the note is being
- * recorded into.
+ * A finger's bend, pressure or slide, recorded into the note's clip.
  *
- * Filed against the note and not the channel, because the channel is an
- * accident of the controller and the note is the music. The value is
- * normalised the way the document stores it - bend in semitones scaled to
- * MPE's own maximum, and not the fourteen bits that arrived - so a take
- * recorded with a 24-semitone controller plays back as the notes it was
- * played as, on any desk.
+ * Recorded against the note, not the channel, since the channel is just
+ * how the controller sends it. Values are normalised the way songs store
+ * them (bend in semitones scaled to MPE's maximum, not raw 14-bit), so a
+ * take made with a 24-semitone controller plays back the same anywhere.
  */
 void Engine::recordExpression(int32_t rack, uint8_t channel, uint8_t note, uint8_t status, uint8_t d1,
                               uint8_t d2) {
@@ -1002,16 +909,15 @@ void Engine::recordExpression(int32_t rack, uint8_t channel, uint8_t note, uint8
         value = expr7To01(d1);
         break;
     case 0xb0:
-        if (d1 != 74) return; // the only CC that is slide; the rest are not a note's
+        if (d1 != 74) return; // CC 74 is slide, other CCs aren't per note
         kind = Expr::Timbre;
         value = expr7To01(d2);
         break;
     default: return;
     }
-    // A finger that is holding still sends the same value over and over -
-    // a seven-bit pressure especially, where a whole gesture is 127 distinct
-    // values and thousands of messages. Dropping the repeats here rather
-    // than at the far end is what keeps five fingers inside the queue.
+    // A finger holding still sends the same value over and over, especially
+    // 7-bit pressure. Dropping repeats here keeps five fingers from
+    // overflowing the queue.
     if (channel < 16) {
         float &last = lastExprSent[channel][static_cast<int32_t>(kind)];
         if (last == value) return;
@@ -1061,7 +967,7 @@ void Engine::drainParams() {
             }
         } else if (p.rack >= 0 && p.rack < kRackCount) {
             if (p.quantise > 0 && playing) {
-                // Parked until the rack's next line: a newer one replaces it.
+                // Waiting for the rack's next bar line. A newer one replaces it.
                 const int64_t q = p.quantise;
                 const int64_t into = scheduler.rackTick(p.rack) % q;
                 PendingParam &waiting = pendingParams[p.rack];
@@ -1074,7 +980,7 @@ void Engine::drainParams() {
             }
         }
     }
-    // And whatever has reached its line.
+    // And apply whatever has reached its bar line.
     for (int32_t r = 0; r < kRackCount; ++r) {
         PendingParam &waiting = pendingParams[r];
         if (waiting.waiting && clock.position() >= waiting.due) {
@@ -1102,12 +1008,12 @@ void Engine::applyRackParam(const ParamMessage &p) {
     }
 }
 
-// One mount per block keeps the worst case bounded; the UI's builder retries
-// when the queue is momentarily full.
+// Mounts per block are capped to bound the worst case. The UI's builder
+// retries when the queue is full.
 void Engine::applyMounts() {
-    // Every mount queued so far, bounded: a swap is a pointer exchange and a
-    // retire push, so a burst (a loaded song mounting its machines and
-    // effects) lands whole in one block, ahead of the parameters behind it.
+    // Every mount queued so far, up to the cap. A swap is a pointer exchange
+    // and a retire push, so a burst (a song loading its machines and effects)
+    // lands in one block, ahead of the parameters queued after it.
     for (int32_t n = 0; n < kMaxMountsPerBlock; ++n) {
         Mount m;
         if (!mounts.pop(m)) return;
@@ -1148,8 +1054,8 @@ void Engine::applyMount(const Mount &m) {
         retirer.retire(master.swapInsert(m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);
         break;
     case Mount::Kind::Send:
-        // Slot-checked inside swapSend, which hands back whatever it displaced
-        // - or the new one straight back if the slot was not a slot.
+        // swapSend checks the slot and returns whatever it replaced, or the
+        // new one if the slot was invalid.
         retirer.retire(master.swapSend(m.slot, static_cast<Effect *>(m.object)), deleteAs<Effect>);
         break;
     case Mount::Kind::InputMod:

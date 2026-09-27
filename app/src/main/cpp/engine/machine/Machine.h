@@ -19,28 +19,26 @@ class Machine {
     virtual void prepare(int32_t sampleRate) = 0;
 
     // --- Audio thread ---------------------------------------------------------
-    // Once per block, before render(): the block's tick range and the tempo,
-    // for anything a machine syncs to the transport (Trinity's LFOs).
+    // Once per block before render(), with the block's tick range and tempo,
+    // for anything synced to the transport (like Trinity's LFOs).
     virtual void onBlock(int64_t /*tickStart*/, int64_t /*tickEnd*/, float /*bpm*/) {}
     /**
      * Where the rack is in the arrangement, for a machine that plays the song
-     * rather than notes from it.
+     * instead of notes (Bias).
      *
-     * Every machine here is told *when* a block is and nothing about *where*;
-     * Bias has to know which cell it is in and how far through that cell's
-     * own cycle, and only the scheduler can say - it is the one place that
-     * unifies the arranger's single position with the launcher's sixteen.
-     * `cycleTick` counts the repeats, unlike the tick a note is fired against;
-     * see SceneScheduler::rackCycleTick.
+     * Bias needs to know which cell it's in and how far through that cell's
+     * cycle, which only the scheduler knows since it handles both arranger
+     * and launcher positions. `cycleTick` counts through repeats, unlike the
+     * tick notes fire against. See SceneScheduler::rackCycleTick.
      *
-     * Defaulted, so the nineteen machines that answer notes ignore it.
+     * Machines that play notes ignore it.
      */
     virtual void onScene(int64_t /*sceneId*/, int64_t /*cycleTick*/, bool /*playing*/,
                          bool /*clipMuted*/) {}
     /**
-     * The track's tuning: for each MIDI note, its ratio to equal temperament,
-     * or null for equal temperament. The rack hands it over before every
-     * block; [noteHz] is how a machine reads it.
+     * The track's tuning: each MIDI note's ratio to equal temperament, or
+     * null for equal temperament. The rack sets it before every block, and
+     * machines read it through [noteHz].
      */
     void setTuning(const float *ratios) { tuning_ = ratios; }
 
@@ -50,9 +48,9 @@ class Machine {
     virtual void allNotesOff() = 0;
     virtual void controlChange(uint8_t /*cc*/, uint8_t /*value*/) {}
     /**
-     * The sustain pedal's other half. The rack holds the notes; this tells a
-     * machine that models dampers that they are off the strings, so what is
-     * not being played can ring in sympathy with what is. Most have none.
+     * The rack holds notes for the sustain pedal. This also tells a machine
+     * that models dampers that they're lifted, so unplayed strings can ring
+     * in sympathy. Most machines ignore it.
      */
     virtual void setDampers(bool /*lifted*/) {}
     virtual void channelPressure(uint8_t /*value*/) {}
@@ -60,27 +58,22 @@ class Machine {
 
     // --- Per-note expression (MPE) ---------------------------------------
     //
-    // The same three gestures, but belonging to one note rather than to the
-    // channel. A controller that gives every finger its own channel can
-    // bend, press and slide them independently; the rack works out which
-    // note a member channel is holding and calls these.
+    // Bend, pressure and slide for one note instead of the whole channel. The
+    // rack works out which note a member channel is holding and calls these.
     //
-    // They default to the channel-wide versions, which is what makes this
-    // safe to add: a machine that has not been taught about voices still
-    // answers a bend by bending, as it always did. Only the sense of "which
-    // note" is lost, and it had none to begin with.
+    // By default they call the channel-wide versions, so machines without
+    // per-voice support still respond, just not per note.
     //
-    // [semitones] is signed and already scaled by the zone's bend range, so
-    // a machine adds it to the voice's pitch and asks nothing further.
+    // [semitones] is signed and already scaled by the zone's bend range, so a
+    // machine just adds it to the voice's pitch.
     virtual void noteBend(uint8_t /*note*/, float semitones) {
-        // As a channel bend over two semitones, clamped: an MPE finger can
-        // slide forty-eight, and unclamped that wrapped the sixteen bits
-        // round to a bend in some other direction entirely.
+        // As a channel bend with a range of two semitones, clamped. An MPE
+        // finger can slide 48 semitones, which would overflow the 16 bits.
         const float v = semitones / 2.0f * 8192.0f;
         pitchBend(static_cast<int16_t>(v < -8192.0f ? -8192.0f : (v > 8191.0f ? 8191.0f : v)));
     }
     virtual void notePressure(uint8_t /*note*/, uint8_t value) { channelPressure(value); }
-    /** Slide, CC 74. Nothing read it before MPE, so there is nothing to fall back to. */
+    /** Slide, CC 74. There's no channel-wide version to fall back to. */
     virtual void noteTimbre(uint8_t /*note*/, uint8_t /*value*/) {}
 
     // Render `frames` samples. Return true if R was written (stereo), false if
@@ -90,9 +83,9 @@ class Machine {
     ParamSet &params() { return params_; }
     const ParamSet &params() const { return params_; }
 
-    // Audio thread. An object built elsewhere (a decoded sample) for `slot`.
-    // Return what it displaces for the caller to retire; a machine that has no
-    // use for it returns `object` itself, and it is retired unused.
+    // Audio thread. Hands over an object built elsewhere (like a decoded
+    // sample) for `slot`. Returns the object it replaces for the caller to
+    // free. A machine that doesn't use it returns `object` itself.
     virtual void *swapObject(int32_t /*slot*/, void *object) { return object; }
 
     void handleMidi(uint8_t status, uint8_t d1, uint8_t d2) {
@@ -118,24 +111,16 @@ class Machine {
     ParamSet params_;
 
     /**
-     * The three ways to read a parameter, and which to use when.
+     * The ways to read a parameter.
      *
-     * `paramOf` is the smoothed value and is what audio should be made from:
-     * a cutoff that jumped to its new value on the block a knob moved would
-     * click, which is what the smoother is for.
+     * `paramOf` is the smoothed value. Use it for audio so knob moves don't
+     * click.
      *
-     * `targetOf` and `steppedTargetOf` are where it is *going*, and are what
-     * anything read **once, at note-on, to seed per-note state** must use -
-     * a glide time, an envelope stage, a voice count, a spread. Seeded from
-     * the smoothed value, a note sounds different depending on how long ago
-     * the knob moved, so the same song exported twice can differ: once from
-     * a panic, once carrying on from whatever was played before it.
-     *
-     * Found 2026-09-13 while working on Brazen and left open until now
-     * because `tools/reset_test.sh` cannot see it - its performance never
-     * moves a parameter, so the smoothed and target values are equal
-     * throughout and both its passes agree. `tools/noteon_check.py` is what
-     * watches this instead.
+     * `targetOf` and `steppedTargetOf` are the value it's heading to. Use them
+     * for anything read once at note-on to set up per-note state (glide time,
+     * envelope stage, voice count, spread). Otherwise a note depends on how
+     * recently the knob moved and two exports of one song can differ.
+     * `tools/noteon_check.py` checks this.
      */
     float paramOfIndex(int32_t p) const { return params_.get(p); }
     float targetOf(int32_t p) const { return params_.target(p); }
@@ -147,9 +132,8 @@ class Machine {
     /**
      * A note's pitch in hertz, in the track's tuning.
      *
-     * Between two notes - a glide, a bend written as a fractional note - the
-     * tuning is interpolated on a log scale, so a slide from a tuned C to a
-     * tuned D passes evenly through the pitches between them.
+     * Fractional notes (glides, bends) interpolate the tuning on a log scale,
+     * so a slide from a tuned C to a tuned D passes evenly between them.
      */
     float noteHz(float note) const {
         const float equal = 440.0f * std::exp2((note - 69.0f) / 12.0f);
@@ -162,7 +146,7 @@ class Machine {
         return equal * r;
     }
 
-    /** The table itself, for a machine that tunes something other than a voice - the organ's wheels. */
+    /** The tuning table, for a machine that tunes something other than voices, like the organ's wheels. */
     const float *tuningTable() const { return tuning_; }
 
   private:
@@ -170,15 +154,12 @@ class Machine {
 };
 
 /**
- * What a panic does to a machine, in one place, so the engine and the
- * harness that checks it cannot drift apart.
+ * What a panic does to a machine, shared by the engine and the test harness.
  *
- * Silence, then the channel's controllers back to rest, then the machine's
- * own reset, then parameters jumped rather than glided. The controllers are
- * the part that was missing: a machine keeps where the wheel, the bend and
- * the pressure were last left, so a render made after a bent note began
- * bent, and two exports of one song could differ by what was played between
- * them.
+ * Silence, reset the channel's controllers, reset the machine, then jump
+ * parameters to their targets. Controllers are reset because a machine keeps
+ * the last wheel, bend and pressure, so a render would otherwise start with
+ * whatever was played before.
  */
 inline void panicMachine(Machine &m) {
     m.allNotesOff();

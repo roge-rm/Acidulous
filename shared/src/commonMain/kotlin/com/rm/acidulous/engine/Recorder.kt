@@ -19,22 +19,22 @@ import com.rm.acidulous.model.clipLengthTicks
 import com.rm.acidulous.model.emptyClipFor
 
 /**
- * Turns stamped live MIDI into notes in the document.
+ * Turns timestamped live MIDI into notes in the song.
  *
  * Three rules:
- *  - the document updates the moment a note completes (the piano roll shows it);
- *  - quantise happens here, at merge time, and the raw tick is kept, so it can
- *    be undone later;
- *  - the engine gets the new notes at the next iteration boundary (or on stop),
- *    never mid-pass - otherwise a note quantised *forward* of where it was
- *    played would sound twice in the pass it was recorded in.
+ *  - the song updates as soon as a note ends, so the piano roll shows it;
+ *  - quantising happens here, when the note is added, and the raw tick is
+ *    kept so it can be undone later;
+ *  - the engine gets the new notes at the next iteration boundary (or on
+ *    stop), never mid-pass. Otherwise a note quantised forward of where it
+ *    was played would sound twice in the pass it was recorded in.
  *
- * Drive [poll] from the UI's polling loop. Not thread-safe; UI thread only.
+ * Call [poll] from the UI's polling loop. Not thread-safe: UI thread only.
  */
 class Recorder {
 
     var quantise: Boolean = true
-    /** How far a note moves towards its grid line when [quantise] is on: 1 all the way. */
+    /** How far a note moves towards its grid line when [quantise] is on. 1 is all the way. */
     var strength: Float = 1f
 
     private val buffer = LongArray(128 * 5)
@@ -50,12 +50,11 @@ class Recorder {
         private set
 
     /**
-     * A note being held, and what the finger holding it is doing.
+     * A held note and what the finger holding it is doing.
      *
-     * The three builders are made up front rather than on first use: an MPE
-     * controller sends a note's pressure before its note-on in some
-     * firmwares, and a curve that only exists once something has moved would
-     * lose the value the note started at.
+     * The three curve builders are made up front because some MPE firmwares
+     * send a note's pressure before its note-on, and a curve created on first
+     * use would lose the starting value.
      */
     private class OpenNote(val absTick: Long, val sceneId: Long, val tickInIteration: Long, val velocity: Int) {
         val curves = listOf(
@@ -67,15 +66,13 @@ class Recorder {
     }
 
     /**
-     * @param song the current document
+     * @param song the current song
      * @param position where the transport is now
-     * @param sceneIdOf maps the engine's 64-bit scene id back to the document's
-     * @return the updated document, and whether the caller should push it now
-     */
-    /**
-     * [cycleWrapped]: a launcher track has just come round, which the
-     * arranger's [position] cannot see in clip mode - the looper needs its
-     * last pass pushed there to hear it on the next.
+     * @param sceneIdOf maps the engine's 64-bit scene id back to the song's
+     * @param cycleWrapped a launcher track has just looped, which [position]
+     *   can't show in clip mode. The looper needs its last pass pushed then to
+     *   hear it on the next one.
+     * @return the updated song, and whether the caller should push it now
      */
     fun poll(song: Song, position: Position, playing: Boolean, sceneIdOf: (Long) -> String?, cycleWrapped: Boolean = false): Result {
         var doc = song
@@ -92,9 +89,9 @@ class Recorder {
             val p2 = (packed and 0xff).toInt()
 
             if (cmd == CMD_EXPRESSION) {
-                // A curve point for a note already down. One that is not -
-                // a finger's tail after its note-off, or the count-in - has
-                // nowhere to go, and is dropped rather than guessed at.
+                // A curve point for a note that's held. Points with no held
+                // note (after its note-off, or during the count-in) are
+                // dropped.
                 val on = open[(rack shl 8) or p1] ?: continue
                 val kind = p2
                 if (kind in on.curves.indices) {
@@ -155,31 +152,27 @@ class Recorder {
         val len = song.clipLengthTicks(sceneId, clip)
         if (len <= 0) return null
 
-        // **Put the performance back into straight time first.**
+        // Convert the performance back to straight time first.
         //
-        // A part is played against what is already sounding, and what is
-        // sounding is swung - so the times that arrive are swung times. Kept
-        // as they arrive, they are swung a second time on the way out, and
-        // the harder the setting the further the recording walks away from
-        // what the player heard themselves do. The document has always held
-        // straight time; this is what keeps it that way.
+        // The player hears swung playback, so the times that arrive are in
+        // swung time. Stored as they are, they'd be swung again on playback.
+        // Songs always hold straight time.
         //
-        // Before the quantise, not after: a swung offbeat rounds to the
-        // *wrong* grid line, because it is nearer the next one than the one
-        // it was played on.
+        // This has to happen before quantising, because a swung offbeat is
+        // nearer the next grid line than the one it was played on.
         val heard = (on.tickInIteration % len).toInt()
         val raw = Swing.from(heard, song.swingOf(track), song.swingPair)
         val tick = if (quantise) {
             val g = clip.grid.coerceAtLeast(1)
             val snapped = ((raw + g / 2) / g) * g
-            // Part of the way, at less than full strength; rounding past the
-            // end lands at the top of the loop.
+            // Partial move at less than full strength. Rounding past the end
+            // wraps to the start of the loop.
             (raw + Math.round((snapped - raw) * strength.coerceIn(0f, 1f))) % len
         } else raw
         val length = (offAbsTick - on.absTick).toInt().coerceAtLeast(1)
 
-        // Curves are the note's own, so trimming them to its length is the
-        // last thing done and needs no reference to where the note ended up.
+        // Curves are relative to the note, so trimming them to its length
+        // doesn't depend on where the note ends up.
         val curves = if (on.moved) on.curves.map { it.build()?.trimmedTo(length) } else NO_CURVES
         notesRecorded++
         dirty = true
@@ -194,7 +187,7 @@ class Recorder {
         )
     }
 
-    /** A knob move becomes a lane point at the quantised tick; same tick replaces. */
+    /** A knob move becomes a lane point at the quantised tick. A point at the same tick is replaced. */
     private fun commitParam(
         song: Song, rack: Int, unitOrdinal: Int, index: Int, value: Float,
         sceneIdRaw: Long, tickInIteration: Long, sceneIdOf: (Long) -> String?,
@@ -226,9 +219,9 @@ class Recorder {
         if (len <= 0) return null
         val raw = (tickInIteration % len).toInt()
         val g = clip.grid.coerceAtLeast(1)
-        // A held effect is kept where it was played: quantised, a quick press
-        // and its release can land on one grid line and the release wins.
-        // The repeat keeps time by itself, from the grid in the engine.
+        // Held performance effects aren't quantised, since a quick press and
+        // its release could land on the same grid line and the release would
+        // win. The repeat keeps time by itself from the engine's grid.
         val tick = if (quantise && unit != "perform") (((raw + g / 2) / g) * g) % len else raw
         val key = laneKey(unit, name)
         dirty = true
@@ -239,10 +232,10 @@ class Recorder {
     }
 
     /**
-     * An empty lane, except for a held effect's. A lane holds its first value
-     * back to the top of the clip, so a repeat pressed on beat three would
-     * play from beat one; the held effects start at rest instead. Repeat and
-     * stop are switches, so they step rather than slide between points.
+     * An empty lane, except for held performance effects. A lane holds its
+     * first value back to the start of the clip, so a repeat pressed on beat
+     * three would play from beat one. Held effects start at rest instead.
+     * Repeat and stop are switches, so they step rather than slide.
      */
     private fun newLane(unit: String, name: String, tick: Int): Lane {
         if (unit == "performance") return com.rm.acidulous.model.newLaneFor(laneKey(unit, name), tick)
@@ -261,7 +254,6 @@ class Recorder {
         const val CMD_PARAM = 0xf0
         const val CMD_EXPRESSION = 0xf1
         val NO_CURVES = listOf<Lane?>(null, null, null)
-        /** Unit::Performance's two indices; see kPerfMod in Messages.h. */
         /** Mirrors kPerfMod.. in Messages.h, by index: the wheel, pressure, then the pedals. */
         val PERF_PARAMS = listOf("mod", "pressure", "sustain", "sostenuto", "soft")
         /** Mirrors `Perform::P`, by index. */
@@ -275,13 +267,8 @@ class Recorder {
         /** The held controls that are switches or steps, so their lanes step rather than slide. */
         val PERFORM_STEPPED = setOf("repeat", "stop", "reverse", "gate", "killlow", "killmid", "killhigh", "riser")
         /**
-         * Mirrors `kChannelDefs` in `Rack.cpp`, **by index**.
-         *
-         * It had drifted: the engine grew `midimode` and `midichannel` and
-         * this list stopped at `senddelay`, so those two recorded as nothing
-         * at all. Harmless while nothing after them existed, and not harmless
-         * the moment something did - `swing` at index eight would have been
-         * named `midimode` if the two before it were still missing.
+         * Mirrors `kChannelDefs` in `Rack.cpp`, by index. Keep them in step,
+         * or params after a missing one are recorded under the wrong name.
          */
         val CHANNEL_PARAMS = listOf(
             "gain", "pan", "mute", "solo", "sendreverb", "senddelay", "midimode", "midichannel", "swing",
@@ -292,16 +279,12 @@ class Recorder {
 }
 
 /**
- * The name of each `acidulous::Unit`, **by ordinal**: the audio thread stamps
- * a recorded knob with the ordinal, and this turns it back into the name a
- * lane is keyed by.
+ * The name of each `acidulous::Unit`, by ordinal. The audio thread tags a
+ * recorded knob move with the ordinal, and this turns it back into the name
+ * the lane is keyed by.
  *
- * It had stopped at `performance` in eighth place. The sends and the input
- * effects were later put into the enum *before* `Performance`, which moved it
- * to twelfth, and nothing here followed - so from then on every mod wheel and
- * pressure move made while recording looked up nothing and was dropped.
- * `RecordUnitsTest` reads the enum out of Messages.h and holds the two
- * together now.
+ * Must match the enum's order in Messages.h, or recorded moves get dropped
+ * or land on the wrong unit. `RecordUnitsTest` checks the two match.
  */
 internal val RECORD_UNITS = listOf(
     "machine", "effect1", "effect2", "mod1", "mod2", "mod3", "channel", "master",

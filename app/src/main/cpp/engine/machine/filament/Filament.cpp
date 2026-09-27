@@ -6,10 +6,9 @@
 
 namespace acidulous::machine {
 
-// What this machine's signal reaches before its drive stage, and so the level
-// that stage should treat as nominal. Measured, not guessed: before volume 0.8; peak -8.6 dB.
-// A nominal above what the signal reaches puts the whole sound on the steep
-// part of the curve, where the knob is a volume control again.
+// The level the signal reaches before the drive stage, used as its nominal
+// level. Measured before volume 0.8, peak -8.6 dB. Set it too high and the
+// drive knob acts like a volume knob.
 constexpr float kNominal = 0.14f;
 using namespace dsp;
 
@@ -88,9 +87,8 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
         lin(BodyDamp, "bodydamp", 0.0f, 1.0f, 0.5f);
 
         lin(Drive, "drive", 0.0f, 1.0f, 0.1f);
-        // To 1.5, for the same reason Reflux's was raised: the drive law
-        // had been supplying level it should not have been, and Steel could
-        // not get it back from a knob that stopped at 1.0.
+        // Goes up to 1.5 so quieter patches like Steel can reach the
+        // standard level.
         lin(Volume, "volume", 0.0f, 1.5f, 0.8f);
         lin(Pan, "pan", -1.0f, 1.0f, 0.0f);
         lin(Dry, "exciter out", 0.0f, 1.0f, 0.0f);
@@ -144,8 +142,8 @@ void Filament::prepare(int32_t sr) {
     for (auto &v : voices) {
         v.a.prepare(sampleRate);
         v.b.prepare(sampleRate);
-        // Half of the longest string this machine can hold, which is as far
-        // back as a pick can be from the bridge.
+        // Half the longest string, the furthest a pick can be from the
+        // bridge.
         v.pick.assign(static_cast<size_t>(sampleRate / 36.0f) + 4, 0.0f);
         v.pickWrite = 0;
     }
@@ -165,9 +163,9 @@ void Filament::reset() {
         v.exciteDc = v.lastPick = 0.0f;
         std::fill(v.pick.begin(), v.pick.end(), 0.0f);
         v.pickWrite = 0;
-        // The bow's phase runs on from note to note, and a bowed or blown
-        // string started wherever the last one left it: those two families
-        // were the only ones that did not repeat after a panic.
+        // Reset the bow phase too, or bowed and blown notes would start
+        // where the last one left off and renders after a panic would
+        // differ.
         v.bowPhase = 0.0f;
         v.damp = 0.0f;
         v.bend = 0.0f;
@@ -177,7 +175,7 @@ void Filament::reset() {
     for (auto &s : sympathetic) s.clear();
     dampersUp = false;
     damperMix = 0.0f;
-    // Retuned from the next note, not kept from the last one.
+    // Retune from the next note instead of keeping the last one.
     lastRoot = 0.0f;
     lastTuning = -1;
     for (auto &l : lfo) l.reset(0.0f);
@@ -190,8 +188,8 @@ void Filament::reset() {
     asleep = false;
 }
 
-// The sympathetic bank follows whatever was played last, so it is a set of
-// strings in the same key rather than a fixed drone.
+// The sympathetic bank follows the last note played, so it stays in the same
+// key instead of being a fixed drone.
 void Filament::retuneSympathetic(float rootHz) {
     const int32_t tuning = steppedOf(SympatheticTune);
     if (std::fabs(rootHz - lastRoot) < 0.5f && tuning == lastTuning) return;
@@ -200,7 +198,7 @@ void Filament::retuneSympathetic(float rootHz) {
     const float spread = paramOf(SympatheticSpread);
     for (int i = 0; i < kSympathetic; ++i) {
         const float semis = static_cast<float>(kSymIntervals[tuning][i]);
-        // A little out, by design: six strings exactly in tune do not shimmer.
+        // Slightly detuned on purpose, so they shimmer.
         const float cents = (static_cast<float>(i) - 2.5f) * 2.0f * spread;
         sympatheticHz[i] = rootHz * std::pow(2.0f, (semis + cents * 0.01f) / 12.0f);
         sympathetic[i].setFrequency(sympatheticHz[i]);
@@ -208,18 +206,10 @@ void Filament::retuneSympathetic(float rootHz) {
 }
 
 void Filament::noteOn(uint8_t note, uint8_t velocity) {
-    // **The two mod envelopes, which had never run.**
-    //
-    // They were `set` from their eight parameters every block and read by
-    // `sourceValue`, and nothing ever triggered or advanced them - so
-    // `eg1` and `eg2` were two mod sources that always returned nought, and
-    // eight knobs that did nothing. Found while taking a `pow` out of the
-    // loop next to them.
-    //
-    // They belong to the machine rather than to a voice, as the LFOs do, so
-    // they start on the first note of a phrase and let go when the last one
-    // does - a second note on top of a held one does not restart them, which
-    // would put a step into whatever they are moving.
+    // The two mod envelopes belong to the machine, like the LFOs. They start
+    // on the first note of a phrase and release when the last note does. A
+    // note added on top of a held one doesn't restart them, which would
+    // cause a jump.
     bool held = false;
     for (const auto &cand : voices) if (cand.used && cand.gate) { held = true; break; }
     if (!held) for (auto &e : eg) e.retrigger();
@@ -227,8 +217,8 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     Voice *v = nullptr;
     for (auto &cand : voices) if (!cand.used) { v = &cand; break; }
     if (v == nullptr) {
-        // Steal the quietest string rather than the oldest: a note that has
-        // decayed is the one nobody will miss.
+        // Steal the quietest string instead of the oldest, since it'll be
+        // missed least.
         float quietest = 1e9f;
         for (auto &cand : voices) {
             const float l = cand.a.level();
@@ -254,50 +244,20 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     const float lengthSeconds = mode == Bow || mode == Breath || mode == External
                                     ? 0.0f
                                     : targetOf(ExcitLength);
-    // **A pluck displaces the whole string, so it fills the whole loop.**
+    // A pluck or pick displaces the whole string, so its excitation lasts at
+    // least one full turn of the loop. A shorter burst would just go round as
+    // a pulse train instead of sounding like a string.
     //
-    // `length` is the contact time - how long a finger or a pick is against
-    // the string - and it is a time, honestly. But the *displacement* it
-    // leaves behind is spread along the entire string, and a waveguide's
-    // string is one period long. Put in as a burst shorter than that and the
-    // burst simply goes round as a burst: measured on the nylon patch at
-    // note 52, one millisecond of excitation in a six millisecond loop came
-    // out as two milliseconds of sound and four of near silence, over and
-    // over - a pulse train at the right pitch rather than a string, thirty
-    // decibels between the loud part and the quiet part of every period.
-    //
-    // It was also the last of this machine's fixed times that should have
-    // been a turn: at the bottom of a range the burst covered a sixth of the
-    // loop and at the top two thirds of it, so the same patch was a different
-    // instrument at each end and seven decibels louder at the top.
-    //
-    // A **hammer** is the other case and does not get this. It does not
-    // displace the string, it hits one point of it and leaves: the contact
-    // time is the whole of what it has to say, and stretching it to a period
-    // put the struck patch's octave above its fundamental and tripled the
-    // corner at its onset. Pluck and pick set a shape along the string;
-    // hammer, bow and breath act at a point.
-    // A **hammer** does not get that: it does not displace the string, it hits
-    // one point of it and leaves. But its contact time is a fraction of the
-    // string's period and not a fixed number of milliseconds, for the same
-    // reason a piano's treble hammers are harder and lighter than its bass
-    // ones. Fixed, the default six milliseconds is two thirds of a period at
-    // the bottom of a range and four whole periods at the top, and a pulse
-    // four periods long has nothing at the note to give it: the prepared
-    // patch was twelve decibels quieter at the top of its range than the
-    // bottom with an identical peak, which is a hammer too slow to move the
-    // string it is hitting. `length` is read at middle C and scales from
-    // there, so every note is struck the same way and what changes across a
-    // range is the string rather than the hammer.
+    // A hammer hits one point and leaves, so it isn't stretched to a turn.
+    // Its contact time scales with the note instead (`length` is the time at
+    // middle C), like a piano's lighter treble hammers, so high notes aren't
+    // much quieter than low ones.
     const float turn = sampleRate / std::max(20.0f, v->target);
     const bool spread = mode == Pluck || mode == Pick;
     const float contact = mode == Hammer ? lengthSeconds * 261.63f / std::max(20.0f, v->target)
                                          : lengthSeconds;
-    // A shorter contact is a smaller blow unless the hammer hits harder for
-    // it, and a hammer of one mass at one speed carries the same energy
-    // whatever it lands on. Without this the scaling above traded a twelve
-    // decibel taper for a fifteen: the struck patch spans four octaves and
-    // its contact at the top is a quarter of the one at the bottom.
+    // A shorter contact carries less energy, so the gain goes up with pitch
+    // to keep the level even across the range.
     if (mode == Hammer) {
         v->exciteGain *= clampf(std::sqrt(v->target / 261.63f), 0.35f, 3.0f);
     }
@@ -310,8 +270,8 @@ void Filament::noteOff(uint8_t note) {
     for (auto &v : voices) {
         if (v.used && v.gate && v.note == note) {
             v.gate = false;
-            // Letting go either damps the string or leaves it ringing, which
-            // is the difference between a piano with the pedal down and up.
+            // On release the string is either damped or left ringing,
+            // depending on the release setting.
             v.damp = steppedOf(Release) != 0 ? 1.0f : 0.0f;
         }
     }
@@ -388,9 +348,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     }
     eg[0].set(0.0f, paramOf(Eg1A), paramOf(Eg1D), paramOf(Eg1S), paramOf(Eg1R), false);
     eg[1].set(0.0f, paramOf(Eg2A), paramOf(Eg2D), paramOf(Eg2S), paramOf(Eg2R), false);
-    // Stepped below only if the matrix names one: an envelope nothing reads
-    // makes no sound, and these belong to the machine rather than to a voice,
-    // so stepping them costs the same whether one string is sounding or six.
+    // Only stepped below if the matrix uses one.
     bool egWanted = false;
     for (int m = 0; m < kMatrixSlots && !egWanted; ++m) {
         const int base = MatrixBase + m * kMatrixParams;
@@ -399,14 +357,10 @@ bool Filament::render(float *L, float *R, int32_t frames) {
         egWanted = src == SrcEg1 || src == SrcEg2;
     }
 
-    // **No string sounding and the tail gone quiet: nothing to do.**
-    //
-    // With every voice retired the body resonators, the six sympathetic
-    // strings and the drive were still being run every sample, for ever, on
-    // silence - eight microseconds a block on the dev box for a track in a
-    // scene where it has no clip. Asleep once the output has stayed under
-    // -120 dB for two blocks; the state it leaves behind is zeroed on the way
-    // in, so what wakes is exactly what a reset would have made.
+    // With no voices and the output under -120 dB for two blocks, skip the
+    // body, sympathetic strings and drive, which would otherwise run on
+    // silence. Their state is cleared on the way to sleep, so waking up is
+    // the same as after a reset.
     bool anyVoice = false;
     for (const auto &v : voices) anyVoice = anyVoice || v.used;
     if (!anyVoice && quietBlocks >= 2) {
@@ -436,8 +390,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const float couple = paramOf(Couple);
     const bool symOn = steppedOf(SympatheticOn) != 0;
     const float symLevel = paramOf(SympatheticLevel);
-    // Undamped strings ring longer: the pedal down is at least nearly the
-    // longest the bank can ring.
+    // With the pedal down the bank rings nearly as long as it can.
     const float symDamping = dampersUp ? std::fmax(paramOf(SympatheticDamping), 0.95f)
                                        : paramOf(SympatheticDamping);
     const float damperCoeff = 1.0f - std::exp(-1.0f / (0.03f * sampleRate));
@@ -445,17 +398,15 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const bool bodyOn = steppedOf(BodyOn) != 0;
     const float bodyMix = paramOf(BodyMix);
     const float drive = paramOf(Drive);
-    // Normalised. This had no compensation at all, so turning the knob up
-    // thinned the string and quietened it at the same time. The curve's own
-    // answer at the nominal level is a constant for the block; it was a third
-    // `tanh` a sample.
+    // Normalised on the nominal level, so turning drive up doesn't make it
+    // quieter. Worked out once a block.
     const float driveK = 1.0f + drive * 8.0f;
     const float driveNorm = kNominal / std::tanh(kNominal * driveK);
     const float volume = paramOf(Volume);
     const float panBase = paramOf(Pan);
     const float dry = paramOf(Dry);
-    // Thirty hertz: under every note this machine plays and over everything
-    // a player's arm does.
+    // 30 Hz: below every note this machine plays and above the slow part of
+    // the drive.
     const float exciteDcCoeff = 1.0f - std::exp(-2.0f * kPiF * 30.0f / sampleRate);
     const float pitchScale = std::pow(2.0f, (bendSemis + paramOf(Octave) * 12.0f + paramOf(Transpose) +
                                              paramOf(Fine) * 0.01f) / 12.0f);
@@ -464,8 +415,8 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const float rattleAt = paramOf(RattleThreshold);
 
     if (bodyOn) {
-        // Four modes standing in for a box. Size moves them together; damp
-        // widens them, which is the difference between a guitar and a crate.
+        // Four resonant modes for the body. Size moves them together, damp
+        // widens them.
         static const float kModeHz[kBodyModes] = {110.0f, 220.0f, 400.0f, 780.0f};
         const float size = std::pow(2.0f, (0.5f - paramOf(BodySize)) * 2.2f);
         const float q = 1.0f + (1.0f - paramOf(BodyDamp)) * 9.0f;
@@ -474,8 +425,8 @@ bool Filament::render(float *L, float *R, int32_t frames) {
         }
     }
     for (int i = 0; i < kSympathetic; ++i) {
-        // ...and the sympathetic strings the same way, against their own
-        // pitches, or the high ones in the bank die while the low ones hang.
+        // Sympathetic string damping is a time too, worked out from each
+        // string's own pitch so high ones don't die much faster than low ones.
         const float symRing = 0.1f * std::pow(60.0f, symDamping);
         sympathetic[i].setDamping(
             std::fmin(0.99995f, std::exp(-1.0f / (std::fmax(20.0f, sympatheticHz[i]) * symRing))),
@@ -486,10 +437,10 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     const InputBus &bus = InputBus::get();
     const float *in = bus.live() ? bus.block() : nullptr;
     float symFeed = 0.0f;
-    // The sympathetic bank belongs to the machine, so it takes the matrix of
-    // the last voice that sounded - as it always has.
+    // The sympathetic bank belongs to the machine, so it uses the matrix of
+    // the last voice that sounded.
     float symMod = 0.0f;
-    // And so do the body and the drive, which are the machine's as well.
+    // The same for the body and the drive.
     float bodyMod = 0.0f, driveMod = 0.0f;
     float driveKNow = driveK, driveNormNow = driveNorm, driveSolved = drive;
 
@@ -501,58 +452,39 @@ bool Filament::render(float *L, float *R, int32_t frames) {
 
         for (auto &v : voices) {
             if (!v.used) continue;
-            // **Everything the string is made of, on a sixteen-sample stride.**
+            // The string's settings are updated every 16 samples, since the
+            // matrix and coefficients only change as fast as the knobs.
             //
-            // All of this was per voice *per sample*: the matrix, three
-            // `pow`s, an `exp`, and eight coefficient setters on two
-            // waveguides - for an answer that changes at the rate a knob
-            // moves. The matrix advances nothing (the LFOs are stepped once a
-            // block and read by value), so it gave the same numbers forty-
-            // eight thousand times a second.
-            //
-            // The one thing here that does move inside a block is `v.damp`,
-            // the hand coming down on the string, and its ramp is multiplied
-            // by the stride so a damped note stops just as fast as it did.
-            //
-            // The *excitation* below stays per sample. A block-rate value
-            // applied per sample is the onset-click fault this tree has been
-            // caught by before; this is the opposite case - a coefficient,
-            // not a source - and the filters have always been set this way.
+            // `v.damp` does change within a block, so its ramp is multiplied
+            // by the stride to keep the same damping speed. The excitation
+            // below stays per sample.
             if ((n & 15) == 0) {
             applyMatrix(v, v.mod);
             {
-                // A finger pressing, whatever the matrix says.
+                // MPE pressure, applied on top of the matrix.
                 const float prs = glidePressure(v.prsGlide, v.pressure, pressure) * paramOf(MpePressure);
                 v.mod[DstPressure] += prs * 0.6f;
                 v.mod[DstBrightness] += prs * 0.5f;
                 v.mod[DstVolume] += prs * 0.4f;
             }
 
-            // Damping, brightness and tuning, note by note: a short string
-            // rings for less time and darker, as a real one does.
+            // Damping, brightness and tuning per note. Higher notes can be
+            // darker (tonekey) and ring shorter, like real short strings.
             const float keyTone = 1.0f - paramOf(ToneKey) * v.key01 * 0.5f;
             const float tone = clampf((paramOf(Tone) + v.mod[DstTone]) * keyTone, 0.02f, 1.0f);
             const float freq = v.freq * pitchScale * noteBendMul(v) * std::pow(2.0f, v.mod[DstPitch]);
 
-            // **How long the string rings is a time, not a loop gain.**
+            // How long the string rings is a time, not a loop gain. A string
+            // goes round f times a second, so a fixed gain per turn would make
+            // high notes die much faster than low ones.
             //
-            // A fixed gain per turn is a fixed loss per turn, and a string
-            // goes round f times a second - so the same number gave a low
-            // string twice the ring of the one an octave up and four times
-            // the one above that. Two octaves up from the note it was voiced
-            // at, every patch here was gone before the harness could find a
-            // pitch in it: not a wrong note, no note. The same law the
-            // woodwinds' walls needed, in the other direction.
+            // `sustain` goes from 0.05 s at 0 to a little over half a second
+            // in the middle and 8 s at the top, and the loop gain is worked
+            // out from it and the pitch. `sustainkey` shortens the top of the
+            // keyboard a little, like real short strings.
             //
-            // So `sustain` is a time - a twentieth of a second at nothing, a
-            // little over half a second in the middle, eight at the top - and the gain follows
-            // from it and the pitch. `sustainkey` then does what it says
-            // instead of the opposite: it shortens the top of the keyboard a
-            // little, as a real instrument's short strings are.
-            //
-            // Letting go shortens that time rather than scaling the gain,
-            // because a damped string is still a string and a hand on a high
-            // one stops it just as fast as on a low one.
+            // Releasing shortens the time instead of scaling the gain, so a
+            // damped high string stops as fast as a low one.
             if (v.damp > 0.0f) v.damp = std::fmin(1.0f, v.damp + releaseCoeff * 64.0f);
             const float keyDamp = 1.0f - paramOf(DampingKey) * v.key01 * 0.35f;
             const float sustain = clampf(paramOf(Damping) + v.mod[DstDamping], 0.0f, 1.0f);
@@ -573,17 +505,15 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             const float damperF = clampf(paramOf(DamperPressure) + v.mod[DstDamperPressure], 0.0f, 1.0f);
             v.a.setDamper(damperP, damperF);
             v.b.setDamper(damperP, damperF);
-            // Two trig calls a voice a sample, for a pan that moves when the
-            // matrix does.
+            // Pan, here since it only moves when the matrix does.
             const float pan = clampf(panBase + v.pan * spread + v.mod[DstPan], -1.0f, 1.0f);
             const float angle = (pan + 1.0f) * 0.25f * kPiF;
             v.panL = std::cos(angle);
             v.panR = std::sin(angle);
             }
 
-            // Excitation. `brightness` in the matrix is the exciter's: the grit
-            // of a finger, a pick, a bow or a breath, and the hardness of a
-            // hammer. It was offered as a destination and read by nothing.
+            // Excitation. The matrix's `brightness` destination sets the grit
+            // of a pluck, pick, bow or breath, and the hardness of a hammer.
             const float bright = v.mod[DstBrightness];
             const float gritNow = bright == 0.0f ? grit : clampf(grit + bright, 0.0f, 1.0f);
             const float hardNow = bright == 0.0f ? hardness : clampf(hardness + bright, 0.0f, 1.0f);
@@ -594,19 +524,9 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             case Pluck:
             case Pick:
                 if (v.exciteLeft > 0) {
-                    // A pick is a harder, narrower contact than a finger, so
-                    // what it puts in is the same disturbance with more of
-                    // its top: a first difference, which is six decibels an
-                    // octave of tilt and nothing else.
-                    //
-                    // It used to be the noise multiplied by an alternating
-                    // plus and minus one - a square wave at Nyquist, which
-                    // does not brighten a spectrum, it *inverts* it, and
-                    // puts the whole burst up against the sample rate where
-                    // no string has a partial. The Wire patch started twelve
-                    // times brighter than it continued and no setting on the
-                    // string could reach it, because none of it was on the
-                    // string.
+                    // A pick is a harder contact than a finger, so it gets a
+                    // first difference, which tilts the noise up 6 dB per
+                    // octave.
                     const float raw = noise * (0.3f + 0.7f * gritNow);
                     excite = (mode == Pick ? (raw - v.lastPick * 0.7f) * 1.25f : raw) * v.exciteGain;
                     v.lastPick = raw;
@@ -615,8 +535,8 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 break;
             case Hammer:
                 if (v.exciteLeft > 0) {
-                    // A hammer is a soft impulse, and softer the harder you
-                    // hit it: felt compresses.
+                    // A hammer is a soft impulse, softened further by the
+                    // hardness setting, like felt compressing.
                     const float t = 1.0f - static_cast<float>(v.exciteLeft) / std::fmax(1.0f, paramOf(ExcitLength) * sampleRate);
                     const float soft = std::sin(kPiF * t);
                     excite = soft * soft * (1.0f - hardNow * 0.6f) * v.exciteGain * 2.0f;
@@ -625,10 +545,10 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 break;
             case Bow: {
                 if (!v.gate) break;
-                // Friction against the string as it is now: the bow grips
-                // while the two move together and lets go when the string
-                // slips past it. The curve has to fall away on both sides or
-                // the bow only ever adds energy and the note runs away.
+                // Bow friction: the bow grips while the bow and string move
+                // together and lets go when the string slips. The curve must
+                // fall away on both sides or the bow only adds energy and
+                // the note runs away.
                 const float p = clampf(bowPressure + v.mod[DstPressure], 0.0f, 1.0f);
                 const float relative = bowSpeed * 0.5f - v.a.velocity();
                 const float width = 0.08f + 0.5f * (1.0f - p);
@@ -638,16 +558,15 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             }
             case Breath:
                 if (!v.gate) break;
-                // An air jet saturates as the resonator fills: past a point
-                // blowing harder does not make it louder, it makes it
-                // overblow, which is the instrument, not a bug.
+                // An air jet saturates as the resonator fills. Past a point,
+                // blowing harder makes it overblow instead of getting louder,
+                // which is intended.
                 excite = (noise * (0.2f + 0.8f * gritNow) * 0.25f + 0.02f) *
                          clampf(bowPressure + v.mod[DstPressure], 0.0f, 1.0f) * v.exciteGain *
                          (1.0f - std::tanh(std::fabs(v.a.velocity()) * 1.6f) * 0.9f);
                 break;
             case External:
-                // The string is played by whatever is coming in. This is the
-                // one a sampled string library cannot do at all.
+                // The audio input excites the string.
                 if (in != nullptr) {
                     excite = 0.5f * (in[static_cast<size_t>(n) * 2] + in[static_cast<size_t>(n) * 2 + 1]) *
                              externalGain * v.exciteGain;
@@ -655,50 +574,29 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 break;
             default: break;
             }
-            // **Nothing slow goes into a string.**
-            //
-            // A bow leans on a string with a steady force and a jet blows
-            // at it with a steady pressure, and neither is a wave: a steady
-            // force is a static deflection that the two ends take. So the
-            // slow part of the drive does not go in. (On its own this was
-            // not what cured the bow's wander - that was the loop's own
-            // high-pass, which now sits under the note; see kDcBelow. This
-            // is here because it is true, and it keeps a hammer's blow,
-            // which is a squared sine and never negative, from leaning on
-            // the string after it has left.)
+            // Remove the slow part of the excitation. A bow's steady force or
+            // a jet's steady pressure isn't a wave, and a hammer's blow is
+            // never negative, so without this they'd push a DC offset into
+            // the string. See also kDcBelow in Waveguide.h.
             v.exciteDc += (excite - v.exciteDc) * exciteDcCoeff;
             excite -= v.exciteDc;
             exciterOut += excite;
 
-            // **Pick position.** A string plucked a fraction b along its
-            // length gets harmonic n in proportion to sin(n.pi.b): every
-            // harmonic with a node under the pick is missing, which is why
-            // playing by the bridge is thin and nasal and over the hole is
-            // round. In a waveguide that is one comb on the excitation,
-            // `1 - z^-bL` over a string L samples long - its nulls fall
-            // exactly where sin(n.pi.b) does, and at the middle of the
-            // string it takes out the even harmonics and leaves the
-            // fundamental at its loudest, which is what plucking there does.
+            // Pick position. A string plucked a fraction b along its length
+            // gets harmonic n in proportion to sin(n.pi.b), so harmonics with
+            // a node under the pick are missing. Near the bridge it sounds
+            // thin, in the middle it's round. This is a comb on the
+            // excitation, `1 - z^-bL` for a string L samples long, whose
+            // nulls fall exactly there.
             //
-            // This comment described that and the code underneath it did
-            // something else: it handed the *second string of the course* a
-            // fraction less excitation. That is a level difference between
-            // two strings, not a pick position, and it was measurably
-            // nothing - moving `position` from 0.08 to 0.3 on the steel
-            // patch changed no column at all. Four patches set it expecting
-            // the comb.
-            //
-            // Slide walks the pick up the string, which is the brightest
-            // thing a finger can do to one.
+            // MPE slide moves the pick along the string.
             const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
             const float pos = clampf(position + v.mod[DstPosition] +
                                          slide * paramOf(MpeTimbre) * 0.28f,
                                      0.02f, 0.5f);
-            // A pluck, a pick and a hammer all act at one point and leave,
-            // so all three get the comb - a piano's strike point at a
-            // seventh of the string, chosen to lose the seventh harmonic, is
-            // the same fact. A bow or a jet is a force held against the
-            // string for the whole note and does not comb it this way.
+            // Pluck, pick and hammer act at one point and leave, so they get
+            // the comb (like a piano hammer placed to lose the 7th harmonic).
+            // A bow or jet acts for the whole note, so it doesn't.
             const bool atAPoint = mode == Pluck || mode == Pick || mode == Hammer;
             if (atAPoint && !v.pick.empty()) {
                 const auto size = static_cast<int32_t>(v.pick.size());
@@ -708,24 +606,17 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 const float earlier = v.pick[static_cast<size_t>(at)];
                 v.pick[static_cast<size_t>(v.pickWrite)] = excite;
                 v.pickWrite = (v.pickWrite + 1) % size;
-                // Halved, because a comb peaks at twice what goes into it.
+                // Halved, since a comb peaks at twice its input.
                 excite = (excite - earlier) * 0.5f;
             }
             const float a = v.a.step(excite);
             const float b = v.b.step(excite);
             const float coupled = (a + b) * 0.5f;
-            // A course is two strings over one bridge, and a bridge *shares*
-            // energy rather than making it. Each string is given a fraction
-            // of the difference, so what one gains the other loses and the
-            // pair rings exactly as long as one string would; and the
-            // fraction is a fraction of a whole turn, not of a sample.
-            //
-            // Handing each string the other's output per sample did both
-            // things wrong. Over a 145-sample turn at `couple` 0.8 that was
-            // two and a third added to a loop gain already at 0.999, so the
-            // Wire patch was fourteen decibels louder with the coupling on
-            // than off and its note-on read fifty thousand times the edge of
-            // its own tone.
+            // The two strings of a course share a bridge, which moves energy
+            // between them without adding any. Each gets a fraction of the
+            // difference, so what one gains the other loses. The fraction is
+            // per turn, not per sample, so it's the same at every pitch and
+            // can't run away.
             const float share = (b - a) * couple * 0.05f;
             v.a.exciteOverTurn(share);
             v.b.exciteOverTurn(-share);
@@ -733,12 +624,13 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             float voiceOut = coupled;
             const float rattleNow = v.mod[DstRattle] == 0.0f ? rattle : clampf(rattle + v.mod[DstRattle], 0.0f, 1.0f);
             if (rattleNow > 0.0f && std::fabs(voiceOut) > rattleAt) {
-                // Something loose on the string: it buzzes only when driven.
+                // Something loose on the string that only buzzes when driven
+                // hard.
                 const float over = std::fabs(voiceOut) - rattleAt;
                 voiceOut += (voiceOut > 0.0f ? -1.0f : 1.0f) * over * rattleNow * 1.6f;
             }
-            // A voice's own level, moved the way the knob would move it -
-            // the machine's volume is applied once, at the end, to everything.
+            // Per-voice volume modulation, scaled like the knob. The machine
+            // volume is applied once at the end.
             if (v.mod[DstVolume] != 0.0f && volume > 0.0f)
                 voiceOut *= clampf(volume + v.mod[DstVolume], 0.0f, 1.5f) / volume;
             sumForSympathy += voiceOut;
@@ -755,15 +647,13 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             }
         }
 
-        // The sympathetic bank hears everything and answers - always when it
-        // is switched on, and as far as the pedal has lifted the dampers when
-        // it is not.
+        // The sympathetic bank is fed by all the voices. It's always on when
+        // switched on, otherwise it follows the sustain pedal.
         damperMix += (damperTarget - damperMix) * damperCoeff;
         const float symGate = symOn ? 1.0f : damperMix;
         if (symGate > 1.0e-4f) {
-            // ...per turn as well, and for the same reason: six strings each
-            // given eight per cent of the played one every sample is forty
-            // times a turn at the bottom of the range, and they never stopped.
+            // Fed per turn too, so low strings don't build up and ring
+            // forever.
             symFeed = sumForSympathy * clampf(symLevel + symMod, 0.0f, 1.0f) * 0.6f;
             float symOut = 0.0f;
             for (int i = 0; i < kSympathetic; ++i)
@@ -788,7 +678,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
         outR += exciterOut * dry;
         const float driveNow = driveMod == 0.0f ? drive : clampf(drive + driveMod, 0.0f, 1.0f);
         if (driveNow > 0.0f) {
-            if (driveNow != driveSolved) { // modulated: solved again only when it moves
+            if (driveNow != driveSolved) { // only recomputed when modulation moves it
                 driveSolved = driveNow;
                 driveKNow = 1.0f + driveNow * 8.0f;
                 driveNormNow = kNominal / std::tanh(kNominal * driveKNow);

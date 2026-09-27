@@ -2,23 +2,19 @@
 #include "Decoded.h"
 #include <cstring>
 
-// FLAC, decoded.
+// FLAC decoder, the counterpart of FlacWriter.
 //
-// The mirror of FlacWriter, with one asymmetry that matters: our encoder uses
-// *fixed* predictors only - orders nought to four, each the difference of the
-// one before - because they cost nothing to choose and get most of the way.
-// Every other encoder uses LPC as well, with its own coefficients written into
-// the subframe. A reader that only understood what we write would decline most
-// of the FLACs anybody actually has, so this understands both, and the escape
-// partitions and the four channel decorrelations besides.
+// Our encoder only uses fixed predictors (orders 0 to 4), but other encoders
+// also use LPC, so this reads both, plus escape partitions and all four
+// stereo decorrelation modes.
 //
-// It is a losslessly exact format, so a round trip through our writer and back
-// must return the samples bit for bit, and the test asks exactly that.
+// FLAC is lossless, so a round trip through our writer must return the exact
+// same samples, and the test checks that.
 namespace acidulous {
 
 namespace {
 
-/** Bits, most significant first, which is the order FLAC writes them in. */
+/** Reads bits most significant first, the order FLAC uses. */
 class BitReader {
   public:
     BitReader(const unsigned char *data, size_t size) : p(data), n(size) {}
@@ -47,7 +43,7 @@ class BitReader {
         return static_cast<int32_t>((v ^ sign) - sign);
     }
 
-    /** Zeroes until a one, which is how Rice writes a quotient. */
+    /** Counts zeroes until a one, which is how Rice codes a quotient. */
     uint32_t unary() {
         uint32_t count = 0;
         while (true) {
@@ -58,7 +54,7 @@ class BitReader {
             }
             ++count;
             if (++bit == 8) { bit = 0; ++at; }
-            if (count > (1u << 24)) { failed = true; return count; } // a run this long is corruption
+            if (count > (1u << 24)) { failed = true; return count; } // a run this long means corrupt data
         }
     }
 
@@ -95,8 +91,8 @@ bool readResidual(BitReader &br, int32_t blockSize, int32_t order, int32_t *out)
         const int32_t count = part == 0 ? each - order : each;
         const uint32_t param = br.get(paramBits);
         if (param == escape) {
-            // Not Rice at all: a raw bit width, then that many bits each.
-            // Zero is legal and means a partition of silence.
+            // Escape: a raw bit width, then that many bits per sample. Zero
+            // means a partition of silence.
             const int raw = static_cast<int>(br.get(5));
             for (int32_t i = 0; i < count; ++i) out[at++] = raw == 0 ? 0 : br.getSigned(raw);
         } else {
@@ -104,8 +100,8 @@ bool readResidual(BitReader &br, int32_t blockSize, int32_t order, int32_t *out)
                 const uint32_t quotient = br.unary();
                 const uint32_t remainder = param > 0 ? br.get(static_cast<int>(param)) : 0;
                 const uint32_t folded = (quotient << param) | remainder;
-                // Zig-zag: the low bit is the sign, which keeps small
-                // negatives small and is what makes Rice worth using.
+                // Zig-zag: the low bit is the sign, so small negatives stay
+                // small.
                 out[at++] = static_cast<int32_t>((folded >> 1) ^ (~(folded & 1u) + 1u));
             }
         }
@@ -133,7 +129,7 @@ bool readSubframe(BitReader &br, int32_t blockSize, int bps, int32_t *out) {
         if (order > blockSize) return false;
         for (int32_t i = 0; i < order; ++i) out[i] = br.getSigned(effective);
         if (!readResidual(br, blockSize, order, out)) return false;
-        // Undo the differencing, which is the whole of a fixed predictor.
+        // Undo the differencing of the fixed predictor.
         for (int32_t i = order; i < blockSize; ++i) {
             switch (order) {
             case 0: break;
@@ -154,8 +150,8 @@ bool readSubframe(BitReader &br, int32_t blockSize, int bps, int32_t *out) {
         int32_t coeff[32];
         for (int32_t i = 0; i < order; ++i) coeff[i] = br.getSigned(precision);
         if (!readResidual(br, blockSize, order, out)) return false;
-        // The prediction runs in 64 bits: order 32 at 24 bits of coefficient
-        // and 24 of sample overflows 32 long before the end of a block.
+        // The prediction uses 64 bits, since order 32 with 24-bit coefficients
+        // and 24-bit samples overflows 32 bits.
         for (int32_t i = order; i < blockSize; ++i) {
             int64_t sum = 0;
             for (int32_t k = 0; k < order; ++k) {
@@ -182,7 +178,7 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
         return nullptr;
     }
 
-    // --- metadata, of which only STREAMINFO is of any interest -------------
+    // --- metadata, only STREAMINFO is used -----------------------------------
     StreamInfo si;
     size_t at = 4;
     bool sawStreamInfo = false;
@@ -225,7 +221,7 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
     while (!br.atEnd()) {
         const size_t frameStart = br.bytePosition();
         if (br.get(14) != 0x3FFEu) { // the sync code
-            // Not a frame: either the end of the stream or padding after it.
+            // Not a frame: the end of the stream or padding after it.
             break;
         }
         br.get(1); // reserved
@@ -236,8 +232,8 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
         const uint32_t sizeCode = br.get(3);
         br.get(1); // reserved
 
-        // The frame or sample number, in a UTF-8-like coding. Nothing here
-        // needs its value; it has to be stepped over exactly.
+        // The frame or sample number, in a UTF-8-like coding. Its value isn't
+        // used but it has to be skipped exactly.
         const uint32_t first = br.get(8);
         int extra = 0;
         if ((first & 0x80u) != 0) {
@@ -262,7 +258,7 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
         else if (rateCode == 13) rate = static_cast<int32_t>(br.get(16));
         else if (rateCode == 14) rate = static_cast<int32_t>(br.get(16)) * 10;
         else if (rateCode == 15) { error = "bad sample rate"; return nullptr; }
-        (void)rate; // the stream's rate governs; a frame may not disagree usefully
+        (void)rate; // the stream's rate is used
 
         int bps = si.bits;
         switch (sizeCode) {
@@ -276,7 +272,7 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
         default: error = "reserved sample size"; return nullptr;
         }
 
-        br.get(8); // the header's CRC-8, which we do not check
+        br.get(8); // the header's CRC-8, not checked
         if (br.bad() || blockSize <= 0 || blockSize > 65536) { error = "bad frame header"; return nullptr; }
 
         const int32_t channels = channelCode < 8 ? static_cast<int32_t>(channelCode) + 1 : 2;
@@ -284,8 +280,8 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
         for (int32_t c = 0; c < channels; ++c) plane[c].assign(static_cast<size_t>(blockSize), 0);
 
         for (int32_t c = 0; c < channels; ++c) {
-            // The difference channel of a stereo pair carries one more bit,
-            // because a difference of two n-bit numbers needs n+1.
+            // The side channel has one more bit, since the difference of two
+            // n-bit numbers needs n+1.
             const bool side = (channelCode == 8 && c == 1) || (channelCode == 9 && c == 0) ||
                               (channelCode == 10 && c == 1);
             if (!readSubframe(br, blockSize, bps + (side ? 1 : 0), plane[c].data())) {
@@ -294,7 +290,7 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
             }
         }
         br.align();
-        br.get(16); // the frame's CRC-16, likewise
+        br.get(16); // the frame's CRC-16, not checked either
 
         // Undo whichever decorrelation was used.
         if (channelCode == 8) { // left / side
@@ -304,24 +300,16 @@ std::unique_ptr<SampleData> FlacReader::read(const std::string &path, int32_t ta
         } else if (channelCode == 10) { // mid / side
             for (int32_t i = 0; i < blockSize; ++i) {
                 const int32_t side = plane[1][i];
-                // The mid channel dropped a bit on the way in; the side's
-                // low bit is where it went.
-                //
-                // Doubled through `uint32_t` rather than with `<< 1`, because
-                // a mid sample is signed and shifting a negative value left is
-                // undefined behaviour in C++17 - which a sanitiser says out
-                // loud and a compiler is entitled to act on. The same
-                // round-trip the wasted-bits line above uses. Every real
-                // compiler does the obvious thing here, so this changes the
-                // decoded audio not at all; it changes what we are entitled
-                // to expect.
+                // The mid channel lost its low bit when encoded, and the side's
+                // low bit restores it. Shifted as uint32_t because shifting a
+                // negative int left is undefined behaviour in C++17.
                 const auto mid = static_cast<int32_t>(static_cast<uint32_t>(plane[0][i]) << 1 | (side & 1u));
                 plane[0][i] = (mid + side) >> 1;
                 plane[1][i] = (mid - side) >> 1;
             }
         }
 
-        // A block that will not fit whole is a block the cap cut through.
+        // If the block doesn't fit whole, the cap cut it.
         if (static_cast<int64_t>(got.ch[0].size()) + blockSize > cap) got.truncated = true;
         for (int32_t i = 0; i < blockSize; ++i) {
             if (static_cast<int64_t>(got.ch[0].size()) >= cap) break;

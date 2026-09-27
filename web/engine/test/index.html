@@ -5,9 +5,9 @@
 <pre id="out"></pre>
 <script src="../out/acidulous.js"></script>
 <script>
-// The engine alone in a page: start it, resume the audio (a gesture in a real
-// browser; headless is started with the autoplay policy off), mount Reflux,
-// play a note, and read the peak level the worklet reports.
+// Runs the engine on its own: starts it, resumes audio (needs a click in a
+// real browser; headless runs with the autoplay policy off), mounts Reflux,
+// plays a note and prints the peak level the worklet reports.
 const out = document.getElementById('out');
 function say(line) {
   out.textContent += line + '\n';

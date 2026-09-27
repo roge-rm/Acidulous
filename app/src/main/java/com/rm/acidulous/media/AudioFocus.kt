@@ -10,15 +10,13 @@ import android.media.AudioManager
 import android.util.Log
 
 /**
- * Being a good neighbour on the phone's audio: while the transport runs, the
- * app holds audio focus, and it stops when something else takes it - a call,
- * an alarm, another app starting music - or when headphones are pulled out,
- * which would otherwise carry on at full volume out of the speaker.
+ * Audio focus. While the transport runs the app holds focus, and it stops
+ * when something else takes it (a call, an alarm, another app's music) or
+ * when headphones are unplugged, so it doesn't carry on out of the speaker.
  *
- * Follows the transport the way the playback service does: [follow] is called
- * on each change of playing, and [stop] is how the app stops. A short loss
- * that says it can duck - a navigation prompt, a notification - is let pass:
- * the song carrying on under it is what a musician wants.
+ * Like the playback service, [follow] is called whenever playing changes and
+ * [stop] stops the app. Short losses that allow ducking (a navigation prompt,
+ * a notification) are ignored so the song keeps playing under them.
  */
 object AudioFocus {
     private const val TAG = "Acidulous.Focus"
@@ -48,7 +46,7 @@ object AudioFocus {
                     }
                     .build()
                 request = req
-                // Refused - a call in progress - is the same as losing it.
+                // Being refused (during a call) is the same as losing it.
                 if (audio.requestAudioFocus(req) == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
                     Log.i(TAG, "focus refused: stopping")
                     stop()
@@ -64,8 +62,8 @@ object AudioFocus {
                     }
                 }
                 noisy = receiver
-                // Not exported: it is the system's broadcast, which reaches a
-                // receiver either way, and nothing else should be able to stop us.
+                // Not exported: the system broadcast reaches it either way,
+                // and no other app should be able to stop us.
                 androidx.core.content.ContextCompat.registerReceiver(
                     app, receiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY),
                     androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,

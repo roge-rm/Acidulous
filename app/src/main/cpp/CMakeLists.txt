@@ -7,12 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -ffast-math gets us flush-to-zero for denormals on ARM, which matters for
 # filter and delay tails; -fno-finite-math-only keeps NaN/inf checks honest.
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -fno-finite-math-only")
-# The debug build is optimised exactly as the release is, with symbols. It is
-# the build that gets played and measured - every phone figure in M65 came off
-# it - and at -O1 without fast-math it was a different engine: slower by about
-# a fifth on the dev box, and not even the same arithmetic as what ships. A
-# debug APK's engine that sounds and costs what the release's does is worth
-# more here than stepping through native code line by line.
+# The debug build uses the same optimisation as release, plus symbols. It's
+# the build that gets played and measured, so it needs to sound and perform
+# the same as what ships.
 set(CMAKE_CXX_FLAGS_DEBUG "-O3 -ffast-math -fno-finite-math-only -g")
 
 # engine/    the audio engine
@@ -32,10 +29,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O3 -ffast-math -fno-finite-math-only -g")
 # Nothing under engine/ may include anything under platform/.
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp")
 file(GLOB_RECURSE PLATFORM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/platform/*.cpp")
-# platform/desktop is the desktop build's (desktop/native/CMakeLists.txt): its
-# own audio driver, which would be a second AudioDriver here.
+# platform/desktop belongs to the desktop build (desktop/native/CMakeLists.txt)
+# and has its own AudioDriver.
 list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/desktop/.*")
-# And the browser build's: web/engine/CMakeLists.txt.
+# platform/web belongs to the browser build (web/engine/CMakeLists.txt).
 list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/web/.*")
 
 add_library(acidulous SHARED
@@ -51,19 +48,15 @@ target_include_directories(acidulous PRIVATE
 
 target_compile_options(acidulous PRIVATE -Wall -Wextra -Wno-unused-parameter)
 
-# LAME, as a shared library of its own. It is LGPL, so it must stay
-# replaceable: linked in statically nobody could swap their own build in, and
-# that relinking freedom is the whole point of that licence. See
-# third_party/lame/PROVENANCE.md.
+# LAME, as its own shared library. It's LGPL, so users must be able to swap in
+# their own build. See third_party/lame/PROVENANCE.md.
 add_subdirectory(third_party/lame)
 
-# Ableton Link, as headers. GPLv2-or-later, which our GPLv3 may take, so
-# unlike LAME it is compiled straight in - there is no relinking freedom to
-# preserve and a header-only library has no other way to be used. See
-# third_party/link/PROVENANCE.md.
+# Ableton Link, header-only and compiled in. It's GPLv2-or-later, which is
+# compatible with our GPLv3. See third_party/link/PROVENANCE.md.
 add_subdirectory(third_party/link)
 
-# Link's own headers are somebody else's and are warned about on their terms.
+# Quiet the warnings from Link's own headers.
 set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/platform/link/LinkTimebase.cpp
     PROPERTIES COMPILE_OPTIONS "-Wno-multichar;-Wno-unused-parameter"

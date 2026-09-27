@@ -5,13 +5,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Is a scale written the way a musician writes it?
- *
- * These are not opinions. C Dorian has a flat third and a flat seventh and
- * they are E♭ and B♭; writing D♯ and A♯ is wrong in the same way that
- * spelling a word phonetically is wrong. Every case below is a scale whose
- * spelling is settled by convention, so a failure here means the code has
- * picked the enharmonic twin rather than the note.
+ * Checks that scales are spelled the usual way, e.g. C Dorian has E♭ and B♭,
+ * not D♯ and A♯. Every case here has a settled spelling, so a failure means
+ * the code picked the wrong enharmonic name.
  */
 class ScaleSpellingTest {
 
@@ -45,7 +41,7 @@ class ScaleSpellingTest {
 
     @Test
     fun `the flat keys are flat, not their sharp twins`() {
-        // B♭ major, not A♯ major - which would need 5 sharps and a double.
+        // B♭ major. A♯ major would need 5 sharps and a double sharp.
         assertEquals("B♭ C D E♭ F G A", notes(10, ionian))
         assertEquals("E♭ F G A♭ B♭ C D", notes(3, ionian))
         assertEquals("A♭ B♭ C D♭ E♭ F G", notes(8, ionian))
@@ -55,7 +51,7 @@ class ScaleSpellingTest {
 
     @Test
     fun `the case that started this`() {
-        // C Dorian. The app used to show C D D♯ F G A A♯.
+        // C Dorian.
         assertEquals("C D E♭ F G A B♭", notes(0, dorian))
     }
 
@@ -87,8 +83,8 @@ class ScaleSpellingTest {
 
     @Test
     fun `a scale with an unconventional shape still gets single accidentals`() {
-        // Pentatonics and the eight-note scales have no letter-per-degree to
-        // follow, so they take one accidental each and must not stack them.
+        // Pentatonic and eight-note scales don't have one letter per degree,
+        // so each note gets a single accidental, never a double.
         for (scale in Scales.intervals.indices) {
             if (Scales.intervals[scale].size == 7) continue
             for (key in 0 until 12) {
@@ -114,7 +110,7 @@ class ScaleSpellingTest {
         // MIDI 60 is C4 here, as the rest of the app has it, so 63 is E♭4.
         assertEquals("E♭4", Scales.noteName(63, 0, dorian)) // in C Dorian
         assertEquals("C4", Scales.noteName(60, 0, dorian))
-        // F♯ is not in C Dorian; it has no spelling there, so it stays plain.
+        // F♯ isn't in C Dorian, so it keeps its plain sharp name.
         assertEquals("F♯4", Scales.noteName(66, 0, dorian))
     }
 }

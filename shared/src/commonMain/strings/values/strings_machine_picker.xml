@@ -1,5 +1,5 @@
 <resources>
-    <!-- model/MachineUi.kt: the machine picker. Machine names are names and stay as they are. -->
+    <!-- model/MachineUi.kt: the machine picker. Machine names are names and aren't translated. -->
     <string name="machines_synths">synths</string>
     <string name="machines_drums">drums</string>
     <!-- Instruments modelled on real ones. The picker sets a trailing "ish" in italic, where there is one. -->

@@ -3,34 +3,23 @@
 #include <cstdint>
 #include <vector>
 
-// Playing a file once, to hear what it is.
+// Plays a file once so you can hear it from the sample browser.
 //
-// The browser lists what is in the samples folder and until now the only way
-// to find out which one a name refers to was to put it on a machine and press
-// a key. That is a long way to go to answer "is this the snare".
+// This sits outside the song: it's one buffer the master mixes in, and it
+// isn't recorded, exported or frozen.
 //
-// **Not a machine and not a mount.** A machine is part of the song and a
-// mount is a hand-over with a deleter and a queue; this is neither. It is one
-// buffer the master mixes in when it is asked to, outside the song entirely -
-// it is not recorded, not exported, not frozen, and it stops the moment
-// anything else wants attention.
-//
-// **How it crosses the thread, without a queue.** Two buffers and an index.
-// The audio thread reads `which` once and touches only that buffer for the
-// whole block; the UI thread only ever writes the *other* one and publishes
-// it afterwards. So there is no moment where one is reading what the other is
-// resizing, and nothing has to be freed on the audio thread or at all.
+// Two buffers and an index instead of a queue. The audio thread reads `which`
+// once and only touches that buffer for the whole block. The UI thread only
+// writes the other one and then publishes it. Nothing is freed on the audio
+// thread.
 namespace acidulous {
 
 class Audition {
   public:
     /** UI thread. Interleaved stereo at the engine rate. Starts it playing. */
     void play(const float *interleaved, int64_t frames) {
-        // Nothing has played yet (-1): either is free, so the first. It read
-        // `1 - which`, which is 2 before anything has played - a third buffer
-        // that does not exist - and the first audition after a start wrote a
-        // vector over the members behind the array. On a phone that went
-        // unnoticed; in a browser it was a crash in free() on the next play.
+        // `which` is -1 before anything has played, so use buffer 0 then.
+        // `1 - which` would give 2, which is out of bounds.
         const int now = which.load(std::memory_order_acquire);
         const int spare = now < 0 ? 0 : 1 - now;
         auto &buffer = pcm[static_cast<size_t>(spare)];

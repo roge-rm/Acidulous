@@ -4,57 +4,39 @@
 #include <engine/dsp/Math.h>
 #include <vector>
 
-// One player's instrument: a tube, a bell, and a pair of lips.
+// One player's instrument: a tube, a bell and a pair of lips.
 //
-// A brass instrument is a pressure wave going round a loop. The lips are a
-// valve the player holds nearly shut; the pressure behind them and the
-// pressure inside the tube together decide how far they open, and that is
-// the whole nonlinearity that makes brass behave like brass - the notes lock
-// to the tube's resonances, the tone opens out as you blow harder, and the
-// thing screams rather than simply getting louder.
+// A pressure wave goes round a loop. The lips are a valve, and the pressure
+// behind them and inside the tube decide how far they open. That's the
+// nonlinearity that makes notes lock to the tube's resonances and the tone
+// get brighter as you blow harder.
 //
-// Such a loop plays the tube's lowest mode, and *where* that mode sits is
-// decided by everything in the loop, not just the length of the line: the
-// lips, the bell and the DC blocker each hold the wave up a little. Models
-// of this kind are famous for playing a quarter-tone flat because of it.
-// So the line is not set to a period and hoped for - the loop is linearised
-// about the note, its phase evaluated there, and the line set to whatever
-// makes the total come to exactly one turn. See tune().
+// The pitch depends on everything in the loop (lips, bell, DC blocker), not
+// just the line length, and models like this often play flat because of it.
+// So tune() linearises the loop at the note and sets the line length so the
+// total phase comes to exactly one period.
 //
 // Two additions to the textbook loop:
 //
-//   - **Brassiness.** A loud wave in a real tube steepens as it travels - the
-//     crest catches up with the trough - until it is very nearly a shock.
-//     That is why a fortissimo trombone is a different instrument from a
-//     mezzo one and not just a louder one. The steepening here grows with
-//     the wave's own amplitude, so the brightness arrives with the effort.
-//   - **A bell that radiates rather than reflects.** What leaves the
-//     instrument is the part the bell does *not* send back, which is why the
-//     high end is outside the horn and the low end is still inside it.
+//   - Brassiness: a loud wave steepens as it travels, nearly into a shock
+//     wave, which is why a loud trombone sounds so different from a quiet
+//     one. The steepening here grows with the wave's amplitude.
+//   - The output is the part the bell doesn't reflect, so the highs come out
+//     and the lows stay inside.
 namespace acidulous::machine::brazen {
 
 using dsp::clampf;
 
 /**
- * The DC blocker's pole, and it is not a free choice on this instrument.
+ * The DC blocker's pole, a corner at 22.9 Hz.
  *
- * 0.997 is a corner at 22.9 Hz - one octave below a tuba's pedal F, so the
- * filter meant to remove what cannot be heard is standing on the lowest thing
- * the machine can play. Measured at F2, moving it to 3.8 Hz returns **18% of
- * the tuba's fundamental** and 15% of its peak, and 12% to a bass trombone.
+ * This takes some of a tuba's fundamental (moving it to 3.8 Hz gives back
+ * about 18% at F2), but it also shapes the timbre of every patch. Moving it
+ * makes all the instruments bright and alike, so changing it means
+ * re-voicing all the patches.
  *
- * And it is left where it is anyway, which is worth writing down so nobody
- * finds the same 18% and takes it. The corner is not only removing the
- * fundamental, it is holding the whole instrument's timbre where it is: moved
- * down, the harmonic ladder runs Tuba 7, Trombone 12, Trumpet 12, Harmon 12
- * where it ran 3, 4, 9, 12 - every instrument bright and none of them
- * distinguishable, which is precisely the fault this bank was written to fix.
- * Taking the 18% means re-voicing all fourteen against a different machine,
- * and that is a decision rather than a tidy-up.
- *
- * Used twice on purpose: once as the filter and once in `tune`, where its
- * phase is part of the loop the line length is solved against. Changing one
- * without the other detunes the instrument.
+ * Used twice: as the filter and in `tune`, where its phase is part of the
+ * loop. Changing one without the other detunes the instrument.
  */
 constexpr float kDcPole = 0.997f;
 
@@ -62,14 +44,12 @@ constexpr float kDcPole = 0.997f;
 constexpr float kLiftCeiling = 3.0f;
 
 /**
- * The corner of the airstream, as a one-pole coefficient at 48 kHz.
+ * The corner of the breath noise lowpass, as a one-pole coefficient at
+ * 48 kHz.
  *
- * Turbulent noise in a wind instrument is broadband and tilted, not white.
- * Chosen by sweep against the first pass down the tube: the horn's excess
- * above 1.5 kHz reads 5.1x white, 3.5x at 4 kHz and 2.4x at 2 kHz, and below
- * about 2 kHz the patches that use `breath` as a *tone* - the harmon, the
- * piccolo, the straight mute - start losing the air that is the point of
- * them. 2 kHz is where those two stop arguing.
+ * Breath noise is broadband and tilted, not white. Lower corners cut the
+ * harsh onset noise more, but below about 2 kHz the patches that use
+ * `breath` as part of their tone (harmon, piccolo, straight mute) lose it.
  */
 constexpr float kAirPole = 0.2298f; // 1 - exp(-2 pi 2000 / 48000)
 
@@ -80,32 +60,18 @@ class Bore {
     void prepare(float sampleRate) {
         sr = sampleRate;
         delayGlide = dsp::onePoleCoeff(0.006f, sampleRate);
-        // A tuba's pedal, and room for the read to wrap.
+        // Long enough for a tuba's pedal note, plus room for the read to wrap.
         line.assign(static_cast<size_t>(sampleRate / 18.0f) + 8, 0.0f);
         clear();
     }
 
     /**
-     * Everything the tube is holding, and not a chosen subset of it.
+     * Clears all of the tube's state, not just some of it.
      *
-     * `lastArrive` was missing, which is the wave that was at the bell one
-     * sample ago and which sets where the *next* sample is read from - the
-     * brass steepening bends the read by a fraction of it. So a cleared tube
-     * carried one number of the note before it into the note after, and it
-     * survived reset_test only because the difference used to decay to
-     * nothing before the comparison; priming the line made it audible.
-     *
-     * Nothing here is configuration - the machine sets every parameter on
-     * every block - so this can take the lot back, and `dirty` makes sure the
-     * loop is solved again rather than reusing a delay worked out for a note
-     * that is over.
-     *
-     * `delay` has to go with it and not merely be recomputed later, because
-     * `prime` runs before the next `tune` does and reads it. Left behind, the
-     * fade was cut to the length of the *previous* note's tube and a render
-     * that followed a panic differed from one that did not, at the very
-     * first sample. Twice now the answer here has been that a reset takes
-     * back everything or it takes back nothing useful.
+     * Anything left over (like `lastArrive`, which bends the next read, or
+     * `delay`) carries into the next note and makes renders after a panic
+     * differ. The machine sets every parameter each block, so everything can
+     * be reset, and `dirty` makes the loop get solved again.
      */
     void clear() {
         for (auto &v : line) v = 0.0f;
@@ -123,28 +89,23 @@ class Bore {
         delay = 0.0f;
         onsetBoost = 1.0f;
         onsetFall = 0.0f;
-        // Back to where a new tube starts. setPressure ignores a change of
-        // under 0.02, so a tube still holding its last note's pressure kept
-        // it whenever the next note came in near it, and was tuned for the
-        // old one: the same chord sounded different depending on which
-        // voices had played before. That is what stopped two exports of the
-        // same song matching, from the horns' first note.
+        // Reset the pressure too. setPressure ignores changes under 0.02, so
+        // an old pressure could stick and the tuning would depend on what
+        // the voice played before.
         pressure = 0.5f;
         dirty = true;
     }
 
-    /** The note. tune() works out how long the line has to be for it. */
+    /** The note. tune() works out the line length for it. */
     void setFrequency(float hz) {
         const float f = clampf(hz, 20.0f, 4000.0f);
         if (f != freq) { freq = f; dirty = true; }
     }
 
     /**
-     * [tension] multiplies where the lips want to buzz against the note. At
-     * one they buzz it; below, they lean on the fundamental and the tone
-     * goes round and dark; above, they favour the partials over it and the
-     * instrument brightens the way a player leaning in does. The loop is
-     * retuned for it, so it colours the note rather than bending it.
+     * [tension] scales the lips' buzz frequency against the note. At 1 they
+     * buzz at the note, below it the tone gets darker and above it brighter.
+     * The loop is retuned for it, so it changes the tone and not the pitch.
      */
     void setLips(float tension, float damping) {
         const float t = clampf(tension, 0.25f, 3.0f), d = clampf(damping, 0.0f, 1.0f);
@@ -157,21 +118,21 @@ class Bore {
         if (v != lipGain) { lipGain = v; dirty = true; }
     }
 
-    /** How hard the player is blowing, which the tuning depends on. */
+    /** How hard the player is blowing. The tuning depends on it. */
     void setPressure(float p) {
         const float v = clampf(p, 0.0f, 2.0f);
         if (std::fabs(v - pressure) > 0.02f) { pressure = v; dirty = true; }
     }
 
-    /** Bell: how much comes back, and how dull what comes back is. */
+    /** Bell: how much is reflected and how dull the reflection is. */
     void setBell(float reflection, float cutoff01) {
         const float rf = clampf(reflection, 0.5f, 0.995f), c = clampf(cutoff01, 0.02f, 0.98f);
         if (rf != reflect || c != bellCoeff) { reflect = rf; bellCoeff = c; dirty = true; }
     }
     void setBrass(float amount) { brass = clampf(amount, 0.0f, 1.0f); }
-    /** How far the lips close up as the note takes hold. */
+    /** How far the lips close as the note builds. */
     void setBite(float amount) { bite = clampf(amount, 0.0f, 1.6f); }
-    /** How far open the lips sit before anything happens. */
+    /** How far open the lips are at rest. */
     void setRest(float amount) {
         const float v = clampf(amount, 0.0f, 0.9f);
         if (v != rest) { rest = v; dirty = true; }
@@ -179,81 +140,46 @@ class Bore {
     void setLoss(float amount) { loss = clampf(amount, 0.8f, 1.0f); }
 
     /**
-     * The tongue: lean on the note for its first few round trips.
+     * The tongue: push harder on the note for its first few round trips.
      *
-     * A loop whose gain is just over one grows by the same factor every round
-     * trip, and a round trip is a period - so this instrument took 47 ms to
-     * speak at 700 Hz and 758 at 44, with a loop gain of 1.2320 at both. The
-     * solve is right and the consequence is not: identical certainty, sixteen
-     * times the wait.
+     * The loop grows by the same factor every round trip, and a round trip
+     * is one period, so without this low notes take much longer to speak
+     * (about 16 times longer at 44 Hz than at 700 Hz). Like tonguing, the
+     * loop gain is lifted at the start and relaxes over a fixed time, so the
+     * onset takes about the same time at every pitch.
      *
-     * A player does not wait either. The attack of a brass note is a harder
-     * push than the note that follows it - that is what tonguing is - and it
-     * is why a tuba speaks in about a tenth of a second rather than three
-     * quarters of one. So the lip drive is lifted at the start and relaxes to
-     * what the solve asked for, over a fixed *time* rather than a fixed
-     * number of cycles, which is what makes the onset the same length at
-     * every pitch instead of proportional to the period.
+     * To grow by a factor A in T seconds at frequency f the loop needs
+     * ln(A)/(f T) per round trip, and the boost is that divided by what the
+     * loop already has. It's 1 above a few hundred hertz and climbs for
+     * longer tubes. Nothing is injected into the tube, it still starts empty.
      *
-     * How far it is lifted is arithmetic, not taste. To grow by a factor A in
-     * T seconds at frequency f the loop needs ln(A)/(f T) per round trip, so
-     * the boost is that over what the loop already has - which is 1 for
-     * anything above a few hundred hertz and climbs as the tube gets longer.
-     *
-     * This replaces filling the line with a synthetic wave, which worked and
-     * brought its own artefacts with it: whatever shape went in was not the
-     * shape the loop wanted, and the difference was audible on the front of
-     * every low note. Nothing is injected now. The tube still starts empty
-     * and still grows its own standing wave; it is only leant on while it
-     * does.
-     */
-    /**
-     * ...and not by starting the lips already tensioned, which is the
-     * obvious idea and is wrong.
-     *
-     * The valve sits at its full resting width for the first pass of a note
-     * because the follower is a *measurement* and there is nothing yet to
-     * measure. Seating it - pre-tensioning the lips the way a player does
-     * before the air arrives - looks like the fix and makes the instrument
-     * worse: every e-fold by which the injection is reduced costs 1/g of a
-     * second, and g is the growth the lift asks for, so the note simply
-     * takes longer to build and a long slow build is itself broadband
-     * against a tone that is nearly a sine. Measured on the tuba, seating
-     * the valve at 20% of its resting width moved the first-pass excess
-     * above 1.5 kHz from 3.6x to 23.1x and the speak time from 70 ms to 180.
-     * The horn improved slightly and paid 70 ms for it. Left as it is.
+     * Starting with the lips already tensioned seems like an alternative but
+     * sounds worse: the note takes longer to build and the onset gets
+     * noisier.
      */
     void tongue(float seconds = 0.13f) {
         if (!(freq > 0.0f)) return;
         constexpr float kGrowth = 6.9f; // ln(1000): silence to a sounding note
-        // Against the gain the loop settles at rather than the one it has
-        // this instant. At note-on the envelope is still at zero, so the
-        // player is barely blowing and the solve returns a loop that does not
-        // sound at all - sizing the lift against that would be sizing it
-        // against silence. 1.23 is what `tune` arrives at once the note is
-        // under way, across the whole range: the solve asks for the same
-        // certainty at every pitch and gets it.
+        // Sized against the loop gain once the note is going, not the current
+        // one. At note-on the envelope is still at zero so the loop gain
+        // would be too low. `tune` settles at 1.23 at every pitch.
         constexpr float kSettled = 1.23f;
         const float want = std::exp(kGrowth / (freq * seconds));
         onsetBoost = clampf(want / kSettled, 1.0f, 4.0f);
-        // Relaxed over the same window it was sized for, so what is left by
-        // the time the note has spoken is the loop the solve asked for. Per
-        // block, because that is how often the loop is solved.
+        // Relaxed over the same time it was sized for, per block since that's
+        // how often the loop is solved.
         onsetFall = std::exp(-64.0f / (seconds * sr));
         dirty = true;
     }
 
     /**
-     * Work out how long the line has to be for the loop to come round in
-     * exactly one period of the note.
+     * Works out the line length so the loop takes exactly one period of the
+     * note.
      *
-     * Linearise the valve about where it sits: the wave coming back moves
-     * the lips, the lips move the opening, the opening decides how much of
-     * the player and how much of the tube goes back down the line. That
-     * gives one complex number G at the note; the bell filter and the DC
-     * blocker give two more. Their phases are how far the loop is already
-     * round before the line is counted, so the line takes the rest. Called
-     * whenever anything in that sentence changes, and never per sample.
+     * The valve is linearised where it sits, giving a complex gain G at the
+     * note. The bell filter and DC blocker give two more. Their phases add
+     * up to part of the loop, and the line makes up the rest. Only runs when
+     * something changed, never per sample.
      */
     void tune() {
         if (onsetBoost > 1.001f) {
@@ -265,37 +191,27 @@ class Bore {
         dirty = false;
 
         lipHz = clampf(freq * lipTension, 20.0f, sr * 0.45f);
-        // A lip is a resonance with a *quality*, not a pole radius. Set the
-        // radius directly and a low note gets a filter a kilohertz wide,
-        // which is not a lip at all: its gain then climbs with frequency,
-        // the fourth mode of the tube wins over the first, and a tuba plays
-        // a trumpet's note. Ask for a Q and let the radius follow it.
+        // The lip resonance is set by Q, not pole radius. A fixed radius makes
+        // low notes' filter very wide, so a higher mode wins and a tuba plays
+        // the wrong note.
         const float q = 0.7f + (1.0f - lipDamp) * 12.0f;
         const float lw = 6.28318530718f * lipHz / sr;
-        // ...but not narrower than a real pair of lips, which are a
-        // centimetre of wet muscle and not a crystal. Without the floor a
-        // tuba's lip filter is four hertz wide, only the fundamental gets
-        // through it, and the biggest instrument in the band comes out a
-        // sine wave.
+        // But no narrower than 15 Hz. Otherwise a tuba's lip filter is only
+        // a few hertz wide and it comes out as a sine wave.
         float bw = lw / (2.0f * q);
         const float floorBw = 6.28318530718f * 15.0f / sr;
         if (bw < floorBw) bw = floorBw;
         const float r = clampf(1.0f - bw, 0.3f, 0.9995f);
         lipA1 = 2.0f * r * std::cos(lw);
         lipA2 = -r * r;
-        // Zeros at DC and at Nyquist: the lips must not feel the steady
-        // pressure behind them, only its wobble. Driven by the whole
-        // difference - lungs included - they simply slam open and stay
-        // there, and the instrument makes one click and dies.
+        // Zeros at DC and Nyquist so the lips only respond to changes in
+        // pressure. Otherwise the steady pressure pushes them wide open and
+        // the note dies.
         //
-        // Negative, and that sign is the difference between a clarinet and
-        // a trumpet. A reed is blown *shut*: pressure inside the tube
-        // pushes it against the mouthpiece. Lips are blown *open*: the same
-        // pressure pushes them apart, so the valve opens as the tube fills
-        // and the loop has gain instead of losing it. With the reed's sign
-        // this model cannot sing at all.
+        // Negative because lips are blown open, unlike a reed which is blown
+        // shut. With a reed's sign this model can't play.
         lipB0 = -1.0f;
-        {   // Normalise, so lipGain means what it says at the lips' own note.
+        {   // Normalise, so lipGain is the gain at the lips' own frequency.
             const float c1 = std::cos(lw), s1 = std::sin(lw);
             const float c2 = std::cos(2.0f * lw), s2 = std::sin(2.0f * lw);
             const float nr = 1.0f - c2, ni = s2;
@@ -326,41 +242,25 @@ class Bore {
         den = dr * dr + di * di + 1e-20f;
         const float lr = (nr * dr + ni * di) / den, li = (ni * dr - nr * di) / den;
 
-        // Now the embouchure. A player does not hold their lips still and
-        // hope the horn speaks; they lean on it until it does, and lean
-        // harder to play louder. So rather than setting a lip drive and
-        // measuring what the loop does with it, ask for the loop gain the
-        // note should have - just over one, and further over it the harder
-        // the player is blowing - and solve for the drive that gives it.
-        // Everything else about the horn is then free to change the *tone*
-        // without deciding whether it speaks at all, which is why this one
-        // plays a low F and a high C with the same certainty.
+        // The embouchure. Pick the loop gain the note should have (just over
+        // one, more when blowing harder) and solve for the lip drive that
+        // gives it. The other settings can then change the tone without
+        // stopping the note from sounding, at any pitch.
         const float open0 = clampf(rest, 0.0f, 1.0f);
         const float a0 = 1.0f - open0 * open0;
         const float k = 2.0f * open0 * clampf(pressure, 0.0f, 2.0f) + 1e-6f;
         const float outside = std::sqrt((br * br + bi * bi) * (lr * lr + li * li)) * reflect * loss;
-        // ...lifted, at the start of a note, by however much it takes to
-        // grow a standing wave in a fixed time rather than in a fixed number
-        // of round trips. See `tongue`. It has to go here and not on the lip
-        // drive the solve produces: the loop gain is not linear in that drive
-        // - G is a0 - k u H - so scaling u scales nothing predictable, while
-        // scaling what the solve is *asked* for is exact by construction.
-        // ...and the lift is allowed past the steady ceiling, because 1.9 is
-        // what keeps a *held* note in bounds and a tongue is not a held
-        // note. Clamped at 1.9 the lift was flattened to an effective 1.45x
-        // at every pitch below F2 - the tongue asks for 1.5x at F2 and 6.3x
-        // at the pedal, and got 1.45 for all of them - so onset time went
-        // back to being one over the frequency, which is the whole thing
-        // `tongue` exists to stop. See kLiftCeiling.
+        // At note start the target is lifted by the tongue boost (see
+        // `tongue`). The boost goes on the target, not on the solved drive,
+        // since G = a0 - k u H isn't linear in u.
+        // During the lift the ceiling is kLiftCeiling instead of 1.9, or low
+        // notes wouldn't get the boost they need.
         const float steady = 0.86f + 0.62f * pressure * lipGain;
         const float ceiling = onsetBoost > 1.001f ? kLiftCeiling : 1.9f;
         const float want = clampf(steady * onsetBoost, 0.0f, ceiling);
         const float t = want / (outside > 1e-6f ? outside : 1e-6f);
 
-        // The returning wave moves the lips, the lips move the opening,
-        // the opening decides how much of the player and how much of the
-        // tube goes back down the line: G = a0 - k H. Solve |G| = t for a
-        // lip drive u >= 0.
+        // G = a0 - k u H. Solve |G| = t for a lip drive u >= 0.
         const float hh = hr * hr + hi * hi + 1e-20f;
         const float disc = a0 * a0 * hr * hr - hh * (a0 * a0 - t * t);
         float u = 0.0f;
@@ -378,63 +278,34 @@ class Bore {
         while (phase > 3.14159265359f) phase -= twoPi;
         while (phase <= -3.14159265359f) phase += twoPi;
         const float period = sr / freq;
-        // How quickly the lips find their working tension, and it is counted
-        // in cycles of the note rather than in milliseconds.
-        //
-        // It was one symmetric pole at a fixed 34.7 ms, which is two things
-        // wrong at once. A fixed time is a different filter at each end of
-        // the range - one and a half periods at a tuba's F2 and forty-five
-        // at a piccolo trumpet's, so it rippled at the bottom and slept
-        // through the top. And symmetric, it cannot keep up with a note that
-        // is still growing: a one-pole fed an input rising at g nepers a
-        // second settles at 1/(1+g*tau) of it, and for the growth this loop
-        // is asked for that is about a third. The valve therefore spent
-        // every onset some three times further open than the note it was
-        // playing, passing raw airstream into a tube that had nothing in it
-        // yet - which is the burst of high frequency on the front of a low
-        // note, and the reason `bite` was the loudest thing in it.
-        //
-        // Fast up and slow down is also what lips do. They tighten against
-        // the pressure within a few cycles and let go over a breath.
+        // How quickly the lips find their working tension, in cycles of the
+        // note so it behaves the same at every pitch. Fast rise and slow fall,
+        // like real lips, so it keeps up with a growing note. A slow rise
+        // leaves the valve too far open at the onset and gives a burst of
+        // noise on low notes.
         lipRise = 1.0f - std::exp(-1.0f / (kRiseP * period));
         lipFall = 1.0f - std::exp(-1.0f / (kFallP * period));
         delayTarget = clampf(period + phase / w, 4.0f, static_cast<float>(line.size() - 3));
-        // A note-on has no tube to glide from, so it starts where it belongs.
+        // On a new note there's nothing to glide from, so jump straight there.
         if (delay < 4.0f) delay = delayTarget;
         onsetBoost = 1.0f + (onsetBoost - 1.0f) * onsetFall;
         loopMag = std::sqrt((gr * gr + gi * gi) * (br * br + bi * bi) * (lr * lr + li * li)) * reflect * loss;
     }
 
     /**
-     * One sample. [mouth] is the pressure behind the lips (0 is silence),
-     * [noise] the turbulence in the airstream. Returns what the bell puts
-     * into the room.
+     * One sample. [mouth] is the pressure behind the lips (0 is silence) and
+     * [noise] the breath noise. Returns what comes out of the bell.
      */
     float step(float mouth, float noise) {
         const int32_t size = static_cast<int32_t>(line.size());
-        // Steepening. A loud wave in a real tube travels *unevenly*: the
-        // crest is carried on air the crest itself has compressed, so it
-        // gains on the trough ahead of it until the front is very nearly a
-        // shock. That is why a fortissimo trombone is a different
-        // instrument from a mezzo one and not simply a louder one.
+        // Steepening. In a loud wave the crest travels faster than the
+        // trough, so the delay depends on the wave: shorter where it's loud.
+        // Bending the read this way adds harmonics without changing the loop
+        // gain, so the horn gets brighter and stays in tune. It's scaled as a
+        // fraction of the line length so it works the same at every pitch.
         //
-        // Which makes it a delay that depends on the wave, not a distortion
-        // of it: the loud parts of the tube are short and the quiet parts
-        // long. Bending the read that way puts the harmonics in without
-        // touching how much gain the loop has, so the horn brightens under
-        // pressure and still plays the note it was asked for.
-        // In fractions of the wave's own length, not in samples: the tube
-        // is the same tube whichever note is in it, and a fixed number of
-        // samples would steepen a trumpet and leave a tuba alone.
-        // The line length is solved once a block and it moves while a note is
-        // starting: the lip tension rises 6% across the attack and the lift
-        // decays under it, so `arg(G)` walks and the read pointer walks with
-        // it - about seventeen samples on a tuba's F1, delivered as a
-        // hundred discrete jumps at 750 Hz. A jump in where the tube is read
-        // is a step in the output, which is the same block-rate buzz the
-        // breath staircase was, arriving by a different road. The target is
-        // untouched; only the path to it is smoothed, so the note the solve
-        // asked for is still the note that comes out.
+        // The line length is solved once a block and moves during the attack.
+        // It's glided here so it doesn't jump each block, which would buzz.
         delay += (delayTarget - delay) * delayGlide;
         float read = delay - brass * delay * 0.06f * lastArrive;
         if (read < 4.0f) read = 4.0f;
@@ -445,28 +316,19 @@ class Bore {
         const size_t i1 = i0 == 0 ? line.size() - 1 : i0 - 1;
         const float arrive = line[i0] + (line[i1] - line[i0]) * frac;
 
-        // The bell splits the wave that reaches it: the low end turns round
-        // and goes back down the tube, the high end leaves. That split is
-        // the whole reason a trumpet is bright outside and dull inside, and
-        // it is why what you hear is the part the instrument loses.
+        // The bell reflects the lows back down the tube and lets the highs
+        // out.
         bellState += (arrive - bellState) * bellCoeff;
-        // What leaves is what the bell would not send back - though not
-        // quite all of it, or the note's own fundamental never reaches the
-        // room and the instrument is all harmonics and no pitch. A real one
-        // is close to that; a useful one is not.
+        // The output is what the bell doesn't reflect, but not all of the
+        // reflected part is removed, or the fundamental would be missing.
         radiated = arrive - 0.8f * bellState;
         const float bore = bellState * reflect;
         lastArrive = arrive;
 
-        // The pressure across the lips: the player behind them, the tube in
-        // front. This is the quantity the whole instrument is about.
-        // Air moving past a pair of lips is turbulence, and turbulence is
-        // not flat to Nyquist - it is broadband with the top falling away.
-        // The hiss arrived here white, and at the start of a note the valve
-        // is at its resting width and puts an eighth of it straight into a
-        // tube that has nothing in it yet, so the first thing out of the
-        // bell was full-band noise lifted thirteen decibels by the bell's
-        // own tilt. Half of what was left on the horn was this.
+        // The pressure across the lips: the player behind, the tube in front.
+        // Breath noise is lowpassed first since real turbulence rolls off at
+        // the top. White noise would come out of the bell as a harsh hiss at
+        // the start of each note.
         noiseLp += (noise - noiseLp) * kAirPole;
         const float breath = mouth + noiseLp;
         const float delta = breath - bore;
@@ -477,20 +339,14 @@ class Bore {
         lipY2 = lipY1;
         lipY1 = lip;
 
-        // How far the valve is open, squared because a gap closes in two
-        // directions at once. Open, the tube gets the player; shut, it gets
-        // its own reflection back, and the crossfade between those two is
-        // the entire instrument.
-        // As the note establishes, the lips settle *closed* and only crack
-        // open on the pressure peaks - which is what makes a brass
-        // instrument bright when it is loud and round when it is not. So
-        // the rest point walks down with how hard the lips are working: at
-        // a whisper the valve is a sine, leaned on it is a narrow pulse,
-        // and the harmonics arrive with the effort rather than with a knob.
-        // Two thirds of the swing, because the rest point was voiced against
-        // the *mean* of the drive and a follower that rises faster than it
-        // falls settles at the peak instead. Without the 2/pi every patch in
-        // the bank would quietly get half again as much bite as it asks for.
+        // How far the valve is open, squared since the gap closes from both
+        // sides. Open, the tube gets the player's breath. Shut, it gets its
+        // own reflection back.
+        // As the note builds, the lips settle closed and only open on the
+        // pressure peaks, so the valve goes from a sine when quiet to a
+        // narrow pulse when loud. The follower is scaled by 2/pi because the
+        // rest point was voiced against the mean of the drive, and a
+        // fast-rise follower settles at the peak.
         const float working = std::fabs(lip) * 0.63661977f;
         lipEnv += (working - lipEnv) * (working > lipEnv ? lipRise : lipFall);
         float open = rest - bite * lipEnv + lip;
@@ -501,7 +357,7 @@ class Bore {
 
         in = dsp::fastTanh(in);
 
-        // A DC blocker, or the loop fills with the player's own lungs.
+        // A DC blocker, or the loop fills up with the steady breath pressure.
         const float hp = in - dcIn + kDcPole * dcOut;
         dcIn = in;
         dcOut = hp;
@@ -513,7 +369,7 @@ class Bore {
 
     float lastRadiated() const { return radiated; }
     float lastInside() const { return lastArrive; }
-    /** |loop| at the note: over one and it sings, under and it dies. */
+    /** |loop| at the note: over one and it sounds, under and it dies. */
     float loopGain() const { return loopMag; }
     float lineDelay() const { return delay; }
 
@@ -521,7 +377,7 @@ class Bore {
     std::vector<float> line;
     int32_t write = 0;
     float sr = 48000.0f, freq = 220.0f, delay = 434.0f, delayTarget = 434.0f;
-    /** How fast the read chases the length the solve asked for. See step(). */
+    /** How fast the read follows the solved length. See step(). */
     float delayGlide = 1.0f;
     float lipHz = 220.0f, lipGain = 1.0f, lipTension = 1.0f, lipDamp = 0.4f, pressure = 0.5f;
     bool dirty = true;
@@ -530,10 +386,10 @@ class Bore {
     float lipX1 = 0.0f, lipX2 = 0.0f, lipY1 = 0.0f, lipY2 = 0.0f;
     float reflect = 0.9f, bellCoeff = 0.3f, bellState = 0.0f;
     float brass = 0.3f, loss = 0.995f, rest = 0.35f, bite = 0.0f, lipEnv = 0.0f;
-    /** How hard the lips are working, and how fast they find out. See tune(). */
+    /** Rise and fall rates of the lip follower. See tune(). */
     float lipRise = 0.0006f, lipFall = 0.0006f;
     float dcIn = 0.0f, dcOut = 0.0f, radiated = 0.0f, loopMag = 0.0f, lastArrive = 0.0f;
-    /** The airstream, tilted. See kAirPole. */
+    /** The lowpassed breath noise. See kAirPole. */
     float noiseLp = 0.0f;
 };
 

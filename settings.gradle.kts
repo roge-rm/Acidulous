@@ -15,14 +15,14 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 dependencyResolutionManagement {
-    // Settings' repositories win over a project's: the Kotlin/Wasm plugin adds
+    // Settings' repositories win over a project's. The Kotlin/Wasm plugin adds
     // its own for Node, Yarn and Binaryen, which are declared below instead.
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
-        // The browser build's tools (web/app): Node.js, Yarn and Binaryen, fetched
-        // by the Kotlin/Wasm plugin from their own release pages.
+        // Tools for the browser build (web/app): Node.js, Yarn and Binaryen,
+        // fetched by the Kotlin/Wasm plugin from their release pages.
         ivy("https://nodejs.org/dist") {
             patternLayout { artifact("v[revision]/[artifact](-v[revision]-[classifier]).[ext]") }
             metadataSources { artifact() }
@@ -45,7 +45,7 @@ rootProject.name = "Acidulous"
 include(":app")
 include(":shared")
 include(":desktop")
-// The browser build's app: web/app, beside the engine's WebAssembly build in web/engine.
+// The browser app: web/app, next to the engine's WebAssembly build in web/engine.
 include(":webApp")
 project(":webApp").projectDir = file("web/app")
  

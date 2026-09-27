@@ -3,20 +3,13 @@
 #include <cmath>
 #include <cstring>
 
-// The mirror of AiffWriter, and the same three oddities read backwards.
+// The counterpart of AiffWriter. AIFF is big-endian, its chunks are inside a
+// FORM, and its sample rate is an 80-bit IEEE extended float.
 //
-// AIFF is big-endian throughout, its chunks live inside a FORM rather than a
-// RIFF, and its sample rate is an 80-bit IEEE extended float - the only
-// genuinely strange corner of the format, and the only one with arithmetic
-// in it.
-//
-// AIFF-C is the same file with a FORM type of AIFC and a compression type in
-// COMM. Almost all of those types are actual compression and we decline them;
-// three are not. `NONE` is plain big-endian PCM. `fl32` (and `FL32`) is what
-// our own writer produces for 32-bit float. And `sowt` is PCM with the bytes
-// the *other* way round, which is what macOS writes by default and is
-// therefore the one a player is most likely to arrive with - declining it
-// would mean declining most real AIFFs.
+// AIFF-C adds a compression type in COMM. We only read the uncompressed ones:
+// `NONE` is big-endian PCM, `fl32` (or `FL32`) is 32-bit float as our writer
+// makes it, and `sowt` is little-endian PCM. macOS writes `sowt` by default,
+// so it's the most common.
 namespace acidulous {
 
 namespace {
@@ -26,13 +19,11 @@ uint32_t be32(const unsigned char *p) {
 }
 
 /**
- * The sample rate, from 80 bits of IEEE extended float.
+ * Reads the sample rate from an 80-bit IEEE extended float.
  *
- * Sign, fifteen bits of exponent biased by 16383, then sixty-four bits of
- * mantissa with its leading one written out rather than implied. `ldexp`
- * puts it back: the mantissa read as an integer is the fraction scaled by
- * 2^63, so the exponent it wants is the biased one less the bias and less
- * that scaling.
+ * Sign, 15 bits of exponent biased by 16383, then a 64-bit mantissa with its
+ * leading one written out. The mantissa read as an integer is the fraction
+ * scaled by 2^63, so ldexp takes the exponent minus the bias minus 63.
  */
 double extended(const unsigned char *p) {
     const uint32_t biased = be16(p) & 0x7FFFu;
@@ -78,8 +69,8 @@ std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t ta
             rate = extended(body + 8);
             if (aifc && len >= 22) std::memcpy(compression, body + 18, 4);
         } else if (std::memcmp(id, "SSND", 4) == 0 && len >= 8) {
-            // Eight bytes of offset and block size come before the samples,
-            // and the offset is almost always zero but is not promised to be.
+            // Eight bytes of offset and block size come before the samples.
+            // The offset is almost always zero but not always.
             const uint32_t offset = be32(body);
             if (8u + offset <= len) {
                 data = body + 8 + offset;
@@ -130,8 +121,7 @@ std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t ta
                 const uint32_t w = be32(p);
                 std::memcpy(&v, &w, 4);
             } else if (bits == 8) {
-                // AIFF's 8-bit is signed, where WAV's is not. The one place
-                // the two formats disagree about what a number means.
+                // AIFF's 8-bit is signed, unlike WAV's.
                 v = static_cast<float>(static_cast<int8_t>(p[0])) / 128.0f;
             } else if (bits == 16) {
                 v = static_cast<int16_t>(be16(p)) / 32768.0f;

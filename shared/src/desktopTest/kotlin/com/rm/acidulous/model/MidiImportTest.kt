@@ -8,7 +8,7 @@ import java.io.File
 
 class MidiImportTest {
 
-    // --- a small file writer, so the tests can say exactly what is in a file ---
+    // --- a small file writer, so each test controls exactly what's in a file ---
 
     private fun varLen(v: Int): ByteArray {
         var buffer = v and 0x7f
@@ -76,7 +76,7 @@ class MidiImportTest {
             0 to b(0x90, 60, 100),
             0 to b(62, 90),                          // running status: another note-on
             0 to b(0x99, 36, 120),                   // drums, channel 10
-            PPQN to b(0x90, 60, 0),                  // velocity nought is a note-off
+            PPQN to b(0x90, 60, 0),                  // velocity 0 is a note-off
             0 to b(62, 0),
             0 to b(0x89, 36, 0),
         ))
@@ -137,7 +137,7 @@ class MidiImportTest {
             // What another program sees: General MIDI's kick, closed hat, snare.
             assertEquals(setOf(36, 42, 38), drums.notes.map { it.pitch }.toSet())
             assertEquals(0, parts.first { it.name == "Bass" }.channel)
-            // And what comes back in on the same machine is what went out.
+            // Importing it again on the same machine gives back what went out.
             assertEquals(beat.sortedWith(compareBy({ it.tick }, { it.pitch })), MidiImport.notesFor(drums, "Hexbeat"))
         } finally {
             tmp.delete()
@@ -160,8 +160,7 @@ class MidiImportTest {
     fun aLoopRepeatedComesInAsOneSceneRepeated() {
         val parsed = MidiFile.Parsed(100f, null, listOf(loop(32)))
         val song = MidiImport.build("loop", parsed, listOf("Trinity"), 8)
-        // The part is eight notes long in pitch, two bars in time, so every
-        // eight-bar cut is the same as the last.
+        // The part repeats every two bars, so every eight-bar cut is the same.
         assertEquals(1, song.scenes.size)
         assertEquals(4, song.scenes.single().repeat)
         assertEquals(8, song.tracks.single().clips.values.single().bars)

@@ -18,12 +18,11 @@ void put32(FILE *f, uint32_t v) {
 }
 
 /**
- * The sample rate, as an 80-bit IEEE extended float.
+ * Writes the sample rate as an 80-bit IEEE extended float.
  *
- * Sign, then fifteen bits of exponent biased by 16383, then sixty-four bits
- * of mantissa *with* its leading one written out - unlike every other IEEE
- * float, where the leading one is implied. frexp gives a fraction in
- * [0.5, 1), whose leading one sits at 2^-1, so the bias is one less.
+ * Sign, 15 bits of exponent biased by 16383, then a 64-bit mantissa with its
+ * leading one written out (other IEEE floats leave it implied). frexp gives a
+ * fraction in [0.5, 1), so the bias used is one less.
  */
 void putExtended(FILE *f, double v) {
     uint8_t b[10] = {};
@@ -59,8 +58,8 @@ bool AiffWriter::open(const std::string &path, int32_t sampleRate, int32_t bits,
 
 void AiffWriter::writeHeader() {
     const auto dataBytes = static_cast<uint32_t>(frames * kChannels * bytesPerSample);
-    // COMM is 18 bytes of PCM, or 18 plus a four-character type and a
-    // Pascal string naming it when the samples are floats.
+    // COMM is 18 bytes for PCM. For floats it adds a four-character type and
+    // a Pascal string naming it.
     const uint32_t commBytes = floatFormat ? 18 + 4 + 6 : 18;
     const uint32_t fverBytes = floatFormat ? 8 + 4 : 0; // header + one long
     const uint32_t formBytes = 4 + fverBytes + (8 + commBytes) + (8 + 8 + dataBytes);
@@ -73,7 +72,7 @@ void AiffWriter::writeHeader() {
     if (floatFormat) {
         std::fwrite("FVER", 1, 4, file);
         put32(file, 4);
-        put32(file, 0xA2805140u); // the one and only AIFF-C version stamp
+        put32(file, 0xA2805140u); // the only AIFF-C version stamp
     }
 
     std::fwrite("COMM", 1, 4, file);
@@ -107,7 +106,7 @@ void AiffWriter::write(const float *interleaved, int32_t framesIn) {
         for (int32_t i = 0; i < n * kChannels; ++i) {
             float v = interleaved[(done * kChannels) + i];
             if (floatFormat) {
-                // Big-endian, so the bytes go out in the other order.
+                // Big-endian byte order.
                 uint32_t bits = 0;
                 std::memcpy(&bits, &v, 4);
                 buf[i * 4] = static_cast<uint8_t>(bits >> 24);
@@ -137,8 +136,8 @@ bool AiffWriter::close() {
     if (file == nullptr) {
         return true;
     }
-    // An odd number of data bytes needs a pad byte to keep the next chunk
-    // aligned. There is no next chunk, but a reader is entitled to expect it.
+    // An odd number of data bytes needs a pad byte. There's no chunk after
+    // it, but readers may expect the padding anyway.
     if ((frames * kChannels * bytesPerSample) % 2 != 0) {
         const uint8_t pad = 0;
         std::fwrite(&pad, 1, 1, file);

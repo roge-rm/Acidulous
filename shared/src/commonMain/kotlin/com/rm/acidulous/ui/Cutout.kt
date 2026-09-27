@@ -27,29 +27,25 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Laying the top row out around the camera.
+ * Lays the top row out around the camera hole.
  *
- * A phone with a hole punched in its screen reports a safe inset for the
- * whole top edge, and the easy thing is to start the app below it. That
- * throws away a strip the width of the screen to dodge something the size of
- * a fingertip - on this project's emulator, 136 pixels of height to avoid a
- * 136 pixel box in one corner. The row that lives up there is a handful of
- * buttons and one label, which is exactly the kind of content that can step
- * around a hole instead.
+ * A phone with a camera hole reports a safe inset for the whole top edge,
+ * and starting the app below it wastes a full-width strip to avoid something
+ * the size of a fingertip. The top row is a few buttons and a label, which
+ * can easily step around a hole.
  *
- * So the row is told where the hole is and flows around it. A hole at the
- * left pushes everything right; a hole at the right pulls the trailing
- * controls in; a hole in the middle splits the row in two, and the elastic
- * child gives up the width. When what is left is too narrow to use, the row
- * sits below the hole, which is where it would have been anyway.
+ * So the row is told where the hole is and flows around it. A hole on the
+ * left pushes everything right, a hole on the right pulls the trailing
+ * controls in, and a hole in the middle splits the row in two with the
+ * flexible child giving up the width. If what's left is too narrow, the row
+ * goes below the hole.
  */
 
 /**
- * What the app gives up around its content: the sides, for a cutout in
- * landscape or a curved edge, and the bottom, for the gesture handle. Never
- * the top - that strip is the headers' to lay out in, and [CutoutRow]
- * measures against this to know where its own left edge is, so the two must
- * be the same expression.
+ * The insets the app keeps clear: the sides, for a cutout in landscape or a
+ * curved edge, and the bottom, for the gesture handle. Never the top, which
+ * the headers lay out around themselves. [CutoutRow] uses this to find its
+ * own left edge, so the two must stay the same expression.
  */
 val AppContentInsets: WindowInsets
     @Composable get() = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
@@ -58,9 +54,9 @@ val AppContentInsets: WindowInsets
 @LayoutScopeMarker
 interface CutoutRowScope {
     /**
-     * Marks the one child that gives up its width to the hole - the row's
-     * label. This is [androidx.compose.foundation.layout.RowScope.weight]'s
-     * job here: everything else keeps the width it asks for.
+     * Marks the one child that gives up its width to the hole, i.e. the row's
+     * label. Like [androidx.compose.foundation.layout.RowScope.weight] here:
+     * everything else keeps the width it asks for.
      */
     fun Modifier.flexible(): Modifier
 }
@@ -80,38 +76,35 @@ private data class Segment(val start: Int, val end: Int) {
     val width get() = end - start
 }
 
-/** Where everything goes: which segment leads, how many trailing children follow it there. */
+/** Where everything goes: which segment leads, and how many trailing children follow it there. */
 private data class RowPlan(val segment: Int, val spill: Int, val flexWidth: Int, val below: Boolean)
+
+/**
+ * How tall a header control can be without costing any space.
+ *
+ * A row next to the camera hole is already as tall as the hole (see `rowH`
+ * below), so shorter controls would leave a gap under them. The row
+ * publishes its band height and header controls fill it, so on a cutout
+ * phone they get bigger for free and elsewhere they use [MIN_BAND].
+ */
+val LocalHeaderBand = androidx.compose.runtime.compositionLocalOf { 44.dp }
+
+/** The minimum band height, cutout or not. Material asks for 48, and glyph
+ *  buttons only 30 wide are easy to miss. */
+private val MIN_BAND = 44.dp
 
 /**
  * A row for the top edge of the screen that steps around the camera hole.
  *
- * Place it full bleed and as the first child of the screen, at window y = 0 -
- * it applies [contentPadding] itself, because it has to compare the hole's
- * position against its children in one coordinate space, and it grows to the
- * height of the hole so that whatever follows clears the glass.
+ * Place it full width as the first child of the screen, at window y = 0. It
+ * applies [contentPadding] itself because it has to compare the hole's
+ * position with its children in one coordinate space, and it grows to the
+ * height of the hole so whatever follows clears it.
  *
- * At most one child may call [CutoutRowScope.flexible]; it takes whatever is
- * left in its run. If that falls below [minFlexible] the row gives up the
- * strip and lays out below the hole instead.
+ * At most one child may use [CutoutRowScope.flexible], and it takes whatever
+ * is left in its run. If that's less than [minFlexible], the row lays out
+ * below the hole instead.
  */
-/**
- * How tall a header control may be without costing the screen anything.
- *
- * A row standing beside the camera hole is already as tall as the hole -
- * that is the rule in `rowH` below, because whatever follows would
- * otherwise run underneath it. Anything shorter than that leaves dead space
- * under the buttons, which is exactly the gap you can see on a phone with a
- * tall cutout. So the row publishes the height of its own band and the
- * header controls fill it: on a cutout phone they get bigger for nothing,
- * and everywhere else they take the floor below.
- */
-val LocalHeaderBand = androidx.compose.runtime.compositionLocalOf { 44.dp }
-
-/** No smaller than this, cutout or not; Material asks for 48 and a glyph
- *  button that is only 30 wide is the one people miss. */
-private val MIN_BAND = 44.dp
-
 @Composable
 fun CutoutRow(
     modifier: Modifier = Modifier,
@@ -147,8 +140,8 @@ fun CutoutRow(
         val minFlexPx = minFlexible.roundToPx()
         val clearance = CLEARANCE.roundToPx()
 
-        // The row is a screen-width header; an unbounded width would mean it
-        // has been put somewhere it cannot do its job.
+        // The row is a screen-width header. An unbounded width means it's
+        // been put somewhere it can't work.
         val width = if (constraints.hasBoundedWidth) constraints.maxWidth else constraints.minWidth
         val bandStart = padStart
         val bandEnd = max(bandStart, width - padEnd)
@@ -158,7 +151,7 @@ fun CutoutRow(
         val fixed = arrayOfNulls<Placeable>(measurables.size)
         measurables.forEachIndexed { i, m -> if (i != flexIndex) fixed[i] = m.measure(child) }
 
-        // A collapsed menu anchor measures zero and must not earn a gap.
+        // A collapsed menu anchor measures zero and shouldn't get a gap.
         val leadIdx = (0 until (if (flexIndex >= 0) flexIndex else measurables.size))
             .filter { (fixed[it]?.width ?: 0) > 0 }
         val trailIdx = (if (flexIndex >= 0) flexIndex + 1 until measurables.size else IntRange.EMPTY)
@@ -179,9 +172,9 @@ fun CutoutRow(
             ).filter { it.width > 0 }
         }
 
-        // Try each run in turn, and within it try handing the trailing
-        // controls over one at a time: with a hole in the middle, the ones
-        // that still fit stay beside the label and the rest go past it.
+        // Try each run in turn, and within it move the trailing controls
+        // over one at a time. With a hole in the middle, the ones that fit
+        // stay next to the label and the rest go past the hole.
         var plan: RowPlan? = null
         outer@ for (s in segments.indices) {
             if (leadW > segments[s].width) continue
@@ -209,7 +202,7 @@ fun CutoutRow(
             Constraints(minWidth = final.flexWidth, maxWidth = final.flexWidth, maxHeight = constraints.maxHeight),
         )
         val contentH = max(fixed.maxOfOrNull { it?.height ?: 0 } ?: 0, flexPlaceable?.height ?: 0)
-        // Standing beside the hole only works if the row is as tall as it,
+        // Sitting next to the hole only works if the row is as tall as it,
         // or whatever follows would run underneath.
         val bandTop = if (final.below) holeHeight + clearance else 0
         val rowH = (
@@ -218,8 +211,8 @@ fun CutoutRow(
             ).coerceIn(constraints.minHeight, constraints.maxHeight)
 
         layout(width, rowH) {
-            // Anchored to the top of its band rather than centred in the
-            // inflated height: a taller hole must not push the header down.
+            // Aligned to the top of its band rather than centred in the
+            // taller height, so a taller hole doesn't push the header down.
             fun y(h: Int) = bandTop + padTop + max(0, (contentH - h) / 2)
             fun put(p: Placeable, x: Int) =
                 p.place(if (direction == LayoutDirection.Rtl) width - x - p.width else x, y(p.height))
@@ -240,8 +233,8 @@ fun CutoutRow(
                 put(fixed[i]!!, x)
                 x += fixed[i]!!.width + gap
             }
-            // Whatever is left hangs off the end of the last run, which is
-            // what puts it on the far side of a hole in the middle.
+            // Whatever's left goes at the end of the last run, which puts it
+            // on the far side of a hole in the middle.
             val tail = trailIdx.drop(final.spill)
             x = segs.last().end - packed(tail)
             for (i in tail) {
@@ -257,5 +250,5 @@ fun CutoutRow(
     }
 }
 
-/** A hair of air between a control and the camera glass. */
+/** A small gap between a control and the camera hole. */
 private val CLEARANCE = 2.dp

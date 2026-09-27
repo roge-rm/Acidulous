@@ -4,21 +4,18 @@
 #include <string>
 #include <vector>
 
-// An interface's own low-latency driver on Windows, through Steinberg's ASIO
-// SDK (third_party/asiosdk, taken under the GPL v3). Windows only; the
-// desktop AudioDriver plays through one of these instead of miniaudio when
-// one is chosen as the output.
+// ASIO drivers on Windows, through Steinberg's ASIO SDK (third_party/asiosdk,
+// used under the GPL v3). When one is chosen as the output, the desktop
+// AudioDriver plays through it instead of miniaudio.
 //
-// **One driver at a time, on one thread of its own.** A driver is a COM
-// object and expects to be loaded, started, stopped and let go of on the one
-// apartment-threaded thread, which keeps a message loop running for it - so
-// every call here is handed to that thread and waited for. The driver calls
-// back on its own audio thread, and the SDK's callbacks carry no context, so
-// the open stream is a single one here.
+// Only one driver is open at a time. Drivers are COM objects and need to be
+// loaded, started and stopped on the same thread, with a message loop, so
+// every call here runs on that thread and waits for it. The driver calls back
+// on its own audio thread and the SDK's callbacks carry no context, so there's
+// only one open stream.
 //
-// The app never names the technology to the person using it (Steinberg's
-// trademark rules follow from naming it): a driver is listed under the name
-// its maker registered, as the output list's other devices are.
+// The app never shows the word ASIO (Steinberg's trademark rules). Drivers are
+// listed by the name their maker registered, like any other output.
 namespace acidulous::asio {
 
 /** The drivers installed, by the names their makers registered. */
@@ -40,10 +37,10 @@ struct Stream {
 using Process = std::function<void(const float *in, float *out, int32_t frames)>;
 
 /**
- * Open [name] at [sampleRate], its buffer sized by [bursts] (1 the smallest the
- * driver offers, 2 its preferred, more than that a larger one), and start it.
- * [onReset] is called on a thread of its own when the driver asks to be
- * opened again - its buffer size or sample rate changed in its own panel.
+ * Open [name] at [sampleRate] and start it. [bursts] sets the buffer: 1 is the
+ * driver's smallest, 2 its preferred, more is larger. [onReset] runs on its
+ * own thread when the driver asks to be reopened, e.g. after its buffer size
+ * or sample rate was changed in its own panel.
  */
 bool open(const std::string &name, int32_t sampleRate, int32_t bursts, Process process, std::function<void()> onReset, Stream &stream);
 void close();

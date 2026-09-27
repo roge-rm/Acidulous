@@ -5,22 +5,14 @@
 #include <engine/dsp/Filter.h>
 #include <engine/machine/Machine.h>
 
-// Genesis - the big box.
+// Genesis is the big analogue style drum machine (Hexbeat is the small one).
+// A long pitch-swept kick, a snare made of two tones and noise, six detuned
+// squares through a high pass for the metal voices, and a clap made of four
+// bursts and a room.
 //
-// Hexbeat is the small one: dry, short, and it was built to be. Genesis is
-// the pair of machines that came after it and never left - the long
-// pitch-swept kick you feel before you hear, a snare that is two tones and a
-// cloud of noise, six detuned squares through a high-pass for everything
-// metal, and a clap that is four bursts and a room.
-//
-// Two things make it more than a second drum synthesizer:
-//
-//   - **Drift.** No two hits are identical. Tune, decay and level each move
-//     a little on every trigger, the way a circuit does, so a four-bar loop
-//     stops sounding like one bar copied four times.
-//   - **A bus compressor with the kick wired to its side chain.** The pump
-//     is not an effect on these records, it is the sound of the record, and
-//     it belongs in the machine rather than three menus away.
+//   - Drift moves tune, decay and level a little on every hit, so repeated
+//     hits don't sound identical.
+//   - A bus compressor has the kick on its side chain for pumping.
 namespace acidulous::machine {
 
 class Genesis final : public Machine {
@@ -63,16 +55,8 @@ class Genesis final : public Machine {
         float level = 0.0f, coeff = 0.01f;
         bool active = false;
         /**
-         * [seconds] is how long the sound *lasts* - the time to fall 60 dB -
-         * and not one time constant.
-         *
-         * It used to be one time constant, which is 60 dB in 6.9 of them, so
-         * every decay in this machine ran nearly seven times longer than the
-         * number beside it said. A crash set to 2.2 seconds was still only
-         * 20 dB down after 4.8 and took 14.8 to finish: Dan heard it as "a
-         * metallic constant noise... the only sound for the last 15 seconds
-         * of each sample", which is exactly what it was. A control in seconds
-         * has to mean seconds - the number is the promise.
+         * [seconds] is the time to fall 60 dB, so a decay knob in seconds
+         * means what it says.
          */
         void fire(float sr, float seconds, float amp = 1.0f) {
             level = amp;
@@ -82,14 +66,10 @@ class Genesis final : public Machine {
         }
 
         /**
-         * The same curve read the old way: [seconds] is one time constant.
-         *
-         * For the envelopes that are a *shape* rather than a length - the
-         * kick's pitch sweep, the tom's bend, the click - where the number
-         * was never a duration anybody reads off a panel and was tuned by ear
-         * as a curve. Changing those to mean 60 dB made them seven times
-         * faster and quietly rewrote how the kick speaks, which is not what
-         * was wrong.
+         * The same curve with [seconds] as one time constant. Used for the
+         * envelopes that shape a sound (the kick's pitch sweep, the tom bend,
+         * the click), which were tuned by ear this way. Switching them to
+         * [fire] would make them about seven times faster.
          */
         void fireTau(float sr, float seconds, float amp = 1.0f) {
             level = amp;
@@ -117,7 +97,7 @@ class Genesis final : public Machine {
         rng ^= rng << 5;
         return static_cast<float>(rng) * (2.0f / 4294967296.0f) - 1.0f;
     }
-    /** A hit is never quite the last one: this is how much off it is. */
+    /** A random factor around 1 for drift, +/- [amount]. */
     float wobble(float amount) { return 1.0f + noise() * amount; }
     float metallic(float tune);
     void trigger(int32_t voice, float velocity);
@@ -136,7 +116,7 @@ class Genesis final : public Machine {
     float clapPhase = 0.0f;
     int32_t clapLeft = 0;
 
-    // The bus compressor, and what the kick is telling it to do.
+    // Bus compressor and kick ducking envelopes.
     float compEnv = 0.0f, duckEnv = 0.0f;
 };
 

@@ -3,28 +3,22 @@
 #include <engine/core/Sample.h>
 #include <string>
 
-// What a recording needs doing to it before it is usable.
+// Offline edits to a recording: crop, fade, level, filter and so on.
 //
-// **Not a machine, and not on the audio thread.** Everything here works on a
-// decoded file: it is read with WavReader, changed here, written with
-// WavWriter, and the result is a sample like any other. That is what lets a
-// take be cropped and levelled once rather than by every machine that plays
-// it, and it is why these are plain functions over a `SampleData` rather than
-// anything that knows about racks - the harness in tools/ drives them on the
-// desk with no engine at all.
+// Not on the audio thread. A file is read with WavReader, changed here and
+// written with WavWriter. These are plain functions over `SampleData` so the
+// harness in tools/ can test them without an engine.
 //
-// The order the operations run in is fixed and is not the order they are
-// listed: crop first because everything after it is cheaper on less audio,
-// then reverse, then the filters, then the compressor, then level, and the
-// fades last so that whatever the level did the ends still reach nought.
+// The operations always run in this order: crop first so the rest has less
+// audio to work on, then reverse, filters, compressor and level, and the
+// fades last so the ends still reach zero.
 namespace acidulous::audio {
 
 /**
- * One edit, as a screen would describe it.
+ * One edit, as the screen describes it.
  *
- * Every field is inert at its default, so an empty `SampleOps` is a copy.
- * That matters more than it looks: it is what lets the screen hand the whole
- * struct over every time rather than working out which parts changed.
+ * Every field does nothing at its default, so an empty `SampleOps` is a copy.
+ * That lets the screen pass the whole struct every time.
  */
 struct SampleOps {
     /** Keep [from] until [to], in frames. `to <= from` means to the end. */
@@ -34,34 +28,31 @@ struct SampleOps {
     float fadeOutMs = 0.0f;
     /** Level, in decibels, applied before the peak is normalised. */
     float gainDb = 0.0f;
-    /** Bring the loudest sample to this, 0..1. Nought leaves the level alone. */
+    /** Brings the loudest sample to this, 0..1. 0 leaves the level alone. */
     float normaliseTo = 0.0f;
     bool reverse = false;
-    /** A high pass, for the room under a voice. Nought is off. */
+    /** High pass, e.g. for room rumble under a voice. 0 is off. */
     float lowCutHz = 0.0f;
-    /** The tone filter: nought is off; the type is a dsp::MultiFilter::Type. */
+    /** The tone filter. 0 is off. The type is a dsp::MultiFilter::Type. */
     float cutoffHz = 0.0f;
     float resonance = 0.0f;
     int32_t filterType = 0;
     /**
-     * How hard the compressor squeezes, 0..1, and how fast.
-     *
-     * One knob rather than a threshold and a ratio, because the two move
-     * together in every use this has: nought is off, and at one the threshold
-     * is 24 dB down and the ratio is eight to one, with the makeup that keeps
-     * the peak where it was.
+     * Compressor amount, 0..1, plus attack and release. One knob sets both
+     * threshold and ratio: 0 is off, and 1 is -24 dB at 8:1, with makeup gain
+     * that keeps the peak where it was.
      */
     float squash = 0.0f;
     float squashAttackMs = 10.0f;
     float squashReleaseMs = 120.0f;
 };
 
-/** Apply the lot, in the fixed order. False with [error] set if it cannot. */
+/** Applies everything in the fixed order. Returns false with [error] set on failure. */
 bool applyEdit(SampleData &data, const SampleOps &ops, std::string &error);
 
-// --- and each on its own, which is how they are tested -----------------------
+// --- each step on its own, for testing ---------------------------------------
 
-/** Keep [from] until [to]. Clamped; a range that inverts is left alone. */
+/** Keeps [from] until [to]. Clamped. An inverted range is left alone. */
 void cropTo(SampleData &data, int32_t from, int32_t to);
 /** Linear fades over this many frames at each end. */
 void fadeEnds(SampleData &data, int32_t inFrames, int32_t outFrames);

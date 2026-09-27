@@ -8,14 +8,14 @@ import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 
-// The small platform questions, as a browser answers them: mostly as the
-// desktop does, for it is a desktop's window more often than not.
+// Small platform details for the browser. Mostly the same as the desktop,
+// since it's usually running on one.
 
-/** A page has no camera in it. */
+/** A page has no camera cutout. */
 @Composable
 actual fun rememberTopCutout(): TopCutout? = null
 
-/** A screen reader reads a canvas as nothing, so the layout is the sighted one. */
+/** Screen readers can't read a canvas, so this is always false. */
 @Composable
 actual fun rememberTalkBack(): Boolean = false
 
@@ -23,9 +23,9 @@ actual fun rememberTalkBack(): Boolean = false
 private fun micGranted(): Boolean = js("!!(globalThis.acidMicGranted || (globalThis.acidInput && globalThis.acidInput.stream && globalThis.acidInput.stream.active))")
 
 /**
- * The browser's microphone prompt, answered into the stream the audio driver
- * connects (globalThis.acidInput, platform/web/drivers/AudioDriver.cpp) - so
- * the input the app opens next is the one just granted, with nothing asked twice.
+ * Shows the browser's microphone prompt and stores the stream where the audio
+ * driver picks it up (globalThis.acidInput, platform/web/drivers/AudioDriver.cpp),
+ * so the next input the app opens uses it without asking again.
  */
 private fun askMic(done: (Boolean) -> Unit): Unit = js(
     """(() => {
@@ -54,13 +54,13 @@ private fun watchMicPermission(): Unit = js(
 )
 
 /**
- * Whether the microphone was granted on an earlier visit, so the recorder
- * opens on its meter rather than on a button asking. The browser answers
- * later, so this is asked at start-up, before any window wants it.
+ * Checks whether the microphone was granted on an earlier visit, so the
+ * recorder can open straight to its meter. The browser answers
+ * asynchronously, so this runs at start-up before any window needs it.
  */
 fun watchMicrophonePermission() = watchMicPermission()
 
-/** The microphone is the browser's to grant; everything else a phone asks for, a page already has. */
+/** Only the microphone needs asking for in a browser. Everything else a phone asks for, a page already has. */
 @Composable
 actual fun rememberPermissions(onResult: (Boolean) -> Unit): Permissions {
     val result = rememberUpdatedState(onResult)
@@ -74,15 +74,15 @@ actual fun rememberPermissions(onResult: (Boolean) -> Unit): Permissions {
     }
 }
 
-/** The page's height in the outer dp: see the desktop's. */
+/** The page's height in the outer dp (see the desktop version). */
 @Composable
 internal actual fun windowHeightDp(): Float =
     with(LocalBaseDensity.current ?: LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp().value }
 
 /**
- * A window is drawn in the page's one canvas, so its keys pass through the
- * page's handlers - [previewKey] and [fallbackKey] - and what is left is to
- * say that one is open: while it is, Esc is the window's. As the desktop.
+ * Windows are drawn in the page's one canvas, so their keys already go
+ * through [previewKey] and [fallbackKey]. This only counts open windows so
+ * Esc goes to the window while one is open, as on the desktop.
  */
 @Composable
 internal actual fun WindowKeys() {
@@ -95,7 +95,7 @@ internal actual fun WindowKeys() {
 private var openWindows = 0
 private val KeyPress.esc get() = keyCode == KeyCodes.KEYCODE_ESCAPE
 
-/** The page's preview of a key: the hub first. */
+/** The page's key preview, which goes to the hub first. */
 fun previewKey(event: KeyEvent): Boolean {
     val press = event.press
     if (openWindows > 0 && press.esc) {
@@ -105,7 +105,7 @@ fun previewKey(event: KeyEvent): Boolean {
     return KeyHub.preview(press)
 }
 
-/** What the focused control left, back to the hub. */
+/** Keys the focused control didn't use go back to the hub. */
 fun fallbackKey(event: KeyEvent): Boolean {
     val press = event.press
     if (openWindows > 0 && press.esc) return false

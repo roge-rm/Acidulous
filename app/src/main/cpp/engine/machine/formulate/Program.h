@@ -5,14 +5,9 @@
 #include <vector>
 #include <engine/machine/formulate/Expr.h>
 
-// What Formulate is told to be: one expression and three step tables.
-//
-// Chip music's expression came from tables clocked at the video frame rate -
-// arpeggios, duty sweeps, volume shapes - and from whatever the programmer
-// could make the hardware do between them. This carries both: the tables,
-// and the formula that is the point of the machine.
-//
-// Built on a worker from four strings, handed over as one object.
+// A Formulate program: one formula and three step tables (arpeggio, duty and
+// volume), like the frame-rate tables in chip music. Built on a worker thread
+// from four strings and handed over as one object.
 namespace acidulous::machine::formulate {
 
 /** A step table: values, and where it loops back to when it runs out. */
@@ -42,9 +37,9 @@ struct Program {
 };
 
 /**
- * Parse all four. A table is "0 4 7 | 12 -12": numbers, and an optional bar
- * saying where it loops back to. Returns null with a reason on the first
- * thing that does not read.
+ * Parse all four. A table is "0 4 7 | 12 -12": numbers, with an optional bar
+ * marking where it loops back to. Returns null with a reason on the first
+ * error.
  */
 std::unique_ptr<Program> compile(const std::string &formula, const std::string &arp,
                                  const std::string &duty, const std::string &vol,

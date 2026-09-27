@@ -7,19 +7,14 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Every colour the app draws, by what it is for rather than what it looks
- * like.
+ * Every colour the app draws, named by what it's for, not what it looks like.
  *
- * The dark set is the look the app has always had, lifted out of the two
- * hundred-odd literals that used to be scattered through the screens; the
- * light set is the same design read on paper instead of glass. Nothing
- * outside this file should name a colour: a literal at a use site is a
- * colour that cannot follow the theme, and it will be the one thing that
- * stays black when everything else turns white.
+ * Nothing outside this file should name a colour, since a literal can't
+ * follow the theme.
  *
- * Colours that belong to an object rather than to the interface are the
- * exception and are the same in both - a drawbar is brown or white because
- * organ drawbars are, and a track's stripe is how that track is recognised.
+ * Colours that belong to an object instead of the interface are the same in
+ * every theme: drawbars are brown or white because organ drawbars are, and a
+ * track's stripe is how you recognise the track.
  */
 @Immutable
 data class AcidColors(
@@ -43,23 +38,22 @@ data class AcidColors(
     val gridBar: Color,
     val gridBeat: Color,
     val gridStep: Color,
-    // Type, loudest to quietest, and what reads on a filled accent.
+    // Text, loudest to quietest, and what reads on a filled accent.
     val text: Color,
     val textHi: Color,
     val textMid: Color,
     val textDim: Color,
     val textFaint: Color,
     /**
-     * What goes *on* [accent] - and only on it. It is near black in both
-     * themes, so on [accentDim], which the dark theme makes a dark olive, it
-     * is dark on dark. The clip-mode button did that and the label vanished.
+     * Text and icons on [accent], and only on it. It's near black in both
+     * themes, so on [accentDim] (a dark olive in the dark theme) it vanishes.
      */
     val onAccent: Color,
-    // The four voices the app speaks in: amber for what you are doing, teal
-    // for what a thing is, green for on, red for danger.
+    // The four main colours: amber for what you're doing, teal for what a
+    // thing is, green for on, red for danger.
     val accent: Color,
     val accentSoft: Color,
-    /** Amber and green as a background rather than as a mark. */
+    /** Amber and green as a background instead of as a mark. */
     val accentDim: Color,
     val greenDim: Color,
     val teal: Color,
@@ -114,7 +108,7 @@ data class AcidColors(
     val tip: Color,
 )
 
-/** The look the app was built in. */
+/** The dark theme, the app's original look. */
 val DarkColors = AcidColors(
     dark = true,
     bgDeep = Color(0xFF15151A),
@@ -190,13 +184,12 @@ val DarkColors = AcidColors(
 )
 
 /**
- * The same instrument in daylight.
+ * The light theme.
  *
- * Two things do not survive a straight inversion and are handled by hand.
- * Amber at full brightness disappears on white, so anything made of amber
- * *type* is a deeper amber here while amber *fills* keep their heat. And a
- * selected note is the brightest thing in the roll on dark, which on paper
- * has to become the darkest - inverted, not lightened.
+ * Two things are handled by hand instead of inverted. Full brightness amber
+ * disappears on white, so amber text is a deeper amber here while amber
+ * fills stay bright. And a selected note, the brightest thing in the roll
+ * on dark, is the darkest here.
  */
 val LightColors = AcidColors(
     dark = false,
@@ -273,9 +266,8 @@ val LightColors = AcidColors(
 )
 
 /**
- * Colours that belong to the thing, not to the theme: an organ's drawbars
- * and the stripes that tell one track from another. They do not change
- * between light and dark, because they are not interface.
+ * Colours that belong to the thing, not the theme: an organ's drawbars and
+ * the track stripes. Same in light and dark.
  */
 val DrawbarBrown = Color(0xFF8A6A4A)
 val DrawbarWhite = Color(0xFFE8E4DA)
@@ -283,18 +275,17 @@ val DrawbarBlack = Color(0xFF6E6E76)
 
 internal val LocalAcidColors = staticCompositionLocalOf { DarkColors }
 
-/** `Acid.colors.accent` - the one way to name a colour outside this file. */
+/** `Acid.colors.accent` is the one way to name a colour outside this file. */
 object Acid {
     val colors: AcidColors
         @Composable @ReadOnlyComposable get() = LocalAcidColors.current
 }
 
 /**
- * For low vision: black grounds, white type, and the accents pushed until
- * every word clears seven to one against anything it sits on. Built on the
- * dark palette, so what is not named here keeps the dark theme's colour.
- * Lines and edges are near white, because in the other themes a control is
- * told from its card by a shade that a weak eye cannot see.
+ * For low vision: black backgrounds, white text, and accents pushed until
+ * every word has at least 7:1 contrast against its background. Built on the
+ * dark palette, so anything not set here keeps the dark theme's colour.
+ * Lines and edges are near white so controls stand out from their cards.
  */
 val HighContrastColors = DarkColors.copy(
     bgDeep = Color(0xFF000000),
@@ -325,8 +316,8 @@ val HighContrastColors = DarkColors.copy(
     accentDim = Color(0xFF4D3F10),
     greenDim = Color(0xFF14503A),
     teal = Color(0xFF6CF5D2),
-    // Both white and black words sit on it, so it is the one green where
-    // each clears four and a half to one.
+    // Both white and black text sit on it, so it's the one green where both
+    // clear 4.5:1.
     green = Color(0xFF2A827C),
     pink = Color(0xFFFF9CC4),
     red = Color(0xFFFF7A70),

@@ -12,9 +12,9 @@ import androidx.compose.ui.input.key.type
 import java.awt.event.KeyEvent as Awt
 
 actual val androidx.compose.ui.input.key.KeyEvent.press: KeyPress get() {
-    // One event is asked twice - the hub's preview, then its fallback - and
-    // the second asking must not find its own key already down and call it a
-    // repeat, which the hub takes without running.
+    // The same event is checked twice (the hub's preview, then its fallback),
+    // and the second check must not see its own key already down and treat it
+    // as a repeat, which the hub ignores.
     last?.let { (event, press) -> if (event === nativeKeyEvent) return press }
     return pressOf(this).also { last = nativeKeyEvent to it }
 }
@@ -25,10 +25,10 @@ private fun pressOf(e: androidx.compose.ui.input.key.KeyEvent): KeyPress {
     val key = e.key
     val type = e.type
     val code = androidCode(key)
-    // AWT repeats a held key as more presses and says nothing of it; Android
-    // counts them. A key already down is a repeat. Its "typed" events - a
-    // character, after the press - are neither down nor up, and the hub
-    // leaves anything else alone.
+    // AWT sends a held key as more presses without marking them; Android
+    // counts them. So a key that's already down is a repeat. "Typed" events
+    // (a character, after the press) are neither down nor up, and the hub
+    // ignores anything else.
     val (action, repeat) = when (type) {
         KeyEventType.KeyDown -> KeyCodes.ACTION_DOWN to (if (!held.add(code)) 1 else 0)
         KeyEventType.KeyUp -> { held.remove(code); KeyCodes.ACTION_UP to 0 }
@@ -48,9 +48,10 @@ private fun pressOf(e: androidx.compose.ui.input.key.KeyEvent): KeyPress {
 private val held = HashSet<Int>()
 
 /**
- * The key as Android's code, the form bindings are saved in. Compose names
- * the sided and numpad keys itself; everything else goes by AWT's code, and a
- * key with no Android equivalent keeps AWT's number, offset clear of Android's.
+ * The key as an Android key code, which is how bindings are saved. Compose
+ * names the sided and numpad keys itself; everything else uses AWT's code,
+ * and a key with no Android equivalent keeps AWT's number, offset clear of
+ * Android's.
  */
 private fun androidCode(key: Key): Int {
     when (key) {

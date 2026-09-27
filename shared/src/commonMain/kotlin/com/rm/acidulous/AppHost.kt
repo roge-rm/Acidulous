@@ -4,116 +4,114 @@ import com.rm.acidulous.io.*
 
 
 /**
- * What the shared UI asks of the app around it: the things only the platform
- * knows or can do. The Android app's is AndroidHost; the desktop's is its own.
- * Set once at startup, before anything is drawn.
+ * What the shared UI needs from the platform it runs on. Android's is
+ * AndroidHost and the desktop has its own. Set once at startup, before
+ * anything is drawn.
  */
 interface AppHost {
     /**
-     * The installed version, "0.9.7", or null when it cannot be read. Asked
-     * of the platform rather than compiled in, so it is the version of what
-     * is actually installed and not of the module that happened to be built.
+     * The installed version, like "0.9.7", or null if it can't be read. It's
+     * read from the platform rather than compiled in, so it's the version
+     * that's actually installed.
      */
     val versionName: String?
-    /** The version with its build number, "0.9.7 (18)", or null. */
+    /** The version with its build number, like "0.9.7 (18)", or null. */
     val versionLong: String?
-    /** One of the bundled licence texts, by its path ("licences/gpl-3.0.txt"), or null. */
+    /** One of the bundled licence texts by path ("licences/gpl-3.0.txt"), or null. */
     fun licenceText(path: String): String?
-    /** The last crash report, while there is one; null where there are none. */
+    /** The last crash report, or null if there are none. */
     fun latestCrashReport(): File?
     fun shareCrashReport(report: File)
-    /** The audio inputs plugged in now, for the recorder's choice of ear; empty when the platform will not say. */
+    /** The audio inputs plugged in now, for the recorder. Empty if the platform won't say. */
     fun audioInputs(): List<AudioInput>
 
     /**
-     * The outputs there are to choose from, by id and name, or none where the
-     * platform does the choosing - the phone routes its own sound. The
-     * desktop's and the browser's, with [chooseAudioOutput]: see Settings > audio.
+     * The outputs to choose from, by id and name, or none where the platform
+     * chooses itself (Android routes its own sound). Used on desktop and in
+     * the browser with [chooseAudioOutput]: see Settings > audio.
      */
     fun audioOutputs(): List<Pair<Int, String>> = emptyList()
     fun chooseAudioOutput(id: Int) {}
 
-    // --- Files the platform's pickers handed over: see [Doc] ------------------
+    // --- Files from the platform's pickers: see [Doc] -------------------------
 
-    /** What the platform calls a file, or [fallback] when it will not say. */
+    /** The file's name, or [fallback] if the platform won't say. */
     fun docName(doc: Doc, fallback: String): String
-    /** Where something was written, for a "done" line: a folder's own name, or a file's. */
+    /** Where something was written, for a "done" message: a folder's name, or a file's. */
     fun placeName(doc: Doc): String
     /** The whole of [doc]. */
     fun readDoc(doc: Doc): ByteArray
-    /** [doc], copied into [file]: for what may be too big to hold. */
+    /** Copies [doc] into [file], for things that may be too big to hold in memory. */
     fun copyFromDoc(doc: Doc, file: File)
-    /** [file], copied over [doc], replacing what was there. */
+    /** Copies [file] over [doc], replacing what was there. */
     fun copyToDoc(file: File, doc: Doc)
-    /** A new file in a folder the picker gave, or null when it could not be made. */
+    /** A new file in a folder from the picker, or null if it couldn't be made. */
     fun createIn(folder: Doc, mime: String, name: String): Doc?
-    /** The share sheet, with what was written. */
+    /** The share sheet, with the files that were written. */
     fun share(docs: List<Doc>, mime: String, title: String)
-    /** The share sheet, with a file of the app's own. */
+    /** The share sheet, with one of the app's own files. */
     fun shareFile(file: File, mime: String, title: String)
 
     // --- The rest of the platform ---------------------------------------------
 
-    /** A small named store of the app's own flags. */
+    /** A small named store for the app's own settings. */
     fun prefs(name: String): com.rm.acidulous.util.PrefStore
-    /** The crash report the last run left and nobody has seen, or null. */
+    /** The crash report from the last run that the user hasn't been told about, or null. */
     fun unreadCrashReport(): File?
     fun markCrashReportRead()
     /**
-     * The transport started or stopped: what the platform does about it (on
-     * Android, the playback service and audio focus). [stop] is how the
-     * platform stops it in turn - for a call, or headphones pulled out.
+     * The transport started or stopped, so the platform can react (on
+     * Android, the playback service and audio focus). The platform calls
+     * [stop] to stop playback itself, for a call or unplugged headphones.
      */
     fun transportChanged(playing: Boolean, stop: () -> Unit)
-    /** Encode a 16-bit WAV to AAC at [bitrate]; "" when it worked, else why not. */
+    /** Encode a 16-bit WAV to AAC at [bitrate]. Returns "" on success, otherwise the reason. */
     fun encodeAac(pcm: File, out: File, bitrate: Int): String
-    /** Whether [encodeAac] can: the export window leaves AAC out where it cannot. */
+    /** Whether [encodeAac] works here. The export window hides AAC if not. */
     val canEncodeAac: Boolean get() = true
     /**
-     * The platform's name where it is not the phone - "Linux" - for the About
-     * window to say which build this is. Null on Android, the app's home, where
-     * nothing needs adding.
+     * The platform's name, like "Linux", shown in the About window. Null on
+     * Android.
      */
     val platformName: String? get() = null
 
     /**
-     * The pointer is a mouse rather than a finger: the wheel moves and zooms
-     * the grids, and the few words that say "tap" say "click". False on the
-     * phone, whose words and gestures these are.
+     * The pointer is a mouse rather than a finger: the wheel scrolls and
+     * zooms the grids, and text says "click" instead of "tap". False on
+     * Android.
      */
     val usesMouse: Boolean get() = false
 
     /**
-     * A computer rather than a phone, for the few words and pages that are
-     * about which one this is: "this phone", the share sheet, TalkBack. False
-     * on the phone, whose words these are.
+     * Running on a computer rather than a phone, for the few texts that
+     * depend on it ("this phone", the share sheet, TalkBack). False on
+     * Android.
      */
     val onDesktop: Boolean get() = false
 
-    /** Whether the screen can be kept on while playing: the phone's window flag. */
+    /** Whether the screen can be kept on while playing (Android's window flag). */
     val canKeepScreenOn: Boolean get() = true
     /**
-     * Whether Ableton Link can be had: not in a browser, where a page can
-     * neither send nor hear the local network's multicast that Link finds its
-     * peers by. Where it cannot, the tempo window has no Link page.
+     * Whether Ableton Link is available. Not in a browser, since a page can't
+     * send or receive the local multicast Link uses to find peers. Without
+     * it the tempo window has no Link page.
      */
     val hasLink: Boolean get() = true
 
-    /** MIDI through ALSA's sequencer: the Linux desktop's, for the About window's list. */
+    /** MIDI through ALSA's sequencer (Linux desktop), for the About window's list. */
     val hasAlsa: Boolean get() = false
 
-    /** Steinberg's driver SDK, for interfaces' own drivers: Windows', for the same list. */
+    /** Steinberg's ASIO SDK for audio interfaces' own drivers (Windows), for the same list. */
     val hasDriverSdk: Boolean get() = false
     /**
-     * Whether the audio thread can time itself to well under a callback, so its
-     * peaks - the worst block, the late count, dropouts - mean something. Not in
-     * a browser: an AudioWorklet has no clock, the one it is lent ticks in steps
-     * as long as a callback, and it cannot see a dropout at all. There the
-     * readouts keep the average load, which the steps even out, and leave the
-     * peaks out rather than show numbers that are wrong.
+     * Whether the audio thread can time itself precisely enough for its peak
+     * readouts (worst block, late count, dropouts) to mean anything. Not in a
+     * browser: an AudioWorklet has no clock of its own, the one it can use
+     * ticks in callback-sized steps, and it can't see dropouts. There only
+     * the average load is shown.
      */
     val timesAudioPrecisely: Boolean get() = true
-    /** Whose code the audio stream is, for the About window's credits. */
+    /** Which library provides the audio stream, for the About window's credits. */
     val audioStream: AudioStream get() = AudioStream.Oboe
 
     companion object {
@@ -121,10 +119,10 @@ interface AppHost {
     }
 }
 
-/** The phone's Oboe; the desktop's miniaudio, with ALSA's MIDI; or a browser's own Web Audio, which is nobody's to credit. */
+/** Oboe on Android, miniaudio on desktop (with ALSA MIDI), or the browser's Web Audio, which needs no credit. */
 enum class AudioStream { Oboe, Miniaudio, Browser }
 
-/** An audio input as the recorder names it: what kind of thing, and the device's own name for an unusual one. */
+/** An audio input as the recorder shows it: its kind, and the device's own name for unusual ones. */
 data class AudioInput(val id: Int, val kind: Kind, val name: String?) {
     enum class Kind { BuiltIn, Headset, Usb, Bluetooth, Line, NotAnEar, Other }
 }

@@ -2,6 +2,6 @@ package com.rm.acidulous.ui
 
 import androidx.compose.runtime.Composable
 
-/** No screen reader explores a desktop window by touch; the layout is the sighted one. */
+/** No desktop screen reader explores by touch, so the normal layout is used. */
 @Composable
 actual fun rememberTalkBack(): Boolean = false

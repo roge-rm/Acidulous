@@ -40,24 +40,21 @@ class Effect {
     bool bypassed() const { return bypass_; }
 
     /**
-     * **Sidechain: which track this effect listens to, if not its own input.**
+     * The rack this effect's detector listens to, e.g. a compressor on the
+     * bass ducking under the kick. `sidechain` is a stepped parameter, 0 for
+     * its own input and 1..16 for a rack.
      *
-     * An effect with a detector - the compressor, the gate, the filter's
-     * follower - may name another rack whose sound it reacts to while it
-     * processes its own: the bass ducking under the kick. `sidechain` is a
-     * stepped parameter, 0 for its own input and 1..16 for a rack.
-     *
-     * Returns the rack index, or -1 for its own input (and for an effect that
-     * has no detector).
+     * Returns the rack index, or -1 for its own input or an effect with no
+     * detector.
      */
     int32_t sidechainRack() const {
         if (sidechainIndex_ < 0) return -1;
         return static_cast<int32_t>(params_.get(sidechainIndex_) + 0.5f) - 1;
     }
     /**
-     * The key for this block: a mono buffer of the source rack's sound, or
-     * null for the effect's own input. Set by the engine before the rack
-     * renders; valid for that call only.
+     * The sidechain for this block: a mono buffer of the source rack's sound,
+     * or null for the effect's own input. Set by the engine before the rack
+     * renders and only valid for that call.
      */
     void setKey(const float *key) { key_ = key; }
 
@@ -66,9 +63,8 @@ class Effect {
         int32_t n = 0;
         const ParamDef *defs = paramDefs(n);
         params_.init(defs, n);
-        // Every effect ends with an output trim, and it is applied here rather
-        // than fourteen times over. Found by name so an effect that has not
-        // got one simply does not get the multiply.
+        // The output trim is applied here for every effect. It's found by
+        // name, so an effect without a "gain" param just skips it.
         gainIndex_ = -1;
         sidechainIndex_ = -1;
         for (int32_t i = 0; i < n; ++i) {
@@ -82,14 +78,9 @@ class Effect {
 
   private:
     /**
-     * The output trim, in decibels, applied after the effect has run.
-     *
-     * A wet/dry crossfade does not preserve level: mixing half of a chorus in
-     * takes half the dry away and what replaces it is spread across several
-     * detuned voices, so the sum is quieter than what went in. Dan, hearing
-     * exactly that: "a lot of the effects (eg chorus) seem to make the sound
-     * quieter". Every insert now ends with a knob that puts it back, which is
-     * also the knob you want when a distortion has made something louder.
+     * The output trim in dB, applied after the effect has run. Makes up level
+     * lost in a wet/dry mix (a chorus comes out quieter) or tames an effect
+     * that makes things louder.
      */
     void applyGain(float *L, float *R, int32_t frames, bool stereo) {
         if (gainIndex_ < 0) return;

@@ -7,14 +7,13 @@
 #include <engine/dsp/Wavetable.h>
 #include <engine/machine/Machine.h>
 
-// Trinity - the polyphonic machine, three oscillators deep. The shape is a
-// modern wavetable poly's: three equal oscillators that each carry analogue
-// waves or wavetables, density stacking, virtual sync, two filters with
-// drive, six envelopes, three LFOs and a modulation matrix.
+// Trinity, the polyphonic machine with three oscillators. Laid out like a
+// modern wavetable poly synth: three equal oscillators with analogue waves
+// or wavetables, density stacking, virtual sync, two filters with drive,
+// six envelopes, three LFOs and a modulation matrix.
 //
-// What it adds beyond that shape: FM between the oscillators - the ones this
-// follows ring and sync but never phase-modulate - and per-voice drift so
-// held chords breathe.
+// On top of that it has FM between the oscillators and per-voice drift so
+// held chords move a little.
 namespace acidulous::machine {
 
 class Trinity final : public Machine {
@@ -25,10 +24,10 @@ class Trinity final : public Machine {
     static constexpr int kLfos = 3;
     static constexpr int kMatrixSlots = 12;
     static constexpr int kVoices = 16;
-    /** Released voices lean lets ring at once; see `cutTails`. */
+    /** How many released voices can ring at once in lean mode (see cutTails). */
     static constexpr int kLeanTails = 6;
 
-    // Waves 0..3 are the analogue ones; 4.. index the wavetable bank.
+    // Waves 0..3 are the analogue ones. 4 and up index the wavetable bank.
     enum WaveKind : int32_t { WSaw, WSquare, WTriangle, WSine, WFirstTable, WaveCount = WFirstTable + dsp::WavetableBank::kTables };
 
     enum ModSource : int32_t {
@@ -64,17 +63,17 @@ class Trinity final : public Machine {
         VoiceBase = MatrixBase + kMatrixSlots * MatrixParams,
         VoiceMode = VoiceBase, UnisonCount, UnisonDetune, UnisonSpread,
         Glide, GlideMode, BendRange, Octave, Transpose, Volume, Pan, VelocityAmount,
-        // Appended, and appended is safe: the document addresses parameters
-        // by name and a name it has never seen takes its default. What is
-        // not safe is changing a stepped parameter's step *count*, because
-        // the stored value is normalised against it - which is why slide is
-        // a depth knob here and not another modulation source.
+        // Added at the end, which is safe because songs address parameters by
+        // name and an unknown name gets its default. Changing a stepped
+        // parameter's step count isn't safe, since the saved value is
+        // normalised against it. That's why slide is a depth knob here and not
+        // another modulation source.
         MpeTimbre,
-        // What a finger's pressure does when the matrix says nothing about
-        // it: opens the filters and leans on the level.
+        // What a finger's pressure does when the matrix doesn't use it: opens
+        // the filters and pushes the level.
         MpePressure,
-        // What the mod wheel does when the matrix says nothing about it:
-        // opens the filters.
+        // What the mod wheel does when the matrix doesn't use it: opens the
+        // filters.
         WheelFilter,
         Count
     };
@@ -120,22 +119,20 @@ class Trinity final : public Machine {
         float freq = 440.0f, glideFrom = 440.0f, glidePos = 1.0f;
         float random = 0.0f, detuneCents = 0.0f, panOffset = 0.0f;
         /**
-         * Whether this note was started while the engine was running lean.
+         * Whether this note started while the engine was running lean.
          *
-         * Read once, at note-on, and kept for the life of the voice. The
-         * unison stack is resolved per *block*, so reading the setting there
-         * would thin a note that is already sounding the moment the automatic
-         * watcher changed its mind - a chord would shift under your hands.
-         * A note keeps the detail it was born with; the next one gets the new
-         * answer.
+         * Read once at note-on and kept for the life of the voice. The unison
+         * stack is worked out per block, so reading the setting there would thin
+         * a note that's already sounding when the watcher switches. The next note
+         * gets the new setting.
          */
         bool bornLean = false;
-        /** Released and being faded out early by `cutTails`. */
+        /** Released and being faded out early by cutTails. */
         bool cut = false;
-        // Per-note expression (MPE). `bend` is in semitones and adds to the
-        // machine's own; `pressure` and `timbre` are -1 until this finger
-        // sends them, so a voice with no expression of its own falls back to
-        // whatever the channel is doing and nothing changes for a keyboard.
+        // Per-note expression (MPE). bend is in semitones and adds to the
+        // machine's own. pressure and timbre are -1 until this finger sends
+        // them, so a voice without its own expression uses the channel's and
+        // nothing changes for a normal keyboard.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
         float prsGlide = 0.0f; // see glidePressure
         OscState osc[kOscs];
@@ -151,32 +148,27 @@ class Trinity final : public Machine {
     Voice *allocate();
     void updateVoiceMod(Voice &v, float blockSeconds);
     /**
-     * Which envelopes anything actually reads, as a bit per envelope.
+     * Which envelopes are actually used, one bit per envelope.
      *
-     * Six envelopes ticked every sample, and only two of them are wired to
-     * anything by name: the amplitude and the filter. The other four exist to
-     * be *routed*, and a patch that routes none of them was still paying for
-     * four envelopes a sample a voice - six percent of the machine, for four
-     * numbers nothing read.
+     * Only the amp and filter envelopes are wired by name. The other four are
+     * for routing, and ticking them every sample when nothing reads them cost
+     * about 6% of the machine.
      *
-     * Recomputed once a block from the matrix, so a slot that starts naming an
-     * envelope mid-note gets one that begins moving from where it was left.
+     * Recomputed once a block from the matrix, so a slot that starts using an
+     * envelope mid-note gets one that carries on from where it was left.
      */
     int32_t envMask() const;
     /**
-     * **Under lean, no more than `kLeanTails` released voices ring at once.**
+     * In lean mode, no more than kLeanTails released voices ring at once.
      *
-     * A patch with a long release costs its release, not its notes. Bell Keys
-     * rings for a second and a half after every note, so a sixteenth arp holds
-     * eleven to fourteen voices of which one is held - and lean's only other
-     * lever here, halving the unison stack, reaches nothing in a patch that
-     * does not stack. The demo's dearest track measured the same lean as full.
+     * A patch with a long release costs its tails, not its notes. A long
+     * release on a sixteenth arp can hold 11-14 voices with only one held, and
+     * halving the unison stack doesn't help a patch that doesn't stack.
      *
-     * The oldest tails go first, faded over ten milliseconds rather than
-     * stopped, and a held note is never touched: this thins the wash behind
-     * the playing, not the playing. Read every block rather than at note-on,
-     * unlike the stack - a tail is not under anybody's hands, and the moment
-     * the watcher goes lean is exactly when the room is wanted.
+     * The oldest tails go first, faded over 10 ms, and held notes are never
+     * touched. Checked every block rather than at note-on (unlike the stack)
+     * since nobody's playing a tail and going lean is exactly when the room
+     * is needed.
      */
     void cutTails();
     float sourceValue(const Voice &v, int src) const;

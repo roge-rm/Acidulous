@@ -7,7 +7,7 @@
 namespace acidulous::machine::nexus {
 
 namespace {
-/** Split "a|b|c" without allocating a vector per field more than once. */
+/** Split "a|b|c" into fields. */
 std::vector<std::string> split(const std::string &line, char sep) {
     std::vector<std::string> out;
     size_t start = 0;
@@ -65,9 +65,8 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
             n.slot = slot;
             n.type = typeFromName(f[2].c_str());
             if (n.type < 0) {
-                // Written by a build that has a module this one does not. Keep
-                // the slot, its knobs and its cables; say so rather than
-                // quietly dropping it and destroying the patch on re-save.
+                // A module this build doesn't have. Keep the slot, its knobs
+                // and its cables and warn, so re-saving doesn't lose it.
                 n.type = TBlank;
                 n.unknown = true;
                 g->warn = "unknown module \"" + f[2] + "\"";
@@ -125,14 +124,14 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
             c.modPort = p;
         }
         if (f.size() >= 7) c.modAmount = toFloat(f[6], 0.0f);
-        // The first two dozen cables get a pair of parameters for their depth,
-        // so they can be dragged and automated without rebuilding the graph.
+        // The first kCables cables get a pair of depth parameters, so they
+        // can be changed and automated without rebuilding the graph.
         c.paramIndex = cableIndex < kCables ? cableIndex : -1;
         ++cableIndex;
         g->cables.push_back(c);
     }
 
-    // Layout, which the audio thread never reads but the editor needs back.
+    // Layout. The audio thread never reads it but the editor needs it.
     for (const auto &line : lines) {
         if (line.empty() || line[0] != 'p') continue;
         const auto f = split(line, '|');
@@ -144,9 +143,9 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
         n.y = toFloat(f[3]);
     }
 
-    // Order the nodes so that everything is computed before it is read.
-    // Kahn's algorithm; whatever is left over is in a cycle, and the cables
-    // that close those cycles read the previous sample instead.
+    // Order the nodes so everything is computed before it's read (Kahn's
+    // algorithm). Whatever is left over is in a cycle, and the cables that
+    // close those cycles read the previous sample instead.
     const int32_t count = static_cast<int32_t>(g->nodes.size());
     std::vector<int32_t> indegree(static_cast<size_t>(count), 0);
     for (const auto &c : g->cables) {
@@ -171,7 +170,7 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
     for (size_t i = 0; i < g->order.size(); ++i) position[static_cast<size_t>(g->order[i])] = static_cast<int32_t>(i);
     for (auto &c : g->cables) {
         // A cable is delayed only if its source is computed after its
-        // destination, which is exactly the set of edges that close a loop.
+        // destination, which is exactly the cables that close a loop.
         c.delayed = c.srcNode == c.dstNode ||
                     position[static_cast<size_t>(c.srcNode)] >= position[static_cast<size_t>(c.dstNode)];
         if (c.delayed) {
@@ -187,7 +186,7 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
     }
     g->prev.assign(static_cast<size_t>(kVoices + 1) * (g->delayedPorts.size() + 1), 0.0f);
 
-    // Group cables by destination so the inner loop walks a span, not a list.
+    // Group cables by destination so the inner loop walks a contiguous span.
     std::sort(g->cables.begin(), g->cables.end(),
               [](const Cable &a, const Cable &b) { return a.dstNode < b.dstNode; });
     for (int32_t i = 0; i < count; ++i) {
@@ -206,9 +205,9 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
 }
 
 void Graph::adoptFrom(Graph &old) {
-    // Keep whatever was already sounding: a slot that still holds the same
-    // kind of module keeps its instance, so adding a cable does not cut every
-    // ringing string and delay tail in the patch. Pointer moves only.
+    // A slot that still holds the same kind of module keeps its instance, so
+    // adding a cable doesn't cut off ringing strings and delay tails. Pointer
+    // moves only.
     for (auto &n : nodes) {
         for (auto &o : old.nodes) {
             if (o.slot != n.slot || o.type != n.type || o.poly != n.poly) continue;
@@ -217,7 +216,7 @@ void Graph::adoptFrom(Graph &old) {
             break;
         }
     }
-    // Anything the old graph could not supply is new and starts clean.
+    // Anything the old graph couldn't supply starts clean.
     for (auto &n : nodes) {
         for (auto &i : n.inst) {
             if (i) continue;
@@ -236,14 +235,8 @@ void Graph::reset() {
 }
 
 /**
- * The meters, read every kMeterEvery samples rather than every one.
- *
- * Thirty frames a second is all the editor can draw, and a peak that has been
- * held for a thirtieth of a second is exactly as informative whether it was
- * found by looking three thousand times or forty-eight thousand. What this
- * must not be is expensive, because it runs on the audio thread in service of
- * something purely decorative: at one sample in sixteen it costs well under a
- * percent of what the graph itself costs.
+ * The editor meters, read every kMeterEvery samples to keep the cost on the
+ * audio thread tiny. That's still far more often than the screen redraws.
  */
 void Graph::meter(const int32_t *active, int32_t activeCount) {
     for (auto &v : slotLevel) v *= kMeterDecay;
@@ -350,7 +343,7 @@ void Graph::gather(const Node &n, int32_t nodeIndex, int32_t voice, const int32_
             x = readPort(k.srcNode, k.srcPort, voice);
         }
 
-        // The cable is a VCA: its depth can be driven by anything else here.
+        // The cable is a VCA: its depth can be modulated by any other output.
         float depth = k.base;
         if (k.modNode >= 0) {
             const Node &m = nodes[static_cast<size_t>(k.modNode)];

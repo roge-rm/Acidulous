@@ -36,7 +36,7 @@ import com.rm.acidulous.ui.watchPointer
 import com.rm.acidulous.util.FilePrefs
 import java.io.File
 
-/** Whether the screen is smaller than the window's 1280 x 800 would need. */
+/** Whether the screen is too small for a 1280 x 800 window. */
 private fun smallScreen(): Boolean = runCatching {
     val bounds = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().maximumWindowBounds
     bounds.width < 1300 || bounds.height < 840
@@ -47,48 +47,48 @@ private fun windowIcon(): BitmapPainter? = runCatching {
     BitmapPainter(org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap())
 }.getOrNull()
 
-/** Windows, where the folders, the MIDI and the libraries' loading differ. */
+/** Running on Windows, where folders, MIDI and library loading differ. */
 internal val onWindows: Boolean = System.getProperty("os.name").orEmpty().startsWith("Windows")
 
-/** Where the XDG spec says, or its default under the home folder. */
+/** The XDG folder from [variable], or its default under the home folder. */
 private fun xdg(variable: String, fallback: String): File =
     File(System.getenv(variable)?.takeIf { it.isNotBlank() } ?: (System.getProperty("user.home") + "/" + fallback), "acidulous")
 
-/** Windows' own: settings and songs roam with the account, the cache stays on this machine. */
+/** Windows folders: settings and songs roam with the account, the cache stays on this machine. */
 private fun windowsDir(variable: String, vararg under: String): File =
     under.fold(File(System.getenv(variable)?.takeIf { it.isNotBlank() } ?: System.getProperty("user.home"), "Acidulous")) { dir, name -> File(dir, name) }
 
 fun main() {
-    // Windows looks for a DLL's own DLLs beside java.exe, not beside it, so
-    // LAME is loaded first and the engine finds it already there.
+    // Windows looks for a DLL's dependencies next to java.exe, not next to
+    // the DLL, so load LAME first and the engine finds it already loaded.
     if (onWindows) System.loadLibrary("mp3lame")
     val config = (if (onWindows) windowsDir("APPDATA", "config") else xdg("XDG_CONFIG_HOME", ".config")).apply { mkdirs() }
     val data = (if (onWindows) windowsDir("APPDATA", "data") else xdg("XDG_DATA_HOME", ".local/share")).apply { mkdirs() }
     val cache = (if (onWindows) windowsDir("LOCALAPPDATA", "cache") else xdg("XDG_CACHE_HOME", ".cache")).apply { mkdirs() }
-    // Before anything else can throw, as on the phone; and the last runs'
-    // native crashes, which the JVM wrote where the launcher told it to.
+    // Before anything else can throw, like on Android. Also collects native
+    // crashes from earlier runs, which the JVM wrote where the launcher said.
     val crashes = CrashReports(data).apply { install(); collect() }
 
-    // What MainActivity.onCreate does on the phone, in the same order.
+    // Same setup as MainActivity.onCreate on Android, in the same order.
     AppHost.current = DesktopHost(config, crashes)
     UiPrefs.init(FilePrefs(File(config, "ui.properties")))
-    // The output chosen last time, before the engine opens a stream.
+    // Restore the last chosen output before the engine opens a stream.
     DesktopAudio.chooseOutput(UiPrefs.outputDevice)
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
-    // ALSA's sequencer, which sees every device and program; Java Sound's raw
-    // MIDI where there is none, and on Windows. See AlsaSeqMidi.
+    // ALSA's sequencer, which sees every device and program. Java Sound's raw
+    // MIDI if there's no sequencer, and on Windows. See AlsaSeqMidi.
     MidiHub.start((if (onWindows) null else AlsaSeqMidi.open()) ?: JavaSoundMidi())
-    // Nothing on a desktop filters multicast, so Link needs no lock.
+    // Desktops don't filter multicast, so Link needs no lock.
     LinkHub.multicastLock = null
     EngineAssets.install(data, cache)
     watchPointer()
-    // The right button is the phone's long press: see RightClickHold.
+    // Right-click acts as a long press: see RightClickHold.
     RightClickHold.install()
 
     application {
-        // Maximised where the screen is smaller than the window would be - a
-        // Pi's 720-pixel square - rather than opening past its edges.
+        // Open maximised if the screen is smaller than the window (like a
+        // Pi's 720 pixel screen) instead of running off the edges.
         val window = rememberWindowState(
             size = DpSize(1280.dp, 800.dp),
             placement = if (smallScreen()) WindowPlacement.Maximized else WindowPlacement.Floating,
@@ -102,17 +102,16 @@ fun main() {
                 exitApplication()
             },
             title = "Acidulous",
-            // The app's own in the title bar and the taskbar, rather than
-            // Java's cup: Linux's menu entry names it, Windows has only this.
+            // The app's icon in the title bar and taskbar instead of Java's.
+            // Linux also gets it from the menu entry, Windows only from this.
             icon = remember { windowIcon() },
             state = window,
-            // Every key through the hub first, as dispatchKeyEvent does on the
-            // phone; whatever the focused control leaves comes back for the
-            // plain-letter shortcuts. The windows' keys too: see WindowKeys.
+            // Every key goes through the hub first, like dispatchKeyEvent on
+            // Android, and whatever the focused control doesn't use comes back
+            // for the single-letter shortcuts. Other windows too: see WindowKeys.
             //
-            // Except F11, which is the window's own on a desktop: full screen
-            // and back, as a browser or a video player has it. Not Alt+Enter,
-            // which already opens a focused control's hold actions.
+            // Except F11, which toggles full screen like in a browser. Not
+            // Alt+Enter, which already opens a focused control's hold actions.
             onPreviewKeyEvent = {
                 if (it.key == Key.F11) {
                     if (it.type == KeyEventType.KeyDown) {
@@ -128,9 +127,9 @@ fun main() {
             },
             onKeyEvent = { fallbackKey(it) },
         ) {
-            // The screen scale, where one is chosen (Settings > display): the
-            // density everything below is laid out in, the app's own size
-            // setting on top of it. See UiPrefs.screenScale.
+            // The screen scale if one is chosen (Settings > display) sets the
+            // density, and the app's own size setting applies on top. See
+            // UiPrefs.screenScale.
             val system = LocalDensity.current
             val chosen = UiPrefs.screenScale
             CompositionLocalProvider(LocalDensity provides if (chosen > 0f) Density(chosen, system.fontScale) else system) {

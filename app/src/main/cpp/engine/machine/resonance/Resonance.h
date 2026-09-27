@@ -3,19 +3,12 @@
 #include <engine/dsp/Filter.h>
 #include <engine/machine/Machine.h>
 
-// Resonance - percussion by what a thing is, not by what it sounded like.
+// Resonance is modal percussion. Eight pads, each a bank of resonators tuned
+// to the modes of a shape (membrane, bar, plate, tube, bowl or metal), struck
+// at a position and left to ring.
 //
-// Hexbeat is a drum machine's circuits; Forage is recordings of drums. This
-// is neither: eight objects, each a bank of resonators tuned to the modes of
-// a shape - a membrane, a bar, a plate, a tube, a bowl, a lump of metal -
-// hit somewhere, with something, and left to ring. Congas, woodblocks, steel
-// pans, bottles, anvils and a thousand things with no name, all arithmetic.
-//
-// The twist is the thing every hardware drum machine leaves out: **the pads
-// hear each other**. Real kits do this constantly - hit the kick and the
-// snare's shell buzzes, the ride shimmers - and here each pad feeds the
-// others by an amount you set, so a kit rings as one object rather than
-// eight islands.
+// The pads can also excite each other by a set amount, like the snare buzzing
+// when the kick is hit, so the kit rings together.
 namespace acidulous::machine {
 
 class Resonance final : public Machine {
@@ -26,8 +19,8 @@ class Resonance final : public Machine {
 
     enum Shape : int32_t { Membrane, Bar, Plate, Tube, Bowl, Metal, ShapeCount };
 
-    // Fourteen per pad, then the globals. Names are generated as
-    // "p00_tune" and so on, the way Forage's are.
+    // Per-pad parameters, then the globals. Names are generated as
+    // "p00_tune" and so on, like Forage's.
     enum PadP : int32_t {
         Kind = 0, Tune, Decay, Damp, Inharm, Hit, Hard, Noise, Bend, BendTime,
         Drive, Level, Pan, Couple, PadParamCount
@@ -51,22 +44,14 @@ class Resonance final : public Machine {
     bool render(float *L, float *R, int32_t frames) override;
 
   private:
-    /** One mode: a two-pole resonator, which is all a mode is. */
+    /** One mode: a two-pole resonator. */
     struct Mode {
         float a1 = 0.0f, a2 = 0.0f, b0 = 0.0f;
         /**
-         * `b0` without the strike in it: the part that belongs to the object.
-         *
-         * A pad is rebuilt whenever anything it is made of changes, and one of
-         * those things is **where it was hit** - which moves on every note,
-         * because the humanise that makes two hits sound different moves it on
-         * purpose. So every note-on was rebuilding all eight pads from
-         * scratch: twenty-four modes each of `pow`, `exp`, `cos`, `sin`,
-         * `sqrt` and `pow` again.
-         *
-         * Only the node gain depends on the strike, and it is one sine. Keep
-         * the rest here and a restrike is six libm calls a mode cheaper, with
-         * exactly the same numbers coming out.
+         * `b0` without the strike position's node gain. The hit position
+         * moves on every note (humanise), and only the node gain depends on
+         * it, so keeping the rest here lets a restrike skip the expensive
+         * rebuild and get the same numbers.
          */
         float b0Base = 0.0f;
         float y1 = 0.0f, y2 = 0.0f;
@@ -86,20 +71,20 @@ class Resonance final : public Machine {
         float velocity = 1.0f;
         // Where the last strike landed, humanise included. -1 until struck.
         float hit = -1.0f;
-        float last = 0.0f;   // what this pad put out, for the coupling bus
-        // Two samples of the excitation, so every mode can be fed the
-        // *difference* rather than the signal. See the note in render().
+        float last = 0.0f;   // this pad's last output, for the coupling bus
+        // The last two excitation samples, so modes can be fed the
+        // difference. See render().
         float x1 = 0.0f, x2 = 0.0f;
-        // The frame's losses, per pad - see the note in render() for why this
-        // cannot be one filter on the shared bus.
+        // Per-pad coupling loss filter. See render() for why it can't be one
+        // filter on the shared bus.
         float coupleLp = 0.0f;
-        // How much of the frame this object accepts. A resonator's gain runs
-        // as 1/sqrt(1-r), so a long decay has a thousand times the gain of a
-        // short one and no fixed coupling constant can be safe for both.
+        // How much coupling this pad accepts. A resonator's gain is about
+        // 1/sqrt(1-r), so long decays have far more gain than short ones and
+        // need trimming.
         float couplingTrim = 1.0f;
         bool ringing = false;
-        // What the modes were built from, so they are only rebuilt when the
-        // object actually changes.
+        // What the modes were built from, so they're only rebuilt when
+        // something changes.
         float builtTune = -1.0f, builtDecay = -1.0f, builtDamp = -1.0f, builtInharm = -1.0f, builtHit = -1.0f;
         int32_t builtKind = -1, builtModes = -1;
     };
@@ -107,17 +92,12 @@ class Resonance final : public Machine {
     float padParam(int32_t pad, int32_t which) const { return params_.get(PadBase + pad * PadParamCount + which); }
     int32_t padStep(int32_t pad, int32_t which) const { return static_cast<int32_t>(padParam(pad, which) + 0.5f); }
     void buildPad(int32_t pad);
-    /** The node gains alone, for when only the strike has moved. */
+    /** Update only the node gains, for when only the strike has moved. */
     void restrike(int32_t pad);
     /**
-     * Where a pad is struck, humanise included.
-     *
-     * Humanise used to be written back into the Hit parameter itself, which
-     * made it a random walk with nothing pulling it home: the position you
-     * set drifted away over a session and eventually pinned at one end, and
-     * two renders of the same song could not agree because the drift
-     * survived a reset. Where a stick landed is a property of the hit, so
-     * it lives on the pad and a reset takes it back.
+     * Where a pad was struck, humanise included. Kept on the pad rather than
+     * written back to the Hit parameter, so it doesn't drift and a reset
+     * clears it.
      */
     float hitOf(int32_t pad) const {
         return pads[pad].hit >= 0.0f ? pads[pad].hit : padParam(pad, Hit);
@@ -131,12 +111,10 @@ class Resonance final : public Machine {
 
     float sr = 48000.0f;
     Pad pads[kPads];
-    // **Two buses, because they are two different things.** The knock is a
-    // one-shot: it is generated by a key, never by a resonator, so it cannot
-    // feed back and needs no limiting - and it is broadband, which is what
-    // actually excites a neighbouring object. The ring is a handful of lines
-    // and *is* a loop, so it travels at a fraction and is trimmed by how
-    // resonant the object receiving it is.
+    // Two coupling buses. The knock comes from the strike only, so it can't
+    // feed back, and it's broadband so it excites neighbouring pads well. The
+    // ring comes from the resonators and is a loop, so it's sent at a
+    // fraction and trimmed by how resonant the receiving pad is.
     float knockBus = 0.0f, ringBus = 0.0f;
     static constexpr uint32_t kRngSeed = 0x2545f491u;
     uint32_t rng = kRngSeed;

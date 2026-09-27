@@ -9,10 +9,10 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="theme-color" content="#1b1c1f">
 <script>
-  // The service worker (sw.js): the isolation headers a static host cannot
-  // send, and the app kept for next time and for installing. On a first visit
-  // it only answers once it is in charge, so the page loads again then - once,
-  // in case this browser will not isolate a page at all.
+  // Register the service worker (sw.js), which adds the isolation headers a
+  // static host can't send and caches the app for offline use and installing.
+  // On a first visit it only takes over after a reload, so reload once, in
+  // case the browser can't isolate the page at all.
   (() => {
     const tried = (set) => { try { return set ? sessionStorage.setItem('acid-reloaded', '1') : sessionStorage.getItem('acid-reloaded'); } catch (e) { return '1'; } };
     if (window.crossOriginIsolated) { try { sessionStorage.removeItem('acid-reloaded'); } catch (e) {} }
@@ -27,7 +27,7 @@
 </script>
 <style>
   html, body { margin: 0; height: 100%; background: #1b1c1f; overflow: hidden; }
-  /* The status line is behind the app, which covers it with its first frame. */
+  /* The status text sits behind the app, which covers it with its first frame. */
   #root { position: relative; z-index: 1; width: 100%; height: 100%; }
   #status { position: fixed; inset: 0; z-index: 0; display: flex; flex-direction: column; align-items: center;
             justify-content: center; gap: 10px; padding: 16px; color: #9a9aa2; font: 15px/1.5 system-ui, sans-serif;
@@ -45,11 +45,11 @@
   <div id="amount"></div>
 </div>
 <script>
-  // How much of the download has come: the engine, the app and its graphics,
-  // twenty megabytes or so, against the sizes the build wrote beside the page
-  // (load-sizes.json, web/app/build.gradle.kts). Both WebAssembly loaders ask
-  // through fetch, so each answer is counted as it streams in on its way to
-  // them; the two scripts count when they have loaded.
+  // Download progress for the engine, the app and its graphics (about twenty
+  // megabytes), against the sizes the build writes next to the page
+  // (load-sizes.json, see web/app/build.gradle.kts). Both WebAssembly loaders
+  // use fetch, so each response is counted as it streams in. The two scripts
+  // count once they've loaded.
   const loading = (() => {
     const text = document.getElementById('status-text');
     const bar = document.getElementById('bar');
@@ -76,7 +76,7 @@
         bar.style.visibility = 'visible';
         fill.style.width = (100 * have / total).toFixed(1) + '%';
         amount.textContent = have >= total ? mb(total) + ' MB' : mb(have) + ' of ' + mb(total) + ' MB';
-        // All here: what is left is the browser compiling it, and the app starting.
+        // All downloaded. What's left is compiling and starting the app.
         if (have >= total) text.textContent = 'Starting Acidulous…';
       } else {
         amount.textContent = mb(have) + ' MB';
@@ -107,7 +107,7 @@
     };
     return {
       done(name) { finished.add(name); redraw(); },
-      /** Nothing to wait for: say so instead. */
+      /** Shows an error message in place of the progress bar. */
       fail(message) { text.textContent = message; bar.style.display = 'none'; amount.textContent = ''; },
     };
   })();
@@ -115,12 +115,12 @@
 <script src="acidulous.js"></script>
 <script>
   loading.done('acidulous.js');
-  // The engine first: its module, on shared memory, as globalThis.acid. Then
-  // the app's folder, /data, from browser storage - written back soon after
-  // the app changes it, every ten seconds for what the engine writes itself,
-  // and when the tab is put away. Then the app, which calls the engine.
-  // Without isolation there is no shared memory and no engine: the service
-  // worker is about to reload the page with it, or this browser will not have it.
+  // Load the engine module on shared memory as globalThis.acid, then mount the
+  // app's folder /data from browser storage, then load the app. /data is saved
+  // back shortly after the app changes it, every ten seconds for what the
+  // engine writes, and when the tab is hidden.
+  // Without isolation there's no shared memory and no engine. Either the
+  // service worker is about to reload the page, or the browser doesn't support it.
   if (!window.crossOriginIsolated) {
     setTimeout(() => {
       loading.fail('This browser is not giving the page the isolation it needs to run the engine. ' +
@@ -146,7 +146,7 @@
       globalThis.acidFsChanged = () => { clearTimeout(timer); timer = setTimeout(save, 500); };
       setInterval(save, 10000);
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
-      // Sound may only start from a gesture: the first touch or key starts it.
+      // Sound can only start from a user gesture, so the first touch or key starts it.
       const wake = () => engine._acid_resume();
       addEventListener('pointerdown', wake, true);
       addEventListener('keydown', wake, true);
@@ -154,10 +154,10 @@
       ui.src = 'acidulous-ui.js';
       ui.onload = () => {
         loading.done('acidulous-ui.js');
-        // Running: keep the rest of the app too (sw.js), once the start is over.
+        // Once started, have the service worker cache the rest of the app.
         setTimeout(() => navigator.serviceWorker?.controller?.postMessage('fill'), 5000);
-        // Installed, the songs are worth keeping when the browser is short of
-        // room. Asked only then: some browsers ask the person.
+        // When installed, ask for persistent storage so songs aren't cleared
+        // when space runs low. Only asked then, since some browsers prompt.
         if (matchMedia('(display-mode: standalone)').matches) navigator.storage?.persist?.();
       };
       document.body.appendChild(ui);

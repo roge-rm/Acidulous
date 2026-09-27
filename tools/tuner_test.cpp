@@ -1,16 +1,11 @@
-// The tuner: can it name the note, and can it say how far out it is.
+// Tests the tuner: does it name the right note, and the right number of cents.
 //
-// A tuner is only worth having if it is right to a cent or two, and the two
-// ways of being wrong are very different. Being a few cents out is a tuner
-// that is not good enough. Being an **octave** out is a pitch detector doing
-// the thing every autocorrelation pitch detector does, and it is the fault
-// this harness exists to catch: the correlation at twice the true period is
-// nearly as strong as at the true one, and on a string whose fundamental is
-// weak it is stronger.
+// It needs to be right to a cent or two. The main fault to catch is reading
+// an octave out: autocorrelation at twice the true period is nearly as strong
+// as at the true one, and stronger on a string with a weak fundamental.
 //
-// So none of the material here is a sine. A sine has no harmonics to be
-// confused by, no decay, no inharmonicity and no noise - it is the one signal
-// on which a broken detector looks perfect.
+// None of the test signals are sines. A sine has no harmonics, decay,
+// inharmonicity or noise, so a broken detector looks perfect on it.
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -41,11 +36,11 @@ struct Rng {
 };
 
 /**
- * A plucked string, built to be awkward on purpose.
+ * A plucked string, deliberately awkward.
  *
  * [weakFundamental] is the bridge-pickup case, where the first harmonic is
- * buried under the second and third - the signal that makes a naive detector
- * report an octave down.
+ * buried under the second and third and a naive detector reports an octave
+ * down.
  */
 std::vector<float> pluck(float hz, float seconds, bool weakFundamental = false,
                          float noise = 0.0f, float startAt = 0.0f) {
@@ -56,10 +51,9 @@ std::vector<float> pluck(float hz, float seconds, bool weakFundamental = false,
         double v = 0.0;
         if (t >= 0.0) {
             for (int h = 1; h <= 10; ++h) {
-                // Real strings are stiff, so the partials are not exact
-                // multiples: they stretch, by about this much on a wound
-                // string. A detector that assumes they are exact will read a
-                // steady note as drifting.
+                // Real strings are stiff, so the partials stretch above exact
+                // multiples, by about this much on a wound string. A detector
+                // that assumes exact multiples reads a steady note as drifting.
                 const double stretch = std::sqrt(1.0 + 0.00012 * h * h);
                 const double f = hz * h * stretch;
                 if (f > 18000.0) break;
@@ -111,7 +105,7 @@ void itSaysHowFarOut() {
 void noOctaveErrors() {
     printf("- the octave, which is the fault that matters\n");
     // A bridge pickup on a bass: the fundamental is 24 dB under the second
-    // harmonic. Picking the strongest correlation reports the octave below.
+    // harmonic. Picking the strongest correlation would report an octave down.
     for (float hz : {41.20f, 82.41f, 110.0f, 220.0f}) {
         const auto x = pluck(hz, 0.6f, true);
         const float got = PitchFinder::find(x.data(), static_cast<int32_t>(x.size()), kRate);
@@ -132,7 +126,7 @@ void itSaysNothingWhenThereIsNothing() {
            PitchFinder::find(silence.data(), static_cast<int32_t>(silence.size()), kRate) == 0.0f);
     }
     {
-        // A room, at a level a tuner would otherwise be happy with.
+        // Room noise, at a level the tuner would otherwise accept.
         std::vector<float> hiss(24000);
         Rng rng;
         for (auto &v : hiss) v = 0.05f * rng.next();
@@ -156,8 +150,8 @@ void itSaysNothingWhenThereIsNothing() {
 
 void itWorksOnADyingNote() {
     printf("- a note that is already dying\n");
-    // Half a second after the pluck, which is where somebody actually looks
-    // at a tuner: the transient is long gone and the string is quiet.
+    // Half a second after the pluck, when people actually look at a tuner:
+    // the transient is gone and the string is quiet.
     const auto x = pluck(110.0f, 1.2f, false, 0.0008f);
     const int32_t from = static_cast<int32_t>(0.55f * kRate);
     const int32_t n = static_cast<int32_t>(x.size()) - from;
@@ -202,17 +196,13 @@ void itCostsNothingUntilAsked() {
 /**
  * What one reading costs.
  *
- * The number that matters is the low note, where the coarse stage searches
- * every lag out to 444 and the fine stage has the longest periods to
- * correlate. It was 3.2 ms before the normalisation was turned into a pair of
- * running sums and the coarse search given one span for every lag; it is
- * about 1.1 ms now, on this machine, at -O2.
+ * The low note is the slow case, where the coarse stage searches every lag
+ * out to 444 and the fine stage has the longest periods. It's about 1.1 ms on
+ * this machine at -O2.
  *
- * **The harness builds with the sanitisers on at -O1**, so what this prints
- * is several times the real figure and the ceiling is set to catch an
- * order-of-magnitude regression rather than to certify a budget. The reading
- * is polled off the drawing thread anyway, which is where a millisecond every
- * eighth of a second belongs.
+ * The harness builds with sanitisers at -O1, so the printed figure is several
+ * times the real one. The ceiling only catches an order-of-magnitude
+ * regression. The reading is polled off the drawing thread anyway.
  */
 void itIsCheapEnoughToPoll() {
     printf("- the cost of one reading\n");

@@ -33,18 +33,18 @@ import kotlin.math.roundToInt
 import com.rm.acidulous.res.*
 
 /**
- * Everything that belongs to one track rather than to its machine or its
- * mix: what it is called and its colour, what it does to its notes on the
- * way to the machine, and where they go. Held open from the track's header.
+ * Settings for the track itself, not its machine or mix: its name and
+ * colour, what it does to notes on the way to the machine, and where they
+ * go. Opened from the track's header.
  *
- * Edited as a copy and handed back whole on OK, so the window is one undo
- * step and Cancel leaves the song as it was.
+ * Edits a copy and hands it back on OK, so the window is one undo step and
+ * Cancel changes nothing.
  */
 @Composable
 fun TrackSettingsDialog(
     song: Song,
     index: Int,
-    /** The tunings there are to choose from: built in, and imported. */
+    /** The tunings to choose from: built in and imported. */
     tunings: List<Tuning>,
     onDismiss: () -> Unit,
     onConfirm: (Track) -> Unit,
@@ -65,8 +65,8 @@ fun TrackSettingsDialog(
     ) {
         WindowCards {
             WindowCard(stringResource(Res.string.track_track)) {
-                // One piece of a known width, so it sits the same in a stack
-                // upright and in a row of cards turned.
+                // A fixed width so it looks the same stacked upright and in a row
+                // of cards turned.
                 Column(Modifier.widthIn(max = 300.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     OutlinedTextField(
                         value = name, onValueChange = { name = it }, singleLine = true,
@@ -75,8 +75,7 @@ fun TrackSettingsDialog(
                     ColourRow(trackColour(index, track.colour)) { track = track.copy(colour = it) }
                 }
             }
-            // A tape's notes are recordings, not pitches or hits: nothing
-            // here would change them.
+            // A tape plays recordings, so none of these apply to it.
             if (kind != MachineKind.Audio) {
                 WindowCard(stringResource(Res.string.track_notes)) {
                     if (MachineUi.takesTranspose(type)) {
@@ -93,7 +92,7 @@ fun TrackSettingsDialog(
                         stringResource(Res.string.track_velocity), track.velocity ?: 0, 0..127, velocityName(track.velocity ?: 0, asPlayed),
                         choices = (0..127).map { velocityName(it, asPlayed) },
                     ) { track = track.copy(velocity = it.takeIf { v -> v > 0 }) }
-                    // Nought is "the song's"; the rest are the amounts.
+                    // 0 is "the song's"; the rest are amounts.
                     val swingSteps = SWING_STRAIGHT.toInt()..SWING_MAX.toInt()
                     val own = track.swing?.roundToInt()?.coerceIn(swingSteps)
                     val song = stringResource(Res.string.track_swing_song)
@@ -135,7 +134,7 @@ private fun swingName(amount: Int?, song: String, straight: String) = when {
     else -> "$amount%"
 }
 
-/** The palette as dots, the chosen one ringed; two lines when the interface is large. */
+/** The palette as dots with the chosen one ringed; two lines at large UI scales. */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun ColourRow(current: androidx.compose.ui.graphics.Color, onPick: (Int) -> Unit) {

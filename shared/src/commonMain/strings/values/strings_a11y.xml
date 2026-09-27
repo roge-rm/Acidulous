@@ -1,8 +1,8 @@
 <resources>
-    <!-- What TalkBack says about controls that are drawn rather than written: ui/Accessibility.kt and its callers. -->
+    <!-- What TalkBack says about controls that are drawn instead of made of text: ui/Accessibility.kt and its callers. -->
     <string name="a11y_reset">Reset</string>
     <string name="a11y_choose">Choose from list</string>
-    <!-- After a knob's value, when a lane or step locks move it. -->
+    <!-- After a knob's value, when lane or step locks are moving it. -->
     <string name="a11y_automated">%s, automated</string>
     <string name="a11y_locked">%s, locked on some steps</string>
     <!-- A control's name and one of its choices, or its value: "wave: saw". -->
@@ -22,7 +22,7 @@
     <string name="a11y_record">Record</string>
     <string name="a11y_armed">armed</string>
     <string name="a11y_not_armed">not armed</string>
-    <!-- Record's state, when the metronome is on too. -->
+    <!-- Record's state when the metronome is on too. -->
     <string name="a11y_with_click">%s, click on</string>
     <string name="a11y_click_on">Turn the click on</string>
     <string name="a11y_click_off">Turn the click off</string>
@@ -45,7 +45,7 @@
     <string name="a11y_page">page %1$d of %2$d</string>
     <string name="a11y_velocity">Velocity</string>
     <string name="a11y_velocity_touch">from where you touch</string>
-    <!-- Its twin where the pointer is a mouse: the desktop build. -->
+    <!-- The same for the desktop build, where the pointer is a mouse. -->
     <string name="a11y_velocity_touch_mouse">from where you click</string>
     <string name="a11y_velocity_full">full</string>
     <string name="a11y_step_view">Step view</string>
@@ -163,7 +163,7 @@
         <item quantity="other">Piano roll, %1$d notes, from %2$s to %3$s</item>
     </plurals>
 
-    <!-- The perform pages. TalkBack cannot hold, so a double tap switches a held effect on and off. -->
+    <!-- The perform pages. TalkBack can't hold, so a double tap switches a held effect on and off. -->
     <string name="a11y_xy">Pad: %1$s to %2$s across, %3$s going up</string>
     <string name="a11y_xy_press">Press in the middle</string>
     <string name="a11y_xy_release">Let go</string>

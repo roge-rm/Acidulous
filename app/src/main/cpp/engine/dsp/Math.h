@@ -12,17 +12,9 @@ inline float dbToGain(float db) { return std::pow(10.0f, db / 20.0f); }
 
 // Pade-style tanh: cheap, monotonic, good to ~1e-3 in the range that matters.
 //
-// The seam is at three and not at four, and that is arithmetic rather than
-// taste. Differentiating the rational part gives 9(x^2-9)^2 over the square
-// of its denominator, so it is stationary at x = 3 - and there it evaluates
-// to 3(27+9)/(27+81), which is exactly one. Three is therefore the one place
-// the curve and the clamp agree in value *and* in slope.
-//
-// At four they do not: the rational part has climbed to 1.005848 by then, so
-// the old seam stepped back down by 5.8e-3 on the way out and the function
-// was neither monotonic nor a tanh - it returned more than one for every
-// |x| between 3 and 4. Reachable wherever a drive knob multiplies before
-// this is called.
+// The clamp is at 3 because that's where the rational part reaches exactly 1
+// with zero slope, so the curve and the clamp meet smoothly. Past 3 it goes
+// above 1.
 inline float fastTanh(float x) {
     if (x < -3.0f) return -1.0f;
     if (x > 3.0f) return 1.0f;
@@ -37,19 +29,12 @@ inline float onePoleCoeff(float seconds, float sampleRate) {
 }
 
 /**
- * Push a number that has fallen into the denormal range down to zero.
+ * Flushes a denormal to zero.
  *
- * A denormal is a float so small it has left the normal exponent range, and
- * on most hardware arithmetic on one costs tens to hundreds of times what the
- * same arithmetic costs on a normal number. Nothing sounds different - the
- * values are far below anything audible - so this is invisible until it is
- * measured, and then it is enormous: Nexus's vocoder block fed near-silence
- * ran at three times realtime on a desktop, which is under one on a phone.
- *
- * Anything that decays towards zero without reaching it will get there: a
- * leaky integrator, an envelope follower, a filter's state, a feedback line.
- * Adding and subtracting the same tiny number is exact for a normal float and
- * lands on zero for a denormal one, which is the whole trick.
+ * Denormals are inaudible but very slow on most CPUs, and anything decaying
+ * toward zero ends up in them (filter states, envelope followers, feedback).
+ * Adding and subtracting a tiny number leaves a normal float unchanged and
+ * turns a denormal into zero.
  */
 inline float undenormal(float v) {
     static constexpr float kTiny = 1.0e-20f;
@@ -57,13 +42,9 @@ inline float undenormal(float v) {
 }
 
 /**
- * [undenormal] where no thread can be told to flush denormals, and nothing at
- * all where one can (Denormals.h). That is WebAssembly: its floats are IEEE to
- * the letter and a page cannot set the CPU's flush-to-zero, so in a browser
- * every filter state and feedback path that decays spends its last few dB on
- * the slow path - Reflux through a Distortion cost five times as much in its
- * tail as with the flag. The web build defines ACID_SOFT_DENORMALS; everywhere
- * else this is the value itself and costs nothing.
+ * [undenormal] on WebAssembly, where the CPU's flush-to-zero can't be set
+ * (see Denormals.h). The web build defines ACID_SOFT_DENORMALS. Everywhere
+ * else this just returns the value.
  */
 inline float guardDenormal(float v) {
 #if defined(ACID_SOFT_DENORMALS)
@@ -79,24 +60,11 @@ inline float clampf(float v, float lo, float hi) { return v < lo ? lo : (v > hi 
  * Where to read in a circular buffer, for a write head at [writeHead] and a
  * delay of [samples]. Writes the interpolation fraction to [frac].
  *
- * **The whole reason this is a function is the third line.** Bringing a small
- * negative position into range by adding the buffer length can land *on* the
- * length rather than under it: the position is a float, and a hundredth of a
- * sample below zero plus 96000.0f rounds to exactly 96000, because the
- * difference is far below half an ulp there. The index is then one past the
- * end - and the fraction is zero, so that out-of-bounds float is returned at
- * full weight rather than as a rounding error.
+ * Use this for every circular buffer read. Adding the buffer length to a
+ * tiny negative float position can round to exactly the length (e.g. -0.01 +
+ * 96000.0f == 96000), one past the end. The third line catches that.
  *
- * It has now been found twice. The send delay crashed on it the day the engine
- * started following a Link session, because a tempo nudged every block keeps
- * the read position gliding and a gliding position eventually lands there.
- * Then the reverb: a ten millisecond pre-delay at 48 kHz asks for 480.000031
- * samples, which does it on the *first* read of every render, and the garbage
- * it picked up from past the end of the buffer made the bank test report a
- * reverb that "played differently the second time" for weeks.
- *
- * The condition is written as a failed less-than so that a position which is
- * not a number goes to zero rather than being used as an index.
+ * The check is written as a failed less-than so a NaN position also goes to 0.
  */
 inline int32_t wrappedReadIndex(int32_t writeHead, float samples, int32_t size, float &frac) {
     float pos = static_cast<float>(writeHead) - samples;

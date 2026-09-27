@@ -5,14 +5,13 @@
 #include <string>
 #include <vector>
 
-// SoundFont 2 reader. Ours, no dependency, and deliberately partial: it reads
-// what a multisample player needs - presets, their instruments, key and
-// velocity zones, root keys, tuning, loops, attenuation, pan and the volume
-// envelope - and ignores modulators, chorus and reverb sends, and anything
-// the engine has its own answer for.
+// SoundFont 2 reader. It reads what a multisample player needs: presets,
+// their instruments, key and velocity zones, root keys, tuning, loops,
+// attenuation, pan and the volume envelope. Modulators, chorus and reverb
+// sends and anything the engine does itself are ignored.
 //
-// Only the chosen preset's samples are decoded, so opening one instrument out
-// of a large bank costs what that instrument costs.
+// Only the chosen preset's samples are decoded, so loading one instrument
+// from a large bank stays cheap.
 namespace acidulous {
 
 class Sf2Reader {
@@ -23,7 +22,7 @@ class Sf2Reader {
         std::string name;
     };
 
-    // Reads only the headers. Cheap enough to call to fill a picker.
+    // Reads only the headers, so it's cheap enough to fill a picker.
     static bool listPresets(const std::string &path, std::vector<PresetInfo> &out, std::string &error);
 
     // Builds one preset into a playable map. `presetIndex` indexes the list

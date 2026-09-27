@@ -52,7 +52,7 @@ void WavWriter::write(const float *interleaved, int32_t framesIn) {
         for (int32_t i = 0; i < n * kChannels; ++i) {
             float v = interleaved[(done * kChannels) + i];
             if (floatFormat) {
-                // No clamp: the point of float is that it does not need one.
+                // Float is written as is, without clamping.
                 std::memcpy(buf + i * 4, &v, 4);
                 continue;
             }

@@ -5,15 +5,12 @@
 #include <engine/dsp/Osc.h>
 #include <engine/machine/Machine.h>
 
-// Reflux - the signature machine, in its first form. Not a copy of the
-// classic acid box: the brief is to take it where its own modern descendants
-// went. This is the classic layer only - saw or pulse, a resonant lowpass
-// with envelope-modulated cutoff, decay, accent and slide - voiced by ear,
-// tuned later.
+// Reflux is the acid bass: saw or pulse into a resonant lowpass with an
+// envelope on the cutoff, decay, accent and slide.
 //
-// Monophonic with last-note priority. Slide is legato: a note-on while one is
-// held glides the pitch and leaves the envelopes alone. Accent is velocity at
-// or above the threshold: more envelope, more level.
+// Monophonic with last-note priority. Slide is legato: a note-on while another
+// is held glides the pitch and leaves the envelopes alone. Accent is velocity
+// at or above kAccentVelocity and gives more envelope and more level.
 namespace acidulous::machine {
 
 class Reflux final : public Machine {
@@ -21,7 +18,7 @@ class Reflux final : public Machine {
     enum P : int32_t { Wave, Tune, Cutoff, Resonance, EnvMod, Decay, Accent, Slide, Drive, Volume,
                        // the open layer
                        PulseWidth, Sub, Mode,
-                       // appended: how much velocity sets the level
+                       // added later: how much velocity sets the level
                        Velocity, Count };
 
     Reflux();

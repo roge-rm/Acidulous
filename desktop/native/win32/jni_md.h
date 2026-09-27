@@ -1,8 +1,8 @@
 /*
- * The platform half of the JNI headers, for building the engine for Windows
- * on Linux: jni.h itself is the same everywhere, and the cross compiler has
- * only Linux's JDK to take it from. What Windows' own jni_md.h says, in the
- * types this code already uses - jint is 32 bits and jlong 64 either way.
+ * The platform part of the JNI headers, for building the Windows engine on
+ * Linux. jni.h is the same everywhere, but the cross compiler only has the
+ * Linux JDK. These match Windows' own jni_md.h, using the types this code
+ * already uses (jint is 32 bits and jlong 64 either way).
  */
 #ifndef ACIDULOUS_WIN32_JNI_MD_H
 #define ACIDULOUS_WIN32_JNI_MD_H

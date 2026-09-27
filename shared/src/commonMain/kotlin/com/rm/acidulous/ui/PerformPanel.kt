@@ -56,11 +56,9 @@ import kotlinx.coroutines.delay
 import com.rm.acidulous.res.*
 
 /**
- * What the perform pages are holding.
- *
- * Kept above the pages rather than in them, so that a repeat latched on the
- * hold page is still on - and still shown as on - after a turn to the live
- * page to drop a track out. Each value is what was last sent to the engine.
+ * What the perform pages are holding. Kept above the pages so a repeat
+ * latched on the hold page stays on (and shown as on) after switching to
+ * the live page. Each value is what was last sent to the engine.
  */
 class PerformState {
     var holdLatch by mutableStateOf(false)
@@ -76,8 +74,8 @@ class PerformState {
     var pad by mutableStateOf<Offset?>(null)
 
     /**
-     * The transport stopped and the engine let go of everything, so this
-     * forgets it too. Nothing is sent: there is nothing left on to turn off.
+     * Called when the transport stops and the engine has released everything.
+     * Sends nothing, since there's nothing left to turn off.
      */
     fun forgetHeld() {
         repeat = 0
@@ -109,10 +107,9 @@ private val KILLS = listOf("killlow", "killmid", "killhigh")
 private val KILL_H = 52.dp
 
 /**
- * Things that happen in time: repeat, gate, reverse, tape stop and the riser.
- *
- * Held, or with **latch** on, tapped on and tapped off. Turning latch off
- * lets go of whatever it was holding.
+ * Timed effects: repeat, gate, reverse, tape stop and the riser. Held, or
+ * with latch on, tapped on and tapped off. Turning latch off releases
+ * whatever it was holding.
  */
 @Composable
 fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
@@ -174,9 +171,8 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
 }
 
 /**
- * Shaping the sound: the pad, and the kills under it. Across the pad is a
- * filter or a crush, and up it is how much of the mix is thrown into an echo
- * or a wash.
+ * The pad and the kills under it. Across the pad is a filter or crush, up
+ * is how much of the mix goes into an echo or a wash.
  */
 @Composable
 fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
@@ -198,7 +194,7 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
                         }
                     }
                 }
-                // A wash has a time of its own; only the echo's is a setting.
+                // A wash has its own time; only the echo's is a setting.
                 if (settings.yMode == 0) {
                     Setting(stringResource(Res.string.perform_echo), THROW_TIMES[settings.throwTime], Modifier.fillMaxWidth()) {
                         editor.editSong { s ->
@@ -240,7 +236,7 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
                 out.pad(at)
             }
         }
-        // The kills under the pad, so a hand on the pad has them in reach.
+        // The kills sit under the pad so they're in reach.
         Row(Modifier.fillMaxWidth().height(KILL_H), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             val kills = stringArrayResource(Res.array.perform_kills)
             for (b in 0 until 3) {
@@ -254,19 +250,18 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
 }
 
 /**
- * The song's parts: every track's mute, and fill.
+ * Every track's mute, and fill.
  *
- * A mute here is the mixer's own mute, and the strip shows it too. While the
- * song plays it waits for the next bar (or beat, from **mute on**) and is
- * drawn outlined until it lands. The song's own mute only changes once the
- * engine's has, so nothing pushed in between can land it early. Fill is the
- * same held fill the editor has, and like it is never recorded.
+ * A mute here is the mixer's mute. While the song plays it waits for the
+ * next bar (or beat, with mute on) and is drawn outlined until it lands. The
+ * song's mute only changes after the engine's has, so nothing in between
+ * can land it early. Fill is the editor's held fill and is never recorded.
  */
 @Composable
 fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modifier: Modifier = Modifier) {
     val c = Acid.colors
     val settings = song.master.perform
-    // What each track's mute is on its way to, while it waits for its line.
+    // The state each waiting mute is heading to.
     val waiting = remember { mutableStateMapOf<Int, Boolean>() }
     LaunchedEffect(Unit) {
         while (true) {
@@ -279,7 +274,7 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
             }
         }
     }
-    // A stop drops whatever was waiting, in the engine and so here.
+    // A stop drops anything waiting, in the engine and here.
     LaunchedEffect(playing) { if (!playing) waiting.clear() }
     fun toggle(i: Int) {
         val track = song.tracks.getOrNull(i) ?: return
@@ -298,8 +293,8 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
     Row(modifier.background(c.panelAlt).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(Modifier.weight(3f).fillMaxHeight().together(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Caption(stringResource(Res.string.perform_mute))
-            // Four across, the way the track picker lays sixteen out, and
-            // always four rows tall so a short song's buttons are not huge.
+            // Four across like the track picker, and always four rows tall so a
+            // short song's buttons aren't huge.
             val rows = song.tracks.indices.chunked(4)
             for (row in rows) {
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -334,7 +329,7 @@ private fun Caption(text: String, modifier: Modifier = Modifier) {
     Text(text, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = modifier)
 }
 
-/** A setting you tap through: its name, and what it is set to. */
+/** A setting you tap through, showing its name and value. */
 @Composable
 private fun Setting(label: String, value: String, modifier: Modifier, onClick: () -> Unit) {
     val c = Acid.colors
@@ -346,8 +341,8 @@ private fun Setting(label: String, value: String, modifier: Modifier, onClick: (
 }
 
 /**
- * Where the held effects run: "on all", or on one of the groups. Only there
- * when the song has a group; a tap moves to the next.
+ * Where the held effects run: on all, or on one group. Only shown when the
+ * song has a group. A tap moves to the next.
  */
 @Composable
 private fun TargetChip(song: Song, editor: SongEditor, modifier: Modifier) {
@@ -386,7 +381,7 @@ private fun LatchChip(on: Boolean, modifier: Modifier, onClick: () -> Unit) {
 
 /**
  * One track's mute: its colour down the side, its name, red while muted.
- * [waiting] is the state it is on its way to, drawn as an outline in that
+ * [waiting] is the state it's heading to, drawn as an outline in that
  * state's colour until it lands.
  */
 @Composable
@@ -416,8 +411,8 @@ private fun TrackMute(name: String, colour: Color, muted: Boolean, waiting: Bool
 }
 
 /**
- * Lengths side by side, played as one strip. Held: press one, slide along to
- * change it, lift to stop. Latched: tap one on, tap it again for off, tap
+ * Lengths side by side, played as one strip. Held: press one, slide to
+ * change it, lift to stop. Latched: tap one on, tap again for off, tap
  * another to change.
  */
 @Composable
@@ -453,7 +448,7 @@ private fun LengthStrip(labels: List<String>, held: Int, latch: Boolean, modifie
             val on = held == i + 1
             Box(
                 Modifier.weight(1f).fillMaxHeight().background(if (on) c.accent.copy(alpha = 0.35f) else c.raised)
-                    // A double tap holds it, and another lets go.
+                    // A double tap holds it, another releases it.
                     .choice(stringResource(Res.string.a11y_named, name, label), on) { cb(if (on) 0 else i + 1) },
                 contentAlignment = Alignment.Center,
             ) { Text(label, color = if (on) c.accent else c.textMid, fontSize = 12.sp, maxLines = 1, softWrap = false) }
@@ -461,7 +456,7 @@ private fun LengthStrip(labels: List<String>, held: Int, latch: Boolean, modifie
     }
 }
 
-/** On while a finger is on it, or with [latch], tapped on and off. */
+/** On while held, or with [latch], tapped on and off. */
 @Composable
 private fun HoldPad(label: String, on: Boolean, latch: Boolean, colour: Color, modifier: Modifier, onHold: (Boolean) -> Unit) {
     val c = Acid.colors
@@ -490,8 +485,8 @@ private fun HoldPad(label: String, on: Boolean, latch: Boolean, colour: Color, m
 }
 
 /**
- * The pad. Held, it goes back to rest when the finger lifts; latched, it
- * stays where it was left.
+ * The pad. Held, it returns to rest when the finger lifts. Latched, it stays
+ * where it was left.
  */
 @Composable
 private fun XyPad(

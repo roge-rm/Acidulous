@@ -9,20 +9,19 @@ import java.awt.event.MouseEvent
 import javax.swing.Timer
 
 /**
- * A right-click is a hold.
+ * Turns a right-click into a long press.
  *
- * The phone opens a thing's settings, menus and second actions on a long
- * press, and a desktop's hand goes to the right button for the same. Rather
- * than teach each of the app's holds a second button, the right button is
- * turned here into the left one held down past the long-press time and let
- * go: every hold answers it, whichever way it was written, and nothing in the
- * shared code knows. A held left button is a hold already.
+ * On Android, settings, menus and second actions open on a long press, and on
+ * desktop people reach for the right button. So the right button is turned
+ * into a left press held past the long-press time and then released. Every
+ * long press in the shared code handles it without knowing. Holding the left
+ * button already works as a long press.
  *
- * While the made-up press is down the mouse's movements are kept back, so a
- * hand drifting off the button does not turn the hold into a drag.
+ * Mouse movement is swallowed while the fake press is down, so the mouse
+ * drifting doesn't turn it into a drag.
  */
 internal object RightClickHold {
-    /** Past Compose's long press (500 ms) by enough to be sure of it. */
+    /** Safely past Compose's long press time (500 ms). */
     private const val HOLD_MS = 600
 
     private var pressed: Component? = null
@@ -40,7 +39,7 @@ internal object RightClickHold {
         })
     }
 
-    /** True when [e] was the right button's, or a movement during the hold, and is spoken for. */
+    /** True when [e] is a right-button event, or movement during the hold, and has been handled here. */
     private fun take(e: MouseEvent): Boolean {
         val right = e.button == MouseEvent.BUTTON3 ||
             (e.id == MouseEvent.MOUSE_DRAGGED && e.modifiersEx and InputEvent.BUTTON3_DOWN_MASK != 0)
@@ -54,7 +53,7 @@ internal object RightClickHold {
             }
             return true
         }
-        // The left button's own, or the mouse moving, while the hold is down.
+        // Swallow mouse movement while the hold is down.
         return pressed != null && (e.id == MouseEvent.MOUSE_MOVED || e.id == MouseEvent.MOUSE_DRAGGED)
     }
 
@@ -65,8 +64,8 @@ internal object RightClickHold {
         pressY = e.y
         pressedAt = System.currentTimeMillis()
         target.dispatchEvent(leftEvent(target, MouseEvent.MOUSE_PRESSED, e.modifiersEx))
-        // Let go at the hold's length even if the right button is still down,
-        // as the phone's hold acts at its length and not at the lift.
+        // Release after the hold time even if the right button is still down,
+        // since a long press fires at that time, not when the finger lifts.
         later(HOLD_MS)
     }
 

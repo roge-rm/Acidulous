@@ -7,32 +7,29 @@
 
 namespace acidulous::machine {
 
-// What a sliced loop reaches before the output stage, and so what the drive
-// stage should treat as its nominal level.
+// The level a sliced loop reaches before the output stage, used as the drive
+// stage's nominal level.
 constexpr float kNominal = 0.3f;
-// Where this machine's bank sits in the volume knob's travel, set from Init -
-// which carries no `volume` line, and so is the only patch that says what the
-// machine does at its defaults. Without one, Init measured 1.7 dB over the
-// bank's line and Dust, which throws away level through a short gate and a
-// low filter, ran out of knob 5.5 dB under it.
+// Output gain that puts Init (the defaults) at the same level as the other
+// patches, leaving room on the volume knob for quieter patches like Dust.
 constexpr float kHouse = 0.82f;
-// Sixty decibels, as a multiple of the time constant: a decay stated in
-// seconds has to be the time to fall sixty, or the number is a fiction.
+// 60 dB as a multiple of the time constant, so a decay in seconds is the
+// time to fall 60 dB.
 constexpr float kLn1000 = 6.907755f;
 // A per-slice decay at or above the top of its range means no decay at all.
 constexpr float kDecayOff = 4.0f;
-// The ramps at a slice's edges, in frames at 48 kHz. Short enough that a
-// kick still arrives as a kick, long enough that the boundary is not a step.
+// The fades at a slice's edges, in frames at 48 kHz. Short enough to keep a
+// kick's attack, long enough not to click.
 constexpr int32_t kFadeIn = 24;   // half a millisecond
 constexpr int32_t kFadeOut = 96;  // two milliseconds
-// A following voice's buffer of stretched audio, and how much is asked of the
-// stretcher at a time. The margin keeps enough in hand that when the loop runs
-// out under a slice, what is left is long enough to fade rather than stop -
-// at the pitch knob's top, four times the fade.
+// A following voice's buffer of stretched audio, and how much is pulled from
+// the stretcher at a time. The margin keeps enough audio that when the loop
+// runs out mid-slice there's enough left to fade out (four times the fade at
+// the highest pitch).
 constexpr int32_t kHeld = 4096;
 constexpr int32_t kPull = 256;
 constexpr int32_t kHeldMargin = 512;
-// A half, then 1 to 16: the bars knob past auto.
+// 1/2, then 1 to 16: the bars knob values after auto.
 constexpr float kBarsOf[] = {0.5f, 1.0f, 2.0f, 4.0f, 8.0f, 16.0f};
 
 Dice::Dice() { initParams(); }
@@ -112,7 +109,7 @@ void Dice::allNotesOff() {
 
 void *Dice::swapObject(int32_t slot, void *object) {
     if (slot != 0) return object;
-    for (auto &v : voices) v.used = false; // they hold positions into the old loop
+    for (auto &v : voices) v.used = false; // they hold positions in the old loop
     void *old = const_cast<audio::Take *>(take);
     take = static_cast<const audio::Take *>(object);
     builtFrames = -1; // recut against the new loop
@@ -120,10 +117,8 @@ void *Dice::swapObject(int32_t slot, void *object) {
 }
 
 /**
- * Where the cuts fall. Either the loop's own transients - which is what you
- * want on a break, because that is where the hits are - or an even grid,
- * which is what you want when the loop is a pad or the detector finds
- * nothing useful.
+ * Works out where the cuts fall: at the loop's transients (best for breaks)
+ * or on an even grid (for pads, or when the detector finds nothing useful).
  */
 void Dice::recut() {
     slices = 0;
@@ -131,8 +126,8 @@ void Dice::recut() {
     const int32_t want = std::clamp(steppedOf(SliceCount), 2, kSlices);
     const int32_t mode = steppedOf(CutMode);
     if (mode == 0 && !take->onsets.empty()) {
-        // Onsets, thinned evenly when there are more of them than slices:
-        // taking the first N would slice the first bar and ignore the rest.
+        // With more onsets than slices, pick them evenly across the loop.
+        // Taking the first N would only slice the first bar.
         const int32_t found = static_cast<int32_t>(take->onsets.size());
         const int32_t n = std::min(want, found);
         for (int32_t i = 0; i < n; ++i) {
@@ -160,17 +155,15 @@ float Dice::loopBpm() const {
 }
 
 /**
- * Point a following voice's stretcher at the top of its slice.
+ * Points a following voice's stretcher at the start of its slice.
  *
- * A stretcher's first hop has nothing to overlap, so it comes out as the
- * source times the rising half of the window - fifteen milliseconds of fade on
- * what is, on a break, the kick. The other half of the window times the same
- * source is exactly what is missing, so it is added here and the first hop is
- * the source untouched, attack and all.
+ * The stretcher's first hop has nothing to overlap, so it comes out faded in
+ * by the rising half of the window, which would soften the kick. The missing
+ * half is added here so the first hop is the untouched source.
  */
 void Dice::startStretch(Voice &v) const {
-    // Round the loop's end into its start, which is what follows it anyway,
-    // so the last slice is not a window short.
+    // Wrap the loop's end into its start so the last slice isn't a window
+    // short.
     v.stretch.setLoop(true);
     v.stretch.seek(v.start);
     v.heldHave = 0;
@@ -189,7 +182,7 @@ void Dice::startStretch(Voice &v) const {
     v.heldHave = made;
 }
 
-/** More stretched audio into a following voice's buffer; false when the loop has run out. */
+/** Adds stretched audio to a following voice's buffer. False when the loop has run out. */
 bool Dice::pullStretch(Voice &v, const float *left, const float *right) const {
     if (v.heldPos >= kHeld / 2) {
         const int32_t k = static_cast<int32_t>(v.heldPos);
@@ -208,24 +201,17 @@ bool Dice::pullStretch(Voice &v, const float *left, const float *right) const {
 
 Dice::Voice *Dice::allocate() {
     for (auto &v : voices) if (!v.used) return &v;
-    // A slicer steals rather than refuses - the beat comes first - but it has
-    // to steal the *oldest* slice, not `voices[0]`.
-    //
-    // Taking the first slot cut whichever slice happened to live there, dead,
-    // at whatever amplitude it was passing through: on Held, where `hold`
-    // makes every roll land in the same place each pass, that was a step of
-    // 0.71 once a bar and a click reading three hundred thousand times the
-    // surrounding slope. The oldest voice is the one nearest its own end, so
-    // it is both the least missed and the quietest place to cut.
+    // Always steal a voice, and steal the oldest one. It's nearest its end,
+    // so it's the least missed and the quietest place to cut.
     Voice *oldest = &voices[0];
     for (auto &v : voices) if (v.age > oldest->age) oldest = &v;
     return oldest;
 }
 
 /**
- * The dice for one trigger. Held, the rolls come from the slice and the seed
- * alone, so every pass is identical and a take can be recorded; free, they
- * come from a counter that never repeats.
+ * The random seed for one trigger. With Hold, the rolls come only from the
+ * slice and the seed, so every pass is the same. Otherwise they come from a
+ * counter that never repeats.
  */
 uint32_t Dice::rollFor(int32_t slice) {
     if (steppedOf(Hold) != 0) {
@@ -255,7 +241,7 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     };
 
     ++triggers;
-    if (chance(targetOf(Drop))) return; // the roll said nothing
+    if (chance(targetOf(Drop))) return; // dropped
 
     int32_t slice = asked;
     if (chance(targetOf(Swap))) slice = static_cast<int32_t>(uniform() * slices) % slices;
@@ -279,10 +265,9 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->start = bounds[slice];
     v->end = bounds[slice + 1];
     if (v->end <= v->start) v->end = std::min(take->frames, v->start + 64);
-    // Following, the tempo ratio sets how fast the loop goes by and the pitch
-    // knob only its pitch. A reversed slice cannot go through a stretcher that
-    // reads forwards, so it goes by at the ratio as tape would: in tune at the
-    // loop's own tempo, and a little off it elsewhere.
+    // When following, the tempo ratio sets the speed and the pitch knob only
+    // the pitch. The stretcher only reads forwards, so a reversed slice just
+    // plays faster or slower like tape, which shifts its pitch a little.
     const float lb = loopBpm();
     const bool follow = steppedTargetOf(Follow) != 0 && lb > 0.0f && take->frames > dsp::StereoStretch::kWindow * 2;
     const float tempo = follow ? songBpm / lb : 1.0f;
@@ -311,15 +296,10 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->gainL = std::cos(angle) * level * 1.4142f;
     v->gainR = std::sin(angle) * level * 1.4142f;
     v->env = 1.0f;
-    // Gate at one lets a slice run to its own end; below that it is cut
-    // short, which is what makes a loop breathe rather than smear.
+    // Gate at 1 lets a slice run to its end. Lower values shorten it.
     //
-    // The decay is the time to fall sixty decibels, not one time constant -
-    // the same correction Hexbeat and Genesis needed, where a label in
-    // seconds meant seven times what it said. The top of the range is the
-    // exception and means *no* decay: a slicer playing a loop straight must
-    // not fade every slice, and four seconds read honestly would take three
-    // and a half decibels off a quarter-second slice.
+    // The decay is the time to fall 60 dB. The top of the range means no
+    // decay, so a loop played straight doesn't fade every slice.
     const float decay = sliceParam(slice, Decay) * std::max(0.02f, targetOf(Gate));
     v->envCoeff = decay >= kDecayOff ? 0.0f
                                      : 1.0f - std::exp(-kLn1000 / (decay * sampleRate));
@@ -327,7 +307,7 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->filterR.reset();
 }
 
-void Dice::noteOff(uint8_t) {} // a slice plays its length; it is not held
+void Dice::noteOff(uint8_t) {} // a slice plays its full length
 
 bool Dice::render(float *L, float *R, int32_t frames) {
     params_.tick();
@@ -378,16 +358,10 @@ bool Dice::render(float *L, float *R, int32_t frames) {
                 sl = left[idx] + (left[next] - left[idx]) * f;
                 sr = right[idx] + (right[next] - right[idx]) * f;
             }
-            // Ramped at both ends.
-            //
-            // A slice cut at onsets ends exactly where the next transient
-            // begins, so its last sample is nowhere near zero and stopping
-            // there is a step - the harness measured sixteen thousand times
-            // the surrounding slope on Straight and three hundred thousand on
-            // Held. The out ramp is the longer of the two because that is the
-            // end that lands on a transient; the in ramp only has to cover a
-            // grid cut landing mid-waveform, and any longer would eat the
-            // attack that a slicer exists to deliver.
+            // Faded at both ends so slices don't click. The fade out is
+            // longer since an onset cut ends right on the next transient. The
+            // fade in only has to cover a grid cut landing mid-waveform, and
+            // longer would soften the attack.
             const float rampIn = v.age < kFadeIn
                                      ? static_cast<float>(v.age) / static_cast<float>(kFadeIn)
                                      : 1.0f;
@@ -403,7 +377,7 @@ bool Dice::render(float *L, float *R, int32_t frames) {
             else v.pos += v.inc;
             if (--v.left <= 0) {
                 if (v.repeats > 1) {
-                    // A stutter is the same piece again, not the next one.
+                    // A stutter repeats the same piece.
                     --v.repeats;
                     if (v.follows) {
                         startStretch(v);
@@ -412,7 +386,7 @@ bool Dice::render(float *L, float *R, int32_t frames) {
                         v.pos = v.inc < 0 ? v.end - 1 : v.start;
                         v.left = static_cast<int32_t>(v.repeatLen / std::max(0.05, std::fabs(v.inc)));
                     }
-                    v.age = 0; // a repeat is a new start, and needs the same ramp
+                    v.age = 0; // a repeat starts over and needs the same fade in
                 } else {
                     v.used = false;
                 }
@@ -424,10 +398,8 @@ bool Dice::render(float *L, float *R, int32_t frames) {
     for (int32_t i = 0; i < frames; ++i) {
         float l = L[i] * volume * kHouse, r = R[i] * volume * kHouse;
         if (drive > 0.0001f) {
-            // Normalised on the nominal level, not on the ceiling. The fourth
-            // machine to carry `tanh(x * k) / sqrt(k)`, after Hexbeat, Genesis
-            // and Pollen: sqrt(k) grows faster than the tanh recovers, so the
-            // knob bought dirt by spending level.
+            // Normalised on the nominal level so the drive knob changes the
+            // character and not the level.
             const float k = 1.0f + drive * 10.0f;
             const float norm = kNominal / dsp::fastTanh(kNominal * k);
             l = dsp::fastTanh(l * k) * norm;

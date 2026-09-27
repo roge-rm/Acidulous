@@ -10,17 +10,11 @@ import org.junit.Test
 /**
  * What a copied clip carries, and the one thing it must not.
  *
- * A clip holds two references to files on disk and they are not alike. A
- * `TakeRef` is a window into a shared, immutable recording - one take across
- * four scenes is four clips and one file - so a second clip pointing at it is
- * what that design is for. A `Frozen` is a render named after the track and
- * scene it was made for, and `Freeze.discard` deletes that file: two clips
- * pointing at one render means thawing either one silences both, and pasted
- * onto another track it is a render of the wrong machine entirely.
- *
- * So the freeze is the one thing a copy drops, and that is worth a test rather
- * than a comment, because nothing about it is visible until somebody thaws a
- * clip and a different one goes quiet.
+ * A `TakeRef` points into a shared recording that never changes (one take
+ * across four scenes is four clips and one file), so copies can share it. A
+ * `Frozen` render is named for its track and scene, and `Freeze.discard`
+ * deletes the file, so two clips sharing it means thawing one silences both.
+ * A copy must drop the freeze.
  */
 class ClipCopyTest {
 
@@ -44,8 +38,8 @@ class ClipCopyTest {
         val source = full()
         val copy = source.asCopy()
         assertNull("a copy must not carry the freeze", copy.frozen)
-        // And the source keeps its own, which is the half that would be found
-        // late: a copy that stole the freeze would silence the clip it came from.
+        // And the source keeps its own. A copy that took the freeze would
+        // silence the clip it came from.
         assertEquals("the source kept its freeze", "t-bass__s-verse.wav", source.frozen?.file)
     }
 
@@ -72,9 +66,8 @@ class ClipCopyTest {
     @Test
     fun aCopyHasItsOwnIdentity() {
         // The engine caches a marshalled clip by `rev` alone, so two cells
-        // sharing one would share an engine clip. `rev` lives outside the
-        // constructor for exactly this reason - every construction mints one -
-        // and this is the test that says so out loud.
+        // sharing one would share an engine clip. That's why `rev` lives outside
+        // the constructor and every construction makes a new one.
         val source = full()
         assertNotEquals("a copy is a different clip", source.rev, source.asCopy().rev)
         assertNotEquals("and so is the next one", source.asCopy().rev, source.asCopy().rev)

@@ -1,16 +1,14 @@
-// MIDI on Linux through ALSA's sequencer, for AlsaSeq.kt: every port the
-// sequencer knows - the kernel's for each USB or other hardware MIDI device,
-// and those of other programs and of BlueZ's Bluetooth MIDI, which raw MIDI
-// (Java Sound's) never sees.
+// MIDI on Linux through the ALSA sequencer, for AlsaSeq.kt. It sees every
+// sequencer port: hardware MIDI devices, other programs, and BlueZ Bluetooth
+// MIDI, which Java Sound's raw MIDI can't see.
 //
-// libasound is opened here rather than linked, as miniaudio opens it for the
-// audio: the engine builds with nothing but the headers (third_party/alsa),
-// and a machine without the library, or without the sequencer, is told so and
-// falls back to Java Sound's raw MIDI.
+// libasound is loaded at runtime rather than linked, like miniaudio does for
+// audio, so the engine builds with just the headers (third_party/alsa). On a
+// machine without it we fall back to Java Sound's raw MIDI.
 //
-// One sequencer handle, open for as long as the app runs: the reading thread
-// only ever reads, and everything else - sends, the port list, connecting -
-// takes the lock.
+// One sequencer handle, open for as long as the app runs. The reading thread
+// only reads. Everything else (sending, listing ports, connecting) takes the
+// lock.
 
 #include <alsa/asoundlib.h>
 #include <android/log.h>
@@ -27,7 +25,7 @@
 
 namespace {
 
-/** libasound's functions this uses, typed from its own declarations. */
+/** The libasound functions we use, typed from its own declarations. */
 struct Alsa {
 #define ALSA_FN(name) decltype(&::name) name = nullptr
     ALSA_FN(snd_seq_open);
@@ -71,15 +69,15 @@ struct Alsa {
 #undef ALSA_FN
 };
 
-/** The largest message either way: a SysEx dump, whole. */
+/** The largest message in or out, big enough for a whole SysEx dump. */
 constexpr size_t kMaxMessage = 65536;
 
 Alsa alsa;
 std::mutex lock;
 snd_seq_t *seq = nullptr;
 int ownClient = -1;
-int inPort = -1;  // where what we are connected to arrives
-int outPort = -1; // what we send from
+int inPort = -1;  // where incoming messages arrive
+int outPort = -1; // where we send from
 snd_midi_event_t *encoder = nullptr;
 snd_midi_event_t *decoder = nullptr;
 
@@ -154,7 +152,7 @@ void closeLocked() {
 
 extern "C" {
 
-/** Open the sequencer as a client called "Acidulous": its client number, or below nought when there is none. */
+/** Open the sequencer as a client called "Acidulous". Returns its client number, or negative on failure. */
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_desktop_AlsaSeq_nativeOpen(JNIEnv *, jclass) {
     std::lock_guard<std::mutex> guard(lock);
@@ -168,8 +166,8 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeOpen(JNIEnv *, jclass) {
     }
     alsa.snd_seq_set_client_name(seq, "Acidulous");
     ownClient = alsa.snd_seq_client_id(seq);
-    // Ours alone: other programs connect to nothing here, because what comes
-    // in is sorted by the port it came from and a stranger's would go nowhere.
+    // Not open to other programs. Incoming messages are sorted by the port
+    // they came from, so one we didn't connect to would go nowhere.
     const unsigned type = SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION;
     inPort = alsa.snd_seq_create_simple_port(seq, "in",
         SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE | SND_SEQ_PORT_CAP_NO_EXPORT, type);
@@ -181,16 +179,16 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeOpen(JNIEnv *, jclass) {
         closeLocked();
         return -1;
     }
-    // Every message whole, status byte and all: the hub parses no running status.
+    // Always include the status byte. The hub doesn't handle running status.
     alsa.snd_midi_event_no_status(decoder, 1);
     LOGI("sequencer open as client %d", ownClient);
     return ownClient;
 }
 
 /**
- * Every port there is, seven strings in a row: client, port, capabilities,
- * client type (1 user, 2 kernel), card (-1 for none), client name, port name.
- * Which of them are instruments is AlsaSeq.kt's to decide.
+ * Every port as seven strings in a row: client, port, capabilities, client
+ * type (1 user, 2 kernel), card (-1 for none), client name, port name.
+ * AlsaSeq.kt decides which ones are instruments.
  */
 JNIEXPORT jobjectArray JNICALL
 Java_com_rm_acidulous_desktop_AlsaSeq_nativePorts(JNIEnv *env, jclass) {
@@ -230,7 +228,7 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativePorts(JNIEnv *env, jclass) {
     return array;
 }
 
-/** Hear what client:port sends, or stop hearing it. */
+/** Start or stop receiving from client:port. */
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_desktop_AlsaSeq_nativeListen(JNIEnv *, jclass, jint client, jint port, jboolean on) {
     std::lock_guard<std::mutex> guard(lock);
@@ -243,12 +241,11 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeListen(JNIEnv *, jclass, jint client
 }
 
 /**
- * Be connected to client:port for sending, or no longer. Sending needs it
- * even though every message names its destination: a hardware port opens
- * its device's output only when something is subscribed to it, and a
- * message to one nobody is subscribed to fails with "No such device" - which
- * is what Dan's Launchpad Pro answered, so it never heard it was to switch to
- * programmer mode.
+ * Subscribe to or unsubscribe from client:port for sending. Needed even
+ * though every message names its destination, because a hardware port only
+ * opens its device's output while something is subscribed. Otherwise sends
+ * fail with "No such device" (the Launchpad Pro never gets switched to
+ * programmer mode, for example).
  */
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_desktop_AlsaSeq_nativeSpeak(JNIEnv *, jclass, jint client, jint port, jboolean on) {
@@ -261,7 +258,7 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeSpeak(JNIEnv *, jclass, jint client,
     return err >= 0 ? JNI_TRUE : JNI_FALSE;
 }
 
-/** Send whole messages to client:port, now. */
+/** Send complete messages to client:port right away. */
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_desktop_AlsaSeq_nativeSend(JNIEnv *env, jclass, jint client, jint port,
                                                   jbyteArray bytes, jint offset, jint count) {
@@ -287,7 +284,7 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeSend(JNIEnv *env, jclass, jint clien
         snd_seq_ev_set_direct(&ev);
         const int err = alsa.snd_seq_event_output_direct(seq, &ev);
         if (err < 0) {
-            // Said once per destination and reason, not on every clock tick.
+            // Log once per destination and error, not on every clock tick.
             static int lastClient = -1, lastPort = -1, lastErr = 0;
             if (client != lastClient || port != lastPort || err != lastErr) {
                 LOGW("could not send to %d:%d: %s", client, port, alsa.snd_strerror(err));
@@ -300,15 +297,15 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeSend(JNIEnv *env, jclass, jint clien
 }
 
 /**
- * The next message that has come in, into [out]: its length, with the client
- * and port it came from in from[0] and from[1]; nought when nothing came
- * within [timeoutMs]; below nought once the sequencer has closed.
+ * Read the next incoming message into [out] and return its length, with the
+ * source client and port in from[0] and from[1]. Returns 0 if nothing came
+ * within [timeoutMs] and negative once the sequencer has closed.
  */
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_desktop_AlsaSeq_nativeRead(JNIEnv *env, jclass, jbyteArray out, jintArray from, jint timeoutMs) {
     snd_seq_t *handle = seq;
     if (handle == nullptr) return -1;
-    // What alsa-lib has already fetched first: poll says nothing about that.
+    // Check what alsa-lib has already fetched first, since poll doesn't see it.
     if (alsa.snd_seq_event_input_pending(handle, 0) <= 0) {
         const int n = alsa.snd_seq_poll_descriptors_count(handle, POLLIN);
         std::vector<pollfd> fds(static_cast<size_t>(n));
@@ -317,10 +314,10 @@ Java_com_rm_acidulous_desktop_AlsaSeq_nativeRead(JNIEnv *env, jclass, jbyteArray
     }
     snd_seq_event_t *ev = nullptr;
     if (alsa.snd_seq_event_input(handle, &ev) < 0 || ev == nullptr) return 0;
-    static unsigned char buffer[kMaxMessage]; // the one reading thread's
+    static unsigned char buffer[kMaxMessage]; // only the reading thread uses it
     alsa.snd_midi_event_reset_decode(decoder);
     const long length = alsa.snd_midi_event_decode(decoder, buffer, sizeof buffer, ev);
-    if (length <= 0) return 0; // not MIDI: an announcement, a timer tick
+    if (length <= 0) return 0; // not MIDI, e.g. an announcement or timer tick
     const jint source[2] = {ev->source.client, ev->source.port};
     env->SetIntArrayRegion(from, 0, 2, source);
     env->SetByteArrayRegion(out, 0, static_cast<jsize>(length), reinterpret_cast<const jbyte *>(buffer));

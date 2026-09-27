@@ -6,34 +6,25 @@
 #include <engine/machine/Machine.h>
 #include <engine/machine/cumulus/Cloud.h>
 
-// Cumulus - pads by spectrum.
+// Cumulus, a spectral pad synth.
 //
-// Spectral pads are the thing nothing else sounds quite like: harmonics
-// smeared into bands, inverse transformed into one enormous table, and the
-// result is a chorus of hundreds of oscillators for the price of reading an
-// array. This is our own implementation of that idea, and then the part
-// that makes it an instrument rather than a tribute:
+// Harmonics are smeared into bands and inverse transformed into one long
+// table (see Cloud.h), which sounds like hundreds of oscillators for the cost
+// of reading an array. On top of that:
 //
-//   - **Four spectra, morphed.** The table is built four times along a path
-//     from one spectrum to another - brighter, wider, stretched, hollower -
-//     and the morph knob walks it. Every frame is built from the same random
-//     phases, which is the trick that lets two of them be crossfaded without
-//     cancelling.
-//   - **Stretch.** Partial n sits at n^(1+stretch), so the same patch goes
-//     from choir to piano to bell to gong by moving one knob off zero.
-//   - **A vowel in the profile.** Three formants, five vowels, interpolated:
-//     a pad that says something.
-//   - **Scatter.** The table is a second and a half long, and every voice
-//     starts somewhere different in it, so a chord is never the same cloud
-//     three times.
-//   - **Drift.** A slow random walk on each copy's rate: the one thing a
-//     static table cannot do on its own is change, and this is what keeps it
-//     alive without an LFO on anything.
-//   - **Shimmer.** A second reader an octave (or a fifth, or two octaves) up,
-//     from the same table, for nothing but the read.
-//   - **Width by distance.** The right channel reads a quarter of a table
-//     away from the left. Two uncorrelated parts of the same cloud, which is
-//     as wide as stereo gets without an effect.
+//   - Morph: the table is built four times along a path from one spectrum to
+//     another, and the morph knob moves along it. Every frame uses the same
+//     random phases so they can be crossfaded without cancelling.
+//   - Stretch: partial n sits at n^(1+stretch), going from choir to piano to
+//     bell to gong.
+//   - Vowel: three formants, five vowels, interpolated.
+//   - Scatter: the table is a second and a half long and every voice starts
+//     somewhere different, so chord notes don't sound identical.
+//   - Drift: a slow random walk on each reader's rate to keep it moving.
+//   - Shimmer: a second reader an octave (or a fifth, or two octaves) up in
+//     the same table.
+//   - Width: the right channel reads a quarter of a table away from the
+//     left, giving two uncorrelated parts of the same cloud.
 namespace acidulous::machine {
 
 class Cumulus final : public Machine {
@@ -45,7 +36,7 @@ class Cumulus final : public Machine {
         // --- The spectrum. These build the tables, off the audio thread. ---
         Partials = 0, Tilt, Odd, Comb, CombPeriod, Vowel, VowelAmount,
         Bandwidth, BandwidthScale, Stretch, Seed,
-        // The far end of the morph, as differences from the above.
+        // The B end of the morph, as offsets from the values above.
         BTilt, BBandwidth, BStretch, BComb, BVowel, BOdd,
         // --- Everything below is live. ---
         Morph, MorphKey,
@@ -59,9 +50,8 @@ class Cumulus final : public Machine {
         Lfo2Wave, Lfo2Rate, Lfo2Sync, Lfo2Cutoff, Lfo2Pan,
         Drive, Volume, Pan,
         Glide, BendRange, Octave, Transpose, Fine, VelocityAmount,
-        // A finger's own: slide walks the morph, pressure opens the filter
-        // and lifts the level. Appended, so a patch without them takes the
-        // defaults.
+        // MPE: slide moves the morph, pressure opens the filter and raises
+        // the level. Added last so older patches get the defaults.
         MpeTimbre, MpePressure,
         Count
     };
@@ -89,14 +79,13 @@ class Cumulus final : public Machine {
     void *swapObject(int32_t slot, void *object) override;
 
     /**
-     * The recipe the current parameters describe. Mount thread.
+     * The cloud spec for the current parameters. Mount thread.
      *
-     * [norm01] is the UI's own idea of the spectrum parameters, in table
-     * order, 0..1 - passed in rather than read from here because parameters
-     * reach a machine through a queue the audio thread drains, and a build
-     * started in the same breath as the knob would otherwise render the
-     * value before it. NaN means "whatever this machine already has", and
-     * a null pointer means all of them.
+     * [norm01] is the UI's values for the spectrum parameters, in table
+     * order, 0..1. They're passed in because parameters reach the machine
+     * through a queue the audio thread drains, so a build started right after
+     * a knob move would otherwise use the old value. NaN means use the
+     * machine's current value, and null means use it for all of them.
      */
     cumulus::CloudSpec spec(const float *norm01 = nullptr, int32_t count = 0) const;
 
@@ -106,7 +95,7 @@ class Cumulus final : public Machine {
         float rateMul = 1.0f; // detune
         float drift = 0.0f;   // slow walk, in cents
         float driftTarget = 0.0f;
-        /** What that drift works out to, refreshed on a stride rather than per sample. */
+        /** The resulting rate, refreshed every few samples instead of every sample. */
         float rate = 1.0f;
         float pan = 0.0f;
     };
@@ -121,9 +110,9 @@ class Cumulus final : public Machine {
         dsp::Adsr amp, fenv;
         dsp::MultiFilter filterL, filterR;
         int64_t age = 0;
-        // Per-note expression (MPE). `bend` is in semitones and adds to
-        // whatever the channel is bending; `pressure` and `timbre` are -1
-        // until this finger sends any.
+        // Per-note expression (MPE). `bend` is in semitones and adds to the
+        // channel bend. `pressure` and `timbre` are -1 until this note sends
+        // them.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
         float prsGlide = 0.0f; // see glidePressure
     };

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Slicing a file across Forage's pads. See tools/slice_test.cpp.
+# Tests slicing a file across Forage's pads. See tools/slice_test.cpp.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

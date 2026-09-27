@@ -7,8 +7,8 @@
 namespace acidulous::machine {
 
 namespace {
-// Built once: 13 pads x 14 parameters, then the globals. Names are stable
-// strings the table points into.
+// Built once: every pad's parameters, then the globals. The defs point into
+// the names vector.
 struct Table {
     std::vector<std::string> names;
     std::vector<ParamDef> defs;
@@ -18,16 +18,8 @@ struct Table {
             {"end", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
             {"pitch", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "st"},
             {"decay", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""}, // 1 = play through
-            // Up to four, not one.
-            //
-            // A pad level that can only attenuate cannot match anything: put
-            // thirteen files from thirteen sources on the pads and the loud
-            // ones come down while the quiet ones are already at the top of
-            // the knob. Measured across a ragged kit, matching against a
-            // ceiling of one closed eighteen decibels of spread to thirteen;
-            // twelve decibels of headroom closes it to one. The default is
-            // unchanged at 0.8, so nothing sounds different until somebody
-            // turns it up.
+            // Goes up to 4 so quiet samples can be brought up to match loud
+            // ones, which a level that only attenuates can't do.
             {"level", 0.0f, 4.0f, 0.8f, Curve::Linear, 0, ""},
             {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
             {"reverse", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
@@ -38,29 +30,21 @@ struct Table {
             {"crush", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
             {"penv", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},   // octaves of sweep, signed
             {"pdecay", 5.0f, 500.0f, 60.0f, Curve::Exponential, 0, "ms"},
-            // 0 one shot, 1 loop, 2 while held. One shot is the default and
-            // is what the machine did before this existed.
-            //
-            // A *loop* runs while the note is held and stops when it comes
-            // up, which is the only reading that works: looping until the
-            // decay envelope ends it means a pad with the default decay - play
-            // the sample through - never stops at all, and a step in the
-            // sequencer would set it going until the next panic. So the three
-            // are "ignores the release", "repeats until the release" and
-            // "plays once, cut at the release".
+            // 0 one shot (ignores the release), 1 loop (repeats until the
+            // release), 2 while held (plays once, cut at the release). A loop
+            // has to stop at the release, otherwise a pad with the default
+            // decay would never stop.
             {"play", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},
         };
         const ParamDef globals[Forage::GlobalCount] = {
             {"accent", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
-            // The machine had no level of its own at all, so a bank of kits
-            // could not be levelled against anything - see kDrive below.
+            // See kDrive below.
             {"volume", 0.0f, 1.5f, 0.9f, Curve::Linear, 0, ""},
-            // How much velocity sets the level, on the law every machine shares.
+            // How much velocity sets the level, using the shared velocity curve.
             {"velocity", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         };
-        // Every name is placed before any def points at one: a ParamDef holds
-        // a bare char*, and a vector that reallocates would leave every one of
-        // them dangling. The reserve is doing real work.
+        // All names are added before any def points at one. A ParamDef holds a
+        // bare char*, so the vector must not reallocate afterwards.
         names.reserve(Forage::kPads * Forage::PadParamCount + Forage::GlobalCount);
         for (int32_t p = 0; p < Forage::kPads; ++p) {
             for (int32_t i = 0; i < Forage::PadParamCount; ++i) {
@@ -86,27 +70,16 @@ struct Table {
 };
 const Table &table() { static const Table t; return t; }
 
-// How hard the pads hit the clipper, and where a levelled bank sits in the
-// volume knob's travel. Two constants because they answer two questions:
-// kDrive decides how dirty the box is, kHouse decides where the fader lands.
+// kDrive sets how hard the pads hit the clipper, kHouse sets where a
+// levelled bank sits on the volume knob.
 constexpr float kDrive = 0.375f; // -8.5 dB into the clipper
 
-// The ramps at a sample's edges, in frames at 48 kHz.
-//
-// A pad does not necessarily start at a zero crossing: `start` above zero
-// drops the read head into the middle of a waveform, and what that produces
-// is a step. Measured, a kit with `start` at a tenth read a discontinuity
-// twenty-one thousand times the size of the sound's own - which is not a
-// transient, it is a click on every hit. The same applies at `end`, which
-// otherwise stops dead mid-waveform.
-//
-// Half a millisecond in, so a kick still arrives as a kick; two out, because
-// nothing is waiting on the tail and a longer ramp is cheaper to hide.
+// Ramps at a sample's edges, in frames at 48 kHz. Start and end usually land
+// mid-waveform and would click without them. Half a millisecond in so a kick
+// keeps its attack, two out.
 constexpr int32_t kFadeIn = 24;
 constexpr int32_t kFadeOut = 96;
-// And at a loop's seam, where the same ramps would cut a two millisecond
-// notch out of every pass - audible as a tick at anything but the longest
-// loop lengths. Short enough to hide, long enough not to be a step.
+// A shorter ramp at a loop's seam, so it doesn't cut a notch into every pass.
 constexpr int32_t kLoopFade = 32;
 
 /** 0 one shot, 1 loop, 2 while held. */
@@ -165,7 +138,7 @@ void Forage::trigger(int32_t i, float vel, bool accent) {
     if (group >= 0.5f) {
         for (int32_t j = 0; j < kPads; ++j) {
             if (j != i && pads[j].playing && std::fabs(params_.get(index(j, Choke)) - group) < 0.5f) {
-                pads[j].ampCoeff = dsp::onePoleCoeff(0.006f, sr); // a fast release, not a click
+                pads[j].ampCoeff = dsp::onePoleCoeff(0.006f, sr); // fast release, avoids a click
                 pads[j].penv = 0.0f;
             }
         }
@@ -194,12 +167,10 @@ void Forage::noteOff(uint8_t note) {
     const int32_t pad = static_cast<int32_t>(note) - kBaseNote;
     if (pad < 0 || pad >= kPads) return;
     Pad &p = pads[pad];
-    // Only a pad that is waiting for the release answers a note off at all -
-    // a loop or a held pad. A one shot ignores it, because a drum pad that
-    // stopped when the finger came up would be a different instrument.
+    // Only loop and while-held pads respond to a note off. One shots ignore it.
     if (!p.playing || !p.held) return;
-    // Whichever is faster: a pad already decaying quickly should not be made
-    // to ring on by being released.
+    // Take whichever release is faster, so releasing never makes a pad ring
+    // longer.
     p.ampCoeff = std::max(p.ampCoeff, dsp::onePoleCoeff(0.008f, sr));
     p.held = false;
 }
@@ -223,33 +194,26 @@ bool Forage::render(float *L, float *R, int32_t frames) {
         const float gr = std::sin((pan + 1.0f) * 0.25f * dsp::kPi) * 1.4142f;
         const float crush = params_.get(index(i, Crush));
         const auto play = static_cast<int32_t>(params_.get(index(i, Play)) + 0.5f);
-        // A loop needs somewhere to loop *in*: two frames is not a loop, it is
-        // a divide by nothing, so a slice too short to run round plays once.
+        // A slice too short to loop plays once instead.
         const bool looping = play == Looping && (hi - lo) > 4.0;
         const bool bandpass = params_.get(index(i, Mode)) >= 0.5f;
         p.filter.set(params_.get(index(i, Cutoff)), params_.get(index(i, Reso)));
         const float levels = crush > 0.0f ? std::exp2(16.0f - crush * 13.0f) : 0.0f; // 16 -> 3 bits
         const float holdStep = 1.0f / (1.0f + crush * 11.0f);                          // 48 kHz -> 4 kHz
 
-        // The read rate is a power of two, and an exp2 per sample per pad is
-        // thirteen of them per frame for a knob almost every pad leaves alone.
-        // Only a pitch envelope actually moves it; without one it is fixed for
-        // the whole block.
+        // The read rate only changes per sample when there's a pitch envelope.
+        // Otherwise it's worked out once per block to save an exp2 per sample.
         const bool sweeping = penvAmt != 0.0f;
         const double fixedRate = std::exp2(pitch / 12.0f);
         for (int32_t n = 0; n < frames; ++n) {
             const double rate = sweeping ? std::exp2((pitch + penvAmt * 12.0f * p.penv) / 12.0f) : fixedRate;
             p.penv = dsp::undenormal(p.penv - p.penv * p.penvCoeff);
             if (p.ampCoeff > 0.0f) { p.amp -= p.amp * p.ampCoeff; if (p.amp < 1e-4f) { p.playing = false; break; } }
-            // `> hi - 1` and not `>=`: a reversed pad starts at exactly the
-            // last readable frame, and with the old test it was outside its
-            // own range on its first sample and stopped before it made a
-            // sound. Every reversed patch in the bank measured -200 dB.
+            // Use `> hi - 1` rather than `>=`. A reversed pad starts exactly on the
+            // last readable frame and would stop before making a sound.
             if (p.pos < lo || p.pos > hi - 1.0) {
                 if (!looping) { p.playing = false; break; }
-                // Round again, and start the ramp over: the seam is not at a
-                // zero crossing and without a ramp on both sides of it every
-                // pass begins with a step.
+                // Loop round and restart the ramp so the seam doesn't click.
                 p.pos = reverse ? hi - 1.0 : lo;
                 p.age = 0;
             }
@@ -271,18 +235,15 @@ bool Forage::render(float *L, float *R, int32_t frames) {
                 r = p.holdR;
             }
             const float m = (l + r) * 0.5f;
-            // A band-pass comes back with the filter's own Q as a gain, so
-            // without this the `reso` knob is a volume control and band-pass
-            // mode is several decibels under low-pass for no reason anybody
-            // asked for. The narrowness is the point and stays; the scaling
-            // was never the point. Same correction as Cipher and the Nexus
-            // band block needed.
+            // The band-pass output is scaled by Q, so bandNorm() undoes that
+            // to keep reso from acting as a volume knob. Cipher and the Nexus
+            // band block do the same.
             const float f = bandpass ? p.filter.bandpass(m) * p.filter.bandNorm() : p.filter.lowpass(m);
-            // keep the stereo image: apply the filter's change as a mono correction
+            // Apply the filter's change as a mono correction to keep the stereo image.
             const float corr = f - m;
             l += corr;
             r += corr;
-            // How far from whichever edge playback is running towards.
+            // Distance to the edge playback is heading towards.
             const double toEdge = reverse ? p.pos - lo : (hi - 1.0) - p.pos;
             const int32_t fadeIn = looping ? kLoopFade : kFadeIn;
             const int32_t fadeOut = looping ? kLoopFade : kFadeOut;
@@ -296,17 +257,9 @@ bool Forage::render(float *L, float *R, int32_t frames) {
             R[n] += r * a * gr;
         }
     }
-    // Thirteen pads summed straight into a tanh is not a mix bus, it is a
-    // ceiling: every pad arrived at it near full scale, so the whole kit came
-    // out flattened to within a decibel of itself and of every other kit. It
-    // read as "balanced" and was nothing of the kind - the clipper was doing
-    // the balancing. Hexbeat had exactly this and was fixed the same way.
-    //
-    // The tanh stays, because a sample box that bends when the whole kit lands
-    // on one beat is the sound. What changes is that it is something the loud
-    // moments reach rather than something every hit lives inside: at kDrive a
-    // single accented pad comes out near a third of full scale and stays
-    // straight, and it takes several at once to bend.
+    // The pads are turned down by kDrive before the tanh so a single accented
+    // pad stays clean (about a third of full scale) and only several at once
+    // start to saturate. Hexbeat does the same.
     const float out = params_.get(globalIndex(Volume)) * kHouse;
     for (int32_t n = 0; n < frames; ++n) {
         L[n] = dsp::fastTanh(L[n] * kDrive) * out;

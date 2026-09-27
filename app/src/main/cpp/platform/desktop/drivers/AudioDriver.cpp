@@ -23,9 +23,9 @@
 namespace {
 
 /**
- * A period of 256 frames - 5.3 ms at 48 kHz - is what a desktop's sound
- * server copes with comfortably; the phone's burst is in the same range, so
- * the setting's "bursts" mean about the same thing on both.
+ * 256 frames (5.3 ms at 48 kHz) is comfortable for desktop sound servers and
+ * close to a phone's burst, so the "bursts" setting means about the same on
+ * both.
  */
 constexpr ma_uint32 kPeriodFrames = 256;
 
@@ -44,9 +44,8 @@ void onInput(ma_device *device, void * /*out*/, const void *in, ma_uint32 frames
 }
 
 /**
- * The context inputs are listed and opened through, made once: an id from one
- * context is only good for opening a device in the same one. The output opens
- * its own, as it always has.
+ * The context inputs are listed and opened through, made once, because a
+ * device id only works in the context it came from. The output opens its own.
  */
 ma_context *inputContext() {
     static ma_context context;
@@ -58,7 +57,7 @@ ma_context *inputContext() {
     return ok ? &context : nullptr;
 }
 
-/** The server's own name for a device, where the backend has one worth keeping. */
+/** The server's internal name for a device, where the backend has a useful one. */
 std::string keyOf(const ma_context *context, const ma_device_id &id) {
     switch (context->backend) {
         case ma_backend_pulseaudio: return std::string(id.pulse);
@@ -76,9 +75,9 @@ std::string keyOf(const ma_context *context, const ma_device_id &id) {
 }
 
 /**
- * An input's id: FNV-1a of the server's name for it, or of what it is called
- * when there is none, so the one chosen is still the one chosen after it has
- * been unplugged and plugged back in. Nought is the default and never an id.
+ * A device id: FNV-1a of the server's name for it, or its display name if
+ * there's none, so the choice survives unplugging and plugging back in. 0 is
+ * the default and never an id.
  */
 int32_t idOf(const std::string &text) {
     uint32_t hash = 2166136261u;
@@ -94,7 +93,7 @@ int32_t idOf(const std::string &text) {
 
 namespace {
 
-/** The devices one way or the other, with the ids this driver knows them by. */
+/** The capture or playback devices, with this driver's ids for them. */
 std::vector<AudioDriver::InputInfo> listDevices(bool capture) {
     std::vector<AudioDriver::InputInfo> out;
     ma_context *context = inputContext();
@@ -114,7 +113,7 @@ std::vector<AudioDriver::InputInfo> listDevices(bool capture) {
     return out;
 }
 
-/** The id [want] among the devices there are now, into [into]; false when it is not there. */
+/** Find [want] among the current devices and put it in [into]. False if it's not there. */
 bool findDevice(bool capture, int32_t want, ma_device_id &into) {
     ma_context *context = inputContext();
     if (want == 0 || context == nullptr) return false;
@@ -138,9 +137,9 @@ bool findDevice(bool capture, int32_t want, ma_device_id &into) {
 int32_t AudioDriver::sChosenOutput = 0;
 AudioDriver *AudioDriver::sLive = nullptr;
 
-// An interface's own drivers, on Windows: listed after the sound server's
-// outputs, keyed "driver:<name>" so the app can say which they are; and while
-// one is playing, the inputs are its channel pairs, read on its own clock.
+// ASIO drivers on Windows, listed after the sound server's outputs with the
+// key "driver:<name>" so the app can tell them apart. While one is playing,
+// the inputs are its channel pairs, read on its own clock.
 namespace {
 const char *const kDriverKey = "driver:";
 }
@@ -212,8 +211,8 @@ bool AudioDriver::start() {
     carryFrames = 0;
     carryOffset = 0;
 #ifdef _WIN32
-    // An interface's own driver, when that is what is chosen. One that will
-    // not open - unplugged, or held by another program - is the default instead.
+    // An ASIO driver, if that's what is chosen. If it won't open (unplugged or
+    // held by another program) the default output is used instead.
     if (sChosenOutput != 0) {
         for (const auto &name : acidulous::asio::driverNames()) {
             if (idOf(kDriverKey + name) != sChosenOutput) continue;
@@ -227,7 +226,7 @@ bool AudioDriver::start() {
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format = ma_format_f32;
     config.playback.channels = 2;
-    // The engine runs at kSampleRate; miniaudio resamples if the device will not.
+    // The engine runs at kSampleRate. miniaudio resamples if the device can't.
     config.sampleRate = acidulous::kSampleRate;
     config.periodSizeInFrames = kPeriodFrames;
     config.periods = static_cast<ma_uint32>(std::max(2, bufferBursts));
@@ -235,8 +234,7 @@ bool AudioDriver::start() {
     config.noPreSilencedOutputBuffer = MA_TRUE;
     config.dataCallback = onOutput;
     config.pUserData = this;
-    // The output chosen in Settings, found among what is there now; gone,
-    // it is the default, as a vanished input is.
+    // The output chosen in Settings. If it's gone, use the default.
     ma_device_id chosen{};
     const bool found = findDevice(false, sChosenOutput, chosen);
     if (sChosenOutput != 0 && !found) LOGI("output %d is not there now; the default instead", sChosenOutput);
@@ -290,8 +288,8 @@ void AudioDriver::stop() {
 
 bool AudioDriver::startInput(int32_t deviceId) {
 #ifdef _WIN32
-    // Playing through a driver: its inputs, a pair at a time, the first pair
-    // for "default" and for an id it does not know.
+    // Playing through an ASIO driver: its inputs are channel pairs. The first
+    // pair is used for "default" and for an unknown id.
     if (driverOn) {
         int32_t pair = 0;
         for (size_t i = 0; i < driverPairs.size(); ++i) {
@@ -314,8 +312,8 @@ bool AudioDriver::startInput(int32_t deviceId) {
         return true;
     }
 #endif
-    // Already open on the one asked for - including nought, which means
-    // "whatever the system picks" and cannot be compared: see the Oboe driver.
+    // Already open on the one asked for. 0 means "whatever the system picks"
+    // and can't be compared, so it always counts (see the Oboe driver).
     if (capturer != nullptr && (deviceId == 0 || deviceId == actualInputDevice)) return true;
     if (capturer != nullptr) stopInput();
     const size_t ringFrames = static_cast<size_t>(acidulous::kSampleRate) / 4; // a quarter second
@@ -338,8 +336,8 @@ bool AudioDriver::startInput(int32_t deviceId) {
     config.performanceProfile = ma_performance_profile_low_latency;
     config.dataCallback = onInput;
     config.pUserData = this;
-    // The one chosen, found by its id among what is there now. Gone - an
-    // interface unplugged since - is the default, as it is on the phone.
+    // Find the chosen input by id. If it's gone (unplugged), use the default,
+    // same as on the phone.
     ma_context *context = inputContext();
     ma_device_id chosen{};
     const int32_t found = findDevice(true, deviceId, chosen) ? deviceId : 0;
@@ -390,8 +388,8 @@ void AudioDriver::stopInput() {
     actualInputDevice = 0;
 }
 
-// On the capture thread: into the queue, and never waiting. A full queue is
-// a hole in the recording, not a stalled input.
+// On the capture thread. Writes into the queue without waiting. If the queue
+// is full the audio is dropped rather than stalling the input.
 void AudioDriver::capture(const float *in, int32_t numFrames) {
     ma_pcm_rb *queue = inputQueue ? &inputQueue->rb : nullptr;
     if (queue == nullptr || in == nullptr) return;
@@ -406,7 +404,7 @@ void AudioDriver::capture(const float *in, int32_t numFrames) {
     }
 }
 
-// Drain whatever the capture has queued, without waiting for it.
+// Drain whatever the capture has queued, without waiting.
 void AudioDriver::pumpInput(int32_t frames) {
     ma_pcm_rb *queue = inputQueue ? &inputQueue->rb : nullptr;
     if (capturer == nullptr || queue == nullptr) return;
@@ -453,15 +451,15 @@ const float *AudioDriver::nextInputBlock() {
 }
 
 void AudioDriver::render(float *out, int32_t numFrames) {
-    // As on the phone, and for the same reason: see the Oboe driver.
+    // Same as on the phone (see the Oboe driver).
     acidulous::dsp::flushDenormalsOnce();
     const auto tCallback = std::chrono::steady_clock::now();
     const int64_t cpu0 = threadCpuUs();
     pumpInput(numFrames);
 
-    // No presentation timestamp from the sound server, so the anchor is what
-    // is known: the frame about to be written is heard once the frames
-    // already queued ahead of it have played.
+    // The sound server gives no presentation timestamp, so estimate it: the
+    // frame about to be written is heard once the frames queued ahead of it
+    // have played.
     {
         const int32_t rate = actualSampleRate > 0 ? actualSampleRate : acidulous::kSampleRate;
         const int32_t next = 1 - anchorSlot.load(std::memory_order_relaxed);
@@ -511,7 +509,7 @@ void AudioDriver::setBufferBursts(int32_t bursts) {
     bursts = std::clamp(bursts, 1, 8);
     if (bursts == bufferBursts) return;
     bufferBursts = bursts;
-    // A period count is fixed when the device opens, so a change reopens it.
+    // The period count is fixed when the device opens, so reopen it.
     if (isRunning()) reopen();
 }
 
@@ -520,7 +518,7 @@ void AudioDriver::pushInput(const float *in, int32_t numFrames) {
     if (in == nullptr || capacity == 0) return;
     float peak = 0.0f;
     for (int32_t i = 0; i < numFrames; ++i) {
-        if (inputRingFrames == capacity) { // behind: the oldest goes
+        if (inputRingFrames == capacity) { // full: drop the oldest
             inputRingRead = (inputRingRead + 1) % capacity;
             --inputRingFrames;
         }
@@ -540,13 +538,13 @@ bool AudioDriver::startDriver(const std::string &name) {
     acidulous::asio::Stream stream;
     const bool opened = acidulous::asio::open(
         name, acidulous::kSampleRate, bufferBursts,
-        // The driver's own audio thread: the input first, then the engine's
-        // blocks served out through the carry buffer, as miniaudio's are.
+        // On the driver's audio thread: take the input, then serve the
+        // engine's blocks through the carry buffer like miniaudio does.
         [this](const float *in, float *out, int32_t frames) {
             if (in != nullptr && driverInput) pushInput(in, frames);
             render(out, frames);
         },
-        // Its own panel changed its buffer or rate: open it again as it is now.
+        // The driver's panel changed its buffer or rate, so reopen it.
         [] {
             if (sLive != nullptr && sLive->driverOn) sLive->reopen();
         },

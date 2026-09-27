@@ -63,16 +63,14 @@ import org.jetbrains.compose.resources.StringResource
 
 /** What a slot panel edits: the track's insert effects or its modifiers. */
 enum class SlotKind(
-    /** A key, for what the panel remembers about each slot; [title] is what it is called. */
+    /** A key for what the panel remembers about each slot; [title] is its display name. */
     val label: String, val title: StringResource, val slots: Int,
     val types: () -> List<String>, val paramInfo: (String) -> List<com.rm.acidulous.engine.ParamInfo>,
     val unit: (Int) -> String, val at: (Track, Int) -> UnitSlot,
     val withType: (Track, Int, String) -> Track, val withParam: (Track, Int, String, Float) -> Track, val withBypass: (Track, Int, Boolean) -> Track,
     /**
-     * How a unit of this kind is keyed in the patch store, or null when it
-     * has no presets. Modifiers would take them for almost nothing - an arp
-     * pattern is exactly the sort of thing to keep - but that is a different
-     * milestone, and this is the seam it will use.
+     * How a unit of this kind is keyed in the patch store, or null when it has
+     * no presets. Modifiers don't have presets yet, but this is where they'd go.
      */
     val patchKey: ((String) -> String)? = null,
     val loadPatch: ((Track, Int, Map<String, Float>) -> Track)? = null,
@@ -98,10 +96,8 @@ fun SlotsPanel(kind: SlotKind, track: Track, trackIndex: Int, editor: SongEditor
 }
 
 /**
- * One slot on its own, for the chip that opens it. The row is the same one
- * the pane used to show two of - choose the type, switch it on, and its
- * parameters underneath - so the pane can retire without taking anything
- * with it.
+ * One slot on its own, for the chip that opens it: choose the type, switch
+ * it on, and its parameters underneath.
  */
 @Composable
 fun SlotDialog(
@@ -110,44 +106,30 @@ fun SlotDialog(
     trackIndex: Int,
     slot: Int,
     editor: SongEditor,
-    /** When the slot's type is decided by the control that opened it, there
-     *  is nothing to pick and the dropdown only invites a mistake. */
+    /** Set when the control that opened the slot decides its type, so there's
+     *  no dropdown to pick from. */
     fixedType: String? = null,
     onDismiss: () -> Unit,
 ) {
     val types = remember(kind) { kind.types() }
-    // **Cancel and OK, like every other window, and Cancel means it.**
-    //
-    // This said Done because the controls in it write live - a knob is heard
-    // as it turns, which is the only way to voice anything by ear - so there
-    // was nothing held back for an OK to apply and nothing for a Cancel to
-    // throw away. That is a true label and an inconsistent one: two windows
-    // opened from the same row of chips disagreed about how to leave them.
-    //
-    // So Cancel is given something to do rather than the label being changed
-    // to suit. The panel already knows every control's value as the window
-    // opened - it is what a long press puts one knob back to - so Cancel puts
-    // all of them back, in one undo step, and the bypass with them.
+    // The controls write live, so you hear a knob as it turns. Cancel puts
+    // every control and the bypass back to how they were when the window
+    // opened, in one undo step, so it works like every other window.
     val revert = remember { mutableStateOf<(() -> Unit)?>(null) }
     val title = fixedType?.lowercase() ?: stringResource(kind.title, slot + 1)
     val dismiss = { revert.value?.invoke(); onDismiss() }
-    // The default, which is 560, rather than the 420 this used to ask for.
-    // That number was chosen when every control sat in one scrolling row
-    // and the body only ever needed the height of a single knob; wrapped
-    // into rows the arp's seventeen need nearer all of it, and the shell
-    // caps the card to the window anyway, so asking for more cannot push
-    // the Done button off a turned phone.
-    // Turned, the unit's own row - what it is, and whether it is on -
-    // goes up into the header beside the title (Dan, 2026-09-23), and the
-    // cards get the height it took.
+    // Uses the shell's default height (560), which the arp's wrapped rows of
+    // controls need most of. The shell caps the card to the window anyway, so
+    // this can't push the buttons off a turned phone. Turned, the unit's row
+    // (what it is and whether it's on) moves into the header beside the title
+    // and the cards get its height.
     val header: @Composable () -> Unit = {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
         }
     }
-    // **On a square phone a unit with too much for one page gets two.** The
-    // arp's five cards and its steps are nearly two windows' worth there, and
-    // its cards are too wide to pair; see [PAGES].
+    // On a square phone a unit with too much for one page gets split into
+    // pages, see [PAGES].
     val pageTitles = PAGES[fixedType ?: kind.at(track, slot).type]?.let { pageNames(it) }
     if (pageTitles != null && compactWindow()) {
         var page by rememberSaveable(kind.label, slot) { mutableStateOf(0) }
@@ -179,13 +161,12 @@ fun SlotDialog(
 }
 
 /**
- * A unit's cards in pages, for a square phone's window: which card titles
- * each page shows. The arp's steps go with its pattern.
+ * Which card titles each page shows, for a unit split into pages on a
+ * square phone. The arp's steps go with its pattern.
  *
- * Three pages of two cards, not two of three: a square phone's window holds
- * two cards and a strip, and the arp's second page of three ran forty dp
- * over. Paired by what they are about - when and how hard, which notes, and
- * what happens by chance and on letting go.
+ * Three pages of two cards, since a square phone's window holds two cards
+ * and a strip. Paired by topic: timing and feel, which notes, and chance
+ * and release.
  */
 private val PAGES: Map<String, List<Set<String>>> = mapOf(
     "Arp" to listOf(setOf("time", "feel"), setOf("pattern"), setOf("chance", "run")),
@@ -207,38 +188,30 @@ private fun SlotRow(
     kind: SlotKind, track: Track, trackIndex: Int, slot: Int, types: List<String>, editor: SongEditor,
     fixedType: String? = null,
     /**
-     * A window's shape rather than a panel's: the controls wrap into as many
-     * rows as they need instead of running off the side.
-     *
-     * The one scrolling row is the machine-panel house style and it is right
-     * there - a panel shares its height with the piano roll, so width is the
-     * only axis it can have. A dialog is the opposite: it has 420 dp of height
-     * to itself and the width of the screen, and an arp with thirteen controls
-     * in one row made you scroll sideways to find out what it was doing while
-     * two thirds of the window sat empty.
+     * Lay the controls out as a window: they wrap into rows instead of running
+     * off the side in one scrolling row, which is the panel style. A panel
+     * shares its height with the piano roll, but a window has height to spare.
      */
     wrap: Boolean = false,
-    /** Hands the window a way to put everything back; see [SlotDialog]. */
+    /** Gives the window a way to put everything back; see [SlotDialog]. */
     onRevert: ((() -> Unit) -> Unit)? = null,
     /** One page of the unit's cards, or all of them when -1; see [PAGES]. */
     page: Int = -1,
 ) {
     val fx = kind.at(track, slot)
-    // The slot as the window found it. Bypass is not a parameter, so it is not
+    // The bypass as the window found it. Bypass isn't a parameter, so it's not
     // in the binding's baseline and has to be remembered here.
     val openedBypass = remember(kind, slot, trackIndex) { fx.bypass }
-    // Per slot, and kept across a rotation, the same as a machine panel's.
-    // Two effects and an modifier can fill a phone between them, and most of
-    // the time what you want from a slot you are not editing is the one line
-    // that says what it is and whether it is on.
+    // Per slot and kept across rotation, like a machine panel's. Two effects
+    // and a modifier can fill a phone, so a slot you aren't editing can be
+    // folded down to its one line.
     var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
         if (!(wrap && LocalDialogHeaderRow.current)) Row(
             if (wrap) Modifier.fillMaxWidth() else Modifier,
             verticalAlignment = Alignment.CenterVertically,
-            // Centred in a window, packed left in a panel: a panel's row is a
-            // line in a column of slots and has to line up with the ones above
-            // and below it; a window's is the only thing on its line.
+            // Centred in a window. Packed left in a panel so it lines up with the
+            // slots above and below.
             horizontalArrangement = if (wrap) {
                 Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)
             } else {
@@ -265,21 +238,20 @@ private fun SlotRow(
 private fun SlotFace(
     kind: SlotKind, type: String, trackIndex: Int, slot: Int, editor: SongEditor,
     wrap: Boolean = false,
-    /** Which of [PAGES]' pages to show, or all of it when -1. */
+    /** Which of [PAGES]' pages to show, or all when -1. */
     page: Int = -1,
-    /** Called with the binding once it exists, so a window can undo it wholesale. */
+    /** Called with the binding once it exists, so a window can undo everything. */
     onBinding: ((ParamBinding) -> Unit)? = null,
 ) {
     val info = remember(kind, type) { kind.paramInfo(type) }
     val unit = kind.unit(slot)
     val b = rememberParamBinding(trackIndex, type, info, editor, unit) { t, n, v -> kind.withParam(t, slot, n, v) }
     androidx.compose.runtime.SideEffect { onBinding?.invoke(b) }
-    // The panel follows the engine; on first show the engine holds whatever the
-    // document pushed, so nothing to seed here.
+    // The panel follows the engine, which already holds what the document
+    // pushed, so there's nothing to seed here.
     Column {
-        // The same three words a machine panel has, over the same store. An
-        // effect preset needed no mechanism of its own, only somewhere to put
-        // the picker and a key that cannot collide with a machine's.
+        // The same patch picker a machine panel has, over the same store, with
+        // a key that can't collide with a machine's.
         val key = kind.patchKey?.invoke(type)
         val load = kind.loadPatch
         if (key != null && load != null) {
@@ -302,8 +274,7 @@ private fun SlotFace(
         }
         val control: @Composable (ParamInfo) -> Unit = { p ->
             run {
-                // A sidechain names a track, so its steps are the song's own
-                // track names rather than numbers nobody can match to a row.
+                // A sidechain picks a track, so its steps show the song's track names.
                 val labels = if (p.name == SIDECHAIN_PARAM) {
                     listOf(stringResource(Res.string.slot_sidechain_own)) + (0 until SIDECHAIN_STEPS - 1).map { i ->
                         editor.song.tracks.getOrNull(i)?.name ?: stringResource(Res.string.slot_sidechain_empty, i + 1)
@@ -312,23 +283,18 @@ private fun SlotFace(
                     switchLabels(type, p.name, p.steps)
                 }
                 val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
-                // A knob is 58 dp wide and some names are not. Shortened here
-                // rather than in the engine, because the engine's name is what
-                // a patch file, a lane and a mapping all address.
+                // A knob is 58 dp wide and some names aren't. Shortened here, not in the
+                // engine, because patch files, lanes and mappings all use the engine name.
                 val shortLabel = SHORT_LABELS[p.name] ?: p.name
                 when {
-                    // a few choices: buttons; many (note values): a stepped knob that names its step
+                    // A few choices: buttons. Many (note values): a stepped knob that names its step.
                     p.curve == 2 && labels != null && labels.size <= 4 -> PanelSwitch(b, p.name, labels, label = shortLabel)
                     p.curve == 2 && labels != null -> Knob(
                         label = panelWord(shortLabel), value = b.value(p.name), accent = accent,
-                        // The step's *position* in the range, not its value.
-                        //
-                        // `p.map` gives the parameter in its own units, and
-                        // using that as a list index only works for a range
-                        // that starts at zero. The Harmonizer's `interval`
-                        // runs -7..7, so a default of +2 read `labels[2]` and
-                        // the knob said "-5". The normalised value is already
-                        // the position, which is what a list wants.
+                        // The step's position in the range, not its value. `p.map` gives
+                        // the value in its own units, which only works as a list index
+                        // for a range starting at 0. The Harmonizer's `interval` runs
+                        // -7..7, so +2 showed "-5".
                         display = panelWords(labels)[(b.value(p.name) * (labels.size - 1))
                             .roundToInt().coerceIn(0, labels.size - 1)],
                         onStart = { b.start(p.name) }, onChange = { v -> b.change(p.name, v) }, onEnd = { b.end() },
@@ -339,15 +305,14 @@ private fun SlotFace(
                 }
             }
         }
-        // The arp's sixteen step toggles are a row of their own below, so they
-        // are not among the controls a card lays out.
+        // The arp's sixteen step toggles get their own row below, so they're
+        // left out of the cards.
         val shown = info.filterNot {
             type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit()
         }
         if (wrap) {
             // A card per group, stacked down the window, each wrapping its own
-            // controls. `LocalPanelStacked` is what tells `Group` to wrap
-            // rather than to lay one row and let it run off the side.
+            // controls. `LocalPanelStacked` tells `Group` to wrap.
             val wide = LocalDialogWide.current
             WindowCards {
                 val pages = PAGES[type]
@@ -357,9 +322,8 @@ private fun SlotFace(
                         for (p in group) control(p)
                     }
                 }
-                // Turned, the steps are a card among the others, two lines of
-                // eight, rather than a strip under them the window has no
-                // height left for.
+                // Turned, the steps are a card like the others, two lines of eight,
+                // since there's no height left for a strip under them.
                 if (type == "Arp" && wide) {
                     Group("steps", background = Acid.colors.cardAlt) { ArpStepGrid(b) }
                 }
@@ -376,20 +340,6 @@ private fun SlotFace(
     }
 }
 
-/**
- * What belongs with what, for the windows that get a card per group.
- *
- * A wrapped row of every control in the order the engine happens to declare
- * them is not a layout - it is a list that has run out of width, and it reads
- * as one: Dan, on the first version of this, *"knobs and buttons following no
- * apparent layout"*. These say which controls are about the same thing, so the
- * window can put a titled card round each and you can find `gate` by knowing
- * it is about time rather than by reading every label.
- *
- * Anything the engine declares that is not named here still appears, in a
- * trailing card - so adding a parameter to a modifier shows it rather than
- * hiding it, and this table is a layout rather than a filter.
- */
 /** Names too long for a knob's width, said shorter. */
 private val SHORT_LABELS = mapOf(
     "ratchetchance" to "rchance",
@@ -400,25 +350,32 @@ private val SHORT_LABELS = mapOf(
     "inversion" to "invert",
 )
 
+/**
+ * Which controls belong together, for windows that get a card per group,
+ * so related controls sit in one titled card instead of in engine order.
+ *
+ * Anything not named here still shows up in a trailing card, so a new
+ * parameter is never hidden.
+ */
 private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
     "Arp" to listOf(
         // When a note happens, and for how long.
         "time" to listOf("rate", "gate", "swing"),
-        // Which note, out of what you are holding.
+        // Which note, out of what you're holding.
         "pattern" to listOf("mode", "octaves", "octmode", "length"),
         // How hard, and how human.
         "feel" to listOf("velmode", "accent", "humanise"),
-        // What it does twice, and what it does sometimes.
+        // Ratchets and chance.
         "chance" to listOf("ratchet", "ratchetchance", "chance"),
-        // How it sits against the song, and what happens when you let go.
+        // Timing against the song, and what happens when you let go.
         "run" to listOf("sync", "shift", "cycles", "latch"),
     ),
     "Chord" to listOf(
         // Which chord.
         "chord" to listOf("mode", "type", "key", "scale"),
-        // How it is stacked.
+        // How it's stacked.
         "voicing" to listOf("voicing", "inversion", "spread", "bass"),
-        // How it is played, rather than which notes it is.
+        // How it's played, not which notes.
         "strum" to listOf("strum", "strumdir", "velspread"),
     ),
     "Scale" to listOf(
@@ -428,10 +385,10 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
 )
 
 /**
- * The declared groups, then a card for whatever was not spoken for.
+ * The declared groups, then a card for anything not in them.
  *
- * Names the engine does not have are dropped rather than drawn empty, so a
- * parameter that is renamed leaves a smaller card instead of a broken one.
+ * Names the engine doesn't have are dropped, so a renamed parameter leaves a
+ * smaller card instead of a broken one.
  */
 private fun groupsFor(type: String, info: List<ParamInfo>): List<Pair<String, List<ParamInfo>>> {
     val byName = info.associateBy { it.name }
@@ -501,10 +458,7 @@ private val EXTRA = mapOf(
     "Width" to setOf("below", "haas"),
     "Shifter" to setOf("spread", "feedback"),
     "Harmonizer" to setOf("scale", "key"),
-    // **This key used to be written twice.** The later entry won, so of the
-    // reverb's six extras only `freeze` and `gate` were drawn in the accent
-    // colour and the four M53 added were not - which is the one thing that
-    // colour exists to prevent. The duplicate is gone and the six are here.
+    // Each key must appear only once here, or the later entry silently wins.
     "Amp" to setOf("size", "cone"), // the cabinet you can resize
     "Gate" to setOf("key", "duck"), // the detector's own filter, and how far down shut is
     "Eq" to setOf("tilt"),
@@ -561,8 +515,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     steps == 2 -> listOf("off", "on")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
-    // Scale degrees, not semitones - the whole point of the Harmonizer, so the
-    // knob should not read as a number of frets.
+    // Scale degrees, not semitones, since that's how the Harmonizer works.
     (name == "interval" || name == "interval2") && type == "Harmonizer" ->
         (-7..7).map { if (it > 0) "+$it" else "$it" }
     name == "shape" && type == "Tremolo" -> listOf("sine", "tri", "square")
@@ -576,13 +529,12 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
 }
 
 /**
- * A song-level slot's face - a send, a master or group insert, an input
- * effect - laid out exactly as a track's effect window lays out its own:
- * the same cards, the same switches, the same short labels.
+ * The face of a song-level slot (a send, a master or group insert, an input
+ * effect), laid out like a track's effect window.
  *
- * Not through [ParamBinding], which edits a track. These slots belong to the
- * song, so the values are the document's and each change is a song gesture;
- * the window hands in how to read and write them.
+ * Doesn't use [ParamBinding], which edits a track. These values belong to the
+ * song and each change is a song gesture; the window passes in how to read
+ * and write them.
  */
 @Composable
 internal fun SongSlotFace(
@@ -604,8 +556,8 @@ internal fun SongSlotFace(
             p.curve == 2 && labels != null && labels.size <= 4 -> SwitchGrid(
                 shortLabel, labels, (v * (labels.size - 1)).roundToInt().coerceIn(0, labels.size - 1),
             ) { i -> set(p.name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
-            // Named steps - note values, modes - turn as a knob and, held,
-            // open as a list, so an exact one is a tap rather than a hunt.
+            // Named steps (note values, modes) turn as a knob and, held, open as a
+            // list, so picking an exact one is a tap.
             p.curve == 2 && labels != null -> {
                 val n = labels.size
                 val idx = (v * (n - 1)).roundToInt().coerceIn(0, n - 1)
@@ -632,9 +584,9 @@ internal fun SongSlotFace(
 }
 
 /**
- * A slot's own line: its name, the unit in it, and whether it is on - in a
- * panel, over its face; in a window, over its cards upright and in the
- * header turned.
+ * A slot's header line: its name, the unit in it, and whether it's on. In a
+ * panel it sits over the face; in a window it's over the cards upright and
+ * in the header turned.
  */
 @Composable
 private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
@@ -665,18 +617,14 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                 TextButton(
                     onClick = {
                         val bypass = !fx.bypass
-                        // The document push mounts nothing new; the flag goes straight to the running effect too.
+                        // The document push mounts nothing new, so the flag also goes straight to the running effect.
                         editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
                         NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
                     },
                     modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
                 ) { Text(stringResource(if (on) Res.string.slot_on else Res.string.slot_bypass), color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
-                // Folding the face away is a *panel* control: two effects and a
-                // modifier can fill a phone, so a slot you are not editing is
-                // worth reducing to the line that says what it is. A window is
-                // the opposite - it exists to show the face - so the mark is
-                // not offered there, and the row stops carrying a wide gap to
-                // hold a control that would only make the window pointless.
+                // Folding is only offered in a panel, where space is short. A window
+                // exists to show the face, so it doesn't get the fold mark.
                 if (!wrap) {
                     Spacer(Modifier.weight(1f))
                     TextButton(

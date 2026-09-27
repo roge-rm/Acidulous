@@ -1,19 +1,17 @@
-// Does reset() actually put a machine back where it started?
+// Checks reset() really puts a machine back where it started.
 //
-// An offline render panics first, so every machine begins the render from
-// reset() rather than from construction. If reset() misses any state, the
-// render depends on whatever was played before it - and exporting the same
-// song twice gives two different files.
+// An offline render panics first, so every machine starts the render from
+// reset(), not from construction. If reset() misses any state, the render
+// depends on what was played before it, and exporting the same song twice
+// gives two different files.
 //
-// The test is deliberately not "is the RNG seed restored". That question has
-// to be asked once per member variable and is answered wrong by omission.
-// This asks the only question that matters: play a machine, reset it, play
-// exactly the same thing again, and require the two renders to be identical
-// bit for bit. Anything reset() forgets - a seed, an oscillator phase, a
-// filter's history, an envelope still in release - shows up as a difference.
+// Instead of checking each member variable, this plays a machine, resets it,
+// plays exactly the same thing again and requires the two renders to match
+// bit for bit. Anything reset() forgets (a seed, an oscillator phase, a
+// filter's history, an envelope still releasing) shows up as a difference.
 //
-// Every machine in the registry is covered, so machine nineteen is covered
-// the day it is registered.
+// It covers every machine in the registry, so new machines are covered
+// automatically.
 
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
@@ -37,11 +35,10 @@ constexpr int32_t kBlock = 64;
 constexpr int32_t kBlocks = 512; // ~0.68 s
 
 /**
- * One identical performance, twice over.
+ * One identical performance, played twice.
  *
- * The notes, the controllers and the block clock all have to be the same on
- * both passes or the comparison proves nothing, so they come from the block
- * index and nothing else.
+ * The notes, the controllers and the block clock must match on both passes,
+ * so they come only from the block index.
  */
 void performance(Machine *m, std::vector<float> &out) {
     out.clear();
@@ -49,13 +46,10 @@ void performance(Machine *m, std::vector<float> &out) {
     float L[kBlock], R[kBlock];
 
     // A wide spread of notes, not a chord in one octave. The drum machines
-    // answer to particular pads rather than to pitch, and a performance that
-    // never reaches them proves nothing about them - the first version of
-    // this test left nine machines rendering silence.
+    // respond to particular pads, not pitch, and need to be reached.
     for (int32_t b = 0; b < kBlocks; ++b) {
-        // It opens on a chord with nothing leaning on it, the way a song's
-        // first notes arrive, so whatever a voice kept from the prelude is
-        // what that chord meets.
+        // It opens on a chord with nothing leaning on it, like a song's first
+        // notes, so it meets whatever a voice kept from the prelude.
         if (b == 0) for (uint8_t n : {64, 69, 72}) m->noteOn(n, 100);
         if (b == 40) for (uint8_t n : {64, 69, 72}) m->noteOff(n);
         if (b % 16 == 0 && b < 448) {
@@ -64,14 +58,14 @@ void performance(Machine *m, std::vector<float> &out) {
             m->noteOn(note, vel > 127 ? 127 : vel);
         }
         // Held long enough to overlap, so polyphony and voice stealing are
-        // part of what is being compared.
+        // part of the comparison.
         if (b >= 96 && (b - 96) % 16 == 0 && b < 480) {
             m->noteOff(static_cast<uint8_t>(36 + ((b - 96) / 16) * 2));
         }
-        // The performance controllers too: several machines drift or scatter
-        // from them, and that is exactly the state a reset has to rewind.
-        // Not on the first block: the opening chord is played with whatever
-        // the panic left the controllers at, which has to be rest.
+        // The performance controllers too, since several machines drift or
+        // scatter from them and a reset has to rewind that. Not on the first
+        // block: the opening chord plays with whatever the panic left the
+        // controllers at, which must be rest.
         if (b > 0 && b % 7 == 0) m->controlChange(1, static_cast<uint8_t>(b % 128));
         if (b > 0 && b % 11 == 0) m->channelPressure(static_cast<uint8_t>((b * 3) % 128));
         if (b > 0 && b % 23 == 0) m->pitchBend(static_cast<int16_t>((b % 200) - 100));
@@ -90,37 +84,34 @@ void performance(Machine *m, std::vector<float> &out) {
 }
 
 /**
- * Something else to have played before the second pass: a chord held, let
- * go, and a long silence - what a track in a song does before an export.
+ * Something else played before the second pass: a chord held, released, and
+ * a long silence, like a track in a song before an export.
  *
- * The second pass used to follow the first, so both began from the same
- * history and a voice that kept something from its last note kept the same
- * thing both times. Brazen's tubes kept their pressure, which only shows when
- * the history differs: two exports of the demo did not match from the horns'
- * first chord, and this test said nothing.
+ * Both passes need different histories. If the second pass just followed the
+ * first, a voice that kept something from its last note would keep the same
+ * thing both times and the test would miss it.
  */
 void prelude(Machine *m) {
     float L[kBlock], R[kBlock];
-    // Played with the controllers at rest, as a track in a song is: a held
-    // pressure would leave every voice far enough from the next note's
-    // that the fault above could not show.
+    // Played with the controllers at rest, like a track in a song. Held
+    // pressure would move every voice far enough from the next note that
+    // leftover state couldn't show.
     m->controlChange(1, 0);
     m->channelPressure(0);
     m->pitchBend(0);
     for (uint8_t n : {64, 65, 66}) m->noteOn(n, 100);
     for (int32_t b = 0; b < 2100; ++b) {
         if (b == 50) for (uint8_t n : {64, 65, 66}) m->noteOff(n);
-        // Every drum pad struck a few times, so a kit has a history too. A
-        // prelude of three notes in the middle of the keyboard never touched
-        // a hi-hat, and a hat that kept count of its hits across a panic
-        // passed here while Riddim's fourth hat came out different.
+        // Strike every drum pad a few times so a kit has a history too.
+        // Notes in the middle of the keyboard never reach a hi-hat, so a hat
+        // that counted hits across a panic would otherwise pass.
         if (b >= 100 && b < 900 && b % 25 == 0) {
             const uint8_t pad = static_cast<uint8_t>(36 + (b / 25) % 16);
             m->noteOn(pad, static_cast<uint8_t>(60 + (b / 25) % 60));
         }
         if (b >= 110 && b < 910 && (b - 10) % 25 == 0) m->noteOff(static_cast<uint8_t>(36 + ((b - 10) / 25) % 16));
-        // And left raised once the notes have gone, which a panic has to
-        // put back: the performance below opens without sending them.
+        // Leave the controllers raised after the notes stop, which a panic
+        // has to reset: the performance below opens without sending them.
         if (b == 2000) { m->controlChange(1, 90); m->channelPressure(100); m->pitchBend(3000); }
         const int64_t tick = static_cast<int64_t>(b) * 4;
         m->onBlock(tick, tick + 4, 120.0f);
@@ -130,7 +121,7 @@ void prelude(Machine *m) {
     }
 }
 
-/** What a panic does: the engine's own function, not a copy of it. */
+/** What a panic does, using the engine's own function. */
 void panic(Machine *m) { panicMachine(*m); }
 
 struct Result {
@@ -153,10 +144,8 @@ void apply(ParamSet &params, const Patch *patch) {
 /**
  * What a machine needs mounted before it makes the sound a song hears.
  *
- * Cumulus plays nothing without a cloud, and a harness that gave it none said
- * "ok" about a machine whose every read position came from a generator
- * reset() never put back - so every export of a song with a pad in it was
- * different. It gets the table the app builds, from its own settings.
+ * Cumulus plays nothing without a cloud, and without one its read positions
+ * weren't tested. It gets the table the app builds, from its own settings.
  */
 /** Whatever was mounted, kept alive for as long as the machine plays it. */
 struct Dressing {
@@ -173,8 +162,8 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
         d.cloud = machine::cumulus::buildCloud(cumulus->spec(), kRate);
         m->swapObject(0, d.cloud.get());
     }
-    // Formulate's formula and tables are text compiled into a program, the
-    // way EngineSync.ensureFormulas has the app do it.
+    // Formulate's formula and tables are text compiled into a program, like
+    // EngineSync.ensureFormulas does in the app.
     if (std::strcmp(name, "Formulate") == 0 && settings != nullptr) {
         std::string formula, arp, duty, vol, error;
         for (const auto &kv : *settings) {
@@ -200,13 +189,11 @@ Result check(const char *name, const Patch *patch = nullptr, const Settings *set
     apply(m->params(), patch);
     const auto dressed = dress(name, m, settings);
 
-    // Panic before the *first* pass as well, because an offline render does.
-    // Without this the test fails everything by a hair for a reason that has
-    // nothing to do with reset(): jumpAll() sets each parameter to
-    // map(unmap(def)), and a round trip through an exponential curve is not
-    // bit-exact, so a panicked machine starts a few mantissa bits away from
-    // a newly built one. Both renders of an export are panicked, so both get
-    // the same slightly-off value and the export still repeats.
+    // Panic before the first pass too, because an offline render does.
+    // jumpAll() sets each parameter to map(unmap(def)), and a round trip
+    // through an exponential curve isn't bit-exact, so a panicked machine
+    // starts a few mantissa bits away from a newly built one. Both renders of
+    // an export are panicked, so the export still repeats.
     std::vector<float> a, b, fresh;
     panic(m);
     performance(m, a);
@@ -216,9 +203,8 @@ Result check(const char *name, const Patch *patch = nullptr, const Settings *set
     delete m;
 
     // A second machine, built from scratch and panicked the same way. If this
-    // does not match the first pass then reset() is innocent and the machine
-    // itself is not deterministic - a different question with a different
-    // answer.
+    // doesn't match the first pass, reset() isn't the problem: the machine
+    // itself isn't deterministic.
     Machine *m2 = MachineRegistry::create(name);
     m2->prepare(kRate);
     apply(m2->params(), patch);
@@ -242,12 +228,11 @@ Result check(const char *name, const Patch *patch = nullptr, const Settings *set
 }
 
 /**
- * The same question of an effect.
+ * The same check for an effect.
  *
- * An effect is fed a signal rather than notes, and it has to be the same
- * signal both times - so it comes from a counter, not from a machine. A
- * reverb's tail, a delay's buffer and a chorus's LFO are all state a render
- * must not inherit from whatever played before it.
+ * An effect is fed a signal instead of notes, and it has to be the same both
+ * times, so it comes from a counter instead of a machine. A reverb's tail, a
+ * delay's buffer and a chorus's LFO are all state a render mustn't inherit.
  */
 Result checkEffect(const char *name, const Patch *patch = nullptr) {
     Result r;
@@ -277,7 +262,7 @@ Result checkEffect(const char *name, const Patch *patch = nullptr) {
     std::vector<float> a, b, other;
     panicE(e); pass(e, a);
     // Something else through it before the second pass, so a delay's buffer
-    // or a reverb's tail holds a different history rather than the same one.
+    // or a reverb's tail holds a different history.
     {
         float L[kBlock], R[kBlock];
         for (int32_t k = 0; k < 400; ++k) {
@@ -303,18 +288,13 @@ Result checkEffect(const char *name, const Patch *patch = nullptr) {
 }
 
 /**
- * Every registered machine can be reached by name for its parameters.
+ * Every registered machine can be found by name for its parameters.
  *
- * `MachineRegistry` says a machine's name in three places - the name table,
- * `create`, and `paramDefs` - and a machine added to the first two but not the
- * third **has no working knobs at all**, silently. `EngineHost::setParam` looks
- * its index up through `paramDefs`, finds nothing, and returns false; the panel
- * draws every control at zero, the document's values are refused on every push,
- * and the machine plays on at its built-in defaults, which is exactly loud
- * enough to look like it is working.
- *
- * Bias shipped that way on 2026-09-20 and was found by tapping a mute that did
- * nothing. One loop over the names is the whole defence.
+ * `MachineRegistry` names a machine in three places: the name table,
+ * `create`, and `paramDefs`. A machine missing from `paramDefs` has no
+ * working knobs. `EngineHost::setParam` finds nothing and returns false, the
+ * panel shows every control at zero, and the machine plays on at its built-in
+ * defaults, so it looks like it works.
  */
 int registryIsComplete() {
     int missing = 0;
@@ -342,14 +322,12 @@ int registryIsComplete() {
 /**
  * Every factory patch, not only each machine at its defaults.
  *
- * The defaults are where drift, scatter and wobble are usually off, so a
- * machine can pass above and still not repeat once a patch turns them up -
- * which is how two exports of the demo came to differ on its bass, its
- * melodica and its horns while every line above said "ok". So the same
- * question, asked of every patch in every bank.
+ * Drift, scatter and wobble are usually off by default, so a machine can
+ * pass above and still not repeat once a patch turns them up. So the same
+ * check runs on every patch in every bank.
  *
- * Skipped: the machines whose sound is a file or a graph (their patches
- * only mean something with it mounted; their state is covered above).
+ * Skipped: machines whose sound is a file or a graph, since their patches
+ * only mean something with it mounted. Their state is covered above.
  */
 int everyPatch(const std::string &banks) {
     static const char *const kNeedsMore[] = {"Forage", "Mosaic", "Pollen", "Dice", "Molt", "Bias", "Cipher", "Nexus"};

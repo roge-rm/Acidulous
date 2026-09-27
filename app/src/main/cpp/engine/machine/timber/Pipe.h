@@ -4,102 +4,57 @@
 #include <engine/dsp/Math.h>
 #include <vector>
 
-// One woodwind: a mouthpiece, a row of holes, and whatever is left of the
-// instrument below them.
+// One woodwind: a mouthpiece, a row of tone holes and the rest of the tube
+// below them.
 //
-// Brazen's lips are blown *open* - pressure in the tube pushes them apart,
-// and the gain comes from the valve opening in step with the wave. A reed
-// is the other way round, and it is not enough to flip a sign: the gain
-// comes from somewhere else entirely. The mouthpiece is a *reflection*
-// whose strength falls as the pressure across the reed rises, so what the
-// tube gets back is `mouth + difference x reflection`, and the slope of
-// that product against the returning wave is bigger than one as soon as the
-// player blows. Written as a crossfade instead - as Brazen's valve is - a
-// reed model cannot oscillate at all, whichever way its sign points.
+// A reed is modelled as a reflection at the mouthpiece whose strength falls
+// as the pressure across the reed rises. The tube gets back
+// `mouth + difference x reflection`, and the slope of that against the
+// returning wave goes above one when the player blows. (A crossfade, like
+// Brazen's lip valve, can't oscillate as a reed.)
 //
-// A flute has no reed. A ribbon of air crosses the mouth hole and takes
-// time doing it, and that time is the instrument's second clock.
+// A flute has no reed. A jet of air crosses the mouth hole, and the time it
+// takes is the instrument's second delay.
 //
-// The part nobody models: **the tube below your fingers**. Every modelled
-// woodwind is one delay line set to the pitch, as though the instrument
-// stopped where the note does. A real one does not. The first open hole
-// reflects the low end and lets the high end straight past into the rest of
-// the horn, which is still there, still ringing, and still radiating. That
-// is where a woodwind's cutoff comes from, why the same pitch fingered two
-// ways is two sounds, and why a forked fingering can set two modes arguing
-// and sound a chord.
+// The first open hole reflects the low end and lets the high end pass into
+// the tube below, which is also modelled. That gives the woodwind cutoff,
+// makes the same pitch fingered two ways sound different, and lets a forked
+// fingering sound two modes at once.
 namespace acidulous::machine::timber {
 
 /**
- * What the loop is asked for, and how far a breath attack may lean past it.
- *
- * 1.9 is what keeps a held note in bounds. An attack is not a held note, so
- * the lift has its own ceiling - the same argument, and the same fault, as
- * the brass: growth per round trip is fixed and a round trip is a period, so
- * without a lift the time to speak is one over the frequency.
- *
- * Lowering the steady target was tried here first, because the reed's clamp
- * is what puts this instrument flat and a gentler loop keeps the reed off
- * its stops. On a bare pipe it works - at F3 the error goes from -18.6 cents
- * to -3.0 at pressure 0.7. On the bank it does nothing at all, because
- * 0.9 + 0.4 p d never reaches even 1.4 at the pressures these patches use,
- * and pulling the slope down instead made some patches better and others
- * worse: every patch has its own embouchure and its own reed, so where the
- * clamp bites is not a function of loop gain alone. Left at 1.9.
+ * The loop gain target and how far a breath attack may lift past it. 1.9
+ * keeps a held note in bounds. The attack lift has its own higher ceiling,
+ * like the brass, because growth per round trip is fixed and low notes would
+ * otherwise be slow to speak.
  */
 constexpr float kWantSlope = 0.4f, kWantMax = 1.9f, kLiftCeiling = 2.6f;
 /** What the loop settles at once the note is under way, for sizing the lift. */
 constexpr float kSettled = 1.15f;
 /**
- * How much of the top the walls take, on the round trip of the bottom note.
- *
- * A bore loses more of a wave the higher it is: the boundary layer goes as
- * the root of the frequency. But what the loop feels is the loss over a
- * *round trip*, and a round trip is as long as the tube that is sounding -
- * so the loss per turn goes as the root of the partial number and as one
- * over the root of the note. A high note is a short tube and loses less per
- * turn than a low one, which is why this is a depth at the bottom of the
- * instrument, scaled from there. Saying it as a fixed frequency instead -
- * a fifth off above four times the bottom note - was the same law stated
- * wrongly: deep enough to stop the saxophone's bottom note coming out an
- * octave high, it took the top three notes off the oboe.
+ * Wall loss on the round trip of the bottom note. The loss per round trip
+ * goes as the square root of the partial number and one over the square root
+ * of the note, since higher notes use a shorter tube. So it's set as a depth
+ * at the bottom note and scaled from there, not as a fixed frequency.
  */
 constexpr float kWallDepth = 0.35f;
 /**
- * How curved the reed's table is, and therefore where its gain comes from.
- *
- * A straight table has only one way to make gain: tilt it. But the tilt and
- * the resting point are then the same number - the reed sits at
- * `offset + tilt x pressure` and answers the wave at twice that tilt - so a
- * loop gain of 1.24 at a normal embouchure meant a reed resting 97 per cent
- * shut, with three per cent of its travel left against wave swings ten
- * times that. It spent every note against its own stops: the gain was
- * capped at `2 r_rest - offset` whatever the player did, the big reeds took
- * a quarter of a second to speak, and `pressure` moved nothing at all.
- *
- * A real reed's table is a curve. It barely moves at low pressure and then
- * closes hard, so the slope *at the operating point* is several times the
- * slope from rest to there - which is gain the reed does not have to buy
- * with its own travel. At a cube the loop sees `offset + S(1 + 3L)` for a
- * closure of only S, so 1.24 costs a sixth of the aperture instead of all
- * of it, and the ceiling goes from 2 - offset to 4 - 3 x offset. The curve
- * also reaches exactly one at the closing pressure, so the hard clamp that
- * used to be the whole nonlinearity is now the smooth end of the table.
+ * How curved the reed's table is. A real reed barely moves at low pressure
+ * and then closes hard, so the slope at the operating point is several times
+ * the slope from rest. That gives loop gain without the reed resting nearly
+ * shut. With a cube, a loop gain of 1.24 costs about a sixth of the aperture,
+ * and the gain ceiling goes from 2 - offset to 4 - 3 x offset. The curve
+ * reaches exactly one at the closing pressure, so it ends smoothly.
  */
 constexpr float kReedCurve = 3.0f;
 
 using dsp::clampf;
 
 /**
- * One section of the lattice, as a filter rather than a lag.
- *
- * A row of open holes is a *cutoff*: below it the wave turns round almost
- * whole, above it the wave goes on down the bore. A one-pole is neither -
- * it is already eleven percent down at half its corner, so the top of an
- * instrument's range was losing an eighth of its loop to a lattice that
- * should have been giving it back untouched, and the oboe simply stopped
- * making a pitch from note 75. This is flat where a lattice is flat and
- * steeper where it turns over, which is the whole of the difference.
+ * One section of the tone hole lattice, as a two-pole lowpass. A row of open
+ * holes is a cutoff: below it the wave reflects almost whole, above it the
+ * wave carries on down the bore. A one-pole droops too early and starves the
+ * top of the range.
  */
 struct Section {
     float b0 = 1.0f, b1 = 0.0f, b2 = 0.0f, a1 = 0.0f, a2 = 0.0f;
@@ -121,7 +76,7 @@ struct Section {
         z2 = b2 * x - a2 * y;
         return y;
     }
-    /** What it does to a partial at [w] radians a sample. */
+    /** The response at [w] radians per sample. */
     void at(float w, float &re, float &im) const {
         const float c1 = std::cos(w), s1 = std::sin(w);
         const float c2 = std::cos(2.0f * w), s2 = std::sin(2.0f * w);
@@ -155,34 +110,20 @@ class Pipe {
         bellLp = inertia = breathLp = ventLp = wallLp = 0.0f;
         dcIn = dcOut = 0.0f;
         radiated = 0.0f;
-        // The tube length goes back with the rest of it. tune() rewrites it
-        // before step() ever reads it, so nothing depends on this today -
-        // but a cleared pipe holding the last note's length is exactly the
-        // omission that broke reset_test twice on the brass, and it costs a
-        // line to not find out again.
-        //
-        // Gliding the read toward the solved length, which is what the brass
-        // needed, was tried here and does not earn its place: it helps the
-        // reeds a little (Bass Clarinet 2.8 to 2.3, Alto Sax 3.8 to 3.0) and
-        // hurts the jets more (Flute 3.3 to 4.6), because the jet line is
-        // read against this length and a moving one detunes it.
+        // Reset the tube length too. tune() rewrites it before step() reads
+        // it, but a cleared pipe shouldn't hold the last note's length. It
+        // isn't glided like the brass, since that detunes the jet line.
         upperDelay = 0.0f;
         onsetBoost = 1.0f;
         onsetFall = 0.0f;
-        // ...and having taken the length back, ask for it again. Without
-        // this a cleared pipe given the *same* note is not dirty, and reads
-        // its line at a length of nothing. It happened to be saved by the
-        // pressure being different at note-on, which is not a reason.
-        //
-        // And the pressure goes back too. setPressure ignores a change of
-        // under 0.015, so a pipe holding its last note's pressure kept it
-        // when the next came in near it, and was tuned for the old one - the
-        // same fault the brass had, and why two exports did not match.
+        // Reset the pressure (setPressure ignores tiny changes, so an old
+        // value could stick) and mark dirty so the next note retunes even if
+        // it's the same note. Otherwise exports aren't repeatable.
         pressure = 0.5f;
         dirty = true;
     }
 
-    // --- what the player and the instrument are ------------------------------
+    // --- player and instrument settings --------------------------------------
 
     void setNote(float hz) {
         const float f = clampf(hz, 20.0f, 5000.0f);
@@ -190,12 +131,11 @@ class Pipe {
     }
 
     /**
-     * [cylindrical] closes the tube at the mouthpiece, so it is a quarter
-     * of a wavelength long and has only its odd partials - a clarinet,
-     * hollow underneath and overblowing a twelfth. A cone is half a
-     * wavelength, has every partial and overblows an octave. One sign, and
-     * it is the largest single fact about a woodwind.
-     * [mode] is which partial the register vent is holding the note on.
+     * [cylindrical] closes the tube at the mouthpiece, so it's a quarter
+     * wavelength long with only odd partials and overblows a twelfth, like a
+     * clarinet. A cone is half a wavelength, has every partial and overblows
+     * an octave.
+     * [mode] is which partial the register vent holds the note on.
      */
     void setShape(bool cylindrical, int32_t mode) {
         const int32_t m = mode < 1 ? 1 : (mode > 3 ? 3 : mode);
@@ -210,11 +150,8 @@ class Pipe {
 
     /**
      * The row of open holes. [hz] is where the lattice stops reflecting and
-     * starts radiating - the one number that says clarinet or saxophone
-     * louder than any other. [fingering] is how forked the fingering is: a
-     * cross fingering closes holes *below* the open one, which drags that
-     * cutoff down and veils the note, and is the sound of an instrument
-     * playing a chromatic note it does not really have.
+     * starts radiating. [fingering] is how forked the fingering is: closing
+     * holes below the open one pulls the cutoff down and veils the note.
      */
     void setLattice(float hz, float fingering, float holes) {
         const float h = clampf(hz, 200.0f, 8000.0f);
@@ -225,19 +162,16 @@ class Pipe {
         }
     }
 
-    /**
-     * How much of the bore below the holes answers back.
-     */
+    /** How much of the bore below the holes reflects back. */
     void setFork(float amount) {
         const float a = clampf(amount, 0.0f, 1.0f);
         if (a != fork) { fork = a; dirty = true; }
     }
 
     /**
-     * How long that bore is, against the length the note implies. At one it
-     * is simply what is left of the instrument. Away from one it is a tube
-     * the reed cannot reconcile with the one it is playing, and two
-     * resonances sharing one reed is what a multiphonic is.
+     * The length of the bore below, relative to what the note implies. At 1
+     * it's the rest of the instrument. Away from 1 it gives two resonances
+     * sharing one reed, which makes multiphonics.
      */
     void setBelow(float scale) {
         const float v = clampf(scale, 0.2f, 4.0f);
@@ -245,10 +179,9 @@ class Pipe {
     }
 
     /**
-     * [kind] single reed, double reed or air jet. [stiffness] is how high
-     * the reed's own inertia lets it follow, [embouchure] how hard the lip
-     * holds it - which is the rest reflection of the mouthpiece and so the
-     * thing the whole loop is built on.
+     * [kind] single reed, double reed or air jet. [stiffness] sets how fast
+     * the reed can follow. [embouchure] is how hard the lip holds it, which
+     * sets the mouthpiece's rest reflection.
      */
     void setReed(int32_t kind, float stiffness, float embouchure) {
         const int32_t k = kind < 0 ? 0 : (kind > 2 ? 2 : kind);
@@ -260,10 +193,9 @@ class Pipe {
     }
 
     /**
-     * The flute's ribbon of air: how long it takes to cross, as a fraction
-     * of the note's own period, and how far off the edge it is aimed. A
-     * player sets that fraction with their lip and changes it by blowing
-     * harder, which is not a metaphor for overblowing - it is the mechanism.
+     * The flute's air jet: how long it takes to cross, as a fraction of the
+     * note's period, and how far off the edge it's aimed. Blowing harder
+     * shortens the crossing time, which is how a flute overblows.
      */
     void setJet(float ratio, float aim) {
         const float l = clampf(ratio, 0.05f, 2.0f);
@@ -281,7 +213,7 @@ class Pipe {
         if (std::fabs(v - pressure) > 0.015f) { pressure = v; dirty = true; }
     }
 
-    /** How hard the player leans past the point where it speaks at all. */
+    /** How hard the player blows past the point where the note speaks. */
     void setDrive(float d) {
         const float v = clampf(d, 0.0f, 2.0f);
         if (v != drive) { drive = v; dirty = true; }
@@ -289,40 +221,21 @@ class Pipe {
 
     void setLoss(float amount) { loss = clampf(amount, 0.8f, 1.0f); }
 
-    /** The tongue on the reed. 1 holds it shut, which is what a tongue is
-     *  for and what every sampled staccato is a photograph of. */
+    /** The tongue on the reed. 1 holds it shut. */
     void setTongue(float amount) { tongue = clampf(amount, 0.0f, 1.0f); }
 
     // --- tuning --------------------------------------------------------------
 
     /**
-     * Set both tubes so the loop comes round in exactly one turn at the
-     * note, and solve the mouthpiece for the gain it needs to speak.
-     *
-     * Same argument as Brazen's, with one more term: the bore below the
-     * holes feeds its own delayed return back into the junction, which
-     * pulls the pitch exactly as a real cross fingering does. So the
-     * junction is evaluated as a single complex number with both paths in
-     * it, and the upper tube takes whatever phase is left over.
-     */
-    /**
-     * Lean on the note for its first few round trips, then let go.
-     *
-     * The same arithmetic as the brass: to grow by a factor A in T seconds
-     * at frequency f the loop needs ln(A)/(fT) per round trip, and a round
-     * trip is a period. Over a fixed *time*, so a low note takes as long to
-     * speak as a high one instead of proportionally longer.
+     * Boost the loop gain for the note's first few round trips. Same as the
+     * brass: to grow by A in T seconds at frequency f the loop needs
+     * ln(A)/(fT) per round trip, so low notes speak as quickly as high ones.
      */
     void lift(float seconds = 0.08f) {
         if (!(freq > 0.0f)) return;
-        // Not the jet. Its gain solve is steep - g = cos(ph) + sqrt(cos^2(ph)
-        // - 1 + t^2) - so a modest lift on the target drives it a long way,
-        // and the flute came out five decibels louder, half again as peaky
-        // and nineteen cents flat. Solving the tube at the steady gain does
-        // not rescue it either, because what moves is the jet's own comb and
-        // not the tube. A jet is also the one exciter here that is *started*
-        // by the turbulence in the airstream rather than by the loop alone,
-        // so it has least need of a lift and most to lose from one.
+        // Not for the jet. Its gain solve is steep, so a lift makes the flute
+        // louder, peakier and flat. The jet is also started by breath noise
+        // rather than the loop alone, so it doesn't need a lift.
         if (excite == Jet) return;
         constexpr float kGrowth = 6.9f; // ln(1000): silence to a sounding note
         onsetBoost = clampf(std::exp(kGrowth / (freq * seconds)) / kSettled, 1.0f, 4.0f);
@@ -330,6 +243,14 @@ class Pipe {
         dirty = true;
     }
 
+    /**
+     * Set both tubes so the loop comes round in exactly one turn at the note,
+     * and solve the mouthpiece for the gain it needs to speak. Like Brazen,
+     * plus the bore below the holes feeding back into the junction, which
+     * pulls the pitch like a real cross fingering. The junction is evaluated
+     * as one complex number with both paths, and the upper tube takes the
+     * leftover phase.
+     */
     void tune() {
         if (onsetBoost > 1.001f) {
             dirty = true; // the loop is changing under us while the lift lasts
@@ -342,18 +263,12 @@ class Pipe {
         const float period = sr / freq;
         const float w = 6.28318530718f * freq / sr;
 
-        // The lattice. A forked fingering drags the cutoff down, and that
-        // is the whole of why forked notes sound veiled.
-        // ...but never below the note it has to reflect. A real instrument's
-        // cutoff sits above the range it is asked to play, and one that did
-        // not would simply not speak up there.
+        // The lattice. A forked fingering pulls the cutoff down, but never
+        // below the note it has to reflect or the note wouldn't speak.
         const float cut = clampf(latticeHz * (1.0f - finger * 0.7f),
                                  std::max(120.0f, freq * 1.6f), sr * 0.45f);
-        // Two poles, or four when the holes are deep: a lattice with more
-        // of them open cuts off harder, and that is what `holes` is. Flat
-        // below the corner either way - a real lattice reflects what is
-        // under its cutoff whole, and the one-pole this replaced was down
-        // an eighth at half of it, which is where the top of the oboe went.
+        // Two poles, or four when `holes` is high, since more open holes cut
+        // off harder. Flat below the corner either way.
         latticeCut = cut;
         holeOrder4 = holeDepth > 0.5f;
         if (holeOrder4) {
@@ -365,19 +280,14 @@ class Pipe {
         holeReflect = 0.98f - fork * 0.12f;
         throat = 0.2f + fork * 0.75f;
 
-        // How much instrument is still hanging below the hole the note is
-        // fingered on. Nobody sets this: it falls out of where the note is
-        // and how big the instrument is, which is why the same machine
-        // sounds different at the bottom of its range and at the top.
+        // How much tube is left below the hole the note is fingered on,
+        // worked out from the note and the size of the instrument.
         const float base = cylinder ? 0.5f : 1.0f;
         const float whole = base * (sr / lowest);
-        // A vent puts the note on a higher partial of a *longer* tube, and
-        // the instrument only has so much tube. Asking for a twelfth from a
-        // note near the bottom of the range wants a bore the thing does not
-        // have, and the honest answer is the one a player would give: it
-        // comes out in the natural register instead. Without this guard the
-        // note simply lands between two modes and plays whatever it likes,
-        // which measured as a confident and entirely wrong +95 cents.
+        // A vent puts the note on a higher partial of a longer tube. If the
+        // instrument isn't long enough, drop to a lower register, like a
+        // player would. Otherwise the note lands between modes and plays
+        // badly out of tune.
         int32_t useMode = regMode;
         while (useMode > 1 && base * static_cast<float>(useMode) * period > whole * 1.02f) {
             useMode = cylinder ? (useMode > 3 ? 3 : 1) : useMode - 1;
@@ -385,44 +295,22 @@ class Pipe {
         sounding = useMode;
         const float nominal = base * static_cast<float>(useMode) * period;
 
-        // The vent itself. Lengthening the tube is only half of a register
-        // key: the hole also has to *stop* the partials below the one you
-        // want, or the tube simply plays its own fundamental and you have
-        // built a longer instrument rather than a higher note. A small hole
-        // near the top of the bore is a high-pass on the loop, so that is
-        // what this is, cornered between the tube's fundamental and the
-        // note being asked for.
+        // The register vent, as a high pass on the loop. It stops the
+        // partials below the one wanted, cornered between the tube's
+        // fundamental and the note.
         //
-        // And when no vent is open, the same high-pass stands in for a
-        // fact about the tube: it has no mode below its own lowest note.
-        // A cone's loop closes a whole turn at DC - that is what makes its
-        // series complete - and the DC blocker's phase lead then closes one
-        // again a little way above its corner, where the reed's static gain
-        // is still over one. The oboe measured that mode at 40 Hz with a
-        // gain of 1.03 at its centre note and 1.06 four semitones up, at
-        // which point it wins and the note is not a pitch at all; and every
-        // cone in the bank rang it for the first tenth of a second of every
-        // note. A high-pass under the instrument's bottom note starves it:
-        // the turn now closes where this filter passes half, and the mode
-        // reads 0.5 instead of 1.0. Cylinders have half a turn at DC and
-        // never had the mode, and lose a few degrees the solve puts back.
-        // ...and a quarter of the note as well as a third of the bottom of
-        // the instrument. The tube that is actually sounding is the one
-        // above the first open hole, and it has no resonance below its own
-        // fundamental - but the *loop* still had one, and it grew as the
-        // note rose, because the bore left hanging below the hole gets
-        // longer as you go up. The oboe's top octave was arguing with a
-        // mode at an eighth of its pitch, gain 1.00 at the top of its range
-        // against the note's own 0.99.
+        // With no vent open it still sits under the note, at the higher of
+        // 0.3 x the lowest note and 0.25 x the note. Without it a cone (and
+        // the long tube below the holes on high notes) rings a spurious low
+        // mode that can take over the note.
         float ventHz = std::max(lowest * 0.3f, freq * 0.25f);
         if (useMode > 1) ventHz = std::max(ventHz, (freq / static_cast<float>(useMode)) * 1.5f);
         ventCoeff = 1.0f - std::exp(-6.28318530718f * ventHz / sr);
         float below = (whole - nominal) * (1.0f + finger * 0.4f) * belowScale;
         lowerDelay = clampf(below, 1.0f, static_cast<float>(lower.size() - 3));
 
-        // The reed's own inertia: a plain one-pole, because a resonance
-        // sharp enough to be interesting is also sharp enough to win the
-        // argument about which mode sounds. Brazen learnt that the hard way.
+        // The reed's inertia, as a plain one-pole. A resonant reed would be
+        // strong enough to pull the note onto the wrong mode (as in Brazen).
         reedCoeff = clampf(1.0f - std::exp(-6.28318530718f * (400.0f + reedStiff * 3600.0f) / sr), 0.01f, 0.999f);
 
         float jr, ji, br, bi, fr, fi;
@@ -434,23 +322,11 @@ class Pipe {
             const float nr2 = br * vr - bi * vi, ni2 = br * vi + bi * vr;
             br = nr2; bi = ni2;
         }
-        // The walls. A real bore loses more of a wave the higher it is -
-        // the boundary layer goes as the root of the frequency - and that
-        // is what puts a tube's fundamental ahead of its own partials: at
-        // a clarinet's bottom note the third mode is four percent lossier
-        // than the first. Without it every mode here sat within a few
-        // percent of the same gain, the bottom note of the bank's default
-        // instrument lost the race to its own third partial, and a bassoon
-        // had four modes over unity fighting through its attack.
-        //
-        // A shelf, not a low-pass: a fifth off above four times the
-        // instrument's bottom note, which is the root law to within a
-        // percent or two from the third partial to the twentieth. A plain
-        // one-pole there was tried first and halved every centroid in the
-        // bank, because a partial whose loop gain sits at 0.95 is amplified
-        // twenty times by the tube and one at 0.75 four times - the tube's
-        // resonance is most of a woodwind's brightness, and a loss that
-        // looks small on paper is a loss of that.
+        // Wall loss. A real bore loses more at higher frequencies, which
+        // keeps the fundamental ahead of its upper partials so low notes
+        // don't jump to a higher mode. It's a shelf, not a lowpass, because
+        // the tube's resonance multiplies any loss and a lowpass dulls the
+        // tone a lot. See kWallDepth.
         const float tubeHz = freq / static_cast<float>(useMode);
         wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(tubeHz, 30.0f, sr * 0.45f) / sr);
         wallDepth = clampf(kWallDepth * std::sqrt(lowest / std::max(tubeHz, 1.0f)), 0.0f, 0.6f);
@@ -461,7 +337,7 @@ class Pipe {
             br = nr2; bi = ni2;
         }
 
-        // Everything outside the mouthpiece, which is what it has to beat.
+        // Loop gain from everything outside the mouthpiece.
         const float outside = std::sqrt((br * br + bi * bi) * (jr * jr + ji * ji)) * loss;
         const float steady = clampf(0.9f + kWantSlope * pressure * drive, 0.0f, kWantMax);
         const float ceiling = onsetBoost > 1.001f ? kLiftCeiling : kWantMax;
@@ -470,16 +346,12 @@ class Pipe {
         const float mouth = clampf(pressure, 0.05f, 2.0f);
 
         if (excite == Jet) {
-            // The ribbon of air takes time to cross, and blowing harder
-            // shortens it. F = 1 + G e^-jw.tau, so solve for G.
-            // Half a period, and blowing harder shortens it. The jet
-            // *opposes* what it finds when it lands, so F = 1 - g e^-jw.tau
-            // is largest exactly when the crossing takes half a period -
-            // which is the real number for a real flute, and puts the note
-            // on the peak of the comb while leaving the octave in its
-            // trough at 2 - t. Blow harder, the crossing shortens, the comb
-            // slides down, and the octave comes up to meet it. That is not
-            // a model of overblowing; it is overblowing.
+            // The jet takes time to cross, and blowing harder shortens it.
+            // It opposes what it finds, so F = 1 - g e^-jw.tau is largest
+            // when the crossing takes half a period, which puts the note on
+            // the peak of the comb and the octave in a trough. Blowing
+            // harder shortens the crossing and brings the octave up, which
+            // is how a flute overblows. Solve for g.
             jetDelay = clampf(jetRatio * period / (0.75f + pressure * 0.35f),
                               1.0f, static_cast<float>(jetLine.size() - 3));
             const float ph = -w * jetDelay;
@@ -494,14 +366,12 @@ class Pipe {
             fi = -g * sp;
         } else {
             // The reed table: r rises from the embouchure to fully shut as
-            // the pressure across the reed goes from nothing to the pressure
-            // that closes it, as the cube of that fraction. Blowing steadily
-            // puts it S of the way there, and what the loop sees is
-            //     F(w) = offset + S . (1 + 3 L(w)),
-            // three quarters of which is the curvature and not the closure.
-            // Solve |F| = t for S - one quadratic, positive root, because a
-            // reed closes as the bore fills and one that opened instead is a
-            // saxophone that will not play.
+            // the cube of the pressure across the reed, as a fraction of the
+            // closing pressure. Blowing steadily puts it S of the way there,
+            // and the loop sees
+            //     F(w) = offset + S . (1 + 3 L(w)).
+            // Solve |F| = t for S. It's a quadratic, and the positive root is
+            // the one where the reed closes as the bore fills.
             float lr, li;
             onePole(reedCoeff, std::cos(w), std::sin(w), lr, li);
             const float ar = 1.0f + kReedCurve * lr, ai = kReedCurve * li;
@@ -510,20 +380,14 @@ class Pipe {
             const float cq = offset * offset - t * t;
             const float disc = bq * bq - aa * cq;
             float shut = disc >= 0.0f ? (-bq + std::sqrt(disc)) / aa : 1.0f;
-            // ...but the reed must still have somewhere left to go: nine
-            // tenths of the way shut and the mouthpiece is nearly a mirror,
-            // and a tight embouchure chokes a real one for the same reason.
-            // The ceiling this leaves is 4 - 3 x offset, which at these
-            // embouchures is 1.8 rather than 1.2 - enough that the solve now
-            // gets what it asks for, and the note's gain no longer ripples
-            // with whatever the tube below the fingers happens to be doing.
+            // Keep the reed below 90% of the way shut, so it has room to
+            // move. That still leaves a gain ceiling of 4 - 3 x offset.
             shut = clampf(shut, 0.0f, 0.9f * (1.0f - offset));
             reedShut = shut;
             rRest = offset + shut;
-            // Which says what the closing pressure is, since the player is
-            // blowing `mouth` and that is what has taken the reed this far:
-            // the reed sits at a = cbrt(S / (1 - offset)) of the way, so the
-            // pressure that shuts it is mouth / a. Nothing else states it.
+            // This sets the closing pressure. The reed sits at
+            // a = cbrt(S / (1 - offset)) of the way at pressure `mouth`, so
+            // the closing pressure is mouth / a.
             const float aOp = std::cbrt(shut / (1.0f - offset));
             reedScale = aOp > 1e-4f ? aOp / mouth : 0.0f;
             fr = offset + shut * ar;
@@ -531,10 +395,8 @@ class Pipe {
         }
 
         float phase = std::atan2(fi, fr) + std::atan2(bi, br) + std::atan2(ji, jr);
-        // Whatever is left goes in the tube, at the length nearest the one
-        // the instrument would physically be - so the note sits on the mode
-        // the register vent chose and not on whichever one the arctangent
-        // happened to land in.
+        // The leftover phase goes in the tube, at the length nearest the
+        // physical one, so the note sits on the mode the vent chose.
         float extra = phase / w - nominal;
         while (extra > period * 0.5f) extra -= period;
         while (extra <= -period * 0.5f) extra += period;
@@ -544,10 +406,9 @@ class Pipe {
     }
 
     /**
-     * How much gain the loop has at any frequency, with the instrument as
-     * it currently stands. Over one and that partial will sound; the
-     * loudest one wins, and this is how you find out *which* before
-     * spending an afternoon wondering why a clarinet is playing a fifth.
+     * The loop gain at [hz] with the current settings. Partials over one can
+     * sound and the strongest wins, so this is for checking which mode will
+     * sound.
      */
     float loopAt(float hz) const {
         const float w = 6.28318530718f * clampf(hz, 1.0f, sr * 0.49f) / sr;
@@ -562,9 +423,8 @@ class Pipe {
     }
 
     /**
-     * How far round the loop has come at [hz], in turns. A partial can only
-     * sound where this is a whole number - the magnitude above decides
-     * which of those wins, not which exist.
+     * The loop phase at [hz], in turns. A partial can only sound where this
+     * is a whole number. loopAt() decides which of those wins.
      */
     float loopTurns(float hz) const {
         const float w = 6.28318530718f * clampf(hz, 1.0f, sr * 0.49f) / sr;
@@ -583,78 +443,56 @@ class Pipe {
     // --- one sample ----------------------------------------------------------
 
     /**
-     * [mouth] is the pressure the player is making, [noise] the hiss in it.
-     * Returns what the instrument puts into the room - the holes and the
-     * bell added together, not just the far end, because most of what you
-     * hear from a woodwind leaves through the holes.
+     * [mouth] is the player's pressure, [noise] the breath noise in it.
+     * Returns the radiated sound from the holes and the bell together, since
+     * most of a woodwind's sound leaves through the holes.
      */
     float step(float mouth, float noise) {
         const float arrive = read(upper, wUpper, upperDelay);
 
-        // The lattice splits the wave: the low end turns round, the high
-        // end goes on down the rest of the instrument.
+        // The lattice splits the wave: the low end reflects, the high end
+        // carries on down the rest of the instrument.
         float low = hole1.process(arrive);
         if (holeOrder4) low = hole2.process(low);
         const float past = (arrive - low) * throat;
         const float fromHoles = arrive - 0.8f * low;
 
-        // ...and the rest of the instrument, which is still down there.
+        // The rest of the instrument below the holes.
         const float belowArrive = read(lower, wLower, lowerDelay);
         bellLp += (belowArrive - bellLp) * bellCoeff;
         const float fromBell = belowArrive - 0.8f * bellLp;
         write(lower, wLower, past);
 
-        // An open hole is a pressure node, so it inverts - which is why a
-        // cylinder keeps only its odd partials whichever hole is open. A
-        // cone's mode series is complete, and taking the sign off the
-        // return is the cheap and honest way to say so.
+        // An open hole is a pressure node, so it inverts, which is why a
+        // cylinder only has odd partials. A cone has every partial, so its
+        // return isn't inverted.
         const float sign = cylinder ? 1.0f : -1.0f;
         const float bore = sign * (-low * holeReflect - bellLp * bellGain * throat);
 
         const float breath = mouth + noise;
         float in;
         if (excite == Jet) {
-            // The jet is pushed about by the sound in the mouth hole, not
-            // by the steady stream behind it. Feed it the breath as well
-            // and it sits pinned at the end of its travel before a note has
-            // started, which is the same silence the reed table gave.
-            //
-            // Which leaves the question of how it ever starts, because a
-            // loop fed only on its own output stays at nothing forever. A
-            // real flute is started by the turbulence in the airstream and
-            // by the shove of the breath arriving - so those are what
-            // starts this one, and a flute patch with the breath noise
-            // turned all the way down is a flute nobody can get a note out
-            // of, which is correct.
+            // The jet is driven by the sound in the mouth hole, not the
+            // steady breath, which would pin it at one end of its travel.
+            // The note is started by breath noise and the change in breath
+            // pressure, so a flute patch with no breath noise won't speak.
             breathLp += (breath - breathLp) * 0.002f;
             write(jetLine, wJet, bore + noise + (breath - breathLp) * 0.5f);
             const float late = read(jetLine, wJet, jetDelay);
             in = bore - (dsp::fastTanh(jetGain * late + jetAim) - jetRest);
         } else {
-            // mouth + difference x reflection, and the reflection is the
-            // reed's own table read at the pressure across it. The reed has
-            // inertia, so it reads a lagged one - and that lag is the only
-            // state here: the table itself is a function, evaluated fresh
-            // every sample, with nothing in it solved per block. What the
-            // block rate does set is the scale: how much of the closing
-            // pressure one unit of `breath` is.
+            // mouth + difference x reflection, where the reflection is the
+            // reed table read at the (lagged, for the reed's inertia)
+            // pressure across it. The only per-block value is reedScale.
             //
-            // The table is a cube rising from the embouchure at no pressure
-            // to fully shut at the pressure that shuts it, and to fully open
-            // - an inversion, which is what an open mouthpiece is - at that
-            // much the other way. So it saturates smoothly at both ends and
-            // there is no clamp in it at all. The old straight table hit a
-            // hard limit at one and spent every note there; see kReedCurve.
+            // The table is a cube from the embouchure at no pressure to fully
+            // shut at the closing pressure, and to fully open (inverted) the
+            // same amount the other way, so it saturates smoothly at both
+            // ends. See kReedCurve.
             //
-            // The tongue holds the reed *shut*: the reflection goes to one
-            // and the flow to nothing, and the reed's answer to the wave is
-            // damped in proportion. Released, the flow steps up by the
-            // little it was held back by - which is what a tongued attack
-            // is, and it is what starts the note. It used to scale the
-            // whole table, rest and all, which *opened* the reed while the
-            // tongue was on and shut it by a quarter at the release: fifty
-            // cents sharp at thirty milliseconds on the clarinet, a pulse
-            // circulating the bassoon's whole bore.
+            // The tongue holds the reed shut: the reflection goes to one and
+            // the flow to nothing. Releasing it is the tongued attack that
+            // starts the note.
             const float pd = bore - breath;
             inertia += ((breath - bore) - inertia) * reedCoeff;
             const float a = clampf(inertia * reedScale, -1.0f, 1.0f);
@@ -682,7 +520,7 @@ class Pipe {
     float lastRadiated() const { return radiated; }
     float loopGain() const { return loopMag; }
     float upperLength() const { return upperDelay; }
-    /** Which partial the vent actually managed to put the note on. */
+    /** Which partial the vent actually put the note on. */
     int32_t soundingMode() const { return sounding; }
     float lowerLength() const { return lowerDelay; }
 
@@ -695,7 +533,7 @@ class Pipe {
         im = -c * di / den;
     }
 
-    /** The whole tube, as one complex number: the holes and everything
+    /** The whole tube as one complex number: the holes and everything
      *  below them, seen from the mouthpiece. */
     void junction(float w, float &re, float &im) const {
         const float c1 = std::cos(w), s1 = std::sin(w);
@@ -710,7 +548,7 @@ class Pipe {
         }
         re = -lr * holeReflect;
         im = -li * holeReflect;
-        // What went past the holes, down the horn, off the bell and back.
+        // What went past the holes, down the tube, off the bell and back.
         float bre, bim;
         onePole(bellCoeff, c1, s1, bre, bim);
         const float tr = (1.0f - lr) * throat, ti = -li * throat;
@@ -724,10 +562,9 @@ class Pipe {
         const float sign = cylinder ? 1.0f : -1.0f;
         re *= sign;
         im *= sign;
-        // Note what is *not* here: the upper tube's own delay. tune() calls
-        // this to find out how much phase is left for that tube, so putting
-        // it in would be counting it twice - and the pipe would solve for a
-        // length it had already spent. It cost an afternoon once.
+        // The upper tube's delay is left out on purpose. tune() uses this
+        // to find the phase left over for that tube, so including it would
+        // count it twice.
     }
 
     /** The walls' loss, as the loop sees it: 1 - depth x (1 - onepole). */
@@ -738,7 +575,7 @@ class Pipe {
         im = wallDepth * li;
     }
 
-    /** The register vent: 1 - onepole, or nothing at all when it is shut. */
+    /** The register vent: 1 - onepole, or 1 when it's shut. */
     void ventAt(float w, float &re, float &im) const {
         if (ventCoeff <= 0.0f) { re = 1.0f; im = 0.0f; return; }
         float lr, li;
@@ -799,9 +636,8 @@ class Pipe {
     float bellGain = 0.9f, bellCoeff = 0.4f;
 
     float reedStiff = 0.5f, offset = 0.7f, reedCoeff = 0.2f, inertia = 0.0f;
-    // How far the steady breath has shut the reed, what one unit of pressure
-    // is as a fraction of the pressure that would shut it, and where the two
-    // together leave the table at rest.
+    // How far the steady breath has shut the reed, one unit of pressure as a
+    // fraction of the closing pressure, and the resulting rest reflection.
     float reedShut = 0.1f, reedScale = 1.0f, rRest = 0.7f;
     float jetRatio = 0.5f, jetAim = 0.0f, jetDelay = 48.0f, jetGain = 1.0f, jetSlope = 1.0f, jetRest = 0.0f;
 

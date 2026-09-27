@@ -9,7 +9,7 @@ namespace acidulous::audio {
 
 namespace {
 
-/** Both channels, or the one there is. A mono file keeps `right` empty. */
+/** Runs [fn] on each channel. A mono file has an empty `right`. */
 template <typename Fn>
 void eachChannel(SampleData &data, Fn fn) {
     fn(data.left);
@@ -33,7 +33,7 @@ void cropTo(SampleData &data, int32_t from, int32_t to) {
     const int32_t end = to > from ? std::min(to, data.frames) : data.frames;
     const int32_t start = std::clamp(from, 0, end);
     if (start == 0 && end == data.frames) return;
-    if (end - start < 1) return; // a crop to nothing is a mistake, not an edit
+    if (end - start < 1) return; // ignore a crop to nothing
     eachChannel(data, [&](std::vector<float> &ch) {
         ch.erase(ch.begin() + end, ch.end());
         ch.erase(ch.begin(), ch.begin() + start);
@@ -45,8 +45,8 @@ void cropTo(SampleData &data, int32_t from, int32_t to) {
 
 void fadeEnds(SampleData &data, int32_t inFrames, int32_t outFrames) {
     if (data.frames <= 0) return;
-    // Neither fade may eat the other: two that overlap would multiply in the
-    // middle and leave a hole where the sound is supposed to be.
+    // Don't let the fades overlap, or they'd multiply and leave a dip in the
+    // middle.
     const int32_t rise = std::clamp(inFrames, 0, data.frames);
     const int32_t fall = std::clamp(outFrames, 0, data.frames - rise);
     eachChannel(data, [&](std::vector<float> &ch) {
@@ -70,7 +70,7 @@ void applyGain(SampleData &data, float linear) {
 void normalisePeak(SampleData &data, float peak) {
     if (peak <= 0.0f) return;
     const float now = loudest(data);
-    if (now < 1e-6f) return; // silence normalises to silence, not to noise
+    if (now < 1e-6f) return; // leave silence alone
     applyGain(data, peak / now);
     data.peak = peak;
 }
@@ -81,8 +81,7 @@ void reverseInPlace(SampleData &data) {
 
 void filterInPlace(SampleData &data, float cutoffHz, float resonance, int32_t type) {
     if (cutoffHz <= 0.0f || data.frames <= 0) return;
-    // One filter per channel and its own state: sharing one between left and
-    // right would make a stereo file the sum of itself delayed by a sample.
+    // A separate filter per channel so they don't share state.
     eachChannel(data, [&](std::vector<float> &ch) {
         dsp::MultiFilter f;
         f.setSampleRate(static_cast<float>(data.rate));
@@ -94,26 +93,16 @@ void filterInPlace(SampleData &data, float cutoffHz, float resonance, int32_t ty
 void compressInPlace(SampleData &data, float amount, float attackMs, float releaseMs) {
     if (amount <= 0.0f || data.frames <= 0) return;
     const float squeeze = std::clamp(amount, 0.0f, 1.0f);
-    // One knob, opened out here: the threshold walks down to 24 dB under full
-    // scale and the ratio up to eight to one, which is the span between "a
-    // little control" and "squashed" and has nothing useful outside it.
+    // One knob: the threshold goes down to -24 dB and the ratio up to 8:1.
     const float threshold = std::pow(10.0f, -24.0f * squeeze / 20.0f);
     const float ratio = 1.0f + 7.0f * squeeze;
 
-    // **It looks ahead, because offline it can.**
+    // Since this runs offline it can look ahead. The gain reduction is worked
+    // out for every frame first, then smoothed with the attack running
+    // backwards, so the gain is already down when a transient arrives.
     //
-    // A compressor that follows its input cannot begin to turn down until the
-    // loud part has already arrived, so the first few milliseconds of every
-    // transient go through at full height - which is why a live one with a
-    // five millisecond attack measured *higher* crest factor than the file it
-    // was given, not lower. Here the whole recording is on the table, so the
-    // gain is worked out for every frame first and then smoothed with the
-    // attack running **backwards**: the reduction is already down by the time
-    // the peak gets there.
-    //
-    // Smoothed as decibels of reduction with a slope limit rather than as a
-    // gain through a one-pole, because a slope is the thing the attack and
-    // release times actually name, and it cannot overshoot.
+    // The reduction is smoothed in dB with a slope limit, which matches what
+    // attack and release times mean and can't overshoot.
     const auto n = static_cast<size_t>(data.frames);
     const bool twoUp = data.stereo && !data.right.empty();
     std::vector<float> cut(n, 0.0f);
@@ -127,7 +116,7 @@ void compressInPlace(SampleData &data, float amount, float attackMs, float relea
     }
 
     const auto rate = static_cast<float>(data.rate);
-    // Sixty decibels in the time named, which is the usual reading of both.
+    // 60 dB over the attack or release time.
     const float attackSlope = 60.0f / std::max(1.0f, attackMs * 0.001f * rate);
     const float releaseSlope = 60.0f / std::max(1.0f, releaseMs * 0.001f * rate);
     for (size_t i = n - 1; i-- > 0;) {
@@ -143,8 +132,8 @@ void compressInPlace(SampleData &data, float amount, float attackMs, float relea
         data.left[i] *= gain;
         if (twoUp) data.right[i] *= gain;
     }
-    // Makeup: back to the level it came in at, which is what makes the knob
-    // read as "squeeze" rather than as "quieter".
+    // Makeup gain back to the original peak, so the knob squeezes instead of
+    // just making it quieter.
     const float after = loudest(data);
     if (after > 1e-6f && before > 1e-6f) applyGain(data, before / after);
 }
@@ -160,8 +149,7 @@ bool applyEdit(SampleData &data, const SampleOps &ops, std::string &error) {
         return false;
     }
     if (ops.reverse) reverseInPlace(data);
-    // A high pass before anything that has a threshold in it: a compressor
-    // fed a take with the room still under it rides the room.
+    // High pass before the compressor so it doesn't react to low rumble.
     if (ops.lowCutHz > 0.0f) {
         filterInPlace(data, ops.lowCutHz, 0.0f, dsp::MultiFilter::HP12);
     }

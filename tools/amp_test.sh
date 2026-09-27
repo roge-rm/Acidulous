@@ -1,8 +1,5 @@
 #!/bin/bash
-# The amp and its cabinet, measured rather than rendered. See tools/amp_test.cpp.
-#
-# Header-only and dependency-free: `dsp::Wsola` asks the material nothing, so
-# the harness needs neither the engine archive nor a file on disk.
+# Tests the amp and its cabinet. See tools/amp_test.cpp.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

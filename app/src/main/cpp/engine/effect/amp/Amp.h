@@ -6,22 +6,17 @@
 #include <engine/dsp/Oversampler.h>
 #include <engine/effect/Effect.h>
 
-// A guitar amplifier: a preamp that clips asymmetrically, a tone stack whose
-// three controls fight each other, a power stage that sags under load, and a
-// speaker in a box.
+// A guitar amp: a preamp that clips asymmetrically, a tone stack whose three
+// controls interact, a power stage that sags under load, and a speaker cabinet.
 //
-// **It is a chain, and the order is the point.** `fx.Distortion` already
-// exists and is good; what it is not is an amp, because an amp is those four
-// things in that sequence. The tone stack between the two nonlinearities is
-// what makes the second one distort something shaped; presence inside the
-// feedback loop is what makes it a presence control rather than a treble one.
+// The order matters. The tone stack sits between the two nonlinear stages so
+// the second one distorts an already shaped signal, and presence is inside
+// the feedback loop so it acts as presence and not as treble.
 //
-// **One oversampled region, not three.** Everything from the bright cap to the
-// output transformer runs at twice the rate; the cabinet runs at the base
-// rate, because it is linear and cannot alias. Wrapping each nonlinearity
-// separately would cost three round trips *and be wrong*: decimating between
-// the preamp stages throws away exactly the harmonics the oversampling was
-// protecting.
+// Everything from the bright cap to the output transformer runs oversampled
+// 2x in one go. The cabinet runs at the base rate since it's linear and can't
+// alias. Oversampling each stage separately would be slower and would throw
+// away harmonics between the preamp stages.
 namespace acidulous::effect {
 
 class Amp final : public Effect {
@@ -32,9 +27,8 @@ class Amp final : public Effect {
     };
     Amp() { initParams(); }
 
-    // Written out rather than through `ACIDULOUS_EFFECT_COMMON`, which lives
-    // in `Effects.h` - a header that declares all fourteen of the others. Five
-    // lines here against a dependency on every effect in the app.
+    // Written out instead of using `ACIDULOUS_EFFECT_COMMON` to avoid
+    // including Effects.h, which declares every other effect.
     const char *typeName() const override { return "Amp"; }
     const ParamDef *paramDefs(int32_t &count) const override;
     void prepare(int32_t sampleRate) override;
@@ -42,7 +36,7 @@ class Amp final : public Effect {
     bool process(float *L, float *R, int32_t frames, bool stereoIn) override;
 
   private:
-    /** Room for the latency and a block, rounded up so the wrap is cheap. */
+    /** Room for the latency plus a block, a power of two so the wrap is cheap. */
     static constexpr int32_t kDry = 128;
 
     struct Channel {
@@ -58,14 +52,14 @@ class Amp final : public Effect {
         int32_t dryAt = 0;
     };
 
-    /** Stage A: a diode curve with the player's own bias on it. */
+    /** Stage A: a diode curve with the bias knob applied. */
     static float stageA(float x, float g, float b) {
         const float off = dsp::fastTanh(b);
         const float at = dsp::fastTanh(dsp::kDriveNominal * g + b) - off;
         const float norm = at > 1e-6f ? dsp::kDriveNominal / at : 1.0f;
         return (dsp::fastTanh(x * g + b) - off) * norm;
     }
-    /** Stage B: the valve curve, verbatim from MultiFilter's. */
+    /** Stage B: the valve curve, the same as MultiFilter's. */
     static float stageB(float x, float g) {
         return dsp::fastTanh(x * g) * (dsp::kDriveNominal / dsp::fastTanh(dsp::kDriveNominal * g));
     }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Two notes, move one, and require the other to be unchanged bit for bit.
+# Plays two notes, moves one, and checks the other is unchanged bit for bit.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

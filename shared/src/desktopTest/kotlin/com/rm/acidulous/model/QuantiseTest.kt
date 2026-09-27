@@ -6,7 +6,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Quantise, as the editor, the recorder and a Launchpad all mean it. */
+/** Quantise as used by the editor, the recorder and the Launchpad. */
 class QuantiseTest {
     private val g = PPQN / 4 // a sixteenth: 60 ticks
     private val bar = PPQN * 4
@@ -45,7 +45,7 @@ class QuantiseTest {
         val twice = Quantise.apply(listOf(once), null, QuantiseSpec(g * 2), bar).single()
         assertEquals(120, twice.tick) // exactly halfway rounds up
         assertEquals(70, twice.rawTick)
-        // A note already on the line is not touched at all.
+        // A note already on the grid isn't touched.
         assertNull(Quantise.apply(listOf(note(120)), null, QuantiseSpec(g), bar).single().rawTick)
     }
 

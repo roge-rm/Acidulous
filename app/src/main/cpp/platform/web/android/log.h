@@ -1,7 +1,7 @@
 #pragma once
-// Android's log call, for the browser build: the engine's host code logs
-// through __android_log_print, and here that is the browser's console, at the
-// console's own level - so an engine starting is not shown as an error.
+// Android's log call for the browser build. The engine logs through
+// __android_log_print and here it goes to the browser console at the matching
+// level, so info messages don't show up as errors.
 #include <cstdarg>
 #include <cstdio>
 #include <emscripten/emscripten.h>

@@ -38,12 +38,12 @@ import com.rm.acidulous.ui.watchMicrophonePermission
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
-// Acidulous in a browser. The page has loaded the engine (globalThis.acid)
-// and put the app's folder, kept in browser storage, at /data; this is what
-// MainActivity.onCreate does on the phone, in the same order, and then the
-// app.
+// Acidulous in a browser. The page has already loaded the engine
+// (globalThis.acid) and mounted the app's folder from browser storage at
+// /data. This does what MainActivity.onCreate does on the phone, in the same
+// order, then starts the app.
 
-/** A file beside the page as a string of chars 0-255: one crossing, then bytes in Kotlin. */
+/** Fetches a file next to the page as a string of chars 0-255, so it crosses to Kotlin in one go. */
 private fun fetchLatin1(url: String): kotlin.js.Promise<JsString> = js(
     """fetch(url).then((r) => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then((b) => {
         const a = new Uint8Array(b);
@@ -63,18 +63,18 @@ private fun onPageHide(action: () -> Unit): Unit = js("addEventListener('pagehid
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     MainScope().launch {
-        // Every string first: nothing on the page's one thread may wait for one later.
+        // Load every string first. Nothing on the page's single thread can wait for one later.
         preloadStrings()
         AppHost.current = WebHost()
         watchMicrophonePermission()
         UiPrefs.init(LocalPrefs("ui"))
-        // The output chosen last time, found once the browser lists it.
+        // The output chosen last time, selected once the browser lists it.
         AppHost.current.chooseAudioOutput(UiPrefs.outputDevice)
         Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
         Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
         MidiHub.start(WebMidi())
-        // A Launchpad goes back to its own mode when the page goes, as it
-        // does when the desktop's window closes.
+        // Put a Launchpad back in its own mode when the page closes, like the
+        // desktop does when its window closes.
         onPageHide {
             MidiHub.clearPads()
             MidiHub.releaseLaunchpad()
@@ -83,13 +83,12 @@ fun main() {
         EngineAssets.install(File("/data"), File("/tmp/cache").apply { mkdirs() })
 
         ComposeViewport("root") {
-            // **The symbols, before anything is drawn.** A browser lends no
-            // system fonts, so the symbols the app draws as text - the
-            // editor's dice, grid and lock, the pills' arrows, the MIDI
-            // window's cable - came from whatever the page could find: boxes
-            // on one machine, glyphs sitting high or low on another. These
-            // two small subsets (fonts/NOTICE.txt) are preloaded as fallbacks,
-            // so every browser draws the same ones.
+            // Load the symbol fonts before drawing anything. Browsers don't
+            // lend system fonts, so symbols drawn as text (the editor's dice,
+            // grid and lock, the pill arrows, the MIDI cable) showed as boxes
+            // or sat at the wrong height. These two small subsets
+            // (fonts/NOTICE.txt) are preloaded as fallbacks so every browser
+            // draws the same ones.
             val fonts = LocalFontFamilyResolver.current
             var fontsReady by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
@@ -99,10 +98,10 @@ fun main() {
                 fontsReady = true
             }
             if (!fontsReady) return@ComposeViewport
-            // Every key through the hub first, as the desktop's window does;
-            // what the focused control leaves comes back for the shortcuts.
-            // Focused itself at the start, so a key goes somewhere before
-            // anything has been clicked.
+            // Every key goes through the hub first, like the desktop window.
+            // Whatever the focused control doesn't use comes back for the
+            // shortcuts. The box takes focus at the start so keys work before
+            // anything is clicked.
             val focus = remember { FocusRequester() }
             Box(
                 Modifier.fillMaxSize()

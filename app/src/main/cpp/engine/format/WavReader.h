@@ -5,20 +5,20 @@
 #include <memory>
 #include <string>
 
-// Reads uncompressed WAV - PCM 8/16/24/32-bit and 32-bit float, mono or
-// stereo, any rate - and resamples to the engine rate. Ours; no dependency.
+// Reads uncompressed WAV (PCM 8/16/24/32-bit and 32-bit float, mono or
+// stereo, any rate) and resamples to the engine rate.
 namespace acidulous {
 
 class WavReader {
   public:
-    // Returns nullptr on any failure; `error` says why. A targetRate of 0 or
-    // less keeps the file's own rate, which is what a multisample wants.
-    // maxSeconds is how much of a long file to take - see kMaxDecodeSeconds
-    // and kMaxSliceSeconds, which are the only two values it is ever given.
+    // Returns nullptr on failure and `error` says why. A targetRate of 0 or
+    // less keeps the file's own rate, which multisamples use. maxSeconds is
+    // how much of a long file to take, either kMaxDecodeSeconds or
+    // kMaxSliceSeconds.
     static std::unique_ptr<SampleData> read(const std::string &path, int32_t targetRate, std::string &error,
                                             int32_t maxSeconds = kMaxDecodeSeconds);
-    // Kept as a name for callers; the number itself lives with the shared
-    // decode tail now, because every reader has to agree on it.
+    // Kept for callers. The value lives in Decoded.h so every reader uses the
+    // same one.
     static constexpr int32_t kMaxSeconds = kMaxDecodeSeconds;
 };
 

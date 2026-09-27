@@ -3,10 +3,10 @@ package com.rm.acidulous.engine
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-// The engine module, as the page's script put it: globalThis.acid - the
-// Emscripten build of app/src/main/cpp on the memory the audio worklet shares.
-// These carry the JNI objects its bridge takes and returns (platform/web/jni.h)
-// across, for EngineNative's generated wasmJs half.
+// globalThis.acid is the engine module set up by the page's script: the
+// Emscripten build of app/src/main/cpp, on memory shared with the audio
+// worklet. These pass the JNI objects its bridge uses (platform/web/jni.h)
+// back and forth for EngineNative's generated wasmJs half.
 
 private fun jniEnv(): Int = js("globalThis.acid._acid_jni_env()")
 private fun jniRelease(): Unit = js("globalThis.acid._acid_jni_release()")
@@ -37,10 +37,10 @@ private fun asyncRelease(t: Int): Unit = js("globalThis.acid._acid_async_release
 private fun onAsyncDone(done: (Int) -> Unit): Unit = js("globalThis.acidAsyncDone = done")
 
 /**
- * JNI's objects on the engine's heap, from Kotlin: made to pass in, read when
- * they come back, and freed together once a call is done with them ([release]).
- * Arrays go across a value at a time - they are knob readings and waveform
- * columns, a few hundred at most, not audio.
+ * Creates and reads JNI objects on the engine's heap. They're made to pass in,
+ * read when they come back, and freed together once a call is done ([release]).
+ * Arrays are copied one value at a time. They're knob values and waveform
+ * columns, a few hundred at most, never audio.
  */
 internal object Jni {
     val env: Int by lazy { jniEnv() }
@@ -48,19 +48,20 @@ internal object Jni {
 
     // --- Calls handed to an engine thread: see web_async.cpp -----------------
 
-    /** What each handed-over call does when its thread is done, by ticket. */
+    /** What to run when each handed-over call finishes, by ticket. */
     private val waiting = HashMap<Int, () -> Unit>()
     private val hooked by lazy { onAsyncDone { ticket -> waiting.remove(ticket)?.invoke() } }
 
-    /** A fresh arena, for the arguments of a call about to be handed over. */
+    /** A new arena for the arguments of a call about to be handed over. */
     fun openArena(): Int {
         hooked
         return jniArenaOpen()
     }
 
     /**
-     * Until the call's thread is done. Given up on, the call still finishes -
-     * a thread cannot be stopped halfway through a file - and is freed then.
+     * Waits for the call's thread to finish. If cancelled, the call still
+     * finishes (a thread can't be stopped halfway through a file) and is
+     * freed then.
      */
     suspend fun await(ticket: Int) = suspendCancellableCoroutine { c ->
         waiting[ticket] = { c.resume(Unit) }

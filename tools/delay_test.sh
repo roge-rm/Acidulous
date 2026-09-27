@@ -1,5 +1,5 @@
 #!/bin/bash
-# The send delay under the address sanitiser. See tools/delay_test.cpp.
+# Tests the delay buffers under the address sanitiser. See tools/delay_test.cpp.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

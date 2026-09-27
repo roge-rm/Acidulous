@@ -6,39 +6,38 @@
 #include <thread>
 #include <vector>
 
-// The browser's output stream: a Web Audio AudioWorklet, run by Emscripten's
-// Wasm Audio Worklets on shared memory, so the engine the UI thread calls into
-// is the very one the audio thread renders - as on the phone.
+// The browser audio stream: a Web Audio AudioWorklet run by Emscripten's Wasm
+// Audio Worklets on shared memory, so the UI thread and the audio thread use
+// the same engine, like on the phone.
 //
-// The same class and public surface as the Oboe driver (platform/drivers) and
-// the desktop's (platform/desktop/drivers): EngineHost builds against any of
-// them without knowing which. What a browser does not give: a choice of
-// device, a scheduler hint, or a presentation timestamp - the anchor is the
-// frames written and the context's own latency.
+// Same class and public API as the Oboe driver (platform/drivers) and the
+// desktop one (platform/desktop/drivers) so EngineHost builds against any of
+// them. Browsers give no device choice, scheduler hint or presentation
+// timestamp, so the anchor comes from the frames written and the context's
+// latency.
 //
-// The input is the browser's microphone: a MediaStream, asked for by the page
-// (the app's permission is the browser's prompt), connected to the worklet's
-// one input and read in the same quantum the output is written in.
+// The input is the browser's microphone, a MediaStream the page asks for,
+// connected to the worklet's input and read in the same quantum the output is
+// written in.
 //
-// Web Audio runs the worklet in quanta of 128 frames; the engine renders
-// blocks of kBlockFrames (64), served out through a carry buffer as the other
-// drivers do. An AudioContext starts suspended until the page is touched:
-// resume() is for the first gesture.
+// Web Audio runs the worklet in 128-frame quanta and the engine renders
+// kBlockFrames (64) blocks, served through a carry buffer like the other
+// drivers. An AudioContext stays suspended until the page is clicked, and
+// resume() is called on that first gesture.
 //
-// **Until then, a stand-in renders.** The engine takes a new machine, effect
-// or sample on its audio thread, at the top of a block, and the app waits for
-// that before sending the machine's patch - a few milliseconds on the phone.
-// Here there is no audio thread until somebody clicks, so the song the app
-// opens at start-up would send every patch to an empty rack. A thread of the
-// driver's own renders blocks into nothing, a few hundred a second, until the
-// worklet's first quantum takes over; the hand-over is the two atomics below.
+// Until then a stand-in thread renders. The engine only takes a new machine,
+// effect or sample at the top of a block on its audio thread, and the app
+// waits for that before sending the patch. With no audio thread before the
+// first click, the song opened at startup would send every patch to an empty
+// rack. So a driver thread renders blocks into nothing, a few hundred a
+// second, until the worklet's first quantum takes over (the two atomics
+// below).
 //
-// **The buffer setting is the context's latency hint** - interactive,
-// balanced, playback for tight, balanced, safe - which the browser turns into
-// how much it buffers ahead of the speakers. It is fixed when a context is
-// made, so a change makes a new one (reopen), as the desktop reopens its
-// device. How late sound actually is, the browser says: the context's base
-// and output latency, which the page reads for the driver (acid_latency_watch).
+// The buffer setting maps to the context's latency hint (tight, balanced,
+// safe = interactive, balanced, playback). It's fixed when a context is made,
+// so changing it makes a new one (reopen). The actual latency comes from the
+// context's base and output latency, which the page reads for the driver
+// (acid_latency_watch).
 
 class AudioDriver {
   public:
@@ -54,28 +53,28 @@ class AudioDriver {
     }
 
     /**
-     * Creates the context and asks for the worklet; sound follows once the
-     * page has been touched (resume). After a stop(), attaches the engine again.
+     * Creates the context and asks for the worklet. Sound starts once the page
+     * has been clicked (resume). After a stop(), reattaches the engine.
      */
     bool start();
     /**
-     * Takes the engine off the stream, for a render or a freeze to pull its
-     * blocks by hand: the stream goes on, silent. Not closed - a browser's
-     * audio can only be made on the page's thread, and those run on an engine
-     * thread here, and sound would need another click to start again.
+     * Detaches the engine so a render or freeze can pull its blocks by hand.
+     * The stream keeps running silently. It isn't closed because browser audio
+     * can only be created on the page's thread (this runs on an engine thread)
+     * and restarting would need another click.
      */
     void stop();
-    /** The first user gesture: an AudioContext may only start from one. */
+    /** Call on the first user gesture. An AudioContext can only start from one. */
     static void resume();
-    /** For the page's own checks: frames rendered so far, and the context's state (0 suspended, 1 running). */
+    /** For the page's checks: frames rendered so far, and the context state (0 suspended, 1 running). */
     static double liveFrames();
     static int liveState();
 
     /**
-     * Open the ear: the stream the page holds, or a new one asked of the
-     * browser, connected as soon as there is both a stream and a worklet. On
-     * from now; the first few blocks may be silence while the browser opens
-     * the microphone. The browser chooses which microphone.
+     * Start the input: the page's stream, or a new one from the browser,
+     * connected once there's both a stream and a worklet. The first few
+     * blocks may be silent while the browser opens the microphone. The
+     * browser picks which microphone.
      */
     bool startInput(int32_t = 0);
     void stopInput();
@@ -93,7 +92,7 @@ class AudioDriver {
 
     void setBufferBursts(int32_t bursts);
     int32_t getBufferBursts() const { return bufferBursts; }
-    /** The browser's own figure once it has given one; two quanta until then. */
+    /** The browser's figure once it has one, two quanta until then. */
     int32_t getBufferFrames() const {
         const double s = latencySeconds.load(std::memory_order_relaxed);
         const int32_t rate = actualSampleRate > 0 ? actualSampleRate : acidulous::kSampleRate;
@@ -119,7 +118,7 @@ class AudioDriver {
         return static_cast<int32_t>(static_cast<int64_t>(kQuantum) * 1000000 / rate);
     }
 
-    /** When the audio being written now will be heard: see the Oboe driver. */
+    /** When the audio being written now will be heard (see the Oboe driver). */
     bool presentationAnchor(int64_t &frame, int64_t &nanos) const {
         const int32_t s = anchorSlot.load(std::memory_order_acquire);
         if (anchors[s].frame < 0) return false;
@@ -134,10 +133,10 @@ class AudioDriver {
         return now;
     }
 
-    // The worklet's callbacks; public only so the C trampolines can reach them.
+    // The worklet's callbacks. Public only so the C trampolines can reach them.
     void render(const float *inLeft, const float *inRight, float *left, float *right, int32_t numFrames);
     void connect(int context, void *stream);
-    /** Whether a worklet's context is still this driver's, and not one a reopen left behind. */
+    /** Whether a worklet's context is still current and not one left over from a reopen. */
     bool isCurrent(int ctx) const { return ctx != 0 && ctx == context.load(std::memory_order_relaxed); }
     /** Where the page writes the context's latency, in seconds. */
     std::atomic<double> latencySeconds{0.0};
@@ -148,14 +147,14 @@ class AudioDriver {
     static constexpr float kMeterDecay = 0.7f;
     static AudioDriver *sLive;
 
-    std::atomic<int> context{0}; // EMSCRIPTEN_WEBAUDIO_T; nought is none. Read on the worklet's thread
+    std::atomic<int> context{0}; // EMSCRIPTEN_WEBAUDIO_T, 0 for none. Read on the worklet's thread
     int node = 0;
     std::function<void(float *, float *, unsigned long)> callback;
 
     std::vector<float> carry;
     std::vector<float> silence;
 
-    // The input, as the desktop's: a quantum's frames in, a block's out.
+    // The input, like the desktop's: a quantum's frames in, a block's out.
     // Only the worklet's thread touches the ring.
     std::atomic<bool> inputOn{false};
     std::atomic<float> inputPeak{0.0f};
@@ -166,27 +165,27 @@ class AudioDriver {
     void pushInput(const float *left, const float *right, int32_t frames);
     const float *nextInputBlock();
 
-    /** The real end, on the page's thread: the context and the worklet gone. */
+    /** Really closes the context and worklet, on the page's thread. */
     void close();
-    /** A context with the latency hint the buffer setting asks for, its worklet, and the stand-in until then. */
+    /** Opens a context with the buffer setting's latency hint, its worklet, and the stand-in until it's ready. */
     bool openContext();
-    /** The context and worklet exchanged for new ones: see the top of this file. */
+    /** Replaces the context and worklet with new ones (see the top of this file). */
     void reopen();
     int32_t generation = 0;
     std::atomic<bool> detached{false};
-    /** The worklet is inside a quantum, which stop() waits out. */
+    /** The worklet is inside a quantum. stop() waits for it. */
     std::atomic<bool> inCallback{false};
 
-    /** The stand-in before the worklet: see the top of this file. */
+    /** The stand-in renderer before the worklet (see the top of this file). */
     void standby();
     std::thread standbyThread;
-    /** Set by the worklet's first quantum; the stand-in stops when it sees it. */
+    /** Set by the worklet's first quantum. The stand-in stops when it sees it. */
     std::atomic<bool> workletOwns{false};
-    /** The stand-in is inside a block, which the worklet waits out. */
+    /** The stand-in is inside a block. The worklet waits for it. */
     std::atomic<bool> standbyBusy{false};
     std::atomic<bool> standbyStop{false};
 
-    /** Writes the time for the audio thread: see acid_clock_ms. */
+    /** Writes the time for the audio thread (see acid_clock_ms). */
     std::thread clockThread;
     std::atomic<bool> clockStop{false};
     int32_t carryFrames = 0;

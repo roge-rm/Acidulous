@@ -8,7 +8,8 @@ private fun storageRemove(key: String): Unit = js("(() => { try { localStorage.r
 
 /**
  * A [PrefStore] in the browser's local storage, one key per setting under
- * "acidulous.[name].". Read as asked for; each apply writes what changed.
+ * "acidulous.[name].". Values are read when asked for and apply() writes only
+ * what changed.
  */
 class LocalPrefs(name: String) : PrefStore {
     private val prefix = "acidulous.$name."

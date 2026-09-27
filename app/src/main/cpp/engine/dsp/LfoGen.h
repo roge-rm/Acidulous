@@ -3,8 +3,8 @@
 #include <cstdint>
 
 // A modulation LFO: nine waves, free or tempo-synced, with delay, start
-// phase, slew and one-shot. Advanced once per block - 750 Hz is ample for
-// modulation, and it keeps a full matrix cheap.
+// phase, slew and one-shot. Advanced once per block (750 Hz), which is plenty
+// for modulation and keeps a full matrix cheap.
 namespace acidulous::dsp {
 
 class LfoGen {

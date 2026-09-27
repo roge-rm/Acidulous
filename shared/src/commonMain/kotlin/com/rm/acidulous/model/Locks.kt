@@ -2,13 +2,12 @@ package com.rm.acidulous.model
 
 /**
  * A lane point that means "back to the knob": whatever the parameter is set
- * to for the whole clip, resolved when the clip is sent to the engine.
+ * to for the whole clip, filled in when the clip is sent to the engine.
  *
- * Normalised values are 0..1, so a negative one can never be a real value.
- * It is what makes a lock *follow* the knob (Dan's choice, 2026-09-23): turn
- * the knob for the whole clip after locking a step, and every step without a
- * lock goes where the knob went. Written down as a number instead, the steps
- * around a lock would stay where the knob was on the day it was made.
+ * Normalised values are 0..1, so a negative value can't be a real one. This
+ * is what makes locks follow the knob: turn the knob after locking a step and
+ * every unlocked step follows it. Storing a number instead would freeze the
+ * steps around a lock at the old knob position.
  */
 const val LANE_BASE = -1f
 
@@ -18,21 +17,20 @@ data class Lock(val tick: Int, val end: Int, val value: Float)
 /**
  * Step parameter locks, stored as an ordinary stepped lane: the locked value
  * at a step's start and [LANE_BASE] at its end. So they record, undo, copy,
- * freeze and export as lanes do, and the engine plays them with no idea they
- * are anything else.
+ * freeze and export like any lane, and the engine plays them like any lane.
  */
 object Locks {
 
-    /** A lane made of locks, as opposed to one drawn or recorded. */
+    /** A lane made of locks rather than drawn or recorded. */
     fun isLocks(lane: Lane?): Boolean = lane != null && !lane.linear && lane.points.any { it.value == LANE_BASE }
 
     /**
-     * A drawn or recorded curve, which locks leave alone: the two would fight
-     * over one parameter, so a knob with one refuses to lock (Dan's choice).
+     * A drawn or recorded curve. Locks leave these alone because the two would
+     * fight over one parameter, so a knob with a curve can't be locked.
      */
     fun isDrawn(lane: Lane?): Boolean = lane != null && lane.points.isNotEmpty() && !isLocks(lane)
 
-    /** The locks a lane holds: each real value until the next point, or the clip's end. */
+    /** The locks in a lane: each real value until the next point or the clip's end. */
     fun of(lane: Lane?, clipTicks: Int): List<Lock> {
         if (lane == null || !isLocks(lane)) return emptyList()
         val pts = lane.points
@@ -50,20 +48,19 @@ object Locks {
         val sorted = locks.sortedBy { it.tick }
         val pts = ArrayList<LanePoint>()
         // Before the first lock, the knob. A lane holds its first value back
-        // to the top of the clip, so without this the first lock would.
+        // to the start of the clip, so without this the first lock would.
         if (sorted.first().tick > 0) pts += LanePoint(0, LANE_BASE)
         sorted.forEachIndexed { i, l ->
             pts += LanePoint(l.tick, l.value)
             val next = sorted.getOrNull(i + 1)
-            // Back to the knob where it ends, unless the next lock takes over
-            // right there - or it runs to the end, where the top of the clip
-            // takes over.
+            // Back to the knob where it ends, unless the next lock starts
+            // right there or it runs to the end of the clip.
             if (next?.tick != l.end && l.end < clipTicks) pts += LanePoint(l.end, LANE_BASE)
         }
         return Lane(pts, linear = false)
     }
 
-    /** [value] on every span, replacing whatever locks overlapped them. */
+    /** Sets [value] on every span, replacing any locks that overlap them. */
     fun set(lane: Lane?, spans: List<IntRange>, value: Float, clipTicks: Int): Lane? {
         val v = value.coerceIn(0f, 1f)
         val kept = of(lane, clipTicks).filter { l -> spans.none { overlaps(l, it) } }
@@ -71,14 +68,14 @@ object Locks {
         return lane(kept + added, clipTicks)
     }
 
-    /** No locks on these spans any more. */
+    /** Removes locks on these spans. */
     fun clear(lane: Lane?, spans: List<IntRange>, clipTicks: Int): Lane? =
         lane(of(lane, clipTicks).filter { l -> spans.none { overlaps(l, it) } }, clipTicks)
 
     /** The lock covering [tick], if there is one. */
     fun at(lane: Lane?, tick: Int, clipTicks: Int): Lock? = of(lane, clipTicks).firstOrNull { tick >= it.tick && tick < it.end }
 
-    /** What the engine is sent: "back to the knob" replaced by where the knob is. */
+    /** What the engine is sent: "back to the knob" replaced by the knob's value. */
     fun resolve(lane: Lane, base: Float): Lane =
         if (lane.points.none { it.value == LANE_BASE }) lane
         else lane.copy(points = lane.points.map { if (it.value == LANE_BASE) it.copy(value = base) else it })

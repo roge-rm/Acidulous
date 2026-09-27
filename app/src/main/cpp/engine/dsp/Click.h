@@ -3,22 +3,16 @@
 #include <cmath>
 #include <cstdint>
 
-// The metronome's voice.
+// The metronome sound. There are three voices, since a sine blip is easy to
+// hear over a synth but gets lost under drums:
 //
-// Three of them, because one sine blip is legible over a synth line and
-// disappears under a drum kit, and the answer to that is not "turn it up":
+//   Blip    - a decaying sine, higher on the downbeat.
+//   Stick   - short filtered noise. Stays audible in a busy mix without
+//             being loud.
+//   Cowbell - two detuned squares. For when the drums are loud.
 //
-//   Blip    - a decaying sine, high on the downbeat. The classic, and what
-//             this was before.
-//   Stick   - filtered noise, short. It sits in a different part of the
-//             spectrum from anything tuned, so it stays audible against a
-//             busy mix without being loud.
-//   Cowbell - two detuned squares through a band-pass, the old trick. For
-//             when the kit is loud enough to hide the other two.
-//
-// Three accents rather than two: the bar, the beat, and the subdivision
-// under it. A metronome that ticks sixteenths at one level is a buzz, and
-// you cannot hear where the beat is - which is the only thing it is for.
+// Three accent levels (bar, beat and subdivision) so you can still hear where
+// the beat is when it ticks sixteenths.
 
 namespace acidulous::dsp {
 
@@ -28,7 +22,7 @@ class Click {
     /** Bar, beat, and everything between: three levels, loudest first. */
     enum Accent : int32_t { Bar = 0, Beat = 1, Division = 2 };
 
-    /** The loudest a click can be, for whoever has to leave room for it. */
+    /** The loudest a click can be, for anything that needs to leave headroom. */
     static constexpr float kPeak = 0.6f;
     static float peakFor(float volume) { return volume * kPeak; }
 
@@ -49,17 +43,13 @@ class Click {
     }
 
     /**
-     * Sound one [offset] samples from the start of the next process().
-     *
-     * An offset past the end of the block is *carried*, not dropped: at a
-     * fast subdivision the tick after this one can easily land in the block
-     * after this one, and a metronome that silently loses beats is worse
-     * than no metronome. Several can be in flight at once for the same
-     * reason.
+     * Sounds a click [offset] samples from the start of the next process().
+     * An offset past the end of the block is carried over to the next one,
+     * and several clicks can be queued at once.
      */
     void trigger(int32_t accent, int32_t offset) {
         if (queued >= kMaxQueued) {
-            return; // more than four in 64 frames is not a tempo
+            return; // more than four in 64 frames isn't a real tempo
         }
         pending[queued].offset = offset < 0 ? 0 : offset;
         pending[queued].accent = accent < Bar ? Bar : (accent > Division ? Division : accent);
@@ -80,7 +70,7 @@ class Click {
                 R[i] += s;
             }
         }
-        // Whatever did not fit moves to the front of the next block.
+        // Carry anything that didn't fit over to the next block.
         int32_t kept = 0;
         for (int32_t q = 0; q < queued; ++q) {
             if (pending[q].offset >= frames) {
@@ -101,17 +91,17 @@ class Click {
     };
 
     void strike(int32_t accent) {
-        // A bar is full, a beat is most of one, a subdivision is a hint.
+        // Full level on the bar, less on a beat, quieter on a subdivision.
         env = accent == Bar ? 1.0f : (accent == Beat ? 0.7f : 0.35f);
         phase[0] = phase[1] = 0.0f;
         switch (voice) {
         case Stick:
-            // Noise through a narrow band: the pitch is the band, so the
-            // accent moves it rather than only the level.
+            // Noise through a narrow band. The accent moves the band as well
+            // as the level.
             bandHz = accent == Bar ? 2600.0f : (accent == Beat ? 2000.0f : 1700.0f);
             break;
         case Cowbell:
-            // Two squares, a minor third apart and detuned.
+            // Two squares, a slightly flat fifth apart.
             inc[0] = (accent == Bar ? 840.0f : 620.0f) / sampleRate;
             inc[1] = inc[0] * 1.4983f;
             break;
@@ -126,7 +116,7 @@ class Click {
         case Stick: {
             rng = rng * 1664525u + 1013904223u;
             const float white = static_cast<float>(rng >> 8) * (1.0f / 8388608.0f) - 1.0f;
-            // One band-pass, done as a two-pole state variable by hand.
+            // A band-pass, as a hand-written two-pole state variable filter.
             const float f = 2.0f * std::sin(kPi * bandHz / sampleRate);
             noiseA += f * noiseB;
             noiseB += f * (white - noiseA - 0.6f * noiseB);

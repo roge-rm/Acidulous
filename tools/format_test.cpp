@@ -1,11 +1,6 @@
-// Everything we write, read back by us.
-//
-// The app wrote four formats and read one, which meant a stem exported
-// yesterday could not be loaded today. These are the round trips: write with
-// our own sink, decode with our own reader, compare. Three of the four are
-// lossless and are asked for the samples back within a bit; MP3 is not and is
-// asked for the right length at the right level, which is what sink_test asks
-// ffmpeg for and is now answerable inside the repository.
+// Round trips every format we write: write with our own sink, decode with our
+// own reader, compare. The three lossless formats must give the samples back
+// within a bit. MP3 must come back at the right length and level.
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -35,10 +30,9 @@ constexpr int32_t kRate = 48000;
 constexpr int32_t kFrames = 30000;
 
 /**
- * Something with corners in it. A pure tone is decoded correctly by almost
- * anything that is nearly right, and a wrong channel order or an off-by-one
- * in a predictor would not show; a tone in one ear, a different one in the
- * other, a click and a burst of noise will.
+ * A test signal with some detail. A pure tone would hide a swapped channel
+ * or an off-by-one, so this has a different tone in each ear, a click and a
+ * burst of noise.
  */
 std::vector<float> signalFor() {
     std::vector<float> s(static_cast<size_t>(kFrames) * 2);
@@ -67,7 +61,7 @@ bool writeWith(AudioSink &sink, const std::string &path, int bits, const std::ve
     return sink.close();
 }
 
-/** Round trip one lossless format and say how far the samples moved. */
+/** Round trips one lossless format and reports how far the samples moved. */
 void lossless(const std::string &label, AudioSink &sink, const std::string &path, int bits,
               AudioFormat expect, const std::vector<float> &s, float tolerance) {
     if (!writeWith(sink, path, bits, s)) { ++gFails; ++gChecks; return; }
@@ -98,12 +92,9 @@ float rmsOf(const std::vector<float> &s) {
 } // namespace
 
 /**
- * The chunked reader, against the slurping one.
- *
- * `WavStream` exists so that a twenty-minute take does not have to be three
- * copies of itself in memory at once, and the only thing worth asserting about
- * it is that it says **the same numbers** the reader everybody already trusts
- * says - at an offset, across a chunk boundary, and at every depth.
+ * The chunked `WavStream` reader against `WavReader`. `WavStream` lets a long
+ * take be read without holding several copies in memory. It must return the
+ * same samples at an offset, across a chunk boundary, and at every bit depth.
  */
 void streamMatchesTheReader(const std::string &dir, const std::vector<float> &s) {
     for (const int bits : {16, 24, 32}) {
@@ -114,8 +105,7 @@ void streamMatchesTheReader(const std::string &dir, const std::vector<float> &s)
             continue;
         }
         std::string error;
-        // The file's own rate, so the two are comparing the same samples
-        // rather than two resamplings of them.
+        // Read at the file's own rate so neither side resamples.
         const auto whole = WavReader::read(path, 0, error, kMaxSliceSeconds);
         WavStream stream;
         if (!whole || !stream.open(path, error)) {
@@ -126,8 +116,8 @@ void streamMatchesTheReader(const std::string &dir, const std::vector<float> &s)
                   stream.rate() == whole->rate,
               "stream" + std::to_string(bits) + " agrees about the shape");
 
-        // Three windows: the top, an odd offset well in, and the tail - which
-        // is where a reader that trusts its own arithmetic runs off the end.
+        // Three windows: the start, an odd offset well in, and the end, where
+        // an off-by-one would run past the file.
         const int64_t n = whole->frames;
         bool same = true;
         int64_t worstAt = -1;
@@ -145,11 +135,11 @@ void streamMatchesTheReader(const std::string &dir, const std::vector<float> &s)
         check(same, "stream" + std::to_string(bits) + " reads what the reader read" +
                         (worstAt < 0 ? "" : " (first differing frame " + std::to_string(worstAt) + ")"));
 
-        // Past the end is nothing, not a crash and not a guess.
+        // Reading past the end returns nothing.
         std::vector<float> tail(16, 1.0f);
         check(stream.read(n, 0, tail.data(), 16) == 0, "stream" + std::to_string(bits) +
                                                            " reads nothing past the end");
-        // And the right channel is the right channel.
+        // The right channel isn't mixed up with the left.
         std::vector<float> right(64, 0.0f);
         const int64_t k = stream.read(100, 1, right.data(), 64);
         bool rightOk = whole->stereo && k == 64;
@@ -165,13 +155,9 @@ int main(int argc, char **argv) {
     const std::string dir = argc > 1 ? argv[1] : ".";
     const std::vector<float> s = signalFor();
 
-    // **A step and a half, not a step.** Every writer here quantises with
-    // `lrint(v * 32767)` and every reader divides by 32768, which is the
-    // ordinary convention - PCM runs -32768..+32767, so the negative end
-    // reaches -1.0 exactly and the positive end stops just short. A round
-    // trip therefore costs half a step of rounding *plus* the sample's own
-    // size over 32768, which at full scale is another whole step. Asking for
-    // one step would be asking the formats to be something they are not.
+    // Allow a step and a half. Writers quantise with `lrint(v * 32767)` and
+    // readers divide by 32768 (the usual convention), so a round trip loses
+    // half a step to rounding plus up to another step at full scale.
     const float step16 = 1.5f / 32768.0f, step24 = 1.5f / 8388608.0f;
     streamMatchesTheReader(dir, s);
     { WavWriter w;  lossless("wav16",  w, dir + "/rt16.wav",  16, AudioFormat::Wav,  s, step16); }
@@ -183,7 +169,7 @@ int main(int argc, char **argv) {
     { FlacWriter f; lossless("flac16", f, dir + "/rt16.flac", 16, AudioFormat::Flac, s, step16); }
     { FlacWriter f; lossless("flac24", f, dir + "/rt24.flac", 24, AudioFormat::Flac, s, step24); }
 
-    // MP3: lossy, and asked only for what a lossy format can promise.
+    // MP3 is lossy, so only check length and level.
     {
         Mp3Writer m;
         const std::string path = dir + "/rt.mp3";
@@ -195,7 +181,7 @@ int main(int argc, char **argv) {
                 check(false, "mp3 decodes (" + error + ")");
             } else {
                 check(got->stereo && got->rate == kRate, "mp3 comes back 48 kHz stereo");
-                // A frame is 1152 samples and an encoder pads at both ends.
+                // A frame is 1152 samples and the encoder pads both ends.
                 const int32_t slack = 1152 * 3;
                 char msg[160];
                 std::snprintf(msg, sizeof(msg), "mp3 comes back %d frames, wanted %d within %d", got->frames,
@@ -216,9 +202,7 @@ int main(int argc, char **argv) {
         } else { ++gFails; ++gChecks; }
     }
 
-    // What a file off the internet looks like: a tag in front of the audio,
-    // and something that is not audio glued on the end. Neither is unusual
-    // and both used to be fatal.
+    // Real-world files often have a tag before the audio and junk after it.
     {
         std::vector<unsigned char> raw;
         FILE *f = std::fopen((dir + "/rt.mp3").c_str(), "rb");
@@ -228,17 +212,12 @@ int main(int argc, char **argv) {
             while ((n = std::fread(buf, 1, sizeof(buf), f)) > 0) raw.insert(raw.end(), buf, buf + n);
             std::fclose(f);
         }
-        // An ID3v2 header: "ID3", version, flags, then a syncsafe length -
-        // four bytes of seven bits each. The body here is binary, standing in
-        // for the album art that is usually what makes these large.
+        // An ID3v2 header: "ID3", version, flags, then a syncsafe length (four
+        // bytes of seven bits each). The body stands in for album art.
         //
-        // The body is what a real tag carries: a picture. It is seeded with
-        // the exact four bytes that broke this - `FF FE 42 00`, twenty-one
-        // bytes into a Backstreet Boys mp3, which is a legal MPEG-1 **Layer
-        // I** frame header. A decoder fed the file from byte nought locks
-        // onto that and decodes the cover art as layer 1 audio: four hundred
-        // kilobytes of bursts of noise, and the song never reached at all.
-        // Large, too, because the fault needs the art to outlast a resync.
+        // It contains `FF FE 42 00`, which is a valid MPEG-1 Layer I frame
+        // header. A decoder that starts at byte 0 can lock onto it and decode
+        // the art as noise. It's large so the art outlasts a resync.
         std::vector<unsigned char> art(60000, 0xFF); // 0xFF: false frame syncs, deliberately
         const unsigned char falseSync[4] = {0xFF, 0xFE, 0x42, 0x00};
         std::memcpy(art.data() + 11, falseSync, 4); // where the real file had it
@@ -250,7 +229,7 @@ int main(int argc, char **argv) {
         tagged.push_back(static_cast<unsigned char>(size & 0x7F));
         tagged.insert(tagged.end(), art.begin(), art.end());
         tagged.insert(tagged.end(), raw.begin(), raw.end());
-        // And a trailing APE-ish block, which is junk to a decoder.
+        // A trailing APE-like block, which is junk to a decoder.
         const char *junk = "APETAGEX and then some bytes that are not a frame";
         tagged.insert(tagged.end(), junk, junk + std::strlen(junk));
 
@@ -270,12 +249,9 @@ int main(int argc, char **argv) {
             check(false, "a tagged mp3 with junk on the end decodes (" + error + ")");
         } else {
             char msg[200];
-            // **Against the untagged decode of the same audio, not against a
-            // length.** The old assertion here was `frames > kFrames / 2`,
-            // which a garbage decode passes easily: layer 1 nonsense from the
-            // art, a resync, and then the real audio, adds up to plenty of
-            // frames. It has to be the same music, so it is asked to be the
-            // same length and the same loudness as the file without the tag.
+            // Compared with the untagged decode of the same audio, same length
+            // and loudness. Just checking the length would pass a decode that
+            // included noise from the art.
             std::snprintf(msg, sizeof(msg), "a tagged mp3 decodes to the same length as the untagged one "
                                             "(%d vs %d frames)", got->frames, plain->frames);
             check(std::abs(got->frames - plain->frames) < 2304, msg);
@@ -290,8 +266,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    // A file we can name but cannot read is said so by name, because being
-    // told an m4a is a broken mp3 sends the player nowhere useful.
+    // A format we recognise but can't read is reported by name, not as a
+    // broken mp3.
     {
         struct Case { const char *name; std::vector<unsigned char> head; const char *says; };
         const std::vector<Case> cases = {
@@ -302,25 +278,23 @@ int main(int argc, char **argv) {
         for (const Case &c : cases) {
             std::string path = dir + "/" + c.name;
             std::vector<unsigned char> body = c.head;
-            // Padded with the byte that looks like half a frame sync, which
-            // is what used to make these decode as broken mp3s.
+            // Padded with the byte that looks like half an mp3 frame sync.
             body.resize(20000, 0xFF);
             FILE *f = std::fopen(path.c_str(), "wb");
             std::fwrite(body.data(), 1, body.size(), f);
             std::fclose(f);
             check(sniff(path) == AudioFormat::Unknown, std::string(c.name) + " is not mistaken for an mp3");
             std::string error;
-            // Decoded first and checked second: the two are arguments to the
-            // same call otherwise, and C++ does not say which runs first - so
-            // the message was built from an `error` nothing had written yet
-            // and reported every one of these as "()".
+            // Decode first, then check. As arguments to the same call, C++
+            // doesn't define which runs first, so `error` could be read before
+            // it's written.
             const bool refused = decodeAudio(path, kRate, error) == nullptr;
             check(refused && error.find(c.says) != std::string::npos,
                   std::string(c.name) + " is named in the message (" + error + ")");
         }
     }
 
-    // And the thing the front door is for: deciding by content, not by name.
+    // The decoder picks the format by content, not by file name.
     {
         const std::string named = dir + "/actually-a-flac.wav";
         FlacWriter f;
@@ -331,16 +305,12 @@ int main(int argc, char **argv) {
         check(sniff(dir + "/nothing-here") == AudioFormat::Unknown, "a missing file is nothing");
     }
 
-    // --- the ceiling, and saying when it was hit ---------------------------
+    // --- the length cap, and reporting when it was hit ---------------------
     //
-    // A long file is cut to the cap, which is fine, and until now was cut in
-    // silence, which was not: `truncated` lived on the shared tail and every
-    // reader trimmed the planes before the tail ever saw them, so the flag
-    // could never be true and the message behind it was unreachable. Asked of
-    // all four, because that is four places the trimming happens.
+    // A long file is cut to the cap and `truncated` must be set. Checked for
+    // all four readers, since each does its own trimming.
     {
-        // Three seconds of signal, asked for two: short enough to write four
-        // times in a test and long enough that a cap of two cuts it.
+        // Three seconds of signal with a two second cap.
         constexpr int32_t kLongFrames = kRate * 3;
         constexpr int32_t kCap = 2;
         std::vector<float> longer(static_cast<size_t>(kLongFrames) * 2);
@@ -363,14 +333,13 @@ int main(int argc, char **argv) {
             auto cut = decodeAudio(path, kRate, error, kCap);
             if (!cut) { check(false, std::string(l.name) + " decodes (" + error + ")"); continue; }
             check(cut->truncated, std::string(l.name) + " says it was cut at " + std::to_string(kCap) + "s");
-            // Within a frame either way: mp3 pads the front and the back, so
-            // an exact count is the one thing not to ask of it.
+            // Within a frame either way, since mp3 pads both ends.
             check(std::abs(cut->frames - kCap * kRate) < 2304,
                   std::string(l.name) + " kept " + std::to_string(cut->frames) + " frames, wanted " +
                       std::to_string(kCap * kRate));
 
-            // And the whole thing under a ceiling that clears it, which is
-            // what the slice source gets: nothing lost and nothing claimed.
+            // Under a cap it fits in (like the slice source uses), nothing is
+            // lost and `truncated` isn't set.
             auto whole = decodeAudio(path, kRate, error, kMaxSliceSeconds);
             if (!whole) { check(false, std::string(l.name) + " decodes whole (" + error + ")"); continue; }
             check(!whole->truncated && std::abs(whole->frames - kLongFrames) < 2304,

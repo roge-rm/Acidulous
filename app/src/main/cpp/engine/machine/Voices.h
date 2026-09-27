@@ -3,13 +3,12 @@
 #include <cmath>
 #include <cstdint>
 
-// Finding the voice that is playing a note.
+// Shared voice helpers for per-note expression, used by the machines that
+// keep an array of voices.
 //
-// Thirteen machines keep an array of voices and every one of those voices
-// carries the note it was started with, so per-note expression needs this
-// exactly once rather than thirteen times. A voice counts only while it is
-// still held: a note that has been released may still be ringing out, and a
-// finger lifted from one key must not bend the tail of another.
+// voiceForNote only finds voices that are still held. A released note may
+// still be ringing out, and expression for a new note on the same key
+// shouldn't bend its tail.
 namespace acidulous {
 
 /** A voice's own bend as a frequency multiplier, for machines that scale. */
@@ -28,14 +27,12 @@ Voice *voiceForNote(Voice (&voices)[N], uint8_t note) {
 
 
 /**
- * A finger's pressure as a voice should use it: its own if it sent any, the
- * channel's otherwise, glided a block at a time.
+ * The pressure a voice should use: its own if it sent any, otherwise the
+ * channel's, glided once per block.
  *
- * Pressure arrives in a hundred and twenty-eight steps and is applied once a
- * block, and a level stepped per block is the onset-click fault all over
- * again - so it is glided, about five milliseconds at a 64-frame block. No
- * pressure is exactly zero out, so a patch played without it renders
- * bit-identical to before.
+ * Pressure comes in 128 steps and is applied once a block, so it's glided
+ * (about 5 ms at a 64-frame block) to avoid clicks. No pressure gives exactly
+ * zero, so patches played without it sound the same.
  */
 inline float glidePressure(float &state, float own, float channel) {
     const float target = own >= 0.0f ? own : channel;
@@ -45,14 +42,12 @@ inline float glidePressure(float &state, float own, float channel) {
 }
 
 /**
- * Velocity as loudness, the same law on every machine.
+ * Velocity to gain, the same on every machine.
  *
- * At [amount] 1 the gain is the square of the velocity - 40 log10(v/127) dB,
- * the usual law for this: 127 is full, 64 is 12 dB down, 32 is 24 down and
- * 1 is all but silent - so a player has everything from a whisper to full.
- * Less [amount] narrows that range in decibels, in proportion, and 0 turns
- * velocity off. A controller that gives too much or too little is fixed by
- * the MIDI velocity curve, not here.
+ * At [amount] 1 the gain is velocity squared, 40 log10(v/127) dB: 127 is
+ * full, 64 is 12 dB down, 32 is 24 dB down and 1 is almost silent. A lower
+ * [amount] narrows the range in proportion and 0 turns velocity off. Fix a
+ * controller's response with the MIDI velocity curve, not here.
  */
 inline float velocityGain(float v01, float amount) {
     if (amount <= 0.0f) return 1.0f;

@@ -5,13 +5,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * That the *generated* banks are well formed.
+ * Checks the generated banks are well formed.
  *
- * `tools/bank_test.sh` asks the harder questions - does this patch make a
- * sound, does it name parameters the engine has - but it asks them of the
- * bank files, and it never sees the Kotlin. This asks the one question only
- * this side can: that what the generator wrote is what the app can read, and
- * that `PatchStore.factory` still reaches all of it.
+ * `tools/bank_test.sh` checks the bank files make sound and name real
+ * parameters, but never sees the Kotlin. This checks that what the generator
+ * wrote can be read by the app and that `PatchStore.factory` reaches all of
+ * it.
  */
 class FactoryBanksTest {
 
@@ -51,8 +50,8 @@ class FactoryBanksTest {
 
     @Test
     fun `Init sets nothing, so loading it is a reset`() {
-        // The app fills every parameter a patch omits with the engine's own
-        // default, so an empty patch is how "put this machine back" is spelt.
+        // The app fills any parameter a patch leaves out with the engine's
+        // default, so an empty patch means "reset this machine".
         for (machine in machines) {
             val bank = PatchStore.factory(machine)
             if (bank.isEmpty()) continue
@@ -61,12 +60,9 @@ class FactoryBanksTest {
     }
 
     /**
-     * The generated file is only as current as the last run of the script.
-     *
-     * Forgetting to run it is silent - the app simply has fewer patches than
-     * the bank files say, which is exactly what happened the first time an
-     * effect bank was written. Counting `patch` lines is a crude comparison
-     * and it catches the whole of that.
+     * The generated file is only as current as the last run of the script, and
+     * forgetting to run it is silent. Counting `patch` lines is crude but
+     * catches it.
      */
     @Test
     fun `the generated banks are as new as the bank files`() {

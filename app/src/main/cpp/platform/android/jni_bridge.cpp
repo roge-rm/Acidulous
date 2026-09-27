@@ -470,11 +470,9 @@ Java_com_rm_acidulous_engine_EngineNative_nativeFileInfo(JNIEnv *env, jobject, j
 }
 
 /**
- * The edit, as a flat array rather than as a dozen arguments.
- *
- * The order is fixed and is written out on both sides - see `SampleOps` and
- * `NativeEngine.editSample`. A dozen jfloats in a signature is a dozen chances
- * to put two of them the wrong way round, and the compiler cannot tell.
+ * The edit as one flat array instead of a dozen float arguments, which would
+ * be easy to swap by mistake. The order is fixed on both sides (see SampleOps
+ * and NativeEngine.editSample).
  */
 JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeEditSample(JNIEnv *env, jobject, jstring src,
@@ -604,8 +602,8 @@ Java_com_rm_acidulous_engine_EngineNative_nativeFreezeClip(JNIEnv *env, jobject,
     float bpm = 0.0f, peak = 0.0f;
     const std::string err = host().freezeClip(rack, sceneId, p, tailSeconds, frames, tail, ticks, bpm, peak);
     env->ReleaseStringUTFChars(path, p);
-    // One string, because the alternative is six calls that can disagree:
-    // "ok|frames|ticks|bpm|peak|tail", or the reason it did not happen.
+    // One string so the values can't get out of step:
+    // "ok|frames|ticks|bpm|peak|tail", or the reason it failed.
     char out[160];
     if (err.empty()) {
         std::snprintf(out, sizeof(out), "ok|%d|%d|%.6f|%.6f|%d", frames, ticks, bpm, peak, tail);
@@ -967,7 +965,7 @@ Java_com_rm_acidulous_engine_EngineNative_nativeDrainMidiOut(JNIEnv *env, jobjec
     return n;
 }
 
-/** frame, nanoseconds, sample rate - or a zero frame when the stream cannot say yet. */
+/** Frame, nanoseconds, sample rate, or a zero frame when the stream doesn't know yet. */
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeAudioAnchor(JNIEnv *env, jobject, jlongArray out) {
     if (env->GetArrayLength(out) < 3) return;

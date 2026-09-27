@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <cstdlib> // std::llabs, which the NDK happens to pull in and a host g++ does not
+#include <cstdlib> // std::llabs, which the NDK pulls in but host g++ doesn't
 
 namespace acidulous {
 
@@ -14,31 +14,28 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
     {"solo", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
     {"sendreverb", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     {"senddelay", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-    // Where this track's notes go: the machine, the machine and the world,
-    // or only the world. Stepped, and read unsmoothed, because a three-way
-    // switch must not ramp through the middle on its way across.
+    // Where this track's notes go: the machine, the machine and external
+    // MIDI, or only external MIDI. Stepped and read unsmoothed so the switch
+    // never ramps through the middle value.
     {"midimode", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},
     {"midichannel", 0.0f, 15.0f, 0.0f, Curve::Stepped, 16, ""},
     /**
      * How late this track's offbeats are, as a percentage of the pair.
      *
-     * Fifty is straight and is what every track gets unless the document
-     * says otherwise: the song's own value is resolved on the way in, so
-     * the engine never has to know what "follow the song" means. It sits on
-     * the channel for the same reason `midimode` does - it belongs to the
-     * track rather than to any machine, and arriving as a parameter means
-     * it can be automated and recorded without a second path.
+     * 50 is straight and is the default. The song's value is resolved before
+     * it gets here, so the engine never deals with "follow the song". It's a
+     * channel parameter, like midimode, because it belongs to the track, and
+     * that way it can be automated and recorded.
      */
     {"swing", 50.0f, 75.0f, 50.0f, Curve::Linear, 0, "%"},
-    // Where this track's sound goes: 0 the master, 1..4 a group in the mixer.
-    // Seventeen steps because it shipped that way, when a group was a track,
-    // and a stepped parameter's count is what a saved value is normalised
-    // against. A decision like `midimode`, so it never ramps.
+    // Where this track's sound goes: 0 the master, 1..4 a mixer group. 17
+    // steps because saved values are normalised against the step count and
+    // it shipped that way. Stepped like midimode so it never ramps.
     {"output", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
-    // Semitones added to every note on its way to the machine, from a clip
-    // or a finger alike; nought for a drum machine, whose notes are sounds.
+    // Semitones added to every note going to the machine, from a clip or a
+    // finger. 0 for drum machines, whose notes pick sounds.
     {"transpose", -48.0f, 48.0f, 0.0f, Curve::Stepped, 97, "st"},
-    // Every note at this velocity, or nought for as played.
+    // Every note at this velocity, or 0 for as played.
     {"velocity", 0.0f, 127.0f, 0.0f, Curve::Stepped, 128, ""},
 };
 } // namespace
@@ -46,8 +43,8 @@ const ParamDef kChannelDefs[Rack::ChannelCount] = {
 Rack::Rack() {
     channel.init(kChannelDefs, ChannelCount);
     resetSentTo();
-    // Here, because it allocates: seventeen kilobytes of overlap buffer per
-    // rack, and a rack is built long before the audio thread exists.
+    // Done here because it allocates (17 KB of overlap buffer per rack), and
+    // racks are built before the audio thread exists.
     frozenStretch.prepare();
     for (int32_t i = 0; i <= kInputModSlots; ++i) {
         sinks[i].rack = this;
@@ -62,23 +59,14 @@ void Rack::deliver(int32_t fromStage, uint8_t status, uint8_t d1, uint8_t d2) {
     for (int32_t s = fromStage; s < kInputModSlots; ++s) {
         if (modifiers[s] != nullptr && !modifiers[s]->bypassed()) {
             modifiers[s]->handleMidi(status, d1, d2, sinks[s]);
-            return; // the modifier forwards through its sink
+            return; // the modifier passes it on through its sink
         }
     }
     toMachine(status, d1, d2, true);
 }
 
-/**
- * The voice limit, applied here rather than in each machine: a machine knows
- * how to steal one of its own voices, but only the rack knows how many notes
- * are being asked for in the first place - including the ones an arpeggiator
- * made up. Over the limit, the oldest held note is released before the new
- * one starts, which is the same thing a real instrument does when it runs
- * out of strings.
- */
 int32_t Rack::midiOutMode() const {
-    // Normalised, not smoothed: a three-way switch must not ramp through
-    // "both" on its way from one end to the other.
+    // Normalised, not smoothed, so the switch never ramps through "both".
     const float v = channel.normalized(MidiMode);
     return static_cast<int32_t>(v * 2.0f + 0.5f);
 }
@@ -88,8 +76,8 @@ void Rack::updateMidiOut(int64_t frame) {
     const int32_t mode = midiOutMode();
     const uint8_t ch = static_cast<uint8_t>(channel.normalized(MidiChannel) * 15.0f + 0.5f);
     if ((mode != lastOutMode || ch != lastOutChannel) && lastOutMode != OutInternal && outQueue != nullptr) {
-        // It was sending and now it is sending somewhere else, or nowhere.
-        // Whatever it left sounding out there is its responsibility.
+        // It was sending to MIDI and now isn't, or to a different channel. End
+        // whatever it left sounding there.
         outQueue->push({frame, static_cast<uint8_t>(0xb0 | lastOutChannel), 123, 0,
                         static_cast<uint8_t>(rackIndex)});
     }
@@ -98,16 +86,16 @@ void Rack::updateMidiOut(int64_t frame) {
 }
 
 void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
-    // Anything that got here through the chain came from a finger, or from a
-    // modifier acting on one, so this is what a recording should keep: the
-    // arpeggio rather than the key that started it. A clip's own notes arrive
-    // by the other door and are not written down again.
+    // Anything that came through the chain came from a finger or a modifier
+    // acting on one, so that's what gets recorded (the arpeggio, not the key
+    // that started it). A clip's own notes come in the other way and aren't
+    // recorded again.
     if (live && modifiedSink != nullptr) modifiedSink->onModifiedNote(rackIndex, status, d1, d2);
 
-    // The track's transpose and fixed velocity, after the recording tap so a
-    // take keeps what was played, and before the hardware so a synthesizer
-    // on the other end hears what the machine would. A note-off goes where
-    // its note-on went, whatever the transpose is now.
+    // Transpose and fixed velocity, after the recording tap so a take keeps
+    // what was played, and before MIDI out so external gear hears what the
+    // machine would. A note-off goes where its note-on went, even if the
+    // transpose has changed since.
     {
         const uint8_t k = status & 0xf0;
         if (k == 0x90 && d2 > 0) {
@@ -126,10 +114,9 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
         }
     }
 
-    // After the modifiers, so what leaves for the hardware is what you hear -
-    // arpeggiated and scale-corrected. Before the voice limiter, which is a
-    // property of the machine and no business of a synthesizer on the other
-    // end of a cable.
+    // After the modifiers so MIDI out sends what you hear (arpeggiated,
+    // scale-corrected). Before the voice limiter, which is only for the
+    // machine.
     const int32_t mode = lastOutMode;
     if (mode != OutInternal && outQueue != nullptr) {
         outQueue->push({outFrame, static_cast<uint8_t>((status & 0xf0) | lastOutChannel), d1, d2,
@@ -140,8 +127,8 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
     const uint8_t kind = status & 0xf0;
     const bool on = kind == 0x90 && d2 > 0;
     const bool off = kind == 0x80 || (kind == 0x90 && d2 == 0);
-    // The pedals. A key let go while one of them holds it is not let go yet:
-    // its off waits in pedalHeld for the pedal to come up.
+    // Pedals. A key released while a pedal holds it isn't released yet: its
+    // note-off waits in pedalHeld until the pedal comes up.
     if (on) {
         keyDown[d1 & 0x7f] = true;
         pedalHeld[d1 & 0x7f] = false;
@@ -154,7 +141,10 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
         }
     }
     if (on) {
-        forgetHeld(d1); // a retrigger is not a second note
+        forgetHeld(d1); // a retrigger isn't a second note
+        // The voice limit lives in the rack because only the rack knows how
+        // many notes are asked for, including ones an arpeggiator makes. Over
+        // the limit, the oldest held note is released before the new one starts.
         int32_t limit = EngineSettings::get().voiceLimit.load(std::memory_order_relaxed);
         if (limit > 0) {
             if (limit > kMaxHeld) limit = kMaxHeld;
@@ -173,9 +163,8 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
 }
 
 void Rack::setPedal(int32_t which, bool down) {
-    // To the hardware as the pedal itself: a synthesizer on the other end
-    // of a cable has its own pedal logic, and holding its note-offs back
-    // here as well would be holding them twice.
+    // Send the pedal itself to MIDI out. External synths have their own pedal
+    // handling, so holding their note-offs here too would hold them twice.
     const uint8_t cc = which == kPerfSustain ? 64 : which == kPerfSostenuto ? 66 : 67;
     if (lastOutMode != OutInternal && outQueue != nullptr) {
         outQueue->push({outFrame, static_cast<uint8_t>(0xb0 | lastOutChannel), cc,
@@ -192,8 +181,7 @@ void Rack::setPedal(int32_t which, bool down) {
     } else {
         if (down == sostenutoDown) return;
         sostenutoDown = down;
-        // What it catches is decided the moment it goes down: the keys held
-        // then, and nothing played after.
+        // Sostenuto catches only the keys held when it goes down.
         for (int32_t n = 0; n < 128; ++n) sostenutoSet[n] = down && keyDown[n];
     }
     if (!down) releasePedalled();
@@ -259,8 +247,7 @@ void Rack::allNotesOff() {
         if (modifiers[s] != nullptr) modifiers[s]->allNotesOff(sinks[s]);
     }
     if (machine != nullptr) machine->allNotesOff();
-    // Panic reaches the rack through here, and panic means silence - so the
-    // frozen ring-out stops with everything else that was still sounding.
+    // Panic comes through here, so the frozen ring-out stops too.
     tailClip = nullptr;
     heldCount = 0;
     resetSentTo();
@@ -278,38 +265,30 @@ void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
 }
 
 /**
- * Is this rack playing audio it made earlier?
+ * Whether this rack plays its frozen audio.
  *
- * Only when a clip for the scene now playing has been frozen *and* the song
- * is at the tempo it was frozen at - audio does not stretch, and a frozen
- * clip played at another tempo would be in the wrong place within a beat of
- * starting. Falling back to the machine is both correct and quiet about it;
- * the UI says the freeze is stale.
+ * Only when the playing scene's clip is frozen and the song is at the tempo
+ * it was frozen at. Audio played at another tempo would drift off the beat.
+ * Otherwise it falls back to the machine and the UI shows the freeze as
+ * stale.
  */
 void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing, bool ramping) {
     const FrozenClip *want = nullptr;
-    // **A muted clip is muted whether or not it was frozen.**
+    // A muted clip is muted whether or not it's frozen. ClipPlayer skips a
+    // muted clip's notes, but frozen audio needs its own check.
     //
-    // `ClipPlayer` has always skipped a muted clip's notes, and nothing here
-    // ever looked at a clip at all - so muting a frozen clip silenced notes
-    // that were not being played and left the audio running. The mute button
-    // simply did nothing on the one kind of clip whose whole point is that
-    // the machine is not running.
-    //
-    // The player's clip is the rack's own and is set per rack per scene, so it
-    // is the right one in clip mode as well as in the arranger.
+    // The player's clip is set per rack per scene, so it's the right one in
+    // both clip mode and the arranger.
     const seq::Clip *clip = clipPlayer.clip();
     const bool muted = clip != nullptr && clip->mute;
     if (playing && !muted && frozenSet != nullptr) {
         const FrozenClip *c = frozenSet->find(sceneId);
-        // The tempo has to be the one it was rendered at, to a hundredth of
-        // a beat: a second of audio at 121 bpm is a different number of
-        // frames than at 120, so the loop would walk away from the beat.
+        // The tempo has to match the rendered tempo to a hundredth of a beat,
+        // or the loop drifts off the beat.
         //
-        // Unless the clock is ramping, in which case there is no tempo to
-        // match - it is between two of them - and the ratio is handed to the
-        // stretcher instead. Bounded, because a rate far from one is a warble
-        // rather than a tempo and the machine is the better answer there.
+        // Unless the clock is ramping, in which case the ratio goes to the
+        // stretcher. It's bounded, because a rate far from 1 sounds like a
+        // warble and the machine does a better job.
         if (c != nullptr && c->frames > 0 && c->bpm > 0.0f) {
             const float rate = bpm / c->bpm;
             if (std::fabs(c->bpm - bpm) < 0.01f) {
@@ -323,31 +302,29 @@ void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing, bool ramping) 
     }
     if (want == nullptr) frozenRate = 1.0f;
     if (want == frozenNow) return;
-    // A frozen clip is exactly its own length, so when it stops it stops - and
-    // what the machine would have done is go on ringing. That is what the tail
-    // is for: hand it to the second cursor on the way out and the scene change
-    // sounds like the live track did, reverb and releases and all.
+    // A frozen clip is exactly its own length, but the machine would keep
+    // ringing after it. The tail handles that: hand it to the second cursor
+    // so a scene change sounds like the live track, reverb and releases
+    // included.
     //
-    // On a stop as well as on a scene change, because a stop is note-offs and
-    // note-offs are a release: a live track goes quiet over a second or two
-    // rather than at the instant the button is pressed, and the tail is by
-    // construction exactly that long. Panic is the one that cuts.
+    // On stop too, since a stop is note-offs and a live track fades out over
+    // a second or two. Only panic cuts it.
     if (frozenNow != nullptr && want == nullptr && frozenNow->tail > 0) {
         tailClip = frozenNow;
         tailCursor = frozenNow->frames;
     }
-    // Crossing in either direction: whatever the machine was holding has to
-    // stop, or it hangs while the audio takes over and after it hands back.
+    // Either way, stop whatever the machine was holding or it hangs while the
+    // frozen audio plays and after it hands back.
     if (machine != nullptr) machine->allNotesOff();
     frozenNow = want;
     frozenCursor = -1;
-    stretching = nullptr; // a new clip is a new cycle, so the stretcher re-seeks
+    stretching = nullptr; // a new clip starts a new cycle, so the stretcher re-seeks
 }
 
 void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing) {
     if (machine == nullptr) return;
-    // The clip is the rack's own, set per rack per scene, so the mute is the
-    // right one in both modes - the same reason updateFrozen asks it.
+    // The clip is set per rack per scene, so the mute is right in both modes
+    // (same as updateFrozen).
     const seq::Clip *clip = clipPlayer.clip();
     machine->onScene(sceneId, cycleTick, playing, clip != nullptr && clip->mute);
 }
@@ -355,31 +332,27 @@ void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing) {
 void Rack::syncFrozen(int64_t tickInIteration, float bpm) {
     (void)bpm;
     if (frozenNow == nullptr) return;
-    // **The clip's own tempo, not the clock's.** The target is a position in
-    // the recorded audio, and that audio's seconds are the ones it was
-    // rendered at - which is the same number until the clock ramps, and a
-    // different one the moment it does.
+    // The clip's tempo, not the clock's. The target is a position in the
+    // recorded audio, which only matches the clock until the clock ramps.
     const float at = frozenNow->bpm > 0.0f ? frozenNow->bpm : 120.0f;
     const double perTick = static_cast<double>(kSampleRate) * 60.0 / (static_cast<double>(at) * kPPQN);
     const int64_t ticks = frozenNow->ticks > 0 ? frozenNow->ticks : 1;
     const int64_t target = static_cast<int64_t>((tickInIteration % ticks) * perTick) % frozenNow->frames;
     if (frozenRate == 1.0f) {
-        // `stretching` is *not* cleared here. The stretcher has to stay alive
-        // until the crossfade out of it has finished, and render is what knows
-        // when that is.
+        // stretching isn't cleared here. The stretcher has to stay alive until
+        // the crossfade out of it finishes, and render() knows when that is.
         //
         // The cursor runs free between blocks and is only pulled back when it
-        // has drifted audibly - recomputing it from the tick every block would
-        // step the read position by a sample or two each time, which clicks.
+        // drifts audibly. Recomputing it from the tick every block would step it
+        // by a sample or two each time, which clicks.
         if (frozenCursor < 0 || std::llabs(target - frozenCursor) > 256) frozenCursor = target;
         frozenSyncTarget = target;
         return;
     }
-    // Stretching, and the read position is the stretcher's own. Nudging it
-    // between hops is the one thing `Stretcher` forbids: the next join would
-    // be searched against audio from somewhere else. So it is seeded when the
-    // clip arrives and re-seeded only where a cycle begins, which the tick
-    // going backwards is how we know.
+    // Stretching, and the stretcher owns the read position. Stretcher
+    // doesn't allow moving it between hops, so it's only seeded when the
+    // clip arrives and again when a new cycle starts (the tick going
+    // backwards).
     if (stretching != frozenNow || target < frozenSyncTarget) {
         frozenStretch.seek(target);
         stretching = frozenNow;
@@ -388,9 +361,8 @@ void Rack::syncFrozen(int64_t tickInIteration, float bpm) {
 }
 
 /**
- * The frozen clip read at the rate it was rendered at: a memory read, and the
- * whole of what freezing saves. Lifted out of `render` so the crossfade into
- * and out of the stretcher can mix it against the stretched read.
+ * The frozen clip read at its rendered rate, a plain memory read. Separate
+ * from render() so the crossfade can mix it with the stretched read.
  */
 void Rack::readFrozenPlain(int32_t frames) {
     const FrozenClip *f = frozenNow;
@@ -399,11 +371,10 @@ void Rack::readFrozenPlain(int32_t frames) {
     for (int32_t i = 0; i < frames; ++i) {
         if (at >= f->frames) {
             at = 0;
-            // Round again, and the pass that just ended starts ringing over
-            // the top of this one - which is the whole reason a loop of a
-            // frozen clip does not cut its own reverb off at the bar line.
-            // It is started here rather than from the tick, because this is
-            // the one place that knows the audio itself came round.
+            // When the loop comes round, the pass that just ended starts ringing
+            // over this one, so looping a frozen clip doesn't cut off its reverb at
+            // the bar line. Started here because this is where we know the audio
+            // itself looped.
             if (f->tail > 0) {
                 tailClip = f;
                 tailCursor = f->frames;
@@ -417,44 +388,36 @@ void Rack::readFrozenPlain(int32_t frames) {
 }
 
 void Rack::render(int32_t frames) {
-    // Frozen audio, in one of three states: read plainly, read through the
-    // stretcher, or crossfading between the two. The blend is what the third
-    // one is, and it exists because both edges are discontinuities - see
-    // `frozenBlend`. It is stepped once per block rather than per sample,
-    // because ten milliseconds of ramp across a 64-frame block is a
-    // hundred-and-thirty step staircase and each step is a fifth of a
-    // percent: below anything audible, and it saves a multiply a sample.
+    // Frozen audio is read plainly, through the stretcher, or crossfading
+    // between the two (see frozenBlend). The blend steps once per block, not
+    // per sample. That's inaudible and saves a multiply per sample.
     if (frozenNow != nullptr) {
         const bool wantStretch = frozenRate != 1.0f && stretching == frozenNow;
         const float target = wantStretch ? 1.0f : 0.0f;
         const float step = static_cast<float>(frames) / static_cast<float>(kBlendFrames);
         if (frozenBlend < target) frozenBlend = std::min(target, frozenBlend + step);
         else if (frozenBlend > target) frozenBlend = std::max(target, frozenBlend - step);
-        if (frozenBlend <= 0.0f && !wantStretch) stretching = nullptr; // the fade is done with it
+        if (frozenBlend <= 0.0f && !wantStretch) stretching = nullptr; // the fade is finished
     } else {
         frozenBlend = 0.0f;
         stretching = nullptr;
     }
 
     if (frozenNow != nullptr && frozenBlend > 0.0f && stretching == frozenNow) {
-        // Following a tempo the audio was not rendered at, by stretching it.
+        // Following a tempo the audio wasn't rendered at, by stretching it.
         //
-        // The source runs to the end of the **tail**, not the end of the clip,
-        // and that is deliberate: `Stretcher::fill` stops a window short of
-        // whatever end it is given, so bounding it at the clip would drop the
-        // last thirty milliseconds of every pass. The tail is the audio that
-        // followed the clip, contiguous in the same buffer, so it is exactly
-        // the right runway to read into.
+        // The source runs to the end of the tail, not the clip, on purpose.
+        // Stretcher::fill stops a window short of the end it's given, so ending
+        // at the clip would drop the last 30 ms of every pass. The tail follows
+        // the clip in the same buffer, so it's the right audio to read into.
         const FrozenClip *f = frozenNow;
         float *dst[2] = {bufL, bufR};
         const float *src[2] = {f->left.data(), f->right.data()};
         const int64_t last = static_cast<int64_t>(f->frames) + f->tail;
         int32_t made = frozenStretch.fill(dst, src, 0, last, frames, frozenRate);
-        // Round again when the source has passed the clip's end. A loop point
-        // inside a ramp is joined by the stretcher's own search rather than
-        // sample-exactly, which is the one thing here that is approximate -
-        // and a ramp is one bar, so it needs a clip shorter than that to
-        // happen at all.
+        // Loop when the source passes the clip's end. A loop point inside a ramp
+        // is joined by the stretcher's search, not sample-exact. That only
+        // happens with a clip shorter than the one-bar ramp.
         while (made < frames) {
             if (f->tail > 0) {
                 tailClip = f;
@@ -477,15 +440,13 @@ void Rack::render(int32_t frames) {
             frozenStretch.seek(0);
         }
         stereo = true;
-        // **Not `frozenCursor = sourcePosition()`.** That is where the *next*
-        // hop will read from, which runs ahead of the audio just emitted by up
-        // to a whole hop - so handing it to the plain read on the way out
-        // skipped up to fifteen milliseconds rather than merely clicking. The
-        // plain cursor is left where the tick put it, which is authoritative,
+        // Don't set frozenCursor = sourcePosition(). That's where the next hop
+        // will read, up to a hop ahead of what's been played, so the plain read
+        // would skip up to 15 ms. The plain cursor stays where the tick put it
         // and the crossfade covers the join.
         if (frozenBlend < 1.0f) {
-            // Mid-fade, so the plain read is wanted too. It goes in a scratch
-            // and the two are mixed; the stretched read is already in buf.
+            // Mid-fade, so we need the plain read too. It goes in a scratch
+            // buffer and gets mixed with the stretched read already in buf.
             float wetL[kBlockFrames], wetR[kBlockFrames];
             for (int32_t i = 0; i < frames; ++i) {
                 wetL[i] = bufL[i];
@@ -504,15 +465,14 @@ void Rack::render(int32_t frames) {
     } else if (machine == nullptr) {
         for (int32_t i = 0; i < frames; ++i) bufL[i] = bufR[i] = 0.0f;
         stereo = false;
-        // Nothing to render - but a tail may still be ringing out of a clip
-        // this rack was playing before its machine was taken away, so the
-        // shortcut only holds when there is truly nothing left to hear.
+        // Nothing to render, but a tail may still be ringing from a clip this
+        // rack played before its machine was removed.
         if (tailClip == nullptr) {
             for (int32_t i = 0; i < frames; ++i) keyBuf[i] = 0.0f;
             return;
         }
     } else {
-        // The track's tuning, whichever of the two tables is the current one.
+        // The track's tuning, from whichever of the two tables is current.
         const int t = tuningIndex.load(std::memory_order_acquire);
         machine->setTuning(t < 0 ? nullptr : tuningTables[t]);
         stereo = machine->render(bufL, bufR, frames);
@@ -520,11 +480,10 @@ void Rack::render(int32_t frames) {
             if (effects[s] != nullptr) stereo = effects[s]->run(bufL, bufR, frames, stereo);
         }
     }
-    // The ring-out, over the top of all three cases above: over the next pass
-    // of a loop, over whatever live clip the next scene brought, or over
-    // silence when this track has nothing more to play. It is the rack's own
-    // sound, so it goes in before the dry tap and before the channel strip -
-    // the fader still moves it and freezing a track still captures it.
+    // The ring-out, on top of whatever else plays: the next pass of a loop,
+    // the next scene's live clip, or silence. It's the rack's own sound, so
+    // it goes in before the dry tap and the channel strip, so the fader
+    // still affects it and freezing still captures it.
     if (tailClip != nullptr) {
         const FrozenClip *t = tailClip;
         const int64_t end = static_cast<int64_t>(t->frames) + t->tail;
@@ -538,12 +497,11 @@ void Rack::render(int32_t frames) {
             bufR[i] += t->right[static_cast<size_t>(at)];
         }
         tailCursor = at;
-        if (at >= end) tailClip = nullptr; // rung out
+        if (at >= end) tailClip = nullptr; // finished
     }
-    // The sidechain tap: this rack as another rack's detector hears it -
-    // after its own inserts, before its fader and its mute. Pre-fader so that
-    // pulling the kick down in the mix does not take the duck away with it,
-    // and pre-mute so a muted kick can still drive a pump nobody hears.
+    // The sidechain tap: after the inserts, before the fader and mute.
+    // Pre-fader so turning the kick down doesn't remove the ducking, and
+    // pre-mute so a muted kick can still drive it.
     if (stereo) {
         for (int32_t i = 0; i < frames; ++i) keyBuf[i] = (bufL[i] + bufR[i]) * 0.5f;
     } else {
@@ -555,7 +513,7 @@ void Rack::render(int32_t frames) {
             dryR[i] = stereo ? bufR[i] : bufL[i];
         }
     }
-    // Channel strip: gain and equal-power pan, smoothed; a mono source pans
+    // Channel strip: smoothed gain and equal-power pan. A mono source pans
     // from L and becomes stereo here.
     channel.tick();
     const float gain = channel.get(Mute) >= 0.5f ? 0.0f : channel.get(Gain);
@@ -604,7 +562,7 @@ Effect *Rack::swapEffect(int32_t slot, Effect *next) {
 InputMod *Rack::swapInputMod(int32_t slot, InputMod *next) {
     if (slot < 0 || slot >= kInputModSlots) return next;
     InputMod *old = modifiers[slot];
-    if (old != nullptr) old->allNotesOff(sinks[slot]); // its sounding notes end cleanly
+    if (old != nullptr) old->allNotesOff(sinks[slot]); // end its sounding notes cleanly
     modifiers[slot] = next;
     return old;
 }
@@ -639,9 +597,9 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
     }
     case Unit::Channel: channel.set(index, v01); break;
     case Unit::Performance: {
-        // Back into the MIDI it arrived as, so a lane and a finger on the
-        // strip reach the machine by exactly the same path - through the
-        // modifiers, as a controller, the way a hardware wheel would.
+        // Convert back to the MIDI it came in as, so a lane and a finger on the
+        // strip reach the machine the same way, through the modifiers as a
+        // controller, like a hardware wheel.
         const auto byte = static_cast<uint8_t>(
             v01 <= 0.0f ? 0 : (v01 >= 1.0f ? 127 : static_cast<int32_t>(v01 * 127.0f + 0.5f)));
         if (index == kPerfMod) {
@@ -649,13 +607,13 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
         } else if (index == kPerfPressure) {
             handleMidi(0xd0, byte, 0);
         } else if (index == kPerfSustain || index == kPerfSostenuto || index == kPerfSoft) {
-            // Down from the middle up, as MIDI has it.
+            // 64 and up is down, as in MIDI.
             setPedal(index, byte >= 64);
         }
         break;
     }
     case Unit::Perform: if (performSink != nullptr) performSink->set(index, v01); break;
-    case Unit::Master: break; // never addressed at a rack
+    case Unit::Master: break; // never sent to a rack
     }
 }
 
@@ -664,9 +622,9 @@ void Rack::setTuning(const float *ratios) {
         tuningIndex.store(-1, std::memory_order_release);
         return;
     }
-    // Written into whichever table the audio thread is not reading, then
-    // handed over in one store. Two changes inside one block could still
-    // write the table being read; tunings change by hand, not that fast.
+    // Written into the table the audio thread isn't reading, then switched
+    // over with one store. Two changes in one block could still write the
+    // table being read, but tunings change by hand, not that fast.
     const int next = tuningIndex.load(std::memory_order_acquire) == 0 ? 1 : 0;
     for (int i = 0; i < 128; ++i) tuningTables[next][i] = ratios[i];
     tuningIndex.store(next, std::memory_order_release);

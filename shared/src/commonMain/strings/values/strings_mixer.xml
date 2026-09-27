@@ -1,5 +1,5 @@
 <resources>
-    <!-- ui/MixerPanel.kt: channel strips, groups, the master. Effect names and their short forms are names, and stay as they are. -->
+    <!-- ui/MixerPanel.kt: channel strips, groups, the master. Effect names and their short forms are names and aren't translated. -->
     <!-- An empty send slot. -->
     <string name="mixer_send">send %d</string>
     <string name="mixer_group_name_title">Group name</string>
@@ -17,7 +17,7 @@
     <!-- Mute and solo, one letter each. -->
     <string name="mixer_mute_short">M</string>
     <string name="mixer_solo_short">S</string>
-    <!-- Turned on its side, at the end of the groups. -->
+    <!-- Written sideways, at the end of the groups. -->
     <string name="mixer_add_group">+ group</string>
     <string name="mixer_clear_title">Clear automation on %s?</string>
     <string name="mixer_clear">Clear</string>

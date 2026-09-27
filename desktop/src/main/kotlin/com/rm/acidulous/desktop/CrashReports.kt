@@ -10,28 +10,26 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * What is left behind when the desktop app dies: the phone's CrashReports,
- * with a desktop's two sources.
+ * Crash reports for the desktop app. Works like Android's CrashReports, with
+ * two sources:
  *
- * - **A Kotlin crash** is caught by the default handler and written out on
- *   the spot - the stack, and what the app last logged - before the crash
- *   carries on exactly as it would have.
- * - **A native crash** - the engine, or the JVM itself - is written up by the
- *   JVM as an `hs_err` file, which the launcher points into this folder
- *   (`-XX:ErrorFile`). On the next start each one becomes a report.
+ * - A Kotlin crash is caught by the default handler and written out with its
+ *   stack and the app's recent log, then passed on as normal.
+ * - A native crash (in the engine or the JVM) is written by the JVM as an
+ *   `hs_err` file, which the launcher points at this folder
+ *   (`-XX:ErrorFile`). Each one becomes a report on the next start.
  *
- * A freeze leaves nothing on a desktop: nobody kills it, and it is closed by
- * hand.
+ * Freezes leave nothing on desktop, since the user closes the app by hand.
  *
- * Reports stay in the app's data folder, the last [KEEP] of them, and go
- * nowhere unless the person shares one. The notice for the newest unread one
- * is the shared code's, as on the phone.
+ * The last [KEEP] reports are kept in the app's data folder and only leave it
+ * if the user shares one. The notice for the newest unread one is in the
+ * shared code, like on Android.
  */
 class CrashReports(dataDir: File) {
     val directory: File = File(dataDir, "crashes").apply { mkdirs() }
     private val unreadMark = File(directory, ".unread")
 
-    /** First thing at start: catch what the app's own code throws. */
+    /** Call first thing at start: catches what the app's own code throws. */
     fun install() {
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
@@ -47,7 +45,7 @@ class CrashReports(dataDir: File) {
         }
     }
 
-    /** On start: the JVM's own crash files from the runs before, as reports. */
+    /** On start: turn the JVM's crash files from earlier runs into reports. */
     fun collect() {
         val files = directory.listFiles { f -> f.name.startsWith("hs_err") && f.name.endsWith(".log") }.orEmpty()
         for (f in files.sortedBy { it.lastModified() }) {
@@ -58,7 +56,7 @@ class CrashReports(dataDir: File) {
         }
     }
 
-    /** The newest report nobody has seen the notice for, if any. */
+    /** The newest report the user hasn't been told about, if any. */
     fun unread(): File? =
         runCatching { unreadMark.readText().trim() }.getOrNull()
             ?.let { File(directory, it) }?.takeIf { it.isFile }
@@ -67,7 +65,7 @@ class CrashReports(dataDir: File) {
         unreadMark.delete()
     }
 
-    /** The newest report there is, read or not: for About. */
+    /** The newest report, read or not. Used by About. */
     fun latest(): File? = reports().maxByOrNull { it.name }
 
     private fun reports(): List<File> = directory.listFiles { f -> f.extension == "txt" }.orEmpty().toList()
@@ -87,7 +85,7 @@ class CrashReports(dataDir: File) {
         append("When: ${stamp(whenMs)}\n\n")
     }
 
-    /** "Debian GNU/Linux 13 (trixie)", from the one file every distribution keeps it in. */
+    /** For example "Debian GNU/Linux 13 (trixie)", from /etc/os-release. */
     private fun distribution(): String = runCatching {
         File("/etc/os-release").readLines().firstOrNull { it.startsWith("PRETTY_NAME=") }
             ?.substringAfter('=')?.trim('"')

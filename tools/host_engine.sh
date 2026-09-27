@@ -1,22 +1,19 @@
 #!/bin/bash
-# The engine's leaf sources, compiled for the host once and kept.
+# Compiles the engine's leaf sources for the host once and keeps them.
 #
-# reset_test, mpe_test, bank_test and audition all want the same hundred-odd
-# translation units - every machine, every effect, the dsp and a little of
-# core - and compiling them takes the best part of a minute. Compiling them
-# four times in one run of all_tests.sh took four. So they are built into an
-# archive here, and each harness links that instead: the first run pays once
-# and every run after it pays nothing at all.
+# reset_test, mpe_test, bank_test and audition all need the same hundred-odd
+# files (every machine, every effect, the dsp and some of core), which take
+# about a minute to compile. They're built into one archive here that each
+# harness links, so only the first run pays for it.
 #
 # Prints the path to the archive on stdout; build noise goes to stderr.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
-# HOST_ENGINE_FLAGS builds a variant - denormal_probe.sh's, with the web
-# build's guards - into a folder of its own, HOST_ENGINE_OUT.
-# With the rest of the build output where this machine keeps it (the
-# acidulous.buildRoot Gradle property: see the root build.gradle.kts), and
-# through the compiler cache where there is one.
+# HOST_ENGINE_FLAGS builds a variant (denormal_probe.sh's, with the web build's
+# guards) into its own folder, HOST_ENGINE_OUT.
+# Otherwise it builds under acidulous.buildRoot if set (see the root
+# build.gradle.kts), and uses ccache where there is one.
 BUILD_ROOT=$(sed -n 's/^acidulous\.buildRoot=//p' "$HOME/.gradle/gradle.properties" 2>/dev/null | tail -1)
 OUT="${HOST_ENGINE_OUT:-${BUILD_ROOT:+$BUILD_ROOT/$(basename "$ROOT")/host-engine}}"
 OUT="${OUT:-$ROOT/build/host-engine}"
@@ -30,23 +27,18 @@ SRC="$SRC $CPP/engine/core/Utterance.cpp $CPP/engine/core/Take.cpp $CPP/engine/c
 SRC="$SRC $CPP/engine/core/Tuner.cpp"
 # The modifiers and the rack that runs them, for inputmod_test.
 SRC="$SRC $(find "$CPP/engine/inputmod" -name '*.cpp') $CPP/engine/rack/Rack.cpp"
-# And the Engine itself, for render_test. It was left out on the grounds that
-# it "wants a platform under it", and it turns out it does not: `sequencer/` is
-# entirely headers, and `LinkFollower.h` needs only Constants and Timebase, so
-# no Ableton Link comes with it. Two files buy a harness that renders a whole
-# song off a phone.
+# The Engine itself, for render_test. The sequencer is all headers and
+# LinkFollower.h only needs Constants and Timebase, so no Link comes with it.
 SRC="$SRC $CPP/engine/rack/Engine.cpp $CPP/engine/rack/MasterBus.cpp $CPP/engine/core/Capture.cpp"
 SRC="$SRC $CPP/engine/core/ReelCache.cpp $CPP/engine/format/WavStream.cpp"
 SRC="$SRC $CPP/engine/format/WavWriter.cpp $CPP/engine/format/WavReader.cpp"
 SRC="$SRC $CPP/engine/format/Decoded.cpp $CPP/engine/format/AiffReader.cpp $CPP/engine/format/FlacReader.cpp"
 SRC="$SRC $CPP/engine/format/AudioDecoder.cpp"
-# Deliberately not AudioSink.cpp: it includes all four writers and would pull
-# in host LAME, which only sink_test has any use for.
+# Not AudioSink.cpp: it includes all four writers and would pull in LAME,
+# which only sink_test needs.
 
-# A header nobody tracks is a stale object file that fails in a way nobody can
-# read, so any header newer than the archive rebuilds everything. Coarse, and
-# right - the alternative is a dependency graph for a build that takes a
-# minute from cold.
+# If any header is newer than the archive, rebuild everything. Coarse, but it
+# avoids stale object files without tracking dependencies.
 newest_header=$(find "$CPP" -name '*.h' -newer "$LIB" 2>/dev/null | head -1)
 if [ -n "$newest_header" ]; then
     rm -f "$OUT"/*.o "$LIB"

@@ -2,10 +2,10 @@
 #include "Math.h"
 #include <cstdint>
 
-// A block-lookahead peak limiter. Output lags input by one block, which is the
-// lookahead: by the time a block is output, its own peak and the next block's
-// are both known, so the gain ramps down *before* the peak arrives and never
-// lets a sample over the ceiling. Release is exponential toward unity.
+// A block-lookahead peak limiter. Output lags input by one block, so when a
+// block is output the next block's peak is already known and the gain ramps
+// down before it arrives, keeping every sample under the ceiling. Release is
+// exponential back to unity.
 namespace acidulous::dsp {
 
 template <int32_t kBlock>

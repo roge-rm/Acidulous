@@ -6,9 +6,9 @@
 // Loudness as ITU-R BS.1770-4 and EBU R128 measure it: momentary (400 ms),
 // short-term (3 s), integrated (the whole programme, gated) and true peak.
 //
-// What a streaming service turns a song down to, so it is what a mix is judged
-// against rather than its sample peak. Fixed memory and no allocation after
-// prepare(), so it can sit on the audio thread for as long as a song plays.
+// Streaming services normalise to these figures. Fixed memory and no
+// allocation after prepare(), so it can run on the audio thread for a whole
+// song.
 namespace acidulous::dsp {
 
 class Loudness {
@@ -58,7 +58,7 @@ class Loudness {
     /** The highest true peak so far, in dBTP. */
     float truePeakDb() const { return truePeak > 0.0f ? 20.0f * std::log10(truePeak) : kSilent; }
 
-    /** What a reading of nothing reports. */
+    /** The reading for silence. */
     static constexpr float kSilent = -120.0f;
 
   private:
@@ -66,12 +66,11 @@ class Loudness {
     struct State { double x1 = 0, x2 = 0, y1 = 0, y2 = 0, u1 = 0, u2 = 0, w1 = 0, w2 = 0; };
 
     /**
-     * The K-weighting: a high shelf that stands for the head, then a high
-     * pass that stands for how little the lowest octave counts.
+     * The K-weighting filter: a high shelf for the head's effect, then a high
+     * pass for the ear's low sensitivity to bass.
      *
-     * At 48 kHz the coefficients are the standard's own table; at any other
-     * rate they are derived from the same analogue prototype, as every
-     * reference implementation does.
+     * At 48 kHz the coefficients come from the standard's table. At other
+     * rates they're derived from the same analogue prototype.
      */
     void kWeighting() {
         if (sr == 48000.0f) {
@@ -93,7 +92,7 @@ class Loudness {
             const double w0 = 2.0 * 3.141592653589793 * f0 / sr, c = std::cos(w0), alpha = std::sin(w0) / (2.0 * Q);
             const double a0 = 1 + alpha;
             highpass = {1.0, -2.0, 1.0, -2 * c / a0, (1 - alpha) / a0};
-            // Normalised the way the standard's table is: unity numerator.
+            // Unity numerator, like the standard's table.
         }
     }
 
@@ -112,15 +111,13 @@ class Loudness {
     }
 
     /**
-     * Every 100 ms: a new gating block of the last 400 ms (75% overlap),
-     * the momentary and short-term readings, and the integrated one again.
+     * Runs every 100 ms: adds a gating block of the last 400 ms (75% overlap)
+     * and updates the momentary, short-term and integrated readings.
      *
-     * The integrated figure is gated twice - blocks under -70 LUFS are
-     * silence and do not count, then blocks more than 10 LU under the average
-     * of what is left do not count either - and it has to cover the whole
-     * programme, so the blocks are kept as a histogram of 0.1 LU bins with
-     * their energy summed, not as a list that grows for as long as a song
-     * plays. Exact to within a bin at the relative gate's edge.
+     * The integrated figure ignores blocks under -70 LUFS, then blocks more
+     * than 10 LU below the average of the rest. Blocks are kept in a
+     * histogram of 0.1 LU bins so memory stays fixed however long the song
+     * is. It's exact to within a bin at the relative gate.
      */
     void endHop() {
         hopRing[hopAt] = hopSum / static_cast<double>(hopFrames);
@@ -164,16 +161,17 @@ class Loudness {
     }
 
     /**
-     * The sample and the three points between it and the last, per channel.
+     * Checks the sample and the three points between it and the previous one,
+     * per channel, for the true peak.
      *
-     * The history is written twice, a window apart, so the twelve taps a
-     * phase read one contiguous run instead of wrapping on every tap.
+     * The history is written twice, a window apart, so each phase's twelve
+     * taps read one contiguous run without wrapping.
      */
     void peakOf(float l, float r) {
         const float in[2] = {l, r};
         for (int32_t ch = 0; ch < 2; ++ch) {
             tpHist[ch][tpAt] = tpHist[ch][tpAt + kTpPhaseTaps] = in[ch];
-            // Newest first: tap k of a phase meets the sample k back.
+            // Newest first: tap k of a phase multiplies the sample k back.
             const float *x = &tpHist[ch][tpAt + kTpPhaseTaps];
             for (int32_t p = 0; p < 4; ++p) {
                 float y = 0.0f;

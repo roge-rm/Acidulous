@@ -1,24 +1,13 @@
-// What a take is, and what Molt makes of it.
+// Measures a take and what Molt makes of it.
 //
-// Not a test: it asserts nothing and it cannot fail. It prints the take's own
-// numbers beside the numbers of a note rendered from it, in the harness's own
-// units, so the two can be compared.
+// Not a test: it asserts nothing and can't fail. It prints the take's own
+// numbers next to those of a note rendered from it, in the same units, so
+// they can be compared. That shows which problems are in the recording itself
+// and which come from the machine.
 //
-// **That comparison is the whole reason it exists.** Molt was reported as
-// mishandling a real voice on three counts - almost nothing on the note's
-// harmonic series, a loudest partial below the note, and fourteen decibels
-// under the rest of the bank - and all three turned out to be true of the
-// take *before Molt was given it*. The recording is fifty-six per cent
-// sub-seventy-hertz energy and clipped; measured as it was mounted it read
-// harm 0.006, part 0.45 and -30.9 dBFS. Molt raised the first and was blamed
-// for all of them. Only `click` was the machine's own.
-//
-// Without a take column there is nothing to notice that with, so this is now
-// a standing measurement rather than something reconstructed by hand.
-//
-// It runs against ACIDULOUS_INPUT_FILE when tools/local.env names one and the
-// synthetic phrase otherwise, exactly as the audition harness does, so it is
-// committable and still says something where there is no recording.
+// It uses ACIDULOUS_INPUT_FILE when tools/local.env names one and the
+// synthetic phrase otherwise, like the audition harness, so it still works
+// where there's no recording.
 #include <engine/core/Utterance.h>
 #include <engine/machine/molt/Molt.h>
 
@@ -37,7 +26,7 @@ using namespace acidulous::audio;
 namespace {
 
 constexpr float kSr = audition::kSr;
-/** C3, which is what the bank is rendered at: no note= and no range= in it. */
+/** C3, which the bank is rendered at when it has no note= or range=. */
 constexpr int kNote = 48;
 
 float midiHz(int note) { return 440.0f * std::exp2((static_cast<float>(note) - 69.0f) / 12.0f); }
@@ -59,9 +48,8 @@ std::vector<float> asStereo(const std::vector<float> &mono) {
 }
 
 /**
- * The share of energy under [hz], averaged over the take rather than taken
- * from one window - a phrase has silences, and a window in one of them says
- * whatever the noise floor is shaped like.
+ * The share of energy under [hz], averaged over the whole take. A phrase has
+ * silences, and one window in a silence just shows the noise floor.
  */
 float belowShare(const std::vector<float> &mono, float hz) {
     const auto n = static_cast<int32_t>(mono.size());
@@ -103,8 +91,8 @@ void printTake(const std::vector<float> &mono, const char *what) {
 
 void printTrack(const std::vector<float> &mono) {
     PitchTrack t;
-    // Cleaned already - `analyse` did it. Filtering again is eight poles
-    // at kMinHz and takes the fundamental with the room.
+    // Already cleaned by `analyse`. Filtering again is eight poles at kMinHz
+    // and removes the fundamental along with the room.
     t.find(mono, static_cast<int32_t>(mono.size()), kSr, true);
     std::vector<float> voiced, clarity;
     int32_t jumps = 0, pairs = 0, flaps = 0;
@@ -120,9 +108,8 @@ void printTrack(const std::vector<float> &mono) {
         clarity.push_back(t.clarity[i]);
         if (last > 0.0f) {
             ++pairs;
-            // Seven semitones: a voice does not move that far in ten
-            // milliseconds, so anything past it is the tracker changing its
-            // mind about which octave it is in rather than a sung interval.
+            // Seven semitones. A voice doesn't move that far in ten
+            // milliseconds, so a bigger jump is the tracker switching octave.
             if (std::abs(1200.0f * std::log2(f / last)) > 700.0f) ++jumps;
         }
         last = f;
@@ -140,11 +127,11 @@ void printTrack(const std::vector<float> &mono) {
 /**
  * What the grains will be cut from.
  *
- * Three numbers, and the third is the one that decides whether PSOLA can work
- * at all. Overlap-add only adds if consecutive grains are cut at the same
- * point in the cycle: near one they reinforce, near nought they cancel into a
- * hollow phasey voice, and negative means alternate marks landed on opposite
- * polarities and the output is an octave down with a hole in it.
+ * The third number decides whether PSOLA can work at all. Overlap-add only
+ * adds up if consecutive grains are cut at the same point in the cycle. Near
+ * one they reinforce, near zero they cancel into a hollow phasey voice, and
+ * negative means alternate marks landed on opposite polarities and the output
+ * is an octave down with a hole in it.
  */
 void printEpochs(const Utterance &u) {
     std::vector<float> jitter;
@@ -193,14 +180,14 @@ void printEpochs(const Utterance &u) {
                 pairs > 0 ? coherence / pairs : 0.0);
 }
 
-/** One note held two seconds, which is what the bank is measured on. */
+/** One note held for two seconds, as the bank is measured. */
 std::vector<float> renderNote(Utterance &u) {
     machine::Molt m;
     m.prepare(static_cast<int32_t>(kSr));
     int32_t count = 0;
     const ParamDef *defs = m.paramDefs(count);
     auto setp = [&](int32_t p, float value) { m.params().set(p, defs[p].unmap(value)); };
-    // Init, near enough: the machine and not a patch of it.
+    // Roughly the init patch: the machine itself, not a preset.
     setp(machine::Molt::Tune, 1.0f);
     setp(machine::Molt::Rate, 0.0f);
     setp(machine::Molt::VelocityAmount, 0.0f);
@@ -250,8 +237,8 @@ int main() {
     printTake(u->mono, real ? "recording" : "synthetic phrase");
     printTrack(u->mono);
     printEpochs(*u);
-    // The take measured as if it were a render, so the two rows below are in
-    // the same units and the machine's contribution is the difference.
+    // The take measured as if it were a render, so the rows below are in the
+    // same units and the difference is what the machine adds.
     printMeasured(audition::measure(asStereo(u->mono), static_cast<int64_t>(u->frames), kNote), "as if rendered");
 
     std::printf("\nthe note, rendered\n");

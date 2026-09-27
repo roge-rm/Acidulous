@@ -1,23 +1,16 @@
-// The scheduler, driven the way the engine drives it.
+// Drives the scene scheduler the way the engine does.
 //
-// Everything below this line had no harness until now, and it is where the
-// awkward questions live: what happens at the moment somebody presses clip,
-// what "which pass is this" means when a clip does not divide its scene, and
-// what the grid is told before anything has ever played. Three separate faults
-// shipped out of that gap in one day - a cold start claiming to play the first
-// scene, a mode latch taken at the wrong moment, and a launch from stopped
-// that sounded eight notes and gave up - and each of them was found by hand,
-// on a phone, by Dan.
+// Covers the awkward cases: what happens the moment clip is pressed, what
+// "which pass is this" means when a clip doesn't divide its scene, and what
+// the grid is told before anything has played.
 //
-// The reason it had none is real rather than an oversight: SceneScheduler
-// wants live Racks, and a Rack wants a Machine. So this builds four of them
-// out of the registry, hands the scheduler a SongSnapshot assembled by hand,
-// and turns the clock over a block at a time. It costs the host-engine archive
-// that reset_test and bank_test already pay for.
+// SceneScheduler needs live Racks, and a Rack needs a Machine, so this builds
+// four from the registry, hands the scheduler a SongSnapshot built by hand,
+// and turns the clock over a block at a time. It links the same host-engine
+// archive as reset_test and bank_test.
 //
-// What it watches is deliberately the *UI's* view: `Transport::launchState`
-// is the packed word the grid reads, and every fault above was visible in it
-// before it was audible.
+// It watches the UI's view: `Transport::launchState` is the packed word the
+// grid reads, and these faults show up there before they're audible.
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -37,7 +30,7 @@ namespace {
 int checks = 0;
 int failures = 0;
 
-/** Audio, so a hair either side of the number is the same number. */
+/** Audio floats, so a hair either side of the number counts as the number. */
 bool isAbout(float value, float want) { return std::fabs(value - want) < 1.0e-4f; }
 
 void ok(const char *what, bool cond, const std::string &detail = "") {
@@ -80,9 +73,8 @@ int soundingCount(const Transport &t) {
  * A song, four racks, and a scheduler bound to them.
  *
  * The racks carry a real machine because `Rack::isActive()` is
- * `machine != nullptr` and an inactive rack is skipped before a note is
- * fired - so a harness without one would watch a scheduler doing nothing and
- * report that everything was fine.
+ * `machine != nullptr` and an inactive rack is skipped before any note fires,
+ * so without one the scheduler would do nothing and the tests would pass.
  */
 struct Fixture {
     Rack racks[kRacks];
@@ -154,9 +146,9 @@ struct Fixture {
     /**
      * A freeze of [sceneId] on [rack], rendered at the tempo it will play at.
      *
-     * The body is a flat 0.5 and the ring-out a flat 0.25, so any sample tells
-     * you which region of the file it came from - and 0.75 says both are
-     * sounding, which is what a loop point is supposed to sound like.
+     * The body is a flat 0.5 and the ring-out a flat 0.25, so any sample shows
+     * which region of the file it came from, and 0.75 means both are sounding,
+     * as at a loop point.
      */
     void freeze(int32_t rack, int64_t sceneId, int32_t ticks, int32_t tail = 0,
                 int32_t frames = kSampleRate) {
@@ -173,11 +165,11 @@ struct Fixture {
     }
 
     /**
-     * What `Engine::renderBlock` does before the scheduler fires, by hand.
+     * What `Engine::renderBlock` does before the scheduler fires, done by hand.
      *
-     * `run()` cannot do it: the engine asks every rack whether it is playing
-     * audio it made earlier *outside* the scheduler, and a harness that only
-     * turns the scheduler would never see the frozen path at all.
+     * `run()` can't do it: the engine asks every rack whether it's playing
+     * audio it made earlier, outside the scheduler, so a harness that only
+     * runs the scheduler would never see the frozen path.
      */
     void updateFrozen() {
         for (int32_t r = 0; r < kRacks; ++r) {
@@ -187,7 +179,7 @@ struct Fixture {
 
     void commit() { scheduler.swapSnapshot(snap.get()); }
 
-    /** Turn the clock over, as Engine::renderBlock does. */
+    /** Turns the clock over, as Engine::renderBlock does. */
     void run(int blocks) {
         for (int i = 0; i < blocks; ++i) {
             clock.advance(kBlockFrames);
@@ -201,12 +193,11 @@ struct Fixture {
     }
 
     /**
-     * What `Engine::renderBlock` does with a play request, by hand.
+     * What `Engine::renderBlock` does with a play request, done by hand.
      *
-     * The engine resets the clock and calls `scheduler.start(...)`; nothing
-     * here renders audio, so the two steps are taken directly. Keeping them
-     * in this order matters - `start` reads `clock.position()` for the
-     * iteration origin.
+     * The engine resets the clock and calls `scheduler.start(...)`. Nothing
+     * here renders audio, so the two steps are done directly. The order
+     * matters: `start` reads `clock.position()` for the iteration origin.
      */
     void play(int32_t sceneIdx = 0) {
         transport.requestPlay(sceneIdx);
@@ -247,10 +238,9 @@ std::unique_ptr<Fixture> twoScenes() {
 void theGridIsToldNothingBeforeAnythingRuns() {
     printf("- a transport that has never played\n");
     Fixture f;
-    // The fault Dan found: `launchForUi` was zeroed, and a zeroed slot
-    // unpacks to scene nought with scene nought queued - "playing the first
-    // scene, and queued to play it again". Press clip on a cold start and the
-    // whole first column lit up without a note being sounded.
+    // `launchForUi` must not be zeroed: a zeroed slot unpacks to scene zero
+    // with scene zero queued, and pressing clip on a cold start would light
+    // the whole first column without a note sounding.
     ok("no rack claims to be playing", soundingCount(f.transport) == 0,
        std::to_string(soundingCount(f.transport)) + " of 4");
     ok("and none claims anything queued",
@@ -277,16 +267,16 @@ void songModePlaysTheSong() {
 void clipModeFromColdStaysSilent() {
     printf("- press clip with nothing playing, then play\n");
     auto f = twoScenes();
-    // Exactly Dan's sequence: the app has just started, clip is pressed, and
-    // then the transport is started.
+    // The app has just started, clip is pressed, and then the transport is
+    // started.
     f->transport.setLauncher(true);
     f->play(0);
     f->run(f->blocksFor(4.0));
     ok("nothing sounds", f->totalNotes() == 0, std::to_string(f->totalNotes()) + " notes");
     ok("and the grid says so", soundingCount(f->transport) == 0);
-    // `start()` says it in words - "nothing plays until a clip is tapped" -
-    // and `process` used to undo it on the very next block by reading the
-    // launcher flag as a mode change and adopting the whole scene.
+    // `start()` says "nothing plays until a clip is tapped", and `process`
+    // mustn't undo that on the next block by reading the launcher flag as a
+    // mode change and adopting the whole scene.
     ok("the clock ran anyway", f->clock.position() > kBar, std::to_string(f->clock.position()));
 }
 
@@ -294,10 +284,10 @@ void launchingAColumnFromStopped() {
     printf("- launch a column, then start\n");
     auto f = twoScenes();
     f->transport.setLauncher(true);
-    // The UI queues the clips and *then* asks for play, which is the order
-    // that lets the first clip sound at tick zero.
-    // Every rack, including the one with nothing in that scene - which the
-    // grid would never do, and which the scheduler should decline.
+    // The UI queues the clips and then asks for play, so the first clip
+    // sounds at tick zero.
+    // Every rack, including the one with nothing in that scene, which the
+    // grid would never do and the scheduler should decline.
     for (int32_t r = 0; r < kRacks; ++r) f->transport.launchClip(r, 11);
     f->play(0);
     f->run(f->blocksFor(2.0));
@@ -351,15 +341,15 @@ void theModeSurvivesAStopAndAnotherStart() {
     f->play(0);
     f->run(f->blocksFor(2.0));
     f->stop();
-    // The latch used to be taken here, at the stop - which is before the mode
-    // is toggled, so it was always one step behind.
+    // The latch mustn't be taken here at the stop, which is before the mode
+    // is toggled, or it's always one step behind.
     f->transport.setLauncher(true);
     f->play(0);
     f->run(f->blocksFor(4.0));
     const uint32_t after = f->totalNotes();
     ok("a launcher started from stopped is silent", soundingCount(f->transport) == 0,
        std::to_string(soundingCount(f->transport)) + " of 4");
-    // The notes from the first playing are still counted; what matters is
+    // The notes from the first playing are still counted. What matters is
     // that the second playing added none.
     f->run(f->blocksFor(2.0));
     ok("and stays silent", f->totalNotes() == after);
@@ -373,8 +363,8 @@ void aOneShotReArmsEveryIteration() {
     f->commit();
     f->play(0);
     f->run(f->blocksFor(8.0)); // four bars, four repeats
-    // One hit per scene iteration: the origin moves each repeat, which is
-    // what re-arms it without any extra state.
+    // One hit per scene iteration: the origin moves each repeat, which
+    // re-arms it without any extra state.
     ok("fired once per repeat", f->notes(0) == 4, std::to_string(f->notes(0)));
 }
 
@@ -411,8 +401,8 @@ void nothingIsLeftSounding() {
     for (int32_t r = 0; r < kRacks; ++r) {
         if (f->racks[r].clipPlayer.notesOn() != f->racks[r].clipPlayer.notesOff()) balanced = false;
     }
-    // The invariant ClipPlayer states about itself: equal after a stop means
-    // nothing is left hanging.
+    // ClipPlayer's own invariant: equal after a stop means no note is left
+    // hanging.
     ok("every note-on has its note-off", balanced,
        std::to_string(f->racks[0].clipPlayer.notesOn()) + " on, " +
            std::to_string(f->racks[0].clipPlayer.notesOff()) + " off");
@@ -422,10 +412,8 @@ void nothingIsLeftSounding() {
 /**
  * Muting a clip mutes its frozen audio too.
  *
- * `ClipPlayer` has always skipped a muted clip's notes. `Rack::updateFrozen`
- * never looked at a clip at all - so muting a frozen clip silenced notes that
- * nobody was playing and left the audio running, on the one kind of clip whose
- * whole point is that the machine is not running. The mute chip did nothing.
+ * `ClipPlayer` skips a muted clip's notes, but `Rack::updateFrozen` has to
+ * check the mute as well, or a frozen clip keeps playing when muted.
  */
 void aMutedClipIsMutedWhenFrozen() {
     auto f = std::make_unique<Fixture>();
@@ -453,13 +441,10 @@ void aMutedClipIsMutedWhenFrozen() {
 /**
  * A frozen clip rings out past its own end, and over its own next pass.
  *
- * A freeze used to be exactly one clip long, with its ring folded into its
- * head - so a loop joined, and everything else was wrong. The last pass before
- * a scene change stopped dead at the bar line where the live track would have
- * gone on sounding; the *first* pass carried a ring no pass had played yet; and
- * a clip shorter than its own tail wrapped it on twice. The tail is a region
- * after the clip now, read by a second cursor, which is the only arrangement
- * that gets all three right at once.
+ * The tail is a region after the clip, read by a second cursor. That way the
+ * last pass before a scene change rings on past the bar line, the first pass
+ * has no ring from a pass that hasn't played, and a clip shorter than its
+ * tail doesn't wrap it twice.
  *
  * 0.5 is the body, 0.25 the ring-out, so 0.75 is both at once.
  */
@@ -471,9 +456,9 @@ void aFrozenClipRingsOutPastItsOwnEnd() {
     f->play();
     f->run(2);
 
-    // Rack 1, which has no clip in this scene and so no notes: the only sound
-    // it can make is the frozen audio, which is what every reading below
-    // depends on. Rack 0 is playing, and its machine would be in every number.
+    // Rack 1 has no clip in this scene and so no notes, so the only sound it
+    // makes is the frozen audio. Rack 0 is playing, so its machine would be
+    // in every number.
     constexpr int32_t kBody = 256; // four blocks, so the loop point is close
     constexpr int32_t kTail = 64;  // one block of ring-out
     f->freeze(1, 1, kBar, kTail, kBody);
@@ -491,7 +476,7 @@ void aFrozenClipRingsOutPastItsOwnEnd() {
     r.render(kBlockFrames);
     ok("and the ring stops when it runs out", isAbout(r.dryL[0], 0.5f), std::to_string(r.dryL[0]));
 
-    // A scene this rack has no clip in: the audio stops, the ring does not.
+    // A scene this rack has no clip in: the audio stops, the ring doesn't.
     r.updateFrozen(999, 120.0f, true);
     ok("the clip has stopped", !r.frozenActive());
     r.render(kBlockFrames);
@@ -499,7 +484,7 @@ void aFrozenClipRingsOutPastItsOwnEnd() {
     r.render(kBlockFrames);
     ok("for exactly as long as it was given", isAbout(r.dryL[0], 0.0f), std::to_string(r.dryL[0]));
 
-    // And panic cuts it mid-ring, because panic means silence.
+    // And panic cuts it mid-ring.
     r.updateFrozen(1, 120.0f, true);
     r.updateFrozen(999, 120.0f, true);
     r.allNotesOff();
@@ -509,17 +494,14 @@ void aFrozenClipRingsOutPastItsOwnEnd() {
 }
 
 /**
- * A frozen clip follows a tempo it was not rendered at, while the clock ramps.
+ * A frozen clip follows a tempo it wasn't rendered at while the clock ramps.
  *
  * A scene with a smooth tempo change spends its first bar between two tempos,
- * so it matches no clip's rendered tempo - and `updateFrozen` used to drop the
- * freeze for exactly that bar and run the machine instead. On the demo that is
- * three frozen tracks going live at once, in the scene most likely to be why
- * they were frozen: Trinity measures 87 us a rack against a stretch's 9.
- *
- * So the mismatch becomes a rate. The checks are that it engages while ramping
- * and not otherwise, that the rate is the tempo ratio, and that audio comes
- * out - a stretcher fed a bad range returns nothing and would be silent.
+ * so it matches no clip's rendered tempo. Dropping the freeze for that bar
+ * would run every frozen machine live at once (Trinity costs 87 us a rack
+ * against a stretch's 9), so the mismatch becomes a stretch rate instead.
+ * Checks it engages only while ramping, the rate is the tempo ratio, and
+ * audio comes out (a stretcher fed a bad range returns silence).
  */
 void aFrozenClipFollowsARamp() {
     auto f = std::make_unique<Fixture>();
@@ -543,8 +525,8 @@ void aFrozenClipFollowsARamp() {
     r.render(kBlockFrames);
     ok("and read plainly", r.dryL[0] == 0.5f, std::to_string(r.dryL[0]));
 
-    // A tempo it was not rendered at, and no ramp: the freeze steps aside, as
-    // it always did, because audio at the wrong tempo walks off the beat.
+    // A different tempo with no ramp: the freeze steps aside, because audio
+    // at the wrong tempo drifts off the beat.
     r.updateFrozen(1, 132.0f, true, false);
     ok("a wrong tempo drops the freeze", !r.frozenActive());
 
@@ -556,21 +538,19 @@ void aFrozenClipFollowsARamp() {
     float peak = 0.0f;
     for (int32_t i = 0; i < kBlockFrames; ++i) peak = std::max(peak, std::fabs(r.dryL[i]));
     ok("and it still makes a sound", peak > 0.1f, std::to_string(peak));
-    // Both channels, because the source is the same in both and the search is
-    // shared - the thing that keeps a stereo image together.
+    // Both channels match, because the source is the same in both and the
+    // search is shared, which keeps the stereo image together.
     bool same = true;
     for (int32_t i = 0; i < kBlockFrames; ++i) same = same && r.dryL[i] == r.dryR[i];
     ok("in both channels alike", same);
 
-    // Nothing jumps on the way in or the way out.
+    // Nothing jumps on the way in or out.
     //
-    // Dan: *"Just because we don't hear it in this example doesn't mean there
-    // won't be cases where it could happen"* - and costing the smoothing found
-    // something worse than a click. `sourcePosition()` is where the *next* hop
-    // will read, which runs ahead of the audio already emitted by up to a
-    // whole hop, so handing it to the plain read on the way out skipped up to
-    // fifteen milliseconds. Both edges are crossfaded now, and the test is
-    // that no single sample step is bigger than the material's own.
+    // `sourcePosition()` is where the next hop will read, which runs up to a
+    // whole hop ahead of the audio already output. Switching straight to the
+    // plain read there would skip up to fifteen milliseconds, so both edges
+    // are crossfaded. The test is that no sample step is bigger than the
+    // material's own.
     float worstStep = 0.0f;
     float last = r.dryL[kBlockFrames - 1];
     for (int pass = 0; pass < 24; ++pass) {
@@ -583,23 +563,22 @@ void aFrozenClipFollowsARamp() {
             last = r.dryL[i];
         }
     }
-    // The body is a flat 0.5 and the ring 0.25, so any real signal step is 0 -
-    // a jump between two read positions would show up as 0.25 or more.
+    // The body is a flat 0.5 and the ring 0.25, so any real signal step is 0.
+    // A jump between two read positions would show up as 0.25 or more.
     ok("no jump leaving the stretch", worstStep < 0.2f, std::to_string(worstStep));
 
     r.tapDry = false;
 }
 
 /**
- * A cell's cycle counts its repeats; a note's tick does not.
+ * A cell's cycle counts its repeats; a note's tick doesn't.
  *
- * `rackTick` goes back to nought at every repeat, which is what makes a
- * one-bar clip come round four times in a four-bar scene. Audio arranged on
- * the song cannot work that way: a take sung across a scene played twice is
- * one performance eight bars long, and restarting it on the second pass would
- * play the first four bars again. `rackCycleTick` is the same question asked
- * so that the answer runs on - and in clip mode it is already what the
- * launcher's own origin means, which is what lets one take serve both modes.
+ * `rackTick` goes back to zero at every repeat, which is how a one-bar clip
+ * comes round four times in a four-bar scene. Recorded audio can't work that
+ * way: a take sung across a scene played twice is one eight-bar performance,
+ * and restarting it would replay the first four bars. `rackCycleTick` keeps
+ * counting instead, and in clip mode it's the same as the launcher's origin,
+ * so one take serves both modes.
  */
 void aCellsCycleCountsItsRepeats() {
     auto f = std::make_unique<Fixture>();
@@ -624,14 +603,13 @@ void aCellsCycleCountsItsRepeats() {
 }
 
 /**
- * The claim that one recording serves both modes, put where it can fail.
+ * Checks one recording serves both modes.
  *
- * A cell shorter than its scene is the case the two modes used to disagree
- * about: the launcher gives a clip `lengthTicks() * repeat` and the arranger
- * used to give it the whole scene, so the same take would have read different
- * frames depending on which button was pressed. Four bars of scene, one bar of
- * clip, played twice - so the clip's cycle is two bars and the scene's
- * iteration is four.
+ * A cell shorter than its scene is where the modes could disagree: the
+ * launcher gives a clip `lengthTicks() * repeat`, so the arranger must too,
+ * or the same take would read different frames in each mode. Four bars of
+ * scene, one bar of clip played twice, so the clip's cycle is two bars and
+ * the scene's iteration is four.
  */
 void aShortCellsCycleAgreesInBothModes() {
     printf("- a cell shorter than its scene reads the same in both modes\n");

@@ -22,9 +22,9 @@ class SongStoreTest {
     }
 
     /**
-     * The M38b promise: a note with no expression must cost the file nothing.
-     * The document writes defaults, so without `@EncodeDefault(NEVER)` every
-     * note in every song gains three lines saying null.
+     * A note with no expression adds nothing to the file. The document writes
+     * defaults, so without `@EncodeDefault(NEVER)` every note would gain three
+     * null fields.
      */
     @Test
     fun `a note without expression writes no expression`() {
@@ -51,13 +51,13 @@ class SongStoreTest {
         assertEquals(0.75f, note.bend!!.points[1].value, 1e-6f)
         assertEquals(1, note.pressure!!.points.size)
         assertEquals(null, note.timbre)
-        // A quarter of the way up the +/-48 domain either side of centre.
+        // A quarter of the way up the +/-48 range.
         assertEquals(24f, Note.bendFrom01(note.bend!!.points[1].value), 1e-3f)
     }
 
     @Test
     fun `a song written before expression still opens`() {
-        // Exactly what an older build wrote: no curve fields at all.
+        // What an older build wrote: no curve fields at all.
         val text = SongStore.encode(Fixtures.song())
         val back = SongStore.decode(text)
         assertTrue(back.tracks.flatMap { it.clips.values }.flatMap { it.notes }.none { it.hasExpression })
@@ -104,15 +104,14 @@ class SongStoreTest {
 
     @Test
     fun aRenamedMachineOpens() {
-        // Subvert became Reflux after three tagged releases, so songs saved
-        // by those builds name a machine the registry no longer has. Without
-        // the map the track opens dead: notes on the screen and nothing
-        // played.
+        // Subvert was renamed Reflux, so older songs name a machine the
+        // registry no longer has. Without the rename map the track would load
+        // but play nothing.
         val was = """{"name":"Old","tracks":[{"id":"t","name":"T","machine":{"type":"Subvert","params":{"cutoff":0.4}}}],"scenes":[{"id":"s","name":"S"}]}"""
         val song = SongStore.decode(was)
         assertEquals("Reflux", song.tracks[0].machine.type)
         assertTrue(MachineUi.machineGroups.flatMap { it.machines }.contains(song.tracks[0].machine.type))
-        // The rename is the whole change: the patch comes through with it.
+        // The patch comes through unchanged.
         assertEquals(0.4f, song.tracks[0].machine.params["cutoff"])
     }
 
@@ -166,7 +165,7 @@ class SongStoreTest {
 
     @Test
     fun modifiersRoundTrip() {
-        // In their home slots already - chord 0, scale 1, arp 2 - so loading
+        // Already in their own slots (chord 0, scale 1, arp 2), so loading
         // gives back exactly what was saved.
         val song = Fixtures.song()
         val withEv = song.copy(tracks = song.tracks.mapIndexed { i, t ->
@@ -189,11 +188,10 @@ class SongStoreTest {
 
     @Test
     fun oldSongsHaveTheirModifiersMovedHome() {
-        // Before M34 an modifier went wherever there was room, because only
-        // two of the three could run at once. Each has its own chip and its
-        // own slot now, so a song written earlier is migrated as it loads -
-        // otherwise the chord chip reads the scale's slot as empty and the
-        // first tap quietly replaces it.
+        // Each modifier now has its own slot (chord 0, scale 1, arp 2). Older
+        // songs put them wherever there was room, so they're moved as the song
+        // loads. Otherwise the chord chip could read the scale's slot as empty
+        // and replace it on the first tap.
         val song = Fixtures.song()
         val old = song.copy(tracks = song.tracks.mapIndexed { i, t ->
             if (i == 0) t.withModifier(0, "Scale").withModifier(1, "Arp") else t

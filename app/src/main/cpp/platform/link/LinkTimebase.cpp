@@ -15,14 +15,14 @@ struct LinkTimebase::Impl {
 
     ableton::Link link;
     std::atomic<double> quantum{4.0};
-    /** The stream's (frame, nanosecond) pair, as one word each. */
+    /** The stream's (frame, nanosecond) anchor, one atomic each. */
     std::atomic<int64_t> anchorFrame{-1};
     std::atomic<int64_t> anchorNanos{0};
     std::atomic<int32_t> anchorRate{0};
     std::atomic<int64_t> fallbackMicros{0};
     std::atomic<double> blockSeconds{0.0};
 
-    /** CLOCK_MONOTONIC, which is what the audio stream stamps its anchor in. */
+    /** CLOCK_MONOTONIC, which the audio stream stamps its anchor in. */
     static int64_t monotonicNanos() {
         ::timespec ts{};
         ::clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -32,11 +32,10 @@ struct LinkTimebase::Impl {
     /**
      * How far ahead of now this block is heard, in microseconds.
      *
-     * A *duration*, deliberately, and not a time. Link's clock on Android is
-     * CLOCK_MONOTONIC_RAW and the audio stream's is CLOCK_MONOTONIC: the two
-     * tick at very slightly different rates, so a timestamp cannot be
-     * carried from one to the other - but an interval can, to a few parts
-     * per million, which is nothing over the twenty milliseconds this is.
+     * A duration on purpose. On Android Link uses CLOCK_MONOTONIC_RAW and the
+     * audio stream uses CLOCK_MONOTONIC, which run at slightly different
+     * rates, so a timestamp can't be moved between them but a short interval
+     * can.
      */
     int64_t aheadMicros(int64_t framesRendered) const {
         const int64_t frame = anchorFrame.load(std::memory_order_relaxed);
@@ -46,15 +45,15 @@ struct LinkTimebase::Impl {
                                   static_cast<double>(framesRendered - frame) * 1e9 /
                                       static_cast<double>(rate);
         const double ahead = (heardNanos - static_cast<double>(monotonicNanos())) / 1000.0;
-        // Half a second of it is not latency, it is a stale anchor.
+        // More than half a second means the anchor is stale.
         if (ahead < 0.0 || ahead > 500000.0) return fallbackMicros.load(std::memory_order_relaxed);
         return static_cast<int64_t>(ahead);
     }
 };
 
 LinkTimebase::LinkTimebase() : impl(new Impl(kDefaultBpm)) {
-    // Start/stop is always *carried*; whether the engine acts on it is the
-    // engine's setting. Enabling it here costs nothing while nobody asks.
+    // Start/stop sync is always on here. Whether the engine acts on it is an
+    // engine setting.
     impl->link.enableStartStopSync(true);
 }
 
@@ -99,13 +98,9 @@ void LinkTimebase::tempoFromApp(double bpm) {
 }
 
 /**
- * The audio thread's one question: where is everybody, at the moment this
- * block is heard?
- *
- * Not where they are *now*. `now` is when the block is being computed; it
- * will be heard an output buffer later, and a beat read at the wrong one of
- * those two times is late by exactly that buffer - twenty milliseconds at a
- * 960-frame burst, which is an audible slap against another machine.
+ * Audio thread. The session state at the moment this block will be heard,
+ * which is an output buffer after now. Reading it at now would put us late by
+ * that buffer (20 ms at a 960-frame burst).
  */
 Timebase::State LinkTimebase::capture(int64_t framesRendered) {
     State out;

@@ -3,19 +3,10 @@ package com.rm.acidulous.model
 /**
  * The small song the model tests are written against.
  *
- * **A demo song is content, and content is a bad fixture.** This was
- * `DemoSong.build()` for a long time, which meant two dozen assertions quietly
- * depended on the demo having two scenes, three tracks, a particular reverb
- * send and no note expression anywhere. Making the demo show more of the app -
- * more scenes, more tracks, a bend on one note - broke fourteen tests that were
- * not about any of that, and re-baselining the numbers would only have set the
- * trap again for the next time somebody improves the demo.
- *
- * So the fixture is here, it is deliberately minimal, and it is what M2's proof
- * song was: two scenes of different lengths, a repeat count on the first, a
- * smoothed tempo change on the second, and three tracks with clips in both.
- * Nothing in it is decorative, and it should only change when a test needs it
- * to.
+ * Kept separate from the demo song so the demo can change without breaking
+ * tests. Deliberately minimal: two scenes of different lengths, a repeat
+ * count on the first, a smoothed tempo change on the second, and three
+ * tracks with clips in both. Only change it when a test needs it.
  */
 object Fixtures {
 

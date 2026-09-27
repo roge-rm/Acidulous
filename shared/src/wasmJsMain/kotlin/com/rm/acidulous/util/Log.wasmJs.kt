@@ -4,7 +4,7 @@ private fun consoleLog(line: String): Unit = js("console.log(line)")
 private fun consoleWarn(line: String): Unit = js("console.warn(line)")
 private fun consoleError(line: String): Unit = js("console.error(line)")
 
-/** The browser's console, in Android's "L/tag: message" shape so a log reads the same everywhere. */
+/** Logs to the browser console in Android's "L/tag: message" format, so logs look the same everywhere. */
 actual object Log {
     private fun line(level: Char, tag: String, message: String, error: Throwable?) =
         "$level/$tag: $message" + (error?.let { "\n    ${it.stackTraceToString()}" } ?: "")

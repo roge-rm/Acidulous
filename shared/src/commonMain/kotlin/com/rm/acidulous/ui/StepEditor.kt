@@ -38,18 +38,18 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.res.*
 
 /**
- * Reflux's step sequencer: the old way of entering a line, as a second editor
- * over the ordinary clip. A step is the note starting on that grid tick.
- * Accent is velocity at or above 100; slide is a note long enough to overlap
- * the next step, which the voice plays as a legato glide. So the piano roll
- * shows exactly the same thing, and any machine can play the result.
+ * Reflux's step sequencer, a second editor over the normal clip. A step is
+ * the note starting on that grid tick. Accent is velocity 100 or more; slide
+ * is a note long enough to overlap the next step, which the voice plays as a
+ * legato glide. So the piano roll shows the same thing, and any machine can
+ * play the result.
  */
 @Composable
 fun StepEditor(
     clip: Clip,
     ticksPerBar: Int,
     playheadTick: Long?,
-    /** Which bar to show; the Edit screen's header owns the paging. */
+    /** Which bar to show; the Edit screen's header does the paging. */
     barIndex: Int,
     onSetStep: (tick: Int, note: Note?) -> Unit,          // null clears the step (one undo step)
     onPitchGestureBegin: () -> Unit,
@@ -125,7 +125,7 @@ private fun StepColumn(
             Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(3.dp))
                 .background(if (gate) Acid.colors.green else Acid.colors.card)
                 .then(if (lockMode && selected && gate) Modifier.border(2.dp, Acid.colors.text, RoundedCornerShape(3.dp)) else Modifier)
-                // Its pitch, a semitone a swipe; in lock mode, a double tap chooses it.
+                // Swipe for pitch, a semitone at a time; in lock mode, a double tap selects it.
                 .then(
                     when {
                         !gate -> Modifier.button(stepSaid, stepState)
@@ -139,7 +139,7 @@ private fun StepColumn(
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         if (!gate) return@awaitEachGesture
-                        // Locking: the step is chosen, not played with.
+                        // In lock mode a tap selects the step instead of changing it.
                         if (lockMode) { onSelectState(); return@awaitEachGesture }
                         val start = pitchState
                         cb.first()
@@ -173,11 +173,10 @@ private fun Toggle(label: String, on: Boolean, colour: Color, onClick: () -> Uni
 
 private val NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 /**
- * A note's name, spelled by the running scale where there is one.
+ * A note's name, spelled by the running scale if there is one.
  *
- * [spelling] comes from `Scales.spellingFor(track)`; empty means chromatic,
- * and then everything is a sharp, which is the convention when there is no
- * key to read it against.
+ * [spelling] comes from `Scales.spellingFor(track)`. Empty means chromatic,
+ * and then everything is written as a sharp.
  */
 fun noteName(pitch: Int, spelling: Map<Int, String> = emptyMap()): String {
     val pc = ((pitch % 12) + 12) % 12

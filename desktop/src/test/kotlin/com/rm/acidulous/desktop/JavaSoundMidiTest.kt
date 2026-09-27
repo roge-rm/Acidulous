@@ -16,10 +16,10 @@ import javax.sound.midi.Transmitter
 import javax.sound.midi.spi.MidiDeviceProvider
 
 /**
- * The desktop's MIDI adapter against a loopback: what is sent to "Loop" comes
- * back from it. Registered as a Java Sound provider (see
- * META-INF/services), the way a real driver is, and listed - as Java Sound
- * lists every device - as two entries of one name, one each way.
+ * The desktop MIDI adapter against a loopback: whatever is sent to "Loop"
+ * comes back from it. It's registered as a Java Sound provider (see
+ * META-INF/services) like a real driver, and listed as two entries with the
+ * same name, one each way, like Java Sound lists every device.
  */
 class JavaSoundMidiTest {
     private fun open(midi: JavaSoundMidi): MidiOpenDevice {
@@ -76,10 +76,10 @@ class JavaSoundMidiTest {
 }
 
 /**
- * Two Java Sound devices named "Loop": one to send to, one that hears what was
- * sent. Java Sound makes a provider more than once and matches devices by the
- * identity of their Info, so everything here is one shared set, as a real
- * driver's is.
+ * Two Java Sound devices named "Loop": one to send to, and one that receives
+ * what was sent. Java Sound creates providers more than once and matches
+ * devices by their Info object, so everything here is shared, like a real
+ * driver's.
  */
 class LoopbackProvider : MidiDeviceProvider() {
     override fun getDeviceInfo(): Array<MidiDevice.Info> = arrayOf(Loopback.inInfo, Loopback.outInfo)

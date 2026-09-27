@@ -1,10 +1,8 @@
 #!/bin/bash
-# Re-vendor Ableton Link and asio from upstream, at the pinned versions.
+# Re-vendors Ableton Link and asio from upstream at the pinned versions.
 #
-# Run this to update them; it is also the record of exactly what was taken,
-# so third_party/link and third_party/asio can be checked against upstream by
-# anybody who wants to. Nothing here is edited on the way in - the only files
-# of ours in those trees are CMakeLists.txt and PROVENANCE.md.
+# Nothing is edited on the way in. The only files of ours in those trees are
+# CMakeLists.txt and PROVENANCE.md.
 set -eu
 LINK_TAG=Link-4.0
 ASIO_TAG=asio-1-36-0   # the submodule Link pins at that tag
@@ -17,13 +15,12 @@ echo "cloning $LINK_TAG and its asio submodule ..."
 git clone -q --depth 1 --branch "$LINK_TAG" --recurse-submodules --shallow-submodules \
     https://github.com/Ableton/link.git "$WORK/link"
 
-# --- Link: the headers, and only the platforms this app builds for ----------
+# --- Link: the headers, only for the platforms we build for -----------------
 rm -rf "$OUT/link/include" "$OUT/link/LICENSE.md" "$OUT/link/GNU-GPL-v2.0.md" "$OUT/link/README.md"
 mkdir -p "$OUT/link/include"
 cp -r "$WORK/link/include/ableton" "$OUT/link/include/"
-# Left behind: the tests, the Link Audio extension (a different feature), and
-# the platforms nothing here builds for. Windows is kept for the desktop's
-# Windows build.
+# Leave out the tests, the Link Audio extension and platforms we don't build
+# for. Windows is kept for the desktop build.
 rm -rf "$OUT/link/include/ableton/test" \
        "$OUT/link/include/ableton/link_audio" \
        "$OUT/link/include/ableton/LinkAudio.hpp" "$OUT/link/include/ableton/LinkAudio.ipp" \
@@ -31,10 +28,9 @@ rm -rf "$OUT/link/include/ableton/test" \
        "$OUT/link/include/ableton/platforms/esp32"
 cp "$WORK/link/LICENSE.md" "$WORK/link/GNU-GPL-v2.0.md" "$WORK/link/README.md" "$OUT/link/"
 
-# --- asio: the include tree whole ------------------------------------------
-# Not the subset Link happens to reach today: asio's headers include each
-# other freely, the subset differs by platform, and a header missing from a
-# future build is a worse problem than four megabytes of text.
+# --- asio: the whole include tree ------------------------------------------
+# asio's headers include each other freely and differ by platform, so copy
+# them all instead of just what Link uses today.
 rm -rf "$OUT/asio/include"
 mkdir -p "$OUT/asio"
 cp -r "$WORK/link/modules/asio-standalone/asio/include" "$OUT/asio/"

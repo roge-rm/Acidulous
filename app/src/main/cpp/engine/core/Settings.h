@@ -2,30 +2,24 @@
 #include <atomic>
 #include <cstdint>
 
-// The handful of engine-wide choices that belong to the device rather than
-// to the song: how hard the engine is allowed to work, and how much it is
-// allowed to sound like it.
+// Engine-wide settings that belong to the device, not the song, such as how
+// hard the engine is allowed to work.
 //
-// Read on the audio thread, written from the UI, so each one is an atomic
-// and each is a plain value with a sane default - a setting that has never
-// been written must behave exactly as the app did before it existed.
+// Read on the audio thread and written from the UI, so each one is an atomic.
+// The defaults match how the app behaved before each setting existed.
 namespace acidulous {
 
 struct EngineSettings {
     /**
-     * Notes a rack may hold at once, 0 for no limit. Counted as held notes
-     * rather than as voices: a voice that is releasing costs a fraction of
-     * one that is being played, and a machine knows how to steal its own.
+     * Notes a rack may hold at once, 0 for no limit. Counts held notes, not
+     * voices, since releasing voices are cheap and each machine steals its own.
      */
     std::atomic<int32_t> voiceLimit{0};
 
     /**
-     * 1 is everything the engine can do; 0 trades some of it for headroom on
-     * a phone that has not got any. It reaches the master reverb's density
-     * and the distortion's oversampling, and nothing that would change a
-     * song's parameters.
-     *
-     * **It never reaches a file.** See [offlineRender].
+     * 1 is full quality. 0 saves CPU on slow phones by lowering the master
+     * reverb's density and the distortion's oversampling. It never changes a
+     * song's parameters, and never applies to a render (see [offlineRender]).
      */
     std::atomic<int32_t> quality{1};
 
@@ -33,19 +27,13 @@ struct EngineSettings {
     std::atomic<int32_t> recordBits{24};
 
     /**
-     * Set while the engine is rendering to a file rather than to a speaker.
+     * Set while the engine is rendering to a file instead of the speaker.
      *
-     * **A render has no deadline.** An export and a freeze both stop the audio
-     * stream and drive `renderBlock` in a loop as fast as the machine allows,
-     * so there is no callback to miss and nothing to be gained by working less
-     * hard - it simply takes as long as it takes. Lean exists to buy headroom
-     * that a render does not need.
-     *
-     * So it is not a *setting* the render saves and restores: the automatic
-     * quality watcher moves on the interface's poll while a render runs on a
-     * worker, and a saved-and-restored value is a race that would change
-     * quality part way through a file. The flag is read where the answer is
-     * given instead, so nothing can reach past it.
+     * Exports and freezes run `renderBlock` in a loop with the stream stopped,
+     * so there's no deadline and they always use full quality. This is a
+     * separate flag instead of saving and restoring [quality], because the
+     * automatic quality watcher can change [quality] from the UI while a
+     * render runs on a worker thread.
      */
     std::atomic<bool> offlineRender{false};
 
@@ -56,11 +44,8 @@ struct EngineSettings {
 };
 
 /**
- * Everything the engine can do - always, while rendering to a file.
- *
- * Every lean branch in the engine goes through here, so writing the answer in
- * one place is what makes "an export is always full" true of all of them at
- * once, including the ones added after this was written.
+ * True for full quality, and always true while rendering to a file. Every
+ * lean branch in the engine should check this.
  */
 inline bool fullQuality() {
     const EngineSettings &s = EngineSettings::get();

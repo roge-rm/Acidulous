@@ -6,35 +6,31 @@
 #include <engine/dsp/Math.h>
 #include <engine/dsp/MultiFilter.h>
 
-// What is between the guitar and the speaker: two preamp stages, a tone stack
-// that fights with itself, and a power stage whose supply sags.
+// The stages between the guitar and the speaker: two preamp stages, an
+// interactive tone stack, and a power stage whose supply sags.
 //
-// The order is the amp's order, and every part of it is load-bearing:
+// The order follows a real amp:
 //
 //   input HP -> low shelf -> bright cap -> NL A -> interstage HP -> NL B
 //   -> tone stack -> presence -> [sag detector] -> NL C -> output transformer
 //
-// **`presence` is before the power stage, not after.** In a real amp it is a
-// tilt inside the negative feedback loop - it makes the output stage work
-// harder in the upper mids. After the power stage it is a treble knob and the
-// entire point is lost. It is the most commonly botched placement there is.
+// Presence comes before the power stage. In a real amp it's inside the
+// negative feedback loop and makes the output stage work harder in the upper
+// mids. After the power stage it would just be a treble knob.
 //
-// **The interstage highpass is why a high-gain cascade sounds tight.** Two
-// cascaded tanhs with nothing between them are mush; a real amp has a coupling
-// capacitor between every stage, so stage B is fed a bass-shy stage A. It also
-// does DC duty: stage A's bias makes a real offset, stage B amplifies it and
-// then clips around it, and what comes out is an asymmetry nobody asked for.
+// The interstage highpass keeps high gain tight, like the coupling capacitor
+// between stages in a real amp. It also removes the DC offset stage A's bias
+// creates, which stage B would otherwise clip around.
 //
-// **Nothing here is a hard clamp.** A clamp has infinite bandwidth and 2x
-// oversampling will not save it. The power stage is a tanh inside a tanh,
-// which gives a harder knee than one with no discontinuity anywhere - and that
-// is what buys the right to stay at 2x rather than needing 4x.
+// There are no hard clamps, since those alias badly even at 2x. The power
+// stage is a tanh inside a tanh, which gives a harder knee while staying
+// smooth, so 2x oversampling is enough.
 namespace acidulous::effect::amp {
 
-/** Which amp this is. It changes far more than the tone stack. */
+/** The amp type. It changes much more than the tone stack. */
 enum Stack : int32_t { Us = 0, Uk = 1, Modern = 2, StackCount = 3 };
 
-/** Everything the voicing decides, looked up once a block. */
+/** Everything set by the amp type, looked up once a block. */
 struct Voicing {
     float bassHz, bassLo, bassHi;
     float midRef, scoopBase, scoopSpan, midQ;
@@ -48,16 +44,15 @@ struct Voicing {
 
 inline Voicing voicingOf(int32_t stack) {
     switch (stack) {
-    // **A passive stack can only attenuate**, which is why every one of these
-    // shelves runs from a large cut up to about nothing rather than from a cut
-    // to a boost. An amp's make-up gain is the stage after it, not the stack;
-    // a stack that boosts is an equaliser wearing its name.
+    // A passive stack can only cut, so every shelf goes from a large cut up
+    // to about zero instead of from a cut to a boost. The stage after it
+    // makes up the gain.
     case Uk:
         return {90.0f, -15.0f, 2.0f, 650.0f, 3.0f, 12.0f, 0.70f, 3000.0f, -14.0f, 2.0f,
                 -4.0f, 150.0f, 5.0f, 3000.0f, 90.0f, 0.30f, 0.8f};
     case Modern:
-        // The least scooped of the three on purpose: a modern high-gain amp
-        // does its scooping with gain structure, and its stack is flatter.
+        // The least scooped of the three, since a modern high-gain amp gets
+        // its scoop from the gain stages and has a flatter stack.
         return {70.0f, -12.0f, 3.0f, 800.0f, 2.0f, 5.0f, 1.00f, 4500.0f, -10.0f, 3.0f,
                 -8.0f, 220.0f, 0.0f, 3000.0f, 160.0f, 0.15f, 0.5f};
     default:
@@ -69,28 +64,22 @@ inline Voicing voicingOf(int32_t stack) {
 /**
  * The tone stack: three sections whose coefficients are cross-coupled.
  *
- * **Not a solved RC network.** The real Fender/Marshall stack is third order
- * and `Biquad` is second, so it would want a cubic factorisation per block on
- * the audio thread - which is where the NaN at an extreme knob setting comes
- * from. Worse, at all-pots-zero the network is genuinely near-degenerate and
- * its poles crawl towards the unit circle; a cascade of cookbook sections
- * **cannot** go unstable, and that guarantee is worth a great deal in
- * something anybody can automate.
+ * This isn't a solved RC network. The real Fender/Marshall stack is third
+ * order and would need a cubic factorisation per block on the audio thread,
+ * which can give NaNs at extreme settings, and it gets close to unstable
+ * with all pots at zero. A cascade of cookbook sections can't go unstable,
+ * which matters since anything can be automated.
  *
- * What a player hears from a real stack is three facts, and all three are
- * cheap:
+ * What you hear from a real stack:
  *
- *   - mid is not a boost and cut at a fixed frequency; it sets the floor of a
- *     scoop whose corner slides;
- *   - **bass and treble up deepens that scoop**, because a passive stack can
- *     only attenuate - a Marshall at all-ten is about ten decibels down at a
- *     kilohertz;
- *   - treble's corner moves with mid, because they share a node.
+ *   - mid isn't a fixed boost or cut, it sets the floor of a scoop whose
+ *     corner slides
+ *   - bass and treble up deepens that scoop, since a passive stack can only
+ *     cut. A Marshall on all ten is about 10 dB down at 1 kHz
+ *   - treble's corner moves with mid, since they share a node
  *
- * The scoop depth runs on the **product** of bass and treble, which is the
- * whole trick: turn either one down and the mid fills back in. Independent
- * shelves never do that, and it is the single thing that tells a tone stack
- * from an equaliser.
+ * The scoop depth follows bass times treble, so turning either one down
+ * fills the mids back in. Separate shelves wouldn't do that.
  */
 class ToneStack {
   public:
@@ -105,12 +94,9 @@ class ToneStack {
     }
 
     void set(const Voicing &v, float b, float m, float t) {
-        // **Make-up, so the stack does not also set the level.** Everything in
-        // a passive network is a cut, so halfway on every control is a long
-        // way down; the amp after it makes that back. Measured from the
-        // network's own response at the middle setting rather than typed in as
-        // a number somebody tuned once - and only when the voicing moves,
-        // because it costs three sections' worth of coefficients.
+        // Make-up gain so the stack doesn't also change the level. It's
+        // measured from the stack's own response with every control halfway,
+        // and only redone when the voicing changes since it's not cheap.
         if (v.midRef != builtFor) {
             builtFor = v.midRef;
             dsp::Biquad rl, rm, rh;
@@ -123,9 +109,8 @@ class ToneStack {
         }
         low.lowShelf(v.bassHz, v.bassLo + (v.bassHi - v.bassLo) * b, sr);
         const float midHz = dsp::clampf(v.midRef * std::pow(2.0f, -1.0f * t + 0.35f * b), 60.0f, 4000.0f);
-        // Never below 0.5: `Biquad::peak` clamps Q at 0.1, and a fifteen
-        // decibel cut at Q 0.1 is a three-octave hole rather than a scoop -
-        // the control dies quietly, which is worse than it blowing up.
+        // At least 0.5. `Biquad::peak` clamps Q at 0.1, and a 15 dB cut at Q
+        // 0.1 is a three-octave hole instead of a scoop.
         const float q = dsp::clampf(v.midQ + 0.7f * b * t, 0.5f, 4.0f);
         mid.peak(midHz, -(v.scoopBase + v.scoopSpan * b * t) * (1.0f - m), q, sr);
         high.highShelf(dsp::clampf(v.trebRef * std::pow(2.0f, -0.5f * m), 300.0f, sr * 0.4f),
@@ -145,19 +130,14 @@ class ToneStack {
 };
 
 /**
- * The power stage, and the supply that droops under it.
+ * The power stage and its sagging supply.
  *
- * **Feedforward, from the stage's input.** Physically right - a preamp draws a
- * milliamp and an output stage a hundred, so it is the output stage that pulls
- * the rail down - and it is also what keeps this implementable. Detect on the
- * stage's *output* for accuracy and you have a limiter loop with a twelve
- * millisecond time constant and a loop gain above one, which **motorboats at
- * thirty to eighty hertz** at high sag and high master, and gets blamed on the
- * cab.
+ * Sag is detected from the stage's input (feedforward). The output stage is
+ * what pulls the rail down in a real amp, and detecting on the output would
+ * make a feedback loop that oscillates at 30-80 Hz with high sag and master.
  *
- * Twelve milliseconds down and two hundred and twenty back: the eighteen-to-one
- * asymmetry *is* the sound, because a rectifier only conducts on peaks, so a
- * rail refills far more slowly than it empties.
+ * 12 ms attack and 220 ms release. A rectifier only conducts on peaks, so
+ * the rail refills much more slowly than it empties, and that's the sound.
  */
 class PowerStage {
   public:
@@ -178,13 +158,13 @@ class PowerStage {
     void set(float master, float sagAmt, float sagScale) {
         gm = 1.0f + master * 14.0f;
         sag = sagAmt * sagScale;
-        // The normaliser once a block from the block's opening rail: per
-        // sample it is a divide and a tanh at twice the rate for a level error
-        // under half a decibel across sixty-four frames.
+        // The normaliser is worked out once a block from the rail at the start
+        // of the block. Doing it per sample would cost a divide and a tanh
+        // for under 0.5 dB of difference.
         const float atNom = std::tanh(1.2f * std::tanh(dsp::kDriveNominal * gm / railNow));
         norm = atNom > 1e-6f ? dsp::kDriveNominal / atNom : 1.0f;
-        // The output transformer: a peak whose depth tracks the rail, which is
-        // why a sagging amp sounds *loose* rather than merely compressed.
+        // The output transformer: a peak whose depth follows the rail, so a
+        // sagging amp sounds loose and not just compressed.
         ot.peak(85.0f, 2.5f * railNow, 0.8f, sr);
         otLow.lowpass(11000.0f, 0.707f, sr);
         block.setSampleRate(sr);
@@ -197,11 +177,10 @@ class PowerStage {
         demand = dsp::undenormal(demand);
         const float load = dsp::clampf(demand * gm / 3.0f, 0.0f, 1.0f);
         railNow = 1.0f - sag * 0.45f * load;
-        // Drive harder *and* clip lower, which is where the compression comes
-        // from without a compressor being anywhere.
+        // Drive harder and clip lower as the rail drops, which compresses.
         const float y = std::tanh(1.2f * std::tanh(x * gm / railNow)) * norm * railNow;
-        // The transformer cannot pass DC, and this is after the sag because a
-        // moving offset is a thump rather than an offset.
+        // The transformer can't pass DC. This comes after the sag because a
+        // moving offset would thump.
         return block.highpass(otLow.process(ot.process(y)));
     }
 

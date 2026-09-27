@@ -3,9 +3,8 @@ package com.rm.acidulous.ui
 import androidx.compose.runtime.Composable
 
 /**
- * Runtime permissions: Android's, which the microphone and a Bluetooth scan
- * need. A desktop has none to ask for, so everything is already granted
- * there. Names are Android's manifest names.
+ * Android runtime permissions, for the microphone and Bluetooth scans.
+ * Names are Android's manifest names. On desktop everything is granted.
  */
 interface Permissions {
     fun has(name: String): Boolean
@@ -17,6 +16,6 @@ interface Permissions {
     }
 }
 
-/** A way to ask, remembered in the composition; [onResult] hears whether everything asked for was granted. */
+/** [onResult] gets whether everything asked for was granted. */
 @Composable
 expect fun rememberPermissions(onResult: (Boolean) -> Unit): Permissions

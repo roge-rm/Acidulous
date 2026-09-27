@@ -30,8 +30,8 @@ class TuningTest {
     fun nineteenStepsPutTheOctaveNineteenKeysUp() {
         val t = Tunings.builtIn.first { it.name == "19 equal" }
         val r = Tunings.ratios(t, 0)
-        // Key 60 is C and stays; key 79 is the octave, which in equal
-        // temperament would be G - seven hundred cents below where it is now.
+        // Key 60 is C and stays put. Key 79 is the octave, which in equal
+        // temperament would be G, 700 cents lower.
         assertEquals(1f, r[60], 1e-6f)
         assertEquals(1200.0 - 1900.0, cents(r[79]), 0.01)
         assertEquals(1200.0 / 19 - 100.0, cents(r[61]), 0.01)

@@ -7,7 +7,7 @@ namespace acidulous::audio {
 
 namespace {
 
-/** Six to one: 48 kHz down to 8, which is where the pitch is looked for. */
+/** 48 kHz down to 8 kHz, where the pitch is searched for. */
 constexpr int32_t kDecim = 6;
 
 } // namespace
@@ -32,34 +32,15 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
     hopFrames = sampleRate * kHopMs * 0.001f;
     if (frames <= 0) return;
 
-    // --- rumble, first ------------------------------------------------------
+    // --- remove rumble first ------------------------------------------------
     //
-    // Anything below the lowest pitch this can report is, by definition, not
-    // a pitch. It is rumble, and in a forty millisecond window it is not even
-    // a low note - it is a drift across the window, which correlates with
-    // itself best at the *shortest* lag and less and less as the lag grows.
-    // So a take with rumble under it produces a score curve that falls
-    // monotonically from the minimum lag, with no peak at the true period
-    // anywhere, and the tracker pegs at its own ceiling for every frame.
+    // Rumble below kMinHz drifts across a 40 ms window and correlates best at
+    // the shortest lag, so the tracker reads every frame at its maximum pitch.
+    // Phone recordings nearly always have it. It takes four poles to fix; one
+    // or two aren't enough. Clean material is unaffected.
     //
-    // Which is exactly what a real recording did. Dan's voice take - a phone
-    // in a room, which is what this machine will always be fed - is dominated
-    // below eighty hertz for much of its length, and every frame of it came
-    // back as 889 Hz and voiced. Synthetic material has no rumble by
-    // construction, so the analyser had never met the case: Molt worked
-    // perfectly on a signal nobody will ever sing.
-    //
-    // Four poles at kMinHz, not one or two. Measured on that take: one pole
-    // and two poles both leave it pegged at 800 Hz, four bring it to 116 Hz,
-    // against a median fundamental of about 125 measured by other means. The
-    // synthetic take reads 125 Hz throughout and is unmoved by any of it,
-    // which is the point - this takes nothing away from material that was
-    // already clean.
-    //
-    // `Utterance::analyse` now does this to the take itself before it gets
-    // here, so for that caller this pass is close to a no-op - but `find` is
-    // also driven on its own by the harness, and a tracker that is only
-    // correct when somebody else has cleaned up first is a trap.
+    // `Utterance::analyse` already does this (and passes [cleaned]), but the
+    // harness calls `find` directly, so it's done here too.
     std::vector<float> clean(mono.begin(), mono.begin() + frames);
     if (!cleaned) removeRumble(clean, sampleRate, kMinHz, 4);
 
@@ -87,9 +68,8 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
 
     for (int32_t h = 0; h < hops; ++h) {
         const int32_t at = h * hop;
-        // A window that runs off the end is simply short; the normalisation
-        // below divides by what was actually summed, so a half window still
-        // gives an honest correlation rather than a quiet one.
+        // A window that runs off the end is just shorter. The normalisation
+        // uses what was actually summed, so it's still correct.
         const int32_t len = std::min(window, lowFrames - at);
         if (len <= maxLag + 2) break;
 
@@ -112,8 +92,8 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
                 energy += b * b;
             }
             if (energy < 1e-9) continue;
-            // Normalised against both halves, so a lag that merely points at
-            // a louder stretch of audio does not win on volume.
+            // Normalised against both halves so a lag doesn't win just by
+            // pointing at louder audio.
             const float score = static_cast<float>(corr / std::sqrt(power * energy));
             scores[static_cast<size_t>(lag - minLag)] = score;
             bestScore = std::max(bestScore, score);
@@ -129,27 +109,16 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
         }
         if (bestLag <= 0) { wasVoiced = false; continue; }
 
-        // Halve while halving is just as good, and no further.
+        // Halve the lag while the half scores nearly as well.
         //
-        // A perfectly periodic voice correlates with itself two periods away
-        // exactly as well as one, so which of the two wins is down to
-        // rounding - and the answer comes out an octave low whenever the
-        // second harmonic is the stronger, which for a voice with its
-        // formants moved up is most of the time.
-        //
-        // Only exact sub-multiples of the winner are considered, and only at
-        // ninety-five per cent of its score. Scanning every lag for the first
-        // that is merely close instead lands on the first formant: a vowel at
-        // 180 Hz rings at 700, which is periodic enough over a few cycles to
-        // pass a looser test and is four times wrong.
+        // A voice correlates about as well two periods away as one, so the
+        // winner can be an octave low. Only exact halves are tried, at 95% of
+        // the best score. A looser test lands on the first formant instead.
         for (int32_t k = 0; k < 3; ++k) {
             const int32_t half = bestLag / 2;
             if (half - 1 < minLag) break;
-            // Either side of the halving, because it rounds. A lag of 61 at
-            // eight kHz is 131 Hz and its half is 30.5, so the integer 30 is
-            // a fifth of a semitone out - which at this resolution costs
-            // enough correlation to fail the test and leave the octave error
-            // standing. The neighbours cost two more multiplications.
+            // Check either side of the half as well, since halving an odd
+            // lag rounds and the rounded lag can score too low to pass.
             float bestHalf = 0.0f;
             int32_t halfLag = half;
             for (int32_t l = half - 1; l <= half + 1 && l <= maxLag; ++l) {
@@ -163,11 +132,8 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
             bestLag = halfLag;
         }
 
-        // Parabolic interpolation over the three correlations around the peak
-        // would need them kept; the cheaper refinement is to search the
-        // original rate in a narrow band, which also undoes the decimation's
-        // own quantisation - one low-rate frame is six real ones, and at 200
-        // Hz that is a whole semitone.
+        // Refine by searching a narrow band at the original rate. One
+        // decimated frame is six real ones, which at 200 Hz is a semitone.
         const float coarse = lowRate / static_cast<float>(bestLag);
         const int32_t fineCentre = static_cast<int32_t>(sampleRate / coarse);
         const int32_t fineFrom = std::max(2, fineCentre - kDecim);
@@ -201,19 +167,12 @@ void PitchTrack::find(const std::vector<float> &mono, int32_t frames, float samp
         wasVoiced = true;
     }
 
-    // --- and then the octave errors, which are not errors of measurement ---
+    // --- then fix octave jumps -----------------------------------------------
     //
-    // Every hop above decides on its own, and for a periodic signal the
-    // octave is genuinely ambiguous: a voice correlates with itself two
-    // periods away exactly as well as one. The walk at the top picks one, and
-    // on a real take it picks differently from its neighbour one time in five
-    // - a fifth of the track jumping more than seven semitones between hops
-    // ten milliseconds apart, which no voice does.
-    //
-    // A five-hop median settles it, because an octave error is a minority
-    // report among its neighbours and a sung interval is not. Only voiced
-    // hops vote, so a median never invents a pitch where there was none and
-    // never drags one toward a silence.
+    // Each hop picks its octave on its own, and neighbouring hops sometimes
+    // disagree. A five-hop median removes the odd one out, since a real sung
+    // interval lasts longer than that. Only voiced hops vote, so it never
+    // invents a pitch or pulls one toward silence.
     {
         std::vector<float> smoothed = hz;
         std::vector<float> near;
@@ -242,8 +201,7 @@ float PitchTrack::periodAt(float pos, float sampleRate) const {
     }
     const float a = hz[static_cast<size_t>(i)];
     const float b = hz[static_cast<size_t>(i + 1)];
-    // An unvoiced neighbour is not averaged in - it would drag the period
-    // toward nothing. Whichever end has a pitch speaks for both.
+    // Don't average with an unvoiced neighbour. Use whichever end has a pitch.
     if (a <= 0.0f && b <= 0.0f) return 0.0f;
     if (a <= 0.0f) return sampleRate / b;
     if (b <= 0.0f) return sampleRate / a;
@@ -257,27 +215,16 @@ void Utterance::analyse(float sampleRate) {
     frames = static_cast<int32_t>(mono.size());
     if (frames <= 1) return;
 
-    // Before anything reads it - see the header. Four poles at the tracker's
-    // own floor, which is the strength that was measured to work: one pole
-    // and two both left a real take pegged at the tracker's ceiling.
+    // Before anything reads it (see the header). Four poles at the tracker's
+    // floor, since fewer aren't enough.
     removeRumble(mono, sampleRate, PitchTrack::kMinHz, 4);
 
-    // **And then the room before the voice.**
+    // Then trim the room tone before the voice starts, so notes don't start
+    // late.
     //
-    // Somebody presses record, and then they sing. A real take had four
-    // hundred milliseconds of room tone in front of it, twenty to thirty
-    // decibels under the phrase - which is silence to a listener and is not
-    // silence to a machine that starts reading at frame nought. Every note
-    // began in it: the harness timed the bank at four hundred and fifty
-    // milliseconds to speak, where over two hundred and fifty is a warning,
-    // and measured the note-on's corner against a stretch of nothing, which
-    // is a number with no meaning in it.
-    //
-    // Twenty decibels under the take's own level, in ten millisecond
-    // windows, and then back off by two of them so the first consonant keeps
-    // its front. A breath that is part of the phrase is well above that; a
-    // room is well below it. Only the front - what comes after the last word
-    // is the take's own decay, and `loop` wants it.
+    // Finds the first 10 ms window within 20 dB of the take's level and backs
+    // off two windows so the first consonant keeps its start. Only the front
+    // is trimmed, since `loop` needs the tail.
     {
         double sum = 0.0;
         for (float v : mono) sum += static_cast<double>(v) * v;
@@ -301,9 +248,8 @@ void Utterance::analyse(float sampleRate) {
     PitchTrack track;
     track.find(mono, frames, sampleRate, true);
 
-    // The median rather than the mean: a take ends on a sigh and starts on a
-    // breath, and both are found as pitches somewhere absurd. The middle of
-    // the sorted list does not care, and an average would be dragged.
+    // The median, not the mean, so odd pitches from breaths at either end
+    // don't pull it off.
     {
         std::vector<float> voiced;
         voiced.reserve(track.hz.size());
@@ -317,16 +263,12 @@ void Utterance::analyse(float sampleRate) {
         }
     }
 
-    // Unvoiced marks go down every five milliseconds. Short enough that a
-    // consonant is carried by several of them and its noise is not repeated
-    // audibly, long enough that a second of hiss is two hundred grains and
-    // not two thousand.
+    // Unvoiced marks every 5 ms. Short enough that repeated noise isn't
+    // audible, long enough to keep the grain count down.
     const float unvoicedPeriod = sampleRate * 0.005f;
 
-    // Where the marks fall, before any of them is pulled onto a peak. The
-    // walk does not depend on the snapping - `pos` advances by the period the
-    // tracker reports and never by where a mark ended up - so it can be done
-    // first, and the polarity decided from all of it.
+    // A first pass of marks, before snapping to peaks, used only to decide
+    // the polarity below.
     std::vector<Epoch> raw;
     for (float pos = 0.0f; pos < static_cast<float>(frames);) {
         const float period = track.periodAt(pos, sampleRate);
@@ -338,26 +280,13 @@ void Utterance::analyse(float sampleRate) {
         pos += e.period;
     }
 
-    // **Which way up a glottal pulse is, decided once for the take.**
+    // Decide once for the whole take which way up the glottal pulses are.
     //
-    // A voiced mark is pulled onto the biggest sample within a quarter
-    // period, because overlap-add wants every grain cut at the same point in
-    // the cycle; cut them at arbitrary phases instead and the sum of two of
-    // them cancels as often as it adds, which is heard as a hollow, phasey
-    // voice.
-    //
-    // Taking the biggest by *magnitude* does not do that. A glottal pulse has
-    // a large excursion each way and which of the two is larger is a property
-    // of the recording - the microphone, the room, the phase of everything
-    // the voice went through - and on a real take it is close to a coin toss
-    // per period. Measured on one: 48% of the marks landed on a negative
-    // sample and 52% on a positive, which is not a take that changes its mind
-    // halfway, it is alternate marks cut half a cycle apart. Grains then
-    // subtract rather than add, and the coherence between neighbours - which
-    // should be near one - came out at 0.35.
-    //
-    // So the polarity is a property of the take and is decided from the whole
-    // of it, and then every mark is snapped the same way up.
+    // Voiced marks snap to the biggest sample within a quarter period so
+    // every grain is cut at the same point in the cycle. Snapping by
+    // magnitude doesn't work, because the positive and negative peaks are
+    // often close and marks would flip between them, making grains cancel.
+    // So every mark snaps the same way up.
     double positive = 0.0, negative = 0.0;
     auto reachOf = [&](const Epoch &e) { return static_cast<int32_t>(e.period * 0.25f); };
     for (const Epoch &e : raw) {
@@ -375,23 +304,9 @@ void Utterance::analyse(float sampleRate) {
     }
     const float sign = negative > positive ? -1.0f : 1.0f;
 
-    // **The walk advances from where the last mark landed, not from where it
-    // was aimed.**
-    //
-    // The marks used to be laid on a ruler of their own - `pos += period`
-    // from the beginning of the take - and then each pulled onto the nearest
-    // peak within a quarter period. On material whose pitch the tracker gets
-    // exactly right that is the same thing. On a real take it is not: an
-    // error of a per cent or two in the period is a ruler that slides
-    // steadily away from the pulses, and a snap that reaches only a quarter
-    // of a period cannot keep pulling it back. The marks then drift in and
-    // out of alignment, and the spacing between neighbours - which should be
-    // one period - came out thirteen per cent away from it, against half a
-    // per cent on synthetic material.
-    //
-    // Stepping from the snapped mark closes the loop: the period says how far
-    // to go, the waveform says where to land, and an error in the first is
-    // corrected by the second instead of accumulating.
+    // Each step starts from where the last mark snapped to, not where it was
+    // aimed. Otherwise a small error in the period builds up and the marks
+    // drift off the pulses.
     for (float pos = 0.0f; pos < static_cast<float>(frames);) {
         const float period = track.periodAt(pos, sampleRate);
         Epoch e;
@@ -415,14 +330,13 @@ void Utterance::analyse(float sampleRate) {
             e.at = peak;
         }
 
-        // Monotonic and never on the spot: a repeated position would make a
-        // grain of zero length and the reader would sit on it forever.
+        // Always move forward. A repeated position would make a zero-length
+        // grain that the reader gets stuck on.
         if (!epochs.empty() && e.at <= epochs.back().at) e.at = epochs.back().at + 1;
         if (e.at >= frames) break;
         epochs.push_back(e);
-        // From the mark, and never backwards: a snap that pulled the mark
-        // back further than the next step goes forward would walk the take in
-        // the wrong direction and never leave.
+        // Step from the mark, but always forward by at least half a period
+        // in case the snap pulled it back.
         pos = std::max(static_cast<float>(e.at) + e.period, pos + e.period * 0.5f);
     }
 }

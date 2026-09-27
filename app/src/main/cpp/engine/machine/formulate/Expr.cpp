@@ -7,8 +7,7 @@ namespace acidulous::machine::formulate {
 
 namespace {
 
-// A quarter-degree sine in 256 steps, -127..127. Chips did it this way and
-// so does this: the input is in "brads", 256 to the cycle.
+// A sine table with 256 steps to the cycle, values -127..127.
 struct SineTable {
     int8_t v[256];
     SineTable() {
@@ -25,7 +24,7 @@ struct Token {
 
 } // namespace
 
-/** Precedence climbing, straight out of the book, over the C operator table. */
+/** A precedence climbing parser over the C operator table. */
 class Parser {
   public:
     Parser(const std::string &src, Expr &out) : s(src), e(out) {}
@@ -226,7 +225,7 @@ class Parser {
 bool Expr::parse(const std::string &source, Expr &out, std::string &error) {
     out.ops.clear();
     out.text = source;
-    // An empty formula is not an error; it is a machine with no formula in it.
+    // An empty formula is allowed and just means there's no formula.
     bool anything = false;
     for (char ch : source) if (!std::isspace(static_cast<unsigned char>(ch))) anything = true;
     if (!anything) return true;
@@ -271,8 +270,8 @@ int32_t Expr::eval(const Vars &vars) const {
             case Op::And: push(lhs & rhs); break;
             case Op::Or: push(lhs | rhs); break;
             case Op::Xor: push(lhs ^ rhs); break;
-            // Shifts are clamped rather than undefined: a formula is typed by
-            // hand and "t >> 99" should be zero, not a crash.
+            // Shifts outside 0..31 are clamped so "t >> 99" gives zero instead
+            // of undefined behaviour.
             case Op::Shl: push(rhs < 0 || rhs > 31 ? 0 : static_cast<int32_t>(static_cast<uint32_t>(lhs) << rhs)); break;
             case Op::Shr: push(rhs < 0 || rhs > 31 ? (lhs < 0 ? -1 : 0) : lhs >> rhs); break;
             case Op::Lt: push(lhs < rhs ? 1 : 0); break;

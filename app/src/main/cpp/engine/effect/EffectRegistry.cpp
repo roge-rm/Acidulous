@@ -42,8 +42,8 @@ Effect *EffectRegistry::create(const char *typeName) {
 }
 
 const ParamDef *EffectRegistry::paramDefs(const char *typeName, int32_t &count) {
-    // One probe instance per type, built on first use; the tables are static
-    // inside each paramDefs() so the probe only serves to reach them.
+    // One probe instance per type, built on first use. The tables are static
+    // inside each paramDefs(), the probe is just a way to reach them.
     static Effect *probes[kCount] = {};
     for (int32_t i = 0; i < kCount; ++i) {
         if (std::strcmp(kEntries[i].name, typeName ? typeName : "") == 0) {

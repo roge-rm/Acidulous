@@ -7,13 +7,10 @@
 #include <vector>
 
 // What every audio reader produces before it becomes a SampleData, and the
-// one piece of arithmetic they all share.
+// code they share.
 //
-// A container is a container: WAV, AIFF, FLAC and MP3 differ entirely in how
-// they store the numbers and not at all in what the numbers mean afterwards.
-// So each reader's job ends at "channel planes at the file's own rate", and
-// the truncation, the resampling and the naming happen once, here, where a
-// change to any of them reaches all four.
+// Each reader stops at channel planes at the file's own rate. Truncation,
+// resampling and naming happen here, once, for all four formats.
 namespace acidulous {
 
 /** Channel planes at the file's own rate, before anything is done to them. */
@@ -25,11 +22,9 @@ struct DecodedAudio {
     /**
      * Set by a reader that stopped early because it hit the cap.
      *
-     * The readers cap as they go rather than decoding a whole file and
-     * throwing most of it away, so by the time `assemble` sees the planes
-     * they are already the right length and it cannot tell that anything was
-     * lost. Without this the "only the first N seconds arrived" message was
-     * unreachable: every reader trimmed, so nothing was ever reported.
+     * Readers stop decoding at the cap, so `assemble` gets planes that are
+     * already the right length and can't tell anything was cut. This flag
+     * lets the "only the first N seconds" message show.
      */
     bool truncated = false;
 };
@@ -37,23 +32,21 @@ struct DecodedAudio {
 /**
  * The longest a sample can be, in seconds.
  *
- * Two ceilings, because the two uses cost differently. A pad sample is one of
- * thirteen and thirty seconds of it is 11.5 MB; thirteen of those is already
- * 150 MB. A slice source is one file for the whole machine - it is mounted
- * once at Forage::kSharedSlot and every pad reads a region of it - so it can
- * afford to be a whole track. Ten minutes of stereo float at 48 kHz is
- * 230 MB, which is the price of slicing an album track and is knowingly paid.
+ * A pad sample is one of thirteen, and 30 seconds is 11.5 MB each, so 150 MB
+ * for all of them. A slice source is one file for the whole machine (mounted
+ * at Forage::kSharedSlot, each pad reads a region of it), so it can be a whole
+ * track. Ten minutes of stereo float at 48 kHz is 230 MB.
  */
 constexpr int32_t kMaxDecodeSeconds = 30;
 constexpr int32_t kMaxSliceSeconds = 600;
 
 /**
- * Planes in, a mounted sample out.
+ * Turns decoded planes into a SampleData.
  *
- * A [targetRate] of zero or less keeps the file's own rate, which is what a
- * multisample wants: it takes the ratio into account when it pitches, so
- * resampling a whole instrument would only cost quality. Everything else
- * resamples, because every machine but Mosaic assumes the engine rate.
+ * A [targetRate] of zero or less keeps the file's own rate. Multisamples use
+ * that since they account for the rate when pitching, and resampling would
+ * only lose quality. Everything else resamples, because every machine except
+ * Mosaic assumes the engine rate.
  */
 inline std::unique_ptr<SampleData> assemble(DecodedAudio &in, const std::string &path, int32_t targetRate,
                                            int32_t maxSeconds = kMaxDecodeSeconds) {
@@ -63,25 +56,16 @@ inline std::unique_ptr<SampleData> assemble(DecodedAudio &in, const std::string 
     if (cut) in.frames = static_cast<int32_t>(cap);
 
     auto out = std::make_unique<SampleData>();
-    // Either this cut it, or the reader did on the way in and said so.
+    // Cut here or by the reader.
     out->truncated = cut || in.truncated;
     out->stereo = in.stereo;
     const size_t slash = path.find_last_of('/');
     out->name = slash == std::string::npos ? path : path.substr(slash + 1);
 
-    // Nothing to resample: either the caller wants the file's own rate, or the
-    // file is already at the rate it asked for - which is the ordinary case,
-    // since almost everything anyone records is 48 kHz.
-    //
-    // **The planes are moved, not copied**, and that is the point of this
-    // branch. Measured on 2026-09-20 with a five-minute mono take on a Bias
-    // track: the peak was 118 MB above the resident 28 MB, because the file's
-    // bytes, the decoder's float planes and the assembled copy were all alive
-    // at once - and the copy was made by interpolating fourteen million
-    // samples at a ratio of exactly one. A move deletes both the pass and its
-    // 58 MB. What remains - the slurped file plus one set of planes - is the
-    // chunked reader's problem, and it is named in the plan rather than
-    // scheduled.
+    // Nothing to resample: the caller wants the file's own rate, or the file
+    // is already at the target rate (the usual case, most audio is 48 kHz).
+    // The planes are moved instead of copied, which saves a full copy of the
+    // audio in memory for long files.
     if (targetRate <= 0 || targetRate == in.rate) {
         out->rate = in.rate;
         out->frames = in.frames;
@@ -95,8 +79,8 @@ inline std::unique_ptr<SampleData> assemble(DecodedAudio &in, const std::string 
         return out;
     }
 
-    // Linear interpolation. Good enough for drums; a better interpolator can
-    // replace this without touching a single caller.
+    // Linear interpolation. Good enough for drums, and a better one can
+    // replace it without changing any callers.
     out->rate = targetRate;
     const double ratio = static_cast<double>(in.rate) / static_cast<double>(targetRate);
     const auto outFrames = static_cast<int32_t>(static_cast<double>(in.frames) / ratio);
@@ -120,17 +104,17 @@ inline std::unique_ptr<SampleData> assemble(DecodedAudio &in, const std::string 
     return out;
 }
 
-/** The whole file in memory, or false and why not. [ceiling] is in bytes. */
+/** Reads the whole file into memory, or returns false with [error] set. [ceiling] is in bytes. */
 bool slurp(const std::string &path, std::vector<unsigned char> &bytes, std::string &error,
            size_t ceiling = 64u * 1024u * 1024u);
 
-/** At most [maxBytes] from the front of a file - enough to recognise it. */
+/** Reads at most [maxBytes] from the start of a file, enough to recognise it. */
 bool slurpHead(const std::string &path, std::vector<unsigned char> &bytes, size_t maxBytes, std::string &error);
 
-/** What a file of [maxSeconds] could weigh as a WAV, so slurp will take it. */
+/** The most a WAV of [maxSeconds] could weigh, as a ceiling for slurp. */
 inline size_t slurpCeilingFor(int32_t maxSeconds) {
-    // 48 kHz stereo at 24 bits is 288 kB a second, and a container adds
-    // nothing that matters; half again for headroom over odd rates and depths.
+    // 48 kHz stereo at 24 bits is 288 kB a second, plus half again for other
+    // rates and bit depths.
     const size_t bytes = static_cast<size_t>(maxSeconds) * 288u * 1024u * 3u / 2u;
     return bytes < 64u * 1024u * 1024u ? 64u * 1024u * 1024u : bytes;
 }

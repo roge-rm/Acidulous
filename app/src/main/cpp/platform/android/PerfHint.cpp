@@ -10,8 +10,8 @@ namespace acidulous::platform {
 
 bool PerfHint::load() {
     if (manager != nullptr) return true;
-    // Already in the process - every Android app links it - so this is a
-    // reference count rather than a read from disk.
+    // Every Android app already has this loaded, so this only bumps a
+    // reference count.
     lib = dlopen("libandroid.so", RTLD_NOW | RTLD_LOCAL);
     if (lib == nullptr) return false;
 
@@ -23,9 +23,8 @@ bool PerfHint::load() {
         reinterpret_cast<decltype(reportActual)>(dlsym(lib, "APerformanceHint_reportActualWorkDuration"));
     closeSession = reinterpret_cast<decltype(closeSession)>(dlsym(lib, "APerformanceHint_closeSession"));
 
-    // All five or none. A platform with half of them is not one this has been
-    // thought about on, and a null call here would be a crash on the audio
-    // thread of a device nobody testing this owns.
+    // All five or none, so a missing one can never be called on the audio
+    // thread.
     if (getManager == nullptr || createSession == nullptr || updateTarget == nullptr ||
         reportActual == nullptr || closeSession == nullptr) {
         dlclose(lib);
@@ -48,11 +47,9 @@ bool PerfHint::begin(int32_t tid, int64_t targetNanos, bool lastTry) {
     const int32_t ids[1] = {tid};
     void *made = createSession(manager, ids, 1, targetNanos);
     if (made == nullptr) {
-        // Every requirement we can check is met - the manager exists, the
-        // thread is ours and the target is positive - so this is the platform
-        // declining. Only the last attempt says so, because a readout that
-        // reads "refused" while a retry is still pending is wrong for as long
-        // as the wait lasts.
+        // Everything we can check is fine, so the platform said no. Only the
+        // last attempt shows "refused" so the readout doesn't say it while a
+        // retry is still pending.
         if (lastTry) status.store(State::Refused, std::memory_order_relaxed);
         LOGI("the platform refused a hint session for thread %d at %lld ns", tid,
              static_cast<long long>(targetNanos));
@@ -74,8 +71,7 @@ void PerfHint::retarget(int64_t targetNanos) {
 
 void PerfHint::report(int64_t actualNanos) {
     void *s = session.load(std::memory_order_acquire);
-    // A duration of nought is not a measurement, and the platform treats a
-    // non-positive one as an error rather than as "we were quick".
+    // The platform treats zero or less as an error.
     if (s == nullptr || actualNanos <= 0) return;
     reportActual(s, actualNanos);
 }

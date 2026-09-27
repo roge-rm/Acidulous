@@ -27,8 +27,8 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.res.*
 
 /**
- * The song browser: every saved song, load on tap, delete behind a confirm.
- * The current song is marked so "delete" cannot be mistaken for "discard".
+ * The song browser: every saved song, tap to load, delete asks first. The
+ * current song is marked so "delete" can't be mistaken for "discard".
  */
 @Composable
 fun SongBrowserDialog(
@@ -67,28 +67,19 @@ fun SongBrowserDialog(
 /**
  * Patches for one machine: a tab per family, and one more for the user's own.
  *
- * A bank of fifty-one in one list is a list nobody reads to the end of, and
- * M45 left several that size. The banks have carried `family=` all along -
- * Mosaic's keys/pad/grain/motion/lead/texture, Pollen's cloud/pitch/bloom -
- * so the shelves already exist and only had to be carried through the
- * generator and drawn.
+ * Families come from the bank's family= attribute. Tabs are in the order the
+ * bank introduces them, not alphabetical, since banks list their plainest
+ * family first. A bank with no families gets a single "factory" tab, and a
+ * factory patch without a family goes in "other" so nothing is unreachable.
  *
- * Tabs are in the order the bank introduces them, not alphabetical: a bank is
- * written with its plainest family first and its strangest last, and that is a
- * better order to meet a machine in than one the alphabet chose. A bank with
- * no families at all gets a single "factory" tab rather than an empty row of
- * chips, and a factory patch with no family of its own lands in "other" so
- * that nothing can be made unreachable by a missing attribute.
- *
- * Only the user's tab can delete, which is the whole reason it is a tab of its
- * own rather than a section at the bottom of a long list.
+ * Only the user's tab can delete patches.
  */
 @Composable
 fun PatchBrowserDialog(
     machine: String, factory: List<Patch>, user: List<String>,
     onLoad: (String) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit,
 ) {
-    // First-appearance order, and "other" only if something actually needs it.
+    // First-appearance order, and "other" only if something needs it.
     val families = remember(factory) {
         val seen = LinkedHashSet<String>()
         for (p in factory) if (p.family.isNotEmpty()) seen.add(p.family)
@@ -96,7 +87,7 @@ fun PatchBrowserDialog(
         if (named.isEmpty()) emptyList()
         else named + (if (factory.any { it.family.isEmpty() }) listOf(OTHER) else emptyList())
     }
-    // The families are the bank's own words; the three shelves the app adds are ours.
+    // The families are named by the bank, the three tabs the app adds are ours.
     val labels = (if (families.isEmpty()) listOf(stringResource(Res.string.patches_factory)) else families.map {
         if (it == OTHER) stringResource(Res.string.patches_other) else it
     }) + stringResource(Res.string.patches_user)
@@ -135,21 +126,24 @@ fun PatchBrowserDialog(
     )
 }
 
-/** Where a factory patch with no `family=` of its own is shelved. */
+/** The tab for a factory patch with no family=. */
 private const val OTHER = "other"
 
-/** What the export is doing; shown until dismissed so the result is read. */
+/**
+ * Export progress and result, shown until dismissed so the result gets read.
+ */
 sealed class ExportState {
     data class Running(val seconds: Float, val expectedSeconds: Float) : ExportState()
     data class Done(
         val seconds: Float, val peak: Float, val fileName: String,
         val files: Int = 1, val format: String = "wav", val bits: Int = 24,
-        /** Kilobits a second, where the format has a rate rather than a depth. */
+        /**
+         * Kilobits per second, for formats with a bitrate instead of a bit depth.
+         */
         val rate: Int = 0,
         /**
-         * The files as written, for the share sheet: the platform's own
-         * handles to them (content Uris on Android), which only the platform
-         * reads. Empty where there is nothing to share.
+         * The written files as platform handles for the share sheet (content
+         * Uris on Android). Empty when there's nothing to share.
          */
         val uris: List<Any> = emptyList(),
         val mime: String = "*/*",
@@ -160,13 +154,11 @@ sealed class ExportState {
 @Composable
 fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit, onShare: (ExportState.Done) -> Unit = {}) {
     val running = state is ExportState.Running
-    // Finished, it can go straight on to somebody else: the share sheet, with
-    // the file or files just written.
+    // When it's done, the files can go straight to the share sheet.
     val done = (state as? ExportState.Done)?.takeIf { it.uris.isNotEmpty() }
     PlainDialog(
         title = stringResource(Res.string.export_title),
-        // While it renders the only thing to do is stop it, so the one
-        // button says so; afterwards the only thing to do is read it.
+        // While rendering the button cancels, afterwards it closes.
         onDismiss = { if (running) onCancel() else onDismiss() },
         dismissLabel = stringResource(if (running) Res.string.cancel else Res.string.ok),
         confirmLabel = if (done != null) stringResource(Res.string.export_share) else "",
@@ -194,8 +186,8 @@ fun ExportDialog(state: ExportState, onCancel: () -> Unit, onDismiss: () -> Unit
                             Res.string.export_done,
                             state.seconds, state.format,
                             when {
-                                // A lossy format has no depth to report, and
-                                // saying "24-bit" of an MP3 is just wrong.
+                                // A lossy format has no bit depth, so show its
+                                // bitrate.
                                 state.rate > 0 -> stringResource(Res.string.export_kbit, state.rate)
                                 state.bits == 32 -> stringResource(Res.string.export_bit_float)
                                 else -> stringResource(Res.string.export_bit, state.bits)

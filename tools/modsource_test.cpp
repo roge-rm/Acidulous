@@ -1,23 +1,14 @@
-// Every mod source in every matrix, and whether it reaches the sound.
+// Checks every mod source in every matrix actually changes the sound.
 //
-// Written because Filament's two envelopes did not. They were `set` from
-// their eight parameters every block and read by `sourceValue`, and nothing
-// anywhere called `trigger` or `next` - so `eg1` and `eg2` returned nought
-// for ever, and eight knobs on the panel did nothing at all. No factory patch
-// routed them, so no harness here could see it; it was found by eye, while
-// taking a `pow` out of the loop beside it.
+// Routes each source of every machine with a matrix to a destination and
+// checks the audio changes, whether or not a factory patch uses it. A source
+// that's never triggered (like envelopes nobody calls `trigger` on) otherwise
+// goes unnoticed if no patch routes it.
 //
-// That is the same shape as the arp that had never been connected, and the
-// same lesson as the render harness next door: **a fault nothing can fail on
-// is a fault that waits.** So this asks the only question that matters of a
-// modulation source - route it to something and does the audio change? - of
-// every source of every machine that has a matrix, whether or not a patch
-// happens to use it.
-//
-// What it cannot see: a source that is *wired* but wrong, and a source that
-// only moves when something outside the machine does. The second is why the
-// machine is driven below with a mod wheel, pressure, a bend and two notes
-// before anything is judged.
+// It can't catch a source that's wired but wrong, or one that only moves when
+// something outside the machine does. For the second, the machine is played
+// below with a mod wheel, pressure, a bend and two notes before anything is
+// judged.
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -38,16 +29,13 @@ constexpr int32_t kBlock = 64;
 constexpr int32_t kBlocks = 240; // five seconds, so a slow envelope arrives
 
 /**
- * Something for a machine that listens to listen to.
+ * Audio for machines that listen to their input.
  *
- * Cipher's loudness, brightness and pitch sources are all measurements of the
- * *modulator*, which is the audio coming in - so on a silent bus all three
- * read nought and none of them can be told from a source that was never
- * wired. Three formants over a moving fundamental, loud then quiet: not a
- * voice, but enough of one that every measurement has something to measure.
- * The tree's own rule about synthetic material is about faults a clean signal
- * hides; nothing here is looking at the signal's quality, only at whether a
- * number moves.
+ * Cipher's loudness, brightness and pitch sources all measure the incoming
+ * modulator, so on a silent bus all three read zero and look unwired. Three
+ * formants over a moving fundamental, loud then quiet, gives every
+ * measurement something to measure. Only whether the numbers move matters
+ * here, not how realistic the signal is.
  */
 struct Modulator {
     std::vector<float> buf;
@@ -60,8 +48,8 @@ struct Modulator {
             phase += f0 / kSr;
             if (phase >= 1.0) phase -= 1.0;
             const auto p = static_cast<float>(phase);
-            // A buzz, then three formants on top of it - enough shape for the
-            // brightness measure to have an opinion.
+            // A buzz with three formants on top, so the brightness measure
+            // has something to measure.
             float x = 2.0f * p - 1.0f;
             x += 0.5f * std::sin(6.2831853f * p * 7.0f);
             x += 0.3f * std::sin(6.2831853f * p * 13.0f);
@@ -76,16 +64,12 @@ struct Modulator {
 /**
  * What a machine has to be doing before its sources can be judged.
  *
- * A source that reads nought is indistinguishable from a source that is not
- * wired, and some of them read nought until the machine is *doing* something:
- * the organ's rotor sources are the horn's and drum's angles, and the rotor
- * ships braked, so `horn` is exactly zero on a default patch and nothing it
- * is pointed at moves. That is the machine behaving correctly and the harness
- * being asked the wrong question.
+ * A source reading zero looks the same as one that isn't wired, and some read
+ * zero until the machine is doing something. For example the organ's rotor
+ * ships braked, so `horn` is exactly zero on a default patch.
  *
- * So a machine may name the knobs that have to be up first, as normalised
- * values. Keep this short: a long list here is the harness excusing itself
- * rather than testing.
+ * So a machine can name knobs to turn up first, as normalised values. Keep
+ * this list short, or the harness stops testing anything.
  */
 struct Setup {
     const char *machine;
@@ -94,13 +78,12 @@ struct Setup {
 };
 constexpr Setup kSetup[] = {
     {"Manual", "rotspeed", 1.0f}, // off the brake, or `horn` and `drum` stand still
-    // A vocoder with nothing singing into it is silent however loud its
-    // carrier is, because the carrier is what the *modulator* shapes. The dry
-    // path is the carrier itself, so turning it up gives this something to
-    // listen to without inventing a voice to feed it.
+    // A vocoder is silent with nothing on its modulator, however loud the
+    // carrier. The dry path is the carrier itself, so turning it up gives
+    // this something to listen to.
     {"Cipher", "dry", 1.0f},
-    // And its pitch source is the tracker's answer, which is not computed at
-    // all until the tracker is switched on.
+    // Its pitch source is the tracker's output, which isn't computed until
+    // the tracker is on.
     {"Cipher", "track", 1.0f},
 };
 
@@ -108,17 +91,12 @@ constexpr Setup kSetup[] = {
  * Where a destination can be heard at all.
  *
  * A destination is only audible in a patch that uses what it moves: pulse
- * width on a square, oscillator three with its level up, a second filter that
- * is switched in, an LFO's rate while that LFO is routed somewhere. A default
- * patch has none of those, so it cannot tell a destination that is wired from
- * one that is not. Each machine names a few *contexts* - whole patches' worth
- * of knobs, applied before the slot under test - and a destination passes if
- * any of them lets it be heard.
- *
- * Not an excuse list: every destination is still routed and still has to move
- * the sound. The treble fault in the organ was found by writing the organ's
- * context: its EQ switched itself in only when its *knobs* were off centre, so
- * a treble modulation on a flat EQ did nothing.
+ * width on a square, oscillator three with its level up, a second filter
+ * switched in, an LFO's rate while that LFO is routed. A default patch has
+ * none of those. So each machine names a few contexts (sets of knob values
+ * applied before the slot under test), and a destination passes if any of
+ * them lets it be heard. Every destination is still routed and still has to
+ * change the sound.
  *
  * Knobs are `name=value`, normalised, or `name=#n` for step n.
  */
@@ -135,8 +113,8 @@ constexpr Context kContexts[] = {
                 "m04_src=#15 m04_dest=#1 m04_depth=0.7"},
     // And every oscillator a pulse, which is the only thing pulse width moves.
     {"Trinity", "o1_wave=#1 o2_wave=#1 o3_wave=#1 o3_level=0.8"},
-    // All six operators sounding on ratios that are not one - skew bends a
-    // ratio by a power, and one to any power is one - and the LFOs routed.
+    // All six operators sounding on ratios other than one (skew bends a ratio
+    // by a power, and one to any power is one), and the LFOs routed.
     {"Ratio", "o1_level=0.8 o2_level=0.8 o3_level=0.8 o4_level=0.8 o5_level=0.8 o6_level=0.8 "
               "o1_ratio=0.375 o2_ratio=0.448 o3_ratio=0.5 o4_ratio=0.55 o5_ratio=0.6 o6_ratio=0.65 "
               "m02_src=#11 m02_dest=#1 m02_depth=0.7 m03_src=#12 m03_dest=#1 m03_depth=0.7 "
@@ -152,7 +130,7 @@ constexpr Context kContexts[] = {
     {"Mosaic", "grain=#1 m02_src=#11 m02_dest=#1 m02_depth=0.7 m03_src=#12 m03_dest=#1 m03_depth=0.7"},
     // Layers scanned by a knob rather than by velocity, for the scan.
     {"Mosaic", "scanamt=1"},
-    // A frozen bank, for the freeze morph; a remap that is not straight
+    // A frozen bank, for the freeze morph; a remap that isn't straight
     // through, for how much of it.
     {"Cipher", "freeze=#1 remap=#1"},
 };
@@ -184,12 +162,12 @@ Slot firstSlot(const ParamSet &p) {
 
 /**
  * Five seconds of the machine being played, with everything a source might
- * be listening to actually moving.
+ * follow actually moving.
  *
- * A source that needs a mod wheel reads nought on a machine nobody touched,
- * which would make this harness fail honest wiring. So the wheel is up, the
- * key is under pressure, the bend is off centre, and two notes are played at
- * different velocities in different octaves.
+ * A source that needs a mod wheel reads zero if nobody touches it, which
+ * would fail correct wiring. So the wheel is up, the key is under pressure,
+ * the bend is off centre, and two notes play at different velocities in
+ * different octaves.
  */
 void applyKnobs(Machine *m, const char *knobs) {
     if (knobs == nullptr) return;
@@ -217,9 +195,8 @@ std::vector<float> play(const std::string &name, int32_t srcStep, int32_t destSt
     if (m == nullptr) return {};
     m->prepare(kSr);
     m->reset();
-    // Mosaic plays a zone map, and with none mounted it was skipped here as
-    // silent - its matrix never tested. The audition harness's synthetic map,
-    // built once and kept.
+    // Mosaic plays a zone map, and with none mounted its matrix couldn't be
+    // tested. Uses the audition harness's synthetic map, built once and kept.
     if (name == "Mosaic") {
         static const std::unique_ptr<SampleMap> map = audition::zoneMap();
         m->swapObject(0, map.get());
@@ -272,11 +249,10 @@ double difference(const std::vector<float> &a, const std::vector<float> &b) {
 /**
  * Whether two renders differ anywhere by more than -120 dB of the louder's peak.
  *
- * For the destination pass. These renders are deterministic, so a destination
- * nothing reads comes out bit-identical and *any* difference is a wire. An
- * energy share is the wrong test there: the organ's key click is one sample at
- * each of nine contacts, and doubling it moved five seconds of audio by less
- * than a thousandth.
+ * For the destination pass. The renders are deterministic, so a destination
+ * nothing reads comes out bit-identical and any difference means it's wired.
+ * An energy measure would miss small effects like the organ's key click,
+ * which is one sample at each of nine contacts.
  */
 bool differsAtAll(const std::vector<float> &a, const std::vector<float> &b) {
     float peak = 0.0f, d = 0.0f;
@@ -304,10 +280,9 @@ void aMachine(const std::string &name) {
     const auto silent = play(name, 0, 0, 0, slot);
     const double base = energyOf(silent);
     if (base <= 0.0) {
-        // Mosaic is the one this lands on: a sample player with nothing
-        // mounted has nothing to play, and mounting a file here would make
-        // this harness depend on material it does not own. `bank_test`
-        // reports the same nine machines the same way.
+        // A sample player with nothing mounted has nothing to play, and
+        // mounting a file would make this depend on outside material.
+        // `bank_test` reports the same machines the same way.
         printf("  ..   %-10s makes no sound unrouted; nothing to compare\n", name.c_str());
         return;
     }
@@ -316,8 +291,8 @@ void aMachine(const std::string &name) {
     for (int32_t s = 1; s < slot.srcSteps; ++s) {
         bool moved = false;
         // Every destination, until one of them moves. A source is wired if
-        // *anything* it can be pointed at responds; which destinations suit
-        // it is a question for the ear, not for this.
+        // anything it can be pointed at responds. Which destinations suit it
+        // is for the ear to judge.
         for (int32_t d = 1; d < slot.destSteps && !moved; ++d) {
             const auto routed = play(name, s, d, 0, slot);
             if (difference(silent, routed) > base * 0.001) moved = true;
@@ -343,14 +318,12 @@ void aMachine(const std::string &name) {
                dead.size() == 1 ? "" : "s", listOf(dead).c_str());
     }
 
-    // **And every destination, from the other end.**
+    // And every destination, from the other end.
     //
-    // A source that reaches *something* passes above, so a destination the
-    // render never reads was invisible to it: Filament's matrix offered
-    // brightness, rattle, body, drive and volume, and nothing read any of the
-    // five. Every source is tried against each destination, at both ends of
-    // the depth knob - a destination already at the top of its range can
-    // only be moved down.
+    // A source passes above if it reaches anything, so a destination the
+    // render never reads would slip through. Every source is tried against
+    // each destination at both ends of the depth knob, since a destination
+    // already at the top of its range can only move down.
     std::vector<const char *> contexts = {nullptr};
     for (const auto &c : kContexts) if (name == c.machine) contexts.push_back(c.knobs);
     std::vector<std::vector<float>> quiet;

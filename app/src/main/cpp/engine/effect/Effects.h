@@ -8,8 +8,7 @@
 #include <engine/dsp/Math.h>
 #include <engine/effect/Effect.h>
 
-// The first wave of insert effects. Each is the classic thing plus the one
-// extra that takes it somewhere.
+// The insert effects. Each is the classic effect plus an extra or two.
 namespace acidulous::effect {
 
 #define ACIDULOUS_EFFECT_COMMON(Name)                                         \
@@ -32,27 +31,21 @@ class Delay final : public Effect {
 };
 
 /**
- * Reverb - a room, and four things a room cannot do.
+ * Reverb.
  *
- * The classic half is Freeverb's: eight combs and four allpasses a side, with
- * `size`, `damp` and `predelay` doing what they always do. Everything after
- * that is here because a rack with one reverb in it should not only be able to
- * make rooms.
+ * Based on Freeverb: eight combs and four allpasses a side, with `size`,
+ * `damp` and `predelay`. The extras:
  *
- *   - **Shimmer.** The tail is fed back an octave up, so each pass climbs and
- *     the room turns into a slowly rising chord. The pitch shift is the cheap
- *     honest one - a delay line read at the wrong speed, two taps crossfaded -
- *     and it lives *inside* the feedback, which is what makes it build rather
- *     than just add a high part.
- *   - **Bits** and **crush.** The tail, and only the tail, goes through a bit
- *     quantiser and a sample-and-hold. A reverb made of eight-bit memory:
- *     the dry stays clean and the room behind it is a cheap sampler, which is
- *     a thing hardware did by accident for years and nobody offers on purpose.
- *   - **Wobble.** The comb lengths drift, slowly and out of step, so a long
- *     tail is never quite still. Tape does this; concrete does not.
+ *   - Shimmer: the tail is fed back an octave up, so each pass climbs into a
+ *     rising chord. The pitch shift is a delay line read at double speed with
+ *     two crossfaded taps, and it sits inside the feedback so it builds up.
+ *   - Bits and crush: only the tail goes through a bit quantiser and a
+ *     sample-and-hold, so the dry stays clean and the room sounds like an old
+ *     sampler.
+ *   - Wobble: the comb lengths drift slowly and out of step, so a long tail
+ *     never sits still, like tape.
  *
- * Freeze and gate were always here: one holds the tail forever, the other cuts
- * it off flat.
+ * Freeze holds the tail forever and gate cuts it off.
  */
 class Reverb final : public Effect {
   public:
@@ -68,10 +61,10 @@ class Reverb final : public Effect {
     Comb combs[2][kCombs];
     Allpass aps[2][kAps];
     dsp::DelayLine pre[2];
-    /** The shimmer's own line: the tail, re-read an octave up. */
+    /** The shimmer's line: the tail, read back an octave up. */
     dsp::DelayLine shimmerLine[2];
     float shimmerPhase[2]{}, shimmerFb[2]{};
-    /** The shimmer path's own DC blocker; see the note where it is used. */
+    /** The shimmer path's DC blocker. See the note where it's used. */
     float shimDcX[2]{}, shimDcY[2]{}, shimLp[2]{};
     float crushAcc[2]{}, crushHeld[2]{};
     float wobblePhase = 0.0f;
@@ -96,8 +89,8 @@ class Distortion final : public Effect {
     ACIDULOUS_EFFECT_COMMON(Distortion)
   private:
     dsp::Biquad tone[2];
-    // The downsampling filter runs at twice the engine rate, which is why it
-    // is not the tone filter reused.
+    // The downsampling filter runs at twice the engine rate, so it can't
+    // reuse the tone filter.
     dsp::Biquad halfband[2];
     float dcIn[2]{}, dcOut[2]{}, prevIn[2]{}, sr = 48000.0f;
 };
@@ -150,17 +143,12 @@ class Phaser final : public Effect {
 };
 
 /**
- * Chorus - several detuned copies, and one that will not sit still.
+ * Chorus: two, three or four taps at different delays, each swept by its own
+ * phase of the LFO, so it sounds like a section and not a doubling.
  *
- * The gap the first nine left: a flanger at low feedback is not a chorus, it is
- * a flanger somebody turned down. A chorus is *voices* - two, three or four
- * taps at different delays, each swept by its own phase of the LFO, so what
- * comes back is a section rather than a doubling.
- *
- * The extra is `drift`: a slow random walk added to each voice's delay, which
- * is what a bucket-brigade line does when its clock is not quite steady. At
- * nothing it is a clean digital chorus; turned up, no two voices agree about
- * the tuning for very long.
+ * The extra is `drift`, a slow random walk on each voice's delay, like a
+ * bucket-brigade chip with an unsteady clock. At 0 it's a clean digital
+ * chorus. Turned up, the voices keep drifting out of tune with each other.
  */
 class Chorus final : public Effect {
   public:
@@ -176,17 +164,12 @@ class Chorus final : public Effect {
 };
 
 /**
- * Tremolo, and the same lever turned into an auto-pan.
+ * Tremolo and auto-pan, with rate, depth and shape.
  *
- * Nothing in the rack modulated amplitude at all, which is a strange gap - it
- * is the oldest effect there is. The classic part is rate, depth and a shape
- * to sweep with.
- *
- * The extra is `pan`, which is not a second effect but the same LFO arriving at
- * the two channels further and further out of step: at nothing both channels
- * duck together and it is a tremolo, at full they are opposite and it is an
- * auto-pan, and everywhere between is the wobble that neither has a name for.
- * `skew` bends the waveform's duty so the dip can be a stab or a swell.
+ * `pan` shifts the LFO phase between the two channels. At 0 both channels
+ * dip together (tremolo), at full they're opposite (auto-pan), and in
+ * between is a mix of both. `skew` bends the waveform so the dip can be a
+ * stab or a swell.
  */
 class Tremolo final : public Effect {
   public:
@@ -200,20 +183,13 @@ class Tremolo final : public Effect {
 };
 
 /**
- * Width - the stereo image, which nothing else here could touch.
+ * Width: mid and side, with the side scaled. Under 1 narrows toward mono,
+ * over 1 widens.
  *
- * Mid and side, with the side scaled: under one it collapses toward mono, over
- * one it opens past where it was recorded. That is the classic part, and it is
- * also a diagnostic - a machine that has quietly gone mono is obvious the
- * moment you can widen it and nothing happens.
- *
- * Two extras, both of which are what mastering actually does with this.
- * `below` returns everything under a frequency to the centre, because width in
- * the bass is what makes a mix fall apart on a club system and on a phone
- * speaker alike. `haas` delays one side by up to twenty milliseconds, which is
- * width the side channel cannot give you - it is the ear's own arrival-time
- * cue rather than a level trick, and it survives a mono fold as a comb rather
- * than as silence.
+ * `below` makes everything under a frequency mono, since stereo bass falls
+ * apart on club systems and phone speakers. `haas` delays one side by up to
+ * 20 ms, which widens using arrival time instead of level, and folds to mono
+ * as a comb instead of cancelling.
  */
 class Width final : public Effect {
   public:
@@ -227,23 +203,17 @@ class Width final : public Effect {
 };
 
 /**
- * Frequency shifter - the one effect here that nothing else can imitate.
+ * Frequency shifter.
  *
- * Not a pitch shifter. A pitch shifter multiplies every partial by the same
- * ratio and the sound keeps its harmonic series; this *adds* the same number of
- * hertz to every partial, so 100, 200, 300 becomes 180, 280, 380 and the series
- * is no longer harmonic at all. A few hertz and it is a slow phasing that never
- * repeats, because the two sides beat against each other forever; a few hundred
- * and everything turns to struck metal.
+ * It adds the same number of hertz to every partial (100, 200, 300 becomes
+ * 180, 280, 380), so the sound stops being harmonic. A pitch shifter would
+ * multiply them instead. A few hertz gives slow phasing and a few hundred
+ * sounds metallic.
  *
- * The classic part is a Hilbert pair - two allpass chains whose outputs stay 90
- * degrees apart across the band - and a quadrature oscillator to turn the
- * spectrum by. The extra is `spread`: the two channels are shifted in opposite
- * directions, which nothing acoustic can do and which makes a mono source into
- * something that will not sit still.
- *
- * `feedback` sends the shifted output back in, so each pass is shifted again
- * and the partials walk away in a ladder.
+ * A Hilbert pair (two allpass chains 90 degrees apart across the band) and a
+ * quadrature oscillator do the shift. `spread` shifts the two channels in
+ * opposite directions. `feedback` sends the output back in, so each pass is
+ * shifted again.
  */
 class Shifter final : public Effect {
   public:
@@ -266,26 +236,18 @@ class Shifter final : public Effect {
 };
 
 /**
- * Harmonizer - intervals that belong to the key, not to the knob.
+ * Harmonizer that shifts by scale degrees instead of semitones.
  *
- * Every pitch shifter in a box like this shifts by a fixed number of
- * semitones, which means a "third" is a major third over every note you play
- * and half of them are wrong. This one shifts by a number of *scale degrees*:
- * it listens for what note is arriving, finds that note's place in the scale,
- * counts up the degrees you asked for, and shifts by whatever that turns out
- * to be - a major third here, a minor third there, the way a second singer
- * would. The thirty-three scales are the ones the modifiers already know, so a
- * part harmonised here agrees with a part quantised there.
+ * It tracks the incoming note, finds its place in the scale, counts up the
+ * chosen number of degrees and shifts by that, so a third can be major or
+ * minor depending on the note. It uses the same 33 scales as the modifiers.
  *
- * Two voices, because two is what a harmony part is and four is a chorus.
- * Below the tracker's confidence - on a drum, on noise, on silence between
- * phrases - it falls back to the plain chromatic interval rather than guessing
- * a key, since a wrong note is worse than an unmusical one.
+ * Two voices. When the tracker isn't confident (drums, noise, silence) it
+ * falls back to the plain chromatic interval.
  *
- * The shifter itself is the honest cheap one: a delay line read at the wrong
- * speed, with two taps half a window apart crossfaded so the wrap never lands
- * in the middle of a note. `window` is that length, and it is the trade -
- * short is tight and burbles, long is smooth and smears.
+ * The shifter is a delay line read at a different speed, with two taps half
+ * a window apart crossfaded so the wrap never lands mid-note. `window` sets
+ * the length: short is tight but burbles, long is smooth but smears.
  */
 class Harmonizer final : public Effect {
   public:
@@ -300,9 +262,9 @@ class Harmonizer final : public Effect {
     };
     dsp::DelayLine line[2];
     Voice voice[2][2];        // [channel][voice]
-    // The tracker: zero crossings over a window, the same cheap thing Cipher
-    // steers its carrier with. A thousandth of the cost of autocorrelation and
-    // accurate enough to name a note.
+    // The tracker counts zero crossings over a window, like Cipher's carrier
+    // tracking. Much cheaper than autocorrelation and good enough to find
+    // the note.
     float zeroPrev = 0.0f, trackedHz = 0.0f;
     int32_t zeroCount = 0, zeroWindow = 0;
     float confidence = 0.0f;
@@ -322,33 +284,17 @@ class Flanger final : public Effect {
 };
 
 /**
- * Gate - the one an amp asks for, and the sixteenth insert.
+ * Noise gate with threshold, attack, hold and release.
  *
- * A gate is four knobs everybody knows: shut below a level, open fast, stay
- * open a while, and fall away. Two things here are not on a pedal.
+ * `key` high-passes the detector, not the audio, so hum and handling noise
+ * don't open the gate but the note still keeps its low end.
  *
- * **`key`** filters the *detector* and not the audio. A gate in front of a
- * guitar amp is listening to a pickup that hears mains hum, a room and a
- * player's hand as well as the string, and all of those are low. Sliding the
- * detector's high-pass up means the gate opens for a pick and not for a
- * building, while the note it lets through keeps its bottom end - which is
- * the difference between a gate and a high-pass filter with attitude.
+ * `duck` sets how far down the gate closes. Fully closed for noise, or about
+ * 12 dB down on drums so the room just gets quieter between hits.
  *
- * **`duck`** is how far down closed is. All the way is what a gate does;
- * 12 dB down is what you want on drums, where silence between hits is a
- * hole and the room going quiet is a tightening.
- *
- * There is deliberately **no `mix`**. Every other insert has one and it
- * would be an anti-control here: half a gate is the noise at half level,
- * which is the thing the gate was added to remove. Without one the base
- * class leaves it alone on a send bus, where gating the send is exactly what
- * the knob would have been asked for anyway.
- *
- * **Not a parameter: a threshold that learns the hiss.** It was designed and
- * dropped. Making `threshold` mean dBFS with the learning off and dB above a
- * measured floor with it on is one knob with two units, and a knob that
- * needs a sentence under it to say which one it is in is the fault the house
- * rule about help text exists to catch.
+ * There's no `mix`, since half a gate just lets half the noise through.
+ * Without one the base class doesn't touch it on a send bus, where gating
+ * the send is what you'd want anyway.
  */
 class Gate final : public Effect {
   public:
@@ -357,18 +303,15 @@ class Gate final : public Effect {
     ACIDULOUS_EFFECT_COMMON(Gate)
   private:
     /**
-     * One detector for the pair, always.
-     *
-     * Two independent gates on a stereo signal open at slightly different
-     * moments, and what that sounds like is the image stepping sideways at
-     * every note onset. Nobody has ever wanted that, so the detector takes
-     * the louder of the two and both channels get the same gain.
+     * One detector for both channels. It takes the louder of the two and
+     * both get the same gain, otherwise the stereo image would shift at
+     * every note.
      */
     float env = 0.0f, gain = 0.0f, sr = 48000.0f;
     float holdLeft = 0.0f; // seconds still to run before the release starts
     bool open = false;
     dsp::Svf key[2];
-    float keyHz = -1.0f; // what the key filters are set to, so they are not rebuilt per block
+    float keyHz = -1.0f; // what the key filters are set to, so they aren't rebuilt every block
 };
 
 #undef ACIDULOUS_EFFECT_COMMON

@@ -4,20 +4,13 @@
 #include <mutex>
 #include <vector>
 
-// The generator: one bank of oscillators running all the time, which every
-// key taps into. That is how a tonewheel organ is actually built - 91 wheels
-// spinning on one shaft whether or not anybody is playing - and it is why an
-// organ sounds the way it does. Every note is in phase with every other note
-// because they are drawing on the same wheels, so a chord does not beat, and
-// the same wheel feeding two keys at once is no louder than it was.
+// The generator: one bank of 91 oscillators that runs all the time and every
+// key taps into, like the wheels of a tonewheel organ. Notes sharing a wheel
+// stay in phase, and a key costs nine multiplies instead of nine oscillators.
 //
-// It is also why polyphony here is nearly free: a key costs nine multiplies,
-// not nine oscillators.
-//
-// Each wheel's frequency is fixed, so each can carry a table band-limited
-// exactly to it: every harmonic that fits under Nyquist and not one more. The
-// bank is built once for the process and shared, because it depends on
-// nothing but the sample rate.
+// Each wheel has a fixed frequency, so its tables are band-limited exactly
+// to it. The bank depends only on the sample rate, so it's built once per
+// process and shared.
 namespace acidulous::machine {
 
 class WheelBank {
@@ -26,9 +19,8 @@ class WheelBank {
     static constexpr int kTable = 256;
     static constexpr int kLowestNote = 24; // wheel 0 is C1, 32.703 Hz
 
-    // What a wheel can be made of. A tonewheel is very nearly a sine; the
-    // rest are here because a combo organ divides square waves down, and a
-    // pipe rank is a fixed harmonic recipe.
+    // The waveforms a wheel can have. Wheel is a nearly pure sine, the
+    // squares are for the combo organ and the rest are pipe ranks.
     enum Timbre : int32_t { Sine, Wheel, Square, Pulse, Saw, Principal, Flute, String, Reed, kTimbres };
 
     static const WheelBank &shared(float sampleRate) {
@@ -55,9 +47,8 @@ class WheelBank {
         const float fh = static_cast<float>(h);
         switch (timbre) {
         case Sine: return h == 1 ? 1.0f : 0.0f;
-        // Not a perfect sine: the pickup sees a little of the tooth shape,
-        // and that trace of 2nd and 3rd is most of why a Hammond is not a
-        // bank of sine oscillators.
+        // A sine with a trace of 2nd and 3rd harmonic from the tooth shape,
+        // as a real pickup hears it.
         case Wheel: return h == 1 ? 1.0f : (h == 2 ? 0.035f : (h == 3 ? 0.018f : 0.0f));
         case Square: return (h % 2) ? 1.0f / fh : 0.0f;
         case Pulse: return std::fabs(std::sin(fh * 3.14159265f * 0.25f)) * 2.0f / (fh * 3.14159265f);
@@ -85,8 +76,8 @@ class WheelBank {
                 for (int h = 1; h <= maxH && h <= 64; ++h) {
                     const float a = harmonic(t, h);
                     if (a <= 1e-5f) continue;
-                    // Phasor recurrence rather than a sin() per sample: the
-                    // bank is 91 wheels wide and this is built at load.
+                    // A phasor recurrence instead of sin() per sample, to
+                    // keep the build at load time quick.
                     const float dphi = 6.2831853f * static_cast<float>(h) / static_cast<float>(kTable);
                     const float c = std::cos(dphi), s = std::sin(dphi);
                     float re = 1.0f, im = 0.0f;

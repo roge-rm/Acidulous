@@ -13,9 +13,9 @@
     </string-array>
     <string name="about_version">version %s</string>
     <string name="about_version_unknown">unknown</string>
-    <!-- %1$s is empty on Android; in a build for another platform it is about_for_platform, with a space before it. -->
+    <!-- %1$s is empty on Android; in other builds it is about_for_platform, with a space before it. -->
     <string name="about_what">A music studio for Android%1$s. Combine up to 16 synthesizers, drum machines, noise generators and processors into scenes of music.</string>
-    <!-- Its name, "Linux": set straight after "for Android" in the line above. -->
+    <!-- The platform name, "Linux", shown straight after "for Android" in the line above. -->
     <string name="about_for_platform">(for %s)</string>
     <string name="about_panic">Panic · stop all sound</string>
     <string name="about_share_crash">Share the last crash report</string>
@@ -27,11 +27,11 @@
     <string name="about_not_ours_note">Everything else was written for this app, including the engine, the machines and effects, the sequencer and the file writers. No DSP code, presets or samples come from anywhere else.</string>
     <!-- A component: its name and version, then what it does here. -->
     <string name="about_oboe">Oboe 1.10.0 · the audio stream</string>
-    <!-- The desktop's, in Oboe's place. -->
+    <!-- The desktop's audio, in Oboe's place. -->
     <string name="about_miniaudio">miniaudio 0.11.22 · the audio stream</string>
-    <!-- The desktop's too: Linux's MIDI. -->
+    <!-- The desktop's too: Linux MIDI. -->
     <string name="about_alsa">alsa-lib 1.2.14 · MIDI, through ALSA\'s sequencer</string>
-    <!-- Windows only. Steinberg's trademark rules apply wherever the app names the technology, so it does not. -->
+    <!-- Windows only. The app doesn't name the technology, because of Steinberg's trademark rules. -->
     <string name="about_driver_sdk">Steinberg\'s driver SDK 2.3.4 · interfaces\' own low-latency drivers</string>
     <string name="about_lame">LAME 3.100 · MP3 encoding, as its own library</string>
     <string name="about_link">Ableton Link 4.0 · a tempo shared over Wi-Fi</string>

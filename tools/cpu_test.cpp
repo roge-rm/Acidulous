@@ -1,16 +1,11 @@
-// What the machines and effects actually cost, per block, worst case.
+// What the machines and effects cost per block, worst case. The in-app meter
+// shows the worst callback on a device. This measures the same offline so
+// numbers can be compared between changes.
 //
-// The first harness in this tree about **cost** rather than correctness, and
-// it exists because the app could not answer the only question a dropout asks.
-// The in-app meter now reports the worst callback against its budget; this is
-// the same question asked offline, where a number can be compared against last
-// week's instead of against a phone that was also running something else.
-//
-// **Worst block, not mean.** A mean hides exactly the thing that causes a
-// click - one block in eleven doing ten times the work - so every figure here
-// is the slowest single block of the run, with the mean beside it only to show
-// how far apart they are. A unit whose worst is far above its mean is spiky,
-// and spiky is what drops audio at an average load of twenty-six per cent.
+// Figures are for the slow blocks, not the mean, since one slow block in
+// eleven is what causes a dropout. The mean is shown beside it. A unit whose
+// worst is far above its mean is spiky, and spiky units drop audio even at
+// low average load.
 //
 // Run:  tools/cpu_test.sh            all of them, sorted by worst block
 //       tools/cpu_test.sh Resonance  one, with its per-phase detail
@@ -47,14 +42,9 @@ constexpr int32_t kBlock = kBlockFrames;
 constexpr int32_t kBlocks = 2000;
 
 /**
- * This thread's own CPU time, in microseconds.
- *
- * **Not the wall clock**, and the first version of this harness used the wall
- * clock and was wrong in the same way the app's meter was wrong: a benchmark
- * process is descheduled like any other, so the slowest block it records is
- * whichever one the host interrupted. That showed up as a dozen unrelated
- * units all reporting a worst block between 250 and 455 us - a number about
- * this machine's scheduler, not about any of them.
+ * This thread's CPU time, in microseconds. Not wall clock time, since the
+ * process can be descheduled and the slowest block would then just be the
+ * one the OS interrupted.
  */
 double nowUs() {
     timespec ts{};
@@ -66,15 +56,9 @@ double nowUs() {
 constexpr double kBudgetUs = 1000000.0 * kBlock / kSr;
 
 /**
- * Every block's cost, reduced to the two numbers worth quoting.
- *
- * **A percentile, not the maximum.** The maximum of two thousand samples is
- * whichever one the host interrupted - even measured in thread CPU time it is
- * dominated by artefacts, and it read 250-390 us for a dozen units that have
- * nothing in common. The 99th survives that and still catches what this is
- * for: a spike that fires one block in eleven is 9% of the run, far inside the
- * top percentile, so a real periodic cost shows up and a one-in-two-thousand
- * scheduler hiccup does not.
+ * Every block's cost, reduced to the 99th percentile and the mean. Not the
+ * maximum, which is mostly scheduler noise even in thread CPU time. A spike
+ * that fires one block in eleven still shows in the 99th percentile.
  */
 struct Result {
     std::string name;
@@ -95,33 +79,20 @@ struct Result {
 };
 
 /**
- * How fast notes arrive, in note-ons a second.
+ * Note-ons per second. The default is about 23, roughly three times faster
+ * than sixteenths at 124 bpm, so patches with long releases hold about three
+ * times the voices they would in a song.
  *
- * **This was a hidden assumption and it made a number wrong.** The pattern
- * below has always fired an event every sixteen blocks, alternating on and
- * off - a note-on every 43 ms, about 23 a second. A sixteenth at 124 bpm is
- * 121 ms, about eight. So the harness plays roughly **three times faster than
- * any music**, and any patch whose release outlives a note therefore holds
- * three times the voices here that it would in a song: Trinity's `Bell Keys`
- * measures 122 us at this rate and 53 at a musical one, and it was the 122
- * that got reported as what the demo's Keys track costs.
- *
- * The density is right for what this harness is mostly for - comparing units,
- * and measuring a change against itself, where more voices is more signal -
- * and wrong for "what does this song cost". So it stays the default, and it
- * is **printed** rather than assumed, and `--rate` changes it.
- *
- * Percussive patches do not care: `Pump` and `Squelch` measure the same at
- * both. A patch that moves a lot between the two rates is telling you its
- * release is long, which is worth knowing on its own.
+ * That's good for comparing units and changes, but overstates what a song
+ * costs. It's printed on every run and `--rate` changes it. Percussive
+ * patches measure the same either way. A big difference between rates means
+ * a long release.
  */
 double gNotesPerSecond = static_cast<double>(kSr) / (16.0 * 2.0 * kBlock); // ~23.4
 
 /**
- * A note pattern with something happening on most blocks.
- *
- * Silence measures nothing: most of these are cheap until a note starts, and
- * the per-note-on work is exactly what this harness is looking for.
+ * A note pattern that keeps notes coming. Most units are cheap until a note
+ * starts, and the note-on work is part of what's being measured.
  */
 struct Player {
     int32_t next = 0;
@@ -133,11 +104,8 @@ struct Player {
     }
     void tick(Machine *m, int32_t block) {
         if (block != next) return;
-        // **36 upward, one semitone at a time.** The first version played 48
-        // and up in whole tones, which is a fine melodic range and misses
-        // every drum machine in the app: the pads of Hexbeat, Genesis, Forage
-        // and Resonance all start at 36 and run eight or thirteen semitones,
-        // so four machines were being timed with no note ever reaching them.
+        // Notes start at 36, where the drum machines' pads start (Hexbeat,
+        // Genesis, Forage, Resonance), so they actually get played.
         const uint8_t pitch = static_cast<uint8_t>(36 + (step % 8));
         if (step % 2 == 0) m->noteOn(pitch, 100);
         else m->noteOff(static_cast<uint8_t>(36 + ((step - 1) % 8)));
@@ -147,32 +115,14 @@ struct Player {
 };
 
 /**
- * The cloud Cumulus plays, which nothing here was building.
+ * Material for machines that are silent without it, so their real cost is
+ * measured.
  *
- * Cumulus takes its wavetables through `swapObject`, the way the samplers take
- * a file - so with nothing mounted it renders **exact silence**, and this
- * harness has been reporting 1.4 us for a machine doing nothing at all while
- * the same track was the second dearest on a phone. Unlike a sampler's, its
- * tables are *computed*, so nothing outside the tree is needed to build them:
- * the app does this in `EngineHost::buildCloud` and so does this.
- *
- * The set is leaked on purpose. It lives as long as the machine does and the
- * process is about to end.
- */
-/**
- * **And the samplers get something to play.**
- *
- * The same was true of Mosaic, Forage, Dice, Pollen and Molt, and it hid
- * the dearest fault outside the demo: Mosaic worked out every layer's playback
- * rate - two `exp2` and a double divide - and its pan - a `cos` and a `sin` -
- * per sample, for numbers that hold still for the block. It was reported here
- * as a floor because it had nothing mounted.
- *
- * The material is the audition harness's own synthetic set, the one
- * `bank_test` plays every factory patch against: a zone map, a drum kit, a
- * break and a spoken phrase, all built in code. Built once per machine and
- * kept for the life of the process, so a forty-round sweep does not build
- * forty of each.
+ * Cumulus gets its wavetables through `swapObject`, built the same way
+ * `EngineHost::buildCloud` does. The samplers (Mosaic, Forage, Dice, Pollen,
+ * Molt) get the audition harness's synthetic material: a zone map, a drum
+ * kit, a break and a spoken phrase. That's built once per machine and kept
+ * for the whole process, so a sweep doesn't rebuild it every round.
  */
 struct Mounted {
     std::vector<std::unique_ptr<SampleData>> pieces;
@@ -223,11 +173,11 @@ void mountCloudIfNeeded(Machine *m, const std::string &machine) {
     delete static_cast<machine::cumulus::CloudSet *>(cum->swapObject(0, set.release()));
 }
 
-/** And the other half of it: a sweep builds one of these per round. */
+/** Undoes mountCloudIfNeeded. A sweep mounts and unmounts every round. */
 void unmountCloud(Machine *m, const std::string &machine) {
     if (m == nullptr) return;
     if (holdsAudio(machine)) {
-        // The material is kept; the machine only lets go of it.
+        // The material is kept. The machine just lets go of it.
         const int32_t slots = machine == "Forage" ? static_cast<int32_t>(mounted(machine).pieces.size()) : 1;
         for (int32_t i = 0; i < slots; ++i) m->swapObject(i, nullptr);
         return;
@@ -238,21 +188,15 @@ void unmountCloud(Machine *m, const std::string &machine) {
 }
 
 /**
- * A whole rack, live against frozen: what freezing actually gives back.
- *
- * Dan asked the only question that matters about it - *"is freezing the tracks
- * really leading to reduced load?"* - and neither the per-unit table above nor
- * the app's meter answers it, because both measure parts rather than the rack
- * as the engine runs it. This times `Rack::render` itself, with a machine and
- * two inserts, in each of the three states a rack can be in:
+ * A whole rack, live against frozen, to see how much freezing saves. Times
+ * `Rack::render` with a machine and two inserts in each of three states:
  *
  *   live    the machine and both effects running, notes arriving
- *   frozen  the same rack reading its own audio back instead
- *   bare    a rack with nothing mounted, which is the floor nothing can go below
+ *   frozen  the same rack playing back its frozen audio instead
+ *   bare    a rack with nothing mounted, the lowest possible cost
  *
- * The channel strip, the pan and the peak loop run in every one of them, so
- * the difference between live and frozen is the whole of the saving and the
- * frozen figure is the whole of the remaining cost.
+ * The channel strip, pan and peak meter run in all three, so live minus
+ * frozen is the saving.
  */
 Result timeRack(const std::string &machine, const std::string &fx1, const std::string &fx2, int mode) {
     Result r;
@@ -273,9 +217,8 @@ Result timeRack(const std::string &machine, const std::string &fx1, const std::s
         }
     }
 
-    // A freeze of one bar, with a second of ring-out after it, which is what
-    // the renderer now produces. The content does not matter to the cost: a
-    // buffer read is a buffer read.
+    // A one-bar freeze with a second of tail, like the renderer produces.
+    // The content doesn't affect the cost.
     FrozenSet set;
     auto fc = std::make_shared<FrozenClip>();
     if (mode == 1) {
@@ -311,14 +254,9 @@ Result timeRack(const std::string &machine, const std::string &fx1, const std::s
 }
 
 /**
- * What a machine costs with nothing to play.
- *
- * Not the tail above, which is the two seconds after a note and is mostly a
- * release. This is a track that is simply not in this scene - and on Dan's
- * phone that is most of them most of the time: nine tracks, and the busiest
- * scene uses six. If a silent machine is not free then a song pays for every
- * track in every scene whether it sounds or not, which is a very different
- * problem from any single machine being dear.
+ * What a machine costs with nothing to play, like a track that isn't used in
+ * the current scene. Most tracks are idle most of the time, so if idle isn't
+ * nearly free a song pays for every track all the time.
  */
 Result timeIdle(const std::string &name) {
     Machine *m = MachineRegistry::create(name.c_str());
@@ -347,19 +285,14 @@ Result timeIdle(const std::string &name) {
 }
 
 /**
- * What it would cost for a frozen clip to follow a tempo ramp by stretching.
+ * The cost of a frozen clip following a tempo ramp by time-stretching. A
+ * freeze is tied to one tempo, so during a ramp `Rack::updateFrozen` falls
+ * back to the live machine. Stretching with `dsp::Wsola` would avoid that.
  *
- * Dan asked for this after finding that a scene with a smooth tempo change
- * hands back every freeze in it for a bar - the freeze is tempo-bound, the
- * ramp is between two tempos, so `Rack::updateFrozen` can match neither and
- * falls back to the machine. Time-stretching the audio instead is the obvious
- * answer and the tree already has the stretcher, in `dsp::Wsola` for Bias.
- *
- * The question is what it costs in the *audio* path rather than over a take,
- * and the shape of the answer is the point: WSOLA lays one hop per 720 output
- * frames, which is one block in eleven, and that hop searches 181 lags over a
- * 180-tap decimated overlap. So the mean is not the number - the block the hop
- * lands in is, and it is paid per channel per frozen rack.
+ * WSOLA does one hop per 720 output frames (one block in eleven), and each
+ * hop searches 181 lags over a 180-tap decimated overlap. So the block with
+ * the hop is what matters, not the mean, and it's paid per channel per frozen
+ * rack.
  */
 Result timeStretchStereo() {
     Result r;
@@ -396,9 +329,8 @@ Result timeStretchStereo() {
 Result timeStretch() {
     Result r;
     r.name = "Wsola, one channel";
-    // A few seconds of something with structure to lock onto: a tone, a fifth
-    // above it, and noise, because a correlation search on silence measures
-    // the loop and not the work.
+    // A tone, a fifth above it and some noise, so the correlation search has
+    // something real to lock onto.
     std::vector<int16_t> src(static_cast<size_t>(kSr) * 4);
     uint32_t seed = 22222;
     for (size_t i = 0; i < src.size(); ++i) {
@@ -414,7 +346,7 @@ Result timeStretch() {
     w.prepare();
     w.seek(0);
     std::vector<float> dst(kBlock);
-    // 124 to 132, which is what the demo's Lift asks for.
+    // 124 to 132 bpm, like the demo's Lift scene.
     for (int32_t b = 0; b < kBlocks; ++b) {
         const float ramp = 124.0f + 8.0f * (static_cast<float>(b % 200) / 200.0f);
         const float rate = ramp / 124.0f;
@@ -430,34 +362,18 @@ Result timeStretch() {
 }
 
 /**
- * Parameters to force before timing, as `name=value` in the machine's own
- * units.
+ * Parameters to force before timing, as `name=value`. The value is
+ * normalised 0 to 1, where 1 is the knob's maximum.
  *
- * **A lever that depends on a patch setting is invisible at defaults**, and
- * this harness times machines at their defaults. Resonance caps `modes` in
- * lean, and `modes` defaults to 12 against a cap of 12 - nothing. Trinity
- * halves the unison stack, and `density` defaults to 1 - nothing. Both levers
- * measured 0% and both were working; the sweep was asking the machine to play
- * a patch nobody would.
- *
- * So a measurement can say what it is measuring: `paired Trinity o1_density=1`
- * times the thing the lever is for. The value is **normalised**, 0 to 1, as
- * every parameter is on the way in - 1 is whatever that knob's maximum means.
+ * Some lean-mode savings only show at certain settings (e.g. Trinity's
+ * `density`), so `paired Trinity o1_density=1` times what the saving is for.
  */
 std::vector<std::pair<std::string, float>> forced;
 
 /**
- * A factory patch to time instead of the defaults.
- *
- * **Defaults are a patch nobody plays**, and timing them has been wrong twice
- * over: Resonance's `modes` defaults to the number lean caps it at, and
- * Trinity's `density` to one, so both levers measured nought while both were
- * working. The same blindness runs the other way - the demo's `Brass` is four
- * players and its `Keys` is a wavetable through a ring modulator, and neither
- * is what this harness was timing when it said what those machines cost.
- *
- * So `--patch "Bell Keys"` loads that patch out of `tools/banks/`, which is
- * the same file the audition harness and the app's factory bank come from.
+ * A factory patch to time instead of the defaults, since the defaults aren't
+ * what anyone plays. `--patch "Bell Keys"` loads it from `tools/banks/`, the
+ * same files the app's factory bank is built from.
  */
 std::string patchName;
 
@@ -494,7 +410,7 @@ void force(Machine *m, const std::string &machine) {
         if (i >= 0) m->params().set(i, kv.second);
     }
     m->params().jumpAll();
-    // After the patch: the spectrum the cloud is built from is parameters.
+    // After the patch, since the cloud is built from its parameters.
     mountCloudIfNeeded(m, machine);
 }
 
@@ -517,8 +433,7 @@ Result timeMachine(const std::string &name) {
         const double t0 = nowUs();
         m->render(L.data(), R.data(), kBlock);
         const double us = nowUs() - t0;
-        // The first few blocks are cold cache and first-touch, which is a real
-        // cost but not the one this is looking for.
+        // Skip the first few blocks, which pay for cold caches.
         if (b > 8) r.samples.push_back(us);
     }
     r.finish();
@@ -539,8 +454,8 @@ Result timeEffect(const std::string &name) {
     std::vector<float> L(kBlock), R(kBlock);
     double phase = 0.0;
     for (int32_t b = 0; b < kBlocks; ++b) {
-        // Something to chew on, and something that decays: a feedback path
-        // full of denormals is one of the things this is here to catch.
+        // Bursts of tone with silence between, so feedback paths decay and
+        // any denormal slowdown shows.
         const bool loud = (b % 64) < 8;
         for (int32_t i = 0; i < kBlock; ++i) {
             phase += 220.0 / kSr;
@@ -560,15 +475,10 @@ Result timeEffect(const std::string &name) {
 }
 
 /**
- * What a unit costs **after** the note has stopped.
- *
- * The one measurement that finds denormals, and the general run above cannot:
- * its material never sits still long enough for a tail to walk down into the
- * subnormal range. Here each unit gets one burst and is then left alone for
- * two seconds, and it is those silent blocks that are timed - a reverb emptying
- * out, a modal bank ringing down, an envelope approaching zero. On a machine
- * whose FPU takes the slow path for subnormals this is where the cost is, and
- * it arrives as a spike at the end of every note rather than as load.
+ * What a unit costs after the note has stopped, which is where denormals
+ * show. Each unit gets one burst of sound and then two silent seconds, and
+ * the silent blocks are timed (reverbs emptying, modes ringing down,
+ * envelopes approaching zero).
  */
 Result timeTail(const std::string &name, bool isEffect) {
     Result r;
@@ -597,7 +507,7 @@ Result timeTail(const std::string &name, bool isEffect) {
     }
     if (m != nullptr) m->noteOff(38);
 
-    // And then nothing at all, for two seconds.
+    // Then two seconds of silence.
     const int32_t tail = 2 * kSr / kBlock;
     for (int32_t b = 0; b < tail; ++b) {
         std::fill(L.begin(), L.end(), 0.0f);
@@ -633,27 +543,16 @@ void report(std::vector<Result> &rows) {
 } // namespace
 
 /**
- * Full against lean, for one unit, measured so the difference is legible.
+ * Full against lean mode for one unit. Two separate runs vary by 30 to 50%,
+ * which hides the difference, so:
  *
- * **Two runs of this harness cannot answer this question.** Three of each on
- * this machine put the run-to-run spread at ±30% to ±50% for most units, which
- * swamps everything the comparison is for: it reported Filament 19% *slower*
- * in lean and a dozen units "reached" that lean does not touch at all. Both
- * were noise, and the second was repeated to Dan as fact before being checked.
+ *  - both modes run in one process, with the same cache and CPU governor;
+ *  - they alternate, so background load affects both equally;
+ *  - the minimum is used, not the mean, since the fastest pass was
+ *    interrupted least.
  *
- * Three things fix it, and they are all about comparing like with like:
- *
- *  - **One process**, so both modes meet the same cache, the same page layout
- *    and the same governor.
- *  - **Alternating**, so a machine that gets busy half way through spoils both
- *    equally instead of whichever ran second.
- *  - **The minimum, not the mean.** The fastest pass is the one that was
- *    interrupted least, and is the closest this can get to what the work
- *    costs; a mean averages in whatever else the machine was doing.
- *
- * And the spread of the full-mode minima is printed beside the result as the
- * **floor**: a saving smaller than that is not a saving, and the row says so
- * rather than leaving it to be read into.
+ * The spread of the full-mode minima is printed as the noise floor. A saving
+ * smaller than that isn't real, and the row says so.
  */
 struct Paired {
     std::string name;
@@ -669,20 +568,13 @@ Paired timePaired(const std::string &name, bool isEffect, int rounds) {
     for (int i = 0; i < rounds; ++i) {
         for (int mode = 0; mode < 2; ++mode) {
             // Full first on even rounds, lean first on odd, so neither mode
-            // always pays for whatever a fresh unit does on its first blocks.
+            // always pays the first-run cost.
             const bool full = (i % 2 == 0) ? (mode == 0) : (mode == 1);
             EngineSettings::get().quality.store(full ? 1 : 0, std::memory_order_relaxed);
             Result r = isEffect ? timeEffect(name) : timeMachine(name);
             if (r.samples.empty()) return p;
-            // **The round's own mean, and the minimum is taken across rounds.**
-            //
-            // Not the cheapest *block* in the round, which was the first
-            // attempt and measured the wrong thing entirely: the cheapest
-            // block of a machine is one where nothing is sounding, so Trinity
-            // came out at 6.9 us against the 87 it costs with notes in it. The
-            // two minimums are at different levels - within a round it picks
-            // silence, across rounds it picks the pass the machine interfered
-            // with least - and only the second one is wanted.
+            // Use each round's mean. The cheapest single block would just be
+            // one where nothing was sounding.
             (full ? fulls : leans).push_back(r.mean);
         }
     }
@@ -694,23 +586,10 @@ Paired timePaired(const std::string &name, bool isEffect, int rounds) {
         return v[static_cast<size_t>(q * static_cast<double>(v.size() - 1))];
     };
 
-    // **The median, and a floor that does not grow when you measure harder.**
-    //
-    // Three estimators were tried and the first two were wrong in instructive
-    // ways. The *minimum* of the rounds looks right - the least interfered-with
-    // pass - but pairing it with a max-minus-min floor is self-defeating: a
-    // range grows with the sample, so asking for forty rounds instead of ten
-    // took Trinity's floor from 9% to 64% and made measuring harder look like
-    // knowing less. Splitting the full rounds in half and comparing those was
-    // the other, and it is far too kind at small counts - the minimum of four
-    // agrees with the minimum of four much more closely than either agrees
-    // with the truth, and it passed Molt at 18% when Molt has no lean branch
-    // to save anything with.
-    //
-    // A median is stable and the middle half is a spread that settles rather
-    // than climbs. So the answer is the median of the rounds, and the floor is
-    // how wide the middle half of the *full* rounds is: how much this
-    // measurement moves when nothing has changed at all.
+    // The result is the median of the rounds, and the floor is the width of
+    // the middle half of the full-mode rounds: how much the measurement moves
+    // when nothing has changed. A max-minus-min range would grow with more
+    // rounds, and the minimum of a few rounds is too optimistic.
     p.full = at(fulls, 0.5);
     p.lean = at(leans, 0.5);
     p.floorPct = p.full > 0.0 ? 100.0 * (at(fulls, 0.75) - at(fulls, 0.25)) / p.full : 0.0;
@@ -734,9 +613,8 @@ void reportPaired(std::vector<Paired> &rows) {
 }
 
 int main(int argc, char **argv) {
-    // `--rate N` anywhere, in every mode: the note density, in note-ons a
-    // second. It is stripped out here so each mode's own argument handling
-    // sees the arguments it expects.
+    // `--rate N` works anywhere in every mode and sets note-ons per second.
+    // It's removed here so each mode sees only its own arguments.
     std::vector<std::string> args;
     for (int i = 0; i < argc; ++i) {
         const std::string a = argv[i];
@@ -752,10 +630,8 @@ int main(int argc, char **argv) {
     argv = argp.data();
 
     const std::string only = argc > 1 ? argv[1] : "";
-    // Off with ACIDULOUS_NO_FTZ=1, so the cost of denormals can be measured
-    // rather than argued about.
-    // Lean quality with ACIDULOUS_LEAN=1, so what the setting buys is a
-    // measurement rather than a claim.
+    // ACIDULOUS_NO_FTZ=1 turns off flush-to-zero, to measure what denormals
+    // cost. ACIDULOUS_LEAN=1 uses lean quality.
     if (getenv("ACIDULOUS_LEAN") != nullptr) {
         EngineSettings::get().quality.store(0, std::memory_order_relaxed);
         printf("quality: lean\n");
@@ -764,8 +640,7 @@ int main(int argc, char **argv) {
     if (ftz) dsp::flushDenormals();
     printf("flush-to-zero: %s\n", ftz ? "on" : "off");
     printf("cost per %d-frame block, budget %.0f us\n", kBlock, kBudgetUs);
-    // Said out loud, because it decides what the sustained patches cost and
-    // nothing else here reveals it.
+    // Printed because it changes what sustained patches cost.
     printf("notes: %.1f a second, one every %.0f ms%s\n\n", gNotesPerSecond,
            1000.0 / gNotesPerSecond,
            gNotesPerSecond > 15.0 ? " - a stress rate, about three times sixteenths at 124 bpm"
@@ -773,10 +648,8 @@ int main(int argc, char **argv) {
 
     std::vector<Result> rows;
     if (only == "paired") {
-        // A second argument names one unit and buys it more rounds. The floor
-        // falls as the rounds rise - it is the spread of a sample - so a unit
-        // being changed is worth measuring harder than the sweep can afford
-        // to measure all thirty-six.
+        // A second argument picks one unit and gives it more rounds, which
+        // lowers the noise floor.
         const std::string one = argc > 2 ? argv[2] : "";
         // Anything after the unit is `name=normalised`, applied before timing.
         for (int i = 3; i < argc; ++i) {
@@ -810,7 +683,7 @@ int main(int argc, char **argv) {
     }
     if (only == "rack") {
         printf("a whole rack, live against frozen - what freezing gives back\n\n");
-        // The demo's two dearest tracks, with the inserts they actually carry.
+        // The demo's most expensive tracks, with their actual inserts.
         rows.push_back(timeRack("Trinity", "Delay", "", 0));
         rows.push_back(timeRack("Trinity", "Delay", "", 1));
         rows.push_back(timeRack("Filament", "Chorus", "", 0));

@@ -1,9 +1,8 @@
 #!/bin/bash
-# The gate. See tools/gate_test.cpp.
+# Tests the gate. See tools/gate_test.cpp.
 #
-# Rendered rather than evaluated: the two things that separate a good gate from
-# a bad one - chattering on a signal that sits on the threshold, and opening
-# for a room instead of for a note - are not visible in a frequency response.
+# The gate is rendered because chattering on a signal near the threshold, and
+# opening on room noise instead of a note, don't show in a frequency response.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

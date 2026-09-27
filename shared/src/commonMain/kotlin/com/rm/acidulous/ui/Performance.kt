@@ -40,17 +40,8 @@ import kotlinx.coroutines.launch
 import com.rm.acidulous.res.*
 
 /**
- * The performance controls, shaped like the things they are.
- *
- * A mod wheel is a wheel: it stands beside the keys, it moves up and down
- * under a thumb, and it stays where it is left. A bend wheel is the same
- * wheel on the other side that springs back to the middle when you let go.
- * Drawing them as horizontal sliders above the keyboard was easier and told
- * you nothing about how to use them.
- *
- * All three - both wheels and the pressure strip - share one control, so a
- * position means the same thing wherever it appears: a bright tab against a
- * ridged dark body.
+ * A wheel control, used for the mod wheel, the bend wheel and the pressure
+ * strip. Mod stays where it's left, bend springs back to the middle.
  */
 @Composable
 fun TouchWheel(
@@ -63,9 +54,9 @@ fun TouchWheel(
     /** A line across the middle, for a control whose rest position is centre. */
     centreMark: Boolean = false,
     label: String? = null,
-    /** What TalkBack calls it; unnamed, TalkBack does not stop on it. */
+    /** The TalkBack label. Without one TalkBack skips it. */
     said: String? = null,
-    /** Its setting in words, where a percentage is not the right reading. */
+    /** Its value in words, for when a percentage isn't right. */
     state: String = "",
     onChange: (Float) -> Unit,
 ) {
@@ -75,9 +66,9 @@ fun TouchWheel(
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     Box(
         modifier.clip(RoundedCornerShape(5.dp)).background(c.wheelBg)
-            // A swipe from TalkBack sets it and never lets go, so a wheel that
-            // springs back does it on its own a moment later - otherwise a
-            // bend set by TalkBack would hold every note out of tune.
+            // A TalkBack swipe sets the value and never releases, so a spring-back
+            // wheel returns on its own a moment later. Otherwise a bend set by
+            // TalkBack would leave every note out of tune.
             .then(
                 if (said == null) Modifier else Modifier.adjustable(
                     said, state.ifEmpty { "%.0f%%".format(value * 100f) }, value,
@@ -93,14 +84,9 @@ fun TouchWheel(
                         val v = if (vertical) 1f - (at.y / size.height) else at.x / size.width
                         change(v.coerceIn(0f, 1f))
                     }
-                    // A drag, never a jab. This used to report the down's own
-                    // position immediately, so the wheel jumped to wherever a
-                    // finger landed - including a finger that was aiming at
-                    // the outermost piano key three dp away and missed. Mod
-                    // does not spring back, and a control change records, so
-                    // a missed note could leave the wheel somewhere new and
-                    // write a point into the lane on the way. A real wheel
-                    // cannot teleport under your thumb either.
+                    // Only moves once dragged. Jumping to the touch point meant a finger
+                    // that missed the nearest piano key could move the mod wheel and record
+                    // a point into the lane.
                     val slop = awaitTouchSlopOrCancellation(down.id) { c, _ -> c.consume() }
                         ?: return@awaitEachGesture
                     report(slop.position)
@@ -111,11 +97,10 @@ fun TouchWheel(
     ) {
         Canvas(Modifier.fillMaxSize()) {
             val v = value.coerceIn(0f, 1f)
-            // Ridges, so it reads as something that turns rather than a bar.
+            // Ridges, so it looks like something that turns.
             val ridge = c.wheelRidge
-            // The pitch of the ridges and the size of the tab below are in dp,
-            // so the wheel is the same wheel at every interface scale rather
-            // than the same drawing on a larger control.
+            // Ridge pitch and tab size are in dp so the wheel looks the same at
+            // every UI scale.
             val pitch = 7.dp.toPx()
             if (vertical) {
                 var y = 4f
@@ -165,26 +150,19 @@ fun TouchWheel(
 }
 
 /**
- * What the octave stepper needs: two arrows and the note between them.
+ * The width the octave stepper needs for two arrows and the note.
  *
- * Stated, because a weighted share of the performance row does not cover it -
- * upright at 1.0 the share came to fifty-eight dp against the seventy-six of
- * `◀ C4 ▶`, and a `Row` asked for more than it has gives the last child what
- * is left. What was left was thirteen pixels of the arrow you step *up* with,
- * and then, once the arrows shared instead, two pixels of the note. Nothing
- * arranges its way out of a box that is too small; the box has to be the right
- * size, and the slack comes off the pressure wheel at the other end, which can
- * spare it.
+ * A fixed width, because a weighted share of the performance row can be too
+ * narrow, and then a `Row` squeezes the last child (the up arrow) to almost
+ * nothing. The pressure wheel at the other end gives up the space instead.
  */
 val OctaveW = 80.dp
 
 /**
- * Octave up and down, side by side, with the octave between them.
+ * Octave down and up arrows with the octave between them.
  *
- * The octave in the middle is also the hardware keyboard's play mode: a tap
- * makes the letters notes, starting at this octave, and it is lit while they
- * are. It is where a player looking for "the keys play the keys" looks, and
- * the row had no room for a chip of its own.
+ * Tapping the octave also toggles the hardware keyboard's play mode, where
+ * the letter keys play notes starting at this octave. It's lit while on.
  */
 @Composable
 fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Modifier) {
@@ -196,14 +174,9 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        // **The arrows share what the stepper is given; they do not state a
-        // width and take it.** Stated at thirty-two each they came to more than
-        // the weighted box around them, and a `Row` asked for more than it has
-        // gives the last child what is left - which was thirteen pixels of the
-        // `▶` you step *up* with. This row's own note already said what that
-        // costs: a stepper missing an arrow is a control that does not work.
-        // Sharing, the two are always the same size as each other and always
-        // both there, whatever the row can spare.
+        // The arrows share the stepper's width instead of each taking a fixed
+        // width, so both are always there and the same size. With fixed widths
+        // the row could squeeze the up arrow to a few pixels.
         StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_down)) {
             onOctave(octave - 1)
         }

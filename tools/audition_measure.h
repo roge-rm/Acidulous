@@ -7,16 +7,13 @@
 
 #include <engine/dsp/Fft.h>
 
-// What a rendered buffer measures.
+// Measurements of a rendered buffer.
 //
-// Eight numbers, and the reason there are eight rather than thirty is that
-// each one changes a decision while a patch is being voiced. Total harmonic
-// distortion, spectral flatness, roughness and every loudness model past RMS
-// were all considered and left out: none of them would have moved a knob, and
-// each is a thing to keep working.
+// Only measurements that help decide how to voice a patch are here. THD,
+// spectral flatness, roughness and fancier loudness models were left out
+// because none of them would change a knob.
 //
-// The two FFT helpers came out of tools/molt_test.cpp, which had them first
-// and now includes them from here, so there is one copy of each.
+// tools/molt_test.cpp uses the FFT helpers from here too.
 
 namespace acidulous::audition {
 
@@ -27,15 +24,11 @@ inline float dB(float linear) {
 }
 
 /**
- * Where the energy sits, in Hz: the magnitude-weighted mean over a band.
+ * Brightness in Hz: the magnitude-weighted mean frequency over a band. Down a
+ * bank's column it shows at a glance if every patch is the same colour.
  *
- * The brightness number. Read down a bank's column it says, at a glance,
- * that every patch in it is the same colour - which is the fault a bank is
- * most likely to have and the one hardest to hear patch by patch.
- *
- * Band-limited because the ends are noise: below 200 Hz a lone fundamental
- * drags the mean down regardless of timbre, and above 8 kHz there is hiss
- * and nothing a listener would call brightness.
+ * Limited to 200 Hz to 8 kHz. Below that a lone fundamental drags the mean
+ * down whatever the timbre, and above it is mostly hiss.
  */
 inline float centroid(const std::vector<float> &mono, int32_t from, float lo = 200.0f, float hi = 8000.0f) {
     constexpr int32_t kN = 8192;
@@ -60,7 +53,7 @@ inline float centroid(const std::vector<float> &mono, int32_t from, float lo = 2
     return den > 0.0 ? static_cast<float>(num / den) : 0.0f;
 }
 
-/** How much of [hz] is in there, for asking whether a chord has both notes. */
+/** The magnitude at [hz], e.g. to check a chord has both notes. */
 inline float magnitudeAt(const std::vector<float> &mono, int32_t from, float hz) {
     constexpr int32_t kN = 8192;
     static const dsp::Fft fft(kN);
@@ -83,14 +76,12 @@ inline float magnitudeAt(const std::vector<float> &mono, int32_t from, float hz)
 }
 
 /**
- * One windowed spectrum, kept so the measures that ask about a *known* note
- * can share a transform and a vocabulary.
+ * One windowed spectrum, shared by the measurements about a known note.
  *
- * Everything below it is anchored: the harness always knows which note it
- * asked for, so it never has to guess one. A blind detector has to choose an
- * octave and can choose wrong - it did, on every string picked near its
- * bridge, where the fundamental sits eleven decibels under the fifth
- * harmonic. Anchored, there is no choice to get wrong.
+ * The harness always knows which note it played, so these never have to
+ * guess the pitch. A blind detector can pick the wrong octave, e.g. on a
+ * string plucked near the bridge where the fundamental is 11 dB under the
+ * fifth harmonic.
  */
 struct Spectrum {
     static constexpr int32_t kBins = 4096; // 8192-point transform
@@ -116,10 +107,8 @@ struct Spectrum {
                     c = mag[static_cast<size_t>(best + 1)];
         const float den = a - 2.0f * b + c;
         float shift = den != 0.0f ? 0.5f * (a - c) / den : 0.0f;
-        // A parabola through three nearly equal bins is nearly a straight
-        // line, and its vertex can be a long way outside them. Unclamped,
-        // that turned a +-60 cent search window into readings of +-600 on any
-        // patch flat enough to have no clear peak.
+        // Clamp the shift. With three nearly equal bins the parabola is
+        // almost flat and its vertex can land far outside them.
         if (shift > 0.5f) shift = 0.5f;
         else if (shift < -0.5f) shift = -0.5f;
         atHz = (static_cast<float>(best) + shift) * binHz;
@@ -160,15 +149,11 @@ inline Spectrum spectrumAt(const std::vector<float> &mono, int32_t from) {
 }
 
 /**
- * The fundamental, by the loudest spectral peak with its neighbours used to
- * put it between bins.
+ * The fundamental, from the loudest spectral peak, interpolated between bins.
  *
- * Not `PitchTrack`, which the engine already has: that is an autocorrelation
- * tracker written for a voice and it looks between 70 and 800 Hz, so it
- * cannot see a lead two octaves above middle C - which is most of what there
- * is to measure here. Parabolic interpolation over three bins gets a 5.9 Hz
- * grid down to well under a cent, which is what makes "is this oscillator an
- * octave out" answerable.
+ * Doesn't use the engine's `PitchTrack`, which is made for voice and only
+ * looks between 70 and 800 Hz. Parabolic interpolation over three bins gets
+ * the 5.9 Hz bin spacing down to well under a cent.
  */
 inline float fundamental(const std::vector<float> &mono, int32_t from, float lo = 20.0f, float hi = 5000.0f) {
     constexpr int32_t kN = 8192;
@@ -193,10 +178,9 @@ inline float fundamental(const std::vector<float> &mono, int32_t from, float lo 
         if (mag[static_cast<size_t>(k)] > mag[static_cast<size_t>(best)]) best = k;
     }
     if (best < 1) return 0.0f;
-    // The loudest partial is not always the first one. Walk down to the
-    // lowest peak that is a near-integer division of it and still carries a
-    // tenth of its energy: a filtered saw whose second harmonic is loudest
-    // is still playing the note underneath it.
+    // The loudest partial isn't always the first. Walk down to the lowest
+    // peak at an integer division of it that still has a tenth of its level,
+    // e.g. a filtered saw whose second harmonic is loudest.
     for (int32_t div = 8; div >= 2; --div) {
         const int32_t k = best / div;
         if (k < kLo) continue;
@@ -231,80 +215,64 @@ struct Measured {
     float peakDb = -200.0f;
     int64_t overs = 0;      // samples past +/-1.0
     float rmsDb = -200.0f;  // over the sounding part only
-    float crestDb = 0.0f;   // peak - rms: transients, or a wall
+    float crestDb = 0.0f;   // peak - rms: high for transients, low for a wall
     float centroidHz = 0.0f;
     float f0Hz = 0.0f;
-    // The even harmonics against the odd ones, in decibels. A centroid
-    // cannot tell a hollow tone from a full one of the same brightness -
-    // a clarinet and a saxophone levelled to the same loudness read within
-    // a percent of each other - and hollow against full is the largest
-    // single fact about a wind instrument. Negative is hollow.
+    // Even harmonics against odd, in dB. Negative is hollow. The centroid
+    // can't tell a hollow tone from a full one of the same brightness, e.g.
+    // a clarinet and a sax.
     float evenOddDb = 0.0f;
     float speaksMs = 0.0f;    // note-on to half the level it settles at
-    // How much brighter the attack is than the tone. A chiff, not a click: a
-    // flute has one on purpose and so does a plucked string, whose attack
-    // really is twenty times the edge of its own tail. See clickRatio for
-    // the fault this column was being read as.
+    // How much brighter the attack is than the tone (chiff). Flutes and
+    // plucked strings have this on purpose. Clicks are measured separately
+    // in clickRatio.
     float onsetEdge = 1.0f;
-    // --- anchored to the note the harness asked for ------------------------
+    // --- measured against the note the harness played -----------------------
     //
-    // A blind pitch detector has to choose an octave and can choose wrong.
-    // These never choose: they look where the note should be.
-    float tuneCents = 0.0f;   // the note's own deviation, from its low partials
-    bool tuned = false;       // ...and whether there was enough there to say
+    // These look where the note should be instead of guessing the pitch.
+    float tuneCents = 0.0f;   // the note's deviation, from its low partials
+    bool tuned = false;       // ...and whether there was enough there to tell
     float partialRatio = 0.0f;// the loudest partial over the note: 2.0 is an octave up
-    // The note's own fundamental against the loudest partial, in decibels.
-    // The difference between a string whose fundamental is merely quiet -
-    // which is what picking near a bridge does, and is a tone colour - and a
-    // saxophone that is sounding its octave and has nothing at the note at
-    // all, which is a fault. `partialRatio` alone cannot tell those apart.
+    // The note's fundamental against the loudest partial, in dB. Tells a
+    // string with a quiet fundamental (a tone colour) from a sax jumping to
+    // its octave with nothing at the note (a fault), which `partialRatio`
+    // alone can't.
     float fundamentalDb = -200.0f;
-    float harmonicity = 0.0f; // how much of the energy stands on the note's series
+    float harmonicity = 0.0f; // how much of the energy is on the note's harmonics
     float lowDb = -200.0f;    // energy under half the note, against all of it
     float ringSeconds = 0.0f; // the fundamental's own fall to -60 dB; 0 if it holds
-    // A click is a *discontinuity*, which is what the second difference sees,
-    // against the largest the sound makes for itself just afterwards. Scale
-    // free and frequency free, so a bright attack does not read as a fault.
+    // A click is a discontinuity. This compares the second difference at the
+    // note-on with the largest one the sound makes just after, so a bright
+    // attack doesn't count as a click.
     float clickRatio = 0.0f;
-    // What the ear would call the level of one note: the loudest four hundred
-    // milliseconds of it. Neither peak nor rms levels a bank holding both a
-    // pluck and a bowed note; this does.
+    // The perceived level of a note: its loudest 400 ms. Unlike peak or rms,
+    // this levels plucked and bowed notes against each other properly.
     float loudnessDb = -200.0f;
     float tailSeconds = 0.0f; // note-off to -60 dB
     bool tailRanOut = false;  // it was still going when the render stopped
     float monoLossDb = 0.0f;  // how much is lost by summing to mono
-    // Energy below 45 Hz against everything above 15. A patch is allowed a
-    // bottom octave; what this is for is the *accident* - Manual's demo was
-    // putting its bass line on a manual, where a 16' and an 8' drawbar fold
-    // onto the same bottom wheel, and twenty-two patches were carrying up to
-    // 28% of themselves below 45 Hz without one column saying so.
+    // Energy below 45 Hz against everything above 15 Hz. Catches patches
+    // with far too much sub-bass by accident.
     float subDb = -200.0f;
-    // Peak-to-trough of the level inside one sustained note, and how fast it
-    // moves. A cabinet, a tremulant and two detuned ranks all live here, and
-    // the difference between a swell and a chop is the rate rather than the
-    // depth: five decibels at 0.8 Hz is musical and the same five at 6.6 Hz
-    // is not.
+    // How much the level moves inside one held note, and how fast. Rotary
+    // cabinets, tremulants and detuned ranks show here. The rate matters as
+    // much as the depth: 5 dB at 0.8 Hz is a swell, at 6.6 Hz it's choppy.
     float swingDb = 0.0f;
     float swingHz = 0.0f;
-    // Left against right at its widest, inside one note. A rotary cabinet
-    // that measures 13 dB here is an auto-panner, not a room.
+    // The widest left/right difference inside one note. A rotary cabinet at
+    // 13 dB here is acting like an auto-panner.
     float panSwingDb = 0.0f;
     float dcDb = -200.0f;
     bool finite = true;
 };
 
 /**
- * [stereo] is interleaved. [offAt] is the frame the last note was released,
- * which is where the tail is measured from; pass the end for a phrase that
- * never lets go.
- */
-/**
- * [offAt] is the frame the last note was released - or, for an effect, the
- * frame its source fell silent - which is where the tail is measured from.
- * [centroidFrom] is where the brightness is taken; the default is a tenth of
- * a second in, past the attack, which is where a machine's tone lives. An
- * effect wants it in the tail instead, where the sound is all wet and the
- * difference between one preset and the next is actually visible.
+ * [stereo] is interleaved. [offAt] is the frame the last note was released
+ * (or where an effect's source went silent), which is where the tail is
+ * measured from. Pass the end for a phrase that never lets go.
+ * [centroidFrom] is where brightness is measured. The default is a tenth of a
+ * second in, past the attack. Effects measure in the tail, where the sound is
+ * all wet.
  */
 inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int noteForF0,
                         int64_t centroidFrom = -1) {
@@ -331,10 +299,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     m.peakDb = dB(m.peak);
     m.dcDb = dB(static_cast<float>(std::abs(dc) / static_cast<double>(frames * 2)));
 
-    // RMS over the sounding part: everything at or above -60 dB of the peak.
-    // Measured over the whole buffer instead, a patch with a four-second tail
-    // reads quieter than an identical one with a short release, and the
-    // column that exists to be flattened would be measuring release time.
+    // RMS over the sounding part only (within 60 dB of the peak), so a long
+    // release doesn't make a patch read quieter.
     const float gate = m.peak * 0.001f;
     double soundSq = 0.0;
     size_t sounding = 0;
@@ -347,9 +313,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     if (sounding > 0) m.rmsDb = dB(static_cast<float>(std::sqrt(soundSq / (static_cast<double>(sounding) * 2.0))));
     m.crestDb = m.peakDb - m.rmsDb;
 
-    // Mono-sum loss. This app is full of unison, rotary and chorus, and a
-    // patch that cancels itself on a phone speaker is a real fault that one
-    // listen on headphones will never find.
+    // Mono-sum loss. Unison, rotary and chorus can cancel on a mono phone
+    // speaker, which you won't notice on headphones.
     if (sumSq > 0.0) {
         const float stereoRms = static_cast<float>(std::sqrt(sumSq / (static_cast<double>(frames) * 2.0)));
         const float monoRms = static_cast<float>(std::sqrt(monoSq / static_cast<double>(frames)));
@@ -358,11 +323,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
 
     // --- what a held note does while it is held --------------------------
     //
-    // These three are why Manual took five rounds of listening: a chord that
-    // squared off while the tune stayed clean, a cabinet swinging thirteen
-    // decibels across the stereo field, a celeste that could not beat, and a
-    // bass line an octave below where it was written are all *inside* a note
-    // and none of them move a single column that reads the note's average.
+    // Level and stereo movement inside a note don't show in any average, so
+    // they're measured separately here.
     {
         const size_t hop = static_cast<size_t>(kSr * 0.02f);
         std::vector<float> env, panDb;
@@ -379,14 +341,9 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             env.push_back(static_cast<float>(both));
             if (l > 1e-6 && r > 1e-6) panDb.push_back(static_cast<float>(std::abs(20.0 * std::log10(l / r))));
         }
-        // **The middle of the note only, for both of them.** A note's own
-        // attack and release are a level change of exactly the kind this is
-        // looking for, and including them means measuring the envelope rather
-        // than anything underneath it - a patch with a slow attack read as a
-        // sixteen-decibel wobble on that alone. The same goes for the stereo:
-        // Brazen's Shambles staggers four players across 85 ms, so for the
-        // first of those milliseconds one player really is alone in one ear,
-        // and reading that as the patch's width said 47 dB.
+        // Only the middle of the note, for both. The attack and release would
+        // otherwise count as level swing, and a staggered ensemble start would
+        // count as stereo width.
         if (env.size() > 16) {
             const size_t drop = env.size() / 5;
             env.assign(env.begin() + static_cast<long>(drop), env.end() - static_cast<long>(drop));
@@ -401,9 +358,9 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             const float lo = sorted[sorted.size() / 20];
             const float hi = sorted[sorted.size() - 1 - sorted.size() / 20];
             if (lo > 1e-9f) m.swingDb = dB(hi) - dB(lo);
-            // How fast: the strongest cycle in the envelope between a half
-            // hertz and thirty, found by walking candidate rates rather than
-            // by an FFT, because there are only a few hundred hops.
+            // The rate: the strongest cycle in the envelope between 0.5 and
+            // 30 Hz, found by trying each rate since there are only a few
+            // hundred hops.
             double mean = 0.0;
             for (float v : env) mean += v;
             mean /= static_cast<double>(env.size());
@@ -423,13 +380,9 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         if (!panDb.empty()) m.panSwingDb = *std::max_element(panDb.begin(), panDb.end());
     }
 
-    // Brightness is averaged over the whole sounding part rather than read
-    // from one window, and that is not a refinement - it is the difference
-    // between a number and a wrong number. Read at a fixed point, a drum
-    // kit's brightness was its kick's, because the kit is played one voice at
-    // a time and the first one is the kick; every kit in the bank reported
-    // the same figure and they looked identical. Anything that evolves - a
-    // pad, a sweep, a slicer - had the same problem more quietly.
+    // Brightness is averaged over the whole sounding part, not read from one
+    // window. One window only sees one moment, e.g. just the kick of a kit or
+    // one point of a sweep.
     const int32_t start = centroidFrom >= 0
                               ? static_cast<int32_t>(std::min<size_t>(static_cast<size_t>(centroidFrom), frames))
                               : static_cast<int32_t>(std::min<size_t>(frames > 8192 ? 4800 : 0, frames));
@@ -438,8 +391,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     const int32_t windows = span > 8192 * 2 ? std::min(6, span / 8192) : 1;
     for (int32_t w = 0; w < windows; ++w) {
         const int32_t at = start + (windows > 1 ? w * (span - 8192) / (windows - 1) : 0);
-        // Weighted by how loud that window is, so silence between two hits
-        // does not drag the answer towards whatever noise is in it.
+        // Weighted by loudness, so quiet gaps between hits don't pull the
+        // answer towards the noise in them.
         float loud = 0.0f;
         for (int32_t i = at; i < at + 8192 && i < static_cast<int32_t>(frames); ++i) {
             loud = std::max(loud, std::abs(mono[static_cast<size_t>(i)]));
@@ -463,13 +416,10 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
 
     // How long before you hear it.
     //
-    // Measured against the level the note *settles* at, not against its peak,
-    // because a sharp onset transient is the peak and would report every
-    // patch as instant. A waveguide is the reason this is worth a column: a
-    // big tube takes hundreds of milliseconds to build a standing wave, so a
-    // patch can be perfectly good on a held note and produce almost nothing
-    // in a phrase - which is exactly what Brazen's low brass was doing, and
-    // what no other number here could see.
+    // Measured against the level the note settles at, not its peak, since a
+    // sharp transient would make every patch look instant. A big waveguide
+    // tube can take hundreds of ms to build up, so a patch fine on a held
+    // note can be nearly silent in a fast phrase.
     {
         const size_t off = std::min(static_cast<size_t>(std::max<int64_t>(0, offAt)), frames);
         const size_t step10 = static_cast<size_t>(kSr) / 100;
@@ -496,17 +446,12 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         }
     }
 
-    // How much brighter the attack is than the note it turns into.
-    //
-    // A click is not an overshoot - it does not have to be louder than the
-    // tone, and Brazen's low brass clicked while measuring well under it. It
-    // is a burst of high frequency the body of the sound never has, so what
-    // separates the two is a *ratio of edge to level*, onset against settled.
-    // Around 1 is a note; above 2 or 3 there is a click on the front of it,
-    // and the darker the instrument the more it sticks out.
+    // How much brighter the attack is than the note it turns into: the ratio
+    // of high-frequency edge to level at the onset against later on. Around
+    // 1 is normal; above 2 or 3 there's something bright on the front.
     //
     // The first difference is a +6 dB/octave tilt, which is enough of a
-    // high-pass to ask this question and costs nothing.
+    // high-pass for this.
     {
         auto edge = [&](size_t from, size_t to) {
             if (to <= from + 1 || to > frames) return 0.0f;
@@ -522,10 +467,9 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         };
         const auto twenty = static_cast<size_t>(kSr * 0.02f);
         const size_t off = std::min(static_cast<size_t>(std::max<int64_t>(0, offAt)), frames);
-        // Only where there is a tone to compare the attack with. A plucked or
-        // struck sound has decayed to nothing by the end of a two-second note,
-        // and dividing by that reports every short patch as a click - which
-        // is not a fault, it is what percussive means.
+        // Only when there's still a tone to compare with. A plucked or struck
+        // sound has died away by the end of the note, and dividing by that
+        // would flag every percussive patch.
         float late = 0.0f;
         for (size_t i = off - off / 4; i < off && i < frames; ++i) late = std::max(late, std::abs(mono[i]));
         if (off > twenty * 4 && late > m.peak * 0.05f) {
@@ -535,9 +479,9 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         }
     }
 
-    // The tail: from the release to 60 dB below the peak, in 10 ms steps, and
-    // it is the LAST step above the floor that counts rather than the first
-    // below it - a release that dips and comes back has not ended.
+    // The tail: from the release to 60 dB below the peak, in 10 ms steps.
+    // Uses the last step above the floor rather than the first below it,
+    // since a release that dips and comes back hasn't ended.
     const size_t off = std::min(static_cast<size_t>(std::max<int64_t>(0, offAt)), frames);
     const float floorAt = m.peak * 0.001f;
     const size_t step = static_cast<size_t>(kSr) / 100;
@@ -549,21 +493,14 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
     }
     m.tailSeconds = static_cast<float>(last - off) / kSr;
     m.tailRanOut = last + step > frames;
-    // --- the loudest four hundred milliseconds, weighted for the ear --------
+    // --- the loudest 400 ms, weighted for the ear ---------------------------
     //
-    // Unweighted, this counted sixty-five hertz at its full size, and sixty-
-    // five hertz is not heard at its full size by anybody or reproduced at it
-    // by most speakers. Six FM basses that measured within eight tenths of a
-    // decibel of each other spanned four once the weighting was on, and the
-    // one Dan reported as "too quiet to really hear" was the quietest of the
-    // six - which the flat number had no way to say.
+    // Weighted because low bass isn't heard at full size, so unweighted
+    // bass patches read louder than they sound.
     //
-    // The two stages are the broadcast loudness ones: a high shelf that lifts
-    // everything above about a kilohertz, standing in for the head and the
-    // outer ear, and a high-pass near forty hertz for what is felt rather
-    // than heard. They are the standard's coefficients at this sample rate,
-    // which is the whole reason to use them - a weighting invented here would
-    // be a preference, and this is a measurement.
+    // The two stages are the standard broadcast loudness (K-weighting)
+    // filters at 48 kHz: a high shelf above about 1 kHz for the head and
+    // outer ear, and a high-pass near 40 Hz.
     {
         static_assert(static_cast<int>(kSr) == 48000, "the weighting coefficients are 48 kHz ones");
         const double b1[3] = {1.53512485958697, -2.69169618940638, 1.19839281085285};
@@ -602,7 +539,7 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         m.loudnessDb = dB(static_cast<float>(std::sqrt(best)));
     }
 
-    // --- a click, which is a corner in the waveform and not a bright attack --
+    // --- a click: a sharp corner in the waveform, not a bright attack -------
     {
         const auto twoMs = static_cast<size_t>(kSr * 0.002f);
         const auto fifty = static_cast<size_t>(kSr * 0.05f);
@@ -613,10 +550,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             }
             return worst;
         };
-        // Where the note actually starts, rather than where the buffer does.
-        // A render has a block or two of lead-in and some machines take a
-        // moment; measured from frame zero this read nothing at all for every
-        // patch in a bank, which is the shape a broken measure has.
+        // Measure from where the note actually starts, not frame zero. A
+        // render has some lead-in and some machines take a moment to sound.
         size_t onset = 0;
         while (onset < frames && std::abs(mono[onset]) < m.peak * 0.01f) ++onset;
         if (onset < frames) {
@@ -626,31 +561,27 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         }
     }
 
-    // Sub-bass, which needs no note to be meaningful: below 45 Hz is below
-    // the bottom of almost every instrument here, and anything much of it is
-    // an accident rather than a choice.
+    // Sub-bass. Below 45 Hz is under almost every instrument here, so much
+    // energy there is usually an accident.
     {
         const Spectrum sub = spectrumAt(mono, start);
         m.subDb = dB(std::sqrt(sub.fractionBelow(45.0f)));
     }
 
-    // --- everything that needs to know which note was asked for -------------
+    // --- everything that needs to know which note was played ----------------
     if (noteForF0 > 0) {
         const float want = midiToHz(noteForF0);
         const Spectrum sp = spectrumAt(mono, start);
-        // Tuning, from the low partials. If the note is flat by x cents then
-        // so is every partial of it; a stiff string's partials run sharper as
-        // they go up, so the low ones are weighted most and the top ones are
-        // there only to speak for a fundamental too quiet to be heard from.
+        // Tuning, from the low partials. A stiff string's upper partials run
+        // sharp, so the low ones are weighted most. The upper ones help when
+        // the fundamental is too quiet to read.
         double num = 0.0, den = 0.0;
         for (int h = 1; h <= 6; ++h) {
             const float target = want * static_cast<float>(h);
             if (target > kSr * 0.45f) break;
-            // Below about eight bins the transform cannot resolve sixty cents
-            // at all - at 65 Hz one bin *is* eighty cents - so a reading there
-            // is the grid speaking, not the note. The upper partials of a flat
-            // note are flat by the same amount and are resolved far better, so
-            // the answer comes from them instead.
+            // Below about eight bins the transform can't resolve 60 cents (at
+            // 65 Hz one bin is 80 cents), so skip those and rely on the upper
+            // partials, which are off by the same amount.
             if (target < 8.0f * sp.binHz) continue;
             float atHz = 0.0f, size = 0.0f;
             sp.peakNear(target, 60.0f, atHz, size);
@@ -663,8 +594,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             m.tuneCents = static_cast<float>(num / den);
             m.tuned = true;
         }
-        // Which partial is actually the loudest. This is the column that says
-        // a saxophone is overblowing: "2.0" rather than "+1200 cents".
+        // Which partial is loudest. Shows an overblowing sax as "2.0" rather
+        // than "+1200 cents".
         int32_t loudest = 1;
         const int32_t kLo = std::max(1, static_cast<int32_t>(20.0f / sp.binHz));
         const int32_t kHi = std::min(Spectrum::kBins - 2, static_cast<int32_t>(6000.0f / sp.binHz));
@@ -678,9 +609,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             const float loudMag = sp.mag[static_cast<size_t>(loudest)];
             m.fundamentalDb = loudMag > 1e-12f ? dB(size / loudMag) : -200.0f;
         }
-        // How much of the sound stands on the note's own harmonic series. One
-        // number that tells a note on the wrong partial (harmonic, but not
-        // this note's) from a note that is not a note at all.
+        // How much of the sound is on the note's harmonic series. Tells a
+        // note on the wrong partial apart from one with no pitch at all.
         double onSeries = 0.0;
         for (int h = 1; h <= 20; ++h) {
             const float target = want * static_cast<float>(h);
@@ -690,15 +620,14 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             onSeries += static_cast<double>(size) * size;
         }
         m.harmonicity = sp.totalSq > 0.0 ? static_cast<float>(std::min(1.0, onSeries / sp.totalSq)) : 0.0f;
-        // Anything under half the note has no business being there, and one
-        // number for it finds a DC pedestal and a sub-audio wander alike.
+        // Energy under half the note shouldn't be there. This catches DC
+        // offsets and sub-audio wander.
         m.lowDb = dB(std::sqrt(sp.fractionBelow(want * 0.5f)));
 
         // --- how long the note's own fundamental takes to go --------------
         //
-        // Beat the note down to nothing and watch what is left: what remains
-        // is that partial's own envelope and nothing else's. Fitted over the
-        // first twenty decibels it falls, while the note is still held.
+        // Mix the note down to DC so only the fundamental's envelope is left,
+        // then fit its decay over the first 20 dB while the note is held.
         {
             const double w = 2.0 * M_PI * static_cast<double>(want) / kSr;
             double cr = 1.0, ci = 0.0;
@@ -747,8 +676,8 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
 
 // --- Pitch against time ------------------------------------------------------
 
-/** One reading of the tracker: when, what pitch, how loud, and whether the
- *  three periods it was taken from agreed with each other. */
+/** One pitch tracker reading: when, what pitch, how loud, and whether the
+ *  three periods it came from agreed. */
 struct TrackPoint {
     float ms = 0.0f;
     float hz = 0.0f;   // 0: nothing periodic there yet
@@ -757,12 +686,10 @@ struct TrackPoint {
 };
 
 /**
- * A two-pole low-pass run forward and then backward, so it has no phase at
- * all - the crossings of what comes out are where the crossings of the
- * fundamental are, not where a filter's lag put them. Three times over,
- * which is twelve poles: fifty decibels down an octave up, so a second
- * harmonic louder than the note - which is what a clarinet radiates - does
- * not put crossings of its own between the real ones.
+ * A two-pole low-pass run forward then backward, so it has zero phase and
+ * the zero crossings stay where the fundamental's are. Run three times (12
+ * poles, about 50 dB down an octave up), so a second harmonic louder than
+ * the fundamental can't add crossings of its own.
  */
 inline void isolateFundamental(std::vector<float> &x, float hz) {
     const double w0 = 2.0 * M_PI * static_cast<double>(hz) / kSr;
@@ -789,19 +716,14 @@ inline void isolateFundamental(std::vector<float> &x, float hz) {
 /**
  * Pitch and level at each of [atMs], from the start of [mono].
  *
- * Period by period rather than by any window: the fundamental is isolated
- * (see above), every positive-going crossing is placed between its two
- * samples by a straight line, and the pitch at a moment is the median of
- * the period it is in and the two beside it. A window of any length
- * averages over the very thing an onset measurement is looking at - the
- * scratch script this replaces autocorrelated twenty-five milliseconds,
- * which at a bassoon's pitch is under three cycles, and it disagreed with
- * the settled measurement by forty cents. This one is checked against a
- * tone of known pitch (trackSelfTest) before it is believed about anything.
+ * Works period by period instead of with a window, since a window averages
+ * over the attack this is meant to show. The fundamental is isolated (see
+ * above), each rising zero crossing is interpolated between samples, and the
+ * pitch comes from the periods around each moment. Checked by trackSelfTest.
  *
- * [hz] is the pitch the note settles at, from fundamental(): the isolation
- * is cut a third above it. Level is RMS over one settled period of the
- * *unfiltered* signal, so it is the note's level and not the fundamental's.
+ * [hz] is the pitch the note settles at, from fundamental(). The filter is
+ * cut a third above it. Level is RMS over one period of the unfiltered
+ * signal, so it's the note's level, not just the fundamental's.
  */
 inline std::vector<TrackPoint> pitchTrack(const std::vector<float> &mono, float hz,
                                           const std::vector<float> &atMs) {
@@ -812,14 +734,10 @@ inline std::vector<TrackPoint> pitchTrack(const std::vector<float> &mono, float 
     const size_t span = std::min(mono.size(), static_cast<size_t>(kSr * (lastMs / 1000.0f + 0.1f)));
     const auto period = static_cast<size_t>(kSr / hz + 0.5f);
 
-    // The level, as RMS over one period centred on each sample, from a
-    // running sum. It is the dB column, and it is also divided out of the
-    // signal before the filter sees it: a filter whose corner is near the
-    // note reads a *growing* note flat - the sidebands the growth puts
-    // above the note are cut and the ones below are not, and the crossings
-    // drift late. Measured on a thirty-millisecond ramp, eleven cents. The
-    // shape of the envelope is the last thing an onset measurement can
-    // afford to have in its pitch, so it is taken out first.
+    // The level as RMS over one period around each sample, from a running
+    // sum. It's the dB column, and it's also divided out before filtering:
+    // with the filter corner near the note, a note that's getting louder
+    // would read flat (about 11 cents on a 30 ms ramp).
     std::vector<double> sum2(span + 1, 0.0);
     for (size_t i = 0; i < span; ++i) sum2[i + 1] = sum2[i] + static_cast<double>(mono[i]) * mono[i];
     auto levelAt = [&](double at) {
@@ -844,13 +762,9 @@ inline std::vector<TrackPoint> pitchTrack(const std::vector<float> &mono, float 
             cross.push_back(static_cast<double>(i) + (d > 0.0 ? -static_cast<double>(x[i]) / d : 0.0));
         }
     }
-    // Each reading is three cycles: the time between crossings three apart,
-    // over three. One cycle on its own is placed by two crossings and the
-    // hiss on a real note moves each by a fraction of a sample, which at
-    // two hundred hertz is three cents of jitter; three cycles is a third
-    // of that, and for a note on its way somewhere the mean of three is
-    // exactly the pitch at their middle. So the earliest a reading exists
-    // is three cycles in, and the front of a note reads '-' before that.
+    // Each reading averages three cycles, which cuts the jitter from noise
+    // to a third and gives the pitch at their middle for a gliding note. So
+    // the first reading is three cycles in, and before that shows '-'.
     struct Span { double centre, period; bool sure; };
     std::vector<Span> spans;
     for (size_t a = 0; a + 3 < cross.size(); ++a) {
@@ -870,9 +784,8 @@ inline std::vector<TrackPoint> pitchTrack(const std::vector<float> &mono, float 
         p.ms = ms;
         const double at = static_cast<double>(ms) * kSr / 1000.0;
         p.db = dB(static_cast<float>(levelAt(at)));
-        // Read between the two spans whose centres bracket the moment, so a
-        // glide reads where it is and not where the nearest whole reading
-        // happened to be - at a slow glide those differ by cents.
+        // Interpolate between the two spans either side of the moment, so a
+        // glide reads where it actually is.
         if (!spans.empty() && p.db > -90.0f && at >= spans.front().centre &&
             at <= spans.back().centre + spans.back().period) {
             size_t k = 0;
@@ -895,18 +808,14 @@ inline std::vector<TrackPoint> pitchTrack(const std::vector<float> &mono, float 
 }
 
 /**
- * The tracker against tones whose pitch is known, in cents of worst error.
+ * Tests the tracker against tones of known pitch.
  *
- * Two tones. One steps from 200 to 210 Hz at a tenth of a second, with a
- * second harmonic six decibels *louder* than the fundamental - the reading
- * has to be right within two periods of the step. The other climbs from 50
- * to 55 Hz over a second, which at the bottom of the bassoon is where the
- * old measurement was forty cents out. Both carry a hiss at -30 dB and a
- * thirty-millisecond fade in, because a real note has those.
+ * One steps from 200 to 210 Hz at 0.1 s, with a second harmonic 6 dB louder
+ * than the fundamental. The other glides from 50 to 55 Hz over a second.
+ * Both have hiss at -30 dB and a 30 ms fade in, like a real note.
  *
- * A tool that cannot pass this says nothing about an instrument. Returns
- * the worst error past the first two periods, in cents; the caller decides
- * what is close enough.
+ * Returns the worst error in cents after the start. The caller decides
+ * what's close enough.
  */
 inline float trackSelfTest(bool verbose = false) {
     float worst = 0.0f;
@@ -944,8 +853,8 @@ inline float trackSelfTest(bool verbose = false) {
         if (verbose) std::printf("  %s\n", t.name);
         for (const TrackPoint &p : got) {
             const auto i = static_cast<size_t>(p.ms * kSr / 1000.0f);
-            // Judged once the fade is over and three cycles are in, and not
-            // across the step: a reading that straddles it is a mean of both.
+            // Only judged after the fade and three cycles, and not across the
+            // step, since a reading there averages both pitches.
             const float threePeriods = 3000.0f / t.f0;
             const bool judged = p.ms > 30.0f + threePeriods &&
                                 (t.glideOver > 0.0f || std::fabs(p.ms - t.switchAt * 1000.0f) > threePeriods);

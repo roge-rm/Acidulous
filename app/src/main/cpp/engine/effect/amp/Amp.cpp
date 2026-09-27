@@ -7,11 +7,9 @@ namespace acidulous::effect {
 
 const ParamDef *Amp::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        // **The preamp is `drive`, not `gain`.** `Effect::initParams` finds a
-        // parameter literally named `gain` and the base class multiplies the
-        // output by it afterwards, so a preamp called that would have a hidden
-        // trim welded to it. And for an effect the parameter's *name is the
-        // knob's label*, so it has to read correctly too.
+        // The preamp is called `drive` because `Effect::initParams` treats a
+        // parameter named `gain` as the output trim. The name is also the
+        // knob's label.
         {"drive", 0.0f, 1.0f, 0.35f, Curve::Linear, 0, ""},
         {"bias", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"bass", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
@@ -22,10 +20,9 @@ const ParamDef *Amp::paramDefs(int32_t &count) const {
         {"master", 0.0f, 1.0f, 0.35f, Curve::Linear, 0, ""},
         {"sag", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
         {"cab", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},
-        // Every voicing knob is a plain 0..1 and every taper lives in the code
-        // below, so a taper can be retuned without changing what a stored
-        // value means - which after the first factory patch ships is the
-        // difference between an improvement and a song changing under somebody.
+        // Every voicing knob is a plain 0..1 and the tapers are in the code
+        // below, so a taper can be retuned without changing how saved songs
+        // sound.
         {"size", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"cone", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"mic", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""},
@@ -75,7 +72,7 @@ bool Amp::process(float *L, float *R, int32_t frames, bool stereoIn) {
     g1 = 1.0f + drive * 18.0f;
     const float over = drive > v.stageBFrom ? (drive - v.stageBFrom) / (1.0f - v.stageBFrom) : 0.0f;
     g2 = 1.0f + over * 12.0f;
-    stageBOn = over > 0.0f; // a clean setting is genuinely one stage, and cheaper
+    stageBOn = over > 0.0f; // a clean setting uses one stage, which is cheaper
     biasOff = p.get(Bias) * 0.5f;
     interCoeff = dsp::onePoleCoeff(1.0f / (6.2831853f * v.interHz), sr * 2.0f);
     cabOn = p.get(Cab) >= 0.5f;
@@ -95,28 +92,19 @@ bool Amp::process(float *L, float *R, int32_t frames, bool stereoIn) {
     for (int c = 0; c < chans; ++c) {
         Channel &s = ch[c];
         float *buf = c == 0 ? L : R;
-        // **The dry path is delayed by the oversampler's latency, always.**
-        //
-        // Two reasons, and the second is the one that bites. A wet path fifteen
-        // samples behind an undelayed dry notches at 1.6 kHz when `mix` is
-        // halfway, and nobody attributes that to an oversampler - they say the
-        // amp sounds phasey. And delaying it *unconditionally*, rather than
-        // only when the oversampling is on, means the latency never changes,
-        // so flipping the quality setting mid-stream cannot click.
+        // The dry path is always delayed by the oversampler's latency.
+        // Otherwise a half mix comb filters (a notch at 1.6 kHz). Delaying it
+        // even when oversampling is off keeps the latency fixed, so changing
+        // the quality setting doesn't click.
         float dry[kBlockFrames];
         for (int32_t i = 0; i < frames; ++i) {
             s.dry[static_cast<size_t>(s.dryAt)] = buf[i];
             s.dryAt = s.dryAt + 1 >= kDry ? 0 : s.dryAt + 1;
             dry[i] = s.dry[static_cast<size_t>((s.dryAt + kDry - 1 - dsp::Oversampler::kLatency) % kDry)];
         }
-        // **At lean quality the chain runs at the base rate.**
-        //
-        // Two nonlinear stages with a cabinet after them is the most
-        // aliasing-prone thing in the app, which is why the oversampler was
-        // written; it is also the dearest effect here, and on a phone that
-        // cannot afford it, an amp that aliases is better than an amp that
-        // stutters. The dry delay above is unconditional, so this switch does
-        // not change the latency and cannot click when it is thrown.
+        // At lean quality the chain runs at the base rate. It aliases more but
+        // this is the most expensive effect, and aliasing is better than
+        // dropouts on a slow phone.
         const bool over = acidulous::fullQuality();
         const int32_t n = over ? frames * 2 : frames;
         if (over) s.os.up(buf, frames, up);
@@ -125,8 +113,8 @@ bool Amp::process(float *L, float *R, int32_t frames, bool stereoIn) {
             float x = s.inHp.highpass(up[i]);
             x = s.bright.process(s.inShelf.process(x));
             x = stageA(x, g1, biasOff);
-            // The coupling capacitor: what makes a cascade tight rather than
-            // flubby, and what stops stage A's bias becoming stage B's offset.
+            // The coupling capacitor. Keeps the low end tight and stops stage
+            // A's bias becoming an offset into stage B.
             s.interZ += (x - s.interZ) * interCoeff;
             x -= s.interZ;
             if (stageBOn) x = stageB(x, g2);
@@ -139,8 +127,7 @@ bool Amp::process(float *L, float *R, int32_t frames, bool stereoIn) {
         if (cabOn) {
             for (int32_t i = 0; i < frames; ++i) buf[i] = s.cab.process(buf[i]);
         }
-        // At nought this is exactly the dry, which is what makes the effect
-        // provably transparent when it is asked to be.
+        // At mix 0 this is exactly the dry signal.
         for (int32_t i = 0; i < frames; ++i) buf[i] = dry[i] + (buf[i] - dry[i]) * mixNow;
     }
     if (!stereoIn) return false;

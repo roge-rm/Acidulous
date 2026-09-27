@@ -48,18 +48,10 @@ import com.rm.acidulous.ui.theme.AcidColors
 import com.rm.acidulous.res.*
 
 /**
- * The keyboard, in two shapes.
- *
- * With no scale running it is an ordinary piano: white keys across the
- * bottom, black keys overlaid where they belong, every C named.
- *
- * With a scale running the out-of-scale notes are simply gone, and what is
- * left is packed edge to edge - still coloured as the piano colours them, so
- * the shape of the scale stays legible, but no longer laid out as a piano.
- * Nothing can be played wrong, and two or three times as many usable notes
- * fit in the same width.
- *
- * Either way it plays polyphonically, one note per finger.
+ * The keyboard. With no scale running it's a normal piano. With a scale
+ * running the out-of-scale notes are left out and the rest are packed edge
+ * to edge, still coloured like piano keys, so more notes fit and nothing can
+ * be played wrong. Plays polyphonically, one note per finger.
  */
 @Composable
 fun PianoKeys(
@@ -68,40 +60,35 @@ fun PianoKeys(
     scaleRoot: Int?,
     octave: Int,
     modifier: Modifier = Modifier,
-    /** How the running scale writes its notes; empty is chromatic. */
+    /** How the running scale spells its notes; empty is chromatic. */
     noteSpelling: Map<Int, String> = emptyMap(),
 ) {
     val c = Acid.colors
     val measurer = rememberTextMeasurer()
     var held by remember { mutableStateOf(mapOf<Long, Int>()) }
     // How hard each sounding note was struck, 0 at the front edge of its key
-    // and 1 at the back. Kept beside `held` and for the same reason: the
-    // gesture owns it, composition only draws it.
+    // and 1 at the back. Owned by the gesture like `held`; composition only
+    // draws it.
     var strikes by remember { mutableStateOf(mapOf<Int, Float>()) }
     val base = 12 * (octave + 1)
     val scale = scalePitchClasses?.takeIf { it.isNotEmpty() }?.sorted()
 
-    // The pointer area is the whole box and the keys are drawn inset into it,
-    // so the gap between the keyboard and the wheel either side belongs to
-    // the keys rather than to nobody. The outermost key is the one a finger
-    // misses - it is as wide as its neighbours but has a wheel three dp away
-    // instead of another key - and this hands it that three dp to be hit in.
+    // The pointer area is the whole box and the keys are drawn inset, so a
+    // touch in the small gap next to the wheels still hits the outermost key.
     Box(
         modifier.pointerInput(base, scale) {
             val grab = EdgeGrab.toPx()
-                // What is down is owned by this loop, not by composition.
-                // Rebuilding it from the drawn state each event was the bug:
-                // touches arrive faster than recomposition, so a finger that
-                // had just lifted was read back out of a stale snapshot and
-                // put down again, and its key stayed lit with nothing on it.
+                // The loop owns which keys are down, not composition. Touches arrive
+                // faster than recomposition, so reading from drawn state brought back
+                // fingers that had already lifted and left keys stuck lit.
                 val down = HashMap<Long, Int>()
                 val force = HashMap<Int, Float>()
                 try {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent()
-                            // Measured against the drawn keys, not the box,
-                            // and the touch is moved into their space.
+                            // Measured against the drawn keys, not the box, with the touch
+                            // moved into their space.
                             val layout = Layout(
                                 size.width.toFloat() - grab * 2f, size.height.toFloat(),
                                 base, MinKey.toPx(), scale,
@@ -116,14 +103,9 @@ fun PianoKeys(
                                     if (down[id] != note) {
                                         down[id]?.let { NativeEngine.noteOff(rack, it); force.remove(it) }
                                         if (note != null) {
-                                            // Hit it high for hard and low for
-                                            // soft, as a pad is. Read once, as
-                                            // the note goes down: a finger that
-                                            // slides afterwards has already
-                                            // played it, and sliding onto the
-                                            // next key plays that one from
-                                            // wherever it crossed - which is
-                                            // what a glissando is.
+                                            // Higher on the key is harder, like a pad. Read once when the
+                                            // note starts; sliding onto the next key plays it from where
+                                            // the finger crossed, which gives a glissando.
                                             val strike = if (UiPrefs.keysFullStrength) 1f else {
                                                 layout.strikeAt(
                                                     Offset(change.position.x - grab, change.position.y),
@@ -152,10 +134,9 @@ fun PianoKeys(
                         }
                     }
                 } finally {
-                    // Changing octave or scale restarts this loop, and leaving
-                    // the screen cancels it. Either way the fingers that were
-                    // down will never report going up, so let go of them here
-                    // rather than leaving notes sounding and keys lit.
+                    // Changing octave or scale restarts this loop and leaving the
+                    // screen cancels it. Either way the fingers that were down never
+                    // report going up, so release their notes here.
                     for (note in down.values) NativeEngine.noteOff(rack, note)
                     down.clear()
                     force.clear()
@@ -167,26 +148,22 @@ fun PianoKeys(
         Canvas(Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))) {
             val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale)
             val down = held.values.toSet()
-            // How far up a sounding key to light it. **The fill is the only
-            // thing that says which mode you are in once your finger is down**
-            // - that is the drum pads' note about their own highlight, and it
-            // holds here for the same reason - so a key struck softly lights
-            // from its front edge to where the finger landed, and full
-            // strength lights the whole of it.
+            // How far up a sounding key to light it. A soft note lights from the
+            // front edge to where the finger landed, full strength lights the whole
+            // key, so you can see which mode you're in.
             fun lit(note: Int): Float = strikes[note] ?: 1f
             val nameStyle = TextStyle(color = c.keyLabel, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
 
             if (layout.scaleKeys != null) {
                 // Scale mode: one key per usable note, packed together.
-                // The tonic is named, not merely the lowest key on screen.
+                // The tonic is named.
                 val root = scaleRoot
                 for ((i, note) in layout.scaleKeys.withIndex()) {
                     val x = i * layout.keyW
                     val black = isBlackKey(note)
                     val colour = when {
                         down.contains(note) -> if (black) c.green else c.teal
-                        // Light enough to read as a key rather than a gap: on
-                        // this background a true black note disappears.
+                        // Lighter than true black, which disappears on this background.
                         black -> c.keyBlack
                         else -> c.keyWhite
                     }
@@ -202,7 +179,7 @@ fun PianoKeys(
                         drawRect(c.keyEdge, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height),
                             style = Stroke(1f))
                     }
-                    // The tonic gets its name, so the scale has a landmark.
+                    // The tonic gets its name so the scale has a landmark.
                     if (root != null && ((note % 12) + 12) % 12 == root) {
                         val laid = measurer.measure(
                             AnnotatedString(noteName(note, noteSpelling)),
@@ -241,11 +218,9 @@ fun PianoKeys(
                 }
             }
         }
-        // After the drawing, so the keys TalkBack is told about lie over it
-        // and a touch finds them. They draw nothing themselves.
+        // After the drawing, so the TalkBack keys lie over it. They draw
+        // nothing themselves.
         KeysForTalkBack(rack, base, scale, noteSpelling)
-        // Octave up and down, stacked so they cost one narrow column rather
-        // than two, which is width the keys would rather have.
     }
 }
 
@@ -260,9 +235,8 @@ private fun OctaveKey(label: String, enabled: Boolean, modifier: Modifier, onCli
 }
 
 /**
- * The chip beside the keys, turned on its side so it costs almost no width:
- * every millimetre it gives back is another key. A tap switches the scale
- * off and on, a long press opens the selector.
+ * The scale chip beside the keys, turned on its side to save width. A tap
+ * switches the scale off and on, a long press opens the selector.
  */
 @Composable
 fun ScaleChip(
@@ -270,16 +244,12 @@ fun ScaleChip(
     onToggle: () -> Unit,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
-    /** Turned on its side when it stands beside the keys; flat in a strip. */
+    /** On its side next to the keys; flat in a strip. */
     vertical: Boolean = true,
     /**
-     * A glyph to stand in for the whole label, when the row cannot afford it.
-     *
-     * **And the scale's name goes with the word, not just instead of it.**
-     * "C Ionian (Major)" squeezed into a chip the size of a finger is three
-     * letters and an ellipsis, which says less than nothing. Lit or unlit
-     * already answers the question the chip is there for - is a scale
-     * running - and which scale it is, is what holding it open is for.
+     * A glyph to show instead of the label when the row is short on room. The
+     * scale name is dropped too, since it wouldn't fit. Holding the chip
+     * shows which scale it is.
      */
     icon: String? = null,
 ) = SlotChip(
@@ -288,13 +258,8 @@ fun ScaleChip(
 )
 
 /**
- * The chip grammar the keyboard strip uses for everything that sits between
- * what you play and what sounds: **a tap turns it on or off, a long press
- * opens it**. The common question - is this running? - costs one tap and is
- * answerable at a glance; choosing and configuring is rare and lives a level
- * down. The scale chip established it; the modifier chips either side of it
- * follow it exactly, because two controls doing the same job should not want
- * two different gestures.
+ * The chip used for everything between what you play and what sounds (the
+ * scale and the modifiers): a tap turns it on or off, a long press opens it.
  */
 @Composable
 fun SlotChip(
@@ -305,26 +270,18 @@ fun SlotChip(
     modifier: Modifier = Modifier,
     vertical: Boolean = true,
     /**
-     * The text is a single glyph standing in for a word, so it is drawn at the
-     * size a glyph needs rather than the size three or four letters need - and
-     * never ellipsised, because there is nothing to ellipsise.
+     * The text is a single glyph standing in for a word, so it's drawn at glyph
+     * size and never ellipsised.
      */
     icon: Boolean = false,
-    /** What TalkBack calls it, where [text] is a glyph. */
+    /** The TalkBack label, for when [text] is a glyph. */
     said: String = text,
 ) {
     val c = Acid.colors
-    // **The callbacks have to be the current ones.** `pointerInput` restarts
-    // only when its key changes, and the key here was `on` - so the block held
-    // whichever lambdas were in scope the last time the chip's lit state
-    // changed, and went on calling them for as long as it did not.
-    //
-    // That cost the arp every setting anybody made. Holding the chip fills an
-    // empty slot *bypassed*, so `on` stays false; the captured lambda goes on
-    // believing the slot is empty; and the next hold fills it again, which
-    // replaces the slot and throws the parameters away. It looked exactly like
-    // a window that did not save. `Knob` has guarded against this since it was
-    // written, with the same three lines.
+    // pointerInput only restarts when its key (`on`) changes, so the callbacks
+    // must be read through rememberUpdatedState. Otherwise the block keeps stale
+    // lambdas: holding the arp chip on an empty slot fills it bypassed, `on`
+    // stays false, and the next hold refills the slot and loses its settings.
     val cb by rememberUpdatedState(onToggle to onOpen)
     Box(
         modifier.clip(RoundedCornerShape(4.dp)).background(if (on) c.accentDim else c.card)
@@ -351,15 +308,12 @@ fun SlotChip(
     }
 }
 
-/** Narrower than this and a key is harder to hit than it is worth. */
+/** A key narrower than this is too hard to hit. */
 private val MinKey = 23.dp
 
 /**
- * How far past the drawn keys a touch still counts as one.
- *
- * The same three dp that separates the keyboard from the wheel either side,
- * so the gap is drawn rather than merely empty and the first and last key
- * each get it to be hit in.
+ * How far past the drawn keys a touch still counts. Same as the gap between
+ * the keyboard and the wheels, so the first and last key get it.
  */
 private val EdgeGrab = 3.dp
 
@@ -367,9 +321,9 @@ private val EdgeGrab = 3.dp
 private val WhiteSteps = intArrayOf(0, 2, 4, 5, 7, 9, 11)
 
 /**
- * Key geometry for both shapes. Piano mode picks two octaves, an octave and
- * a half, or one, by what leaves a key wide enough to hit; scale mode simply
- * takes as many in-scale notes as fit.
+ * Key layout for both modes. Piano mode shows two octaves, one and a half, or
+ * one, whichever keeps the keys wide enough to hit. Scale mode fits as many
+ * in-scale notes as it can.
  */
 private class Layout(val width: Float, val height: Float, val base: Int, minKey: Float, scale: List<Int>?) {
     val scaleKeys: List<Int>? = scale?.let { pcs ->
@@ -407,7 +361,7 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
         return out
     }
 
-    /** The black key under a touch, if it is on one. */
+    /** The black key under a touch, if any. */
     private fun blackAt(p: Offset): Int? {
         if (scaleKeys != null || p.y > blackH) return null
         for ((x, note) in blacks()) if (p.x >= x && p.x <= x + blackW) return note
@@ -415,9 +369,8 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
     }
 
     fun noteAt(p: Offset): Int? {
-        // Across, the coerceIn below does the work: a touch in the grab margin
-        // beyond either end is the outermost key, which is what a finger that
-        // slightly missed it meant. Above and below really is nothing.
+        // Sideways, coerceIn below maps a touch in the margin past either end to
+        // the outermost key. Above or below the keys is nothing.
         if (p.y < 0f || p.y > height) return null
         scaleKeys?.let { keys ->
             val i = (p.x / keyW).toInt().coerceIn(0, keys.size - 1)
@@ -429,14 +382,11 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
 
     /**
      * How far up its own key a touch landed, 0 at the front edge and 1 at the
-     * back. This is the velocity, and the fill that draws it.
+     * back. This is the velocity, and how far the key is lit.
      *
-     * **Up the key it hit, not up the keyboard.** A black key is drawn over
-     * the back two thirds of the whites, so measuring against the whole
-     * keyboard would leave it nothing below a third and no way to play one
-     * softly at all. Against its own length every key has the full range, and
-     * the black keys are simply steeper - which is what they feel like under a
-     * finger anyway.
+     * Measured along the key that was hit, not the whole keyboard. Black keys
+     * only cover the back two thirds, so otherwise they could never be played
+     * softly.
      */
     fun strikeAt(p: Offset): Float {
         val h = if (blackAt(p) != null) blackH else height
@@ -446,10 +396,9 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
 
 // --- The scale selector ------------------------------------------------------------
 //
-// Reached by holding the scale chip. It is a picker, not a panel: the key
-// across the top, how the scale is applied, then the scales themselves in the
-// families they belong to. The row of twelve dots shows the shape of whatever
-// is selected, so an unfamiliar name still tells you something.
+// Opened by holding the scale chip. The key across the top, how the scale is
+// applied, then the scales grouped by family. The row of dots shows the
+// selected scale's notes.
 
 /** How a Scale modifier is set up, as the dialog sees it. */
 data class ScaleSetting(val on: Boolean, val key: Int, val scale: Int, val degree: Boolean, val snap: Int)
@@ -473,26 +422,18 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
     }
     // C Dorian is C D E♭ F G A B♭, not C D D♯ F G A A♯.
     val spelling = remember(s.key, s.scale) { com.rm.acidulous.model.Scales.spelling(s.key, s.scale) }
-    // Open on the family the current scale belongs to, so the window comes up
-    // showing what is in force rather than showing the modes every time.
+    // Open on the current scale's family.
     var tab by rememberSaveable(current.scale) {
         mutableStateOf(ScaleGroups.indexOfFirst { current.scale in it.second }.coerceAtLeast(0))
     }
 
     /**
-     * Everything above the scales, on every page.
-     *
-     * It is the same three rows whichever family you are looking at - the key,
-     * what the scale *does*, and which notes that leaves - so it belongs above
-     * the tabs. `TabbedDialog` has no slot above them, and repeating a
-     * composable across pages that share their state costs nothing, so each
-     * page draws it.
+     * The key, mode and notes rows shown above the scales on every page.
+     * `TabbedDialog` has no slot above the tabs, so each page draws it.
      */
     val header: @Composable () -> Unit = {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            // **Twelve keys across the width.** They were a row that scrolled
-            // sideways, which hid half of them; sharing the width by weight
-            // makes every key reachable and makes each one bigger than it was.
+            // Twelve keys sharing the width by weight, so all are reachable.
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 for (i in 0 until 12) {
                     val on = i == s.key
@@ -511,8 +452,7 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                     }
                 }
             }
-            // Centred, because these three are the window's verb and the eye
-            // should find them without reading left to right.
+            // Centred, since these three are the main choice in the window.
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
@@ -531,10 +471,7 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                     }
                 }
             }
-            // The shape of the scale: the notes it keeps, and nothing else. It
-            // used to show all twelve with the rejected ones greyed, which
-            // asked you to read past them to see the scale; the notes that are
-            // in it are the answer. Centred under the keys they came from.
+            // The notes in the scale, centred under the keys.
             androidx.compose.foundation.layout.FlowRow(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
@@ -565,12 +502,8 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
         dismissLabel = stringResource(Res.string.cancel),
         confirmLabel = stringResource(Res.string.ok),
         onConfirm = { onApply(s) },
-        // **Wrapped, not shared out by weight.** The shared chip row gives every
-        // tab the same slice of the width and cuts the words to fit, which is
-        // right for the four the machine picker has and wrong for six: it read
-        // "Minor var", "Pentatoni", "World & e". These size to their words and
-        // take a second line when they need one, so nothing is abbreviated and
-        // nothing scrolls.
+        // Tab chips wrap and size to their words instead of sharing the width,
+        // which cut six family names short.
         chips = {
             androidx.compose.foundation.layout.FlowRow(
                 Modifier.fillMaxWidth(),
@@ -580,11 +513,7 @@ fun ScaleDialog(current: ScaleSetting, onDismiss: () -> Unit, onApply: (ScaleSet
                 ScaleGroups.forEachIndexed { i, (title, _) -> Pill(stringResource(title), i == tab) { tab = i } }
             }
         },
-        // **Tabs with the scales under them, like the machine picker.** The
-        // thirty-three were one long list in a box 220 dp tall; six families
-        // behind six chips is the same arrangement the app already uses for
-        // choosing an instrument, and it is one tap to a family rather than a
-        // drag through everything.
+        // Scales grouped into families behind tabs, like the machine picker.
         pages = ScaleGroups.map { (_, range) ->
             {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -625,9 +554,8 @@ private fun Pill(label: String, on: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * The keys, one node each, for TalkBack: the canvas under them is one picture,
- * and a keyboard that says nothing but "keyboard" cannot be played. Each is laid
- * over its key, named for its note, and a double tap plays it for a moment.
+ * One TalkBack node per key, since the canvas is a single picture. Each is
+ * laid over its key, named for its note, and a double tap plays it briefly.
  */
 @Composable
 private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: Map<Int, String>) {
@@ -638,11 +566,9 @@ private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: M
         val w = with(density) { maxWidth.toPx() }
         val h = with(density) { maxHeight.toPx() }
         val layout = Layout(w, h, base, with(density) { MinKey.toPx() }, scale)
-        // Left to right, whites and blacks in pitch order, which is the order
-        // TalkBack walks them. The blacks are raised over the whites, as they
-        // are drawn: in pitch order each white key would otherwise lie over
-        // the black key before it, and a touch on that black key's right half
-        // would find the white one.
+        // In pitch order, which is the order TalkBack walks them. Black keys are
+        // raised over the whites so a touch on a black key's right half doesn't
+        // hit the next white key.
         val keys = ArrayList<Triple<Int, Float, Float>>() // note, x, width
         val blackH: Float
         if (layout.scaleKeys != null) {
@@ -669,7 +595,7 @@ private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: M
     }
 }
 
-/** A note as it is said rather than written: "C sharp 4", not "C#4". */
+/** A note as it's spoken: "C sharp 4", not "C#4". */
 internal fun spokenNote(pitch: Int, spelling: Map<Int, String>, resources: AppStrings): String {
     val written = noteName(pitch, spelling)
     val octave = pitch / 12 - 1

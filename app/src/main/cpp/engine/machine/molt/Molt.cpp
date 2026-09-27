@@ -14,11 +14,8 @@ using dsp::mtof;
 namespace {
 
 /**
- * Hann, once, sampled by position rather than computed per sample.
- *
- * A grain can be a thousand frames long and one is laid every period, so the
- * window is asked for several times a frame per voice. A table of a thousand
- * is finer than the ear and finer than the grain.
+ * A Hann window table, looked up instead of computed per sample since it's
+ * read several times a frame per voice. 1024 points is fine enough.
  */
 constexpr int32_t kWindowSize = 1024;
 
@@ -41,25 +38,22 @@ Molt::Molt() { initParams(); }
 
 const ParamDef *Molt::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        // The take is a file, mounted like any other machine's material -
-        // see the recording window. This machine used to capture into a
-        // buffer of its own with `record`, `seconds` and `ingain`, which was
-        // a fourth way of recording in an app that already had three.
+        // The take is a file mounted like other machines' material. See the
+        // recording window.
         {"start", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"loop", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
 
-        // How hard the take is pulled onto what was written. At nought it
-        // keeps the line it was sung with and is merely transposed; at one
-        // every moment lands exactly on the note.
+        // How hard the take is pulled onto the written note. At 0 it keeps
+        // the sung line and is just transposed, at 1 it lands exactly on the
+        // note.
         {"tune", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        // How long it takes to get there. Zero is the hard tune everybody
-        // knows; forty milliseconds is a singer correcting themselves.
+        // How long it takes to get there. 0 is hard tune, 40 ms sounds like a
+        // singer correcting themselves.
         {"rate", 0.0f, 400.0f, 40.0f, Curve::Linear, 0, "ms"},
-        // Every mark takes the written pitch, voiced or not: a monotone with
-        // the words still in it.
+        // Every mark takes the written pitch, voiced or not.
         {"robot", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
 
-        // The size of the singer, independent of the note.
+        // Formant shift, independent of the note.
         {"formant", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "st"},
         {"mega", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
 
@@ -126,8 +120,7 @@ void Molt::noteOn(uint8_t note, uint8_t velocity) {
         if (!c.used) { v = &c; break; }
     }
     if (v == nullptr) {
-        // Steal the quietest, which for a chord of held notes is the oldest
-        // thing still fading.
+        // Steal the quietest voice.
         v = &voices[0];
         for (auto &c : voices) {
             if (c.amp.value() < v->amp.value()) v = &c;
@@ -142,9 +135,8 @@ void Molt::noteOn(uint8_t note, uint8_t velocity) {
     v->untilGrain = 0.0f;
     v->amp.retrigger();
 
-    // The first note starts the phrase. Later ones join it where it has got
-    // to rather than restarting it - that is what makes a chord harmony, and
-    // what lets a melody be written under a line that keeps its own rhythm.
+    // The first note starts the phrase. Later notes join where it's got to
+    // instead of restarting it, so chords sing together.
     if (!running) {
         const audio::Utterance *u = source;
         if (u != nullptr && u->usable()) {
@@ -168,16 +160,14 @@ void Molt::allNotesOff() {
         v.gate = false;
         v.amp.release();
     }
-    // The words stop with the hands: a transport stop rewinds the phrase.
+    // A transport stop rewinds the phrase.
     running = false;
     head = 0.0;
 }
 
 void Molt::controlChange(uint8_t cc, uint8_t value) {
     if (cc == 1) {
-        // Mod is the size of the singer, which is the one thing here worth a
-        // wheel: it is continuous, it is musical, and it is the gesture the
-        // machine is named for.
+        // The mod wheel sets the formant.
         const float v = static_cast<float>(value) / 127.0f;
         params_.set(Formant, 0.5f + v * 0.5f);
     }
@@ -204,7 +194,7 @@ void Molt::notePressure(uint8_t note, uint8_t value) {
 
 void *Molt::swapObject(int32_t slot, void *object) {
     if (slot != 0) return object;
-    // Voices hold positions into the old take, so they stop with it.
+    // Voices hold positions in the old take, so they stop with it.
     for (auto &v : voices) {
         v.used = false;
         v.gate = false;
@@ -225,7 +215,7 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
     const audio::Epoch &e = u->epochs[static_cast<size_t>(idx)];
     const float srcPeriod = clampf(e.period, 2.0f, 2000.0f);
 
-    // --- what this grain is pulled to --------------------------------------
+    // --- the pitch this grain is pulled to ---------------------------------
     float targetPeriod;
     if (e.voiced || robot) {
         const float pitchHz = noteHz(static_cast<float>(v.note) +
@@ -234,9 +224,9 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
         const float logNote = std::log2(pitchHz);
         float want = logNote;
         if (!robot && u->rootHz > 0.0f && e.voiced) {
-            // How far this moment is from the take's own root, kept in part:
-            // at tune nought the whole shape of the sung line survives and is
-            // merely moved to the note; at one it is flattened onto it.
+            // Keep part of this moment's distance from the take's root. At
+            // tune 0 the sung line's shape is kept, at 1 it's flattened onto
+            // the note.
             const float logSrc = std::log2(sampleRate / srcPeriod);
             want = logNote + (1.0f - tune) * (logSrc - std::log2(u->rootHz));
         }
@@ -246,80 +236,41 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
         } else if (rateSec <= 0.0005f) {
             v.logPitch = want;
         } else {
-            // One pole per grain rather than per sample: correction happens
-            // at the rate the voice has periods, which is the rate at which
-            // there is anything new to correct.
+            // One pole per grain rather than per sample, since there's only
+            // something new to correct once per period.
             const float coeff = 1.0f - std::exp(-srcPeriod / (rateSec * sampleRate));
             v.logPitch += (want - v.logPitch) * coeff;
         }
         targetPeriod = sampleRate / std::exp2(v.logPitch);
     } else {
-        // A consonant has no pitch to move, and moving it anyway is what
-        // makes a cheap shifter sound cheap. It is copied at its own rate.
+        // Unvoiced sounds have no pitch to move, so they're copied at their
+        // own rate.
         targetPeriod = srcPeriod;
     }
     targetPeriod = clampf(targetPeriod, 4.0f, 2000.0f);
 
-    // --- and how it is read ------------------------------------------------
-    // Half a grain is the source's own period, and never more: two periods
-    // holds exactly one glottal pulse, with its neighbours falling under the
-    // window's skirts. Widen it to cover the *target* period instead - which
-    // is tempting, because it guarantees the grains overlap - and a grain
-    // with the formant shifted up ends up holding two pulses instead of one.
-    // The output then has them in pairs and reads an octave down, which is
-    // what the harness caught.
-    //
-    // Overlap is not this function's problem anyway: pitching down makes the
-    // head crawl, so `epochAt` hands back the same pulse several times and
-    // the gaps fill themselves, which is what PSOLA does.
+    // --- and how it's read -------------------------------------------------
+    // Half a grain is exactly the source's period, so a grain holds one
+    // glottal pulse. Sizing it to the target period would let a formant
+    // shifted grain hold two pulses and sound an octave down.
     const float half = srcPeriod;
     const int32_t n = static_cast<int32_t>(2.0f * half / formantRatio);
     if (n < 2 || n >= kAccum) return targetPeriod;
 
-    // Hann summed at fifty per cent overlap is one; laid tighter it is more
-    // and wider it is less, and either way the hop over the half length is
-    // the correction.
+    // Overlap gain correction. Hann windows sum to 1 at 50% overlap, more
+    // when laid tighter and less when wider. It's capped at 1 because when
+    // grains don't overlap at all (the target is far below the source, which
+    // happens when the pitch tracker gets the octave wrong) no correction is
+    // needed, and boosting them makes loud isolated bursts.
     //
-    // **And it is only a correction while the grains actually overlap.** A
-    // grain is two source periods long and they are laid one target period
-    // apart, so when the note is more than an octave under the pitch the
-    // tracker reports, consecutive grains do not touch and there is nothing
-    // to correct for - the right gain is one, and `2*target/n` asks for six.
-    // The old cap of 1.6 still let a third of that through, and what it
-    // sounds like is a train of isolated bursts rather than a voice.
-    //
-    // Which is not a corner case, because the tracker is wrong about the
-    // octave on about one hop in ten of a real take: one short `srcPeriod`
-    // and the grain for that mark is a sixth as long as its own spacing.
-    // `Wide Bend` peaked at +12.3 dBFS that way, and only at rate 50 - at 20,
-    // 120 and 250 the glide crossed the bad value somewhere the take was
-    // quiet. A patch that is eighteen decibels hot because of where a glide
-    // happened to be is not a patch anybody can voice.
-    //
-    // (The comment below about the head crawling and filling the gaps is not
-    // true of this machine: the head advances one frame per sample whatever
-    // the note is. It fills gaps when the *source* is low, not when the
-    // target is.)
+    // The head advances one frame per sample whatever the note is, so gaps
+    // only fill themselves when the source pitch is low.
     const float gain = clampf(2.0f * targetPeriod / static_cast<float>(n), 0.0f, 1.0f);
     const float *window = hannTable();
     const float wStep = static_cast<float>(kWindowSize - 1) / static_cast<float>(n - 1);
-    // **A grain that runs off the end of the take is laid from the middle of
-    // its own window, which is a step.**
-    //
-    // The window is what makes overlap-add seamless: it is nought at both
-    // ends, so a grain arrives and leaves without an edge. Reading it from
-    // `e.at - half` puts the epoch at its centre, which is right - but a mark
-    // less than one period into the take has no audio to fill the first half
-    // of its window, and the guard below simply skipped those samples. The
-    // grain then began at whatever the window was worth where the audio
-    // started, which for the very first mark of a take is its peak. Every
-    // note-on reaching for the front of a take emitted a step, and the
-    // harness reads a step at the note-on as exactly what it is: a click, at
-    // eleven times the sound's own corners, on the patches whose first grain
-    // was loudest.
-    //
-    // Slid rather than skipped. One grain sits a fraction of a period off
-    // its epoch at each end of the take and every window is whole.
+    // A grain near either end of the take is slid inside it rather than
+    // having samples skipped, so the whole window is always used. Otherwise
+    // the grain would start mid-window and click.
     const int32_t frames = u->frames;
     const float span = static_cast<float>(n - 1) * formantRatio;
     const float from = clampf(static_cast<float>(e.at) - half, 0.0f,
@@ -356,8 +307,8 @@ bool Molt::render(float *L, float *R, int32_t frames) {
     filter.set(paramOf(Cutoff), paramOf(Resonance), steppedOf(FilterType), dsp::MultiFilter::Clean,
                0.0f);
     const float mega = clampf(paramOf(Mega), 0.0f, 1.0f);
-    // A tannoy is a band nobody's throat has and enough drive to shout
-    // through it. The band narrows as the amount rises.
+    // The megaphone is a band pass with clipping drive. The band narrows as
+    // the amount rises.
     horn.set(1500.0f, 0.25f + mega * 0.45f, dsp::MultiFilter::BP12, dsp::MultiFilter::Clip, mega);
 
     const float drive = paramOf(Drive);
@@ -395,7 +346,7 @@ bool Molt::render(float *L, float *R, int32_t frames) {
                 v.used = false;
                 continue;
             }
-            // Pressure leans on the level, which is what a singer does with it.
+            // Pressure raises the level.
             mix += s * env * v.velocity * (1.0f + v.pressure * 0.5f);
         }
 

@@ -1,10 +1,9 @@
-// Is an effect on the input actually printed into the recording?
+// Checks an effect on the input ends up in the recording.
 //
-// The whole feature is one ordering claim - the input chain runs *before*
-// `InputBus::publish`, and the recorder reads what was published - and an
-// ordering claim is exactly the sort of thing that is true when it is written
-// and quietly false two refactors later. So this drives the real `Engine`, with
-// a real effect mounted, into the real `Capture`, and reads the file back.
+// The input chain has to run before `InputBus::publish`, and the recorder
+// reads what was published. That order is easy to break in a refactor, so
+// this drives the real `Engine` with a real effect into the real `Capture`
+// and reads the file back.
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -27,7 +26,7 @@ void ok(const char *what, bool cond, const std::string &detail = "") {
     if (!cond) ++failures;
 }
 
-/** A block of a loud sine, interleaved, as the audio callback hands it over. */
+/** A block of a loud sine, interleaved, like the audio callback delivers it. */
 void fill(float *in, int64_t at) {
     for (int32_t i = 0; i < kBlockFrames; ++i) {
         const float v = 0.4f * std::sin(6.2831853f * 220.0f * static_cast<float>(at + i) / kSampleRate);
@@ -44,7 +43,7 @@ int main() {
 
     float in[kBlockFrames * 2], out[kBlockFrames * 2];
 
-    // Nothing on the input: what is published is what arrived.
+    // Nothing on the input: what's published is what arrived.
     {
         Engine e;
         e.start();
@@ -57,7 +56,7 @@ int main() {
         e.stop();
     }
 
-    // An amp on it: what is published is not what arrived.
+    // With an amp on it, what's published differs from what arrived.
     {
         Engine e;
         e.start();
@@ -80,7 +79,7 @@ int main() {
         delete fx;
     }
 
-    // **And the recorder gets the coloured one.** The claim, end to end.
+    // And the recorder gets the processed signal.
     {
         const std::string wet = dir + "/inputfx-wet.wav";
         const std::string dry = dir + "/inputfx-dry.wav";
@@ -92,7 +91,7 @@ int main() {
             if (pass == 0) {
                 fx = EffectRegistry::create("Amp");
                 fx->prepare(kSampleRate);
-                // Driven hard, so the difference is not a matter of opinion.
+                // Driven hard so the difference is obvious.
                 fx->params().set(fx->params().indexOf("drive"), 1.0f);
                 fx->params().set(fx->params().indexOf("master"), 1.0f);
                 fx->params().jumpAll();
@@ -117,7 +116,7 @@ int main() {
                 ok("the recording was written", false, error);
                 return 1;
             }
-            // Past the first blocks, where the oversampler's latency and the
+            // Skip the first blocks, while the oversampler's latency and the
             // filters are still filling.
             for (int32_t i = kSampleRate / 8; i < got->frames; ++i) {
                 peaks[pass] = std::max(peaks[pass], static_cast<double>(std::fabs(got->left[static_cast<size_t>(i)])));

@@ -1,9 +1,8 @@
 #include "Modules.h"
 
-// The palette's table of contents. The engine publishes this to the UI, so
-// the editor's labels, its jack names and a module's defaults all come from
-// here - there is no second copy in Kotlin to keep in step by hand, which is
-// a trap five other panels in this app are already caught in.
+// The module table. The engine publishes it to the UI, so the editor's
+// labels, jack names and module defaults all come from here, with no second
+// copy in Kotlin.
 namespace acidulous::machine::nexus {
 
 namespace {
@@ -65,7 +64,7 @@ int32_t typeFromName(const char *name) {
     for (int32_t i = 0; i < TypeCount; ++i) {
         if (std::strcmp(kInfo[i].name, name) == 0) return i;
     }
-    return -1; // unknown: the caller puts a blank in the slot and says so
+    return -1; // unknown: the caller puts a blank in the slot and warns
 }
 
 Module *makeModule(int32_t type) {

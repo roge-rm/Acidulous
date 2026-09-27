@@ -19,184 +19,111 @@ import com.rm.acidulous.ui.theme.ThemeMode
 import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.StringResource
 
-/**
- * The settings that belong to the person and the device, not to the song.
- *
- * Folding the automation strip, or preferring a light screen, or knowing
- * that this particular phone cannot hold a two-burst buffer, are all
- * statements about how and where someone is working: they follow them to
- * the next track, the next song and the next session. A song carries none
- * of them, so opening someone else's song cannot change how your phone
- * behaves.
- *
- * Compose-observable so any screen reading one recomposes when another
- * changes it, and everything is stored by name rather than by ordinal - the
- * order of an enum is not a promise.
- */
-/** How little, and how much, of a turned editor the keyboard may take. */
+/** How little and how much of a turned editor the keyboard may take. */
 const val KeysFractionMin = 0.18f
 const val KeysFractionMax = 0.62f
 
 /**
- * How far the instrument may be dragged from its stated height, upright.
- *
- * Down to about two thirds, which is where a black key stops being worth
- * aiming at, and up to three times, which on a phone is most of the screen -
- * and the roll's own floor stops it before that anyway, because what the
- * keyboard takes it takes from the roll.
+ * How far the instrument may be stretched from its normal height, upright.
+ * Below about two thirds the black keys get too small to hit. The upper
+ * limit is rarely reached, since the roll's own minimum height stops it first.
  */
 const val KeysStretchMin = 0.65f
 const val KeysStretchMax = 3f
 
 /**
- * Whether the fault-finding numbers show on a phone that has never been told.
- * **Set to false for 1.0** (Dan, 2026-09-23): until then everybody using it
- * is testing it, and the numbers are what a report needs.
+ * Whether the diagnostics numbers show by default. Set to false for 1.0;
+ * until then everyone using it is testing it and the numbers help reports.
  */
 const val DIAGNOSTICS_BY_DEFAULT = true
 
+/**
+ * Settings that belong to the user and the device, not the song. They
+ * carry across tracks, songs and sessions.
+ *
+ * Compose-observable, so every screen reading one recomposes when it
+ * changes. Everything is stored by name, not by ordinal, since enum order
+ * can change.
+ */
 object UiPrefs {
     private var store: PrefStore? = null
 
     // --- Editing ---------------------------------------------------------
     var automationFolded by mutableStateOf(false)
     /**
-     * The note lane starts folded, unlike the automation strip.
-     *
-     * Most clips never carry a chance or a condition, and the roll should not
-     * pay a row for a lane nobody has asked for yet. Like the automation
-     * fold, it says how somebody works rather than anything about the song,
-     * so it follows them between tracks and across launches.
+     * The note lane starts folded, unlike the automation strip, since most
+     * clips never use chance or conditions.
      */
     var noteLaneFolded by mutableStateOf(true)
 
     /**
-     * The same two folds again, for when the phone is turned.
-     *
-     * **A fold is a statement about a shape, not about a habit.** Upright
-     * there are eight hundred and fifty dp of height and a lane costs
-     * eighty-eight of them; turned there are three hundred and ninety-three
-     * and the lane still wanted eighty-eight, which left the roll forty-six -
-     * about four rows of pitch. Dan: "it feels cluttered". Folding a lane
-     * away because the screen is short is not the same decision as folding it
-     * away because you are not drawing velocity today, so it is not the same
-     * flag: turning the phone must not put the lane away upright, and
-     * unfolding it sideways must not open it upright either.
-     *
-     * Both start folded, because sideways the roll is what the height is for.
-     */
-    /**
-     * The keyboard or the drum pads, folded away to their own control row.
-     *
-     * One flag for both orientations, unlike the two lanes above. Those are
-     * folded sideways because the screen is short, which is a fact about the
-     * shape; this is "I am editing rather than playing", which is not. The
-     * performance row stays either way - the scale, the modifiers, the octave
-     * and the mark that brings the instrument back all live in it.
+     * The keyboard or drum pads, folded away to their control row. One flag
+     * for both orientations, unlike the lanes below. The performance row
+     * (scale, modifiers, octave and the unfold mark) stays either way.
      */
     var keysFolded by mutableStateOf(false)
 
+    // The two lane folds again, for landscape. Kept separate because folding
+    // a lane on a short screen is a different choice from folding it upright.
+    // Both start folded, since in landscape the roll needs the height.
     var automationFoldedLand by mutableStateOf(true)
     var noteLaneFoldedLand by mutableStateOf(true)
 
     /**
-     * How much of a turned editor the keyboard takes, 0..1.
-     *
-     * Dan asked to be able to drag it: the keys were fifty-nine dp against
-     * portrait's seventy-two, on the screen he had asked to give the
-     * instrument "the entire bottom". A share rather than a stated height so
-     * it means the same thing on a tablet, and remembered because where you
-     * put the divider is how you work.
-     *
-     * Bounded well inside 0..1 by [KeysFractionMin] and [KeysFractionMax] -
-     * a divider dragged to either end would leave one side unusable and
-     * nothing to grab to get it back.
+     * How much of a turned editor the keyboard takes, 0..1. Stored as a share
+     * so it means the same on a tablet. Kept inside [KeysFractionMin] and
+     * [KeysFractionMax] so neither side can be dragged away to nothing.
      */
     var keysFractionLand by mutableStateOf(0.33f)
 
     /**
-     * The machine panel folded away.
-     *
-     * The transport had one of these too while it was a column against the
-     * right edge. It has no fold now and no need of one: sideways it stands
-     * in the empty half of the header, which was there whether or not
-     * anything was in it. See EditScreen's landscape branch.
-     *
-     * The panel's own flag used to be a `rememberSaveable` inside it, which
-     * survived a rotation and nothing else. It has to live out here for a
-     * second reason now: turned sideways the panel is drawn in two pieces -
-     * its header down the left edge and its cards on the right, with the roll
-     * between them - and two composables cannot share a flag one of them owns.
+     * The machine panel folded away. Kept here instead of in the panel because
+     * in landscape the panel is drawn in two pieces (its header on the left,
+     * its cards on the right), which both need the flag.
      */
     var panelFolded by mutableStateOf(false)
 
     /**
-     * Whether a finger is on fill right now.
-     *
-     * Not persisted - it is a gesture, not a setting - but it lives here
-     * because two places press it: the pill in the editor's footer and a pad
-     * on a controller through `Action.Fill`. One piece of state means the
-     * pill lights up when the controller is the one holding it.
+     * Whether fill is held right now. Not saved, but kept here because both the
+     * editor's fill pill and a controller pad (`Action.Fill`) press it, and the
+     * pill should light up either way.
      */
     var fillHeld by mutableStateOf(false)
         private set
 
     /**
-     * Whether a drum pad sends full strength wherever it is struck.
-     *
-     * Off, a pad reads the height of the hit: low is soft, high is hard. That
-     * is how you play a part in. On, every pad sends 127 - which is what you
-     * want when you are auditioning a kit, checking a patch, or tapping a
-     * pattern in where every hit is meant to be identical and a finger landing
-     * a little low is a mistake rather than a nuance.
-     *
-     * A statement about how somebody is working rather than about the song, so
-     * it lives here and follows them between tracks and across launches.
+     * Whether a drum pad always sends full strength. Off, where you hit the pad
+     * sets the velocity: low is soft, high is hard. On, every hit sends 127,
+     * which is handy for auditioning a kit or tapping in a pattern.
      */
     var padsFullStrength by mutableStateOf(false)
         private set
 
     /**
-     * The same question for the keyboard, and it is a separate answer.
-     *
-     * A key reads the height of the strike exactly as a pad does - low is
-     * soft, high is hard - and the two surfaces are set independently because
-     * they are played differently: a kit is often tapped in at one strength
-     * while a part is played with the hand, or the other way about.
-     *
-     * Off by default, like the pads', which is the mode that carries more
-     * information. Before this the keys sent 100 whatever you did to them.
+     * The same for the keyboard, set separately from the pads since the two
+     * are often played differently. Off by default, like the pads.
      */
     var keysFullStrength by mutableStateOf(false)
         private set
 
     /**
-     * How much taller than its stated height the instrument has been dragged,
-     * upright. One is as written.
-     *
-     * A multiplier rather than the share of the window the turned editor keeps
-     * (see [keysFractionLand]), because upright the keyboard is one of several
-     * stated heights in a column rather than one of two panes: what somebody
-     * means by dragging it is "more than it was", and what it was depends on
-     * whether this machine has keys or pads and on the interface scale. A
-     * multiplier says that and survives all three.
+     * How much taller than its normal height the instrument has been dragged,
+     * upright. 1 is normal. A multiplier, since the normal height depends on
+     * keys or pads and on the UI scale. Landscape uses [keysFractionLand].
      */
     var keysStretch by mutableStateOf(1f)
         private set
 
     /**
-     * The song grid as a launcher rather than an arranger. A way of working
-     * rather than anything about the song, so it follows the person and not
-     * the file - open somebody else's song and it is still however you left
-     * it.
+     * The song grid as a clip launcher instead of an arranger. A way of working,
+     * so it stays however you left it whichever song is open.
      */
     var clipMode by mutableStateOf(false)
         private set
 
     /**
-     * When a tapped clip actually starts, in bars. 0 waits for the playing
-     * clip to finish the cycle it is in, which is the musical default;
-     * anything else is a plain grid.
+     * When a tapped clip starts, in bars. 0 waits for the playing clip to finish
+     * its cycle; anything else is a plain grid.
      */
     var launchQuantise by mutableStateOf(0)
         private set
@@ -207,35 +134,30 @@ object UiPrefs {
         private set
 
     /**
-     * How much larger than stated the interface is drawn, 1.0 for as written.
-     *
-     * A statement about the person's eyes and their screen, not about the
-     * song, so it belongs here beside the theme - and like the theme it is
-     * read once at the root of the composition, where it is turned into a
-     * density every `dp` and `sp` in the app resolves through. See
-     * ui/UiScale.kt for the arithmetic and for why it only ever goes up.
+     * How much larger than normal the interface is drawn, 1.0 for normal. Read
+     * once at the root of the composition and turned into the density every
+     * `dp` and `sp` goes through. See ui/UiScale.kt for the maths and why it
+     * only ever goes up.
      */
     var uiScale by mutableStateOf(1f)
 
     /**
-     * The desktop's screen scale: how many pixels a dp is, or nought for
-     * whatever the system says. A desktop takes every screen as 96 dpi, and
-     * Dan's Pi has a three-inch 720-pixel square - drawn tiny, and 660 dp
-     * across, so it got the big-screen layout rather than the square phone's.
-     * At 2x it is 330 dp: the square layout, at a size a finger can use.
-     * The phone's density is its own, and it never shows this.
+     * The desktop's screen scale: pixels per dp, or 0 for the system's value.
+     * Desktops assume 96 dpi, so a small high-res screen (like a Pi's three inch
+     * 720 pixel square) comes out tiny and gets the wrong layout. Phones use
+     * their own density and never show this.
      */
     var screenScale by mutableStateOf(0f)
 
-    /** The output the desktop or the browser plays through, by the host's id; nought is the system's default. */
+    /** The output the desktop or browser plays through, by the host's id; 0 is the system default. */
     var outputDevice by mutableStateOf(0)
         private set
 
     // --- Audio -----------------------------------------------------------
     /**
-     * How deep the output buffer is, in bursts. Tight is as low as the
-     * device will go and will crackle on a phone that cannot keep up; safe
-     * buys a phone that cannot the room to finish late.
+     * How deep the output buffer is, in bursts. Tight is as low as the device
+     * will go and will crackle on a phone that can't keep up; safe gives a slow
+     * phone room to finish late.
      */
     enum class Buffer(val bursts: Int, val label: StringResource) {
         Tight(1, Res.string.settings_buffer_tight), Balanced(2, Res.string.settings_buffer_balanced), Safe(4, Res.string.settings_buffer_safe)
@@ -248,20 +170,15 @@ object UiPrefs {
     var voiceLimit by mutableStateOf(0)
         private set
 
-    /** Full is everything; lean trades reverb density and distortion oversampling. */
+    /** Full is everything; lean cuts reverb density and distortion oversampling. */
     var fullQuality by mutableStateOf(true)
         private set
 
     /**
-     * Let the app choose between full and lean while it plays.
-     *
-     * Off by default, and that is deliberate rather than timid: a setting that
-     * changes what you are hearing without being asked has to be something you
-     * turned on. What makes it honest at all is that there are now **two**
-     * signals and they call for opposite answers - a worst block over budget
-     * with few interrupted blocks means the song is asking too much and lean
-     * will help; a high interrupted share means the device is busy and lean
-     * will do nothing but make it sound worse.
+     * Let the app switch between full and lean while it plays. Off by default,
+     * since it changes what you hear without asking. A worst block over budget
+     * with few interrupted blocks means the song asks too much and lean helps;
+     * many interrupted blocks mean the device is busy and lean won't help.
      */
     var autoQuality by mutableStateOf(false)
         private set
@@ -269,12 +186,9 @@ object UiPrefs {
     /** Bits in a recorded or exported WAV. */
     var recordBits by mutableStateOf(24)
     /**
-     * Which input the recorder opens, as an `AudioDeviceInfo` id.
-     *
-     * Nought is whatever the platform would have chosen. A device that has
-     * been unplugged since keeps its id here and simply fails to open, at
-     * which point the screen offers the list again - remembering a wrong
-     * answer is cheaper than forgetting a right one every time.
+     * Which input the recorder opens, as an `AudioDeviceInfo` id. 0 is the
+     * platform's default. An unplugged device keeps its id here and just fails
+     * to open, and then the screen offers the list again.
      */
     var inputDevice by mutableStateOf(0)
         private set
@@ -283,9 +197,8 @@ object UiPrefs {
     /** Keep the screen awake while the transport is running. */
     var keepAwake by mutableStateOf(true)
     /**
-     * The numbers kept for finding faults: the line under the transport, the
-     * readings in Settings, the MIDI counters, the editor's note count. One
-     * switch in Settings for all of them. On until 1.0, off from then - see
+     * Show the diagnostics numbers: the line under the transport, the readings
+     * in Settings, the MIDI counters and the editor's note count. See
      * [DIAGNOSTICS_BY_DEFAULT].
      */
     var showDiagnostics by mutableStateOf(DIAGNOSTICS_BY_DEFAULT)
@@ -300,9 +213,9 @@ object UiPrefs {
         private set
 
     /**
-     * The keyboard's shortcuts: [DEFAULT_KEYS] with the person's changes on
-     * top. Only the changes are stored, so a default that moves in a later
-     * version moves for everybody who never touched it.
+     * Keyboard shortcuts: [DEFAULT_KEYS] with the user's changes on top. Only
+     * the changes are stored, so a changed default reaches everyone who never
+     * touched it.
      */
     var keyBindings by mutableStateOf(DEFAULT_KEYS)
         private set
@@ -312,11 +225,8 @@ object UiPrefs {
         private set
 
     /**
-     * Mapping mode: every mappable control says so, and a tap arms it.
-     *
-     * Not persisted. It is a mode you are in for a minute, and coming back
-     * to the app in it - with every knob lit and none of them turning - is
-     * a puzzle nobody needs to solve twice.
+     * Mapping mode: every mappable control shows it, and a tap arms it. Not
+     * saved, so the app never starts up stuck in it.
      */
     var mapMode by mutableStateOf(false)
         private set
@@ -326,9 +236,7 @@ object UiPrefs {
         private set
 
     // --- Metronome -------------------------------------------------------
-    // The click belongs to the person and the device rather than the song:
-    // two people working on the same file want different clicks, and
-    // nobody wants the one they inherited.
+    // The click belongs to the user and the device, not the song.
     /** 0 blip, 1 stick, 2 cowbell. */
     var clickVoice by mutableStateOf(0)
         private set
@@ -358,13 +266,8 @@ object UiPrefs {
         private set
 
     /**
-     * The machine a new song's one track starts with.
-     *
-     * Hexbeat rather than Reflux, because a new song is almost always a beat
-     * before it is anything else - you put a pattern down and then write to
-     * it. Settable, because "almost always" is a statement about most people
-     * and somebody who opens the app to write a bassline should not have to
-     * change the machine every time.
+     * The machine a new song's one track starts with. Hexbeat by default,
+     * since a new song usually starts with a beat.
      */
     var newMachine by mutableStateOf("Hexbeat")
         private set
@@ -419,9 +322,9 @@ object UiPrefs {
         recordQuantise = p.getBoolean(KEY_RECORD_Q, true)
         recordStrength = p.getInt(KEY_RECORD_Q_AMOUNT, 100)
         clickWhen = p.getInt(KEY_CLICK_WHEN, 0)
-        // Not pushed here: init() runs in onCreate, hundreds of lines
-        // before NativeEngine.start(), so anything sent now goes nowhere.
-        // applyToEngine() is where settings meet a running engine.
+        // Not pushed here: init() runs in onCreate, well before
+        // NativeEngine.start(), so anything sent now goes nowhere.
+        // applyToEngine() sends settings to a running engine.
         newTempo = p.getFloat(KEY_TEMPO, 120f)
         newSignature = Signature(p.getInt(KEY_BEATS, 4), p.getInt(KEY_UNIT, 4))
         newScaleOn = p.getBoolean(KEY_SCALE_ON, false)
@@ -439,8 +342,8 @@ object UiPrefs {
             ?.let { runCatching { MidiHub.Follow.valueOf(it) }.getOrNull() }
             ?: if (p.getBoolean(KEY_MIDI_FOLLOW, false)) MidiHub.Follow.On else MidiHub.Follow.Off
         MidiHub.chooseFollow(follow)
-        // 48 semitones is what the MPE specification asks a receiver to
-        // assume, and is nothing like what a keyboard means by a bend.
+        // The MPE spec says a receiver should assume 48 semitones, which is
+        // nothing like what a keyboard means by a bend.
         MidiHub.chooseMpe(
             // Auto unless chosen otherwise: follow the controller.
             p.getInt(KEY_MPE_ZONE, com.rm.acidulous.midi.MpeZone.AUTO), p.getInt(KEY_MPE_MEMBERS, 15),
@@ -471,15 +374,14 @@ object UiPrefs {
         store?.edit()?.putInt(KEY_PAD_MODE, mode.ordinal)?.apply()
     }
 
-    /**
-     * Hand the engine what it cannot read for itself. Called once the audio
-     * stream is up, and again whenever one of these changes - the engine
-     * keeps no preferences of its own, so this is the only thing that puts
-     * them there.
-     */
-    /** The three stepped click params, whenever one of them changes. */
+    /** Sends the three stepped click params, whenever one of them changes. */
     private fun pushClick() = EngineSync.setClickSettings(clickVoice, clickDivision, clickWhen, clickVolume)
 
+    /**
+     * Sends the engine the settings it can't read itself. Called once the audio
+     * stream is up and again whenever one changes; the engine keeps no
+     * preferences of its own.
+     */
     fun applyToEngine() {
         NativeEngine.setBufferBursts(buffer.bursts)
         NativeEngine.setVoiceLimit(voiceLimit)
@@ -487,8 +389,8 @@ object UiPrefs {
         NativeEngine.setRecordBits(recordBits)
         NativeEngine.setLauncher(clipMode)
         NativeEngine.setExternalSync(MidiHub.clockIn)
-        // The quantise is in bars here and in ticks there; the song's own
-        // signature converts it, and MainScreen re-sends it when that changes.
+        // Launch quantise is in bars here and ticks in the engine. MainScreen
+        // re-sends it when the time signature changes.
         NativeEngine.setLaunchQuantise(launchQuantise * 4 * 240)
         NativeEngine.setCountInBars(countInBars)
         pushClick()
@@ -505,11 +407,8 @@ object UiPrefs {
     }
 
     /**
-     * Where the keyboard's edge was let go, upright.
-     *
-     * Written once the finger lifts, for the reason [chooseKeysFraction]
-     * gives: a preference stored on every frame of a drag is a file written
-     * sixty times a second.
+     * Where the keyboard's edge was let go, upright. Saved once the finger
+     * lifts, see [chooseKeysFraction].
      */
     fun chooseKeysStretch(f: Float) {
         keysStretch = f.coerceIn(KeysStretchMin, KeysStretchMax)
@@ -553,19 +452,17 @@ object UiPrefs {
     }
 
     /**
-     * Where the divider above the keyboard was let go.
-     *
-     * Written on every frame of a drag would be a preference file touched
-     * sixty times a second, so the caller stores it once the finger lifts and
-     * holds the live value itself while the drag is running.
+     * Where the divider above the keyboard was let go. The caller holds the live
+     * value during a drag and stores it once the finger lifts, so the preference
+     * file isn't written sixty times a second.
      */
     fun chooseKeysFraction(f: Float) {
         keysFractionLand = f.coerceIn(KeysFractionMin, KeysFractionMax)
         store?.edit()?.putFloat(KEY_KEYS_FRACTION, keysFractionLand)?.apply()
     }
 
-    // Not setClipMode: the property's own generated setter already owns
-    // that JVM signature. Same reason chooseTheme is not setTheme.
+    // Not setClipMode: the property's generated setter already has that JVM
+    // signature. Same reason chooseTheme isn't setTheme.
     fun chooseClipMode(on: Boolean) {
         clipMode = on
         store?.edit()?.putBoolean(KEY_CLIP_MODE, on)?.apply()
@@ -607,9 +504,8 @@ object UiPrefs {
     }
 
     /**
-     * Stored as the multiplier rather than as an index into the steps, so
-     * adding a step later cannot re-point somebody's saved choice - the same
-     * reason everything else here is stored by name and not by ordinal.
+     * Stored as the multiplier, not an index into the steps, so adding a step
+     * later can't change someone's saved choice.
      */
     fun chooseUiScale(scale: Float) {
         uiScale = scale.coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
@@ -651,12 +547,10 @@ object UiPrefs {
     }
 
     /**
-     * What the watcher decided, kept apart from what *you* chose.
-     *
-     * Turning the watcher off has to give you your setting back, so its
-     * decision never writes over `fullQuality` in the preferences - it only
-     * tells the engine. This is the last thing it asked for, so the readout
-     * can say what is actually running.
+     * What auto quality decided, kept apart from your own setting. It never
+     * writes over `fullQuality`, so turning auto off gives your setting back.
+     * This is the last thing it asked for, so the readout can show what's
+     * actually running.
      */
     var qualityNow by mutableStateOf(true)
         private set
@@ -667,14 +561,10 @@ object UiPrefs {
         NativeEngine.setQuality(if (full) 1 else 0)
     }
 
-    /** Remembered rather than asked for every time the window opens. */
     /**
-     * The editor's zoom for each track, by the track's id: how many ticks
-     * across and how many rows down, nought for the editor's own default.
-     * Dan (2026-09-25): a clip reopened at the default every time, and four
-     * bars on a desktop is busy - so a track keeps the zoom it was left at,
-     * across leaving the editor and across launches. The last [ZOOMS_KEPT]
-     * tracks zoomed are kept, most recent last.
+     * The editor's zoom for each track, by track id: ticks across and rows
+     * down, 0 for the editor's default. Kept across leaving the editor and
+     * across launches for the last [ZOOMS_KEPT] tracks, most recent last.
      */
     private val zooms = LinkedHashMap<String, Pair<Float, Float>>()
 
@@ -806,9 +696,9 @@ object UiPrefs {
     }
 
     /**
-     * Link is remembered but **not** switched on by `applyToEngine`: it needs
-     * a Context for the multicast lock, so MainActivity turns it on once the
-     * stream is up. What is stored here is only the wish.
+     * Link is remembered but not switched on by `applyToEngine`: it needs a
+     * Context for the multicast lock, so MainActivity turns it on once the
+     * stream is up.
      */
     fun chooseLink(on: Boolean) {
         linkWanted = on
@@ -832,7 +722,7 @@ object UiPrefs {
         store?.edit()?.putInt(KEY_MIDI_AHEAD, v)?.apply()
     }
 
-    /** How note-ons from controllers are bent: below 0 softer, above harder. */
+    /** How controller note-on velocities are curved: below 0 softer, above harder. */
     fun chooseVelocityCurve(step: Int) {
         val v = step.coerceIn(-VelocityCurve.STEPS, VelocityCurve.STEPS)
         MidiHub.velocityCurve = v
@@ -840,10 +730,8 @@ object UiPrefs {
     }
 
     /**
-     * The MPE zone, and what a finger's bend is worth.
-     *
-     * Kept here with the other MIDI settings rather than in the song: a
-     * zone describes the controller on the desk, not the music.
+     * The MPE zone and bend range. Stored here with the other MIDI settings,
+     * not in the song, since a zone describes the controller.
      */
     fun chooseMpe(
         zone: Int = MidiHub.mpeSetting,
@@ -929,16 +817,13 @@ object UiPrefs {
     // --- What a new song and a new track start as ------------------------
 
     /**
-     * Fit [index]'s track with a Scale modifier set to the default scale, so
-     * a new track agrees with the song from its first note. Does nothing
-     * when no default is set - an unasked-for modifier in slot 1 would be a
-     * surprise, not a convenience.
+     * Fit [index]'s track with a Scale modifier set to the default scale, so a
+     * new track matches the song from its first note. Does nothing when no
+     * default is set.
      */
     fun Song.withDefaultScale(index: Int): Song {
-        // **The song's key wins over the setting.** The setting says what a
-        // new song should start in; once a song has said what key it is in,
-        // that is the answer, and a track fitted from the preference instead
-        // would disagree with the roll it is drawn on.
+        // The song's key wins over the setting. Once a song has a key, a track
+        // fitted from the setting would disagree with its roll.
         val songKey = key
         if (songKey == null && !newScaleOn) return this
         val track = tracks.getOrNull(index) ?: return this
@@ -957,10 +842,7 @@ object UiPrefs {
         store?.edit()?.putString(KEY_NEW_MACHINE, type)?.apply()
     }
 
-    /**
-     * A new song in the tempo, signature, scale and machine the settings ask
-     * for.
-     */
+    /** A new song with the tempo, signature, scale and machine from the settings. */
     fun newSong(name: String): Song =
         SongStore.blank(name, newTempo, newSignature, newMachine).withDefaultScale(0)
 }

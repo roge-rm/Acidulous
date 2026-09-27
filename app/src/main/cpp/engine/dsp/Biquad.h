@@ -39,13 +39,10 @@ class Biquad {
     }
 
     /**
-     * What this section does to a partial at [w] radians a sample.
+     * The complex response of this section at [w] radians per sample.
      *
-     * The same arithmetic `Pipe::Section::at` has carried since Timber, lifted
-     * here because three things now want it: the amp's cabinet, which trims
-     * itself against its own measured response rather than against a table of
-     * fudge factors; the harness, which asserts a filter chain's magnitude
-     * without rendering audio or running an FFT; and Timber.
+     * Used by the amp's cabinet to trim its level, by the harness to check a
+     * filter chain without rendering audio, and by Timber.
      */
     void at(float w, float &re, float &im) const {
         const float c1 = std::cos(w), s1 = std::sin(w);
@@ -57,7 +54,7 @@ class Biquad {
         im = (ni * dr - nr * di) / den;
     }
 
-    /** The magnitude alone, which is what most callers want. */
+    /** Just the magnitude, at [hz]. */
     float magnitudeAt(float hz, float sr) const {
         float re = 0.0f, im = 0.0f;
         at(kTwoPi * hz / sr, re, im);

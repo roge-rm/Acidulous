@@ -1,19 +1,18 @@
 package com.rm.acidulous.model
 
 /**
- * The editing surface over the document: every change goes through here.
+ * Every change to the song goes through here.
  *
- * Undo is per track, which is the unit that suits note edits: each track
- * has its own undo/redo history of *whole Track values* (they are immutable, so
- * a history entry is just a reference). Structure edits - scenes, tracks, song
- * settings - have a separate song-level history, which is what the main
- * screen's undo drives.
+ * Undo is per track for note edits. Each track has its own undo/redo history
+ * of whole Track values, which are immutable, so an entry is just a
+ * reference. Structure edits (scenes, tracks, song settings) have a separate
+ * song-level history, which the main screen's undo uses.
  *
- * Gestures - a note being dragged - are coalesced: [beginGesture] captures the
- * track once, [updateGesture] re-derives from that base so drags are absolute
- * rather than cumulative, and only [endGesture] writes an undo step. The
- * [onChange] callback says whether the caller should push to the engine now
- * (taps, gesture ends) or may throttle (mid-gesture).
+ * Gestures like dragging a note are merged: [beginGesture] captures the track
+ * once, [updateGesture] works from that base so drags are absolute rather
+ * than cumulative, and only [endGesture] writes an undo step. [onChange] says
+ * whether the caller should push to the engine now (taps, gesture ends) or
+ * may throttle (mid-gesture).
  */
 class SongEditor(
     initial: Song,
@@ -31,12 +30,12 @@ class SongEditor(
     private val songUndo = ArrayDeque<Song>()
     private val songRedo = ArrayDeque<Song>()
     private var gesture: Gesture? = null
-    /** Each track as the take in progress last left it, by track id; see [recorded]. */
+    /** Each track as the current take last left it, by track id; see [recorded]. */
     private val takes = HashMap<String, Track>()
 
     private class Gesture(val trackIndex: Int, val base: Track)
 
-    /** Replace the whole document (load, structural edit from elsewhere). Clears histories. */
+    /** Replaces the whole song (load, or a structural edit from elsewhere). Clears histories. */
     fun replace(newSong: Song, push: Boolean = true) {
         song = newSong
         histories.clear()
@@ -50,22 +49,18 @@ class SongEditor(
     /**
      * A mapped controller moved a parameter.
      *
-     * The same three things a knob does, because a mapping is a knob that
-     * happens to be somewhere else: the engine hears it, the lane records it
-     * while the transport is armed, and the document keeps it so the knob on
-     * screen agrees and the patch saves. Doing only the first would move the
-     * sound and leave the knob behind.
+     * Does the same three things a knob does: the engine hears it, the lane
+     * records it while armed, and the song stores it so the on-screen knob
+     * matches and the patch saves.
      *
-     * No undo entry, and this is deliberate rather than lazy: one turn of a
-     * controller knob is a hundred CC messages, and a hundred undo steps for
-     * one movement makes undo useless for everything else. An on-screen knob
-     * gets one step because it has a begin and an end; a controller sends no
-     * such thing, so there is no honest place to close a gesture.
+     * No undo entry, on purpose. One turn of a controller knob is a hundred
+     * CC messages, and a controller has no begin and end like an on-screen
+     * knob does, so there's no good place to close an undo step.
      */
     fun applyMapped(trackIndex: Int, unit: String, name: String, v01: Float) {
         com.rm.acidulous.engine.NativeEngine.setParam(trackIndex, unit, name, v01, record = true)
-        // The master is one thing, not one per track, so it is a song edit -
-        // the same split the mixer's own faders already make.
+        // The master is shared by all tracks, so it's a song edit, same as
+        // the mixer's own faders.
         if (unit == "master") {
             song = song.withMasterParam(name, v01)
             onChange(song, false)
@@ -99,10 +94,10 @@ class SongEditor(
 
     /**
      * A recording put notes on a track. A whole take is one undo step: the
-     * first notes of a take write the step, and the rest join it - but only
-     * while the track is still as the take left it. Anything else that
-     * touched the track in between (an edit, an undo) starts a fresh step,
-     * so joining can never fold someone else's change into the take.
+     * first notes write the step and the rest join it, but only while the
+     * track is still as the take left it. If anything else touched the track
+     * in between (an edit, an undo), a new step starts, so someone else's
+     * change never gets folded into the take.
      */
     fun recorded(trackIndex: Int, track: Track, push: Boolean = false) {
         val before = song.tracks.getOrNull(trackIndex) ?: return
@@ -112,7 +107,7 @@ class SongEditor(
         takes[track.id] = track
     }
 
-    /** The take is over: the next recorded notes start a new undo step. */
+    /** The take is over, so the next recorded notes start a new undo step. */
     fun endTake() = takes.clear()
 
     fun editClip(trackIndex: Int, sceneId: String, push: Boolean = true, f: (Clip) -> Clip) = edit(trackIndex, push) { track ->
@@ -147,16 +142,16 @@ class SongEditor(
         gesture = Gesture(trackIndex, base)
     }
 
-    /** [f] is applied to the gesture's *base* track, so it must describe the total change so far. */
+    /** [f] is applied to the gesture's base track, so it must describe the total change so far. */
     fun updateGesture(pushNow: Boolean = false, f: (Track) -> Track) {
         val g = gesture ?: return
         commit(g.trackIndex, f(g.base), pushNow)
     }
 
     /**
-     * [pushNow] for a gesture made of separate steps rather than one drag:
-     * the throttle that keeps a drag cheap would otherwise hold back the last
-     * step until the gesture ends, and that step is the one being listened to.
+     * [pushNow] is for gestures made of separate steps rather than one drag.
+     * Otherwise the drag throttle would hold back the last step until the
+     * gesture ends, and that's the step being listened to.
      */
     fun updateGestureClip(sceneId: String, pushNow: Boolean = false, f: (Clip) -> Clip) = updateGesture(pushNow) { track ->
         val current = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
@@ -198,7 +193,7 @@ class SongEditor(
 
     fun beginSongGesture() { songGesture = song }
 
-    /** [f] is applied to the gesture's base song; describe the total change so far. */
+    /** [f] is applied to the gesture's base song, so describe the total change so far. */
     fun updateSongGesture(f: (Song) -> Song) {
         val base = songGesture ?: return
         song = f(base)

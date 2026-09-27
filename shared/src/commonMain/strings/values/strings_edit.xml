@@ -29,7 +29,7 @@
     <!-- The pad's two axes. -->
     <string name="perform_x">x</string>
     <string name="perform_y">y</string>
-    <!-- The pad's edges: across it low to high, or rate to bits; up it, how much is thrown. -->
+    <!-- The pad's edge labels: across, low to high or rate to bits; up, how much goes into the effect. -->
     <string name="perform_pad_low">low</string>
     <string name="perform_pad_high">high</string>
     <string name="perform_pad_rate">rate</string>
@@ -71,7 +71,7 @@
         <item>wash</item>
     </string-array>
 
-    <!-- The modular's patch editor. Module names are names. -->
+    <!-- The modular's patch editor. Module names are names and aren't translated. -->
     <plurals name="patch_modules">
         <item quantity="one">%d module</item>
         <item quantity="other">%d modules</item>

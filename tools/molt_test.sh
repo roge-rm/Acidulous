@@ -1,5 +1,5 @@
 #!/bin/bash
-# Molt, proved against a voice nobody has to sing. See tools/molt_test.cpp.
+# Tests Molt against a synthetic voice. See tools/molt_test.cpp.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

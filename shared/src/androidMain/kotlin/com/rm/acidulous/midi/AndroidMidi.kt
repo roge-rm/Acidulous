@@ -23,9 +23,8 @@ import com.rm.acidulous.util.Log
 
 /**
  * Android's MIDI for [MidiHub]: MidiManager, a HandlerThread for everything
- * to happen on, and the Bluetooth scan that turns a BLE MIDI peripheral into
- * a MIDI device. These are the calls the hub always made, moved here so the
- * hub itself has no Android in it.
+ * to run on, and the Bluetooth scan that turns a BLE MIDI peripheral into a
+ * MIDI device. Kept here so the hub itself has no Android code.
  */
 fun androidMidi(context: Context): MidiSystem? {
     val app = context.applicationContext
@@ -39,7 +38,7 @@ private class AndroidMidi(private val context: Context, private val manager: Mid
     private val thread = HandlerThread("midi-in").apply { start() }
     private val handler = Handler(thread.looper)
 
-    /** The real MidiDeviceInfo behind each id handed out, which is what opening takes. */
+    /** The real MidiDeviceInfo behind each id handed out, needed to open it. */
     private val infos = HashMap<Int, MidiDeviceInfo>()
 
     override val supported: Boolean
@@ -103,19 +102,18 @@ private class AndroidMidi(private val context: Context, private val manager: Mid
 
     // --- Bluetooth ------------------------------------------------------------
     //
-    // A BLE MIDI device is not a MIDI device until it has been found and
+    // A BLE MIDI device only becomes a MIDI device once it's found and
     // opened. Scan for the MIDI service, hand the result to MidiManager, and
-    // from there it is the same as anything plugged in.
+    // from then on it works like anything plugged in.
 
     private inner class Bluetooth : MidiBluetooth {
         /**
-         * MIDI over Bluetooth Low Energy: the GATT service every such device
-         * advertises, from the BLE-MIDI specification.
+         * The GATT service every BLE MIDI device advertises, from the BLE-MIDI
+         * spec.
          *
-         * This is the scan filter, so one wrong digit in it is not a bug that
-         * degrades anything - it is a scan that can never match, on any device,
-         * for ever, and reports "nothing found" perfectly calmly. It had an 8
-         * where the spec has a 4, and cost an evening to find.
+         * This is the scan filter, so a single wrong digit means the scan
+         * never matches anything and just reports "nothing found". Check it
+         * against the spec if you touch it.
          */
         private val BLE_MIDI_SERVICE = ParcelUuid.fromString("03B80E5A-EDE8-4B33-A751-6CE34EC4C700")
 
@@ -125,7 +123,7 @@ private class AndroidMidi(private val context: Context, private val manager: Mid
             return adapter?.isEnabled == true
         }
 
-        /** The permissions a scan needs, which differ either side of Android 12. */
+        /** The permissions a scan needs, which differ before and after Android 12. */
         override fun permissions(): Array<String> =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 arrayOf(android.Manifest.permission.BLUETOOTH_SCAN, android.Manifest.permission.BLUETOOTH_CONNECT)
@@ -140,9 +138,9 @@ private class AndroidMidi(private val context: Context, private val manager: Mid
 
         private val scanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
-                // Reading a device's name needs BLUETOOTH_CONNECT on Android 12
-                // and up, and throws rather than returning null without it - in
-                // a system callback, where it takes the scan down with it.
+                // Reading a device's name needs BLUETOOTH_CONNECT on Android 12+,
+                // and without it throws instead of returning null, which would
+                // kill the scan from inside a system callback.
                 val name = try {
                     result.device.name ?: result.scanRecord?.deviceName
                 } catch (e: SecurityException) {
@@ -186,15 +184,14 @@ private class AndroidMidi(private val context: Context, private val manager: Mid
         }
 
         /**
-         * Look for the MIDI service first, and if nothing has answered after a
-         * few seconds, widen to everything with a name.
+         * Scan for the MIDI service first, and if nothing answers within a few
+         * seconds, widen to every device with a name.
          *
-         * Not every peripheral puts its 128-bit service UUID in the advertising
-         * packet - there is only room for one, and some put it in the scan
-         * response instead, where Android's offloaded filter can miss it. A
-         * filtered scan that finds nothing is therefore not proof of absence,
-         * and a list you can pick from beats a list that is empty and sure of
-         * itself.
+         * Not every device puts its 128-bit service UUID in the advertising
+         * packet (there's only room for one). Some put it in the scan
+         * response, where Android's offloaded filter can miss it. So a
+         * filtered scan that finds nothing doesn't prove there's nothing, and
+         * a list to pick from is better than an empty one.
          */
         override fun scan() {
             if (MidiHub.scanning) return
@@ -253,9 +250,9 @@ private class AndroidMidi(private val context: Context, private val manager: Mid
             try {
                 manager.openBluetoothDevice(device, { opened ->
                     if (opened == null) {
-                        // Android hands back nothing and says nothing. Usually it
-                        // is not a MIDI device at all, or it is already paired in
-                        // the system's Bluetooth settings and so is not listening.
+                        // Android returns nothing and gives no reason. Usually
+                        // it's not a MIDI device, or it's already paired in the
+                        // system's Bluetooth settings and so isn't listening.
                         Log.w(TAG, "openBluetoothDevice gave nothing for $address")
                         MidiHub.scanStatus = MidiHub.say(Res.string.midi_open_failed)
                     } else {

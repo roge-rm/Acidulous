@@ -1,11 +1,7 @@
-// The gate, which is the thing a loud amp asks for next.
-//
-// A gate is judged on four numbers and two habits. The numbers are easy and
-// are here: how far down it shuts, how fast it opens, how long it holds, how
-// fast it falls. The habits are what make a bad gate: it chatters on anything
-// sitting near the threshold, and it opens for a room rather than for a note.
-// Both get a check of their own, and neither can be seen in a frequency
-// response, so all of this is rendered rather than evaluated.
+// Tests the gate: how far down it shuts, how fast it opens, how long it
+// holds and how fast it closes. Also that it doesn't chatter near the
+// threshold and doesn't open for low rumble. All of it is rendered, since
+// none of this shows in a frequency response.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -57,10 +53,9 @@ Gate make(float threshold, float hyst, float attack, float hold, float release,
 /** Run a mono signal through, in blocks, and give back what came out. */
 std::vector<float> run(Gate &fx, const std::vector<float> &in) {
     std::vector<float> l = in, r = in;
-    // **Every sample, including the remainder.** A signal whose length is not
-    // a multiple of the block left its last few dozen samples untouched, and
-    // a peak measurement over the tail then read the input back and called it
-    // the gate passing a signal it had in fact shut out.
+    // Process every sample, including the last partial block, or the
+    // untouched samples at the end would read as the gate letting them
+    // through.
     for (size_t at = 0; at < in.size(); at += kBlock) {
         const int32_t n = static_cast<int32_t>(std::min<size_t>(kBlock, in.size() - at));
         fx.run(l.data() + at, r.data() + at, n, true);
@@ -110,15 +105,15 @@ void theAttackIsTheAttack() {
     printf("- the attack time is the one on the knob\n");
     for (float ms : {0.5f, 5.0f, 20.0f}) {
         Gate fx = make(-45.0f, 4.0f, ms, 200.0f, 500.0f);
-        // A burst that starts at a zero crossing, so the first samples are
-        // not small for a reason that has nothing to do with the gate.
+        // A burst starting at a zero crossing, so the first samples being
+        // small isn't mistaken for the gate.
         std::vector<float> in(static_cast<size_t>(0.2f * kRate), 0.0f);
         for (size_t i = 0; i < in.size(); ++i) {
             in[i] = 0.4f * std::sin(2.0 * M_PI * 1000.0 * static_cast<double>(i) / kRate);
         }
         const auto out = run(fx, in);
-        // Where the envelope of the output first reaches 90% of the input's.
-        // Measured on the peak of each cycle so a sine's own zeros do not
+        // Where the output's envelope first reaches 90% of the input's.
+        // Measured at each cycle's peak so the sine's zero crossings don't
         // count as the gate being shut.
         int64_t at = -1;
         for (size_t i = 0; i + 48 < out.size(); i += 48) {
@@ -137,22 +132,19 @@ void theAttackIsTheAttack() {
 
 void holdCarriesAGap() {
     printf("- hold carries a gap, and without it the gap is a hole\n");
-    // A tone with 60 ms of silence in the middle of it - the gap between two
-    // phrases rather than between two cycles. Shorter than about 12 ms and
-    // neither setting closes, because the detector itself takes ten of those
-    // to fall from a loud note to under the threshold.
+    // A tone with 60 ms of silence in the middle, like a gap between phrases.
+    // Under about 12 ms neither setting would close, since the detector takes
+    // about 10 ms to fall below the threshold.
     auto withGap = [] {
         auto x = tone(1000.0f, 0.4f, 0.4f);
         const size_t from = static_cast<size_t>(0.2f * kRate), to = from + static_cast<size_t>(0.06f * kRate);
         for (size_t i = from; i < to; ++i) x[i] = 0.0f;
         return x;
     };
-    // Measured in the five milliseconds *after* the gap, with an attack slow
-    // enough that re-opening takes a moment: a gate that held through the gap
-    // is already at full there, one that shut is on its way back up. With a
-    // one-millisecond attack both are open again before this window ends and
-    // the difference - which is perfectly audible on a held note - would be
-    // invisible to the harness.
+    // Measured in the 5 ms after the gap, with a slow enough attack that
+    // reopening takes a while. A gate that held is already fully open there,
+    // one that shut is still opening. With a 1 ms attack both would be open
+    // before the window ends.
     const size_t after = static_cast<size_t>(0.2605f * kRate);
     const size_t window = static_cast<size_t>(0.005f * kRate);
     {
@@ -171,7 +163,7 @@ void holdCarriesAGap() {
     }
 }
 
-/** How many times the gain crosses halfway, which is what chatter sounds like. */
+/** How many times the gain crosses halfway. Lots of crossings is chatter. */
 int crossings(const std::vector<float> &out, const std::vector<float> &in) {
     int n = 0;
     bool wasOpen = false;
@@ -187,8 +179,8 @@ int crossings(const std::vector<float> &out, const std::vector<float> &in) {
 
 void hysteresisStopsTheChatter() {
     printf("- a signal sitting on the threshold\n");
-    // A tone whose level drifts slowly across the threshold: the classic way
-    // to make a gate stutter, and exactly what a held note fading out does.
+    // A tone whose level drifts slowly across the threshold, like a held note
+    // fading out. This is what makes a gate stutter.
     std::vector<float> in(static_cast<size_t>(1.0f * kRate));
     for (size_t i = 0; i < in.size(); ++i) {
         const double t = static_cast<double>(i) / kRate;
@@ -245,8 +237,8 @@ void theKeyFilterListensAbove() {
 
 void theDetectorIsShared() {
     printf("- one detector for the pair\n");
-    // Loud in the left, quiet in the right. Two independent gates would shut
-    // the right channel and the image would step sideways on every note.
+    // Loud in the left, quiet in the right. Separate gates per channel would
+    // shut the right and the stereo image would jump on every note.
     Gate fx = make(-45.0f, 4.0f, 1.0f, 20.0f, 50.0f);
     const auto loud = tone(440.0f, 0.4f, 0.3f);
     const auto quiet = tone(440.0f, 0.004f, 0.3f); // -48 dBFS, under the threshold
@@ -265,7 +257,7 @@ void resetIsShut() {
     fx.reset();
     const auto out = run(fx, in);
     // With a 50 ms attack, a gate that reset open would pass the first
-    // millisecond at full. One that reset shut cannot.
+    // millisecond at full. One that reset shut can't.
     ok("a reset gate starts shut", peakOver(out, 0, 48) < 0.05f,
        std::string("first ms peaked at ") + std::to_string(peakOver(out, 0, 48)));
 }
@@ -273,14 +265,10 @@ void resetIsShut() {
 // --- the habit that only shows on real material -----------------------------------
 
 /**
- * A plucked note over a hiss floor.
- *
- * The harness's own tones have no noise, no decay and no harmonics, and a
- * gate that passes every one of the checks above can still chop the tail off
- * a note or breathe on the hiss. So this one is built to be awkward: six
- * harmonics with a slightly stiff string's stretch, a decay that takes the
- * note down through the threshold rather than stopping at it, and a floor of
- * hiss underneath the whole thing.
+ * A plucked note over a hiss floor. The simple tones above have no noise,
+ * decay or harmonics, so a gate could pass them and still cut off a note's
+ * tail. This has six slightly stretched harmonics, a decay that passes down
+ * through the threshold, and hiss underneath.
  */
 void aPluckedNoteOverHiss() {
     printf("- a plucked note over a hiss floor\n");
@@ -313,19 +301,18 @@ void aPluckedNoteOverHiss() {
        std::string("floor ") + std::to_string(dB(peakOver(out, 0, beforeTo))) + " dB, hiss " +
            std::to_string(dB(floorAmp)) + " dB");
 
-    // The attack of the note itself, unchanged - measured over 25 ms, because
-    // a one-millisecond attack is *by definition* not transparent over the two
-    // milliseconds it spends opening, and this plucked note happens to peak
-    // inside them. Anything still down after 25 ms is the gate's doing.
+    // The note's attack comes through unchanged, measured over 25 ms. A 1 ms
+    // attack can't be transparent in the first couple of ms, where this note
+    // peaks, but anything still down after 25 ms is the gate's fault.
     const size_t onset = static_cast<size_t>(0.25f * kRate);
     const size_t span = static_cast<size_t>(0.025f * kRate);
     const double pick = dB(peakOver(out, onset, onset + span)) - dB(peakOver(in, onset, onset + span));
     ok("the pick is not softened", pick > -1.0,
        std::string("first 25 ms is ") + std::to_string(pick) + " dB off the input");
 
-    // And the tail: the note is still audible while it is still above the
-    // threshold. A gate that closes on its own hysteresis band would have
-    // taken half a second off this.
+    // The tail stays audible while it's above the threshold. A gate that
+    // closed at the bottom of its hysteresis band early would cut half a
+    // second off it.
     size_t lastAudible = 0;
     for (size_t i = 0; i + 480 < in.size(); i += 480) {
         if (dB(peakOver(in, i, i + 480)) > -45.0) lastAudible = i;

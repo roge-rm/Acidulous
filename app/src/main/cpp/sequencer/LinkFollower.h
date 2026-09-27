@@ -4,26 +4,23 @@
 #include <engine/core/Constants.h>
 #include <engine/core/Timebase.h>
 
-// What following a network session comes down to, with no network in it.
+// The maths for following a Link session, kept apart from the network so it
+// can be tested.
 //
-// A Link session hands over a tempo and a beat that are already smooth -
-// Link does the estimating - so unlike the MIDI follower next door there is
-// no loop here. What is left is arithmetic, and it is the arithmetic that is
-// easy to get wrong: a phase that wraps the short way round, a pull that has
-// to be gentle enough not to be heard, and a downbeat that has to be caught
-// in the block it falls in rather than the one after.
-//
-// Separated out so all of that can be proven at a desk. The engine then only
-// has to hand over where it is and do what this says.
+// Link already gives a smooth tempo and beat, so unlike the MIDI clock
+// follower there's no loop here. What's left is the easy-to-get-wrong part:
+// the phase error has to wrap the short way round, the correction has to be
+// gentle enough not to be heard, and a downbeat has to be caught in the block
+// it falls in. The engine passes in where it is and does what this says.
 
 namespace acidulous::seq {
 
 class LinkFollower {
   public:
     /**
-     * How hard to lean on the tempo per tick of error. At 0.002 a full
-     * eight-tick error moves the rate by 1.6%, which closes a third of a
-     * beat over a bar or two without being heard as wobble.
+     * How much to adjust the tempo per tick of error. At 0.002 a full
+     * eight-tick error changes the rate by 1.6%, which closes a third of a
+     * beat over a bar or two without audible wobble.
      */
     static constexpr double kPull = 0.002;
     /** No more than this many ticks of error are acted on at once. */
@@ -32,30 +29,24 @@ class LinkFollower {
     struct Advice {
         /** Run the clock at this. */
         double framesPerTick = 0.0;
-        /** The phase error, in ticks: ours minus theirs, shortest way round. */
+        /** The phase error in ticks: ours minus theirs, the short way round. */
         double errorTicks = 0.0;
-        /** A downbeat falls inside this block: a waiting transport starts. */
+        /** A downbeat falls inside this block, so a waiting transport starts. */
         bool downbeat = false;
     };
 
     /**
-     * Should a press of play hold until the session's next downbeat?
-     *
-     * Only when there is somebody to be in phase with. A session of one has
-     * a tempo and a phase like any other, and following them costs nothing -
-     * but *waiting* for them costs up to a bar, and buys being in time with
-     * nobody. Link switched on and left on, alone, is the ordinary case: the
-     * setting survives a restart and nothing on screen announces it, so the
-     * wait arrives as the transport simply not starting when you press it.
+     * Whether pressing play waits for the session's next downbeat. Only when
+     * there are peers. Alone, waiting up to a bar gains nothing and just looks
+     * like play not working, and Link is often left on with no one else there.
      */
     static bool waitsForDownbeat(const Timebase::State &s) { return s.valid && s.peers > 0; }
 
     /**
-     * [ourTickInBar] is where we are in our own bar, [barTicks] how long that
-     * bar is, and [framesPerTickAtTempo] how long a tick would be at the
-     * session's tempo. [pulling] is false when the phase is not to be
-     * corrected - stopped, or still waiting to start - in which case the
-     * tempo is taken but the bar line is left alone.
+     * [ourTickInBar] is where we are in our bar, [barTicks] how long the bar
+     * is, and [framesPerTickAtTempo] how long a tick is at the session's
+     * tempo. [pulling] is false when the phase shouldn't be corrected (stopped
+     * or waiting to start), so only the tempo is followed.
      */
     static Advice advise(const Timebase::State &s,
                          double ourTickInBar,
@@ -66,17 +57,15 @@ class LinkFollower {
         out.framesPerTick = framesPerTickAtTempo;
         if (!s.valid || s.quantum <= 0.0 || barTicks <= 0.0) return out;
 
-        // Does the session's bar line fall inside this block? Asked of the
-        // block's own span rather than of a single instant, because a block
-        // is 1.3 ms and a downbeat that is only ever *looked at* is missed.
+        // Does the session's bar line fall inside this block? Checks the whole
+        // block's span, not a single instant, so no downbeat is missed.
         const double endBeat = s.beat + s.beatsPerBlock;
         out.downbeat = std::floor(s.beat / s.quantum) != std::floor(endBeat / s.quantum);
 
         if (!pulling) return out;
 
-        // Phase, both as a fraction of a bar, so a 7/8 bar and a 4/4 quantum
-        // still compare. The wrap is the point: at 0.02 and 0.98 we are two
-        // hundredths apart, not ninety-six.
+        // Both phases as a fraction of a bar, so a 7/8 bar and a 4/4 quantum
+        // still compare. Wrapped so 0.02 and 0.98 are 0.04 apart, not 0.96.
         const double ours = wrap01(std::fmod(ourTickInBar, barTicks) / barTicks);
         const double theirs = wrap01(std::fmod(s.beat, s.quantum) / s.quantum);
         double err = ours - theirs;
@@ -87,8 +76,7 @@ class LinkFollower {
         const double pull = out.errorTicks > kMaxPullTicks
                                 ? kMaxPullTicks
                                 : (out.errorTicks < -kMaxPullTicks ? -kMaxPullTicks : out.errorTicks);
-        // Ahead of them means our ticks must get longer, which is what the
-        // plus sign is: a positive error is us being further through the bar.
+        // A positive error means we're ahead, so our ticks get longer.
         out.framesPerTick = framesPerTickAtTempo * (1.0 + pull * kPull);
         return out;
     }

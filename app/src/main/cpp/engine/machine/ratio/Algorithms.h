@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
 
-// Ratio's algorithm table. An algorithm is only a routing: which operator
-// feeds which, and which are heard. Holding them as matrices rather than as
-// hard-wired cases is what lets two of them be blended - see Ratio's morph.
+// Ratio's algorithm table. An algorithm is just a routing: which operator
+// feeds which, and which are heard. They're stored as edge lists so two can be
+// blended (see Ratio's morph).
 //
 // Operators are numbered 1..6 in the names and indexed 0..5 in the edges.
 namespace acidulous::machine::ratio {
@@ -52,11 +52,8 @@ constexpr Algorithm kAlgorithms[kAlgorithmCount] = {
 
     // --- Pairs
     {"6-5 : 4-3 : 2-1 (wide)", car(5, 3, 1), 3, {{5, 4}, {3, 2}, {1, 0}}},
-    // Three edges, and it said four. The fourth was never written, so the
-    // engine read the array's own zero-initialised pair as `{0, 0}` and added
-    // a full-strength edge from operator one to itself - a self-modulation
-    // nobody asked for, on every voice that reached this algorithm or morphed
-    // towards it. The count is the loop bound; it has to match the list.
+    // edgeCount is the loop bound and must match the list, otherwise the
+    // unused {0, 0} entries become an edge from operator 1 to itself.
     {"6-5 4-5 : 3-2 : 1", car(5, 3, 1), 3, {{5, 4}, {3, 4}, {2, 1}}},
     {"6-4 5-3 : 2-1", car(4, 3, 1), 3, {{5, 3}, {4, 2}, {1, 0}}},
     {"6-3 5-2 4-1", car(1, 2, 3), 3, {{5, 2}, {4, 1}, {3, 0}}},

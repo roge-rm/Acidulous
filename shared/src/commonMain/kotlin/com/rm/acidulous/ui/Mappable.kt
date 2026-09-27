@@ -25,17 +25,15 @@ import com.rm.acidulous.ui.theme.Acid
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Mapping mode, and the one modifier every mappable thing wears.
+ * Mapping mode, and the modifier every mappable control uses.
  *
- * A knob, a fader and a transport button have nothing in common except this:
- * in mapping mode each says it can be mapped, takes a tap to arm itself, and
- * takes a long press to forget what drives it. Putting that in one modifier
- * is what keeps three very different controls behaving identically, and
- * stops the next control that wants mapping from having to be told twice.
+ * In mapping mode a knob, fader or transport button shows it can be mapped, a
+ * tap arms it and a long press clears its mapping. Keeping that in one modifier
+ * makes every control behave the same.
  *
- * A target is a string because it has to survive being parked in settings
- * while you reach for the hardware: `"3:machine:cutoff"` for a parameter on
- * a track, `"action:Panic"` for a button.
+ * A target is a string so it can be kept in settings while you reach for the
+ * hardware: "3:machine:cutoff" for a parameter on a track, "action:Panic" for a
+ * button.
  */
 object MapTargets {
     fun param(rack: Int, unit: String, name: String): String = "$rack:$unit:$name"
@@ -43,12 +41,12 @@ object MapTargets {
 }
 
 /**
- * The open song's own mappings, so a control can say whether it is mapped
- * without every one of six hundred call sites being handed the song.
+ * The open song's mappings, so a control can check whether it's mapped without
+ * passing the song to every call site.
  */
 val LocalSongMappings = androidx.compose.runtime.staticCompositionLocalOf { emptyList<Mapping>() }
 
-/** Is anything mapped to this target now? */
+/** Whether anything is mapped to this target. */
 @Composable
 fun mappedTo(target: String): Mapping? {
     val parts = target.split(":")
@@ -61,11 +59,9 @@ fun mappedTo(target: String): Mapping? {
 }
 
 /**
- * The three states a control shows in mapping mode.
- *
- * Colours are roles: mappable is teal, waiting blinks in the accent, mapped
- * is green - the same green that means "this is doing something" everywhere
- * else in the app.
+ * The three states a control shows in mapping mode: mappable is teal, waiting
+ * blinks in the accent colour, and mapped is green, the same green that means
+ * active everywhere else in the app.
  */
 @Composable
 fun Modifier.mappable(target: String): Modifier = composed {
@@ -87,16 +83,13 @@ fun Modifier.mappable(target: String): Modifier = composed {
     this
         .alpha(if (waiting) blink else 1f)
         .border(2.dp, colour, RoundedCornerShape(6.dp))
-        // In mapping mode a control is a thing you are pointing at, not a
-        // thing you are using - so its own gesture never runs, and a tap
-        // cannot turn a knob or start the transport by accident.
+        // In mapping mode a control's own gesture never runs, so a tap can't
+        // turn a knob or start the transport by accident.
         //
-        // Consuming on the Initial pass is what makes that true. The obvious
-        // detectTapGestures works on the Main pass, which travels child to
-        // parent: a knob's drag or a chip's clickable would see the touch
-        // first and eat it, and the switches - where the modifier sits on a
-        // Column of buttons rather than the button itself - would never arm
-        // at all. Initial travels parent to child, so this gets there first.
+        // This consumes on the Initial pass (parent to child). On the Main pass
+        // a knob's drag or a chip's clickable would get the touch first, and
+        // the switches, where the modifier is on a Column of buttons, would
+        // never arm.
         .pointerInput(target, existing) {
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial).consume()
@@ -112,8 +105,8 @@ fun Modifier.mappable(target: String): Modifier = composed {
                     UiPrefs.chooseMapWaiting(target)
                 } else {
                     clearMapping(target)
-                    // Swallow the rest of the press, or the release lands on
-                    // whatever is underneath once the highlight has gone.
+                    // Consume the rest of the press, otherwise the release
+                    // lands on whatever is underneath.
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Initial)
                         event.changes.forEach { it.consume() }
@@ -125,17 +118,16 @@ fun Modifier.mappable(target: String): Modifier = composed {
 }
 
 /**
- * A long press on something that already does something on tap.
+ * A long press on something that already has a tap action.
  *
- * Mapping mode hangs off a long press of *redo*, which is a Material button
- * with a `clickable` of its own inside it. A `combinedClickable` on the
- * outside would never be reached, and disabling the button - redo is
- * disabled most of the time - would take the long press with it.
+ * Mapping mode is opened by long-pressing redo, a Material button with its own
+ * clickable inside. A combinedClickable outside would never be reached, and
+ * disabling the button (redo is usually disabled) would disable the long press
+ * too.
  *
- * So this watches the Initial pass, which travels parent to child, and
- * consumes nothing until the press has lasted long enough to be a long one.
- * Up to that moment the button underneath behaves exactly as it did; after
- * it, the rest of the gesture is eaten so the release does not also redo.
+ * So this watches the Initial pass (parent to child) and consumes nothing until
+ * the press is long enough. After that the rest of the gesture is consumed so
+ * the release doesn't also redo.
  */
 fun Modifier.onLongPress(action: () -> Unit): Modifier = pointerInput(action) {
     awaitEachGesture {
@@ -145,7 +137,7 @@ fun Modifier.onLongPress(action: () -> Unit): Modifier = pointerInput(action) {
                 if (awaitPointerEvent(PointerEventPass.Initial).changes.none { it.pressed }) break
             }
         }
-        if (lifted != null) return@awaitEachGesture // an ordinary tap; not ours
+        if (lifted != null) return@awaitEachGesture // an ordinary tap, not ours
         action()
         while (true) {
             val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -155,7 +147,7 @@ fun Modifier.onLongPress(action: () -> Unit): Modifier = pointerInput(action) {
     }
 }
 
-/** Long press: forget whatever drives this target, in the song and the device alike. */
+/** Long press: clear whatever drives this target, in the song and on the device. */
 private fun clearMapping(target: String) {
     val parts = target.split(":")
     val unit = if (parts.size == 3) parts[1] else null

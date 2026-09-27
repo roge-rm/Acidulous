@@ -1,10 +1,8 @@
 #!/bin/bash
-# Bias, the four-track, read back off a reel built out of a ramp. See
+# Tests Bias, the four-track, by reading back a reel built from a ramp. See
 # tools/bias_test.cpp.
 #
-# Links the host-engine archive for the registry, as scheduler_test does, but
-# needs no Rack: what is being asked here is what the machine reads when it is
-# told where the song is, which is a question with an exact answer.
+# Links the host engine library for the registry, but needs no Rack.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

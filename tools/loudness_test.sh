@@ -1,5 +1,5 @@
 #!/bin/bash
-# The loudness meter against the EBU's own test signals. See tools/loudness_test.cpp.
+# Checks the loudness meter against the EBU test signals. See tools/loudness_test.cpp.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DIR=$(mktemp -d)

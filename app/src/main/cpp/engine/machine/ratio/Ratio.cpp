@@ -32,9 +32,8 @@ inline float foldInto(float x) {
 
 } // namespace
 
-// The operator waveforms. FM has always aliased when an operator is anything
-// but a sine, and that brightness is part of the sound; these are not
-// band-limited on purpose.
+// The operator waveforms. They're not band-limited on purpose, since the
+// aliasing of non-sine FM operators is part of the sound.
 float Ratio::waveAt(int wave, float p, OpState &st) {
     switch (wave) {
     case 0: return std::sin(p * kTwoPi);
@@ -81,8 +80,8 @@ const ParamDef *Ratio::paramDefs(int32_t &count) const {
         for (int o = 0; o < kOps; ++o) {
             const int32_t b = OpBase + o * OpParams;
             const int n = o + 1;
-            // Operator 1 is the carrier of most algorithms, so it starts
-            // audible and the rest start silent: a usable init patch.
+            // Operator 1 is the carrier in most algorithms, so it starts
+            // audible and the rest silent, which makes a usable init patch.
             const bool carrier = o == 0;
             put(b + OWave, "o%d_wave", n, 0.0f, kWaveCount - 1.0f, 0.0f, Curve::Stepped, kWaveCount, "");
             put(b + OMode, "o%d_mode", n, 0.0f, ModeCount - 1.0f, 0.0f, Curve::Stepped, ModeCount, "");
@@ -188,7 +187,7 @@ void Ratio::reset() {
 }
 
 // Blend the two algorithms into one matrix, then flatten it to the edges that
-// actually carry something. Once per block, not once per voice.
+// carry something. Runs once per block, not per voice.
 void Ratio::fillRouting(Routing &routing, float morph) const {
     const Algorithm &a = kAlgorithms[stepOf(AlgoA) % kAlgorithmCount];
     const Algorithm &b = kAlgorithms[stepOf(AlgoB) % kAlgorithmCount];
@@ -221,8 +220,8 @@ void Ratio::fillRouting(Routing &routing, float morph) const {
 void Ratio::buildRouting() {
     fillRouting(routing, paramOf(Morph));
 
-    // And which of the three mod envelopes any matrix slot names. See
-    // Trinity's `envMask` for why an envelope nobody reads is not free.
+    // Also note which mod envelopes any matrix slot uses, so unused ones can
+    // be skipped. See Trinity's `envMask`.
     egUsed = 0;
     for (int s = 0; s < kMatrixSlots; ++s) {
         const int32_t b = MatrixBase + s * MatrixParams;
@@ -265,7 +264,7 @@ void Ratio::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool retrigger)
         const int32_t b = OpBase + o * OpParams;
         v.env[o].set(0.0f, targetOf(b + OAttack), targetOf(b + ODecay), targetOf(b + OSustain), targetOf(b + ORelease), false);
         v.env[o].trigger();
-        v.op[o].phase = 0.0f; // FM wants a fixed phase relationship every note
+        v.op[o].phase = 0.0f; // FM needs the same phase relationship every note
         v.op[o].out = 0.0f;
     }
     for (int e = 0; e < kModEgs; ++e) {
@@ -360,7 +359,7 @@ float Ratio::sourceValue(const Voice &v, int src) const {
     switch (src) {
     case SrcOn: return 1.0f;
     case SrcModWheel: return modWheel;
-    // A finger's own pressure if it sent any, the channel's otherwise.
+    // This note's own pressure if it has one, otherwise the channel's.
     case SrcPressure: return v.pressure >= 0.0f ? v.pressure : pressure;
     case SrcVelocity: return static_cast<float>(v.velocity) / 127.0f;
     case SrcKeyTrack: return (static_cast<float>(v.note) - 60.0f) / 48.0f;
@@ -397,7 +396,7 @@ void Ratio::updateVoiceMod(Voice &v, float blockSeconds) {
         const float bm = src2 == SrcOff ? 1.0f : sourceValue(v, src2);
         v.mod[dest] += a * bm * paramOf(b + XDepth);
     }
-    // A finger pressing, whatever the matrix says: brighter and louder.
+    // Pressure makes the note brighter and louder, on top of the matrix.
     const float prs = glidePressure(v.prsGlide, v.pressure, pressure) * paramOf(MpePressure);
     v.mod[DstFilterFreq] += prs * 0.4f;
     v.mod[DstAmp] += prs * 0.4f;
@@ -429,20 +428,20 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
         const float ratio = snapRatio(paramOf(b + ORatio), c.fixed ? SnapFree : snapMode, c.fixed ? 0.0f : skew);
         c.freqMul = ratio * std::exp2(paramOf(b + OFine) * 0.01f / 12.0f + v.mod[DstRatio1 + o] * 2.0f);
         c.fixedHz = ratio * 55.0f;
-        // Key scaling tilts an operator's level across the keyboard, which is
-        // how an FM patch stays even instead of screaming at the top.
+        // Key scaling tilts an operator's level across the keyboard so a
+        // patch stays even instead of getting harsh at the top.
         c.keyGain = clampf(1.0f + paramOf(b + OKey) * keyOffset / 36.0f, 0.0f, 2.0f);
         c.velGain = 1.0f - paramOf(b + OVel) * (1.0f - vel);
         c.level = clampf(paramOf(b + OLevel) + v.mod[DstLevel1 + o], 0.0f, 2.0f) * c.keyGain * c.velGain;
         c.feedback = clampf(paramOf(b + OFeedback) + v.mod[DstFeedback], 0.0f, 1.0f);
     }
 
-    // The app's house level, so this machine's default lands where every
-    // other machine's does. See Reflux's kHouse for why.
+    // The house level, so this machine's default matches the others. See
+    // Reflux's kHouse.
     constexpr float kHouse = 0.55f;
     const float volume = clampf(paramOf(Volume) + v.mod[DstAmp], 0.0f, 2.0f) * kHouse;
     const float velAmp = velocityGain(vel, paramOf(VelocityAmount));
-    // Slide opens the filter, by however much the patch says it should.
+    // Slide opens the filter by the MpeTimbre amount.
     const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
     const float filterBase = paramOf(FilterFreq) *
         std::exp2(paramOf(FilterKey) * keyOffset / 12.0f + v.mod[DstFilterFreq] * 6.0f +
@@ -454,11 +453,8 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
     const float glideStep = glideSeconds > 0.001f ? 1.0f / (glideSeconds * sampleRate) : 1.0f;
     const float targetFreq = noteHz(static_cast<float>(v.note));
     const float glideOctaves = v.glidePos < 1.0f ? std::log2(targetFreq / v.glideFrom) : 0.0f;
-    // **Morph, modulated, is this voice's own blend.** The matrix offered
-    // morph as a destination and nothing read it: the blend is built once a
-    // block for the whole machine, and a modulation is per voice. A blend is
-    // a six-by-six table, so a voice whose morph is being moved builds its
-    // own, and every other voice shares the block's.
+    // The block's routing is shared by all voices. A voice with its morph
+    // modulated builds its own blend instead.
     Routing own;
     const bool morphed = v.mod[DstMorph] != 0.0f;
     if (morphed) fillRouting(own, paramOf(Morph) + v.mod[DstMorph]);
@@ -488,9 +484,8 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
             const float env = v.env[o].next();
             const float amp = env * c.level;
             const float hz = clampf(c.fixed ? c.fixedHz : base * c.freqMul, 0.05f, sampleRate * 0.49f);
-            // A reciprocal, not a divide: six operators, sixteen voices, every
-            // sample. Trinity's oscillator says the same thing in the same
-            // words, and this loop is three times the size of that one.
+            // Multiply by the reciprocal instead of dividing, since this runs
+            // for every operator of every voice every sample.
             const float inc = hz * invSampleRate;
             float y = 0.0f;
             const float self = st.out * c.feedback;
@@ -514,16 +509,16 @@ void Ratio::renderVoice(Voice &v, int32_t frames, float *out) {
             case ModeFold:
                 y = foldInto(modIn[o] * (1.0f + c.feedback * 12.0f));
                 break;
-            case ModeSync: { // hard sync to what feeds it, not to a fixed master
+            case ModeSync: { // hard sync to whatever feeds it
                 if (st.syncArmed < 0.0f && modIn[o] >= 0.0f) st.phase = 0.0f;
                 st.syncArmed = modIn[o];
                 y = waveAt(c.wave, st.phase, st);
                 break;
             }
-            case ModePhase: { // phase distortion: the cycle is bent, not modulated
-                // Push the knee toward the start of the cycle: the first half of
-                // the wave happens fast and the second half drags, which is the
-                // resonant edge phase distortion is wanted for.
+            case ModePhase: { // phase distortion: the cycle is bent
+                // Push the knee toward the start of the cycle, so the first half
+                // of the wave is fast and the second half drags. That gives the
+                // resonant edge.
                 const float bendAmt = 0.5f - c.feedback * 0.45f;
                 const float p = st.phase < bendAmt ? st.phase * 0.5f / bendAmt
                                                    : 0.5f + (st.phase - bendAmt) * 0.5f / (1.0f - bendAmt);

@@ -1,12 +1,12 @@
 package com.rm.acidulous.model
 
 /**
- * What the demo song is written with: note lengths, factory patches by name,
+ * Helpers for writing the demo song: note lengths, factory patches by name,
  * and lanes.
  *
- * Patches and effect settings are looked up by name, so a misspelt one does
- * not fail - it comes back empty and the machine plays its defaults.
- * `DemoSongTest` checks every name in the demo resolves.
+ * Patches and effect settings are looked up by name, so a misspelt one comes
+ * back empty and the machine plays its defaults. `DemoSongTest` checks every
+ * name in the demo resolves.
  */
 internal object DemoKit {
     const val Q = PPQN          // quarter
@@ -19,9 +19,9 @@ internal object DemoKit {
         UnitSlot(type, PatchStore.factory(PatchStore.effectKey(type)).firstOrNull { it.name == patchName }?.params ?: emptyMap())
 
     /**
-     * A machine on a factory patch: its knobs, its settings - which is where a
-     * Nexus patch keeps its graph - and the patch's name, marked the way
-     * loading it from the panel marks it, so the panel says which it is.
+     * A machine on a factory patch: its knobs, its settings (where a Nexus
+     * patch keeps its graph) and the patch name, marked the same way loading
+     * it from the panel does so the panel shows which patch it is.
      */
     fun machine(type: String, patchName: String): Machine {
         val p = PatchStore.factory(type).firstOrNull { it.name == patchName } ?: return Machine(type = type)
@@ -32,16 +32,16 @@ internal object DemoKit {
     fun clip(bars: Int, notes: List<Note>, block: Clip.() -> Clip = { this }): Clip =
         Clip(bars = bars, notes = notes.sortedBy { it.tick }).block()
 
-    /** A lane that jumps from point to point, the way a switch or a button does. */
+    /** A lane that jumps from point to point, like a switch or a button. */
     fun steps(vararg points: Pair<Int, Float>) = Lane(points.map { LanePoint(it.first, it.second) }, linear = false)
 
-    /** A lane that slides from point to point, the way a knob being turned does. */
+    /** A lane that slides from point to point, like a knob being turned. */
     fun ramp(vararg points: Pair<Int, Float>) = Lane(points.map { LanePoint(it.first, it.second) })
 
     /**
-     * A compressor that ducks this track under [track] (1-based): hard and
+     * A compressor that ducks this track under [track] (1-based). Hard and
      * fast, so it gets out of the kick's way and comes straight back. Values
-     * are the parameters' normalised positions.
+     * are normalised parameter positions.
      */
     fun duckUnder(track: Int, depth: Float = 0.5f): UnitSlot = UnitSlot(
         "Compressor",

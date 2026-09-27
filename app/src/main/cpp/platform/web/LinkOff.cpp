@@ -1,8 +1,7 @@
-// Ableton Link, for the browser build: never on. Link finds its peers by
-// multicast on the local network, which a web page has no way to send or
-// hear, so the timebase is the one Link switched off is - no session, and
-// the engine keeps its own time. The class is the real one's (link/
-// LinkTimebase.h), so EngineHost builds unchanged.
+// Ableton Link for the browser build, always off. Link finds peers by
+// multicast, which a web page can't do, so there's never a session and the
+// engine keeps its own time. Same class as link/LinkTimebase.h so EngineHost
+// builds unchanged.
 
 #include <link/LinkTimebase.h>
 

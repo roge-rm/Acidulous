@@ -7,21 +7,19 @@ import com.rm.acidulous.util.JavaRandom
 /**
  * Pattern generators: rhythms and lines written as ordinary notes.
  *
- * Each one is a function of its settings and a seed and nothing else, so the
- * same settings give the same notes every time: moving a slider back puts
- * back what was there, and a roll is a new seed rather than a new world. What
- * comes out is notes in the clip, to edit like any others; nothing plays
- * differently for having been generated.
+ * Each one depends only on its settings and a seed, so the same settings give
+ * the same notes every time. Moving a slider back restores what was there,
+ * and a roll just picks a new seed. The result is normal notes in the clip
+ * that you can edit like any others.
  */
 object Generate {
 
     /**
-     * [hits] spread as evenly as they go over [steps], turned by [rotate].
+     * [hits] spread as evenly as possible over [steps], shifted by [rotate].
      *
-     * The step that lands a hit is the one where the running count of
-     * hits-per-step ticks over a whole number, which gives the same patterns
-     * as Bjorklund's algorithm up to a rotation - and the rotation is a
-     * setting anyway. The first step is always a hit before rotating.
+     * A step gets a hit where the running count of hits per step passes a
+     * whole number. That gives the same patterns as Bjorklund's algorithm up
+     * to a rotation. Before rotating, the first step is always a hit.
      */
     fun euclid(hits: Int, steps: Int, rotate: Int = 0): BooleanArray {
         val n = steps.coerceAtLeast(1)
@@ -45,9 +43,8 @@ object Generate {
     )
 
     /**
-     * The pattern across the whole clip, one step at a time, starting over
-     * every [Euclid.steps] - so a pattern of five over twelve against a bar of
-     * sixteen drifts across the bar line, which is half of why anyone wants one.
+     * The pattern across the whole clip, restarting every [Euclid.steps]. So
+     * five over twelve against a bar of sixteen drifts across the bar line.
      */
     fun euclidNotes(e: Euclid, clipTicks: Int): List<Note> {
         val pattern = euclid(e.hits, e.steps, e.rotate)
@@ -75,8 +72,8 @@ object Generate {
 
     /**
      * The notes of [pitchClasses] between [low] and [high], in order. With no
-     * key to be in, a minor pentatonic on [low]: five notes that go with
-     * nearly anything, rather than all twelve, which go with nothing.
+     * key set it uses a minor pentatonic on [low], which fits with nearly
+     * anything.
      */
     fun ladder(pitchClasses: Set<Int>?, low: Int, high: Int): List<Int> {
         val classes = pitchClasses?.takeIf { it.isNotEmpty() }
@@ -85,10 +82,9 @@ object Generate {
     }
 
     /**
-     * A line in key: on each step a note or not by [Line.density], each a walk
-     * from the last by a step or two of the scale, or a leap anywhere in range.
-     * Stronger beats come out a little harder, so a line generated here has a
-     * pulse before anyone has touched it.
+     * A line in key. Each step plays a note or not by [Line.density], and each
+     * note moves a step or two in the scale from the last or leaps anywhere in
+     * range. Notes on the beat are a little louder so the line has a pulse.
      */
     fun lineNotes(l: Line, pitchClasses: Set<Int>?, clipTicks: Int, ticksPerBeat: Int = PPQN): List<Note> {
         val rungs = ladder(pitchClasses, l.low, l.low + 12 * l.octaves.coerceIn(1, 4))
@@ -96,9 +92,9 @@ object Generate {
         val rng = JavaRandom(l.seed.toLong() * 7919L + 17L)
         val step = l.stepTicks.coerceAtLeast(1)
         val count = clipTicks / step
-        // Every step's dice drawn up front, whether it sounds or not, so the
-        // density and length change which steps sound without reshuffling
-        // what the rest of them play.
+        // Every step's random values are drawn up front, played or not, so
+        // changing density or length changes which steps sound without
+        // reshuffling what the others play.
         class Draw(val roll: Float, val jump: Boolean, val anywhere: Int, val walk: Int, val tie: Float, val ties: Int, val vel: Int)
         val draws = List(count) {
             Draw(rng.nextFloat(), rng.nextFloat() < l.leap, rng.nextInt(rungs.size), rng.nextInt(5) - 2,
@@ -129,10 +125,10 @@ object Generate {
 
     /**
      * [notes] changed by about [Mutation.amount]: some move a step or two in
-     * the scale, some go, a few new ones arrive beside old ones, and the
-     * velocities wander. At nought it is exactly what it was. Drums ([drums]
-     * true) keep their pitches - a kick that moves up a scale step is a
-     * different drum - and move in time instead.
+     * the scale, some are removed, a few new ones are added next to old ones,
+     * and velocities wander. At 0 nothing changes. Drums ([drums] true) keep
+     * their pitches, since a moved pitch is a different drum, and move in
+     * time instead.
      */
     fun mutate(
         notes: List<Note>,
@@ -151,8 +147,8 @@ object Generate {
         val rungs = if (drums) emptyList() else ladder(pitchClasses ?: notes.map { it.pitch % 12 }.toSet(), low, high)
         val out = ArrayList<Note>()
         for (n in notes) {
-            // Every draw made whatever happens, as in lineNotes, so turning
-            // the amount up adds changes rather than choosing different ones.
+            // Every value is drawn for every note, as in lineNotes, so turning
+            // the amount up adds changes instead of picking different ones.
             val change = rng.nextFloat()
             val what = rng.nextFloat()
             val by = if (rng.nextBoolean()) 1 + rng.nextInt(2) else -(1 + rng.nextInt(2))
@@ -162,7 +158,7 @@ object Generate {
             if (change >= a) {
                 out += n
             } else if (what < 0.25f) {
-                // Gone.
+                // Removed.
             } else if (what < 0.7f && !drums) {
                 val idx = rungs.indexOfFirst { it >= n.pitch }.let { if (it < 0) rungs.size - 1 else it }
                 val p = rungs.getOrElse((idx + by).coerceIn(0, rungs.size - 1)) { n.pitch }
@@ -173,13 +169,13 @@ object Generate {
             } else {
                 out += n.copy(velocity = (n.velocity + dv).coerceIn(1, 127))
             }
-            // New ones are a third as likely as changes, and copy a neighbour.
+            // New notes are a third as likely as changes and copy a neighbour.
             if (add < a / 3f) {
                 val t = n.tick + addAt
                 if (t in 0 until clipTicks) out += n.copy(tick = t, length = minOf(n.length, step), rawTick = null)
             }
         }
-        // Two notes of the same pitch on the same tick is one note played twice.
+        // Keep only one note per pitch per tick.
         return out.distinctBy { it.tick to it.pitch }.sortedBy { it.tick }
     }
 }

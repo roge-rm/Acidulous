@@ -8,17 +8,16 @@
 #include <string>
 #include <vector>
 
-// The desktop's output stream, through miniaudio: PulseAudio first on Linux
-// (PipeWire answers as it), then ALSA, then JACK.
+// The desktop audio stream through miniaudio: PulseAudio first on Linux
+// (PipeWire shows up as it), then ALSA, then JACK.
 //
-// The same class, and the same public surface, as the Oboe driver in
-// platform/drivers - EngineHost builds against either without knowing which -
-// and the same bookkeeping: fixed engine blocks served out through a carry
-// buffer, the input read inside the output callback, peak meters that decay
-// rather than clear, and the callback timed on the wall clock and the CPU
-// clock both. What a desktop does not have is a scheduler hint, so that part
-// always says it is unavailable; and it has no presentation timestamp, so
-// the anchor is the frames written and the buffer's own depth.
+// Same class and public API as the Oboe driver in platform/drivers so
+// EngineHost builds against either, and it works the same way: fixed engine
+// blocks through a carry buffer, input read inside the output callback, peak
+// meters that decay, and the callback timed in wall clock and CPU time. There
+// are no scheduler hints on desktop, so those always say unavailable. There's
+// no presentation timestamp either, so the anchor comes from the frames
+// written and the buffer depth.
 
 struct ma_device;
 
@@ -40,29 +39,29 @@ class AudioDriver {
 
     /** One of the sound server's inputs, as the input chooser lists it. */
     struct InputInfo {
-        int32_t id;       // stable while the device's name is: a hash of it, never nought
-        std::string name; // what the sound server calls it: "Built-in Audio Analog Stereo"
-        std::string key;  // the server's own name for it - PulseAudio's "alsa_input.usb-..." - or empty
+        int32_t id;       // a hash of the name, so stable while the name is, never 0
+        std::string name; // display name, e.g. "Built-in Audio Analog Stereo"
+        std::string key;  // the server's internal name (PulseAudio's "alsa_input.usb-...") or empty
     };
-    /** The inputs there are now; the ids are what startInput takes. */
+    /** The current inputs. The ids are what startInput takes. */
     static std::vector<InputInfo> listInputs();
-    /** The outputs there are now, the same way; the ids are what chooseOutput takes. */
+    /** The current outputs. The ids are what chooseOutput takes. */
     static std::vector<InputInfo> listOutputs();
     /**
-     * Play through the output with this id from listOutputs, nought for the
-     * system's default: kept for the next start, and a running stream is
-     * reopened on it straight away. One that is not there is the default.
+     * Play through the output with this id from listOutputs, 0 for the
+     * system default. Kept for the next start, and a running stream is
+     * reopened on it right away. An id that isn't there means the default.
      */
     static void chooseOutput(int32_t id);
 
-    /** Open the ear: nought is the system's default input, anything else an id from listInputs. */
+    /** Start the input: 0 is the system default, anything else an id from listInputs. */
     bool startInput(int32_t deviceId = 0);
     void stopInput();
     bool isInputRunning() const { return capturer != nullptr || driverInput; }
     int32_t inputChannels() const { return actualInputChannels; }
     int32_t inputRate() const { return actualInputRate; }
     int32_t inputDevice() const { return actualInputDevice; }
-    /** Decayed rather than cleared, so several meters can read it: see the Oboe driver. */
+    /** Decays rather than clears so several meters can read it (see the Oboe driver). */
     float readInputPeak() {
         const float now = inputPeak.load(std::memory_order_relaxed);
         inputPeak.store(now * kMeterDecay, std::memory_order_relaxed);
@@ -79,7 +78,7 @@ class AudioDriver {
     int32_t getSampleRate() const { return actualSampleRate; }
     int32_t getFramesPerBurst() const { return actualFramesPerBurst; }
     bool isLowLatency() const { return true; }
-    /** miniaudio does not count them; the late count below is ours and does. */
+    /** miniaudio doesn't count xruns. Use the late count below instead. */
     int64_t getXRunCount() const { return 0; }
     bool hintRunning() const { return false; }
     bool hintAvailable() const { return false; }
@@ -97,7 +96,7 @@ class AudioDriver {
         return static_cast<int32_t>(static_cast<int64_t>(frames) * 1000000 / rate);
     }
 
-    /** When the audio being written now will be heard: see the Oboe driver. */
+    /** When the audio being written now will be heard (see the Oboe driver). */
     bool presentationAnchor(int64_t &frame, int64_t &nanos) const {
         const int32_t s = anchorSlot.load(std::memory_order_acquire);
         if (anchors[s].frame < 0) return false;
@@ -112,7 +111,7 @@ class AudioDriver {
         return now;
     }
 
-    // miniaudio's callbacks; public only so the C trampolines can reach them.
+    // miniaudio's callbacks. Public only so the C trampolines can reach them.
     void render(float *out, int32_t numFrames);
     void capture(const float *in, int32_t numFrames);
 
@@ -165,20 +164,20 @@ class AudioDriver {
         return static_cast<int32_t>(static_cast<int64_t>(frames) * 1000000 / rate);
     }
 
-    /** Stop and start again, on whatever output is chosen now, keeping the input open if it was. */
+    /** Restart on the currently chosen output, keeping the input open if it was. */
     void reopen();
     static int32_t sChosenOutput;
     static AudioDriver *sLive;
 
-    // An interface's own driver in miniaudio's place (Asio.h, Windows only):
-    // open, with its input pairs, the pair being read, and its output latency.
+    // An ASIO driver used instead of miniaudio (Asio.h, Windows only): whether
+    // it's open, its input pairs, the pair being read, and its output latency.
     bool driverOn = false;
     bool driverInput = false;
     std::string driverName;
     std::vector<std::string> driverPairs;
     int32_t driverLatency = 0;
     bool startDriver(const std::string &name);
-    /** A driver's input, on its audio thread: straight into the ring the output reads. */
+    /** ASIO input, on the driver's audio thread, straight into the ring the output reads. */
     void pushInput(const float *in, int32_t numFrames);
 
     int32_t engineBlockFrames = 0;

@@ -7,9 +7,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The keyboard's arithmetic: which chord is which action, what a stored
- * binding reads back as, and which note a letter plays. The rest of it - does
- * a key reach the screen, does the note record - needs the app running.
+ * Keyboard logic: which key chord is which action, how a stored binding reads
+ * back, and which note a letter plays. Whether keys reach the screen and notes
+ * record needs the app running.
  */
 class KeysTest {
     @Test
@@ -28,7 +28,7 @@ class KeysTest {
         assertEquals(KeyAction.Undo, actionFor(KeyChord(KeyCodes.KEYCODE_Z, ctrl = true), DEFAULT_KEYS))
         assertEquals(KeyAction.Undo, actionFor(KeyChord(KeyCodes.KEYCODE_Z, alt = true), DEFAULT_KEYS))
         assertEquals(KeyAction.Redo, actionFor(KeyChord(KeyCodes.KEYCODE_Z, ctrl = true, shift = true), DEFAULT_KEYS))
-        // Plain Z is play mode's octave key, not undo.
+        // Plain Z is the octave key in play mode.
         assertNull(actionFor(KeyChord(KeyCodes.KEYCODE_Z), DEFAULT_KEYS))
     }
 
@@ -49,12 +49,12 @@ class KeysTest {
 
     @Test
     fun theHomeRowIsAPiano() {
-        // A is the octave's C; K is the C above; the black keys sit between.
+        // A is C, K is the C above, and the black keys sit between.
         assertEquals(60, noteFor(NOTE_KEYS.getValue(KeyCodes.KEYCODE_A), 4, null))
         assertEquals(61, noteFor(NOTE_KEYS.getValue(KeyCodes.KEYCODE_W), 4, null))
         assertEquals(72, noteFor(NOTE_KEYS.getValue(KeyCodes.KEYCODE_K), 4, null))
         assertEquals(48, noteFor(NOTE_KEYS.getValue(KeyCodes.KEYCODE_A), 3, null))
-        // Nothing outside MIDI's range, whatever the octave.
+        // Always stays in MIDI's range, whatever the octave.
         assertEquals(127, noteFor(17, 9, null))
         assertEquals(0, noteFor(0, -2, null))
     }

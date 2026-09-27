@@ -6,26 +6,20 @@
 #include <engine/core/Take.h>
 #include <vector>
 
-// Where to cut one file so it lands across a set of pads.
+// Where to cut one file to spread it across a set of pads.
 //
-// Not in EngineHost, though that is its only caller today: the host is JNI
-// plumbing and this is a decision about audio, which means it wants a test
-// and the host cannot have one - it does not link outside the app.
+// Kept out of EngineHost, its only caller, so it can be tested outside the app.
 namespace acidulous::audio {
 
 enum class SliceMode : int { Transients = 0, Even = 1 };
 
 /**
- * [count] + 1 boundaries as fractions of the file's length, ascending, from
- * 0 to 1. Slice n runs from boundary n to boundary n + 1, so a caller has a
- * start and an end for every pad without arithmetic of its own.
+ * [count] + 1 boundaries as fractions of the file's length, from 0 to 1 in
+ * order. Slice n runs from boundary n to boundary n + 1.
  *
- * Transients are found with the same detector Dice and Pollen read. A
- * detector finds what it finds and a player asked for a number of pads, so:
- * enough transients means one pad per stretch of the file, each snapped to
- * the strongest onset in its own stretch; fewer than pads falls back to an
- * even division, because thirteen pads of which nine are empty is not what
- * anybody meant by "slice this".
+ * Transients use the same detector as Dice and Pollen. With enough of them,
+ * each pad snaps to the strongest onset in its own stretch of the file. With
+ * fewer onsets than pads it falls back to even slices.
  */
 inline std::vector<float> slicePoints(const SampleData &s, SliceMode mode, int count, float sampleRate) {
     if (count < 1) count = 1;
@@ -41,20 +35,10 @@ inline std::vector<float> slicePoints(const SampleData &s, SliceMode mode, int c
         take.detect(sampleRate);
         const std::vector<int32_t> &onsets = take.onsets;
         if (static_cast<int>(onsets.size()) >= count) {
-            // **One cut per stretch of the file, not the loudest [count] in
-            // it.** Taking the loudest overall is right about a drum loop and
-            // wrong about anything longer: a whole song's loudest transients
-            // are wherever the song is loudest, so a four minute track cut
-            // into thirteen put twelve cuts in the first twenty seconds and
-            // left the remaining two hundred as one slice. Measured on a real
-            // one - the cuts came out at 0.0, 9.7, 10.2, 11.3 ... 20.0, 225.9.
-            //
-            // So the file is divided into [count] equal stretches and each
-            // pad takes the strongest onset inside its own. A break loses
-            // nothing by it, because hits that regular fall one to a stretch
-            // anyway; a song gains the whole of itself. A stretch the
-            // detector heard nothing in keeps its plain division, which is
-            // the honest answer for a bar of silence.
+            // Split the file into [count] equal stretches and take the
+            // strongest onset in each. Taking the loudest onsets overall
+            // bunches the cuts together on a long track. A stretch with no
+            // onsets keeps its even cut.
             const auto window = static_cast<int32_t>(sampleRate * 0.02f);
             cuts.assign(static_cast<size_t>(count), 0);
             size_t at = 0;
@@ -85,9 +69,8 @@ inline std::vector<float> slicePoints(const SampleData &s, SliceMode mode, int c
             cuts.push_back(static_cast<int32_t>(static_cast<int64_t>(s.frames) * i / count));
         }
     }
-    // The first slice starts at the top of the file whatever the detector
-    // said: a loop whose first transient is two hundred samples in would
-    // otherwise throw those away, and they are the attack.
+    // The first slice always starts at 0, so nothing before the first
+    // transient is lost.
     cuts[0] = 0;
 
     out.reserve(cuts.size() + 1);

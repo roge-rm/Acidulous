@@ -2,29 +2,18 @@
 #include <cmath>
 #include <cstdint>
 
-// Running a nonlinearity at twice the rate, so what it makes above Nyquist
-// does not fold back into the music.
+// Runs a nonlinearity at twice the rate so harmonics above Nyquist don't fold
+// back into the audible range.
 //
-// **Why this exists when `Distortion` already oversamples.** That one is
-// hand-rolled inline: upsampled by taking the midpoint of two samples and
-// decimated with a single biquad. A linear-interpolated midpoint is
-// convolution with a two-sample triangle, whose response passes the first
-// image at about -13 dB - so the nonlinearity downstream intermodulates those
-// images straight back down into the audible band, and the 2x buys far less
-// than it looks like it buys. Good enough for a distortion pedal whose grit is
-// part of its sound; not good enough for an amp, which has *two* nonlinear
-// stages and a speaker filter after them that hides none of it, because folded
-// harmonics land below the corner.
+// `Distortion` has its own cheaper oversampling (midpoint upsampling and one
+// biquad), which lets a lot of aliasing through. That's fine for a distortion
+// pedal but not for an amp with two nonlinear stages. This uses a halfband
+// FIR, where every even tap but the centre is zero, so the polyphase form
+// needs 8 multiplies per sample each way instead of 31.
 //
-// A halfband FIR instead. Halfband because every even tap of it is zero except
-// the middle one, which is what makes the polyphase form cost eight multiplies
-// a sample each way rather than thirty-one.
-//
-// **2x and not 4x**, and that is a decision about the *nonlinearities*, not
-// about the filter: a tanh family's harmonics fall away fast enough that what
-// is left above 72 kHz is already far below anything audible. A hard clipper
-// or a wavefolder would need 4x, which is why nothing inside the oversampled
-// region of an amp is allowed to be one.
+// 2x is enough for tanh-style curves, whose harmonics fall off fast. Hard
+// clippers and wavefolders would need 4x, so don't put them inside an amp's
+// oversampled section.
 namespace acidulous::dsp {
 
 class Oversampler {
@@ -33,19 +22,15 @@ class Oversampler {
     static constexpr int32_t kTaps = 31;
     static constexpr int32_t kHalf = kTaps / 2;
     /**
-     * What a round trip costs, in samples at the **base** rate.
-     *
-     * Thirty at twice the rate, which is fifteen here. It is a constant rather
-     * than something to measure because the dry path has to be delayed by
-     * exactly this - see the note on `Amp` - and a latency that changes when a
-     * quality setting is flipped is a click.
+     * Round-trip latency in samples at the base rate. It's a constant because
+     * the dry path is delayed by exactly this (see `Amp`), and a latency that
+     * changed with the quality setting would click.
      */
     static constexpr int32_t kLatency = (kTaps - 1) / 2;
 
     void prepare() {
-        // A windowed sinc at a quarter of the doubled rate. Blackman, which
-        // gets a 31-tap halfband to about -74 dB in the stopband: the images
-        // the nonlinearity would otherwise fold back arrive already dead.
+        // A Blackman-windowed sinc at a quarter of the doubled rate, which
+        // gives about -74 dB in the stopband.
         for (int32_t k = 0; k < kPairs; ++k) {
             const int32_t n = 2 * k + 1; // the odd taps are the only live ones
             const float ideal = std::sin(1.5707963f * static_cast<float>(n)) /
@@ -67,10 +52,8 @@ class Oversampler {
     /**
      * [n] frames in, 2n out.
      *
-     * The even outputs are the input itself: with zeros stuffed between the
-     * samples, only the centre tap reaches them, and a halfband's centre tap
-     * is a half that the doubling cancels. So half the work is already done
-     * and the odd outputs are the only ones that cost anything.
+     * The even outputs are just the (delayed) input, since only the halfband's
+     * centre tap reaches them. Only the odd outputs need filtering.
      */
     void up(const float *in, int32_t n, float *out) {
         for (int32_t i = 0; i < n; ++i) {

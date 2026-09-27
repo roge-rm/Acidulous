@@ -1,26 +1,22 @@
-// Acidulous's service worker. Two jobs, because a page has only one:
+// Acidulous's service worker. It does two things:
 //
-// **Isolation.** The engine shares its memory with the audio thread, and a
-// browser allows that only on a cross-origin isolated page - one served with
-// COOP and COEP headers, which a static host like GitLab Pages cannot send.
-// Every answer given here carries them.
+// Isolation. The engine shares memory with the audio thread, which browsers
+// only allow on a cross-origin isolated page (COOP and COEP headers). Static
+// hosts like GitLab Pages can't send those, so every response here adds them.
 //
-// **The app, kept.** Installed or not, the page opens from what is kept here,
-// with no connection and without downloading twenty megabytes again. Every
-// file of a build is kept together, under the build's fingerprint, because
-// three of them (the engine, its loader and the app's script) keep their names
-// from one build to the next and must never be mixed across two. The build
-// writes the fingerprint and the list into the two lines below
-// (web/app/build.gradle.kts).
+// Offline. The app opens from the cache, with no connection and without
+// downloading twenty megabytes again. All files of a build are cached
+// together under the build's fingerprint, because the engine, its loader and
+// the app's script keep the same names between builds and must never be
+// mixed. The build writes the fingerprint and file list into the two lines
+// below (web/app/build.gradle.kts).
 //
-// A new build is noticed when the app is opened and the browser finds this
-// file changed. It is fetched whole in the background while the old one
-// carries on, and takes over when it is all here: the next time the app is
-// opened, it is the new build. (Chrome does not get round to checking again
-// while the app is running - its update checks wait until the page has gone -
-// so a build published mid-session arrives two openings later, not one.) The
-// first visit keeps what the page itself fetches, and then the rest (fill), so
-// nothing is downloaded twice.
+// A new build is found when the app is opened and the browser sees this file
+// changed. It downloads in the background and takes over the next time the
+// app is opened. Chrome doesn't check again while the app is running, so a
+// build published mid-session shows up two openings later. On the first visit
+// the page's own requests are cached, then fill() gets the rest, so nothing
+// is downloaded twice.
 
 const VERSION = '__VERSION__';
 const FILES = __FILES__;
@@ -29,7 +25,7 @@ const built = !VERSION.startsWith('__');
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  // An update: all of it, before it replaces the build that is working.
+  // An update: fetch all of it before it replaces the working build.
   if (built && self.registration.active) event.waitUntil(fill());
 });
 
@@ -42,7 +38,7 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-// The page, once the app is running: keep whatever it has not asked for yet.
+// Once the app is running the page asks for the rest of the files to be cached.
 self.addEventListener('message', (event) => {
   if (event.data === 'fill' && built) event.waitUntil(fill());
 });
@@ -72,8 +68,9 @@ async function answer(request, url) {
   let file = url.pathname.slice(new URL(self.registration.scope).pathname.length);
   if (request.mode === 'navigate' || file === '') file = 'index.html';
   const kept = built && FILES.includes(file);
-  // The sizes for the progress bar are only worth the network's: a kept build
-  // needs no bar. Everything else kept is answered from here.
+  // load-sizes.json is only for the progress bar, which a cached build doesn't
+  // need, so it always comes from the network. Everything else cached is
+  // answered from here.
   if (kept && file !== 'load-sizes.json') {
     const cache = await caches.open(CACHE);
     const hit = await cache.match(file);

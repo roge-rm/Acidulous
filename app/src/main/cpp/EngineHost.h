@@ -41,34 +41,27 @@ class EngineHost {
     bool mountGroupInsert(int group, int slot, const std::string &typeName);
     float groupPeak(int group);
     /**
-     * An effect on the way *in*, before anything hears the input.
-     *
-     * The difference from a track's insert is the whole point: **what is here
-     * is printed into the recording**, because it runs before the capture ever
-     * sees the block. Unlike a send, the mix is left alone - an input effect is
-     * in series with the signal, not beside it, so a dry blend is a legitimate
-     * thing to want.
+     * An effect on the input, before anything hears it. Unlike a track's
+     * insert it's recorded into the take, since it runs before the capture.
+     * Unlike a send, its mix knob is left alone, since it's in series.
      */
     bool mountInputEffect(int slot, const std::string &typeName);
     std::string loadReel(int rack, const std::string &spec);
     /**
-     * Where converted long takes live, set once at startup.
-     *
-     * Empty means there is nowhere to put them, and a long take is then held
-     * in memory up to the resident ceiling rather than refused - a missing
-     * cache directory is a reason to do less, not a reason to fail.
+     * Where converted long takes are stored. Set once at startup. If empty,
+     * long takes are held in memory up to the resident limit instead.
      */
     void setCacheRoot(const std::string &path) { cacheRoot = path; }
     const char *mountedEffect(int rack, int slot) const;
     bool mountInputMod(int rack, int slot, const std::string &typeName);
     // Builds anything a machine needs before it can be mounted (Trinity's
-    // wavetables). Safe to call from a worker at startup; mounting waits on it.
+    // wavetables). Safe to call from a worker at startup. Mounting waits on it.
     static void prewarm();
 
     // Decodes a WAV here and mounts it into the machine's `slot` (a pad). An
-    // empty path clears the slot. Returns false if the file cannot be read.
-    // [maxSeconds] is how much of a long file to keep - see kMaxDecodeSeconds
-    // and kMaxSliceSeconds.
+    // empty path clears the slot. Returns false if the file can't be read.
+    // [maxSeconds] is how much of a long file to keep (see kMaxDecodeSeconds
+    // and kMaxSliceSeconds).
     bool loadSample(int rack, int slot, const std::string &path, std::string &error, int maxSeconds = 0);
 
     // --- Multisample maps (Mosaic) ------------------------------------------
@@ -81,9 +74,9 @@ class EngineHost {
     /** "name|zones|samples|seconds" for the mounted map, or "". */
     std::string sampleMapInfo(int rack) const;
 
-    /** Build a Nexus patch from its text and hand it to the rack. "" or an error. */
+    /** Builds a Nexus patch from its text and mounts it. Returns "" or an error. */
     std::string loadNexusPatch(int rack, const std::string &spec);
-    /** The palette, so the editor never keeps a second copy of it. */
+    /** The palette, so the editor doesn't keep its own copy. */
     std::string nexusPalette() const;
     /** The scope trace from a rack's Nexus, into a caller-owned array. */
     int32_t nexusScope(int rack, float *dest, int32_t max) const;
@@ -91,88 +84,61 @@ class EngineHost {
      * Where a file's slices fall, as fractions of its length.
      *
      * [mode] 0 finds transients and 1 divides evenly. Returns [count]+1
-     * boundaries, "a,b,c,..." - so slice n runs from boundary n to n+1 and
-     * the caller has start and end for every pad without arithmetic of its
-     * own. Empty on any failure, with [error] saying why.
+     * boundaries as "a,b,c,...", so slice n runs from boundary n to n+1.
+     * Empty on failure, with [error] set.
      */
     std::string slicePoints(const std::string &path, int mode, int count, std::string &error) const;
-    /** "bars|seconds" for a loop file: the guess a machine following the song makes of it. */
+    /** "bars|seconds" for a loop file, as guessed for playing at the song's tempo. */
     std::string loopShape(const std::string &path, std::string &error) const;
 
     /**
-     * Make an imported file into one the rest of the app can read.
+     * Converts an imported file into a WAV the rest of the app can read.
      *
-     * Returns the path to use - the same one when it was already a WAV, a new
-     * `.wav` beside it otherwise, with the original removed. Empty on failure,
-     * with [error] saying what the file turned out to be and what was wrong
-     * with it.
+     * Returns the path to use: the same one if it was already a WAV,
+     * otherwise a new `.wav` beside it with the original removed. Empty on
+     * failure, with [error] saying what the file was and what went wrong.
      *
-     * The conversion is here rather than at each machine so that there is one
-     * of it: everything downstream still opens a WAV, a file is decoded once
-     * rather than on every song load, and a document keeps naming something
-     * that plainly exists on disk.
+     * Converting once here means everything else only has to open WAVs.
      */
     std::string importAudio(const std::string &path, std::string &error, int maxSeconds = 0) const;
 
     /**
-     * A pad's sample as something to draw: [columns] pairs of min and max.
+     * A pad's sample as a waveform to draw: [columns] pairs of min and max.
+     * [dest] needs 2 * [columns] floats. Returns how many columns were
+     * filled, 0 when the pad is empty.
      *
-     * Not the samples themselves. A thirty-second file is close to three
-     * million of them and a phone is a thousand pixels wide, so what a
-     * waveform display wants is the extremes within each column - which is
-     * what makes a drawn waveform look like the sound rather than like an
-     * aliased sine. [dest] wants 2 * [columns] floats; returns how many it
-     * filled, which is nought when the pad holds nothing.
-     *
-     * [fromFrame] and [toFrame] are the window to shape, in frames, which is
-     * what makes zooming worth doing: a display that only ever shaped the
-     * whole sample could be magnified but never resolved, and ten minutes
-     * across nine hundred columns is thirty thousand frames a column. An
-     * empty range means the whole of it. Frames and not fractions because a
-     * float fraction of twenty-eight million frames resolves to about two of
-     * them, which is the wrong end of the zoom to go blunt at.
+     * [fromFrame] and [toFrame] set the range to draw, for zooming. An empty
+     * range means the whole sample. Frames, not fractions, because a float
+     * fraction isn't precise enough on a long file.
      */
     int32_t sampleShape(int rack, int pad, float *dest, int32_t columns, int32_t fromFrame = 0,
                         int32_t toFrame = 0) const;
     /**
-     * The same picture, of a **file** rather than of a mounted pad.
+     * The same as `sampleShape`, but for a file instead of a mounted pad, so
+     * the sample editor works for any machine and for unmounted recordings.
      *
-     * `sampleShape` asks a Forage for its pad, which is why the sample editor
-     * has only ever worked on one machine: Dice, Pollen, Molt and Mosaic all
-     * hold their material as something else and answer nothing. A recording
-     * being trimmed is not mounted anywhere yet at all. So the window that
-     * edits a file reads the file, and the two share their column walk.
-     *
-     * Reads and decodes on the calling thread - a worker, never the audio one.
+     * Decodes on the calling thread, which must be a worker.
      */
     int32_t fileShape(const std::string &path, float *dest, int32_t columns,
                       int32_t fromFrame = 0, int32_t toFrame = 0) const;
     /** "name|frames|channels|rate|peak" for a file on disk, "" if unreadable. */
     std::string fileInfo(const std::string &path) const;
     /**
-     * [fileInfo] and [fileShape] in one decode.
-     *
-     * Both of those read the whole file, and a take being put on one of Bias's lanes
-     * wants both answers about the same file at the same moment - so asking
-     * separately decodes five minutes of audio twice, for two numbers and forty
-     * pairs. The peak transient is the reason this exists rather than tidiness:
-     * see the note in `assemble`.
+     * [fileInfo] and [fileShape] from a single decode, for a take going onto
+     * a Bias lane. See the note in `assemble`.
      */
     std::string fileSurvey(const std::string &path, float *dest, int32_t columns) const;
     /**
-     * Read [src], apply [ops], write [dst]. "" or a reason.
+     * Reads [src], applies [ops] and writes [dst]. Returns "" or an error.
      *
-     * [dst] may be [src], which is the overwrite. Written to a temporary and
-     * renamed, so a failure halfway leaves the original where it was rather
-     * than half of it.
+     * [dst] may be [src] to overwrite it. Written to a temporary file and
+     * renamed, so a failure leaves the original intact.
      */
     std::string editSample(const std::string &src, const std::string &dst,
                            const audio::SampleOps &ops) const;
     /**
-     * Play a file once, to hear what it is. An empty path stops it.
-     *
-     * Outside the song: not recorded, not exported, not frozen, and stopped
-     * by a panic like everything else this engine makes a sound with.
+     * Plays a file once to preview it. An empty path stops it. Not part of
+     * the song, so it isn't recorded, exported or frozen. Panic stops it.
      */
     std::string auditionFile(const std::string &path);
     bool auditioning() const;
@@ -193,21 +159,17 @@ class EngineHost {
         int32_t rack = -1; // -1 is the master mix
     };
 
-    // Blocks: renders the whole song from the top (song loop off, metronome
-    // off) plus `tailSeconds` of silence-driven tail, then hands the stream
-    // back to the device. Call from a worker thread.
+    // Blocks. Renders the whole song from the top (song loop and metronome
+    // off) plus `tailSeconds` of tail, then gives the stream back to the
+    // device. Call from a worker thread.
     bool renderSong(const std::string &path, float tailSeconds, AudioFormat format, int32_t bits,
                     std::string &error, int32_t startScene = 0, float maxSeconds = 0.0f);
     /**
-     * The same single pass, written to several files at once.
+     * Renders the song once, writing several files at the same time.
      *
-     * Stems are not the song rendered once per track: every rack renders
-     * every block anyway, and the master only sums what they already made.
-     * So this opens a sink per target and copies each rack's own buffer as
-     * it goes - post-fader, post-pan and post-mute, which is what that rack
-     * contributes to the mix. Solo is not applied, being a monitoring state
-     * rather than a mix decision, and the master bus - its sends, volume and
-     * limiter - is by definition not in any single track.
+     * Each rack's buffer is copied post-fader, post-pan and post-mute, which
+     * is what it adds to the mix. Solo isn't applied, and the master bus
+     * (sends, volume, limiter) isn't in any single stem.
      */
     bool renderStems(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
                      int32_t bits, std::string &error, int32_t startScene = 0, float maxSeconds = 0.0f);
@@ -218,14 +180,13 @@ class EngineHost {
 
     void noteOn(int rack, uint8_t note, uint8_t velocity);
     void noteOff(int rack, uint8_t note);
-    // Performance controllers. They travel as MIDI so the modifier chain and,
-    // later, a USB controller share one path into the machine.
+    // Performance controllers. Sent as MIDI so the modifier chain and a USB
+    // controller share one path into the machine.
     void controlChange(int rack, uint8_t cc, uint8_t value, bool record = true);
     void channelPressure(int rack, uint8_t value, bool record = true);
-    // A channel message straight from a MIDI port. The rack is the channel:
-    // whatever the message was addressed to on the wire is re-addressed here.
+    // A channel message straight from a MIDI port, re-addressed to [rack].
     void midiEvent(int rack, uint8_t status, uint8_t d1, uint8_t d2, uint8_t channel = kNoChannel);
-    /** The MPE zone: kind 0 off / 1 lower / 2 upper. One, for the input. */
+    /** The input's MPE zone: kind 0 off, 1 lower, 2 upper. */
     void setMpeZone(int kind, int members, float bendSemis);
     bool mpeMemberChannel(uint8_t channel) const;
     /** Which member channels are holding a note, a bit per channel. */
@@ -233,7 +194,7 @@ class EngineHost {
 
     // unit: "machine" | "effect1" | "effect2" | "mod1" | "mod2" | "channel".
     // value is normalised 0..1. Names are resolved here, on the UI thread.
-    // `record`: a user gesture (recordable) rather than the document syncing state.
+    // `record`: a user gesture that can be recorded, not the song syncing state.
     bool setParam(int rack, const std::string &unit, const std::string &name, float value, bool record,
                   int quantise = 0);
 
@@ -254,20 +215,20 @@ class EngineHost {
     float tempo() const;
     int64_t positionPacked() const;
 
-    // Clip mode: the grid as a launcher rather than an arranger.
+    // Clip mode: the grid as a launcher instead of an arranger.
     void setLauncher(bool on);
-    /** Whether Fill trigs may sound. A finger on a button, nothing more. */
+    /** Whether Fill trigs play. Set while the Fill button is held. */
     void setFill(bool on);
     void setLaunchQuantise(int32_t ticks);
     void launchClip(int32_t rack, int64_t sceneId);
-    /** Clip mode: a scene's clips in and every other track out, on one tick. */
+    /** Clip mode: starts a scene's clips and stops every other track on the same tick. */
     void launchScene(int64_t sceneId);
     void stopAllClips();
     void cancelLaunch(int32_t rack);
     void launchStates(int64_t *out, int32_t count) const;
 
     // MIDI out: the queue the audio thread fills, and the anchor that turns
-    // a frame into a time the far side can schedule against.
+    // a frame into a time Android can schedule.
     void setClockOut(bool on);
     int drainMidiOut(int64_t *out, int maxEvents);
     bool audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate) const;
@@ -276,15 +237,15 @@ class EngineHost {
     void setTuning(int rack, const float *ratios);
 
     // --- Ableton Link -------------------------------------------------------
-    /** On opens the discovery sockets and hands the tempo to the session. */
+    /** Turning it on opens the discovery sockets and offers our tempo. */
     void setLinkEnabled(bool on);
     bool linkEnabled() const;
-    /** Does a peer starting or stopping start and stop us too? */
+    /** Whether a peer starting or stopping starts and stops us too. */
     void setLinkStartStop(bool on);
     /**
-     * Peers and the session tempo, for the readout - and, on the way past,
-     * the stream's current anchor handed to Link. Poll it.
-     * Packed: peers in the top word, tempo in hundredths in the bottom.
+     * Peers and session tempo for the readout. Also passes the stream's
+     * current anchor to Link, so poll it. Packed: peers in the top word,
+     * tempo in hundredths in the bottom.
      */
     int64_t linkStatus();
     void midiClockIn(int64_t frame, uint8_t status, uint8_t d1, uint8_t d2);
@@ -303,8 +264,8 @@ class EngineHost {
                           bool smooth, bool fadeIn, bool fadeOut);
     bool snapshotSetClipCached(int64_t handle, int rack, int scene, int64_t rev);
     // notes: flat [tick, length, pitch, velocity, curvePointCount, trig] x count,
-    // where `trig` is seq::packTrig's word. `seed` is the clip's own dice; a
-    // `playMode` with bit 1 set means the dice roll free rather than seeded.
+    // where `trig` is seq::packTrig's word. `seed` is the clip's own dice seed.
+    // Bit 1 of `playMode` makes the dice roll freely instead of seeded.
     bool snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
                          int seed, const int32_t *notes, int noteCount, const float *expr, int exprCount);
     // points: flat [tick, value] × count, any order. unit/name resolve against
@@ -316,89 +277,78 @@ class EngineHost {
     void snapshotAbandon(int64_t handle);
 
     /**
-     * Build Cumulus's tables for a rack from its current spectrum
-     * parameters, and mount them. Tens of milliseconds and a few megabytes,
-     * so: worker thread only.
+     * Builds Cumulus's tables for a rack from its spectrum parameters and
+     * mounts them. Takes tens of ms and a few MB, so worker thread only.
      */
     std::string buildCloud(int rack, const float *spectrum01, int32_t count);
 
     /**
-     * Decode a WAV, find its transients, and hand the whole take to the
-     * rack - for Pollen to granulate or Dice to cut up. Worker only.
-     * "" or the reason it would not load.
+     * Decodes a WAV, finds its transients and mounts the take for Pollen or
+     * Dice. Worker thread only. Returns "" or the reason it failed.
      */
     std::string loadTake(int rack, const std::string &path);
 
     /**
-     * A sung take for a Molt: decoded, summed to mono and pitch-marked on a
+     * A sung take for Molt: decoded, summed to mono and pitch-marked on a
      * worker, then mounted. An empty path clears it.
      */
     std::string loadUtterance(int rack, const std::string &path);
-    /** The same, from what the machine just recorded through the input bus. */
-    /** Bumped when a capture finishes, so the UI can notice and analyse it. */
 
     /**
-     * Compile Formulate's expression and its three step tables, and mount
-     * them. Returns "" or the reason it would not read - which the panel
-     * shows, because a typed formula that fails silently is a trap.
+     * Compiles Formulate's expression and its three step tables and mounts
+     * them. Returns "" or the parse error, which the panel shows.
      */
     std::string loadFormula(int rack, const std::string &formula, const std::string &arp,
                             const std::string &duty, const std::string &vol);
 
     // --- Freeze ---------------------------------------------------------
-    /**
-     * Render one clip to a WAV, off the device: the rack's own output after
-     * its effects and before its channel strip, exactly one clip long, with
-     * whatever is still ringing at the end wrapped back into the start so
-     * the loop joins. Returns "" on success and fills in what the playback
-     * side needs to know; anything else is the reason it did not happen.
-     */
   private:
     bool renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,
                        int32_t bits, std::string &error, int32_t startScene, float maxSeconds,
                        dsp::Loudness *measure = nullptr);
   public:
     /**
-     * Render the song as an export would, into no file, and measure it:
+     * Renders the song like an export, without writing a file, and measures
      * integrated LUFS and true peak dBTP. The first pass of a normalised
-     * export - renders repeat exactly, so the second pass is what was measured.
+     * export. Renders are repeatable, so the second pass matches.
      */
     bool measureLoudness(float tailSeconds, int32_t startScene, float maxSeconds, float &lufs, float &truePeak,
                          std::string &error);
-    /** A gain in dB applied to everything the next renders write; 0 for none. */
+    /** Gain in dB applied to what the next renders write. 0 for none. */
     void setRenderGain(float db) { renderGainDb = db; }
   private:
     float renderGainDb = 0.0f;
 
   public:
     /**
-     * [tailSeconds] is the **cap** on the ring-out, not its length: the render
-     * stops as soon as the sound has decayed, and [tailOut] says how much it
-     * kept. The tail is stored after the clip and is never part of the loop.
+     * Renders one clip to a WAV offline: the rack's output after its effects
+     * and before its channel strip, exactly one clip long. Returns "" on
+     * success and fills in the outputs, or returns the error.
+     *
+     * [tailSeconds] is the maximum ring-out. The render stops once the sound
+     * has decayed, and [tailOut] says how much was kept. The tail is stored
+     * after the clip and isn't part of the loop.
      */
     std::string freezeClip(int rack, int64_t sceneId, const std::string &path, float tailSeconds,
                            int32_t &framesOut, int32_t &tailOut, int32_t &ticksOut, float &bpmOut,
                            float &peakOut);
 
     /**
-     * Flatten one Bias cell's four lanes into one file: a comp.
+     * Mixes one Bias cell's four lanes down to one file (a comp).
      *
-     * Not the freeze renderer, which would drive the whole scheduler and bake
-     * the track's inserts in as well. A cell's audio does not depend on the
-     * transport at all - it depends on where in the cycle it is - so this
-     * simply walks the cycle and asks the machine for it, with the medium
-     * switched off: **a comp flattens the lanes and not the tape they are
-     * played through.**
+     * Doesn't use the freeze renderer, which would run the scheduler and
+     * include the track's inserts. It walks the cell's cycle with the tape
+     * medium switched off, so only the lanes are flattened.
      *
-     * [frames] and [bpm] are the cell's own, which the document knows and the
-     * engine would have to go looking for. Returns "" or the reason.
+     * [frames] and [bpm] are the cell's, passed in from the song. Returns ""
+     * or an error.
      */
     std::string compCell(int rack, int64_t sceneId, int32_t frames, float bpm,
                          const std::string &path, float &peakOut);
 
     /**
-     * Give a rack its frozen clips: pairs of scene id and WAV path, read
-     * here and handed over as one object. An empty list thaws the rack.
+     * Gives a rack its frozen clips as pairs of scene id and WAV path, read
+     * here and mounted as one object. An empty list unfreezes the rack.
      */
     std::string loadFrozenSet(int rack, const std::vector<std::pair<int64_t, std::string>> &clips,
                               const std::vector<float> &bpms, const std::vector<int32_t> &ticks,
@@ -422,26 +372,26 @@ class EngineHost {
     int64_t xRunCount() const;
     float loadPercent() const;
     /**
-     * What a dropout actually needs: worst case, not average.
+     * Worst-case timings, which are what matter for dropouts.
      *
-     * Every one of these is peak-hold and **cleared by reading**, so two
-     * readers would rob each other. There is one, the diagnostics poll.
+     * Each is peak-hold and cleared when read, so only the diagnostics poll
+     * should read them.
      */
     int32_t worstBlockUs();
     int32_t worstCallbackUs();
     int32_t worstPhaseUs(int32_t phase);
     int32_t worstRackUs(int32_t rack);
-    /** The rack's 99th-percentile block, which a single unlucky one cannot set. */
+    /** The rack's 99th-percentile block time, so one bad block doesn't set it. */
     int32_t rackPercentileUs(int32_t rack) const;
     void resetRackCosts();
-    /** Was that rack frozen when it set its peak? Read before worstRackUs, which clears. */
+    /** Whether the rack was frozen when it set its peak. Read before worstRackUs, which clears it. */
     bool worstRackWasFrozen(int32_t rack) const;
-    /** How often a block is interrupted rather than slow, 0 to 100. */
+    /** How often a block is interrupted instead of slow, 0 to 100. */
     float interruptedPercent() const;
-    /** Whether the scheduler is being told about our deadline, and whether it could be. */
+    /** Whether the scheduler hint for our deadline is running, and whether it's available. */
     bool hintRunning() const;
     bool hintAvailable() const;
-    /** 0 no api, 1 waiting, 2 the audio thread never named itself, 3 refused, 4 on. */
+    /** 0 no API, 1 waiting, 2 the audio thread never registered, 3 refused, 4 on. */
     int32_t hintState() const;
     int32_t rackCostUs(int32_t rack) const;
     int32_t worstCallbackCpuUs();
@@ -456,12 +406,12 @@ class EngineHost {
     float rackPeak(int rack) const;
     float masterFade() const;
     // --- Audio in -------------------------------------------------------
-    /** [deviceId] from the platform's own list, or nought for the default. */
+    /** [deviceId] from the platform's list, or 0 for the default. */
     bool startInput(int32_t deviceId = 0);
-    /** True if this cut a recording short - see the definition. */
+    /** True if this cut a recording short. See the definition. */
     bool stopInput();
     bool inputRunning() const;
-    /** What the open stream actually is, which is not always what was asked. */
+    /** The open stream's actual format, which may differ from what was asked for. */
     int32_t inputChannels() const;
     int32_t inputRate() const;
     int32_t inputDevice() const;
@@ -470,34 +420,30 @@ class EngineHost {
     float inputPeak();
     void setInputGain(float gain);
     void setMonitorLevel(float level);
-    /**
-     * The tuner: switched on while the record window is showing it, and
-     * asked for a reading whenever the UI wants one.
-     *
-     * `tunerHz` does the analysis on the calling thread, so the caller
-     * chooses the rate and pays for it. It is not called from the audio
-     * thread and must not be.
-     */
     /** Sixteenths (0) or eighths (1): which pair the swing bends. */
     void setSwingUnit(int32_t unit);
+    /**
+     * The tuner, on while the record window shows it. `tunerHz` runs the
+     * analysis on the calling thread. Never call it from the audio thread.
+     */
     void setTunerOn(bool on);
     float tunerHz();
-    /** Record either what is coming in or what is going out. */
+    /** Records either the input or the master output. */
     std::string startCapture(const std::string &path, int source);
     void stopCapture();
     bool capturing() const;
     float capturedSeconds() const;
-    /** How long the finished file is, exactly. Seconds as a float loses frames. */
+    /** The finished file's exact length. Seconds as a float would lose frames. */
     int64_t capturedFrames() const;
     float capturedPeak() const;
     bool captureOverflowed() const;
 
     /**
-     * Which rack a recording is being made *for*, or -1 for none.
+     * The rack a recording is for, or -1 for none.
      *
-     * Only an armed rack has its boundaries stamped - see `CaptureMarks` - and
-     * only one can be, because there is one capture. Arming resets the marks,
-     * so a second take does not inherit the first one's boundaries.
+     * Only the armed rack gets its boundaries stamped (see `CaptureMarks`),
+     * and there's only one capture. Arming resets the marks so a new take
+     * doesn't inherit the last one's.
      */
     void armCapture(int rack);
     /**
@@ -505,18 +451,17 @@ class EngineHost {
      *
      *     frame, sceneId, tick, cycleTicks, millibpm
      *
-     * The tempo goes over as thousandths so that the whole record is one
-     * array of longs rather than two arrays that have to be kept in step.
-     * Returns how many marks were written, or **-1 when the capture dropped
-     * frames**, which means the split has to refuse.
+     * Tempo is in thousandths so everything fits in one array of longs.
+     * Returns how many marks were written, or -1 if the capture dropped
+     * frames, in which case the take can't be split.
      */
     int32_t captureMarks(int64_t *out, int32_t max) const;
 
-    /** Stop everything and silence every tail. Safe from any thread. */
+    /** Stops everything and silences every tail. Safe from any thread. */
     void panic();
-    /** Bars of clicks before a start actually starts. 0 is none. */
+    /** Bars of count-in clicks before playback starts. 0 is none. */
     void setCountInBars(int32_t bars);
-    /** Ticks left of the count, for the screen; 0 when not counting. */
+    /** Ticks left of the count-in, for display. 0 when not counting. */
     int64_t countInRemaining() const;
 
     uint32_t notesOn(int rack) const;
@@ -538,10 +483,10 @@ class EngineHost {
     bool mountObjectWithRetry(struct Mount &m);
 
   private:
-    /** One file as a source: held if it is short, mapped if it is long. */
+    /** One file as a source: held in memory if short, mapped if long. */
     std::shared_ptr<const audio::Reel::Source> sourceFor(const std::string &path,
                                                          int64_t &residentFrames, int &mappedCount);
-    /** Where converted long takes live. Empty means nowhere; see setCacheRoot. */
+    /** Where converted long takes are stored. See setCacheRoot. */
     std::string cacheRoot;
 
     bool running = false;

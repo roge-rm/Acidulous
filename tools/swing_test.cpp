@@ -1,9 +1,8 @@
-// Swing: the arithmetic, and the two properties everything else rests on.
+// Tests the swing maths.
 //
-// A swing that is not monotonic reorders notes that are a tick apart, and one
-// that is not the identity at fifty percent changes a straight song the day
-// the setting is added. Both are cheap to assert over the whole of tick space
-// and neither is visible by ear until somebody has written a part.
+// Swing must be monotonic, or notes a tick apart get reordered, and it must
+// change nothing at fifty percent, or straight songs change. Both are checked
+// over every tick.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -63,7 +62,7 @@ void itIsMonotonic() {
 void itStaysInsideItsOwnPair() {
     printf("- a pair is mapped onto itself\n");
     // If a tick could leave its pair, a note at the end of a bar would move
-    // into the next one - or out of the clip entirely.
+    // into the next one, or out of the clip.
     bool inside = true;
     for (float pct : {55.0f, Swing::kTriplet, 75.0f}) {
         for (int64_t t = 0; t < kBar * 2; ++t) {
@@ -78,7 +77,7 @@ void itStaysInsideItsOwnPair() {
 void theOffbeatIsLate() {
     printf("- what it is for\n");
     const int64_t pair = Swing::kSixteenths;
-    // The downbeats of each pair do not move; the offbeats do.
+    // The downbeats of each pair don't move; the offbeats do.
     ok("the first sixteenth of a pair does not move",
        Swing::at(0, Swing::kTriplet, pair) == 0 && Swing::at(pair, Swing::kTriplet, pair) == pair);
     const int64_t off = Swing::at(pair / 2, Swing::kTriplet, pair);
@@ -100,11 +99,10 @@ void theWayBack() {
             const int64_t err = std::llabs(round - t);
             if (err > worst) { worst = err; at = t; }
         }
-        // Not exact, and cannot be: the map is from ticks to ticks and the
-        // compressed half of the pair has fewer of them to land on, so two
-        // straight ticks can share a swung one. A tick at 240 PPQN is a fifth
-        // of a millisecond at 120 bpm; three of them is inaudible and is the
-        // price of keeping the document in whole ticks.
+        // Can't be exact: the map is ticks to ticks, and the compressed half of
+        // the pair has fewer ticks, so two straight ticks can share a swung
+        // one. A tick at 240 PPQN is a fifth of a millisecond at 120 bpm, so
+        // three of them are inaudible.
         char label[72];
         snprintf(label, sizeof(label), "%.1f%% round trips to within three ticks", pct);
         ok(label, worst <= 3, std::string("worst ") + std::to_string(worst) + " at tick " + std::to_string(at));
@@ -113,9 +111,9 @@ void theWayBack() {
 
 void aPartPlayedInStaysWhereItWasPlayed() {
     printf("- the trap the inverse exists for\n");
-    // Somebody plays a straight sixteenth line against a swung song. What
-    // arrives is swung, because that is what they heard and played along to.
-    // Stored as it arrives and played back, it is swung twice.
+    // Someone plays a straight sixteenth line along to a swung song, so what
+    // arrives is already swung. Stored as it arrives and played back, it's
+    // swung twice.
     const float pct = Swing::kTriplet;
     const int64_t pair = Swing::kSixteenths;
     int64_t worstTwice = 0, worstOnce = 0;
@@ -134,14 +132,13 @@ void aPartPlayedInStaysWhereItWasPlayed() {
        std::string("within ") + std::to_string(worstOnce) + " ticks");
 }
 
-// --- the player, which is where the map is actually used ---------------------------
+// --- the player -----------------------------------------------------------------
 
 /**
  * A straight sixteenth line, played through the player at a swing setting.
  *
- * The arithmetic above proves the map; this proves the *wiring* - that the
- * player asks for it, applies it to the clip-relative tick, and still fires
- * every note exactly once.
+ * Checks the player applies the swing to the clip-relative tick and still
+ * fires every note exactly once.
  */
 std::vector<int64_t> lineAt(float percent, int64_t pair, int64_t step = 1) {
     Clip clip;
@@ -154,7 +151,7 @@ std::vector<int64_t> lineAt(float percent, int64_t pair, int64_t step = 1) {
         n.length = kPPQN / 8;
         n.pitch = 60;
         n.velocity = 100;
-        n.trig = packTrig(100, 0, 1); // certain, unconditional, no ratchet - trig 0 is a chance of nought
+        n.trig = packTrig(100, 0, 1); // certain, unconditional, no ratchet (trig 0 is a chance of zero)
         clip.notes.push_back(n);
     }
     ClipPlayer p;
@@ -184,7 +181,7 @@ void thePlayerSwingsTheLine() {
     const auto swung = lineAt(Swing::kTriplet, Swing::kSixteenths);
     ok("swung: still sixteen notes, none lost or doubled", swung.size() == 16,
        std::string("got ") + std::to_string(swung.size()));
-    // The downbeats of each pair have not moved; the offbeats have.
+    // The downbeats of each pair haven't moved; the offbeats have.
     bool evensHeld = true, oddsMoved = true;
     for (size_t i = 0; i < swung.size() && i < straight.size(); ++i) {
         if (i % 2 == 0) { if (swung[i] != straight[i]) evensHeld = false; }
@@ -198,8 +195,8 @@ void thePlayerSwingsTheLine() {
 
 void theBlockSizeDoesNotMatter() {
     printf("- and the same however the blocks fall\n");
-    // The one thing most likely to break a wrong implementation: a note that
-    // is swung past the end of the block it was scanned in.
+    // The case most likely to break: a note swung past the end of the block
+    // it was scanned in.
     const auto fine = lineAt(Swing::kTriplet, Swing::kSixteenths, 1);
     for (int64_t step : {4, 16, 64, 240}) {
         const auto coarse = lineAt(Swing::kTriplet, Swing::kSixteenths, step);

@@ -9,22 +9,22 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
 }
 
-// Acidulous on a Linux desktop: the shared app in a window, and the engine
-// built by CMake from the same sources as the phone's (see native/).
+// Acidulous for desktop Linux: the shared app in a window, with the engine
+// built by CMake from the same sources as Android (see native/).
 //
 //   ./gradlew :desktop:run       build the engine for this machine and start it
 //   ./gradlew :desktop:debAmd64  a .deb for Debian Trixie on x86-64
 //   ./gradlew :desktop:debArm64  a .deb for Raspberry Pi OS (Trixie, 64-bit)
 //
-// The packages run on the system's own Java 21 rather than carrying one, so
-// all that differs between them is the engine's two libraries and Skia's.
+// The packages use the system's Java 21 rather than bundling one, so they
+// only differ in the engine's two libraries and Skia's.
 
 kotlin { jvmToolchain(21) }
 
-/** The version, from where it is set: app/build.gradle.kts, the one place it is written. */
+/** The version, read from app/build.gradle.kts where it's set. */
 val appGradle = rootProject.file("app/build.gradle.kts").readText()
 val versionName = Regex("versionName = \"([^\"]+)\"").find(appGradle)!!.groupValues[1]
-// The 64-bit build's code: see how :app works it out from `release`.
+// The 64-bit build's version code, worked out from `release` like :app does.
 val versionCode = (Regex("val release = (\\d+)").find(appGradle)!!.groupValues[1].toInt() * 10 + 2).toString()
 val buildInfo = tasks.register("buildInfo") {
     val out = layout.buildDirectory.dir("generated/buildInfo")
@@ -40,7 +40,7 @@ val buildInfo = tasks.register("buildInfo") {
 }
 kotlin.sourceSets.main { kotlin.srcDir(buildInfo) }
 
-/** The app's jars for one architecture: everything but Skia's native renderer is the same. */
+/** The app's jars for each architecture. Only Skia's native renderer differs. */
 val debAmd64Runtime: Configuration = configurations.create("debAmd64Runtime")
 val debArm64Runtime: Configuration = configurations.create("debArm64Runtime")
 val windowsX64Runtime: Configuration = configurations.create("windowsX64Runtime")
@@ -48,8 +48,8 @@ val windowsX64Runtime: Configuration = configurations.create("windowsX64Runtime"
 dependencies {
     implementation(project(":shared"))
     implementation(compose.desktop.common)
-    // Dispatchers.Main on the desktop is Swing's event thread; the app hops to
-    // it (an export pushes the song from there), and without this it has none.
+    // Dispatchers.Main on desktop is Swing's event thread. The app uses it
+    // (exports push the song from there), and without this there isn't one.
     implementation(libs.kotlinx.coroutines.swing)
     runtimeOnly(compose.desktop.currentOs)
     debAmd64Runtime(compose.desktop.linux_x64)
@@ -61,7 +61,7 @@ dependencies {
 for (runtime in listOf(debAmd64Runtime, debArm64Runtime, windowsX64Runtime)) {
     runtime.extendsFrom(configurations.implementation.get())
     runtime.isCanBeConsumed = false
-    // Resolved as the run classpath is, so :shared hands over its desktop jar.
+    // Resolved the same way as the run classpath, so :shared gives its desktop jar.
     val from = configurations.runtimeClasspath.get().attributes
     runtime.attributes {
         for (key in from.keySet()) {
@@ -73,24 +73,22 @@ for (runtime in listOf(debAmd64Runtime, debArm64Runtime, windowsX64Runtime)) {
 
 val nativeDir = layout.projectDirectory.dir("native")
 /**
- * Where the engine's CMake builds go: with the rest of the build output under
- * this machine's build root when it has one (acidulous.buildRoot - see the
- * root build.gradle.kts), in native/ otherwise, as always.
+ * Where the engine's CMake builds go: under acidulous.buildRoot if it's set
+ * (see the root build.gradle.kts), otherwise in native/.
  */
 val nativeOut: File = providers.gradleProperty("acidulous.buildRoot").orNull
     ?.let { File(it, "${rootDir.name}/desktop-native") } ?: file("native")
 fun nativeOutDir(name: String): Directory = layout.projectDirectory.dir(File(nativeOut, name).absolutePath)
 
 /**
- * The compiler cache, where this machine has ccache: the engine is the same
- * C++ built for ten targets, and an unchanged file is a cache hit rather than
- * a compile. The build containers have their own ccache (their Dockerfiles),
- * each with a cache folder of its own here, mounted in: their versions differ
- * from this machine's.
+ * Use ccache if this machine has it, since the same engine C++ is built for
+ * many targets. The build containers have their own ccache (see their
+ * Dockerfiles), each with its own cache folder mounted in, because their
+ * versions differ from this machine's.
  */
 val ccache: Boolean = File("/usr/bin/ccache").canExecute()
 val launcher = if (ccache) "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" else ""
-/** The mounts and settings a build container needs: the build folder at its own path, and its compiler cache. */
+/** Mounts and settings for a build container: the build folder at the same path, and its compiler cache. */
 fun containerArgs(image: String): String {
     val cache = File(System.getProperty("user.home"), ".cache/ccache-containers/$image")
     nativeOut.mkdirs()
@@ -100,7 +98,7 @@ fun containerArgs(image: String): String {
 
 val nativeBuild = nativeOutDir("build")
 
-/** The engine for this machine, as libacidulous.so (and LAME's libmp3lame.so beside it). */
+/** The engine for this machine: libacidulous.so, with LAME's libmp3lame.so next to it. */
 val buildEngine = tasks.register<Exec>("buildEngine") {
     inputs.dir(rootProject.file("app/src/main/cpp"))
     inputs.file(nativeDir.file("CMakeLists.txt"))
@@ -112,8 +110,8 @@ val buildEngine = tasks.register<Exec>("buildEngine") {
 
 /**
  * The engine for a Raspberry Pi, cross-compiled in a Debian Trixie container
- * (native/Dockerfile.arm64) so it is linked against the Pi's own glibc and
- * libstdc++. Needs Docker; the container only compiles, it runs no ARM code.
+ * (native/Dockerfile.arm64) so it links against the Pi's glibc and libstdc++.
+ * Needs Docker. The container only compiles and runs no ARM code.
  */
 val nativeArm64 = nativeOutDir("build-arm64")
 val buildEngineArm64 = tasks.register<Exec>("buildEngineArm64") {
@@ -132,7 +130,7 @@ val buildEngineArm64 = tasks.register<Exec>("buildEngineArm64") {
     )
 }
 
-/** miniaudio's licence, which is the foot of its header: public domain or MIT-0. */
+/** miniaudio's licence, taken from the end of its header: public domain or MIT-0. */
 val miniaudioLicence = tasks.register("miniaudioLicence") {
     val header = rootProject.file("app/src/main/cpp/third_party/miniaudio/miniaudio.h")
     val out = layout.buildDirectory.file("generated/miniaudio/miniaudio.txt")
@@ -148,8 +146,8 @@ val miniaudioLicence = tasks.register("miniaudioLicence") {
 }
 
 /**
- * The licence texts the About window shows, from where they live and under
- * the names the app gives them: the same as :app's stageLicences.
+ * The licence texts shown in the About window, copied from where they live
+ * and renamed the same way as :app's stageLicences.
  */
 val stageLicences = tasks.register<Sync>("stageLicences") {
     val app = rootProject.file("app/src/main/cpp/third_party")
@@ -173,19 +171,20 @@ compose.desktop {
 
 // --- The Debian packages ------------------------------------------------------
 //
-// Laid out as Debian lays out a Java program: the jars in /usr/lib/acidulous/lib,
-// the engine in /usr/lib/acidulous/native, a launcher in /usr/bin, a menu
-// entry and an icon. Built with dpkg-deb, owned by root, from a staged tree.
+// Laid out the usual Debian way for a Java program: jars in
+// /usr/lib/acidulous/lib, the engine in /usr/lib/acidulous/native, a launcher
+// in /usr/bin, a menu entry and an icon. Built with dpkg-deb from a staged
+// tree, owned by root.
 
 fun registerDeb(arch: String, runtime: Configuration, engine: TaskProvider<Exec>, engineDir: Directory) {
     val stage = layout.buildDirectory.dir("deb/$arch")
     val stageTask = tasks.register<Sync>("stageDeb${arch.replaceFirstChar { it.uppercase() }}") {
         dependsOn(engine)
         into(stage)
-        // A jar reached by two paths through the dependencies is still one jar.
+        // The same jar can come in through two dependencies.
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        // Debian's modes whatever the source had: the Gradle cache keeps jars
-        // private to their owner, which installed would be root's alone.
+        // Set Debian's file modes. The Gradle cache keeps jars private to their
+        // owner, which would make them root-only once installed.
         filePermissions { unix("rw-r--r--") }
         dirPermissions { unix("rwxr-xr-x") }
         from(tasks.named("jar")) { into("usr/lib/acidulous/lib") }
@@ -213,10 +212,9 @@ fun registerDeb(arch: String, runtime: Configuration, engine: TaskProvider<Exec>
         val out = deb.get().asFile
         val template = file("deb/control")
         val version = versionName
-        // The jars, each named with its group: Compose's own
-        // "runtime-saveable-desktop" is a stub pointing at AndroidX's jar of
-        // the same name, and by file name alone one of the two is lost - the
-        // one with the classes, as it happened.
+        // Jars are named with their group, because Compose's
+        // "runtime-saveable-desktop" is a stub with the same file name as
+        // AndroidX's jar, and without the group one of them would be lost.
         val artifacts = runtime.incoming.artifacts.resolvedArtifacts
         inputs.files(runtime)
         inputs.dir(stage)
@@ -242,7 +240,7 @@ fun registerDeb(arch: String, runtime: Configuration, engine: TaskProvider<Exec>
                 .redirectErrorStream(true).start()
             val said = result.inputStream.bufferedReader().readText()
             check(result.waitFor() == 0) { "dpkg-deb failed: $said" }
-            // Staged again next time, so the control file does not land among the jars.
+            // Remove it so it isn't staged in with the jars next time.
             control.parentFile.deleteRecursively()
         }
     }
@@ -253,19 +251,19 @@ registerDeb("arm64", debArm64Runtime, buildEngineArm64, nativeArm64)
 
 // --- The AppImages --------------------------------------------------------------
 //
-// One file that runs on most Linux desktops, not only Debian's: Ubuntu 22.04
-// and newer, Fedora, Arch, the Steam Deck. So it carries what the Debian
-// package takes from the system - a Java runtime (Eclipse Temurin, built for
-// old glibc) and an engine built on Ubuntu 22.04 (native/Dockerfile.appimage)
-// with the C++ runtime linked in - and asks only for glibc 2.35. Audio and
-// MIDI open the system's own libraries at run time, as the package does.
+// One file that runs on most Linux desktops: Ubuntu 22.04 and newer, Fedora,
+// Arch, the Steam Deck. It bundles what the Debian package gets from the
+// system: a Java runtime (Eclipse Temurin) and an engine built on Ubuntu
+// 22.04 (native/Dockerfile.appimage) with the C++ runtime linked in, so it
+// only needs glibc 2.35. Audio and MIDI load the system's libraries at run
+// time, like the package does.
 //
 //   ./gradlew :desktop:appImageAmd64   build/appimage/Acidulous-<version>-x86_64.AppImage
 //   ./gradlew :desktop:appImageArm64   build/appimage/Acidulous-<version>-aarch64.AppImage
 //
-// The downloads are pinned and checked against their SHA-256.
+// Downloads are pinned and checked against their SHA-256.
 
-/** What an AppImage is made from, fetched once into build/appimage/downloads. */
+/** A download needed to build an AppImage, fetched once into build/appimage/downloads. */
 class Download(val url: String, val sha256: String) {
     val name: String get() = url.substringAfterLast('/')
 }
@@ -304,7 +302,7 @@ fun registerAppImage(
                 "docker run --rm -u \$(id -u):\$(id -g) -v '$root':/src ${containerArgs("appimage")} -w /src/desktop/native acidulous-appimage sh -c '" +
                 "cmake -S . -B ${engineDir.asFile.path} -DCMAKE_BUILD_TYPE=Release $launcher " +
                 "\"-DCMAKE_SHARED_LINKER_FLAGS=-static-libstdc++ -static-libgcc\" " +
-                // FindJNI on 22.04's CMake wants AWT, which a headless JDK has not.
+                // FindJNI in 22.04's CMake wants AWT, which a headless JDK doesn't have.
                 "\"-DJNI_INCLUDE_DIRS=/usr/lib/jvm/java-17-openjdk-amd64/include;/usr/lib/jvm/java-17-openjdk-amd64/include/linux\" " +
                 "$cmakeArgs >/dev/null && " +
                 "cmake --build ${engineDir.asFile.path} -j8'",
@@ -326,7 +324,7 @@ fun registerAppImage(
     tasks.register("appImage$cap") {
         group = "distribution"
         description = "Builds Acidulous-$versionName-$appImageArch.AppImage"
-        // Its action fetches and runs tools through this script's own helpers.
+        // Its action uses this script's download and exec helpers.
         notCompatibleWithConfigurationCache("uses the build script's download and exec helpers")
         dependsOn(stage)
         val artifacts = runtime.incoming.artifacts.resolvedArtifacts
@@ -337,14 +335,14 @@ fun registerAppImage(
         inputs.dir(appDir)
         outputs.file(image)
         doLast {
-            // The jars, named with their group, as the Debian package names them.
+            // The jars, named with their group like in the Debian package.
             val lib = File(dir, "usr/lib/acidulous/lib")
             for (a in artifacts.get()) {
                 val id = a.id.componentIdentifier
                 val name = if (id is org.gradle.api.artifacts.component.ModuleComponentIdentifier) "${id.group}-${a.file.name}" else a.file.name
                 a.file.copyTo(File(lib, name), overwrite = true)
             }
-            // The Java runtime, unpacked under the one name AppRun looks for.
+            // The Java runtime, unpacked under the name AppRun looks for.
             val jreDir = File(dir, "usr/lib/acidulous/jre")
             jreDir.deleteRecursively()
             jreDir.mkdirs()
@@ -352,7 +350,7 @@ fun registerAppImage(
             val tool = fetch(appImageTool, cache).apply { setExecutable(true) }
             val runtimeFile = fetch(appImageRuntime, cache)
             image.delete()
-            // Extracted and run rather than mounted, so building needs no FUSE.
+            // Extract and run instead of mounting, so building doesn't need FUSE.
             runCommand(
                 tool.path, "--no-appstream", "--runtime-file", runtimeFile.path, dir.path, image.path,
                 env = mapOf("ARCH" to appImageArch, "APPIMAGE_EXTRACT_AND_RUN" to "1"),
@@ -361,7 +359,7 @@ fun registerAppImage(
     }
 }
 
-/** Runs [command], failing the build with what it said if it fails; what it printed otherwise. */
+/** Runs [command] and returns its output, failing the build with the output if it fails. */
 fun runCommand(vararg command: String, env: Map<String, String> = emptyMap()): String {
     val process = ProcessBuilder(*command).redirectErrorStream(true).apply { environment().putAll(env) }.start()
     val said = process.inputStream.bufferedReader().readText()
@@ -398,15 +396,15 @@ tasks.matching { it.name == "run" }.configureEach { dependsOn(buildEngine) }
 
 // --- Windows -------------------------------------------------------------------
 //
-// 64-bit Windows 10 and 11, cross-built here: the engine and the launcher with
-// MinGW-w64 (native/Dockerfile.windows), the app's jars as for Linux but with
+// 64-bit Windows 10 and 11, cross-built here: the engine and launcher with
+// MinGW-w64 (native/Dockerfile.windows), the same jars as Linux but with
 // Skia's Windows renderer, and Eclipse Temurin's Java runtime for Windows.
-// Two ways to hand it over, the same files in each:
+// It comes as an installer and a portable zip with the same files:
 //
 //   ./gradlew :desktop:windowsX64   build/windows/Acidulous-<version>-setup.exe
 //                                   build/windows/Acidulous-<version>-windows-x64.zip
 //
-// Link is off for now (platform/web/LinkOff.cpp), and MIDI is Java Sound's.
+// Link is off for now (platform/web/LinkOff.cpp), and MIDI uses Java Sound.
 
 val nativeWindows = nativeOutDir("build-windows")
 val buildEngineWindows = tasks.register<Exec>("buildEngineWindows") {
@@ -477,8 +475,8 @@ tasks.register("windowsX64") {
         val portable = "Acidulous-$version-windows-x64.zip"
         File(out, setup).delete()
         File(out, portable).delete()
-        // The output folder at its own path inside the container too, wherever
-        // this machine keeps its build output.
+        // Mount the output folder at the same path inside the container,
+        // wherever this machine keeps its build output.
         val inContainer = out.absolutePath
         runCommand(
             "docker", "run", "--rm", "-u", "${runCommand("id", "-u")}:${runCommand("id", "-g")}", "-v", "$root:/src", "-v", "$inContainer:$inContainer",

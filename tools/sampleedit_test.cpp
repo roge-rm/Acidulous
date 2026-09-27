@@ -1,11 +1,10 @@
-// What a recording needs doing to it, checked one operation at a time.
+// Tests the sample edit operations one at a time.
 //
-// These run on a buffer built here rather than on a file, because a file is a
-// second thing to be wrong about: every claim below is about arithmetic, and
-// the reader and the writer already have `format_test` next door.
+// They run on a buffer built here, not a file, since every check is about the
+// arithmetic and the reader and writer have `format_test`.
 //
-// Each check is named for the way the operation can go wrong rather than for
-// what it does, so a failure says what happened.
+// Each check is named for how the operation can go wrong, so a failure says
+// what happened.
 #include <engine/core/SampleEdit.h>
 #include <engine/dsp/MultiFilter.h>
 
@@ -91,17 +90,17 @@ int main() {
         check(d.right.size() == d.left.size(), "both channels the same length");
     }
     {
-        // `to` at or before `from` is "to the end", which is what a screen
-        // hands over before anybody has dragged the right-hand handle.
+        // `to` at or before `from` means "to the end", which is what the
+        // screen passes before the right-hand handle has been dragged.
         SampleData d = tone(440.0f, 0.5f);
         cropTo(d, kSr / 10, 0);
         std::snprintf(detail, sizeof(detail), "(%d frames)", d.frames);
         check(d.frames == kSr / 2 - kSr / 10, "an open-ended crop runs to the end", detail);
     }
     {
-        // An end at or before the start is the same "to the end" the screen
-        // hands over, not an error: the handles cannot cross, so the only way
-        // to get here is by not having set one.
+        // An end at or before the start means "to the end" here too, not an
+        // error. The handles can't cross, so this only happens when one isn't
+        // set.
         SampleData d = tone(440.0f, 0.2f);
         const int32_t was = d.frames;
         cropTo(d, 5000, 4000);
@@ -133,8 +132,8 @@ int main() {
         check(std::abs(peakOf(d) - 0.5f) < 1e-3f, "and the middle is untouched");
     }
     {
-        // Two fades longer than the file would otherwise multiply in the
-        // middle and leave a hole where the sound is.
+        // Two fades longer than the file would multiply in the middle and
+        // leave a hole in the sound.
         SampleData d = tone(440.0f, 0.1f);
         fadeEnds(d, d.frames, d.frames);
         check(peakOf(d) > 0.0f, "two fades that overlap do not cancel the file");
@@ -172,8 +171,7 @@ int main() {
 
     std::printf("\nthe low cut takes the room and leaves the voice\n");
     {
-        // The case this exists for, measured: Dan's own take was 56% of its
-        // energy under seventy hertz.
+        // A real take measured with 56% of its energy under seventy hertz.
         SampleData d = tone(30.0f, 1.0f, 0.5f);
         for (int32_t i = 0; i < d.frames; ++i) {
             const float v = 0.5f * std::sin(2.0f * 3.14159265f * 300.0f * static_cast<float>(i) /
@@ -193,8 +191,8 @@ int main() {
 
     std::printf("\nthe compressor squeezes and nothing else does\n");
     {
-        // A tone with one loud burst in it: the thing a compressor is for, and
-        // the thing a gain cannot do.
+        // A tone with one loud burst in it, which a compressor can fix and a
+        // gain can't.
         SampleData d = tone(440.0f, 1.0f, 0.2f);
         for (int32_t i = kSr / 2; i < kSr / 2 + kSr / 20; ++i) {
             d.left[static_cast<size_t>(i)] *= 4.0f;
@@ -207,9 +205,9 @@ int main() {
                       static_cast<double>(before), static_cast<double>(after));
         check(after < before * 0.85f, "the crest factor comes down", detail);
         check(peakOf(d) > 0.1f, "and the makeup puts the level back");
-        // The check the look-ahead exists for: a feed-forward compressor lets
-        // the front of the burst through at full height and reads *worse*
-        // than the file it was given.
+        // This is what the look-ahead is for: a feed-forward compressor lets
+        // the front of the burst through at full height and peaks higher
+        // than the input.
         float front = 0.0f;
         for (int32_t i = kSr / 2; i < kSr / 2 + kSr / 200; ++i) {
             front = std::max(front, std::abs(d.left[static_cast<size_t>(i)]));
@@ -242,8 +240,8 @@ int main() {
         check(same, "and changes nothing at all");
     }
     {
-        // Fades last: a fade applied before the level was set would be scaled
-        // back up by the normalise and the ends would not be silent.
+        // Fades go last. A fade applied before normalising would be scaled
+        // back up and the ends wouldn't be silent.
         SampleData d = tone(440.0f, 1.0f, 0.05f);
         SampleOps ops;
         ops.normaliseTo = 0.9f;

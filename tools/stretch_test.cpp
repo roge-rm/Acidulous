@@ -1,9 +1,9 @@
-// Changing how long a take is without changing what it sings.
+// Tests changing a take's length without changing its pitch.
 //
-// Four claims, and the first two are the whole of it: the duration moves, and
-// the pitch does not. The rest are the ways a stretcher goes wrong quietly -
-// a rate of one that is not the input back again, a warble from joining two
-// windows at the wrong phase, and a render that does not repeat.
+// The main checks are that the duration changes and the pitch doesn't. The
+// rest cover quieter failures: a rate of one that doesn't give the input back,
+// a warble from joining two windows at the wrong phase, and a render that
+// doesn't repeat.
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -27,7 +27,7 @@ void ok(const char *what, bool cond, const std::string &detail = "") {
 
 constexpr int32_t kRate = 48000;
 
-/** A tone, as int16, which is how a reel holds one. */
+/** A tone as int16, which is how a reel holds one. */
 std::vector<int16_t> tone(float hz, int32_t frames, float amp = 0.5f) {
     std::vector<int16_t> v(static_cast<size_t>(frames));
     for (int32_t i = 0; i < frames; ++i) {
@@ -37,7 +37,7 @@ std::vector<int16_t> tone(float hz, int32_t frames, float amp = 0.5f) {
     return v;
 }
 
-/** The dominant period, by counting rising zero crossings. Pitch, cheaply. */
+/** The dominant period, by counting rising zero crossings. A cheap pitch estimate. */
 float pitchOf(const std::vector<float> &x, int32_t from, int32_t to) {
     int crossings = 0;
     int32_t firstAt = -1, lastAt = -1;
@@ -76,14 +76,14 @@ std::vector<float> stretched(const std::vector<int16_t> &src, float rate, int32_
     return out;
 }
 
-// --- The claims ------------------------------------------------------------------
+// --- The tests -------------------------------------------------------------------
 
 /**
- * The pitch does not move, at any rate.
+ * The pitch doesn't move, at any rate.
  *
- * This is the claim that separates a stretcher from resampling. Played at half
- * speed by resampling, a 440 Hz tone becomes 220; stretched, it stays 440 and
- * simply lasts twice as long.
+ * This is what separates a stretcher from resampling. At half speed a 440 Hz
+ * tone resampled becomes 220, but stretched it stays 440 and lasts twice as
+ * long.
  */
 void thePitchStaysWhereItWas() {
     printf("- the duration moves and the pitch does not\n");
@@ -121,11 +121,10 @@ void theSourceIsConsumedAtTheRate() {
 }
 
 /**
- * A rate of one is the take back again.
+ * A rate of one gives the take back.
  *
- * Not bit for bit - the windows still overlap-add - but a stretcher that
- * colours the audio when it is not stretching it is one nobody can leave
- * switched on, and that is how it will be used.
+ * Not bit for bit, since the windows still overlap-add, but it mustn't colour
+ * the audio when it isn't stretching, because it's left switched on.
  */
 void aRateOfOneIsTransparent() {
     printf("- a rate of one does not colour the take\n");
@@ -139,11 +138,11 @@ void aRateOfOneIsTransparent() {
 }
 
 /**
- * It does not warble.
+ * It doesn't warble.
  *
- * The failure a stretcher has when the join is wrong: two windows overlap-added
- * at opposing phase cancel, so the level pumps at the hop rate. Measured as the
- * spread of the level hop by hop.
+ * When the join is wrong, two windows overlap-added at opposite phase cancel,
+ * so the level pumps at the hop rate. Measured as the spread of the level hop
+ * by hop.
  */
 void itDoesNotWarble() {
     printf("- overlapping windows join in phase rather than cancelling\n");
@@ -164,7 +163,7 @@ void itDoesNotWarble() {
     }
 }
 
-/** Two renders of one take match, or an export does not repeat. */
+/** Two renders of one take match, or an export won't repeat. */
 void itRepeats() {
     printf("- the same take stretched twice is the same audio\n");
     const auto src = tone(261.6f, kRate * 3);
@@ -180,24 +179,20 @@ void itRepeats() {
 /**
  * A stereo pair is stretched as a pair, not as two monos.
  *
- * This is the one claim that is new with `StereoStretch` and the one thing a
- * stereo stretcher gets wrong. WSOLA chooses each hop by searching for the
- * window that joins best; run two of them on a stereo pair and they choose
- * independently, differing by up to half a hop - forty milliseconds - so
- * anything centred is smeared across the image and the middle of the mix
- * comes apart. The search runs once on the sum of the channels instead.
+ * WSOLA picks each hop by searching for the best join. Two separate
+ * stretchers on a stereo pair choose independently, up to half a hop (forty
+ * milliseconds) apart, which smears anything centred. `StereoStretch` runs the
+ * search once on the sum of the channels instead.
  *
- * Proven the way it fails: feed the *same* audio to both channels. Whatever
- * the stretcher does, it must do identically to each, so the output must come
- * back identical too. Two independent searches cannot pass this, because the
- * correlation is over a decimated window and a different lag wins on a signal
- * that is not perfectly periodic.
+ * Tested by feeding the same audio to both channels, which must come back
+ * identical. Two independent searches fail this, since the correlation is over
+ * a decimated window and a different lag wins on a signal that isn't
+ * perfectly periodic.
  */
 void aStereoPairKeepsItsImage() {
     printf("- a stereo pair is stretched as a pair\n");
-    // Not a pure tone: something with enough structure that the search has a
-    // real choice to make. A tone plus a fifth plus a little noise, which is
-    // what any recording of anything looks like to a correlation.
+    // Not a pure tone, so the search has a real choice to make: a tone plus a
+    // fifth plus a little noise.
     const int32_t frames = kRate * 3;
     std::vector<float> l(static_cast<size_t>(frames)), r(static_cast<size_t>(frames));
     uint32_t seed = 9001;
@@ -231,20 +226,19 @@ void aStereoPairKeepsItsImage() {
     ok("both channels came out identical", differ == 0,
        std::to_string(differ) + " samples differ, worst " + std::to_string(worst));
 
-    // And it is still audio: a stretch that returned silence would pass the
-    // check above perfectly.
+    // And it's still audio. A stretch that returned silence would pass the
+    // check above.
     float peak = 0.0f;
     for (int32_t i = 0; i < made; ++i) peak = std::max(peak, std::fabs(outL[static_cast<size_t>(i)]));
     ok("and it is not silence", peak > 0.3f, std::to_string(peak));
 }
 
 /**
- * Float in, float out, above full scale and back again.
+ * Float in, float out, including above full scale.
  *
- * A frozen clip is the rack's output before its fader, so it may legitimately
- * sit above 1.0 - the demo's Hexbeat bar peaks at 1.84. The int16 stretcher
- * could not carry that, and a stretcher that quietly clipped it would undo
- * the reason the freeze is written as float in the first place.
+ * A frozen clip is the rack's output before its fader, so it can go above 1.0
+ * (the demo's Hexbeat bar peaks at 1.84). The int16 stretcher couldn't carry
+ * that, and clipping it would defeat the point of writing freezes as float.
  */
 void itCarriesMoreThanFullScale() {
     printf("- float, and above full scale\n");

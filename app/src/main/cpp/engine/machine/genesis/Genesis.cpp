@@ -7,39 +7,22 @@
 namespace acidulous::machine {
 
 namespace {
-// Where each saturator pins unity: an input this size comes out this size at
-// any setting of its knob, so the knob is a colour and not a level. Pick a
-// level the signal *works* at rather than one it routinely passes - normalise
-// on a peak and every quiet moment gets the gain instead. Below the pin a
-// saturator still lifts, which is what an overdriven stage does to a tail;
-// above it, it bends. Same form as Resonance's per-pad drive.
+// The input level each saturator passes at unity gain, whatever its drive,
+// so drive changes the tone and not the level. It's set at a typical working
+// level, not the peak. Quieter signals get lifted, louder ones bend. Same as
+// Resonance's per-pad drive.
 constexpr float kKickNominal = 0.5f;
 constexpr float kBusNominal = 0.5f;
 
-// The house level. Genesis had none, and with the drive knob at zero - where
-// there is no saturator in the path at all - the Init kit came out at +3.9
-// dBFS and was clipped by the master rather than by anything of its own. This
-// does not decide how loud Genesis is, the bank is levelled either way; it
-// decides where in the volume knob's travel a kit sits, and it keeps the
-// machine's own output inside full scale at every setting of drive.
+// The house level. It sets where a kit sits on the volume knob and keeps the
+// output below full scale at any drive setting (with no drive, Init would
+// otherwise peak at +3.9 dBFS).
 constexpr float kHouse = 0.57f; // -4.9 dB, set so Init sits on the house line
 
-// What one unit of `level` is worth, per voice - the same correction Hexbeat
-// needed, and hidden twice over.
-//
-// Measured through the machine it spread only 4.5 dB, because the bus
-// compressor and the drive saturator were both clamping: trim a voice and
-// they hand most of it back. With the bus bypassed it spreads 13.5 dB on
-// loudness and 15.2 on peak, and the rim came out the loudest voice in the
-// kit - five decibels over the kick by loudness, twelve by peak - while the
-// closed hat was the quietest by eight.
-//
-// So these are not computed from the raw voices; they are *solved* against
-// the balance heard through the bus, the way the bank's volumes are solved
-// against the house line: measure, correct, measure again. Three passes to
-// land every voice within four tenths of where the classic big-box kits put
-// them - the kick on top, the snare just under, the cymbals five decibels
-// back.
+// Per-voice level trims, like Hexbeat's. Without them the voices are up to
+// 13.5 dB apart with the rim loudest. They were tuned by measuring through
+// the bus until each voice sat within 0.4 dB of a classic kit balance: kick
+// on top, snare just under, cymbals about 5 dB back.
 constexpr float kLevelTrim[] = {
     1.000f, // Kick      reference
     0.680f, // Snare     -0.2 dB
@@ -54,7 +37,7 @@ constexpr float kLevelTrim[] = {
 enum Trim { TKick, TSnare, TClap, TRim, TTom, TBell, THat, TCrash, TRide };
 
 constexpr float kTwoPi = 6.28318530718f;
-/** The six ratios the metal voices are built from - inharmonic on purpose. */
+/** Frequency ratios of the six metal squares, inharmonic on purpose. */
 constexpr float kMetalRatios[6] = {1.0f, 1.4471f, 1.6170f, 1.9265f, 2.5028f, 2.6637f};
 } // namespace
 
@@ -125,8 +108,7 @@ void Genesis::prepare(int32_t sampleRate) {
 
 void Genesis::reset() {
     for (int32_t v = 0; v < VoiceCount; ++v) {
-        // Whole structs, not chosen fields: the envelopes kept their coeff
-        // and their active flag, and the oscillators kept their phase.
+        // Reset whole structs so every field (coeff, active, phase) clears.
         amp[v] = Env();
         pitch[v] = Env();
         aux[v] = Env();
@@ -155,7 +137,7 @@ float Genesis::metallic(float tune) {
 
 void Genesis::trigger(int32_t voice, float velocity) {
     const float accent = params_.get(Accent);
-    const float drift = params_.get(Drift) * 0.06f; // a few per cent, like a circuit
+    const float drift = params_.get(Drift) * 0.06f; // a few per cent
     const float level = velocityGain(velocity, accent) * wobble(drift * 1.5f);
     gain[voice] = level;
 
@@ -173,7 +155,7 @@ void Genesis::trigger(int32_t voice, float velocity) {
         break;
     case Clap:
         amp[voice].fire(sr, params_.get(ClapDecay) * wobble(drift), level);
-        clapLeft = 3; // three more bursts after this one: the hands
+        clapLeft = 3; // three more bursts after this one
         clapPhase = params_.get(ClapSpread) * sr;
         break;
     case Rim:
@@ -192,7 +174,7 @@ void Genesis::trigger(int32_t voice, float velocity) {
     }
     case HatClosed:
         amp[voice].fire(sr, params_.get(HatClosedDecay) * wobble(drift), level);
-        amp[HatOpen].level = 0.0f; // the pedal: closing it stops the open one
+        amp[HatOpen].level = 0.0f; // a closed hat chokes the open one
         amp[HatOpen].active = false;
         break;
     case HatOpen:
@@ -250,7 +232,7 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
         float mix = 0.0f;
         float kickOut = 0.0f;
 
-        // --- the kick: a sine that starts high and lands where you tuned it
+        // --- kick: a sine that sweeps down to its tuned pitch
         if (amp[Kick].active || aux[Kick].active) {
             const float env = amp[Kick].next();
             const float sweep = pitch[Kick].next();
@@ -260,11 +242,8 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
             if (click > 0.0f) s += noise() * click * 0.5f;
             const float d = params_.get(KickDrive);
             if (d > 0.0001f) {
-                // Pinned so a kick at its working size comes out its own
-                // size, rather than divided by sqrt(k) - which is a ceiling,
-                // not a normalisation, and drops as the knob turns. Driving
-                // a kick harder made it quieter and squarer at the same
-                // time, so the knob read as a level rather than a colour.
+                // Normalised on kKickNominal so drive changes the shape of
+                // the kick and not its level.
                 const float k = 1.0f + d * 6.0f;
                 s = dsp::fastTanh(s * k) * (kKickNominal / dsp::fastTanh(kKickNominal * k));
             }
@@ -272,7 +251,7 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
             mix += kickOut;
         }
 
-        // --- the snare: two tones and a cloud
+        // --- snare: two tones and noise
         if (amp[Snare].active || aux[Snare].active) {
             const float env = amp[Snare].next();
             const float nEnv = aux[Snare].next();
@@ -283,7 +262,7 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
             mix += (body * (1.0f - tone * 0.5f) + rattle) * params_.get(SnareLevel) * kLevelTrim[TSnare];
         }
 
-        // --- the clap: four bursts and a room
+        // --- clap: four bursts and a room
         if (amp[Clap].active) {
             float env = amp[Clap].next();
             if (clapLeft > 0) {
@@ -291,7 +270,7 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
                 if (clapPhase <= 0.0f) {
                     --clapLeft;
                     clapPhase = params_.get(ClapSpread) * sr;
-                    amp[Clap].level = gain[Clap]; // the next hand
+                    amp[Clap].level = gain[Clap]; // the next burst
                     env = amp[Clap].level;
                 }
             }
@@ -318,7 +297,7 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
             mix += bp[Cowbell].step((a + b) * 0.4f).bp * env * params_.get(BellLevel) * kLevelTrim[TBell];
         }
 
-        // --- everything metal shares one stack of six squares
+        // --- all metal voices share one stack of six squares
         const bool anyMetal = amp[HatClosed].active || amp[HatOpen].active || amp[Crash].active || amp[Ride].active;
         if (anyMetal) {
             const float source = metallic(hatTune);
@@ -337,7 +316,7 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
             }
         }
 
-        // --- the bus: compression, and the kick pushing everything down
+        // --- bus: compression, and ducking from the kick
         const float rectified = std::fabs(mix);
         compEnv = dsp::guardDenormal(compEnv + (rectified - compEnv) * (rectified > compEnv ? compAttack : compRelease));
         const float over = std::max(0.0f, compEnv - 0.25f);
@@ -345,15 +324,12 @@ bool Genesis::render(float *L, float *R, int32_t frames) {
         const float kickLevel = std::fabs(kickOut);
         duckEnv = dsp::guardDenormal(duckEnv + (kickLevel - duckEnv) * (kickLevel > duckEnv ? 0.02f : 0.0006f));
         const float duckGain = 1.0f / (1.0f + duckEnv * duck * 6.0f);
-        // The kick is what does the ducking, so it does not duck itself.
+        // The kick isn't ducked by itself.
         float out = (mix - kickOut) * compGain * duckGain + kickOut * compGain;
 
         if (drive > 0.0001f) {
-            // Same correction on the bus, and the same reason. Unity is
-            // pinned at the level the bus actually works at, so turning the
-            // knob changes the shape and not the loudness: what came out
-            // before fell 6 dB from one end of the travel to the other, which
-            // is a fader with a tone control attached.
+            // Normalised on kBusNominal, like the kick, so drive changes the
+            // shape and not the loudness.
             const float k = 1.0f + drive * 8.0f;
             out = dsp::fastTanh(out * k) * (kBusNominal / dsp::fastTanh(kBusNominal * k));
         }

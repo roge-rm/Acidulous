@@ -46,29 +46,18 @@ import com.rm.acidulous.AudioInput
 import com.rm.acidulous.res.*
 
 /**
- * Recording, editing and keeping the material.
+ * The recorder window's pages: record a take, edit it, and the library of
+ * recordings. Any of them can be the one it opens on.
  *
- * **One window, because it was three half-windows.** Recording lived behind a
- * File-menu item that handed its result to nobody; the browser was a picker
- * bolted to the bottom of the same file; and the only waveform in the app
- * could draw a Forage pad and nothing else. A player who wants to sing
- * something into Molt had to record it in one place, find it in another and
- * mount it in a third, and could not trim it anywhere.
- *
- * The three pages are the three things that happen to a recording in order -
- * make it, shape it, keep it - and any of them can be the one you open on.
- *
- * It hands back a *path*. What a machine does with a path it already knows,
- * which is what lets one window serve Molt's take, Forage's pads, Dice's loop,
- * Pollen's buffer and Mosaic's zones without knowing anything about them.
+ * It hands back a path, so one window serves Molt's take, Forage's pads,
+ * Dice's loop, Pollen's buffer and Mosaic's zones without knowing about them.
  */
 enum class RecorderPage { Record, Edit, Library }
 
 /**
- * The input as the record page sets it up: where the take comes from, the
- * gain and monitor, the tuner's reading. Held by the window rather than the
- * page, because on a square phone the input card is a page of its own and
- * both have to be looking at the same one.
+ * The input settings: source, gain, monitor and the tuner's reading. Held by
+ * the window, not the page, because on a square phone the input card is its
+ * own page and both need the same one.
  */
 private class InputSetup(granted: Boolean) {
     var fromInput by mutableStateOf(true)
@@ -82,25 +71,20 @@ private class InputSetup(granted: Boolean) {
 fun RecorderDialog(
     onDismiss: () -> Unit,
     startOn: RecorderPage = RecorderPage.Record,
-    /** What the song is playing, so the library can say so before deleting. */
+    /** Files the song uses, so the library can warn before deleting. */
     inUse: Set<String> = emptySet(),
     /**
-     * The song, for the two effect slots on the input.
-     *
-     * They belong to the song rather than to a track, and they belong on this
-     * window rather than in the mixer: what they do is done to the recording
-     * as it is made, so the place to decide about them is the place where the
-     * recording is being made.
+     * The song, for the two input effect slots. They belong to the song, and
+     * live in this window because they're applied to the recording as it's made.
      */
     editor: SongEditor,
-    /** Supplied when a machine opened this and is waiting for a file. */
+    /** Set when a machine opened this and is waiting for a file. */
     onPick: ((String) -> Unit)? = null,
 ) {
     val c = Acid.colors
     val samples = remember { File(EngineAssets.userRoot(), "samples").apply { mkdirs() } }
-    // **On a square phone the input is a page of its own**, after record: the
-    // record page is its name, button and meter, the take card and the input
-    // card, and that is half a window more than a square phone has.
+    // On a square phone the input card gets its own page after record, since
+    // it doesn't fit on the record page.
     val inputPage = compactWindow()
     fun tabOf(page: RecorderPage) = if (inputPage && page != RecorderPage.Record) page.ordinal + 1 else page.ordinal
     var tab by remember { mutableStateOf(tabOf(startOn)) }
@@ -110,9 +94,8 @@ fun RecorderDialog(
         NativeEngine.setMonitorLevel(if (setup.monitor) 1f else 0f)
         NativeEngine.setInputGain(setup.gain)
     }
-    // The tuner only listens while the window is open and the input is what
-    // is being recorded: while it is on, the audio thread copies every input
-    // block into its ring.
+    // The tuner only listens while the window is open and recording from the
+    // input. While on, the audio thread copies every input block into its ring.
     DisposableEffect(setup.fromInput, setup.havePermission) {
         NativeEngine.setTunerOn(setup.fromInput && setup.havePermission)
         onDispose { NativeEngine.setTunerOn(false) }
@@ -120,25 +103,22 @@ fun RecorderDialog(
     LaunchedEffect(setup.fromInput, setup.havePermission) {
         if (!setup.fromInput || !setup.havePermission) { setup.tunerHz = 0f; return@LaunchedEffect }
         while (true) {
-            // **Off the drawing thread.** A reading is an autocorrelation over
-            // half a second of audio and costs about a millisecond; done here
-            // it would be a millisecond taken out of every eighth frame.
+            // Off the UI thread. A reading is an autocorrelation over half a second
+            // of audio and takes about a millisecond.
             setup.tunerHz = withContext(Dispatchers.Default) { NativeEngine.tunerHz() }
             delay(120)
         }
     }
-    // Re-read the folder after anything changes it rather than trusting the
-    // list the window opened with.
+    // Bumped after anything changes the folder so the list is re-read.
     var generation by remember { mutableStateOf(0) }
-    /** The file the edit page is working on: the last one recorded or picked. */
+    /** The file the edit page works on: the last one recorded or picked. */
     var chosen by remember { mutableStateOf<File?>(null) }
     var recording by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
-            // Leave nothing running behind us: an open microphone is not
-            // something to forget about, the monitor would howl into the next
-            // screen, and an audition outlives the window that started it.
+            // Stop everything: the microphone, the monitor (which would howl into
+            // the next screen) and any audition.
             NativeEngine.stopCapture()
             NativeEngine.setMonitorLevel(0f)
             NativeEngine.stopInput()
@@ -149,8 +129,8 @@ fun RecorderDialog(
     TabbedDialog(
         title = stringResource(Res.string.sound_title),
         selected = tab,
-        // While it is recording the window will not go away by itself:
-        // tapping outside mid-take and losing it is not a thing to allow.
+        // While recording it won't close on a tap outside, so a take can't be
+        // lost by accident.
         onDismiss = { if (!recording) onDismiss() },
         dismissLabel = stringResource(if (recording) Res.string.sound_recording_button else Res.string.close),
         spacing = 6.dp,
@@ -203,7 +183,7 @@ fun RecorderDialog(
     )
 }
 
-// --- page one: making one --------------------------------------------------
+// --- page one: recording ---------------------------------------------------
 
 @Composable
 private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, editor: SongEditor,
@@ -221,8 +201,7 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
     var lastFile by remember { mutableStateOf<File?>(null) }
     var opened by remember { mutableStateOf("") }
     var havePermission by setup::havePermission
-    // Which ear. Nought is whatever the platform would have chosen, which is
-    // what everything did before there was a screen to choose on.
+    // The input device. 0 is the platform's default.
     var device by remember { mutableStateOf(UiPrefs.inputDevice) }
     val devices = remember(havePermission, generationOfDevices()) { inputsOf() }
 
@@ -258,15 +237,9 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
         }
     }
 
-    // **What you came to do, first.** The name, the button and the meter were
-    // under the source, the device, the gain, the monitor and the bit depth -
-    // six rows of setting up before the one thing the page is for, and on a
-    // phone that is a scroll before you can press record. Dan: "the user
-    // doesn't need to scroll before they can hit the record button".
-    //
-    // So the page is in two halves: what you do, then how it is set up. The
-    // settings have not moved relative to each other - they read in the order
-    // a signal travels, from where it comes from to what it is written as.
+    // The name, record button and meter come first, so you can record without
+    // scrolling. The settings follow, in the order the signal travels from
+    // source to file.
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -281,10 +254,9 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
             onClick = {
                 if (recording) {
                     NativeEngine.stopCapture()
-                    // Said here, not left to the loop above: onRecorded turns
-                    // to the edit page, which ends this one - loop and all -
-                    // before it could see the take stop, and the window went
-                    // on saying "Recording…" and would not close.
+                    // Set here, not by the loop above: onRecorded switches to the edit
+                    // page, which ends this one before it sees the take stop, and the
+                    // window would keep saying "Recording…" and not close.
                     recording = false
                     onRecording(false)
                     val file = lastFile
@@ -308,8 +280,7 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
         ) { Text(stringResource(if (recording) Res.string.sound_stop else Res.string.sound_record)) }
     }
 
-    // Under the button, because while it is running this is the thing being
-    // watched and it must not be somewhere else on the page.
+    // Right under the button, since it's what you watch while recording.
     Meter(level, Modifier.fillMaxWidth().height(10.dp), vertical = false, track = c.sunken)
 
     if (recording) {
@@ -327,9 +298,8 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
         Text(message, color = c.textDim, fontSize = 11.sp)
     }
 
-    // The one setting that cannot wait: the button above is disabled without
-    // it, and a disabled button with its explanation below the fold is a
-    // button that looks broken.
+    // The one setting that can't wait: the button above is disabled without
+    // it, so the explanation has to be visible.
     if (fromInput && !havePermission) {
         Text(stringResource(Res.string.sound_permission), color = c.red, fontSize = 11.sp)
         TextButton(onClick = { permissions.ask(Permissions.RECORD_AUDIO) }) {
@@ -337,9 +307,8 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
         }
     }
 
-    // How it is set up, as cards - the arp window's shape, like every window
-    // with settings in it (Dan, 2026-09-23). They read in the order a signal
-    // travels, from where it comes from to what it is written as.
+    // The settings as cards, like every settings window, in the order the
+    // signal travels from source to file.
     WindowCards {
         WindowCard(stringResource(Res.string.sound_take)) {
             // In records the input; resample records what the app is playing.
@@ -347,9 +316,8 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
                 fromInput = it == 0
             }
             if (fromInput && havePermission && devices.size > 1) {
-                // Only where there is a choice to make. On a phone with nothing
-                // plugged in this would be one cell saying "built-in".
-                // A computer's list is long and its names long too: see DeviceList.
+                // Only shown when there's a choice. A computer's list and names are
+                // long, see DeviceList.
                 val pick: (Int) -> Unit = { if (!recording) device = devices[it].id }
                 if (AppHost.current.onDesktop) {
                     DeviceList(stringResource(Res.string.sound_input), devices.map { it.label }, devices.indexOfFirst { it.id == device }, enabled = !recording, onPick = pick)
@@ -366,7 +334,7 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
     }
 }
 
-/** The input: its gain and monitor, the effects printed into a take, and the tuner. */
+/** The input: gain and monitor, the effects recorded into a take, and the tuner. */
 @Composable
 private fun InputCard(setup: InputSetup, editor: SongEditor) {
     if (!setup.fromInput) return
@@ -374,20 +342,19 @@ private fun InputCard(setup: InputSetup, editor: SongEditor) {
     WindowCard(stringResource(Res.string.sound_input_card)) {
         Knob(label = stringResource(Res.string.sound_gain), value = setup.gain / 4f, display = "%.2f".format(setup.gain), modifier = panelKnobWidth(), onChange = { setup.gain = it * 4f })
         SwitchGrid(stringResource(Res.string.sound_monitor), stringArrayResource(Res.array.off_on).toList(), if (setup.monitor) 1 else 0) { setup.monitor = it == 1 }
-        // **The title is the explanation**: these are printed into
-        // the take, so they are named for what happens to the file.
+        // The title explains it: these effects are recorded into the take.
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(Res.string.sound_printed), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { InputChainChips(editor) }
         }
-        // Tuning comes before anything else a person does after
-        // plugging in, so it is in the card they set the input in.
+        // The tuner is in the input card since tuning is the first thing you do
+        // after plugging in.
         if (setup.havePermission) Box(Modifier.cardLine()) { TunerStrip(setup.tunerHz) }
     }
 }
 
 
-// --- page two: shaping it --------------------------------------------------
+// --- page two: editing -----------------------------------------------------
 
 @Composable
 private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
@@ -411,8 +378,8 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     var start by remember(file) { mutableStateOf(0f) }
     var end by remember(file) { mutableStateOf(1f) }
 
-    // The shaping, all of it local until `apply` - the file on disk is not
-    // touched by turning a knob, which is what makes `revert` free.
+    // All edits stay local until `apply`. The file isn't touched by turning
+    // a knob, which makes `revert` free.
     var fadeIn by remember(file) { mutableStateOf(0f) }
     var fadeOut by remember(file) { mutableStateOf(0f) }
     var gainDb by remember(file) { mutableStateOf(0f) }
@@ -440,9 +407,8 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         meta = info
     }
 
-    // Where `play` has got to, read every frame while the page is open: the
-    // engine plays the whole file, so the fraction is of the whole, which is
-    // what the waveform's own coordinates are.
+    // Where `play` has got to, read every frame while the page is open. It's
+    // a fraction of the whole file, which matches the waveform's coordinates.
     var playhead by remember(file) { mutableStateOf(-1f) }
     LaunchedEffect(file) {
         while (true) {
@@ -455,17 +421,15 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // The file's name is on the reading under the waveform, where it has
-        // the width to be read whole.
+        // The file name is shown under the waveform, where there's room for it.
         Spacer(Modifier.weight(1f))
-        // Stop while it plays: without it, a long take could only be waited out.
+        // Stop while it plays, so a long take doesn't have to be waited out.
         val playing = playhead >= 0f
         TextButton(onClick = { NativeEngine.auditionFile(if (playing) "" else file.absolutePath) }) {
             Text(stringResource(if (playing) Res.string.sound_stop else Res.string.sound_play), color = c.accent, fontSize = 12.sp)
         }
         TextButton(onClick = { start = 0f; end = 1f }) { Text(stringResource(Res.string.sound_all), color = c.accent, fontSize = 12.sp) }
-        // Normalise and reverse are yes-or-no to the whole file, so they sit
-        // with the other things said about the whole file, up here.
+        // Normalise and reverse apply to the whole file, so they sit up here.
         TextButton(onClick = { normalise = !normalise }) {
             Text(stringResource(Res.string.sound_norm), color = if (normalise) c.accent else c.textMid, fontSize = 12.sp)
         }
@@ -502,8 +466,7 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
         ),
     )
 
-    // Cards that wrap rather than one row that scrolls sideways - the arp
-    // window's shape, which every window with settings in it follows.
+    // Cards that wrap, like every settings window.
     WindowCards {
         val off = stringResource(Res.string.sound_off)
         WindowCard(stringResource(Res.string.sound_level)) {
@@ -582,7 +545,7 @@ private fun EditPage(file: File?, samples: File, onSaved: (File) -> Unit) {
     }
 }
 
-// --- page three: keeping it ------------------------------------------------
+// --- page three: the library -----------------------------------------------
 
 @Composable
 private fun LibraryPage(
@@ -599,9 +562,8 @@ private fun LibraryPage(
         (samples.listFiles { f -> f.isFile && f.name.endsWith(".wav", true) } ?: emptyArray())
             .sortedByDescending { it.lastModified() }
     }
-    // Deleting a file cannot be undone, so it takes two taps: the first arms
-    // the row and the second does it. A confirm dialog on top of a dialog is
-    // worse, and a single tap beside "use this one" is an accident waiting.
+    // Deleting can't be undone, so it takes two taps: the first arms the row,
+    // the second deletes.
     var armed by remember { mutableStateOf<String?>(null) }
     var renaming by remember { mutableStateOf<File?>(null) }
 
@@ -632,10 +594,9 @@ private fun LibraryPage(
                     armed = rel
                 } else {
                     armed = null
-                    // The engine holds a decoded copy, so a track playing this
-                    // keeps playing until the song is reloaded - and then
-                    // finds nothing and says so, which is the same path as any
-                    // other file that will not read.
+                    // The engine holds a decoded copy, so a track playing this keeps
+                    // playing until the song is reloaded. Then it reports a missing
+                    // file like any other.
                     if (file.delete()) onChanged()
                 }
             },
@@ -658,8 +619,7 @@ private fun LibraryPage(
                 renaming = null
                 val wanted = safeFileName(typed, file.nameWithoutExtension) + ".wav"
                 if (wanted != file.name) {
-                    // A rename that collided used to be an overwrite, which is
-                    // one file eating another silently.
+                    // Never overwrite an existing file on rename.
                     val target = File(samples, uniqueIn(samples, wanted))
                     if (file.renameTo(target)) onChanged()
                 }
@@ -682,12 +642,11 @@ private fun EditKnob(
     Knob(label = label, value = value, display = display, accent = accent, modifier = panelKnobWidth(), onChange = onChange)
 }
 
-/** A switch whose state is a local `Boolean`, ditto. */
+/** A switch whose state is a local `Boolean`. */
 @Composable
 private fun PanelToggle(label: String, on: Boolean, onClick: () -> Unit) {
-    // Wide enough for the word. `Choice` is twelve-point text with twelve dp
-    // of padding each side, so a four letter label wants about sixty-six -
-    // at forty-six "norm" came out as two lines reading "no rm".
+    // Wide enough for a four letter word. At 46 dp "norm" wrapped onto two
+    // lines.
     Column(
         Modifier.height(PanelControlH).width(66.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -698,21 +657,16 @@ private fun PanelToggle(label: String, on: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * A knob position as a frequency, twenty hertz to twenty kilohertz.
- *
- * Logarithmic, because a filter is: half a turn should be the middle of what
- * a person hears rather than the middle of the number.
+ * A knob position as a frequency, 20 Hz to 20 kHz, on a log scale so the
+ * middle of the knob is the middle of what you hear.
  */
 private fun hzOf(position: Float): Float = 20f * Math.pow(1000.0, position.toDouble()).toFloat()
 
 private data class InputChoice(val id: Int, val label: String)
 
 /**
- * What the platform says is plugged in.
- *
- * Nought is always offered and always first: it is whatever the platform
- * would have chosen, which is what every version of this app before now used
- * and is still the right answer when the list is unfamiliar.
+ * The inputs the platform reports. 0, the platform's default, is always
+ * offered and always first.
  */
 private fun inputsOf(): List<InputChoice> {
     val found = AppHost.current.audioInputs().mapNotNull { d ->
@@ -723,7 +677,7 @@ private fun inputsOf(): List<InputChoice> {
             AudioInput.Kind.Bluetooth -> AppStrings.getString(Res.string.sound_input_bluetooth)
             AudioInput.Kind.Line -> AppStrings.getString(Res.string.sound_input_line)
             AudioInput.Kind.NotAnEar -> null
-            // A phone's switch has room for a short word; a computer's list for the name.
+            // A phone's switch has room for a short word, a computer's list for the name.
             AudioInput.Kind.Other -> if (AppHost.current.onDesktop) d.name else d.name?.lowercase()?.take(12)
         } ?: return@mapNotNull null
         InputChoice(d.id, word)
@@ -731,5 +685,5 @@ private fun inputsOf(): List<InputChoice> {
     return listOf(InputChoice(0, AppStrings.getString(Res.string.sound_input_default))) + found.distinctBy { it.label }
 }
 
-/** Devices come and go; re-listing on every recomposition is the cheap answer. */
+/** Devices come and go, so this re-lists them on every recomposition. */
 private fun generationOfDevices(): Int = AppHost.current.audioInputs().sumOf { it.id }

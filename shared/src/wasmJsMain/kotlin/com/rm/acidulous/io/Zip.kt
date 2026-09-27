@@ -1,16 +1,16 @@
 package com.rm.acidulous.io
 
 /**
- * Zips in a browser, which has no java.util.zip and only an asynchronous
- * deflate: read whole, entries stored or deflated (what the phone and the
- * desktop write); written whole, entries stored. A song bundle is mostly WAVs,
- * which deflate hardly shrinks, so storing them costs little.
+ * Zip support for the browser, which has no java.util.zip and only an async
+ * deflate. Reads whole zips with stored or deflated entries (what the phone
+ * and desktop write), and writes whole zips with stored entries. A song bundle
+ * is mostly WAVs, which barely compress anyway.
  */
 internal object Zip {
 
     fun read(zip: ByteArray, each: (name: String, isDirectory: Boolean, bytes: () -> ByteArray) -> Unit) {
-        // The central directory, found from its end record, has every entry's
-        // sizes even where the local header leaves them to a data descriptor.
+        // Uses the central directory (found from its end record), which has
+        // every entry's sizes even when the local header leaves them out.
         var end = zip.size - 22
         while (end >= 0 && u32(zip, end) != 0x06054b50L) end--
         if (end < 0) throw IllegalArgumentException("not a zip")
@@ -98,7 +98,7 @@ internal object Zip {
     }
 }
 
-/** Raw deflate (RFC 1951), undone: all a zip entry needs. */
+/** Raw inflate (RFC 1951), which is all a zip entry needs. */
 internal object Inflate {
     private val LEN_BASE = intArrayOf(3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258)
     private val LEN_EXTRA = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0)

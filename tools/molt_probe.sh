@@ -1,8 +1,8 @@
 #!/bin/bash
-# What a take is, and what Molt makes of it. See tools/molt_probe.cpp.
+# Measures a take and what Molt makes of it. See tools/molt_probe.cpp.
 #
-# Sources local.env the way audition.sh does, so it measures the real
-# recording where there is one and says so when there is not.
+# Sources local.env like audition.sh does, so it uses the real recording if
+# there is one.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
@@ -10,9 +10,8 @@ DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
 
 # `${VAR+set}` rather than `-z`, so an explicitly empty ACIDULOUS_INPUT_FILE
-# means "the synthetic phrase, please" rather than "go and look in local.env".
-# That is the only way to see the calibration run on a machine that has a
-# recording, and the calibration run is what says what these numbers mean.
+# uses the synthetic phrase instead of reading local.env. That's how you run
+# the calibration on a machine that has a recording.
 if [ -z "${ACIDULOUS_INPUT_FILE+set}" ] && [ -f "$ROOT/tools/local.env" ]; then
     # shellcheck disable=SC1091
     . "$ROOT/tools/local.env"

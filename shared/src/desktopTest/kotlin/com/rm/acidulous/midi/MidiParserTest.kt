@@ -40,8 +40,7 @@ class MidiParserTest {
     @Test fun `clock in the middle of a message does not break it`() {
         feed(0x90, 0xf8, 60, 0xf8, 100)
         assertEquals(listOf(Triple(0x90, 60, 100)), seen)
-        // ...and the clocks are still delivered, which is what M32 needs:
-        // the parser used to drop every realtime byte on the floor.
+        // ...and the clocks are still delivered.
         assertEquals(listOf(Triple(0xf8, 0, 0), Triple(0xf8, 0, 0)), realtime)
     }
 

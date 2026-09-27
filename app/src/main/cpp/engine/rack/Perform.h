@@ -12,31 +12,31 @@
 namespace acidulous {
 
 /**
- * The effects you hold rather than set: beat repeat, tape stop, and a pad
- * with a filter across it and a delay throw up it.
+ * The performance effects you hold rather than set: beat repeat, tape stop,
+ * and an XY pad with a filter across and a delay throw up.
  *
- * They run on the whole mix, after the master inserts and before the master
- * fader and the limiter, in that order: what is repeated is what the tape
- * stops, and what the filter shapes is what gets thrown into the echo.
+ * They run on the whole mix after the master inserts and before the master
+ * fader and limiter, in that order, so the tape stops what's repeated and
+ * the echo gets what the filter shaped.
  *
- * **Held parameters are ordinary parameters.** Repeat, stop and the pad's two
- * axes arrive as `ParamMessage`s on `Unit::Perform`, so pressing one while
- * recording writes a lane the way turning a knob does, and a lane plays it
- * back the same way. The rest (how long a stop takes, the echo's time and
- * feedback) are the song's settings, in the same table.
+ * The held controls are normal parameters. Repeat, stop and the pad's two
+ * axes arrive as ParamMessages on Unit::Perform, so pressing one while
+ * recording writes a lane like turning a knob does, and a lane plays it
+ * back. The rest (stop length, echo time and feedback) are song settings in
+ * the same table.
  *
- * **Untouched, the mix comes out bit for bit.** Every stage has a resting
- * state that returns its input unmodified, and the echo sleeps once its tail
- * has gone quiet. Exports of songs that never used this must not change.
+ * When nothing is held the mix passes through bit for bit. Every stage has
+ * a resting state that returns its input unchanged and the echo sleeps once
+ * its tail is silent, so exports of songs that don't use this never change.
  */
 class Perform {
   public:
     enum P : int32_t {
-        /** 0 off; 1..5 a slice of 1, 1/2, 1/4, 1/8 or 1/16 of a beat. */
+        /** 0 off, 1..5 a slice of 1, 1/2, 1/4, 1/8 or 1/16 of a beat. */
         Repeat,
-        /** Held: the tape slows to a stop. Let go and it spins back up. */
+        /** Held: the tape slows to a stop. Release and it spins back up. */
         Stop,
-        /** The pad's filter: low pass left of centre, high pass right of it. */
+        /** The pad's filter: low pass left of centre, high pass right. */
         X,
         /** The pad's throw: how much of the mix goes into the echo. */
         Y,
@@ -48,24 +48,24 @@ class Perform {
         Feedback,
         /** Held: the last beat, backwards, looped in time. */
         Reverse,
-        /** 0 off; 1..5 chops at 1/8, 1/16, 1/32, 1/8 triplets or 1/16 triplets. */
+        /** 0 off, 1..5 chops at 1/8, 1/16, 1/32, 1/8 triplets or 1/16 triplets. */
         Gate,
-        /** Held: the lows, the mids or the highs taken out. */
+        /** Held: cuts the lows, mids or highs. */
         KillLow, KillMid, KillHigh,
-        /** Held: a high pass climbing and noise rising under it, over [RiserLen]. */
+        /** Held: a rising high pass with noise rising under it, over [RiserLen]. */
         Riser,
-        /** How long the riser takes to get to the top: 1, 2 or 4 bars. */
+        /** How long the riser takes to reach the top: 1, 2 or 4 bars. */
         RiserLen,
-        /** What the pad does across: 0 a filter, 1 a crush. */
+        /** What the pad's X axis does: 0 filter, 1 crush. */
         XMode,
-        /** What the pad does up: 0 an echo, 1 a wash. */
+        /** What the pad's Y axis does: 0 echo, 1 wash. */
         YMode,
-        /** Where they all run: 0 the whole mix, 1..4 one of the mixer's groups. */
+        /** Where they run: 0 the whole mix, 1..4 one of the mixer's groups. */
         Target,
         Count
     };
 
-    /** Each buffer's length: about 2.7 s at 48 kHz, which bounds every time here. */
+    /** Each buffer's length, about 2.7 s at 48 kHz. Every time here fits within it. */
     static constexpr int32_t kSize = 1 << 17;
     static constexpr int32_t kMask = kSize - 1;
 
@@ -90,12 +90,12 @@ class Perform {
             {"target", 0.0f, 4.0f, 0.0f, Curve::Stepped, 5, ""},
         };
         params_.init(kDefs, Count);
-        // Allocated here as well as in [prepare], so an engine that is never
-        // started - every host harness - has buffers to write to.
+        // Also allocated here so an engine that's never started (every host
+        // harness) has buffers to write to.
         prepare(static_cast<float>(kSampleRate));
     }
 
-    /** Not the audio thread: this is where the buffers are allocated. */
+    /** Not on the audio thread: this allocates the buffers. */
     void prepare(float sampleRate) {
         sr = sampleRate;
         ring[0].assign(kSize, 0.0f);
@@ -112,19 +112,17 @@ class Perform {
         gateStep = 1.0f / std::max(1.0f, 0.002f * sr);
         riserStep = 1.0f / std::max(1.0f, 0.010f * sr);
         envRelease = std::exp(-1.0f / (0.04f * sr));
-        // The wash's diffusers: all-passes at prime lengths that between them
-        // cover about one lap of the wash, different on each side so the two
-        // smear apart.
+        // The wash's diffusers: all-passes at prime lengths covering about one
+        // lap of the wash, different on each side so the two sides smear apart.
         const int32_t lens[2][4] = {{557, 1123, 1601, 2203}, {613, 1051, 1709, 2141}};
         for (int c = 0; c < 2; ++c) {
             for (int k = 0; k < 4; ++k) {
                 diffuse[c][k].len = std::clamp(static_cast<int32_t>(lens[c][k] * sr / 48000.0f), 1, Diffuser::kMax - 1);
             }
         }
-        // The crossovers: Linkwitz-Riley, two Butterworth sections each, so
-        // the three bands add back up flat. The low band goes through the
-        // upper crossover's all-pass as well, which is what keeps it in step
-        // with the other two once they have been through it.
+        // The crossovers: Linkwitz-Riley (two Butterworth sections each) so the
+        // three bands sum back flat. The low band also goes through the upper
+        // crossover's all-pass to stay in phase with the other two.
         for (int c = 0; c < 2; ++c) {
             for (int k = 0; k < 2; ++k) {
                 xo[c].lo[k].lowpass(250.0f, 0.70710678f, sr);
@@ -143,12 +141,12 @@ class Perform {
     ParamSet &params() { return params_; }
 
     /**
-     * Back to a known state; the held controls are [release]'s.
+     * Back to a known state. The held controls are reset by [release].
      *
      * Only the echo is cleared. This runs on the audio thread at a panic, and
-     * the other two buffers are never read before they are written: the
-     * repeat reads no further back than [filled], which starts again at
-     * nought, and the tape reads from where it was pressed.
+     * the other two buffers are always written before they're read: the repeat
+     * reads no further back than [filled], which restarts at 0, and the tape
+     * reads from where it was pressed.
      */
     void reset() {
         for (int c = 0; c < 2; ++c) {
@@ -191,10 +189,10 @@ class Perform {
         lastLoud = -(int64_t{1} << 40);
     }
 
-    /** The group they run on, or -1 for the whole mix; see `MasterBus::process`. */
+    /** The group they run on, or -1 for the whole mix (see MasterBus::process). */
     int32_t wantedGroup() const { return static_cast<int32_t>(params_.get(Target) + 0.5f) - 1; }
 
-    /** Every held control back to rest: a transport stop, or a panic. */
+    /** Every held control back to rest, on a transport stop or a panic. */
     void release() {
         params_.set(Repeat, 0.0f);
         params_.set(Stop, 0.0f);
@@ -210,13 +208,11 @@ class Perform {
 
     /**
      * Where the transport is at the start of the next block, in fractional
-     * ticks. A repeat started while playing takes its slice from the grid
-     * line before the press, so it lands in time; stopped, from the press.
+     * ticks. A repeat started while playing takes its slice from the grid line
+     * before the press so it's in time. When stopped, from the press.
      *
-     * Fractional because a block is well under a tick (64 frames against a
-     * hundred at 120 bpm): the whole ticks the clock hands the players are up
-     * to a tick late, and two of them are often the same number while the
-     * transport is running.
+     * Fractional because a block is well under a tick (64 frames against about
+     * 100 at 120 bpm), so whole ticks can be up to a tick late.
      */
     void setTransport(bool playing, double tick) {
         transportPlaying = playing;
@@ -235,8 +231,8 @@ class Perform {
             const float beats = 1.0f / static_cast<float>(1 << (k - 1));
             const int32_t len = std::clamp(static_cast<int32_t>(beats * spb + 0.5f), 64, kSize);
             if (!repActive) {
-                // A fresh slice, begun at the last grid line of its own length
-                // - the part since then is already in the ring.
+                // A new slice, starting at the last grid line of its own length. The
+                // part since then is already in the ring.
                 int32_t offset = 0;
                 if (playing) {
                     const double tickLen = static_cast<double>(beats) * kPPQN;
@@ -255,7 +251,7 @@ class Perform {
                 repLen = len;
                 repActive = true;
             } else if (k != repK) {
-                // Shorter is always there; longer only as far as was caught.
+                // Shorter is always available. Longer only as far as was captured.
                 repLen = repCaptured >= repLen ? std::min(len, repCaptured) : len;
             }
             repK = k;
@@ -265,8 +261,8 @@ class Perform {
         }
 
         // --- Reverse: the beat before the last beat line, backwards ---------
-        // It is already in the ring, whole, so it plays from the press. The
-        // ring holds what the repeat made, so a held repeat reverses too.
+        // It's already fully in the ring, so it plays from the press. The ring
+        // holds the repeat's output, so a held repeat reverses too.
         const bool revNow = params_.get(Reverse) >= 0.5f;
         if (revNow && !revActive) {
             const int32_t len = std::clamp(static_cast<int32_t>(spb + 0.5f), 64, kSize / 2);
@@ -310,8 +306,8 @@ class Perform {
         const bool riserWas = riserHeld;
         riserHeld = params_.get(Riser) >= 0.5f;
         if (riserHeld && !riserWas) {
-            // Pressed again while it was still falling away: the climb starts
-            // over, on the filters it already has, so nothing clicks.
+            // Pressed again while still fading out: the climb restarts on the
+            // filters it already has, so nothing clicks.
             if (!riserOn) {
                 riserHp[0] = riserHp[1] = RiserSvf{};
                 riserNoise = RiserSvf{};
@@ -331,8 +327,8 @@ class Perform {
             if (tape == Tape::Off) readPos = static_cast<double>(w);
             tape = Tape::Stopping;
         } else if (!stopHeld && tape == Tape::Stopping) {
-            // Let go before it was silent: spin up from where it got to.
-            // After: from now, since nothing was being heard anyway.
+            // Released before it was silent: spin up from where it got to.
+            // After that: from now, since nothing was being heard anyway.
             if (rate < 0.01f) readPos = static_cast<double>(w);
             tape = Tape::Starting;
         }
@@ -343,12 +339,12 @@ class Perform {
         const bool crush = params_.get(XMode) >= 0.5f;
         const bool wash = params_.get(YMode) >= 0.5f;
         const float throwBeats[5] = {0.25f, 0.5f, 0.75f, 1.0f, 1.5f};
-        // A wash is short and fixed, not a note value: it is a smear, not
-        // repeats, and its time is what makes it one.
+        // A wash is short and fixed rather than a note value. That short time
+        // is what makes it a smear instead of repeats.
         const float echoTarget = wash ? 0.09f * sr : std::min(
             throwBeats[std::clamp(static_cast<int32_t>(params_.get(ThrowTime) + 0.5f), 0, 4)] * spb,
             static_cast<float>(kSize - 4));
-        if (echoLen < 0.0f || wash != washWas) echoLen = echoTarget; // a change of mode jumps, a tempo glides
+        if (echoLen < 0.0f || wash != washWas) echoLen = echoTarget; // a mode change jumps, a tempo change glides
         washWas = wash;
         const float fb = wash ? std::min(0.93f, 0.7f + 0.3f * params_.get(Feedback)) : params_.get(Feedback);
         const bool echoAwake = yTarget > 0.0f || ys > 1e-7f || w - lastLoud <= static_cast<int64_t>(echoLen) + 2;
@@ -356,9 +352,9 @@ class Perform {
 
         if (!repActive && !revActive && !gateActive && tape == Tape::Off && !riserOn && !killsOn && padIdle &&
             !echoAwake) {
-            // At rest: only the ring is fed, so a repeat or a stop pressed next
-            // has something behind it, and the echo is written silent, so
-            // waking it never replays something from a lap of the buffer ago.
+            // At rest: only the ring is fed, so a repeat or stop pressed next has
+            // audio behind it. The echo is written silent so waking it never replays
+            // something from a lap of the buffer ago.
             for (int32_t i = 0; i < frames; ++i) {
                 ring[0][w & kMask] = L[i];
                 ring[1][w & kMask] = R[i];
@@ -423,8 +419,8 @@ class Perform {
                 if (gateK == 0 && gateG >= 1.0f) gateActive = false;
             }
 
-            // The ring hears what the repeat, reverse and gate made, so the
-            // tape stops that.
+            // The ring gets the repeat, reverse and gate output, so that's what the
+            // tape stops.
             ring[0][w & kMask] = l;
             ring[1][w & kMask] = r;
             if (filled < kSize) ++filled;
@@ -441,7 +437,7 @@ class Perform {
                 float tl = (ring[0][base & kMask] + frac * (ring[0][next & kMask] - ring[0][base & kMask])) * gain;
                 float tr = (ring[1][base & kMask] + frac * (ring[1][next & kMask] - ring[1][base & kMask])) * gain;
                 if (tape == Tape::Starting && rate >= 1.0f) {
-                    // Up to speed, but behind: fade across to the live mix.
+                    // Up to speed but behind: crossfade to the live mix.
                     rejoin = std::min(1.0f, rejoin + rejoinStep);
                     tl += rejoin * (l - tl);
                     tr += rejoin * (r - tr);
@@ -454,8 +450,8 @@ class Perform {
             }
             ++w;
 
-            // Riser: the high pass climbs and the noise rises, exponentially,
-            // to the top at [riserFrames] and held there.
+            // Riser: the high pass and noise rise exponentially to the top at
+            // [riserFrames] and hold there.
             if (riserOn) {
                 if (riserCoefAge-- <= 0) {
                     const float p = std::min(1.0f, static_cast<float>(w - riserFrom) / riserFrames);
@@ -475,7 +471,7 @@ class Perform {
                 if (!riserHeld && riserMix <= 0.0f) riserOn = false;
             }
 
-            // Kills: the split summed back with what is killed left out.
+            // Kills: the bands summed back without the killed ones.
             if (killsOn) {
                 bool settled = !anyKill;
                 for (int b = 0; b < 3; ++b) {
@@ -516,15 +512,14 @@ class Perform {
                     crushEnv = std::max({std::fabs(l), std::fabs(r), crushEnv * envRelease});
                     float cl = l, cr = r;
                     if (d < 0.0f) {
-                        // Left: fewer samples, held between.
+                        // Left: sample rate reduction.
                         crushAcc += 1.0f / (1.0f + t * 15.0f);
                         if (crushAcc >= 1.0f) { crushAcc -= 1.0f; heldL = l; heldR = r; }
                         cl = heldL;
                         cr = heldR;
                     } else {
-                        // Right: fewer bits, counted from the level the signal
-                        // is at rather than from full scale, so a quiet mix
-                        // crushes the same as a loud one.
+                        // Right: bit reduction, relative to the signal's level rather than
+                        // full scale, so a quiet mix crushes the same as a loud one.
                         const float step = std::max(crushEnv, 1e-4f) * std::exp2(-(15.0f - t * 12.0f));
                         cl = std::round(l / step) * step;
                         cr = std::round(r / step) * step;
@@ -550,13 +545,13 @@ class Perform {
                 float dl = echo[0][i0] + frac * (echo[0][i1] - echo[0][i0]);
                 float dr = echo[1][i0] + frac * (echo[1][i1] - echo[1][i0]);
                 if (wash) {
-                    // Smeared on the way out, so what is heard and what goes
-                    // round again are both a wash rather than repeats.
+                    // Smeared on the way out so both what's heard and what feeds back
+                    // are a wash rather than repeats.
                     for (auto &d : diffuse[0]) dl = d.process(dl);
                     for (auto &d : diffuse[1]) dr = d.process(dr);
                 }
-                // Crossed, so each repeat answers from the other side, and
-                // darkened and thinned on every pass, the way a tape echo is.
+                // Crossed so each repeat comes from the other side, and darker and
+                // thinner on every pass like a tape echo.
                 const float inL = l * ys + fb * tone(0, dr, lpCoef, hpCoef);
                 const float inR = r * ys + fb * tone(1, dl, lpCoef, hpCoef);
                 echo[0][w & kMask] = inL;
@@ -609,7 +604,7 @@ class Perform {
         }
     };
 
-    /** A small state-variable filter for the riser: a high pass, or a band pass for its noise. */
+    /** A small state-variable filter for the riser: high pass, or band pass for its noise. */
     struct RiserSvf {
         float ic1 = 0.0f, ic2 = 0.0f, a1 = 1.0f, a2 = 0.0f, a3 = 0.0f, k = 1.0f;
         void tune(float hz, float q, float sr) {
@@ -697,7 +692,7 @@ class Perform {
     float xs = 0.5f, ys = 0.0f;
     bool filterOn = false, highPass = false;
     int32_t coefAge = 0;
-    static constexpr float kDamp = 0.9f; // a little resonance, as a DJ filter has
+    static constexpr float kDamp = 0.9f; // a little resonance, like a DJ filter
     float a1 = 1.0f, a2 = 0.0f, a3 = 0.0f;
     float ic1[2] = {}, ic2[2] = {};
 

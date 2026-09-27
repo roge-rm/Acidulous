@@ -5,13 +5,12 @@
 #include <thread>
 #include <vector>
 
-// Recording audio to a file, without the audio thread ever touching one.
+// Records audio to a file without the audio thread touching the file.
 //
-// The callback pushes frames into a ring and returns. A writer thread drains
-// the ring to disk. If the writer falls behind far enough to fill the ring,
-// the callback drops what will not fit and sets a flag: a gap in a recording
-// is bad, a glitch in the output is worse, and the flag means we can say
-// which happened rather than guess.
+// The callback pushes frames into a ring and a writer thread drains it to
+// disk. If the ring fills, the callback drops what doesn't fit and sets a
+// flag, so a gap in the recording can be reported instead of glitching the
+// output.
 namespace acidulous {
 
 class Capture {
@@ -27,25 +26,17 @@ class Capture {
     Source source() const { return which; }
     int64_t frames() const { return written.load(std::memory_order_relaxed); }
     /**
-     * Frames **accepted into the ring**, which is the audio thread's own count
-     * and the one a mark is stamped with.
-     *
-     * [frames] is the writer thread's and lags it by up to four seconds, so a
-     * boundary stamped with it would name a moment the file has not reached.
-     * This one is exact: the drain writes everything between the two indices,
-     * so what has been accepted is what the file will hold.
+     * Frames accepted into the ring. This is the audio thread's count and the
+     * one to stamp marks with. [frames] is the writer thread's count and can
+     * lag by up to four seconds. Everything accepted ends up in the file.
      */
     int64_t pushed() const { return writeIndex.load(std::memory_order_relaxed); }
     float peak() const { return peakLevel.load(std::memory_order_relaxed); }
     bool overflowed() const { return overflow.load(std::memory_order_relaxed); }
     /**
-     * True once an input capture has been asked to record with nothing
-     * arriving - no stream open, or one that has gone away.
-     *
-     * It is a separate flag from `overflowed` because it is a different
-     * sentence: one says the recording has a hole in it, this one says there
-     * was never anything to record. Both are worth more than a file of
-     * silence and no explanation.
+     * True once an input capture has recorded with no input arriving (no
+     * stream open, or one that went away). Separate from `overflowed` so the
+     * UI can say there was nothing to record, not that the take has a gap.
      */
     bool deaf() const { return wasDeaf.load(std::memory_order_relaxed); }
     const std::string &file() const { return outPath; }
@@ -69,8 +60,8 @@ class Capture {
     std::thread worker;
     std::string outPath;
     int32_t rate = 48000;
-    // Fixed when recording starts: changing the setting mid-take must not
-    // change the format halfway down the file.
+    // Fixed when recording starts, so changing the setting mid-take doesn't
+    // change the file's format.
     int32_t depth = 24;
     Source which = FromInput;
 };

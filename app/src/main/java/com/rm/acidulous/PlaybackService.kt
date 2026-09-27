@@ -13,22 +13,15 @@ import android.os.IBinder
 import android.util.Log
 
 /**
- * The service that says this process is playing music.
+ * A foreground service that tells Android this process is playing music.
  *
- * **Not a player.** The engine is in the activity's process and stays there;
- * this holds no audio, no state and no thread. What it does is tell Android
- * that the process is doing something the user can see, which changes two
- * things that no amount of DSP can:
+ * It isn't a player. The engine stays in the activity's process and this
+ * holds no audio, state or threads. Being a foreground service keeps the
+ * process from being trimmed, frozen or killed while the app is in the
+ * background, and lets it keep playing with the screen off.
  *
- *  - **Importance.** Without it, a process whose activity is not in front is a
- *    cached process: it may be trimmed, frozen or killed, and it is the first
- *    thing the scheduler gives up on. A groovebox that stops playing because
- *    you looked at a message is not a groovebox.
- *  - **Playing with the screen off** becomes a supported thing rather than an
- *    accident of how long the device took to doze.
- *
- * It runs while the transport does and stops when the transport does, so an
- * app sitting idle on the grid is not holding a notification open for nothing.
+ * It runs only while the transport is playing, so there's no notification
+ * while the app sits idle.
  */
 class PlaybackService : Service() {
 
@@ -37,8 +30,8 @@ class PlaybackService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTE_ID, build())
         // Not sticky: if the system kills this, the engine went with it, and
-        // bringing back a service for a transport that is not running would
-        // put a notification on screen with nothing behind it.
+        // restarting the service would show a notification with nothing
+        // playing.
         return START_NOT_STICKY
     }
 
@@ -81,11 +74,9 @@ class PlaybackService : Service() {
         /**
          * Follow the transport.
          *
-         * **Every failure here is survivable and none of them may crash.** A
-         * foreground service can be refused - no notification permission on
-         * Android 13 and later, a restricted background state, an OEM policy -
-         * and when it is, the app keeps playing exactly as it did before this
-         * existed. It is an improvement to ask for, not a thing to depend on.
+         * Nothing here may crash. Starting a foreground service can be refused
+         * (no notification permission on Android 13+, background limits, OEM
+         * policies), and then the app just keeps playing without it.
          */
         fun follow(context: Context, playing: Boolean) {
             val intent = Intent(context, PlaybackService::class.java)

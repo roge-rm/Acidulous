@@ -83,17 +83,18 @@ import com.rm.acidulous.ui.theme.DrawbarWhite
 import com.rm.acidulous.res.*
 
 /**
- * The machine's face in the Edit screen.
+ * The machine panel in the Edit screen.
  *
- * Every machine is laid out the same way - one scrolling row of titled
- * [Group] cards, knobs and switches from the shared helpers below, three
- * colours with fixed meanings, and a [SectionChips] row only when a machine
- * has more groups than one row can carry. Follow that shape when adding a
- * machine rather than inventing a layout. Knob values live in three places
- * that must agree: the engine (live, smoothed), the document (persisted, on
- * the track), and the panel. A turn goes to the engine at once as a user
- * gesture (recordable), and into the document as one undo step; between
- * turns the panel follows the engine, so lanes move the knobs.
+ * Every machine uses the same layout: one scrolling row of titled [Group]
+ * cards, knobs and switches from the shared helpers below, three colours with
+ * fixed meanings, and a [SectionChips] row only when a machine has more groups
+ * than fit in one row. Follow that when adding a machine.
+ *
+ * Knob values live in three places that must agree: the engine (live,
+ * smoothed), the document (saved, on the track) and the panel. A turn goes to
+ * the engine at once as a user gesture (recordable) and into the document as
+ * one undo step. Between turns the panel follows the engine, so lanes move the
+ * knobs.
  */
 @Composable
 fun MachinePanel(
@@ -115,41 +116,39 @@ fun MachinePanel(
     onImportSlice: () -> Unit = {},
     onOpenSample: (pad: Int) -> Unit = {},
     onClearSample: (pad: Int) -> Unit = {},
-    /** Every pad and the slice source at once - see the `clear` action. */
+    /** Clears every pad and the slice source at once, see the clear action. */
     onClearKit: () -> Unit = {},
-    /** A sample already in the app's own folder, chosen rather than imported. */
+    /** A sample already in the app's own folder, chosen instead of imported. */
     onAssignSample: (pad: Int, relative: String) -> Unit = { _, _ -> },
-    /** Nexus keeps its graph on a screen of its own. */
+    /** Nexus has its graph on a separate screen. */
     onOpenPatch: () -> Unit = {},
     /** Pollen holds one sample of its own, under the plain key. */
     onImportOneSample: () -> Unit = {},
     /**
-     * Which cell is open, for the one machine whose material is in the clips.
+     * Which cell is open, for the tape machine, whose material is in the clips.
      *
-     * Every other panel here is about the machine and the same whichever cell
-     * is showing. A tape's takes belong to the clip - four windows into files,
-     * per scene - so its panel has to know which scene it is looking at. Empty
-     * for every other machine, which asks nothing of it.
+     * Every other panel is about the machine and the same for any cell. A
+     * tape's takes belong to the clip, so its panel needs to know the scene.
+     * Empty for every other machine.
      */
     sceneId: String = "",
     /**
      * Which half to draw.
      *
-     * Upright the panel is its header over its cards and both are drawn
-     * together. Turned, the header stands down the left edge of the screen
-     * and the cards stand on the right, **with the roll between them** - so
-     * the two halves are placed separately and each instance draws one.
+     * Upright the header and the cards are drawn together. In landscape the
+     * header runs down the left edge and the cards are on the right with the
+     * roll between them, so each half is placed and drawn separately.
      */
     bar: Boolean = true,
     body: Boolean = true,
-    /** The header reads downwards and the cards stack - see M43. */
+    /** The header reads downwards and the cards stack. */
     vertical: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
-    // Folded away, the panel is just its title row: the roll takes the rest.
-    // In UiPrefs rather than here because the two halves above cannot share a
-    // flag that one of them owns - and because it says how somebody works.
+    // Folded, the panel is just its title row and the roll gets the rest. Kept
+    // in UiPrefs because the two halves can't share a flag that one of them
+    // owns.
     val minimized = UiPrefs.panelFolded
     val info = remember(type) { NativeEngine.machineParamInfo(type) }
     val binding = rememberParamBinding(trackIndex, type, info, editor)
@@ -158,7 +157,7 @@ fun MachinePanel(
     Column(modifier.background(Acid.colors.panel).padding(6.dp)) {
         val loadPatch: (String) -> Unit = { name ->
             onLoadPatch(name)?.let { patch ->
-                // What this machine keeps across a patch change - see
+                // What this machine keeps across a patch change, see
                 // MachineUi.patchKeeps. Empty for everything but Bias.
                 val keep = MachineUi.patchKeeps(type)
                 val params = if (keep.isEmpty()) patch.params
@@ -166,36 +165,34 @@ fun MachinePanel(
                 editor.edit(trackIndex) { t ->
                     var next = t.withPatch(params)
                     for ((k, v) in patch.settings) next = next.withSetting(k, v)
-                    // Last, so a patch that happens to carry these keys cannot
-                    // rename itself. Settings rather than state held here, so
-                    // the name survives a reopen, the arrows know where in the
-                    // list they are standing, and the star knows what the
-                    // patch sounded like when it arrived.
+                    // Set last, so a patch that happens to carry these keys
+                    // can't rename itself. Stored in settings so the name
+                    // survives a reopen, the arrows know where they are in the
+                    // list, and the edited star has something to compare
+                    // against.
                     //
-                    // The stamp is taken from `next`, not from `patch.params`:
-                    // `withPatch` replaces the whole map, so what the machine
-                    // now holds is the truth and what the patch file said is
-                    // only where it came from.
+                    // The stamp comes from next, not patch.params, since
+                    // withPatch replaces the whole map and what the machine now
+                    // holds is what counts.
                     next.withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(next.machine.params))
                 }
                 binding.applyAll(params)
             }
         }
-        // Saving under a name makes the machine *be* that patch: same name,
-        // same knobs, no star until the next one is turned.
+        // Saving under a name makes the machine that patch: same name, same
+        // knobs, no star until a knob is turned.
         val savePatch: (String) -> Unit = { name ->
             onSavePatch(name)
             editor.edit(trackIndex) { t ->
                 t.withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(t.machine.params))
             }
         }
-        // A name that has stopped being true says so. Only the parameters
-        // count: loading a sample onto a pad is how Forage is *used*, and a
-        // kit marked edited the moment it was built would mark everything.
+        // Show when the patch has been edited. Only parameters count, loading
+        // samples onto pads doesn't.
         //
-        // Remembered against the map itself, which is a new object on every
-        // edit: the panel recomposes with each frame of a knob drag and this
-        // walks every parameter the machine has.
+        // Remembered against the params map, which is a new object on every
+        // edit, since the panel recomposes on every frame of a knob drag and
+        // this walks every parameter.
         val stamp = track.machine.settings[kPatchStamp]
         val nowStamp = remember(track.machine.params) { stampOf(track.machine.params) }
         if (bar) PatchBar(
@@ -229,8 +226,8 @@ fun MachinePanel(
                 binding, track, selectedPad, onImportSample, onClearSample, onAssignSample,
                 onImportKit, onImportSlice, onOpenSample, onClearKit,
                 inUse = editor.song.samplesInUse(), editor = editor,
-                // How many pads the slice covers, so the pads and the grid can
-                // say which of them are playing a piece of it.
+                // How many pads the slice covers, so the pads and grid can show
+                // which are playing a piece of it.
                 onSliceApplied = { count ->
                     editor.edit(trackIndex) { t -> t.withSetting("slice_count", count.toString()) }
                 },
@@ -241,8 +238,7 @@ fun MachinePanel(
     }
 }
 
-
-/** Live values + the plumbing to change them. */
+/** Live values and the plumbing to change them. */
 class ParamBinding(
     val trackIndex: Int,
     val info: List<ParamInfo>,
@@ -250,8 +246,8 @@ class ParamBinding(
     private val values: androidx.compose.runtime.MutableState<Map<String, Float>>,
     private val dragging: androidx.compose.runtime.MutableState<String?>,
     /**
-     * Every control's value as it was when this panel opened, or null until
-     * the first poll has said what they are. See [reset].
+     * Every control's value when this panel opened, or null until the first
+     * poll has returned. See [reset].
      */
     private val opened: androidx.compose.runtime.MutableState<Map<String, Float>?>,
     /** Which unit on the rack the names address: "machine", "effect1", "effect2". */
@@ -262,8 +258,8 @@ class ParamBinding(
     fun value(name: String): Float {
         val knob = values.value[name] ?: info.firstOrNull { it.name == name }?.defaultNormalized ?: 0f
         if (!LockEdit.on(trackIndex)) return knob
-        // Locking: the knob shows the selected step's lock, or the knob
-        // itself where that step has none - which is what it would play.
+        // Locking: the knob shows the selected step's lock, or its own value
+        // where the step has none, which is what it would play.
         return com.rm.acidulous.model.Locks.at(
             LockEdit.lanes[com.rm.acidulous.model.laneKey(unit, name)], LockEdit.spans.first().first, LockEdit.clipTicks,
         )?.value ?: knob
@@ -271,8 +267,8 @@ class ParamBinding(
 
     /**
      * Writes a lock on the selected steps instead of moving the knob, and
-     * says whether it did. A parameter with a drawn or recorded curve refuses
-     * - the two would fight over it (Dan's choice) - and its knob stays put.
+     * returns whether it did. A parameter with an automation curve refuses,
+     * since the two would fight, and its knob stays put.
      */
     private fun lock(name: String, v: Float?, gesture: Boolean): Boolean {
         if (!LockEdit.on(trackIndex)) return false
@@ -314,9 +310,8 @@ class ParamBinding(
     /**
      * A batch, as one undo step and one autosave.
      *
-     * Slicing writes twenty-six parameters at once and levelling thirteen;
-     * through `set` that is twenty-six document edits, which is twenty-six
-     * entries in the undo history for one button.
+     * Slicing writes 26 parameters at once and levelling 13. Through set that
+     * would be 26 undo entries for one button.
      */
     fun setMany(batch: Map<String, Float>) {
         if (batch.isEmpty()) return
@@ -336,26 +331,11 @@ class ParamBinding(
     }
 
     /**
-     * Put one control back where it was when the panel was opened.
+     * Put everything back to how it was when the panel opened.
      *
-     * **Where it was, not its factory default.** A default is a fact about the
-     * machine; this is a fact about what you were doing - you turned four
-     * knobs, you want one of them back, and back means how it sounded a minute
-     * ago. Reopening the panel takes a new reading, so "a minute ago" is
-     * always the last time you came in here.
-     *
-     * Returns false when there is nothing to go back to, which is only the
-     * case before the first poll has answered - a window opened and
-     * long-pressed inside a tenth of a second.
-     */
-    /**
-     * Put **everything** back to how it was when the panel opened.
-     *
-     * What a window's Cancel does. The controls in these windows write live -
-     * a knob is heard as it turns, and it has to be, because voicing anything
-     * by ear means hearing it - so there is nothing held back for an OK to
-     * apply. Cancel is the other half of that bargain: the same baseline the
-     * long press uses, applied to the lot, in one undo step.
+     * This is a window's Cancel. The controls write live so you can hear them
+     * as you turn, so there's nothing for OK to apply. Cancel resets everything
+     * to the long-press baseline in one undo step.
      */
     fun resetAll() {
         val was = opened.value ?: return
@@ -363,16 +343,24 @@ class ParamBinding(
         if (changed.isNotEmpty()) setMany(changed)
     }
 
+    /**
+     * Put one control back where it was when the panel opened, not to its
+     * factory default: back means how it sounded when you came in here.
+     * Reopening the panel takes a new reading.
+     *
+     * Returns false when there's nothing to go back to, which only happens
+     * before the first poll has answered.
+     */
     fun reset(name: String): Boolean {
-        // Held while locking: the selected steps lose their lock on this.
+        // Held while locking: the selected steps lose their lock.
         if (lock(name, null, gesture = false)) return true
         val was = opened.value?.get(name) ?: return false
-        if (was == value(name)) return true // already there; a no-op, not a failure
+        if (was == value(name)) return true // already there, a no-op, not a failure
         set(name, was)
         return true
     }
 
-    /** Has this control been moved since the panel opened? */
+    /** Whether this control has moved since the panel opened. */
     fun moved(name: String): Boolean {
         val was = opened.value?.get(name) ?: return false
         return was != value(name)
@@ -390,15 +378,11 @@ fun rememberParamBinding(
     val values = remember(trackIndex, type, unit) { mutableStateOf(info.associate { it.name to it.defaultNormalized }) }
     val dragging = remember { mutableStateOf<String?>(null) }
     /**
-     * What everything read when this panel opened, for a long press to go back
-     * to.
+     * Every value when this panel opened, for a long press to reset to.
      *
-     * **Taken on the first poll, not at composition.** At composition `values`
-     * is every parameter's *default*, because the panel has not asked the
-     * engine anything yet - so a baseline captured here would send a long
-     * press to the factory setting and call it "where it was". Keyed with the
-     * binding, so reopening a panel takes a fresh reading, which is what "when
-     * this panel was opened" has to mean.
+     * Taken on the first poll, not at composition. At composition values are
+     * all defaults because the engine hasn't been asked yet. Keyed on the
+     * binding so reopening a panel takes a fresh reading.
      */
     val opened = remember(trackIndex, type, unit) { mutableStateOf<Map<String, Float>?>(null) }
     val binding = remember(trackIndex, type, unit) {
@@ -419,38 +403,25 @@ fun rememberParamBinding(
 }
 
 /**
- * A small tappable mark in the patch bar.
- *
- * Not a TextButton: Material gives one of those 58 dp of width whatever is
- * written in it, and this row already holds a machine name, a patch name and
- * four marks. Twenty-two dp each is what let them all fit on a phone.
+ * A small tappable mark in the patch bar. Not a TextButton, since Material
+ * makes those 58 dp wide regardless of content, and this row has to fit a
+ * machine name, a patch name and four marks on a phone.
  */
 private val BarIconV = 16.dp
 
 /**
- * How far apart two marks stand in the turned header column.
- *
- * A turned `BarIcon` is sixteen dp of height, which is a small thing to put a
- * finger on when the next one begins where it ends: Dan, over the two step
- * arrows, "these are too close for finger use". Ten dp is what already
- * separated the fold from them, and he asked for that gap - so it is every
- * gap between marks now, and the only number in the column that is not one is
- * the three between the two names, which are meant to read as a pair.
- *
- * Upright there is no equivalent and none needed: the marks are twenty-four
- * dp wide there and a row has width to spare, which a short column has not.
+ * The gap between marks in the landscape header column. A rotated BarIcon is
+ * only 16 dp tall, so the marks need a finger's worth of space between them.
+ * The two names are the only exception, 3 dp apart so they read as a pair.
+ * Upright the marks are 24 dp wide and there's room, so no gap is needed.
  */
 private val SideMarkGap = 10.dp
 
 @Composable
 private fun BarIcon(glyph: String, tint: Color, vertical: Boolean = false, said: String = glyph, onClick: () -> Unit) {
     Box(
-        // Turned, the box turns with it - 24 x 28 is a target measured for a
-        // row of marks and a column of them wants the long side across - and
-        // it loses four dp of length on the way. Five marks single file is a
-        // hundred and twenty dp of a column that has about two hundred and
-        // forty, and what is left over is the two names above them; at 24 the
-        // patch name came out a character short of "patch".
+        // In landscape the box turns too (28 x 16), losing a little length so
+        // five marks and both names fit in the column.
         Modifier.size(width = if (vertical) 28.dp else 24.dp, height = if (vertical) BarIconV else 28.dp)
             .clip(RoundedCornerShape(4.dp))
             .clickable(onClick = onClick)
@@ -467,17 +438,16 @@ private fun PatchBar(
     factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
     onDelete: (String) -> Unit, current: String?, edited: Boolean,
     minimized: Boolean, onToggleMinimized: () -> Unit,
-    /** Down the left edge instead of across the top - see M43. */
+    /** Down the left edge instead of across the top. */
     vertical: Boolean = false,
 ) {
     /**
-     * One patch along the list, without opening it.
+     * Step one patch through the list without opening it.
      *
-     * The names are read here rather than held, because reading them touches
-     * the disk and the bar recomposes with every knob: a click is the only
-     * moment the answer is wanted. Nothing loaded yet means the ends of the
-     * list - forward starts at the first, back at the last - and the walk
-     * wraps, so holding one arrow goes through the whole bank and round.
+     * The names are read here instead of held, since reading them touches the
+     * disk and the bar recomposes with every knob. With nothing loaded, forward
+     * starts at the first and back at the last, and it wraps, so holding an
+     * arrow goes through the whole bank.
      */
     fun step(by: Int) {
         val names = patchNames()
@@ -490,45 +460,22 @@ private fun PatchBar(
         }
         onLoad(names[next])
     }
-    // **The right-hand group is weighed against, not spaced away from.**
+    // The left half takes the weight so it's what shrinks. A Spacer(weight(1f))
+    // before the right-hand group only works with slack, and a phone has none
+    // here, so the arrows moved with the length of the patch name.
     //
-    // This was a flat row ending in a Spacer(weight(1f)), on the theory that
-    // the spacer would pin the arrows to the edge. It only does that while
-    // there is slack, and there is none: a name, three Material TextButtons
-    // (58 dp wide apiece whatever is in them) and three marks fill a phone.
-    // So the arrows moved with the length of the patch name - fifty pixels
-    // between `Init` and `Bell Keys` - and the button under your finger was
-    // whichever one the last patch's name had left there. Putting the left
-    // half in the weight instead makes it the part that gives way.
-    // **Turned, it is the same list read downwards**, with the give still on
-    // the name so the arrows do not move with the length of a patch name.
-    //
-    // The fold points at the edge it folds towards rather than up or down:
-    // against the left edge, `◂` puts it away and `▸` brings it back.
-    //
-    // **It reads upwards, because the words do.**
-    //
-    // Every label in this column is turned anticlockwise, which puts the
-    // start of a word at the bottom. Run the controls the other way and the
-    // column contradicts itself: the machine's name reads up from the floor
-    // while the bar it belongs to reads down from the ceiling. Dan, looking
-    // at it: "machine name in bottom left corner and then patch selector,
-    // save, load, etc".
-    //
-    // So the portrait row is laid down the left edge with its left-hand end
-    // at the *bottom*. Reading up from the floor you get exactly the row you
-    // get reading left to right upright - the machine, the patch, save,
-    // browse, the two steps, the fold - which is why the gap that separates
-    // the fold from the pair is above the arrows here rather than below.
+    // In landscape it's the same list read upwards, with the give still on the
+    // names so the arrows don't move. Labels in the column are rotated
+    // anticlockwise (start of word at the bottom), so the row is laid out with
+    // its left end at the bottom: machine, patch, save, browse, the two steps,
+    // the fold. The fold points at the edge: ◂ puts it away, ▸ brings it back.
     if (vertical) {
         Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-            // **The fold stays here and folds something else.** It is at the
-            // head of the column as it is at the end of the row upright, but
-            // what it puts away is the cards to the right of the roll, not
-            // this strip - so it points that way: `▸` sends them off the
-            // right edge, `◂` brings them back. The strip itself is always
-            // there, which is what lets it keep the mark that brings them
-            // back without needing a folded state of its own.
+            // The fold sits at the head of the column like at the end of the
+            // row upright, but it puts away the cards on the right of the roll,
+            // not this strip, so it points that way: ▸ hides them, ◂ brings
+            // them back. The strip itself always stays, which is why it can
+            // keep the mark.
             BarIcon(if (minimized) "\u25C2" else "\u25B8", Acid.colors.textMid, vertical = true, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) {
                 onToggleMinimized()
             }
@@ -536,24 +483,12 @@ private fun PatchBar(
             BarIcon("\u203A", Acid.colors.accent, vertical = true, said = stringResource(Res.string.a11y_next_patch)) { step(1) }
             Spacer(Modifier.height(SideMarkGap))
             BarIcon("\u2039", Acid.colors.accent, vertical = true, said = stringResource(Res.string.a11y_prev_patch)) { step(-1) }
-            // **The names sit together, and the slack is above them.**
+            // The names sit together with the slack above them, like upright
+            // where the pair shares the weighted half of the row.
             //
-            // They were a weight each, which spread them to the ends of the
-            // column with a hand's width of nothing between - Dan: "on
-            // portrait the Machine name and Patch pulldown are closer". They
-            // are, and for a reason worth copying rather than a spacing
-            // accident: upright the pair sits inside the weighted half of the
-            // row, so the *pair* absorbs the give and the two names stay
-            // beside each other. Turned, that is a bottom-aligned column of
-            // stated lengths, with what is left over standing above the
-            // marks - which is where the gap is upright, between browse and
-            // the step arrows.
-            // **And each name is as long as its own word.** Giving them a
-            // box each and centring the text in it put the gap back: "patch"
-            // in sixty-four dp of box is twenty-five dp of word and thirty-
-            // nine of air, half of it between the two names. So the lengths
-            // are measured from the text, and only shared out in proportion
-            // when both together will not fit.
+            // Each name is as long as its own text. Centred in equal boxes
+            // they'd have a gap between them. So the lengths are measured from
+            // the text, and only shared out in proportion when both don't fit.
             val measurer = androidx.compose.ui.text.rememberTextMeasurer()
             val density = androidx.compose.ui.platform.LocalDensity.current
             val style = androidx.compose.ui.text.TextStyle(fontSize = SideNameSp)
@@ -568,31 +503,25 @@ private fun PatchBar(
                 val shrink = ((forNames - 3.dp) / (wantType + wantPatch)).coerceAtMost(1f)
                 val typeH = wantType * shrink
                 val patchH = wantPatch * shrink
-                // No `spacedBy` here: the marks want a finger's worth of gap
-                // between them and the two names want to sit together, so the
-                // gaps are written where they differ rather than averaged
-                // into one number that is wrong for both.
+                // No spacedBy, since the marks need a finger's gap and the
+                // names want to sit together, so the gaps are written where
+                // they differ.
                 Column(
                     Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Bottom,
                 ) {
                     // The picker puts browse over save over the name, which
-                    // upright is the name, then save, then browse. The two
-                    // names carry the weights, so the give is on them and the
-                    // marks above do not move with the length of a patch
-                    // name - the same rule the row has.
+                    // reads upwards as the upright order. The names carry the
+                    // weights so the marks above don't move with the length of
+                    // a patch name.
                     PatchPicker(
                         type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete,
                         current, edited, vertical = true, modifier = Modifier.height(patchH),
                     )
                     Spacer(Modifier.height(3.dp))
-                    // Half each. The patch name had two thirds while the
-                    // column was the whole screen; once the keyboard took its
-                    // share a third of what was left came to four characters,
-                    // and a machine called "Formulate" reading "Form.."
-                    // next to a patch called "patch" with room to spare is
-                    // the split being wrong rather than the column short.
+                    // Half each, so neither name gets squeezed to a few
+                    // characters.
                     SideText(type, Acid.colors.text, SideNameSp, Modifier.height(typeH))
                 }
             }
@@ -610,46 +539,33 @@ private fun PatchBar(
         }
         BarIcon("\u2039", Acid.colors.accent, said = stringResource(Res.string.a11y_prev_patch)) { step(-1) }
         BarIcon("\u203A", Acid.colors.accent, said = stringResource(Res.string.a11y_next_patch)) { step(1) }
-        // A gap before the fold, because it is not one of the pair. The three
-        // touch targets were flush against each other, so the arrow that
-        // steps a patch and the one that hides the whole panel were a
-        // thumb's width apart and did very different things.
+        // A gap before the fold since it isn't part of the step arrows, which
+        // do something very different.
         Spacer(Modifier.width(18.dp))
         BarIcon(if (minimized) "▴" else "▾", Acid.colors.textMid, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) { onToggleMinimized() }
     }
 }
 
 /**
- * How big the two names in the turned patch column are set.
+ * Text size of the two names in the landscape patch column.
  *
- * Two points under portrait's eleven, because sideways they are not
- * competing with a row's width but with a column's height, and the column's
- * height is whatever the keyboard divider leaves - about eighty dp for the
- * two names once the marks above them have been paid for. At eleven
- * "MyPatch" came out "MyP.." while "Trinity" - same seven letters, three of
- * them narrow - fitted, which is the kind of difference that reads as a bug
- * rather than as a proportional font; at ten the longest machine names
- * clipped as well. Nine sp is what the note lane and automation gutters
- * set their turned labels at, so it is not a size this app is short of
- * precedent for.
+ * Smaller than portrait's 11 sp, because the column is only about 80 dp tall
+ * for the two names. At 11 or 10 common names got cut off. 9 sp matches the
+ * note lane and automation gutters' rotated labels.
  */
 private val SideNameSp = 9.sp
 
 /**
- * What the patch button says: its name once it has one, or what it is for.
+ * What the patch button says: its name once it has one, otherwise "patch".
  *
- * Shared, because the turned column has to know how long the word is before
- * it can decide how much of the column to give it, and computing it twice in
- * two files is how the box and the text it holds come to disagree.
+ * Shared because the landscape column needs the word's length before it can
+ * decide how much space to give it, and computing it twice would let the box
+ * and the text disagree.
  */
 @Composable
 internal fun patchLabel(current: String?, edited: Boolean): String {
-    // The name once there is one. "patch" told you what the button was for
-    // and nothing about what you were listening to, and a rack of eight
-    // machines all saying "patch" is a rack that has forgotten where its
-    // sounds came from.
-    // The star is not a warning, it is an accuracy: the sound is no longer
-    // the one that name refers to, and "save as..." is next to it.
+    // Show the patch name once there is one. A star means the sound has been
+    // edited since the patch was loaded, and "save as..." is right next to it.
     val shown = current?.ifBlank { null }
     return when {
         shown == null -> stringResource(Res.string.machine_patch)
@@ -659,25 +575,24 @@ internal fun patchLabel(current: String?, edited: Boolean): String {
 }
 
 /**
- * The three words that choose a patch: pick one, save this, look through them.
+ * The three controls that choose a patch: pick one, save this, browse.
  *
- * Extracted from the machine panel's title row so an effect slot can have the
- * same one. Nothing about it is machine-shaped - [title] is only the word the
- * browser puts at the top of its window - which is the whole reason effects
- * did not need a preset mechanism of their own, only a place to put this.
+ * Pulled out of the machine panel's title row so an effect slot can use it too.
+ * Nothing about it is machine-specific ([title] is only the word at the top of
+ * the browser window), so effects didn't need their own preset mechanism.
  */
 @Composable
 internal fun PatchPicker(
     title: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
     factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
     onDelete: (String) -> Unit,
-    /** The patch showing, if one was chosen: the button says its name. */
+    /** The patch showing, if one was chosen. The button shows its name. */
     current: String? = null,
-    /** Its knobs have moved since, so the name is where it came from. */
+    /** Its knobs have moved since it was loaded. */
     edited: Boolean = false,
-    /** Read downwards, in the patch column - see M43. */
+    /** Read downwards, in the landscape patch column. */
     vertical: Boolean = false,
-    /** Only the vertical form uses this; the row sizes itself. */
+    /** Only the vertical form uses this, the row sizes itself. */
     modifier: Modifier = Modifier,
 ) {
     var menu by remember { mutableStateOf(false) }
@@ -686,21 +601,20 @@ internal fun PatchPicker(
     var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
     val label = patchLabel(current, edited)
     if (vertical) {
-        // Browse, save, then the name - which is the name, then save, then
-        // browse of the row upright, read from the bottom. See [PatchBar].
+        // Browse, save, then the name: the upright row's order read from the
+        // bottom. See [PatchBar].
         BarIcon("\u2630", Acid.colors.textMid, true, said = stringResource(Res.string.a11y_browse_patches)) { browsing = true }
         Spacer(Modifier.height(SideMarkGap))
         BarIcon("\u21A7", Acid.colors.textMid, true, said = stringResource(Res.string.a11y_save_patch)) { saving = true }
         Spacer(Modifier.height(SideMarkGap))
-        // No Material button around it sideways: one is 58 dp of *width*
-        // whatever is in it, and in a column that width is the column.
+        // No Material button around it in landscape. One is 58 dp wide
+        // regardless of content, which is the whole column.
         Box(
             modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(4.dp))
                 .clickable { menu = true },
-            // No "▾" after it sideways: the mark costs ten dp of the length
-            // the name has, and in a column the thing under your finger is
-            // plainly the patch name whether or not it carries an arrow.
+            // No "▾" after it in landscape, it would cost 10 dp of the name's
+            // length.
         ) { SideText(label, Acid.colors.accent, SideNameSp) }
     } else {
         TextButton(onClick = { menu = true }, contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -712,11 +626,9 @@ internal fun PatchPicker(
             )
         }
     }
-    // Marks rather than words. "save as..." and "browse..." were two Material
-    // TextButtons - 116 dp between them before a letter is drawn - on a row
-    // that also has to hold a machine name, a patch name that can be long,
-    // two step arrows and the fold. Down arrow into a line for putting one
-    // away, a list for looking through them.
+    // Marks instead of words, since two Material TextButtons take 116 dp before
+    // any text, on a row that also has the machine name, a patch name, two step
+    // arrows and the fold. Down arrow into a line for save, a list for browse.
     if (!vertical) {
         BarIcon("\u21A7", Acid.colors.textMid, said = stringResource(Res.string.a11y_save_patch)) { saving = true }
         BarIcon("\u2630", Acid.colors.textMid, said = stringResource(Res.string.a11y_browse_patches)) { browsing = true }
@@ -744,9 +656,8 @@ private const val kPatchName = com.rm.acidulous.model.PatchMark.NAME
 private const val kPatchStamp = com.rm.acidulous.model.PatchMark.STAMP
 private fun stampOf(params: Map<String, Float>): String = com.rm.acidulous.model.PatchMark.stampOf(params)
 
-// The panel palette. Teal is the ordinary control; amber marks the knob that
-// gives a group its character; pink marks drive and output. See the style
-// note at the bottom of this file.
+// The panel palette. Teal is the ordinary control, amber marks the knob that
+// gives a group its character, pink marks drive and output.
 internal val PanelTeal: Color @Composable get() = Acid.colors.teal
 internal val PanelAmber: Color @Composable get() = Acid.colors.accent
 internal val PanelPink: Color @Composable get() = Acid.colors.pink
@@ -754,29 +665,28 @@ internal val PanelPink: Color @Composable get() = Acid.colors.pink
 /**
  * The lanes in the clip the editor has open, as lane keys ("machine:cutoff").
  *
- * A knob a lane moves will not stay where it is put, and until this nothing
- * on the panel said why - only the mixer marked its automated controls. The
- * editor sets it; every [PanelKnob] and [PanelStepKnob] reads it and draws a
- * ∿ on the dial when its own key is in it.
+ * A knob a lane moves won't stay where it's put, so the editor sets this and
+ * every [PanelKnob] and [PanelStepKnob] draws ∿ on the dial when its key is in
+ * it.
  */
 object AutomationMarks {
     var lanes by androidx.compose.runtime.mutableStateOf(emptySet<String>())
-    /** The lanes among them that are step locks, marked ◆ rather than ∿. */
+    /** The lanes among them that are step locks, marked ◆ instead of ∿. */
     var locks by androidx.compose.runtime.mutableStateOf(emptySet<String>())
 }
 
 /**
- * The steps the panel's knobs lock onto: set by the editor while it is in
- * lock mode with steps selected, and empty otherwise.
+ * The steps the panel's knobs lock onto. Set by the editor in lock mode with
+ * steps selected, empty otherwise.
  *
- * State here rather than threaded through every panel, for the same reason
- * as [AutomationMarks]: every knob on every machine and effect panel reads it,
- * and they are built in forty places that know nothing about the editor.
+ * Global state instead of a parameter, like [AutomationMarks], since every knob
+ * on every machine and effect panel reads it and they're built in dozens of
+ * places that know nothing about the editor.
  */
 object LockEdit {
     var trackIndex by androidx.compose.runtime.mutableStateOf(-1)
     var sceneId by androidx.compose.runtime.mutableStateOf("")
-    /** Tick spans, the first to the last tick a lock covers. */
+    /** Tick spans, from the first to the last tick a lock covers. */
     var spans by androidx.compose.runtime.mutableStateOf(emptyList<IntRange>())
     var clipTicks by androidx.compose.runtime.mutableStateOf(0)
     var lanes by androidx.compose.runtime.mutableStateOf(emptyMap<String, com.rm.acidulous.model.Lane>())
@@ -807,29 +717,25 @@ internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, acce
 }
 
 /**
- * How wide a knob stands in a stacked card, so that two fit a line.
+ * How wide a knob is in a stacked card, so that two fit a line.
  *
- * **Stated, because a column of knobs whose dials wander is a list.** Upright
- * a knob takes its own width - a 52 dp dial or the label above it, whichever
- * is wider - and in a row that scrolls sideways nobody can tell. Stacked two
- * to a line the difference lands under your eye: `pw` would be 52 wide and
- * `density` 40 dp wider, and the second column of dials would move down the
- * card. Fifty-eight fits the dial with a little air and ellipsises a label at
- * about ten characters, which is one more than the longest a panel carries.
+ * A fixed width so the dials line up in columns. Upright a knob is as wide as
+ * its dial or label, which is fine in a single row. 58 fits the 52 dp dial with
+ * a little air and cuts a label at about ten characters, one more than the
+ * longest a panel uses.
  */
 internal val StackedKnobW = 58.dp
 
-/** How many controls a stacked card puts on a line. Dan picked two. */
+/** How many controls a stacked card puts on a line. */
 internal const val StackedPerLine = 2
 
 /**
- * How many a stacked card puts on a line where it is being drawn: two in a
- * phone's side column, which is two knobs wide, and four in a tablet's, which
- * is twice that. See the editor's two panes.
+ * How many a stacked card puts on a line where it's drawn: two in a phone's
+ * side column (two knobs wide) and four in a tablet's.
  */
 internal val LocalStackedPerLine = androidx.compose.runtime.compositionLocalOf { StackedPerLine }
 
-/** A stated width stacked; upright a knob is still whatever it needs. */
+/** A fixed width when stacked, upright a knob is whatever width it needs. */
 @Composable
 internal fun panelKnobWidth(): Modifier =
     if (LocalPanelStacked.current) Modifier.width(StackedKnobW) else Modifier
@@ -845,10 +751,10 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
 }
 
 /**
- * A switch's face, for a choice that is not a machine parameter - the
- * generators' step sizes and drum voices sit in the same cards as knobs and
- * have to look like the switches beside them. [selected] out of range lights
- * nothing, which makes a one-cell grid a button.
+ * A switch for a choice that isn't a machine parameter, like the generators'
+ * step sizes and drum voices, which sit in cards next to knobs and need to look
+ * like the switches beside them. [selected] out of range lights nothing, which
+ * makes a one-cell grid a button.
  */
 @Composable
 internal fun SwitchGrid(
@@ -856,41 +762,33 @@ internal fun SwitchGrid(
     labels: List<String>,
     selected: Int,
     modifier: Modifier = Modifier,
-    /** Cells to a row; by default two rows at most. */
+    /** Cells per row. By default at most two rows. */
     columns: Int = 0,
-    /** Which cells can be pressed; all of them when null. */
+    /** Which cells can be pressed, all of them when null. */
     enabled: List<Boolean>? = null,
     onPick: (Int) -> Unit,
 ) {
     val idx = selected
-    // Two rows at most, one column when there are only two options.
-    //
-    // A Material TextButton is 58dp wide whatever is written in it, and this
-    // was a row of them: `saw` and `pulse`, forty-three dp of words, in a
-    // hundred and nineteen. Meanwhile the row a switch sits in is bottom
-    // aligned against knobs that are a hundred dp tall to its seventy-two,
-    // so there was space going spare directly above it. The second row is
-    // free, and paying for it halves the width.
+    // At most two rows, one column when there are only two options. A switch
+    // sits next to knobs that are taller than it, so a second row is free and
+    // halves the width.
     val cols = if (columns > 0) columns else if (labels.size <= 2) 1 else (labels.size + 1) / 2
     Column(
         modifier
-            // Fill the row's height, but never more than a control's worth of
-            // it. Without the ceiling this asks its parent how tall to be
-            // while the parent is asking it the same question - Group's row
-            // is IntrinsicSize.Max - and the two can agree on an absurd
-            // answer: a Filter's three-way mode switch came out 490dp tall
-            // and pushed the piano roll and the keyboard clean off the
-            // screen. The cap is what a knob measures, which is what the
-            // filling was for in the first place.
+            // Fill the row's height, but no more than a control's worth.
+            // Without the cap this and Group's IntrinsicSize.Max row ask each
+            // other how tall to be and can agree on something absurd (a
+            // three-way switch came out 490 dp tall and pushed the roll off
+            // screen). The cap is a knob's height.
             .heightIn(max = PanelControlH).fillMaxHeight().together(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Said as part of each cell's name instead.
+        // Announced as part of each cell's name instead.
         Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.silent())
         // IntrinsicSize.Max, then a weight on every cell: the grid takes the
-        // width of its widest row and the weights divide it evenly, so all
-        // the cells in one switch are the size of its longest label and the
-        // selected one never moves as you change it.
+        // width of its widest row and the weights divide it evenly, so every
+        // cell is the size of the longest label and the selected one doesn't
+        // move.
         Column(
             Modifier.width(IntrinsicSize.Max).weight(1f)
                 .clip(RoundedCornerShape(4.dp)).background(Acid.colors.card),
@@ -905,15 +803,16 @@ internal fun SwitchGrid(
                         val i = row * cols + col
                         val on = i == idx
                         val live = enabled?.getOrNull(i) ?: true
-                        // A switch with no label of its own - a pair of buttons
-                        // in a card that already says what they are for - is
-                        // spoken as its cells alone, not ": humanise".
+                        // A switch with no label of its own (a pair of buttons
+                        // in a card that already says what they're for) is
+                        // announced as its cells alone.
                         val name = if (label.isEmpty()) l else stringResource(Res.string.a11y_named, label, l)
                         Box(
                             Modifier.weight(1f).fillMaxHeight()
                                 .background(if (on) Acid.colors.green else Acid.colors.control)
                                 .clickable(enabled = live) { onPick(i) }
-                                // Nothing lit is a row of actions; one lit is a choice.
+                                // Nothing lit means a row of actions, one lit means a
+                                // choice.
                                 .then(if (idx >= 0) Modifier.choice(name, on) else Modifier.button(name)),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -924,10 +823,9 @@ internal fun SwitchGrid(
                             )
                         }
                     }
-                    // An odd count leaves a hole in the last row. It has to be
-                    // a weighted box and not nothing, or the row above it
-                    // divides its width between fewer cells and the grid comes
-                    // out ragged.
+                    // An odd count leaves a gap in the last row. It has to be a
+                    // weighted box, or the row divides its width between fewer
+                    // cells and the grid comes out ragged.
                     repeat(cols - cells.size) { Box(Modifier.weight(1f).fillMaxHeight()) }
                 }
             }
@@ -936,33 +834,31 @@ internal fun SwitchGrid(
 }
 
 /**
- * The panel body every machine uses: one horizontally scrolling row of
- * [Group]s. Machines with more groups than fit comfortably put a
- * [SectionChips] row above it and show one section at a time.
- */
-/**
  * Whether the cards stack instead of standing in a row.
  *
- * A composition local rather than a parameter because `GroupRow` and `Group`
- * are called from nineteen machine panels and every effect face, none of
- * which has an opinion about the shape of the screen - threading a flag
- * through all of them would be nineteen signatures changed to say the same
- * thing. `MachinePanel` provides it; these two read it.
+ * A composition local instead of a parameter because GroupRow and Group are
+ * called from every machine panel and effect face, none of which cares about
+ * the screen shape. MachinePanel provides it, these two read it.
  */
 internal val LocalPanelStacked = androidx.compose.runtime.compositionLocalOf { false }
 
 /**
- * Stacked cards sized to their controls rather than to the line, so that
- * small ones can share it: a square phone's window. See [WindowCards].
+ * Stacked cards sized to their controls instead of the line, so small ones can
+ * share a line, as in a square phone's window. See [WindowCards].
  */
 internal val LocalCardsPacked = androidx.compose.runtime.compositionLocalOf { false }
 
+/**
+ * The panel body every machine uses: one horizontally scrolling row of
+ * [Group]s. Machines with more groups than fit put a [SectionChips] row above
+ * it and show one section at a time.
+ */
 @Composable
 internal fun GroupRow(content: @Composable () -> Unit) {
     if (LocalPanelStacked.current) {
-        // The cards go down the column and it scrolls that way. Whatever
-        // places this must not also be a vertical scroller - see EditScreen's
-        // landscape branch, which hands it the height directly.
+        // The cards go down the column and it scrolls that way. Whatever places
+        // this must not also scroll vertically. See EditScreen's landscape
+        // branch, which passes the height directly.
         Column(
             Modifier.fillMaxWidth().verticalScrollWithBar(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -978,20 +874,15 @@ internal fun GroupRow(content: @Composable () -> Unit) {
 /**
  * A machine's body: its section tabs, then the chosen section's cards.
  *
- * Upright the tabs are a row over a row of cards. Sideways the cards are a
- * column, so the tabs stand **down the left edge of them** - Dan's call,
- * against putting them back across the top: full width they would be a
- * faithful port of portrait's row, and they would also be twenty-eight dp of
- * a three-hundred-and-ninety-three dp screen spent on tabs.
+ * Upright the tabs are a row over a row of cards. In landscape the cards are a
+ * column and the tabs run down its left edge, since a full-width row of tabs
+ * would cost too much height.
  *
- * **One section at a time, everywhere.** For a day the chosen section brought
- * its neighbours with it wherever there was room, every one of their tabs lit;
- * Dan: confusing - "we don't want that happening anywhere in the UI at any
- * time". A big screen's column is a phone's too - two knobs wide, the section
- * scrolling down it - and the roll has the rest (EditScreen).
+ * Only one section shows at a time, on every screen size. A big screen's column
+ * is two knobs wide like a phone's, and the roll gets the rest.
  *
- * [above] is a line of a section's own over its cards - Dice's slice number,
- * Mosaic's zone map. [section] is a section's cards.
+ * [above] is a line shown over a section's cards (Dice's slice number, Mosaic's
+ * zone map). [section] is a section's cards.
  */
 @Composable
 internal fun PanelSections(
@@ -1016,31 +907,24 @@ internal fun PanelSections(
     }
 }
 
-/** Which group of groups is showing. Only machines too big for one row need it. */
+/** Which section is showing. Only machines too big for one row need it. */
 @Composable
 internal fun SectionChips(
     english: List<String>,
     selected: Int,
     onSelect: (Int) -> Unit,
 ) {
-    // A panel's own sections are English words; a window's arrive translated and pass through.
+    // A panel's section names are English and get translated, a window's arrive translated and
+    // pass through.
     val labels = panelWords(english)
     if (LocalPanelStacked.current) {
         SectionChipsSide(labels, selected, onSelect)
         return
     }
-    // **Equal shares until there is not room for them.**
-    //
-    // An equal share is right at four chips and wrong at seven - the note on
-    // SectionChipsScrolling says so, and until now every machine asked for
-    // equal shares regardless. Sideways the panel is a column about three
-    // hundred dp wide, and Mosaic and Genesis have eight sections each: that
-    // is thirty-seven dp a chip, which is not a word and not a target.
-    //
-    // Measured rather than counted, so it is right on a tablet too, and
-    // decided here rather than at fifteen call sites. The measurement is of
-    // what the chips are *in* and not of the screen: sideways the window is
-    // eight hundred dp wide and the column they stand in is three hundred.
+    // Equal shares until there isn't room for them. In landscape the panel is a
+    // ~300 dp column and some machines have eight sections, which would make
+    // each chip too narrow to read or hit. Below the floor it switches to
+    // SectionChipsScrolling. Measured from the container, not the screen.
     val styled = labels.map { androidx.compose.ui.text.AnnotatedString(it) }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         if (maxWidth / labels.size.coerceAtLeast(1) < kChipFloor) {
@@ -1052,18 +936,12 @@ internal fun SectionChips(
 }
 
 /**
- * The same tabs, turned, down the left edge of the cards.
+ * The same tabs, rotated, down the left edge of the cards.
  *
- * Every one of them on screen at once, which the horizontal row in a hundred
- * dp column could not manage - it showed two of Trinity's seven and you
- * scrolled for the rest, which is what "the portrait elements haven't been
- * faithfully ported" was about. A tab you cannot see is not a tab.
- *
- * So they share the column's height the way portrait's share its width, and
- * fall through to scrolling by the same measurement when a share would be
- * too short to read a word in. The chip is the same chip - same colours,
- * same corner, same equal shares - with its word read bottom to top, which
- * `SideText` is for.
+ * All of them are on screen at once. They share the column's height the way
+ * portrait's share its width, and fall back to scrolling by the same rule when
+ * a share is too short for a word. Same chip, same colours, same equal shares,
+ * with the text read bottom to top via SideText.
  */
 @Composable
 private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
@@ -1096,23 +974,18 @@ private fun SectionChipsSide(labels: List<String>, selected: Int, onSelect: (Int
     }
 }
 
-/**
- * How wide the turned tab column is: a ten sp line box and room to hit it.
- */
+/** How wide the rotated tab column is: a 10 sp line and room to hit it. */
 private val SideChipW = 22.dp
 
 /**
- * The narrowest a chip may be before the row scrolls instead.
- *
- * Under this a four letter word at ten sp clips, which is what makes a row of
- * them unreadable rather than merely tight.
+ * The narrowest a chip can be before the row scrolls instead. Below this a
+ * four-letter word at 10 sp gets cut off.
  */
 private val kChipFloor = 56.dp
 
-
 /**
- * The same, for a label with a word set differently inside it. A separate
- * name rather than an overload: both erase to List on the JVM.
+ * The same, for a label with a styled word inside it. A separate name instead
+ * of an overload, since both erase to List on the JVM.
  */
 @Composable
 internal fun SectionChipsStyled(
@@ -1131,8 +1004,8 @@ internal fun SectionChipsStyled(
         labels.forEachIndexed { i, l ->
             val on = i == selected
             Box(
-                // Equal shares of the full width: these are the machine's
-                // tabs, and a row of tabs that stops half way reads as broken.
+                // Equal shares of the full width, since these are the machine's
+                // tabs.
                 Modifier.weight(1f).clip(RoundedCornerShape(4.dp))
                     .background(if (on) Acid.colors.green else Acid.colors.control)
                     .clickable { onSelect(i) }.choice(l.text, on, tab = true).padding(vertical = 5.dp),
@@ -1149,15 +1022,12 @@ internal fun SectionChipsStyled(
 }
 
 /**
- * The same chips, sized to their words and scrolling when there are too many.
+ * The same chips, sized to their text and scrolling when there are too many.
  *
- * [SectionChipsStyled] gives every chip an equal share of the width, which is
- * right for the machine picker's four groups and wrong as soon as there are
- * seven: the patch browser's dialog is about 320 dp across, so seven families
- * get 43 dp each and "ensemble" wants 48 - and Cumulus has *ten* families,
- * which would be 30 dp apiece. A tab you cannot read is worse than a tab you
- * have to scroll to, so these size to their text and the row scrolls, with the
- * position bar every scrolling row in this app carries.
+ * [SectionChipsStyled] gives every chip an equal share, which works for the
+ * machine picker's four groups but not for seven or more: in the ~320 dp patch
+ * browser, seven families get 43 dp each and "ensemble" needs 48. So these size
+ * to their text and the row scrolls, with the usual scrollbar.
  */
 @Composable
 internal fun SectionChipsScrolling(
@@ -1190,9 +1060,9 @@ internal fun SectionChipsScrolling(
 }
 
 /**
- * A stepped parameter with too many values for [PanelSwitch]: a knob that
- * names its step instead of showing a number. Four values or fewer belong in
- * a switch; more belong here.
+ * A stepped parameter with too many values for [PanelSwitch]: a knob that shows
+ * the step's name instead of a number. Four values or fewer go in a switch,
+ * more go here.
  */
 @Composable
 internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, label: String = name, accent: Color = PanelTeal) {
@@ -1210,45 +1080,31 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
 }
 
 /**
- * How tall one control in a panel stands: a knob's label, its 52dp dial and
- * its value, which at a 9sp line box is 24 + 52 + 24. Switches are capped to
- * it so that a row of controls cannot be taller than the controls in it.
+ * How tall one control in a panel is: a knob's label, its 52 dp dial and its
+ * value, 24 + 52 + 24 at a 9 sp line. Switches are capped to it so a row can't
+ * be taller than its controls.
  */
 internal val PanelControlH = 100.dp
 
 /**
  * A column of buttons in a group, where knobs would otherwise go.
  *
- * Three of them side by side in a card as tall as a knob is mostly empty
- * card - a knob is a hundred device-independent pixels tall and a button is
- * twenty. Stacked, they fill the height they are given and the card is narrow
- * instead of wide, which is the right shape for a row that scrolls sideways.
- *
- * They cannot be bare TextButtons either way: a `Group` aligns its row to the
- * bottom and sizes to its tallest child, so a TextButton takes whatever width
- * is left over and wraps its label a character at a time. That is what turned
- * `match` into a column of single letters.
+ * Stacked, they fill the height of a knob and the card is narrow, which suits a
+ * row that scrolls sideways. They can't be bare TextButtons: a Group aligns its
+ * row to the bottom and sizes to its tallest child, so a TextButton takes
+ * whatever width is left and wraps its label one character per line.
  */
 @Composable
 private fun PanelActions(vararg actions: Triple<String, Color, () -> Unit>) {
-    // Built like PanelSwitch, because it stands next to one.
-    //
-    // These were small pills floating in the middle of a group that is a
-    // hundred dp tall, which read as neither a knob nor a switch and left
-    // most of the space empty. A switch solves the same problem - several
-    // small labels in one control's worth of room - so this is the same
-    // shape: one card, cells divided by a hairline, each filling its share
-    // of the height. Two rows once there are more than two, so a cell is
-    // half a control tall rather than a quarter.
+    // Built like PanelSwitch since it sits next to one: one card, cells divided
+    // by a hairline, each filling its share of the height. Two rows once there
+    // are more than two.
     val cols = if (actions.size <= 2) 1 else (actions.size + 1) / 2
     Column(
-        // A stated height, not a filled one, and that is the whole of why
-        // these came out small. `Group` sizes its row from its children's
-        // *intrinsic* height, and `fillMaxHeight` has none to offer: every
-        // other group has a knob in it bringing a hundred dp, but the kit
-        // group is nothing but these, so the row collapsed onto the text and
-        // the cells had a control's worth of nothing to fill. Saying the
-        // height outright makes it the intrinsic one too.
+        // A fixed height, not a filled one. Group sizes its row from its
+        // children's intrinsic height, and fillMaxHeight has none, so a group
+        // with only these in it (the kit group) collapsed onto the text. A
+        // stated height is also the intrinsic one.
         Modifier.height(PanelControlH).width(IntrinsicSize.Max)
             .clip(RoundedCornerShape(4.dp)).background(Acid.colors.card),
         verticalArrangement = Arrangement.spacedBy(1.dp),
@@ -1279,27 +1135,23 @@ private fun PanelActions(vararg actions: Triple<String, Color, () -> Unit>) {
 
 @Composable
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-// **Cards made in a loop are each wrapped in `key`.** Unkeyed, a section of
-// six cards or more - Trinity's envelopes, any machine's mod slots - crashed
-// on its first recomposition: "Boolean cannot be cast to MutableState" inside
-// a knob, Compose reading one card's slots as another's. A section of three
-// never showed it. Keyed by the loop variable, each card owns its slots.
+// Cards made in a loop must each be wrapped in key. Unkeyed, a section of six
+// or more cards crashed on its first recomposition ("Boolean cannot be cast to
+// MutableState" inside a knob) because Compose mixed up the cards' slots.
 internal fun Group(
     title: String,
     /**
-     * How many controls to a line when the card is stacked.
+     * How many controls per line when the card is stacked.
      *
-     * Two is right for the side panel it was written for, which is as wide as
-     * two knobs. A dialog is the width of the screen and fits four, and a card
-     * that used two there would be tall and half empty.
+     * Two for the side panel, which is two knobs wide. A dialog is the width of
+     * the screen and fits four.
      */
     perLine: Int = LocalStackedPerLine.current,
-    /** Centre the controls in the card rather than packing them to the left. */
+    /** Centre the controls in the card instead of packing them to the left. */
     centred: Boolean = false,
     /**
-     * The card's own colour. The default is what a panel sits on, and a
-     * *window* is already that colour - so a card drawn in it would be
-     * invisible and the grouping would be titles and nothing else.
+     * The card's colour. The default is the panel's background colour, which is
+     * also a window's, so cards in a window need a different one to be visible.
      */
     background: Color = Acid.colors.card,
     content: @Composable () -> Unit,
@@ -1309,41 +1161,31 @@ internal fun Group(
     Column(
         Modifier.then(if (stacked && !packed) Modifier.fillMaxWidth() else Modifier)
             .clip(RoundedCornerShape(6.dp)).background(background)
-            // Packed - a square phone - the card gives two dp top and bottom.
+            // Packed (a square phone) uses less vertical padding.
             .padding(horizontal = 6.dp, vertical = if (packed) 4.dp else 6.dp).together(),
     ) {
-        // A panel's own English title is translated here; a window's card
-        // arrives translated already and passes through untouched.
+        // A panel's English title is translated here, a window's card title
+        // arrives translated and passes through.
         Text(
             panelWord(title), color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
             // A card's title is a heading, so TalkBack can jump card to card.
             modifier = Modifier.semantics { heading() },
         )
-        // IntrinsicSize.Max so the row knows how tall its tallest control is
-        // - a knob, almost always - and anything that wants to can fill it.
-        // Switches do, so their cells line up with the knobs beside them
-        // instead of leaving a gap above. Taken from the children rather
-        // than written down as a number, so it still holds when the text
-        // scale changes the height of a knob's label.
+        // IntrinsicSize.Max so the row knows its tallest control (almost always
+        // a knob) and anything that wants can fill that height. Switches do, so
+        // their cells line up with the knobs. Taken from the children so it
+        // still holds when the text scale changes a knob's label height.
         if (stacked) {
-            // **The card wraps; the knob does not change.** Dan, over the two
-            // orientations side by side: the portrait elements had not been
-            // faithfully ported. A turned knob - name and value rotated down
-            // either side of the dial - was narrower and it was a different
-            // instrument to look at, and the panel is the place in the app
-            // where knowing where a control is by its shape matters most.
+            // In landscape a knob looks exactly like upright, and the card
+            // wraps instead: two per line in a scrolling column. Six knobs is
+            // three lines.
             //
-            // So a knob sideways is exactly the knob upright, and the *card*
-            // is what gives way: two to a line, wrapping, in a column that
-            // scrolls. Six knobs is three lines rather than one long row.
-            //
-            // No `IntrinsicSize.Max` here: a flow row measures each line from
-            // its own children, which is what the intrinsic height meant in
-            // the single row, and `PanelSwitch` still carries its own ceiling
-            // of `PanelControlH` - the scar from the 490 dp three-way switch.
+            // No IntrinsicSize.Max here. A flow row measures each line from its
+            // own children, and PanelSwitch still has its own PanelControlH
+            // cap.
             FlowRow(
-                // Packed, the card may be stretched past its controls to fill
-                // a line; they stay in its middle.
+                // Packed, the card may be stretched past its controls to fill a
+                // line, and they stay centred.
                 if (packed) Modifier.align(Alignment.CenterHorizontally) else Modifier.fillMaxWidth(),
                 horizontalArrangement = if (centred) {
                     Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
@@ -1363,7 +1205,7 @@ internal fun Group(
     }
 }
 
-/** Reflux: the classic layer left to right, the open layer after it. */
+/** Reflux: the classic layer left to right, then the open layer. */
 @Composable
 private fun RefluxPanel(b: ParamBinding) {
     GroupRow {
@@ -1390,7 +1232,7 @@ private fun HexbeatPanel(b: ParamBinding) {
     }
 }
 
-/** Forage: the selected pad's sample and its controls; tap a pad to select it. */
+/** Forage: the selected pad's sample and its controls. Tap a pad to select it. */
 @Composable
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
                         onClear: (Int) -> Unit, onAssign: (Int, String) -> Unit,
@@ -1404,26 +1246,21 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     LaunchedEffect(p, rel) {
         while (true) { info = NativeEngine.sampleInfo(b.trackIndex, p); delay(400) }
     }
-    // The loudest sample in this pad's file, which is not something the player
-    // chose and is the reason `match` exists: thirteen files from thirteen
-    // places arrive at thirteen different levels, and the only remedy before
-    // this was thirteen level knobs set by ear.
+    // The loudest sample in this pad's file. Files from different sources
+    // arrive at different levels, which is what match is for.
     val peak = info.split('|').getOrNull(3)?.toFloatOrNull() ?: 0f
     val peakDb = if (peak > 1e-5f) "%.1f dB".format(20.0 * kotlin.math.log10(peak.toDouble())) else "-"
 
     /**
      * Set every loaded pad's level so the kit comes out even.
      *
-     * Referenced to the **median** loaded sample, not the quietest and not the
-     * loudest. Referencing the quietest would match every pad exactly and take
-     * the whole kit down with the worst of them - one quiet shaker and the
-     * other twelve drop twenty decibels, which `volume` cannot get back.
-     * Referencing the loudest pushes every ratio above one at once.
+     * Referenced to the median loaded sample. Using the quietest would drag the
+     * whole kit down to it, beyond what volume can make up. Using the loudest
+     * would push every ratio above one.
      *
-     * Against the median the loud half comes down and the quiet half goes up,
-     * and the kit keeps the level it had. `level` reaches four for this: at a
-     * ceiling of one the loud half had nowhere to move to and a ragged kit
-     * came out as far apart as it went in.
+     * Against the median the loud half comes down, the quiet half goes up, and
+     * the kit keeps its overall level. level goes up to 4 for this, with a
+     * ceiling of 1 the loud half would have nowhere to go.
      */
     fun matchLevels() {
         val peaks = (0 until 13).map { i ->
@@ -1436,9 +1273,9 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         peaks.forEachIndexed { i, pk ->
             if (pk <= 1e-5f) return@forEachIndexed
             val name = "p%02d_level".format(i)
-            // Through the parameter's own table: `set` wants 0..1 and `level`
-            // is in its own units, and writing the conversion out here would
-            // be a second copy of a range that lives in the engine.
+            // Through the parameter's own table, since set wants 0..1 and level
+            // has its own units. The range lives in the engine, don't copy it
+            // here.
             val def = b.info.firstOrNull { it.name == name } ?: return@forEachIndexed
             batch[name] = def.unmap(median / pk)
         }
@@ -1449,15 +1286,11 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     var clearing by remember { mutableStateOf(false) }
 
     /**
-     * Put a pad's start and end back where they started.
+     * Put a pad's start and end back to the full sample.
      *
-     * Slicing closes the pads it did not use - start and end both at zero -
-     * because a pad with no sample of its own reads the shared file, and
-     * "leave it alone" would mean playing the whole break. That leaves a trap
-     * for the pad's next owner: load a sample into a closed pad and it is
-     * silent for a reason nothing on screen explains. So taking a pad over
-     * resets its trim, which is what anybody would expect of a new sample
-     * anyway - a trim belongs to the sound it was set for.
+     * Slicing closes the pads it didn't use (start and end both 0), because a
+     * pad without its own sample reads the shared file. A sample loaded into a
+     * closed pad would then be silent, so taking a pad over resets its trim.
      */
     fun resetTrim(pad: Int) {
         val batch = mutableMapOf<String, Float>()
@@ -1466,15 +1299,14 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         b.setMany(batch)
     }
 
-    // Slicing one file across the pads. The file is a setting of its own, not
-    // a pad's, because all thirteen read the same copy of it.
+    // Slicing one file across the pads. The file is its own setting, not a
+    // pad's, since all 13 pads read the same copy.
     val scope = rememberCoroutineScope()
     val sliceRel = track.machine.settings["slice_sample"]
     var slicing by remember { mutableStateOf(false) }
     var sliceBusy by remember { mutableStateOf(false) }
-    // Picking the file is a step on the way to slicing, not an end in itself,
-    // so the file coming back opens the dialog rather than dropping the player
-    // back on the panel with nothing to show for it.
+    // Picking the file is a step towards slicing, so when the file comes back
+    // the slice dialog opens.
     var awaitingPick by remember { mutableStateOf(false) }
     LaunchedEffect(sliceRel) {
         if (awaitingPick && sliceRel != null) { awaitingPick = false; slicing = true }
@@ -1497,14 +1329,13 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                 val n = minOf(count, 13, points.size - 1)
                 val batch = mutableMapOf<String, Float>()
                 for (i in 0 until 13) {
-                    // Through the parameter table rather than assuming 0..1,
-                    // the same reason `match` does.
+                    // Through the parameter table instead of assuming 0..1,
+                    // same as match.
                     val startDef = b.info.firstOrNull { it.name == "p%02d_start".format(i) } ?: continue
                     val endDef = b.info.firstOrNull { it.name == "p%02d_end".format(i) } ?: continue
-                    // Pads past the last slice are closed rather than left
-                    // alone: a pad with no sample of its own reads the shared
-                    // file, so "leave it" means "play the whole break", which
-                    // is not what slicing into eight can possibly have meant.
+                    // Pads past the last slice are closed. A pad without its
+                    // own sample reads the shared file, so leaving it would
+                    // play the whole break.
                     val from = if (i < n) points[i] else 0f
                     val to = if (i < n) points[i + 1] else 0f
                     batch[startDef.name] = startDef.unmap(from)
@@ -1522,9 +1353,8 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         onPick = { rel -> picking = false; resetTrim(p); onAssign(p, rel) },
         onDismiss = { picking = false },
     )
-    // Emptying the kit asks first. It is one tap away from `match` in a row
-    // of four, and thirteen samples chosen by hand is not something to lose
-    // to a fat finger - the settings would be gone before the undo was found.
+    // Clearing the kit asks first. It's next to match, and hand-picked samples
+    // are settings that would be lost before anyone found undo.
     if (clearing) PlainDialog(
         title = stringResource(Res.string.kit_clear_title),
         onDismiss = { clearing = false },
@@ -1532,9 +1362,9 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
         onConfirm = {
             clearing = false
             onClearKit()
-            // The samples are settings and the trim is parameters, so putting
-            // the pads back takes both: slicing closed the pads it did not
-            // use, and a cleared kit that stays closed is silently deaf.
+            // The samples are settings and the trim is parameters, so resetting
+            // the pads needs both. Slicing closed the unused pads, and a
+            // cleared kit that stays closed would be silent.
             val batch = mutableMapOf<String, Float>()
             for (i in 0 until 13) {
                 b.infoOf("p%02d_start".format(i))?.let { batch[it.name] = it.defaultNormalized }
@@ -1570,14 +1400,12 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
                     color = Acid.colors.textDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                 )
             }
-            // Only what belongs to *this pad*. The three that act on the whole
-            // kit moved into the group row below: seven controls and a line of
-            // text do not fit across a phone, and what gave way was the last
-            // one - `match` came out as a column of single letters.
+            // Only per-pad controls here. The three kit-wide ones are in the
+            // group row below, since they didn't all fit across a phone.
             TextButton(onClick = { resetTrim(p); onImport(p) }) { Text(stringResource(Res.string.kit_load), color = hot, fontSize = 11.sp) }
             TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.kit_samples), color = hot, fontSize = 11.sp) }
-            // Only where there is something to trim - the page is a picture of
-            // a sample and an empty pad has none.
+            // Only when there's something to trim. An empty pad has no sample
+            // to show.
             if (info.isNotEmpty()) {
                 TextButton(onClick = { onOpenSample(p) }) { Text(stringResource(Res.string.kit_edit), color = hot, fontSize = 11.sp) }
             }
@@ -1589,7 +1417,7 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
             Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
             Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume", "volume", hot) }
-            // The whole kit at once, where there is room for them to be read.
+            // The kit-wide controls.
             Group("kit") {
                 PanelActions(
                     Triple(stringResource(Res.string.kit_kit), hot) { onImportKit(p) },
@@ -1607,10 +1435,9 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
 /**
  * Cutting one file across the pads.
  *
- * Forage has had per-pad start and end from the beginning, so a slice is not a
- * new kind of thing: it is thirteen pads reading one file between two points.
- * What it needed was somewhere to put the file - see Forage::kSharedSlot - and
- * this, to work out where the cuts go.
+ * Forage already has per-pad start and end, so a slice is just 13 pads reading
+ * one file between two points. The file lives in its own slot (see
+ * Forage::kSharedSlot), and this works out where the cuts go.
  */
 @Composable
 private fun SliceDialog(name: String, onChoose: () -> Unit, onDismiss: () -> Unit,
@@ -1665,7 +1492,7 @@ private fun SliceDialog(name: String, onChoose: () -> Unit, onDismiss: () -> Uni
     }
 }
 
-/** Any machine without a face yet: every parameter as a knob. */
+/** Any machine without its own panel: every parameter as a knob. */
 @Composable
 private fun GenericPanel(b: ParamBinding) {
     Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1675,9 +1502,9 @@ private fun GenericPanel(b: ParamBinding) {
 
 // --- Trinity ---------------------------------------------------------------------
 //
-// 178 parameters will not fit on a phone at once, so the panel is sectioned
-// and the sections that repeat (oscillator, envelope, LFO, matrix slot) carry
-// their own selector. Names mirror engine/machine/trinity/Trinity.cpp.
+// 178 parameters won't fit on a phone at once, so the panel is sectioned and
+// the repeating sections (oscillator, envelope, LFO, matrix slot) have their
+// own selector. Names mirror engine/machine/trinity/Trinity.cpp.
 
 val TRINITY_WAVES = listOf("saw", "square", "tri", "sine", "Sweep", "Glass", "Vowel", "Bell", "Comb", "Fold", "Grit", "Organ")
 val TRINITY_FILTERS = listOf("LP6", "LP12", "LP18", "LP24", "HP6", "HP12", "HP18", "HP24", "BP6", "BP12", "notch", "peak")
@@ -1694,8 +1521,8 @@ private val TRINITY_ENVS = listOf("amp env" to "a", "filter env" to "f", "env 3"
 
 @Composable
 private fun TrinityPanel(b: ParamBinding) {
-    // Too many groups for one row, so the sections pick which groups show.
-    // Inside a section it is the same Group-of-knobs row as every machine.
+    // Too many groups for one row, so sections pick which groups show. Inside a
+    // section it's the usual Group row.
     var section by rememberSaveable { mutableStateOf(0) }
     PanelSections(listOf("osc", "mix", "filter", "env", "lfo", "mod", "voice"), section, { section = it }) { sec ->
         when (sec) {
@@ -1780,22 +1607,11 @@ private fun TrinityPanel(b: ParamBinding) {
     }
 }
 
-// --- Performance strip ------------------------------------------------------------
-//
-// The two controllers a player reaches for while holding a chord. One slim
-// row above the keyboard: short enough not to take space from the roll, wide
-// enough to hit with a thumb. They behave like the hardware they are named
-// after - the wheel stays where you leave it, pressure falls back to nothing
-// when you let go - which is also what makes them tell each other apart.
-
-
-
-
 // --- Ratio -----------------------------------------------------------------------
 //
 // Six operators, two algorithms and a morph between them. Same sectioned
-// Group layout as Trinity; names mirror engine/machine/ratio/Ratio.cpp and
-// the algorithm list mirrors Algorithms.h - keep them in step.
+// layout as Trinity. Names mirror engine/machine/ratio/Ratio.cpp and the
+// algorithm list mirrors Algorithms.h, keep them in step.
 
 val RATIO_WAVES = listOf(
     "sine", "sin12", "sin8", "half", "rect", "quart", "tri", "saw",
@@ -1911,11 +1727,10 @@ private fun RatioPanel(b: ParamBinding) {
 
 // --- Manual -----------------------------------------------------------------
 //
-// The drawbars are drawn as drawbars. Everything else on an organ is a tab or
-// a switch, so the rest of the panel is the house style, but a registration
-// is read as a shape - 88 8000 000 - and a row of knobs cannot be read that
-// way. Two registrations are shown at once because morphing between them is
-// the point of this machine.
+// The drawbars are drawn as drawbars, since a registration is read as a shape
+// (88 8000 000) and a row of knobs can't show that. The rest of the panel is
+// the usual style. Two registrations are shown since the machine morphs
+// between them.
 
 private val MANUAL_MODELS = listOf("wheel", "combo", "pipe", "reed")
 private val MANUAL_VIB = listOf("V1", "V2", "V3", "C1", "C2", "C3")
@@ -1929,8 +1744,8 @@ private val MANUAL_DESTS = listOf(
     "pitch", "upper", "lower", "16", "5⅓", "8", "4", "2⅔", "2", "1⅗", "1⅓", "1",
 )
 private val MANUAL_BARS = listOf("16", "5⅓", "8", "4", "2⅔", "2", "1⅗", "1⅓", "1")
-// The colours a Hammond's drawbars are actually made in: the fundamentals
-// white, the harmonics black, the two quints brown.
+// Hammond drawbar colours: fundamentals white, harmonics black, the two quints
+// brown.
 private val BAR_COLOURS = listOf(
     DrawbarBrown, DrawbarBrown, DrawbarWhite, DrawbarWhite,
     DrawbarBrown, DrawbarWhite, DrawbarBlack, DrawbarBlack, DrawbarWhite,
@@ -2155,10 +1970,9 @@ private fun ManualPanel(b: ParamBinding) {
 
 // --- Cipher -----------------------------------------------------------------
 //
-// The bank first, because that is what a vocoder is, then the map, which is
-// what this one is. Everything between measuring the modulator and imposing
-// it on the carrier lives under "map", and that is where the machine stops
-// being an ordinary vocoder.
+// The bank first, then the map. Everything between analysing the modulator
+// and applying it to the carrier is under "map", which is where this differs
+// from an ordinary vocoder.
 
 private val CIPHER_REMAP = listOf("direct", "reverse", "mirror", "odd/even", "shuffle", "fold")
 private val CIPHER_ROLE = listOf("in speaks", "in sings")
@@ -2173,10 +1987,9 @@ private val CIPHER_DESTS = listOf(
 private val CIPHER_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
 
 /**
- * A machine that listens has to be able to open the ear. A vocoder with
- * nothing coming in is a synth with the volume down, and a string waiting to
- * be spoken to is silent, so the panels own the microphone rather than
- * sending you to a menu to find it.
+ * The microphone control, for machines that listen. A vocoder or an input
+ * exciter with nothing coming in is silent, so the panel has the switch instead
+ * of a menu.
  */
 @Composable
 private fun InputListen() {
@@ -2265,10 +2078,8 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "sub", "sub")
                     PanelKnob(b, "noise", "noise")
                     // How much of the carrier is replaced by noise when the
-                    // modulator is unvoiced, which is what turns a sung
-                    // vowel into a whisper. It had no control at all until
-                    // an audit went looking: the Breath patch set it and no
-                    // player could reach it or put it back.
+                    // modulator is unvoiced, which turns a sung vowel into a
+                    // whisper.
                     PanelKnob(b, "unvoiced", "unvoiced", PanelAmber)
                     PanelKnob(b, "cardrive", "drive", PanelPink)
                 }
@@ -2335,21 +2146,19 @@ private fun CipherPanel(b: ParamBinding) {
     }
 }
 
-
 // --- Cumulus ---------------------------------------------------------------------
 
-// The vowels the profile's formants interpolate through, and what shimmer
-// can be tuned to. Names mirror engine/machine/cumulus/Cloud.cpp.
+// The vowels the profile's formants interpolate through, and the shimmer
+// intervals. Names mirror engine/machine/cumulus/Cloud.cpp.
 private val CUMULUS_SHIMMER = listOf("5th", "8ve", "8ve+5", "2 8ve")
 private val CUMULUS_FILTERS = listOf("LP6", "LP12", "LP18", "LP24", "HP6", "HP12", "HP18", "HP24", "BP6", "BP12", "notch", "peak")
 private val CUMULUS_LFO = listOf("sine", "tri", "saw↑", "saw↓", "square", "s&h", "smooth", "8 step", "16 step")
 
 /**
- * Cumulus's panel, in two halves. The "cloud" and "morph to" sections build
- * the tables - each knob there is an inverse transform of a quarter of a
- * million points, done off the audio thread when it settles - and everything
- * else is live. They are kept in separate sections for that reason, and the
- * build ones are marked in amber.
+ * Cumulus's panel, in two halves. The "cloud" and "morph to" sections build the
+ * tables (each knob there is an inverse transform of about 250k points, done
+ * off the audio thread once it settles) and everything else is live. They are
+ * separate sections for that reason, and the build knobs are amber.
  */
 @Composable
 private fun CumulusPanel(b: ParamBinding) {
@@ -2470,13 +2279,12 @@ private fun CumulusPanel(b: ParamBinding) {
     }
 }
 
-
 // --- Formulate -------------------------------------------------------------------
 
 private val FORMULATE_WAVES = listOf("pulse", "tri", "saw", "noise", "off")
 private val FORMULATE_MODES = listOf("off", "replace", "ring", "gate", "xor")
 
-/** Expressions to start from, none of them anybody else's one-liner. */
+/** Example expressions to start from, all original. */
 private val FORMULA_EXAMPLES = listOf(
     "x" to "the chip, untouched",
     "x & (255 << (a >> 5))" to "crush it with knob a",
@@ -2584,7 +2392,7 @@ private fun FormulatePanel(b: ParamBinding, track: Track, trackIndex: Int, edito
     }
 }
 
-/** The formula itself, shown as what it is: text, and whether it reads. */
+/** The formula as text, and whether it parses. */
 @Composable
 private fun FormulaButton(track: Track, error: String, onEdit: () -> Unit) {
     val c = Acid.colors
@@ -2604,9 +2412,8 @@ private fun FormulaButton(track: Track, error: String, onEdit: () -> Unit) {
 }
 
 /**
- * Where the machine is actually programmed: one expression and three step
- * tables. Applied on OK, because a half-typed formula should not be
- * compiled on every keystroke.
+ * Where the machine is programmed: one expression and three step tables.
+ * Applied on OK so a half-typed formula isn't compiled on every keystroke.
  */
 @Composable
 private fun FormulaDialog(
@@ -2624,7 +2431,7 @@ private fun FormulaDialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        // A window: see DialogShell.
+        // A window, see DialogShell.
         KeyScope(window = true)
         WindowKeys()
         ScaledWindow {
@@ -2687,15 +2494,11 @@ private fun FormulaDialog(
     }
 }
 
-
-
-
 // --- Genesis ---------------------------------------------------------------------
 
 /**
- * Genesis's panel. Every voice has its own group, the way the machine it is
- * named after had its own strip of knobs - and the bus at the end, because
- * the compressor and the duck are as much the sound as the kick is.
+ * Genesis's panel. Every voice has its own group, and the bus is at the end,
+ * since the compressor and duck are part of the sound.
  */
 @Composable
 private fun GenesisPanel(b: ParamBinding) {
@@ -2794,10 +2597,9 @@ private fun GenesisPanel(b: ParamBinding) {
 private val RESONANCE_SHAPES = listOf("membrane", "bar", "plate", "tube", "bowl", "metal")
 
 /**
- * Resonance's panel: one object at a time, chosen with the pads, because
- * eight sets of fourteen knobs at once is a wall rather than an instrument.
- * The kit-wide controls sit at the end, where they belong - coupling is the
- * one that makes eight objects into one kit.
+ * Resonance's panel: one object at a time, chosen with the pads, since eight
+ * sets of fourteen knobs is too many. The kit-wide controls are at the end,
+ * including coupling, which ties the objects into one kit.
  */
 @Composable
 private fun ResonancePanel(b: ParamBinding, pad: Int) {
@@ -2849,22 +2651,15 @@ private fun ResonancePanel(b: ParamBinding, pad: Int) {
     }
 }
 
-
 // --- Dice ------------------------------------------------------------------------
 
 private val DICE_CUTS = listOf("onsets", "grid")
 
 /**
- * Dice's panel: the loop and where it is cut, the dice themselves, and then
- * one slice at a time - chosen with the pads, the way Forage chooses a pad.
- */
-/**
- * Molt: the take across the top, then what is done to it.
+ * Molt: the take across the top, then what's done to it.
  *
- * The take is the instrument here, so it comes first and says what it is -
- * a name, or "no take" - with the two ways of getting one beside it. There is
- * no harmony section and no key: the notes in the clip are both, which is the
- * whole idea, and a knob for it would be a second opinion.
+ * The take comes first with its name (or "no take") and the two ways to get
+ * one. There's no harmony section or key, the notes in the clip provide both.
  */
 @Composable
 private fun MoltPanel(
@@ -2902,16 +2697,9 @@ private fun MoltPanel(
                         }
                     }
                 }
-                // **Recording is one window, not a switch on a panel.**
-                //
-                // This was `rec`, `length` and `in` - a machine with its
-                // own capture buffer, its own twelve-second ceiling and no
-                // way to open the microphone from the panel it was on. It
-                // recorded six seconds of silence and said nothing.
-                // Molt's take now arrives the way every other machine's
-                // material does: a file, which can also be trimmed and
-                // levelled before it is sung, which for a real recording
-                // is most of the work.
+                // Recording goes through the record window, like every other
+                // machine's material, as a file that can be trimmed and
+                // levelled first.
                 Group("sing") {
                     PanelActions(
                         Triple(stringResource(Res.string.machine_record), PanelAmber) { recording = true },
@@ -2974,6 +2762,10 @@ private fun MoltPanel(
     )
 }
 
+/**
+ * Dice's panel: the loop and where it's cut, the dice, then one slice at a
+ * time, chosen with the pads like Forage chooses a pad.
+ */
 @Composable
 private fun DicePanel(
     b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, pad: Int, onImport: () -> Unit,
@@ -2984,8 +2776,8 @@ private fun DicePanel(
     val p = pad.coerceIn(0, 15)
     fun n(name: String) = "s%02d_%s".format(p, name)
     val sample = track.machine.settings["sample"].orEmpty()
-    // What the loop is to the song: the engine's guess at its bars, which the
-    // bars knob can overrule, and its length - and so its tempo.
+    // What the loop is to the song: the engine's guess at its bars (the bars
+    // knob can override it) and its length, and so its tempo.
     val shape by produceState<Pair<Float, Float>?>(null, sample) {
         value = if (sample.isEmpty()) null else withContext(Dispatchers.IO) {
             NativeEngine.loopShape(com.rm.acidulous.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(), sample).absolutePath)
@@ -3033,9 +2825,9 @@ private fun DicePanel(
                         }
                     }
                 }
-                // Follow plays the loop at the song's tempo, stretched so it
-                // keeps its pitch; bars is what its own tempo is worked out
-                // from, and auto is the engine's guess.
+                // Follow plays the loop at the song's tempo, stretched to keep
+                // its pitch. Bars is what its own tempo is worked out from, and
+                // auto is the engine's guess.
                 Group("tempo") {
                     PanelSwitch(b, "follow", listOf("own", "song"), "plays at")
                     PanelStepKnob(b, "bars", listOf("auto", "½", "1", "2", "4", "8", "16"), "bars", PanelAmber)
@@ -3072,8 +2864,8 @@ private fun DicePanel(
                 }
             }
             2 -> {
-                // The group's title is harvested for the lane list, so it
-                // stays a constant; which slice is selected is said above.
+                // The group title is used in the lane list, so it stays
+                // constant. The selected slice is shown above.
                 Group("slice") {
                     PanelKnob(b, n("level"), "level", PanelAmber)
                     PanelKnob(b, n("pan"), "pan")
@@ -3108,7 +2900,7 @@ private fun DicePanel(
     )
 }
 
-/** The bars knob past auto, as Dice's engine reads it. */
+/** The bars knob values past auto, as Dice's engine reads them. */
 private val DICE_BARS = listOf(0.5f, 1f, 2f, 4f, 8f, 16f)
 
 // --- Pollen ----------------------------------------------------------------------
@@ -3120,12 +2912,11 @@ private val POLLEN_SCALES = com.rm.acidulous.model.Scales.names
 private val POLLEN_KEYS = com.rm.acidulous.model.Scales.keyNames
 
 /**
- * Pollen's panel. The source section is where the machine is decided - a
- * file or the microphone - and everything else shapes the cloud over it.
+ * Pollen's panel. The source section decides the machine (a file or the
+ * microphone) and everything else shapes the cloud.
  *
- * Two things here that no other panel has: a line saying what the buffer
- * currently holds, and a warning when the source is live, because a live
- * buffer is not part of the song and an exported song will not have it.
+ * It shows what the buffer currently holds, and warns when the source is live,
+ * since a live buffer isn't saved in the song and won't be in an export.
  */
 @Composable
 private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, onImport: () -> Unit) {
@@ -3267,9 +3058,9 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
 }
 
 /**
- * A control that is an action rather than a value: it sets the parameter,
- * and lets go. The engine acts on the edge, and reads the raw target rather
- * than the smoothed value so a pulse cannot be smoothed away.
+ * A control that's an action instead of a value: it sets the parameter and
+ * releases it. The engine acts on the edge and reads the raw target instead of
+ * the smoothed value, so a pulse can't be smoothed away.
  */
 @Composable
 private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
@@ -3283,17 +3074,14 @@ private fun MomentaryButton(b: ParamBinding, name: String, label: String) {
 // --- Bias -------------------------------------------------------------------------
 
 /**
- * The four-track's face: a card per lane, and a lane's card is where its
- * recording lives.
+ * The four-track's panel: a card per lane, and each lane's card holds its
+ * recording.
  *
- * **The one panel in the app that is partly about this cell rather than about
- * the machine**, and the split down the middle of each card is the machine
- * itself: the level and the mute are parameters, so they automate, map to a
- * pad and record into a lane; the take is the document, so it arranges. A
- * level that lived on the recording would have been a second kind of level,
- * invisible to all three.
+ * It's the one panel that depends on the cell as well as the machine. Each card
+ * is split: the level and mute are parameters, so they automate, map and record
+ * into lanes, and the take is part of the clip.
  *
- * Four cards and no section chips, because four lanes are what a tape has.
+ * Four cards and no section chips, since a tape has four lanes.
  */
 @Composable
 private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: String, editor: SongEditor) {
@@ -3304,9 +3092,8 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
     val song = editor.song
     val clip = track.clips[sceneId]
     val sceneBpm = if (sceneId.isEmpty()) song.tempo else song.bpmOf(sceneId)
-    // Two sections and no more: what is on the tape, and what the tape is.
-    // The patch bar above chooses the second of those wholesale, and these
-    // are what it moved.
+    // What's on the tape, what the tape is, and tempo. The patch bar sets the
+    // medium section wholesale.
     PanelSections(listOf("lanes", "medium", "tempo"), section, { section = it }) { sec ->
         if (sec >= 1) {
           if (sec == 1) {
@@ -3348,14 +3135,9 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                 PanelKnob(b, "monitor", "monitor", PanelPink)
                 InputListen()
             }
-            // **What the input goes through on its way in - and so what is
-            // printed into the take.** The slots belong to the song rather
-            // than to this track, but this is where the hand is when
-            // somebody decides they want the amp *on* the recording rather
-            // than after it.
-            // Named for what happens to the file, so it needs no note -
-            // the same four words the record window uses, shortened to fit
-            // a card title.
+            // The song's input effects, which are printed into the take. They
+            // belong to the song, not this track, but this is where you are
+            // when recording.
             Group("printed in") {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     InputChainChips(editor)
@@ -3379,10 +3161,9 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                         fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
-                    // The tempo it was sung at, and only when that is not
-                    // the tempo it is being played at. Audio does not
-                    // stretch yet, so this is the one number that says why
-                    // a take drifts away from the beat.
+                    // The tempo it was recorded at, when it differs from the
+                    // current tempo and the track isn't following it. This
+                    // explains a take drifting off the beat.
                     if (take != null && !track.followsTempo() &&
                         kotlin.math.abs(take.bpm - sceneBpm) > 0.05f) {
                         Text(
@@ -3400,9 +3181,8 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                     }
                 }
                 PanelKnob(b, "lane${lane + 1}", "level")
-                // Labelled for the automation list rather than for the
-                // card: inside a card already titled "lane 2", the lane
-                // list would otherwise read "lane 2 lane".
+                // Labelled for the automation list, otherwise inside a card
+                // titled "lane 2" the list would read "lane 2 lane".
                 PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute"), "mute")
             }
         }
@@ -3412,9 +3192,8 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
 
 // --- Filament ---------------------------------------------------------------
 //
-// The exciter first, because on this machine that is the instrument choice -
-// the same string plucked, struck, bowed or blown at is four instruments -
-// then the string itself, then what is around it.
+// The exciter first, since that's the instrument choice here (the same string
+// plucked, struck, bowed or blown), then the string, then its surroundings.
 
 private val FILAMENT_EXCITERS = listOf("pluck", "pick", "hammer", "bow", "breath", "input")
 private val FILAMENT_SYM = listOf("octaves", "fifths", "major", "minor", "harmonic", "course")
@@ -3445,8 +3224,8 @@ private fun FilamentPanel(b: ParamBinding) {
                     PanelKnob(b, "speed", "speed", PanelAmber)
                     PanelKnob(b, "in gain", "in gain")
                 }
-                // The input exciter plays the string with whatever is
-                // coming in, which needs something to be coming in.
+                // The input exciter plays the string with the incoming audio,
+                // so it needs an input.
                 Group("listen") { InputListen() }
                 Group("touch") {
                     PanelKnob(b, "velocity", "velocity", PanelAmber)
@@ -3547,11 +3326,9 @@ private fun FilamentPanel(b: ParamBinding) {
 
 // --- Brazen -----------------------------------------------------------------
 //
-// The horn first, because the horn is the instrument: how big the tube is,
-// what the bell does with the wave, and what is stuffed into it. Then the
-// player - lips, air, how hard they are leaning on it. Then the section,
-// which is the reason this machine exists and the only page here with no
-// equivalent on a sampled brass library.
+// The horn first, since it's the instrument: tube size, bell, and mute. Then
+// the player: lips, air and effort. Then the section, which has no equivalent
+// in a sampled brass library.
 
 private val BRAZEN_MUTES = listOf("open", "straight", "cup", "harmon")
 
@@ -3638,11 +3415,8 @@ private fun BrazenPanel(b: ParamBinding) {
 
 // --- Timber -----------------------------------------------------------------
 //
-// The pipe first, because on this machine the pipe is the instrument: what
-// starts the air and what shape it is moving in are two chips that between
-// them are the whole woodwind family. Then the mouth, then the holes - which
-// is the page that has no equivalent anywhere else, because it is about the
-// part of the instrument below the note.
+// The pipe first, since the excitation and bore shape between them pick the
+// woodwind family. Then the mouth, then the tone holes.
 
 private val TIMBER_FAMILY = listOf("reed", "double", "air")
 private val TIMBER_BORE = listOf("cylinder", "cone")
@@ -3740,9 +3514,8 @@ private fun TimberPanel(b: ParamBinding) {
 
 // --- Nexus ------------------------------------------------------------------
 //
-// The strip stays a strip. A graph needs a screen, so this holds the things
-// you reach for while playing - the macros, the morph, the output - and a
-// way through to the canvas.
+// The panel holds what you reach for while playing (the macros, the morph,
+// the output) and a way through to the graph canvas.
 
 @Composable
 private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
@@ -3792,8 +3565,7 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
 
 // --- Mosaic ----------------------------------------------------------------------
 //
-// The map section is the one place a machine puts a picture above its group
-// row: a sampler without a visible key-by-velocity map is guesswork. The
+// The map section shows the key-by-velocity map above its group row. The
 // other sections are ordinary Groups.
 
 val MOSAIC_LOOP = listOf("file", "off", "forward")
@@ -3819,8 +3591,8 @@ private fun MosaicPanel(
     LaunchedEffect(trackIndex, sf2, zones.size) {
         while (true) { info = NativeEngine.sampleMapInfo(trackIndex); delay(500) }
     }
-    // A sample recorded in the app is added as a zone the same way an
-    // imported one is; a SoundFont owns the whole map, so it steps aside.
+    // A sample recorded in the app is added as a zone like an imported one. A
+    // SoundFont owns the whole map, so it's not offered then.
     if (pickingZone) RecorderDialog(
         editor = editor,
         startOn = RecorderPage.Library,
@@ -3846,8 +3618,8 @@ private fun MosaicPanel(
                     ZoneMapView(zones, selectedZone, { i -> selectedZone = i; editing = true },
                         Modifier.fillMaxWidth().height(96.dp).padding(bottom = 4.dp))
                 } else {
-                    // A SoundFont preset carries its own map; the file owns it, so
-                    // it is shown rather than edited.
+                    // A SoundFont preset brings its own map, so it's shown instead
+                    // of edited.
                     Text(
                         stringResource(Res.string.mosaic_soundfont, sf2.substringAfterLast('/'), info.ifEmpty { stringResource(Res.string.mosaic_loading) }),
                         color = Acid.colors.textDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
@@ -3884,7 +3656,8 @@ private fun MosaicPanel(
                         Row {
                             TextButton(
                                 onClick = {
-                                    // Spread them evenly and set each root to the middle of its span.
+                                    // Spread them evenly and set each root to the middle of its
+                                    // span.
                                     if (zones.isNotEmpty()) {
                                         val step = 128f / zones.size
                                         putZones(zones.mapIndexed { i, z ->

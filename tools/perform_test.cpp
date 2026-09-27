@@ -1,10 +1,10 @@
-// The held effects on the master (engine/rack/Perform.h), sample by sample.
+// Tests the held effects on the master (engine/rack/Perform.h), sample by
+// sample.
 //
-// Each check is on the numbers the effect is supposed to produce, not on
-// "something changed": a repeat must play back the exact slice it caught, a
-// tape stop must reach silence and come back to the live mix bit for bit, and
-// with nothing held the mix must come out untouched - which is what keeps
-// every song that never used these sounding the way it did.
+// Each check is on the exact numbers the effect should produce: a repeat must
+// play back the exact slice it caught, a tape stop must reach silence and
+// come back to the live mix bit for bit, and with nothing held the mix must
+// pass through untouched so songs that don't use these sound the same.
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -248,7 +248,7 @@ void throwEchoesAndSleeps() {
     for (int f = hit + 35990; f < hit + 36010; ++f) right = std::max(right, std::fabs(oR[f]));
     ok("the second answers on the right", right > 0.05f, num(right));
 
-    // After the tail, asleep: noise goes through untouched.
+    // After the tail it sleeps, and noise goes through untouched.
     Noise n;
     const int M = kBlock * 200;
     std::vector<float> nL(M), nR(M), mL(M), mR(M);
@@ -258,8 +258,8 @@ void throwEchoesAndSleeps() {
     for (int i = 0; i < M; ++i) diff += (mL[i] != nL[i]) + (mR[i] != nR[i]);
     ok("once the tail has died away, bit for bit again", diff == 0, std::to_string(diff) + " differ");
 
-    // Woken again over silence, it must not play back what was in the buffer
-    // a lap ago: while asleep it is written silent.
+    // Woken again over silence, it mustn't play back what was in the buffer
+    // a lap ago. While asleep it writes silence.
     const int W = kBlock * 1000;
     std::vector<float> zL(W, 0.0f), zR(W, 0.0f), wL(W), wR(W);
     rig.run(zL.data(), zR.data(), wL.data(), wR.data(), kBlock * 2000 < W ? kBlock * 2000 : W);
@@ -267,7 +267,7 @@ void throwEchoesAndSleeps() {
     rig.run(zL.data(), zR.data(), wL.data(), wR.data(), W);
     float stale = 0;
     for (int i = 0; i < W; ++i) stale = std::max(stale, std::fabs(wL[i]) + std::fabs(wR[i]));
-    // What it slept under (-120 dB) may come back; a lap of old echoes may not.
+    // The -120 dB it slept under may come back, but not a lap of old echoes.
     ok("woken over silence, nothing louder than -120 dB comes back", stale < 1e-6f, num(stale));
 }
 
@@ -393,9 +393,9 @@ void killsTakeBandsOut() {
     const double kept = 20.0 * std::log10(levelAt(oL, N - 24000, N, 8000.0f) / 0.5);
     ok("with the lows killed, 8 kHz is untouched (within 0.5 dB)", std::fabs(kept) < 0.5, num(kept) + " dB");
 
-    // Where two kept bands meet, they add back up to the level they were.
-    // This is the upper crossover's all-pass on the low band: without it the
-    // low band and the middle one arrive out of step at the lower crossover.
+    // Where two kept bands meet, they add back up to their original level.
+    // That needs the upper crossover's all-pass on the low band, or the low
+    // and middle bands arrive out of step at the lower crossover.
     for (float hz : {250.0f, 400.0f}) {
         Rig r2;
         std::vector<float> a(N), b(N), oa(N), ob(N);

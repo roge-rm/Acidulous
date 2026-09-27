@@ -27,8 +27,8 @@ bool WavStream::open(const std::string &path, std::string &error) {
     }
 
     uint16_t format = 0, bits = 0;
-    // Walk the chunks by their headers alone. `fmt ` is small and read whole;
-    // `data` is never read here, only measured - which is the whole point.
+    // Walk the chunks by their headers. `fmt ` is small and read whole. `data`
+    // isn't read here, only its size and offset are noted.
     while (true) {
         unsigned char ch[8];
         if (std::fread(ch, 1, 8, file) != 8) break;
@@ -86,8 +86,8 @@ int64_t WavStream::read(int64_t from, int32_t ch, float *out, int64_t count) {
     const int64_t want = from + count > frameCount ? frameCount - from : count;
 
     const int32_t frameBytes = bytesPerSample * chans;
-    // One seek and one read per call: a chunk is tens of thousands of frames,
-    // so the per-frame cost is the conversion below and nothing else.
+    // One seek and one read per call. A chunk is tens of thousands of frames,
+    // so the cost per frame is just the conversion below.
     if (std::fseek(file, static_cast<long>(dataOffset + from * frameBytes), SEEK_SET) != 0) return 0;
     std::vector<unsigned char> buf(static_cast<size_t>(want * frameBytes));
     const size_t got = std::fread(buf.data(), 1, buf.size(), file);

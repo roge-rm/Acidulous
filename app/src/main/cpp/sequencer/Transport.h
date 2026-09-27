@@ -3,18 +3,17 @@
 #include <cstdint>
 #include <engine/core/Constants.h>
 
-// Play/stop state plus the handshake that moves it across threads.
-// The UI *requests*; the audio thread *applies* at a block boundary, so state
-// never changes in the middle of a render.
+// Play/stop state and the handshake that moves it between threads. The UI
+// requests and the audio thread applies at a block boundary, so state never
+// changes in the middle of a render.
 
 namespace acidulous::seq {
 
 class Transport {
   public:
     Transport() {
-        // See kLaunchIdle: zero is a rack playing the first scene, not a rack
-        // playing nothing, and nothing publishes here until the launcher has
-        // run at least once.
+        // A zeroed slot means "playing the first scene", not "nothing", so
+        // start every rack at kLaunchIdle until the launcher has run.
         for (auto &v : launchForUi) {
             v.store(kLaunchIdle, std::memory_order_relaxed);
         }
@@ -36,33 +35,25 @@ class Transport {
     /**
      * Back to the top of the song, without starting it.
      *
-     * **A flag of its own rather than another `Request`.** The request word
-     * is a state machine about whether the transport is playing, and it
-     * short-circuits when the state it is asked for is the one it is already
-     * in - `if (wanted == playing) return false`. A rewind wants "not
-     * playing", which is the state you are in when you ask for one, so as a
-     * Request it would have been swallowed every single time.
-     *
-     * There was no way to do this at all before: Play resets the clock and
-     * the scene, which is why the readout went back to 1.1.000 when you
-     * started something, and Stop deliberately leaves the playhead where it
-     * stopped so you can read where that was. Nothing rewound while stopped,
-     * so a new song inherited the bar the old one happened to be on.
+     * This is a separate flag because a Request is skipped when the
+     * transport is already in the asked-for state, and a rewind asks for
+     * "not playing" while already stopped. Play resets the clock itself, and
+     * Stop leaves the playhead where it stopped.
      */
     void requestRewind() { rewindFlag.store(true, std::memory_order_release); }
 
     /**
      * Carry on from where the playhead is, rather than from the top of a
-     * scene. There was no such thing until a master asked for one: Play
-     * resets the clock and restarts the scene, which is not what 0xFB means.
+     * scene. Used for MIDI Continue (0xFB), since Play resets the clock and
+     * restarts the scene.
      */
     void requestContinue() { request.store(Request::Continue, std::memory_order_release); }
     bool takeContinued() { return continued.exchange(false, std::memory_order_relaxed); }
 
     /**
-     * Let the current scene finish the repeats it owes and then stop. Armed
-     * from the UI, disarmed by arming it off, by any play or stop request, or
-     * by the scheduler when it fires.
+     * Let the current scene finish its repeats and then stop. Cleared by
+     * turning it off, by any play or stop request, or by the scheduler when
+     * it fires.
      */
     void setStopAtEnd(bool on) {
         stopAtEndFlag.store(on, std::memory_order_relaxed);
@@ -71,9 +62,9 @@ class Transport {
     bool stopAtEndArmed() const { return stopAtEndFlag.load(std::memory_order_relaxed); }
 
     /**
-     * Line a scene up to start when the current one has finished the repeats
-     * it owes. -1 cancels. Queuing and arming a finish are alternatives, so
-     * each clears the other.
+     * Queue a scene to start when the current one has finished its repeats.
+     * -1 cancels. Queuing a scene and stopping at the end are alternatives,
+     * so each clears the other.
      */
     void queueScene(int32_t idx) {
         queuedScene.store(idx, std::memory_order_relaxed);
@@ -85,25 +76,21 @@ class Transport {
     // beside Add Scene loops the whole song.
     void setLoopScene(bool on) { loopSceneFlag.store(on, std::memory_order_relaxed); }
 
-    // REC is a stand-by: arm now, and playing (or starting to play) records.
-    // Disarm at any time.
+    // REC arms recording: while armed, playing (or starting to play) records.
     void setRecordArmed(bool on) { recordArmed.store(on, std::memory_order_relaxed); }
     bool isRecordArmed() const { return recordArmed.load(std::memory_order_relaxed); }
     void setLoopSong(bool on) { loopSongFlag.store(on, std::memory_order_relaxed); }
 
     // --- Clip mode ------------------------------------------------------------
-    // The same discipline as queueScene: the UI stores, the audio thread
-    // exchanges at a boundary. Sixteen slots instead of one, because in clip
-    // mode every rack has its own idea of what happens next.
+    // Same idea as queueScene: the UI stores, the audio thread exchanges at a
+    // boundary. One slot per rack, since in clip mode every rack has its own
+    // next clip.
 
     /**
-     * Who owns the tempo. There can only be one: following a MIDI clock and
-     * following a Link session at the same time is two masters, and what it
-     * sounds like is a fight.
+     * Who owns the tempo: off, MIDI clock or Link. Only one at a time.
      *
-     * Everything that sets a tempo asks `externalSync()` first - the four
-     * sites in the scheduler included - so a new source only has to set this
-     * and they all stand down.
+     * Everything that sets a tempo checks `externalSync()` first, including
+     * the four places in the scheduler, so a new source only has to set this.
      */
     enum Sync : int32_t { SyncOff = 0, SyncMidi = 1, SyncLink = 2 };
     void setSyncSource(int32_t s) {
@@ -113,13 +100,13 @@ class Transport {
     bool externalSync() const { return syncSource() != SyncOff; }
     bool followingMidi() const { return syncSource() == SyncMidi; }
     bool followingLink() const { return syncSource() == SyncLink; }
-    /** The MIDI clock's own switch, from when it was the only one. */
+    /** On/off switch for MIDI clock sync. */
     void setExternalSync(bool on) {
         if (on) setSyncSource(SyncMidi);
         else if (followingMidi()) setSyncSource(SyncOff);
     }
 
-    // What the follower is doing, for the readout: packed bpm and error.
+    // What the follower is doing, for the display: packed bpm and error.
     void publishSync(int64_t packed) { syncForUi.store(packed, std::memory_order_relaxed); }
     int64_t syncState() const { return syncForUi.load(std::memory_order_relaxed); }
 
@@ -130,12 +117,10 @@ class Transport {
     bool launcherMode() const { return launcherFlag.load(std::memory_order_relaxed); }
 
     /**
-     * Whether a Fill trig may sound - a finger on a button, nothing more.
+     * Whether a Fill trig may sound: true while the Fill button is held.
      *
-     * It lives here rather than on the clip because it is the one condition
-     * that is not a property of the music: it is a property of what somebody
-     * is doing right now. Nobody holds a button during an offline render, so
-     * a render sees it down, which is what keeps exports repeatable.
+     * It lives here because it depends on what the player is doing. An offline
+     * render always sees it off, so exports are repeatable.
      */
     void setFill(bool on) { fillFlag.store(on, std::memory_order_relaxed); }
     bool fill() const { return fillFlag.load(std::memory_order_relaxed); }
@@ -145,10 +130,9 @@ class Transport {
     int32_t launchQuantise() const { return launchQ.load(std::memory_order_relaxed); }
 
     /**
-     * A cell was tapped: the *intent*, not the outcome. What it means -
-     * start, cancel or stop - is decided on the audio thread against what is
-     * actually playing, so a tap can never be interpreted against a readback
-     * that is eighty milliseconds stale.
+     * A cell was tapped. Whether that starts, cancels or stops a clip is
+     * decided on the audio thread against what's actually playing, so it
+     * never uses a stale readback.
      */
     void launchClip(int32_t rack, int64_t sceneId) {
         if (rack >= 0 && rack < kRackCount) {
@@ -164,9 +148,9 @@ class Transport {
     void requestStopAll() { stopAllFlag.store(true, std::memory_order_relaxed); }
     bool takeStopAll() { return stopAllFlag.exchange(false, std::memory_order_relaxed); }
 
-    // Per-rack state for the grid: the scene sounding, the scene queued, and
-    // how far through its own cycle it is. One atomic each, so a cell never
-    // sees a torn pair.
+    // Per-rack state for the grid: the scene playing, the scene queued, and
+    // how far through its cycle it is. One atomic each, so a cell never sees
+    // a torn pair.
     static constexpr int32_t kNoScene = 0xff;   // nothing there
     static constexpr int32_t kStopQueued = 0xfe; // queued to stop
     static constexpr int64_t packLaunch(int32_t scene, int32_t pending, int64_t tickInCycle) {
@@ -175,19 +159,12 @@ class Transport {
                (tickInCycle & 0xffffffffffffLL);
     }
     /**
-     * What a rack that has never launched anything reads as.
-     *
-     * This has to be a *named* value and it has to be what the array starts
-     * at, because a zeroed slot is not "nothing is playing" - it unpacks to
-     * scene nought, queued scene nought, which is "playing the first scene
-     * and queued to play it again". Nothing publishes until the launcher has
-     * run, so before then every rack claimed to be playing scene one: open
-     * the app, press clip, and the whole first scene lit up and pulsed
-     * without a note being sounded. Song mode never noticed because nothing
-     * reads these until clip mode does.
+     * What a rack that has never launched anything reads as. The array
+     * starts at this, because a zeroed slot unpacks to "playing scene one
+     * and queued to play it again".
      */
-    // Written out rather than through packLaunch, which is a member of a
-    // class that is not complete yet and so cannot be called in a constant.
+    // Written out rather than using packLaunch, which can't be called in a
+    // constant while the class is still incomplete.
     static constexpr int64_t kLaunchIdle =
         (static_cast<int64_t>(kNoScene) << 56) | (static_cast<int64_t>(kNoScene) << 48);
     void publishLaunch(int32_t rack, int64_t packed) {
@@ -207,12 +184,12 @@ class Transport {
     }
 
     // --- Audio thread ---------------------------------------------------------
-    // Returns true if the state changed this block.
-    /** True once, when the scheduler should stop at this repeat boundary. */
+    /** True once after requestRewind(). */
     bool takeRewind() { return rewindFlag.exchange(false, std::memory_order_acquire); }
     bool takeStopAtEnd() { return stopAtEndFlag.exchange(false, std::memory_order_relaxed); }
     int32_t takeQueuedScene() { return queuedScene.exchange(-1, std::memory_order_relaxed); }
 
+    // Applies a pending play/stop request. Returns true if the state changed.
     bool applyRequests() {
         const Request r = request.exchange(Request::None, std::memory_order_acq_rel);
         if (r == Request::None) {
@@ -220,10 +197,9 @@ class Transport {
         }
         stopAtEndFlag.store(false, std::memory_order_relaxed); // a new play or stop cancels both
         queuedScene.store(-1, std::memory_order_relaxed);
-        // Launch requests are deliberately *not* cleared here. Starting the
-        // transport is how the first tapped clip gets to sound at all: the UI
-        // queues the clip and then asks for play, and wiping the queue in
-        // between would cost that clip a whole cycle.
+        // Launch requests are not cleared here. The UI queues the first clip
+        // and then asks for play, and clearing the queue here would delay
+        // that clip by a whole cycle.
         if (r == Request::Continue) {
             continued.store(true, std::memory_order_relaxed);
         }
@@ -239,12 +215,10 @@ class Transport {
 
     // --- Count-in ----------------------------------------------------------------
     /**
-     * How many bars of clicks to play before the song actually starts.
+     * How many bars of clicks to play before the song starts.
      *
-     * Held here rather than read from settings on the audio thread, and
-     * consumed at the moment of starting: changing the setting while a
-     * count is already running must not lengthen the count you are
-     * currently listening to.
+     * Read when playback starts, so changing the setting during a count-in
+     * doesn't change the count that's running.
      */
     void setCountInBars(int32_t bars) { countInBars.store(bars < 0 ? 0 : bars, std::memory_order_relaxed); }
     int32_t countInBarsWanted() const { return countInBars.load(std::memory_order_relaxed); }

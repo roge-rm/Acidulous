@@ -4,21 +4,15 @@
 #include <engine/format/AudioSink.h>
 #include <vector>
 
-// Writes stereo FLAC. Ours, from the published spec (RFC 9639); no
-// dependency, and nothing patented in it.
+// Writes stereo FLAC, following the spec (RFC 9639).
 //
-// This is a *subset* encoder, which is a term from the format rather than an
-// apology: FLAC's "Subset" is the profile every decoder must handle, and it
-// is what streaming hardware expects. Within it we use fixed polynomial
-// predictors of order nought to four rather than computed LPC. That is the
-// deliberate trade - LPC buys perhaps five percent more compression for a
-// Levinson-Durbin solve, a quantised coefficient table and a great deal more
-// that can be subtly wrong, and a music app's export is not where those five
-// percent matter. A typical mix lands near half the size of the WAV.
+// It writes FLAC's "Subset" profile, which every decoder must handle. It uses
+// fixed predictors of order 0 to 4 instead of LPC. LPC would only save about
+// 5% more and is a lot more code to get right. A typical mix comes out around
+// half the size of the WAV.
 //
-// Lossless means exactly that, so it is testable in a way lossy formats are
-// not: encode, decode with somebody else's decoder, and the bytes either
-// match or the encoder is broken. tools/flac_test.cpp does that.
+// tools/flac_test.cpp encodes, decodes with another decoder and checks the
+// samples match exactly.
 
 namespace acidulous {
 
@@ -26,7 +20,7 @@ class FlacWriter : public AudioSink {
   public:
     ~FlacWriter() override { close(); }
 
-    /** [bits]: 16 or 24. FLAC has nowhere to put a float, so 32 becomes 24. */
+    /** [bits]: 16 or 24. FLAC can't store floats, so 32 becomes 24. */
     bool open(const std::string &path, int32_t sampleRate, int32_t bits, std::string &error) override;
     void write(const float *interleaved, int32_t frames) override;
     bool close() override;
@@ -51,9 +45,8 @@ class FlacWriter : public AudioSink {
     uint32_t minFrame = 0xffffffffu, maxFrame = 0;
     uint8_t md5Digest[16] = {};
 
-    // MD5 of the unencoded samples, little-endian, which is what the format
-    // asks for and what makes `flac -t` able to check the file against
-    // itself. State is carried across blocks.
+    // MD5 of the unencoded samples as little-endian, as the format asks, so
+    // `flac -t` can verify the file. State carries across blocks.
     struct Md5 {
         uint32_t h[4] = {0x67452301u, 0xefcdab89u, 0x98badcfeu, 0x10325476u};
         uint64_t length = 0;

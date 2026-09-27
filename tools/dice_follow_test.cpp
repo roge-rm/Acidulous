@@ -1,10 +1,9 @@
-// A loop in Dice, played at a song's tempo rather than its own.
+// Tests a Dice loop played at the song's tempo rather than its own.
 //
-// Two halves. The guess: a loop's bars from its length and where its hits fall,
-// which is what everything else is worked out from. And the playing: a slice
-// that follows has to last its share of the song's bar, sing the note it was
-// recorded at, and arrive with its attack - the stretcher's first hop fades in
-// unless Dice puts back what the fade takes away.
+// First, guessing a loop's length in bars from its length and where its hits
+// fall. Then playback: a following slice has to last its share of the song's
+// bar, keep its pitch, and keep its attack. The stretcher's first hop fades
+// in, so Dice has to make up for that.
 #include <cmath>
 #include <cstdio>
 #include <vector>
@@ -52,7 +51,7 @@ Take tone(float bpm, float bars, float hz) {
     for (int32_t i = 0; i < t.frames; ++i) t.left[static_cast<size_t>(i)] = 0.5f * std::sin(6.2831853f * hz * i / kSr);
     t.right = t.left;
     t.detect(kSr);
-    t.bars = bars; // a tone has no hits to guess from; say it
+    t.bars = bars; // a tone has no hits to guess from, so set it
     return t;
 }
 
@@ -80,7 +79,7 @@ std::vector<float> play(Dice &d, int slice, float songBpm, int32_t maxFrames) {
     return out;
 }
 
-/** How long it sounds for: the last frame above a whisper. */
+/** How long it sounds for: the last frame above a very low level. */
 int32_t soundingFor(const std::vector<float> &x) {
     for (int32_t i = static_cast<int32_t>(x.size()) - 1; i >= 0; --i) {
         if (std::fabs(x[static_cast<size_t>(i)]) > 1e-3f) return i + 1;
@@ -169,12 +168,12 @@ int main() {
         delete d;
     }
     {
-        // The downbeat: slice nought starts on the loop's first frame, where
-        // there is no audio before it to fade in from.
+        // Slice 0 starts on the loop's first frame, with no audio before it
+        // to fade in from.
         Take h = hits(loopBpm, 2.0f, 2);
         h.bars = 2.0f;
-        // Against the same slice not following, which has Dice's own gain and
-        // its half-millisecond ramp in and nothing of the stretcher's.
+        // Compared with the same slice not following, which only has Dice's
+        // own gain and half-millisecond ramp.
         auto first = [&](float follow) {
             Dice *d = fresh(h, 16);
             set(*d, Dice::Follow, follow);
@@ -212,8 +211,8 @@ int main() {
             made += got;
         }
         check(made == outFrames, "a looping stretcher never runs out");
-        // Quietest 10 ms anywhere after the first hop: a seam that dropped
-        // audio would show here as a hole.
+        // The quietest 10 ms after the first hop. A seam that dropped audio
+        // would show as a gap.
         float quietest = 1e9f;
         for (int32_t at = 720; at + 480 < made; at += 240) {
             float e = 0.0f;

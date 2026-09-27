@@ -16,10 +16,10 @@ import kotlin.io.writeBytes as kWriteBytes
 import kotlin.io.writeText as kWriteText
 
 /**
- * java.io.File itself: see the expect in commonMain. Java's getters are
- * members, which win over these extensions, so `this.name` below is Java's;
- * Kotlin's own extensions are imported under other names, or `this.extension`
- * would be this one calling itself.
+ * Plain java.io.File (see the expect in commonMain). Java's getters are
+ * members and win over these extensions, so `this.name` below is Java's.
+ * Kotlin's own extensions are imported under other names so that, for
+ * example, `this.extension` doesn't call itself.
  */
 actual typealias File = java.io.File
 
@@ -48,9 +48,9 @@ actual val File.invariantSeparatorsPath: String get() = this.kInvariantSeparator
 actual val FILE_SEPARATOR: String get() = java.io.File.separator
 
 /**
- * Written to a hidden file beside it, flushed to the disk, then renamed over
- * it: a rename within a directory is atomic, so a kill, a crash or a full
- * disk mid-write leaves the previous version whole.
+ * Writes to a hidden file next to it, syncs it to disk, then renames it over
+ * the original. A rename in the same directory is atomic, so a crash or full
+ * disk mid-write leaves the old version intact.
  */
 actual fun File.writeBytesSafely(bytes: ByteArray) {
     val tmp = File(parentFile, ".$name.tmp")

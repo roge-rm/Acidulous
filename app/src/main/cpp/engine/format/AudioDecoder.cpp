@@ -10,12 +10,8 @@ namespace acidulous {
 
 namespace {
 /**
- * As much of the front of a file as recognising it can possibly need.
- *
- * It used to read the whole thing, on the grounds that the reader was about
- * to anyway. That stopped being cheap when a slice source could be a ten
- * minute track: sniff, foreignKind and the reader each slurped it, so a
- * 100 MB file was read three times to decode it once.
+ * How much of the start of a file is read to recognise it. Only the head is
+ * read since sniff and foreignKind both run before the reader loads the file.
  */
 constexpr size_t kHeadBytes = 64 * 1024;
 bool head(const std::string &path, std::vector<unsigned char> &bytes) {
@@ -35,17 +31,14 @@ AudioFormat sniff(const std::string &path) {
         return AudioFormat::Aiff;
     }
     if (n >= 4 && std::memcmp(b, "fLaC", 4) == 0) return AudioFormat::Flac;
-    // Before the frame-sync scan below, not after: those containers hold
-    // compressed audio whose bytes look like a sync soon enough.
+    // Checked before the frame-sync scan below, since these containers hold
+    // compressed audio with bytes that look like a sync.
     if (foreignKind(path) != nullptr) return AudioFormat::Unknown;
 
-    // MP3 has no header of its own. What it has is an ID3 tag in front of it
-    // often enough, and failing that a frame sync - eleven bits set, which
-    // also has to be followed by a version and a layer that are not the
-    // reserved values, or half the binary files in the world are mp3s.
-    // The same skip the decoder makes, from the same function: a tag full of
-    // album art is full of things that look like frame syncs, and agreeing
-    // with the reader about where the audio begins is the point.
+    // MP3 has no header of its own. Look for a frame sync (eleven bits set)
+    // followed by a version and layer that aren't reserved values, otherwise
+    // lots of binary files would pass. Skip any ID3 tag first using the same
+    // function as the decoder, so both agree on where the audio starts.
     if (n >= 10 && std::memcmp(b, "ID3", 3) == 0 && Mp3Reader::audioStart(b, n) == 0) {
         return AudioFormat::Mp3; // the tag runs past what we read; let the decoder say so
     }
@@ -64,8 +57,8 @@ const char *foreignKind(const std::string &path) {
     if (!head(path, bytes)) return nullptr;
     const size_t n = bytes.size();
     const unsigned char *b = bytes.data();
-    // MP4 and its children, which is most of what a phone produces: the size
-    // comes first and `ftyp` at four. AAC in an m4a, ALAC, and video.
+    // MP4 and related formats (AAC in m4a, ALAC, video): a size first, then
+    // `ftyp` at offset 4.
     if (n >= 12 && std::memcmp(b + 4, "ftyp", 4) == 0) {
         if (std::memcmp(b + 8, "M4A", 3) == 0) return "an M4A file";
         return "an MP4 file";
@@ -103,16 +96,14 @@ std::unique_ptr<SampleData> decodeAudio(const std::string &path, int32_t targetR
     case AudioFormat::Flac: out = FlacReader::read(path, targetRate, error, maxSeconds); break;
     case AudioFormat::Mp3: out = Mp3Reader::read(path, targetRate, error, maxSeconds); break;
     default: {
-        // Say what it is, where we can tell. "Not an audio file this can
-        // read" about an m4a is true and useless.
+        // Say what the file is when we can tell.
         const char *kind = foreignKind(path);
         error = kind != nullptr ? std::string(kind) + ", which this cannot read"
                                 : "not an audio file this can read";
         return nullptr;
     }
     }
-    // Say which format was tried. Being told "not a RIFF/WAVE file" about an
-    // mp3 sends the player looking in entirely the wrong place.
+    // Say which format was tried.
     if (!out && !error.empty()) error = std::string(formatName(format)) + ": " + error;
     return out;
 }

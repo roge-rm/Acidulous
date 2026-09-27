@@ -5,11 +5,10 @@ import kotlin.math.PI
 import kotlin.math.floor
 
 /**
- * java.lang.Math, as much of it as the shared code uses, with Java's own
- * results on every platform. The calls read as they always did; only the
- * import says which Math. Not kotlin.math's round, which rounds a half to
- * the even neighbour - Java's rounds it up, and a grid position or a knob
- * value that moved by one on a browser would be a bug nobody could see.
+ * The parts of java.lang.Math the shared code uses, with Java's results on
+ * every platform. Only the import changes. kotlin.math's round rounds a half
+ * to the even neighbour while Java's rounds up, which would shift grid
+ * positions and knob values by one in a browser.
  */
 object Math {
     fun floorMod(x: Int, y: Int): Int = x - floorDiv(x, y) * y
@@ -25,7 +24,7 @@ object Math {
     }
     fun floorDiv(x: Long, y: Int): Long = floorDiv(x, y.toLong())
 
-    /** A half rounds up, toward positive infinity, as Java's does; NaN is nought. */
+    /** A half rounds up, toward positive infinity, like Java's; NaN is 0. */
     fun round(a: Float): Int {
         if (a.isNaN()) return 0
         val f = kotlin.math.floor(a)

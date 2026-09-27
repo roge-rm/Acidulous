@@ -6,17 +6,15 @@
 
 namespace acidulous::machine {
 
-// What this machine's signal reaches before its drive stage, and so the level
-// that stage should treat as nominal. Measured, not guessed: after volume x kHouse; peak -16.4 dB.
-// A nominal above what the signal reaches puts the whole sound on the steep
-// part of the curve, where the knob is a volume control again.
+// The level the signal reaches before the drive stage, measured after
+// volume x kHouse (peak -16.4 dB). The drive is normalised to it. Set it too
+// high and the drive knob mostly changes the volume.
 constexpr float kNominal = 0.09f;
 
 using formulate::Program;
 using formulate::Vars;
 
 namespace {
-/** The pulse's four classic duties, and everything between them. */
 constexpr uint32_t kFull = 0xffffffffu;
 } // namespace
 
@@ -75,8 +73,8 @@ void Formulate::prepare(int32_t sr) {
 }
 
 void Formulate::reset() {
-    // The output blocker holds a sample of history, so a render that starts
-    // after a panic must not begin by stepping away from the last one.
+    // Clear the DC blocker's history so the next render doesn't start with a
+    // step.
     dcX1 = dcPrev = 0.0f;
     for (auto &v : voices) {
         v.used = v.gate = false;
@@ -84,9 +82,8 @@ void Formulate::reset() {
         v.filter.reset();
         v.phase = v.subPhase = 0;
         v.lfsr = 0x7fffu;
-        // The noise's own clock and the crusher's held sample and count, all
-        // three carried from note to note on purpose and all three missed
-        // here: the noise drums came out different on every export.
+        // These carry over between notes, so they must be reset here or
+        // exports won't be repeatable.
         v.noisePhase = 0.0f;
         v.held = v.crushAcc = 0.0f;
         v.freq = v.glideFrom = 440.0f;
@@ -141,9 +138,8 @@ void Formulate::noteOn(uint8_t note, uint8_t velocity) {
     if (steppedTargetOf(TableRetrigger) != 0 || !gliding) {
         v->step = 0;
         v->frameAcc = 0.0f;
-        // The formula's clock restarts with the note: bytebeat's shape comes
-        // from where its counter is, so a note has to start at the start or
-        // every one sounds different.
+        // Restart the formula's clock with the note, otherwise every note
+        // sounds different.
         v->timeAcc = 0.0;
         v->t = 0;
     }
@@ -181,7 +177,7 @@ void Formulate::onBlock(int64_t, int64_t, float tempo) { bpm = tempo; }
 int32_t Formulate::oscSample(Voice &v, int32_t wave, int32_t duty, float dt, float freq, int32_t subLevel) {
     const uint32_t inc = static_cast<uint32_t>(freq * dt * 4294967296.0f);
     v.phase += inc;
-    v.subPhase += inc / 2; // an octave down, as the NES's second pulse so often was
+    v.subPhase += inc / 2; // an octave down
     int32_t out = 128;
     switch (wave) {
     case Pulse: {
@@ -190,8 +186,7 @@ int32_t Formulate::oscSample(Voice &v, int32_t wave, int32_t duty, float dt, flo
         break;
     }
     case Triangle: {
-        // Sixteen steps up and sixteen down, which is exactly what the NES
-        // did and exactly why its triangle buzzes.
+        // Sixteen steps up and sixteen down, like the NES triangle.
         const uint32_t p = v.phase >> 27; // 0..31
         const uint32_t level = p < 16 ? p : 31 - p;
         out = static_cast<int32_t>(level * 17);
@@ -201,8 +196,8 @@ int32_t Formulate::oscSample(Voice &v, int32_t wave, int32_t duty, float dt, flo
         out = static_cast<int32_t>(v.phase >> 24);
         break;
     case Noise: {
-        // A shift register, clocked at the note's own rate: the short tap is
-        // the metallic one.
+        // A shift register clocked at the note's rate. The short tap sounds
+        // metallic.
         v.noisePhase += freq * dt * 16.0f;
         while (v.noisePhase >= 1.0f) {
             v.noisePhase -= 1.0f;
@@ -276,8 +271,8 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
             const float env = v.amp.next();
             if (env <= 0.0000005f && !v.gate) { v.used = false; break; }
 
-            // The table clock: one step every 1/frameHz, arp, duty and
-            // volume together, because that is how a tracker did it.
+            // The table clock steps arp, duty and volume together, once
+            // every 1/frameHz.
             v.frameAcc += frameHz * dt;
             while (v.frameAcc >= 1.0f) { v.frameAcc -= 1.0f; ++v.step; }
             int32_t arpSemis = 0, dutyTable = -1, volTable = 255;
@@ -299,8 +294,8 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
             int32_t duty = dutyTable >= 0 ? dutyTable : static_cast<int32_t>((paramOf(Duty) + pwmDepth * pwmValue) * 255.0f);
             const int32_t oscValue = oscSample(v, wave, duty, dt, freq, subLevel);
 
-            // The formula's own clock. Keyed, it runs with the note - so an
-            // expression is an instrument and not a tape.
+            // The formula's clock. When keyed, it runs at a rate set by the
+            // note's pitch.
             v.timeAcc += keyed ? (freq / 55.0) * timeScale : static_cast<double>(timeScale);
             while (v.timeAcc >= 1.0) { v.timeAcc -= 1.0; ++v.t; }
 
@@ -330,8 +325,7 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
                 value = static_cast<int32_t>(oscValue + (combined - oscValue) * mix);
             }
 
-            // The hardware's own limits, after everything: fewer bits, and a
-            // slower clock.
+            // Bit depth and sample rate reduction, applied last.
             if (bits < 8) {
                 const int32_t levels = 1 << bits;
                 value = (value * levels / 256) * 256 / levels;
@@ -354,30 +348,19 @@ bool Formulate::render(float *L, float *R, int32_t frames) {
     }
 
     for (int32_t i = 0; i < frames; ++i) {
-        // **A chip's output was AC-coupled and this one was not.**
-        //
-        // Centre here is 128, not zero, and almost nothing in this machine
-        // averages to 128: a pulse at an eighth duty sits at one level for
-        // seven eighths of its cycle, and a formula averages to whatever the
-        // arithmetic says. Twenty-seven of forty-three patches carried a DC
-        // offset, which costs headroom on every one of them, thumps when a
-        // voice is released, and is the one artefact of the real hardware
-        // that nobody ever heard, because there was a capacitor in the way.
-        //
-        // Ten hertz, which is below anything this machine is asked to play
-        // and above the offsets it makes.
+        // A 10 Hz high pass to remove DC. Narrow pulses and most formulas
+        // don't average to the centre, and the offset costs headroom and
+        // thumps when a voice is released.
         dcPrev = dsp::guardDenormal(L[i] - dcX1 + kDcPole * dcPrev);
         dcX1 = L[i];
-        // The house level. A chip is a loud machine - square waves at full
-        // scale, no filter in the way by default - and at the 0.5 this used
-        // to be, a patch that set nothing arrived ten decibels over the line
-        // every other machine sits on. See Reflux's kHouse for why this is
-        // one constant rather than forty patch volumes.
+        // The house level. Full-scale square waves are loud, so this brings
+        // the machine in line with the others. See Reflux's kHouse.
         constexpr float kHouse = 0.15f;
         float s = dcPrev * volume * kHouse;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 12.0f;
-            // Normalised on the nominal level; `/ sqrt(k)` was a see-saw.
+            // Normalised on the nominal level so drive doesn't change the
+            // volume.
             s = dsp::fastTanh(s * k) * (kNominal / dsp::fastTanh(kNominal * k));
         }
         L[i] = s * panL * 1.4142f;

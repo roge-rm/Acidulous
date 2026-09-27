@@ -1,5 +1,5 @@
 <resources>
-    <!-- The editor's smaller parts: zones, note lanes, scale, automation, tape lanes, steps. Note names are notation and stay as they are. -->
+    <!-- The editor's smaller parts: zones, note lanes, scale, automation, tape lanes, steps. Note names are notation and aren't translated. -->
 
     <!-- ui/ZoneMap.kt: one zone of a multisample. -->
     <string name="zone_title">Zone</string>
@@ -31,7 +31,7 @@
     <string name="note_prop_nudge">micro timing</string>
     <string name="note_lane_all_notes">all notes</string>
 
-    <!-- ui/PianoKeys.kt: the scale chip and window. Scale names are names. -->
+    <!-- ui/PianoKeys.kt: the scale chip and window. Scale names are names and aren't translated. -->
     <string name="scale_chip">scale</string>
     <string name="scale_title">Scale</string>
     <string name="scale_group_modes">Modes</string>

@@ -12,12 +12,12 @@
 namespace acidulous {
 
 /**
- * A SoundFont modulator, resolved at build time into something the audio
- * thread can evaluate without knowing anything about the file format.
+ * A SoundFont modulator, resolved at build time so the audio thread doesn't
+ * need to know the file format.
  *
- * The file describes a source (a controller or the note itself), a curve, and
- * an amount in the destination's own units. Only the destinations this engine
- * can actually honour survive the reader; the rest are counted and dropped.
+ * It has a source (a controller or the note), a curve, and an amount in the
+ * destination's units. The reader keeps only the destinations the engine
+ * supports and counts the rest as dropped.
  */
 struct ZoneMod {
     enum Source : uint8_t { SrcNone, SrcVelocity, SrcKeyNumber, SrcChannelPressure, SrcPolyPressure, SrcPitchWheel, SrcCc };
@@ -35,11 +35,10 @@ struct ZoneMod {
     /**
      * The curve's output for a source already normalised to 0..1.
      *
-     * The spec gives each curve a closed form per direction rather than
-     * mirroring the input, and the difference is not academic: the default
-     * velocity modulator is concave *descending*, which must read zero
-     * attenuation at full velocity and about twelve decibels down at half.
-     * Mirroring first inverts that and the instrument goes silent.
+     * Each curve has its own formula per direction, as in the spec. Don't
+     * just mirror the input: the default velocity modulator is concave
+     * descending and has to give no attenuation at full velocity, and
+     * mirroring would make the instrument silent.
      */
     float apply(float x) const {
         if (x < 0.0f) x = 0.0f;
@@ -57,7 +56,7 @@ struct ZoneMod {
     }
 
   private:
-    /** One at zero, falling steeply and then flattening to zero at one. */
+    /** 1 at 0, falling steeply then flattening out to 0 at 1. */
     static float conc(float t) {
         if (t <= 0.0001f) return 1.0f;
         const float v = -(40.0f / 96.0f) * std::log10(t);
@@ -75,8 +74,8 @@ struct MapZone {
     float gain = 1.0f;         // linear
     float pan = 0.0f;
     int32_t loopStart = -1, loopEnd = -1; // in source frames; -1 for none
-    // Taken from the file when it carries one, used when the panel asks for
-    // the file's envelope rather than its own.
+    // The file's own envelope, if it has one. Used when the panel is set to
+    // the file's envelope.
     float attack = 0.001f, decay = 0.3f, sustain = 1.0f, release = 0.15f;
     bool hasEnvelope = false;
 
@@ -90,7 +89,7 @@ struct SampleMap {
     std::string name;
     std::vector<SampleData> samples;
     std::vector<MapZone> zones;
-    /** Modulators the file asked for that this engine cannot honour. */
+    /** Modulators in the file that the engine doesn't support. */
     int32_t droppedMods = 0;
 
     int32_t zoneCount() const { return static_cast<int32_t>(zones.size()); }

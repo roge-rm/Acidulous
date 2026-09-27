@@ -5,19 +5,12 @@
 #include <engine/dsp/DelayLine.h>
 #include <engine/dsp/Math.h>
 
-// The cabinet. A rotary speaker is not an effect applied to an organ, it is
-// part of the instrument: a horn spinning one way over a drum spinning the
-// other, heard by microphones that are somewhere in particular. What reaches
-// the mics is three things at once - the level rising as a mouth comes round,
-// the pitch bending as it approaches and recedes, and the tone dulling as it
-// points away - and a chorus pedal gives you none of them.
+// The rotary speaker cabinet: a horn spinning one way over a drum spinning
+// the other, heard by two microphones. The mics hear level changes, Doppler
+// pitch bends and the tone dulling as each rotor points away.
 //
-// The two rotors ramp at different rates, and up faster than down, because
-// they are heavy and the motor has more authority speeding up than the drag
-// has slowing down. That ramp is most of the sound of hitting the switch.
-//
-// Both phases are readable, because in this organ the cabinet is also a
-// modulation source: see Manual's matrix.
+// The rotors speed up faster than they slow down, like the real heavy ones.
+// Both phases can be read as mod sources in Manual's matrix.
 namespace acidulous::machine {
 
 class Rotary {
@@ -31,7 +24,7 @@ class Rotary {
         lowSplit.lowpass(800.0f, 0.707f, sr);
         highSplit.lowpass(800.0f, 0.707f, sr);
         hornTone.lowpass(4200.0f, 0.6f, sr);
-        upSec = downSec = -1.0f; // the coefficients depend on the rate
+        upSec = downSec = -1.0f; // the coefficients depend on the sample rate
         reset();
     }
 
@@ -44,15 +37,9 @@ class Rotary {
         lpL = lpR = 0.0f;
     }
 
-    // Per block: where the rotors are being asked to go, and how fast they
-    // are allowed to get there.
-    //
-    // The two targets are plain assignments, but the ramps are exponentials,
-    // and Nexus's cabinet block calls this from inside its per-sample `step()`
-    // - a module sees its inputs one sample at a time and cannot tell which of
-    // them moved. The ramp is a knob and almost never moves at all, so it is
-    // worth asking before paying. See Waveguide::setFrequency, which had the
-    // same problem in the same patch.
+    // Sets the rotor target speeds and ramp times. Nexus's cabinet block calls
+    // this every sample, so the ramp coefficients are only recalculated when
+    // the ramp times change. See Waveguide::setFrequency for the same thing.
     void setTargets(float hornTargetHz, float drumTargetHz, float rampUpSec, float rampDownSec) {
         hornTarget = hornTargetHz;
         drumTarget = drumTargetHz;
@@ -65,32 +52,20 @@ class Rotary {
     }
 
     void setMic(float distance01, float angle01, float spread01) {
-        // Close in, the level swing and the Doppler are extreme; further back
-        // the room averages them out.
-        //
-        // **Three things here used to multiply into an auto-panner.** The
-        // depth reached 0.58, so one channel swung 11 dB on its own; the
-        // half-angle reached a quarter turn, which puts the two mics a half
-        // turn apart and therefore in *opposition*, so what one gained the
-        // other lost; and the width below widened the difference again. Ten
-        // to thirteen decibels of ping-pong, on every patch with the cabinet
-        // on. A horn going round a room is a few decibels and a Doppler, and
-        // the Doppler is most of what tells you it is turning.
+        // Close mics get more level swing and Doppler, distant ones less.
+        // Depth, angle and spread are kept small so the cabinet doesn't turn
+        // into an auto-panner. Most of the effect should come from Doppler.
         depth = 0.08f + 0.24f * (1.0f - distance01);
         doppler = (0.25f + 0.75f * (1.0f - distance01)) * 0.0016f * sampleRate;
-        // Half the included angle. A pair of microphones on a cabinet is
-        // perhaps a third of a turn apart in total, not a half.
+        // Half the angle between the mics, up to a third of a turn in total.
         angle = angle01 * 1.0471976f;
         spread = spread01;
     }
 
     /**
-     * The rotors going round with nothing to play through them.
-     *
-     * Exactly the speed and angle arithmetic of `process`, sample by sample,
-     * and none of the sound: what a sleeping organ calls so the cabinet is
-     * where it would have been - and at the speed it was asked for - when
-     * the next note arrives.
+     * Advances the rotors without processing audio. The same speed and phase
+     * maths as `process`, called while the organ is asleep so the cabinet is
+     * in the right place and at the right speed when the next note arrives.
      */
     void spin(int32_t frames) {
         for (int32_t i = 0; i < frames; ++i) {
@@ -109,7 +84,7 @@ class Rotary {
         drumHz += (drumTarget - drumHz) * (drumTarget > drumHz ? upCoeff : downCoeff);
         hornPhase += hornHz / sampleRate;
         if (hornPhase >= 1.0f) hornPhase -= 1.0f;
-        drumPhase -= drumHz / sampleRate; // counter-rotating, as the cabinet is
+        drumPhase -= drumHz / sampleRate; // the drum turns the other way
         if (drumPhase < 0.0f) drumPhase += 1.0f;
 
         const float low = lowSplit.process(x);
@@ -129,26 +104,21 @@ class Rotary {
         const float ddL = drumL.read(doppler * 0.35f * (1.0f + dl));
         const float ddR = drumR.read(doppler * 0.35f * (1.0f + dr));
 
-        // Pointing away is quieter and duller; one pole is enough for the
-        // dullness and it costs nothing.
+        // Pointing away is quieter and duller. One pole is enough for the
+        // dulling.
         const float ampHL = 1.0f + depth * hl, ampHR = 1.0f + depth * hr;
         const float ampDL = 1.0f + depth * 0.7f * dl, ampDR = 1.0f + depth * 0.7f * dr;
         float l = hdL * ampHL + ddL * ampDL;
         float r = hdR * ampHR + ddR * ampDR;
-        // How much duller it gets pointing away has to scale with how close
-        // the microphone is, exactly as the level swing does. It did not: the
-        // coefficient swept 0.35 to 0.65 whatever the mic distance said, so
-        // most of the wobble was a tone modulation that no control reached,
-        // and backing the mic off made a patch *worse* rather than better.
+        // The dulling scales with mic distance (through depth), like the
+        // level swing.
         const float tilt = depth * 1.1f;
         const float k = std::fmax(0.08f, 0.62f - tilt * (1.0f - hl) * 0.5f);
         lpL += (l - lpL) * k;
         lpR += (r - lpR) * k;
         l = lpL; r = lpR;
 
-        // The width narrows from what the microphones actually heard; it
-        // does not widen past it. Anything over 1.0 here is inventing
-        // difference that no pair of mics in a room could have picked up.
+        // Spread only narrows what the mics heard. It never widens past it.
         const float mid = 0.5f * (l + r), side = 0.5f * (l - r) * (0.25f + 0.75f * spread);
         outL = mid + side;
         outR = mid - side;
@@ -164,8 +134,8 @@ class Rotary {
     float hornHz = 0.0f, drumHz = 0.0f;
     float hornTarget = 0.0f, drumTarget = 0.0f;
     float upCoeff = 0.001f, downCoeff = 0.0005f;
-    // What those two coefficients were solved for, so setTargets can tell when
-    // nothing has moved. Negative means "not solved yet", which no ramp is.
+    // The ramp times the coefficients were worked out for, so setTargets can
+    // skip the work. Negative means not worked out yet.
     float upSec = -1.0f, downSec = -1.0f;
     float depth = 0.5f, doppler = 40.0f, angle = 1.5f, spread = 0.7f;
     float lpL = 0.0f, lpR = 0.0f;

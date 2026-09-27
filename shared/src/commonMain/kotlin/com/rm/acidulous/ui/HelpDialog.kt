@@ -30,19 +30,12 @@ import com.rm.acidulous.res.*
 /**
  * The manual, inside the app.
  *
- * **The same words as `manual/` in the repository**, lifted by
- * tools/gen_manual.py rather than copied by hand: a manual that disagrees with
- * the app is worse than no manual, and two hand-kept copies disagree within a
- * release. Nothing here is written here.
+ * The text comes from manual/ in the repository via tools/gen_manual.py, so the
+ * app and the manual can't drift apart. Don't write manual text here.
  *
- * **Contents first, a section is its own window, and a machine is a page
- * inside that** - three levels, because twenty machines are a line each in a
- * list and a page each behind it, and neither length does both jobs.
- *
- * The original note still holds: - which is the shape the
- * licences already take a file along, and for the same reason this one cannot
- * be a [TabbedDialog]: that measures every page and takes the tallest, so the
- * longest section would make the short ones a screen of mostly nothing.
+ * Contents first, each section opens in its own window, and each machine is a
+ * page inside that. This can't be a [TabbedDialog] because that sizes every
+ * page to the tallest, which would leave short sections mostly empty.
  */
 @Composable
 fun HelpDialog(onDismiss: () -> Unit) {
@@ -66,15 +59,12 @@ fun HelpDialog(onDismiss: () -> Unit) {
 
     reading?.let { section ->
         PlainDialog(section.title, onDismiss = { reading = null }, dismissLabel = stringResource(Res.string.help_back), spacing = 0.dp) {
-            // A reading line: about a hundred characters, not eleven hundred dp.
+            // A comfortable reading width, about 100 characters.
             WindowWidth(720.dp)
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (block in section.blocks) ManualLine(block)
-                // **A page of its own for each of them, under the summary.**
-                // Twenty machines are a line each here and a page each behind
-                // it, because neither length is the right one for both jobs:
-                // the list is for finding the machine and the page is for
-                // learning it.
+                // Sections with children (the machines) list them under the
+                // summary, each opening its own page.
                 if (section.children.isNotEmpty()) {
                     ListSection(stringResource(Res.string.help_in_detail)) {
                         for (child in section.children) {
@@ -98,12 +88,12 @@ fun HelpDialog(onDismiss: () -> Unit) {
     }
 }
 
-/** One line of the manual, in the shape its own mark asked for. */
+/** One line of the manual, drawn the way its mark says. */
 @Composable
 private fun ManualLine(block: ManualBlock) {
     val c = Acid.colors
-    // The phone's words, or a computer's on one: see gen_manual.py. A line
-    // that is the other platform's alone is empty here, and not drawn.
+    // The phone text or the desktop text, see gen_manual.py. A line that's only
+    // for the other platform is empty here and not drawn.
     val words = block.text(com.rm.acidulous.AppHost.current.onDesktop)
     if (words.isEmpty()) return
     val text = inline(words)
@@ -115,8 +105,8 @@ private fun ManualLine(block: ManualBlock) {
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.padding(top = 6.dp),
         )
-        // A heading inside a heading's part: the body's own face, brighter and
-        // heavier, so it reads as belonging to the teal one above it.
+        // A subheading: body font, brighter and heavier, so it reads as part of
+        // the teal heading above it.
         ManualKind.Subheading -> Text(
             words,
             color = c.text,
@@ -125,8 +115,8 @@ private fun ManualLine(block: ManualBlock) {
             modifier = Modifier.padding(top = 4.dp),
         )
         ManualKind.Para -> Text(text, color = c.textMid, fontSize = 12.sp, lineHeight = 17.sp)
-        // The mark sits in a column of its own so a wrapped line lines up under
-        // the words rather than under the bullet.
+        // The bullet has its own column so wrapped lines line up under the
+        // text.
         ManualKind.Bullet -> Row(Modifier.fillMaxWidth()) {
             Text("·", color = c.textDim, fontSize = 12.sp, modifier = Modifier.width(14.dp))
             Text(text, color = c.textMid, fontSize = 12.sp, lineHeight = 17.sp)
@@ -139,11 +129,11 @@ private fun ManualLine(block: ManualBlock) {
 }
 
 /**
- * `**bold**`, `*emphasis*` and `` `code` `` drawn rather than printed.
+ * Draws `**bold**`, `*emphasis*` and `` `code` `` instead of printing the
+ * marks.
  *
- * Done here rather than in the generator because it is a *drawing* question:
- * the Markdown stays the manual's own text, and this is the one place that
- * knows what this app's bold and its monospace look like.
+ * Done here rather than in the generator so the manual stays plain Markdown and
+ * this is the one place that knows how bold and monospace look in the app.
  */
 internal fun inline(source: String): AnnotatedString = buildAnnotatedString {
     var i = 0
@@ -165,7 +155,7 @@ internal fun inline(source: String): AnnotatedString = buildAnnotatedString {
     }
 }
 
-/** A lone `*`, which is emphasis, as against the `**` of bold. */
+/** A single `*` (emphasis), as opposed to the `**` of bold. */
 private fun emphasisAt(s: String, from: Int): Int {
     var i = s.indexOf('*', from)
     while (i >= 0) {
@@ -175,7 +165,7 @@ private fun emphasisAt(s: String, from: Int): Int {
     return -1
 }
 
-/** Append up to the closing mark in [style]; returns where to carry on. */
+/** Append up to the closing mark in [style], returns where to continue. */
 private fun androidx.compose.ui.text.AnnotatedString.Builder.span(
     source: String,
     from: Int,
@@ -184,7 +174,7 @@ private fun androidx.compose.ui.text.AnnotatedString.Builder.span(
 ): Int {
     val end = source.indexOf(close, from)
     if (end < 0) {
-        // An unclosed mark is the manual's own punctuation, not a span.
+        // An unclosed mark is just punctuation.
         append(source.substring(from - close.length))
         return source.length
     }

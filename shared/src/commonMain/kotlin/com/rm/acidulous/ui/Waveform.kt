@@ -32,16 +32,12 @@ import kotlin.math.min
 import com.rm.acidulous.res.*
 
 /**
- * A picture of a sound, with two handles and a window onto it.
+ * The part of a sound the waveform shows, as a start and a span in fractions
+ * of the whole.
  *
- * It lived inside the pad editor, where it was the only waveform in the app.
- * There are two now - the recording screen trims a file that is not mounted on
- * anything - and two loops drawing the same sound is one of them being subtly
- * different with nobody able to say which. The house rule is that the
- * vocabulary lives in one file.
- *
- * What it does *not* own is fetching the shape: a mounted pad and a file on
- * disk are two different engine calls, and the caller knows which it has.
+ * The waveform with its trim handles is shared by the pad editor and the
+ * recorder. Fetching the shape is left to the caller, since a mounted pad
+ * and a file on disk are different engine calls.
  */
 @Immutable
 data class WaveView(val from: Double = 0.0, val span: Double = 1.0) {
@@ -49,18 +45,12 @@ data class WaveView(val from: Double = 0.0, val span: Double = 1.0) {
 }
 
 /**
- * Min/max pairs into a box, and the one loop in the app that draws a sound.
+ * Draws min/max pairs into a box. The one place the app draws a waveform
+ * (the trimmer, grid cells and tape lanes all use it), so they all look the
+ * same. Each caller decides what the horizontal axis means.
  *
- * Three places draw waveforms now - the trimmer above, a grid cell, and a tape
- * lane - and they disagree about the axis: the trimmer's is the file, a cell's
- * is the scene's cycle, a lane's is the cycle with the take somewhere in it.
- * What they cannot be allowed to disagree about is the *picture*, so the axis
- * stays with each caller and the columns come here.
- *
- * [c0] until [c1] are the columns of [shape] to use, laid across [x0] until
- * [x1]. Drawn as rectangles rather than lines because a column wider than a
- * pixel is a block, and a one-pixel line with a fat stroke is the same block
- * drawn less predictably at the ends.
+ * Columns [c0] until [c1] of [shape] are laid across [x0] until [x1]. Drawn
+ * as rectangles, since a column wider than a pixel is a block.
  */
 fun DrawScope.drawShape(
     shape: List<Float>, c0: Int, c1: Int, x0: Float, x1: Float, mid: Float, half: Float, colour: Color,
@@ -83,7 +73,7 @@ fun DrawScope.drawShape(
 fun Waveform(
     /** Min/max pairs, as `sampleShape` and `fileShape` both return them. */
     shape: FloatArray,
-    /** How long the whole thing is, which sets how far in a pinch may go. */
+    /** The total length, which sets how far a pinch can zoom in. */
     frames: Int,
     view: WaveView,
     onView: (WaveView) -> Unit,
@@ -93,15 +83,15 @@ fun Waveform(
     onStart: (Float) -> Unit,
     onEnd: (Float) -> Unit,
     modifier: Modifier = Modifier,
-    /** What to say when there is nothing to draw. */
+    /** Shown when there's nothing to draw. */
     empty: String = "",
-    /** Where playing has got to, as a fraction of the whole; below nought when nothing plays. */
+    /** How far playback has got, as a fraction of the whole; below 0 when not playing. */
     playhead: Float = -1f,
 ) {
     val c = Acid.colors
     var dragging by remember { mutableStateOf(0) } // -1 start, 1 end, 0 nothing
-    // Read here and captured by the gesture, which is keyed on the sample
-    // rather than on these so that it survives a drag changing them.
+    // The gesture is keyed on the sample, not these, so it survives a drag
+    // changing them. It reads them through these updated states.
     val viewState by rememberUpdatedState(view)
     val startState by rememberUpdatedState(start)
     val endState by rememberUpdatedState(end)
@@ -115,18 +105,15 @@ fun Waveform(
                 val down = awaitFirstDown()
                 val w = size.width.toFloat().coerceAtLeast(1f)
 
-                /** Where on the *sample* an x on screen points. */
+                /** Where on the sample an x on screen points. */
                 fun atOf(x: Float): Float =
                     (viewState.from + (x / w).coerceIn(0f, 1f) * viewState.span)
                         .toFloat().coerceIn(0f, 1f)
 
-                // **What kind of gesture this is, before it moves anything.**
-                // A handle used to be grabbed on the down event, which made
-                // the first finger of a pinch drag the trim somewhere before
-                // the second one landed. So nothing happens until the gesture
-                // has declared itself: past the slop it is a drag, a second
-                // finger makes it a zoom, and a release without either is a
-                // tap that puts the nearer handle where it landed.
+                // Nothing moves until the gesture is decided, so the first finger of a
+                // pinch can't drag a handle. Past the slop it's a drag, a second
+                // finger makes it a zoom, and a release without either is a tap that
+                // moves the nearer handle there.
                 val slop = viewConfiguration.touchSlop
                 var kind = 0 // 0 undecided, 1 drag a handle, 2 two fingers, 3 tapped
                 while (kind == 0) {
@@ -138,9 +125,8 @@ fun Waveform(
                 }
 
                 if (kind == 2) {
-                    // Pinch to zoom, two fingers to scroll. The same pair of
-                    // gestures the roll and the drum grid take, so the hand
-                    // already knows them.
+                    // Pinch to zoom, two fingers to scroll, like the roll and the
+                    // drum grid.
                     var lastSpan = 0f
                     var lastMid = 0f
                     while (true) {
@@ -153,8 +139,8 @@ fun Waveform(
                         val mid = (a + z) / 2f
                         if (lastSpan > 0f) {
                             val now = viewState
-                            // Zoom about the midpoint, so whatever is between
-                            // the fingers stays between them.
+                            // Zoom about the midpoint, so what's between the fingers
+                            // stays there.
                             val anchor = now.from + (mid / w) * now.span
                             val floor = if (frames > 0) (64.0 / frames).coerceAtMost(0.5) else 0.001
                             val next = (now.span * (lastSpan / gap)).coerceIn(floor, 1.0)
@@ -168,8 +154,8 @@ fun Waveform(
                         on.forEach { it.consume() }
                     }
                 } else if (kind == 1) {
-                    // Whichever handle is nearer, so a drag never has to begin
-                    // exactly on a two-pixel line.
+                    // Whichever handle is nearer, so a drag doesn't have to start
+                    // exactly on a two pixel line.
                     val at = atOf(down.position.x)
                     dragging = if (abs(at - startState) <= abs(at - endState)) -1 else 1
                     if (dragging < 0) setStart(at) else setEnd(at)
@@ -196,15 +182,13 @@ fun Waveform(
             val mid = size.height / 2f
             if (shape.isEmpty()) return@Canvas
 
-            // Through the window, not against the whole sample: at eight times
-            // in, a trim handle off the left is at a negative x and must draw
-            // there rather than be clamped onto the edge, or it reads as a
-            // handle sitting where it is not.
+            // Relative to the view, not the whole sample. A handle off the left
+            // edge gets a negative x and must not be clamped onto the edge.
             fun xOf(at: Float): Float = ((at - view.from) / view.span).toFloat() * size.width
             val lo = xOf(min(start, end))
             val hi = xOf(max(start, end))
-            // Outside the trim first, so the part that plays is drawn on top
-            // of it and reads as the subject rather than as a hole.
+            // The area outside the trim first, so the part that plays is drawn on
+            // top.
             val shadeTo = lo.coerceIn(0f, size.width)
             val shadeFrom = hi.coerceIn(0f, size.width)
             drawRect(c.bgDeep.copy(alpha = 0.55f), Offset(0f, 0f), Size(shadeTo, size.height))
@@ -226,8 +210,8 @@ fun Waveform(
                 )
             }
             drawLine(c.textDim.copy(alpha = 0.4f), Offset(0f, mid), Offset(size.width, mid), 1f)
-            // The playhead, while the file plays: through the window, like
-            // the handles, and only where the window shows it.
+            // The playhead while the file plays, relative to the view, and only
+            // if it's in view.
             if (playhead >= 0f) {
                 val x = xOf(playhead)
                 if (x in 0f..size.width) drawLine(c.text, Offset(x, 0f), Offset(x, size.height), 1.5.dp.toPx())
@@ -240,10 +224,8 @@ fun Waveform(
                 )
             }
 
-            // Where in the sample this window is. The house rule is that
-            // anything you can scroll says so - see ui/Scrollbar.kt - and a
-            // waveform zoomed eight times in with no bar is a picture of a
-            // sound with no way to tell which part.
+            // Where in the sample this view is, since anything you can scroll
+            // shows a position bar (see ui/Scrollbar.kt).
             if (view.zoomed) {
                 val trackY = size.height - 3f
                 drawLine(c.scrollbar.copy(alpha = 0.3f), Offset(0f, trackY), Offset(size.width, trackY), 3f)
@@ -259,8 +241,8 @@ fun Waveform(
                 modifier = Modifier.align(Alignment.Center),
             )
         }
-        // The trim's two ends as controls TalkBack can adjust: dragging them
-        // is the only other way, and it has no equivalent there.
+        // The trim ends as controls TalkBack can adjust, since dragging them
+        // doesn't work there.
         if (shape.isNotEmpty()) {
             androidx.compose.foundation.layout.Row(Modifier.matchParentSize()) {
                 Box(

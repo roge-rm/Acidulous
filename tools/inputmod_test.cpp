@@ -1,12 +1,8 @@
-// Modifiers: what they do to what is played, and what they no longer do to
-// what is stored.
+// Tests the input modifiers.
 //
-// Until M59 these sat in the *playback* path, so a clip kept the key somebody
-// pressed and the chord was made again on every pass. The roll showed one note
-// and three were heard. They now act once, on the way in, and what they make
-// is what the clip keeps - so the two claims worth asserting are that a live
-// note comes out modified, and that a clip's own note does not go through them
-// at all.
+// Modifiers act once, as a note comes in, and the clip stores what they
+// produce. So a live note should come out modified, and a note played from a
+// clip shouldn't go through them at all.
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -79,8 +75,8 @@ void aPlainNotePassesThrough() {
 void aChordIsThreeNotes() {
     printf("- the chord modifier\n");
     Fixture f("Chord");
-    // A plain major triad, fixed rather than diatonic, and no strum so all
-    // three land on the same instant.
+    // A plain major triad, fixed instead of diatonic, and no strum so all
+    // three land at the same time.
     f.set("mode", 0.0f);
     f.set("type", 0.0f);
     f.set("strum", 0.0f);
@@ -103,13 +99,13 @@ void aClipGoesStraightToTheMachine() {
     f.set("mode", 0.0f);
     f.set("type", 0.0f);
     f.set("strum", 0.0f);
-    // The same note, arriving from a clip rather than from a finger.
+    // The same note, coming from a clip instead of a key.
     f.rack.playSequenced(0x90, 60, 100);
     ok("a clip's note does not go through the modifiers", f.heard.onsLive() == 0,
        std::string("the sink saw ") + std::to_string(f.heard.onsLive()));
 
-    // And to be sure the fixture is not simply deaf: the same rack still
-    // modifies a live note afterwards.
+    // Check the fixture isn't just deaf: the same rack still modifies a live
+    // note afterwards.
     f.rack.handleMidi(0x90, 62, 100);
     ok("while a live note on the same rack still is", f.heard.onsLive() == 3,
        std::string("got ") + std::to_string(f.heard.onsLive()));
@@ -121,12 +117,11 @@ void theScaleModifierCorrectsOnTheWayIn() {
     f.set("key", 0.0f);     // C
     f.set("scale", 0.0f);   // Ionian
     f.set("mode", 0.0f);    // snap
-    f.rack.handleMidi(0x90, 61, 100); // C sharp, which is not in C major
+    f.rack.handleMidi(0x90, 61, 100); // C sharp, which isn't in C major
     const auto pitches = f.heard.pitchesLive();
     ok("a note outside the scale is moved into it", pitches.size() == 1 && pitches[0] != 61,
        pitches.empty() ? "nothing" : std::string("came out as ") + std::to_string(pitches[0]));
-    // The point of doing it on the way in: what is written down is the
-    // corrected note, so the roll and the sound agree.
+    // The stored note is the corrected one, so the roll and the sound agree.
     ok("and what is written down is the corrected note",
        !pitches.empty() && (pitches[0] == 60 || pitches[0] == 62));
 }

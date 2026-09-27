@@ -1,14 +1,10 @@
-// Every circular buffer in the engine, read at every position it can be read at.
+// Reads every circular buffer in the engine at every position it can be read
+// at. A tempo that changes every block (e.g. following Link) keeps the read
+// position gliding, and it can land exactly on the end of the buffer where a
+// naive wrap reads out of bounds.
 //
-// Written after a crash: a tempo that moves every block keeps the read
-// position gliding, and a glide eventually lands exactly on the end of the
-// buffer, where the wrap-around arithmetic used to leave it. A tempo that
-// sits still almost never does, which is why this went years unnoticed and
-// then fell over the day the engine started following a Link session.
-//
-// Built with the address sanitiser: the assertion is not a number, it is
-// that nothing reads outside the buffer over several million samples of
-// every tempo and every delay time.
+// Built with the address sanitiser, so the test is that nothing reads
+// outside a buffer over millions of samples at every tempo and delay time.
 #include <cmath>
 #include <cstdio>
 #include <engine/dsp/Delay.h>
@@ -18,17 +14,15 @@
 using namespace acidulous::dsp;
 
 /**
- * Every read position the wrap can produce, over the values that actually
- * bite: a write head just short of the delay, at every representable float
- * between one sample and the next. One of these - a fraction of exactly one
- * ULP - is what crashed the app, and it is the reason readIndex exists.
+ * Every read position the wrap can produce around the risky values: a write
+ * head just short of the delay, at every float between one sample and the
+ * next. A fraction of one ULP there is what readIndex guards against.
  */
 int indexTests() {
     int bad = 0, tried = 0, atEnd = 0;
     const int32_t size = 96000; // two seconds at 48 kHz, as prepare() makes it
     for (int32_t wr : {0, 1, 47999, 48000, 48001, 65535, 65536, 95998, 95999}) {
-        // The float grid around wr, a couple of hundred steps either side,
-        // which at this magnitude is a step of one ULP.
+        // A couple of hundred floats either side of wr, one ULP apart.
         for (int step = -256; step <= 256; ++step) {
             float samples = static_cast<float>(wr);
             for (int n = 0; n < (step < 0 ? -step : step); ++n) {
@@ -41,14 +35,14 @@ int indexTests() {
             ++tried;
             if (r < 0 || r >= size) ++bad;
             if (frac < 0.0f || frac >= 1.0f) ++bad;
-            // Count the ones where the naive expression would have gone off
-            // the end, so this test is seen to be testing something.
+            // Count the cases where a naive wrap would go past the end, to
+            // show the test hits them.
             float naive = static_cast<float>(wr) - samples;
             while (naive < 0.0f) naive += static_cast<float>(size);
             if (static_cast<int>(naive) >= size) ++atEnd;
         }
     }
-    // And the states nothing should survive: a delay that is not a number.
+    // A delay that isn't a number must not read out of bounds either.
     {
         float frac = -1.0f;
         const int r = Delay::readIndex(1234, std::nanf(""), size, frac);
@@ -65,30 +59,21 @@ int indexTests() {
 }
 
 /**
- * The other two buffers that read themselves at a fraction.
+ * `DelayLine` and `Waveguide`, which also read at fractional positions. A
+ * 10 ms reverb pre-delay at 48 kHz is 480.000031 samples, and 480 minus that
+ * plus the buffer length is exactly the buffer length, one past the end.
  *
- * `Delay` grew `readIndex` after the Link crash and `DelayLine` and
- * `Waveguide` kept their own copies of the arithmetic, without the
- * correction - so the same bug was still in the tree, in two places, being
- * hit on the *first read of every reverb render*: a ten millisecond pre-delay
- * at 48 kHz is 480.000031 samples, and 480 minus that, plus the buffer
- * length, is exactly the buffer length. Under the sanitiser the old code
- * aborts here; without it, it quietly read whatever the allocator had put
- * after the buffer, which is why a reverb "played differently the second
- * time" depending on what else had been allocated.
- *
- * The delays are swept across the float grid around each write head, which is
- * where the bad values live - a plain sweep of round numbers never finds one.
+ * Delays are swept across the floats around each write head, since round
+ * numbers never hit the bad values.
  */
 int bufferTests() {
     int tried = 0, atEnd = 0;
-    // The sizes that actually occur: a reverb pre-delay, its combs, the
-    // shimmer window, and a low string's loop.
+    // Real sizes: a reverb pre-delay, its combs, the shimmer window and a low
+    // string's loop.
     for (int32_t cap : {10080, 2314, 5760, 2666, 96}) {
-        // The write head has to be *put* where it bites, not assumed: a line
-        // that has been filled right round sits at zero, and from zero the
-        // wrap can never land on the length. The reverb's first read happens
-        // with the head a few hundred samples in, which is exactly the case.
+        // Put the write head where the problem happens. From zero the wrap
+        // can't land on the length, but the reverb's first read happens with
+        // the head a few hundred samples in.
         for (int32_t wr : {1, 2, 3, 480, cap / 4, cap / 2, cap - 2, cap - 1}) {
             if (wr >= cap - 1) continue;
             acidulous::dsp::DelayLine line;
@@ -110,15 +95,15 @@ int bufferTests() {
                 float naive = static_cast<float>(wr) - samples;
                 while (naive < 0.0f) naive += static_cast<float>(cap);
                 if (static_cast<int>(naive) >= cap) ++atEnd;
-                // And through the real thing, with its head where it bites, so
-                // the sanitiser sees the load rather than only the arithmetic.
+                // Also read through the real class so the sanitiser sees the
+                // actual load.
                 const float v = line.read(samples);
                 if (!std::isfinite(v)) { printf("  FAIL DelayLine returned a non-number\n"); return 1; }
             }
         }
     }
-    // The string, driven the way a note drives it: every pitch it can be asked
-    // for, gliding, because a gliding loop length is what lands on the value.
+    // The string at every pitch, gliding, since a gliding loop length is what
+    // hits the bad value.
     {
         acidulous::machine::Waveguide wg;
         wg.prepare(48000.0f);
@@ -155,9 +140,8 @@ int main() {
     for (int i = 0; i < 64; ++i) in[i] = 0.25f * std::sin(i * 0.1f);
 
     int blocks = 0;
-    // Every delay time, swept from the slowest tempo to the fastest and back,
-    // in the steps a Link pull actually takes: a few hundredths of a bpm a
-    // block, which is what lands the read position on awkward values.
+    // Every delay time, swept from the slowest tempo to the fastest and back
+    // in small steps like Link makes (a few hundredths of a bpm a block).
     for (int t = 0; t < Delay::kTimes; ++t) {
         for (int pass = 0; pass < 2; ++pass) {
             for (int step = 0; step < 4000; ++step) {
@@ -178,8 +162,8 @@ int main() {
         }
     }
 
-    // And the pathological one: a tempo that jumps rather than glides, which
-    // is what a peer joining a Link session at a different tempo looks like.
+    // A tempo that jumps rather than glides, like a peer joining a Link
+    // session at a different tempo.
     for (int step = 0; step < 20000; ++step) {
         d.set(step % Delay::kTimes, 0.9f, 0.2f, false, (step % 2) == 0 ? 240.0f : 30.0f);
         for (int i = 0; i < 64; ++i) { outL[i] = 0.0f; outR[i] = 0.0f; }

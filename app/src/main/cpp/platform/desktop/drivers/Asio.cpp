@@ -28,15 +28,14 @@ namespace acidulous::asio {
 namespace {
 
 /**
- * The driver's thread: COM, apartment-threaded, with a message loop, which
- * is what a driver may count on from the thread that loaded it. Everything
- * that touches the driver outside its own callbacks is run here and waited
- * for. Made once and kept for the life of the app.
+ * The driver's thread: apartment-threaded COM with a message loop, which is
+ * what drivers expect. Everything that touches the driver outside its own
+ * callbacks runs here and is waited for. Lives as long as the app.
  */
 class Home {
   public:
     static Home &get() {
-        static Home *home = new Home(); // never torn down: the app's end is its end
+        static Home *home = new Home(); // never torn down
         return *home;
     }
 
@@ -62,7 +61,7 @@ class Home {
     void run(std::promise<DWORD> &started) {
         CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         MSG msg;
-        PeekMessageW(&msg, nullptr, WM_USER, WM_USER, PM_NOREMOVE); // the queue exists before anyone posts
+        PeekMessageW(&msg, nullptr, WM_USER, WM_USER, PM_NOREMOVE); // create the queue before anyone posts
         started.set_value(GetCurrentThreadId());
         while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
             if (msg.message == WM_APP && msg.hwnd == nullptr) {
@@ -157,7 +156,7 @@ bool typeKnown(ASIOSampleType type) {
     }
 }
 
-// On the driver's audio thread: the chosen pair in, the engine's block out.
+// On the driver's audio thread: reads the chosen input pair, writes the engine's block.
 void process(long index) {
     if (!live.on) return;
     const int32_t n = live.frames;
@@ -190,7 +189,7 @@ void onRateChange(ASIOSampleRate rate) { LOGI("the driver's sample rate changed 
 
 void resetSoon() {
     auto reset = live.onReset;
-    if (reset) std::thread(reset).detach(); // not on the driver's threads: the reset closes it
+    if (reset) std::thread(reset).detach(); // own thread, since the reset closes the driver
 }
 
 long onMessage(long selector, long value, void *, double *) {
@@ -199,7 +198,7 @@ long onMessage(long selector, long value, void *, double *) {
             return value == kAsioResetRequest || value == kAsioEngineVersion || value == kAsioResyncRequest ||
                    value == kAsioLatenciesChanged;
         case kAsioEngineVersion: return 2;
-        // The driver's own panel changed its buffer or its rate: open it again.
+        // The driver's panel changed its buffer or rate, so reopen it.
         case kAsioResetRequest: resetSoon(); return 1;
         case kAsioResyncRequest: return 1;
         case kAsioLatenciesChanged: return 1;
@@ -252,8 +251,8 @@ bool openHere(const std::string &name, int32_t sampleRate, int32_t bursts, Proce
         if (asioDrivers != nullptr) asioDrivers->removeCurrentDriver();
         return false;
     }
-    // The engine runs at one rate; the driver is asked for it, and one that
-    // will not is not used - the default output resamples instead.
+    // The driver has to run at the engine's rate. If it can't, it isn't used
+    // and the default output (which resamples) plays instead.
     ASIOSampleRate rate = 0;
     if (ASIOCanSampleRate(sampleRate) != ASE_OK || ASIOSetSampleRate(sampleRate) != ASE_OK ||
         ASIOGetSampleRate(&rate) != ASE_OK || std::lround(rate) != sampleRate) {

@@ -1,8 +1,8 @@
 package com.rm.acidulous.util
 
 /**
- * java.io.ByteArrayOutputStream's part the shared code uses: bytes appended,
- * then taken whole. A MIDI file is built with it, and a SysEx gathered.
+ * The part of java.io.ByteArrayOutputStream the shared code uses: append
+ * bytes, then take them all. Used to build MIDI files and collect SysEx.
  */
 class ByteArrayOutputStream(initial: Int = 32) {
     private var buf = ByteArray(initial.coerceAtLeast(1))

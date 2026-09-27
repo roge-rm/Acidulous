@@ -14,18 +14,13 @@
 
 // A machine's factory patches, as text.
 //
-// The banks used to be Kotlin literals holding *normalised* numbers, which
-// meant every presets object carried its own copy of the engine's parameter
-// ranges to convert with - `lin(620f, 40f, 12000f)` and so on - and those
-// copies could drift from the engine without anything noticing. Here a patch
-// says `cutoff 620 Hz` and the number is resolved through the engine's own
-// ParamDef, so there is nothing to drift.
+// Values are written in real units (`cutoff 620 Hz`) and resolved through
+// the engine's own ParamDef, so there's no second copy of the parameter
+// ranges to drift. The audition harness reads these files and
+// tools/gen_patches.sh turns the same files into the Kotlin that ships, so
+// what's auditioned is what's in the app.
 //
-// It is also what lets the audition harness and the app share a source. The
-// harness reads these files; tools/gen_patches.sh turns the same files into
-// the Kotlin that ships. What was heard is what is in the app.
-//
-// The format, in full:
+// The format:
 //
 //     # comments run to the end of the line
 //     machine  Reflux          # or `effect Delay`
@@ -44,10 +39,9 @@
 //       resonance  0.62         # a 0..1 parameter's range is 0..1
 //       set formula "t * (t >> 5)"
 //
-// Values are always in the parameter's own units. That is the one rule, and
-// the optional unit suffix is how it is enforced: writing `620` into a
-// parameter measured in ms is a typo nobody would ever see, and writing
-// `620 Hz` into it is a parse error.
+// Values are always in the parameter's own units. The optional unit suffix
+// enforces that: `620` in a parameter measured in ms would go unnoticed, but
+// `620 Hz` is a parse error.
 
 namespace acidulous::audition {
 
@@ -62,18 +56,18 @@ struct BankValue {
 struct BankPatch {
     std::string name;
     std::string role;     // overrides the bank's
-    // What kind of sound this is, for grouping - it prefixes the rendered
-    // wav's name so a folder of forty sorts into its families. Defaults to
-    // the role, which for most machines is the same thing; Cumulus is the
-    // exception, where ten families share four demo phrases.
+    // What kind of sound this is, for grouping. It prefixes the rendered
+    // wav's name so a folder sorts into families. Defaults to the role, which
+    // is usually the same thing, except for Cumulus where ten families share
+    // four demo phrases.
     std::string family;
     std::string material; // overrides the bank's
     std::string input;    // overrides the bank's
     int note = -1;        // overrides the phrase's default
     // The range the instrument is played in, as MIDI notes, or -1 for none.
     // The audition phrase stays inside it, and the app puts the keyboard at
-    // its bottom when the patch is loaded - so a bassoon is heard, and
-    // played, where a bassoon is.
+    // its bottom when the patch is loaded, so a bassoon is played where a
+    // bassoon is.
     int low = -1, high = -1;
     std::vector<BankValue> values;
     std::vector<std::pair<std::string, std::string>> settings;
@@ -141,10 +135,11 @@ inline bool token(const std::string &s, size_t &at, std::string &out) {
 
 /** Reads one bank file. Returns false and fills [error] on a malformed line. */
 /**
- * A bank from any stream: [path] is only what errors and `bank.path` call it.
+ * A bank from any stream: [path] is only used to name it in errors and
+ * `bank.path`.
  *
  * The browser build has no files to open, so it carries the bank texts in the
- * binary and reads them from memory; everything else goes through readBank.
+ * binary and reads them from memory. Everything else uses readBank.
  */
 inline bool readBankFrom(std::istream &in, const std::string &path, Bank &bank, std::string &error) {
     bank = Bank();
@@ -191,12 +186,9 @@ inline bool readBankFrom(std::istream &in, const std::string &path, Bank &bank, 
                 if (eq == std::string::npos) return fail("expected key=value, got '" + attr + "'");
                 const std::string k = attr.substr(0, eq), v = attr.substr(eq + 1);
                 if (k == "role") p.role = v;
-                // Every patch gets one. The browser shelves a bank by
-                // family, and a bank of fifty-one in one list is a list
-                // nobody reads to the end of - so a new bank without
-                // families is a bank nobody can find anything in. Aim for
-                // four to seven of them, three patches apiece at least: two
-                // patches is too thin to be worth a tab of its own.
+                // Every patch should have one. The browser groups a bank by
+                // family, and one long list is hard to find anything in. Aim
+                // for four to seven families of at least three patches each.
                 else if (k == "family") p.family = v;
                 else if (k == "material") p.material = v;
                 else if (k == "input") p.input = v;
@@ -222,11 +214,9 @@ inline bool readBankFrom(std::istream &in, const std::string &path, Bank &bank, 
             if (!detail::token(line, at, key)) return fail("a key is wanted after set");
             detail::token(line, at, value); // an empty string is legal: it clears
             // `\n` is a newline, because some settings are whole documents.
-            //
-            // A Nexus patch *is* its graph - a line per module and a line per
-            // cable - and Mosaic's zone map is the same shape. A bank file is
-            // one setting per line, so without this the only machines whose
-            // patches are text could not have a bank at all.
+            // A Nexus patch is its graph (a line per module and per cable)
+            // and Mosaic's zone map is the same, but a bank file is one
+            // setting per line.
             std::string out;
             out.reserve(value.size());
             for (size_t i = 0; i < value.size(); ++i) {
@@ -278,10 +268,9 @@ inline bool readBank(const std::string &path, Bank &bank, std::string &error) {
  * One patch resolved against the engine's own parameter table: normalised
  * values by index, with everything the patch left out at its default.
  *
- * That last part is not a detail. It is exactly what ParamBinding.applyAll
- * does in the app, and it is what makes "a patch lists only what it changes"
- * true. Resolve without it and a patch will sound right in the harness only
- * because the patch before it left something behind.
+ * Defaulting the rest matches ParamBinding.applyAll in the app and is what
+ * lets a patch list only what it changes. Without it a patch could sound
+ * right in the harness only because of what the previous patch left behind.
  */
 struct Resolved {
     std::vector<float> norm;                 // one per parameter, all of them
@@ -296,17 +285,12 @@ inline Resolved resolve(const BankPatch &patch, const ParamDef *defs, int32_t co
     r.settings = patch.settings;
 
     // One `*` in a name stands for any run of characters, and the value is
-    // applied to every parameter it matches.
+    // applied to every parameter it matches. For example Forage has thirteen
+    // pads of fourteen parameters, so `p*_cutoff 2200 Hz` sets them all at
+    // once. Dice's sixteen slices work the same way.
     //
-    // Forage is why. Thirteen pads of fourteen parameters is a hundred and
-    // eighty-two names, and a patch that low-passes the whole kit had to say
-    // so thirteen times - which is not a patch anybody can read, and twelve
-    // more chances to fumble a digit. `p*_cutoff 2200 Hz` says the one thing
-    // it means. Dice's sixteen slices are the same shape of problem.
-    //
-    // A name with no star still has to match exactly, and a star that matches
-    // nothing is an error, so the check that matters - a typo does nothing at
-    // all in the app, silently - keeps working either way.
+    // A name with no star must match exactly, and a star that matches nothing
+    // is an error, so typos are still caught.
     const auto matching = [&](const std::string &name, std::vector<int32_t> &out) {
         const size_t star = name.find('*');
         if (star == std::string::npos) {
@@ -329,9 +313,9 @@ inline Resolved resolve(const BankPatch &patch, const ParamDef *defs, int32_t co
         std::vector<int32_t> matches;
         matching(v.name, matches);
         if (matches.empty()) {
-            // The check that matters most. A name that does not exist does
-            // nothing at all in the app - applyAll fills the default and moves
-            // on - so a typo in a hand-written patch has always been silent.
+            // The most important check. A name that doesn't exist does
+            // nothing in the app (applyAll fills the default and moves on),
+            // so a typo in a patch would otherwise go unnoticed.
             r.problems.push_back("line " + std::to_string(v.line) + ": no parameter named '" + v.name + "'");
             continue;
         }
@@ -373,8 +357,8 @@ inline Resolved resolve(const BankPatch &patch, const ParamDef *defs, int32_t co
         r.norm[static_cast<size_t>(index)] = v01;
         }
     }
-    // A bad value behind a star fails once for every parameter it matched, and
-    // thirteen copies of one mistake is a worse report than one.
+    // A bad value behind a star would fail once per matched parameter, so
+    // report each message only once.
     std::vector<std::string> once;
     for (const std::string &p : r.problems) {
         if (std::find(once.begin(), once.end(), p) == once.end()) once.push_back(p);

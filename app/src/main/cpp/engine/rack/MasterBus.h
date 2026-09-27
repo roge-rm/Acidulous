@@ -15,63 +15,58 @@ namespace acidulous {
 
 /** How many send buses the master carries. */
 constexpr int32_t kSendSlots = 2;
-/** How many insert slots the master carries, before its fader and limiter. */
+/** How many insert slots the master has, before its fader and limiter. */
 constexpr int32_t kMasterInsertSlots = 2;
 /**
- * How many groups the mixer has. A group is a strip in the mixer, not a track:
- * tracks route into it, and it has two inserts and a fader of its own.
+ * How many groups the mixer has. A group is a mixer strip, not a track.
+ * Tracks route into it and it has two inserts and its own fader.
  */
 constexpr int32_t kGroupSlots = 4;
-/** And how many inserts each group has. */
+/** How many inserts each group has. */
 constexpr int32_t kGroupInsertSlots = 2;
 
 class MasterBus {
   public:
     /**
-     * What is left of the master's own parameters.
+     * The master's own parameters.
      *
-     * **The sends are not here any more.** They were nine entries - reverb on,
-     * size, damp, tone, delay on, time, feedback, tone, ping-pong - describing
-     * two fixed boxes, and the boxes are now slots holding any of the
-     * fourteen effects, each with its own parameter table. A send's parameters
-     * belong to whatever is in it, addressed as `send1` and `send2`, the same
-     * way an insert's belong to the effect in the slot.
+     * The sends aren't here. Each send is a slot that can hold any effect, so
+     * its parameters belong to that effect, addressed as send1 and send2, the
+     * same as an insert's.
      */
     enum P : int32_t {
         Volume, LimiterOn, LimiterDrive,
         ClickOn, ClickVolume, ClickVoice, ClickDiv, ClickWhen,
-        // The four groups' faders: gain, mute and solo each, appended.
+        // The four groups' faders: gain, mute and solo each, added at the end.
         G1Gain, G1Mute, G1Solo, G2Gain, G2Mute, G2Solo,
         G3Gain, G3Mute, G3Solo, G4Gain, G4Mute, G4Solo,
-        // And their pans, appended after them.
+        // And their pans, added after those.
         G1Pan, G2Pan, G3Pan, G4Pan,
         Count
     };
-    /** Group [g]'s gain parameter; mute and solo follow it. */
+    /** Group [g]'s gain parameter. Mute and solo follow it. */
     static constexpr int32_t groupParam(int32_t g) { return G1Gain + g * 3; }
 
     MasterBus();
-    void prepare(int32_t sampleRate); // not the audio thread
+    void prepare(int32_t sampleRate); // not on the audio thread
 
     ParamSet &params() { return params_; }
 
     /**
-     * The held effects: on the whole mix after the master inserts and before
-     * the fader, or on one group after its inserts and before its fader.
+     * The performance effects: on the whole mix after the master inserts and
+     * before the fader, or on one group after its inserts and before its fader.
      */
     Perform perform;
 
-    // Per block. `fade` is the scene fade multiplier (1 = none); a click may
-    // be pending from the metronome. The tick range is passed on to the sends,
-    // which may hold anything an insert slot can hold - and four of those sync
-    // their LFOs to the transport rather than to the wall.
+    // Per block. fade is the scene fade multiplier (1 = none). A click may be
+    // pending from the metronome. The tick range is passed on to the sends,
+    // since some effects sync their LFOs to the transport.
     void process(Rack *racks, int32_t rackCount, float *outInterleaved, int32_t frames, float bpm, float fade,
                  int64_t tickStart = 0, int64_t tickEnd = 0);
 
     /**
-     * Put [next] on send [slot] and hand back what was there, for retiring
-     * off this thread. The audio thread's half of a mount; see Rack::swapEffect,
-     * which this is the master's copy of.
+     * Put [next] on send [slot] and return what was there, to be retired off
+     * this thread. The master's version of Rack::swapEffect.
      */
     Effect *swapSend(int32_t slot, Effect *next) {
         if (slot < 0 || slot >= kSendSlots) return next; // the caller retires it
@@ -80,10 +75,10 @@ class MasterBus {
         return old;
     }
 
-    /** What is on send [slot], or null. Its own ParamSet is its parameters. */
+    /** What's on send [slot], or null. Its own ParamSet holds its parameters. */
     Effect *send(int32_t slot) { return (slot >= 0 && slot < kSendSlots) ? sends[slot] : nullptr; }
 
-    /** Put [next] on master insert [slot]; returns what was there, for the caller to retire. */
+    /** Put [next] on master insert [slot]. Returns what was there for the caller to retire. */
     Effect *swapInsert(int32_t slot, Effect *next) {
         if (slot < 0 || slot >= kMasterInsertSlots) return next;
         Effect *old = inserts[slot];
@@ -92,7 +87,7 @@ class MasterBus {
     }
     Effect *insert(int32_t slot) { return (slot >= 0 && slot < kMasterInsertSlots) ? inserts[slot] : nullptr; }
 
-    /** Put [next] on group [g]'s insert [slot]; returns what was there, for the caller to retire. */
+    /** Put [next] on group [g]'s insert [slot]. Returns what was there for the caller to retire. */
     Effect *swapGroupInsert(int32_t g, int32_t slot, Effect *next) {
         if (g < 0 || g >= kGroupSlots || slot < 0 || slot >= kGroupInsertSlots) return next;
         Effect *old = groupInserts[g][slot];
@@ -102,7 +97,7 @@ class MasterBus {
     Effect *groupInsert(int32_t g, int32_t slot) {
         return (g >= 0 && g < kGroupSlots && slot >= 0 && slot < kGroupInsertSlots) ? groupInserts[g][slot] : nullptr;
     }
-    /** Group [g]'s output this block, after its inserts and fader: what its stem is. */
+    /** Group [g]'s output this block, after its inserts and fader. This is its stem. */
     const float *groupOutL(int32_t g) const { return groupL[g]; }
     const float *groupOutR(int32_t g) const { return groupR[g]; }
     float readGroupPeak(int32_t g) {
@@ -116,39 +111,30 @@ class MasterBus {
     /**
      * A count-in is running, so the click sounds whatever the metronome says.
      *
-     * The engine already queues count-in clicks without asking whether the
-     * metronome is on - "a count-in always clicks, that is the whole of what
-     * it is" - but this bus only *rendered* them when it was. With the
-     * metronome off you got the wait and no count, which is the worst of both
-     * and is what Dan reported. Worse, `Click::trigger` queues and
-     * `Click::process` is what empties the queue: never rendering left four
-     * stale clicks sitting in it with stale sample offsets, to go off later at
-     * the wrong moment.
+     * The engine queues count-in clicks even with the metronome off, so they
+     * have to be rendered too. Otherwise you get the wait with no count, and
+     * the queued clicks (Click::process is what empties the queue) would go
+     * off later at the wrong moment.
      */
     void setCountingIn(bool on) { countingIn = on; }
     bool clickAudible() const { return clickEnabled() || countingIn; }
 
     /**
-     * Whether the click should sound while the transport runs.
-     *
-     * "Recording only" is the setting most people end up on: a metronome
-     * is a thing you need while playing something in and a thing you stop
-     * hearing the moment you are listening back.
+     * Whether the click should sound while the transport runs. "Recording
+     * only" is what most people use.
      */
     bool clickAllowed(bool recordArmed) const {
         const int32_t when = static_cast<int32_t>(params_.normalized(ClickWhen) * 2.0f + 0.5f);
         if (when == 1) return recordArmed;
-        if (when == 2) return false; // the count-in is not gated by this
+        if (when == 2) return false; // the count-in ignores this
         return true;
     }
 
     /**
-     * How often it ticks, in ticks: a bar, or a division of the beat.
+     * How often it clicks, in ticks: a bar or a division of the beat.
      *
-     * Read off the *target* rather than the smoothed value, as every
-     * stepped control must be - a smoothed one slides through the values
-     * in between on its way, and here that would mean the metronome
-     * briefly ticking sixteenths on its way from eighths to a bar.
+     * Reads the target rather than the smoothed value, like every stepped
+     * control, or it would briefly tick the values in between when changed.
      */
     int64_t clickStepTicks() const {
         const int32_t index = static_cast<int32_t>(params_.normalized(ClickDiv) * 4.0f + 0.5f);
@@ -164,15 +150,14 @@ class MasterBus {
     float readPeak() { return peakHold.exchange(0.0f, std::memory_order_relaxed); }
 
     /**
-     * Loudness of what leaves the master: momentary, short-term and
-     * integrated LUFS, and true peak in dBTP.
+     * Loudness of the master output: momentary, short-term and integrated
+     * LUFS, and true peak in dBTP.
      *
-     * **Measured only while somebody is reading it.** The meter costs a few
-     * microseconds a block - most of it the 4x interpolation true peak needs -
-     * which is several percent of a phone's budget for a number nobody is
-     * looking at. So each read keeps it running for another second, the
-     * audio thread counts that down, and the integrated figure covers the
-     * time the meter was watched since the last reset.
+     * Only measured while something is reading it. The meter costs a few
+     * microseconds a block (mostly the 4x oversampling for true peak), so each
+     * read keeps it running for another second, counted down on the audio
+     * thread. The integrated figure covers the time it was watched since the
+     * last reset.
      */
     void readLoudness(float *out4) {
         loudnessWatch.store(kWatchBlocks, std::memory_order_relaxed);
@@ -181,16 +166,16 @@ class MasterBus {
         out4[2] = lufsI.load(std::memory_order_relaxed);
         out4[3] = truePeakDb.load(std::memory_order_relaxed);
     }
-    /** Start the integrated figure again: at play, or when asked. */
+    /** Restart the integrated figure, at play or when asked. */
     void resetLoudness() { loudnessResetWanted.store(true, std::memory_order_relaxed); }
     float currentFade() const { return fadeNow.load(std::memory_order_relaxed); }
 
-    /** Empty every tail and come back from silence. Audio thread. */
+    /** Clear every tail and come back from silence. Audio thread. */
     void panic();
 
   private:
     ParamSet params_;
-    /** Where the held effects ran last block: a group, or -1 for the whole mix. */
+    /** Where the performance effects ran last block: a group, or -1 for the whole mix. */
     int32_t performWas = -1;
     Effect *sends[kSendSlots]{};
     Effect *inserts[kMasterInsertSlots]{};
@@ -215,12 +200,9 @@ class MasterBus {
     /** What each send is fed, summed mono across the racks. */
     float sendSum[kSendSlots][kBlockFrames]{};
     /**
-     * The pair a send is *processed* in.
-     *
-     * An insert works in place on a stereo pair; a send bus is a mono sum that
-     * gets added to the mix. So the sum is fanned into this, the effect runs on
-     * it, and the result is added in - which is also what lets a send be
-     * something with a stereo image of its own, like the chorus or the width.
+     * The stereo pair a send is processed in. A send bus is a mono sum, so it's
+     * copied into this pair, the effect runs on it in place, and the result is
+     * added to the mix. That also lets a send effect have its own stereo image.
      */
     float wetL[kBlockFrames]{}, wetR[kBlockFrames]{};
     std::atomic<float> peakHold{0.0f};

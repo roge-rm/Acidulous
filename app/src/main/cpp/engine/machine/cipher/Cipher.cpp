@@ -6,26 +6,20 @@
 
 namespace acidulous::machine {
 
-// Make-up for the normalised band sum. Bands tile the spectrum and are close
-// to decorrelated, so the sum of N of them grows about as sqrt(N) - which is
-// why this is a constant and the band count is not in it.
+// Make-up gain for the normalised band sum. The bands are close to
+// uncorrelated, so the sum of N grows about as sqrt(N) and the band count
+// doesn't need to be in it.
 constexpr float kBandMakeup = 16.0f;
-// What the summed bands reach before the output stage, and what the carrier
-// reaches before its own - the levels each saturator should treat as nominal,
-// so the knob changes shape rather than volume.
+// The levels the summed bands and the carrier reach before their saturators,
+// used as nominal so the drive knobs change the tone and not the volume.
 constexpr float kNominal = 0.3f;
 constexpr float kCarrierNominal = 0.5f;
-// The consonant path's level. It belongs under the vocoded signal - a
-// vocoder with no path for consonants turns every "s" into a hole, but one
-// whose noise outweighs its bands is not a vocoder at all.
+// The level of the consonant (sibilance) path. It should sit under the
+// vocoded signal, not over it.
 constexpr float kSibilanceMakeup = 2.0f;
-// Where the bank sits in the volume knob's travel, set from Init. With the
-// bands normalised the machine no longer runs permanently saturated, so it
-// needs a house level like every other machine rather than a tanh holding it
-// down.
+// Output gain that puts Init at the same level as other machines.
 constexpr float kHouse = 0.94f;
-// The volume knob's top, named once so the knob and the clamp that guards it
-// cannot drift apart again.
+// The volume knob's maximum, shared by the knob and the clamp in render.
 constexpr float kVolumeMax = 2.0f;
 using namespace dsp;
 
@@ -56,15 +50,9 @@ const ParamDef *Cipher::paramDefs(int32_t &count) const {
         };
 
         put(Bands, "bands", 4.0f, 40.0f, 16.0f, Curve::Stepped, 37, "");
-        // The bottom of the bank, at 80 Hz rather than 110.
-        //
-        // A vocoder whose lowest band starts above the speaker's fundamental
-        // cannot measure half of what it is given. Measured on the voice this
-        // bank was voiced against: a median fundamental of 125 Hz, but 48 per
-        // cent of voiced frames below 110 and 25 per cent below 80. The cost
-        // of reaching lower is that the same number of bands covers more
-        // octaves and each one is wider, so this is as low as it goes before
-        // the resolution where speech is actually understood starts to suffer.
+        // The bottom of the bank defaults to 80 Hz, low enough to catch most
+        // of a speaking voice's fundamental. Going lower makes each band
+        // wider and hurts intelligibility.
         exp_(LowHz, "low", 40.0f, 600.0f, 80.0f, "Hz");
         exp_(HighHz, "high", 1500.0f, 16000.0f, 8000.0f, "Hz");
         lin(BandQ, "q", 0.0f, 1.0f, 0.55f);
@@ -103,12 +91,8 @@ const ParamDef *Cipher::paramDefs(int32_t &count) const {
         lin(Dry, "dry", 0.0f, 1.0f, 0.0f);
         lin(Wet, "wet", 0.0f, 1.0f, 1.0f);
         lin(Drive, "drive", 0.0f, 1.0f, 0.15f);
-        // To 2.0, as Manual's does, and for a reason particular to this
-        // machine: a vocoder's output level is set by a modulator it does not
-        // control - on a phone, whatever the player is speaking at - and the
-        // patches that throw the most spectrum away (few bands, a narrow
-        // range, every other band removed, a noise carrier) ran out of knob
-        // four decibels under the bank's line with nothing left to give.
+        // Goes up to 2.0 since the output level depends on the input voice,
+        // and patches that throw away a lot of spectrum need the extra room.
         lin(Volume, "volume", 0.0f, kVolumeMax, 0.8f);
         lin(Pan, "pan", -1.0f, 1.0f, 0.0f);
         exp_(AmpAttack, "ampatk", 0.001f, 4.0f, 0.01f, "s");
@@ -170,19 +154,17 @@ void Cipher::prepare(int32_t sr) {
     for (auto &v : voices) v.amp.setSampleRate(sampleRate);
     for (auto &e : eg) e.setSampleRate(sampleRate);
     lastCount = -1;
-    for (auto &k : lastBandKey) k = NAN; // the coefficients mean another rate now
+    for (auto &k : lastBandKey) k = NAN; // the coefficients are for the old rate
     rebuildBands();
     reset();
 }
 
-// The bank is laid out logarithmically, because hearing is, and because a
-// linear bank spends half its filters above 10 kHz where speech has nothing
-// to say.
+// The bank is spaced logarithmically, like hearing. A linear bank would put
+// half its filters above 10 kHz, where speech has little.
 void Cipher::rebuildBands() {
     const int32_t count = std::max(4, std::min(kMaxBands, steppedOf(Bands)));
-    // The edges move with the matrix, two octaves either way at full depth.
-    // They were offered as destinations and read by nothing: the bank is laid
-    // out here, once a block, and the matrix had never been asked.
+    // The edges can be modulated by the matrix, two octaves either way at
+    // full depth.
     const float low = mod[DstBandLow] == 0.0f ? paramOf(LowHz)
                                               : clampf(paramOf(LowHz) * std::exp2(mod[DstBandLow] * 2.0f), 40.0f, 600.0f);
     const float high = mod[DstBandHigh] == 0.0f ? paramOf(HighHz)
@@ -204,13 +186,11 @@ void Cipher::rebuildBands() {
     }
 }
 
-// A band should be about as wide as the gap to its neighbour. Any narrower
-// and the bank has holes in it; any wider and every band hears every other
-// one, which is what makes a vocoder sound like a blanket. So resonance is
-// derived from how many bands are covering how many octaves, and the knob
-// only leans on that.
+// A band should be about as wide as the gap to its neighbour. Narrower
+// leaves holes, wider makes the bands overlap and sound muddy. So resonance
+// comes from how many bands cover how many octaves, and the knob adjusts it.
 float Cipher::bandResonance(float q) const {
-    // The edges the bank was actually laid out on, modulated or not.
+    // The edges the bank was actually laid out on, including modulation.
     const float octaves = std::log2(std::fmax(1.01f, lastHigh / lastLow));
     const float perOctave = static_cast<float>(bandCount - 1) / std::fmax(0.5f, octaves);
     const float wanted = std::fmax(0.7f, perOctave * 1.45f * (0.45f + 1.1f * q));
@@ -235,10 +215,9 @@ void Cipher::reset() {
 }
 
 void Cipher::noteOn(uint8_t note, uint8_t velocity) {
-    // **The two mod envelopes, which had never run** - the third machine with
-    // this fault and the last one `tools/modsource_test.sh` can find. They
-    // are the machine's, not a voice's, so the first note of a phrase starts
-    // them and a note added to a held chord does not.
+    // The two mod envelopes belong to the machine, not a voice, so the first
+    // note of a phrase starts them and notes added to a held chord don't.
+    // tools/modsource_test.sh checks they run.
     bool held = false;
     for (const auto &cand : voices) if (cand.used && cand.gate) { held = true; break; }
     if (!held) for (auto &e : eg) e.retrigger();
@@ -311,8 +290,7 @@ float Cipher::sourceValue(int32_t src) const {
     case SrcEg2: return eg[1].value();
     case SrcLfo1: return lfoValue[0];
     case SrcLfo2: return lfoValue[1];
-    // The modulator itself is a modulation source: what it is doing can
-    // drive anything, not only the band it lands in.
+    // The modulator's loudness, brightness and pitch are also mod sources.
     case SrcLoudness: return loudness;
     case SrcBrightness: return brightness;
     case SrcPitchTrack: return clampf((trackedNote - 36.0f) / 48.0f, 0.0f, 1.0f);
@@ -331,7 +309,7 @@ void Cipher::applyMatrix() {
     }
 }
 
-// Which analysis band drives this synthesis band. This is the machine.
+// Which analysis band drives this synthesis band.
 int32_t Cipher::mappedBand(int32_t band) const {
     const int32_t n = bandCount;
     const int32_t last = n - 1;
@@ -361,8 +339,8 @@ float Cipher::carrierSample(Voice &v, float glideK, float detuneMul, float pitch
         switch (wave) {
         case WavePulse: return phase < pw ? 1.0f : -1.0f;
         case WaveSuper: {
-            // Three saws a little apart: a carrier wants density more than
-            // it wants purity, because the filters will shape it anyway.
+            // Three slightly detuned saws. A dense carrier works best since
+            // the filters shape it anyway.
             float s = 0.0f;
             for (int i = 0; i < 3; ++i) {
                 const float p = std::fmod(phase * (1.0f + 0.004f * static_cast<float>(i - 1)) + 0.31f * i, 1.0f);
@@ -386,7 +364,7 @@ float Cipher::carrierSample(Voice &v, float glideK, float detuneMul, float pitch
 
 bool Cipher::render(float *L, float *R, int32_t frames) {
     params_.tick();
-    applyMatrix(); // first: the band edges are destinations now
+    applyMatrix(); // first, since the band edges can be modulated
     rebuildBands();
 
     const float dt = static_cast<float>(frames) / sampleRate;
@@ -400,7 +378,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     }
     eg[0].set(0.0f, paramOf(Eg1A), paramOf(Eg1D), paramOf(Eg1S), paramOf(Eg1R), false);
     eg[1].set(0.0f, paramOf(Eg2A), paramOf(Eg2D), paramOf(Eg2S), paramOf(Eg2R), false);
-    // Stepped in the sample loop only if the matrix names one. See Filament's.
+    // Only stepped in the sample loop if the matrix uses one. See Filament.
     bool egWanted = false;
     for (int m = 0; m < kMatrixSlots && !egWanted; ++m) {
         const int base = MatrixBase + m * kMatrixParams;
@@ -409,8 +387,8 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
         egWanted = src == SrcEg1 || src == SrcEg2;
     }
 
-    // A shuffle has to be stable or the bank would boil; it is rebuilt only
-    // when the seed changes.
+    // The shuffle is only rebuilt when the seed or band count changes, so it
+    // stays stable.
     const int32_t seed = steppedOf(Seed);
     if (seed != shuffleSeed || lastCount != bandCount) {
         shuffleSeed = seed;
@@ -433,11 +411,8 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const float remapAmount = clampf(paramOf(RemapAmount) + mod[DstRemapAmount], 0.0f, 1.0f);
     const bool freeze = steppedOf(Freeze) != 0;
     const float freezeMorph = clampf(paramOf(FreezeMorph) + mod[DstFreezeMorph], 0.0f, 1.0f);
-    // Per *sample*, because that is where it is applied. It was worked out
-    // for a whole block - `exp(-frames / (t * rate))` - and then applied on
-    // every sample of it, so a held spectrum let go sixty-four times faster
-    // than the knob said: Held Vowel's thirty seconds were half of one, and
-    // "one vowel sustains for as long as the key is down" did not.
+    // Per sample, since it's applied every sample. A per-block value here
+    // would make the freeze decay 64 times too fast.
     const float freezeDecay = std::exp(-1.0f / (paramOf(FreezeDecay) * sampleRate));
     const float gate = clampf(paramOf(Gate) + mod[DstGate], 0.0f, 1.0f);
     const float gateDepth = paramOf(GateDepth);
@@ -448,8 +423,8 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const int32_t waveA = steppedOf(CarrierWaveA), waveB = steppedOf(CarrierWaveB);
     const float mix = clampf(paramOf(CarrierMix) + mod[DstCarrierMix], 0.0f, 1.0f);
     const float detune = paramOf(Detune), pw = paramOf(PulseWidth), sub = paramOf(SubLevel);
-    // The second oscillator's offset and the glide's coefficient, worked out
-    // once: a `pow` and a divide of numbers that hold still for the block.
+    // The second oscillator's detune and the glide coefficient, worked out
+    // once a block.
     const float detuneMul = std::exp2(detune / 1200.0f);
     const float glideSeconds = paramOf(Glide);
     const float glideK = glideSeconds <= 0.002f ? 1.0f
@@ -462,18 +437,11 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const float carrierDriveNorm = kCarrierNominal / std::tanh(kCarrierNominal * carrierDriveK);
     const float driveK = 1.0f + drive * 8.0f;
     const float driveNorm = kNominal / std::tanh(kNominal * driveK);
-    // Clamped to the knob's own maximum, not to a number that used to match it.
-    //
-    // This said 1.5 while the parameter ran to 1.0, so modulation could push
-    // past the knob - reasonable. Raising the knob to 2.0 turned the same line
-    // into a lid: the four patches that needed the top of the range measured
-    // identically at 1.6 and at 2.0, and no amount of levelling moved them.
+    // Clamped to the knob's own maximum.
     const float volume = clampf(paramOf(Volume) + mod[DstVolume], 0.0f, kVolumeMax);
     const float pan = clampf(paramOf(Pan) + mod[DstPan], -1.0f, 1.0f);
-    // A pan does not move inside a block, and a drive's compensation is a
-    // property of the knob rather than of the sample: all four were trig or
-    // `tanh` being called once per output sample for an answer that never
-    // changed.
+    // Pan and drive compensation are worked out once a block, not per
+    // sample.
     const float panAngle = (pan + 1.0f) * 0.25f * kPiF;
     const float panL = std::cos(panAngle) * 1.4142f, panR = std::sin(panAngle) * 1.4142f;
     const bool track = steppedOf(PitchTrack) != 0;
@@ -484,14 +452,12 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     sibilanceFilter.set(paramOf(SibilanceHz), 0.4f);
     sibilanceShaper.set(paramOf(SibilanceHz), 0.25f);
 
-    // Band tuning for the synthesis side: shifted, stretched, or both. The
-    // analysis bank stays where it is, which is what makes a shift move the
-    // formants rather than the whole sound.
+    // Band tuning for the synthesis side: shifted, stretched or both. The
+    // analysis bank stays put, so a shift moves the formants and not the
+    // whole sound.
     //
-    // **Only when something it depends on has moved.** Four filters a band,
-    // each a `tan`, and two `pow`s and two `exp`s besides - two hundred and
-    // fifty libm calls a block at forty bands, every block, for a bank whose
-    // knobs sit still for minutes at a time.
+    // Only redone when something it depends on changed, since it's a lot of
+    // tan, pow and exp calls at 40 bands.
     const float bandKey[] = {static_cast<float>(bandCount), shift, stretch, q, smear, attack, release,
                              lastLow, lastHigh};
     bool bandsMoved = false;
@@ -508,7 +474,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
         bands[i].analysis1.set(bands[i].centre, res);
         bands[i].analysis2.set(bands[i].centre, res);
         // Smear: the release time is scaled across the bank, so one end of
-        // the spectrum lets go before the other and the sound trails.
+        // the spectrum fades before the other.
         const float spread = std::pow(4.0f, smear * (t - 0.5f) * 2.0f);
         bands[i].attackCoeff = 1.0f - std::exp(-1.0f / std::fmax(1.0f, attack * sampleRate));
         bands[i].releaseCoeff = 1.0f - std::exp(-1.0f / std::fmax(1.0f, release * spread * sampleRate));
@@ -518,18 +484,13 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const float *in = bus.live() ? bus.block() : nullptr;
     float sumLoud = 0.0f, sumBright = 0.0f, sumWeight = 0.0f;
 
-    // **No note, nothing coming in and the bank empty: nothing to do.**
+    // With no note, no input and an empty bank, skip the work. Otherwise the
+    // whole filter bank runs on zeros, which is expensive.
     //
-    // With nothing playing the bank still ran - two filters a band on the
-    // analysis side and two on the synthesis, forty bands, every sample, all
-    // of them filtering zeros. Sixty microseconds a block on the dev box for a
-    // track that was not playing, the most of any machine here.
-    //
-    // Strict about what counts as empty: no voice, no input over -120 dB,
-    // every band's envelope *and* its frozen hold under that too - a held
-    // spectrum is waiting for a note, not finished - and two quiet blocks of
-    // output behind it. So what it leaves is zeros, and it zeroes the filters
-    // on the way in so that what wakes is what a reset would have made.
+    // Empty means: no voice, no input over -120 dB, every band's envelope
+    // and frozen hold below that too, and two quiet output blocks. The
+    // filters are cleared on the way to sleep, so waking up is the same as
+    // after a reset.
     bool anyVoice = false;
     for (const auto &v : voices) anyVoice = anyVoice || v.used;
     float inputPeak = 0.0f;
@@ -563,7 +524,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
         const float external = in != nullptr ? 0.5f * (in[static_cast<size_t>(n) * 2] + in[static_cast<size_t>(n) * 2 + 1]) : 0.0f;
 
         // The carrier: the internal oscillators, or the input if the roles
-        // have been swapped.
+        // are swapped.
         float carrier = 0.0f;
         float ampSum = 0.0f;
         for (auto &v : voices) {
@@ -584,11 +545,8 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             carrier += ((static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f) * noiseLevel;
         }
         if (carrierDrive > 0.0f) {
-            // The carrier's own saturation, normalised the same way. It had no
-            // compensation at all, so turning it up thinned the carrier and
-            // quietened it at once - and the vocoder imposes the modulator's
-            // envelope on whatever the carrier is, so that loss passes
-            // straight through to the output.
+            // The carrier's saturation, normalised on its nominal level so
+            // turning it up doesn't make the output quieter.
             carrier = std::tanh(carrier * carrierDriveK) * carrierDriveNorm;
         }
         carrier *= 0.5f;
@@ -610,7 +568,7 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
         for (int i = 0; i < bandCount; ++i) {
             Band &b = bands[i];
             // Normalised, so a band measures how loud the modulator is in its
-            // range rather than how narrow the band happens to be.
+            // range regardless of how narrow the band is.
             float a = b.analysis1.bandpass(modulator) * b.analysis1.bandNorm();
             if (twoPole) a = b.analysis2.bandpass(a) * b.analysis2.bandNorm();
             const float rectified = std::fabs(a);
@@ -637,22 +595,10 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
                 const float threshold = gate * 0.25f;
                 if (amount < threshold) amount *= 1.0f - gateDepth;
             }
-            // The same normalisation on the way out.
-            //
-            // `Svf::bandpass` returns the raw band output, whose peak gain is
-            // its own Q - and this machine derives Q from how many bands cover
-            // how many octaves, so *the band count was a volume knob*. With
-            // drive off, Init measured -5.1 dB peak at four bands and +54.8 at
-            // forty: sixty decibels of swing from a control that is supposed
-            // to change the resolution of the vocoder, not its level. The
-            // output then sat so far over full scale that the drive stage was
-            // not a drive at all but the only thing keeping the machine from
-            // destroying itself, which is why all nine patches peaked at
-            // exactly the same -3.7 dB.
-            //
-            // `bandNorm()` is the correction already made to MultiFilter this
-            // round, for the same reason: a filter setting should change the
-            // character, not the level.
+            // The same normalisation on the way out. `Svf::bandpass` has a
+            // peak gain of Q, and Q depends on the band count, so without
+            // `bandNorm()` the band count would change the level by up to
+            // 60 dB.
             float s = b.synthesis1.bandpass(source) * b.synthesis1.bandNorm();
             if (twoPole) s = b.synthesis2.bandpass(s) * b.synthesis2.bandNorm();
             out += s * amount * kBandMakeup;
@@ -663,46 +609,29 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             sumWeight += 1.0f;
         }
 
-        // Sibilance: a vocoder with no path for consonants turns every "s"
-        // into a hole. The top of the modulator is passed through directly.
+        // Sibilance: without a path for consonants every "s" would drop out.
+        // Noise is added when the top of the modulator is loud enough.
         if (sibilance > 0.0f) {
             const float hiss = sibilanceFilter.highpass(modulator);
             const float level = std::fabs(hiss);
             sibilanceEnv += (level - sibilanceEnv) * (level > sibilanceEnv ? 0.02f : 0.0008f);
-            // Turned up means *more* sibilance, which is what the name says.
-            //
-            // The knob was the gate's threshold, so raising it let less
-            // through - a control that does the opposite of its label, and
-            // one this bank's first draft set to 0.6 on every patch that was
-            // meant to have consonants.
+            // Turning the knob up gives more sibilance (it lowers the
+            // threshold).
             if (sibilanceEnv > (1.0f - sibilance) * 0.05f) {
                 rngState = rngState * 1664525u + 1013904223u;
                 const float noise = (static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f;
-                // Shaped to where an "s" actually lives, and at a level
-                // that sits under the vocoder rather than over it.
-                //
-                // This was flat white noise times six. Measured on the
-                // octave bands, it put 48 dB more energy in the top octave
-                // than the whole vocoder produced - so every patch came out
-                // with an identical -10.4 dB top band, and the difference
-                // between Classic and a fully reversed bank fell from 11.7 dB
-                // to 2.0. The bank map is the machine, and the consonant path
-                // was drowning it.
-                // Band-passed, not high-passed. White noise above a corner
-                // is *more* top-heavy than white noise, because the top
-                // octave is the widest - and the bank stops at `high`, so
-                // everything above it was sibilance and nothing else. A band
-                // around the corner puts the consonant where the consonant
-                // is and leaves the air above it alone.
+                // Band-passed around where an "s" sits, and quiet enough to
+                // stay under the vocoder. Plain or high-passed white noise
+                // is far too bright and drowns out the vocoder.
                 const float shaped =
                     sibilanceShaper.bandpass(noise) * sibilanceShaper.bandNorm();
                 out += shaped * sibilanceEnv * sibLevel * kSibilanceMakeup;
             }
         }
 
-        // Pitch tracking: zero crossings over a window. Crude next to
-        // autocorrelation and about a thousandth of the cost, which is the
-        // right trade when it is steering a carrier rather than tuning one.
+        // Pitch tracking: zero crossings over a window. Rough compared to
+        // autocorrelation but far cheaper, and good enough to steer a
+        // carrier.
         if (track) {
             if ((zeroPrev <= 0.0f) != (modulator <= 0.0f)) ++zeroCount;
             zeroPrev = modulator;
@@ -720,12 +649,8 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
 
         float x = out * wet + (role == InputIsCarrier ? external : carrier) * dry;
         if (drive > 0.0f) {
-            // Normalised on the nominal level. The divisor used to be
-            // `1 + drive * 1.5`, a guess that handed small signals eleven
-            // decibels at the top of the knob and capped everything else at
-            // 0.4 - but it never showed, because until the bands were
-            // normalised this stage was permanently slammed and acting as the
-            // machine's limiter rather than as a drive.
+            // Normalised on the nominal level so drive changes the tone, not
+            // the level.
             x = std::tanh(x * driveK) * driveNorm;
         }
         feedbackSample = x;

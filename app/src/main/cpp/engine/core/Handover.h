@@ -8,11 +8,11 @@
 
 // How objects cross into and out of the audio thread.
 //
-// Anything with a lifetime - a machine, a song snapshot - is built on a normal
-// thread and *mounted* by pushing a Mount record; the audio thread applies one
-// per block, at the block boundary, and never allocates. Whatever it displaces
-// goes back out as a Retire record; a worker thread runs the deleter. The
-// audio thread therefore never calls new or delete.
+// Anything with a lifetime (a machine, a song snapshot) is built on a normal
+// thread and mounted by pushing a Mount record. The audio thread applies one
+// per block, at the block boundary. Whatever it replaces goes back out as a
+// Retire record and a worker thread runs the deleter, so the audio thread
+// never calls new or delete.
 namespace acidulous {
 
 struct Mount {
@@ -50,15 +50,15 @@ class Retirer {
         drain();
     }
 
-    // Audio thread. Never blocks; a full queue leaks the object rather than stall.
+    // Audio thread. Never blocks. If the queue is full the object leaks instead.
     void retire(void *object, void (*deleter)(void *)) {
         if (object == nullptr) return;
         Retire r;
         r.object = object;
         r.deleter = deleter;
         queue.push(r);
-        // The wake is a relaxed flag; the worker also polls, so a missed notify
-        // only delays deletion by one poll interval.
+        // Just a flag, no notify. The worker also polls, so at worst deletion
+        // waits one poll interval.
         pendingSignal.store(true, std::memory_order_release);
     }
 

@@ -1,10 +1,8 @@
-// The amp, and the cabinet that is most of it.
+// Tests the amp and its cabinet.
 //
-// Nearly everything worth asserting here is **pure arithmetic** - a filter
-// chain's magnitude, evaluated through `Biquad::at`, with no audio rendered and
-// no FFT. That is the point of lifting `at` out of Timber: a claim about a
-// cabinet's response should cost microseconds, so it can be made across a grid
-// of settings rather than at one.
+// Most checks are plain math: a filter chain's magnitude from `Biquad::at`,
+// with no audio rendered and no FFT. That makes each check cost microseconds,
+// so it can run across a whole grid of settings.
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -41,7 +39,7 @@ float lowCornerOf(effect::amp::Cabinet &cab) {
     return 400.0f;
 }
 
-/** And where it falls away at the top. */
+/** Where the response has fallen 6 dB at the top. */
 float topCornerOf(effect::amp::Cabinet &cab) {
     const float ref = cab.magnitudeAt(500.0f);
     for (int32_t i = 400; i >= 0; --i) {
@@ -68,15 +66,12 @@ double centroidOf(effect::amp::Cabinet &cab) {
 // --- The claims ------------------------------------------------------------------
 
 /**
- * A cabinet you can resize, and not a tone control with extra steps.
+ * `size` should resize the cabinet, not act as a tone control.
  *
- * This is the whole reason the cab is modelled rather than convolved, and the
- * regression it invites is scaling every filter by the same factor - which
- * looks tidier and turns `size` into "dark at one end, thin at the other".
- *
- * Two numbers encode the claim: the **low corner moves a lot** because the box
- * decides it, and the **top does not** because the cone does, and a cone is not
- * a box.
+ * The easy mistake is scaling every filter by the same factor, which turns
+ * `size` into dark at one end and thin at the other. The low corner should
+ * move a lot because the box sets it, and the top much less because the cone
+ * sets it.
  */
 void sizeIsACabinetNotAToneControl() {
     printf("- size is a cabinet you can resize\n");
@@ -92,16 +87,12 @@ void sizeIsACabinetNotAToneControl() {
        std::to_string(lowSmall) + " Hz down to " + std::to_string(lowBig) + " Hz, " +
            std::to_string(octaves) + " octaves");
 
-    // **The top corner, not a centroid.** A centroid over the whole band moves
-    // when the *bass* moves, so it cannot tell "the cab got bigger" from "the
-    // cab got darker" - which is the one distinction this test exists to make.
+    // Uses the top corner rather than a centroid. A centroid moves when the
+    // bass moves, so it can't tell a bigger cab from a darker one.
     //
-    // The bar is an octave. The regression this guards against is scaling
-    // every filter by the same factor, which would move the top by the same
-    // 2.2 octaves as the bottom and turn `size` into a tone control; what the
-    // fractional exponents buy is that the top moves about half as far as the
-    // bottom, because breakup belongs to the cone and the corner belongs to
-    // the box.
+    // The limit is an octave. Scaling every filter the same would move the
+    // top by the same 2.2 octaves as the bottom. With the fractional exponents
+    // the top moves about half as far.
     const float topSmall = topCornerOf(small), topBig = topCornerOf(big);
     const double moved = std::log2(topSmall / topBig);
     ok("and the top end moves about half as far", std::fabs(moved) < 1.1 && moved < octaves * 0.6,
@@ -109,7 +100,7 @@ void sizeIsACabinetNotAToneControl() {
            std::to_string(moved) + " octaves against " + std::to_string(octaves));
 }
 
-/** Every cabinet knob has to point one way, or nobody can aim it. */
+/** Every cabinet knob has to change the sound in one direction only. */
 void everyKnobIsMonotonic() {
     printf("- every cabinet control moves one way\n");
     struct Probe { const char *name; int which; float hz; bool up; };
@@ -117,9 +108,8 @@ void everyKnobIsMonotonic() {
         {"size", 0, 80.0f, true},    // bigger box, more bottom
         {"cone", 1, 2600.0f, true},  // harder cone, more breakup
         {"mic", 2, 5000.0f, false},  // off axis, darker
-        // `room` is deliberately not here: it is three delayed taps, not a
-        // filter, so it does not appear in the chain's magnitude at all. What
-        // it does is measured where it happens, in the render.
+        // `room` isn't here: it's three delayed taps rather than a filter,
+        // so it doesn't show in the chain's magnitude.
     };
     for (const auto &p : probes) {
         double last = -1e9;
@@ -136,8 +126,8 @@ void everyKnobIsMonotonic() {
             if (!p.up) g = -g;
             if (i == 0) first = g;
             end = g;
-            // A little slack: the trim moves with the response and a knob may
-            // pause without turning round.
+            // A little slack, since the trim moves with the response and a
+            // knob may flatten out for a bit without reversing.
             if (g < last - 0.35) mono = false;
             last = g;
         }
@@ -148,15 +138,15 @@ void everyKnobIsMonotonic() {
 }
 
 /**
- * A cabinet must not ring.
+ * The cabinet must not ring.
  *
- * Five peaks, and `cone` puts the top of their Q at 3.5. Two of them landing a
- * third apart would sum into something sharper than either, and the symptom is
- * a sproingy ping on transients - a snare turning into a boing.
+ * There are five peaks and `cone` takes their Q up to 3.5. Two peaks close
+ * together can add up to something sharper than either, which sounds like a
+ * ping on every transient.
  *
- * Measured from the poles rather than from audio, and **split at 800 Hz**: an
- * 110 Hz bump at Q 1.6 rings for 30 ms and that ringing *is* the thump, so one
- * flat threshold would fail a correct design.
+ * Measured from the poles, and only above 800 Hz. The 110 Hz bump at Q 1.6
+ * rings for 30 ms on purpose (that's the thump), so one threshold for all of
+ * them would fail a correct design.
  */
 void theCabinetDoesNotRing() {
     printf("- the cabinet does not ring\n");
@@ -183,7 +173,7 @@ void theCabinetDoesNotRing() {
        std::to_string(worstHigh * 1000.0) + " ms at " + where);
 }
 
-/** And every setting has to sit at about the same level as every other. */
+/** Every setting has to sit at about the same level. */
 void theLevelHoldsAcrossTheGrid() {
     printf("- one cabinet is not louder than another\n");
     double lo = 1e9, hi = -1e9;
@@ -197,8 +187,7 @@ void theLevelHoldsAcrossTheGrid() {
                 double sum = 0.0;
                 for (int32_t i = 0; i < 12; ++i) {
                     const float hz = 80.0f * std::pow(2.0f, static_cast<float>(i) * 0.55f);
-                    // The trim is what keeps them together, so it is part of
-                    // what is being measured.
+                    // The trim is what keeps them level, so it's included.
                     const double g = cab.magnitudeAt(hz) * cab.outputTrim();
                     sum += g * g;
                 }
@@ -214,7 +203,7 @@ void theLevelHoldsAcrossTheGrid() {
 
 // --- The amp around it -----------------------------------------------------------
 
-/** And `stack` chooses *how hard* they fight, not just where. */
+/** `stack` changes how deep the scoop is, not just where it is. */
 void theStacksDifferInHowHardTheyFight(const double *depth) {
     ok("the British stack scoops harder than the modern one",
        depth[amp::Uk] > depth[amp::Modern] + 2.0,
@@ -222,12 +211,11 @@ void theStacksDifferInHowHardTheyFight(const double *depth) {
 }
 
 /**
- * The tone stack interacts, which is what tells it from an equaliser.
+ * The tone stack controls interact, unlike an EQ.
  *
- * Three independent shelves would leave the mid where it is when bass and
- * treble go up. A real passive stack scoops, because it can only attenuate -
- * and the scoop runs on the **product** of the two, so turning either one down
- * fills the mid back in.
+ * Independent shelves would leave the mid alone when bass and treble go up. A
+ * passive stack can only cut, so it scoops the mid, and the scoop depends on
+ * both together. Turning either one down fills the mid back in.
  */
 void theToneStackInteracts() {
     printf("- the tone stack fights with itself\n");
@@ -243,10 +231,9 @@ void theToneStackInteracts() {
         const float midHz = v.midRef;
         const double scooped = dB(both.magnitudeAt(midHz)) - dB(both.magnitudeAt(100.0f));
         const double flat = dB(neither.magnitudeAt(midHz)) - dB(neither.magnitudeAt(100.0f));
-        // Three decibels for all three, because **the modern voicing scoops
-        // least on purpose** - a high-gain amp does its scooping with gain
-        // structure and its stack is flatter. That the three differ is
-        // asserted separately below; that they all scoop is the shared claim.
+        // 3 dB for all three, since the modern voicing scoops least on
+        // purpose (a high-gain amp's stack is flatter). That they differ is
+        // checked separately.
         ok((std::string("stack ") + std::to_string(k) + ": bass and treble up scoops the mid").c_str(),
            scooped < flat - 3.0,
            std::to_string(scooped) + " dB against " + std::to_string(flat));
@@ -255,7 +242,7 @@ void theToneStackInteracts() {
     theStacksDifferInHowHardTheyFight(depth);
 }
 
-/** And it can never go unstable, whatever anybody automates it to. */
+/** The tone stack stays stable at every setting. */
 void theToneStackIsAlwaysStable() {
     printf("- no setting of it misbehaves\n");
     double loudest = -1e9;
@@ -285,12 +272,10 @@ void theToneStackIsAlwaysStable() {
 }
 
 /**
- * Sag droops and comes back, and does not oscillate.
+ * Sag droops and recovers without oscillating.
  *
- * The failure it guards: detecting on the stage's *output* instead of its
- * input gives a limiter loop with a twelve millisecond attack and a loop gain
- * above one, which motorboats at thirty to eighty hertz - and gets blamed on
- * the cab.
+ * Detecting on the stage's output instead of its input makes a feedback loop
+ * with a 12 ms attack and gain above one, which motorboats at 30 to 80 Hz.
  */
 void sagDroopsAndRecovers() {
     printf("- the supply sags under load and comes back\n");
@@ -307,8 +292,8 @@ void sagDroopsAndRecovers() {
     ok("it has drooped within two hundred milliseconds", dB(early) < -1.5,
        std::to_string(dB(early)) + " dB of rail");
 
-    // Over the last second it must be steady: a rail that keeps moving is one
-    // that is oscillating.
+    // The rail must be steady over the last second. If it keeps moving, it's
+    // oscillating.
     double lo = 1e9, hi = -1e9;
     for (int32_t i = static_cast<int32_t>(kRate); i < static_cast<int32_t>(kRate * 2); ++i) {
         const double r = rail[static_cast<size_t>(i)];
@@ -330,12 +315,8 @@ void sagDroopsAndRecovers() {
 }
 
 /**
- * The whole effect, end to end.
- *
- * Two claims a chain this long can break quietly: that `mix` at nought is the
- * input back again - which also proves the dry path is delayed by exactly the
- * oversampler's latency, because a dry path that is not would show up here as
- * a difference - and that it makes a sound at all.
+ * The whole effect, end to end: `mix` at 0 gives back the input, delayed by
+ * exactly the oversampler's latency, and turned up it makes a sound.
  */
 void theWholeAmp() {
     printf("- the amp, end to end\n");
@@ -357,9 +338,8 @@ void theWholeAmp() {
         for (size_t at = 0; at < in.size(); at += 64) {
             fx.run(l.data() + at, r.data() + at, 64, true);
         }
-        // Bit for bit, **delayed by the oversampler's latency** - which is the
-        // claim worth making, because it proves the dry path is compensated by
-        // exactly that and not approximately.
+        // Delayed by exactly the oversampler's latency, which shows the dry
+        // path is compensated exactly.
         bool same = true;
         int32_t firstBad = -1;
         for (size_t i = dsp::Oversampler::kLatency; i < in.size(); ++i) {
@@ -372,7 +352,7 @@ void theWholeAmp() {
            firstBad < 0 ? "" : "first differs at " + std::to_string(firstBad));
     }
 
-    // And with it up, something happens - and stays finite.
+    // With it up, it makes a sound and stays finite.
     {
         fx.reset();
         fx.params().set(fx.params().indexOf("mix"), 1.0f);

@@ -1,10 +1,10 @@
-; Acidulous's installer for Windows, built on Linux with NSIS (makensis) by
-; :desktop:windowsX64. It installs for the one person running it, with no
-; administrator's prompt: into %LOCALAPPDATA%\Programs\Acidulous, with a
-; Start menu entry and an entry in Settings > Apps to uninstall it from.
+; The Windows installer, built on Linux with NSIS (makensis) by
+; :desktop:windowsX64. It installs for the current user only, with no
+; administrator prompt, into %LOCALAPPDATA%\Programs\Acidulous, with a Start
+; menu entry and an uninstall entry in Settings > Apps.
 ;
-; Songs and settings are not in here but in %APPDATA%\Acidulous, so an
-; upgrade or an uninstall leaves them alone.
+; Songs and settings live in %APPDATA%\Acidulous, so upgrading or
+; uninstalling leaves them alone.
 ;
 ;   makensis -DVERSION=0.9.8 -DSTAGE=<the staged folder> -DOUT=<setup.exe> installer.nsi
 
@@ -44,8 +44,8 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Dan Hunke. GPLv3 or later."
 
 Section
   SetOutPath "$INSTDIR"
-  ; An upgrade replaces the app and its Java whole: a jar left over from the
-  ; last version would still be on the class path.
+  ; An upgrade replaces the app and its Java completely, since a jar left
+  ; over from the last version would still be on the class path.
   RMDir /r "$INSTDIR\app"
   RMDir /r "$INSTDIR\runtime"
   File /r "${STAGE}\*"

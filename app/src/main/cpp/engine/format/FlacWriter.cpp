@@ -8,7 +8,7 @@ namespace {
 
 constexpr int32_t kChannels = 2;
 
-/** Bits, most significant first, which is how FLAC is packed throughout. */
+/** Writes bits most significant first, as FLAC is packed. */
 class BitWriter {
   public:
     void clear() {
@@ -26,7 +26,7 @@ class BitWriter {
             }
         }
     }
-    /** [count] may exceed 32, which unary quotients routinely do. */
+    /** [count] may be over 32, which unary quotients often are. */
     void putZeros(uint32_t count) {
         for (uint32_t i = 0; i < count; ++i) {
             put(0, 1);
@@ -68,7 +68,7 @@ uint16_t crc16(const uint8_t *p, size_t n) {
     return crc;
 }
 
-/** Signed to unsigned so that small negatives stay small: -1, 1, -2, 2… */
+/** Signed to unsigned so small negatives stay small: -1, 1, -2, 2... */
 inline uint32_t zigzag(int64_t v) {
     return static_cast<uint32_t>(v < 0 ? (static_cast<uint64_t>(-v) * 2 - 1) : (static_cast<uint64_t>(v) * 2));
 }
@@ -82,7 +82,7 @@ uint64_t riceCost(const uint32_t *u, int32_t n, int32_t k) {
     return bits;
 }
 
-/** The parameter that costs least, searched around the mean. */
+/** The cheapest parameter, searched around the mean. */
 int32_t bestRice(const uint32_t *u, int32_t n, uint64_t &costOut) {
     uint64_t sum = 0;
     for (int32_t i = 0; i < n; ++i) {
@@ -106,9 +106,9 @@ int32_t bestRice(const uint32_t *u, int32_t n, uint64_t &costOut) {
 }
 
 /**
- * One fixed-predictor residual. Order nought is the signal itself; each
- * order after it is the difference of the one before, which is why the
- * coefficients are a row of Pascal's triangle with alternating signs.
+ * One fixed-predictor residual. Order 0 is the signal itself and each order
+ * after is the difference of the one before, so the coefficients are a row
+ * of Pascal's triangle with alternating signs.
  */
 void residualFor(const int32_t *x, int32_t n, int32_t order, int64_t *out) {
     for (int32_t i = order; i < n; ++i) {
@@ -128,7 +128,7 @@ struct Residual {
     uint64_t bits = 0;
 };
 
-/** Picks the partitioning and the parameters, and says what it will cost. */
+/** Picks the partitioning and parameters, and returns the cost. */
 Residual planResidual(const uint32_t *u, int32_t n, int32_t predictorOrder) {
     Residual best;
     best.bits = UINT64_MAX;
@@ -166,7 +166,7 @@ struct Subframe {
     uint64_t bits = 0;
 };
 
-/** The cheapest way to say this channel: constant, a predictor, or raw. */
+/** The cheapest way to code this channel: constant, a predictor or raw. */
 Subframe planSubframe(const int32_t *x, int32_t n, int32_t bits) {
     Subframe out;
     bool constant = true;
@@ -283,7 +283,7 @@ void putCodedNumber(BitWriter &bw, uint64_t v) {
 
 } // namespace
 
-// --- MD5, so the file can be checked against itself ---------------------------
+// --- MD5, so the file can be verified -----------------------------------------
 
 void FlacWriter::Md5::block(const uint8_t *p) {
     static const uint32_t K[64] = {
@@ -362,7 +362,7 @@ void FlacWriter::Md5::finish(uint8_t out[16]) {
     for (int i = 0; i < 8; ++i) {
         tail[i] = static_cast<uint8_t>(bits >> (8 * i));
     }
-    length -= 8; // the length field is not itself part of the message
+    length -= 8; // the length field isn't part of the message
     update(tail, 8);
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
@@ -381,7 +381,7 @@ bool FlacWriter::open(const std::string &path, int32_t sampleRate, int32_t bits,
         return false;
     }
     rate = sampleRate;
-    bps = bits == 16 ? 16 : 24; // 32-bit float has nowhere to go in FLAC
+    bps = bits == 16 ? 16 : 24; // FLAC can't store 32-bit float
     frames = 0;
     frameNumber = 0;
     minFrame = 0xffffffffu;
@@ -416,8 +416,8 @@ void FlacWriter::writeStreamInfo() {
     b[7] = static_cast<uint8_t>(maxFrame >> 16);
     b[8] = static_cast<uint8_t>(maxFrame >> 8);
     b[9] = static_cast<uint8_t>(maxFrame);
-    // Twenty bits of rate, three of channels-1, five of bits-1, then
-    // thirty-six of total samples: they straddle bytes, so pack by hand.
+    // 20 bits of rate, 3 of channels-1, 5 of bits-1, then 36 of total
+    // samples. They cross byte boundaries, so they're packed by hand.
     const uint64_t total = static_cast<uint64_t>(frames);
     const uint32_t r = static_cast<uint32_t>(rate);
     b[10] = static_cast<uint8_t>(r >> 12);
@@ -443,8 +443,8 @@ void FlacWriter::write(const float *interleaved, int32_t framesIn) {
         left.push_back(li);
         right.push_back(ri);
 
-        // The MD5 is over the samples as the format stores them: little
-        // endian, signed, however many bytes the bit depth needs.
+        // The MD5 is over the samples as little-endian signed integers, as
+        // many bytes as the bit depth needs.
         uint8_t s[6];
         const int32_t n = bps / 8;
         for (int32_t k = 0; k < n; ++k) {
@@ -466,10 +466,9 @@ void FlacWriter::flushBlock() {
         return;
     }
 
-    // Stereo decorrelation: a mix's two channels are nearly the same signal,
-    // so coding one of them as the difference is most of FLAC's advantage
-    // over a plain predictor. Try all four and keep the cheapest, which
-    // costs four plans and saves real bytes on anything centred.
+    // Stereo decorrelation. The two channels of a mix are nearly the same, so
+    // coding one as the difference saves a lot. Try all four modes and keep
+    // the cheapest.
     std::vector<int32_t> mid(static_cast<size_t>(n)), side(static_cast<size_t>(n));
     for (int32_t i = 0; i < n; ++i) {
         side[static_cast<size_t>(i)] = left[static_cast<size_t>(i)] - right[static_cast<size_t>(i)];
@@ -509,8 +508,8 @@ void FlacWriter::flushBlock() {
     bw.put(0, 1);       // reserved
     bw.put(0, 1);       // fixed block size, so the number below is a frame number
 
-    // A full block has a code of its own; the short last one is written out
-    // in sixteen bits after the header.
+    // A full block has its own code. The shorter last block writes its size
+    // in 16 bits after the header.
     const bool exact = n == kBlock;
     bw.put(exact ? 0xcu : 0x7u, 4);
     bw.put(rate == 48000 ? 0xau : (rate == 44100 ? 0x9u : 0x0u), 4);

@@ -3,29 +3,28 @@ package com.rm.acidulous.midi
 import com.rm.acidulous.util.Math
 
 /**
- * A scale shown on a controller's pads: which notes to light, what to send
- * to get from what is lit to what should be, and how to set an Exquis's own.
+ * Shows a scale on a controller's pads: which notes to light, what to send
+ * to change what's lit, and how to set the Exquis's own scale.
  *
- * The Exquis lights any note sent to it on channel 1 over USB - its manual
- * calls it highlighting, and it needs none of its developer mode, which
- * would take one of its controls away from it to get. So the scale is
- * "held": a note-on for every note in it, in every octave, and a note-off for
- * each one that leaves. Plain Kotlin apart from MidiHub, so the arithmetic is
- * tested without one plugged in.
+ * The Exquis lights any note sent to it on channel 1 over USB (its manual
+ * calls this highlighting), without needing developer mode. So the scale is
+ * shown by sending a note-on for every note in it, in every octave, and a
+ * note-off for each one that leaves. Plain Kotlin, separate from MidiHub, so
+ * it can be tested without a device.
  */
 object PadLights {
-    /** The root's velocity, above the rest, in case the pads show velocity at all. */
+    /** The root's velocity, higher than the rest, in case the pads show velocity. */
     const val ROOT_VELOCITY = 127
     const val NOTE_VELOCITY = 96
 
-    /** Every MIDI note in the scale [intervals] from [root], or none without a key. */
+    /** Every MIDI note in the scale [intervals] from [root], or none if there's no key. */
     fun notes(root: Int?, intervals: List<Int>?): Set<Int> {
         if (root == null || intervals.isNullOrEmpty()) return emptySet()
         val steps = intervals.map { Math.floorMod(it, 12) }.toSet()
         return (0..127).filter { Math.floorMod(it - root, 12) in steps }.toSet()
     }
 
-    /** The messages that turn [lit] into [wanted], as (status, note, velocity), offs first. */
+    /** The messages that turn [lit] into [wanted], as (status, note, velocity), note-offs first. */
     fun changes(lit: Set<Int>, wanted: Set<Int>, root: Int?): List<Triple<Int, Int, Int>> {
         val out = ArrayList<Triple<Int, Int, Int>>()
         for (n in (lit - wanted).sorted()) out += Triple(0x80, n, 0)
@@ -38,15 +37,14 @@ object PadLights {
 
     // --- The Exquis's own key and scale --------------------------------------
     //
-    // Highlighting has two faults as a way to show a scale. The Exquis draws a
-    // highlight in its own green, whatever the player chose for the pads; and
-    // it shows each note once, on one pad, when its layout has most of them
-    // twice. Worse, the pads already show a scale - the Exquis's own, in the
-    // player's colours - so a highlight of another one lays a second pattern
-    // over the first. Setting the Exquis's own tonic and scale shows the
-    // app's scale the way the player already sees one.
+    // Highlighting isn't a great way to show a scale. The Exquis draws
+    // highlights in its own green whatever colours the player chose, and
+    // lights each note on only one pad when most notes appear on two. The
+    // pads also already show the Exquis's own scale, so a highlight adds a
+    // second pattern on top. Setting the Exquis's own tonic and scale shows
+    // the app's scale the way the player is used to.
 
-    /** The Exquis's built-in scales, in its settings' order, as intervals. */
+    /** The Exquis's built-in scales, in the order of its settings, as intervals. */
     val EXQUIS_SCALES: List<List<Int>> = listOf(
         listOf(0, 2, 4, 5, 7, 9, 11), // major
         listOf(0, 2, 3, 5, 7, 8, 10), // natural minor
@@ -66,13 +64,13 @@ object PadLights {
     val EXQUIS_CHROMATIC = EXQUIS_SCALES.lastIndex
 
     /**
-     * The Exquis tonic and scale number that show [pitchClasses] best, with
-     * [root] as the tonic where it can be.
+     * The Exquis tonic and scale number that best show [pitchClasses], using
+     * [root] as the tonic where possible.
      *
-     * The same notes from the same root first; then the same notes from
-     * another root, since the notes are what the pads are for; then the
-     * smallest of its scales that holds every one of them, so nothing
-     * playable is left dark; and chromatic, all lit, when none does.
+     * In order: the same notes from the same root; the same notes from
+     * another root, since the notes matter most; the smallest scale that
+     * contains all of them, so no playable note stays dark; and chromatic
+     * (everything lit) if none does.
      */
     fun exquisScale(root: Int, pitchClasses: Set<Int>): Pair<Int, Int> {
         val r = Math.floorMod(root, 12)
@@ -91,11 +89,11 @@ object PadLights {
         byteArrayOf(0xF0.toByte(), 0x00, 0x21, 0x7E, 0x7F, *b.map { it.toByte() }.toByteArray(), 0xF7.toByte())
 
     /**
-     * The SysEx that sets the Exquis's tonic and scale. It only takes either
-     * in developer mode: when the app already holds the buttons it is in it,
-     * and otherwise it goes in on the slider alone for the few milliseconds
-     * this takes and straight out again, so nothing the player is touching
-     * is taken away.
+     * The SysEx that sets the Exquis's tonic and scale. It only accepts them
+     * in developer mode. If the app already has the buttons it's already in
+     * developer mode. Otherwise it enters it for the slider only, for the few
+     * milliseconds this takes, and leaves straight away, so nothing the
+     * player is using is taken away.
      */
     fun exquisScaleMessages(root: Int, scale: Int, inDeveloperMode: Boolean = false): List<ByteArray> {
         val set = listOf(sysex(0x06, Math.floorMod(root, 12)), sysex(0x07, scale))
@@ -105,9 +103,9 @@ object PadLights {
     // --- The Exquis's buttons -------------------------------------------------
     //
     // Record, loop, clips, play/stop, undo and redo are one developer-mode
-    // zone. Taken over, they report presses to the app as CC on channel 16
-    // and light as the app says - and the pads, knobs, slider and octave
-    // buttons stay the Exquis's own, so it plays exactly as before.
+    // zone. When the app takes them, presses arrive as CC on channel 16 and
+    // the app sets their lights. The pads, knobs, slider and octave buttons
+    // stay the Exquis's own, so it plays as normal.
 
     const val ZONE_SLIDER = 0x04
     const val ZONE_BUTTONS = 0x20
@@ -119,27 +117,27 @@ object PadLights {
     const val BUTTON_REDO = 109
     val BUTTONS = listOf(BUTTON_RECORD, BUTTON_LOOP, BUTTON_CLIPS, BUTTON_PLAY, BUTTON_UNDO, BUTTON_REDO)
 
-    /** Developer mode for the zones in [mask], or out of it with 0. */
+    /** Enter developer mode for the zones in [mask], or leave it with 0. */
     fun exquisSetup(mask: Int): ByteArray = sysex(0x00, mask)
 
-    /** One LED set straight to a colour, each part 0..127, with no effect. */
+    /** Set one LED to a colour, each part 0..127, with no effect. */
     fun exquisLed(id: Int, r: Int, g: Int, b: Int): ByteArray =
         sysex(0x04, id, r.coerceIn(0, 127), g.coerceIn(0, 127), b.coerceIn(0, 127), 0)
 
     /**
-     * The Exquis asking for its LEDs to be drawn again - it sends this going
-     * into and coming out of its settings menu, having painted over them.
-     * [body] is the SysEx between F0 and F7.
+     * The Exquis asking for its LEDs to be redrawn. It sends this when
+     * entering and leaving its settings menu, which draws over them. [body]
+     * is the SysEx between F0 and F7.
      */
     fun isExquisRefresh(body: ByteArray): Boolean =
         body.size >= 5 && body[0].toInt() == 0x00 && body[1].toInt() == 0x21 && body[2].toInt() == 0x7E &&
             body[3].toInt() == 0x7F && body[4].toInt() == 0x03
 
-    /** A press of one of the taken buttons, from what the Exquis sends: its id, or null. */
+    /** A press of one of the app's Exquis buttons: its id, or null. */
     fun exquisButton(status: Int, d1: Int, d2: Int): Int? =
         if (status == 0xBF && d1 in BUTTONS && d2 > 0) d1 else null
 
-    /** Whether a MIDI device is an Exquis, by what it calls itself. */
+    /** Whether a MIDI device is an Exquis, going by its name. */
     fun isExquis(name: String?, product: String?, maker: String?): Boolean {
         val all = listOfNotNull(name, product, maker).joinToString(" ").lowercase()
         return "exquis" in all || "dualo" in all || "intuitive instruments" in all

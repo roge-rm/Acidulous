@@ -1,12 +1,12 @@
 package com.rm.acidulous.engine
 
 /**
- * What one track is doing in clip mode; see seq::Transport::packLaunch.
+ * What one track is doing in clip mode. See seq::Transport::packLaunch.
  *
- * [scene] is the scene whose clip is sounding and [pending] the one queued
- * behind it, both as indices into the song's scene list. Either may be
- * [NONE]; [pending] may also be [STOPPING], which is the clip asking to be
- * let go at the end of its cycle.
+ * [scene] is the scene whose clip is playing and [pending] the one queued
+ * after it, both as indices into the song's scene list. Either may be
+ * [NONE], and [pending] may also be [STOPPING], meaning the clip stops at
+ * the end of its cycle.
  */
 data class LaunchState(
     val scene: Int = NONE,

@@ -8,28 +8,28 @@ import kotlinx.serialization.Serializable
 import kotlin.math.pow
 
 /**
- * A tuning: the steps of a scale above its root, in cents, the last of them
- * the interval it repeats at - 1200 for an octave. It is Scala's idea of a
- * scale, and a `.scl` file reads straight into one.
+ * A tuning: the steps of a scale above its root in cents, the last one being
+ * the interval it repeats at (1200 for an octave). It's the same as a Scala
+ * scale, so a `.scl` file reads straight into one.
  *
- * Kept whole in the song rather than by name, so a song plays the same on a
- * phone that has never seen the file it came from.
+ * Stored whole in the song rather than by name, so the song plays the same on
+ * a phone that doesn't have the file.
  */
 @Serializable
 data class Tuning(val name: String, val cents: List<Float>) {
-    /** Twelve notes a period of 1200 each a hundred apart: nothing to retune. */
+    /** Twelve notes a hundred cents apart with a 1200 period: nothing to retune. */
     val isEqual: Boolean
         get() = cents.size == 12 && cents.withIndex().all { (i, c) -> kotlin.math.abs(c - (i + 1) * 100f) < 0.01f }
 }
 
 object Tunings {
 
-    /** Equal temperament, which is the same as having no tuning at all. */
+    /** Equal temperament, the same as having no tuning. */
     val EQUAL = Tuning("equal", (1..12).map { it * 100f })
 
     /**
-     * The ones worth having without a file. Twelve-note tunings keep the
-     * keyboard's octave; 19 and 24 steps put the octave 19 and 24 keys up.
+     * Tunings available without a file. Twelve-note tunings keep the
+     * keyboard's octave. 19 and 24 steps put the octave 19 and 24 keys up.
      */
     val builtIn: List<Tuning> = listOf(
         EQUAL,
@@ -42,11 +42,10 @@ object Tunings {
     )
 
     /**
-     * For each MIDI note, its ratio to equal temperament: what the engine is
-     * handed. The root's own note in the middle octave keeps its pitch -
-     * a tuning in A leaves A at 440 - and the rest are counted from it, one
-     * step of the tuning per key, so a 19-step tuning puts the octave 19 keys
-     * up the keyboard.
+     * For each MIDI note, its ratio to equal temperament, which is what the
+     * engine gets. The root note in the middle octave keeps its pitch (a
+     * tuning in A leaves A at 440) and the rest count from it, one tuning
+     * step per key, so a 19-step tuning puts the octave 19 keys up.
      */
     fun ratios(tuning: Tuning, root: Int): FloatArray {
         val size = tuning.cents.size.coerceAtLeast(1)
@@ -62,10 +61,11 @@ object Tunings {
     }
 
     /**
-     * A Scala `.scl` file. Lines starting `!` are comments; the first other
-     * line is a description, the next the number of notes, and then one pitch
-     * a line - cents if it has a decimal point, a ratio such as 3/2 or a
-     * whole number such as 2 if not. Anything after the pitch is ignored.
+     * Parses a Scala `.scl` file. Lines starting with `!` are comments. The
+     * first other line is a description, the next the number of notes, and
+     * then one pitch per line: cents if it has a decimal point, otherwise a
+     * ratio like 3/2 or a whole number like 2. Anything after the pitch is
+     * ignored.
      */
     fun parseScl(text: String, fallbackName: String): Tuning {
         val lines = text.lineSequence().map { it.trim() }.filter { !it.startsWith("!") }.toList()
@@ -95,11 +95,11 @@ object Tunings {
     }
 }
 
-/** The `.scl` files brought in with Import, kept under the user folder. */
+/** Imported `.scl` files, kept under the user folder. */
 object TuningStore {
     fun directory(userRoot: com.rm.acidulous.io.File) = com.rm.acidulous.io.File(userRoot, "tunings").apply { mkdirs() }
 
-    /** The built-in tunings, then every imported one that reads. */
+    /** The built-in tunings, then every imported one that parses. */
     fun all(userRoot: com.rm.acidulous.io.File): List<Tuning> =
         Tunings.builtIn + (directory(userRoot).listFiles { f -> f.extension.equals("scl", true) } ?: emptyArray())
             .sortedBy { it.name.lowercase() }

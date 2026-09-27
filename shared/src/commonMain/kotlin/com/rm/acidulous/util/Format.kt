@@ -5,18 +5,16 @@ import kotlin.math.pow
 import kotlin.math.round
 
 /**
- * `"%.1f dB".format(x)` everywhere the app is. On Android and the desktop it
- * is Java's String.format, as it always was - in the device's locale. A
- * browser has no Java, so there it is [javaFormat]: the part of Java's
- * format the app's code and strings use, the way Java does it.
+ * `"%.1f dB".format(x)` on every platform. On Android and desktop it's
+ * Java's String.format in the device's locale. A browser has no Java, so it
+ * uses [javaFormat], which copies the parts of Java's format the app uses.
  */
 expect fun String.format(vararg args: Any?): String
 
 /**
  * Java's String.format for what the app writes: %d %s %f %x %%, a width, the
- * 0 + - flags, a precision on %f, and positions (%2$s). Anything else stays
- * as written. Decimals round half up from the double's exact value, as Java
- * does, and use a point.
+ * 0 + - flags, a precision on %f, and positions (%2$s). Anything else is left
+ * as written. Decimals round half up like Java and always use a point.
  */
 fun javaFormat(pattern: String, args: Array<out Any?>): String {
     val out = StringBuilder()
@@ -88,9 +86,9 @@ private fun fixed(arg: Any?, precision: Int, flags: String): String {
     val v = (arg as? Number)?.toDouble() ?: return arg.toString()
     if (v.isNaN()) return "NaN"
     if (v.isInfinite()) return if (v > 0) (if ('+' in flags) "+Infinity" else "Infinity") else "-Infinity"
-    // Java rounds the shortest decimal that reads back as the value - what
-    // toString gives - half up, not the double's exact binary value: 0.005 is
-    // "0.01" at two places, though the double itself is a hair under.
+    // Like Java, round the shortest decimal that reads back as the value (what
+    // toString gives) half up, not the double's exact binary value. So 0.005 is
+    // "0.01" at two places, even though the double is a hair under.
     val (digits, point) = decimal(abs(if (arg is Float) arg.toString().toDouble() else v), arg)
     val keep = point + precision // digits before the rounding place
     val rounded = StringBuilder()
@@ -115,8 +113,8 @@ private fun fixed(arg: Any?, precision: Int, flags: String): String {
     val intPart = if (intLen <= 0) "0" else whole.substring(0, intLen).trimStart('0').ifEmpty { "0" }
     val fracPart = if (precision == 0) "" else whole.substring(maxOf(intLen, 0)).padStart(precision, '0').takeLast(precision)
     val body = if (precision == 0) intPart else "$intPart.$fracPart"
-    // As Java does: a negative value keeps its sign even rounded to nothing
-    // (-0.4 is "-0"), and so does negative zero.
+    // Like Java, a negative value keeps its sign even when it rounds to
+    // nothing (-0.4 is "-0"), and so does negative zero.
     val negative = v < 0 || (v == 0.0 && 1.0 / v < 0)
     return when {
         negative -> "-$body"
@@ -127,9 +125,10 @@ private fun fixed(arg: Any?, precision: Int, flags: String): String {
 }
 
 /**
- * The shortest decimal of [v] (non-negative) as its digits and where the point
- * falls: 12.5 is ("125", 2), 0.005 is ("5", -2). From toString, which is the
- * shortest on the JVM and in a browser alike, in either of its notations.
+ * The shortest decimal of [v] (non-negative) as its digits and where the
+ * point falls: 12.5 is ("125", 2), 0.005 is ("5", -2). Based on toString,
+ * which gives the shortest form on the JVM and in a browser, in either
+ * notation.
  */
 private fun decimal(v: Double, original: Any?): Pair<String, Int> {
     val text = (if (original is Float) original.let { kotlin.math.abs(it) }.toString() else v.toString()).lowercase()

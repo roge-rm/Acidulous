@@ -31,30 +31,19 @@ import com.rm.acidulous.res.*
 import com.rm.acidulous.res.*
 
 /**
- * Everything MIDI, in four tabs.
+ * Everything MIDI, in tabs, using the shared window shell.
  *
- * It began as one page listing whatever was plugged in, and grew a direction
- * at a time until it was a scroll nobody could find anything in. The four
- * tabs are the four questions actually being asked: what is connected, what
- * comes in, what goes out, and who is keeping time. They use the shared
- * window shell, so this looks like the machine picker and the settings
- * window rather than like a third thing.
- *
- * Every tab ends in numbers. The Bluetooth bug that cost an evening was
- * invisible because a wrong service UUID looks exactly like an empty room,
- * and neither direction of MIDI can be tested from here at all - so each
- * one says out loud what it thinks is happening.
+ * Every tab ends in numbers showing what the app thinks is happening, since a
+ * lot of MIDI problems can't be seen otherwise (a Bluetooth scan with the wrong
+ * service UUID looks exactly like no devices nearby).
  */
 @Composable
 fun MidiDialog(song: Song, onDismiss: () -> Unit) {
     val trackNames = song.tracks.map { it.name }
-    // Read here, in the ordinary composition, and handed down.
-    //
-    // The pages are subcomposed inside a SubcomposeLayout's measure block so
-    // the window can size itself to the tallest of them, and a value that
-    // changes on its own - which member channels are holding a note - does
-    // not reliably re-measure from in there. Read at this level it is a
-    // plain state read, the window recomposes, and the page is rebuilt.
+    // Read here and passed down. The pages are subcomposed inside the window's
+    // measure block (so it can size to the tallest), and a value that changes
+    // by itself doesn't reliably re-measure from in there. Read here it's a
+    // plain state read and the page is rebuilt.
     val mpeHeld = MidiHub.mpeHeld
     var tab by rememberSaveable { mutableStateOf(0) }
     LaunchedEffect(Unit) { MidiHub.refresh() }
@@ -74,22 +63,19 @@ fun MidiDialog(song: Song, onDismiss: () -> Unit) {
     )
 }
 
-// Three, where there were five and most of them were a card or two. Dan: "if
-// that many tabs are needed, most pages feel sparse". What is plugged in,
-// both ways, with the output's timing beside the outputs it applies to; then
-// the notes arriving; then the two things that steer the app from outside -
-// someone else's clock, and the knobs mapped onto its controls.
+// Three tabs: what's plugged in both ways, with output timing next to the
+// outputs; the notes arriving; and what steers the app from outside, which is
+// an external clock and the mapped controls.
 
 /**
- * The tabs are the arp window's shape, like every window with settings in it
- * (Dan, 2026-09-23): titled cards, switches and knobs for what you set, and
- * what is plugged in or arriving as rows and readings inside the same cards.
+ * Titled cards with switches and knobs for settings, and devices and readings
+ * as rows inside the same cards, like every settings window.
  */
 @Composable
 private fun Line(content: @Composable () -> Unit) =
     androidx.compose.foundation.layout.Box(Modifier.cardLine()) { content() }
 
-/** What is plugged in, and the hunt for what is not. */
+/** What's plugged in, and the Bluetooth scan for what isn't. */
 @Composable
 private fun DevicesTab() {
     val ports = MidiHub.ports
@@ -101,10 +87,8 @@ private fun DevicesTab() {
             Text(stringResource(Res.string.midi_unsupported), color = Acid.colors.red, fontSize = 12.sp)
         }
         WindowCard(stringResource(if (MidiHub.canFindBluetooth) Res.string.midi_inputs else Res.string.midi_inputs_cable)) {
-            // **A list, in one column.** In a wide window a card's controls
-            // stand side by side, and rows that each want the whole width
-            // left the second and every one after it none at all - a
-            // Launchpad plugged in beside another device was simply not there.
+            // One column. In a wide window a card lays its controls side by
+            // side, and full width rows after the first got no room at all.
             if (ports.isNotEmpty()) Line {
                 androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
                     ports.forEach { port ->
@@ -119,27 +103,30 @@ private fun DevicesTab() {
                 }
             }
             if (ports.isEmpty()) Line { Readout(stringResource(if (MidiHub.canFindBluetooth) Res.string.midi_no_inputs else Res.string.midi_no_inputs_cable)) }
-            // Only with one plugged in: the app plays it, or it is itself.
+            // Only with a Launchpad plugged in: the app drives it, or it runs
+            // itself.
             if (MidiHub.launchpadHere) {
                 SwitchGrid(stringResource(Res.string.midi_launchpad), stringArrayResource(Res.array.midi_launchpad_choices).toList(), if (MidiHub.launchpadOn) 0 else 1) {
                     UiPrefs.chooseLaunchpad(it == 0)
                 }
             }
-            // Only with one plugged in: the played track's scale on its pads.
+            // Only with an Exquis plugged in: the played track's scale on its
+            // pads.
             if (MidiHub.exquisHere) {
                 SwitchGrid(stringResource(Res.string.midi_exquis_pads), stringArrayResource(Res.array.midi_exquis_pads_choices).toList(), MidiHub.padMode.ordinal, columns = 1) {
                     UiPrefs.choosePadMode(MidiHub.PadMode.entries[it])
                 }
-                // Play, record, loop, clips, undo and redo: the app's, or its own.
+                // Play, record, loop, clips, undo and redo: handled by the app, or
+                // by the Exquis itself.
                 SwitchGrid(stringResource(Res.string.midi_exquis_buttons), stringArrayResource(Res.array.midi_launchpad_choices).toList(), if (MidiHub.exquisButtons) 0 else 1) {
                     UiPrefs.chooseExquisButtons(it == 0)
                 }
             }
-            // Only where the app finds Bluetooth instruments itself - on a
-            // phone. A desktop pairs them in its own settings, not here.
+            // Only where the app finds Bluetooth instruments itself (on a
+            // phone). Desktops pair them in the system settings.
             if (MidiHub.canFindBluetooth) {
-                // A cable appears by itself; a Bluetooth instrument has to be
-                // looked for, which is the one thing on this tab you *do*.
+                // A cable shows up by itself, a Bluetooth instrument has to be
+                // scanned for.
                 SwitchGrid(
                     stringResource(if (MidiHub.bluetoothReady()) Res.string.midi_bluetooth else Res.string.midi_bluetooth_off),
                     listOf(stringResource(if (MidiHub.scanning) Res.string.midi_stop else Res.string.midi_search)), if (MidiHub.scanning) 0 else -1,
@@ -151,13 +138,12 @@ private fun DevicesTab() {
                         if (missing.isEmpty()) MidiHub.scanBluetooth() else permissions.ask(*missing.toTypedArray())
                     }
                 }
-                // Why the list looks the way it does. A scan that finds nothing
-                // and says nothing is indistinguishable from one that is broken,
-                // which is exactly how a wrong service UUID went unnoticed.
+                // The scan status, so a scan that finds nothing doesn't look
+                // like a broken one.
                 if (MidiHub.scanStatus.isNotEmpty()) Line { Readout(MidiHub.scanStatus) }
                 found.forEach { device ->
-                    // A device that actually advertised the MIDI service is worth
-                    // saying so about: in a widened scan everything else is a guess.
+                    // Mark devices that advertised the MIDI service. In a widened
+                    // scan everything else is a guess.
                     DialogRow(
                         mark = if (device.midi) "ᛒ" else "·",
                         name = device.name,
@@ -168,10 +154,10 @@ private fun DevicesTab() {
                 }
             }
         }
-        // Each track chooses whether it sends, in the mixer; this is where to,
+        // Each track chooses whether it sends in the mixer. This sets where to,
         // and how early.
         WindowCard(stringResource(Res.string.midi_outputs)) {
-            // One column, as the inputs are.
+            // One column, like the inputs.
             if (MidiHub.destinations.isNotEmpty()) Line {
                 androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
                     MidiHub.destinations.forEach { dest ->
@@ -190,9 +176,9 @@ private fun DevicesTab() {
                 stringResource(Res.string.midi_send_ahead), MidiHub.outOffsetMs, -50..50, "%+d ms".format(MidiHub.outOffsetMs), PanelAmber,
                 choices = (-50..50).map { "%+d ms".format(it) },
             ) { UiPrefs.chooseMidiOffset(it) }
-            // The numbers to report when something sounds loose. "late" is
-            // how far past its own timestamp a message was handed to the
-            // framework: if that grows, the trim is not the problem.
+            // Numbers to check when timing sounds loose. "late" is how far past
+            // its own timestamp a message was handed to the system. If that
+            // grows, the trim isn't the problem.
             if (UiPrefs.showDiagnostics) Line {
                 Readout(
                     "${MidiHub.produced} out · ${MidiHub.sent} sent · late %.1f ms".format(MidiHub.outLateMs) +
@@ -204,23 +190,23 @@ private fun DevicesTab() {
     }
 }
 
-/** Notes arriving: where they land, and proof that they do. */
+/** Notes arriving: where they go, and a readout showing they arrive. */
 @Composable
 private fun InTab(trackNames: List<String>, mpeHeld: Int) {
-    // **The question, then its answer, then the protocol.** MPE is an *in*
-    // concern and belongs on this tab; it just does not belong first.
+    // Routing first, then the readout, then MPE.
     WindowCards {
-        // Where they go, with the proof that they do in the same card.
+        // Where they go, with the readout in the same card.
         MidiRoutingSection(trackNames) {
-            // Played without a controller: diagnostics, for the emulator. A
-            // player has a controller, and the readout is the proof.
+            // Play notes without a controller, for testing on the emulator.
+            // Diagnostics only.
             if (UiPrefs.showDiagnostics) {
                 val tests = stringArrayResource(Res.array.midi_test_notes).toList() + stringResource(Res.string.midi_test_launchpad)
                 SwitchGrid(stringResource(Res.string.midi_test), tests, -1, columns = 1) {
                     when (it) { 0 -> MidiHub.testNote(); 1 -> MidiHub.testWheel(); else -> MidiHub.testLaunchpad() }
                 }
             }
-            // Next to the readout, which shows each note's velocity as bent.
+            // Next to the readout, which shows each note's velocity after the
+            // curve.
             val curveNames = (-VelocityCurve.STEPS..VelocityCurve.STEPS).map {
                 when {
                     it < 0 -> stringResource(Res.string.midi_velocity_softer, -it)
@@ -246,15 +232,14 @@ private fun InTab(trackNames: List<String>, mpeHeld: Int) {
 }
 
 /**
- * What steers the app from outside: someone else's clock, and the knobs
- * mapped onto its controls.
+ * What steers the app from outside: an external clock, and the mapped controls.
  */
 @Composable
 private fun ControlTab(song: Song) {
     val link = com.rm.acidulous.engine.LinkHub.enabled
     val follow = if (link) MidiHub.Follow.Off else MidiHub.follow
     fun choose(mode: MidiHub.Follow) {
-        // One master at a time, on screen as well as in the engine.
+        // Only one clock master at a time, on screen as well as in the engine.
         if (mode != MidiHub.Follow.Off && link) {
             UiPrefs.chooseLink(false)
             com.rm.acidulous.engine.LinkHub.chooseEnabled(false)
@@ -270,11 +255,11 @@ private fun ControlTab(song: Song) {
                 when (follow) { MidiHub.Follow.Off -> 0; MidiHub.Follow.Auto -> 1; MidiHub.Follow.On -> 2 },
                 columns = 1,
             ) { choose(listOf(MidiHub.Follow.Off, MidiHub.Follow.Auto, MidiHub.Follow.On)[it]) }
-            // Ten seconds of a perfect 120, from inside the app.
+            // Ten seconds of a perfect 120 BPM clock, generated inside the app.
             SwitchGrid(stringResource(Res.string.midi_test), listOf(stringResource(Res.string.midi_test_clock)), -1, enabled = listOf(follow != MidiHub.Follow.Off)) { MidiHub.testClock() }
-            // A tempo can look right while the phase wanders, so the second
-            // number is the one that says whether this is really working: it
-            // is the last pulse's distance from where the loop expected it.
+            // The tempo can look right while the phase drifts, so the second
+            // number is the last pulse's distance from where the loop expected
+            // it.
             Line {
                 Readout(
                     when {
@@ -298,33 +283,28 @@ private fun ControlTab(song: Song) {
 }
 
 /**
- * What the hardware has been pointed at.
+ * What the hardware is mapped to.
  *
- * Mapping is learned by touching things, not by filling in a table, so this
- * is a receipt rather than an editor: it says what is bound, which notes are
- * no longer free to play, and offers the one destructive thing that has no
- * home on a knob - forget the lot.
+ * Mappings are learned by touching controls, so this only lists them: what's
+ * bound, which notes are taken, and a button to clear everything.
  *
- * The song's mappings and the device's are listed apart because they behave
- * differently: the device's travel with the controller and the song's travel
- * with the music, and when both claim a controller the song wins.
+ * The song's mappings and the device's are listed separately because they
+ * behave differently: the device's go with the controller and the song's go
+ * with the music. When both claim a controller the song wins.
  */
 @Composable
 private fun MappingCard(song: Song) {
     val device = UiPrefs.mappings
     val resources = AppStrings
     val laneWord: (String) -> String = { resources.panelWord(it) }
-    // What survives of the explanation is the half nothing on screen can
-    // tell you: that the mode has a gesture of its own, and where - the
-    // title says it.
+    // The title says where the mapping gesture is, the one thing the screen
+    // can't show.
     WindowCard(stringResource(Res.string.midi_mapping)) {
         SwitchGrid(stringResource(Res.string.midi_mapping_mode), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.mapMode) 1 else 0) { UiPrefs.chooseMapMode(it == 1) }
         SwitchGrid(
             stringResource(Res.string.midi_device_mappings), listOf(stringResource(Res.string.midi_forget)), -1, enabled = listOf(device.isNotEmpty()),
         ) { UiPrefs.chooseMappings(emptyList()); UiPrefs.chooseMapWaiting(null) }
-        // One list, each marked with whose it is: the device's travel with
-        // the controller and the song's with the music, and when both claim
-        // a controller the song wins.
+        // One list, each marked with whose it is. See the note above.
         val songs = stringResource(Res.string.midi_mapping_song)
         val devices = stringResource(Res.string.midi_mapping_device)
         val all = song.mappings.map { it to songs } + device.map { it to devices }
@@ -358,31 +338,30 @@ private fun MappingCard(song: Song) {
 }
 
 /**
- * MPE: one instrument played on many channels, a finger to each.
+ * MPE: one instrument played on many channels, a finger per channel.
  *
- * A zone is a property of what is plugged in rather than of the music, so
- * it lives here with the routing and not in the song. While one is on, the
- * member channels are fingers and cannot also be tracks - routing still
- * chooses *which* track the zone plays, but by-channel has nothing left to
- * mean.
+ * A zone belongs to the connected controller, not the music, so it lives here
+ * with the routing and not in the song. While a zone is on, the member channels
+ * are fingers and can't be tracks. Routing still picks which track the zone
+ * plays, but by-channel routing doesn't apply.
  */
 @Composable
 private fun MpeSection(mpeHeld: Int) {
     val zone = MidiHub.mpeZone
     val setting = MidiHub.mpeSetting
     val auto = setting == com.rm.acidulous.midi.MpeZone.AUTO
-    // Auto first: it is the default and what almost everyone wants.
+    // Auto first, it's the default and what almost everyone wants.
     val order = listOf(com.rm.acidulous.midi.MpeZone.AUTO, 0, 1, 2)
     WindowCard(stringResource(Res.string.midi_mpe)) {
-        // Lower: channel 1 is the zone and the ones above it are fingers;
-        // upper: channel 16, and the ones below. Auto: whatever the
-        // controller says, or does.
+        // Lower: channel 1 is the zone and the ones above it are fingers.
+        // Upper: channel 16 and the ones below. Auto: whatever the controller
+        // says or does.
         SwitchGrid(stringResource(Res.string.midi_mpe_zone), stringArrayResource(Res.array.midi_mpe_zone_choices).toList(), order.indexOf(setting), columns = 2) {
             UiPrefs.chooseMpe(zone = order[it])
         }
         if (auto) {
-            // What auto has found, and how - so a controller that is not
-            // being recognised can be seen not to be.
+            // What auto has found and how, so you can see when a controller
+            // isn't recognised.
             Line {
                 Readout(
                     when {
@@ -400,7 +379,8 @@ private fun MpeSection(mpeHeld: Int) {
         if (!auto && zone != 0) {
             // 15 unless the controller says otherwise.
             CountKnob(stringResource(Res.string.midi_mpe_fingers), MidiHub.mpeMembers, 1..15, choices = (1..15).map { "$it" }) { UiPrefs.chooseMpe(members = it) }
-            // Per finger. The standard says 48; many controllers use 24.
+            // Pitch bend range per finger. The standard says 48, many
+            // controllers use 24.
             CountKnob(
                 stringResource(Res.string.midi_mpe_bend), MidiHub.mpeBendSemis.roundToInt(), 1..96,
                 stringResource(Res.string.midi_mpe_bend_st, MidiHub.mpeBendSemis.roundToInt()), PanelAmber,
@@ -408,14 +388,14 @@ private fun MpeSection(mpeHeld: Int) {
             ) { UiPrefs.chooseMpe(bendSemis = it.toFloat()) }
         }
         if (zone != 0) {
-            // Timbre: CC 74 drives each machine's slide knob. Plain: it is
-            // a controller like any other, free to map.
+            // Timbre: CC 74 drives each machine's slide knob. Plain: it's a
+            // normal controller, free to map.
             SwitchGrid(stringResource(Res.string.midi_mpe_cc74), stringArrayResource(Res.array.midi_mpe_cc74_choices).toList(), if (MidiHub.mpeTimbre) 0 else 1, columns = 1) {
                 UiPrefs.chooseMpe(timbre = it == 0)
             }
-            // Is it reaching the voices? Two notes, then the first alone is
-            // bent, pressed and slid: if both change, per-note expression is
-            // not working.
+            // Is expression reaching the voices? Plays two notes, then bends,
+            // presses and slides only the first. If both change, per-note
+            // expression isn't working.
             val held = (0 until 16).filter { (mpeHeld shr it) and 1 == 1 }.map { it + 1 }
             Line {
                 Readout(
@@ -425,8 +405,8 @@ private fun MpeSection(mpeHeld: Int) {
                 )
             }
         }
-        // Under auto too, before anything is heard: the test plays as a
-        // controller would, and auto should recognise it.
+        // Also shown under auto, where the test plays like a controller would
+        // and auto should recognise it.
         if (UiPrefs.showDiagnostics && (zone != 0 || auto)) {
             SwitchGrid(stringResource(Res.string.midi_test), listOf(stringResource(Res.string.midi_test_mpe)), -1) { MidiHub.testMpe() }
         }

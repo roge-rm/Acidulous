@@ -6,15 +6,15 @@ import com.rm.acidulous.midi.launchpad.LaunchpadPro.Button
 import com.rm.acidulous.midi.launchpad.LaunchpadPro.Control
 
 /**
- * The Launchpad as Acidulous lays it out: what each page shows, and what
- * pressing anything does.
+ * The Launchpad layout in Acidulous: what each page shows and what each
+ * press does.
  *
- * Pure: a page is a function from [LpView] - the app, sampled - and
- * [LpState] - the surface's own page, octave and banks, and what is held -
- * to the colour of every LED; a press is a function to the next state and
- * the [LpAction]s the app should carry out. The controller in the UI layer
- * does the sampling and the carrying out; everything that decides anything
- * is here, where it can be tested.
+ * Pure functions: a page maps [LpView] (a snapshot of the app) and [LpState]
+ * (the surface's own page, octave, banks and held buttons) to the colour of
+ * every LED, and a press maps to the next state plus the [LpAction]s the app
+ * should carry out. The controller in the UI layer takes the snapshots and
+ * carries out the actions. Every decision is made here, where it can be
+ * tested.
  */
 
 /** Colours as the device takes them: 0xRRGGBB, each part 0..127. */
@@ -38,18 +38,18 @@ enum class LpPage { Note, Session, Chord, Mixer, Sequencer, Perform }
 data class LpTrack(
     /** In [Rgb]. */
     val colour: Int,
-    /** A drum machine's voice notes lowest first - the drum grid's order - or null for a melodic one. */
+    /** A drum machine's voice notes lowest first (the drum grid's order), or null for a melodic one. */
     val drums: List<Int>? = null,
-    /** The same voices in the order the app lays its pads out, where that differs. */
+    /** The same voices in the order the app lays out its pads, if that differs. */
     val pads: List<Int>? = null,
     /** The scenes, by index, this track has a clip in. */
     val clips: Set<Int> = emptySet(),
     val mute: Boolean = false,
     val solo: Boolean = false,
-    /** In clip mode: the scene it is playing, and the one it is waiting to, or -1. */
+    /** In clip mode: the scene it's playing and the one it's queued for, or -1. */
     val playingScene: Int = -1,
     val queuedScene: Int = -1,
-    /** Its mixer, each 0..1: level, pan (0.5 the middle), and the two sends. */
+    /** Its mixer, each 0..1: level, pan (0.5 is centre), and the two sends. */
     val level: Float = 0f,
     val pan: Float = 0.5f,
     val sendA: Float = 0f,
@@ -59,7 +59,7 @@ data class LpTrack(
 /** What the mixer page's faders are. */
 enum class LpFader { Level, Pan, SendA, SendB, Device }
 
-/** The clip the sequencer page edits: the played track's, in the scene it is in. */
+    /** The clip the sequencer page edits: the played track's, in its current scene. */
 data class LpSeq(
     val scene: Int,
     /** A step, in ticks. */
@@ -68,21 +68,21 @@ data class LpSeq(
     val length: Int,
     /** Its notes as (tick, pitch). */
     val notes: List<Pair<Int, Int>> = emptyList(),
-    /** Where the song is in it, or -1 when it is not playing. */
+    /** Where the song is in it, or -1 when it isn't playing. */
     val playhead: Int = -1,
 )
 
-/** The app, sampled. */
+    /** A snapshot of the app. */
 data class LpView(
     val tracks: List<LpTrack> = emptyList(),
     /** The track the surface plays. */
     val played: Int = 0,
-    /** The played track's scale - its own, or the song's key - or none. */
+    /** The played track's scale (its own, or the song's key), or none. */
     val root: Int? = null,
     val intervals: List<Int>? = null,
     /**
-     * The scale is the track's own Scale modifier, so notes outside it are
-     * snapped away anyway: the note page leaves them out and fits more
+     * The scale comes from the track's own Scale modifier, so notes outside
+     * it get snapped anyway. The note page leaves them out and fits more
      * octaves instead.
      */
     val scaleLocked: Boolean = false,
@@ -91,12 +91,12 @@ data class LpView(
     /** Where in the beat the song is, 0..1. */
     val beat: Float = 0f,
     val scenes: Int = 0,
-    /** The grid as a launcher, not an arrangement. */
+    /** The grid is a launcher, not an arrangement. */
     val clipMode: Boolean = false,
-    /** The scene the song is in, and the one it will go to next (song mode), or -1. */
+    /** The scene the song is in and the one it goes to next (song mode), or -1. */
     val scene: Int = 0,
     val queuedScene: Int = -1,
-    /** The clip the sequencer edits, or null when there is no scene to edit in. */
+    /** The clip the sequencer edits, or null when there's no scene to edit in. */
     val seq: LpSeq? = null,
     /** The played machine's first eight continuous knobs, 0..1, for the device faders. */
     val device: List<Float> = emptyList(),
@@ -105,15 +105,15 @@ data class LpView(
 /** The surface's own state. */
 data class LpState(
     val page: LpPage = LpPage.Note,
-    /** The octave the bottom-left pad is in; C3 is 3, MIDI 48. */
+    /** The octave of the bottom-left pad. C3 is 3, MIDI 48. */
     val octave: Int = 3,
     /** Scale degrees the note grid is shifted by. */
     val degree: Int = 0,
-    /** The first track and the first scene in view: the arrows move them one at a time. */
+    /** The first track and scene in view. The arrows move them one at a time. */
     val trackOffset: Int = 0,
     val sceneOffset: Int = 0,
     val shift: Boolean = false,
-    /** Pads held down, by LED, and the notes each is sounding - several for a chord. */
+    /** Pads held down, by LED, and the notes each is playing (several for a chord). */
     val sounding: Map<Int, List<Int>> = emptyMap(),
     /** Buttons held down that change what a pad or a track button does. */
     val held: Set<Button> = emptySet(),
@@ -121,7 +121,7 @@ data class LpState(
     val stepOffset: Int = 0,
     val seqRow: Int = 0,
     val fader: LpFader = LpFader.Level,
-    /** Perform pads held, by LED, oldest first: the newest of a row is the one in force. */
+    /** Perform pads held, by LED, oldest first. The newest in a row is the one that applies. */
     val performing: List<Int> = emptyList(),
 )
 
@@ -138,14 +138,14 @@ sealed class LpAction {
     data class PlayScene(val index: Int) : LpAction()
     data class LaunchClip(val track: Int, val scene: Int) : LpAction()
     data class ClearClip(val track: Int, val scene: Int) : LpAction()
-    /** A clip copied into the scene below it, where that is empty. */
+    /** A clip copied into the scene below, if that's empty. */
     data class CopyClipDown(val track: Int, val scene: Int) : LpAction()
     data class DuplicateScene(val scene: Int) : LpAction()
     data class ToggleMute(val track: Int) : LpAction()
     data class ToggleSolo(val track: Int) : LpAction()
-    /** Every launched clip in clip mode, the song otherwise. */
+    /** Every launched clip in clip mode, or the song otherwise. */
     object StopClips : LpAction()
-    /** A note one step long at [tick] and [pitch] in the played track's clip in [scene], or taken away if there is one. */
+    /** Add a one-step note at [tick] and [pitch] in the played track's clip in [scene], or remove it if there is one. */
     data class ToggleStep(val track: Int, val scene: Int, val tick: Int, val pitch: Int, val length: Int) : LpAction()
     data class QuantiseClip(val track: Int, val scene: Int) : LpAction()
     data class SetMix(val track: Int, val fader: LpFader, val value: Float) : LpAction()
@@ -156,7 +156,7 @@ sealed class LpAction {
 }
 
 object Surface {
-    /** Pages there are yet; their buttons light and choose them. */
+    /** The pages that exist so far. Their buttons light up and select them. */
     val built = LpPage.entries.toSet()
 
     /** Buttons that change what the next press means while held. */
@@ -167,7 +167,7 @@ object Surface {
 
     /** On the beat: bright on it, fading through it. */
     fun pulse(c: Int, beat: Float): Int = Rgb.scale(c, 0.35f + 0.65f * (1f - beat))
-    /** Half a beat on, half off: waiting for its turn. */
+    /** Half a beat on, half off: for something waiting its turn. */
     fun flash(c: Int, beat: Float): Int = if (beat < 0.5f) c else Rgb.scale(c, 0.12f)
 
     private val pageButtons = mapOf(
@@ -178,8 +178,8 @@ object Surface {
     // --- The note page --------------------------------------------------------
 
     /**
-     * The scale the grid is in: the song's key, or every note from C when the
-     * song has none.
+     * The scale the grid uses: the song's key, or every note from C if the
+     * song has no key.
      */
     private fun steps(view: LpView): List<Int> =
         view.intervals?.map { Math.floorMod(it, 12) }?.distinct()?.sorted()?.takeIf { it.isNotEmpty() && view.root != null }
@@ -187,28 +187,27 @@ object Surface {
 
     private fun root(view: LpView): Int = if (view.intervals.isNullOrEmpty()) 0 else view.root ?: 0
 
-    // The note page is the app's keyboard: a piano, two rows to an octave -
-    // the white keys, and the black keys above them, each over the white key
-    // to its right - four octaves up the grid from the octave's C at the
-    // bottom left. Every note is there, and the scale is what is lit, as the
-    // keys on screen show it: a layout of only the scale's notes played the
-    // scale and showed nothing of it.
+    // The note page is the app's keyboard: a piano with two rows per octave
+    // (the white keys, and the black keys above them, each over the white key
+    // to its right), four octaves up the grid from C at the bottom left.
+    // Every note is there and the scale is lit, like the on-screen keys. A
+    // layout with only the scale's notes wouldn't show the scale at all.
     private val WHITE_KEYS = listOf(0, 2, 4, 5, 7, 9, 11, 12)
     private val BLACK_KEYS = listOf(null, 1, 3, null, 6, 8, 10, null)
 
     /**
-     * With the track's own scale in force, only its notes: an octave a row,
-     * from the root at the left to the root above it, eight octaves up the
-     * grid from the one below the octave's - where the piano fits four.
+     * With the track's own scale on, only its notes: one octave per row,
+     * from the root on the left to the root above it, eight octaves up the
+     * grid (the piano fits four).
      */
     private fun compact(view: LpView): Boolean = view.scaleLocked && !view.intervals.isNullOrEmpty() && view.root != null
 
-    /** The note a pad plays on the note page, or null for a gap or past MIDI's range. */
+    /** The note a pad plays on the note page, or null for a gap or outside MIDI's range. */
     fun noteAt(view: LpView, state: LpState, row: Int, col: Int): Int? {
         padsOf(view)?.let { voices -> return drumVoice(row, col, voices.size)?.let { voices.getOrNull(it) } }
         if (compact(view)) {
             val s = steps(view)
-            // Up to the root above, which a seven-note scale fills the row with.
+            // Up to the root above, which fills the row for a seven-note scale.
             if (col > s.size) return null
             val semis = if (col == s.size) 12 else s[col]
             val note = 12 * state.octave + 12 * row + root(view) + semis
@@ -223,10 +222,10 @@ object Surface {
     private fun padsOf(view: LpView): List<Int>? = view.tracks.getOrNull(view.played)?.let { it.pads ?: it.drums }
 
     /**
-     * A drum machine's pads as the app lays them out on screen: pad one at the
-     * bottom left, the smaller half along the bottom row and the rest in the
-     * row above - thirteen are six and seven. A machine with more than
-     * sixteen goes on up in rows of eight. The index into its pads, or null.
+     * A drum machine's pads, laid out like the app does on screen: pad one at
+     * the bottom left, the smaller half along the bottom row and the rest in
+     * the row above (thirteen split six and seven). Machines with more than
+     * sixteen carry on up in rows of eight. Returns the pad index, or null.
      */
     fun drumVoice(row: Int, col: Int, count: Int): Int? {
         val rows: List<IntRange> = if (count <= 16) {
@@ -253,7 +252,7 @@ object Surface {
             LpPage.Chord -> chordPage(view, state, colour, leds)
             else -> {}
         }
-        // The pages, by their printed names.
+        // The page buttons, by their printed names.
         for ((b, page) in pageButtons) {
             leds[b.cc] = when {
                 page == state.page -> Rgb.WHITE
@@ -270,7 +269,7 @@ object Surface {
         fun trackLed(t: Int): Int {
             val track = view.tracks.getOrNull(t) ?: return Rgb.OFF
             return when {
-                // While Mute or Solo is held, the buttons are what they would change.
+                // While Mute or Solo is held, the buttons show what they'd change.
                 muting -> if (track.mute) MUTE else Rgb.scale(track.colour, 0.2f)
                 soloing -> if (track.solo) SOLO else Rgb.scale(track.colour, 0.2f)
                 t == view.played -> track.colour
@@ -287,14 +286,14 @@ object Surface {
                 else -> Rgb.scale(Rgb.GREEN, 0.25f)
             }
         }
-        // The app's way round, on every page: tracks are rows, so the column
+        // Laid out like the app on every page: tracks are rows, so the column
         // beside the grid is the tracks, top to bottom, and the row under it
-        // the scenes, left to right - as the song grid on screen is.
+        // is the scenes, left to right, like the song grid on screen.
         for (i in 0..7) {
             leds[LaunchpadPro.ledOf(Control.Scene(i))] = trackLed(state.trackOffset + i)
             leds[LaunchpadPro.ledOf(Control.Track(i))] = sceneLed(state.sceneOffset + i)
         }
-        // Where the arrows move the tracks and scenes, one is lit when there is more that way.
+        // Light an arrow when there's more to scroll that way.
         if (navigates(state)) {
             val lit = { can: Boolean -> if (can) Rgb.WHITE else Rgb.OFF }
             leds[Button.Up.cc] = lit(state.trackOffset > 0)
@@ -302,7 +301,7 @@ object Surface {
             leds[Button.Left.cc] = lit(state.sceneOffset > 0)
             leds[Button.Right.cc] = lit(state.sceneOffset < maxOffset(view.scenes))
         }
-        // The track controls this far: record, mute and solo, and stop.
+        // The track controls so far: record, mute and solo, and stop.
         leds[Button.RecordArm.cc] = leds[Button.Record.cc]
         leds[Button.Mute.cc] = if (muting || view.tracks.any { it.mute }) MUTE else Rgb.scale(MUTE, 0.15f)
         leds[Button.Solo.cc] = if (soloing || view.tracks.any { it.solo }) SOLO else Rgb.scale(SOLO, 0.15f)
@@ -313,7 +312,7 @@ object Surface {
             leds[b.cc] = if (mixing && state.fader == f) Rgb.WHITE else Rgb.DIM
         }
         leds[Button.Sends.cc] = if (mixing && (state.fader == LpFader.SendA || state.fader == LpFader.SendB)) Rgb.WHITE else Rgb.DIM
-        // Clear and Duplicate are live on the session page, and undo and redo under Shift.
+        // Clear and Duplicate work on the session page, and undo and redo under Shift.
         if (state.page == LpPage.Session || state.shift) {
             leds[Button.Clear.cc] = if (Button.Clear in state.held) Rgb.WHITE else Rgb.DIM
             leds[Button.Duplicate.cc] = if (Button.Duplicate in state.held) Rgb.WHITE else Rgb.DIM
@@ -337,9 +336,9 @@ object Surface {
                 led in state.sounding || note in held -> Rgb.WHITE
                 drums != null -> Rgb.scale(colour, 0.35f)
                 // The root in the track's colour, the rest of the scale a
-                // shade of it, and what is not in the scale barely lit - there
-                // to play, and plainly not in key. With no key at all, the Cs
-                // are the landmarks, as on a piano.
+                // shade of it, and notes outside the scale barely lit so
+                // they're playable but clearly out of key. With no key, the
+                // Cs are the landmarks, like on a piano.
                 Math.floorMod(note - r, 12) == 0 -> colour
                 compact(view) -> Rgb.scale(colour, 0.3f)
                 Math.floorMod(note, 12) in inKey && keyed -> Rgb.scale(colour, 0.3f)
@@ -349,14 +348,14 @@ object Surface {
         }
     }
 
-    /** The pages whose arrows move the tracks and scenes in view - or any page, with Shift. */
+    /** The pages where the arrows move the tracks and scenes in view, or any page with Shift. */
     private fun navigates(state: LpState): Boolean =
         state.page == LpPage.Session || state.page == LpPage.Mixer || state.shift
 
     /**
-     * Where a session pad points: its track and its scene. The app's grid,
-     * the right way round - the tracks down from the top row, the scenes
-     * across from the left.
+     * Where a session pad points: its track and scene. Laid out like the
+     * app's grid, with tracks down from the top row and scenes across from
+     * the left.
      */
     fun sessionCell(state: LpState, row: Int, col: Int): Pair<Int, Int> =
         (state.trackOffset + (7 - row)) to (state.sceneOffset + col)
@@ -393,7 +392,7 @@ object Surface {
 
     /** The pitch a sequencer row edits: a scale note up from the note page's octave, or a drum voice. */
     fun seqPitch(view: LpView, state: LpState, row: Int): Int? {
-        // A drum machine reads down from the kick, as its grid on screen does.
+        // A drum machine reads down from the kick, like its grid on screen.
         drumsOf(view)?.let { return it.getOrNull(state.seqRow + (7 - row)) }
         val idx = state.seqRow + row
         val s = steps(view)
@@ -424,7 +423,7 @@ object Surface {
                     on && here -> Rgb.WHITE
                     on -> colour
                     here -> Rgb.scale(Rgb.WHITE, 0.15f)
-                    // The root's rows, faintly, so the scale can be read.
+                    // The root's rows, faintly lit, so the scale can be read.
                     !drums && Math.floorMod(pitch - r, 12) == 0 -> Rgb.scale(colour, 0.12f)
                     else -> Rgb.scale(Rgb.WHITE, 0.03f)
                 }
@@ -441,13 +440,13 @@ object Surface {
         LpFader.Device -> 0f
     }
 
-    /** The value a fader pad sets: the left column nought, the right one full. */
+    /** The value a fader pad sets: 0 on the left column, full on the right. */
     fun faderValue(col: Int): Float = col / 7f
 
     /**
-     * The mixer as the app's grid lies: a row for each track, the top track
-     * at the top, and its fader running left to right across the row. With
-     * Device the rows are the played machine's eight knobs, first at the top.
+     * The mixer, laid out like the app's grid: a row per track, top track at
+     * the top, with its fader running left to right. With Device the rows
+     * are the played machine's eight knobs, first at the top.
      */
     private fun mixerPage(view: LpView, state: LpState, leds: IntArray) {
         val colour = view.tracks.getOrNull(view.played)?.colour ?: Rgb.WHITE
@@ -474,9 +473,9 @@ object Surface {
         }
     }
 
-    // The perform page: repeat and gate lengths along the top two rows,
-    // reverse, tape stop and the riser, the three kills, and under them an
-    // XY pad four rows high. All held: let go and it lets go.
+    // The perform page: repeat and gate lengths along the top two rows, then
+    // reverse, tape stop and the riser, the three kills, and an XY pad four
+    // rows high below them. Everything is held: let go and it stops.
     private val REPEAT_ROW = 7
     private val GATE_ROW = 6
     private val MOMENT_ROW = 5
@@ -511,7 +510,7 @@ object Surface {
         else -> listOf(LpAction.PerformParam("x", col / 7f), LpAction.PerformParam("y", row / 3f))
     }
 
-    /** Letting go of one: what is still held in its row takes over, or it goes off. */
+    /** Releasing one: whatever else is held in its row takes over, or it turns off. */
     private fun performOff(state: LpState, row: Int, col: Int): List<LpAction> {
         val still = state.performing.map { LaunchpadPro.padOf(it)!! }
         fun lastIn(rows: IntRange) = still.lastOrNull { it.row in rows }
@@ -528,8 +527,8 @@ object Surface {
         }
     }
 
-    // The chord page: a column for each degree of the scale and its octave,
-    // a row for each kind of chord, bottom to top.
+    // The chord page: a column for each scale degree plus the octave, and a
+    // row for each chord type, bottom to top.
     private val CHORD_DEGREES: List<List<Int>> = listOf(
         listOf(0, 2, 4),        // triad
         listOf(0, 2, 4, 6),     // seventh
@@ -541,7 +540,7 @@ object Surface {
         listOf(2, 4, 7),        // first inversion: the root on top
     )
 
-    /** The notes a chord pad plays: stacked scale degrees from the column's. */
+    /** The notes a chord pad plays: scale degrees stacked from the column's. */
     fun chordAt(view: LpView, state: LpState, row: Int, col: Int): List<Int> {
         val s = if (view.intervals.isNullOrEmpty() || view.root == null) listOf(0, 2, 4, 5, 7, 9, 11) else steps(view)
         val base = 12 * (state.octave + 1) + (view.root ?: 0)
@@ -604,8 +603,8 @@ object Surface {
                 return state.copy(sounding = state.sounding + (led to listOf(note))) to
                     listOf(LpAction.NoteOn(note, velocity.coerceIn(1, 127)))
             }
-            // The column beside the grid is the tracks and the row under it the
-            // scenes, on every page: the app's grid, the right way round.
+            // The column beside the grid is the tracks and the row under it
+            // the scenes, on every page, like the app's grid.
             is Control.Track -> return state to scenePress(view, state, state.sceneOffset + control.index)
             is Control.Scene -> return state to trackPress(view, state, state.trackOffset + control.index)
             is Control.Key -> return key(view, state, control.button)
@@ -632,8 +631,8 @@ object Surface {
         pageButtons[b]?.let { page ->
             return (if (page in built) state.copy(page = page) else state) to emptyList()
         }
-        // Clear, Duplicate, Mute and Solo mean something only with the next
-        // press; undo and redo are Clear and Duplicate under Shift.
+        // Clear, Duplicate, Mute and Solo only apply to the next press. Undo
+        // and redo are Clear and Duplicate under Shift.
         if (b in modifiers && !(state.shift && (b == Button.Clear || b == Button.Duplicate))) {
             return state.copy(held = state.held + b) to emptyList()
         }
@@ -642,8 +641,8 @@ object Surface {
         return when (b) {
             Button.Shift -> state.copy(shift = true) to emptyList()
             Button.RecordArm -> state to listOf(LpAction.Record)
-            // The faders' kind, and the mixer page to see them on. Sends
-            // goes to the first send, then the second.
+        // Choose what the faders control and show the mixer page. Sends goes
+        // to the first send, then the second.
             Button.Volume -> state.copy(page = LpPage.Mixer, fader = LpFader.Level) to emptyList()
             Button.Pan -> state.copy(page = LpPage.Mixer, fader = LpFader.Pan) to emptyList()
             Button.Device -> state.copy(page = LpPage.Mixer, fader = LpFader.Device) to emptyList()
@@ -653,9 +652,9 @@ object Surface {
             ) to emptyList()
             Button.StopClip -> state to listOf(LpAction.StopClips)
             Button.Quantise -> state to (view.seq?.let { listOf(LpAction.QuantiseClip(view.played, it.scene)) } ?: emptyList())
-            // On the session and mixer pages - and on any with Shift - the
-            // arrows move the view a row or a column at a time, as the app's
-            // grid lies: the tracks up and down, the scenes left and right.
+            // On the session and mixer pages (and any page with Shift) the
+            // arrows move the view one row or column at a time, like the app's
+            // grid: tracks up and down, scenes left and right.
             Button.Up -> (if (nav) state.copy(trackOffset = (state.trackOffset - 1).coerceAtLeast(0))
             else state.copy(octave = (state.octave + 1).coerceAtMost(8))) to emptyList()
             Button.Down -> (if (nav) state.copy(trackOffset = (state.trackOffset + 1).coerceAtMost(maxOffset(view.tracks.size)))
@@ -680,8 +679,8 @@ object Surface {
                 next to performOff(next, control.row, control.col)
             } else {
                 val notes = state.sounding[led].orEmpty()
-                // The notes the pad started, whatever the grid says now: an
-                // octave moved while it was held must not leave them sounding.
+                // The notes the pad started, whatever the grid says now, so
+                // moving the octave while it's held can't leave them playing.
                 state.copy(sounding = state.sounding - led) to notes.map { LpAction.NoteOff(it) }
             }
         }
@@ -696,14 +695,13 @@ object Surface {
     fun pressure(state: LpState, pad: Control.Pad, value: Int): List<LpAction> =
         state.sounding[LaunchpadPro.ledOf(pad)].orEmpty().map { LpAction.Pressure(it, value) }
 
-    /** How far the view can move: to where the last of [count] is on the last row or column. */
+    /** How far the view can move: until the last of [count] is on the last row or column. */
     private fun maxOffset(count: Int): Int = maxOf(0, count - 8)
 
-    /** The arrows on the sequencer page: steps across, rows up and down. Null for anything else. */
     /**
-     * The arrows on the sequencer page: a step at a time across, a row at a
-     * time up and down. A drum machine reads down from the kick, so there up
-     * goes back towards it. Null for anything else.
+     * The arrows on the sequencer page: one step at a time across, one row at
+     * a time up and down. A drum machine reads down from the kick, so up
+     * moves back towards it. Null for any other button.
      */
     private fun seqKey(view: LpView, state: LpState, b: Button): LpState? {
         val seq = view.seq

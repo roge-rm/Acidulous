@@ -6,27 +6,22 @@
 #include <engine/dsp/Wsola.h>
 #include <engine/machine/Machine.h>
 
-// Dice - a loop, cut up, and rolled.
+// Dice, a loop slicer.
 //
-// Forage plays one-shots; nothing here took a breakbeat and let you play the
-// pieces. Dice does: a loop is sliced at its own transients (the detector
-// built for Pollen finds them) or on a grid, and each slice lands on a pad.
+// A loop is sliced at its transients (using Pollen's detector) or on a grid,
+// and each slice goes on a pad.
 //
-// The twist is in the name. Every trigger rolls against a handful of
-// probabilities - swap this slice for another, reverse it, stutter it, drop
-// it, throw it up an octave - so a loop reshuffles as it plays and a fill is
-// never the same twice. Hold the dice and the same rolls come up every pass,
-// which is the difference between a machine that surprises you and one you
-// cannot record.
+// Every trigger rolls against a few probabilities: swap the slice for
+// another, reverse it, stutter it, drop it or jump it up an octave. So the
+// loop reshuffles as it plays. Hold keeps the same rolls every pass, so a
+// pattern you like can be recorded.
 namespace acidulous::machine {
 
 class Dice final : public Machine {
   public:
     static constexpr int kSlices = 16;
-    // One per pad at the machine's maximum, so a sixteen-slice loop can have
-    // every slice sounding before anything has to be stolen. Stealing a slice
-    // is a cut in the middle of audio, and the cheapest fix for a cut is not
-    // having to make it.
+    // One per pad, so every slice of a 16-slice loop can sound at once
+    // without stealing, which would cut audio mid-slice.
     static constexpr int kVoices = 16;
     static constexpr uint8_t kBaseNote = 36;
 
@@ -38,19 +33,18 @@ class Dice final : public Machine {
         Swap, Reverse, Stutter, StutterDiv, Drop, Jump, JumpRange, Hold, Seed,
         Cutoff, Resonance, FilterType, Drive, Volume, MasterPan, Accent,
         /**
-         * Whether the loop plays at the song's tempo rather than its own.
+         * Whether the loop follows the song's tempo.
          *
          * Off, a slice plays at the speed it was cut at, so a 90 bpm break in
-         * a 126 bpm song leaves a gap after every slice. On, each slice goes
-         * through the same stretcher a frozen clip and a Bias take use, by the
-         * song's tempo over the loop's - so it lasts its share of the bar and
-         * keeps its pitch.
+         * a 126 bpm song leaves gaps. On, each slice goes through the same
+         * stretcher that frozen clips and Bias takes use, at the ratio of song
+         * tempo to loop tempo, so it fits the bar and keeps its pitch.
          */
         Follow,
         /**
-         * How many bars the loop is, which is what its tempo is worked out
-         * from. Auto takes `Take::bars`, the guess made when it was loaded;
-         * the rest say a half, 1, 2, 4, 8 or 16 outright.
+         * How many bars the loop is, used to work out its tempo. Auto uses
+         * `Take::bars`, the guess made when it was loaded. The others are
+         * 1/2, 1, 2, 4, 8 or 16 bars.
          */
         Bars,
         Count
@@ -67,10 +61,10 @@ class Dice final : public Machine {
     void allNotesOff() override;
     bool render(float *L, float *R, int32_t frames) override;
     void *swapObject(int32_t slot, void *object) override;
-    /** The song's tempo, which is half of what a follow ratio is made of. */
+    /** The song's tempo, used for the follow ratio. */
     void onBlock(int64_t, int64_t, float bpm) override { songBpm = bpm; }
 
-    /** The loop's tempo as it stands, or nought with no loop. For the panel. */
+    /** The loop's tempo, or 0 with no loop. For the panel. */
     float loopBpm() const;
 
     /** Where the cuts fall, for the panel to draw. Not audio-thread state. */
@@ -88,25 +82,21 @@ class Dice final : public Machine {
         int32_t start = 0, end = 0;
         float gainL = 0.5f, gainR = 0.5f;
         float env = 1.0f, envCoeff = 0.0f;
-        // Frames since this slice (or this stutter repeat) started, for the
-        // ramp in. A slice ends where the next one begins, which on an
-        // onset cut is a transient - so both ends need a ramp or every
-        // slice boundary is a step.
+        // Frames since this slice (or stutter repeat) started, for the fade
+        // in. On an onset cut a slice ends on the next transient, so both
+        // ends need a short fade or they click.
         int32_t age = 0;
         uint8_t note = 0;
-        // Following the song: the slice comes out of `stretch` at [stretchRate]
-        // into `held`, which is read at [pitch] - so the stretch sets how long
-        // the slice lasts and the pitch knob only its pitch.
+        // Following the song: the slice comes out of `stretch` at
+        // [stretchRate] into `held`, which is read at [pitch]. So the stretch
+        // sets the length and the pitch knob only sets pitch.
         bool follows = false;
         float stretchRate = 1.0f, pitch = 1.0f, timeRate = 1.0f;
         dsp::StereoStretch stretch;
         std::vector<float> held[2];
         int32_t heldHave = 0;
         double heldPos = 0.0;
-        // One per channel. A single filter processed into L only, which left
-        // the right channel unfiltered: on Dust, with its cutoff at 2.2 kHz,
-        // the right side measured seventeen decibels more treble than the
-        // left. The same fault Mosaic had, found the same way.
+        // One filter per channel, so both sides get filtered.
         dsp::MultiFilter filter, filterR;
     };
 

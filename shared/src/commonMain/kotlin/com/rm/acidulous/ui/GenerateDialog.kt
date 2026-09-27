@@ -32,14 +32,14 @@ import com.rm.acidulous.res.*
 /**
  * The generators, over the clip being edited.
  *
- * The clip changes as the settings do, so it can be heard while the song
- * plays, and the whole visit is one step of undo. Each page starts again from
- * the clip as it was when the window opened, so moving between pages tries
- * one generator and then another rather than stacking them. OK keeps what
- * the page you are on made; Cancel puts the clip back.
+ * The clip changes as the settings do, so you can hear it while the song plays,
+ * and the whole visit is one undo step. Each page starts from the clip as it
+ * was when the window opened, so switching pages tries another generator
+ * instead of stacking them. OK keeps what the current page made, Cancel puts
+ * the clip back.
  *
- * Nothing changes until something is touched: opening the window to look
- * must not cost the clip its notes.
+ * Nothing changes until a setting is touched, so just opening the window never
+ * changes the clip.
  */
 @Composable
 fun GenerateDialog(
@@ -49,7 +49,7 @@ fun GenerateDialog(
     base: Clip,
     clipTicks: Int,
     ticksPerBeat: Int,
-    /** The track's scale, or the song's key; null for neither. */
+    /** The track's scale, or the song's key, or null for neither. */
     pitchClasses: Set<Int>?,
     /** Empty for a melodic machine. */
     voices: List<DrumVoice>,
@@ -62,10 +62,9 @@ fun GenerateDialog(
     var touched by remember { mutableStateOf(false) }
     val m = GenerateMemory
     if (drums && voices.none { it.note == m.voice }) m.voice = voices.first().note
-    // Where this clip already lives, so what is made lands in the part of
-    // the roll that is on screen rather than wherever the last clip was.
-    // Once, as the window opens: the Boolean is only there so remember has
-    // something to keep.
+    // Start the generators around the clip's lowest note, so the result lands
+    // in the part of the roll that's on screen. Runs once when the window
+    // opens, the Boolean is only there so remember has something to keep.
     @Suppress("UNUSED_VARIABLE")
     val placed = remember {
         if (!drums && base.notes.isNotEmpty()) {
@@ -78,7 +77,7 @@ fun GenerateDialog(
 
     DisposableEffect(Unit) {
         editor.beginGesture(trackIndex)
-        // Leaving any other way than OK - back, a tap outside - is Cancel.
+        // Leaving any way other than OK (back, a tap outside) counts as Cancel.
         onDispose { editor.cancelGesture() }
     }
 
@@ -87,8 +86,8 @@ fun GenerateDialog(
         val notes = when (tab) {
             0 -> {
                 val made = Generate.euclidNotes(m.euclid.copy(pitch = if (drums) m.voice else m.euclid.pitch), clipTicks)
-                // A drum pattern is one voice's, laid over the others; a
-                // melodic one is the whole clip.
+                // A drum pattern replaces one voice and keeps the others, a
+                // melodic one replaces the whole clip.
                 if (drums) base.notes.filter { it.pitch != m.voice } + made else made
             }
             1 -> if (drums) {
@@ -128,8 +127,8 @@ fun GenerateDialog(
 }
 
 /**
- * What the window was last set to, for the next time it opens. Not saved
- * with anything: it is how you were working, not a property of the music.
+ * The window's last settings, for the next time it opens. Not saved in the
+ * song.
  */
 private object GenerateMemory {
     var tab by mutableStateOf(0)
@@ -142,9 +141,8 @@ private object GenerateMemory {
 private val STEPS = listOf("1/8" to PPQN / 2, "1/16" to PPQN / 4, "1/32" to PPQN / 8, "1/8T" to PPQN / 3, "1/16T" to PPQN / 6)
 
 /**
- * The pages are the arp window's shape: titled cards of knobs and switches,
- * four to a line, all of it in view at once. Dan asked for exactly that after
- * the first version, which was a column of sliders you had to scroll.
+ * Titled cards of knobs and switches, four per row, all in view at once, like
+ * the arp window.
  */
 @Composable
 private fun Cards(content: @Composable () -> Unit) {
@@ -155,7 +153,7 @@ private fun Cards(content: @Composable () -> Unit) {
 private fun Card(title: String, content: @Composable () -> Unit) =
     Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt, content = content)
 
-/** A knob over a share, in steps of five per cent for the same reason. */
+/** A knob for a share, in steps of 5%. */
 @Composable
 private fun ShareKnob(label: String, value: Float, min: Float = 0f, set: (Float) -> Unit) =
     CountKnob(label, (value * 20f).roundToInt(), (min * 20f).roundToInt()..20, "%.0f%%".format(value * 100f)) { set(it / 20f) }
@@ -171,7 +169,7 @@ private fun VoiceSwitch(voices: List<DrumVoice>, changed: () -> Unit) =
         columns = ((voices.size + 1) / 2).coerceAtMost(8),
     ) { GenerateMemory.voice = voices[it].note; changed() }
 
-/** A new roll of the dice, as a one-cell switch so it sits in a card like the rest. */
+/** A new random seed, as a one-cell switch so it fits in a card. */
 @Composable
 private fun RollButton(seed: Int, roll: () -> Unit) = SwitchGrid(stringResource(Res.string.generate_seed, seed), listOf(stringResource(Res.string.generate_roll)), -1) { roll() }
 
@@ -187,7 +185,7 @@ private fun RhythmPage(drums: Boolean, voices: List<DrumVoice>, spelling: Map<In
             CountKnob(stringResource(Res.string.generate_turn), e.rotate, 0..(e.steps - 1).coerceAtLeast(1)) { set(e.copy(rotate = it.coerceAtMost(e.steps - 1))) }
             StepSwitch(e.stepTicks) { set(e.copy(stepTicks = it)) }
         }
-        // The pattern as it will fall, one character a step.
+        // The resulting pattern, one character per step.
         Text(
             Generate.euclid(e.hits, e.steps, e.rotate).joinToString("") { if (it) "x" else "·" },
             color = Acid.colors.accent, fontFamily = FontFamily.Monospace, fontSize = 14.sp,

@@ -8,15 +8,13 @@
 #   cpu_test.sh --rate 8.3                  sixteenths at 124 bpm, not the stress rate
 #   cpu_test.sh rack | idle | stretch       a whole rack, silence, the stretcher
 #
-# **Two things the numbers depend on and do not show unless you ask.** The
-# note rate is a stress rate, three times faster than music, so a patch with
-# a long release holds three times the voices it would in a song - it is
-# printed on every run now, and `--rate` changes it. And a unit's *defaults*
-# are a patch nobody plays, which has been wrong three times; `--patch` times
-# the sound people actually hear.
+# The default note rate is a stress rate, about three times faster than
+# music, so patches with long releases hold more voices than in a song. It's
+# printed on every run and `--rate` changes it. A unit's defaults aren't a
+# patch anyone plays, so use `--patch` to time a real sound.
 #
-# -O2 and no sanitisers, deliberately: this is the one harness whose numbers
-# are the point, and a sanitised build reports several times the real figure.
+# -O2 and no sanitisers, since a sanitised build reports several times the
+# real cost.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

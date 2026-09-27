@@ -3,13 +3,11 @@ package com.rm.acidulous.util
 /**
  * java.util.Random, number for number, on every platform.
  *
- * Generate and Quantise draw from a Random seeded by what is on screen, so
- * the same seed gives the same notes - on the phone, which has always used
- * Java's, and now in a browser, which has none. Kotlin's own Random(seed) is
- * a different sequence, and would quietly change every pattern a seed makes.
- * So this is Java's: the same 48-bit linear congruential generator and the
- * same derivations (javadoc of java.util.Random), checked against it in
- * JavaRandomTest.
+ * Generate and Quantise use seeded randoms, so the same seed must give the
+ * same notes everywhere, including in a browser. Kotlin's Random(seed) is a
+ * different sequence. This is Java's 48-bit linear congruential generator
+ * with the same derivations (see the java.util.Random javadoc), checked
+ * against it in JavaRandomTest.
  */
 class JavaRandom(seed: Long) {
     private var seed: Long = (seed xor MULTIPLIER) and MASK
@@ -43,8 +41,8 @@ class JavaRandom(seed: Long) {
         const val MULTIPLIER = 0x5DEECE66DL
         const val ADDEND = 0xBL
         const val MASK = (1L shl 48) - 1
-        // 1.0 / (1L shl 53), written out: the Wasm compiler cannot fold that
-        // expression into a constant, and this is exactly the same double.
+        // 1.0 / (1L shl 53) written out, because the Wasm compiler can't fold that
+        // expression into a constant. It's exactly the same double.
         const val DOUBLE_UNIT = 1.1102230246251565E-16
     }
 }

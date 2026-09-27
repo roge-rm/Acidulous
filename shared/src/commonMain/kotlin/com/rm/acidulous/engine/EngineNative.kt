@@ -1,17 +1,18 @@
 package com.rm.acidulous.engine
 
-// The list the platforms' halves are written from (tools/gen_engine_bridge.py):
-// a new engine call is a line here, its C++ in platform/android/jni_bridge.cpp,
-// and a run of the script. One line per call, as the script reads it.
+// The platform versions are generated from this list
+// (tools/gen_engine_bridge.py). To add an engine call, add a line here, its
+// C++ in platform/android/jni_bridge.cpp, and run the script. One line per
+// call, since the script reads it line by line.
 //
-// `suspend` marks a call that takes long - a file decoded, a song rendered -
-// and is only ever made off the main thread: the same JNI call on the phone,
-// and one handed to an engine thread in a browser, whose page has no other.
+// `suspend` marks slow calls (decoding a file, rendering a song) that are
+// only made off the main thread. On a JVM it's the same JNI call. In a
+// browser it's handed to an engine thread, since the page has only one.
 
 /**
- * The engine's native calls, one for one with platform/android/jni_bridge.cpp:
- * JNI on Android and the desktop, the same bridge compiled to WebAssembly in a
- * browser. NativeEngine is the Kotlin face of them; nothing else calls these.
+ * The engine's native calls, matching platform/android/jni_bridge.cpp one
+ * for one: JNI on Android and desktop, and the same bridge compiled to
+ * WebAssembly in a browser. Only NativeEngine calls these.
  */
 internal expect object EngineNative {
     fun nativePanic()

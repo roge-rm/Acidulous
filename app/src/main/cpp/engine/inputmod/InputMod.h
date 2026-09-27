@@ -2,8 +2,8 @@
 #include <cstdint>
 #include <engine/core/Params.h>
 
-// A MIDI processor between the clip player and the machine - where scale
-// lock, chord trigger and the arpeggiator will live.
+// A MIDI processor between the clip player and the machine, such as Scale,
+// Chord and Arp.
 namespace acidulous {
 
 struct MidiSink {

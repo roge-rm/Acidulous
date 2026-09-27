@@ -4,10 +4,9 @@ package com.rm.acidulous.ui
  * One key event as the app reads it: android.view.KeyEvent's fields, on any
  * platform.
  *
- * The keyboard code was written against Android's KeyEvent, and the codes it
- * compares are Android's - [KeyCodes] - because that is what a saved key
- * binding holds. Android fills this in from its own event; the desktop from
- * AWT's, mapped onto the same codes.
+ * The key codes are Android's ([KeyCodes]) because that's what saved key
+ * bindings hold. Android fills this in from its own event, desktop from AWT's
+ * mapped onto the same codes.
  */
 class KeyPress(
     val action: Int,

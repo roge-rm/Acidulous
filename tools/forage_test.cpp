@@ -1,8 +1,5 @@
-// How a Forage pad plays: once, round and round, or for as long as it is held.
-//
-// `noteOff` was an empty function until "while held" existed, and a loop is
-// the one mode that can fail by never stopping - so both are worth a test that
-// does not need ears.
+// Tests Forage's pad play modes: one shot, loop, and while held. A loop can
+// fail by never stopping, and "while held" depends on note off.
 #include <cmath>
 #include <cstdio>
 #include <memory>
@@ -33,7 +30,7 @@ SampleData *tone() {
     return s;
 }
 
-/** Render and throw away, to get past something. */
+/** Render and discard, to skip ahead. */
 void skip(Machine *m, float seconds) {
     float L[kBlock], R[kBlock];
     const int32_t blocks = static_cast<int32_t>(kSr * seconds) / kBlock;
@@ -88,14 +85,14 @@ int main() {
         m->noteOn(36, 110);
         check(peakOver(m.get(), 0.4f) > 0.05f, "a loop speaks");
         check(peakOver(m.get(), 2.0f) > 0.05f, "and is still going four sample-lengths later");
-        // But only while it is held. A loop that outlives its note would be
-        // set going by one step of a sequence and never stop.
+        // Only while it's held. Otherwise one step of a sequence would start
+        // a loop that never stops.
         m->noteOff(36);
         skip(m.get(), 0.05f);
         check(peakOver(m.get(), 1.0f) < 1e-3f, "and stops when the note comes up");
         m->noteOn(36, 110);
-        // And the seam is a ramp, not a step: nothing should exceed what the
-        // sample itself does.
+        // The loop seam is smoothed, so no jump is bigger than the sample's
+        // own.
         float L[kBlock], R[kBlock], worst = 0.0f, prev = 0.0f;
         for (int b = 0; b < 400; ++b) {
             m->render(L, R, kBlock);
@@ -114,8 +111,7 @@ int main() {
         skip(m.get(), 0.05f); // the release is eight milliseconds
         check(peakOver(m.get(), 0.2f) < 1e-3f, "and stops when the note comes up");
     }
-    // While held, never released: it still ends with the sample rather than
-    // hanging for ever.
+    // While held but never released, it still ends with the sample.
     {
         auto m = padSetTo(2, s);
         m->noteOn(36, 110);

@@ -4,12 +4,11 @@
 #include <engine/dsp/Filter.h>
 #include <engine/machine/Machine.h>
 
-// Hexbeat - a drum synthesizer in the small-box vocabulary, expanded to the
-// kit those boxes never had. Nothing is sampled: kick and toms are resonant bursts with a
-// pitch sweep, the snare a tonal pair over filtered noise, hats and cymbals a
-// stack of inharmonic squares through band-pass, the cowbell two squares, the
-// clap a burst of noise pulses. Thirteen voices on C2..C3; accent from
-// velocity >= 100.
+// Hexbeat is a small-box style drum synthesizer with nothing sampled. Kick
+// and toms are resonant bursts with a pitch sweep, the snare is two tones
+// over filtered noise, hats and cymbals are inharmonic squares through a band
+// pass, the cowbell is two squares and the clap is noise pulses. Thirteen
+// voices on C2..C3, accent from velocity >= 100.
 namespace acidulous::machine {
 
 class Hexbeat final : public Machine {
@@ -26,10 +25,10 @@ class Hexbeat final : public Machine {
         BellTune, BellDecay, BellLevel,
         ClaveTune, ClaveLevel,
         Accent,
-        // Appended, and it stays appended: a parameter's position in this
-        // enum is its index in every song already saved.
+        // New parameters go on the end. A parameter's position here is its
+        // index in saved songs.
         Volume,
-        // How much velocity sets the level, on the law every machine shares.
+        // How much velocity sets the level, using the shared velocity curve.
         Velocity,
         Count
     };
@@ -50,16 +49,7 @@ class Hexbeat final : public Machine {
     struct Env { // exponential decay with a fast attack
         float level = 0.0f, coeff = 0.01f;
         bool active = false;
-        /**
-         * [seconds] is how long the sound *lasts* - the time to fall 60 dB.
-         *
-         * It used to be one time constant, and 60 dB is 6.9 of them, so every
-         * decay here ran nearly seven times longer than the number beside it:
-         * `cym_decay 1500 ms` really lasted ten and a half seconds and
-         * Enormous's 3800 lasted twenty-six. Dan found it in Genesis, which
-         * had the same envelope - "a metallic constant noise... the only
-         * sound for the last 15 seconds" - and this is the same fault.
-         */
+        /** [seconds] is the time to fall 60 dB. */
         void fire(float sr, float seconds, float amp = 1.0f) {
             level = amp;
             constexpr float kLn1000 = 6.907755f; // 60 dB, in time constants
@@ -67,13 +57,9 @@ class Hexbeat final : public Machine {
             active = true;
         }
         /**
-         * The same curve read the old way: [seconds] is one time constant.
-         *
-         * For the envelopes that are a *shape* rather than a length - the
-         * pitch sweeps, the click, the clap's pulses, the hat choke, and the
-         * rim and clave whose lengths are fixed in the code rather than on a
-         * panel. Those numbers were tuned by ear as curves and none of them
-         * is a duration anybody reads.
+         * The same curve with [seconds] as one time constant. Used for the
+         * envelopes tuned by ear as shapes: pitch sweeps, the click, clap
+         * pulses, the hat choke, and the fixed rim and clave lengths.
          */
         void fireTau(float sr, float seconds, float amp = 1.0f) { level = amp; coeff = 1.0f - std::exp(-1.0f / (std::max(0.002f, seconds) * sr)); active = true; }
         float next() { level -= level * coeff; if (level < 1e-4f) { level = 0.0f; active = false; } return level; }

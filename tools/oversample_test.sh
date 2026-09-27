@@ -1,8 +1,6 @@
 #!/bin/bash
-# Oversampling: what it costs and what it buys. See tools/oversample_test.cpp.
-#
-# Header-only and dependency-free: `dsp::Wsola` asks the material nothing, so
-# the harness needs neither the engine archive nor a file on disk.
+# Measures what oversampling costs and how much aliasing it removes.
+# See tools/oversample_test.cpp. Header-only, so no engine library is needed.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

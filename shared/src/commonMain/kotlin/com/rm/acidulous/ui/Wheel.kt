@@ -17,30 +17,28 @@ import androidx.compose.ui.input.pointer.pointerInput
 import com.rm.acidulous.AppHost
 
 /**
- * A turn of the mouse wheel, or a touchpad's two-finger scroll: in notches,
- * down and right positive. Shift turns a plain wheel sideways - the desktop
- * may already have, and says so in [dx] - and Ctrl (or Cmd) makes it zoom:
- * what every desktop editor does with them.
+ * A mouse wheel turn or touchpad two-finger scroll, in notches, with down
+ * and right positive. Shift turns a plain wheel sideways (the desktop may
+ * already have, in which case it's in [dx]) and Ctrl or Cmd makes it zoom.
  */
 internal class Wheel(val dx: Float, val dy: Float, val zoom: Boolean, val shift: Boolean) {
-    /** Across, in notches: a touchpad's own, or a plain wheel's with Shift held. */
+    /** Sideways, in notches: a touchpad's own, or a plain wheel's with Shift held. */
     val across: Float get() = if (shift && dx == 0f) dy else dx
-    /** Up and down, in notches: nothing while Shift has turned it sideways. */
+    /** Up and down, in notches: zero while Shift has turned it sideways. */
     val down: Float get() = if (shift && dx == 0f) 0f else dy
     /**
-     * A view span's factor for a zoom: below one is in, as the wheel goes up.
-     * Either axis, because with Shift held a wheel arrives as a sideways one.
+     * A zoom factor for a view span: below 1 zooms in, as the wheel goes up.
+     * Uses either axis, since with Shift held a wheel arrives sideways.
      */
     val zoomFactor: Float get() = Math.pow(1.15, (if (dy != 0f) dy else dx).toDouble()).toFloat()
 }
 
 /**
- * The wheel, for a view that moves and zooms by two fingers on the phone.
- * [handle] answers whether it took it, and a taken turn goes no further - a
- * zoom must not scroll the column it is in as well.
+ * The mouse wheel, for a view that moves and zooms with two fingers on the
+ * phone. [handle] returns whether it used the turn, and a used turn goes no
+ * further, so a zoom doesn't also scroll the column it's in.
  *
- * Only where the pointer is a mouse (AppHost.usesMouse): a phone's view
- * gestures are its fingers', and nothing here changes them.
+ * Only active when the pointer is a mouse (AppHost.usesMouse).
  */
 internal fun Modifier.onWheel(handle: PointerInputScope.(Wheel) -> Boolean): Modifier = composed {
     if (!AppHost.current.usesMouse) return@composed Modifier

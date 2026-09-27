@@ -17,7 +17,7 @@ class CrashReportsTest {
         val reports = CrashReports(dataDir())
         val before = Thread.getDefaultUncaughtExceptionHandler()
         try {
-            // Nothing after ours, so the test run itself is not ended by it.
+            // No handler after ours, so the test run itself doesn't end.
             Thread.setDefaultUncaughtExceptionHandler { _, _ -> }
             reports.install()
             Thread({ throw IllegalStateException("boom in a test") }, "crasher").apply { start(); join() }

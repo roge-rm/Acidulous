@@ -34,20 +34,16 @@ class WavetableBank {
 
     // frame is 0..kFrames-1 with `frac` between it and the next; phase in [0,1).
     /**
-     * The two rows a read interpolates between, for a caller that knows they
-     * do not change every sample.
-     *
-     * `table`, `frame` and `mip` are fixed for at least sixteen samples at a
-     * time, but `sample` below worked them out on every call - two address
-     * computations of three multiplies each, per oscillator, per voice, per
-     * sample. A caller that fetches the pair once and keeps it pays neither.
+     * The two rows a read interpolates between. `table`, `frame` and `mip`
+     * stay fixed for at least sixteen samples, so a caller can fetch these
+     * once and use `between` instead of working them out every sample.
      */
     void rowsFor(int table, int frame, int mip, const float *&a, const float *&b) const {
         a = row(table, frame, mip);
         b = row(table, frame + 1 < kFrames ? frame + 1 : frame, mip);
     }
 
-    /** The interpolation alone, given the pair from `rowsFor`. */
+    /** Just the interpolation, given the pair from `rowsFor`. */
     static float between(const float *a, const float *b, float frac, float phase) {
         const float x = phase * static_cast<float>(kSize);
         int i = static_cast<int>(x);
@@ -75,20 +71,9 @@ class WavetableBank {
   private:
     WavetableBank();
     /**
-     * **Mip outside frame, not the other way round.**
-     *
-     * `sample` interpolates between two adjacent *frames* at one mip, so those
-     * two rows are read together on every sample of every oscillator. Laid out
-     * `[table][frame][mip]` they sat `kMips` rows apart - ten times 1025
-     * floats, or **41 KB** - which is past the first-level data cache on the
-     * phones this has to run on, so the pair could not stay resident and each
-     * sample paid for two lines a long way apart. The whole bank is 2.6 MB, so
-     * there is no question of it all fitting; the only thing that helps is
-     * putting what is read together next to each other.
-     *
-     * Swapped, adjacent frames are one row apart - 4.1 KB - and the mip, which
-     * is held constant for sixteen samples at a time, is the outer index.
-     * Identical numbers come out; only their addresses change.
+     * Laid out [table][mip][frame] so the two adjacent frames read on every
+     * sample are one row (4.1 KB) apart. With frame outside mip they'd be
+     * 41 KB apart, which doesn't fit in a phone's L1 cache.
      */
     const float *row(int table, int frame, int mip) const {
         return data.data() + ((static_cast<size_t>(table) * kMips + static_cast<size_t>(mip)) * kFrames +

@@ -1,24 +1,22 @@
 package com.rm.acidulous.model
 
 /**
- * Where a tick lands once the beat is not even.
+ * Where a tick lands once the beat is swung.
  *
- * The same map as `sequencer/Swing.h`, and it has to stay the same: the engine
- * uses it to decide where a note *sounds*, and this side uses the inverse to
- * decide where a note somebody played should be *written*. If the two ever
- * disagreed, a part played in would land next to where it was heard, which is
- * the one thing the inverse exists to prevent. `SwingTest` checks a row of
- * values against the numbers the C++ harness prints.
+ * The same map as `sequencer/Swing.h`, and it has to stay that way. The
+ * engine uses it to decide where a note sounds, and this side uses the
+ * inverse to decide where a played note should be written. If they differed,
+ * recorded parts would land off from where they were heard. `SwingTest`
+ * checks values against the numbers the C++ harness prints.
  *
- * It is a time warp rather than a delay: each pair of subdivisions is mapped
- * onto itself with its midpoint moved late, linearly on each side. Continuous,
- * monotonic, and exactly the identity at fifty percent, so two notes a tick
- * apart stay a tick apart and stay in order wherever they sit.
+ * Each pair of subdivisions is mapped onto itself with its midpoint moved
+ * later, linearly on each side. It's continuous, keeps notes in order, and is
+ * exactly the identity at 50%.
  */
 object Swing {
-    /** A pair of sixteenths - what a groovebox means by swing. */
+    /** A pair of sixteenths, the usual groovebox swing. */
     const val SIXTEENTHS = PPQN / 2
-    /** A pair of eighths, which is the jazz and shuffle feel. */
+    /** A pair of eighths, for a jazz or shuffle feel. */
     const val EIGHTHS = PPQN
 
     fun pairOf(unit: Int): Int = if (unit == 1) EIGHTHS else SIXTEENTHS
@@ -36,7 +34,7 @@ object Swing {
         return base + out
     }
 
-    /** The tick that would sound at [swung] - what a live part has to be put back through. */
+    /** The tick that would sound at [swung]. Live input is put back through this. */
     fun from(swung: Int, percent: Float, pair: Int): Int {
         if (straight(percent) || pair < 2 || swung < 0) return swung
         val mid = midpoint(percent, pair)
@@ -47,7 +45,7 @@ object Swing {
         return base + out
     }
 
-    /** Kept off both ends, so neither half of the pair collapses to an instant. */
+    /** Kept away from both ends so neither half of the pair shrinks to nothing. */
     private fun midpoint(percent: Float, pair: Int): Int {
         val clamped = percent.coerceIn(SWING_STRAIGHT, SWING_MAX)
         val guard = pair / 20 + 1
@@ -55,8 +53,8 @@ object Swing {
     }
 }
 
-/** This track's swing, which is the song's unless the track says otherwise. */
+/** This track's swing: the song's unless the track has its own. */
 fun Song.swingOf(track: Track): Float = track.swing ?: swing
 
-/** The pair this song's swing bends. */
+/** The pair this song's swing moves. */
 val Song.swingPair: Int get() = Swing.pairOf(swingUnit)

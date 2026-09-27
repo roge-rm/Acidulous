@@ -2,16 +2,13 @@
 #include <cstddef>
 #include <cstdint>
 
-// What is coming in from outside, for whatever wants it.
+// Audio input from outside the engine.
 //
-// The engine has always been a closed system: oscillators in, speakers out.
-// A vocoder cannot be, and neither can sampling something you play into the
-// phone. So one block of input audio is published here each time the engine
-// renders, and anything on the audio thread can read it - the capture
-// recorder, a monitor path, or a machine like Cipher.
+// Each render publishes one block of input audio here, and anything on the
+// audio thread can read it: the capture recorder, monitoring, or a machine
+// like Cipher.
 //
-// Audio thread only. The pointer is valid for the duration of one block and
-// no longer; nobody may keep it.
+// Audio thread only. The pointer is only valid for one block, so don't keep it.
 namespace acidulous {
 
 class InputBus {

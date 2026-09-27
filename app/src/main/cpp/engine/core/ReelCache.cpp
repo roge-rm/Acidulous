@@ -11,19 +11,15 @@
 namespace acidulous::audio {
 
 /**
- * A take too long to hold, converted once into the engine's own flat format.
+ * Converts a long take once into planar int16 at the engine rate, which is
+ * what `Reel::Source` reads, so the audio thread can map and index it
+ * directly. Unlike `WavReader` it works in chunks, so memory use doesn't grow
+ * with the file.
  *
- * Planar int16 at the engine rate, which is exactly what `Reel::Source` reads,
- * so the file can be mapped and indexed with no work at all on the audio
- * thread. **Chunked throughout**: nothing here is proportional to the length
- * of the file, which is the difference between this and `WavReader` and the
- * whole reason it exists.
+ * Stereo is written in two passes over the source, one per channel, to avoid
+ * buffering a whole channel.
  *
- * Stereo is written in two passes over the source. Reading a twenty-minute
- * file twice is a few seconds on a worker, once per file ever; buffering the
- * second channel instead would be the very megabytes this is avoiding.
- *
- * Returns the frame count written, or 0 and why not.
+ * Returns the frame count written, or 0 with the reason in [error].
  */
 int64_t ReelCache::convert(const std::string &path, const std::string &dest, bool &stereoOut,
                           std::string &error) {
@@ -55,9 +51,8 @@ int64_t ReelCache::convert(const std::string &path, const std::string &dest, boo
         int64_t written = 0;
         while (written < outFrames && ok) {
             const int64_t n = std::min<int64_t>(kChunk, outFrames - written);
-            // The window of the *source* these output frames come from, with
-            // one frame of overhang so the last interpolation has a right-hand
-            // neighbour rather than reaching past the chunk.
+            // The source frames these output frames come from, plus one extra
+            // so the last interpolation has a right-hand neighbour.
             const int64_t first = static_cast<int64_t>(static_cast<double>(written) * ratio);
             const int64_t last = static_cast<int64_t>(static_cast<double>(written + n) * ratio) + 2;
             const int64_t span = last - first;
@@ -93,11 +88,9 @@ int64_t ReelCache::convert(const std::string &path, const std::string &dest, boo
 }
 
 /**
- * What a converted file is called: the source, its size and when it changed.
- *
- * A re-import of the same file reuses the conversion; a file edited in place
- * does not, which is the whole of the cache's correctness. The name is a hash
- * rather than the path so that it is a filename at all.
+ * The converted file's name: a hash of the source path, size and modified
+ * time. Re-importing the same file reuses the conversion, and a file edited
+ * in place gets a new one. Hashed so the result is a valid filename.
  */
 std::string ReelCache::nameFor(const std::string &path) {
     struct stat st {};

@@ -3,13 +3,12 @@
 #include "Filter.h"
 #include "Math.h"
 
-// Twelve slopes from two SVF stages and a one-pole, with a drive stage at the
-// input - the arrangement that lets a filter change character, not just
-// brightness. Resonance lives on the first stage.
+// Twelve filter types from two SVF stages and a one-pole, with a drive stage
+// at the input. Resonance is on the first stage.
 namespace acidulous::dsp {
 
-// The level a drive stage should treat as nominal: what the signal reaching it
-// actually reaches, rather than full scale or the curve's own ceiling.
+// The typical level of the signal reaching a drive stage, used to normalise
+// its output.
 constexpr float kDriveNominal = 0.3f;
 
 class MultiFilter {
@@ -30,26 +29,19 @@ class MultiFilter {
         sampleRate = sr;
         a.setSampleRate(sr);
         b.setSampleRate(sr);
-        lastFc = -1.0f; // the coefficients below are about to mean something else
+        lastFc = -1.0f; // force set() to recompute at the new rate
     }
     void reset() { a.reset(); b.reset(); z = 0.0f; }
 
     /**
-     * Coefficients, and three things not to do.
+     * Sets the coefficients. Called four times a block per voice, so it
+     * avoids libm calls where it can:
      *
-     * This is `exp2` in the caller plus two `tan` and an `exp` here, and every
-     * machine with a filter per voice calls it four times a block per voice -
-     * a hundred and ninety-two libm calls a block for Ratio's twelve, two
-     * hundred and fifty-six for Trinity's sixteen. So:
+     *  - nothing is recomputed if cutoff, resonance and type haven't changed;
+     *  - `b` (the second stage) is only set for the three types that use it;
+     *  - `onePole` (the 6 dB path) is only set for the four types that use it.
      *
-     *  - **nothing is recomputed when nothing moved.** The cutoff only moves
-     *    if something is modulating it; with the filter envelope at nought it
-     *    is the same number four times a block, for ever;
-     *  - `b` is the second pole pair and only three of the thirteen types
-     *    have one;
-     *  - `onePole` is the six-decibel path and only four types use it.
-     *
-     * The drive is stored before any of that, because it changes on its own.
+     * The drive is stored first because it can change on its own.
      */
     void set(float cutoffHz, float resonance01, int type, int drive, float driveAmount) {
         this->type = type < 0 ? 0 : (type >= TypeCount ? TypeCount - 1 : type);
@@ -94,24 +86,12 @@ class MultiFilter {
         if (drive == Clean || driveAmount <= 0.0f) return x;
         const float g = 1.0f + driveAmount * 24.0f;
         switch (drive) {
-        // Normalised on a nominal level, not by 1/sqrt(g).
-        //
-        // `tanh(x * g) / sqrt(g)` is a see-saw, not a drive: for a small
-        // signal the tanh is near-linear, so the whole thing reduces to
-        // x * sqrt(g) - a *boost* of up to ten decibels - while a large one is
-        // held at a ceiling of 1/sqrt(g), ten decibels down. The knob changes
-        // the level far more than the character, in opposite directions
-        // depending on how loud the signal already is, which is an extreme
-        // compressor with a tone control attached. Resonance's coupling loop
-        // oscillated for exactly this reason: nine decibels of hidden gain
-        // handed to small signals inside a feedback path.
-        //
-        // Divide by the curve's own response at a nominal level instead, so a
-        // signal of that size comes out the size it went in.
+        // Normalised so a signal at kDriveNominal comes out the same size it
+        // went in. Dividing by sqrt(g) instead boosts quiet signals by up to
+        // 10 dB and cuts loud ones, which can make feedback loops oscillate.
         case Valve: return fastTanh(x * g) * (kDriveNominal / fastTanh(kDriveNominal * g));
         case Diode: {
-            // The bias offset is taken back out before normalising, or the DC
-            // it adds is what gets scaled.
+            // Remove the bias offset before normalising so its DC isn't scaled.
             const float bias = fastTanh(0.35f);
             const float at = fastTanh(kDriveNominal * g + 0.35f) - bias;
             const float norm = at > 1e-6f ? kDriveNominal / at : 1.0f;

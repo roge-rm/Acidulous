@@ -1,14 +1,13 @@
-// A Link peer in a box, for proving the app's own Link on a device.
+// A standalone Link peer for testing the app's Link on a device.
 //
-// An Android emulator has no route to the machine's network, so the two
-// phones this milestone is really for cannot be had here - but two peers on
-// *one* device find each other exactly as two apps on one phone do, which is
-// the whole chain: discovery, the session tempo, and start and stop.
+// The Android emulator can't reach the local network, but two peers on one
+// device find each other the same way two apps on a phone do. That covers
+// discovery, the session tempo, and start and stop.
 //
 //   link_peer <seconds> [tempo-to-propose]
 //
-// It prints a line a quarter second: peers, the session tempo, and the beat,
-// so the app's readout and this can be compared while both are running.
+// Prints peers, session tempo and beat every quarter second, so it can be
+// compared with the app's readout.
 #include <ableton/Link.hpp>
 #include <chrono>
 #include <cstdio>
@@ -25,8 +24,8 @@ int main(int argc, char **argv) {
     link.enable(true);
 
     if (propose > 0.0) {
-        // A moment to find anybody first: proposing into an empty session
-        // and then joining one is a different thing from proposing into it.
+        // Wait to find other peers first. Proposing into an empty session and
+        // then joining one isn't the same as proposing into it.
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         auto state = link.captureAppSessionState();
         state.setTempo(propose, link.clock().micros());

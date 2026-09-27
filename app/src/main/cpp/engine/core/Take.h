@@ -4,20 +4,18 @@
 #include <string>
 #include <vector>
 
-// A piece of audio with its transients found: what Pollen's grains read,
-// and what Dice cuts into slices.
+// A piece of audio with its transients marked. Pollen's grains read it and
+// Dice cuts it into slices.
 //
-// Two things can feed a cloud: a file, decoded on a worker and mounted
-// read-only, or the machine's own ring of what came in through the
-// microphone a moment ago. A grain must not care which, so both are reached
-// through one View, resolved once a block.
+// A cloud can be fed from a decoded file or from the machine's own ring of
+// recent microphone input. Both are read through one View, resolved once a
+// block, so grains don't need to know which.
 namespace acidulous::audio {
 
 /**
- * Where a transient is. A hop of energy against a slow average, which is
- * the cheapest detector that works on a drum loop and on a voice, and the
- * only kind that can also run incrementally on the audio thread as a live
- * buffer fills.
+ * Finds transients by comparing each hop's energy to a slow average. Cheap,
+ * works on drums and voices, and can run on the audio thread as a live buffer
+ * fills.
  */
 class OnsetFinder {
   public:
@@ -31,7 +29,7 @@ class OnsetFinder {
         sinceLast = minGap;
     }
 
-    /** One frame in; true when this frame opens an onset. */
+    /** Takes one frame. Returns true when it starts an onset. */
     bool push(float l, float r) {
         energy += std::abs(l) + std::abs(r);
         ++sinceLast;
@@ -50,16 +48,16 @@ class OnsetFinder {
     int32_t hopSize = 256, minGap = 1440, hop = 0, sinceLast = 0;
 };
 
-/** A decoded file, with its transients. Built on a worker, never mutated. */
+/** A decoded file, with its transients. Built on a worker, never changed. */
 struct Take {
-    std::vector<float> left, right; // both always filled; a mono file is copied across
+    std::vector<float> left, right; // both always filled, mono is copied to both
     int32_t frames = 0;
     std::vector<int32_t> onsets; // sorted, in frames
     std::string name;
     /**
-     * How many bars of four beats the take most likely is, for a machine that
-     * plays it at the song's tempo: a half, or 1, 2, 4, 8 or 16. Nought when
-     * no whole number of bars puts it between 70 and 180 bpm.
+     * How many 4/4 bars the take most likely is, for playing it at the song's
+     * tempo: 0.5, 1, 2, 4, 8 or 16. 0 when no bar count puts it between 70
+     * and 180 bpm.
      */
     float bars = 0.0f;
 
@@ -67,7 +65,7 @@ struct Take {
     float guessBars(float sampleRate) const;
 };
 
-/** What a reader actually reads. Resolved once per block. */
+/** The audio a reader reads. Resolved once per block. */
 struct View {
     const float *l = nullptr, *r = nullptr;
     int32_t frames = 0;

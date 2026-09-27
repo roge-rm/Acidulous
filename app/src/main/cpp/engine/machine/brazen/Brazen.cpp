@@ -6,23 +6,17 @@
 
 namespace acidulous::machine {
 
-// What this machine's signal reaches before its drive stage, and so the level
-// that stage should treat as nominal. Measured, not guessed: after volume x2; peak -21.5 dB.
-// A nominal above what the signal reaches puts the whole sound on the steep
-// part of the curve, where the knob is a volume control again.
+// The level the signal reaches before the drive stage, used as its nominal
+// level. Measured after volume x2, peak -21.5 dB. Set it too high and the
+// drive knob acts like a volume knob.
 constexpr float kNominal = 0.085f;
-// Where this bank sits in the volume knob's travel. It was an unnamed 2.0,
-// which left Init 4.4 dB under the line its patches sit on - and unlike
-// Timber's, this gap is real rather than a note the harness chose: at
-// Trombone's own note, Init still measures 4.4 dB quieter than Trombone.
+// Output gain that puts Init at the same level as the other patches (at
+// 2.0 it measured 4.4 dB quieter than Trombone on the same note).
 constexpr float kHouse = 3.32f;
 
 /**
- * Below this a tube has stopped, and it is chosen against what was audible.
- *
- * A voice used to go when its envelope did, cutting the tail off at -56 dBFS
- * - a step from -1.58e-3 straight to zero in one sample, mid-cycle. This is
- * ninety decibels below full scale and a good forty below the tick.
+ * Below this the tube counts as silent and the voice can be freed. It's
+ * about 90 dB below full scale, low enough that cutting it doesn't tick.
  */
 constexpr float kSilent = 3.0e-5f;
 
@@ -35,8 +29,7 @@ Brazen::Brazen() { initParams(); }
 const ParamDef *Brazen::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
         // 0 is a tuba's wide slow bore, 1 a trumpet's narrow bright one. It
-        // is one knob because it is one physical fact: how much of the wave
-        // the bell sends back.
+        // sets how much of the wave the bell sends back.
         {"size", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
         {"bell", 0.05f, 0.95f, 0.55f, Curve::Linear, 0, ""},
         {"loss", 0.97f, 1.0f, 0.999f, Curve::Linear, 0, ""},
@@ -117,11 +110,9 @@ void Brazen::allNotesOff() {
 
 Brazen::Voice *Brazen::allocate() {
     for (auto &v : voices) if (!v.used) return &v;
-    // Of the notes already let go, take the quietest rather than the oldest.
-    // Starting a note calls Bore::clear, which truncates whatever the tube
-    // was still ringing - so the one that costs least to interrupt is the
-    // one with least left in it, and an old note is not reliably that: a
-    // tuba's tube rings half a second after a trumpet's has gone.
+    // Of the released notes, steal the quietest instead of the oldest.
+    // Starting a note clears the tube, and an old note isn't always the
+    // quietest since a tuba rings much longer than a trumpet.
     Voice *best = nullptr;
     for (auto &v : voices) {
         if (v.gate) continue;
@@ -156,8 +147,7 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         Player &p = v.players[i];
         p.rng = rng = rng * 1664525u + 1013904223u;
         const float pos = players == 1 ? 0.0f : (static_cast<float>(i) / (players - 1) * 2.0f - 1.0f);
-        // Each player is out by their own amount, and none of them is
-        // exactly on the note - which is what a section is.
+        // Each player is off the note by their own amount.
         p.home = pos * spread * 0.5f + (nextRandom() * 2.0f - 1.0f) * spread * 0.5f;
         p.offsetCents = p.home;
         p.walk = 0.0f;
@@ -168,20 +158,16 @@ void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         p.pushScale = p.pushBias = 0.0f;
         if (!gliding) {
             p.bore.clear();
-            // The tongue. Not air poured into the tube - the tube grows its
-            // own wave, as it always did - but the lips leant on while it
-            // does, so a low note takes about as long to speak as a high one
-            // instead of sixteen times as long. Needs the note and a solved
-            // loop first, so the frequency goes in here and `tongue` is
-            // called after the tune in render.
+            // The tongue pushes on the lips while the wave builds up, so a
+            // low note speaks about as fast as a high one. It needs the note
+            // and a solved loop, so the frequency is set here and `tongue`
+            // is called after the tune in render.
             p.bore.setFrequency(noteHz(static_cast<float>(note)));
             p.tongue = true;
         }
     }
-    // The mutes are two one-poles a voice carries, and a stolen voice used to
-    // start a note holding the last one's - a step on the front of the note,
-    // and a render after a panic that differed from one before it. reset_test
-    // never caught it because the mutes are off in all but three patches.
+    // Clear the mute filters so a stolen voice doesn't start with the old
+    // note's state, which would click and make renders differ.
     v.muteLpL = v.muteLpR = v.muteHpL = v.muteHpR = 0.0f;
     v.ring = 0.0f;
     v.filterL.reset();
@@ -220,10 +206,9 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
     const float dt = 1.0f / sampleRate;
     const int32_t players = std::clamp(steppedOf(Players), 1, kPlayers);
     const float size = paramOf(Size);
-    // A wide slow tube sends back nearly everything and only the low end
-    // of it; a narrow bright one loses more and lets more out. The tube
-    // has to be close to lossless or the harmonics have no gain to live on
-    // and the horn plays a flute's note instead of a trumpet's.
+    // A wide tube reflects nearly everything, mostly lows. A narrow one
+    // loses more and lets more out. The tube must be close to lossless or
+    // the harmonics die out and it sounds like a flute.
     const float bellCut = paramOf(Bell) * (0.15f + size * 0.55f);
     const float reflect = 0.99f - size * 0.04f;
     const float loss = paramOf(Loss);
@@ -243,19 +228,15 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
     const float velAmount = paramOf(VelocityAmount);
     const int32_t mute = steppedOf(MuteKind);
     const float muteTone = paramOf(MuteTone);
-    // A mute passes a band and swallows the rest. Tone slides the whole
-    // window up and down, because that is what a player does with it.
+    // A mute passes a band and cuts the rest. Tone slides the band up and
+    // down.
     const float muteShift = std::pow(2.0f, muteTone * 2.0f - 1.0f);
     const float muteHpHz = (mute == Straight ? 700.0f : mute == Cup ? 220.0f : 1100.0f) * muteShift;
     const float muteLpHz = (mute == Straight ? 6000.0f : mute == Cup ? 2000.0f : 3600.0f) * muteShift;
     const float muteGain = mute == Straight ? 1.6f : mute == Cup ? 1.3f : 1.9f;
-    // One-poles, and the coefficient is the exponential rather than the
-    // radians. `min(1, 2 pi f / sr)` is the small-angle version of it and it
-    // stops being small a long way below Nyquist: at mutetone 1 the straight
-    // mute asks for 12 kHz, 2 pi f / sr is 1.571, the clamp makes it exactly
-    // one, and a one-pole with a coefficient of one is a piece of wire. The
-    // mute then did nothing at all but multiply by 1.6 - no band, no
-    // swallowing, which is the whole of what a mute is.
+    // One-poles using the exact exponential coefficient. The small-angle
+    // version `min(1, 2 pi f / sr)` hits 1 at high frequencies (like the
+    // straight mute's 12 kHz at mutetone 1) and the filter stops filtering.
     const float muteHp = dsp::onePoleCoeff(1.0f / (kTwoPi * muteHpHz), sampleRate);
     const float muteLp = dsp::onePoleCoeff(1.0f / (kTwoPi * muteLpHz), sampleRate);
     const float drive = paramOf(Drive), volume = paramOf(Volume);
@@ -263,11 +244,10 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
     const float panL = std::cos((panKnob + 1.0f) * 0.25f * 3.14159265f);
     const float panR = std::sin((panKnob + 1.0f) * 0.25f * 3.14159265f);
 
-    // Five milliseconds, so it follows a decaying tube rather than its
-    // waveform, and a voice is not held on by one stray sample.
+    // 5 ms, so it follows the tube's decay and not its waveform.
     const float ringCoeff = dsp::onePoleCoeff(0.005f, sampleRate);
-    // The same shape the amplitude envelope's own attack has, so a scattered
-    // player arrives the way the first one did rather than being faded in.
+    // Matches the amp envelope's attack, so a late player comes in the same
+    // way the first one did.
     const float entryCoeff = dsp::onePoleCoeff(paramOf(Attack) * 0.4f, sampleRate);
 
     const float growlStart = growlPhase;
@@ -288,15 +268,11 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
             v.freq = noteHz(static_cast<float>(v.note));
         }
 
-        // --- the section listens to itself --------------------------------
-        // Each player has their own idea of where the note is, wanders off
-        // it slowly, and is pulled back toward wherever everybody else has
-        // got to. At lock 0 nobody is listening and the section is as wide
-        // as its players are stubborn; at 1 they give way to the average
-        // within a breath and the four of them are one horn. Everything
-        // between is what a section sounds like on the way into tune, and
-        // it is the one thing a sampled brass library cannot do, because
-        // samples cannot hear each other.
+        // --- the section tunes to itself -------------------------------------
+        // Each player has their own idea of the note, drifts off it slowly,
+        // and is pulled toward the section's average. At lock 0 they ignore
+        // each other. At 1 they quickly settle on the average and sound like
+        // one horn.
         float mean = 0.0f;
         for (int32_t i = 0; i < players; ++i) mean += v.players[i].offsetCents;
         mean /= static_cast<float>(players);
@@ -320,19 +296,18 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
         while (v.vibratoPhase >= 1.0f) v.vibratoPhase -= 1.0f;
         const float vib = std::sin(v.vibratoPhase * kTwoPi) * vibratoDepth;
 
-        // Velocity does two things on a wind model: it blows - harder is brighter,
-        // at the depth this knob always had at its old default - and it sets the
-        // level, on the law every machine shares. Blowing alone could not make
-        // a note quiet: under a point the lips do not speak at all.
+        // Velocity sets how hard the player blows (harder is brighter) and
+        // also the level, with the same law as every machine. Blowing alone
+        // can't make a note quiet, since below a point the lips don't sound.
         const float vel = 1.0f - 0.6f * velAmount * (1.0f - v.velocity);
-        // Ramped across the block: a slurred note changes it mid-sound.
+        // Ramped across the block, since a slurred note changes it mid-sound.
         const float gainTo = velocityGain(v.velocity, velAmount);
         const float gainStep = (gainTo - v.outGain) / static_cast<float>(frames);
         const float growlNow = growl * (0.5f + 0.5f * std::sin(growlPhase * kTwoPi));
         const float env0 = v.amp.value();
 
-        // Everything the horn is made of, once a block. tune() is trigonometry
-        // and the note does not change inside a block worth hearing.
+        // Set up the horn once a block. tune() is expensive and the note
+        // doesn't change audibly within a block.
         for (int32_t pi = 0; pi < players; ++pi) {
             Player &p = v.players[pi];
             const float hz = v.freq * tune * bendMul * noteBendMul(v) *
@@ -340,43 +315,39 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
             const float prs = v.pressure >= 0.0f ? v.pressure : pressure;
             const float push = mouth * env0 * vel * p.breath * (1.0f - growlNow * 0.5f) + prs * 0.3f;
             p.bore.setFrequency(hz);
-            // Lips tighten as the player leans in, which is most of what an
-            // attack is: the note arrives before the tone does.
-            // The growl is a player humming against their own note: it
-            // leans on the lips and on the air at once, which is why it
-            // buzzes rather than simply wobbling.
-            // Slide leans on the lips, which is what a player's embouchure does.
+            // Lips tighten as the player blows harder, so the note arrives
+            // before the tone does. The growl pushes on the lips and the air
+            // at once so it buzzes instead of just wobbling. Slide (MPE
+            // timbre) also tightens the lips, like embouchure.
             const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
             p.bore.setLips(tension * (0.94f + env0 * bite * 0.12f) * (1.0f + growlNow * 0.06f) *
                                (1.0f + slide * paramOf(MpeTimbre) * 0.35f),
                            lipDamp);
             p.bore.setLipGain(0.7f + bite * 0.6f);
             p.bore.setBell(reflect, bellCut);
-            // Brassiness closes the lips as well as bending the line: a
-            // narrow pulse is half of why a loud horn is a bright one.
+            // Brassiness also closes the lips, since a narrow pulse is part of
+            // what makes a loud horn bright.
             p.bore.setRest(0.35f);
             p.bore.setBite(bite * 0.9f + brass * 0.5f);
-            // The steepening is a property of how loud the wave is, so it
-            // follows the player and not the envelope generator.
+            // The steepening depends on how loud the wave is, so it follows
+            // the pressure and not the envelope.
             p.bore.setBrass(brass * std::min(1.0f, push * 1.4f));
             p.bore.setLoss(loss);
             p.bore.setPressure(push);
             p.bore.tune();
-            // Where this player sits. A section's width does not move inside a
-            // block, so the trig pair belongs here and not on every sample of
-            // every player - four players is eight calls a sample.
+            // Where this player sits. Worked out once a block to save the
+            // trig calls per sample.
             const float panNow = std::clamp(p.pan * width, -1.0f, 1.0f);
             const float panAngle = (panNow + 1.0f) * 0.25f * 3.14159265f;
             p.panL = std::cos(panAngle);
             p.panR = std::sin(panAngle);
-            // Everything in `push` that does not change inside the block, so
-            // the sample loop can put the envelope back on per sample rather
-            // than in sixty-four-frame treads. See the step() call below.
+            // The parts of `push` that don't change within the block, so the
+            // sample loop can apply the envelope per sample. See step() below.
             p.pushScale = mouth * vel * p.breath * (1.0f - growlNow * 0.5f);
             p.pushBias = prs * 0.3f;
             if (p.tongue) {
-                // After the loop has been solved for this note: `tongue`
-                // sizes the lift from the gain the solve arrived at.
+                // After the loop is solved for this note, since `tongue` uses
+                // the solved gain.
                 p.bore.tune();
                 p.bore.tongue();
                 p.tongue = false;
@@ -385,14 +356,11 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
 
         for (int32_t i = 0; i < frames; ++i) {
             const float env = v.amp.next();
-            // Gone when the player has stopped *and* the tube has, which are
-            // not the same instant. See Voice::ring.
+            // Free the voice once the player has stopped and the tube is
+            // silent. See Voice::ring.
             if (env <= 0.0000005f && !v.gate && v.ring < kSilent) { v.used = false; break; }
-            // The growl is a tremolo on the output, so it is the one thing
-            // here that has to be per sample rather than per block: held for
-            // sixty-four frames it is a staircase on the audio itself, and
-            // at 42 Hz and 0.75 deep that is a step every 1.3 ms. It is the
-            // last of the block-rate edges in this machine.
+            // The growl is a tremolo on the output, so it's worked out per
+            // sample. Per block it would give audible steps.
             const float growlAmNow =
                 growl > 0.0001f
                     ? 1.0f - growl * (0.5f + 0.5f * std::sin((growlStart + growlStep * static_cast<float>(i)) * kTwoPi)) * 0.35f
@@ -403,22 +371,10 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 if (p.delayLeft > 0.0f) { p.delayLeft -= 1.0f; continue; }
                 rng = rng * 1664525u + 1013904223u;
                 const float hiss = (static_cast<float>(rng >> 8) * (1.0f / 16777216.0f) * 2.0f - 1.0f) * breathNoise * 0.25f;
-                // A player's breath is a ramp and not a staircase. The mouth
-                // pressure was worked out once a block and held for all
-                // sixty-four frames, so a fifty-millisecond attack went into
-                // the tube as thirty-seven treads of four per cent each - a
-                // 750 Hz sawtooth on the front of every note, straight
-                // through a DC blocker that passes a step at full height,
-                // down a tube with nothing in it yet, and out of a bell that
-                // lifts the top of it by thirteen decibels. The per-sample
-                // envelope was already being computed here and used only to
-                // decide when the voice had finished.
-                //
-                // The block value still feeds setPressure, setBrass and the
-                // solve, so the loop is linearised about exactly what it was
-                // before and the instrument plays the same note.
-                // ...and a late player gets the front of the note it missed,
-                // over its own attack. See Player::entry.
+                // Mouth pressure follows the envelope per sample, so the
+                // attack is a smooth ramp and not steps that would buzz. The
+                // block value still feeds setPressure, setBrass and the solve.
+                // A late player also gets its own attack, see Player::entry.
                 p.entry += (1.0f - p.entry) * entryCoeff;
                 const float pushNow = (p.pushScale * env + p.pushBias) * p.entry;
                 const float s = p.bore.step(pushNow, hiss * pushNow) * growlAmNow;
@@ -426,10 +382,8 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 r += s * p.panR;
             }
             v.ring += (std::fabs(l) + std::fabs(r) - v.ring) * ringCoeff;
-            // The mute. A cup over the bell is not a volume knob: it is a
-            // box with its own resonance, letting a band through and
-            // sending the rest back down the tube. Straight is bright and
-            // thin, cup is dark and close, harmon is the nasal one.
+            // The mute passes a band and cuts the rest. Straight is bright
+            // and thin, cup is dark and close, harmon is nasal.
             if (mute != Open) {
                 v.muteLpL += (l - v.muteLpL) * muteHp;
                 v.muteLpR += (r - v.muteLpR) * muteHp;
@@ -451,9 +405,8 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
         float l = L[i] * volume * kHouse, r = R[i] * volume * kHouse;
         if (drive > 0.0001f) {
             const float k = 1.0f + drive * 8.0f;
-            // Normalised on the nominal level. `/ sqrt(k)` boosts a quiet
-            // signal by up to ten decibels and holds a loud one ten below,
-            // so the knob moved the level rather than the character.
+            // Normalised on the nominal level so the drive knob changes the
+            // character and not the level.
             const float norm = kNominal / dsp::fastTanh(kNominal * k);
             l = dsp::fastTanh(l * k) * norm;
             r = dsp::fastTanh(r * k) * norm;

@@ -2,36 +2,29 @@
 #include <cstdint>
 #include <engine/core/Constants.h>
 
-// What a block in a patch is.
+// A module in a patch: eight knobs, some inputs, some outputs and a step()
+// that runs once per sample. It owns no note or voice state. The graph owns
+// that, because the graph is replaced when the patch changes.
 //
-// A module is eight knobs, some inputs, some outputs and a step() that runs
-// once per sample. It owns no note state and no voice: the graph owns both,
-// because the graph is what gets replaced when the patch changes, and a
-// voice holding a pointer into a module would be left pointing at freed
-// memory the moment somebody adds a cable.
-//
-// Everything is a float and every jack accepts every other, as on a real
-// modular. Audio is nominally -1..1 and control 0..1 or -1..1; the colours
-// in the editor are a hint, not a rule.
+// Everything is a float and any jack can connect to any other, like a real
+// modular. Audio is nominally -1..1 and control 0..1 or -1..1. The colours in
+// the editor are only a hint.
 namespace acidulous::machine::nexus {
 
-constexpr int kKnobs = 8;      // per module, fixed: nine would be two modules
+constexpr int kKnobs = 8;      // per module, fixed
 constexpr int kPorts = 8;      // inputs and outputs, each
 constexpr int kSlots = 16;     // modules in a patch
 constexpr int kCables = 24;    // cables whose depth is a parameter
 constexpr int kVoices = 8;
 
-// How the editor's activity meters behave. One sample in sixteen is three
-// thousand readings a second against a screen that redraws thirty times, and
-// the decay is set so a level falls to about a third of itself in a tenth of
-// a second: fast enough that a cable stops glowing when the note does, slow
-// enough that an audio-rate signal reads as a steady glow rather than a
-// flicker.
+// The editor's activity meters read one sample in sixteen. The decay drops a
+// level to about a third in a tenth of a second, so a cable stops glowing
+// when the note does but audio-rate signals don't flicker.
 constexpr int kMeterEvery = 16;
 constexpr float kMeterDecay = 0.9964f;
 constexpr int kMacros = 8;
 
-/** What the whole graph shares: the transport, and the performance controls. */
+/** Shared by the whole graph: the transport and the performance controls. */
 struct Context {
     float sampleRate = 48000.0f;
     float bpm = 120.0f;
@@ -41,16 +34,16 @@ struct Context {
     float pressure = 0.0f;
     float bend = 0.0f;
     float macro[kMacros] = {};
-    // The voice this call is for; -1 for a mono module. The per-voice values
-    // live in the machine and are read through here, so a module never holds
-    // a pointer to anything that a patch rebuild could take away.
+    // The voice this call is for, or -1 for a mono module. Per-voice values
+    // live in the machine and are read through here, so modules never hold
+    // pointers that a patch rebuild could invalidate.
     int32_t voice = -1;
     const float *pitchOf = nullptr;
     const float *gateOf = nullptr;
     const float *velocityOf = nullptr;
     const float *randomOf = nullptr;
     const float *triggerOf = nullptr;
-    // A finger's own pressure and slide, -1 where it has sent none.
+    // Per-note pressure and slide, -1 if none has been sent.
     const float *pressureOf = nullptr;
     const float *timbreOf = nullptr;
 
@@ -70,8 +63,8 @@ struct Context {
 };
 
 /**
- * One module. Constructed on a worker thread - it may allocate there - and
- * afterwards touched only by the audio thread.
+ * One module. Constructed on a worker thread (where it may allocate), then
+ * only touched by the audio thread.
  */
 class Module {
   public:
@@ -86,25 +79,17 @@ class Module {
     virtual void setKnobs(const float *knobs) = 0;
 
     /**
-     * Once a block: which of this module's inputs have a cable in them.
+     * Once a block: which of this module's inputs have a cable in them. Bit n
+     * is input port n. Only the output sink uses it.
      *
-     * Bit n is input port n. Almost nothing wants this - a jack carrying
-     * silence and an empty jack mean the same thing nearly everywhere, and a
-     * module that behaves differently depending on what it can see of the
-     * patch around it is a module that is hard to reason about. The sink is
-     * the exception, and it is stated once here rather than guessed at from a
-     * zero sample.
-     *
-     * It is set per block rather than at build time because a graph hand-over
-     * moves live instances from the old graph into the new one, and it is the
-     * new graph's wiring that is true afterwards.
+     * Set per block rather than at build time because a graph hand-over
+     * moves live instances into the new graph, with new wiring.
      */
     virtual void setConnected(uint32_t) {}
 
     /**
-     * One sample. `in` is kPorts wide and already summed and scaled by the
-     * cables; write up to kPorts outputs. `state` is this module's slice of
-     * the graph's per-voice storage.
+     * One sample. `in` is kPorts wide, already summed and scaled by the
+     * cables. Write up to kPorts outputs.
      */
     virtual void step(const float *in, float *out, const Context &ctx) = 0;
 

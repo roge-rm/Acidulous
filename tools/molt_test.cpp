@@ -1,19 +1,17 @@
-// Molt, proved on a voice nobody has to sing.
+// Tests Molt against a synthetic voice.
 //
-// A vowel is a train of glottal pulses through a couple of resonances, and
-// that is cheap enough to build here - which means the whole machine can be
-// checked against a source whose pitch and formants are known exactly rather
-// than against a recording somebody has to make first.
+// A vowel is a train of glottal pulses through a couple of resonances, which
+// is cheap to build, so the machine can be checked against a source whose
+// pitch and formants are known exactly.
 //
-// What is asserted, in order: the analyser finds a pitch it was given; a
-// noise burst is not called pitched; and - the point of the machine - pitch
-// and formant move independently, each leaving the other where it was.
+// Checked in order: the analyser finds the pitch it was given, a noise burst
+// isn't called pitched, and pitch and formant move independently without
+// affecting each other.
 #include <engine/core/Utterance.h>
 #include <engine/machine/molt/Molt.h>
 
-// The vowel, the noise and the two FFT measurements were written here first
-// and live next door now, because the audition harness wants exactly the same
-// four things and two copies of a spectral centroid is one too many.
+// The vowel, the noise and the two FFT measurements are shared with the
+// audition harness.
 #include "audition_material.h"
 #include "audition_measure.h"
 
@@ -47,7 +45,7 @@ void check(bool ok, const char *what, const char *detail = "") {
 
 float cents(float a, float b) { return 1200.0f * std::log2(a / b); }
 
-/** The median of the voiced part of a pitch track - what the take "is". */
+/** The median of the voiced part of a pitch track, the take's overall pitch. */
 float medianVoiced(const PitchTrack &t) {
     std::vector<float> v;
     for (float f : t.hz) if (f > 0.0f) v.push_back(f);
@@ -65,22 +63,14 @@ float voicedShare(const PitchTrack &t) {
 
 
 /**
- * A vowel as somebody would actually hand it over: a room under it, a
- * recorder that clipped, and silence at the front while they got ready.
+ * A vowel like a real recording: room noise under it, clipping, and silence
+ * at the front.
  *
- * **This is the case the harness had never met.** Molt was built and voiced
- * against `vowel()`, which is a perfectly periodic pulse train through two
- * resonances - no rumble, no clipping, a crest factor of eleven decibels and
- * audio from frame nought. The first real recording it was given was 56% of
- * its energy under seventy hertz, clipped at 0.3% of its samples, and had
- * four hundred milliseconds of room tone in front of the first word. Every
- * one of those broke something, and none of them could be seen from here.
- *
- * So the dirt is synthesised too, and the numbers are stated: a 32 Hz tone
- * and noise under seventy hertz at three times the vowel's own level, hard
- * clipping at eight tenths, and four hundred milliseconds of room at a
- * fortieth of it. Dan's recording cannot live in this repository, and without
- * a stand-in for it nothing here can ever see this class of fault again.
+ * `vowel()` is a perfectly periodic pulse train with no rumble, no clipping
+ * and audio from frame zero, and real takes aren't like that. So the problems
+ * are synthesised too: a 32 Hz tone and noise under seventy hertz at three
+ * times the vowel's level, hard clipping at 0.8, and four hundred
+ * milliseconds of room tone at a fortieth of it in front.
  */
 std::vector<float> dirtyVowel(float f0, float seconds) {
     std::vector<float> clean = vowel(f0, seconds);
@@ -90,9 +80,9 @@ std::vector<float> dirtyVowel(float f0, float seconds) {
     for (float v : clean) rms += v * v;
     rms = std::sqrt(rms / static_cast<float>(std::max(1, n)));
 
-    // The room: a hum well under the tracker's floor, and low-passed noise
-    // with it. Three times the voice, which is what more than half of the
-    // energy being under seventy hertz means.
+    // The room: a hum well under the tracker's floor plus low-passed noise, at
+    // three times the voice's level so more than half the energy is under
+    // seventy hertz.
     std::vector<float> out(static_cast<size_t>(n), 0.0f);
     float lp = 0.0f;
     for (int32_t i = 0; i < n; ++i) {
@@ -101,16 +91,16 @@ std::vector<float> dirtyVowel(float f0, float seconds) {
         out[static_cast<size_t>(i)] =
             clean[static_cast<size_t>(i)] + rms * 3.0f * (std::sin(2.0f * 3.14159265f * 32.0f * t) * 0.5f + lp * 6.0f);
     }
-    // The recorder: hard clipping, as a phone does when it is held too close.
+    // The recorder: hard clipping, like a phone held too close.
     for (float &v : out) v = std::max(-0.8f, std::min(0.8f, v));
-    // And the wait before the first word.
+    // And the silence before the first word.
     std::vector<float> room(static_cast<size_t>(kSr * 0.4f), 0.0f);
     for (size_t i = 0; i < room.size(); ++i) room[i] = rms * 0.025f * rng.next();
     room.insert(room.end(), out.begin(), out.end());
     return room;
 }
 
-/** Play a take through a Molt and hand back what came out, in mono. */
+/** Plays a take through a Molt and returns the output in mono. */
 std::vector<float> play(audio::Utterance &u, float seconds, const std::vector<int> &notes,
                         const std::vector<std::pair<int32_t, float>> &overrides = {}) {
     machine::Molt m;
@@ -118,7 +108,7 @@ std::vector<float> play(audio::Utterance &u, float seconds, const std::vector<in
     int32_t count = 0;
     const ParamDef *defs = m.paramDefs(count);
     auto setp = [&](int32_t p, float value) { m.params().set(p, defs[p].unmap(value)); };
-    // A test wants to hear the machine, not its envelope or its correction.
+    // Hear the machine itself, not its envelope or its correction.
     setp(machine::Molt::AmpAttack, 0.001f);
     setp(machine::Molt::AmpRelease, 0.01f);
     setp(machine::Molt::Tune, 1.0f);
@@ -323,13 +313,11 @@ int main() {
         check(gBoth > gAlone * 3.0f && cBoth > 0.0f, "two notes sing two pitches at once", detail);
     }
 
-    // --- determinism, which reset_test cannot reach here --------------------
+    // --- determinism, which reset_test can't reach here ---------------------
     //
-    // That harness panics every machine and compares two renders, but a
-    // machine with nothing mounted renders silence and silence proves
-    // nothing. With a take in it there is a read head, four overlap-add
-    // rings, a filter and an envelope to rewind, so it is worth doing here
-    // where a take exists.
+    // reset_test compares two renders after a panic, but with nothing mounted
+    // Molt renders silence. With a take there's a read head, four overlap-add
+    // rings, a filter and an envelope to rewind, so it's checked here.
     std::printf("\nwhat a panic rewinds\n");
     {
         machine::Molt m;
@@ -376,11 +364,10 @@ int main() {
         check(differ == 0 && loudest > 0.01f, "the same performance twice, bit for bit", detail);
     }
 
-    // --- and the same thing, dirty -----------------------------------------
+    // --- the same thing, dirty ---------------------------------------------
     //
-    // Everything above is asserted again on a take with a room, a clip and a
-    // wait in front of it. `analyse` cleans all three, and each check here
-    // failed before it did.
+    // Everything above again on a take with room noise, clipping and a gap in
+    // front. `analyse` cleans all three.
     std::printf("\na take somebody actually recorded\n");
     {
         audio::Utterance dirty;
@@ -393,14 +380,14 @@ int main() {
         check(std::abs(cents(dirty.rootHz, 180.0f)) < 20.0f,
               "the rumble does not become the pitch", detail);
 
-        // The room at the front is gone, so the take begins on the voice.
+        // The room tone at the front is gone, so the take starts on the voice.
         const float began = static_cast<float>(static_cast<int32_t>(dirtyVowel(180.0f, 3.0f).size()) -
                                                dirty.frames) / kSr;
         std::snprintf(detail, sizeof(detail), "(%.0f ms taken off the front)",
                       static_cast<double>(began * 1000.0f));
         check(began > 0.2f && began < 0.45f, "the silence before the first word is gone", detail);
 
-        // What is left is the voice and not the room it was sung in.
+        // What's left is the voice, not the room.
         double below = 0.0, total = 0.0;
         for (int32_t at = 0; at + 8192 < dirty.frames; at += static_cast<int32_t>(kSr * 0.25f)) {
             const audition::Spectrum sp = audition::spectrumAt(dirty.mono, at);
@@ -412,8 +399,8 @@ int main() {
                       100.0 * share, static_cast<double>(audio::PitchTrack::kMinHz));
         check(share < 0.02, "the room under the voice is gone", detail);
 
-        // And the marks are all cut the same way up, which is what lets the
-        // grains add rather than cancel.
+        // And the marks all have the same polarity, so the grains add
+        // instead of cancelling.
         int32_t voiced = 0, negative = 0;
         for (const audio::Epoch &e : dirty.epochs) {
             if (!e.voiced) continue;

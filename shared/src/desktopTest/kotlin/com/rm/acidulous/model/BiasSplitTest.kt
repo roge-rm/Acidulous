@@ -6,11 +6,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Cutting one recording into cells.
- *
- * The engine's half of this is `tools/marks_test`, which proves the boundaries
- * land where they should. This is the other half: given boundaries, the right
- * windows into the file, and nothing invented.
+ * Cutting one recording into cells. `tools/marks_test` checks the engine
+ * puts the boundaries in the right place; this checks that given the
+ * boundaries, each cell gets the right window into the file.
  */
 class BiasSplitTest {
 
@@ -79,7 +77,7 @@ class BiasSplitTest {
         assertEquals(listOf("s-intro"), out.keys.toList())
     }
 
-    /** Round the song twice and the second pass is the keeper. */
+    /** Go round the song twice and the second pass is the one kept. */
     @Test
     fun goingRoundAgainReplacesTheFirstPass() {
         val out = splitTake(

@@ -32,8 +32,8 @@ import com.rm.acidulous.ui.theme.AcidColors
 import com.rm.acidulous.res.*
 
 /**
- * Touch-native mixer controls. All values are 0..1; the caller maps to units.
- * Each gesture reports start / change / end so the document can coalesce a
+ * Touch mixer controls. All values are 0..1 and the caller maps them to
+ * units. Each gesture reports start, change and end so the song can merge a
  * drag into one undo step.
  */
 
@@ -45,9 +45,9 @@ fun VerticalFader(
     onStart: () -> Unit = {},
     onChange: (Float) -> Unit,
     onEnd: () -> Unit = {},
-    /** Hold it to put it back where it was when the panel opened; see [Knob]. */
+    /** Hold it to reset it to where it was when the panel opened; see [Knob]. */
     onReset: (() -> Unit)? = null,
-    /** What TalkBack calls it, and what it is set to; unnamed, TalkBack skips it. */
+    /** What TalkBack calls it, and its value. Without a name TalkBack skips it. */
     name: String = "",
     state: String = "",
 ) {
@@ -65,10 +65,9 @@ fun VerticalFader(
         ).pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
-                // Before anything moves. A fader jumps to where you touched
-                // it, so the hold has to be ruled out first or a hold would
-                // move the value and then put it back - which is a jump either
-                // way, and the one thing this gesture is for is not jumping.
+                // Check for a hold before anything moves. A fader jumps to
+                // where you touch it, so otherwise a hold would move the value
+                // and then put it back.
                 if (reset != null &&
                     wasHeld(down, viewConfiguration.touchSlop, viewConfiguration.longPressTimeoutMillis)
                 ) {
@@ -87,10 +86,8 @@ fun VerticalFader(
             }
         },
     ) {
-        // **In dp, not in pixels.** A `DrawScope` is a `Density`, so a size
-        // written here as a bare float is a size that does not move when the
-        // interface scale does: the fader would grow and its track and cap
-        // would stay the hairline they are on a 440 dpi phone.
+        // Sizes in dp, not pixels, so the track and cap scale with the
+        // interface scale like the rest of the fader.
         val trackW = 6.dp.toPx()
         val capH = 16.dp.toPx()
         val cx = size.width / 2f
@@ -111,9 +108,9 @@ fun MiniSlider(
     onStart: () -> Unit = {},
     onChange: (Float) -> Unit,
     onEnd: () -> Unit = {},
-    /** Hold it to put it back where it was when the panel opened; see [Knob]. */
+    /** Hold it to reset it to where it was when the panel opened; see [Knob]. */
     onReset: (() -> Unit)? = null,
-    /** What TalkBack calls it, and what it is set to; unnamed, TalkBack skips it. */
+    /** What TalkBack calls it, and its value. Without a name TalkBack skips it. */
     name: String = "",
     state: String = "",
 ) {
@@ -131,7 +128,7 @@ fun MiniSlider(
         ).pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown()
-                // Before the jump, for the reason the fader above gives.
+        // Check for a hold before the jump, as in the fader above.
                 if (reset != null &&
                     wasHeld(down, viewConfiguration.touchSlop, viewConfiguration.longPressTimeoutMillis)
                 ) {
@@ -150,9 +147,8 @@ fun MiniSlider(
             }
         },
     ) {
-        // In dp for the reason the fader above gives. This is every send and
-        // every pan in the mixer, so a thumb that stayed ten pixels wide would
-        // be the thing hardest to see on a screen somebody asked to enlarge.
+        // In dp like the fader above. These are every send and pan in the
+        // mixer, so they need to scale when the interface is enlarged.
         val h = 6.dp.toPx()
         val thumbW = 10.dp.toPx()
         val thumbH = 18.dp.toPx()
@@ -172,10 +168,9 @@ fun MiniSlider(
 /**
  * A peak meter in dB, -60 .. 0.
  *
- * [track] is what it sits on when there is nothing to show. The default is
- * `card`, which is right on a panel and invisible inside a dialog - the
- * dialog *is* a card, so a meter reading nothing was a label with a gap under
- * it and no way to tell a quiet input from a missing one.
+ * [track] is the background colour. The default `card` works on a panel but
+ * is invisible in a dialog, which is already a card, so dialogs pass another
+ * colour to show an empty meter.
  */
 @Composable
 fun Meter(
@@ -185,7 +180,7 @@ fun Meter(
     track: Color = Acid.colors.card,
 ) {
     val c = Acid.colors
-    // Changing many times a second: TalkBack would talk over the music.
+    // Changes many times a second, so TalkBack would talk over the music.
     Canvas(modifier.silent()) {
         val db = if (peak <= 1e-5f) -60f else (20f * log10(peak)).coerceIn(-60f, 0f)
         val frac = (db + 60f) / 60f
@@ -206,16 +201,13 @@ fun Meter(
 
 /**
  * A header control sized to its glyph. Material's TextButton reserves a 48dp
- * touch target in both directions, and a row of those leaves the title no
- * room - which matters twice over now that a header has to fit beside a
- * camera hole. So these take only the width they need, and for height they
- * fill the header's band: a row beside a cutout is already as tall as the
- * hole, so on such a phone the target grows for nothing at all.
+ * touch target both ways, which leaves the title no room, especially next to
+ * a camera hole. So these only take the width they need, and fill the
+ * header's height, which next to a cutout is already as tall as the hole.
  *
- * The width is the part people actually miss - a 30dp glyph button at the
- * very edge of the screen, which the back button is - so it is no longer
- * quite as mean as it was. What it costs comes out of the title, which
- * ellipsises, and not out of the roll.
+ * The default width is a bit more generous, since small buttons at the screen
+ * edge (like back) are easy to miss. The extra comes out of the title, which
+ * ellipsises.
  */
 @Composable
 fun HeaderButton(
@@ -224,15 +216,15 @@ fun HeaderButton(
     /** Overrides the enabled/disabled pair, for a button also showing a mode. */
     color: Color? = null,
     /**
-     * Narrower than the floor, for a button that is not the whole of its own
-     * target. The editor's back arrow is one: the title beside it goes back
-     * too, so between them there is a fifth of the screen to hit and the
-     * arrow only has to be *visible*. A parameter because the size below is
-     * applied after the caller's modifier and so cannot be overridden by one.
+     * Narrower than the default, for a button that isn't its own whole
+     * target. The editor's back arrow is one: the title next to it also goes
+     * back, so the arrow only needs to be visible. It's a parameter because
+     * the size is applied after the caller's modifier and can't be overridden
+     * by it.
      */
     width: Dp = 42.dp,
     modifier: Modifier = Modifier,
-    /** What TalkBack calls it: the glyph is not a word. */
+    /** What TalkBack calls it, since the glyph isn't a word. */
     description: String? = null,
     state: String? = null,
     onClick: () -> Unit,
@@ -253,7 +245,7 @@ fun HeaderTextButton(
     label: String,
     color: Color = Acid.colors.textMid,
     enabled: Boolean = true,
-    /** What TalkBack says, where the label is a number with no name. */
+    /** What TalkBack says when the label is just a number. */
     description: String? = null,
     onClick: () -> Unit,
 ) {

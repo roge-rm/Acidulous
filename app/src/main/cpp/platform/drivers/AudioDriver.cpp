@@ -38,8 +38,8 @@ bool AudioDriver::start() {
         ->setFormat(oboe::AudioFormat::Float)
         ->setChannelCount(oboe::ChannelCount::Stereo)
         ->setSampleRate(acidulous::kSampleRate)
-        // The engine runs at kSampleRate. If the device will not, let Oboe
-        // resample rather than let the engine detune itself.
+        // The engine runs at kSampleRate. If the device can't, Oboe resamples
+        // so the engine doesn't play out of tune.
         ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Medium)
         ->setUsage(oboe::Usage::Game)
         ->setDataCallback(this)
@@ -56,9 +56,8 @@ bool AudioDriver::start() {
     actualFramesPerBurst = stream->getFramesPerBurst();
     actualLowLatency = stream->getPerformanceMode() == oboe::PerformanceMode::LowLatency;
 
-    // Two bursts is the usual starting point: low enough to stay responsive,
-    // deep enough to absorb a late callback. AAudio tunes down from here,
-    // and Settings can ask for a different depth.
+    // Two bursts is low enough to feel responsive and deep enough to absorb a
+    // late callback. AAudio tunes down from here and Settings can change it.
     stream->setBufferSizeInFrames(actualFramesPerBurst * bufferBursts);
 
     result = stream->requestStart();
@@ -74,14 +73,12 @@ bool AudioDriver::start() {
          actualLowLatency ? "LowLatency" : "Normal",
          stream->getSharingMode() == oboe::SharingMode::Exclusive ? "Exclusive" : "Shared");
 
-    // **The hint, opened off the audio thread once the audio thread exists.**
-    //
-    // A session is per *thread* and the thread is AAudio's, not ours, so its
-    // id is not known until it has run once. Creating the session allocates
-    // and talks to a system service, which is not something to do in a
-    // callback - so the callback leaves its id behind and this waits for it.
-    // A detached thread rather than a wait here, because `start` is called
-    // from the UI and a second of it is a second of blank screen.
+    // Open the performance hint session off the audio thread. A session is
+    // per thread and the thread belongs to AAudio, so we don't know its id
+    // until the first callback stores it. Creating a session allocates and
+    // talks to a system service, so it can't happen in the callback. A
+    // detached thread waits for the id because start() is called from the UI
+    // thread and mustn't block.
     audioThreadId.store(0, std::memory_order_relaxed);
     if (perfHint.load()) {
         const int64_t targetNanos = static_cast<int64_t>(budgetFor(actualFramesPerBurst)) * 1000;
@@ -91,7 +88,7 @@ bool AudioDriver::start() {
                 return hintGeneration.load(std::memory_order_relaxed) == generation;
             };
             int32_t tid = 0;
-            for (int i = 0; i < 200 && ours(); ++i) { // two seconds to name itself
+            for (int i = 0; i < 200 && ours(); ++i) { // wait up to two seconds
                 tid = audioThreadId.load(std::memory_order_acquire);
                 if (tid != 0) break;
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -100,22 +97,15 @@ bool AudioDriver::start() {
                 if (ours()) perfHint.gaveUp();
                 return;
             }
-            // **Asked again, later.** Dan's phone answered "refused" to a
-            // session asked for within ten milliseconds of the first callback,
-            // and a device that declines in the first moments of a process's
-            // life may accept once it has settled - the power HAL may not be
-            // up, or the app may not yet count as foreground. Four tries over
-            // about seventeen seconds, then it is a fact about the device
-            // rather than about our timing.
-            //
-            // Cheap to be wrong about: a refusal is one call that returns
-            // null, and a success on the second try is a session for the rest
-            // of the stream's life.
+            // Some devices refuse a session right after the stream starts but
+            // accept one later, once the power HAL is up or the app counts as
+            // foreground. Try four times over about seventeen seconds before
+            // giving up. A refusal is cheap, just one call returning null.
             static constexpr int kWaits[] = {0, 2000, 5000, 10000};
             constexpr int kTries = static_cast<int>(sizeof(kWaits) / sizeof(kWaits[0]));
             for (int n = 0; n < kTries; ++n) {
                 if (kWaits[n] > 0) std::this_thread::sleep_for(std::chrono::milliseconds(kWaits[n]));
-                if (!ours()) return; // the stream this belonged to has gone
+                if (!ours()) return; // the stream this was for is gone
                 if (!hintWanted.load(std::memory_order_relaxed)) return;
                 if (perfHint.begin(tid, targetNanos, n == kTries - 1)) return;
             }
@@ -125,9 +115,8 @@ bool AudioDriver::start() {
 }
 
 bool AudioDriver::startInput(int32_t deviceId) {
-    // Already open on the device that was asked for - including nought,
-    // which means "whatever you were going to pick" and cannot be compared
-    // against what was picked.
+    // Already open on the device asked for. 0 means "whatever the system
+    // picks" and can't be compared, so it always counts.
     if (inputStream != nullptr && (deviceId == 0 || deviceId == actualInputDevice)) return true;
     if (inputStream != nullptr) stopInput();
     oboe::AudioStreamBuilder builder;
@@ -139,9 +128,9 @@ bool AudioDriver::startInput(int32_t deviceId) {
         ->setChannelCount(oboe::ChannelCount::Stereo)
         ->setSampleRate(acidulous::kSampleRate)
         ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Medium)
-        // Unprocessed asks the platform to leave it alone: no AGC, no noise
-        // suppression, no echo canceller. Those are for voice calls and they
-        // would eat a guitar or a synth alive. Not every device honours it.
+        // Unprocessed asks for no AGC, noise suppression or echo cancelling.
+        // Those are for voice calls and ruin instruments. Not every device
+        // honours it.
         ->setInputPreset(oboe::InputPreset::Unprocessed);
 
     oboe::Result result = builder.openStream(inputStream);
@@ -184,9 +173,8 @@ void AudioDriver::stopInput() {
     actualInputDevice = 0;
 }
 
-// Drain whatever the input stream has ready, without waiting for it. A
-// microphone that is behind is a hole in the recording, not a stalled
-// output: never block the callback for it.
+// Drain whatever the input stream has ready without waiting. If the input
+// is behind we get a gap in the recording, but the callback never blocks.
 void AudioDriver::pumpInput(int32_t frames) {
     if (inputStream == nullptr) return;
     const int32_t channels = actualInputChannels > 0 ? actualInputChannels : 1;
@@ -229,8 +217,7 @@ const float *AudioDriver::nextInputBlock() {
 }
 
 void AudioDriver::stop() {
-    // Before the stream goes: the session names a thread that is about to
-    // stop existing.
+    // End the hint session before the stream (and its thread) goes away.
     perfHint.end();
     if (stream == nullptr) {
         return;
@@ -255,20 +242,16 @@ int64_t AudioDriver::getXRunCount() const {
 oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStream,
                                                    void *audioData,
                                                    int32_t numFrames) {
-    // **Before anything else this thread does.** A denormal is what the inside
-    // of every decaying tail is made of, and on a CPU that takes the slow path
-    // for them a block full of releases costs many times a block full of
-    // notes. Measured on the harness: the amp's idle tail went from 841 us to
-    // 52, which is 63% of a block's budget down to 4%, for one bit in a
-    // register. It is set here rather than at thread start because this thread
-    // is AAudio's, not ours - the guard makes it one branch a callback.
+    // First thing on this thread. Decaying tails are full of denormals, which
+    // are very slow on some CPUs (the amp's idle tail went from 841 us to
+    // 52 us with this). Done here rather than at thread start because the
+    // thread is AAudio's. After the first call it's a single branch.
     acidulous::dsp::flushDenormalsOnce();
 
     const auto tCallback = std::chrono::steady_clock::now();
     const int64_t cpu0 = threadCpuUs();
-    // Once, for the thread that opens the hint session. A relaxed read of an
-    // already-set value is a register compare, which is what this costs on
-    // every callback after the first.
+    // Store our thread id once for the thread that opens the hint session.
+    // After that this is just a relaxed read.
     if (audioThreadId.load(std::memory_order_relaxed) == 0) {
         audioThreadId.store(static_cast<int32_t>(gettid()), std::memory_order_release);
     }
@@ -276,9 +259,9 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     int32_t written = 0;
     pumpInput(numFrames);
 
-    // Where the stream is, in both of its clocks. It refuses to answer until
-    // it has run a little, and it can refuse again later, so the last good
-    // answer is kept rather than the anchor being lost.
+    // Where the stream is in frames and in time. getTimestamp fails until the
+    // stream has run a little and can fail again later, so keep the last good
+    // anchor.
     if (audioStream != nullptr) {
         const auto stamp = audioStream->getTimestamp(CLOCK_MONOTONIC);
         if (stamp) {
@@ -308,8 +291,8 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
         carryFrames -= n;
     }
 
-    // Cheap peak meter. Reads are relaxed and lossy by design - this must not
-    // cost the callback anything meaningful.
+    // Cheap peak meter. Relaxed and lossy on purpose so it costs the callback
+    // next to nothing.
     float peak = 0.0f;
     for (int32_t i = 0; i < numFrames * 2; ++i) {
         const float mag = std::fabs(out[i]);
@@ -322,26 +305,22 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
         peakLevel.store(peak, std::memory_order_relaxed);
     }
 
-    // Everything above is inside the measurement, which is the point: the
-    // engine already times its own render and it is not the thing with the
-    // deadline.
+    // Everything above is inside the measurement. The engine times its own
+    // render separately; this is the whole callback, which has the deadline.
     const auto us = static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
                                              std::chrono::steady_clock::now() - tCallback)
                                              .count());
-    // **Wall clock and CPU time, both.** They answer different questions and
-    // only the pair is diagnostic. Wall says how long the callback took, which
-    // is what the deadline is measured against. CPU says how much of that we
-    // actually spent computing. When the two agree the engine is genuinely
-    // slow and the fix is DSP; when wall is far larger the thread was taken
-    // off its core and no amount of optimising will help - that is a
-    // scheduling problem, and it wants priority and a performance hint
-    // instead. Told apart by an average, the two look identical.
+    // Wall clock and CPU time. Wall time is what the deadline is measured
+    // against, CPU time is how much of it we spent computing. If they're close
+    // the DSP is too slow. If wall time is much bigger the thread was taken off
+    // its core, which is a scheduling problem and needs priority and the
+    // performance hint instead.
     const auto cpuUs = static_cast<int32_t>(threadCpuUs() - cpu0);
     int32_t seen = callbackPeakUs.load(std::memory_order_relaxed);
     while (us > seen && !callbackPeakUs.compare_exchange_weak(seen, us, std::memory_order_relaxed)) {
     }
-    // Falls by about a third every half second at this rate, which is slow
-    // enough to read off a meter and quick enough to follow a scene change.
+    // Falls by about a third every half second, slow enough to read on a meter
+    // and quick enough to follow a scene change.
     const int32_t wasRecent = callbackRecentUs.load(std::memory_order_relaxed);
     const int32_t faded = static_cast<int32_t>(static_cast<int64_t>(wasRecent) * 49 / 50);
     callbackRecentUs.store(us > faded ? us : faded, std::memory_order_relaxed);
@@ -349,28 +328,25 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     while (cpuUs > seenCpu &&
            !callbackCpuPeakUs.compare_exchange_weak(seenCpu, cpuUs, std::memory_order_relaxed)) {
     }
-    // A callback that ran long in wall time while barely using the CPU was
-    // descheduled, not slow. Counted apart, because the two have different
-    // cures and a single "late" number hides which one this device has.
+    // Long in wall time but low CPU means the thread was descheduled. Counted
+    // separately from late callbacks because the fix is different.
     if (us > budgetFor(numFrames) && cpuUs * 2 < us) {
         stalledCallbacks.fetch_add(1, std::memory_order_relaxed);
     }
-    // The budget is this callback's own frames at this stream's own rate, not
-    // a constant: Oboe may open at a rate we did not ask for and may hand a
-    // different frame count than the burst.
+    // The budget is this callback's frames at the stream's rate, since Oboe
+    // may open at a different rate and pass a different frame count than the
+    // burst.
     if (us > budgetFor(numFrames)) lateCallbacks.fetch_add(1, std::memory_order_relaxed);
-    // **Every callback, not only the late ones.** The governor is being told
-    // what this work costs so it can decide what to clock the core at;
-    // reporting only the misses would describe a device that is always
-    // struggling and ask for more than we need. Wall time, because that is
-    // what the deadline is about and what the session's target is stated in.
+    // Report every callback, not only the late ones, so the governor sees
+    // what the work really costs. Wall time, because the session's target is
+    // in wall time.
     perfHint.report(static_cast<int64_t>(us) * 1000);
 
     return oboe::DataCallbackResult::Continue;
 }
 
 void AudioDriver::onErrorAfterClose(oboe::AudioStream * /*audioStream*/, oboe::Result result) {
-    // Typically Disconnected: headphones pulled, or a USB interface removed.
+    // Usually Disconnected: headphones pulled or a USB interface removed.
     // The stream is already closed by the time we get here.
     LOGE("stream error after close: %s - reopening", oboe::convertToText(result));
     stream.reset();

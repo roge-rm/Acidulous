@@ -1,14 +1,12 @@
-// Does running a nonlinearity at twice the rate actually buy anything?
+// Measures how much oversampling a nonlinearity at twice the rate helps.
 //
-// The question is not academic: the engine already had an oversampled
-// distortion whose upsampler was a linear-interpolated midpoint, and the point
-// of this harness is to put a number on how much that buys against a proper
-// halfband - because an amp has two nonlinear stages and a speaker filter after
-// them that hides none of the folding.
+// Compares the old linear-interpolated upsampler against a proper halfband.
+// An amp has two nonlinear stages and a speaker filter after them that hides
+// none of the aliasing, so this matters.
 //
-// **The measurement.** A 7 kHz sine into a saturator. Its seventh harmonic is
-// 49 kHz; at 48 kHz that folds to 1 kHz, and *nothing legitimate* puts energy
-// at 1 kHz from a 7 kHz input. So the 1 kHz bin is aliasing and only aliasing.
+// The measurement: a 7 kHz sine into a saturator. Its seventh harmonic is
+// 49 kHz, which at 48 kHz folds to 1 kHz. Nothing else puts energy at 1 kHz
+// from a 7 kHz input, so the 1 kHz bin is purely aliasing.
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -48,7 +46,7 @@ double goertzel(const std::vector<float> &x, double hz, int32_t from) {
 
 double dB(double v) { return 20.0 * std::log10(v + 1e-20); }
 
-/** The stage an amp's preamp is: a tanh hard enough to make harmonics. */
+/** Like an amp's preamp stage: a tanh driven hard enough to make harmonics. */
 float saturate(float x) { return dsp::fastTanh(x * 6.0f); }
 
 std::vector<float> input() {
@@ -59,14 +57,14 @@ std::vector<float> input() {
     return x;
 }
 
-/** Straight through, at the base rate: every fold lands where it lands. */
+/** Straight through at the base rate, with all the aliasing. */
 std::vector<float> plain(const std::vector<float> &in) {
     std::vector<float> out(in.size());
     for (size_t i = 0; i < in.size(); ++i) out[i] = saturate(in[i]);
     return out;
 }
 
-/** Distortion's scheme: one linear-interpolated midpoint, a biquad to decimate. */
+/** The Distortion effect's scheme: one linear-interpolated midpoint, a biquad to decimate. */
 std::vector<float> linearTwice(const std::vector<float> &in) {
     std::vector<float> out(in.size());
     dsp::Biquad half;
@@ -81,7 +79,7 @@ std::vector<float> linearTwice(const std::vector<float> &in) {
     return out;
 }
 
-/** A halfband either way, a block at a time, as the amp will use it. */
+/** A halfband both ways, a block at a time, as the amp uses it. */
 std::vector<float> halfband(const std::vector<float> &in) {
     dsp::Oversampler os;
     os.prepare();
@@ -102,7 +100,7 @@ int main() {
     printf("oversampling: what it costs and what it buys\n");
     const auto in = input();
 
-    // Past the filters' startup, so the measurement is of the steady state.
+    // Skip the filters' startup, so this measures the steady state.
     const int32_t from = kRate / 4;
     const double a1 = goertzel(plain(in), 1000.0, from);
     const double a2 = goertzel(linearTwice(in), 1000.0, from);
@@ -118,7 +116,7 @@ int main() {
     ok("and beats the linear midpoint by a wide margin", dB(a2) - dB(a4) > 20.0,
        std::to_string(dB(a2) - dB(a4)) + " dB better");
 
-    // The other half of the claim: it must not damage what it passes.
+    // It also mustn't damage what it passes.
     {
         std::vector<float> quiet(static_cast<size_t>(kN));
         for (int32_t i = 0; i < kN; ++i) {
@@ -139,8 +137,8 @@ int main() {
            std::fabs(dB(got) - dB(want)) < 0.2,
            std::to_string(dB(got) - dB(want)) + " dB");
 
-        // And the latency is what it says, because the dry path is delayed by
-        // exactly this and being wrong makes `mix` a comb filter.
+        // The latency must be exactly what it reports, because the dry path is
+        // delayed by that much and a wrong value turns `mix` into a comb filter.
         double best = 1e9;
         int32_t bestAt = -1;
         for (int32_t d = 0; d <= 24; ++d) {

@@ -7,18 +7,13 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
-/** What the person chose, which is not the same as what is on screen. */
+/** The theme the user chose. Auto follows the system. */
 enum class ThemeMode { Auto, Light, Dark, HighContrast }
 
 /**
- * Material's scheme, built from ours.
- *
- * Nearly everything in this app draws its own colours, but the parts that
- * come out of Material - dialogs, dropdown menus, text fields, the buttons
- * inside them - read the scheme, and while that scheme was the template's
- * purple (with dynamic colour on top, so it took its cue from the phone's
- * wallpaper) those parts never matched the app. A file menu that opened
- * white over a black arranger was the visible half of that.
+ * Material's colour scheme, built from ours. Most of the app draws its own
+ * colours, but dialogs, menus, text fields and their buttons come from
+ * Material and read the scheme, so it has to match.
  */
 private fun scheme(c: AcidColors) = if (c.dark) {
     darkColorScheme(
@@ -28,9 +23,8 @@ private fun scheme(c: AcidColors) = if (c.dark) {
         background = c.bg, onBackground = c.textHi,
         surface = c.card, onSurface = c.textHi,
         surfaceVariant = c.control, onSurfaceVariant = c.textDim,
-        // M3 gives a dialog, a menu and a sheet their own surface roles, and
-        // left unset they are tinted from the primary palette - which is how
-        // a lilac dialog turned up over a grey one.
+        // M3 gives dialogs, menus and sheets their own surface roles, and if they
+        // aren't set they're tinted from the primary palette.
         surfaceContainerLowest = c.bgDeep, surfaceContainerLow = c.panel,
         surfaceContainer = c.card, surfaceContainerHigh = c.card,
         surfaceContainerHighest = c.cardHi,
@@ -60,9 +54,8 @@ private fun scheme(c: AcidColors) = if (c.dark) {
 }
 
 /**
- * [mode] is the setting; Auto asks the OS. Dynamic colour is deliberately
- * not used: this app has a look of its own, and a wallpaper has no opinion
- * worth taking about the colour of a piano roll.
+ * [mode] is the setting; Auto asks the OS. Dynamic colour isn't used, since
+ * the app has its own look.
  */
 @Composable
 fun AcidulousTheme(mode: ThemeMode = ThemeMode.Dark, content: @Composable () -> Unit) {
@@ -78,8 +71,8 @@ fun AcidulousTheme(mode: ThemeMode = ThemeMode.Dark, content: @Composable () -> 
     }
     CompositionLocalProvider(LocalAcidColors provides colors) {
         MaterialTheme(colorScheme = scheme(colors), typography = Typography) {
-            // Every `clickable` wears a ring while the keyboard is on it; see
-            // ui/KeyControls.kt. The press still ripples as it always did.
+            // Every `clickable` shows a ring while it has keyboard focus, see
+            // ui/KeyControls.kt. Presses still ripple as usual.
             CompositionLocalProvider(
                 androidx.compose.foundation.LocalIndication provides
                     com.rm.acidulous.ui.FocusRingIndication(androidx.compose.material3.ripple(), colors.accent),

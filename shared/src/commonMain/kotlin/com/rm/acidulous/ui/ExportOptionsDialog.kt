@@ -12,12 +12,9 @@ import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * What leaves the app, and as what.
- *
- * Two questions that are almost independent - what to render, and what to
- * write it as - plus the couple of numbers that only matter for audio. The
- * dialog hides what does not apply rather than greying it out: a bit depth
- * beside a MIDI file is not a disabled control, it is a meaningless one.
+ * What to export and in which format, plus the few settings that only matter
+ * for audio. The dialog hides options that don't apply instead of greying them
+ * out.
  */
 enum class ExportWhat(val label: StringResource) {
     Song(Res.string.export_what_song),
@@ -26,10 +23,9 @@ enum class ExportWhat(val label: StringResource) {
 }
 
 /**
- * [engineFormat] indexes `acidulous::AudioFormat`; -1 means this one is not
- * rendered by the engine at all. [manyFiles] means it needs a folder rather
- * than a filename, because the system's create-a-document picker makes one
- * file and stems are not one file.
+ * [engineFormat] indexes acidulous::AudioFormat, -1 means the engine doesn't
+ * render this one. [manyFiles] means it needs a folder instead of a filename,
+ * since the system's create-document picker only makes one file.
  */
 enum class ExportFormat(
     val label: String,
@@ -37,7 +33,7 @@ enum class ExportFormat(
     val mime: String,
     val engineFormat: Int,
     val audio: Boolean,
-    /** No bit depth to choose: the format throws audio away instead. */
+    /** No bit depth to choose, the format uses a bitrate instead. */
     val lossy: Boolean = false,
 ) {
     Wav("wav", ".wav", "audio/wav", 0, true),
@@ -49,30 +45,29 @@ enum class ExportFormat(
     Bundle("bundle", ".zip", "application/zip", -1, false),
 }
 
-/** What a normalised export aims for: where the streaming services turn songs to. */
+/** Loudness target for a normalised export, what the streaming services use. */
 const val NORMALISE_LUFS = -14f
 
 data class ExportOptions(
     val what: ExportWhat = ExportWhat.Song,
     val format: ExportFormat = ExportFormat.Wav,
     val bits: Int = 24,
-    /** Kilobits a second, for the formats that throw audio away. */
+    /** Kilobits per second, for the lossy formats. */
     val rate: Int = 256,
     val tailSeconds: Float = 2f,
-    /** Measured first and turned to [NORMALISE_LUFS], never past -1 dBTP. */
+    /** Measured first and brought to [NORMALISE_LUFS], never above -1 dBTP. */
     val normalise: Boolean = false,
 ) {
     /** Several files, so the picker has to ask for a folder. */
     val manyFiles: Boolean get() = what == ExportWhat.Stems && format.audio
 }
 
-
 private fun describeFormat(f: ExportFormat): StringResource? = when (f) {
     ExportFormat.Wav -> null
     ExportFormat.Aiff -> Res.string.export_about_aiff
     ExportFormat.Flac -> Res.string.export_about_flac
-    // LAME's own licence asks that its use be acknowledged, and this is where
-    // somebody choosing the format will see it.
+    // LAME's licence asks that its use is acknowledged, this is where someone
+    // choosing MP3 will see it.
     ExportFormat.Mp3 -> Res.string.export_about_mp3
     ExportFormat.Aac -> Res.string.export_about_aac
     ExportFormat.Midi -> Res.string.export_about_midi
@@ -99,8 +94,7 @@ fun ExportOptionsDialog(
     var tail by rememberSaveable { mutableStateOf(2f) }
     var normalise by rememberSaveable { mutableStateOf(false) }
 
-    // The data formats describe the whole song by their nature: there is no
-    // such thing as one track's worth of song bundle.
+    // The data formats always hold the whole song, there's no per-track bundle.
     val audio = format.audio
     val options = ExportOptions(if (audio) what else ExportWhat.Song, format, bits, rate, tail, audio && normalise)
 
@@ -111,24 +105,23 @@ fun ExportOptionsDialog(
         onConfirm = { onExport(options) },
         spacing = 6.dp,
     ) {
-        // Cards of switches, the arp window's shape, like every window with
-        // settings in it (Dan, 2026-09-23).
+        // Cards of switches, like every window with settings in it.
         WindowCards {
             WindowCard(stringResource(Res.string.export_file)) {
-                // AAC is the phone's own encoder; where there is none, it is not offered.
+                // AAC uses the phone's own encoder, so it's only offered where there is
+                // one.
                 val formats = ExportFormat.entries.filter { it != ExportFormat.Aac || com.rm.acidulous.AppHost.current.canEncodeAac }
                 SwitchGrid(
                     stringResource(Res.string.export_format),
                     formats.map { if (it == ExportFormat.Bundle) stringResource(Res.string.export_format_bundle) else it.label }, formats.indexOf(format), columns = 4) { i ->
                     val f = formats[i]
                     format = f
-                    // FLAC has nowhere to put a float, so a 32-bit choice
-                    // made under another format quietly becomes 24 rather
-                    // than being silently ignored at the far end.
+                    // FLAC can't store float, so a 32-bit choice from another
+                    // format becomes 24.
                     if (f == ExportFormat.Flac && bits == 32) bits = 24
                 }
-                // The data formats describe the whole song by their nature:
-                // there is no such thing as one track's worth of bundle.
+                // The data formats always hold the whole song, there's no
+                // per-track bundle.
                 if (audio) {
                     SwitchGrid(stringResource(Res.string.export_what), ExportWhat.entries.map { stringResource(it.label) }, ExportWhat.entries.indexOf(what), columns = 1) {
                         what = ExportWhat.entries[it]
@@ -137,9 +130,8 @@ fun ExportOptionsDialog(
             }
             if (audio) {
                 WindowCard(stringResource(Res.string.export_sound)) {
-                    // A bit depth is a thing a PCM format has. MP3 and AAC
-                    // throw audio away instead - what they have is a budget,
-                    // so that is what they are asked for.
+                    // PCM formats have a bit depth. MP3 and AAC have a bitrate
+                    // instead.
                     if (format.lossy) {
                         val rates = listOf(128, 192, 256, 320)
                         SwitchGrid(stringResource(Res.string.export_kbps), rates.map { "$it" }, rates.indexOf(rate), columns = 2) { rate = rates[it] }
@@ -161,9 +153,8 @@ fun ExportOptionsDialog(
                 }
             }
         }
-        // The one line of what the switches cannot say. The format's own line
-        // stays whatever else goes: LAME's licence asks that its use be
-        // acknowledged, and this is where somebody choosing MP3 sees it.
+        // A single line for what the switches can't say. The format's own line
+        // always stays, since LAME's licence asks that its use is acknowledged.
         val notes = listOfNotNull(
             describeFormat(format)?.let { stringResource(it) },
             if (audio) describeWhat(what, sceneName) else null,

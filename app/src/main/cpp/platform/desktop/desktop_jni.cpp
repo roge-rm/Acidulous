@@ -1,6 +1,5 @@
-// What only the desktop build asks of the native side: the phone's questions
-// go through jni_bridge.cpp, unchanged, and Android answers these ones itself
-// (AudioManager lists its inputs).
+// JNI calls only the desktop build uses. Everything shared goes through
+// jni_bridge.cpp. On Android, AudioManager answers these instead.
 
 #include <drivers/AudioDriver.h>
 #include <jni.h>
@@ -8,7 +7,7 @@
 
 extern "C" {
 
-/** Every input as three strings in a row - its id, its name and the server's own name for it - for DesktopAudio. */
+/** Every input as three strings in a row (id, name, the server's name for it) for DesktopAudio. */
 JNIEXPORT jobjectArray JNICALL
 Java_com_rm_acidulous_desktop_DesktopAudio_nativeInputs(JNIEnv *env, jclass) {
     const auto inputs = AudioDriver::listInputs();
@@ -41,7 +40,7 @@ Java_com_rm_acidulous_desktop_DesktopAudio_nativeOutputs(JNIEnv *env, jclass) {
     return out;
 }
 
-/** Play through this output from now on: nought for the system's default. */
+/** Play through this output from now on. 0 means the system default. */
 JNIEXPORT void JNICALL
 Java_com_rm_acidulous_desktop_DesktopAudio_nativeChooseOutput(JNIEnv *, jclass, jint id) {
     AudioDriver::chooseOutput(id);

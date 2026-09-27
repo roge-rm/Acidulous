@@ -1,11 +1,11 @@
-// Does a song-absolute tick survive the round trip?
+// Checks a song-absolute tick converts to a scene position and back.
 #include <cstdio>
 #include <sequencer/Song.h>
 using namespace acidulous; using namespace acidulous::seq;
 namespace { int failures = 0, checks = 0; }
 int main() {
     SongSnapshot s;
-    // mixed lengths and repeats, which is the whole point of the model
+    // mixed lengths and repeats
     const struct { int bars, repeat, tpb; } spec[] = {
         {1, 2, 960}, {4, 1, 960}, {2, 3, 960}, {8, 1, 720}, {1, 1, 960},
     };
@@ -52,7 +52,7 @@ int main() {
     printf("  %-46s %lld / %lld\n", got == want ? "ok   the song ends where its parts add up to" : "FAIL length",
            (long long)got, (long long)want);
 
-    // past the end clamps to the last scene rather than running off
+    // past the end clamps to the last scene
     int32_t sc2, rp2; int64_t t2;
     s.locate(want * 4, sc2, rp2, t2);
     ++checks; if (sc2 != (int)s.scenes.size() - 1) ++failures;

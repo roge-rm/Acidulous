@@ -1,7 +1,6 @@
-# The toolchain for the Raspberry Pi build: Debian Trixie - what Raspberry Pi
-# OS is built on - with its aarch64 cross compiler, so the engine is linked
-# against the same glibc and libstdc++ the Pi has. Nothing in it runs ARM
-# code; it only compiles it.
+# The toolchain for the Raspberry Pi build: Debian Trixie (which Raspberry Pi
+# OS is based on) with its aarch64 cross compiler, so the engine links against
+# the same glibc and libstdc++ as the Pi. It only compiles and runs no ARM code.
 FROM debian:trixie
 RUN apt-get update && apt-get install -y --no-install-recommends \
         g++-aarch64-linux-gnu gcc-aarch64-linux-gnu cmake make ccache openjdk-21-jdk-headless \

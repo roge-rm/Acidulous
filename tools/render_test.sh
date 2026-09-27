@@ -1,11 +1,8 @@
 #!/bin/bash
-# A whole song rendered off a phone: does it repeat, and does a render ignore
-# the quality setting. See tools/render_test.cpp.
+# Renders a whole song on the desktop and checks it repeats exactly and that a
+# render ignores the quality setting. See tools/render_test.cpp.
 #
-# The first harness here that runs the Engine rather than a piece of it, which
-# is why it needs `engine/rack/Engine.cpp` and `MasterBus.cpp` in the archive.
-# Sanitised like the rest: these questions are about what the audio *is*, and
-# a render that is fast and wrong is no use.
+# Needs Engine.cpp and MasterBus.cpp in the host engine archive.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

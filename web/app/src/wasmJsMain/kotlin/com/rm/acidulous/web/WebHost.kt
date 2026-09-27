@@ -14,7 +14,7 @@ import com.rm.acidulous.res.Res
 import com.rm.acidulous.res.files_downloads_web
 import com.rm.acidulous.util.PrefStore
 
-/** A file beside the page, read there and then; null when it is not there. */
+/** Reads a file next to the page synchronously; null if it isn't there. */
 private fun fetchTextNow(path: String): String? = js(
     "(() => { try { const r = new XMLHttpRequest(); r.open('GET', path, false); r.send(); " +
         "return r.status === 200 ? r.responseText : null; } catch (e) { return null; } })()",
@@ -22,14 +22,13 @@ private fun fetchTextNow(path: String): String? = js(
 private fun coarsePointer(): Boolean = js("matchMedia('(pointer: coarse)').matches")
 
 /**
- * The outputs, kept in globalThis.acidOutput for the engine's side
- * (acid_output_attach in the web AudioDriver): the list, read now and again
- * whenever a device comes or goes; the one wanted, by a number made from the
- * browser's id for it, which is what the setting stores; and pick(), which
- * finds it - or the default while it is unplugged - and moves the sound
- * there. A browser names its outputs only once the microphone is allowed, and
- * one it will not name is left out, so before that the list is empty and
- * Settings shows no choice.
+ * Audio outputs, kept in globalThis.acidOutput for the engine side
+ * (acid_output_attach in the web AudioDriver). `list` is re-read whenever a
+ * device is added or removed. `wanted` is a number hashed from the browser's
+ * device id, which is what the setting stores. pick() finds it, or the default
+ * while it's unplugged, and moves the sound there. Browsers only name outputs
+ * once the microphone is allowed, and unnamed ones are left out, so until then
+ * the list is empty and Settings shows no choice.
  */
 private fun watchOutputs(): Unit = js(
     "(() => { const o = (globalThis.acidOutput ??= {}); o.list = []; " +
@@ -45,14 +44,14 @@ private fun watchOutputs(): Unit = js(
 private fun outputCount(): Int = js("globalThis.acidOutput?.list?.length ?? 0")
 private fun outputId(i: Int): Int = js("globalThis.acidOutput.idOf(globalThis.acidOutput.list[i].deviceId)")
 private fun outputLabel(i: Int): String = js("globalThis.acidOutput.list[i].label")
-/** Read again for next time: a list read before the microphone was allowed has no names. */
+/** Re-reads the list for next time, since one read before microphone access has no names. */
 private fun rereadOutputs(): Unit = js("globalThis.acidOutput?.read?.()")
 private fun wantOutput(id: Int): Unit = js("(() => { const o = (globalThis.acidOutput ??= {}); o.wanted = id; o.pick && o.pick(); })()")
 
 /**
  * The browser's [AppHost]. A [Doc] is a [WebDoc]: a chosen file already
- * copied in, or a download waiting for its bytes - so writing one downloads
- * it, and sharing downloads it too, there being no share sheet to hand to.
+ * copied in, or a download waiting for its bytes. Writing one downloads it,
+ * and so does sharing, since there's no share sheet.
  */
 class WebHost : AppHost {
     init {
@@ -61,10 +60,10 @@ class WebHost : AppHost {
 
     override val versionName: String? = VERSION_NAME
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
-    /** Served beside the page, and read only when somebody opens one. */
+    /** Served next to the page and only read when opened. */
     override fun licenceText(path: String): String? = fetchTextNow(path)
 
-    // No crash reports: a page that falls over shows it in the console.
+    // No crash reports. Errors show in the browser console.
     override fun latestCrashReport(): File? = null
     override fun shareCrashReport(report: File) {}
     override fun unreadCrashReport(): File? = null
@@ -86,7 +85,7 @@ class WebHost : AppHost {
     }
     override fun copyToDoc(file: File, doc: Doc) = downloadFile(file, doc.web.name.ifEmpty { file.name }, doc.web.mime)
     override fun createIn(folder: Doc, mime: String, name: String): Doc? = Doc(WebDoc(name, null, mime))
-    /** Already downloaded when it was written: there is nothing more to hand over. */
+    /** Nothing to do, since the file was downloaded when it was written. */
     override fun share(docs: List<Doc>, mime: String, title: String) {}
     override fun shareFile(file: File, mime: String, title: String) = downloadFile(file, file.name, mime)
 
@@ -99,7 +98,7 @@ class WebHost : AppHost {
         "AAC export is only on the phone. Choose MP3 or FLAC."
 
     override val platformName: String = "the web"
-    /** A finger on a phone's or a tablet's browser; a mouse anywhere else. */
+    /** Touch in phone and tablet browsers, a mouse everywhere else. */
     override val usesMouse: Boolean = !coarsePointer()
     override val onDesktop: Boolean = !coarsePointer()
     override val canKeepScreenOn: Boolean = true

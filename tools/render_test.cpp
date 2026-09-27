@@ -1,23 +1,10 @@
-// Rendering a whole song, off a phone.
+// Renders whole songs on the desktop.
 //
-// Every other harness here takes one piece - a machine, an effect, the
-// scheduler, a stretcher - and asks whether that piece is right. This one runs
-// the **Engine**: racks, scheduler, master, the lot, rendering blocks the way
-// an export does, and asks the questions that only exist once the pieces are
-// together.
-//
-// It was written because the alternative was a phone. Proving "a render
-// repeats" or "an export ignores the quality setting" meant freezing a track
-// on an emulator, pulling the file over adb, doing it again and comparing -
-// minutes per attempt, with the app's own state drifting underneath. Three
-// attempts at it produced two tests that *could not fail* (the clip I chose
-// was on a machine lean does not reach, then on a patch whose mode count was
-// already at the lean cap) and one result nobody could interpret. None of that
-// was a hard question; it was an unusable loop.
-//
-// The lesson is the one the tree already knows about wall clocks and averages:
-// **a measurement you cannot repeat cheaply is a measurement you will get
-// wrong.**
+// The other harnesses test one piece at a time. This one runs the Engine
+// (racks, scheduler, master, all of it), renders blocks the way an export
+// does, and checks the things that only exist once the pieces are together,
+// like a render repeating exactly or an export ignoring the quality setting.
+// Checking those on a phone is slow and hard to repeat.
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -50,11 +37,9 @@ constexpr int32_t kBar = kPPQN * 4;
 /**
  * A song with something in it, built by hand.
  *
- * Deliberately not the demo: the demo is Kotlin and this is C++, and a harness
- * that needed the app's own song file to run would be a harness that breaks
- * when somebody edits the demo. Two racks, two scenes, a machine that is
- * reached by `lean` and one that is not - which is the distinction most of the
- * questions below turn on.
+ * Not the demo, which is Kotlin, so editing the demo can't break this. Two
+ * racks, two scenes, one machine `lean` reaches and one it doesn't, which is
+ * what most of the checks below depend on.
  */
 struct Fixture {
     Engine engine;
@@ -130,13 +115,11 @@ std::vector<float> render(int32_t blocks) {
     // What an offline render does: panic to a known state, then play from the
     // top. `renderBlock` applies a requested transport between blocks, so the
     // first block is the one that starts it.
-    // The engine's own panic, requested the way the host requests it: the
-    // flag is read at the top of a block, which is why one is rendered before
-    // anything is asked to play.
+    // The panic flag is read at the top of a block, so one block is rendered
+    // before anything is asked to play.
     f.engine.panicFlag.store(true, std::memory_order_release);
-    // A real buffer even for the block nobody listens to: the master writes
-    // its output unconditionally, and `nullptr` is an output nothing in this
-    // engine accepts - the host always hands it a scratch block.
+    // A real buffer even for the block nobody hears: the master always writes
+    // its output, and the engine never accepts `nullptr` as an output.
     float scratch[kBlockFrames * 2];
     f.engine.renderBlock(nullptr, scratch);
     f.engine.transport.requestPlay(0);
@@ -165,11 +148,9 @@ size_t firstDifference(const std::vector<float> &a, const std::vector<float> &b)
 /**
  * The same song, rendered twice, is the same audio.
  *
- * The property the export has always claimed and that nothing off a phone
- * checked. It is also the one that catches a whole family of faults at once -
- * a parameter still gliding from whatever played before, a modifier part way
- * through its pattern, a filter holding state a `reset` missed - because every
- * one of them shows up as two renders that disagree.
+ * Catches a whole family of faults at once: a parameter still gliding from
+ * what played before, a modifier part way through its pattern, a filter
+ * holding state a `reset` missed. Each shows up as two renders that disagree.
  */
 void aRenderRepeats() {
     printf("- the same song rendered twice\n");
@@ -185,22 +166,21 @@ void aRenderRepeats() {
 /**
  * A render ignores the quality setting.
  *
- * `lean` buys headroom against a deadline, and a render has no deadline - it
- * stops the stream and pulls blocks as fast as the machine allows. So a file
- * must not come out thinner because the setting happened to say lean, or
- * because the automatic watcher chose it a minute earlier.
+ * `lean` buys headroom against a deadline, and a render has no deadline: it
+ * stops the stream and pulls blocks as fast as it can. So a file mustn't come
+ * out thinner because the setting was on lean, or because the automatic
+ * watcher picked it earlier.
  *
- * **This test can fail**, which is the part that took three goes on a phone to
- * get right: rack 0 carries a Distortion, whose oversampling is one of the
- * four things `lean` actually reaches. The control below proves the fixture
- * can tell the two modes apart at all.
+ * Rack 0 carries a Distortion, whose oversampling is one of the four things
+ * `lean` changes, so this test can fail. The first check proves the fixture
+ * can tell the two modes apart.
  */
 void aRenderIsAlwaysFullQuality() {
     printf("- quality, and what a render ignores\n");
     auto &settings = EngineSettings::get();
 
-    // First: with the offline flag *off*, lean really does change this song.
-    // If it does not, everything under it is vacuous.
+    // First, with the offline flag off, lean really does change this song.
+    // If it doesn't, the rest proves nothing.
     settings.offlineRender.store(false, std::memory_order_relaxed);
     settings.quality.store(1, std::memory_order_relaxed);
     const auto liveFull = render(160);
@@ -225,18 +205,15 @@ void aRenderIsAlwaysFullQuality() {
 }
 
 /**
- * A render does not depend on what played before it.
+ * A render doesn't depend on what played before it.
  *
- * The same engine, rendering the same passage twice with a panic between, must
- * give the same audio - because a panic is what an offline render does to get
- * to a known state, and "known" has to mean it.
+ * The same engine rendering the same passage twice with a panic between must
+ * give the same audio, because a panic is how an offline render gets to a
+ * known state.
  *
- * This is the shape of a real fault, found in `freezeClip` the week this was
- * written: it reset the machine and the effects but never jumped their
- * *parameters*, and every one of them is smoothed - so the first few
- * milliseconds of a render slid in from wherever the knobs had been left, and
- * freezing the same clip twice gave two different files. `Engine`'s own panic
- * path had the fix and the comment explaining it; the freeze had half of it.
+ * Every parameter is smoothed, so a panic has to jump parameters as well as
+ * reset machines and effects. Otherwise the first few milliseconds slide in
+ * from wherever the knobs were left.
  */
 void aRenderDoesNotDependOnWhatPlayedBefore() {
     printf("- a render, after something else has played\n");
@@ -244,11 +221,10 @@ void aRenderDoesNotDependOnWhatPlayedBefore() {
     float scratch[kBlockFrames * 2];
 
     const auto take = [&](bool moveAKnobFirst) {
-        // **Both takes ask for the same sound.** The only difference between
-        // them is the *history* - one of them played something else first and
-        // left a smoothed parameter part way home. Setting the target in one
-        // branch only would be two different cutoffs, which is a test that
-        // fails for the wrong reason, and did.
+        // Both takes ask for the same sound. The only difference is the
+        // history: one played something else first and left a smoothed
+        // parameter part way there. Setting the target in only one branch
+        // would test two different cutoffs.
         const auto aim = [&](float v) {
             if (Machine *m = f.engine.racks[0].currentMachine()) {
                 const int32_t cutoff = m->params().indexOf("cutoff");
@@ -256,9 +232,8 @@ void aRenderDoesNotDependOnWhatPlayedBefore() {
             }
         };
         if (moveAKnobFirst) {
-            // Somewhere else entirely, and let it glide: a smoothed parameter
-            // part way to a new value is exactly the state a render must not
-            // inherit.
+            // Somewhere else entirely, and let it glide. A smoothed parameter
+            // part way to a new value is the state a render mustn't inherit.
             aim(0.05f);
             f.engine.transport.requestPlay(0);
             for (int i = 0; i < 40; ++i) f.engine.renderBlock(nullptr, scratch);
@@ -282,20 +257,17 @@ void aRenderDoesNotDependOnWhatPlayedBefore() {
 }
 
 /**
- * What a track costs, as a figure a single bad block cannot set.
+ * What a track costs, as a figure one bad block can't set.
  *
- * `worst track` was a peak-hold over a whole song, which is the least
- * repeatable statistic available: three runs of one build on one phone put
- * the per-track figures up to 26% apart, so a twenty per cent saving - most of
- * what is left to find - could not be told from the same build measured twice.
- * The engine keeps a coarse histogram per rack instead and reads a percentile
- * out of it.
+ * A peak-hold over a whole song varies too much between runs to show a small
+ * saving, so the engine keeps a coarse histogram per rack and reads a
+ * percentile from it.
  *
- * Repeatability itself cannot be tested here, because an offline render is
- * deterministic and the peak would agree with itself too. What can be tested
- * is that the number is a percentile of the right distribution: present when
- * the rack has played, never above the worst block it saw, and gone when the
- * reset button is pressed.
+ * Repeatability can't be tested here, since an offline render is
+ * deterministic and the peak would agree with itself too. What's tested is
+ * that the number is a percentile of the right distribution: present once the
+ * rack has played, never above the worst block it saw, and cleared by the
+ * reset button.
  */
 void aTracksCostIsAPercentile() {
     printf("- what a track costs, as a distribution\n");
@@ -310,8 +282,8 @@ void aTracksCostIsAPercentile() {
     const int32_t p99 = f.engine.rackPercentileUs(0);
     const int32_t peak = f.engine.worstRackUs(0);
     ok("a rack that has played reports a cost", p99 > 0, std::to_string(p99) + " us");
-    // The bucket's top, so it may sit a little above the worst block seen -
-    // eight buckets an octave is at most nine per cent over.
+    // The bucket's top, so it may sit a little above the worst block seen.
+    // Eight buckets an octave is at most nine per cent over.
     ok("and never more than the worst block it saw", p99 <= peak + peak / 8 + 1,
        "p99 " + std::to_string(p99) + " against peak " + std::to_string(peak));
     ok("a rack with nothing mounted reports nothing", f.engine.rackPercentileUs(5) == 0);
@@ -322,12 +294,11 @@ void aTracksCostIsAPercentile() {
 } // namespace
 
 /**
- * **Sidechain: a track that listens to another.**
+ * Sidechain: a track that listens to another.
  *
- * A held chord on rack 2 through a compressor keyed by a kick on rack 5 -
- * the listener on the *lower* rack, deliberately, because racks used to
- * render in index order and a listener that rendered first could only ever
- * hear its source a block late. The engine now renders sources first.
+ * A held chord on rack 2 through a compressor keyed by a kick on rack 5. The
+ * listener is on the lower rack on purpose: the engine renders sources first,
+ * or a listener rendered before its source would hear it a block late.
  */
 struct SideFixture {
     Engine engine;
@@ -413,14 +384,14 @@ void aTrackCanListenToAnother() {
     printf("- sidechain\n");
     constexpr int32_t kBlocks = 1500; // two seconds: a bar and a bit at 120
     std::vector<float> dry, keyA, keyed, keyB;
-    // The baseline is the compressor *bypassed*: left on its own input at
-    // -45 dB and twenty to one it squashes the chord by itself.
+    // The baseline is the compressor bypassed: on its own input at -45 dB and
+    // twenty to one it squashes the chord by itself.
     { SideFixture f(0, -1, true); f.run(kBlocks, dry, keyA); }
     { SideFixture f(SideFixture::kSource + 1); f.run(kBlocks, keyed, keyB); }
 
-    // Gain at each sample, as the keyed listener over the unkeyed one - the
-    // same machine, the same notes, so the ratio is the compressor and
-    // nothing else. Only where the dry signal is big enough to divide by.
+    // Gain at each sample, as the keyed listener over the unkeyed one. Same
+    // machine, same notes, so the ratio is only the compressor. Only where
+    // the dry signal is big enough to divide by.
     size_t firstKick = 0;
     while (firstKick < keyB.size() && std::fabs(keyB[firstKick]) < 0.02f) ++firstKick;
     size_t firstDuck = 0;
@@ -466,9 +437,9 @@ void aTrackCanListenToAnother() {
 }
 
 /**
- * **Groups: tracks routed into a strip in the mixer.**
+ * Groups: tracks routed into a strip in the mixer.
  *
- * Two members - a pattern on rack 1 and a kick on rack 5 - routed into the
+ * Two members, a pattern on rack 1 and a kick on rack 5, routed into the
  * master's group 0, which has two inserts and a fader of its own.
  */
 struct GroupFixture {
@@ -641,9 +612,9 @@ void theMasterHasInserts() {
 /**
  * A held effect recorded into a clip plays back from it, on the master.
  *
- * The lane is on rack 0's clip, addressed to `Unit::Perform`: the rack hands
- * it on to the master's held effects, which is the whole of how a recorded
- * press becomes something the song does again.
+ * The lane is on rack 0's clip, addressed to `Unit::Perform`. The rack passes
+ * it on to the master's held effects, which is how a recorded press plays
+ * back.
  */
 std::vector<float> renderPerformed(int32_t blocks, bool stopHalfway, float *repeatAfterStop, bool heldFromTop = false) {
     Fixture f;
@@ -751,8 +722,8 @@ void aMuteWaitsForTheBar() {
  *
  * Only rack A is routed into the group; B goes straight to the master. With
  * the limiter off the master is linear, so everything the effects did must
- * be the group's own change at the master's volume - which is what says B
- * was left alone.
+ * be the group's own change at the master's volume, which shows B was left
+ * alone.
  */
 void theEffectsCanPlayOnAGroup() {
     printf("- the held effects on a group\n");
@@ -847,10 +818,10 @@ void aStepCanBeLocked() {
     const size_t first = firstDifference(plain, locked) / 2;
     ok("nothing changes before the locked note", first >= static_cast<size_t>(at), std::to_string(first) + " vs " + std::to_string(at));
     ok("and the lock is heard", first < plain.size() / 2);
-    // Struck with the lock, not one after it: exactly what the tune set an
-    // eighth before the note sounds like. (The snare's first two blocks do
-    // not depend on its tune at all, so where the difference starts says
-    // nothing about when the lock arrived; this does.)
+    // Struck with the lock, not one step after it: the same as the tune set
+    // an eighth before the note. (The snare's first two blocks don't depend
+    // on its tune, so where the difference starts doesn't show when the lock
+    // arrived. This does.)
     const auto early = renderLocked(kBlocks, true, &at, kBar * 3 / 8);
     ok("and the note on the step is struck with it", firstDifference(locked, early) == locked.size(),
        std::to_string(firstDifference(locked, early) / 2));

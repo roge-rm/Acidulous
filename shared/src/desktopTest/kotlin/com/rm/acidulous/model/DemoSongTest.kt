@@ -7,17 +7,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The demo song is the first thing anybody hears, and every name in it is a
- * string looked up at build time.
+ * Checks every name in the demo song resolves, and that the demo shows what
+ * it's meant to.
  *
- * A misspelt patch name does not fail: `PatchStore.factory(...).firstOrNull`
- * returns null and the machine is built on its defaults, so the song still
- * plays and merely sounds wrong - which is exactly the kind of fault nobody
- * finds by reading the file. Same for a machine or effect type that no registry
- * knows, or a lane on a parameter that does not exist: the song looks fine.
- *
- * So this checks the names resolve, not that the music is any good, and then
- * that the demo shows what it is there to show.
+ * A misspelt patch name doesn't fail: `PatchStore.factory(...).firstOrNull`
+ * returns null and the machine uses its defaults, so the song plays but
+ * sounds wrong. The same goes for an unknown machine or effect type, or a
+ * lane on a parameter that doesn't exist.
  */
 class DemoSongTest {
 
@@ -33,8 +29,8 @@ class DemoSongTest {
             for (track in song.tracks) {
                 assertTrue("${demo.name}: unknown machine '${track.machine.type}'", track.machine.type in machines)
                 // Effects are named in the engine's registry, which a unit test
-                // cannot ask, so they are checked against the factory banks -
-                // a bank exists only for a real effect.
+                // can't reach, so they're checked against the factory banks, which
+                // only exist for real effects.
                 for (slot in track.effects) {
                     if (slot.type.isEmpty()) continue
                     assertTrue(
@@ -49,8 +45,8 @@ class DemoSongTest {
     @Test
     fun everyPatchNameResolved() {
         for ((demo, song) in demos) {
-            // A machine given a patch has more than nothing in its params; one
-            // that came back empty means the name was not found.
+            // A machine given a patch has some params; an empty set means the
+            // name wasn't found.
             for (track in song.tracks) {
                 assertTrue(
                     "${demo.name}: patch for ${track.machine.type} on '${track.name}' resolved to nothing",
@@ -121,8 +117,7 @@ class DemoSongTest {
                     assertTrue("${demo.name}: '${track.name}' has a clip in no scene: $sceneId", sceneId in ids)
                 }
             }
-            // And every scene has something in it, or it is a silent bar nobody
-            // asked for.
+            // And every scene has something in it.
             for (scene in song.scenes) {
                 assertTrue(
                     "${demo.name}: scene '${scene.name}' is empty",
@@ -155,9 +150,8 @@ class DemoSongTest {
     @Test
     fun itNeedsNothingFromDisk() {
         // The demo has to play on a phone that has never recorded anything, so
-        // no machine in it may hold audio and no clip may carry a take. A
-        // Nexus graph is a setting, but it is text, not a file, and so is the
-        // name of the patch a machine is on.
+        // no machine may hold audio and no clip may carry a take. A Nexus graph
+        // and a patch name are settings stored as text, not files.
         val needsMedia = setOf("Forage", "Mosaic", "Pollen", "Dice", "Molt", "Bias")
         for ((demo, song) in demos) {
             for (track in song.tracks) {
@@ -176,7 +170,7 @@ class DemoSongTest {
         for ((demo, song) in demos) assertEquals(demo.name, song, SongStore.decode(SongStore.encode(song)))
     }
 
-    // --- what it is there to show -----------------------------------------------------
+    // --- what it's there to show ------------------------------------------------------
 
     @Test
     fun theFirstRunOpensIt() {

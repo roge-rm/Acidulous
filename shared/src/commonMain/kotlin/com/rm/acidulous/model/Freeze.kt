@@ -9,18 +9,16 @@ import com.rm.acidulous.engine.EngineAssets
 import com.rm.acidulous.engine.NativeEngine
 
 /**
- * Freezing: a clip rendered to audio, so its rack plays a file instead of
+ * Freezing renders a clip to audio, so its rack plays a file instead of
  * running its machine.
  *
- * Sixteen tracks is the promise; a phone is the problem. Filament is about
- * 6% of a core for six voices and a heavy Nexus patch a quarter of one, so
- * four or five of those and a mid-range phone is out of room. A frozen clip
- * costs a memory read and the channel strip - which is why the fader, pan,
- * sends, mute and meters all still work over it, and why freezing is not
- * bouncing: the mix stays live, only the instrument stops running.
+ * Heavy machines add up fast on a phone: a big Nexus patch can take a quarter
+ * of a core. A frozen clip only costs a memory read and the channel strip.
+ * The fader, pan, sends, mute and meters all still work, because only the
+ * instrument is rendered and the mix stays live.
  *
- * The unit is the clip, and a scene or a track is just every clip in that
- * column or row. Nothing here knows about scenes or tracks as such.
+ * Everything here works per clip. Freezing a scene or a track just means every
+ * clip in that column or row.
  */
 object Freeze {
     /** One clip, addressed the way the grid addresses it. */
@@ -29,10 +27,9 @@ object Freeze {
     private const val TAG = "Acidulous.Freeze"
 
     /**
-     * The most ring-out we will store. Not how much we keep: the render stops
-     * as soon as the sound has gone, so a closed hat costs nothing and a hall
-     * gets what it needs. It was a flat two seconds, which was too little for
-     * the one and pure waste for the other.
+     * The longest ring-out we store. The render stops as soon as the sound has
+     * died away, so a closed hat costs nothing and a long reverb gets what it
+     * needs.
      */
     private const val TAIL_CAP_SECONDS = 8f
 
@@ -47,43 +44,40 @@ object Freeze {
     fun track(song: Song, track: Int): List<Target> =
         song.scenes.map { it.id }.filter { freezable(song, track, it) }.map { Target(track, it) }
 
-    /** A clip with nothing in it renders silence; there is no point. */
+    /** A clip with no notes would render silence, so it isn't freezable. */
     fun freezable(song: Song, track: Int, sceneId: String): Boolean {
         val clip = song.tracks.getOrNull(track)?.clips?.get(sceneId) ?: return false
         return clip.notes.isNotEmpty() && clip.frozen == null
     }
 
     /**
-     * A frozen clip at another tempo cannot be used: audio does not stretch,
-     * so the engine plays the machine instead and the clip says it is stale
-     * rather than quietly sounding wrong.
+     * A frozen clip at another tempo can't be used because audio doesn't
+     * stretch. The engine plays the machine instead and the clip shows as
+     * stale.
      */
     fun stale(song: Song, sceneId: String, clip: Clip): Boolean {
         val f = clip.frozen ?: return false
         val scene = song.scenes.firstOrNull { it.id == sceneId }
         val tempo = scene?.tempo?.bpm ?: song.tempo
         if (kotlin.math.abs(f.bpm - tempo) >= 0.01f) return true
-        // A freeze with no tail was written by the old renderer, and that one
-        // folded two seconds of the clip *playing again* onto its own opening -
-        // so it is not merely missing its ring-out, its first two seconds are
-        // doubled. Unlike a changed knob this cannot be heard as a choice, so
-        // these are stale and ask to be rendered again. Every new freeze keeps
-        // at least one block of tail, so nought only ever means "old".
+        // A freeze with no tail came from the old renderer, which doubled
+        // the first two seconds of the clip, so it has to be rendered again.
+        // Every new freeze has at least one block of tail, so 0 always means
+        // old.
         if (f.tail == 0) return true
-        // And the voice it was rendered through. A freeze written before this
-        // field existed carries nought and is left alone.
+        // Also stale if the sound it was rendered with has changed. A voice
+        // of 0 means the freeze is older than this field, so leave it.
         if (f.voice == 0) return false
         val track = song.tracks.firstOrNull { it.clips[sceneId] === clip } ?: return false
         return f.voice != voiceOf(track)
     }
 
     /**
-     * A number that changes when anything the freeze baked in changes: the
-     * machine, its parameters and settings, and both insert slots.
+     * A hash of everything the freeze baked in: the machine, its parameters
+     * and settings, and both insert slots.
      *
-     * Not the clip - editing one thaws the freeze outright - and not the
-     * mixer, because the fader, pan, sends and mute stay live over a frozen
-     * track on purpose. That is the line between a freeze and a bounce.
+     * The clip isn't included because editing it thaws the freeze anyway. The
+     * mixer isn't included because it stays live over a frozen track.
      */
     fun voiceOf(track: Track): Int {
         var h = track.machine.type.hashCode()
@@ -94,7 +88,7 @@ object Freeze {
             h = h * 31 + fx.type.hashCode() + if (fx.bypass) 7 else 0
             for ((k, v) in fx.params.entries.sortedBy { it.key }) h = h * 31 + k.hashCode() * 31 + v.toBits()
         }
-        // Nought means "written before this existed", so never return it.
+        // 0 means "written before this field existed", so never return it.
         return if (h == 0) 1 else h
     }
 
@@ -102,8 +96,8 @@ object Freeze {
         targets.count { song.tracks.getOrNull(it.track)?.clips?.get(it.sceneId)?.frozen != null }
 
     /**
-     * Render one clip. Blocking, and it takes the audio stream down while it
-     * runs, so it belongs on a worker with the transport stopped. Returns the
+     * Renders one clip. It blocks and takes the audio stream down while it
+     * runs, so call it from a worker with the transport stopped. Returns the
      * record to store on the clip, or null with the reason logged.
      */
     suspend fun render(song: Song, target: Target): Frozen? {
@@ -128,7 +122,7 @@ object Freeze {
         }
     }
 
-    /** Forget a render and delete it. The clip's notes were never touched. */
+    /** Deletes a render. The clip's notes are untouched. */
     fun discard(song: Song, target: Target) {
         val track = song.tracks.getOrNull(target.track) ?: return
         val frozen = track.clips[target.sceneId]?.frozen ?: return

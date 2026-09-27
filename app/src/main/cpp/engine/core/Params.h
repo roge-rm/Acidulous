@@ -7,10 +7,10 @@
 // Parameters as the engine sees them.
 //
 // A unit (machine, effect) publishes a static table of ParamDef. The UI and
-// the automation player address parameters by *index into that table*; names
-// are for files and for humans. Values travel as 0..1 and are mapped to the
-// unit's own range by the curve. Every parameter is smoothed on the audio
-// thread, so a knob turn or an automation step never zippers.
+// automation address parameters by index into that table, and names are used
+// in files and for display. Values travel as 0..1 and the curve maps them to
+// the unit's range. Every parameter is smoothed on the audio thread so knob
+// turns and automation don't zipper.
 namespace acidulous {
 
 enum class Curve : uint8_t { Linear, Exponential, Stepped };
@@ -89,7 +89,7 @@ class ParamSet {
         norm[index] = v01;
         smooth[index].set(defs[index].map(v01));
     }
-    // A step lock's change: at once, not glided in. See Lane::linear.
+    // For step locks: jumps straight to the value. See Lane::linear.
     void jump(int32_t index, float v01) {
         if (index < 0 || index >= count) return;
         norm[index] = v01;
@@ -106,13 +106,10 @@ class ParamSet {
     float normalized(int32_t index) const { return norm[index]; }
 
     /**
-     * Where the parameter is *going*, in unit range, ignoring the smoother.
-     *
-     * This is what anything read once to seed per-note state must use.
-     * `get()` is the smoothed value, so it depends on how long ago the knob
-     * moved - and a note seeded from it sounds different depending on
-     * whether a render started from a panic or carried on from a
-     * performance, which is the one thing an export must not do.
+     * The value the parameter is heading to, in unit range, ignoring the
+     * smoother. Use this to seed per-note state. `get()` depends on how
+     * recently the knob moved, so an export could sound different from
+     * playback.
      */
     float target(int32_t index) const { return defs[index].map(norm[index]); }
 

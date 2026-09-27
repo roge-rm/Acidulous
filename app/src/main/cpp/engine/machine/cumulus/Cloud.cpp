@@ -10,12 +10,12 @@ namespace {
 
 constexpr float kTwoPi = 6.28318530718f;
 
-/** Table lengths per zone: resolution has to follow the fundamental. */
+/** Table lengths per zone, since resolution has to follow the fundamental. */
 int32_t sizeOfZone(int zone) {
     return zone == 0 ? (1 << 17) : (zone == 1 ? (1 << 16) : (1 << 15));
 }
 
-/** A small deterministic generator: the same seed is the same cloud, always. */
+/** A small deterministic generator, so the same seed always gives the same cloud. */
 struct Rng {
     uint32_t s;
     explicit Rng(uint32_t seed) : s(seed * 2654435761u + 1u) {}
@@ -50,8 +50,8 @@ float formantGain(float hz, float vowel01, float amount) {
         const float d = (hz - centre) / width;
         g += gain / (1.0f + d * d); // a resonance, not a brick wall
     }
-    // Blended in rather than switched: at amount 1 it is a vowel, at 0 the
-    // spectrum is whatever the other controls made it.
+    // Blended in: at amount 1 it's a vowel, at 0 the other controls decide
+    // the spectrum.
     return 1.0f + amount * (std::min(g, 4.0f) - 1.0f);
 }
 
@@ -60,8 +60,8 @@ float partialGain(int n, float tilt, float odd, float comb, float combPeriod,
                   float formant, float formantAmount, float hz) {
     const float octaves = std::log2(static_cast<float>(n));
     float g = std::pow(10.0f, tilt * octaves / 20.0f);
-    // Odd/even: at 0 the odd partials go, at 1 the even ones do. A square
-    // wave at one end, something hollow and clarinet-like at the other.
+    // Odd/even: at 0 the odd partials are removed, at 1 the even ones, which
+    // sounds hollow like a clarinet or square wave.
     const bool isOdd = (n % 2) == 1;
     const float bias = isOdd ? odd : 1.0f - odd;
     g *= std::min(1.0f, bias * 2.0f);
@@ -95,9 +95,8 @@ std::unique_ptr<CloudSet> buildCloud(const CloudSpec &spec, int32_t sampleRate) 
         const float binHz = sr / static_cast<float>(n);
         dsp::Fft fft(n);
 
-        // Nothing above this can survive being played an octave up, so it is
-        // never put in: that is the band-limiting, done at build time for
-        // nothing at playback.
+        // Partials above this would alias when played an octave up, so they're
+        // left out. This is the band-limiting, done at build time for free.
         const float ceiling = sr * 0.5f * 0.95f / 2.0f;
 
         std::vector<float> re(static_cast<size_t>(n)), im(static_cast<size_t>(n));
@@ -113,14 +112,14 @@ std::unique_ptr<CloudSet> buildCloud(const CloudSpec &spec, int32_t sampleRate) 
             std::fill(re.begin(), re.end(), 0.0f);
             std::fill(im.begin(), im.end(), 0.0f);
 
-            // One generator per frame *from the same seed*: every frame gets
-            // the same phases, which is what lets the morph crossfade two
-            // tables without them cancelling each other out.
+            // One generator per frame from the same seed, so every frame gets
+            // the same phases and the morph can crossfade tables without them
+            // cancelling out.
             Rng rng(spec.seed + 1u);
             int32_t used = 0;
             for (int p = 1; p <= spec.partials; ++p) {
-                // Stretch: a real string's partials run sharp, and further
-                // than that lies bells and gongs.
+                // Stretch: a real string's partials run sharp, and more
+                // stretch sounds like bells and gongs.
                 const float ratio = std::pow(static_cast<float>(p), 1.0f + stretch);
                 const float hz = base * ratio;
                 if (hz > ceiling) break;
@@ -129,8 +128,8 @@ std::unique_ptr<CloudSet> buildCloud(const CloudSpec &spec, int32_t sampleRate) 
                 if (gain < 1e-4f) continue;
                 ++used;
 
-                // The band: a Gaussian in frequency, wide in cents and so
-                // wider in Hz the higher it sits, scaled again by bwScale.
+                // The band: a Gaussian with a width in cents, so it's wider in
+                // Hz the higher it is, scaled again by bwScale.
                 const float cents = bandwidth * std::pow(static_cast<float>(p), spec.bwScale - 1.0f);
                 const float sigmaHz = std::max(binHz * 0.6f, hz * (std::pow(2.0f, cents / 1200.0f) - 1.0f));
                 const int32_t centre = static_cast<int32_t>(hz / binHz + 0.5f);
@@ -142,7 +141,7 @@ std::unique_ptr<CloudSet> buildCloud(const CloudSpec &spec, int32_t sampleRate) 
                     const float a = gain * std::exp(-0.5f * d * d);
                     if (a < 1e-6f) continue;
                     const float phase = rng.next() * kTwoPi;
-                    // Accumulate: overlapping bands add, as they should.
+                    // Overlapping bands add up.
                     re[static_cast<size_t>(k)] += a * std::cos(phase);
                     im[static_cast<size_t>(k)] += a * std::sin(phase);
                 }
@@ -164,11 +163,10 @@ std::unique_ptr<CloudSet> buildCloud(const CloudSpec &spec, int32_t sampleRate) 
             table.data.resize(static_cast<size_t>(n) + 1);
             float peak = 1e-9f;
             for (int32_t i = 0; i < n; ++i) peak = std::max(peak, std::fabs(re[static_cast<size_t>(i)]));
-            // Normalised per frame, so the morph does not change how loud the
-            // instrument is - only what it is.
+            // Normalised per frame, so the morph doesn't change the level.
             const float norm = 0.9f / peak;
             for (int32_t i = 0; i < n; ++i) table.data[static_cast<size_t>(i)] = re[static_cast<size_t>(i)] * norm;
-            table.data[static_cast<size_t>(n)] = table.data[0]; // the loop, made free
+            table.data[static_cast<size_t>(n)] = table.data[0]; // wrap sample for the loop
         }
     }
     set->buildMs = std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - started).count();

@@ -6,13 +6,13 @@ import com.rm.acidulous.res.Res
 import com.rm.acidulous.res.settings_output_driver
 
 /**
- * The sound server's inputs, for the recorder's list of them: what Android's
- * AudioManager answers on the phone.
+ * The sound server's inputs and outputs, for the recorder and Settings. On
+ * Android AudioManager provides the inputs.
  */
 internal object DesktopAudio {
     init {
-        // The engine's library, which NativeEngine has loaded already; a second
-        // load is nothing.
+        // The engine's library. NativeEngine has already loaded it, so this
+        // does nothing.
         System.loadLibrary("acidulous")
     }
 
@@ -26,9 +26,9 @@ internal object DesktopAudio {
     private external fun nativeChooseOutput(id: Int)
 
     /**
-     * The sound server's outputs, by id and name: what Settings offers to play
-     * through. On Windows an interface's own drivers follow, under their
-     * makers' names, marked as the low-latency way to them.
+     * The sound server's outputs by id and name, offered in Settings. On
+     * Windows, audio interfaces' own ASIO drivers are listed after them under
+     * the maker's name, marked as the low-latency option.
      */
     fun outputs(): List<Pair<Int, String>> =
         runCatching { nativeOutputs() }.getOrDefault(emptyArray()).toList().chunked(3)
@@ -37,15 +37,14 @@ internal object DesktopAudio {
                 id.toIntOrNull()?.let { it to shown }
             }
 
-    /** Play through [id] from now on, reopening the stream if it is running; nought is the default. */
+    /** Play through [id] from now on, reopening the stream if it's running. 0 is the default. */
     fun chooseOutput(id: Int) {
         runCatching { nativeChooseOutput(id) }
     }
 
     /**
-     * Read again at most every two seconds: the recorder asks on every
-     * redraw, which is nothing on the phone and a round trip to the sound
-     * server here.
+     * Re-read at most every two seconds. The recorder asks on every redraw,
+     * and here each read is a round trip to the sound server.
      */
     private var cached: List<AudioInput> = emptyList()
     private var readAt = 0L
@@ -64,10 +63,10 @@ internal object DesktopAudio {
 }
 
 /**
- * What kind of ear, from PulseAudio's names for it - PipeWire answers as
- * PulseAudio and names them the same way: "alsa_input.usb-...",
- * "bluez_input...", "alsa_input.pci-..." for the one on the board. A monitor
- * is the computer listening to its own output, so not an ear at all.
+ * What kind of input it is, from PulseAudio's names (PipeWire uses the same
+ * ones): "alsa_input.usb-...", "bluez_input...", "alsa_input.pci-..." for
+ * the built-in one. A monitor is the computer listening to its own output,
+ * so it isn't a real input.
  */
 internal fun kindOf(name: String, key: String): AudioInput.Kind {
     val k = key.lowercase()

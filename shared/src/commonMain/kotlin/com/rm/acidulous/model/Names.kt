@@ -1,10 +1,10 @@
 package com.rm.acidulous.model
 
 /**
- * The names the model gives things it makes: a new scene, a copy.
+ * Names the model gives things it creates, like a new scene or a copy.
  *
- * The model has no resources to read them from, so the app sets these from
- * its strings when it starts, and the English here is what a test sees.
+ * The model can't read resources, so the app sets these from its strings at
+ * startup. The English defaults are what tests see.
  */
 object Names {
     var scene: (Int) -> String = { "Scene $it" }

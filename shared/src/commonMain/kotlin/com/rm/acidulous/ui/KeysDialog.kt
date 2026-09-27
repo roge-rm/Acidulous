@@ -25,20 +25,18 @@ import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.res.*
 
 /**
- * Every shortcut and its keys, changeable the way a controller mapping is
- * learned: choose a key and press the new one.
+ * Every shortcut and its keys. Change one by choosing it and pressing the new
+ * key, like learning a controller mapping.
  *
- * A window of its own rather than a Settings tab, because a tabbed window is
- * as tall as its tallest page and a list of twenty actions would have made
- * every page of Settings that tall. A key already in use moves to the action
- * it is given to - two actions on one key could never both run - and the
- * window says, under the row, which one lost it.
+ * It's its own window instead of a Settings tab because a tabbed window is as
+ * tall as its tallest page. A key that's already used moves to the new action,
+ * and the window says under the row which action lost it.
  */
 @Composable
 fun KeysDialog(onDismiss: () -> Unit) {
     val c = Acid.colors
     val bindings = UiPrefs.keyBindings
-    // What is being learned: an action and which of its two keys.
+    // What's being learned: an action and which of its two keys.
     var learning by remember { mutableStateOf<Pair<KeyAction, Int>?>(null) }
     // The action that last took a key from another, and the one it took it from.
     var moved by remember { mutableStateOf<Pair<KeyAction, KeyAction>?>(null) }
@@ -48,7 +46,7 @@ fun KeysDialog(onDismiss: () -> Unit) {
         learning = action to slot
         KeyHub.learning = { chord ->
             learning = null
-            // Off whichever action had it.
+            // Remove it from whichever action had it.
             val from = UiPrefs.keyBindings.entries.firstOrNull { (a, cs) -> a != action && chord in cs }?.key
             if (from != null) UiPrefs.chooseKeys(from, UiPrefs.keyBindings[from].orEmpty() - chord)
             val now = UiPrefs.keyBindings[action].orEmpty().toMutableList()
@@ -90,7 +88,7 @@ fun KeysDialog(onDismiss: () -> Unit) {
                                 )
                                 for (slot in 0 until 2) {
                                     val chord = chords.getOrNull(slot)
-                                    // A second key is offered only once there is a first.
+                                    // A second key is only offered once there's a first.
                                     if (chord == null && slot > chords.size) continue
                                     KeyChip(
                                         text = when {
@@ -105,7 +103,7 @@ fun KeysDialog(onDismiss: () -> Unit) {
                                     ) { learn(action, slot) }
                                 }
                             }
-                            // Under the row just pressed, where the eye is.
+                            // Shown under the row just pressed.
                             moved?.takeIf { it.first == action }?.let { (_, from) ->
                                 Text(stringResource(Res.string.keys_moved, stringResource(from.label)), color = c.accent, fontSize = 11.sp)
                             }
