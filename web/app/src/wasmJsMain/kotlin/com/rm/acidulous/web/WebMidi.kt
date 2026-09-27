@@ -163,8 +163,28 @@ class WebMidi : MidiSystem {
         var before = known.associateBy { it.desc.id }
         midiStart {
             val now = scan().associateBy { it.desc.id }
-            for ((id, d) in before) if (id !in now) { Log.i(TAG, "gone ${d.desc.name}"); removed(d.desc) }
-            for ((id, d) in now) if (id !in before) { Log.i(TAG, "device ${d.desc.name} (in ${d.sources.size}, out ${d.destinations.size})"); added(d.desc) }
+            // **A device whose ports changed is gone and back.** Chrome on
+            // Windows can announce a device's ports one at a time, so a
+            // Launchpad could arrive with its inputs and no output yet: the
+            // hub took it for something that could not be sent to, and the
+            // output arriving a moment later - the same device - changed
+            // nothing. It listed, and never took Programmer mode or played
+            // until the page was reloaded (Dan). So the hub hears it leave and
+            // come back with every port it has.
+            for ((id, d) in before) {
+                val then = now[id]
+                if (then == null || then.sources != d.sources || then.destinations != d.destinations) {
+                    Log.i(TAG, if (then == null) "gone ${d.desc.name}" else "ports changed: ${d.desc.name}")
+                    removed(d.desc)
+                }
+            }
+            for ((id, d) in now) {
+                val was = before[id]
+                if (was == null || was.sources != d.sources || was.destinations != d.destinations) {
+                    Log.i(TAG, "device ${d.desc.name} (in ${d.sources.size}, out ${d.destinations.size})")
+                    added(d.desc)
+                }
+            }
             before = now
         }
     }
