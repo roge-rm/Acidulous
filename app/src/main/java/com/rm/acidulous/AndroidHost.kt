@@ -46,7 +46,7 @@ class AndroidHost(private val context: Context) : AppHost {
         var display = fallback
         context.contentResolver.query(doc.uri, null, null, null, null)?.use { c ->
             val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-            if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+            if (i >= 0 && c.moveToFirst()) display = c.getString(i) ?: display
         }
         return display
     }
@@ -64,7 +64,7 @@ class AndroidHost(private val context: Context) : AppHost {
         var display = uri.lastPathSegment ?: AppStrings.getString(Res.string.app_the_file)
         context.contentResolver.query(uri, null, null, null, null)?.use { c ->
             val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-            if (i >= 0 && c.moveToFirst()) display = c.getString(i)
+            if (i >= 0 && c.moveToFirst()) display = c.getString(i) ?: display
         }
         display
     }.getOrDefault(AppStrings.getString(Res.string.app_the_file))
