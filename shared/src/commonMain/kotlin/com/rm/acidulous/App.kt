@@ -370,9 +370,17 @@ fun App(modifier: Modifier = Modifier) {
      * selection moves.
      */
     var sampleEdit by remember { mutableStateOf<Pair<Int, Int>?>(null) }
-    // A track deleted under an open window would leave it pointing at nothing.
+    // A track deleted under an open window would leave it pointing at nothing,
+    // and the keys would play a track that isn't there any more.
     LaunchedEffect(song.tracks.size) {
         if (sampleEdit?.first?.let { it !in song.tracks.indices } == true) sampleEdit = null
+        if (song.tracks.isNotEmpty() && midiTrack !in song.tracks.indices) midiTrack = song.tracks.size - 1
+    }
+    // The editor draws nothing for a track or scene that's gone, and its back
+    // button goes with it, so leave it for the grid instead.
+    LaunchedEffect(song.tracks.size, song.scenes) {
+        val s = screen as? Screen.Edit ?: return@LaunchedEffect
+        if (s.track !in song.tracks.indices || song.scenes.none { it.id == s.sceneId }) screen = Screen.Main
     }
     sampleEdit?.takeIf { it.first in song.tracks.indices }?.let { (track, pad) ->
         com.rm.acidulous.ui.SampleDialog(
@@ -1227,7 +1235,7 @@ fun App(modifier: Modifier = Modifier) {
             com.rm.acidulous.midi.launchpad.LpAction.Panic -> com.rm.acidulous.ui.panicEverything()
             com.rm.acidulous.midi.launchpad.LpAction.Undo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Undo)
             com.rm.acidulous.midi.launchpad.LpAction.Redo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Redo)
-            is com.rm.acidulous.midi.launchpad.LpAction.SelectTrack -> midiTrack = a.index
+            is com.rm.acidulous.midi.launchpad.LpAction.SelectTrack -> if (a.index in song.tracks.indices) midiTrack = a.index
             // Like tapping the scene in the grid.
             is com.rm.acidulous.midi.launchpad.LpAction.PlayScene -> song.scenes.getOrNull(a.index)?.let { scene ->
                 when {
