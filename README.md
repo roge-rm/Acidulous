@@ -214,9 +214,6 @@ or later**. See [LICENSE](LICENSE).
 
 Copyright © 2026 Dan Hunke.
 
-It's GPLv3 rather than GPLv2 because Oboe is Apache 2.0, which works with
-GPLv3 but not GPLv2.
-
 Third-party components (Oboe, LAME, Ableton Link and asio) are listed with
 their licences in [NOTICE](NOTICE), and every licence text can be read from
 the app's About window.
