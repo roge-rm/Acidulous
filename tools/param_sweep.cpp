@@ -8,7 +8,11 @@
 // becomes, and a knob at its end is where those usually hide.
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/core/SampleMap.h>
+#include <engine/core/Take.h>
+#include <engine/core/Utterance.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/forage/Forage.h>
 
 #include <cmath>
 #include <cstdint>
@@ -170,6 +174,86 @@ void sweep(const std::string &name, Unit *u, Fresh fresh) {
     }
 }
 
+/**
+ * What a machine needs mounted before it plays anything, kept alive while it
+ * plays. The sample machines are silent without it, and the reads through a
+ * sample are where an index goes past the end.
+ */
+struct Dressing {
+    std::unique_ptr<machine::cumulus::CloudSet> cloud;
+    std::vector<std::unique_ptr<SampleData>> pads;
+    std::unique_ptr<audio::Take> take;
+    std::unique_ptr<audio::Utterance> voice;
+    std::unique_ptr<SampleMap> map;
+};
+
+/** [seconds] of a tone that decays, at [hz]. Odd lengths, so nothing lines up with a block. */
+std::vector<float> tone(float seconds, float hz, float decay) {
+    std::vector<float> v(static_cast<size_t>(seconds * kRate) + 37);
+    for (size_t i = 0; i < v.size(); ++i) {
+        const float t = static_cast<float>(i) / kRate;
+        v[i] = 0.6f * std::sin(6.2831853f * hz * t) * std::exp(-t * decay);
+    }
+    return v;
+}
+
+Dressing dress(const char *name, Machine *m) {
+    Dressing d;
+    if (std::strcmp(name, "Cumulus") == 0) {
+        auto *c = static_cast<machine::Cumulus *>(m);
+        d.cloud = machine::cumulus::buildCloud(c->spec(), kRate);
+        m->swapObject(0, d.cloud.get());
+    } else if (std::strcmp(name, "Forage") == 0) {
+        for (int32_t pad = 0; pad <= machine::Forage::kSharedSlot; ++pad) {
+            auto s = std::make_unique<SampleData>();
+            s->left = tone(0.05f + 0.07f * static_cast<float>(pad), 110.0f + 30.0f * static_cast<float>(pad), 6.0f);
+            s->frames = static_cast<int32_t>(s->left.size());
+            if (pad % 2 == 1) { s->right = s->left; s->stereo = true; }
+            s->measure();
+            m->swapObject(pad, s.get());
+            d.pads.push_back(std::move(s));
+        }
+    } else if (std::strcmp(name, "Dice") == 0 || std::strcmp(name, "Pollen") == 0) {
+        d.take = std::make_unique<audio::Take>();
+        auto &t = *d.take;
+        t.left.assign(static_cast<size_t>(kRate * 4) + 101, 0.0f);
+        for (size_t at = 0; at < t.left.size(); at += 12000) {
+            const auto hit = tone(0.1f, 180.0f, 30.0f);
+            for (size_t i = 0; i < hit.size() && at + i < t.left.size(); ++i) t.left[at + i] = hit[i];
+        }
+        t.right = t.left;
+        t.frames = static_cast<int32_t>(t.left.size());
+        t.detect(kRate);
+        t.bars = 2.0f;
+        m->swapObject(0, d.take.get());
+    } else if (std::strcmp(name, "Molt") == 0) {
+        d.voice = std::make_unique<audio::Utterance>();
+        auto v = tone(1.5f, 180.0f, 0.5f);
+        for (size_t i = 0; i < v.size(); ++i) v[i] += 0.3f * std::sin(6.2831853f * 540.0f * static_cast<float>(i) / kRate);
+        d.voice->mono = v;
+        d.voice->analyse(kRate);
+        m->swapObject(0, d.voice.get());
+    } else if (std::strcmp(name, "Mosaic") == 0) {
+        d.map = std::make_unique<SampleMap>();
+        for (int k = 0; k < 2; ++k) {
+            SampleData s;
+            s.left = tone(0.4f + 0.3f * k, 220.0f, 1.0f);
+            s.frames = static_cast<int32_t>(s.left.size());
+            s.rate = k == 0 ? kRate : 22050; // a multisample keeps its own rate
+            s.measure();
+            d.map->samples.push_back(std::move(s));
+            MapZone z;
+            z.sample = k;
+            z.lowKey = k == 0 ? 0 : 64;
+            z.highKey = k == 0 ? 63 : 127;
+            if (k == 0) { z.loopStart = 1000; z.loopEnd = d.map->samples[0].frames - 1; }
+            d.map->zones.push_back(z);
+        }
+        m->swapObject(0, d.map.get());
+    }
+    return d;
+}
+
 } // namespace
 
 int main() {
@@ -179,13 +263,7 @@ int main() {
         std::unique_ptr<Machine> m(MachineRegistry::create(name));
         if (!m) continue;
         m->prepare(kRate);
-        // Cumulus plays nothing without the table the app builds for it.
-        std::unique_ptr<machine::cumulus::CloudSet> cloud;
-        if (std::strcmp(name, "Cumulus") == 0) {
-            auto *c = static_cast<machine::Cumulus *>(m.get());
-            cloud = machine::cumulus::buildCloud(c->spec(), kRate);
-            m->swapObject(0, cloud.get());
-        }
+        const Dressing dressed = dress(name, m.get());
         const int before = failures;
         const std::vector<float> defaults = defaultsOf(m.get());
         sweep(name, m.get(), [&] { m->reset(); });
