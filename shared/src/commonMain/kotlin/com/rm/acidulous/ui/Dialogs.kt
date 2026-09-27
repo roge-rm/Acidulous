@@ -1163,6 +1163,14 @@ private fun DialogShell(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
     ) {
+        // **A window lays itself out.** One opened from the editor's side
+        // column - Bias's "audio..." - inherited the column's turned layout,
+        // and its tabs stood on their side down the middle of an empty window.
+        // The window's own cards say how they stack (WindowCards).
+        androidx.compose.runtime.CompositionLocalProvider(
+            LocalPanelStacked provides false,
+            LocalStackedPerLine provides StackedPerLine,
+        ) {
         // **A window is a window of its own**, so its keys never pass through
         // MainActivity: the hub is asked here instead, before and after the
         // window's controls, as it is there for the screen. Esc is left to
@@ -1313,6 +1321,7 @@ private fun DialogShell(
                     }
                 }
             }
+        }
         }
     }
 }
