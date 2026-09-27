@@ -1,4 +1,8 @@
 # MIDI and playing with others
+You can use MIDI with a variety of keyboards and controllers, including MPE.
+Special support has been added for the Intuitive Instruments Exquis and 
+Novation Launchpad Pro MK3 (as I have these myself).
+
 ## Playing from a keyboard
 
 USB and Bluetooth MIDI keyboards work directly. Notes go either to whichever
