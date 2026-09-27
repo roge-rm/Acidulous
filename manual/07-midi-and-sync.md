@@ -1,8 +1,4 @@
 # MIDI and playing with others
-> Keyboards, controller mapping, clock, MPE and Link.
-
-Everything here is under **MIDI…** in the file menu.
-
 ## Playing from a keyboard
 
 USB and Bluetooth MIDI keyboards work directly. Notes go either to whichever
