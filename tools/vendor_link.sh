@@ -22,13 +22,13 @@ rm -rf "$OUT/link/include" "$OUT/link/LICENSE.md" "$OUT/link/GNU-GPL-v2.0.md" "$
 mkdir -p "$OUT/link/include"
 cp -r "$WORK/link/include/ableton" "$OUT/link/include/"
 # Left behind: the tests, the Link Audio extension (a different feature), and
-# the platforms nothing here builds for.
+# the platforms nothing here builds for. Windows is kept for the desktop's
+# Windows build.
 rm -rf "$OUT/link/include/ableton/test" \
        "$OUT/link/include/ableton/link_audio" \
        "$OUT/link/include/ableton/LinkAudio.hpp" "$OUT/link/include/ableton/LinkAudio.ipp" \
        "$OUT/link/include/ableton/platforms/darwin" \
-       "$OUT/link/include/ableton/platforms/esp32" \
-       "$OUT/link/include/ableton/platforms/windows"
+       "$OUT/link/include/ableton/platforms/esp32"
 cp "$WORK/link/LICENSE.md" "$WORK/link/GNU-GPL-v2.0.md" "$WORK/link/README.md" "$OUT/link/"
 
 # --- asio: the include tree whole ------------------------------------------

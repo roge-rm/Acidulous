@@ -3,9 +3,6 @@
 // hear, so the timebase is the one Link switched off is - no session, and
 // the engine keeps its own time. The class is the real one's (link/
 // LinkTimebase.h), so EngineHost builds unchanged.
-//
-// The Windows build uses it too for now: Link supports Windows, but only its
-// Linux and POSIX platform headers are vendored (third_party/link).
 
 #include <link/LinkTimebase.h>
 

@@ -12,6 +12,9 @@
 #include <cmath>
 #include <cstring>
 #include <engine/dsp/Denormals.h>
+#ifdef _WIN32
+#include "Asio.h"
+#endif
 
 #define LOG_TAG "Acidulous.Audio"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -135,17 +138,52 @@ bool findDevice(bool capture, int32_t want, ma_device_id &into) {
 int32_t AudioDriver::sChosenOutput = 0;
 AudioDriver *AudioDriver::sLive = nullptr;
 
-std::vector<AudioDriver::InputInfo> AudioDriver::listInputs() { return listDevices(true); }
-std::vector<AudioDriver::InputInfo> AudioDriver::listOutputs() { return listDevices(false); }
+// An interface's own drivers, on Windows: listed after the sound server's
+// outputs, keyed "driver:<name>" so the app can say which they are; and while
+// one is playing, the inputs are its channel pairs, read on its own clock.
+namespace {
+const char *const kDriverKey = "driver:";
+}
+
+std::vector<AudioDriver::InputInfo> AudioDriver::listInputs() {
+#ifdef _WIN32
+    if (sLive != nullptr && sLive->driverOn) {
+        std::vector<InputInfo> out;
+        for (size_t i = 0; i < sLive->driverPairs.size(); ++i) {
+            InputInfo info;
+            info.key = "driver-in:" + sLive->driverName + ":" + std::to_string(i);
+            info.name = sLive->driverName + ": " + sLive->driverPairs[i];
+            info.id = idOf(info.key);
+            out.push_back(std::move(info));
+        }
+        return out;
+    }
+#endif
+    return listDevices(true);
+}
+
+std::vector<AudioDriver::InputInfo> AudioDriver::listOutputs() {
+    auto out = listDevices(false);
+#ifdef _WIN32
+    for (const auto &name : acidulous::asio::driverNames()) {
+        InputInfo info;
+        info.key = kDriverKey + name;
+        info.name = name;
+        info.id = idOf(info.key);
+        out.push_back(std::move(info));
+    }
+#endif
+    return out;
+}
 
 void AudioDriver::chooseOutput(int32_t id) {
     if (id == sChosenOutput) return;
     sChosenOutput = id;
-    if (sLive != nullptr && sLive->device != nullptr) sLive->reopen();
+    if (sLive != nullptr && sLive->isRunning()) sLive->reopen();
 }
 
 void AudioDriver::reopen() {
-    const bool listening = capturer != nullptr;
+    const bool listening = isInputRunning();
     const int32_t listeningTo = actualInputDevice;
     stop();
     start();
@@ -164,7 +202,7 @@ AudioDriver::~AudioDriver() {
 }
 
 bool AudioDriver::start() {
-    if (device != nullptr) return true;
+    if (device != nullptr || driverOn) return true;
     if (!callback) {
         LOGE("start() called before registerCallback()");
         return false;
@@ -173,6 +211,18 @@ bool AudioDriver::start() {
     carry.assign(static_cast<size_t>(engineBlockFrames) * 2, 0.0f);
     carryFrames = 0;
     carryOffset = 0;
+#ifdef _WIN32
+    // An interface's own driver, when that is what is chosen. One that will
+    // not open - unplugged, or held by another program - is the default instead.
+    if (sChosenOutput != 0) {
+        for (const auto &name : acidulous::asio::driverNames()) {
+            if (idOf(kDriverKey + name) != sChosenOutput) continue;
+            if (startDriver(name)) return true;
+            LOGI("driver \"%s\" would not open; the default output instead", name.c_str());
+            break;
+        }
+    }
+#endif
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format = ma_format_f32;
@@ -217,6 +267,18 @@ bool AudioDriver::start() {
 }
 
 void AudioDriver::stop() {
+#ifdef _WIN32
+    if (driverOn) {
+        stopInput();
+        acidulous::asio::close();
+        driverOn = false;
+        driverPairs.clear();
+        carryFrames = 0;
+        carryOffset = 0;
+        LOGI("stream stopped");
+        return;
+    }
+#endif
     if (device == nullptr) return;
     stopInput();
     ma_device_uninit(device.get());
@@ -227,6 +289,31 @@ void AudioDriver::stop() {
 }
 
 bool AudioDriver::startInput(int32_t deviceId) {
+#ifdef _WIN32
+    // Playing through a driver: its inputs, a pair at a time, the first pair
+    // for "default" and for an id it does not know.
+    if (driverOn) {
+        int32_t pair = 0;
+        for (size_t i = 0; i < driverPairs.size(); ++i) {
+            if (idOf("driver-in:" + driverName + ":" + std::to_string(i)) == deviceId) pair = static_cast<int32_t>(i);
+        }
+        if (driverPairs.empty()) return false;
+        const size_t ringFrames = static_cast<size_t>(acidulous::kSampleRate) / 4;
+        if (!driverInput) {
+            inputRing.assign(ringFrames * 2, 0.0f);
+            inputBlock.assign(static_cast<size_t>(acidulous::kBlockFrames) * 2, 0.0f);
+            inputRingFrames = 0;
+            inputRingRead = 0;
+        }
+        acidulous::asio::setInputPair(pair);
+        driverInput = true;
+        actualInputChannels = 2;
+        actualInputRate = actualSampleRate;
+        actualInputDevice = idOf("driver-in:" + driverName + ":" + std::to_string(pair));
+        LOGI("input open: %s, %s", driverName.c_str(), driverPairs[static_cast<size_t>(pair)].c_str());
+        return true;
+    }
+#endif
     // Already open on the one asked for - including nought, which means
     // "whatever the system picks" and cannot be compared: see the Oboe driver.
     if (capturer != nullptr && (deviceId == 0 || deviceId == actualInputDevice)) return true;
@@ -279,6 +366,18 @@ bool AudioDriver::startInput(int32_t deviceId) {
 }
 
 void AudioDriver::stopInput() {
+#ifdef _WIN32
+    if (driverInput) {
+        acidulous::asio::setInputPair(-1);
+        driverInput = false;
+        inputRingFrames = 0;
+        inputRingRead = 0;
+        actualInputChannels = 0;
+        actualInputRate = 0;
+        actualInputDevice = 0;
+        return;
+    }
+#endif
     if (capturer == nullptr) return;
     ma_device_uninit(capturer.get());
     capturer.reset();
@@ -336,7 +435,7 @@ void AudioDriver::pumpInput(int32_t frames) {
 }
 
 const float *AudioDriver::nextInputBlock() {
-    if (capturer == nullptr) return nullptr;
+    if (capturer == nullptr && !driverInput) return nullptr;
     const int32_t capacity = static_cast<int32_t>(inputRing.size() / 2);
     for (int32_t i = 0; i < engineBlockFrames; ++i) {
         if (inputRingFrames > 0) {
@@ -413,5 +512,61 @@ void AudioDriver::setBufferBursts(int32_t bursts) {
     if (bursts == bufferBursts) return;
     bufferBursts = bursts;
     // A period count is fixed when the device opens, so a change reopens it.
-    if (device != nullptr) reopen();
+    if (isRunning()) reopen();
+}
+
+void AudioDriver::pushInput(const float *in, int32_t numFrames) {
+    const int32_t capacity = static_cast<int32_t>(inputRing.size() / 2);
+    if (in == nullptr || capacity == 0) return;
+    float peak = 0.0f;
+    for (int32_t i = 0; i < numFrames; ++i) {
+        if (inputRingFrames == capacity) { // behind: the oldest goes
+            inputRingRead = (inputRingRead + 1) % capacity;
+            --inputRingFrames;
+        }
+        const float l = in[static_cast<size_t>(i) * 2];
+        const float r = in[static_cast<size_t>(i) * 2 + 1];
+        const int32_t slot = (inputRingRead + inputRingFrames) % capacity;
+        inputRing[static_cast<size_t>(slot) * 2] = l;
+        inputRing[static_cast<size_t>(slot) * 2 + 1] = r;
+        ++inputRingFrames;
+        peak = std::fmax(peak, std::fmax(std::fabs(l), std::fabs(r)));
+    }
+    if (peak > inputPeak.load(std::memory_order_relaxed)) inputPeak.store(peak, std::memory_order_relaxed);
+}
+
+bool AudioDriver::startDriver(const std::string &name) {
+#ifdef _WIN32
+    acidulous::asio::Stream stream;
+    const bool opened = acidulous::asio::open(
+        name, acidulous::kSampleRate, bufferBursts,
+        // The driver's own audio thread: the input first, then the engine's
+        // blocks served out through the carry buffer, as miniaudio's are.
+        [this](const float *in, float *out, int32_t frames) {
+            if (in != nullptr && driverInput) pushInput(in, frames);
+            render(out, frames);
+        },
+        // Its own panel changed its buffer or rate: open it again as it is now.
+        [] {
+            if (sLive != nullptr && sLive->driverOn) sLive->reopen();
+        },
+        stream);
+    if (!opened) return false;
+    driverOn = true;
+    driverName = name;
+    driverPairs = stream.inputPairs;
+    driverLatency = stream.outputLatency > 0 ? stream.outputLatency : stream.bufferFrames * 2;
+    actualSampleRate = stream.sampleRate;
+    actualFramesPerBurst = stream.bufferFrames;
+    actualPeriods = 1;
+    framesWritten = 0;
+    anchors[0].frame = anchors[1].frame = -1;
+    sLive = this;
+    LOGI("stream open: driver %s, %d Hz, %d frames, output latency %d frames, engine block %d frames",
+         name.c_str(), actualSampleRate, actualFramesPerBurst, driverLatency, engineBlockFrames);
+    return true;
+#else
+    (void)name;
+    return false;
+#endif
 }

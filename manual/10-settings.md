@@ -15,7 +15,7 @@
 
 ## audio
 
-<!-- desktop: - **output** - which output to play through, or the system default. -->
+<!-- desktop: - **output** - which output to play through, or the system default. On Windows an interface's own driver is listed too, marked **low latency**: it is the quickest way to the interface, and while it plays, the recorder's inputs are that interface's inputs, two at a time. -->
 - **buffer** - tight, balanced or safe. Tight has the lowest latency but
   may crackle on a slower phone; safe gives the phone more time. With
   **diagnostics** on, a line under it shows the buffer size, the latency and

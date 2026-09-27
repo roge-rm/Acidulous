@@ -1,6 +1,9 @@
 package com.rm.acidulous.desktop
 
 import com.rm.acidulous.AudioInput
+import com.rm.acidulous.res.AppStrings
+import com.rm.acidulous.res.Res
+import com.rm.acidulous.res.settings_output_driver
 
 /**
  * The sound server's inputs, for the recorder's list of them: what Android's
@@ -22,10 +25,17 @@ internal object DesktopAudio {
     @JvmStatic
     private external fun nativeChooseOutput(id: Int)
 
-    /** The sound server's outputs, by id and name: what Settings offers to play through. */
+    /**
+     * The sound server's outputs, by id and name: what Settings offers to play
+     * through. On Windows an interface's own drivers follow, under their
+     * makers' names, marked as the low-latency way to them.
+     */
     fun outputs(): List<Pair<Int, String>> =
         runCatching { nativeOutputs() }.getOrDefault(emptyArray()).toList().chunked(3)
-            .mapNotNull { (id, name, _) -> id.toIntOrNull()?.let { it to name } }
+            .mapNotNull { (id, name, key) ->
+                val shown = if (key.startsWith("driver:")) AppStrings.getString(Res.string.settings_output_driver, name) else name
+                id.toIntOrNull()?.let { it to shown }
+            }
 
     /** Play through [id] from now on, reopening the stream if it is running; nought is the default. */
     fun chooseOutput(id: Int) {

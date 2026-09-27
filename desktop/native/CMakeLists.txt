@@ -35,11 +35,16 @@ endif()
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CPP}/engine/*.cpp")
 
 # Windows, cross-compiled with MinGW-w64 (Dockerfile.windows): no ALSA, whose
-# JNI calls the app finds missing and passes over, and Link switched off -
-# the browser's stand-in - until Link's Windows platform headers are vendored
-# beside the Linux ones.
+# JNI calls the app finds missing and passes over.
 if(WIN32)
-    set(PLATFORM_SOURCES ${CPP}/platform/web/LinkOff.cpp)
+    # With an interface's own low-latency drivers, through the host side of
+    # Steinberg's SDK (third_party/asiosdk, taken under the GPL v3).
+    set(ASIOSDK ${CPP}/third_party/asiosdk)
+    set(PLATFORM_SOURCES ${CPP}/platform/link/LinkTimebase.cpp
+        ${CPP}/platform/desktop/drivers/Asio.cpp
+        ${ASIOSDK}/common/asio.cpp
+        ${ASIOSDK}/host/asiodrivers.cpp
+        ${ASIOSDK}/host/pc/asiolist.cpp)
 else()
     set(PLATFORM_SOURCES ${CPP}/platform/link/LinkTimebase.cpp ${CPP}/platform/desktop/alsa_seq.cpp)
 endif()
@@ -86,7 +91,13 @@ if(WIN32)
     set_target_properties(acidulous mp3lame PROPERTIES PREFIX "")
     set_target_properties(mp3lame PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     target_compile_definitions(acidulous PRIVATE _WIN32_WINNT=0x0A00 WINVER=0x0A00 NOMINMAX WIN32_LEAN_AND_MEAN)
-    target_link_libraries(acidulous mp3lame Threads::Threads)
+    target_link_libraries(acidulous mp3lame ableton_link Threads::Threads ole32 advapi32 user32)
+    target_include_directories(acidulous SYSTEM PRIVATE ${ASIOSDK}/common ${ASIOSDK}/host ${ASIOSDK}/host/pc)
+    # Steinberg's C, warned about on its terms; it and the code over it are
+    # COM, which the lean Windows headers leave out.
+    set_source_files_properties(${ASIOSDK}/common/asio.cpp ${ASIOSDK}/host/asiodrivers.cpp ${ASIOSDK}/host/pc/asiolist.cpp
+        PROPERTIES COMPILE_OPTIONS "-w;-UWIN32_LEAN_AND_MEAN")
+    set_source_files_properties(${CPP}/platform/desktop/drivers/Asio.cpp PROPERTIES COMPILE_OPTIONS "-UWIN32_LEAN_AND_MEAN")
     target_link_options(acidulous PRIVATE -static -static-libgcc -static-libstdc++)
     target_link_options(mp3lame PRIVATE -static -static-libgcc)
 

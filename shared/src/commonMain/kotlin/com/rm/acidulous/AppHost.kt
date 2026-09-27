@@ -98,6 +98,12 @@ interface AppHost {
      * peers by. Where it cannot, the tempo window has no Link page.
      */
     val hasLink: Boolean get() = true
+
+    /** MIDI through ALSA's sequencer: the Linux desktop's, for the About window's list. */
+    val hasAlsa: Boolean get() = false
+
+    /** Steinberg's driver SDK, for interfaces' own drivers: Windows', for the same list. */
+    val hasDriverSdk: Boolean get() = false
     /**
      * Whether the audio thread can time itself to well under a callback, so its
      * peaks - the worst block, the late count, dropouts - mean something. Not in

@@ -16,12 +16,14 @@ what was copied.
 Link is header-only, so `include/ableton` is the whole library. Left behind:
 its tests, the **Link Audio** extension (streaming audio between peers - a
 different feature we do not use), and the platforms this app does not build
-for (`darwin`, `esp32`, `windows`). What stays is `platforms/linux`, which is
-what Android is from Link's point of view, plus `posix`, `asio` and `stl`.
+for (`darwin`, `esp32`). What stays is `platforms/linux`, which is what
+Android is from Link's point of view, `windows` for the desktop's Windows
+build, plus `posix`, `asio` and `stl`.
 
 Nothing is edited. `CMakeLists.txt` here is ours: an interface target that
 sets the include paths and the two definitions the library expects
-(`LINK_PLATFORM_LINUX=1` and `ASIO_STANDALONE`).
+(`LINK_PLATFORM_LINUX=1`, or `LINK_PLATFORM_WINDOWS=1` on Windows, and
+`ASIO_STANDALONE`).
 
 Link needs **asio**, which comes with it as a submodule and is vendored
 beside this - see `../asio/PROVENANCE.md`.

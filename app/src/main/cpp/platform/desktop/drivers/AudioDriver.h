@@ -58,7 +58,7 @@ class AudioDriver {
     /** Open the ear: nought is the system's default input, anything else an id from listInputs. */
     bool startInput(int32_t deviceId = 0);
     void stopInput();
-    bool isInputRunning() const { return capturer != nullptr; }
+    bool isInputRunning() const { return capturer != nullptr || driverInput; }
     int32_t inputChannels() const { return actualInputChannels; }
     int32_t inputRate() const { return actualInputRate; }
     int32_t inputDevice() const { return actualInputDevice; }
@@ -69,12 +69,12 @@ class AudioDriver {
         return now;
     }
 
-    bool isRunning() const { return device != nullptr; }
+    bool isRunning() const { return device != nullptr || driverOn; }
 
     /** The number of periods the output keeps queued; applied by reopening the stream. */
     void setBufferBursts(int32_t bursts);
     int32_t getBufferBursts() const { return bufferBursts; }
-    int32_t getBufferFrames() const { return actualFramesPerBurst * actualPeriods; }
+    int32_t getBufferFrames() const { return driverOn ? driverLatency : actualFramesPerBurst * actualPeriods; }
 
     int32_t getSampleRate() const { return actualSampleRate; }
     int32_t getFramesPerBurst() const { return actualFramesPerBurst; }
@@ -169,6 +169,17 @@ class AudioDriver {
     void reopen();
     static int32_t sChosenOutput;
     static AudioDriver *sLive;
+
+    // An interface's own driver in miniaudio's place (Asio.h, Windows only):
+    // open, with its input pairs, the pair being read, and its output latency.
+    bool driverOn = false;
+    bool driverInput = false;
+    std::string driverName;
+    std::vector<std::string> driverPairs;
+    int32_t driverLatency = 0;
+    bool startDriver(const std::string &name);
+    /** A driver's input, on its audio thread: straight into the ring the output reads. */
+    void pushInput(const float *in, int32_t numFrames);
 
     int32_t engineBlockFrames = 0;
     int32_t bufferBursts = 2;

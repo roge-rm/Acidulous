@@ -14,7 +14,14 @@ target_include_directories(ableton_link INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../asio/include
 )
 
-target_compile_definitions(ableton_link INTERFACE
-    LINK_PLATFORM_LINUX=1 # what Android is, to Link
-    ASIO_STANDALONE
-)
+if(WIN32)
+    # The desktop's Windows build: Winsock, the IP helper for the interfaces'
+    # addresses, and the multimedia timer Link's clock is steadied by.
+    target_compile_definitions(ableton_link INTERFACE LINK_PLATFORM_WINDOWS=1 ASIO_STANDALONE _WIN32_WINNT=0x0A00)
+    target_link_libraries(ableton_link INTERFACE ws2_32 iphlpapi winmm)
+else()
+    target_compile_definitions(ableton_link INTERFACE
+        LINK_PLATFORM_LINUX=1 # what Android is, to Link
+        ASIO_STANDALONE
+    )
+endif()

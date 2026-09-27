@@ -124,7 +124,9 @@ private fun ComponentsTab(onRead: (Licence) -> Unit) {
             com.rm.acidulous.AudioStream.Oboe -> LicenceRow(Licence.Apache2, stringResource(Res.string.about_oboe), onRead)
             com.rm.acidulous.AudioStream.Miniaudio -> {
                 LicenceRow(Licence.PublicDomain, stringResource(Res.string.about_miniaudio), onRead)
-                LicenceRow(Licence.Lgpl21, stringResource(Res.string.about_alsa), onRead)
+                if (com.rm.acidulous.AppHost.current.hasAlsa) LicenceRow(Licence.Lgpl21, stringResource(Res.string.about_alsa), onRead)
+                // Taken under the GPL v3, the app's own licence (NOTICE has the rest).
+                if (com.rm.acidulous.AppHost.current.hasDriverSdk) LicenceRow(Licence.Gpl3, stringResource(Res.string.about_driver_sdk), onRead)
             }
             com.rm.acidulous.AudioStream.Browser -> {}
         }
