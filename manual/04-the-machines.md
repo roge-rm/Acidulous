@@ -1,10 +1,5 @@
 # The machines
-
-> Nineteen instruments, a four-track, and what each is for.
-
-Every track has one machine. You pick it when you add the track, and you can
-change it any time from the name at the top of the editor. **Each machine has
-its own page below.** This page is for finding the right one.
+Each track holds one machine and you can use multiple of the same machine.
 
 ## Bass and lead
 
@@ -63,5 +58,4 @@ the MIDI window rather than on every machine.
 ## Patches
 
 Every machine comes with patches, sorted by family. **patch** at the top of the
-panel opens the browser. Your own patches have their own tab, and they're the
-only ones you can delete.
+panel opens the browser. Add your own patches in the tab at the end.
