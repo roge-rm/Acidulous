@@ -44,4 +44,10 @@ internal val TickTextSize = 9.sp
 internal const val RowGap = 2f
 internal const val MinRow = 14f
 internal const val MaxRow = 44f
+/**
+ * The fit's ceiling on a big screen. At [MaxRow] a tall window's rows stopped
+ * two-thirds of the way down with the rest of the slot empty; a phone keeps
+ * the lower one, which is what its grid has always looked like.
+ */
+internal const val MaxRowLarge = 88f
 

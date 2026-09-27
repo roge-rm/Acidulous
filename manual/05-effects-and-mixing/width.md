@@ -1,5 +1,5 @@
 # Width
-> Wider, narrower, mono below a frequency, or rotated.
+> Wider, narrower, mono below a frequency or rotated.
 
 Controls the stereo image.
 

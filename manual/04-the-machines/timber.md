@@ -11,19 +11,19 @@ holes in it.
 **family** picks the kind of instrument:
 
 - **reed** - clarinet and saxophone.
-- **double reed** - oboe and bassoon.
-- **air jet** - flute. **aim** sets how the air hits the edge, like a flute
-  player's lips.
+- **double** - a double reed: oboe and bassoon.
+- **air** - a jet of air: flute. **aim** sets how the air hits the edge, like a
+  flute player's lips.
 
 ## The tube
 
-- **bore** - cylindrical or conical. A cylinder gives the hollow clarinet sound;
-  a cone sounds more like a sax.
+- **shape** - the bore, a cylinder or a cone. A cylinder gives the hollow
+  clarinet sound; a cone sounds more like a sax.
 - **body** and **bell** - the shape of the end.
 - **loss** - how much energy is lost in the tube.
 - **fingering**, **below** and **answer** - the tone holes, including the part of
   the tube past the note you're playing.
-- **fork** - cross-fingerings, which sound slightly different from normal
+- **forked** - cross-fingerings, which sound slightly different from normal
   fingerings, as on a real instrument.
 
 ## Blowing

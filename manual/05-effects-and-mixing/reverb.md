@@ -1,5 +1,5 @@
 # Reverb
-> A room that can also freeze, gate, shimmer, or crush itself.
+> A room that can also freeze, gate, shimmer or crush itself.
 
 A reverb with the usual size, damping and predelay, plus some extras.
 

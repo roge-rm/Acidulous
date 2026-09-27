@@ -12,7 +12,7 @@ load or the live input, recorded into a loop as you play.
 - **density** and **jitter** - how many grains per second, and how irregular.
 - **window** and **skew** - the shape of each grain's fade in and out.
 - **position**, **scan** and **spray** - where grains come from in the buffer,
-  whether that point moves, and how far they scatter around it.
+  whether that point moves and how far they scatter around it.
 - **snap** - lines grains up with the hits in the source, so rhythmic material
   stays rhythmic.
 - **panspread** and **width**.

@@ -57,5 +57,5 @@ the MIDI window rather than on every machine.
 
 ## Patches
 
-Every machine comes with patches, sorted by family. **patch** at the top of the
-panel opens the browser. Add your own patches in the tab at the end.
+Every machine comes with patches, sorted by family. The patch name at the top
+of the panel opens the browser. Add your own patches in the tab at the end.

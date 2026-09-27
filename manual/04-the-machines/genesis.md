@@ -3,7 +3,7 @@
 > The big drum box, with a bus compressor the kick ducks.
 
 Genesis is the big drum machine, in the style of the boxes that house and
-techno were made on. Twelve voices, more weight than Hexbeat, and two extras.
+techno were made on. Twelve voices, more weight than Hexbeat and two extras.
 
 ## Drift
 

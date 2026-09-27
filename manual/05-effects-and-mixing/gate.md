@@ -1,5 +1,5 @@
 # Gate
-> A noise gate, with a filter on what it listens to, and a sidechain.
+> A noise gate, with a filter on what it listens to and a sidechain.
 
 ## The controls
 

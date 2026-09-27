@@ -10,10 +10,12 @@ help it fit.
 - **level**, **pan**, **pitch** and **decay**.
 - **start** and **end** - which part of the file plays. One long recording can
   feed several pads this way.
-- **mode** - once, loop or hold.
-- **dir** - forwards or backwards.
-- **cutoff** with a filter type, and **crush** for bit reduction.
-- **pdecay** - a pitch drop, so a sample can fall like a drum does.
+- **play** - once, loop or hold.
+- **reverse** - forwards or backwards.
+- **cutoff**, **reso** and **mode** (low or band pass), and **crush** for bit
+  reduction.
+- **pitch env** and its **decay**, under punch - a pitch drop, so a sample can
+  fall like a drum does.
 - **choke** - pads in the same choke group cut each other off, like an open
   hat stopping when the closed hat plays.
 

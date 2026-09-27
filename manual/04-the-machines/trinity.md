@@ -20,7 +20,7 @@ through. Automate **pos** to sweep the tone.
 
 ## Filters
 
-There are two. **route** puts them in series, in parallel, or split with
+There are two. **route** puts them in series, in parallel or split with
 **balance** between them. Each has its own type, drive, key tracking and
 envelope amount.
 

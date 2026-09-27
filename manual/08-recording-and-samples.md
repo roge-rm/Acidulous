@@ -2,9 +2,9 @@
 ## The recording window
 
 One window handles recording, and it opens wherever a machine needs audio: a
-pad on Forage, a loop for Dice, a buffer for Pollen, or a take for Molt.
+pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
 
-- **Record** - choose the input, watch the level, and record.
+- **Record** - choose the input, watch the level and record.
   - **source** is **in** for the microphone or what's plugged in, or
     **resample** to record what the app is playing.
   - The **tuner** in the input card shows the nearest note and how many cents
@@ -13,7 +13,8 @@ pad on Forage, a loop for Dice, a buffer for Pollen, or a take for Molt.
   - **printed into the take** holds two effects that are recorded into the
     file, e.g. a guitar amp. Effects on a *track* can be changed any time
     instead.
-- **Edit** - trim the ends, set the level, and cut low rumble. **norm** and
+- **Edit** - play the take back, trim the ends, set the level and cut low
+  rumble. **norm** and
   **rev** at the top normalise and reverse the whole file.
 - **Library** - everything you've recorded or imported.
 
@@ -28,7 +29,7 @@ the way in, so songs load quickly.
 ## Recording onto a track
 
 **Bias** is the audio track. Open a Bias cell, tap the red dot next to a lane,
-arm record on the transport, and press play. The song plays while you record,
+arm record on the transport and press play. The song plays while you record,
 and the other lanes keep playing.
 
 When you stop, the take is cut at the scene lines. One recording over the
@@ -36,7 +37,7 @@ whole song becomes one cell per scene, all pointing at the same file, and cells
 are created in scenes where the track was empty. The full recording also stays
 in the sound library, so you can undo the split and place it by hand.
 
-Trimming, fades, crossfades, flattening lanes, and tempo following are covered
+Trimming, fades, crossfades, flattening lanes and tempo following are covered
 on **Bias**'s page. None of them change the file.
 
 Takes can be up to half an hour. Anything over two minutes is converted once in

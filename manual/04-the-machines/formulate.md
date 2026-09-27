@@ -7,11 +7,11 @@ consoles. It can also play a waveform you write as a formula.
 
 ## The chip
 
-- **wave** - pulse, triangle, noise, or the formula.
+- **wave** - pulse, triangle, noise or the formula.
 - **duty** - the pulse width. **pwmrate** and **pwmdepth** sweep it.
 - **sub** - adds an octave below.
 - **noiseshort** - switches the noise between a hiss and a metallic buzz.
-- **bits**, **crush** and **smooth** - bit depth, sample rate, and how much the
+- **bits**, **crush** and **smooth** - bit depth, sample rate and how much the
   steps are smoothed off.
 
 ## Tracker tables

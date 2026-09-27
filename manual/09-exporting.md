@@ -2,7 +2,7 @@
 **Export…** in the file menu renders the song faster than real time, through the
 same engine that plays it, tails included.
 
-You can export the whole song, the current scene, or stems.
+You can export the whole song, the current scene or stems.
 
 ## Formats
 
@@ -69,7 +69,7 @@ a number after it.
 ## Sharing
 
 When an export finishes, **Share** sends it straight on through the phone's
-share sheet: email, Drive, a chat, or another app. Stems go as all their files
+share sheet: email, Drive, a chat or another app. Stems go as all their files
 together.
 
 **Share song…** in the file menu sends the open song as a bundle, samples

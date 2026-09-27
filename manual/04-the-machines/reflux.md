@@ -1,6 +1,6 @@
 # Reflux
 
-> Acid bass: one oscillator, one filter that screams, and lines you play rather than program.
+> Acid bass: one oscillator, one filter that screams and lines you play rather than program.
 
 Reflux is one oscillator, one filter and one envelope, set up so you can play a
 bassline in rather than build it step by step.
@@ -10,26 +10,27 @@ bassline in rather than build it step by step.
 Classic acid basslines come from two things: accent and slide. Reflux maps them
 to things you already do when playing:
 
-- **Accent is velocity.** Play a note harder and it's accented: louder, brighter,
+- Accent is velocity. Play a note harder and it's accented: louder, brighter
   and with more filter envelope.
-- **Slide is legato.** Overlap two notes and the second one glides from the
-  first instead of retriggering. Leave a gap and it plucks.
+- Slide is legato. Overlap two notes and the second one glides from the first
+  instead of retriggering. Leave a gap and it plucks.
 
 So you can play a line on the keyboard, or draw it in the roll with overlapping
 notes for the slides.
 
 ## The controls
 
-- **osc** - the waveform, saw or square, plus a sub oscillator an octave down.
-- **filter** - cutoff and resonance, plus envelope amount and decay. This is
+- **osc** - the **wave**, saw or pulse, with **pw** for the pulse's width, a
+  **sub** oscillator an octave down and **tune**.
+- **filter** - **cutoff** and **reso**, plus **envmod** for how much the
+  envelope opens the filter and **decay** for how long it lasts. Short decays
+  are plucky, long ones are rubbery. **mode** is low pass or band pass. This is
   where most of the sound is.
-- **env** - one decay envelope and how much of it goes to the filter. Short
-  decays are plucky, long ones are rubbery.
-- **accent** - how much an accented note adds to level and filter.
-- **vel** - how much velocity sets the level, as on every machine. A note
-  that slides keeps the level of the note it slid from.
-- **glide** - how long a slide takes.
-- **drive** - the output stage, where the scream comes from.
+- **play** - **accent** is how much an accented note adds to level and filter,
+  **slide** is how long a slide takes, and **vel** is how much velocity sets the
+  level, as on every machine. A note that slides keeps the level of the note it
+  slid from.
+- **out** - **drive**, where the scream comes from, and **volume**.
 
 ## Tips
 

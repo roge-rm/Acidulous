@@ -546,12 +546,16 @@ fun MainScreen(
         // phone's size the grid sat in one corner of a ten-inch screen with the
         // rest of it empty. Each way is fitted on its own - a wide tablet has
         // twice the width it needs and barely the height - between the stated
-        // size and double it, and neither way may outgrow the other by more
+        // size and three times it, and neither way may outgrow the other by more
         // than [FitAspectMax], so a clip stays a tile rather than a sliver. A
         // pinch takes over from wherever this left the width.
-        val fit: Pair<Float, Float>? = if (!largeScreen() || gridZoom > 0f || gridW <= 0 || gridH <= 0) null else {
+        // A big screen's cells may grow further than a phone's, fitted or
+        // pinched: see [CellMaxWLarge].
+        val large = largeScreen()
+        val cellMax = if (large) CellMaxWLarge else CellMaxW
+        val fit: Pair<Float, Float>? = if (!large || gridZoom > 0f || gridW <= 0 || gridH <= 0) null else {
             with(LocalDensity.current) {
-                val top = CellMaxW / CELL_W
+                val top = cellMax / CELL_W
                 var zx = (gridW.toDp() * FitSlack / (TRACK_W + CELL_W * (song.scenes.size + 1))).coerceIn(1f, top)
                 var zy = (gridH.toDp() * FitSlack / (SCENE_H + CELL_H * (song.tracks.size + 1))).coerceIn(1f, top)
                 zx = zx.coerceAtMost(zy * FitAspectMax)
@@ -560,7 +564,7 @@ fun MainScreen(
             }
         }
         val cellW = if (fit != null) CELL_W * fit.first
-                    else (CELL_W * (if (gridZoom > 0f) gridZoom else 1f)).coerceIn(CellMinW, CellMaxW)
+                    else (CELL_W * (if (gridZoom > 0f) gridZoom else 1f)).coerceIn(CellMinW, cellMax)
         // The factor actually in force, which is the clamped width read back.
         // Everything else follows it, so a cell keeps its shape - unless the
         // tablet fit above gave the height a factor of its own.
@@ -621,7 +625,7 @@ fun MainScreen(
                     when {
                         w.zoom -> {
                             val was = if (gridZoom > 0f) gridZoom else z
-                            gridZoom = (was / w.zoomFactor).coerceIn(CellMinW / CELL_W, CellMaxW / CELL_W)
+                            gridZoom = (was / w.zoomFactor).coerceIn(CellMinW / CELL_W, cellMax / CELL_W)
                             true
                         }
                         w.across != 0f -> { hScroll.dispatchRawDelta(w.across * cellW.toPx()); true }
@@ -686,7 +690,7 @@ fun MainScreen(
                                     if (wasSpread > TwoFingers.MinSpread && nowSpread > TwoFingers.MinSpread) {
                                         live *= nowSpread / wasSpread
                                         gridZoom = live.coerceIn(
-                                            CellMinW / CELL_W, CellMaxW / CELL_W,
+                                            CellMinW / CELL_W, cellMax / CELL_W,
                                         )
                                         live = gridZoom
                                     }
@@ -1559,6 +1563,13 @@ private const val AddButtonMax = 1.25f
 /** The fit leaves a little over, so the last row is not cut by a rounding. */
 private const val FitSlack = 0.98f
 private val CellMaxW = 168.dp
+/**
+ * The ceiling on a big screen, fitted or pinched: three times the stated
+ * size. At twice, a song of a few tracks on a desktop's 1080p window stopped
+ * growing with most of the window still empty; a quarter of a phone is not a
+ * quarter of a monitor.
+ */
+private val CellMaxWLarge = 252.dp
 
 /**
  * The four sizes the song grid is drawn at, after a pinch.

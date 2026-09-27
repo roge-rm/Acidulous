@@ -13,7 +13,7 @@ Not a Markdown renderer: the app has none and does not need one. The subset the
 manual is written in is the subset a manual needs -
 
     # Title              the section, one per file (and one per sub-page)
-    > summary            the line under it in the contents
+    > summary            the line under it in the contents (optional)
     ## Heading           a heading inside the section
     ### Subheading       a heading inside that
     paragraph            run of lines, joined
@@ -118,8 +118,8 @@ DESKTOP_SENTENCES = {
     # The pointer.
     "Drag with two fingers to move around the grid, and pinch to make the cells bigger or smaller. One finger still opens and launches clips.":
         "The mouse wheel moves around the grid, and sideways with Shift held. Ctrl and the wheel make the cells bigger or smaller.",
-    "On a tablet the cells grow to fill the screen, up to twice their size, until you pinch.":
-        "In a big window the cells grow to fill it, up to twice their size, until you zoom.",
+    "On a tablet or a big window the cells grow to fill the screen, up to three times their size, until you pinch.":
+        "In a big window the cells grow to fill it, up to three times their size, until you zoom.",
     "Drag with **two fingers** to scroll and pinch to zoom. One finger always draws.":
         "The mouse wheel scrolls up and down, and sideways with Shift held. Ctrl and the wheel zoom in on time, and Ctrl, Shift and the wheel on the rows. Dragging always draws.",
     "The arrows, or swipes on a touchpad, move between controls.":
@@ -129,25 +129,25 @@ DESKTOP_SENTENCES = {
     "Turn the phone and press it again for a layout that suits that way round.":
         "Make the window wider or taller and press it again for a layout that suits that shape.",
     # What a computer does not do, or does its own way.
-    "Playing stops by itself when a call comes in, another app starts playing, or headphones are unplugged, so it never carries on out of the speaker.":
+    "Playing stops by itself when a call comes in, another app starts playing or headphones are unplugged, so it never carries on out of the speaker.":
         "",
     "Reports stay on the phone unless you share one; the last one is also in About.":
         "Reports stay on this computer, in `~/.local/share/acidulous/crashes`, unless you share one; the last one is also in About.",
     "**MP3** and **AAC** - at the bitrate you choose.":
         "**MP3** - at the bitrate you choose. (AAC is the phone's own encoder.)",
-    "When an export finishes, **Share** sends it straight on through the phone's share sheet: email, Drive, a chat, or another app. Stems go as all their files together.":
+    "When an export finishes, **Share** sends it straight on through the phone's share sheet: email, Drive, a chat or another app. Stems go as all their files together.":
         "When an export finishes, **Share** opens the folder it was saved in, to send it on from there.",
     "**Share song…** in the file menu sends the open song as a bundle, samples included, for someone else to open in Acidulous.":
         "**Share song…** in the file menu makes the open song a bundle, samples included, and opens the folder it is in, for someone else to open in Acidulous.",
     "The other way works too. Open a MIDI file, a bundle or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it.":
         "",
-    "dark, light, high contrast, or follow the phone.":
-        "dark, light, high contrast, or follow the system.",
-    "**screen while playing** - whether the screen can turn off while playing.":
+    "dark, light, high contrast or follow the phone.":
+        "dark, light, high contrast or follow the system.",
+    "**while playing** - whether the screen can turn off while playing.":
         "",
     "**scheduler hint** - whether the phone accepted the app's request to treat the audio as time-critical. Some phones refuse; nothing to do about it here.":
         "**scheduler hint** - the phone's alone: on a computer it always says not available, and there is nothing to do about it.",
-    "Acidulous works with a phone's own keyboard, like the ones on square phones, and with USB or Bluetooth keyboards.":
+    "Acidulous works with built in, USB, or Bluetooth keyboards.":
         "Acidulous works with the computer's keyboard.",
 }
 
@@ -326,14 +326,19 @@ def kotlin(sections, used):
     return "\n".join(out)
 
 
+def lowered(summary):
+    """ - and the summary, begun in lower case; nothing where a page has none (Dan took the chapters' out)."""
+    return f" - {summary[0].lower() + summary[1:]}" if summary else ""
+
+
 def contents(files, sections):
     """The numbered list, between the markers in manual/README.md."""
     rows = []
     for i, (path, ((title, summary, _), kids)) in enumerate(zip(files, sections), 1):
-        rows.append(f"{i}. [{title}]({path.name}) - {summary[0].lower() + summary[1:]}")
+        rows.append(f"{i}. [{title}]({path.name})" + lowered(summary))
         for kp, (kt, ks, _) in kids:
             here = f"{path.stem}/{kp.name}"
-            rows.append(f"    - [{kt}]({here}) - {ks[0].lower() + ks[1:]}")
+            rows.append(f"    - [{kt}]({here})" + lowered(ks))
     return "\n".join([OPEN, ""] + rows + ["", CLOSE])
 
 

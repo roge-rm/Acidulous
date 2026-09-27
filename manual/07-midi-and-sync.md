@@ -107,9 +107,9 @@ The buttons round the edge work on every page:
 - Hold **Clear** and tap a clip to clear it. Hold **Duplicate** and tap a clip
   to copy it into the next scene if that's empty, or tap a scene button to
   duplicate the scene.
-- The buttons down the right are the tracks, top to bottom, as the grid's rows
-  are: tap one to choose the track the Launchpad plays, or hold **Mute** or
-  **Solo** and tap it to mute or solo it.
+- The buttons down the right are the tracks, top to bottom, like the grid's
+  rows. Tap one to choose the track the Launchpad plays. Hold **Mute** or
+  **Solo** and tap one to mute or solo it.
 - The row under the grid is the scenes, left to right: tap one to play it, as
   tapping a scene does.
 - On **Session** and **Custom**, up and down move through the tracks and left
@@ -157,7 +157,8 @@ other device.
   tempo a second after it stops.
 - **off** ignores incoming clock.
 
-Each track chooses what it sends out: notes, clock, or both.
+**send**, next to it, turns clock out on and off. Whether a track's notes go
+out is set per track, in its settings or on its mixer strip.
 
 ## Link
 

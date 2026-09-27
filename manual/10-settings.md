@@ -2,21 +2,23 @@
 
 ## display
 
-- **theme** - dark, light, high contrast, or follow the phone. High contrast is
+- **theme** - dark, light, high contrast or follow the phone. High contrast is
   white on black, with brighter colours and outlines round every control.
-- **interface size** - makes everything bigger, in four steps.
-- **screen while playing** - whether the screen can turn off while playing.
+- **size** - makes everything bigger, in four steps.
+<!-- desktop: - **screen scale** - how big the whole window is drawn. **system** takes the computer's own setting. -->
+- **while playing** - whether the screen can turn off while playing.
 - **diagnostics** - shows or hides the numbers for tracking down problems: the
   line under the transport, the readings on the audio page, the MIDI send
-  counts, and the note count in the editor's title.
+  counts and the note count in the editor's title.
 - **keyboard** - **keys…** opens the list of shortcuts, where you can change
   them and choose how letters play notes. See [A keyboard](11-keyboard.md).
 
 ## audio
 
-- **audio buffer** - tight, balanced or safe. Tight has the lowest latency but
+<!-- desktop: - **output** - which output to play through, or the system default. -->
+- **buffer** - tight, balanced or safe. Tight has the lowest latency but
   may crackle on a slower phone; safe gives the phone more time. With
-  **diagnostics** on, a line under it shows the buffer size, the latency, and
+  **diagnostics** on, a line under it shows the buffer size, the latency and
   how many dropouts there have been.
 - **worst block** (with **diagnostics** on) - the longest any block of audio
   took to make, against the time it had, and where that time went. The load meter is an average and can
@@ -34,7 +36,7 @@
 
   This is each track's worst block in a hundred, so one unlucky moment doesn't
   set it. Give it a few seconds of playing before trusting it.
-- **machine voice limit** - how many notes a track can hold at once. The oldest
+- **voices** - how many notes a track can hold at once. The oldest
   note is dropped first.
 - **quality** - what to give up when the phone can't keep up. **lean**:
   - runs the **amp** and **distortion** without oversampling (about half the

@@ -96,9 +96,10 @@ fun DrumGrid(
     // The cells start after the name column, so a step is this much narrower
     // than the row - which is what a finger dragging the view moves by.
     val gutterPx = with(density) { GutterWidth.toPx() }
+    val ceiling = if (largeScreen()) MaxRowLarge else MaxRow
     val fitted = if (voices.isEmpty() || slotPx == 0) 24f else {
         val dp = with(density) { slotPx.toDp().value }
-        ((dp - RowGap * (voices.size - 1)) / voices.size).coerceIn(MinRow, MaxRow)
+        ((dp - RowGap * (voices.size - 1)) / voices.size).coerceIn(MinRow, ceiling)
     }
     val rowHeight = if (pinched > 0f) pinched else fitted
     val resources = AppStrings

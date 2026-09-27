@@ -19,7 +19,7 @@ their own:
 - **kick** - tune, decay and **punch** (the pitch drop at the start).
 - **snare** - tune, decay, tone and **snappy** (drum against noise).
 - **hats** - shared tone and tune, separate closed and open decays.
-- **clap** - decay, tone, and the spread of the little repeats that make it a
+- **clap** - decay, tone and the spread of the little repeats that make it a
   clap.
 - **cymbals** - decay and tone for crash and ride.
 - **bell** and **clave** - tune and level.

@@ -11,7 +11,7 @@ For a melodic machine it's a piano roll: pitch up the side, time across.
 - Drag with **two fingers** to scroll and pinch to zoom. One finger always
   draws.
 - The **scl** corner changes how the song's scale is shown: all notes, scale
-  notes highlighted, or only the scale notes.
+  notes highlighted or only the scale notes.
 
 For a drum machine it's a step grid with one row per sound. Tap to add a hit.
 
@@ -29,7 +29,7 @@ visit in one step.
   neither, it uses a minor pentatonic on the lowest note. **leaps** is how
   often it jumps instead of moving to a nearby note.
 - **mutate** changes some of the notes already there: some move a step in the
-  scale, some go, a few new ones appear, and velocities shift. **amount** is
+  scale, some go, a few new ones appear and velocities shift. **amount** is
   how much.
 
 On a drum machine, rhythm and **scatter** work on one sound and leave the
@@ -116,8 +116,9 @@ you want it.
 
 ## Knobs
 
-The machine's panel sits between the grid and the keyboard. Inserts, modifiers
-and sends open the same kind of panel in a window.
+The machine's panel sits between the grid and the keyboard. Its controls are in
+sections, and the tabs along its top show one section at a time. Inserts,
+modifiers and sends open the same kind of panel in a window.
 
 Hold a knob to reset it to where it was when you opened the panel (not to
 the factory value). Faders and sliders work the same way, including in the

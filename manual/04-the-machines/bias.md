@@ -18,7 +18,7 @@ through, so a scene played twice plays one continuous take.
 
 ## Recording
 
-Tap the red dot next to a lane, arm record on the transport, and press play. The
+Tap the red dot next to a lane, arm record on the transport and press play. The
 song plays while you record, and the other lanes keep playing.
 
 When you stop, the take is cut at the scene lines: one cell per scene, and

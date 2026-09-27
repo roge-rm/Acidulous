@@ -21,7 +21,7 @@ change the spectrum. Everything from **morph** on is instant.
 - **tilt** - the balance of bass to treble.
 - **stretch** - pushes the partials off whole-number multiples, like a piano's
   top end or a bell. A little goes a long way.
-- **comb** and **period** - cut regular notches in the spectrum.
+- **comb** and **every** - cut regular notches in the spectrum.
 - **vowel** and its amount - shapes the spectrum towards a vowel.
 - **odd** - odd against even partials. All odd sounds like a clarinet, all even
   sounds hollow.

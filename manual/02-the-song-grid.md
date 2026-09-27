@@ -9,15 +9,15 @@ scene plays all its clips, repeats as many times as its header says, and then
 the next scene starts.
 
 - Tap a scene's header to play just that scene.
-- Hold a scene's header for its menu: settings, insert, duplicate, delete, and
+- Hold a scene's header for its menu: settings, insert, duplicate, delete and
   move left or right.
 - The loop button at the left of the bottom bar: **tap** it to choose what
   loops, the whole song or the current scene. **Hold** it to choose whether it
   loops at all: **⟳** loops forever, **⇥ end** plays through once and stops.
-- Stop means stop. The next play starts from the top of the song.
+- After a stop, the next play starts from the top of the song.
 - If something keeps sounding, **hold play** to silence everything: every
   note, echo and tail. **Panic** under About… in the file menu does the same.
-- Playing stops by itself when a call comes in, another app starts playing,
+- Playing stops by itself when a call comes in, another app starts playing
   or headphones are unplugged, so it never carries on out of the speaker.
 - If Acidulous ever closes unexpectedly, it says so the next time it opens and
   offers to share a report. Reports stay on the phone unless you share one;
@@ -65,7 +65,8 @@ own clip, from any scene.
   straight away, so it lands in time.
 - The **q:** button sets what it waits for. **end** waits for the playing clip
   to finish its loop. The others wait for a number of bars.
-- Tap a scene's header to launch that whole column.
+- Tap a scene's header to move to that scene. Its clips start and every other
+  track stops, all on the same line. A clip that's already playing carries on.
 - Tap a playing clip to stop it at the end of its loop. Tap stop twice to stop
   everything.
 - Each track keeps its own position, and stop leaves them where they are. The
@@ -91,12 +92,12 @@ What you end up with is an ordinary clip. Double tap it to edit it.
 Drag with two fingers to move around the grid, and pinch to make the cells
 bigger or smaller. One finger still opens and launches clips.
 
-On a tablet the cells grow to fill the screen, up to twice their size, until
-you pinch.
+On a tablet or a big window the cells grow to fill the screen, up to three
+times their size, until you pinch.
 
 ## Clip settings
 
-Hold a clip for its settings: its length in bars, mute, and the grid it snaps
+Hold a clip for its settings: its length in bars, mute and the grid it snaps
 to.
 
 **Copy, cut, paste and clear** are at the top. You can hold any cell to get
@@ -147,4 +148,4 @@ A track only glows when the engine is running late right then *and* that track
 is a big part of the load. Freezing it is usually the answer.
 
 With **diagnostics** on, **Settings · audio** has the details: the worst block,
-where the time went, and each track's cost.
+where the time went and each track's cost.

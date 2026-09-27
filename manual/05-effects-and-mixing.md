@@ -15,15 +15,15 @@ Each effect has its own page below.
 - [**Delay**](05-effects-and-mixing/delay.md) - echoes on a note value, and it
   can duck while you play.
 - [**Reverb**](05-effects-and-mixing/reverb.md) - a room that can also freeze,
-  gate, shimmer, or crush itself down to 8 bits.
+  gate, shimmer or crush itself down to 8 bits.
 
 ## Tone
 
 - [**Eq**](05-effects-and-mixing/eq.md) - three bands and a tilt.
 - [**Filter**](05-effects-and-mixing/filter.md) - low, band or high pass, moved
   by an LFO, the signal's level, or another track.
-- [**Width**](05-effects-and-mixing/width.md) - wider, narrower, or mono below a
-  frequency.
+- [**Width**](05-effects-and-mixing/width.md) - wider, narrower, mono below a
+  frequency or rotated.
 
 ## Drive
 
@@ -37,7 +37,7 @@ Each effect has its own page below.
 ## Level
 
 - [**Compressor**](05-effects-and-mixing/compressor.md) - the usual controls, a
-  sidechain from any track, and a tempo-synced pump.
+  sidechain from any track and a tempo-synced pump.
 - [**Gate**](05-effects-and-mixing/gate.md) - a noise gate that can be opened by
   another track.
 
@@ -87,8 +87,8 @@ its left edge switch between the mixer and the three perform pages (see
   lanes, and to clear them from every clip on the track. Notes aren't touched.
 
 After the tracks come the **groups**, if the song has any, and a **+ group**
-button. Last is the master strip, which has the master fader, the limiter's **limit drive**, and the
-loudness readout. Under that is a grid of buttons: the two sends on top, the two
+button. Last is the master strip, with the master fader, the limiter's
+**limit drive** and the loudness readout. Under that is a grid of buttons: the two sends on top, the two
 master inserts (**fx1**, **fx2**) in the middle, and the limiter (**lim**) and
 the click (**♩**) at the bottom. Tap one to turn it on or off, and hold a send
 or insert to choose its effect and set it up.
@@ -118,7 +118,7 @@ back the same way. Stopping the song lets go of anything held.
   to change the length. While the song is playing the slice starts on the beat,
   so it stays in time.
 - **gate** chops the sound on and off in time. The five buttons are how fast:
-  eighths, sixteenths, thirty-seconds, or eighth and sixteenth triplets. Slide
+  eighths, sixteenths, thirty-seconds or eighth and sixteenth triplets. Slide
   along them the same way as repeat.
 - **reverse** plays the last beat backwards, over and over, in time with the
   song. Hold it with a repeat and the repeat plays backwards.
@@ -153,7 +153,7 @@ A mute button for every track (the same mute as the mixer's), and **fill**.
 
 While the song plays, a mute waits for the next bar and lands on it, so tracks
 drop in and out in time. The button is outlined until it does. **mute on**
-sets what it waits for: a bar, a beat, or nothing (**now**). When the song is
+sets what it waits for: a bar, a beat or nothing (**now**). When the song is
 stopped, mutes happen straight away. If you're recording, the mutes are
 recorded into each track's own clip.
 
@@ -164,7 +164,7 @@ recorded.
 
 **fx1** and **fx2** process the whole mix, including the sends, before the
 master fader and the limiter. Use them for things that apply to the whole song:
-a gentle EQ, a bit of glue compression, some tape-style drive, or narrowing the
+a gentle EQ, a bit of glue compression, some tape-style drive or narrowing the
 low end.
 
 The difference from a send: a send is added alongside the mix, and each track
@@ -273,4 +273,4 @@ swing is taken back out before the notes are written. The roll shows where you
 meant the notes, playback puts them where you played them, and if you turn the
 swing down later the part is straight rather than lopsided.
 
-The **click is never swung**.
+The click is never swung.

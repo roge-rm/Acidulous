@@ -51,14 +51,14 @@ All six are the demo song, Squelch.
 | **Trinity** | A three-oscillator poly synth with wavetables, stacked voices, FM between the oscillators and a bit of drift. |
 | **Ratio** | Six-operator FM. You can morph between two algorithms and snap or skew the operator ratios. |
 | **Manual** | An organ. Two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
-| **Cumulus** | Pads built from a spectrum of partials, like PadSynth. Big, smooth and slow to change. |
+| **Cumulus** | Pads built from a spectrum of partials. Big, smooth and slow to change. |
 | **Formulate** | An 8-bit chip synth with tracker-style step tables, plus a small expression language so you can type your own waveform. |
 | **Filament** | Physically modelled strings. Pluck, pick, hammer, bow or blow them. |
 | **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
 | **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
 | **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
 | **Hexbeat** | A synthesized drum machine in the style of the classic small boxes. Thirteen voices, no samples. |
-| **Genesis** | The big drum box: a kick you feel, some circuit drift, and a bus compressor the kick ducks. |
+| **Genesis** | The big drum box: a kick you feel, some circuit drift and a bus compressor the kick ducks. |
 | **Mosaic** | A multisample player. Load a SoundFont or your own samples into key and velocity zones. It can also turn them into grain clouds. |
 | **Pollen** | Granular clouds from a file or from the live input. |
 | **Dice** | A loop slicer that plays a loop at the song's tempo without changing its pitch, and can shuffle, stutter, reverse and drop its slices on chance. |
@@ -75,14 +75,14 @@ Each has the usual controls plus one extra, and a page in the manual.
 | | |
 |---|---|
 | **Delay** | Echoes on a note value. It can duck while you play. |
-| **Reverb** | A room. Can also freeze, gate, shimmer up an octave, or crush itself down to 8 bits. |
+| **Reverb** | A room. Can also freeze, gate, shimmer up an octave or crush itself down to 8 bits. |
 | **Eq** | Three bands and a tilt. |
 | **Filter** | Low, band or high pass, moved by an LFO, by the signal's level, or by another track's. |
-| **Width** | Wider, narrower, or mono below a frequency. |
+| **Width** | Wider, narrower, mono below a frequency or rotated. |
 | **Distortion** | Four kinds of clipping and a bias control. |
 | **Amp** | A guitar amp with a cabinet you can resize from a small combo to a full stack. |
-| **Bitcrusher** | Fewer bits, a lower sample rate, and an unsteady clock if you want one. |
-| **Compressor** | The usual controls, a sidechain from any track, and a pump that follows the tempo. |
+| **Bitcrusher** | Fewer bits, a lower sample rate and an unsteady clock if you want one. |
+| **Compressor** | The usual controls, a sidechain from any track and a pump that follows the tempo. |
 | **Gate** | A noise gate that can be keyed from another track. |
 | **Chorus** | Two to four detuned voices that drift. |
 | **Flanger** | A short sweeping delay, with negative feedback for the hollow sound. |
@@ -103,16 +103,16 @@ Each has the usual controls plus one extra, and a page in the manual.
 
 ### Sequencing
 
-- Songs are built from scenes. Clips in a scene can be different lengths, and scenes can repeat, change tempo, or slow down and speed up inside themselves.
+- Songs are built from scenes. Clips in a scene can be different lengths, and scenes can repeat, change tempo or slow down and speed up inside themselves.
 - A clip launcher view of the same song for playing live, where any empty cell is a looper.
 - Piano roll and drum grid.
 - Scale, chord and arp that act on notes as you play them in, so the clip holds what you hear.
 - Swing per song, with a per-track override.
 - Tunings per song, with a per-track override: just, meantone and others built in, or your own from Scala files.
-- Each track can be transposed, played at a fixed velocity, and given its own colour: hold its name.
+- Each track can be transposed, played at a fixed velocity and given its own colour: hold its name.
 - Automation lanes, mod wheel and pressure lanes, and per-note pitch bend, pressure and slide.
 - Probability, conditions, ratchets and micro-timing on individual notes.
-- Pattern generators: even rhythms, lines in key, and mutation of what is there.
+- Pattern generators: even rhythms, lines in key and mutation of what is there.
 - Step locks: any knob can have its own value on chosen steps.
 - Freeze a clip to audio to save CPU.
 - Audio tracks (Bias) for recording over the song. A loop added to one follows the song's tempo.
@@ -214,7 +214,8 @@ or later**. See [LICENSE](LICENSE).
 
 Copyright © 2026 Dan Hunke.
 
-Third-party components (Oboe, LAME, Ableton Link and asio) are listed with
+Third-party components (Oboe, LAME, Ableton Link, asio, miniaudio, alsa-lib,
+coi-serviceworker and subsets of the DejaVu and Noto fonts) are listed with
 their licences in [NOTICE](NOTICE), and every licence text can be read from
 the app's About window.
 

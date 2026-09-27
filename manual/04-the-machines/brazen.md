@@ -18,7 +18,7 @@ with a bell on the end.
 ## The tube
 
 - **size** - how long the tube is, from trumpet to tuba.
-- **bore** and **bell** - how the tube flares, which changes how bright it is.
+- **bell** - how the tube flares, which changes how bright it is.
 - **loss** - how much energy is lost in the tube.
 - **brass** - the blare you get when a brass instrument is played loud.
 

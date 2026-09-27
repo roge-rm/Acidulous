@@ -29,7 +29,7 @@ Each of the six has:
 ## Everything else
 
 A filter with its own envelope, three extra envelopes for modulation, three
-LFOs that can sync to the tempo, and ten matrix rows (source, second source,
+LFOs that can sync to the tempo and ten matrix rows (source, second source,
 destination, depth) that work like Trinity's.
 
 **snap** keeps ratios on useful values (whole numbers, odd numbers, semitones,

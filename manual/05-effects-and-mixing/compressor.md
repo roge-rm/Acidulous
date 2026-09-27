@@ -1,5 +1,5 @@
 # Compressor
-> The usual controls, a sidechain from any track, and a tempo-synced pump.
+> The usual controls, a sidechain from any track and a tempo-synced pump.
 
 ## The controls
 

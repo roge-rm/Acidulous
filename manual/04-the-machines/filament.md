@@ -7,7 +7,7 @@ simulates a vibrating string, so it reacts the way a real one does.
 
 ## The exciter
 
-**exciter** is what sets the string going: pluck, pick, hammer, bow, breath, or
+**exciter** is what sets the string going: pluck, pick, hammer, bow, breath or
 **the live input**, so you can play a string with a microphone.
 
 - **position** - where on the string it's excited. This changes the tone more
@@ -37,8 +37,8 @@ The envelopes do nothing until you route them. One of the sources is **level**,
 how loudly the string is ringing right now, so you can make the string react to
 itself.
 
-Destinations include **damping**, **tone**, **position**, **pressure**,
-**damper**, **tension** and **detune**. **brightness** changes the exciter
+Destinations include **sustain**, **tone**, **position**, **pressure**,
+**damper**, **tension** and **detune**. **bright** changes the exciter
 (grit, or a hammer's hardness), and **rattle** and **volume** are per note.
 **body**, **drive** and **sympathy** apply to the whole instrument and follow the
 most recent note.

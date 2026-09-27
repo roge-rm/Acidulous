@@ -54,6 +54,20 @@ alsa-lib 1.2.14 — GNU Lesser General Public License, version 2.1 or later
   directory's PROVENANCE.md.
   Licence text: licences/LGPL-2.1.txt
 
+coi-serviceworker 0.1.7 — MIT License
+  https://github.com/gzuidhof/coi-serviceworker
+  The browser build only: a service worker that makes the page cross-origin
+  isolated where the host cannot send the headers itself. Unchanged. See
+  web/app/third_party/coi-serviceworker/PROVENANCE.md.
+  Licence text: web/app/third_party/coi-serviceworker/LICENSE
+
+DejaVu Sans and Noto Sans Symbols / Runic — Bitstream Vera licence (DejaVu's
+changes public domain) and SIL Open Font License 1.1
+  https://dejavu-fonts.github.io/  https://fonts.google.com/noto
+  The browser build only: small subsets for the symbols the app draws as text,
+  since a browser lends no system fonts.
+  Licence texts: web/app/src/wasmJsMain/resources/fonts/NOTICE.txt
+
 Everything else in this repository is original work. The C++ engine, every
 machine and effect, the sequencer, the WAV, AIFF and FLAC writers and the
 MIDI file writer were all written for this project; no DSP, presets or

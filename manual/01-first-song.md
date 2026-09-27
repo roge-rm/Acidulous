@@ -18,8 +18,8 @@ five buttons in the same order: undo, redo, mixer, record and play.
 1. Tap **+ track** and pick a machine. A new song already has one.
 2. Tap the empty clip where the track meets the first scene. This opens the
    editor.
-3. Play the keyboard at the bottom. Tap **patch** at the top of the panel to try
-   the factory sounds.
+3. Play the keyboard at the bottom. Tap the patch name at the top of the panel
+   to try the factory sounds.
 4. Draw notes in the grid, or press record and play them in.
 5. Tap the back arrow to go back to the song, and press play.
 
@@ -36,7 +36,7 @@ four-bar chord clip just loops four times.
 
 The song you're working on is saved as you go and comes back next time you open
 the app. **save** in the header saves it under its name. **file** has new song,
-save as, and your other songs.
+save as and your other songs.
 
 ## The demo song
 
@@ -48,9 +48,9 @@ around in and pull apart. It uses most of what the app can do:
 - Perform effects recorded into the song, and snare rolls that only play while
   fill is held.
 - Percussion with chances, ratchets and hits that land every other pass.
-- An arp played from held chords, a riser drawn as a bend, and bleeps on the
+- An arp played from held chords, a riser drawn as a bend and bleeps on the
   modular.
-- A pad ducked under the kick, a drum group with its own compressor, and
+- A pad ducked under the kick, a drum group with its own compressor and
   effects on the master.
 
 It's saved with your songs, so you can open it again from **file · Songs…**.

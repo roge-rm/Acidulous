@@ -1,6 +1,6 @@
 # Manual
 
-> The organ: two manuals and pedals, four models, and a rotary cabinet.
+> The organ: two manuals and pedals, four models and a rotary cabinet.
 
 Manual is an organ with two keyboards and a pedalboard. They all share one
 generator of 91 tonewheels, like the real thing, so the same wheel plays the

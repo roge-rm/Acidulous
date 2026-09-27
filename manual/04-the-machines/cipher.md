@@ -37,9 +37,9 @@ Fast is clear but can chatter; slow is smooth but can slur.
 
 Two envelopes and two LFOs that can sync to the tempo, into eight matrix rows.
 
-Three sources come from the modulator itself: its **loudness**, **brightness**
-and **pitch** (pitch needs **track** on). For example, loudness on **smear**
-makes the words tighten up as they get louder.
+Three sources come from the modulator itself: its level (**loud**), its
+brightness (**bright**) and its **pitch** (pitch needs **follow** on). For
+example, loudness on **smear** makes the words tighten up as they get louder.
 
 The destinations are the map controls (**shift**, **stretch**, **remap**,
 **freeze**, **smear**, **q** and the band edges) plus the carrier's pitch and
