@@ -1,8 +1,6 @@
 # The song grid
-> The arranger, the launcher, and freezing.
-
-The grid works in two ways. The square in its top left corner switches between
-them.
+The grid can be used as an arranger or as a clip launcher, switch between
+them by pressing the button in the top left corner of the song grid.
 
 ## As an arranger
 
