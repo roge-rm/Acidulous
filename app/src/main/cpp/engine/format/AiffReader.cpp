@@ -1,5 +1,6 @@
 #include "AiffReader.h"
 #include "Decoded.h"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -54,33 +55,41 @@ std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t ta
     double rate = 0.0;
     char compression[5] = "NONE";
     const unsigned char *data = nullptr;
-    uint32_t dataLen = 0;
+    size_t dataLen = 0;
 
     size_t pos = 12;
     while (pos + 8 <= bytes.size()) {
         const unsigned char *id = bytes.data() + pos;
-        const uint32_t len = be32(bytes.data() + pos + 4);
+        const size_t len = be32(bytes.data() + pos + 4);
         const unsigned char *body = bytes.data() + pos + 8;
-        if (pos + 8 + static_cast<size_t>(len) > bytes.size()) break;
-        if (std::memcmp(id, "COMM", 4) == 0 && len >= 18) {
+        // What's left after the header, compared so nothing can wrap (see
+        // WavReader).
+        const size_t room = bytes.size() - pos - 8;
+        if (std::memcmp(id, "SSND", 4) == 0 && std::min(len, room) >= 8) {
+            // Eight bytes of offset and block size come before the samples.
+            // The offset is almost always zero but not always. A length past
+            // the end is a cut-off file, so take what's there.
+            const size_t have = std::min(len, room);
+            const size_t offset = be32(body);
+            if (offset <= have - 8) {
+                data = body + 8 + offset;
+                dataLen = have - 8 - offset;
+            }
+            if (len > room) break;
+        } else if (len > room) {
+            break;
+        } else if (std::memcmp(id, "COMM", 4) == 0 && len >= 18) {
             channels = be16(body);
             frameCount = be32(body + 2);
             bits = be16(body + 6);
             rate = extended(body + 8);
             if (aifc && len >= 22) std::memcpy(compression, body + 18, 4);
-        } else if (std::memcmp(id, "SSND", 4) == 0 && len >= 8) {
-            // Eight bytes of offset and block size come before the samples.
-            // The offset is almost always zero but not always.
-            const uint32_t offset = be32(body);
-            if (8u + offset <= len) {
-                data = body + 8 + offset;
-                dataLen = len - 8 - offset;
-            }
         }
         pos += 8 + len + (len & 1); // chunks are padded to even, like RIFF
     }
 
     if (data == nullptr || channels == 0 || rate <= 0.0) { error = "missing COMM or SSND"; return nullptr; }
+    if (!(rate < static_cast<double>(kMaxFileRate))) { error = "unsupported sample rate"; return nullptr; }
     if (channels > 2) { error = "more than two channels"; return nullptr; }
 
     const bool isFloat = std::memcmp(compression, "fl32", 4) == 0 || std::memcmp(compression, "FL32", 4) == 0;
@@ -94,17 +103,17 @@ std::unique_ptr<SampleData> AiffReader::read(const std::string &path, int32_t ta
         return nullptr;
     }
 
-    const uint32_t bytesPerSample = bits / 8;
-    const uint32_t frameBytes = bytesPerSample * channels;
-    uint32_t frames = std::min(frameCount, dataLen / frameBytes);
+    const size_t bytesPerSample = bits / 8;
+    const size_t frameBytes = bytesPerSample * channels;
+    const uint64_t frames = std::min<uint64_t>(frameCount, dataLen / frameBytes);
     if (frames == 0) { error = "empty"; return nullptr; }
 
     DecodedAudio got;
     got.rate = static_cast<int32_t>(rate + 0.5);
     got.stereo = channels == 2;
-    const auto cap = static_cast<uint32_t>(maxSeconds) * static_cast<uint32_t>(got.rate);
+    const uint64_t cap = static_cast<uint64_t>(maxSeconds) * static_cast<uint64_t>(got.rate);
     got.truncated = frames > cap;
-    got.frames = static_cast<int32_t>(std::min<uint32_t>(frames, cap));
+    got.frames = static_cast<int32_t>(std::min(frames, cap));
     for (uint16_t c = 0; c < channels; ++c) got.ch[c].resize(static_cast<size_t>(got.frames));
 
     for (int32_t i = 0; i < got.frames; ++i) {

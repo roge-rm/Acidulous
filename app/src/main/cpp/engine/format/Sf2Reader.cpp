@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <tuple>
 
 namespace acidulous {
 
@@ -84,11 +85,12 @@ struct Chunks {
 };
 
 void scanList(const uint8_t *p, const uint8_t *end, Chunks &c) {
-    while (p + 8 <= end) {
+    while (end - p >= 8) {
         const char *id = reinterpret_cast<const char *>(p);
-        const uint32_t size = rd32(p + 4);
+        const size_t size = rd32(p + 4);
         const uint8_t *body = p + 8;
-        if (body + size > end) break;
+        // Against what's left, never as body + size, which wraps on 32 bits.
+        if (size > static_cast<size_t>(end - body)) break;
         auto take = [&](const char *want, const uint8_t *&dst, size_t &dstSize) {
             if (std::memcmp(id, want, 4) == 0) { dst = body; dstSize = size; }
         };
@@ -104,6 +106,7 @@ void scanList(const uint8_t *p, const uint8_t *end, Chunks &c) {
         take("igen", c.igen, c.igenBytes);
         take("shdr", c.shdr, c.shdrBytes);
         if (std::memcmp(id, "INAM", 4) == 0) c.name = trimmed(reinterpret_cast<const char *>(body), size);
+        if ((size & 1) != 0 && size == static_cast<size_t>(end - body)) break; // no room for the pad byte
         p = body + size + (size & 1); // chunks are word aligned
     }
 }
@@ -116,12 +119,13 @@ bool parseChunks(const std::vector<uint8_t> &bytes, Chunks &c, std::string &erro
     }
     const uint8_t *p = bytes.data() + 12;
     const uint8_t *end = bytes.data() + bytes.size();
-    while (p + 8 <= end) {
+    while (end - p >= 8) {
         const char *id = reinterpret_cast<const char *>(p);
-        const uint32_t size = rd32(p + 4);
+        const size_t size = rd32(p + 4);
         const uint8_t *body = p + 8;
-        if (body + size > end) break;
+        if (size > static_cast<size_t>(end - body)) break;
         if (std::memcmp(id, "LIST", 4) == 0 && size >= 4) scanList(body + 4, body + size, c);
+        if ((size & 1) != 0 && size == static_cast<size_t>(end - body)) break;
         p = body + size + (size & 1);
     }
     if (c.phdr == nullptr || c.pbag == nullptr || c.pgen == nullptr || c.inst == nullptr ||
@@ -306,8 +310,10 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
     auto map = std::make_unique<SampleMap>();
     map->name = trimmed(preset.name, 20);
 
-    // Which source samples the preset actually touches, so only those decode.
-    std::map<uint16_t, int32_t> sampleIndexOf;
+    // Which windows of the source samples the preset actually touches, so
+    // only those decode. Keyed by the window and not just the sample, since
+    // two zones can trim one sample differently.
+    std::map<std::tuple<uint16_t, int64_t, int64_t>, int32_t> sampleIndexOf;
     int64_t decodedFrames = 0;
 
     auto gensOf = [](const uint8_t *gen, size_t genCount, size_t from, size_t to, GenSet &set) {
@@ -439,8 +445,8 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
             }
 
             // Decode the source window once, however many zones point at it.
-            const uint32_t key = static_cast<uint32_t>(sampleId);
-            auto known = sampleIndexOf.find(static_cast<uint16_t>(key));
+            const auto key = std::make_tuple(sampleId, srcStart, srcEnd);
+            auto known = sampleIndexOf.find(key);
             if (known == sampleIndexOf.end()) {
                 const int64_t frames = srcEnd - srcStart;
                 if (decodedFrames + frames > kMaxDecodedFrames) {
@@ -466,8 +472,7 @@ std::unique_ptr<SampleMap> Sf2Reader::load(const std::string &path, int32_t pres
                     }
                 }
                 map->samples.push_back(std::move(data));
-                known = sampleIndexOf.emplace(static_cast<uint16_t>(key),
-                                              static_cast<int32_t>(map->samples.size()) - 1).first;
+                known = sampleIndexOf.emplace(key, static_cast<int32_t>(map->samples.size()) - 1).first;
             }
             zone.sample = known->second;
             map->zones.push_back(zone);

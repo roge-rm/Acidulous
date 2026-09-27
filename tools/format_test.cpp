@@ -348,6 +348,41 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Headers that lie. None may read outside the file; the sanitizer is the
+    // real check here.
+    {
+        auto put = [](std::vector<unsigned char> &v, uint32_t x, bool big) {
+            for (int i = 0; i < 4; ++i) v.push_back(static_cast<unsigned char>(big ? x >> (24 - 8 * i) : x >> (8 * i)));
+        };
+        auto save = [&](const std::string &name, const std::vector<unsigned char> &v) {
+            const std::string path = dir + "/" + name;
+            FILE *f = std::fopen(path.c_str(), "wb");
+            std::fwrite(v.data(), 1, v.size(), f);
+            std::fclose(f);
+            return path;
+        };
+        std::string error;
+        // An AIFF whose SSND offset wraps 8 + offset round to 0.
+        std::vector<unsigned char> a = {'F', 'O', 'R', 'M', 0, 0, 0, 0, 'A', 'I', 'F', 'F', 'C', 'O', 'M', 'M', 0, 0, 0, 18,
+                                        0, 1, 0, 0, 3, 0xE8, 0, 16, 0x40, 0x0E, 0xAC, 0x44, 0, 0, 0, 0, 0, 0,
+                                        'S', 'S', 'N', 'D'};
+        put(a, 72, true);
+        put(a, 0xFFFFFFF8u, true);
+        put(a, 0, true);
+        a.resize(a.size() + 64, 0);
+        check(decodeAudio(save("wrap.aiff", a), kRate, error) == nullptr, "an AIFF whose offset wraps is refused");
+        // A WAV cut off mid-recording: its data length runs past the end.
+        std::vector<unsigned char> w = {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E', 'f', 'm', 't', ' '};
+        put(w, 16, false);
+        const unsigned char fmt[] = {1, 0, 1, 0, 0x80, 0xBB, 0, 0, 0, 0x77, 1, 0, 2, 0, 16, 0};
+        w.insert(w.end(), fmt, fmt + 16);
+        w.insert(w.end(), {'d', 'a', 't', 'a'});
+        put(w, 0xFFFFFFFFu, false);
+        w.resize(w.size() + 4800 * 2, 0);
+        auto cut = decodeAudio(save("cut.wav", w), kRate, error);
+        check(cut != nullptr && cut->frames == 4800, "a WAV cut off mid-recording plays what's there");
+    }
+
     std::printf("\n%d checks, %d failures\n", gChecks, gFails);
     return gFails == 0 ? 0 : 1;
 }

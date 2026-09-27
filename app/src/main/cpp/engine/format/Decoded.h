@@ -41,6 +41,13 @@ constexpr int32_t kMaxDecodeSeconds = 30;
 constexpr int32_t kMaxSliceSeconds = 600;
 
 /**
+ * The highest sample rate a file may claim. Real files stop at 768 kHz. A
+ * larger number is a corrupt header, and it would overflow the frame cap and
+ * the resampler's sizes.
+ */
+constexpr uint32_t kMaxFileRate = 1536000;
+
+/**
  * Turns decoded planes into a SampleData.
  *
  * A [targetRate] of zero or less keeps the file's own rate. Multisamples use

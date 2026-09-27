@@ -1,5 +1,6 @@
 #include "WavReader.h"
 #include "Decoded.h"
+#include <algorithm>
 #include <cstring>
 
 namespace acidulous {
@@ -21,22 +22,29 @@ std::unique_ptr<SampleData> WavReader::read(const std::string &path, int32_t tar
     uint16_t format = 0, channels = 0, bits = 0;
     uint32_t rate = 0;
     const unsigned char *data = nullptr;
-    uint32_t dataLen = 0;
+    size_t dataLen = 0;
     size_t pos = 12;
     while (pos + 8 <= bytes.size()) {
         const unsigned char *id = bytes.data() + pos;
-        const uint32_t len = u32(bytes.data() + pos + 4);
+        const size_t len = u32(bytes.data() + pos + 4);
         const unsigned char *body = bytes.data() + pos + 8;
-        if (pos + 8 + len > bytes.size()) break;
-        if (std::memcmp(id, "fmt ", 4) == 0 && len >= 16) {
+        // What's left after the header. Compared this way round, never as
+        // pos + 8 + len, which wraps on a 32-bit build.
+        const size_t room = bytes.size() - pos - 8;
+        if (std::memcmp(id, "data", 4) == 0) {
+            // A recorder that crashed or streamed leaves a length that runs
+            // past the end, often 0xFFFFFFFF. Take what's there.
+            data = body;
+            dataLen = std::min(len, room);
+            if (len > room) break;
+        } else if (len > room) {
+            break;
+        } else if (std::memcmp(id, "fmt ", 4) == 0 && len >= 16) {
             format = u16(body);
             channels = u16(body + 2);
             rate = u32(body + 4);
             bits = u16(body + 14);
             if (format == 0xFFFE && len >= 26) format = u16(body + 24); // WAVE_FORMAT_EXTENSIBLE: the sub-format's first word
-        } else if (std::memcmp(id, "data", 4) == 0) {
-            data = body;
-            dataLen = len;
         }
         pos += 8 + len + (len & 1);
     }
@@ -48,17 +56,18 @@ std::unique_ptr<SampleData> WavReader::read(const std::string &path, int32_t tar
         error = "unsupported bit depth";
         return nullptr;
     }
-    const uint32_t bytesPerSample = bits / 8;
-    const uint32_t frameBytes = bytesPerSample * channels;
-    uint32_t frames = dataLen / frameBytes;
+    if (rate > kMaxFileRate) { error = "unsupported sample rate"; return nullptr; }
+    const size_t bytesPerSample = bits / 8;
+    const size_t frameBytes = bytesPerSample * channels;
+    const uint64_t frames = dataLen / frameBytes;
     if (frames == 0) { error = "empty"; return nullptr; }
 
     DecodedAudio got;
     got.rate = static_cast<int32_t>(rate);
     got.stereo = channels == 2;
-    const uint32_t cap = static_cast<uint32_t>(maxSeconds) * rate;
+    const uint64_t cap = static_cast<uint64_t>(maxSeconds) * rate;
     got.truncated = frames > cap;
-    got.frames = static_cast<int32_t>(std::min<uint32_t>(frames, cap));
+    got.frames = static_cast<int32_t>(std::min(frames, cap));
     for (uint16_t c = 0; c < channels; ++c) got.ch[c].resize(static_cast<size_t>(got.frames));
     for (int32_t i = 0; i < got.frames; ++i) {
         for (uint16_t c = 0; c < channels; ++c) {
