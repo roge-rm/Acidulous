@@ -97,4 +97,27 @@ class MidiParserTest {
         assertEquals(emptyList<List<Int>>(), sysexes)
         assertEquals(listOf(Triple(0x90, 60, 100)), seen)
     }
+
+    @Test fun `random bytes never throw and only ever make well-formed messages`() {
+        // Whatever a device sends: a cable pulled mid-message, a device
+        // speaking its own protocol, line noise. Nothing may throw, and every
+        // message handed on has a status byte and data bytes in range.
+        val rng = java.util.Random(20260927)
+        repeat(2000) {
+            val bytes = ByteArray(rng.nextInt(64)) { rng.nextInt(256).toByte() }
+            // Sometimes in pieces, as a port delivers them.
+            var at = 0
+            while (at < bytes.size) {
+                val n = 1 + rng.nextInt(bytes.size - at)
+                parser.parse(bytes, at, n, at.toLong())
+                at += n
+            }
+        }
+        for ((s, a, b) in seen) {
+            check(s in 0x80..0xef) { "status %02x".format(s) }
+            check(a in 0..127 && b in 0..127) { "data $a $b for %02x".format(s) }
+        }
+        for ((s, _, _) in realtime) check(s == 0xf2 || s in 0xf8..0xff) { "realtime %02x".format(s) }
+        for (x in sysexes) check(x.size <= 1024 + 2) { "sysex of ${x.size}" }
+    }
 }
