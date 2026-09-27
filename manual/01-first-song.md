@@ -1,9 +1,6 @@
 # A first song
-> Tracks, scenes, clips, and a first sound.
-
 A song has up to sixteen tracks. Each track has one machine on it: a synth, a
-drum machine, a sampler and so on. The track and its instrument are the same
-thing, so there's no separate instrument list.
+drum machine, a sampler, etc. You can have multiple of the same machine in a song.
 
 <!-- desktop: On a computer, a click is a tap and a right-click is a hold - so is holding the button down. The mouse wheel scrolls the grids, sideways with Shift held, and Ctrl and the wheel zoom them. **F11** switches full screen on and off. -->
 
