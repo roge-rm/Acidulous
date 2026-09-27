@@ -72,9 +72,11 @@ echo "--- edit";  "$ROOT/tools/sampleedit_test.sh" | tail -2 || fail=1
 # noteon: does anything start a note from a smoothed parameter? reset_test
 # can't catch this case (see the file).
 echo "--- noteon"; python3 "$ROOT/tools/noteon_check.py" | tail -2 || fail=1
-# plan: does the milestone table still match the tree? Passes quietly when
-# there's no docs/PLAN.md.
-echo "--- plan";  python3 "$ROOT/tools/plan_check.py" | tail -2 || fail=1
+# plan: does the milestone table still match the tree? Only where docs/PLAN.md
+# and the check are on disk; neither is in the repo.
+if [ -f "$ROOT/docs/PLAN.md" ] && [ -f "$ROOT/tools/plan_check.py" ]; then
+    echo "--- plan";  python3 "$ROOT/tools/plan_check.py" | tail -2 || fail=1
+fi
 # The manual and the app's Help window must have the same text.
 echo "--- manual"; (cd "$ROOT" && python3 tools/gen_manual.py --check) | tail -2 || fail=1
 # Each platform's engine bridge is generated from one list of calls. This

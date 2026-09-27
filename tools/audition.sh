@@ -11,7 +11,7 @@ BIN="$ROOT/build/audition-bin"
 # Where the wavs go. build/ by default, but tools/local.env (untracked) can
 # point them somewhere else, e.g. a folder you can download from:
 #
-#   ACIDULOUS_AUDITION_OUT=/srv/downloads/temp/debug/audition
+#   ACIDULOUS_AUDITION_OUT=~/audition
 #
 # --out on the command line still wins over this.
 OUT="$ROOT/build/audition"
