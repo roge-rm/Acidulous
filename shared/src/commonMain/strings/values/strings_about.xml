@@ -34,6 +34,7 @@
     <!-- Windows only. The app doesn't name the technology, because of Steinberg's trademark rules. -->
     <string name="about_driver_sdk">Steinberg\'s driver SDK 2.3.4 · interfaces\' own low-latency drivers</string>
     <string name="about_lame">LAME 3.100 · MP3 encoding, as its own library</string>
+    <string name="about_cmudict">CMU Pronouncing Dictionary · how Diction says English words</string>
     <string name="about_link">Ableton Link 4.0 · a tempo shared over Wi-Fi</string>
     <string name="about_asio">asio 1.36.0 · the network, underneath Link</string>
     <string name="about_read">read</string>

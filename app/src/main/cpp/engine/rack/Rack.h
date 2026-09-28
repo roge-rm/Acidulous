@@ -68,6 +68,8 @@ class Rack {
      * arpeggio), and this way a clip plays exactly what the piano roll shows.
      */
     void playSequenced(uint8_t status, uint8_t d1, uint8_t d2);
+    /** A clip note's words, sent just before its note-on. See Machine::lyric. */
+    void lyric(const uint8_t *phones, int32_t count);
     void allNotesOff();
 
     /**

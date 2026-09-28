@@ -2,6 +2,9 @@ package com.rm.acidulous.engine
 
 import com.rm.acidulous.io.*
 
+import com.rm.acidulous.model.lyrics.Accent
+import com.rm.acidulous.model.lyrics.Lexicon
+import com.rm.acidulous.model.lyrics.Lyrics
 import kotlin.concurrent.Volatile
 
 import com.rm.acidulous.util.format
@@ -55,6 +58,9 @@ import org.jetbrains.compose.resources.StringResource
  * edit.
  */
 object EngineSync {
+    /** The machine that reads a note's words. */
+    private const val SINGER = "Diction"
+
 
     private const val TAG = "Acidulous.Sync"
     private const val RACKS = 16
@@ -655,8 +661,14 @@ object EngineSync {
                 val clip = track.clips[scene.id] ?: return@forEachIndexedInner
                 val implicit = pedals - clip.automation.keys
                 // Unchanged since the last push? Then it's one lookup, not a marshal.
+                // A singer's words depend on the accent and on whether the
+                // dictionary has loaded yet, not only on the clip.
+                val sings = track.machine.type == SINGER && clip.notes.any { it.lyric.isNotBlank() }
+                val accent = Accent.of(track.machine.params["accent"] ?: 0f)
                 val rev = lockedRev(track, clip).let { r ->
                     if (implicit.isEmpty()) r else r xor (implicit.sorted().hashCode().toLong() shl 20) xor 0x5a5a
+                }.let { r ->
+                    if (!sings) r else r xor ((accent.ordinal + 1L) shl 40) xor (if (Lexicon.dictionary != null) 1L shl 44 else 0L)
                 }
                 if (NativeEngine.snapshotSetClipCached(handle, rack, sceneIdx, rev)) {
                     cached++
@@ -700,6 +712,7 @@ object EngineSync {
                     seed = clip.seed,
                     notes = flat,
                     expr = if (expr.isEmpty()) EMPTY_FLOATS else expr.toFloatArray(),
+                    lyrics = if (sings) Lyrics.forNotes(clip.notes, accent, Lexicon.dictionary)?.joinToString("|") else null,
                 )
                 for ((key, stored) in clip.automation) {
                     // Step locks say "back to the knob" between steps, so tell

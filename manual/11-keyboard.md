@@ -101,7 +101,7 @@ In the piano roll:
 - **Alt** and an arrow moves the note along with the cursor.
 
 In a note lane, Left and Right walk from note to note, and Up and Down change
-the note's value, finely with Shift.
+the note's value, finely with Shift. Showing words, Enter opens them.
 
 In an automation lane, Left and Right move a grid step, and Up and Down set
 the value there, adding a point if there isn't one.

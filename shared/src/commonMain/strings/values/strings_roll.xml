@@ -30,6 +30,10 @@
     <string name="note_prop_nudge_short">nudge</string>
     <string name="note_prop_nudge">micro timing</string>
     <string name="note_lane_all_notes">all notes</string>
+    <string name="note_prop_words_short">words</string>
+    <string name="note_prop_words">words</string>
+    <string name="words_title">words</string>
+    <string name="a11y_words_field">the words from this note on, a syllable a note</string>
 
     <!-- ui/PianoKeys.kt: the scale chip and window. Scale names are names and aren't translated. -->
     <string name="scale_chip">scale</string>

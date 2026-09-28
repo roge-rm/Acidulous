@@ -61,6 +61,8 @@ private enum class Licence(val title: String, val asset: String) {
     Apache2("Apache License 2.0", "licences/apache-2.0.txt"),
     Bsl1("Boost Software License 1.0", "licences/bsl-1.0.txt"),
     PublicDomain("Unlicense or MIT-0", "licences/miniaudio.txt"),
+    /** Travels with the dictionary as one of the app's own files, the same on every platform. */
+    Cmu("CMU Pronouncing Dictionary licence", "files/dictionary-licence.txt"),
 }
 
 @Composable
@@ -124,6 +126,7 @@ private fun ComponentsTab(onRead: (Licence) -> Unit) {
             com.rm.acidulous.AudioStream.Browser -> {}
         }
         LicenceRow(Licence.Lgpl2, stringResource(Res.string.about_lame), onRead)
+        LicenceRow(Licence.Cmu, stringResource(Res.string.about_cmudict), onRead)
         // Link, and the networking library it uses, when it's built in.
         if (com.rm.acidulous.AppHost.current.hasLink) {
             LicenceRow(Licence.Gpl2, stringResource(Res.string.about_link), onRead)
@@ -144,12 +147,17 @@ private fun LicenceRow(licence: Licence, under: String, onRead: (Licence) -> Uni
 @Composable
 private fun LicenceTextDialog(licence: Licence, onDismiss: () -> Unit) {
     val resources = AppStrings
-    val text = remember(licence) {
-        AppHost.current.licenceText(licence.asset) ?: resources.getString(Res.string.about_licence_missing, licence.asset)
+    val missing = resources.getString(Res.string.about_licence_missing, licence.asset)
+    val text by androidx.compose.runtime.produceState<String?>(null, licence) {
+        value = if (licence.asset.startsWith("files/")) {
+            runCatching { Res.readBytes(licence.asset).decodeToString() }.getOrNull() ?: missing
+        } else {
+            AppHost.current.licenceText(licence.asset) ?: missing
+        }
     }
     PlainDialog(licence.title, onDismiss = onDismiss, dismissLabel = stringResource(Res.string.close), spacing = 0.dp) {
         Text(
-            text,
+            text ?: "",
             color = Acid.colors.textMid,
             fontSize = 10.sp,
             lineHeight = 14.sp,

@@ -3421,6 +3421,8 @@ private fun BrazenPanel(b: ParamBinding) {
 
 /** The vowels Diction sweeps, back of the mouth to the front. Sounds, not words, so not translated. */
 private val VOWEL_NAMES = listOf("oo", "oh", "ah", "eh", "ee")
+/** In the order of model.lyrics.Accent. */
+private val DICTION_ACCENTS = listOf("prairie", "central", "american")
 
 /**
  * The vowel is a knob rather than a switch so it can sweep between them, and
@@ -3457,6 +3459,10 @@ private fun DictionPanel(b: ParamBinding) {
                     PanelVowelKnob(b, "vowel", "vowel")
                     PanelKnob(b, "formant", "formant", PanelAmber)
                     PanelKnob(b, "breath", "breath")
+                }
+                Group("words") {
+                    PanelKnob(b, "consonants", "consonants", PanelPink)
+                    PanelStepKnob(b, "accent", DICTION_ACCENTS, "accent", PanelAmber)
                 }
             }
             1 -> {

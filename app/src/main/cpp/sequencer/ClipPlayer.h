@@ -69,6 +69,13 @@ class ClipPlayer {
     // Sink signature: void(uint8_t cmd, uint8_t p1, uint8_t p2).
     template <class Sink>
     void process(int64_t start, int64_t end, int64_t origin, Sink &&sink) {
+        process(start, end, origin, sink, [](const uint8_t *, int32_t) {});
+    }
+
+    // As above, with a note's words sent to [lyric] just before its note-on.
+    // Lyric signature: void(const uint8_t *phones, int32_t count).
+    template <class Sink, class Lyric>
+    void process(int64_t start, int64_t end, int64_t origin, Sink &&sink, Lyric &&lyric) {
         // Note-offs first so a note ending where another begins retriggers
         // cleanly. Anything overdue (tick < start) fires now.
         for (PendingOff &p : pending) {
@@ -110,7 +117,9 @@ class ClipPlayer {
             }
 
             bool prevPlayed = false; // the chain starts again every pass
-            for (const ClipNote &note : clip_->notes) {
+            const bool words = !clip_->noteLyric.empty();
+            for (size_t index = 0; index < clip_->notes.size(); ++index) {
+                const ClipNote &note = clip_->notes[index];
                 // Swing is monotonic, so the notes stay sorted and the break
                 // below is safe.
                 const int64_t t = base + swung(note.tick);
@@ -148,6 +157,13 @@ class ClipPlayer {
                                             ? std::max<int64_t>(h + 1, std::min<int64_t>(next, tail))
                                             : tail;
                     releaseIfSounding(note.pitch, sink);
+                    if (words) {
+                        const uint32_t w = clip_->noteLyric[index];
+                        const uint32_t first = w >> 8, count = w & 0xFFu;
+                        if (count > 0 && first + count <= clip_->phones.size()) {
+                            lyric(clip_->phones.data() + first, static_cast<int32_t>(count));
+                        }
+                    }
                     sink(0x90, note.pitch, note.velocity);
                     onCount.fetch_add(1, std::memory_order_relaxed);
                     // t, not h: the curve runs across the whole ratchet

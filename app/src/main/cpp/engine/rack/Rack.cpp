@@ -216,6 +216,10 @@ void Rack::handleMidi(uint8_t status, uint8_t d1, uint8_t d2) { deliver(0, statu
 
 void Rack::playSequenced(uint8_t status, uint8_t d1, uint8_t d2) { toMachine(status, d1, d2, false); }
 
+void Rack::lyric(const uint8_t *phones, int32_t count) {
+    if (machine != nullptr) machine->lyric(phones, count);
+}
+
 void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, float bendSemis) {
     if (machine == nullptr) return;
     note = sentTo[note & 0x7f];

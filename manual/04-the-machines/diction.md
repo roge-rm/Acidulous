@@ -1,10 +1,28 @@
 # Diction
 
-> A voice that sings the notes, as a man, a woman or neither.
+> A vocal synthesizer trained on your voice and taken to the next level.
 
 Diction sings. It's one singer, so it plays one note at a time, and it
-slides from note to note while you hold them. For now it sings vowels. Words
-come later.
+slides from note to note while you hold them. Give its notes words and it
+sings them. A note without words sings the **vowel** knob's vowel.
+
+## Words
+
+Open the lane under the grid and pick **words**. Tap a note to type the words
+from that note on, a syllable a note:
+
+- `hel-lo world` sings *hel* on the first note, *lo* on the next and *world*
+  on the third. A hyphen joins syllables into one word, so it's said as the
+  word, not as two.
+- `-` on its own holds the last vowel over another note.
+- `_` is a note with no words.
+- Put sounds in brackets to say a word your own way: `[t ah m ey t ow]`.
+
+Under the words is what each note will sing, as sounds. If a word comes out
+wrong, write it in brackets.
+
+Consonants come before the vowel at the start of a note, and the ones after it
+when the note ends.
 
 ## The voice
 
@@ -16,6 +34,10 @@ come later.
   down sound like a man, high notes with it up like a woman or a child, and
   in between is neither.
 - **breath** - how much air is in the voice.
+- **consonants** - how long the consonants take.
+- **accent** - how the words are said. **prairie** is Canadian as it's spoken
+  in Alberta, **central** is Canadian as in Ontario, and **american** is
+  General American.
 
 ## Expression
 

@@ -278,7 +278,8 @@ class EngineHost {
     // where `trig` is seq::packTrig's word. `seed` is the clip's own dice seed.
     // Bit 1 of `playMode` makes the dice roll freely instead of seeded.
     bool snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
-                         int seed, const int32_t *notes, int noteCount, const float *expr, int exprCount);
+                         int seed, const int32_t *notes, int noteCount, const float *expr, int exprCount,
+                         const char *lyrics = nullptr);
     // points: flat [tick, value] × count, any order. unit/name resolve against
     // `machineType`'s table (for "machine") or the channel table.
     bool snapshotSetLane(int64_t handle, int rack, int scene, const std::string &machineType,

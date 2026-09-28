@@ -8,6 +8,8 @@
 #include <engine/core/Utterance.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/diction/Diction.h>
+#include <engine/machine/diction/Phones.h>
+#include <sequencer/ClipPlayer.h>
 
 #include "audition_measure.h"
 
@@ -202,6 +204,67 @@ int main() {
         });
         const float after = rms(y, static_cast<size_t>(kSr * 1.2f), static_cast<size_t>(kSr * 0.3f));
         check(after == 0.0f, "silent once let go and released", std::to_string(after));
+    }
+
+    std::printf("\nwords\n");
+    {
+        // The share of energy above 4 kHz, where an S is and a vowel isn't:
+        // through a high-pass against the whole.
+        auto hiss = [](const std::vector<float> &x, size_t from, size_t n) {
+            const float w = 2.0f * 3.14159265f * 4000.0f / kSr, c = std::cos(w), alpha = std::sin(w) / (2.0f * 0.7071f);
+            const float a0 = 1.0f + alpha, b0 = (1.0f + c) / 2.0f / a0, b1 = -(1.0f + c) / a0, a1 = -2.0f * c / a0,
+                        a2 = (1.0f - alpha) / a0;
+            float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+            double high = 0.0, all = 0.0;
+            for (size_t i = from; i < from + n && i < x.size(); ++i) {
+                const float y = b0 * x[i] + b1 * x1 + b0 * x2 - a1 * y1 - a2 * y2;
+                x2 = x1; x1 = x[i]; y2 = y1; y1 = y;
+                high += static_cast<double>(y1) * y1;
+                all += static_cast<double>(x[i]) * x[i];
+            }
+            return all > 0.0 ? static_cast<float>(high / all) : 0.0f;
+        };
+        auto m = singer({});
+        uint8_t see[8];
+        const int32_t n = machine::diction::parsePhones("S IY", see, 8);
+        const auto x = render(*m, 0.8f, [&](int32_t b) {
+            if (b == 0) {
+                m->lyric(see, n);
+                m->noteOn(57, 100);
+            }
+        });
+        const float onset = hiss(x, 480, 2400), vowel = hiss(x, 14400, 4800);
+        check(onset > 0.5f && vowel < 0.05f, "see starts with its S and holds its ee",
+              "above 4 kHz " + std::to_string(onset) + " then " + std::to_string(vowel));
+
+        // Words for a note that never came are forgotten, not sung by the next one.
+        auto k = singer({});
+        const auto y = render(*k, 0.8f, [&](int32_t b) {
+            if (b == 0) k->lyric(see, n);
+            if (b == 10) k->noteOn(57, 100);
+        });
+        check(hiss(y, 10 * kBlock + 480, 2400) < 0.05f, "words a note didn't use aren't kept for the next",
+              std::to_string(hiss(y, 10 * kBlock + 480, 2400)));
+
+        // A clip sends each note's words just before it, and nothing for a plain note.
+        seq::Clip clip;
+        clip.bars = 1;
+        clip.ticksPerBar = 4 * kPPQN;
+        seq::ClipNote a{};
+        a.tick = 0; a.length = 10; a.pitch = 60; a.velocity = 100;
+        seq::ClipNote b = a;
+        b.tick = 20; b.pitch = 62;
+        clip.notes = {a, b};
+        clip.phones = {see[0], see[1]};
+        clip.noteLyric = {2u, 0u}; // the first note has two phones from 0
+        seq::ClipPlayer player;
+        player.setClip(&clip);
+        std::vector<std::string> events;
+        player.process(0, 40, 0, [&](uint8_t c, uint8_t p, uint8_t) {
+            if ((c & 0xf0) == 0x90) events.push_back("on " + std::to_string(p));
+        }, [&](const uint8_t *ph, int32_t count) { events.push_back("words " + std::to_string(count) + " " + std::to_string(ph[0])); });
+        const std::string got = events.size() == 3 ? events[0] + ", " + events[1] + ", " + events[2] : std::to_string(events.size());
+        check(got == "words 2 " + std::to_string(see[0]) + ", on 60, on 62", "a clip sends a note's words before it", got);
     }
 
     std::printf("\n%d checks, %d failures\n", checks, failures);

@@ -376,11 +376,13 @@ object NativeEngine {
      * @param seed the clip's own dice, so a probability repeats
      * @param expr flat [kind, tick, value] x point, in note order. Each note
      * takes the number of points it declared
+     * @param lyrics each note's sounds for a singer, in note order, split by
+     * `|`, e.g. `HH AX|L OW|`. Null when no note has words
      */
     fun snapshotSetClip(
         handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int,
-        notes: IntArray, expr: FloatArray,
-    ): Boolean = EngineNative.nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, seed, notes, expr)
+        notes: IntArray, expr: FloatArray, lyrics: String? = null,
+    ): Boolean = EngineNative.nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, seed, notes, expr, lyrics)
     fun snapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean =
         EngineNative.nativeSnapshotSetLane(handle, rack, scene, machineType, unit, name, linear, points)
     fun snapshotCommit(handle: Long): Boolean = EngineNative.nativeSnapshotCommit(handle)

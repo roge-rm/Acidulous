@@ -1517,6 +1517,19 @@ fun App(modifier: Modifier = Modifier) {
         true
     }
 
+    // The singer's dictionary, the first time a song has a singer. Its words
+    // were said from their spelling until now, so the song goes again.
+    val hasSinger = song.tracks.any { it.machine.type == "Diction" }
+    LaunchedEffect(hasSinger) {
+        if (!hasSinger || com.rm.acidulous.model.lyrics.Lexicon.dictionary != null) return@LaunchedEffect
+        val loaded = runCatching {
+            val bytes = Res.readBytes("files/dictionary.bin")
+            withContext(Dispatchers.Default) { com.rm.acidulous.model.lyrics.Dictionary(bytes) }
+        }.onFailure { Log.w("App", "dictionary: ${it.message}") }.getOrNull() ?: return@LaunchedEffect
+        com.rm.acidulous.model.lyrics.Lexicon.dictionary = loaded
+        EngineSync.sync(editor.song)
+    }
+
     // Keep the screen on while the transport runs (if the setting says so),
     // so a take isn't lost to the screen locking.
     KeepScreenOn(playing && com.rm.acidulous.ui.UiPrefs.keepAwake)

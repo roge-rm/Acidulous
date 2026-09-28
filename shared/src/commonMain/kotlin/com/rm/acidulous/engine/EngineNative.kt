@@ -182,7 +182,7 @@ internal expect object EngineNative {
     fun nativeSnapshotBegin(): Long
     fun nativeSnapshotAddScene(handle: Long, sceneId: Long, ticksPerBar: Int, repeat: Int, bpmOverride: Float, rampToBpm: Float, rampBars: Int, smooth: Boolean, fadeIn: Boolean, fadeOut: Boolean): Boolean
     fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean
-    fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray): Boolean
+    fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray, lyrics: String?): Boolean
     fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean
     fun nativeSnapshotCommit(handle: Long): Boolean
     fun nativeMachineParamNames(type: String): Array<String>

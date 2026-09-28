@@ -655,7 +655,8 @@ class SceneScheduler {
                     [&rack](Unit u, int32_t i) { return rack.isTouched(u, i); });
             }
             rack.clipPlayer.process(from, to, origin,
-                                    [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); });
+                                    [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); },
+                                    [&rack](const uint8_t *p, int32_t n) { rack.lyric(p, n); });
             rack.clipPlayer.processExpression(
                 to, [&rack](uint8_t n, int32_t k, float v) { rack.noteExpressionValue(k, n, v); });
         }
@@ -731,7 +732,8 @@ class SceneScheduler {
                     [&rack](Unit u, int32_t i, float v, bool jump) { rack.setParam(u, i, v, jump); },
                     [&rack](Unit u, int32_t i) { return rack.isTouched(u, i); });
                 rack.clipPlayer.process(from, to, iterationOrigin,
-                                        [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); });
+                                        [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); },
+                                        [&rack](const uint8_t *p, int32_t n) { rack.lyric(p, n); });
                 rack.clipPlayer.processExpression(
                     to, [&rack](uint8_t n, int32_t k, float v) { rack.noteExpressionValue(k, n, v); });
             }

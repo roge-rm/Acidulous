@@ -1116,7 +1116,7 @@ JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetClip(JNIEnv *env, jobject, jlong handle, jint rack,
                                                                 jint scene, jlong rev, jint bars, jint playMode,
                                                                 jboolean mute, jint seed, jintArray notes,
-                                                                jfloatArray expr) {
+                                                                jfloatArray expr, jstring lyrics) {
     const jsize len = notes != nullptr ? env->GetArrayLength(notes) : 0;
     const int noteCount = static_cast<int>(len / 6);
     if (noteCount <= 0) {
@@ -1132,9 +1132,14 @@ Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetClip(JNIEnv *env, job
     const jsize elen = expr != nullptr ? env->GetArrayLength(expr) : 0;
     const int exprCount = static_cast<int>(elen / 3);
     jfloat *edata = exprCount > 0 ? env->GetFloatArrayElements(expr, nullptr) : nullptr;
+    const char *words = lyrics != nullptr ? env->GetStringUTFChars(lyrics, nullptr) : nullptr;
     const bool ok = host().snapshotSetClip(handle, rack, scene, rev, bars, playMode, mute == JNI_TRUE, seed,
                                            reinterpret_cast<const int32_t *>(data), noteCount,
-                                           reinterpret_cast<const float *>(edata), edata != nullptr ? exprCount : 0);
+                                           reinterpret_cast<const float *>(edata), edata != nullptr ? exprCount : 0,
+                                           words);
+    if (words != nullptr) {
+        env->ReleaseStringUTFChars(lyrics, words);
+    }
     if (edata != nullptr) {
         env->ReleaseFloatArrayElements(expr, edata, JNI_ABORT);
     }

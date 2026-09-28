@@ -30,6 +30,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.drawText
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.text.font.FontFamily
@@ -63,6 +66,8 @@ enum class NoteProp(val short: StringResource, val label: StringResource) {
     Cond(Res.string.note_prop_cond_short, Res.string.note_prop_cond),
     Ratchet(Res.string.note_prop_ratchet_short, Res.string.note_prop_ratchet),
     Nudge(Res.string.note_prop_nudge_short, Res.string.note_prop_nudge),
+    /** What a singer's note sings. Only on a singer's track. */
+    Words(Res.string.note_prop_words_short, Res.string.note_prop_words),
 }
 
 /** How far a note may be pushed off the grid: half a sixteenth either way. */
@@ -75,6 +80,7 @@ private fun valueText(n: Note, prop: NoteProp): String = when (prop) {
     NoteProp.Ratchet -> "x${n.ratchet}"
     NoteProp.Nudge -> if (n.nudge > 0) "+${n.nudge}" else "${n.nudge}"
     NoteProp.Cond -> n.trig.short.ifEmpty { "-" }
+    NoteProp.Words -> n.lyric
 }
 
 @Composable
@@ -107,9 +113,15 @@ fun NoteLane(
     pitchName: (Int) -> String = { "$it" },
     collapsed: Boolean = false,
     onToggleCollapse: () -> Unit = {},
+    /** Whether the track sings, so its notes have words to show. */
+    words: Boolean = false,
+    /** A note tapped while showing words: open its words. An index into clip.notes. */
+    onWords: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val c = Acid.colors
+    val wordsState by rememberUpdatedState(onWords)
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     var menu by remember { mutableStateOf(false) }
     /**
      * The note being dragged and its new value, so the gutter can show the
@@ -150,6 +162,12 @@ fun NoteLane(
             val c = clipState
             // The notes the lane shows, in time order.
             val order = c.notes.indices.filter { shown(c.notes[it]) }.sortedBy { c.notes[it].tick }
+            if (propState == NoteProp.Words) {
+                // Words are typed, not stepped: Enter opens the note's words.
+                if (!enter || order.isEmpty()) return@onKeyEvent false
+                wordsState(if (keyNote in order) keyNote else order.first())
+                return@onKeyEvent true
+            }
             if (!keyEditing) {
                 if (!enter || order.isEmpty()) return@onKeyEvent false
                 keyEditing = true
@@ -233,6 +251,7 @@ fun NoteLane(
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 ScaledMenu(menuScroll) {
                     for (p in NoteProp.entries) {
+                        if (p == NoteProp.Words && !words) continue
                         DropdownMenuItem(
                             text = {
                                 Text(
@@ -305,6 +324,13 @@ fun NoteLane(
                             }
                         }
 
+                        if (what == NoteProp.Words) {
+                            // A tap opens the note's words; there's nothing to sweep.
+                            down.consume()
+                            val at = stackAt(down.position.x).firstOrNull()
+                            if (waitForUpOrCancellation() != null && at != null) wordsState(at)
+                            return@awaitEachGesture
+                        }
                         // A drag that starts sideways sweeps and sets every
                         // note it passes. A drag that starts vertically locks
                         // onto its first note, so the finger can move aside
@@ -371,7 +397,8 @@ fun NoteLane(
                     if (!shown(n)) continue
                     val mid = centreTick(n)
                     if (mid < from - clip.grid || mid > from + span) continue
-                    drawMark(n, prop, xOf(mid), wide, c)
+                    if (prop == NoteProp.Words) drawWords(n, xOf(mid), textMeasurer, c)
+                    else drawMark(n, prop, xOf(mid), wide, c)
                 }
                 if (keyFocused) {
                     drawRect(c.accent, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
@@ -394,6 +421,28 @@ fun NoteLane(
                 }
             }
         }
+    }
+}
+
+/**
+ * A note's words, written sideways up the lane so neighbours don't run into
+ * each other. A note with none gets a dot.
+ */
+private fun DrawScope.drawWords(
+    n: Note, x: Float, measurer: androidx.compose.ui.text.TextMeasurer, c: com.rm.acidulous.ui.theme.AcidColors,
+) {
+    if (n.lyric.isBlank()) {
+        drawCircle(c.teal.copy(alpha = 0.5f), 2f, Offset(x, size.height - 4f))
+        return
+    }
+    val layout = measurer.measure(
+        n.lyric,
+        androidx.compose.ui.text.TextStyle(color = c.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace),
+        maxLines = 1,
+        constraints = androidx.compose.ui.unit.Constraints(maxWidth = (size.height - 4f).toInt().coerceAtLeast(1)),
+    )
+    rotate(-90f, Offset(x, size.height - 2f)) {
+        drawText(layout, topLeft = Offset(x, size.height - 2f - layout.size.height / 2f))
     }
 }
 
@@ -448,6 +497,7 @@ private fun DrawScope.drawMark(
                 drawRect(c.accent, Offset(left, size.height - 2f - h), Size(wide, h))
             }
         }
+        NoteProp.Words -> Unit // drawWords
     }
 }
 
@@ -464,6 +514,7 @@ internal fun fractionOf(n: Note, prop: NoteProp): Float = when (prop) {
         val all = com.rm.acidulous.model.Trig.inOrder
         all.indexOf(n.trig).coerceAtLeast(0).toFloat() / (all.size - 1).coerceAtLeast(1)
     }
+    NoteProp.Words -> 0f
 }
 
 /** One key's worth of change: a step of the value, or a finer one with Shift. */
@@ -473,4 +524,5 @@ internal fun stepOf(prop: NoteProp, fine: Boolean): Float = when (prop) {
     NoteProp.Ratchet -> 1f / 8f
     NoteProp.Nudge -> (if (fine) 1f else 4f) / (2f * NUDGE_RANGE)
     NoteProp.Cond -> 1f / (com.rm.acidulous.model.Trig.inOrder.size - 1).coerceAtLeast(1)
+    NoteProp.Words -> 0f
 }

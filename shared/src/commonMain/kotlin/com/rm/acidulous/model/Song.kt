@@ -102,6 +102,13 @@ data class Note(
     @EncodeDefault(EncodeDefault.Mode.NEVER) val trig: Trig = Trig.Always,
     @EncodeDefault(EncodeDefault.Mode.NEVER) val ratchet: Int = 1,
     @EncodeDefault(EncodeDefault.Mode.NEVER) val nudge: Int = 0,
+    /**
+     * The words this note sings, on a singer's track: a syllable or a word as
+     * typed ("hel-", "lo"), or sounds in brackets ("[hh ax]"). A syllable
+     * ending in "-" is joined to the next note's into one word, and "-" alone
+     * holds the last vowel over another note. Empty for a plain note.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val lyric: String = "",
 ) {
     val hasExpression: Boolean get() = bend != null || pressure != null || timbre != null
 

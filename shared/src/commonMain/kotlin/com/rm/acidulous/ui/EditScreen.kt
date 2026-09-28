@@ -218,6 +218,10 @@ fun EditScreen(
     // Which note property the lane shows. Per track, like the roll's zoom, and
     // not saved in the song.
     var noteProp by remember(trackIndex) { mutableStateOf(NoteProp.Velocity) }
+    // A singer's notes have words; the note tapped in the words row, while its window is open.
+    val sings = track.machine.type == "Diction"
+    if (!sings && noteProp == NoteProp.Words) noteProp = NoteProp.Velocity
+    var wordsFrom by remember(trackIndex, sceneId) { mutableStateOf<Int?>(null) }
     // Which pitch the note lane shows, or every pitch. Keyed on the track so
     // the filter doesn't carry over to another machine.
     var notePitch by remember(trackIndex) { mutableStateOf<Int?>(null) }
@@ -819,6 +823,7 @@ fun EditScreen(
                                 val at = (v * (all.size - 1)).roundToInt().coerceIn(0, all.size - 1)
                                 n.copy(trig = all[at])
                             }
+                            NoteProp.Words -> n
                         }
                     }
                     base.copy(notes = notes)
@@ -829,6 +834,8 @@ fun EditScreen(
             onToggleCollapse = {
                 if (landscape) UiPrefs.foldNoteLaneLand(!noteFolded) else UiPrefs.foldNoteLane(!noteFolded)
             },
+            words = sings,
+            onWords = { wordsFrom = it },
             // The same height as the automation strip below it.
             modifier = Modifier.fillMaxWidth().height(if (noteFolded) 24.dp else open).padding(top = 4.dp),
         )
@@ -1268,6 +1275,19 @@ fun EditScreen(
             clipTicks = clipLen,
             which = selection.takeIf { it.isNotEmpty() },
             onDismiss = { quantiseDialog = false; selection = emptySet() },
+        )
+    }
+    // Guarded, since the notes can change under the window (a recording, an undo).
+    wordsFrom?.takeIf { sings && it in clip.notes.indices }?.let { from ->
+        WordsDialog(
+            clip = clip,
+            from = from,
+            accent = com.rm.acidulous.model.lyrics.Accent.of(track.machine.params["accent"] ?: 0f),
+            onDismiss = { wordsFrom = null },
+            onApply = { notes ->
+                editor.editClip(trackIndex, sceneId) { it.copy(notes = notes) }
+                wordsFrom = null
+            },
         )
     }
     if (scaleDialog) {

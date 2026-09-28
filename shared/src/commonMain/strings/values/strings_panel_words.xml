@@ -38,6 +38,7 @@
     <string name="pw_alt">alt</string>
     <string name="pw_altissimo">altissimo</string>
     <string name="pw_always">always</string>
+    <string name="pw_american">american</string>
     <string name="pw_amount">amount</string>
     <string name="pw_amp">Amp</string>
     <string name="pw_amp_65f59e">amp</string>
@@ -101,6 +102,7 @@
     <string name="pw_cabinet">cabinet</string>
     <string name="pw_cable_n">cable %d</string>
     <string name="pw_carrier">carrier</string>
+    <string name="pw_central">central</string>
     <string name="pw_chance">chance</string>
     <string name="pw_channel">channel</string>
     <string name="pw_character">character</string>
@@ -577,6 +579,7 @@
     <string name="pw_pos2">pos2</string>
     <string name="pw_pos3">pos3</string>
     <string name="pw_position">position</string>
+    <string name="pw_prairie">prairie</string>
     <string name="pw_predelay">predelay</string>
     <string name="pw_prepare">prepare</string>
     <string name="pw_prepared">prepared</string>
@@ -886,6 +889,7 @@
     <string name="pw_wire">wire</string>
     <string name="pw_wobble">wobble</string>
     <string name="pw_wood">wood</string>
+    <string name="pw_words">words</string>
     <string name="pw_worn">worn</string>
     <string name="pw_wow">wow</string>
     <string name="pw_xor">xor</string>

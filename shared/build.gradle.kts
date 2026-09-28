@@ -74,6 +74,8 @@ abstract class NormaliseStrings : DefaultTask() {
     @get:InputDirectory abstract val source: DirectoryProperty
     /** Android vector drawables to copy as they are into drawable/. */
     @get:InputFiles abstract val drawables: ConfigurableFileCollection
+    /** Data files the app reads, like Diction's dictionary, copied as they are into files/. */
+    @get:InputFiles abstract val files: ConfigurableFileCollection
     @get:OutputDirectory abstract val output: DirectoryProperty
 
     @TaskAction
@@ -97,6 +99,7 @@ abstract class NormaliseStrings : DefaultTask() {
             }.transform(DOMSource(doc), StreamResult(target))
         }
         drawables.forEach { it.copyTo(File(out, "drawable/${it.name}"), overwrite = true) }
+        files.forEach { it.copyTo(File(out, "files/${it.name}"), overwrite = true) }
     }
 
     private fun androidText(raw: String): String {
@@ -137,6 +140,7 @@ val normaliseStrings by tasks.registering(NormaliseStrings::class) {
     // The splash logo is the launcher icon's foreground, which has to stay in
     // the app's own resources for the launcher, so it's copied from there.
     drawables.from(rootProject.file("app/src/main/res/drawable/ic_launcher_foreground.xml"))
+    files.from(layout.projectDirectory.dir("src/commonMain/files").asFileTree)
     output.set(layout.buildDirectory.dir("generated/strings"))
 }
 

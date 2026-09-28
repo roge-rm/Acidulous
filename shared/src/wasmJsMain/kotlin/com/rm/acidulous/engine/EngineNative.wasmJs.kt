@@ -505,8 +505,8 @@ private fun raw_nativeSnapshotAddScene(env: Int, handle: Long, sceneId: Long, ti
 private fun raw_nativeSnapshotSetClipCached(env: Int, handle: Long, rack: Int, scene: Int, rev: Long): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetClipCached(env, 0, handle, rack, scene, rev)")
 
-private fun raw_nativeSnapshotSetClip(env: Int, handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Int, seed: Int, notes: Int, expr: Int): Int =
-    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetClip(env, 0, handle, rack, scene, rev, bars, playMode, mute, seed, notes, expr)")
+private fun raw_nativeSnapshotSetClip(env: Int, handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Int, seed: Int, notes: Int, expr: Int, lyrics: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetClip(env, 0, handle, rack, scene, rev, bars, playMode, mute, seed, notes, expr, lyrics)")
 
 private fun raw_nativeSnapshotSetLane(env: Int, handle: Long, rack: Int, scene: Int, machineType: Int, unit: Int, name: Int, linear: Int, points: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSnapshotSetLane(env, 0, handle, rack, scene, machineType, unit, name, linear, points)")
@@ -1723,10 +1723,11 @@ internal actual object EngineNative {
         return result_
     }
 
-    actual fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray): Boolean {
+    actual fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray, lyrics: String?): Boolean {
         val jnotes = Jni.ints(notes)
         val jexpr = Jni.floats(expr)
-        val raw_ = raw_nativeSnapshotSetClip(Jni.env, handle, rack, scene, rev, bars, playMode, if (mute) 1 else 0, seed, jnotes, jexpr)
+        val jlyrics = Jni.string(lyrics)
+        val raw_ = raw_nativeSnapshotSetClip(Jni.env, handle, rack, scene, rev, bars, playMode, if (mute) 1 else 0, seed, jnotes, jexpr, jlyrics)
         Jni.copyBack(jnotes, notes)
         Jni.copyBack(jexpr, expr)
         val result_ = raw_ != 0

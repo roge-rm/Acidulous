@@ -43,6 +43,13 @@ class Machine {
     void setTuning(const float *ratios) { tuning_ = ratios; }
 
     virtual void reset() = 0; // silence, forget held notes
+    /**
+     * The words the next note-on sings, as phone codes (see
+     * machine/diction/Phones.h), sent from a clip just before its note. The
+     * array is only good for the call, so a machine keeps a copy. Only a
+     * singer listens.
+     */
+    virtual void lyric(const uint8_t * /*phones*/, int32_t /*count*/) {}
     virtual void noteOn(uint8_t note, uint8_t velocity) = 0;
     virtual void noteOff(uint8_t note) = 0;
     virtual void allNotesOff() = 0;

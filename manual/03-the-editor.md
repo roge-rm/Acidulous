@@ -110,6 +110,8 @@ set that value on each note.
 - **ratchet** - how many times the note repeats in its step.
 - **micro timing** - nudges the note off the grid, up to half a sixteenth either
   way.
+- **words** - on a singer's track, what each note sings. Tap a note to type
+  them. See [Diction](04-the-machines/diction.md).
 
 The randomness uses a fixed seed, so the same variation comes back every time.
 

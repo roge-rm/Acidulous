@@ -219,7 +219,7 @@ internal actual object EngineNative {
     actual external fun nativeSnapshotBegin(): Long
     actual external fun nativeSnapshotAddScene(handle: Long, sceneId: Long, ticksPerBar: Int, repeat: Int, bpmOverride: Float, rampToBpm: Float, rampBars: Int, smooth: Boolean, fadeIn: Boolean, fadeOut: Boolean): Boolean
     actual external fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean
-    actual external fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray): Boolean
+    actual external fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray, lyrics: String?): Boolean
     actual external fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean
     actual external fun nativeSnapshotCommit(handle: Long): Boolean
     actual external fun nativeMachineParamNames(type: String): Array<String>

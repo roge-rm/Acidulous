@@ -1,6 +1,8 @@
 #include "EngineHost.h"
 
 #include <engine/dsp/Denormals.h>
+#include <engine/machine/diction/Diction.h>
+#include <engine/machine/diction/Phones.h>
 #include <engine/machine/molt/Molt.h>
 #include <engine/core/Settings.h>
 #include <engine/machine/nexus/Nexus.h>
@@ -1419,7 +1421,8 @@ bool EngineHost::snapshotSetClipCached(int64_t handle, int rack, int scene, int6
 }
 
 bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t rev, int bars, int playMode, bool mute,
-                                 int seed, const int32_t *notes, int noteCount, const float *expr, int exprCount) {
+                                 int seed, const int32_t *notes, int noteCount, const float *expr, int exprCount,
+                                 const char *lyrics) {
     using namespace seq;
     auto *snap = fromHandle(handle);
     if (snap == nullptr || scene < 0 || scene >= static_cast<int>(snap->scenes.size())) return false;
@@ -1471,8 +1474,37 @@ bool EngineHost::snapshotSetClip(int64_t handle, int rack, int scene, int64_t re
         taken += want;
         clip->notes.push_back(note);
     }
-    std::stable_sort(clip->notes.begin(), clip->notes.end(),
-                     [](const ClipNote &a, const ClipNote &b) { return a.tick < b.tick; });
+    // Each note's words, one entry a note in the order sent, split by '|'.
+    // Parsed before the sort, since the sort moves the notes.
+    std::vector<uint32_t> words;
+    if (lyrics != nullptr && *lyrics != '\0') {
+        words.assign(clip->notes.size(), 0);
+        const char *at = lyrics;
+        for (size_t n = 0; n < clip->notes.size() && at != nullptr; ++n) {
+            const char *bar = std::strchr(at, '|');
+            const std::string one = bar != nullptr ? std::string(at, bar) : std::string(at);
+            uint8_t codes[machine::Diction::kMaxPhones];
+            const int32_t count = machine::diction::parsePhones(one.c_str(), codes, machine::Diction::kMaxPhones);
+            if (count > 0) {
+                words[n] = static_cast<uint32_t>(clip->phones.size()) << 8 | static_cast<uint32_t>(count);
+                clip->phones.insert(clip->phones.end(), codes, codes + count);
+            }
+            at = bar != nullptr ? bar + 1 : nullptr;
+        }
+    }
+    // Sorted by tick with the words carried along.
+    std::vector<size_t> order(clip->notes.size());
+    for (size_t i = 0; i < order.size(); ++i) order[i] = i;
+    std::stable_sort(order.begin(), order.end(),
+                     [&](size_t a, size_t b) { return clip->notes[a].tick < clip->notes[b].tick; });
+    std::vector<ClipNote> sorted;
+    sorted.reserve(order.size());
+    for (size_t i : order) sorted.push_back(clip->notes[i]);
+    clip->notes.swap(sorted);
+    if (!words.empty()) {
+        clip->noteLyric.reserve(order.size());
+        for (size_t i : order) clip->noteLyric.push_back(words[i]);
+    }
     return snap->setClip(rack, scene, std::move(clip));
 }
 

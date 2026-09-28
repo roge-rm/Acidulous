@@ -181,6 +181,12 @@ struct Clip {
     // sorted by kind and then tick, so a note-on finds its three curves in one
     // pass over its own points.
     std::vector<ExprPoint> expr;
+    // The words the notes sing, for a singer: every note's phone codes end to
+    // end, and for each note (in the notes' order) where its own start and
+    // how many, packed as first << 8 | count. Both empty when no note has
+    // words, which is nearly every clip, so they cost nothing there.
+    std::vector<uint8_t> phones;
+    std::vector<uint32_t> noteLyric;
 
     int32_t lengthTicks() const { return bars * ticksPerBar; }
 };
