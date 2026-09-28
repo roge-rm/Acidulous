@@ -20,7 +20,7 @@ PANELS = {
     "ManualPanel": "Manual", "CipherPanel": "Cipher", "FilamentPanel": "Filament",
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
     "PollenPanel": "Pollen", "ResonancePanel": "Resonance", "DicePanel": "Dice", "GenesisPanel": "Genesis",
-    "BrazenPanel": "Brazen", "TimberPanel": "Timber", "MoltPanel": "Molt",
+    "BrazenPanel": "Brazen", "TimberPanel": "Timber", "MoltPanel": "Molt", "DictionPanel": "Diction",
     "BiasPanel": "Bias",
 }
 # Some panels name every control for the selected pad, so one panel covers
@@ -60,7 +60,7 @@ def split_args(text, start):
 
 
 def calls(text):
-    for m in re.finditer(r'Panel(Knob|Switch|StepKnob)\(', text):
+    for m in re.finditer(r'Panel(Knob|Switch|StepKnob|VowelKnob)\(', text):
         args, _ = split_args(text, m.end() - 1)
         if len(args) >= 2:
             yield args

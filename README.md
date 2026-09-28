@@ -44,7 +44,7 @@ All six are the demo song, Squelch.
 
 ## What's in it
 
-### Twenty machines
+### Twenty-one machines
 
 | | |
 |---|---|
@@ -66,6 +66,7 @@ All six are the demo song, Squelch.
 | **Forage** | A sample drum machine with thirteen pads for your own sounds. |
 | **Cipher** | A vocoder where you can rearrange which bands drive which. |
 | **Molt** | Sing a take and play it back tuned to the notes you draw. |
+| **Diction** | A voice that sings the notes, as a man, a woman or neither. |
 | **Nexus** | A modular synth whose modules are the other machines. |
 | **Bias** | A four-track for audio recordings that runs along the song. |
 

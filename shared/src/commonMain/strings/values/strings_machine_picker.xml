@@ -23,6 +23,7 @@
     <string name="machine_about_mosaic">multisample player for SoundFonts and your samples</string>
     <string name="machine_about_pollen">granular clouds from a file or the live input</string>
     <string name="machine_about_molt">sing a take and tune it with the piano roll</string>
+    <string name="machine_about_diction">a voice that sings the notes, as a man, a woman or neither</string>
     <string name="machine_about_cipher">vocoder with a band map you can rearrange</string>
     <string name="machine_about_nexus">modular synth built from the other machines</string>
     <string name="machine_about_bias">four-track for audio recordings</string>

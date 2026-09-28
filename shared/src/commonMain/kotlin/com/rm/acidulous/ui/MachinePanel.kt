@@ -209,6 +209,7 @@ fun MachinePanel(
             "Resonance" -> ResonancePanel(binding, selectedPad)
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
             "Molt" -> MoltPanel(binding, track, trackIndex, editor, onImportOneSample)
+            "Diction" -> DictionPanel(binding)
             "Trinity" -> TrinityPanel(binding)
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
@@ -3417,6 +3418,77 @@ private fun BrazenPanel(b: ParamBinding) {
 //
 // The pipe first, since the excitation and bore shape between them pick the
 // woodwind family. Then the mouth, then the tone holes.
+
+/** The vowels Diction sweeps, back of the mouth to the front. Sounds, not words, so not translated. */
+private val VOWEL_NAMES = listOf("oo", "oh", "ah", "eh", "ee")
+
+/**
+ * The vowel is a knob rather than a switch so it can sweep between them, and
+ * it says which it's on, or which two it's between.
+ */
+@Composable
+private fun PanelVowelKnob(b: ParamBinding, name: String, label: String = name) {
+    val key = com.rm.acidulous.model.laneKey(b.unit, name)
+    val at = b.value(name) * (VOWEL_NAMES.size - 1)
+    val lower = at.toInt().coerceIn(0, VOWEL_NAMES.size - 2)
+    val t = at - lower
+    val shown = when {
+        t < 0.15f -> VOWEL_NAMES[lower]
+        t > 0.85f -> VOWEL_NAMES[lower + 1]
+        else -> VOWEL_NAMES[lower] + "–" + VOWEL_NAMES[lower + 1]
+    }
+    Knob(
+        label = panelWord(label), value = b.value(name), display = shown, accent = PanelAmber,
+        automated = key in AutomationMarks.lanes && key !in AutomationMarks.locks,
+        locked = key in AutomationMarks.locks,
+        modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
+        onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
+        onReset = { b.reset(name) },
+    )
+}
+
+@Composable
+private fun DictionPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("voice", "expression", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("voice") {
+                    PanelVowelKnob(b, "vowel", "vowel")
+                    PanelKnob(b, "formant", "formant", PanelAmber)
+                    PanelKnob(b, "breath", "breath")
+                }
+            }
+            1 -> {
+                Group("vibrato") {
+                    PanelKnob(b, "vibrato", "depth", PanelAmber)
+                    PanelKnob(b, "vibratorate", "rate")
+                    PanelKnob(b, "vibratodelay", "delay")
+                }
+                Group("singer") {
+                    PanelKnob(b, "drift", "drift", PanelPink)
+                    PanelKnob(b, "glide", "glide")
+                }
+            }
+            else -> {
+                Group("envelope") {
+                    PanelKnob(b, "attack", "attack")
+                    PanelKnob(b, "release", "release")
+                    PanelKnob(b, "velocity", "velocity")
+                }
+                Group("tuning") {
+                    PanelKnob(b, "bendrange", "bend")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                }
+            }
+        }
+    }
+}
 
 private val TIMBER_FAMILY = listOf("reed", "double", "air")
 private val TIMBER_BORE = listOf("cylinder", "cone")

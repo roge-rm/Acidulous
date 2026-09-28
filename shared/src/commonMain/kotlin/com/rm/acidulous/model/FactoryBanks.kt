@@ -26,6 +26,7 @@ internal object FactoryBanks {
         "Dice" -> dice
         "Mosaic" -> mosaic
         "Molt" -> molt
+        "Diction" -> diction
         "Bias" -> bias
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
@@ -2657,6 +2658,87 @@ internal object FactoryBanks {
         family = "play")
 
     private val molt: List<Patch> by lazy { listOf(molt0(), molt1(), molt2(), molt3(), molt4(), molt5(), molt6(), molt7(), molt8(), molt9(), molt10(), molt11(), molt12(), molt13(), molt14(), molt15(), molt16(), molt17(), molt18(), molt19(), molt20(), molt21(), molt22(), molt23(), molt24()) }
+
+    private fun diction0() = Patch("Diction", "Init", emptyMap(),
+        family = "voices")
+
+    private fun diction1() = Patch("Diction", "Deep",
+        mapOf("formant" to 0.25f, "vibrato" to 0.22f, "vibratorate" to 0.333333343f),
+        family = "voices")
+
+    private fun diction2() = Patch("Diction", "Low",
+        mapOf("formant" to 0.375f),
+        family = "voices")
+
+    private fun diction3() = Patch("Diction", "High",
+        mapOf("formant" to 0.625f, "vibrato" to 0.28f),
+        family = "voices")
+
+    private fun diction4() = Patch("Diction", "Light",
+        mapOf("formant" to 0.7083333f, "breath" to 0.25f, "vibrato" to 0.2f),
+        family = "voices")
+
+    private fun diction5() = Patch("Diction", "Neither",
+        mapOf("formant" to 0.5416667f, "breath" to 0.3f, "vibrato" to 0.15f, "drift" to 0.2f),
+        family = "voices")
+
+    private fun diction6() = Patch("Diction", "Oo",
+        mapOf("vowel" to 0f),
+        family = "vowels")
+
+    private fun diction7() = Patch("Diction", "Oh",
+        mapOf("vowel" to 0.25f),
+        family = "vowels")
+
+    private fun diction8() = Patch("Diction", "Eh",
+        mapOf("vowel" to 0.75f),
+        family = "vowels")
+
+    private fun diction9() = Patch("Diction", "Ee",
+        mapOf("vowel" to 1f),
+        family = "vowels")
+
+    private fun diction10() = Patch("Diction", "Chant",
+        mapOf("vowel" to 0.25f, "vibrato" to 0f, "drift" to 0.05f, "glide" to 0.05f),
+        family = "style")
+
+    private fun diction11() = Patch("Diction", "Ballad",
+        mapOf("vibrato" to 0.25f, "vibratodelay" to 0.3f, "drift" to 0.55f, "glide" to 0.12f),
+        family = "style")
+
+    private fun diction12() = Patch("Diction", "Opera",
+        mapOf("formant" to 0.458333343f, "breath" to 0.04f, "vibrato" to 0.7f, "vibratorate" to 0.5f, "vibratodelay" to 0.1f),
+        family = "style")
+
+    private fun diction13() = Patch("Diction", "Breathy",
+        mapOf("breath" to 0.7f, "vibrato" to 0.15f, "attack" to 0.599823236f),
+        family = "style")
+
+    private fun diction14() = Patch("Diction", "Lullaby",
+        mapOf("vowel" to 0.25f, "breath" to 0.35f, "vibrato" to 0.15f, "vibratodelay" to 0.45f, "glide" to 0.15f, "attack" to 0.738351941f),
+        family = "style")
+
+    private fun diction15() = Patch("Diction", "Swoop",
+        mapOf("drift" to 0.6f, "glide" to 0.25f),
+        family = "style")
+
+    private fun diction16() = Patch("Diction", "Giant",
+        mapOf("formant" to 0f, "vibrato" to 0.12f, "vibratorate" to 0.166666672f),
+        family = "strange")
+
+    private fun diction17() = Patch("Diction", "Tiny",
+        mapOf("formant" to 1f, "vibrato" to 0.35f, "vibratorate" to 0.75f),
+        family = "strange")
+
+    private fun diction18() = Patch("Diction", "Machine",
+        mapOf("breath" to 0f, "vibrato" to 0f, "drift" to 0f, "glide" to 0f, "attack" to 0f),
+        family = "strange")
+
+    private fun diction19() = Patch("Diction", "Ghost",
+        mapOf("formant" to 0.5833333f, "breath" to 1f, "attack" to 0.827060044f, "release" to 0.945703149f),
+        family = "strange")
+
+    private val diction: List<Patch> by lazy { listOf(diction0(), diction1(), diction2(), diction3(), diction4(), diction5(), diction6(), diction7(), diction8(), diction9(), diction10(), diction11(), diction12(), diction13(), diction14(), diction15(), diction16(), diction17(), diction18(), diction19()) }
 
     private fun bias0() = Patch("Bias", "Init", emptyMap(),
         family = "clean")

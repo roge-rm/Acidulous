@@ -34,6 +34,7 @@ These copy how the real instrument works, so they play like one.
 - [**Pollen**](04-the-machines/pollen.md) - granular clouds from a file or the live input.
 - [**Mosaic**](04-the-machines/mosaic.md) - a multisample player for SoundFonts and your own samples.
 - [**Molt**](04-the-machines/molt.md) - sing a take in and the piano roll tunes it.
+- [**Diction**](04-the-machines/diction.md) - a voice that sings the notes, as a man, a woman or neither.
 - [**Cipher**](04-the-machines/cipher.md) - a vocoder.
 
 ## Modular

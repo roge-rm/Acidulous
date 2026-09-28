@@ -62,6 +62,7 @@ echo "--- cost"; "$ROOT/tools/cpu_test.sh" | tail -3 || fail=1
 echo "--- bank";  "$ROOT/tools/bank_test.sh"  | tail -2 || fail=1
 echo "--- sink";  "$ROOT/tools/sink_test.sh"  | tail -2 || fail=1
 echo "--- molt";  "$ROOT/tools/molt_test.sh"  | tail -2 || fail=1
+echo "--- diction"; "$ROOT/tools/diction_test.sh" | tail -2 || fail=1
 # Link takes about half a minute, mostly two sessions finding each other over
 # the local network.
 echo "--- link";  "$ROOT/tools/link_test.sh"  | tail -2 || fail=1

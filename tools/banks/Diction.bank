@@ -1,0 +1,100 @@
+# Diction - twenty patches for the built-in voice.
+#
+# It sings vowels for now, so a patch is a singer: how big the throat is, how
+# steady the voice, how it moves between notes. Which vowel is one knob, and
+# the vowels family just starts on each. Init is ah.
+#
+# The throat is `formant`. Down is bigger and darker, up smaller and
+# brighter, and it doesn't move the pitch. Play a patch low or high for a low
+# or high singer: the notes decide that.
+
+machine Diction
+
+patch Init family=voices
+patch Deep family=voices
+  # A big, dark throat. Best low.
+  formant        -6 st
+  vibrato        22 ct
+  vibratorate    5 Hz
+patch Low family=voices
+  formant        -3 st
+patch High family=voices
+  formant        3 st
+  vibrato        28 ct
+patch Light family=voices
+  # A small throat and a little air, like a child's voice.
+  formant        5 st
+  breath         0.25
+  vibrato        20 ct
+patch Neither family=voices
+  # Between the two, with a steadier line than either.
+  formant        1 st
+  breath         0.3
+  drift          0.2
+  vibrato        15 ct
+
+patch Oo family=vowels
+  vowel          0
+patch Oh family=vowels
+  vowel          1
+patch Eh family=vowels
+  vowel          3
+patch Ee family=vowels
+  vowel          4
+
+patch Chant family=style
+  # Straight and steady: no vibrato, hardly any wander.
+  vibrato        0 ct
+  drift          0.05
+  glide          0.05 s
+  vowel          1
+patch Ballad family=style
+  # Late, gentle vibrato and an easy scoop into each note.
+  vibrato        25 ct
+  vibratodelay   0.6 s
+  drift          0.55
+  glide          0.12 s
+patch Opera family=style
+  # Wide vibrato that comes in early, a darker throat, hardly any air.
+  vibrato        70 ct
+  vibratorate    6 Hz
+  vibratodelay   0.2 s
+  formant        -1 st
+  breath         0.04
+patch Breathy family=style
+  breath         0.7
+  vibrato        15 ct
+  attack         0.12 s
+patch Lullaby family=style
+  # Soft and close: a slow start, a little air and vibrato that waits.
+  vowel          1
+  attack         0.25 s
+  breath         0.35
+  vibrato        15 ct
+  vibratodelay   0.9 s
+  glide          0.15 s
+patch Swoop family=style
+  # Slides between notes and wanders on them.
+  glide          0.25 s
+  drift          0.6
+
+patch Giant family=strange
+  formant        -12 st
+  vibrato        12 ct
+  vibratorate    4 Hz
+patch Tiny family=strange
+  formant        12 st
+  vibrato        35 ct
+  vibratorate    7.5 Hz
+patch Machine family=strange
+  # Nothing human left: no vibrato, no wander, no air, no glide.
+  vibrato        0 ct
+  drift          0
+  breath         0
+  glide          0 s
+  attack         0.005 s
+patch Ghost family=strange
+  breath         1
+  attack         0.4 s
+  release        1.5 s
+  formant        2 st

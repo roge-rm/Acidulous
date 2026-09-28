@@ -66,7 +66,7 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
+        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt", "Diction")),
         MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Bias")),
     )
 
@@ -89,6 +89,7 @@ object MachineUi {
         "Mosaic" -> Res.string.machine_about_mosaic
         "Pollen" -> Res.string.machine_about_pollen
         "Molt" -> Res.string.machine_about_molt
+        "Diction" -> Res.string.machine_about_diction
         "Cipher" -> Res.string.machine_about_cipher
         "Nexus" -> Res.string.machine_about_nexus
         "Bias" -> Res.string.machine_about_bias
@@ -117,7 +118,7 @@ object MachineUi {
     fun usesPerformance(type: String): Boolean =
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
-            type == "Brazen" || type == "Timber" || type == "Molt"
+            type == "Brazen" || type == "Timber" || type == "Molt" || type == "Diction"
 
     /** Genesis's kit, in the Voice order of engine/machine/genesis/Genesis.h. */
     val genesisVoices: List<DrumVoice> = listOf(

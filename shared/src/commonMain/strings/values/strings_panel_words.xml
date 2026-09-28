@@ -714,6 +714,7 @@
     <string name="pw_sin8">sin8</string>
     <string name="pw_sine">sine</string>
     <string name="pw_sing">sing</string>
+    <string name="pw_singer">singer</string>
     <string name="pw_single">single</string>
     <string name="pw_size">size</string>
     <string name="pw_skew">skew</string>
@@ -755,6 +756,7 @@
     <string name="pw_stiff">stiff</string>
     <string name="pw_stiffness">stiffness</string>
     <string name="pw_straight">straight</string>
+    <string name="pw_strange">strange</string>
     <string name="pw_stretch">stretch</string>
     <string name="pw_strike">strike</string>
     <string name="pw_string">string</string>
@@ -763,6 +765,7 @@
     <string name="pw_strum">strum</string>
     <string name="pw_strumdir">strumdir</string>
     <string name="pw_stutter">stutter</string>
+    <string name="pw_style">style</string>
     <string name="pw_sub">sub</string>
     <string name="pw_sub_8ve">sub 8ve</string>
     <string name="pw_subtle">subtle</string>
@@ -864,6 +867,7 @@
     <string name="pw_volume">volume</string>
     <string name="pw_vowel">Vowel</string>
     <string name="pw_vowel_f2d494">vowel</string>
+    <string name="pw_vowels">vowels</string>
     <string name="pw_vspread">vspread</string>
     <string name="pw_walk">walk</string>
     <string name="pw_warp">warp</string>
