@@ -19,6 +19,21 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
   Changes show and play straight away. **apply** writes them to the file, and
   **revert** takes them all back.
 - **Library** - everything you've recorded or imported.
+- **Voice** - records your voice for Diction, a short prompt at a time.
+  - **new voice** starts one, and **delete** deletes the one chosen, with its
+    takes. **share** sends it as a zip, its takes and all. **note** is the note every prompt is sung on;
+    pick one that's easy for you, since it can't change after the first take.
+  - Tap **sing**, listen to the note, then sing the prompt on it when it says
+    **sing now**. **ah-sah** means ah, then sah, joined, all on the note: it's
+    the consonant going in and out of a vowel that's being recorded. A vowel
+    that moves, like **eye**, stays on its first vowel and moves to the second
+    at the very end: aaah-ee. Each take is two and a half seconds, and it moves on to the
+    next prompt by itself.
+  - **◀** and **▶** go back and forward, **play** plays a take back, and
+    **again** records it over.
+  - **stage 1** is every vowel and every consonant. Stages 2 and 3 sing the
+    consonants between other vowels. A voice is saved as you go, so you can
+    stop and finish it another day.
 
 The result is a file, so the same recording can be used by more than one
 machine.

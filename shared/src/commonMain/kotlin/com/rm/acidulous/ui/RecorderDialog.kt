@@ -52,7 +52,7 @@ import com.rm.acidulous.res.*
  * It hands back a path, so one window serves Molt's take, Forage's pads,
  * Dice's loop, Pollen's buffer and Mosaic's zones without knowing about them.
  */
-enum class RecorderPage { Record, Edit, Library }
+enum class RecorderPage { Record, Edit, Library, Voice }
 
 /**
  * The input settings: source, gain, monitor and the tuner's reading. Held by
@@ -90,6 +90,7 @@ fun RecorderDialog(
     var tab by remember { mutableStateOf(tabOf(startOn)) }
     val permissions = rememberPermissions { }
     val setup = remember { InputSetup(permissions.has(Permissions.RECORD_AUDIO)) }
+    val voicePermission = rememberPermissions { ok -> setup.havePermission = ok }
     LaunchedEffect(setup.monitor, setup.gain) {
         NativeEngine.setMonitorLevel(if (setup.monitor) 1f else 0f)
         NativeEngine.setInputGain(setup.gain)
@@ -177,6 +178,16 @@ fun RecorderDialog(
                         onPick?.invoke("samples/" + file.name)
                     },
                     onEdit = { file -> chosen = file; tab = tabOf(RecorderPage.Edit) },
+                )
+            },
+            {
+                // A voice is sung into the microphone, so the tuner listens.
+                LaunchedEffect(Unit) { setup.fromInput = true }
+                VoicePage(
+                    havePermission = setup.havePermission,
+                    askPermission = { voicePermission.ask(Permissions.RECORD_AUDIO) },
+                    tunerHz = { setup.tunerHz },
+                    onRecording = { recording = it },
                 )
             },
         ),

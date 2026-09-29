@@ -6,7 +6,37 @@
         <item>record</item>
         <item>edit</item>
         <item>library</item>
+        <item>voice</item>
     </string-array>
+
+    <!-- Recording a voice for Diction: short prompts sung one at a time on one note. -->
+    <string name="voice_card">voice</string>
+    <string name="voice_which">voice</string>
+    <string name="voice_new">new voice</string>
+    <string name="voice_default_name">my voice</string>
+    <string name="voice_delete">delete</string>
+    <string name="voice_share">share</string>
+    <string name="voice_share_failed">The voice couldn\'t be shared.</string>
+    <!-- Asking before a voice is deleted: its name. -->
+    <string name="voice_delete_title">Delete %1$s?</string>
+    <!-- How many takes go with it. -->
+    <string name="voice_delete_note">Its %1$d takes are deleted too.</string>
+    <string name="voice_note">note</string>
+    <!-- A stage of the prompts: its number, then how many are sung of how many. -->
+    <string name="voice_stage">stage %1$d · %2$d/%3$d</string>
+    <string name="voice_prompt">sing</string>
+    <!-- A word with the sound in it. -->
+    <string name="voice_like">as in %1$s</string>
+    <!-- A consonant prompt: which consonant, as it sounds in a word. "the h in high". -->
+    <string name="voice_the_in">the %1$s in %2$s</string>
+    <string name="voice_listen">listen…</string>
+    <string name="voice_sing_now">sing now</string>
+    <!-- How far the voice is from the note, e.g. +12 ct. -->
+    <string name="voice_cents">%1$s ct</string>
+    <string name="voice_count">%1$d of %2$d</string>
+    <string name="voice_sing">sing</string>
+    <string name="voice_again">again</string>
+    <string name="voice_play">play</string>
 
     <!-- Recording -->
     <string name="sound_stereo">stereo</string>
