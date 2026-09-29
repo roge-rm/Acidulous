@@ -6,7 +6,7 @@
 ; Songs and settings live in %APPDATA%\Acidulous, so upgrading or
 ; uninstalling leaves them alone.
 ;
-;   makensis -DVERSION=0.9.9 -DSTAGE=<the staged folder> -DOUT=<setup.exe> installer.nsi
+;   makensis -DVERSION=0.9.10 -DSTAGE=<the staged folder> -DOUT=<setup.exe> installer.nsi
 
 Unicode true
 SetCompressor /SOLID lzma

@@ -158,15 +158,17 @@ android {
         // the input opening, notes lost between threads, reads of freed
         // memory, bad audio files and songs, the organ's top wheels, and
         // Harmonizer and Shifter feedback running away.
+        // 0.9.10: Molt no longer leaves the end of a note repeating as a tone;
+        // the whole app from a game controller, sticks and play mode too.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 24
+        val release = 25
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.9.9"
+        versionName = "0.9.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
