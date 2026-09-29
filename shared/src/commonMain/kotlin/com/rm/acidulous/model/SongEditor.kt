@@ -1,5 +1,8 @@
 package com.rm.acidulous.model
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 /**
  * Every change to the song goes through here.
  *
@@ -27,6 +30,15 @@ class SongEditor(
     }
 
     private val histories = HashMap<String, History>()
+
+    /**
+     * Counts changes to any history, so a button showing [canUndo] or
+     * [canUndoSong] updates when it changes. The histories themselves aren't
+     * state, and a screen that isn't rebuilt otherwise (the editor, since it
+     * stopped rebuilding for every meter reading) showed a greyed undo after
+     * an edit, and ignored the tap.
+     */
+    private var historyChanges by androidx.compose.runtime.mutableIntStateOf(0)
     private val songUndo = ArrayDeque<Song>()
     private val songRedo = ArrayDeque<Song>()
     private var gesture: Gesture? = null
@@ -43,6 +55,7 @@ class SongEditor(
         songRedo.clear()
         gesture = null
         takes.clear()
+        historyChanges++
         onChange(song, push)
     }
 
@@ -89,6 +102,7 @@ class SongEditor(
         h.undo.addLast(before)
         if (h.undo.size > MAX_HISTORY) h.undo.removeFirst()
         h.redo.clear()
+        historyChanges++
         commit(trackIndex, after, pushNow = push)
     }
 
@@ -116,14 +130,17 @@ class SongEditor(
         if (next === current) track else track.copy(clips = track.clips + (sceneId to next))
     }
 
-    fun canUndo(trackIndex: Int): Boolean = song.tracks.getOrNull(trackIndex)?.let { histories[it.id]?.undo?.isNotEmpty() } == true
-    fun canRedo(trackIndex: Int): Boolean = song.tracks.getOrNull(trackIndex)?.let { histories[it.id]?.redo?.isNotEmpty() } == true
+    // Each reads historyChanges first, which is always true, so a caller in
+    // composition is told when a history changes.
+    fun canUndo(trackIndex: Int): Boolean = historyChanges >= 0 && song.tracks.getOrNull(trackIndex)?.let { histories[it.id]?.undo?.isNotEmpty() } == true
+    fun canRedo(trackIndex: Int): Boolean = historyChanges >= 0 && song.tracks.getOrNull(trackIndex)?.let { histories[it.id]?.redo?.isNotEmpty() } == true
 
     fun undo(trackIndex: Int) {
         val current = song.tracks.getOrNull(trackIndex) ?: return
         val h = histories[current.id] ?: return
         val previous = h.undo.removeLastOrNull() ?: return
         h.redo.addLast(current)
+        historyChanges++
         commit(trackIndex, previous, pushNow = true)
     }
 
@@ -132,6 +149,7 @@ class SongEditor(
         val h = histories[current.id] ?: return
         val next = h.redo.removeLastOrNull() ?: return
         h.undo.addLast(current)
+        historyChanges++
         commit(trackIndex, next, pushNow = true)
     }
 
@@ -167,6 +185,7 @@ class SongEditor(
         h.undo.addLast(g.base)
         if (h.undo.size > MAX_HISTORY) h.undo.removeFirst()
         h.redo.clear()
+        historyChanges++
         onChange(song, true)
     }
 
@@ -184,6 +203,7 @@ class SongEditor(
         songUndo.addLast(song)
         if (songUndo.size > MAX_HISTORY) songUndo.removeFirst()
         songRedo.clear()
+        historyChanges++
         song = next
         onChange(song, true)
     }
@@ -207,15 +227,17 @@ class SongEditor(
         songUndo.addLast(base)
         if (songUndo.size > MAX_HISTORY) songUndo.removeFirst()
         songRedo.clear()
+        historyChanges++
         onChange(song, true)
     }
 
-    fun canUndoSong(): Boolean = songUndo.isNotEmpty()
-    fun canRedoSong(): Boolean = songRedo.isNotEmpty()
+    fun canUndoSong(): Boolean = historyChanges >= 0 && songUndo.isNotEmpty()
+    fun canRedoSong(): Boolean = historyChanges >= 0 && songRedo.isNotEmpty()
 
     fun undoSong() {
         val previous = songUndo.removeLastOrNull() ?: return
         songRedo.addLast(song)
+        historyChanges++
         song = previous
         onChange(song, true)
     }
@@ -223,6 +245,7 @@ class SongEditor(
     fun redoSong() {
         val next = songRedo.removeLastOrNull() ?: return
         songUndo.addLast(song)
+        historyChanges++
         song = next
         onChange(song, true)
     }
