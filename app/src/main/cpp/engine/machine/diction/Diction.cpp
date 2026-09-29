@@ -282,6 +282,9 @@ float Diction::layGrains(float vowel, float formantRatio, float breath) {
 }
 
 bool Diction::render(float *L, float *R, int32_t frames) {
+    // The rack's buffer still holds its last block: written through, even
+    // asleep. Left, it came round every block as a 750 Hz tone.
+    for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (!sounding || bank == nullptr) return true; // asleep: nothing held and nothing ringing
 
     const float vowel = paramOf(Vowel);
