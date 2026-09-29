@@ -61,6 +61,7 @@ fun VerticalFader(
             else Modifier.adjustable(
                 name, state.ifEmpty { "%.0f%%".format(value * 100f) }, value,
                 actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
+                gesture = Triple({ cb.first() }, { v -> cb.second(v) }, { cb.third() }),
             ) { v -> cb.first(); cb.second(v); cb.third() },
         ).pointerInput(Unit) {
             awaitEachGesture {
@@ -124,6 +125,7 @@ fun MiniSlider(
             else Modifier.adjustable(
                 name, state.ifEmpty { "%.0f%%".format(value * 100f) }, value,
                 actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
+                gesture = Triple({ cb.first() }, { v -> cb.second(v) }, { cb.third() }),
             ) { v -> cb.first(); cb.second(v); cb.third() },
         ).pointerInput(Unit) {
             awaitEachGesture {

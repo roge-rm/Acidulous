@@ -102,6 +102,8 @@ fun EditScreen(
     armed: Boolean,
     onArm: (Boolean) -> Unit,
     onBack: () -> Unit,
+    /** Edit another track's clip in this scene, by index (previous and next track). */
+    onTrack: (Int) -> Unit = {},
     onOpenPatch: () -> Unit = {},
     patchNames: () -> List<String>,
     /** The name, and the note range the keyboard was showing, which a saved patch remembers. */
@@ -364,6 +366,8 @@ fun EditScreen(
         },
         KeyAction.PagePrev to { if (pages > 1) scrollTick = ((page - 1 + pages) % pages) * pageTicks },
         KeyAction.PageNext to { if (pages > 1) scrollTick = ((page + 1) % pages) * pageTicks },
+        KeyAction.TrackPrev to { onTrack((trackIndex - 1 + song.tracks.size) % song.tracks.size) },
+        KeyAction.TrackNext to { onTrack((trackIndex + 1) % song.tracks.size) },
         KeyAction.EditMode to { if (!steps) mode = if (mode == EditMode.Draw) EditMode.Select else EditMode.Draw },
         KeyAction.StepView to { if (hasSteps) steps = !steps },
         KeyAction.LockSteps to {

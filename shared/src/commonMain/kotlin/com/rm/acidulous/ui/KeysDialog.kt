@@ -57,6 +57,9 @@ fun KeysDialog(onDismiss: () -> Unit) {
     }
 
     androidx.compose.runtime.DisposableEffect(Unit) { onDispose { KeyHub.learning = null } }
+    // The controller button whose job is being chosen.
+    var choosing by remember { mutableStateOf<Int?>(null) }
+    val jobNames = Pad.CHOICES.map { jobName(it) }
 
     PlainDialog(
         title = stringResource(Res.string.keys_title),
@@ -74,6 +77,26 @@ fun KeysDialog(onDismiss: () -> Unit) {
                 SwitchGrid(stringResource(Res.string.keys_defaults), listOf(stringResource(Res.string.keys_reset)), -1) {
                     UiPrefs.resetKeys()
                     moved = null
+                }
+            }
+            // A controller's buttons: each has a job, chosen from a list,
+            // since pressing one to learn it would do its job instead.
+            WindowCard(stringResource(Res.string.keys_pad_card)) {
+                Column(Modifier.cardLine(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for ((code, name) in Pad.BUTTONS) {
+                        val job = Pad.jobOf(code) ?: Pad.Job.Nothing
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(name, color = c.text, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                            KeyChip(
+                                text = jobName(job),
+                                waiting = choosing == code,
+                                said = stringResource(Res.string.keys_chip_said, name, jobName(job)),
+                                onRemove = null,
+                                removeLabel = "",
+                                wide = true,
+                            ) { choosing = code }
+                        }
+                    }
                 }
             }
             for (group in KeyGroup.entries) {
@@ -113,6 +136,29 @@ fun KeysDialog(onDismiss: () -> Unit) {
             }
         }
     }
+    choosing?.let { code ->
+        PickerDialog(
+            title = Pad.BUTTONS.firstOrNull { it.first == code }?.second ?: "",
+            options = jobNames,
+            onDismiss = { choosing = null },
+        ) { picked ->
+            jobNames.indexOf(picked).takeIf { it >= 0 }?.let { UiPrefs.choosePadJob(code, Pad.CHOICES[it]) }
+            choosing = null
+        }
+    }
+}
+
+/** What a controller button's job is called in the list. */
+@Composable
+private fun jobName(job: Pad.Job): String = when (job) {
+    is Pad.Job.Action -> stringResource(job.action.label)
+    Pad.Job.Nothing -> stringResource(Res.string.keys_pad_nothing)
+    is Pad.Job.Key -> when (job.code) {
+        KeyCodes.KEYCODE_ENTER -> stringResource(Res.string.keys_pad_press)
+        KeyCodes.KEYCODE_ESCAPE -> stringResource(Res.string.keys_pad_back)
+        KeyCodes.KEYCODE_MENU -> stringResource(Res.string.keys_pad_actions)
+        else -> keyName(job.code)
+    }
 }
 
 @Composable
@@ -122,12 +168,14 @@ private fun KeyChip(
     said: String,
     onRemove: (() -> Unit)?,
     removeLabel: String,
+    /** Wide enough for an action's name, for a controller button's job. */
+    wide: Boolean = false,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
     Text(
         text, color = if (waiting) c.onAccent else c.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-        modifier = Modifier.width(104.dp).clip(RoundedCornerShape(4.dp))
+        modifier = Modifier.width(if (wide) 160.dp else 104.dp).clip(RoundedCornerShape(4.dp))
             .background(if (waiting) c.accent else c.control)
             .clickable(onClick = onClick)
             .button(said, actions = listOfNotNull(onRemove?.let { action(removeLabel, it) }))

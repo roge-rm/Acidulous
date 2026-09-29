@@ -36,6 +36,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
@@ -123,7 +124,10 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
         val light = !com.rm.acidulous.ui.theme.Acid.colors.dark
         androidx.compose.runtime.LaunchedEffect(light) { onLightTheme(light) }
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
+            // Whether anything in the app has focus, so an arrow can find
+            // somewhere to start from when nothing does (see KeyHub.preview).
+            modifier = Modifier.fillMaxSize()
+                .then(androidx.compose.ui.Modifier.onFocusChanged { com.rm.acidulous.ui.KeyHub.anyFocused = it.hasFocus }),
             containerColor = com.rm.acidulous.ui.theme.Acid.colors.bg,
             // The bars are hidden, so their insets aren't space the app has
             // to give up. A camera cutout is, but only the sides and bottom
@@ -262,6 +266,14 @@ fun App(modifier: Modifier = Modifier) {
     // Typed notes go where hardware notes do. On a drum machine they're its
     // pads in order rather than a scale.
     androidx.compose.runtime.SideEffect {
+        // A controller's notes follow the track's scale chip, or else the song's key.
+        com.rm.acidulous.ui.KeyHub.scaleOf = { rack ->
+            song.tracks.getOrNull(rack)?.let { t ->
+                com.rm.acidulous.model.Scales.activeFor(song, t)?.let { classes ->
+                    (com.rm.acidulous.model.Scales.rootFor(song, t) ?: classes.minOrNull() ?: 0) to classes
+                }
+            }
+        }
         com.rm.acidulous.ui.KeyHub.drumVoices = { rack ->
             song.tracks.getOrNull(rack)?.machine?.let { m ->
                 if (com.rm.acidulous.model.MachineUi.kindOf(m.type) == com.rm.acidulous.model.MachineKind.Drums) {
@@ -269,6 +281,29 @@ fun App(modifier: Modifier = Modifier) {
                 } else null
             }
         }
+    }
+    // With nothing focused, an arrow focuses the screen's first control (see
+    // KeyHub.fallback). Moving to the next with nothing focused does that.
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    androidx.compose.runtime.SideEffect {
+        com.rm.acidulous.ui.KeyHub.focusFirst = {
+            focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
+        }
+    }
+    // A controller's sticks, each frame while one is off centre (see Pad).
+    androidx.compose.runtime.LaunchedEffect(com.rm.acidulous.ui.Pad.active) {
+        if (!com.rm.acidulous.ui.Pad.active) {
+            com.rm.acidulous.ui.Pad.tick(0f) // lets go of a turn
+            return@LaunchedEffect
+        }
+        var last = 0L
+        while (com.rm.acidulous.ui.Pad.active) {
+            androidx.compose.runtime.withFrameNanos { t ->
+                if (last != 0L) com.rm.acidulous.ui.Pad.tick(((t - last) / 1e9).toFloat().coerceAtMost(0.1f))
+                last = t
+            }
+        }
+        com.rm.acidulous.ui.Pad.tick(0f)
     }
     // The keys every screen handles the same way.
     com.rm.acidulous.ui.KeyScope(
@@ -1765,6 +1800,7 @@ fun App(modifier: Modifier = Modifier) {
             position = position, playing = playing, armed = armed, onArm = onArm,
             rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onBack = { screen = Screen.Main },
+            onTrack = { t -> screen = Screen.Edit(t, s.sceneId) },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
             onOpenSample = { pad -> sampleEdit = s.track to pad },
             patchNames = { PatchStore.list(song.tracks[s.track].machine.type) },

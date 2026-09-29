@@ -55,6 +55,7 @@ in the keys window (see **Changing the keys** below):
 In the editor:
 
 - previous / next page - **[ and ]**, or **Alt+B and Alt+N**
+- previous / next track - **Shift+[ and Shift+]**
 - draw or select - **D**, or **Alt+D**
 - step view - **T**, or **Alt+T**
 - lock steps - **K**, or **Alt+K**
@@ -65,6 +66,8 @@ In the editor:
 
 The first key is for a full keyboard and the second for a small one. Keys
 without Alt or Ctrl only work as shortcuts when play mode is off.
+
+In a window with tabs, previous and next page step through the tabs.
 
 ## Moving around
 
@@ -105,6 +108,43 @@ the value there, adding a point if there isn't one.
 
 Every change is one step of undo, like it would be by touch.
 
+## A game controller
+
+A controller's buttons work like the keys, so the app can be used without
+touching the screen, on a handheld like the Retroid Pocket.
+
+- **d-pad** - moves between controls, and moves the cursor in the editor.
+- **A** - presses, like Enter. On a knob it grabs it, the d-pad turns it, and
+  **A** again lets go.
+- **B** - back: closes a window, or leaves the editor.
+- **X** - what a long press does: a control's list of actions.
+- **Y** - play / stop.
+- **L1** and **R1** - previous and next page in the editor, and a window's
+  tabs.
+- **L2** and **R2** - previous and next track in the editor.
+- **Start** - play mode.
+- **Select** - the file menu.
+
+- **left stick** - turns the highlighted knob or fader, faster the further
+  it's pushed. One push is one step of undo.
+- **right stick** - a fast d-pad: the further it's pushed, the faster it moves.
+
+If nothing is highlighted, the first press of the d-pad or **A** highlights
+something to start from.
+
+**Start** switches play mode on and off. In play mode the controller is an
+instrument for the track MIDI plays:
+
+- the **d-pad** and the four buttons are eight notes of the track's scale (its
+  scale chip, or the song's key, or else major), going round each clockwise
+  from the bottom: the d-pad has the first four, the buttons the next four. On
+  a drum machine they're its first eight pads.
+- **L1** and **R1** move the octave.
+- the **right stick** bends the pitch sideways and adds mod upwards, and the
+  **left stick** pushed up is pressure.
+- pull **R2** or **L2** partway while you play to set how hard notes play.
+- **Select** is play / stop, since **Y** is a note.
+
 ## Changing the keys
 
 **Settings › display › keyboard › keys…** lists every shortcut with its keys,
@@ -114,3 +154,8 @@ new key or combination. **+** adds a second key.
 If the new key already belonged to something else, it moves, and the window
 tells you what lost it. **Alt+Enter** on a key removes it. **reset** puts every
 key back as it was.
+
+The **controller** card lists a controller's buttons and what each does. Tap
+one to choose from a list: **press**, **back**, **actions list**,
+**nothing**, or any shortcut. **reset** puts these back too. Play mode's
+notes stay where they are.

@@ -11,10 +11,17 @@ internal actual fun WindowKeys() {
         if (window != null && own != null) {
             window.callback = object : android.view.Window.Callback by own {
                 override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+                    PadEvents.key(event)
+                    PadEvents.route(event) { dispatchKeyEvent(it) }?.let { return it }
                     val esc = event.keyCode == android.view.KeyEvent.KEYCODE_ESCAPE
                     if (!esc && KeyHub.preview(event.toPress())) return true
                     if (own.dispatchKeyEvent(event)) return true
                     return !esc && KeyHub.fallback(event.toPress())
+                }
+
+                override fun dispatchGenericMotionEvent(event: android.view.MotionEvent): Boolean {
+                    if (PadEvents.motion(event) { dispatchKeyEvent(it) }) return true
+                    return own.dispatchGenericMotionEvent(event)
                 }
 
                 override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {

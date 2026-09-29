@@ -52,6 +52,8 @@ enum class KeyAction(val label: StringResource, val group: KeyGroup) {
     Back(Res.string.keys_back, KeyGroup.App),
     PagePrev(Res.string.keys_page_prev, KeyGroup.Editor),
     PageNext(Res.string.keys_page_next, KeyGroup.Editor),
+    TrackPrev(Res.string.keys_track_prev, KeyGroup.Editor),
+    TrackNext(Res.string.keys_track_next, KeyGroup.Editor),
     EditMode(Res.string.keys_edit_mode, KeyGroup.Editor),
     StepView(Res.string.keys_step_view, KeyGroup.Editor),
     LockSteps(Res.string.keys_lock_steps, KeyGroup.Editor),
@@ -158,6 +160,9 @@ val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
         KeyAction.Back to listOf(k(KeyCodes.KEYCODE_ESCAPE)),
         KeyAction.PagePrev to listOf(k(KeyCodes.KEYCODE_LEFT_BRACKET), alt(KeyCodes.KEYCODE_B)),
         KeyAction.PageNext to listOf(k(KeyCodes.KEYCODE_RIGHT_BRACKET), alt(KeyCodes.KEYCODE_N)),
+        // Shift and the page keys, so the pair sits beside pages.
+        KeyAction.TrackPrev to listOf(k(KeyCodes.KEYCODE_LEFT_BRACKET, shift = true)),
+        KeyAction.TrackNext to listOf(k(KeyCodes.KEYCODE_RIGHT_BRACKET, shift = true)),
         KeyAction.EditMode to listOf(k(KeyCodes.KEYCODE_D), alt(KeyCodes.KEYCODE_D)),
         KeyAction.StepView to listOf(k(KeyCodes.KEYCODE_T), alt(KeyCodes.KEYCODE_T)),
         KeyAction.LockSteps to listOf(k(KeyCodes.KEYCODE_K), alt(KeyCodes.KEYCODE_K)),
@@ -220,6 +225,18 @@ internal fun actionFor(chord: KeyChord, bindings: Map<KeyAction, List<KeyChord>>
 internal fun noteFor(semitone: Int, octave: Int, voices: List<Int>?): Int =
     if (!voices.isNullOrEmpty()) voices[semitone % voices.size]
     else ((octave + 1) * 12 + semitone).coerceIn(0, 127)
+
+private val MAJOR = setOf(0, 2, 4, 5, 7, 9, 11)
+
+/**
+ * The [degree]th note of a scale up from its [root] (a pitch class) in
+ * [octave], MIDI numbering: degree 0 is the root, and past the scale's last
+ * note it carries on in the next octave.
+ */
+internal fun degreeNote(degree: Int, octave: Int, root: Int, classes: Set<Int>): Int {
+    val steps = classes.map { (it - root + 12) % 12 }.distinct().sorted().ifEmpty { listOf(0) }
+    return noteFor(root + steps[degree % steps.size] + 12 * (degree / steps.size), octave, null)
+}
 
 /** One registered set of handlers, a screen's or a window's. */
 class KeyScopeHandle internal constructor(
@@ -291,6 +308,52 @@ object KeyHub {
      */
     var drumVoices: (Int) -> List<Int>? = { null }
 
+    /**
+     * Moves focus to the screen's first control, for when nothing has focus.
+     * Set by the app, where the focus manager is. True if it moved.
+     */
+    var focusFirst: () -> Boolean = { false }
+    /** Whether anything in the main window has focus. Set by the app's root. */
+    var anyFocused = false
+
+    private val ARROWS = setOf(
+        KeyCodes.KEYCODE_DPAD_UP, KeyCodes.KEYCODE_DPAD_DOWN, KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT,
+    )
+
+    /**
+     * A track's scale for a controller's notes: its root and pitch classes,
+     * from the track's Scale chip or else the song's key. Null plays major
+     * from C. Set by the app.
+     */
+    var scaleOf: (Int) -> Pair<Int, Set<Int>>? = { null }
+
+    /**
+     * A controller's note in play mode, for the button [code]: the [degree]th
+     * note of the track's scale up from its root in the current octave, or
+     * the [degree]th voice on a drum machine. Released by the same button.
+     */
+    fun padNote(code: Int, degree: Int, down: Boolean, velocityNow: Int = velocity) {
+        if (!down) {
+            sounding.remove(-code)?.let { (rack, note) -> NativeEngine.noteOff(rack, note) }
+            return
+        }
+        if (-code in sounding) return
+        val rack = target()
+        val voices = drumVoices(rack)
+        val note = if (!voices.isNullOrEmpty()) {
+            voices[degree % voices.size]
+        } else {
+            val (root, classes) = scaleOf(rack) ?: (0 to MAJOR)
+            degreeNote(degree, octave, root, classes)
+        }
+        NativeEngine.noteOn(rack, note, velocityNow)
+        // Negative, so a controller's button never meets a keyboard key's code.
+        sounding[-code] = rack to note
+    }
+
+    /** One octave up or down, for a controller's shoulder buttons. */
+    fun shiftOctave(by: Int) = moveOctave(octave + by)
+
     /** Keys sounding now and what each sent, so key up releases what key down played. */
     private val sounding = HashMap<Int, Pair<Int, Int>>()
     /** Key downs this consumed, so their key ups are consumed too and don't reach a control. */
@@ -354,6 +417,14 @@ object KeyHub {
             return taken.remove(code)
         }
         if (e.action != KeyCodes.ACTION_DOWN) return false
+        // An arrow or Enter with nothing focused, as after a window closes or
+        // the screen changes, has nothing to act on. Focus the screen's first
+        // control instead, and the next press acts from there. Not in play
+        // mode, where arrows are left alone.
+        if ((code in ARROWS || code == KeyCodes.KEYCODE_ENTER) && !anyFocused && !playMode && focusFirst()) {
+            taken += code
+            return true
+        }
         val chord = KeyChord.of(e)
         val layout = UiPrefs.noteLayout
         // Shift plays an octave up, unless the chord is a shortcut: Shift+/ is

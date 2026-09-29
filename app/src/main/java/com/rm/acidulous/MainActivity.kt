@@ -196,9 +196,18 @@ class MainActivity : ComponentActivity() {
      * ui/Keys.kt.
      */
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        com.rm.acidulous.ui.PadEvents.key(event)
+        // A controller's buttons get their jobs first; the d-pad carries on as arrows.
+        com.rm.acidulous.ui.PadEvents.route(event) { dispatchKeyEvent(it) }?.let { return it }
         if (com.rm.acidulous.ui.KeyHub.preview(event.toPress())) return true
         if (super.dispatchKeyEvent(event)) return true
         return com.rm.acidulous.ui.KeyHub.fallback(event.toPress())
+    }
+
+    /** A controller's sticks and triggers, which Pad gives their jobs. */
+    override fun dispatchGenericMotionEvent(ev: android.view.MotionEvent): Boolean {
+        if (com.rm.acidulous.ui.PadEvents.motion(ev) { dispatchKeyEvent(it) }) return true
+        return super.dispatchGenericMotionEvent(ev)
     }
 
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {

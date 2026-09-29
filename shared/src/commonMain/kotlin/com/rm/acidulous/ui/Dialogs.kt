@@ -1022,9 +1022,16 @@ fun TabbedDialog(
     } else {
         null
     }
+    // The page keys step through the tabs, round and round (L1 and R1 on a
+    // controller).
+    val n = pages.size
+    val keys = if (onSelectPage != null && n > 1) listOf(
+        KeyAction.PagePrev to { onSelectPage((selected - 1 + n) % n) },
+        KeyAction.PageNext to { onSelectPage((selected + 1) % n) },
+    ) else emptyList()
     DialogShell(
         title, onDismiss, dismissLabel, maxBodyHeight,
-        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = tabs, wideHeader = wideHeader,
+        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = tabs, wideHeader = wideHeader, keys = keys,
     ) {
         TallestOf(selected, pages, spacing)
     }
@@ -1077,6 +1084,8 @@ private fun DialogShell(
     onConfirm: (() -> Unit)? = null,
     chips: (@Composable () -> Unit)?,
     wideHeader: (@Composable () -> Unit)? = null,
+    /** What the window's keys do, like its tabs' previous and next. */
+    keys: List<Pair<KeyAction, () -> Unit>> = emptyList(),
     body: @Composable () -> Unit,
 ) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
@@ -1114,7 +1123,7 @@ private fun DialogShell(
         // window's controls. Esc is left to the window, which closes on it,
         // and the screen's letter shortcuts stop at the window (see
         // KeyScope's `window`).
-        KeyScope(window = true)
+        KeyScope(*keys.toTypedArray(), window = true)
         WindowKeys()
         // Opened from the keyboard, the window moves focus to its first
         // control so the next key goes there.

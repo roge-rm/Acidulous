@@ -228,6 +228,13 @@ object UiPrefs {
     var keyBindings by mutableStateOf(DEFAULT_KEYS)
         private set
 
+    /**
+     * A controller's buttons given jobs other than their own (see Pad), by key
+     * code. Only the changes are kept, like [keyBindings].
+     */
+    var padJobs by mutableStateOf(emptyMap<Int, Pad.Job>())
+        private set
+
     /** Which letters play which notes in play mode. */
     var noteLayout by mutableStateOf(NoteLayout.Piano)
         private set
@@ -298,6 +305,10 @@ object UiPrefs {
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
         loopBars = p.getInt(KEY_LOOP_BARS, 0)
         keyBindings = DEFAULT_KEYS + decodeKeys(p.getString(KEY_KEYS, null).orEmpty())
+        padJobs = p.getString(KEY_PAD_JOBS, null).orEmpty().split(';').mapNotNull { e ->
+            val (code, job) = e.split('=', limit = 2).takeIf { it.size == 2 } ?: return@mapNotNull null
+            (code.toIntOrNull() ?: return@mapNotNull null) to (Pad.decode(job) ?: return@mapNotNull null)
+        }.toMap()
         noteLayout = runCatching { NoteLayout.valueOf(p.getString(KEY_NOTE_LAYOUT, null) ?: "Piano") }.getOrDefault(NoteLayout.Piano)
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
@@ -505,7 +516,18 @@ object UiPrefs {
 
     fun resetKeys() {
         keyBindings = DEFAULT_KEYS
-        store?.edit()?.remove(KEY_KEYS)?.apply()
+        padJobs = emptyMap()
+        store?.edit()?.remove(KEY_KEYS)?.remove(KEY_PAD_JOBS)?.apply()
+    }
+
+    /** A new job for a controller button; its own job again takes the change away. */
+    fun choosePadJob(keyCode: Int, job: Pad.Job) {
+        padJobs = if (Pad.DEFAULT_JOBS[keyCode] == job || (Pad.DEFAULT_JOBS[keyCode] == null && job == Pad.Job.Nothing)) {
+            padJobs - keyCode
+        } else {
+            padJobs + (keyCode to job)
+        }
+        store?.edit()?.putString(KEY_PAD_JOBS, padJobs.entries.joinToString(";") { (c, j) -> "$c=${Pad.encode(j)}" })?.apply()
     }
 
     fun chooseTheme(mode: ThemeMode) {
@@ -783,6 +805,7 @@ object UiPrefs {
     private const val KEY_LOOP_BARS = "loop_bars"
     private const val KEY_THEME = "theme"
     private const val KEY_KEYS = "key_bindings"
+    private const val KEY_PAD_JOBS = "pad_jobs"
     private const val KEY_NOTE_LAYOUT = "note_layout"
     private const val KEY_UI_SCALE = "ui_scale"
     private const val KEY_SCREEN_SCALE = "screen_scale"

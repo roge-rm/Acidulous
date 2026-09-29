@@ -59,14 +59,36 @@ internal fun Modifier.keyAdjust(
     value: Float,
     steps: Int,
     actions: List<CustomAccessibilityAction>,
+    gesture: Triple<() -> Unit, (Float) -> Unit, () -> Unit>?,
     onSet: (Float) -> Unit,
 ): Modifier = composed {
     var focused by remember { mutableStateOf(false) }
     var grabbed by remember { mutableStateOf(false) }
     val accent = Acid.colors.accent
     val pink = Acid.colors.pink
+    // What a controller's left stick turns while this has focus (see Pad).
+    val now by androidx.compose.runtime.rememberUpdatedState(value)
+    val stepsNow by androidx.compose.runtime.rememberUpdatedState(steps)
+    val set by androidx.compose.runtime.rememberUpdatedState(onSet)
+    val own by androidx.compose.runtime.rememberUpdatedState(gesture)
+    val turnable = remember {
+        Pad.Turnable(
+            value = { now },
+            steps = { stepsNow },
+            begin = { own?.first?.invoke() },
+            change = { v -> own?.second?.invoke(v) ?: set(v) },
+            end = { own?.third?.invoke() },
+        )
+    }
+    androidx.compose.runtime.DisposableEffect(turnable) {
+        onDispose { if (Pad.turnable === turnable) Pad.turnable = null }
+    }
     this
-        .onFocusChanged { focused = it.isFocused; if (!it.isFocused) grabbed = false }
+        .onFocusChanged {
+            focused = it.isFocused
+            if (!it.isFocused) grabbed = false
+            if (it.isFocused) Pad.turnable = turnable else if (Pad.turnable === turnable) Pad.turnable = null
+        }
         .focusable()
         .onKeyEvent { ev ->
             val e = ev.press

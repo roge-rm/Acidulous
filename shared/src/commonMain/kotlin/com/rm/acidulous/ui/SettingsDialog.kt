@@ -282,6 +282,30 @@ private fun AudioTab(trackNames: List<String>) {
                 NativeEngine.resetRackCosts()
             }
         }
+        // What a game controller sends: its buttons' codes and its axes, live,
+        // so its buttons can be given jobs that fit it.
+        WindowCard("controller") {
+            val pad = buildList {
+                if (Pad.device.isEmpty()) {
+                    add("press a button or move a stick")
+                } else {
+                    add(Pad.device)
+                    add("button  " + Pad.lastButton.ifEmpty { "-" })
+                    // Two to a line, so a whole controller's buttons fit.
+                    if (Pad.seen.isNotEmpty()) add("seen")
+                    for (pair in Pad.seen.chunked(2)) add("  " + pair.joinToString("   "))
+                    for (a in Pad.axes) add("%-9s %+.2f  rests within %.2f".format(a.name, a.value, a.flat))
+                }
+            }
+            androidx.compose.foundation.layout.Column(Modifier.cardLine()) {
+                for (l in pad) {
+                    Text(
+                        l, color = Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
     }
 }
 

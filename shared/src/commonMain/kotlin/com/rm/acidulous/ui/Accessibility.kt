@@ -43,6 +43,12 @@ internal fun Modifier.adjustable(
     value: Float,
     steps: Int = 0,
     actions: List<CustomAccessibilityAction> = emptyList(),
+    /**
+     * The control's own gesture (start, change, end), for a controller's
+     * stick turning it: one gesture from push to let go, so one step of undo.
+     * Without it each change is a gesture of its own, as a key press is.
+     */
+    gesture: Triple<() -> Unit, (Float) -> Unit, () -> Unit>? = null,
     onSet: (Float) -> Unit,
 ): Modifier = clearAndSetSemantics {
     contentDescription = name
@@ -50,7 +56,7 @@ internal fun Modifier.adjustable(
     progressBarRangeInfo = ProgressBarRangeInfo(value.coerceIn(0f, 1f), 0f..1f, steps)
     setProgress { target -> onSet(target.coerceIn(0f, 1f)); true }
     if (actions.isNotEmpty()) customActions = actions
-}.keyAdjust(value, steps, actions, onSet)
+}.keyAdjust(value, steps, actions, gesture, onSet)
 
 /**
  * A drawn button, or anything tapped: [name] instead of its glyph, and what a

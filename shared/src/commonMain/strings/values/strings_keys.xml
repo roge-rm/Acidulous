@@ -21,6 +21,14 @@
     <string name="keys_back">back</string>
     <string name="keys_page_prev">previous page</string>
     <string name="keys_page_next">next page</string>
+    <string name="keys_track_prev">previous track</string>
+    <!-- The keys window's card for a game controller's buttons, and the jobs a button can have besides the shortcuts. -->
+    <string name="keys_pad_card">controller</string>
+    <string name="keys_pad_press">press</string>
+    <string name="keys_pad_back">back</string>
+    <string name="keys_pad_actions">actions list</string>
+    <string name="keys_pad_nothing">nothing</string>
+    <string name="keys_track_next">next track</string>
     <string name="keys_edit_mode">draw or select</string>
     <string name="keys_step_view">step view</string>
     <string name="keys_lock_steps">lock steps</string>

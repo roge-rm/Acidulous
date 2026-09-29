@@ -16,8 +16,18 @@ import kotlinx.coroutines.launch
 
 /** The ring a focused control gets: accent, or pink while a knob is grabbed. */
 fun ContentDrawScope.focusRing(color: Color) {
+    // Just inside the edge. On the edge, a control that clips its corners
+    // lost half the ring, and one that draws its own border (a clip in the
+    // grid) painted over the rest.
     val w = 2.dp.toPx()
-    drawRoundRect(color, cornerRadius = CornerRadius(4.dp.toPx()), style = Stroke(w))
+    val inset = 2.dp.toPx()
+    drawRoundRect(
+        color,
+        topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
+        size = androidx.compose.ui.geometry.Size((size.width - 2 * inset).coerceAtLeast(0f), (size.height - 2 * inset).coerceAtLeast(0f)),
+        cornerRadius = CornerRadius(4.dp.toPx()),
+        style = Stroke(w),
+    )
 }
 
 /**
