@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.Action
@@ -315,13 +316,22 @@ private fun BarPillRow(words: Boolean, content: @Composable BarScope.() -> Unit)
 @Composable
 private fun BarProbeRow(words: Boolean, content: @Composable BarScope.() -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        BarScope(
-            false, words,
-            weigh = { m, _ -> m.width(BarAnchor) },
-            space = { m, _ -> m },
-        ).content()
+        CompositionLocalProvider(LocalBarProbe provides true) {
+            BarScope(
+                false, words,
+                weigh = { m, _ -> m.width(BarAnchor) },
+                space = { m, _ -> m },
+            ).content()
+        }
     }
 }
+
+/**
+ * True in the row that's only measured. Every pill has a set width, so there a
+ * pill is an empty box of that width rather than a button, which halved what
+ * the bar cost to build.
+ */
+private val LocalBarProbe = androidx.compose.runtime.compositionLocalOf { false }
 
 /**
  * A pill that's held rather than pressed.
@@ -338,6 +348,7 @@ fun BarHoldButton(
     held: Boolean = false,
     onHold: (Boolean) -> Unit,
 ) {
+    if (LocalBarProbe.current) { Spacer(modifier); return }
     val hold by rememberUpdatedState(onHold)
     // TalkBack can't hold a button down, so holding becomes a pair of actions.
     val press = stringResource(Res.string.a11y_fill_start)
@@ -406,6 +417,7 @@ fun BarButton(
     actions: List<androidx.compose.ui.semantics.CustomAccessibilityAction> = emptyList(),
     onClick: () -> Unit,
 ) {
+    if (LocalBarProbe.current) { Spacer(modifier); return }
     var suppressClick by remember { mutableStateOf(false) }
     val gestures = if (onLongPress == null) modifier else modifier.onLongPress {
         suppressClick = true

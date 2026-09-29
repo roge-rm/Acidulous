@@ -127,8 +127,9 @@ fun MainScreen(
     launchStates: List<LaunchState>,
     onClipMode: (Boolean) -> Unit,
     bpm: Float,
-    diagnostics: String,
-    rackPeaks: FloatArray,
+    /** Read by the readout itself, so the numbers changing redraw it and nothing else. */
+    diagnostics: () -> String,
+    rackPeaks: () -> FloatArray,
     /**
      * Whether the engine is missing its deadline right now, and what each track
      * costs as a fraction of one block's budget.
@@ -143,7 +144,7 @@ fun MainScreen(
     performTrack: Int = 0,
     /** Empty launcher cells record into themselves, see Looper. */
     looper: Looper? = null,
-    masterPeak: Float,
+    masterPeak: () -> Float,
     clickOn: Boolean,
     onClick: (Boolean) -> Unit,
     onArm: (Boolean) -> Unit,
@@ -245,12 +246,12 @@ fun MainScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BarReadout(where, whereColour)
                     if (UiPrefs.showDiagnostics) Box(Modifier.weight(1f).padding(start = 12.dp)) {
-                        BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+                        LiveReadout(diagnostics, Acid.colors.textFaint, size = 10)
                     }
                 }
             } else {
                 BarReadout(where, whereColour)
-                if (UiPrefs.showDiagnostics) BarReadout(diagnostics, Acid.colors.textFaint, size = 10)
+                if (UiPrefs.showDiagnostics) LiveReadout(diagnostics, Acid.colors.textFaint, size = 10)
             }
     }
 
@@ -1504,3 +1505,9 @@ private fun PanelTab(label: String, on: Boolean, onClick: () -> Unit) {
 
 /** How much of a square screen the mixer and the perform pages may take. */
 private const val SquareMixerShare = 0.55f
+
+/** A readout that reads its own text, so only it redraws as the numbers change. */
+@Composable
+private fun LiveReadout(text: () -> String, color: androidx.compose.ui.graphics.Color, size: Int) {
+    BarReadout(text(), color, size = size)
+}

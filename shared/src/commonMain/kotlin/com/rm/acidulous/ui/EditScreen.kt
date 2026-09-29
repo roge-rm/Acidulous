@@ -122,9 +122,12 @@ fun EditScreen(
     onImportSoundFont: (track: Int) -> Unit = {},
     onPickPreset: (track: Int) -> Unit = {},
     onImportZoneSamples: (track: Int) -> Unit = {},
-    /** For the mixer, which opens over the editor. */
-    rackPeaks: FloatArray = FloatArray(16),
-    masterPeak: Float = 0f,
+    /**
+     * For the mixer, which opens over the editor. Read by its meters, not
+     * here, so a level changing doesn't rebuild the editor.
+     */
+    rackPeaks: () -> FloatArray = { FloatArray(16) },
+    masterPeak: () -> Float = { 0f },
     clickOn: Boolean = false,
     onClick: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,

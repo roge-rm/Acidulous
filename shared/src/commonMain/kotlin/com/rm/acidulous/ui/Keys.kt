@@ -485,8 +485,10 @@ fun KeyScope(vararg handlers: Pair<KeyAction, () -> Unit>, window: Boolean = fal
     // Update the handlers every composition since the screen's state changes,
     // while the scope keeps its place in the stack.
     androidx.compose.runtime.SideEffect { handle.handlers = handlers.toMap() }
-    DisposableEffect(handle) {
-        KeyHub.push(handle)
+    // A screen kept behind another (see KeepBuilt) handles nothing.
+    val hidden = LocalHidden.current
+    DisposableEffect(handle, hidden) {
+        if (!hidden) KeyHub.push(handle)
         onDispose { KeyHub.remove(handle) }
     }
 }

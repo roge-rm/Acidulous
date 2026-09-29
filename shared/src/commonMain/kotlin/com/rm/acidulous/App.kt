@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -1604,7 +1605,10 @@ fun App(modifier: Modifier = Modifier) {
                 launchStates = next
                 looper.poll(song, launchStates, playing)
             }
-            rackPeaks = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
+            // Only when a level moved: a new array every poll would count as a
+            // change and redraw every meter for nothing.
+            val levels = FloatArray(16) { i -> if (i < song.tracks.size) NativeEngine.readRackPeak(i) else 0f }
+            if (!levels.contentEquals(rackPeaks)) rackPeaks = levels
             // Whether it's struggling now, not whether it ever did. It's the
             // change since the last poll, held briefly so a single late
             // callback is visible and a burst reads as one steady state
@@ -1671,7 +1675,10 @@ fun App(modifier: Modifier = Modifier) {
             // quarter to go out.
             // A track's cost is its worst blocks, which a browser can't time
             // (AppHost.timesAudioPrecisely), so there every track would light.
-            rackHot = BooleanArray(16) { i ->
+            // Assigned only when one changes, like the levels above: a new
+            // array every poll rebuilt the whole song screen twelve times a
+            // second.
+            val hot = BooleanArray(16) { i ->
                 if (blockBudgetUs <= 0f || i >= song.tracks.size || !AppHost.current.timesAudioPrecisely) {
                     false
                 } else {
@@ -1679,6 +1686,7 @@ fun App(modifier: Modifier = Modifier) {
                     if (rackHot[i]) share > 0.22f else share > 0.33f
                 }
             }
+            if (!hot.contentEquals(rackHot)) rackHot = hot
             if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf, cycleWrapped))
             // A take is one pass of armed and playing. Stopping either ends it.
             if (!(armed && playing)) editor.endTake()
@@ -1705,19 +1713,22 @@ fun App(modifier: Modifier = Modifier) {
     // useful for "is it working hard" but not for "why did it click", since a
     // block over budget decays out of it in 27 ms and this line is redrawn
     // every 80.
-    val budgetUs = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
-    // In a browser the peaks aren't measured (see
-    // AppHost.timesAudioPrecisely), so the line shows the load and what's
-    // playing.
-    val timings = if (AppHost.current.timesAudioPrecisely) {
-        " · worst %.1f/%.1fms cpu %.1f · late %d stall %d · xruns %d".format(
-            worstUs / 1000f, budgetUs / 1000f, worstCpuUs / 1000f, lateCallbacks, stalled, xruns,
-        )
-    } else {
-        ""
-    }
-    val diagnostics = ("%s · load %.0f%%%s · peak %.3f · fade %.2f · on %d off %d%s")
-        .format(
+    // Read when the readout draws, not here: these change every poll, and
+    // read here they rebuilt the whole app, and the editor with it, every
+    // 80 ms.
+    val diagnostics = {
+        val budgetUs = NativeEngine.callbackBudgetUs.coerceAtLeast(1)
+        // In a browser the peaks aren't measured (see
+        // AppHost.timesAudioPrecisely), so the line shows the load and what's
+        // playing.
+        val timings = if (AppHost.current.timesAudioPrecisely) {
+            " · worst %.1f/%.1fms cpu %.1f · late %d stall %d · xruns %d".format(
+                worstUs / 1000f, budgetUs / 1000f, worstCpuUs / 1000f, lateCallbacks, stalled, xruns,
+            )
+        } else {
+            ""
+        }
+        ("%s · load %.0f%%%s · peak %.3f · fade %.2f · on %d off %d%s").format(
             status, load, timings, peak, fade, notesOn, notesOff,
             // Only while Link is on: how many machines are sharing this tempo.
             if (com.rm.acidulous.engine.LinkHub.enabled) {
@@ -1725,7 +1736,7 @@ fun App(modifier: Modifier = Modifier) {
             } else {
                 ""
             },
-        )
+        ) }
 
     if (exportAsk) {
         com.rm.acidulous.ui.ExportOptionsDialog(
@@ -1763,24 +1774,36 @@ fun App(modifier: Modifier = Modifier) {
         }
     }
 
-    when (val s = screen) {
-        Screen.Main -> MainScreen(
-            song = song, editor = editor, position = position, playing = playing, armed = armed,
-            performTrack = midiTrack,
+    // The song screen stays built under the others, so going back to it is
+    // quick. See KeepBuilt.
+    androidx.compose.foundation.layout.Box(modifier) {
+    // Hidden, it's given what it last showed, so playing and editing don't
+    // rebuild it behind the editor twelve times a second. The callbacks read
+    // the song and transport when they run rather than holding them, for the
+    // same reason.
+    val hidden = screen !is Screen.Main
+    val playingNow by rememberUpdatedState(playing)
+    com.rm.acidulous.ui.KeepBuilt(!hidden) {
+        MainScreen(
+            song = heldWhile(hidden, song), editor = editor, position = heldWhile(hidden, position),
+            playing = heldWhile(hidden, playing), armed = heldWhile(hidden, armed),
+            performTrack = heldWhile(hidden, midiTrack),
             looper = looper,
-            countInBeats = countInBeats,
-            clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
-            launchStates = launchStates,
+            countInBeats = heldWhile(hidden, countInBeats),
+            clipMode = heldWhile(hidden, com.rm.acidulous.ui.UiPrefs.clipMode),
+            launchStates = heldWhile(hidden, launchStates),
             onClipMode = onClipMode,
-            loopScene = loopScene, stopAtEnd = stopAtEnd, queuedScene = queuedScene,
-            bpm = bpm, diagnostics = diagnostics,
-            rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn,
-            straining = straining, rackHot = rackHot,
+            loopScene = heldWhile(hidden, loopScene), stopAtEnd = heldWhile(hidden, stopAtEnd),
+            queuedScene = heldWhile(hidden, queuedScene),
+            bpm = heldWhile(hidden, bpm), diagnostics = if (hidden) { { "" } } else diagnostics,
+            rackPeaks = if (hidden) { { FloatArray(16) } } else { { rackPeaks } },
+            masterPeak = if (hidden) { { 0f } } else { { peak } }, clickOn = heldWhile(hidden, clickOn),
+            straining = heldWhile(hidden, straining), rackHot = heldWhile(hidden, rackHot),
             onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
-            onSave = { SongStore.save(song); Log.i(TAG, "saved ${song.name}") },
-            onSaveAs = { name -> val renamed = song.copy(name = name); editor.replace(renamed); SongStore.save(renamed); Log.i(TAG, "saved as $name") },
+            onSave = { SongStore.save(currentSong); Log.i(TAG, "saved ${currentSong.name}") },
+            onSaveAs = { name -> val renamed = currentSong.copy(name = name); editor.replace(renamed); SongStore.save(renamed); Log.i(TAG, "saved as $name") },
             onNew = { name ->
                 val fresh = com.rm.acidulous.ui.UiPrefs.newSong(name)
                 swapSong(fresh)
@@ -1796,22 +1819,32 @@ fun App(modifier: Modifier = Modifier) {
             },
             onDelete = { name -> SongStore.delete(name); Log.i(TAG, "deleted $name") },
             songNames = { SongStore.list() },
-            onExport = { if (!playing) exportAsk = true },
+            onExport = { if (!playingNow) exportAsk = true },
             onImport = { importPicker(arrayOf("*/*")) },
             onShareSong = { shareSong() },
             onShareExport = { done -> AppHost.current.share(done.uris.filterIsInstance<Doc>(), done.mime, done.fileName) },
-            exportState = exportState,
+            exportState = heldWhile(hidden, exportState),
             onExportCancel = { NativeEngine.cancelRender() },
             onExportDismiss = { exportState = null },
             onFreeze = onFreeze,
             onThaw = onThaw,
-            freezeStatus = freezeStatus,
-            modifier = modifier,
+            freezeStatus = heldWhile(hidden, freezeStatus),
         )
+    }
+    // Going back, the editor is hidden at once and taken down a frame later,
+    // so the song screen shows without waiting for it.
+    var leaving by remember { mutableStateOf<Screen?>(null) }
+    LaunchedEffect(screen) {
+        if (screen is Screen.Main) { withFrameNanos { }; leaving = null } else leaving = screen
+    }
+    val away = if (screen !is Screen.Main) screen else leaving
+    if (away != null) com.rm.acidulous.ui.KeepBuilt(screen !is Screen.Main) {
+    when (val s = away) {
+        Screen.Main, null -> Unit
         is Screen.Edit -> EditScreen(
             song = song, editor = editor, trackIndex = s.track, sceneId = s.sceneId,
             position = position, playing = playing, armed = armed, onArm = onArm,
-            rackPeaks = rackPeaks, masterPeak = peak, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
+            rackPeaks = { rackPeaks }, masterPeak = { peak }, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onBack = { screen = Screen.Main },
             onTrack = { t -> screen = Screen.Edit(t, s.sceneId) },
             onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
@@ -1860,15 +1893,15 @@ fun App(modifier: Modifier = Modifier) {
                 }
             },
             onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker(AUDIO_TYPES) },
-            modifier = modifier,
         )
         is Screen.Patch -> com.rm.acidulous.ui.PatchScreen(
             track = song.tracks[s.track],
             trackIndex = s.track,
             editor = editor,
             onBack = { screen = Screen.Edit(s.track, s.sceneId) },
-            modifier = modifier,
         )
+    }
+    }
     }
     }
 
@@ -1960,3 +1993,16 @@ private fun fireMapping(
 
 private fun countInBeatsOf(ticks: Long): Int =
     if (ticks <= 0) 0 else ((ticks + com.rm.acidulous.model.PPQN - 1) / com.rm.acidulous.model.PPQN).toInt()
+
+/**
+ * [value] while [hidden] is false, and what it was when it last was while it's
+ * true. For a screen kept behind another (see KeepBuilt): an argument that
+ * doesn't change doesn't rebuild it.
+ */
+@Composable
+private fun <T> heldWhile(hidden: Boolean, value: T): T {
+    val held = remember { arrayOf<Any?>(value) }
+    if (!hidden) held[0] = value
+    @Suppress("UNCHECKED_CAST")
+    return held[0] as T
+}

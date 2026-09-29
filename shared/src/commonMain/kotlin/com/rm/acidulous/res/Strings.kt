@@ -16,12 +16,18 @@ import org.jetbrains.compose.resources.StringResource
 // (`%.1f`, `%3$-8s`, `%8$03d`), so we fetch the raw string and format it
 // with String.format, like Resources.getString did.
 
+//
+// Composed strings come from AppStrings' cache too. Compose's own lookup waits
+// on a coroutine for each one the first time a screen is built, and an editor
+// has a few hundred. A language change recreates the activity (it isn't in the
+// manifest's configChanges), and the cache is by language anyway.
+
 @Composable
-fun stringResource(res: StringResource): String = org.jetbrains.compose.resources.stringResource(res)
+fun stringResource(res: StringResource): String = AppStrings.getString(res)
 
 @Composable
 fun stringResource(res: StringResource, vararg args: Any?): String =
-    org.jetbrains.compose.resources.stringResource(res).format(*args)
+    AppStrings.getString(res).format(*args)
 
 /**
  * The phone's wording, [touch], or [mouse] when the pointer is a mouse
@@ -61,7 +67,18 @@ fun stringArrayResource(res: StringArrayResource): Array<String> =
  * and the lookup reads a small cached file.
  */
 object AppStrings {
-    fun getString(res: StringResource): String = loadString(res)
+    /**
+     * Each string as first looked up, by key and language. A lookup waits on a
+     * coroutine even when the resource file is cached, and a screen asks for
+     * hundreds (a drum grid's cells say what they are to TalkBack), which made
+     * opening an editor slow. A language change is a new key.
+     */
+    private val strings = HashMap<String, String>()
+
+    fun getString(res: StringResource): String {
+        val key = androidx.compose.ui.text.intl.Locale.current.toLanguageTag() + '/' + res.key
+        return strings[key] ?: loadString(res).also { strings[key] = it }
+    }
 
     fun getString(res: StringResource, vararg args: Any?): String =
         getString(res).format(*args)

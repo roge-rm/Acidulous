@@ -36,6 +36,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
@@ -376,16 +380,20 @@ fun rememberParamBinding(
     unit: String = "machine",
     apply: (Track, String, Float) -> Track = { t, n, v -> t.withParam(n, v) },
 ): ParamBinding {
-    val values = remember(trackIndex, type, unit) { mutableStateOf(info.associate { it.name to it.defaultNormalized }) }
+    // Read from the engine now, not left at the defaults for the poll below.
+    // The first frame showed every knob at its default and they jumped to
+    // their real values a few frames later.
+    val values = remember(trackIndex, type, unit) {
+        mutableStateOf(info.associate { p ->
+            p.name to (NativeEngine.paramNormalized(trackIndex, unit, p.name).takeIf { it >= 0f } ?: p.defaultNormalized)
+        })
+    }
     val dragging = remember { mutableStateOf<String?>(null) }
     /**
-     * Every value when this panel opened, for a long press to reset to.
-     *
-     * Taken on the first poll, not at composition. At composition values are
-     * all defaults because the engine hasn't been asked yet. Keyed on the
-     * binding so reopening a panel takes a fresh reading.
+     * Every value when this panel opened, for a long press to reset to. Keyed
+     * on the binding so reopening a panel takes a fresh reading.
      */
-    val opened = remember(trackIndex, type, unit) { mutableStateOf<Map<String, Float>?>(null) }
+    val opened = remember(trackIndex, type, unit) { mutableStateOf<Map<String, Float>?>(values.value) }
     val binding = remember(trackIndex, type, unit) {
         ParamBinding(trackIndex, info, editor, values, dragging, opened, unit, apply)
     }
@@ -856,6 +864,28 @@ internal val LocalCardsPacked = androidx.compose.runtime.compositionLocalOf { fa
  */
 @Composable
 internal fun GroupRow(content: @Composable () -> Unit) {
+    // What a screen shows of the row is built first and the rest a frame
+    // later, so a machine opens without waiting for cards off the edge.
+    val widthDp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    val later = remember { LaterCards((widthDp / LaterCardW).toInt() + 1) }
+    LaunchedEffect(later) { withFrameNanos { }; later.all = true }
+    CompositionLocalProvider(LocalLaterCards provides later) { GroupRowCards(content) }
+}
+
+/** Which of a row's cards wait for the second frame. */
+private class LaterCards(val first: Int) {
+    private var count = 0
+    fun next() = count++
+    var all by mutableStateOf(false)
+}
+
+private val LocalLaterCards = androidx.compose.runtime.compositionLocalOf<LaterCards?> { null }
+
+/** Roughly a card's width, for guessing how many show and holding a waiting card's place. */
+private val LaterCardW = 160.dp
+
+@Composable
+private fun GroupRowCards(content: @Composable () -> Unit) {
     if (LocalPanelStacked.current) {
         // The cards go down the column and it scrolls that way. Whatever places
         // this must not also scroll vertically. See EditScreen's landscape
@@ -1157,6 +1187,12 @@ internal fun Group(
     background: Color = Acid.colors.card,
     content: @Composable () -> Unit,
 ) {
+    val later = LocalLaterCards.current
+    val index = remember { later?.next() ?: 0 }
+    if (later != null && !later.all && index >= later.first) {
+        Spacer(Modifier.size(LaterCardW, 1.dp))
+        return
+    }
     val stacked = LocalPanelStacked.current
     val packed = stacked && LocalCardsPacked.current
     Column(

@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.first
 import kotlin.math.roundToInt
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -21,6 +20,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -117,13 +129,37 @@ fun Knob(
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
     val current by rememberUpdatedState(value)
-    // c is the centre point in the Canvas below, so the palette is col here.
+    // c is the centre point in the drawing below, so the palette is col here.
     val col = Acid.colors
-    val dial: @Composable () -> Unit = {
-        Canvas(
-            Modifier.size(size).pointerInput(Unit) {
+    val measurer = knobTextMeasurer()
+    val base = LocalTextStyle.current
+    val small = remember(base) { base.merge(TextStyle(fontSize = 9.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center)) }
+    val markStyle = remember(base) { base.merge(TextStyle(fontSize = 11.sp)) }
+    val mark = if (locked) "\u25C6" else if (automated) "\u223F" else null
+    // What measuring worked out, for drawing and for telling a turn from a
+    // touch on the words.
+    val laid = remember { KnobLayout() }
+    val resetName = stringResource(if (holdOpensList) Res.string.a11y_choose else Res.string.a11y_reset)
+    val state = when {
+        locked -> stringResource(Res.string.a11y_locked, display)
+        automated -> stringResource(Res.string.a11y_automated, display)
+        else -> display
+    }
+    // One node, drawn: the label, the dial and the value. As a column of two
+    // texts and a canvas, a knob cost several milliseconds to build and a
+    // panel has dozens. The words come from one shared cache, and "tune" or
+    // "decay" is laid out once for every knob that says it.
+    Layout(
+        modifier.adjustable(
+            label, state, value, steps = (steps - 2).coerceAtLeast(0),
+            actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
+        ) { v -> cb.first(); cb.second(v); cb.third() }
+            .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
+                    // Only the dial turns. The words above and below it pass
+                    // the touch on, to a scrolling row say.
+                    if (!laid.dial.contains(down.position)) return@awaitEachGesture
                     val startValue = current
                     val startY = down.position.y
                     // Decide hold vs turn before starting the gesture. Nothing
@@ -145,57 +181,87 @@ fun Knob(
                     }
                     cb.third()
                 }
-            },
-        ) {
-            val r = this.size.minDimension / 2f
-            val c = Offset(this.size.width / 2f, this.size.height / 2f)
-            val stroke = r * 0.22f
-            val start = 135f
-            val sweep = 270f
-            drawArc(col.raised, start, sweep, false, Offset(c.x - r + stroke, c.y - r + stroke),
-                Size((r - stroke) * 2f, (r - stroke) * 2f), style = Stroke(stroke))
-            drawArc(accent, start, sweep * value.coerceIn(0f, 1f), false, Offset(c.x - r + stroke, c.y - r + stroke),
-                Size((r - stroke) * 2f, (r - stroke) * 2f), style = Stroke(stroke))
-            val a = Math.toRadians((start + sweep * value.coerceIn(0f, 1f)).toDouble())
-            val inner = r * 0.35f
-            val outer = r - stroke * 1.6f
-            drawLine(col.knobPointer, Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()),
-                Offset(c.x + outer * cos(a).toFloat(), c.y + outer * sin(a).toFloat()), 3f)
-        }
-    }
-    val resetName = stringResource(if (holdOpensList) Res.string.a11y_choose else Res.string.a11y_reset)
-    val state = when {
-        locked -> stringResource(Res.string.a11y_locked, display)
-        automated -> stringResource(Res.string.a11y_automated, display)
-        else -> display
-    }
-    Column(
-        modifier.adjustable(
-            label, state, value, steps = (steps - 2).coerceAtLeast(0),
-            actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
-        ) { v -> cb.first(); cb.second(v); cb.third() },
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-            maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
-        if (automated || locked) {
-            androidx.compose.foundation.layout.Box {
-                dial()
-                Text(if (locked) "◆" else "∿", color = Acid.colors.accent, fontSize = 11.sp, modifier = Modifier.align(Alignment.TopEnd))
             }
-        } else {
-            dial()
-        }
-        Text(
-            display, color = Acid.colors.accent, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
-            maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
+            .drawBehind {
+                // Named here so a new label, value or mark draws again, not
+                // only a new size. Measuring has laid them out by now.
+                laid.drawn = Triple(label, display, mark)
+                val top = laid.label ?: return@drawBehind
+                drawText(top, col.textDim, Offset(centred(this.size.width, top.size.width), 0f))
+                val d = laid.dial
+                val r = d.width / 2f
+                val c = d.center
+                val stroke = r * 0.22f
+                val start = 135f
+                val sweep = 270f
+                val v = value.coerceIn(0f, 1f)
+                val arcAt = Offset(c.x - r + stroke, c.y - r + stroke)
+                val arcSize = Size((r - stroke) * 2f, (r - stroke) * 2f)
+                drawArc(col.raised, start, sweep, false, arcAt, arcSize, style = Stroke(stroke))
+                drawArc(accent, start, sweep * v, false, arcAt, arcSize, style = Stroke(stroke))
+                val a = Math.toRadians((start + sweep * v).toDouble())
+                val inner = r * 0.35f
+                val outer = r - stroke * 1.6f
+                drawLine(col.knobPointer, Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()),
+                    Offset(c.x + outer * cos(a).toFloat(), c.y + outer * sin(a).toFloat()), 3f)
+                laid.mark?.let { drawText(it, col.accent, Offset(d.right - it.size.width, d.top)) }
+                laid.value?.let { drawText(it, col.accent, Offset(centred(this.size.width, it.size.width), d.bottom)) }
+            },
+    ) { _, constraints ->
+        // A plain density, not this scope: the cache matches on it, and every
+        // knob's scope is a different object.
+        val plain = Density(density, fontScale)
+        fun text(s: String, style: TextStyle, width: Int = Constraints.Infinity) = measurer.measure(
+            s, style, overflow = TextOverflow.Ellipsis, softWrap = false, maxLines = 1,
+            constraints = Constraints(maxWidth = width), layoutDirection = layoutDirection, density = plain,
         )
+        val dialPx = size.roundToPx()
+        var top = text(label, small)
+        var bottom = text(display, small)
+        val w = maxOf(dialPx, top.size.width, bottom.size.width).coerceIn(constraints.minWidth, constraints.maxWidth)
+        // Cut short with an ellipsis only when the knob is given less room than its words.
+        if (top.size.width > w) top = text(label, small, w)
+        if (bottom.size.width > w) bottom = text(display, small, w)
+        val h = (top.size.height + dialPx + bottom.size.height).coerceIn(constraints.minHeight, constraints.maxHeight)
+        val left = centred(w.toFloat(), dialPx)
+        laid.label = top
+        laid.value = bottom
+        laid.mark = mark?.let { text(it, markStyle) }
+        laid.dial = Rect(left, top.size.height.toFloat(), left + dialPx, (top.size.height + dialPx).toFloat())
+        layout(w, h) {}
     }
 }
+
+/** Where something [width] wide starts, centred in [space], on a whole pixel as a centred column puts it. */
+private fun centred(space: Float, width: Int): Float = ((space - width) / 2f).roundToInt().toFloat()
+
+/** What a knob's measuring worked out, read when it's drawn and touched. */
+private class KnobLayout {
+    /** What was last drawn. Read nowhere: see the drawing. */
+    var drawn: Triple<String, String, String?>? = null
+    var label: TextLayoutResult? = null
+    var value: TextLayoutResult? = null
+    var mark: TextLayoutResult? = null
+    var dial = Rect.Zero
+}
+
+/**
+ * The text measurer every knob shares, with a cache big enough for a panel's
+ * words and values. By font resolver, since a window has its own.
+ */
+@Composable
+private fun knobTextMeasurer(): TextMeasurer {
+    val resolver = LocalFontFamilyResolver.current
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    return knobMeasurers.getOrPut(resolver) {
+        if (knobMeasurers.size >= 4) knobMeasurers.remove(knobMeasurers.keys.first())
+        TextMeasurer(resolver, density, direction, cacheSize = 512)
+    }
+}
+
+/** Only the UI thread touches it. */
+private val knobMeasurers = LinkedHashMap<FontFamily.Resolver, TextMeasurer>()
 
 /**
  * A knob for a whole number, for windows rather than machines. It only reports

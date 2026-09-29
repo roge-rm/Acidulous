@@ -19,6 +19,10 @@ actual fun rememberTopCutout(): TopCutout? = null
 @Composable
 actual fun rememberTalkBack(): Boolean = false
 
+/** A browser is almost always on a computer, with a keyboard. */
+@Composable
+actual fun rememberBeyondTouch(): Boolean = true
+
 /** Whether the page may use the microphone: it was granted before, or a stream is open now. */
 private fun micGranted(): Boolean = js("!!(globalThis.acidMicGranted || (globalThis.acidInput && globalThis.acidInput.stream && globalThis.acidInput.stream.active))")
 

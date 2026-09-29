@@ -93,8 +93,9 @@ import com.rm.acidulous.res.*
 fun MixerPanel(
     song: Song,
     editor: SongEditor,
-    rackPeaks: FloatArray,
-    masterPeak: Float,
+    /** Read by each strip's meter, not here, so a level changing redraws the meter and nothing else. */
+    rackPeaks: () -> FloatArray,
+    masterPeak: () -> Float,
     clickOn: Boolean,
     onClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -162,7 +163,7 @@ fun MixerPanel(
             // The first strip is measured and the groups and master are given
             // its height, so the whole row ends level.
             Box(if (index == 0) Modifier.onSizeChanged { stripH = with(density) { it.height.toDp() } } else Modifier) {
-                ChannelStrip(track, index, rackPeaks.getOrElse(index) { 0f }, editor, trackColour(index, track.colour), automated, faderH, room, tight, sendNames, groups)
+                ChannelStrip(track, index, { rackPeaks().getOrElse(index) { 0f } }, editor, trackColour(index, track.colour), automated, faderH, room, tight, sendNames, groups)
             }
         }
         val fullH = if (song.tracks.isEmpty() || tight) Dp.Unspecified else stripH
@@ -330,7 +331,7 @@ private fun AddGroupStrip(editor: SongEditor, room: Dp, fullH: Dp) {
 
 @Composable
 private fun ChannelStrip(
-    track: Track, index: Int, peak: Float, editor: SongEditor, colour: Color,
+    track: Track, index: Int, peak: () -> Float, editor: SongEditor, colour: Color,
     /** Channel controls that some clip of this track has a lane for. */
     automated: List<String> = emptyList(),
     /** The fader height the panel worked out for this strip. */
@@ -428,7 +429,7 @@ private fun ChannelStrip(
             Modifier.height(faderH),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Meter(peak, Modifier.width(8.dp).fillMaxHeight())
+            LiveMeter(peak, Modifier.width(8.dp).fillMaxHeight())
             VerticalFader(
                 value = EngineParams.volume01(m.volume),
                 modifier = Modifier.width(36.dp).fillMaxHeight().mappable(map("gain")),
@@ -514,7 +515,7 @@ private fun LoudnessFigure(label: String, value: String, colour: Color) {
 
 @Composable
 private fun MasterStrip(
-    song: Song, editor: SongEditor, peak: Float, clickOn: Boolean, onClick: (Boolean) -> Unit,
+    song: Song, editor: SongEditor, peak: () -> Float, clickOn: Boolean, onClick: (Boolean) -> Unit,
     faderH: Dp = FADER_H,
     room: Dp = Dp.Infinity,
     tight: Boolean = false,
@@ -570,7 +571,7 @@ private fun MasterStrip(
             Modifier.height(faderH),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Meter(peak, Modifier.width(8.dp).fillMaxHeight())
+            LiveMeter(peak, Modifier.width(8.dp).fillMaxHeight())
             VerticalFader(
                 value = EngineParams.volume01(master.volume),
                 modifier = Modifier.width(36.dp).fillMaxHeight().mappable(map("volume")),
@@ -936,4 +937,10 @@ private fun panSaid(pan: Float): String {
         pan < 0f -> stringResource(Res.string.a11y_left, amount)
         else -> stringResource(Res.string.a11y_right, amount)
     }
+}
+
+/** A meter that reads its level itself, so only it redraws as the level moves. */
+@Composable
+private fun LiveMeter(level: () -> Float, modifier: Modifier) {
+    Meter(level(), modifier)
 }

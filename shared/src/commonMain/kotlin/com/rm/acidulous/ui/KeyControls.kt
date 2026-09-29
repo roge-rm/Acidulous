@@ -23,7 +23,15 @@ import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.DelegatingNode
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.invalidateDraw
+import androidx.compose.ui.node.invalidateSemantics
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.rm.acidulous.ui.theme.Acid
 import kotlinx.coroutines.launch
@@ -145,6 +153,80 @@ internal fun Modifier.keyPress(
             drawContent()
             if (focused) focusRing(accent)
         }
+}
+
+/**
+ * A cell something else draws and takes touches for, like a step in the drum
+ * grid: TalkBack's button and a keyboard focus stop in one node.
+ *
+ * The words are only worked out when TalkBack asks, or when Menu asks for the
+ * actions. A grid has a couple of hundred cells and making their strings on
+ * every build was a good part of opening an editor.
+ */
+internal fun Modifier.drawnCell(
+    name: () -> String,
+    state: () -> String,
+    actions: () -> List<CustomAccessibilityAction>,
+    ring: Color,
+    onClick: () -> Unit,
+): Modifier = this then DrawnCellElement(name, state, actions, ring, onClick)
+
+private data class DrawnCellElement(
+    val name: () -> String,
+    val state: () -> String,
+    val actions: () -> List<CustomAccessibilityAction>,
+    val ring: Color,
+    val onClick: () -> Unit,
+) : androidx.compose.ui.node.ModifierNodeElement<DrawnCellNode>() {
+    override fun create() = DrawnCellNode(this)
+    override fun update(node: DrawnCellNode) = node.update(this)
+}
+
+private class DrawnCellNode(private var e: DrawnCellElement) : DelegatingNode(), DrawModifierNode,
+    androidx.compose.ui.node.SemanticsModifierNode, androidx.compose.ui.input.key.KeyInputModifierNode {
+    private var focused = false
+
+    init {
+        delegate(
+            androidx.compose.ui.focus.FocusTargetModifierNode(
+                onFocusChange = { _, now ->
+                    if (now.isFocused != focused) { focused = now.isFocused; invalidateDraw() }
+                },
+            ),
+        )
+    }
+
+    fun update(next: DrawnCellElement) {
+        e = next
+        invalidateSemantics()
+        invalidateDraw()
+    }
+
+    override val shouldClearDescendantSemantics get() = true
+
+    override fun SemanticsPropertyReceiver.applySemantics() {
+        contentDescription = e.name()
+        role = Role.Button
+        stateDescription = e.state()
+        onClick { e.onClick(); true }
+        val actions = e.actions()
+        if (actions.isNotEmpty()) customActions = actions
+    }
+
+    override fun onKeyEvent(event: androidx.compose.ui.input.key.KeyEvent): Boolean {
+        if (event.type != KeyEventType.KeyDown) return false
+        val press = event.press
+        if (opensActions(press, e.actions())) return true
+        if (isEnter(press.keyCode) && press.repeatCount == 0) { e.onClick(); return true }
+        return false
+    }
+
+    override fun onPreKeyEvent(event: androidx.compose.ui.input.key.KeyEvent) = false
+
+    override fun ContentDrawScope.draw() {
+        drawContent()
+        if (focused) focusRing(e.ring)
+    }
 }
 
 /**
