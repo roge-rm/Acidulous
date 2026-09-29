@@ -66,8 +66,8 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt", "Diction")),
-        MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Bias")),
+        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt")),
+        MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Diction", "Bias")),
     )
 
     /** One line per machine saying what it is. */
