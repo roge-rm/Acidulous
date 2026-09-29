@@ -97,7 +97,11 @@ fun EditScreen(
     editor: SongEditor,
     trackIndex: Int,
     sceneId: String,
-    position: Position,
+    /**
+     * Read where it's drawn, not here: the position moves many times a second
+     * while playing, and taking it as a value rebuilt the whole editor each time.
+     */
+    position: () -> Position,
     playing: Boolean,
     armed: Boolean,
     onArm: (Boolean) -> Unit,
@@ -289,9 +293,10 @@ fun EditScreen(
     }
     val scope = rememberCoroutineScope()
 
-    val playhead = if (playing && song.scenes.getOrNull(position.scene)?.id == sceneId) {
-        position.tickInIteration % clipLen
-    } else null
+    val playhead: () -> Long? = {
+        val at = position()
+        if (playing && song.scenes.getOrNull(at.scene)?.id == sceneId) at.tickInIteration % clipLen else null
+    }
 
     /**
      * The same position counted across the scene's repeats instead of reset at
@@ -302,9 +307,11 @@ fun EditScreen(
      * wraps on the clip's cycle, the same way the scheduler does.
      */
     val cycleTicks = (clipLen * scene.repeat).coerceAtLeast(1)
-    val cyclePlayhead = playhead?.let {
+    val cyclePlayhead: () -> Int? = cycle@{
+        playhead() ?: return@cycle null
+        val at = position()
         val iteration = song.barsOf(scene) * ticksPerBar
-        ((position.repeat.toLong() * iteration + position.tickInIteration) % cycleTicks).toInt()
+        ((at.repeat.toLong() * iteration + at.tickInIteration) % cycleTicks).toInt()
     }
 
     // Two bars at a time in the roll, one in the step views, so notes stay wide
@@ -348,9 +355,11 @@ fun EditScreen(
     val pages = kotlin.math.ceil(clipLen / pageTicks).toInt().coerceAtLeast(1)
     val page = (scrollTick / pageTicks).toInt().coerceIn(0, pages - 1)
     // While playing, follow the playhead onto its own page.
-    val playheadPage = if (playhead != null && clipLen > 0) (playhead / pageTicks).toInt() else -1
-    LaunchedEffect(playheadPage, playing) {
-        if (playing && playheadPage in 0 until pages) scrollTick = playheadPage * pageTicks
+    val latestPlayhead by rememberUpdatedState(playhead)
+    LaunchedEffect(playing, pageTicks, pages) {
+        if (!playing || clipLen <= 0) return@LaunchedEffect
+        androidx.compose.runtime.snapshotFlow { latestPlayhead()?.let { (it / pageTicks).toInt() } ?: -1 }
+            .collect { p -> if (p in 0 until pages) scrollTick = p * pageTicks }
     }
 
     fun preview(pitch: Int) {
@@ -853,7 +862,7 @@ fun EditScreen(
             ticksPerBar = ticksPerBar,
             // Under a tape, every pass of the scene side by side, like the
             // lanes above, so the playheads are in the same place.
-            playheadTick = if (kind == MachineKind.Audio) cyclePlayhead?.toLong() else playhead,
+            playheadTick = if (kind == MachineKind.Audio) { { cyclePlayhead()?.toLong() } } else playhead,
             firstTick = firstTick,
             visibleTicks = visibleTicks,
             passes = if (kind == MachineKind.Audio) scene.repeat.coerceAtLeast(1) else 1,

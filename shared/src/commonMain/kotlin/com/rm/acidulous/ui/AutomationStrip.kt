@@ -65,7 +65,7 @@ import com.rm.acidulous.res.*
 fun AutomationStrip(
     clip: Clip,
     ticksPerBar: Int,
-    playheadTick: Long?,
+    playheadTick: () -> Long?,
     /** The same window the roll is showing, so the playheads line up. */
     firstTick: Int = 0,
     visibleTicks: Int = 0,
@@ -300,7 +300,7 @@ fun AutomationStrip(
             }
             }
             lap = 0
-            playheadTick?.let { pt ->
+            playheadTick()?.let { pt ->
                 // Across every pass: the tick counts through them all.
                 val cycle = (pt % (total.toLong() * laps)).toInt()
                 lap = cycle / total

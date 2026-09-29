@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,7 @@ import com.rm.acidulous.res.*
 fun StepEditor(
     clip: Clip,
     ticksPerBar: Int,
-    playheadTick: Long?,
+    playheadTick: () -> Long?,
     /** Which bar to show; the Edit screen's header does the paging. */
     barIndex: Int,
     onSetStep: (tick: Int, note: Note?) -> Unit,          // null clears the step (one undo step)
@@ -66,13 +67,23 @@ fun StepEditor(
     val stepsPerBar = (ticksPerBar / grid).coerceAtLeast(1)
     val bar = barIndex.coerceIn(0, (clip.bars - 1).coerceAtLeast(0))
     val lastPitch = clip.notes.lastOrNull()?.pitch ?: 36
+    // The step under the playhead, so the columns rebuild once a step and not
+    // on every position reading.
+    val head by rememberUpdatedState(playheadTick)
+    val activeStep by remember(bar, grid, ticksPerBar, stepsPerBar) {
+        derivedStateOf {
+            val t = head() ?: return@derivedStateOf -1
+            val s = ((t - bar * ticksPerBar) / grid).toInt()
+            if (t >= bar * ticksPerBar && s < stepsPerBar) s else -1
+        }
+    }
 
     Column(modifier.background(Acid.colors.bg).padding(4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (s in 0 until stepsPerBar) {
                 val tick = bar * ticksPerBar + s * grid
                 val note = clip.notes.firstOrNull { it.tick == tick }
-                val active = playheadTick != null && playheadTick >= tick && playheadTick < tick + grid
+                val active = s == activeStep
                 StepColumn(
                     index = s, note = note, defaultPitch = lastPitch, grid = grid, active = active,
                     onGate = { onSetStep(tick, if (note == null) Note(tick, (grid * 0.8f).toInt(), lastPitch, 85) else null) },

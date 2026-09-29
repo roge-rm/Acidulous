@@ -78,7 +78,7 @@ fun PianoRoll(
     ticksPerBar: Int,
     mode: EditMode,
     selection: Set<Int>,
-    playheadTick: Long?,
+    playheadTick: () -> Long?,
     lowestPitch: Int,
     rows: Int,
     scalePitchClasses: Set<Int>?,
@@ -494,7 +494,7 @@ fun PianoRoll(
             drawRect(c.selectEdge, band.topLeft, band.size, style = Stroke(1.5f))
         }
 
-        playheadTick?.let { tick ->
+        playheadTick()?.let { tick ->
             val t = (tick % max(1, geo.totalTicks)).toInt()
             if (t >= geo.firstTick && t < geo.lastTick) {
                 val x = geo.xOf(t)
@@ -518,7 +518,7 @@ fun PianoRoll(
 
         drawNameGutter(geo, textMeasurer, scale, c, noteSpelling)
         drawPitchPosition(geo, c)
-        drawBarRuler(geo, size, textMeasurer, playheadTick, c)
+        drawBarRuler(geo, size, textMeasurer, playheadTick(), c)
         drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c, scaleWords)
     }
 }

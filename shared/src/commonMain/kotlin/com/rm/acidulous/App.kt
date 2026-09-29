@@ -1843,7 +1843,7 @@ fun App(modifier: Modifier = Modifier) {
         Screen.Main, null -> Unit
         is Screen.Edit -> EditScreen(
             song = song, editor = editor, trackIndex = s.track, sceneId = s.sceneId,
-            position = position, playing = playing, armed = armed, onArm = onArm,
+            position = { position }, playing = playing, armed = armed, onArm = onArm,
             rackPeaks = { rackPeaks }, masterPeak = { peak }, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onBack = { screen = Screen.Main },
             onTrack = { t -> screen = Screen.Edit(t, s.sceneId) },

@@ -87,7 +87,7 @@ private fun valueText(n: Note, prop: NoteProp): String = when (prop) {
 fun NoteLane(
     clip: Clip,
     ticksPerBar: Int,
-    playheadTick: Long?,
+    playheadTick: () -> Long?,
     firstTick: Int = 0,
     visibleTicks: Int = 0,
     prop: NoteProp,
@@ -411,7 +411,7 @@ fun NoteLane(
                     }
                 }
 
-                playheadTick?.let { pt ->
+                playheadTick()?.let { pt ->
                     if (total > 0) {
                         val x = xOf((pt % total).toInt())
                         if (x >= 0f && x <= size.width) {

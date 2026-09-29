@@ -131,7 +131,7 @@ fun AudioLanes(
     /** Bars times the scene's repeat, in ticks: everything this cell plays. */
     cycleTicks: Int,
     /** Where the rack is in that cycle, or null when it isn't playing this cell. */
-    playheadTick: Int?,
+    playheadTick: () -> Int?,
     trackIndex: Int,
     sceneId: String,
     editor: SongEditor,
@@ -298,11 +298,10 @@ fun AudioLanes(
                             modifier = Modifier.align(Alignment.Center),
                         )
                     }
-                    if (playheadTick != null) {
-                        Canvas(Modifier.fillMaxSize()) {
-                            val x = size.width * playheadTick.coerceIn(0, total) / total
-                            drawLine(c.accent, Offset(x, 0f), Offset(x, size.height), 1.5f)
-                        }
+                    Canvas(Modifier.fillMaxSize()) {
+                        val head = playheadTick() ?: return@Canvas
+                        val x = size.width * head.coerceIn(0, total) / total
+                        drawLine(c.accent, Offset(x, 0f), Offset(x, size.height), 1.5f)
                     }
                 }
             }

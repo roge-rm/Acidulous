@@ -67,7 +67,7 @@ fun DrumGrid(
     clip: Clip,
     ticksPerBar: Int,
     voices: List<DrumVoice>,
-    playheadTick: Long?,
+    playheadTick: () -> Long?,
     /** The window this shows, in ticks from the start of the clip. */
     firstTick: Int,
     visibleTicks: Int,
@@ -230,10 +230,11 @@ fun DrumGrid(
                             val w = (size.width - gutter) / steps
                             val inset = 1.dp.toPx()
                             val corner = CornerRadius(3.dp.toPx())
+                            val head = playheadTick()
                             for (s in 0 until steps) {
                                 val tick = tickOf(s)
                                 val hit = hits[s]
-                                val active = playheadTick != null && playheadTick >= tick && playheadTick < tick + grid
+                                val active = head != null && head >= tick && head < tick + grid
                                 val left = gutter + s * w + inset
                                 val cell = Size((w - 2 * inset).coerceAtLeast(0f), size.height)
                                 drawRoundRect(
