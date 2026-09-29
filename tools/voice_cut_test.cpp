@@ -126,7 +126,7 @@ int main() {
         check(cut.problem.empty(), v, "said: " + cut.problem);
         check(std::fabs(start - take.sungFrom) < 0.06f, std::string(v) + " start", std::to_string(start) + " s, sung at " + std::to_string(take.sungFrom));
         check(cut.holdTo - cut.holdFrom > static_cast<int32_t>(0.3f * kSr), std::string(v) + " hold", std::to_string((cut.holdTo - cut.holdFrom) / kSr) + " s");
-        check(std::fabs(cut.centsOff - take.cents) < 12.0f, std::string(v) + " pitch", std::to_string(cut.centsOff) + " ct, sung " + std::to_string(take.cents));
+        check(std::fabs(1200.0f * std::log2(cut.rootHz / noteHz) - take.cents) < 12.0f, std::string(v) + " pitch", std::to_string(1200.0f * std::log2(cut.rootHz / noteHz)) + " ct, sung " + std::to_string(take.cents));
     }
 
     std::printf("diphthongs\n");
@@ -144,7 +144,7 @@ int main() {
         check(cut.problem.empty() && std::fabs(glide - take.letGo) < 0.06f, std::string(v) + " glide", detail);
         check(cut.glideTo > cut.glideFrom && cut.glideTo - cut.glideFrom < static_cast<int32_t>(0.25f * kSr), std::string(v) + " glide length", detail);
         check(cut.holdTo - cut.holdFrom > static_cast<int32_t>(0.3f * kSr) && cut.holdTo <= cut.glideFrom, std::string(v) + " hold", detail);
-        check(std::fabs(cut.centsOff - take.cents) < 12.0f, std::string(v) + " pitch", std::to_string(cut.centsOff) + " ct, sung " + std::to_string(take.cents));
+        check(std::fabs(1200.0f * std::log2(cut.rootHz / noteHz) - take.cents) < 12.0f, std::string(v) + " pitch", std::to_string(1200.0f * std::log2(cut.rootHz / noteHz)) + " ct, sung " + std::to_string(take.cents));
     }
 
     std::printf("ah-C-ah\n");

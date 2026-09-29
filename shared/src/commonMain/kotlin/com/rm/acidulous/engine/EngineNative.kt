@@ -48,6 +48,7 @@ internal expect object EngineNative {
     suspend fun nativeFileShape(path: String, out: FloatArray, fromFrame: Int, toFrame: Int): Int
     suspend fun nativeFileInfo(path: String): String
     suspend fun nativeFileSurvey(path: String, out: FloatArray): String
+    suspend fun nativeCutTake(path: String, kind: Int, noteHz: Float, consonantNear: Float): String
     fun nativeAuditionFile(path: String): String
     fun nativeAuditioning(): Boolean
     fun nativeAuditionProgress(): Float

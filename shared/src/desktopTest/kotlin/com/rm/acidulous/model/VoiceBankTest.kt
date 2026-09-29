@@ -1,6 +1,7 @@
 package com.rm.acidulous.model
 
 import com.rm.acidulous.io.File
+import com.rm.acidulous.model.voice.TakeCut
 import com.rm.acidulous.model.voice.VoiceBank
 import com.rm.acidulous.model.voice.VoicePrompts
 import org.junit.Assert.assertEquals
@@ -38,5 +39,27 @@ class VoiceBankTest {
         assertEquals("v-ih", back.nextToSing()?.id)
         assertEquals(listOf("me"), VoiceBank.all(root).map { it.name })
         assertNull(VoiceBank.load(VoiceBank.folderOf(root, "nobody")))
+    }
+
+    @Test
+    fun aTakeThatNeedsSingingAgainIsNextAndNotCounted() {
+        val cut = TakeCut.parse("too loud|0|0|0|0|0|0|0|0|0.00|0.0")!!
+        assertEquals("too loud", cut.problem)
+        val good = TakeCut.parse("|4800|90000|12000|40000|0|0|0|0|110.50|-12.0")!!
+        assertEquals(4800, good.start)
+        assertEquals(110.5f, good.rootHz)
+        assertEquals(TakeCut.CUTTER, good.by)
+        assertNull(TakeCut.parse("nonsense"))
+        val bank = VoiceBank(
+            "me", takes = mapOf("v-iy" to "v-iy.wav", "v-ih" to "v-ih.wav"),
+            cuts = mapOf("v-iy" to cut, "v-ih" to good),
+        )
+        assertEquals(1, bank.doneIn(1))
+        assertEquals("v-iy", bank.nextToSing()?.id)
+        // Saved with the voice.
+        val root = File(Files.createTempDirectory("voices").toString())
+        val dir = VoiceBank.folderOf(root, "me")
+        VoiceBank.save(dir, bank)
+        assertEquals("too loud", VoiceBank.load(dir)!!.cuts["v-iy"]?.problem)
     }
 }

@@ -70,6 +70,15 @@ object VoicePrompts {
         }
     }
 
+    /** How a vowel is written to be sung: "AA" is "ah". */
+    fun sungOf(sound: String): String = VOWELS.firstOrNull { it.first == sound }?.second ?: sound.lowercase()
+
+    /** The two vowels a diphthong moves between, as sung: "eye" is ah to ee. */
+    val DIPHTHONG_PARTS = mapOf(
+        "EY" to ("eh" to "ee"), "AY" to ("ah" to "ee"), "AW" to ("ah" to "oo"),
+        "OY" to ("oh" to "ee"), "OW" to ("oh" to "oo"),
+    )
+
     val stages: Int get() = all.maxOf { it.stage }
 
     fun inStage(stage: Int): List<Prompt> = all.filter { it.stage == stage }

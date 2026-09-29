@@ -715,6 +715,12 @@ object NativeEngine {
      * thread.
      */
     suspend fun fileSurvey(path: String, out: FloatArray): String = EngineNative.nativeFileSurvey(path, out)
+    /**
+     * Cuts a Diction voice take: [kind] 0 held, 1 glide, 2 between, and where
+     * the consonant was shown, in seconds, or -1. See EngineHost::cutTake.
+     */
+    suspend fun cutTake(path: String, kind: Int, noteHz: Float, consonantNear: Float): String =
+        EngineNative.nativeCutTake(path, kind, noteHz, consonantNear)
 
     /**
      * Play a file once, to hear it. An empty path stops it.

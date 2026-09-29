@@ -27,12 +27,21 @@ struct Cut {
     int32_t glideFrom = 0, glideTo = 0;
     /** A carrier's consonant, with the steady vowel before it ending and after it starting around it. */
     int32_t consonantFrom = 0, consonantTo = 0;
-    /** The pitch it was sung at, and how far that is from the note asked for, in cents. */
+    /**
+     * The pitch it was sung at, and how far that is from the note asked for,
+     * in cents, in whichever octave it was sung: a low voice sings the note an
+     * octave down.
+     */
     float rootHz = 0.0f;
     float centsOff = 0.0f;
 };
 
-/** Cuts [mono] at [sampleRate], a take of [kind]. [noteHz] is the note it should have been sung on. */
-Cut cutTake(const std::vector<float> &mono, float sampleRate, TakeKind kind, float noteHz);
+/**
+ * Cuts [mono] at [sampleRate], a take of [kind]. [noteHz] is the note it
+ * should have been sung on. [consonantNear], in frames, is where the singer
+ * was shown to put the consonant, if they were: it's looked for within
+ * 0.6 s of there, clear of the voice starting and stopping.
+ */
+Cut cutTake(const std::vector<float> &mono, float sampleRate, TakeKind kind, float noteHz, int32_t consonantNear = -1);
 
 } // namespace acidulous::machine::diction

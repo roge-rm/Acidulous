@@ -16,6 +16,7 @@
     <string name="voice_default_name">my voice</string>
     <string name="voice_delete">delete</string>
     <string name="voice_share">share</string>
+    <string name="voice_zipping">zipping %1$d/%2$d</string>
     <string name="voice_share_failed">The voice couldn\'t be shared.</string>
     <!-- Asking before a voice is deleted: its name. -->
     <string name="voice_delete_title">Delete %1$s?</string>
@@ -30,6 +31,16 @@
     <!-- A consonant prompt: which consonant, as it sounds in a word. "the h in high". -->
     <string name="voice_the_in">the %1$s in %2$s</string>
     <string name="voice_listen">listen…</string>
+    <string name="voice_mic">mic</string>
+    <string name="voice_sing_again">%1$s: sing it again</string>
+    <string name="voice_problem_quiet">too quiet</string>
+    <string name="voice_problem_loud">too loud</string>
+    <string name="voice_problem_short">too short</string>
+    <string name="voice_problem_note">no clear note</string>
+    <string name="voice_problem_consonant">no consonant heard</string>
+    <string name="voice_problem_unclear">consonant unclear</string>
+    <string name="voice_problem_glide">moved too soon</string>
+    <string name="voice_problem_unreadable">couldn\'t be read</string>
     <string name="voice_sing_now">sing now</string>
     <!-- How far the voice is from the note, e.g. +12 ct. -->
     <string name="voice_cents">%1$s ct</string>

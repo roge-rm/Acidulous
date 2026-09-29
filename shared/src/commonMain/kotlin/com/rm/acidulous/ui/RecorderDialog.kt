@@ -188,6 +188,7 @@ fun RecorderDialog(
                     askPermission = { voicePermission.ask(Permissions.RECORD_AUDIO) },
                     tunerHz = { setup.tunerHz },
                     onRecording = { recording = it },
+                    inputBypass = { slot -> editor.song.inputAt(slot).bypass },
                 )
             },
         ),

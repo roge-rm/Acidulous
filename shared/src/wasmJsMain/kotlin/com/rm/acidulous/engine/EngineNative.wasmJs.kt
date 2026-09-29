@@ -103,6 +103,9 @@ private fun async_nativeFileInfo(arena: Int, path: Int): Int =
 private fun async_nativeFileSurvey(arena: Int, path: Int, out: Int): Int =
     js("globalThis.acid._acid_async_nativeFileSurvey(arena, path, out)")
 
+private fun async_nativeCutTake(arena: Int, path: Int, kind: Int, noteHz: Float, consonantNear: Float): Int =
+    js("globalThis.acid._acid_async_nativeCutTake(arena, path, kind, noteHz, consonantNear)")
+
 private fun raw_nativeAuditionFile(env: Int, path: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeAuditionFile(env, 0, path)")
 
@@ -766,6 +769,16 @@ internal actual object EngineNative {
         val ticket_ = async_nativeFileSurvey(arena_, jpath, jout)
         Jni.await(ticket_)
         Jni.copyBack(jout, out)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeCutTake(path: String, kind: Int, noteHz: Float, consonantNear: Float): String {
+        val arena_ = Jni.openArena()
+        val jpath = Jni.string(path)
+        val ticket_ = async_nativeCutTake(arena_, jpath, kind, noteHz, consonantNear)
+        Jni.await(ticket_)
         val result_ = Jni.readString(Jni.resultInt(ticket_))
         Jni.releaseAsync(ticket_)
         return result_

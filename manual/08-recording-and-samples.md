@@ -23,12 +23,18 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
   - **new voice** starts one, and **delete** deletes the one chosen, with its
     takes. **share** sends it as a zip, its takes and all. **note** is the note every prompt is sung on;
     pick one that's easy for you, since it can't change after the first take.
-  - Tap **sing**, listen to the note, then sing the prompt on it when it says
-    **sing now**. **ah-sah** means ah, then sah, joined, all on the note: it's
-    the consonant going in and out of a vowel that's being recorded. A vowel
-    that moves, like **eye**, stays on its first vowel and moves to the second
-    at the very end: aaah-ee. Each take is two and a half seconds, and it moves on to the
-    next prompt by itself.
+  - Tap **sing** and listen to the note. It counts 3, 2, 1, then the prompt
+    turns red: sing it on the note, in whatever octave suits your voice. The
+    bar under it shows where each part goes. **ah-sah** is ah, then sah, in
+    one breath, with the s where the bar marks it: it's the consonant going
+    in and out of a vowel that's being recorded. A vowel that moves, like
+    **eye**, holds its first vowel and moves to the second at the mark near
+    the end: aaah-ee. It moves on to the next prompt by itself.
+  - Each take is checked as soon as it's sung. One that has to be sung
+    again stays on screen in pink and says why, such as **too loud** or **no
+    consonant heard**. The stage counts only count takes that are fine.
+  - **mic** shows the level. Sing loud enough to keep it well up the bar. A
+    take always records the mic raw, without the effects printed into a take.
   - **◀** and **▶** go back and forward, **play** plays a take back, and
     **again** records it over.
   - **stage 1** is every vowel and every consonant. Stages 2 and 3 sing the

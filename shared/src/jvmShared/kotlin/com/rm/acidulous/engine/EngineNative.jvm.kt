@@ -51,6 +51,9 @@ internal actual object EngineNative {
     @JvmName("nativeFileSurvey")
     private external fun blocking_nativeFileSurvey(path: String, out: FloatArray): String
     actual suspend fun nativeFileSurvey(path: String, out: FloatArray): String = blocking_nativeFileSurvey(path, out)
+    @JvmName("nativeCutTake")
+    private external fun blocking_nativeCutTake(path: String, kind: Int, noteHz: Float, consonantNear: Float): String
+    actual suspend fun nativeCutTake(path: String, kind: Int, noteHz: Float, consonantNear: Float): String = blocking_nativeCutTake(path, kind, noteHz, consonantNear)
     actual external fun nativeAuditionFile(path: String): String
     actual external fun nativeAuditioning(): Boolean
     actual external fun nativeAuditionProgress(): Float

@@ -14,21 +14,29 @@ import kotlinx.serialization.json.Json
  * [note] is the one note every prompt is sung on (MIDI), so each take is
  * already at the same pitch. [takes] maps a prompt's id to its file, in the
  * folder; a prompt without one hasn't been sung yet, which is how a session
- * picks up where it stopped.
+ * picks up where it stopped. [cuts] is how each take was cut up, once it has
+ * been; a take whose cut found a problem still has to be sung again.
  */
 @Serializable
 data class VoiceBank(
     val name: String,
     val note: Int = DEFAULT_NOTE,
     val takes: Map<String, String> = emptyMap(),
+    val cuts: Map<String, TakeCut> = emptyMap(),
 ) {
     fun sung(prompt: Prompt): Boolean = prompt.id in takes
 
-    /** How many of a stage's prompts have a take. */
-    fun doneIn(stage: Int): Int = VoicePrompts.inStage(stage).count { sung(it) }
+    /** What's wrong with a prompt's take, or "" when it's fine or not cut yet. */
+    fun problemOf(prompt: Prompt): String = cuts[prompt.id]?.problem.orEmpty()
 
-    /** The first prompt without a take, in order, or null when every one has one. */
-    fun nextToSing(): Prompt? = VoicePrompts.all.firstOrNull { !sung(it) }
+    /** Sung, and not waiting to be sung again. */
+    fun done(prompt: Prompt): Boolean = sung(prompt) && problemOf(prompt).isEmpty()
+
+    /** How many of a stage's prompts have a take that's fine. */
+    fun doneIn(stage: Int): Int = VoicePrompts.inStage(stage).count { done(it) }
+
+    /** The first prompt not done, in order, or null when every one is. */
+    fun nextToSing(): Prompt? = VoicePrompts.all.firstOrNull { !done(it) }
 
     companion object {
         /** A low A: comfortable for most voices, between a man's and a woman's. */

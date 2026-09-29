@@ -440,6 +440,15 @@ Java_com_rm_acidulous_engine_EngineNative_nativeCaptureMarks(JNIEnv *env, jobjec
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeCutTake(JNIEnv *env, jobject, jstring path, jint kind, jfloat noteHz,
+                                                        jfloat consonantNear) {
+    const char *p = env->GetStringUTFChars(path, nullptr);
+    const std::string out = host().cutTake(p != nullptr ? p : "", kind, noteHz, consonantNear);
+    if (p != nullptr) env->ReleaseStringUTFChars(path, p);
+    return env->NewStringUTF(out.c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeFileSurvey(JNIEnv *env, jobject, jstring path,
                                                            jfloatArray out) {
     const jsize max = env->GetArrayLength(out);

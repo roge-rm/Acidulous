@@ -129,6 +129,14 @@ class EngineHost {
      */
     std::string fileSurvey(const std::string &path, float *dest, int32_t columns) const;
     /**
+     * Cuts a recorded voice take for Diction (see diction::cutTake): kind 0
+     * held, 1 glide, 2 between; [consonantNear] in seconds, or below 0 for
+     * nowhere in particular. Returns "problem|start|end|holdFrom|holdTo|
+     * glideFrom|glideTo|consonantFrom|consonantTo|rootHz|centsOff", in frames
+     * at the engine rate.
+     */
+    std::string cutTake(const std::string &path, int32_t kind, float noteHz, float consonantNear) const;
+    /**
      * Reads [src], applies [ops] and writes [dst]. Returns "" or an error.
      *
      * [dst] may be [src] to overwrite it. Written to a temporary file and

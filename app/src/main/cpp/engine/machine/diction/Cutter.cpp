@@ -127,9 +127,31 @@ int32_t steadiest(const Features &f, int32_t from, int32_t to, int32_t length) {
     return best;
 }
 
+/**
+ * How many samples sit in flat runs at the take's peak. A mic driven past
+ * what it can take cuts the wave off flat, at whatever level that is on a
+ * given phone, and the same value repeats; a wave that only peaks there
+ * doesn't repeat it exactly.
+ */
+int32_t clippedSamples(const std::vector<float> &x) {
+    float peak = 0.0f;
+    for (float v : x) peak = std::max(peak, std::fabs(v));
+    if (peak <= 0.0f) return 0;
+    int32_t total = 0, run = 0;
+    for (size_t i = 1; i <= x.size(); ++i) {
+        if (i < x.size() && std::fabs(x[i]) >= 0.99f * peak && std::fabs(x[i]) == std::fabs(x[i - 1])) {
+            ++run;
+        } else {
+            if (run >= 2) total += run + 1;
+            run = 0;
+        }
+    }
+    return total;
+}
+
 } // namespace
 
-Cut cutTake(const std::vector<float> &input, float sr, TakeKind kind, float noteHz) {
+Cut cutTake(const std::vector<float> &input, float sr, TakeKind kind, float noteHz, int32_t consonantNear) {
     Cut cut;
     std::vector<float> x = input;
     // Handling noise and rumble under the voice would count as sound.
@@ -143,6 +165,7 @@ Cut cutTake(const std::vector<float> &input, float sr, TakeKind kind, float note
     const float floor = percentile(f.level, 0.1f);
     const float peak = percentile(f.level, 0.95f);
     if (peak - floor < 12.0f) { cut.problem = "too quiet"; return cut; }
+    if (clippedSamples(input) >= 16) { cut.problem = "too loud"; return cut; }
     const float threshold = std::max(floor + 8.0f, peak - 30.0f);
     auto loud = [&](int32_t h) { return f.level[static_cast<size_t>(h)] > threshold; };
     int32_t first = -1, last = -1;
@@ -163,7 +186,10 @@ Cut cutTake(const std::vector<float> &input, float sr, TakeKind kind, float note
     }
     if (static_cast<int32_t>(sung.size()) < n / 3) { cut.problem = "no clear note"; return cut; }
     cut.rootHz = percentile(sung, 0.5f);
-    cut.centsOff = noteHz > 0.0f ? 1200.0f * std::log2(cut.rootHz / noteHz) : 0.0f;
+    if (noteHz > 0.0f && cut.rootHz > 0.0f) {
+        const float cents = 1200.0f * std::log2(cut.rootHz / noteHz);
+        cut.centsOff = cents - 1200.0f * std::round(cents / 1200.0f);
+    }
 
     if (kind == TakeKind::Held) {
         // --- the vowel's steady part: the steadiest stretch in the middle ----
@@ -246,13 +272,34 @@ Cut cutTake(const std::vector<float> &input, float sr, TakeKind kind, float note
         return cut;
     }
 
-    // --- the consonant: what sounds least like either vowel -------------------
-    // The vowels are sampled near each end, clear of the consonant.
-    const auto before = averageSpectrum(f, first + n / 12, first + n / 4);
-    const auto after = averageSpectrum(f, last - n / 4, last - n / 12);
-    const int32_t from = first + n / 5, to = last - n / 5;
+    // --- the consonant: a short change between two stretches of the vowel ---
+    // Each hop is compared with the voice just before it and just after it,
+    // 100 to 250 ms away, and counts by the nearer of the two. A vowel
+    // drifting is like one side or the other; a consonant is like neither.
+    // Only where both sides are sung near the held level, so the voice
+    // starting or stopping isn't taken for one. A real voice drifts too much
+    // to compare against the vowel's average instead: a plain "ah" stood out
+    // from its own average as far as an "l" or an "ng" did.
+    constexpr int32_t kNear = 10, kFar = 25;
+    const float held = percentile(std::vector<float>(f.level.begin() + first, f.level.begin() + last + 1), 0.5f);
+    int32_t from = first + kFar, to = last - kFar;
+    if (consonantNear >= 0) {
+        const auto spread = static_cast<int32_t>(0.6f * sr);
+        from = std::max(from, (consonantNear - spread) / hop);
+        to = std::min(to, (consonantNear + spread) / hop);
+    }
+    if (to - from < 3) { cut.problem = "no consonant found"; return cut; }
+    auto levelOver = [&](int32_t a, int32_t b) {
+        float sum = 0.0f;
+        for (int32_t h = a; h < b; ++h) sum += f.level[static_cast<size_t>(h)];
+        return sum / static_cast<float>(b - a);
+    };
     std::vector<float> d(static_cast<size_t>(f.hops), 0.0f);
-    for (int32_t h = from; h <= to; ++h) d[static_cast<size_t>(h)] = std::min(distance(f, h, before), distance(f, h, after));
+    for (int32_t h = from; h <= to; ++h) {
+        if (levelOver(h - kFar, h - kNear) < held - 6.0f || levelOver(h + kNear, h + kFar) < held - 6.0f) continue;
+        d[static_cast<size_t>(h)] = std::min(distance(f, h, averageSpectrum(f, h - kFar, h - kNear)),
+                                             distance(f, h, averageSpectrum(f, h + kNear, h + kFar)));
+    }
     // Smoothed a little, so one odd hop doesn't decide it.
     std::vector<float> smooth(d);
     for (int32_t h = from + 1; h < to; ++h) {
@@ -260,17 +307,22 @@ Cut cutTake(const std::vector<float> &input, float sr, TakeKind kind, float note
     }
     int32_t centre = from;
     for (int32_t h = from; h <= to; ++h) if (smooth[static_cast<size_t>(h)] > smooth[static_cast<size_t>(centre)]) centre = h;
-    const float most = smooth[static_cast<size_t>(centre)];
-    // A consonant stands out from the vowels around it: by a good few dB
-    // across the bands, and by far more than the vowel wobbles by itself. A
-    // vowel held through with nothing in it peaks at about twice its usual
-    // wobble, the softest consonants (l, r, w) at three and a half times.
-    const float usual = percentile(std::vector<float>(smooth.begin() + from, smooth.begin() + to + 1), 0.5f);
-    if (most < std::max(4.0f, 2.8f * usual)) { cut.problem = "no consonant found"; return cut; }
+    // On a real voice the softest consonant, an "ng" between two oo's, stood
+    // out by 6.5 dB, and a plain vowel mostly by under 3.5.
+    if (smooth[static_cast<size_t>(centre)] < 5.0f) { cut.problem = "no consonant found"; return cut; }
+
+    // Its edges: where it stops sounding unlike the vowel on either side.
+    const auto before = averageSpectrum(f, std::max(first, centre - 45), std::max(first + 1, centre - 20));
+    const auto after = averageSpectrum(f, std::min(last, centre + 20), std::min(last + 1, centre + 45));
+    const int32_t lo = std::max(first, centre - 40), hi = std::min(last, centre + 40);
+    std::vector<float> e(static_cast<size_t>(f.hops), 0.0f);
+    for (int32_t h = lo; h <= hi; ++h) e[static_cast<size_t>(h)] = std::min(distance(f, h, before), distance(f, h, after));
+    float most = 0.0f;
+    for (int32_t h = std::max(lo, centre - 3); h <= std::min(hi, centre + 3); ++h) most = std::max(most, e[static_cast<size_t>(h)]);
     int32_t left = centre, right = centre;
     const float edge = 0.4f * most;
-    while (left > from && d[static_cast<size_t>(left - 1)] > edge) --left;
-    while (right < to && d[static_cast<size_t>(right + 1)] > edge) ++right;
+    while (left > lo && e[static_cast<size_t>(left - 1)] > edge) --left;
+    while (right < hi && e[static_cast<size_t>(right + 1)] > edge) ++right;
     const int32_t length = right - left + 1;
     if (length * 100 > n * 45) { cut.problem = "consonant unclear"; return cut; }
     cut.consonantFrom = left * hop;

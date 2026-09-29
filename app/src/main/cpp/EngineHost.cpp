@@ -1,6 +1,7 @@
 #include "EngineHost.h"
 
 #include <engine/dsp/Denormals.h>
+#include <engine/machine/diction/Cutter.h>
 #include <engine/machine/diction/Diction.h>
 #include <engine/machine/diction/Phones.h>
 #include <engine/machine/molt/Molt.h>
@@ -440,6 +441,24 @@ std::string EngineHost::fileSurvey(const std::string &path, float *dest, int32_t
     char out[256];
     std::snprintf(out, sizeof(out), "%s|%d|%d|%d|%.4f", s->name.c_str(), s->frames,
                   s->stereo ? 2 : 1, s->rate, static_cast<double>(s->peak));
+    return out;
+}
+
+std::string EngineHost::cutTake(const std::string &path, int32_t kind, float noteHz, float consonantNear) const {
+    std::string error;
+    const std::unique_ptr<SampleData> s = WavReader::read(path, kSampleRate, error, kMaxSliceSeconds);
+    if (s == nullptr || s->frames <= 0) return "unreadable|0|0|0|0|0|0|0|0|0|0";
+    std::vector<float> mono(s->left.begin(), s->left.begin() + s->frames);
+    if (s->stereo) {
+        for (int32_t i = 0; i < s->frames; ++i) mono[static_cast<size_t>(i)] = 0.5f * (s->left[static_cast<size_t>(i)] + s->right[static_cast<size_t>(i)]);
+    }
+    const float rate = static_cast<float>(s->rate);
+    const auto cut = machine::diction::cutTake(mono, rate, static_cast<machine::diction::TakeKind>(std::clamp(kind, 0, 2)), noteHz,
+                                               consonantNear >= 0.0f ? static_cast<int32_t>(consonantNear * rate) : -1);
+    char out[256];
+    std::snprintf(out, sizeof(out), "%s|%d|%d|%d|%d|%d|%d|%d|%d|%.2f|%.1f", cut.problem.c_str(), cut.start, cut.end,
+                  cut.holdFrom, cut.holdTo, cut.glideFrom, cut.glideTo, cut.consonantFrom, cut.consonantTo,
+                  static_cast<double>(cut.rootHz), static_cast<double>(cut.centsOff));
     return out;
 }
 
