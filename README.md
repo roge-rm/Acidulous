@@ -18,7 +18,7 @@ And please join me in the #acidulous channel **[on my discord](https://discord.g
 
 The manual is in [manual/](manual/) and in the app in the **Help…** window.
 
-Disclaimer: I am not a programmer and this was made using Claude Opus 5.0/5.5
+Disclaimer: I am not a great programmer and this was made using Claude Opus 5.0/5.5
 
 Enjoy,<br>
 Dan (rm)
