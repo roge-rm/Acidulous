@@ -21,6 +21,10 @@ from that note on, a syllable a note:
 Under the words is what each note will sing, as sounds. If a word comes out
 wrong, write it in brackets.
 
+To put words on some notes only, select them first and tap one of them in the
+lane: the line goes over the selected notes, and the others keep theirs. Each
+note shows its syllable on the roll too.
+
 Consonants come before the vowel at the start of a note, and the ones after it
 when the note ends.
 

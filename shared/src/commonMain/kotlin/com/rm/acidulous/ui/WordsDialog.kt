@@ -25,11 +25,15 @@ internal fun sungOrder(clip: Clip): List<Int> =
 /**
  * The words from one note to the end of the clip, as a line: a syllable a
  * note, "hel-lo" for a word over two. Under it, the sounds each note will
- * sing, so a word said wrongly can be put right in brackets.
+ * sing, so a word said wrongly can be put right in brackets. With [only],
+ * the selected notes, the line goes over just those, in the order they're
+ * sung, and the others keep their words.
  */
 @Composable
-fun WordsDialog(clip: Clip, from: Int, accent: Accent, onDismiss: () -> Unit, onApply: (List<Note>) -> Unit) {
-    val order = remember(clip, from) { sungOrder(clip).let { o -> o.drop(o.indexOf(from).coerceAtLeast(0)) } }
+fun WordsDialog(clip: Clip, from: Int, accent: Accent, onDismiss: () -> Unit, onApply: (List<Note>) -> Unit, only: Set<Int> = emptySet()) {
+    val order = remember(clip, from, only) {
+        sungOrder(clip).let { o -> if (only.isNotEmpty()) o.filter { it in only } else o.drop(o.indexOf(from).coerceAtLeast(0)) }
+    }
     var line by remember(clip, from) { mutableStateOf(Lyrics.gather(order.map { clip.notes[it].lyric })) }
 
     // The notes with the line applied, from which both the readout and the result come.

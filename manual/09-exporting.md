@@ -54,6 +54,8 @@ happens depends on what it is:
   tempo changes, the scenes after it get a tempo of their own.
 - Pedals, the mod wheel and pressure come in as lanes, and pitch bend as bends
   on the notes.
+- Words in the file, including a karaoke file's, go on the notes they start
+  with, and that part goes to Diction to sing them.
 - It opens as a new song and is saved straight away.
 - **A song bundle** (a .zip made by Export) opens as a song, with its samples.
   If you already have a sample with the same name, yours is kept and the

@@ -15,13 +15,16 @@ package com.rm.acidulous.model
 object MidiImport {
 
     /**
-     * Where a part goes: drums to a drum machine, and parts whose General
+     * Where a part goes: drums to a drum machine, a part with words to the
+     * singer, and parts whose General
      * MIDI instrument one of the modelled machines plays to that machine (an
      * organ part to the organ, a trumpet to the brass). Everything else goes
      * to the poly synth.
      */
     fun defaultMachine(part: MidiFile.Part): String {
         if (part.channel == MidiFile.DRUM_CHANNEL) return "Hexbeat"
+        // A part with words sings them.
+        if (part.notes.any { it.lyric.isNotEmpty() }) return "Diction"
         return when (part.program?.let { it / 8 }) {
             2 -> "Manual"                  // organ
             3, 5 -> "Filament"             // guitar, strings

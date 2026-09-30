@@ -110,6 +110,11 @@ object MidiFile {
         val bendRange = HashMap<Pair<Int, Int>, Int>()
         val rpn = HashMap<Pair<Int, Int>, Int>()
         val tempos = mutableListOf<Pair<Int, Float>>()
+        // Words, as lyric events (0x05), and text events (0x01), which a
+        // karaoke file uses for its words instead: (tick, text) in order.
+        val lyricEvents = mutableListOf<Pair<Int, String>>()
+        val textEvents = mutableListOf<Pair<Int, String>>()
+        var karaoke = false
         fun ticks(fileTicks: Long) = ((fileTicks * PPQN + division / 2) / division).toInt()
         fun control(where: Pair<Int, Int>, name: String, tick: Int, value: Float) {
             controls.getOrPut(where) { mutableMapOf() }.getOrPut(name) { mutableListOf() }.let { pts ->
@@ -147,6 +152,11 @@ object MidiFile {
                         val data = r.bytes(r.varLen().toInt())
                         when (type) {
                             0x03 -> names.getOrPut(t) { data.decodeToString().trim() }
+                            0x05 -> lyricEvents += ticks(at) to data.decodeToString()
+                            0x01 -> data.decodeToString().let { text ->
+                                if (text.startsWith("@K")) karaoke = true
+                                if (!text.startsWith("@")) textEvents += ticks(at) to text
+                            }
                             0x51 -> if (data.size >= 3) {
                                 val us = ((data[0].toInt() and 0xff) shl 16) or ((data[1].toInt() and 0xff) shl 8) or (data[2].toInt() and 0xff)
                                 if (us > 0) {
@@ -195,6 +205,23 @@ object MidiFile {
                 }
             }
             r.pos = end
+        }
+
+        // The words go to the part whose notes start where they do.
+        val words = syllables(lyricEvents.ifEmpty { if (karaoke) textEvents else emptyList() }.sortedBy { it.first })
+        val sung = if (words.isEmpty()) null else parts.keys.maxByOrNull { where ->
+            val starts = parts.getValue(where).map { it.tick }
+            words.count { (tick, _) -> starts.any { kotlin.math.abs(it - tick) <= WORD_SLACK } }
+        }
+        if (sung != null) {
+            val notes = parts.getValue(sung).sortedWith(compareBy({ it.tick }, { it.pitch })).toMutableList()
+            var from = 0
+            for ((tick, syllable) in words) {
+                val k = (from until notes.size).firstOrNull { kotlin.math.abs(notes[it].tick - tick) <= WORD_SLACK } ?: continue
+                notes[k] = notes[k].copy(lyric = syllable)
+                from = k + 1
+            }
+            parts[sung] = notes
         }
 
         val out = parts.map { (where, notes) ->
@@ -254,6 +281,28 @@ object MidiFile {
         "Closed Hat" to 42, "Open Hat" to 46, "Crash" to 49, "Ride" to 51,
         "Cowbell" to 56, "Clave" to 75,
     )
+
+    /** How far a word may be from its note's start and still be its note's: a thirty-second. */
+    private const val WORD_SLACK = PPQN / 8
+
+    /**
+     * A file's words as syllables for notes: "hel-" where the next goes on
+     * with the word. A file ends a word with a space (after it, or before
+     * the next), or a line with "/" or "\"; a syllable with neither goes on.
+     */
+    internal fun syllables(events: List<Pair<Int, String>>): List<Pair<Int, String>> {
+        val out = ArrayList<Pair<Int, String>>()
+        for ((k, event) in events.withIndex()) {
+            val raw = event.second
+            val text = raw.trim().trimStart('/', '\\').trim()
+            if (text.isEmpty()) continue
+            val next = events.getOrNull(k + 1)?.second.orEmpty()
+            val ends = raw.endsWith(' ') || raw.endsWith('\n') || next.isEmpty() || next.first().isWhitespace() ||
+                next.startsWith("/") || next.startsWith("\\") || !text.last().isLetter()
+            out += event.first to if (ends || text.endsWith("-")) text else "$text-"
+        }
+        return out
+    }
 
     /** [program] is the General MIDI instrument the file asked for, if any. */
     data class Part(

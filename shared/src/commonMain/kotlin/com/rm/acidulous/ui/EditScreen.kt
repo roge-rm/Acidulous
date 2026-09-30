@@ -707,6 +707,7 @@ fun EditScreen(
             playheadTick = playhead,
             lowestPitch = lowestPitch,
             rows = rows,
+            lyrics = sings,
             scalePitchClasses = Scales.activeFor(song, track),
             noteSpelling = Scales.spellingFor(song, track),
             scaleView = scaleView,
@@ -1294,6 +1295,9 @@ fun EditScreen(
         WordsDialog(
             clip = clip,
             from = from,
+            // Opened from a note that's selected with others: the line goes
+            // over the selection.
+            only = selection.takeIf { from in it && it.size > 1 && it.all { i -> i in clip.notes.indices } }.orEmpty(),
             accent = com.rm.acidulous.model.lyrics.Accent.of(track.machine.params["accent"] ?: 0f),
             onDismiss = { wordsFrom = null },
             onApply = { notes ->

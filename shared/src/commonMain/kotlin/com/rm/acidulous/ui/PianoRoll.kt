@@ -34,6 +34,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -114,6 +115,8 @@ fun PianoRoll(
      * zooms time.
      */
     onZoom: (pitchScale: Float, timeScale: Float) -> Unit = { _, _ -> },
+    /** A singer's roll: each note shows its syllable. */
+    lyrics: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -487,6 +490,20 @@ fun PianoRoll(
                 )
             }
             drawRect(c.bg, rect.topLeft, rect.size, style = Stroke(1.5f))
+            // Its syllable, inside the note, cut off at its end rather than
+            // running over the next.
+            if (lyrics && note.lyric.isNotEmpty()) {
+                val laid = textMeasurer.measure(
+                    AnnotatedString(note.lyric),
+                    // Against the velocity, which fills most of a note, in either theme.
+                    TextStyle(color = c.bg, fontSize = NameTextSize),
+                )
+                if (laid.size.height <= rect.height + 2f && rect.width > 8f) {
+                    clipRect(rect.left, rect.top, rect.right, rect.bottom) {
+                        drawText(laid, topLeft = Offset(rect.left + 3f, rect.top + (rect.height - laid.size.height) / 2f))
+                    }
+                }
+            }
         }
 
         rubberBand?.let { band ->

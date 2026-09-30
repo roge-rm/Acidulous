@@ -102,6 +102,40 @@ class MidiImportTest {
         assertEquals(PPQN, note.length)
     }
 
+    private fun lyric(text: String): ByteArray = text.encodeToByteArray().let { t -> b(0xff, 0x05) + varLen(t.size) + t }
+    private fun text(text: String): ByteArray = text.encodeToByteArray().let { t -> b(0xff, 0x01) + varLen(t.size) + t }
+
+    @Test
+    fun wordsGoOnTheNotesTheyStartWithAndThePartSingsThem() {
+        // "Twin" "kle " "twin" "kle": a word goes on unless a space ends it.
+        // The words are on their own track, as in many files, and a little
+        // ahead of their notes.
+        val words = track(0 to lyric("Twin"), PPQN to lyric("kle "), PPQN to lyric("twin"), PPQN - 10 to lyric("kle"))
+        val notes = track(
+            0 to b(0x90, 60, 100), PPQN to b(0x80, 60, 0),
+            0 to b(0x90, 60, 100), PPQN to b(0x80, 60, 0),
+            0 to b(0x90, 67, 100), PPQN to b(0x80, 67, 0),
+            0 to b(0x90, 67, 100), PPQN to b(0x80, 67, 0),
+        )
+        val part = MidiFile.read(file(1, PPQN, words, notes)).parts.single()
+        assertEquals(listOf("Twin-", "kle", "twin-", "kle"), part.notes.map { it.lyric })
+        assertEquals("Diction", MidiImport.defaultMachine(part))
+    }
+
+    @Test
+    fun aKaraokeFileHasItsWordsInTextEventsWithLinesMarked() {
+        val words = track(0 to text("@KMIDI KARAOKE FILE"), 0 to text("/Row"), PPQN to text(" row"), PPQN to text("\\Merr"), PPQN to text("i"), PPQN to text("ly"))
+        val notes = track(*(0 until 5).flatMap { listOf((if (it == 0) 0 else 0) to b(0x90, 60, 100), PPQN to b(0x80, 60, 0)) }.toTypedArray())
+        val part = MidiFile.read(file(1, PPQN, words, notes)).parts.single()
+        assertEquals(listOf("Row", "row", "Merr-", "i-", "ly"), part.notes.map { it.lyric })
+    }
+
+    @Test
+    fun aFileWithoutWordsKeepsItsTextOutOfTheNotes() {
+        val bytes = file(1, PPQN, track(0 to text("a comment"), 0 to b(0x90, 60, 100), PPQN to b(0x80, 60, 0)))
+        assertEquals(listOf(""), MidiFile.read(bytes).parts.single().notes.map { it.lyric })
+    }
+
     @Test
     fun anUnnamedPartIsCalledWhatItsInstrumentIsAndGoesToTheMachineThatPlaysIt() {
         val bytes = file(1, PPQN, track(
