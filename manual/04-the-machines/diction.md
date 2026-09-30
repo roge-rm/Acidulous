@@ -40,12 +40,9 @@ when the note ends.
   bigger and darker, up is smaller and brighter. Low notes with the formant
   down sound like a man, high notes with it up like a woman or a child, and
   in between is neither.
-- **breath** - how much air is in the voice. In a recorded voice, how much
-  of the singer's own breath is kept: down is clean, all the way up is as
-  it was sung.
-- **clean** - takes more breath out of a recorded voice's vowels than
-  **breath** can. All the way up, a held vowel sounds almost like an
-  instrument. It does nothing to the built-in voice or to the consonants.
+- **track** - moves the throat with the pitch. Up, high notes get a smaller
+  throat, and all the way up it's a chipmunk an octave up. Below zero it goes
+  the other way.
 - **consonants** - how long the consonants take.
 - **level** - how loud a recorded voice's consonants are against its vowels.
 - **from…** - which of a recorded voice's takes each consonant is formed
@@ -56,6 +53,20 @@ when the note ends.
   in Alberta, **central** is Canadian as in Ontario, and **american** is
   General American.
 
+## Character
+
+- **breath** - how much air is in the voice. In a recorded voice, how much
+  of the singer's own breath is kept: down is clean, all the way up is as
+  it was sung.
+- **clean** - takes more breath out of a recorded voice's vowels than
+  **breath** can. All the way up, a held vowel sounds almost like an
+  instrument. It does nothing to the built-in voice or to the consonants.
+- **whisper** - whispers the words instead of singing them.
+- **effort** - soft to belted. Up is brighter and louder, down is softer.
+- **rasp** - a rough voice.
+- **growl** - a pulse skipped every other time: a crackle at first, a growl
+  an octave down at the top.
+
 ## Expression
 
 - **vibrato** - **depth**, **rate** and **delay**. A singer holds a note
@@ -64,6 +75,8 @@ when the note ends.
 - **drift** - how unsteady the voice is. It wanders a little on a held note
   and scoops up into a new one.
 - **glide** - how long it takes to slide from one note to the next.
+- **scoop** - how far below its note each note starts, on top of the drift's
+  own. Below zero, each note falls into place from above.
 
 Then **attack**, **release** and **velocity**, the tuning, and the level.
 

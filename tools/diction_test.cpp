@@ -111,6 +111,32 @@ float band(const std::vector<float> &x, float lo, float hi) {
     return sum;
 }
 
+/** The median pitch between [from] and [to] seconds into [x]. */
+float pitchBetween(const std::vector<float> &x, float from, float to) {
+    std::vector<float> part(x.begin() + static_cast<long>(from * kSr), x.begin() + static_cast<long>(to * kSr));
+    PitchTrack t;
+    t.find(part, static_cast<int32_t>(part.size()), kSr);
+    std::vector<float> v;
+    for (float f : t.hz) if (f > 0.0f) v.push_back(f);
+    if (v.empty()) return 0.0f;
+    std::sort(v.begin(), v.end());
+    return v[v.size() / 2];
+}
+
+/**
+ * How far the harmonics of [x] between [from] and [to] seconds stand above
+ * what's half way between them, 1 to 4 kHz, in dB, at the pitch [f0].
+ */
+float clearDb(const std::vector<float> &x, float from, float to, float f0) {
+    std::vector<float> part(x.begin() + static_cast<long>(from * kSr), x.begin() + static_cast<long>(to * kSr));
+    float on = 0.0f, between = 0.0f;
+    for (float k = std::ceil(1000.0f / f0); k * f0 < 4000.0f; k += 1.0f) {
+        on += audition::magnitudeAt(part, 0, k * f0);
+        between += audition::magnitudeAt(part, 0, (k + 0.5f) * f0);
+    }
+    return 20.0f * std::log10(on / std::max(between, 1e-9f));
+}
+
 float rms(const std::vector<float> &x, size_t from, size_t n) {
     double s = 0.0;
     for (size_t i = from; i < from + n && i < x.size(); ++i) s += static_cast<double>(x[i]) * x[i];
@@ -202,6 +228,41 @@ int main() {
         const float wide = pitchSpread(held(*singer({{Diction::Vibrato, 50.0f}, {Diction::VibratoDelay, 0.0f}}), 57, 2.0f));
         check(still < 20.0f, "no vibrato holds still", std::to_string(still) + " ct");
         check(wide > 60.0f && wide < 140.0f, "fifty cents of vibrato swings about a hundred", std::to_string(wide) + " ct");
+
+        // Character, on a straight note.
+        auto straight = [&](std::initializer_list<std::pair<int32_t, float>> knobs, uint8_t note = 57) {
+            std::vector<std::pair<int32_t, float>> all{{Diction::Vibrato, 0.0f}, {Diction::Drift, 0.0f}};
+            all.insert(all.end(), knobs.begin(), knobs.end());
+            auto m = singer({});
+            for (const auto &k : all) m->params().set(k.first, m->params().def(k.first).unmap(k.second));
+            m->params().jumpAll();
+            return held(*m, note, 1.0f);
+        };
+        const float a3 = 220.0f;
+        const auto plainNote = straight({});
+        const float plainClear = clearDb(plainNote, 0.4f, 0.9f, a3);
+        const float whisperClear = clearDb(straight({{Diction::Whisper, 1.0f}}), 0.4f, 0.9f, a3);
+        check(whisperClear < plainClear - 6.0f, "whisper takes the pitch away",
+              std::to_string(plainClear) + " dB, then " + std::to_string(whisperClear));
+        const float raspClear = clearDb(straight({{Diction::Rasp, 1.0f}}), 0.4f, 0.9f, a3);
+        check(raspClear < plainClear - 4.0f, "rasp roughens it", std::to_string(plainClear) + " dB, then " + std::to_string(raspClear));
+        const auto growled = straight({{Diction::Growl, 1.0f}});
+        std::vector<float> plainPart(plainNote.begin() + static_cast<long>(0.4f * kSr), plainNote.end());
+        std::vector<float> growlPart(growled.begin() + static_cast<long>(0.4f * kSr), growled.end());
+        const float halfPlain = audition::magnitudeAt(plainPart, 0, a3 / 2.0f) / audition::magnitudeAt(plainPart, 0, a3);
+        const float halfGrowl = audition::magnitudeAt(growlPart, 0, a3 / 2.0f) / audition::magnitudeAt(growlPart, 0, a3);
+        check(halfGrowl > halfPlain * 10.0f && halfGrowl > 0.1f, "growl sounds an octave down",
+              std::to_string(20.0f * std::log10(halfPlain)) + " dB, then " + std::to_string(20.0f * std::log10(halfGrowl)));
+        const float soft = throat(straight({{Diction::Effort, -1.0f}})), belted = throat(straight({{Diction::Effort, 1.0f}}));
+        check(belted > soft * 1.15f, "belted is brighter than soft", std::to_string(soft) + " Hz, then " + std::to_string(belted));
+        const float below = pitchBetween(straight({{Diction::Scoop, 2.0f}}), 0.0f, 0.06f);
+        const float above = pitchBetween(straight({{Diction::Scoop, -2.0f}}), 0.0f, 0.06f);
+        check(cents(above, below) > 100.0f, "scoop starts a note below it, or above",
+              std::to_string(below) + " Hz, then " + std::to_string(above));
+        const float lowTracked = throat(straight({{Diction::Track, 1.0f}}, 45)), highTracked = throat(straight({{Diction::Track, 1.0f}}, 69));
+        const float lowPlain = throat(straight({}, 45)), highPlain = throat(straight({}, 69));
+        check(highTracked / lowTracked > 1.3f * highPlain / lowPlain, "track moves the throat with the pitch",
+              std::to_string(highPlain / lowPlain) + ", then " + std::to_string(highTracked / lowTracked));
 
         auto r = singer({{Diction::Release, 0.1f}});
         const auto y = render(*r, 1.5f, [&](int32_t b) {
@@ -477,11 +538,24 @@ int main() {
             const float plain = clearOfNoise(0.0f), cleaned = clearOfNoise(1.0f);
             check(cleaned > plain + 6.0f, "clean takes the breath out of a held vowel",
                   std::to_string(plain) + " dB, then " + std::to_string(cleaned));
+            auto whisperedAh = [&](float whisper) {
+                auto m = singer({{Diction::Whisper, whisper}, {Diction::Vibrato, 0.0f}, {Diction::Drift, 0.0f}});
+                m->swapObject(0, &voice);
+                std::vector<uint8_t> ah{code("AA")};
+                const auto x = render(*m, 1.0f, [&](int32_t b) { if (b == 0) { m->lyric(ah.data(), 1); m->noteOn(45, 100); } });
+                m->swapObject(0, nullptr);
+                return x;
+            };
+            const float sungClear = clearDb(whisperedAh(0.0f), 0.4f, 0.9f, noteHz),
+                        whisperClear = clearDb(whisperedAh(1.0f), 0.4f, 0.9f, noteHz);
+            check(whisperClear < sungClear - 10.0f, "a recorded voice whispers",
+                  std::to_string(sungClear) + " dB, then " + std::to_string(whisperClear));
         }
 
         // The same words twice, with a reset between, come out the same,
-        // with the clean knob's comb on so it's reset too.
-        auto m = singer({{Diction::Clean, 1.0f}});
+        // with everything that keeps state of its own on so it's reset too.
+        auto m = singer({{Diction::Clean, 1.0f}, {Diction::Whisper, 0.5f}, {Diction::Rasp, 0.5f}, {Diction::Growl, 0.5f},
+                         {Diction::Effort, 0.5f}});
         m->swapObject(0, &voice);
         std::vector<uint8_t> la{code("L"), code("AA")};
         auto phrase = [&]() {

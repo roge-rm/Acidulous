@@ -213,6 +213,7 @@
     <string name="pw_edge">edge</string>
     <string name="pw_ee">ee</string>
     <string name="pw_effect">effect</string>
+    <string name="pw_effort">effort</string>
     <string name="pw_eg_1">eg 1</string>
     <string name="pw_eg_2">eg 2</string>
     <string name="pw_eg1">eg1</string>
@@ -624,6 +625,7 @@
     <string name="pw_ramp_181f09">ramp↓</string>
     <string name="pw_rand">rand</string>
     <string name="pw_random">random</string>
+    <string name="pw_rasp">rasp</string>
     <string name="pw_ratchet">ratchet</string>
     <string name="pw_ratchetchance">ratchetchance</string>
     <string name="pw_rate">rate</string>
@@ -716,6 +718,7 @@
     <string name="pw_scan">scan</string>
     <string name="pw_scanner">scanner</string>
     <string name="pw_scatter">scatter</string>
+    <string name="pw_scoop">scoop</string>
     <string name="pw_section">section</string>
     <string name="pw_seed">seed</string>
     <string name="pw_semi">semi</string>
@@ -902,6 +905,7 @@
     <string name="pw_what_changes">what changes</string>
     <string name="pw_wheel">wheel</string>
     <string name="pw_where">where</string>
+    <string name="pw_whisper">whisper</string>
     <string name="pw_width">Width</string>
     <string name="pw_width_70bec8">width</string>
     <string name="pw_wind">wind</string>

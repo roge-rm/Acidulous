@@ -139,6 +139,20 @@ const ParamDef *Diction::paramDefs(int32_t &count) const {
 #undef FROM
         // A recorded voice with its breath taken out: none to as much as can be.
         {"clean", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+
+        // Soft to belted: the source's top turned down or up against the rest.
+        {"effort", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // Pulses uneven in time and size.
+        {"rasp", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // Every other pulse weaker, down to an octave below: fry, then a growl.
+        {"growl", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"whisper", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // How far below its note each note starts (above, below zero), as
+        // well as the drift's own.
+        {"scoop", -2.0f, 2.0f, 0.0f, Curve::Linear, 0, "st"},
+        // The throat moving with the pitch: all the way up, played up an
+        // octave it's a throat half the size; below zero, the other way.
+        {"track", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -150,6 +164,42 @@ void Diction::prepare(int32_t sr) {
     throat.prepare(sampleRate);
     amp.setSampleRate(sampleRate);
     reset();
+}
+
+namespace {
+
+/** [line] at [back] frames before [head], a ring of [size] (a power of two), read by four-point Hermite. */
+float ringAt(const std::vector<float> &line, int32_t head, float back, int32_t size) {
+    const float at = static_cast<float>(head) - back;
+    const float wrapped = at < 0.0f ? at + static_cast<float>(size) : at;
+    const auto i0 = static_cast<int32_t>(wrapped);
+    const float t = wrapped - static_cast<float>(i0);
+    auto y = [&](int32_t k) { return line[static_cast<size_t>((i0 + k) & (size - 1))]; };
+    const float ym = y(-1), y0 = y(0), y1 = y(1), y2 = y(2);
+    const float c1 = 0.5f * (y1 - ym);
+    const float c2 = ym - 2.5f * y0 + 2.0f * y1 - 0.5f * y2;
+    const float c3 = 0.5f * (y2 - ym) + 1.5f * (y0 - y1);
+    return ((c3 * t + c2) * t + c1) * t + y0;
+}
+
+} // namespace
+
+float Diction::pulseCharacter(float &period) {
+    const float rasp = clampf(paramOf(Rasp), 0.0f, 1.0f);
+    const float growl = clampf(paramOf(Growl), 0.0f, 1.0f);
+    float gain = 1.0f;
+    if (rasp > 0.0f) {
+        period *= 1.0f + 0.06f * rasp * bipolar(pulseSeed);
+        gain *= 1.0f + 0.4f * rasp * bipolar(pulseSeed);
+    }
+    if (growl > 0.0f) {
+        // A pair of pulses, the second weaker and later, the first as much
+        // earlier, so the pitch is still the note.
+        oddPulse = !oddPulse;
+        if (oddPulse) gain *= 1.0f - 0.85f * growl;
+        period *= 1.0f + (oddPulse ? 0.12f : -0.12f) * growl;
+    }
+    return gain;
 }
 
 void Diction::reset() {
@@ -172,6 +222,11 @@ void Diction::reset() {
     wanderCountdown = 0;
     seed = 0x2545f491u;
     noiseSeed = 0x51ee7u;
+    pulseSeed = 0x9e3779b9u;
+    oddPulse = false;
+    tiltLow = 0.0f;
+    loudIn = loudOut = 0.0f;
+    std::fill(rawLine.begin(), rawLine.end(), 0.0f);
     phase = 1.0f;
     phaseStep = 0.0f;
     strength = 1.0f;
@@ -844,7 +899,7 @@ void Diction::control() {
     const float eased = t * t * (3.0f - 2.0f * t);
     for (int32_t k = 0; k < 3; ++k) formants[k] = glideStart[k] + (target[k] - glideStart[k]) * eased;
     nasal = nasalStart + (s.nasal - nasalStart) * eased;
-    const float ratio = std::exp2(paramOf(Formant) / 12.0f);
+    const float ratio = std::exp2(paramOf(Formant) / 12.0f) * tracked(Throat::kReferenceHz);
     const Shape shape = shapeOf(formants, nasal, ratio, sungHz);
     throat.setShape(shape);
     throat.setRing(ringFor(formants, shape));
@@ -1054,7 +1109,7 @@ void Diction::startPlanned(uint8_t n, uint8_t vel, bool legato, const Step *plan
     }
     velocity = velocityGain(static_cast<float>(vel) / 127.0f, targetOf(VelocityAmount));
     // Arriving from a little below, more for a less steady voice.
-    scoop = -0.5f * targetOf(Drift);
+    scoop = -0.5f * targetOf(Drift) - targetOf(Scoop);
     if (sounding) {
         amp.trigger(); // from where the release had got to, so no click
         beginSteps(planned, count, false);
@@ -1182,7 +1237,8 @@ float Diction::nextPeriod() {
     const float seconds = period / sampleRate;
     vibratoPhase += kTwoPi * paramOf(VibratoRate) * seconds;
     if (vibratoPhase > kTwoPi) vibratoPhase -= kTwoPi;
-    scoop *= std::exp(-seconds / 0.06f);
+    // A wider scoop takes longer to arrive.
+    scoop *= std::exp(-seconds / (0.06f + 0.05f * std::fabs(paramOf(Scoop))));
     wander += (wanderTarget - wander) * (1.0f - std::exp(-seconds / 0.25f));
     wanderCountdown -= static_cast<int32_t>(period);
     if (wanderCountdown <= 0) {
@@ -1213,6 +1269,17 @@ bool Diction::render(float *L, float *R, int32_t frames) {
     // down to a tenth in ten periods.
     const float clean = 0.8f * clampf(paramOf(Clean), 0.0f, 1.0f);
     const float combStep = 1.0f / (0.005f * sampleRate);
+    const float whisper = clampf(paramOf(Whisper), 0.0f, 1.0f);
+    const float follow = 1.0f - std::exp(-1.0f / (0.05f * sampleRate));
+    // Effort: above about 1 kHz up to 9 dB up or down.
+    const float effortTop = std::exp2(1.5f * clampf(paramOf(Effort), -1.0f, 1.0f));
+    const float tiltCoef = 1.0f - std::exp(-kTwoPi * 1000.0f / sampleRate);
+    auto tilt = [&](float x) {
+        // Level, it passes as it is: low + (x - low) doesn't round back to x.
+        if (effortTop == 1.0f) return tiltLow = x;
+        tiltLow += tiltCoef * (x - tiltLow);
+        return tiltLow + (x - tiltLow) * effortTop;
+    };
 
     for (int32_t i = 0; i < frames; ++i) {
         if (--untilControl < 0) {
@@ -1229,10 +1296,13 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 // breath of a P) copied at its own rate, since it has no pitch.
                 const Reader &lead = fade >= 0.5f || fading.sound == nullptr ? reading : fading;
                 const audio::Epoch *e = epochOf(lead);
-                const float period = e != nullptr && !e->voiced ? clampf(e->period, 16.0f, 2000.0f) : nextPeriod();
-                const float ratio = std::exp2(paramOf(Formant) / 12.0f);
-                if (fade < 1.0f) layGrain(fading, 1.0f - fade, period, ratio);
-                layGrain(reading, fade, period, ratio);
+                const bool unvoiced = e != nullptr && !e->voiced;
+                float period = unvoiced ? clampf(e->period, 16.0f, 2000.0f) : nextPeriod();
+                const float character = unvoiced ? 1.0f : pulseCharacter(period);
+                float ratio = std::exp2(paramOf(Formant) / 12.0f);
+                if (lead.sound != nullptr && lead.sound->rootHz > 0.0f) ratio *= tracked(lead.sound->rootHz);
+                if (fade < 1.0f) layGrain(fading, (1.0f - fade) * character, period, ratio);
+                layGrain(reading, fade * character, period, ratio);
                 untilGrain += period;
                 grainPeriod = period;
                 grainHeld = lead.held && (e == nullptr || e->voiced);
@@ -1240,6 +1310,21 @@ bool Diction::render(float *L, float *R, int32_t frames) {
             untilGrain -= 1.0f;
             recorded = acc[static_cast<size_t>(accHead)];
             acc[static_cast<size_t>(accHead)] = 0.0f;
+            // Whisper: what doesn't repeat from pulse to pulse, the voice
+            // taken away by a second difference a period apart, which has
+            // nothing left of anything that repeats. Brought up towards the
+            // level of what was sung.
+            const float sung = recorded;
+            float whispered = 0.0f;
+            if (whisper > 0.0f) {
+                const float p1 = ringAt(rawLine, combHead, grainPeriod, kAccum);
+                const float p2 = ringAt(rawLine, combHead, 2.0f * grainPeriod, kAccum);
+                const float r = (sung - 2.0f * p1 + p2) * 0.408f;
+                loudIn += follow * (sung * sung - loudIn);
+                loudOut += follow * (r * r - loudOut);
+                whispered = r * std::min(8.0f, std::sqrt(loudIn / (loudOut + 1e-12f))) * 0.6f;
+            }
+            rawLine[static_cast<size_t>(combHead)] = sung;
             // Clean: what's sung, part mixed with itself a period ago. What
             // repeats from pulse to pulse adds up and stays; breath doesn't.
             // Each grain is a different pulse of the singer's, and the
@@ -1250,22 +1335,13 @@ bool Diction::render(float *L, float *R, int32_t frames) {
             const float wantComb = grainHeld ? clean : 0.0f;
             comb += clampf(wantComb - comb, -combStep, combStep);
             if (comb > 0.0f) {
-                const float back = static_cast<float>(combHead) - grainPeriod;
-                const float wrapped = back < 0.0f ? back + static_cast<float>(kAccum) : back;
-                const auto i0 = static_cast<int32_t>(wrapped);
-                const float t = wrapped - static_cast<float>(i0);
-                // Four-point Hermite: a straight line between two, fed back
-                // round a loop, took the top off the vowel each time round.
-                auto y = [&](int32_t k) { return combLine[static_cast<size_t>((i0 + k) & (kAccum - 1))]; };
-                const float ym = y(-1), y0 = y(0), y1 = y(1), y2 = y(2);
-                const float c1 = 0.5f * (y1 - ym);
-                const float c2 = ym - 2.5f * y0 + 2.0f * y1 - 0.5f * y2;
-                const float c3 = 0.5f * (y2 - ym) + 1.5f * (y0 - y1);
-                const float before = ((c3 * t + c2) * t + c1) * t + y0;
+                const float before = ringAt(combLine, combHead, grainPeriod, kAccum);
                 recorded += comb * (before - recorded);
             }
             combLine[static_cast<size_t>(combHead)] = recorded;
             combHead = (combHead + 1) & (kAccum - 1);
+            if (whisper > 0.0f) recorded += whisper * (whispered - recorded);
+            recorded = tilt(recorded);
             accHead = (accHead + 1) & (kAccum - 1);
             advance(reading);
             if (fade < 1.0f) {
@@ -1277,9 +1353,10 @@ bool Diction::render(float *L, float *R, int32_t frames) {
             // scaled so every pitch meets the throat at the same level.
             if (phase >= 1.0f) {
                 phase -= 1.0f;
-                const float period = nextPeriod();
+                float period = nextPeriod();
+                const float character = pulseCharacter(period);
                 phaseStep = 1.0f / period;
-                strength = 1.0f + 0.03f * bipolar(noiseSeed);
+                strength = (1.0f + 0.03f * bipolar(noiseSeed)) * character;
                 pulseScale = period / referencePeriod;
             }
             const float g = throat.flow(phase) * strength;
@@ -1288,7 +1365,7 @@ bool Diction::render(float *L, float *R, int32_t frames) {
             previousFlow = g;
             // A little breath while the folds are open.
             if (phase < 0.56f) glottal += 0.004f * bipolar(noiseSeed);
-            glottal *= pulseScale;
+            glottal = tilt(glottal * pulseScale);
             phase += phaseStep;
         }
 
@@ -1302,8 +1379,11 @@ bool Diction::render(float *L, float *R, int32_t frames) {
         // A breathy voice gives part of its tone to the air. A recorded voice
         // has its own breath, which the grains keep or take away instead.
         const float airy = voice != nullptr ? 0.0f : breath;
-        const float voiced = level[0] * (1.0f - 0.5f * airy);
-        const float air = level[1] + level[0] * airy;
+        // The built-in voice whispers by giving its tone to the air; a
+        // recorded one has done it above.
+        const float hushed = voice != nullptr ? 0.0f : whisper;
+        const float voiced = level[0] * (1.0f - 0.5f * airy) * (1.0f - hushed);
+        const float air = level[1] + level[0] * (airy + hushed);
         const float sung = throat.process(glottal * voiceGain * voiced,
                                           air > 0.0f ? bipolar(noiseSeed) * airGain * air : 0.0f,
                                           level[2] > 0.0f ? bipolar(noiseSeed) * level[2] : 0.0f) +

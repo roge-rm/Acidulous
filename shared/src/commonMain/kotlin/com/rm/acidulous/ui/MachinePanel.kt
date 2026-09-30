@@ -3577,15 +3577,14 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
     var section by rememberSaveable { mutableStateOf(0) }
     var forming by remember { mutableStateOf(false) }
     if (forming) DictionConsonantsWindow(b) { forming = false }
-    PanelSections(listOf("voice", "expression", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("voice", "character", "expression", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
                 Group("voice") {
                     DictionVoiceKnob(track, trackIndex, editor)
                     PanelVowelKnob(b, "vowel", "vowel")
                     PanelKnob(b, "formant", "formant", PanelAmber)
-                    PanelKnob(b, "breath", "breath")
-                    PanelKnob(b, "clean", "clean", PanelPink)
+                    PanelKnob(b, "track", "track")
                 }
                 Group("words") {
                     PanelKnob(b, "consonants", "consonants", PanelPink)
@@ -3595,6 +3594,18 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 }
             }
             1 -> {
+                Group("air") {
+                    PanelKnob(b, "breath", "breath")
+                    PanelKnob(b, "clean", "clean", PanelPink)
+                    PanelKnob(b, "whisper", "whisper", PanelAmber)
+                }
+                Group("tone") {
+                    PanelKnob(b, "effort", "effort", PanelAmber)
+                    PanelKnob(b, "rasp", "rasp")
+                    PanelKnob(b, "growl", "growl", PanelPink)
+                }
+            }
+            2 -> {
                 Group("vibrato") {
                     PanelKnob(b, "vibrato", "depth", PanelAmber)
                     PanelKnob(b, "vibratorate", "rate")
@@ -3603,6 +3614,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("singer") {
                     PanelKnob(b, "drift", "drift", PanelPink)
                     PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "scoop", "scoop", PanelAmber)
                 }
             }
             else -> {

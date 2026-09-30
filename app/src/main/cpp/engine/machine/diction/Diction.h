@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdint>
 #include <engine/dsp/Adsr.h>
+#include <engine/dsp/Math.h>
 #include <engine/machine/Machine.h>
 #include <engine/machine/diction/Phones.h>
 #include <engine/machine/diction/RecordedVoice.h>
@@ -53,6 +54,9 @@ class Diction final : public Machine {
         ConsonantLevel,
         From,
         Clean = From + 24,
+        // How the voice comes out: how hard it's sung, how rough, whispered,
+        // how it arrives at a note, and whether the throat follows the pitch.
+        Effort, Rasp, Growl, Whisper, Scoop, Track,
         Count
     };
     /** The consonants the From parameters are for, in order. */
@@ -257,6 +261,21 @@ class Diction final : public Machine {
     int32_t wanderCountdown = 0;
     uint32_t seed = 1;
     uint32_t noiseSeed = 1;
+    /** Rasp's own randomness, and which of growl's pair of pulses is next. */
+    uint32_t pulseSeed = 1;
+    bool oddPulse = false;
+    /**
+     * Rasp and growl for the next pulse: its period moved, and the size it's
+     * laid at returned.
+     */
+    float pulseCharacter(float &period);
+    /** Effort's tilt: the source below about 1 kHz, the rest turned up or down against it. */
+    float tiltLow = 0.0f;
+    /** Track's move of the throat, for a voice whose own pitch is [rootHz], at the pitch sung. */
+    float tracked(float rootHz) const {
+        const float t = dsp::clampf(paramOf(Track), -1.0f, 1.0f);
+        return t == 0.0f ? 1.0f : dsp::clampf(std::pow(sungHz / rootHz, t), 0.35f, 3.0f);
+    }
 
     // The folds.
     float phase = 1.0f;
@@ -313,6 +332,9 @@ class Diction final : public Machine {
     float comb = 0.0f;
     float grainPeriod = 1.0f;
     bool grainHeld = false;
+    /** What the grains made before clean, for whisper, and its level and whisper's, followed. */
+    std::vector<float> rawLine = std::vector<float>(kAccum, 0.0f);
+    float loudIn = 0.0f, loudOut = 0.0f;
 };
 
 } // namespace acidulous::machine
