@@ -24,7 +24,9 @@
     <string name="voice_delete_note">Its %1$d takes are deleted too.</string>
     <string name="voice_note">note</string>
     <!-- A stage of the prompts: its number, then how many are sung of how many. -->
-    <string name="voice_stage">stage %1$d · %2$d/%3$d</string>
+    <!-- The first stage is what a voice needs to sing; the others are the consonants between other vowels, which the consonant window can choose. -->
+    <string name="voice_stage">to sing %1$d/%2$d</string>
+    <string name="voice_stage_extra">between %1$ss %2$d/%3$d</string>
     <string name="voice_prompt">sing</string>
     <!-- A word with the sound in it. -->
     <string name="voice_like">as in %1$s</string>

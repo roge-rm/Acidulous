@@ -396,8 +396,9 @@ internal fun VoicePage(
                 )
                 Box(Modifier.cardLine()) {
                     Readout(
-                        (1..VoicePrompts.stages).joinToString("  ") { s ->
-                            resources.getString(Res.string.voice_stage, s, b.doneIn(s), VoicePrompts.inStage(s).size)
+                        (1..VoicePrompts.stages).joinToString("  ·  ") { s ->
+                            if (s == 1) resources.getString(Res.string.voice_stage, b.doneIn(s), VoicePrompts.inStage(s).size)
+                            else resources.getString(Res.string.voice_stage_extra, VoicePrompts.carrierOf(s), b.doneIn(s), VoicePrompts.inStage(s).size)
                         },
                         good = b.doneIn(1) == VoicePrompts.inStage(1).size,
                     )

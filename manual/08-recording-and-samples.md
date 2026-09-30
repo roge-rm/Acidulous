@@ -32,14 +32,16 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
     the end: aaah-ee. It moves on to the next prompt by itself.
   - Each take is checked as soon as it's sung. One that has to be sung
     again stays on screen in pink and says why, such as **too loud** or **no
-    consonant heard**. The stage counts only count takes that are fine.
+    consonant heard**. The counts only count takes that are fine.
   - **mic** shows the level. Sing loud enough to keep it well up the bar. A
     take always records the mic raw, without the effects printed into a take.
   - **◀** and **▶** go back and forward, **play** plays a take back, and
     **again** records it over.
-  - **stage 1** is every vowel and every consonant. Stages 2 and 3 sing the
-    consonants between other vowels. A voice is saved as you go, so you can
-    stop and finish it another day.
+  - **to sing** counts what a voice needs: every vowel, and every consonant
+    between ahs. After it come the consonants **between ees** and **between
+    oos**, which you can leave out. Diction's **from…** window chooses between
+    them for each consonant. A voice is saved as you go, so you can stop and
+    finish it another day.
 
 The result is a file, so the same recording can be used by more than one
 machine.

@@ -40,6 +40,9 @@ data class ParamInfo(
             unit == "Hz" -> if (v >= 1000f) "%.1fk".format(v / 1000f) else "%.0f".format(v)
             unit == "ms" -> if (v >= 1000f) "%.2fs".format(v / 1000f) else "%.0fms".format(v)
             unit == "st" -> "%+.1f".format(v)
+            // A level shows it's a level: a bare 0.00 read as nothing at all.
+            unit == "dB" -> "%+.1fdB".format(v)
+            unit == "dB/oct" -> "%.0fdB/oct".format(v)
             else -> "%.2f".format(v)
         }
     }

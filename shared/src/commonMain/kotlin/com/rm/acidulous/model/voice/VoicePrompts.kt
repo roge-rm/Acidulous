@@ -81,6 +81,9 @@ object VoicePrompts {
 
     val stages: Int get() = all.maxOf { it.stage }
 
+    /** The vowel a stage sings its consonants between: "ah", "ee" or "oo". */
+    fun carrierOf(stage: Int): String = CARRIERS.firstOrNull { it.third == stage }?.second.orEmpty()
+
     fun inStage(stage: Int): List<Prompt> = all.filter { it.stage == stage }
     fun byId(id: String): Prompt? = all.firstOrNull { it.id == id }
 }
