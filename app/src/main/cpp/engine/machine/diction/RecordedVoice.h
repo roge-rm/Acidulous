@@ -79,20 +79,23 @@ struct RecordedVoice {
 
     std::vector<Join> joins;
 
+    /** Which take a consonant is formed from: sung between ahs, ees or oos, or the word's nearest. */
+    enum class From : int32_t { Ah, Ee, Oo, Word };
+
     /**
-     * The consonant [phone] as sung between ahs, or when the voice hasn't
-     * one that's usable, between the vowels most like [vowel] in how far
-     * forward they're sung. Null if the voice has no such consonant. The
-     * flap of butter is its D.
+     * The consonant [phone] as sung between the vowels [from] asks for, or
+     * with Word, or when the voice hasn't that one, between the vowels most
+     * like [vowel] in how far forward they're sung. Null if the voice has no
+     * such consonant. The flap of butter is its D.
      *
-     * Ah first because it's open and neutral, so the consonant comes through
+     * Ah is the default because it's open and neutral, so the consonant comes through
      * clean: chosen by ear for W, R and G (between ees a W's rounding was
      * over at once, an R hardly lowered its third formant, and a G opened
      * into a y), and measured against the singer's own takes for the rest,
      * where between ees a TH kept a quarter of its hiss and a P or T lost
      * its closure.
      */
-    const Join *consonant(uint8_t phone, const float vowel[3]) const;
+    const Join *consonant(uint8_t phone, const float vowel[3], From from = From::Ah) const;
 
     /**
      * Adds the consonant [phone] sung between two [carrier]s from the take at

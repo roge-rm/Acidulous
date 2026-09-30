@@ -378,8 +378,12 @@ int main() {
         const auto l = take("aa-l.wav", {"AA", "L", "AA"});
         const auto lcut = machine::diction::cutTake(l.second, kSr, machine::diction::TakeKind::Between, noteHz);
         voice.addConsonant(l.first, code("L"), code("AA"), lcut.consonantFrom, lcut.consonantTo, kSr, error);
-        check(voice.vowels.size() == 2 && voice.joins.size() == 1 && voice.diphthongs.size() == 1,
-              "two vowels, a diphthong and an L go into the voice",
+        // And an L between ees, for choosing between them.
+        const auto il = take("iy-l.wav", {"IY", "L", "IY"});
+        const auto ilcut = machine::diction::cutTake(il.second, kSr, machine::diction::TakeKind::Between, noteHz);
+        voice.addConsonant(il.first, code("L"), code("IY"), ilcut.consonantFrom, ilcut.consonantTo, kSr, error);
+        check(voice.vowels.size() == 2 && voice.joins.size() == 2 && voice.diphthongs.size() == 1,
+              "two vowels, a diphthong and two Ls go into the voice",
               std::to_string(voice.vowels.size()) + " vowels, " + std::to_string(voice.diphthongs.size()) + " diphthongs, " +
                   std::to_string(voice.joins.size()) + " consonants " + lcut.problem + aycut.problem);
 
@@ -431,6 +435,26 @@ int main() {
             const float endBright = energy(endPart, 1900, 2800) / energy(endPart, 500, 1200);
             check(endBright > heldBright * 1.5f, "eye holds its ah and moves to its ee when let go",
                   std::to_string(heldBright) + " then " + std::to_string(endBright));
+        }
+
+        // Which take an L is formed from, and how loud it is, as the track says.
+        {
+            std::vector<uint8_t> la{code("L"), code("AA")};
+            int32_t fromL = 0;
+            for (int32_t k = 0; k < 24; ++k) if (std::string(Diction::kFromOrder[k]) == "L") fromL = Diction::From + k;
+            auto lSung = [&](float from, float levelDb) {
+                auto m = singer({{fromL, from}, {Diction::ConsonantLevel, levelDb}});
+                m->swapObject(0, &voice);
+                auto x = render(*m, 0.5f, [&](int32_t b) { if (b == 0) { m->lyric(la.data(), 2); m->noteOn(50, 100); } });
+                m->swapObject(0, nullptr);
+                return x;
+            };
+            const auto fromAh = lSung(0.0f, 0.0f), fromEe = lSung(1.0f, 0.0f), quieter = lSung(0.0f, -12.0f);
+            float apart = 0.0f;
+            for (size_t i = 0; i < std::min(fromAh.size(), fromEe.size()); ++i) apart = std::max(apart, std::fabs(fromAh[i] - fromEe[i]));
+            check(apart > 0.01f, "an L formed from the ee take isn't the ah take's", std::to_string(apart));
+            const float loud = rms(fromAh, 0, static_cast<size_t>(0.06f * kSr)), soft = rms(quieter, 0, static_cast<size_t>(0.06f * kSr));
+            check(soft < loud * 0.6f, "the consonant level turns it down", std::to_string(20.0f * std::log10(soft / loud)) + " dB");
         }
 
         // The same words twice, with a reset between, come out the same.

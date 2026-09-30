@@ -103,13 +103,16 @@ const RecordedVoice::Unit *RecordedVoice::forPhone(uint8_t phone) const {
     return nullptr;
 }
 
-const RecordedVoice::Join *RecordedVoice::consonant(uint8_t phone, const float vowel[3]) const {
+const RecordedVoice::Join *RecordedVoice::consonant(uint8_t phone, const float vowel[3], From from) const {
     int32_t count = 0;
     const Phone *table = phoneTable(count);
     if (phone == 0 || phone >= count) return nullptr;
     const char *name = std::strcmp(table[phone].name, "DX") == 0 ? "D" : table[phone].name;
-    for (const Join &j : joins) {
-        if (std::strcmp(table[j.phone].name, name) == 0 && std::strcmp(table[j.carrier].name, "AA") == 0) return &j;
+    const char *carrier = from == From::Ah ? "AA" : from == From::Ee ? "IY" : from == From::Oo ? "UW" : nullptr;
+    if (carrier != nullptr) {
+        for (const Join &j : joins) {
+            if (std::strcmp(table[j.phone].name, name) == 0 && std::strcmp(table[j.carrier].name, carrier) == 0) return &j;
+        }
     }
     const Join *best = nullptr;
     float bestDistance = 1e30f;

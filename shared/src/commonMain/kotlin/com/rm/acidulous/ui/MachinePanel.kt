@@ -3486,6 +3486,73 @@ private fun PanelVowelKnob(b: ParamBinding, name: String, label: String = name) 
     )
 }
 
+/** Where a recorded voice's consonant is taken from: sung between ahs, ees or oos, or the word's nearest. */
+private val DICTION_FROM = listOf("ah", "ee", "oo", "word")
+
+/**
+ * Which of a recorded voice's takes each consonant is formed from, a knob
+ * each, in three pages by how the consonant is made. Saved with the track.
+ */
+@Composable
+private fun DictionConsonantsWindow(b: ParamBinding, onDismiss: () -> Unit) {
+    var page by rememberSaveable { mutableStateOf(0) }
+    // Written out, not looped, so the label generator sees every knob.
+    TabbedDialog(
+        title = stringResource(Res.string.diction_consonants_title),
+        selected = page,
+        onDismiss = onDismiss,
+        pageNames = listOf(panelWord("stops"), panelWord("hisses"), panelWord("hums & glides")),
+        onSelectPage = { page = it },
+        pages = listOf(
+            {
+                WindowCards {
+                    WindowCard(panelWord("stops")) {
+                        PanelStepKnob(b, "fromp", DICTION_FROM, "p", PanelAmber)
+                        PanelStepKnob(b, "fromb", DICTION_FROM, "b", PanelAmber)
+                        PanelStepKnob(b, "fromt", DICTION_FROM, "t", PanelAmber)
+                        PanelStepKnob(b, "fromd", DICTION_FROM, "d", PanelAmber)
+                        PanelStepKnob(b, "fromk", DICTION_FROM, "k", PanelAmber)
+                        PanelStepKnob(b, "fromg", DICTION_FROM, "g", PanelAmber)
+                        PanelStepKnob(b, "fromch", DICTION_FROM, "ch", PanelAmber)
+                        PanelStepKnob(b, "fromjh", DICTION_FROM, "j", PanelAmber)
+                    }
+                }
+            },
+            {
+                WindowCards {
+                    // The two th's by a word with each.
+                    WindowCard(panelWord("hisses")) {
+                        PanelStepKnob(b, "fromf", DICTION_FROM, "f", PanelAmber)
+                        PanelStepKnob(b, "fromv", DICTION_FROM, "v", PanelAmber)
+                        PanelStepKnob(b, "fromth", DICTION_FROM, "thin", PanelAmber)
+                        PanelStepKnob(b, "fromdh", DICTION_FROM, "this", PanelAmber)
+                        PanelStepKnob(b, "froms", DICTION_FROM, "s", PanelAmber)
+                        PanelStepKnob(b, "fromz", DICTION_FROM, "z", PanelAmber)
+                        PanelStepKnob(b, "fromsh", DICTION_FROM, "sh", PanelAmber)
+                        PanelStepKnob(b, "fromzh", DICTION_FROM, "zh", PanelAmber)
+                    }
+                    WindowCard(panelWord("breath")) { PanelStepKnob(b, "fromhh", DICTION_FROM, "h", PanelAmber) }
+                }
+            },
+            {
+                WindowCards {
+                    WindowCard(panelWord("hums")) {
+                        PanelStepKnob(b, "fromm", DICTION_FROM, "m", PanelAmber)
+                        PanelStepKnob(b, "fromn", DICTION_FROM, "n", PanelAmber)
+                        PanelStepKnob(b, "fromng", DICTION_FROM, "ng", PanelAmber)
+                    }
+                    WindowCard(panelWord("glides")) {
+                        PanelStepKnob(b, "froml", DICTION_FROM, "l", PanelAmber)
+                        PanelStepKnob(b, "fromr", DICTION_FROM, "r", PanelAmber)
+                        PanelStepKnob(b, "fromw", DICTION_FROM, "w", PanelAmber)
+                        PanelStepKnob(b, "fromy", DICTION_FROM, "y", PanelAmber)
+                    }
+                }
+            },
+        ),
+    )
+}
+
 /** Which voice a Diction sings in: its own, or one recorded in the Sound window. */
 @Composable
 private fun DictionVoiceKnob(track: Track, trackIndex: Int, editor: SongEditor) {
@@ -3508,6 +3575,8 @@ private fun DictionVoiceKnob(track: Track, trackIndex: Int, editor: SongEditor) 
 @Composable
 private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
+    var forming by remember { mutableStateOf(false) }
+    if (forming) DictionConsonantsWindow(b) { forming = false }
     PanelSections(listOf("voice", "expression", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
@@ -3519,7 +3588,9 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 }
                 Group("words") {
                     PanelKnob(b, "consonants", "consonants", PanelPink)
+                    PanelKnob(b, "consonantlevel", "level")
                     PanelStepKnob(b, "accent", DICTION_ACCENTS, "accent", PanelAmber)
+                    PanelActions(Triple(stringResource(Res.string.diction_from), PanelAmber) { forming = true })
                 }
             }
             1 -> {

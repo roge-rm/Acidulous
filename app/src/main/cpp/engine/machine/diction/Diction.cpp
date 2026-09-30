@@ -84,6 +84,11 @@ bool holdable(Kind k) {
 
 } // namespace
 
+const char *const Diction::kFromOrder[24] = {
+    "P", "B", "T", "D", "K", "G", "CH", "JH", "F", "V", "TH", "DH", "S", "Z", "SH", "ZH", "HH",
+    "M", "N", "NG", "L", "R", "W", "Y",
+};
+
 Diction::Diction() { initParams(); }
 
 const ParamDef *Diction::paramDefs(int32_t &count) const {
@@ -122,6 +127,16 @@ const ParamDef *Diction::paramDefs(int32_t &count) const {
 
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+
+        // A recorded voice's consonants against its vowels.
+        {"consonantlevel", -12.0f, 6.0f, 0.0f, Curve::Linear, 0, "dB"},
+        // Which take each consonant is formed from: sung between ahs, ees or
+        // oos, or whichever is nearest the word's own vowel.
+#define FROM(name) {"from" name, 0.0f, 3.0f, 0.0f, Curve::Stepped, 4, ""}
+        FROM("p"), FROM("b"), FROM("t"), FROM("d"), FROM("k"), FROM("g"), FROM("ch"), FROM("jh"),
+        FROM("f"), FROM("v"), FROM("th"), FROM("dh"), FROM("s"), FROM("z"), FROM("sh"), FROM("zh"), FROM("hh"),
+        FROM("m"), FROM("n"), FROM("ng"), FROM("l"), FROM("r"), FROM("w"), FROM("y"),
+#undef FROM
     };
     count = Count;
     return defs;
@@ -316,7 +331,7 @@ void Diction::layGrain(const Reader &r, float weight, float period, float ratio)
     // vowel within a few dB of its own note, where the full correction lost
     // five by a fifth up.
     float gain = std::sqrt(clampf(2.0f * period / static_cast<float>(n), 0.0f, 1.0f)) * weight * r.gain;
-    if (r.quiet < 1.0f) {
+    if (r.quiet != 1.0f) {
         // Eased in and out over 10 ms either side, so turning it down doesn't click.
         const float ramp = 0.01f * sampleRate;
         const float at = static_cast<float>(e.at);
@@ -603,7 +618,14 @@ int32_t Diction::planRecorded(const uint8_t *p, int32_t count, Step *out, int32_
         }
         for (int32_t j = i - 1; j >= 0 && near == nullptr; --j) if (isVowel(phoneAt(j).kind)) near = &phoneAt(j);
         const float *vowel = near != nullptr ? (i < hold ? near->f : near->to) : kKnobVowels[2];
-        const RecordedVoice::Join *join = voice->consonant(code, vowel);
+        // Which take it's formed from, as its track says; the flap of butter
+        // goes with the D.
+        int32_t take = 0;
+        const char *name = std::strcmp(ph.name, "DX") == 0 ? "D" : ph.name;
+        for (int32_t k = 0; k < 24; ++k) {
+            if (std::strcmp(kFromOrder[k], name) == 0) { take = steppedOf(From + k); break; }
+        }
+        const RecordedVoice::Join *join = voice->consonant(code, vowel, static_cast<RecordedVoice::From>(std::clamp(take, 0, 3)));
         if (join == nullptr) continue;
         // Some of the vowel either side, where it meets one: the way in and
         // out is the consonant too. Not where it meets another consonant, or
@@ -750,7 +772,7 @@ void Diction::enterStep(int32_t index) {
         r.pos = static_cast<float>(s.from);
         r.quietFrom = s.join->from;
         r.quietTo = s.join->to;
-        r.quiet = s.join->consonantGain;
+        r.quiet = s.join->consonantGain * std::pow(10.0f, paramOf(ConsonantLevel) / 20.0f);
         r.speed = s.speed;
         r.rate = s.rate;
         r.soften = s.join->bright;

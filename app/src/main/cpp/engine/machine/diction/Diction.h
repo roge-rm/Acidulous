@@ -48,8 +48,14 @@ class Diction final : public Machine {
         Glide, Attack, Release, VelocityAmount,
         BendRange, Octave, Transpose,
         Volume, Pan,
-        Count
+        // A recorded voice's consonants: how loud against its vowels, and for
+        // each, which of the singer's takes it's formed from (see kFromOrder).
+        ConsonantLevel,
+        From,
+        Count = From + 24
     };
+    /** The consonants the From parameters are for, in order. */
+    static const char *const kFromOrder[24];
 
     Diction();
 

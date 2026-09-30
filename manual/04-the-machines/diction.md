@@ -44,6 +44,11 @@ when the note ends.
   of the singer's own breath is kept: down is clean, all the way up is as
   it was sung.
 - **consonants** - how long the consonants take.
+- **level** - how loud a recorded voice's consonants are against its vowels.
+- **from…** - which of a recorded voice's takes each consonant is formed
+  from: the one sung between **ah**s, **ee**s or **oo**s, or **word**, the one
+  whose vowel is nearest the word's. Ah is usually the clearest. The window
+  has a page each for stops, hisses, and hums and glides.
 - **accent** - how the words are said. **prairie** is Canadian as it's spoken
   in Alberta, **central** is Canadian as in Ontario, and **american** is
   General American.

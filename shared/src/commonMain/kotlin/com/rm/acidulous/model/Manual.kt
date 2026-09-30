@@ -344,6 +344,8 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "**formant** - the size of the throat, without changing the pitch. Down is bigger and darker, up is smaller and brighter. Low notes with the formant down sound like a man, high notes with it up like a woman or a child, and in between is neither."),
                 ManualBlock(ManualKind.Bullet, "**breath** - how much air is in the voice. In a recorded voice, how much of the singer's own breath is kept: down is clean, all the way up is as it was sung."),
                 ManualBlock(ManualKind.Bullet, "**consonants** - how long the consonants take."),
+                ManualBlock(ManualKind.Bullet, "**level** - how loud a recorded voice's consonants are against its vowels."),
+                ManualBlock(ManualKind.Bullet, "**from…** - which of a recorded voice's takes each consonant is formed from: the one sung between **ah**s, **ee**s or **oo**s, or **word**, the one whose vowel is nearest the word's. Ah is usually the clearest. The window has a page each for stops, hisses, and hums and glides."),
                 ManualBlock(ManualKind.Bullet, "**accent** - how the words are said. **prairie** is Canadian as it's spoken in Alberta, **central** is Canadian as in Ontario, and **american** is General American."),
                 ManualBlock(ManualKind.Heading, "Expression"),
                 ManualBlock(ManualKind.Bullet, "**vibrato** - **depth**, **rate** and **delay**. A singer holds a note straight for a moment before the vibrato comes in, and **delay** is how long. The mod wheel adds more."),

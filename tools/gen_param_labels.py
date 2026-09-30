@@ -21,6 +21,7 @@ PANELS = {
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
     "PollenPanel": "Pollen", "ResonancePanel": "Resonance", "DicePanel": "Dice", "GenesisPanel": "Genesis",
     "BrazenPanel": "Brazen", "TimberPanel": "Timber", "MoltPanel": "Molt", "DictionPanel": "Diction",
+    "DictionConsonantsWindow": "Diction",
     "BiasPanel": "Bias",
 }
 # Some panels name every control for the selected pad, so one panel covers
