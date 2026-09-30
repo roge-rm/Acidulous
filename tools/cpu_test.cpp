@@ -810,6 +810,10 @@ int main(int argc, char **argv) {
             rows.push_back(timeDiction("recorded chord of 3", spec, 4.0, {{"harmony", 1.0f}}, 3));
             rows.push_back(timeDiction("recorded 3 x 3 singers", spec, 4.0, {{"harmony", 1.0f}, {"singers", 3.0f}}, 3));
             rows.push_back(timeDiction("recorded 4 x 3 singers", spec, 4.0, {{"harmony", 1.0f}, {"singers", 3.0f}}, 4));
+            // Crossed with the built-in voice: each path alone, and both at once.
+            rows.push_back(timeDiction("recorded, built-in folds", spec, 4.0, {{"source", 1.0f}}));
+            rows.push_back(timeDiction("recorded, built-in throat", spec, 4.0, {{"throat", 1.0f}}));
+            rows.push_back(timeDiction("recorded, half and half", spec, 4.0, {{"source", 0.5f}, {"throat", 0.5f}}));
         }
         report(rows);
         return 0;

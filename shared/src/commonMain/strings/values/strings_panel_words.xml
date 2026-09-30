@@ -147,6 +147,7 @@
     <string name="pw_cowbell_8d2602">cowbell</string>
     <string name="pw_crash">Crash</string>
     <string name="pw_crash_2fc7f1">crash</string>
+    <string name="pw_cross">cross</string>
     <string name="pw_crossfade">crossfade</string>
     <string name="pw_crossing">crossing</string>
     <string name="pw_crunch">crunch</string>
@@ -827,6 +828,7 @@
     <string name="pw_thirds">thirds</string>
     <string name="pw_this">this</string>
     <string name="pw_threshold">threshold</string>
+    <string name="pw_throat">throat</string>
     <string name="pw_through">through</string>
     <string name="pw_thru">thru</string>
     <string name="pw_thumb">thumb</string>

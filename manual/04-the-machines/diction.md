@@ -47,6 +47,12 @@ the chord sings it too.
 - **track** - moves the throat with the pitch. Up, high notes get a smaller
   throat, and all the way up it's a chipmunk an octave up. Below zero it goes
   the other way.
+- **source** and **throat** - a recorded voice crossed with the built-in one.
+  **source** swaps the singer's vocal folds for the built-in voice's: the
+  singer's throat, sung by a perfectly steady buzz. **throat** swaps the
+  singer's throat for the built-in voice's, which follows the words. Both up is
+  the built-in voice singing with the recorded voice's timing. Consonants
+  like S and T stay the singer's.
 - **consonants** - how long the consonants take.
 - **level** - how loud a recorded voice's consonants are against its vowels.
 - **from…** - which of a recorded voice's takes each consonant is formed

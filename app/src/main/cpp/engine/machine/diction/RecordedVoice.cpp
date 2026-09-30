@@ -47,6 +47,132 @@ float centreAbove2k(const std::vector<float> &x, int32_t from, int32_t to, float
     return total > 0.0 ? static_cast<float>(weighted / total) : 0.0f;
 }
 
+/** Taken off before the analysis, so the prediction finds the throat rather than the folds' tilt. */
+constexpr float kEmphasis = 0.97f;
+
+} // namespace
+
+void RecordedVoice::analyseTract(const audio::Utterance &u, float sampleRate, Tract &t) {
+    constexpr int p = Tract::kOrder;
+    const auto frames = static_cast<size_t>(u.frames);
+    const size_t marks = u.epochs.size();
+    t.k.assign(marks * p, 0.0f);
+    t.gain.assign(marks, 0.0f);
+    t.source.assign(frames, 0.0f);
+    if (frames < 2 || marks == 0) return;
+    std::vector<float> pre(frames);
+    pre[0] = u.mono[0];
+    for (size_t i = 1; i < frames; ++i) pre[i] = u.mono[i] - kEmphasis * u.mono[i - 1];
+
+    std::vector<float> a(marks * (p + 1), 0.0f);
+    std::vector<float> w;
+    double r[p + 1];
+    for (size_t m = 0; m < marks; ++m) {
+        const audio::Epoch &e = u.epochs[m];
+        // Two periods around the mark, and never less than 10 ms nor more than 50.
+        const float period = std::max(e.period, 1.0f);
+        const auto len = static_cast<int32_t>(std::clamp(2.0f * period, 0.01f * sampleRate, 0.05f * sampleRate));
+        const int32_t from = std::clamp(e.at + static_cast<int32_t>(0.5f * period) - len / 2, 0, std::max(0, u.frames - len));
+        const int32_t n = std::min(len, u.frames - from);
+        w.resize(static_cast<size_t>(n));
+        double energy = 0.0;
+        for (int32_t i = 0; i < n; ++i) {
+            const float hann = 0.5f - 0.5f * std::cos(6.2831853f * static_cast<float>(i) / static_cast<float>(n - 1));
+            w[static_cast<size_t>(i)] = pre[static_cast<size_t>(from + i)] * hann;
+            energy += static_cast<double>(hann) * hann;
+        }
+        // Four sums at once, in float, which the compiler can vectorise: in
+        // double, one at a time, the whole voice's analysis more than doubled
+        // its loading.
+        for (int32_t lag = 0; lag <= p; ++lag) {
+            const float *x = w.data() + lag, *y = w.data();
+            const int32_t count = n - lag;
+            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+            int32_t i = 0;
+            for (; i + 4 <= count; i += 4) {
+                s0 += x[i] * y[i];
+                s1 += x[i + 1] * y[i + 1];
+                s2 += x[i + 2] * y[i + 2];
+                s3 += x[i + 3] * y[i + 3];
+            }
+            for (; i < count; ++i) s0 += x[i] * y[i];
+            r[lag] = static_cast<double>(s0) + s1 + s2 + s3;
+        }
+        // A floor 30 dB down, and each lag narrowed a little (a lag window,
+        // about 60 Hz), so a take with no noise in it, whose spectrum falls
+        // 60 dB between harmonics, doesn't give a throat that rings on them.
+        // At 1.0001 alone the built-in voice's own ee lost its second formant.
+        r[0] = r[0] * 1.001 + 1e-12;
+        for (int32_t lag = 1; lag <= p; ++lag) {
+            const double x = 2.0 * 3.14159265358979 * 60.0 * lag / sampleRate;
+            r[lag] *= std::exp(-0.5 * x * x);
+        }
+        // Levinson-Durbin: A(z) = 1 + a1 z^-1 + ... + ap z^-p.
+        double coef[p + 1] = {1.0};
+        double err = r[0];
+        for (int32_t order = 1; order <= p; ++order) {
+            double sum = r[order];
+            for (int32_t j = 1; j < order; ++j) sum += coef[j] * r[order - j];
+            const double k = err > 0.0 ? -sum / err : 0.0;
+            double next[p + 1];
+            for (int32_t j = 0; j <= p; ++j) next[j] = coef[j];
+            for (int32_t j = 1; j < order; ++j) next[j] = coef[j] + k * coef[order - j];
+            next[order] = k;
+            for (int32_t j = 0; j <= p; ++j) coef[j] = next[j];
+            err *= (1.0 - k * k);
+            t.k[m * p + static_cast<size_t>(order - 1)] = static_cast<float>(k);
+        }
+        for (int32_t j = 0; j <= p; ++j) a[m * (p + 1) + static_cast<size_t>(j)] = static_cast<float>(coef[j]);
+        t.gain[m] = static_cast<float>(std::sqrt(std::max(0.0, err) / std::max(energy, 1e-9)));
+    }
+    // The source: each stretch from one mark to the next through its own
+    // mark's inverse, then the tilt put back.
+    for (size_t m = 0; m < marks; ++m) {
+        const auto begin = static_cast<size_t>(std::max(0, m == 0 ? 0 : u.epochs[m].at));
+        const size_t end = m + 1 < marks ? static_cast<size_t>(std::max(0, u.epochs[m + 1].at)) : frames;
+        const float *coef = &a[m * (p + 1)];
+        for (size_t i = begin; i < end && i < frames; ++i) {
+            if (i < static_cast<size_t>(p)) {
+                float sum = pre[i];
+                for (int32_t j = 1; static_cast<size_t>(j) <= i; ++j) sum += coef[j] * pre[i - static_cast<size_t>(j)];
+                t.source[i] = sum;
+                continue;
+            }
+            const float *back = &pre[i - static_cast<size_t>(p)];
+            float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+            for (int32_t j = 0; j < p; j += 4) {
+                s0 += coef[p - j] * back[j];
+                s1 += coef[p - j - 1] * back[j + 1];
+                s2 += coef[p - j - 2] * back[j + 2];
+                s3 += coef[p - j - 3] * back[j + 3];
+            }
+            t.source[i] = pre[i] + s0 + s1 + s2 + s3;
+        }
+    }
+    // The tilt left in the voiced parts, before the emphasis is taken back
+    // off: in the harmonics only, each sample averaged with the one a period
+    // back, since breath fills the rest and measured as it was, the source
+    // looked even.
+    double r0 = 0.0, r1 = 0.0;
+    for (size_t m = 0; m < marks; ++m) {
+        if (!u.epochs[m].voiced) continue;
+        const auto period = static_cast<size_t>(std::lround(u.epochs[m].period));
+        const auto begin = static_cast<size_t>(std::max(0, u.epochs[m].at)) + 1;
+        const size_t end = m + 1 < marks ? static_cast<size_t>(std::max(0, u.epochs[m + 1].at)) : frames;
+        if (period < 2 || begin < period + 1) continue;
+        for (size_t i = begin; i < end && i < frames; ++i) {
+            const double h0 = 0.5 * (static_cast<double>(t.source[i]) + t.source[i - period]);
+            const double h1 = 0.5 * (static_cast<double>(t.source[i - 1]) + t.source[i - 1 - period]);
+            r0 += h0 * h0;
+            r1 += h0 * h1;
+        }
+    }
+    t.colour = r0 > 0.0 ? static_cast<float>(std::clamp(r1 / r0, 0.0, 0.95)) : 0.0;
+    for (size_t i = 1; i < frames; ++i) t.source[i] += kEmphasis * t.source[i - 1];
+}
+
+namespace {
+
 /** A take as mono, or null with [error] set. */
 std::unique_ptr<SampleData> readTake(const std::string &path, float sampleRate, std::string &error) {
     std::unique_ptr<SampleData> data = WavReader::read(path, static_cast<int32_t>(sampleRate), error);
@@ -205,6 +331,7 @@ bool RecordedVoice::addConsonant(const std::string &path, uint8_t phone, uint8_t
     join.sound.name = table[phone].name;
     join.sound.analyse(sampleRate);
     if (!join.sound.usable()) { error = "no pitch found"; return false; }
+    analyseTract(join.sound, sampleRate, join.tract);
     join.from = std::clamp(from, start, end) - start;
     join.to = std::clamp(to, start, end) - start;
     // Its level from the vowels either side, clear of the consonant, so a
@@ -299,6 +426,7 @@ bool RecordedVoice::addVowel(const std::string &path, uint8_t phone, int32_t hol
     unit.sound.name = table[phone].name;
     unit.sound.analyse(sampleRate);
     if (!unit.sound.usable()) { error = "no pitch found"; return false; }
+    analyseTract(unit.sound, sampleRate, unit.tract);
     unit.from = std::clamp(holdFrom, from, to) - from;
     unit.to = std::clamp(holdTo, from, to) - from;
 

@@ -60,6 +60,9 @@ class Diction final : public Machine {
         // More singers from the one voice, how unlike each other they are,
         // and whether a chord sings on every note.
         Singers, Spread, Harmony,
+        // A recorded voice crossed with the built-in one: the built-in
+        // folds for the singer's, and the built-in throat for the singer's.
+        CrossSource, CrossThroat,
         Count
     };
     /** The consonants the From parameters are for, in order. */
@@ -163,6 +166,8 @@ class Diction final : public Machine {
         /** The unit or join, to tell one from another. */
         const void *owner = nullptr;
         const audio::Utterance *sound = nullptr;
+        /** Its throat and source, for crossing with the built-in voice. */
+        const diction::RecordedVoice::Tract *tract = nullptr;
         float gain = 1.0f;
         int32_t from = 0, to = 0;
         bool held = true;
@@ -398,6 +403,31 @@ class Diction final : public Machine {
     float tiltLowL = 0.0f, tiltLowR = 0.0f;
     /** Brings the singers together to about one's level. */
     float together = 1.0f;
+
+    // --- crossed with the built-in voice ------------------------------------------
+    static constexpr int kOrder = diction::RecordedVoice::Tract::kOrder;
+    /** The singer's source, laid in grains beside the voice when the built-in throat is wanted. */
+    std::vector<float> accSource = std::vector<float>(kAccum, 0.0f);
+    bool sourceGrains = false;
+    /** The singer's throat as it's reached, heading for the lead's mark's, and the lattice's memory. */
+    float latK[kOrder]{}, latB[kOrder + 1]{};
+    float latGain = 0.0f;
+    const float *latTarget = nullptr;
+    float latGainTarget = 0.0f;
+    /** How voiced it is now, 0 to 1, heading for whether the last grain was: crossing is only for what's voiced. */
+    float crossVoiced = 0.0f;
+    bool crossWanted = false;
+    /** The lead's last voiced period, which the built-in folds follow. */
+    float voicedPeriod = 0.0f;
+    /** Levels followed, to bring each path to the recorded voice's. */
+    float levelSung = 0.0f, levelThroat = 0.0f, levelFolds = 0.0f, levelSource = 0.0f;
+    float levelThroatOut = 0.0f, levelSungOut = 0.0f, throatMatch = 1.0f;
+    float tiltLowCross = 0.0f;
+    /** The rest of a click that fell between two samples, and the emphasis filter's memory. */
+    float clickNext = 0.0f, deemphasis = 0.0f;
+    /** The singer's source's tilt given to the clicks, and its memory. */
+    float colour = 0.0f, colourTarget = 0.0f, coloured = 0.0f;
+    float foldsBefore = 0.0f, foldsEarlier = 0.0f, levelEven = 0.0f;
     bool harmonyOn() const { return steppedOf(Harmony) > 0; }
     void addHarmony(uint8_t n);
     void dropHarmony(uint8_t n);

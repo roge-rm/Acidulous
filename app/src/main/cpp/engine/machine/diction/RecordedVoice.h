@@ -19,6 +19,35 @@ namespace acidulous::machine::diction {
 
 struct RecordedVoice {
     /**
+     * The singer's throat at each pitch mark of a take, found by linear
+     * prediction, and what's left of the take once it's taken out: the
+     * folds' own sound, the source. So the built-in voice's folds can sing
+     * through the singer's throat, and the singer's through the built-in
+     * throat.
+     */
+    struct Tract {
+        // Forty: at 24 the resonances spread over the whole band left only
+        // two or three under 5 kHz, and an ee's dip between its first two
+        // formants filled in.
+        static constexpr int kOrder = 40;
+        static_assert(kOrder % 4 == 0, "the source's filter sums four at a time");
+        /** The source, as long as the take, with the tilt put back that the analysis took off. */
+        std::vector<float> source;
+        /** kOrder reflection coefficients a pitch mark, which stay stable however they're blended. */
+        std::vector<float> k;
+        /** The source's level at each pitch mark. */
+        std::vector<float> gain;
+        /**
+         * The tilt the prediction left in the source, as how much each sample
+         * follows the one before in its voiced parts, 0 to 0.95: an even
+         * source given this is the singer's colour.
+         */
+        float colour = 0.0f;
+    };
+    /** [u]'s tract. Worker thread. */
+    static void analyseTract(const audio::Utterance &u, float sampleRate, Tract &t);
+
+    /**
      * A voice from the lines the app sends: "V|PHONE|path|holdFrom|holdTo" a
      * held vowel, "D|PHONE|path|holdFrom|holdTo|glideFrom|glideTo" a
      * diphthong, "C|PHONE|VOWEL|path|from|to" a consonant, in frames. Its
@@ -36,6 +65,7 @@ struct RecordedVoice {
         float f[3]{};
         /** The steady part with a margin, analysed. */
         audio::Utterance sound;
+        Tract tract;
         /** Where the steady part is in [sound], in frames. */
         int32_t from = 0, to = 0;
         /** Brings its level to the built-in voice's. */
@@ -69,6 +99,7 @@ struct RecordedVoice {
         float f[3]{};
         /** The consonant with some of the vowel either side, analysed. */
         audio::Utterance sound;
+        Tract tract;
         /** Where the consonant is in [sound], in frames. */
         int32_t from = 0, to = 0;
         /** Brings its vowels to the built-in voice's level, and the consonant with them. */

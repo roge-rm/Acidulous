@@ -438,8 +438,17 @@ int main() {
                 if (!rest.empty() && b == 30 + 700) { m->lyric(rest.data(), static_cast<int32_t>(rest.size())); m->noteOn(45, 100); }
                 if (b == 30 + 1500) m->noteOff(45);
             });
+            // A room about 55 dB down, as a phone's mic hears one: without
+            // it, a take whose spectrum falls 60 dB between harmonics gave
+            // the singer's throat a shape no recording has.
+            uint32_t noise = 12345;
             std::vector<float> stereo;
-            for (float v : x) { stereo.push_back(v); stereo.push_back(v); }
+            for (float v : x) {
+                noise = noise * 1664525u + 1013904223u;
+                const float room = (static_cast<float>(noise >> 8) / 16777216.0f - 0.5f) * 0.004f;
+                stereo.push_back(v + room);
+                stereo.push_back(v + room);
+            }
             const std::string path = dir + "/" + file;
             WavWriter w;
             std::string error;
@@ -576,6 +585,35 @@ int main() {
                   std::to_string(sungClear) + " dB, then " + std::to_string(whisperClear));
         }
 
+        // Crossed with the built-in voice: the vowels stay what they are, at the same level.
+        {
+            auto crossed = [&](const char *vowel, float source, float throatAmount) {
+                auto m = singer({{Diction::CrossSource, source}, {Diction::CrossThroat, throatAmount}});
+                m->swapObject(0, &voice);
+                std::vector<uint8_t> v{code(vowel)};
+                const auto x = render(*m, 1.2f, [&](int32_t b) { if (b == 0) { m->lyric(v.data(), 1); m->noteOn(45, 100); } });
+                m->swapObject(0, nullptr);
+                return x;
+            };
+            const size_t from = static_cast<size_t>(kSr * 0.5f), len = static_cast<size_t>(kSr * 0.5f);
+            const float plain = rms(crossed("AA", 0.0f, 0.0f), from, len);
+            for (const auto &cross : {std::make_pair(1.0f, 0.0f), std::make_pair(0.0f, 1.0f), std::make_pair(0.5f, 0.5f)}) {
+                const auto ah = crossed("AA", cross.first, cross.second), ee = crossed("IY", cross.first, cross.second);
+                const std::string which = "source " + std::to_string(cross.first).substr(0, 3) + ", throat " + std::to_string(cross.second).substr(0, 3);
+                // Once its levels have settled: from 0.6 s. The built-in voice
+                // recorded keeps less of its ee through its own throat measured
+                // than a person's voice does (half the contrast, where Dan's
+                // kept all of it), so a vowel is only asked to stay itself: a
+                // wrong source took the two to within 15% of each other.
+                const std::vector<float> ahLater(ah.begin() + static_cast<long>(0.3f * kSr), ah.end());
+                const std::vector<float> eeLater(ee.begin() + static_cast<long>(0.3f * kSr), ee.end());
+                check(band(eeLater, 1900, 2800) > band(ahLater, 1900, 2800) * 1.3f, ("crossed, ee is still ee: " + which).c_str(),
+                      std::to_string(band(eeLater, 1900, 2800)) + " against " + std::to_string(band(ahLater, 1900, 2800)));
+                const float db = 20.0f * std::log10(rms(ah, from, len) / plain);
+                check(std::fabs(db) < 3.0f, ("and as loud: " + which).c_str(), std::to_string(db) + " dB");
+            }
+        }
+
         // More singers from the one recorded voice.
         {
             std::vector<uint8_t> ah{code("AA")};
@@ -631,7 +669,8 @@ int main() {
         // The same words twice, with a reset between, come out the same,
         // with everything that keeps state of its own on so it's reset too.
         auto m = singer({{Diction::Clean, 1.0f}, {Diction::Whisper, 0.5f}, {Diction::Rasp, 0.5f}, {Diction::Growl, 0.5f},
-                         {Diction::Effort, 0.5f}, {Diction::Singers, 3.0f}, {Diction::Harmony, 1.0f}});
+                         {Diction::Effort, 0.5f}, {Diction::Singers, 3.0f}, {Diction::Harmony, 1.0f},
+                         {Diction::CrossSource, 0.5f}, {Diction::CrossThroat, 0.5f}});
         m->swapObject(0, &voice);
         std::vector<uint8_t> la{code("L"), code("AA")};
         auto phrase = [&]() {
