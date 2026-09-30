@@ -110,26 +110,12 @@ int main(int argc, char **argv) {
     const float octave = argc > 4 ? std::strtof(argv[4], nullptr) : 0.0f;
     std::unique_ptr<machine::diction::RecordedVoice> voice;
     if (!specPath.empty()) {
-        voice = std::make_unique<machine::diction::RecordedVoice>();
         std::ifstream in(specPath);
-        for (std::string line; std::getline(in, line);) {
-            std::vector<std::string> f;
-            std::stringstream ss(line);
-            for (std::string part; std::getline(ss, part, '|');) f.push_back(part);
-            auto code = [](const std::string &s) { return machine::diction::phoneCode(s.c_str(), static_cast<int32_t>(s.size())); };
-            std::string error;
-            bool ok = false;
-            if (f.size() == 5 && f[0] == "V" && code(f[1]) > 0) {
-                ok = voice->addVowel(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()), kSr, error);
-            } else if (f.size() == 7 && f[0] == "D" && code(f[1]) > 0) {
-                ok = voice->addDiphthong(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()),
-                                         std::atoi(f[5].c_str()), std::atoi(f[6].c_str()), kSr, error);
-            } else if (f.size() == 6 && f[0] == "C" && code(f[1]) > 0 && code(f[2]) > 0) {
-                ok = voice->addConsonant(f[3], static_cast<uint8_t>(code(f[1])), static_cast<uint8_t>(code(f[2])),
-                                         std::atoi(f[4].c_str()), std::atoi(f[5].c_str()), kSr, error);
-            }
-            if (!ok) std::fprintf(stderr, "  %s: %s\n", line.c_str(), error.c_str());
-        }
+        std::stringstream all;
+        all << in.rdbuf();
+        std::string error;
+        voice = machine::diction::RecordedVoice::fromSpec(all.str(), kSr, 4, error);
+        if (!error.empty()) std::fprintf(stderr, "  %s\n", error.c_str());
         std::printf("  voice: %zu vowels, %zu diphthongs, %zu consonants\n", voice->vowels.size(), voice->diphthongs.size(),
                     voice->joins.size());
     }

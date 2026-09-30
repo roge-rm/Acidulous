@@ -7,7 +7,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
+#include <thread>
 
 namespace acidulous::machine::diction {
 
@@ -72,6 +74,61 @@ double powerOver(const std::vector<float> &x, int32_t from, int32_t to) {
 }
 
 } // namespace
+
+std::unique_ptr<RecordedVoice> RecordedVoice::fromSpec(const std::string &spec, float sampleRate, int threads,
+                                                       std::string &error) {
+    std::vector<std::vector<std::string>> lines;
+    size_t at = 0;
+    while (at < spec.size()) {
+        size_t end = spec.find('\n', at);
+        if (end == std::string::npos) end = spec.size();
+        const std::string line = spec.substr(at, end - at);
+        at = end + 1;
+        std::vector<std::string> f;
+        size_t from = 0;
+        for (size_t bar; (bar = line.find('|', from)) != std::string::npos; from = bar + 1) f.push_back(line.substr(from, bar - from));
+        f.push_back(line.substr(from));
+        if (f.size() >= 5) lines.push_back(std::move(f));
+    }
+    // Each thread builds a voice of its own from a run of the lines, and they
+    // go together in order, so the result doesn't depend on the threads.
+    const auto parts = static_cast<size_t>(std::clamp(threads, 1, 8));
+    std::vector<RecordedVoice> built(parts);
+    std::vector<std::string> errors(parts);
+    auto work = [&](size_t part) {
+        const size_t begin = lines.size() * part / parts, end = lines.size() * (part + 1) / parts;
+        for (size_t i = begin; i < end; ++i) {
+            const auto &f = lines[i];
+            auto code = [](const std::string &name) { return phoneCode(name.c_str(), static_cast<int32_t>(name.size())); };
+            std::string why;
+            bool added = false;
+            if (f.size() == 5 && f[0] == "V" && code(f[1]) > 0) {
+                added = built[part].addVowel(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()), sampleRate, why);
+            } else if (f.size() == 7 && f[0] == "D" && code(f[1]) > 0) {
+                added = built[part].addDiphthong(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()),
+                                                 std::atoi(f[5].c_str()), std::atoi(f[6].c_str()), sampleRate, why);
+            } else if (f.size() == 6 && f[0] == "C" && code(f[1]) > 0 && code(f[2]) > 0) {
+                added = built[part].addConsonant(f[3], static_cast<uint8_t>(code(f[1])), static_cast<uint8_t>(code(f[2])),
+                                                 std::atoi(f[4].c_str()), std::atoi(f[5].c_str()), sampleRate, why);
+            } else {
+                continue;
+            }
+            if (!added && errors[part].empty()) errors[part] = f[1] + ": " + (why.empty() ? "unknown sound" : why);
+        }
+    };
+    std::vector<std::thread> pool;
+    for (size_t part = 1; part < parts; ++part) pool.emplace_back(work, part);
+    work(0);
+    for (auto &t : pool) t.join();
+    auto voice = std::make_unique<RecordedVoice>();
+    for (size_t part = 0; part < parts; ++part) {
+        for (auto &u : built[part].vowels) voice->vowels.push_back(std::move(u));
+        for (auto &u : built[part].diphthongs) voice->diphthongs.push_back(std::move(u));
+        for (auto &j : built[part].joins) voice->joins.push_back(std::move(j));
+        if (error.empty()) error = errors[part];
+    }
+    return voice;
+}
 
 const RecordedVoice::Unit *RecordedVoice::nearest(const float f[3]) const {
     const Unit *best = nullptr;

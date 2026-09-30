@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <engine/core/Utterance.h>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,17 @@
 namespace acidulous::machine::diction {
 
 struct RecordedVoice {
+    /**
+     * A voice from the lines the app sends: "V|PHONE|path|holdFrom|holdTo" a
+     * held vowel, "D|PHONE|path|holdFrom|holdTo|glideFrom|glideTo" a
+     * diphthong, "C|PHONE|VOWEL|path|from|to" a consonant, in frames. Its
+     * takes are read and analysed on up to [threads] threads, since finding
+     * a whole voice's pulses on one took most of a second here and about ten
+     * on a phone. [error] gets the first take that couldn't be used. Worker
+     * thread.
+     */
+    static std::unique_ptr<RecordedVoice> fromSpec(const std::string &spec, float sampleRate, int threads, std::string &error);
+
     struct Unit {
         /** The phone it was sung as. */
         uint8_t phone = 0;

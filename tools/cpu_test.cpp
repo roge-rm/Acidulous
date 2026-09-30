@@ -24,12 +24,18 @@
 #include <engine/effect/EffectRegistry.h>
 #include <engine/core/Frozen.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/diction/Diction.h>
+#include <engine/machine/diction/Phones.h>
+#include <engine/machine/diction/RecordedVoice.h>
+#include <fstream>
+#include <sstream>
 #include "audition_material.h"
 #include "patchbank.h"
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/dsp/Wsola.h>
 #include <engine/rack/Rack.h>
+#include <chrono>
 #include <memory>
 
 using namespace acidulous;
@@ -442,6 +448,70 @@ Result timeMachine(const std::string &name) {
     return r;
 }
 
+/**
+ * Diction singing words, in its own voice or a recorded one from [spec] (the
+ * lines the app sends the engine; empty for the built-in voice), [rate] notes
+ * a second. Every note gets words, with clusters and diphthongs, since a
+ * recorded voice's consonants cost more than its vowels.
+ */
+Result timeDiction(const std::string &label, const std::string &spec, double rate) {
+    using machine::diction::RecordedVoice;
+    static const char *kWords[] = {"T W IHC NG", "K AX L", "S T R IY M", "L IHC", "R OWP", "B OWP T",
+                                   "HH AW S", "Y UW", "D AWP N", "AY", "W AH N", "DH AX"};
+    Result r;
+    r.name = label;
+    std::unique_ptr<RecordedVoice> voice;
+    if (!spec.empty()) {
+        // What loading the voice costs, once: every take read and its pulses
+        // found, which the app does on a worker when the voice is chosen.
+        const auto wall0 = std::chrono::steady_clock::now();
+        std::ifstream in(spec);
+        std::stringstream all;
+        all << in.rdbuf();
+        std::string error;
+        voice = RecordedVoice::fromSpec(all.str(), static_cast<float>(kSr), 4, error);
+        if (voice->vowels.empty()) { printf("  %s: no voice in %s\n", label.c_str(), spec.c_str()); return r; }
+        static bool told = false;
+        if (!told) {
+            told = true;
+            const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - wall0).count();
+            printf("loading the voice: %.0f ms here for %zu vowels, %zu diphthongs, %zu consonants\n\n", ms,
+                   voice->vowels.size(), voice->diphthongs.size(), voice->joins.size());
+        }
+    }
+    std::unique_ptr<Machine> m(MachineRegistry::create("Diction"));
+    m->prepare(kSr);
+    m->reset();
+    m->params().jumpAll();
+    if (voice) m->swapObject(0, voice.get());
+    const auto stride = std::max(1, static_cast<int32_t>(static_cast<double>(kSr) / (rate * kBlock) + 0.5));
+    std::vector<float> L(kBlock), R(kBlock);
+    int32_t word = 0;
+    uint8_t pitch = 0;
+    for (int32_t b = 0; b < kBlocks; ++b) {
+        if (b % stride == 0) {
+            // Legato, a note to the next, as a singer's notes are.
+            uint8_t phones[machine::Diction::kMaxPhones];
+            const int32_t n = machine::diction::parsePhones(kWords[word % 12], phones, machine::Diction::kMaxPhones);
+            const auto next = static_cast<uint8_t>(45 + (word * 5) % 12);
+            m->lyric(phones, n);
+            m->noteOn(next, 100);
+            if (pitch != 0) m->noteOff(pitch);
+            pitch = next;
+            ++word;
+        }
+        std::fill(L.begin(), L.end(), 0.0f);
+        std::fill(R.begin(), R.end(), 0.0f);
+        const double t0 = nowUs();
+        m->render(L.data(), R.data(), kBlock);
+        const double us = nowUs() - t0;
+        if (b > 8) r.samples.push_back(us);
+    }
+    r.finish();
+    if (voice) m->swapObject(0, nullptr);
+    return r;
+}
+
 Result timeEffect(const std::string &name) {
     Effect *fx = EffectRegistry::create(name.c_str());
     Result r;
@@ -700,6 +770,24 @@ int main(int argc, char **argv) {
         rows.push_back(timeStretchStereo());
         rows.push_back(timeRack("Trinity", "Delay", "", 0));
         rows.push_back(timeRack("Trinity", "Delay", "", 1));
+        report(rows);
+        return 0;
+    }
+    if (only == "diction") {
+        // cpu_test diction [voice spec]: its own voice, and a recorded one.
+        const std::string spec = argc > 2 ? argv[2] : "";
+        printf("Diction singing a word every note, legato\n\n");
+        rows.push_back(timeMachine("Diction"));
+        rows.back().name = "held vowel";
+        for (double rate : {4.0, gNotesPerSecond}) {
+            char label[64];
+            std::snprintf(label, sizeof(label), "built-in %.0f/s", rate);
+            rows.push_back(timeDiction(label, "", rate));
+            if (!spec.empty()) {
+                std::snprintf(label, sizeof(label), "recorded %.0f/s", rate);
+                rows.push_back(timeDiction(label, spec, rate));
+            }
+        }
         report(rows);
         return 0;
     }
