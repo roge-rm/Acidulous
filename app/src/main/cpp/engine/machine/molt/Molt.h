@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <cstdint>
 #include <engine/core/Utterance.h>
 #include <engine/dsp/Adsr.h>
@@ -93,7 +94,9 @@ class Molt final : public Machine {
      * smoothing would turn an edge into a ramp.
      */
     float rawOf(int32_t i) const { return params_.normalized(i); }
-    int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
+    // Rounded, not truncated: octave and transpose go below zero, where
+    // adding a half and truncating made -1 into 0.
+    int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(std::lround(paramOf(p))); }
 
     float sampleRate = 48000.0f;
     const audio::Utterance *source = nullptr;

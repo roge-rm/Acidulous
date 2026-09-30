@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <cstdint>
 #include <engine/dsp/Adsr.h>
 #include <engine/machine/Machine.h>
@@ -94,7 +95,9 @@ class Diction final : public Machine {
     void startNote(uint8_t note, uint8_t velocity, bool legato);
 
     float paramOf(int32_t i) const { return params_.get(i); }
-    int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
+    // Rounded, not truncated: octave and transpose go below zero, where
+    // adding a half and truncating made -1 into 0.
+    int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(std::lround(paramOf(p))); }
 
     float sampleRate = 48000.0f;
     const diction::Phone *phones = nullptr;
