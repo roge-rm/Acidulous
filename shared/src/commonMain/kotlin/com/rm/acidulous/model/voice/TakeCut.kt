@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
  * part of its first vowel, where a diphthong moves and where a consonant is.
  * [problem] is empty for a take that's fine, otherwise why it should be sung
  * again. [rootHz] is the pitch it was sung at. [by] is which cutter cut it:
- * takes cut by an older one are cut again.
+ * takes cut by an older one are cut again. [hand] is a cut moved by hand,
+ * which the cutter leaves alone.
  */
 @Serializable
 data class TakeCut(
@@ -23,6 +24,7 @@ data class TakeCut(
     val rootHz: Float = 0f,
     val centsOff: Float = 0f,
     val by: Int = 0,
+    val hand: Boolean = false,
 ) {
     companion object {
         /**

@@ -186,6 +186,7 @@ internal fun VoicePage(
     var level by remember { mutableStateOf(0f) }
     val scope = rememberCoroutineScope()
     var job by remember { mutableStateOf<Job?>(null) }
+    var cutting by remember { mutableStateOf(false) }
 
     // The input has to be running for a take, and for the tuner.
     LaunchedEffect(havePermission) { if (havePermission) NativeEngine.startInput(UiPrefs.inputDevice) }
@@ -209,7 +210,7 @@ internal fun VoicePage(
         for (p in VoicePrompts.all) {
             val take = bank?.takes?.get(p.id) ?: continue
             val was = bank?.cuts?.get(p.id)
-            if (was != null && was.by == TakeCut.CUTTER) continue
+            if (was != null && (was.by == TakeCut.CUTTER || was.hand)) continue
             val cut = cutOf(p, File(dir, take), bank?.note ?: continue) ?: continue
             // Sung again meanwhile, or another voice chosen: this cut is stale.
             val now = bank ?: break
@@ -462,12 +463,40 @@ internal fun VoicePage(
                         onClick = { folder()?.let { NativeEngine.auditionFile(File(it, "${prompt.id}.wav").absolutePath) } },
                         enabled = !busy && b.sung(prompt),
                     ) { Text(stringResource(Res.string.voice_play), fontSize = 12.sp) }
+                    TextButton(onClick = { cutting = true }, enabled = !busy && b.takes[prompt.id] != null) {
+                        Text(stringResource(Res.string.voice_cut), fontSize = 12.sp)
+                    }
                     TextButton(onClick = { if (at < VoicePrompts.all.size - 1) at++ }, enabled = !busy && at < VoicePrompts.all.size - 1) {
                         Text("▶", fontSize = 16.sp)
                     }
                 }
             }
         }
+    }
+
+    // A take's cut, moved by hand.
+    val b = bank
+    val dir = folder()
+    val takeName = b?.takes?.get(VoicePrompts.all[at].id)
+    if (cutting && b != null && dir != null && takeName != null) {
+        val prompt = VoicePrompts.all[at]
+        val take = File(dir, takeName)
+        VoiceCutDialog(
+            prompt = prompt,
+            file = take,
+            cut = b.cuts[prompt.id],
+            consonantNear = { seconds -> consonantAt(prompt, seconds) },
+            recut = { cutOf(prompt, take, b.note) },
+            onKeep = { cut ->
+                val now = bank ?: b
+                val next = now.copy(cuts = now.cuts + (prompt.id to cut))
+                VoiceBank.save(dir, next)
+                bank = next
+                com.rm.acidulous.engine.EngineSync.voicesChanged()
+                cutting = false
+            },
+            onDismiss = { cutting = false },
+        )
     }
 
     // Every take goes with it, so it's asked first.

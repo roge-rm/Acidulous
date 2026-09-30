@@ -37,6 +37,11 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
     take always records the mic raw, without the effects printed into a take.
   - **◀** and **▶** go back and forward, **play** plays a take back, and
     **again** records it over.
+  - **cut…** shows the take with the part it was cut to marked: the held
+    vowel, a vowel's move, or the consonant. Drag a mark to move it, and
+    **part** plays what the marks hold. **keep** saves it, and a take that
+    said to sing it again is used as you marked it. **as cut** puts back where
+    it was cut first.
   - **to sing** counts what a voice needs: every vowel, and every consonant
     between ahs. After it come the consonants **between ees** and **between
     oos**, which you can leave out. Diction's **from…** window chooses between

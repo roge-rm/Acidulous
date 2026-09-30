@@ -50,6 +50,11 @@
     <string name="voice_sing">sing</string>
     <string name="voice_again">again</string>
     <string name="voice_play">play</string>
+    <!-- Moving where a take was cut, by hand: the button, the part the marks hold, keeping it, and the cutter's cut back. -->
+    <string name="voice_cut">cut…</string>
+    <string name="voice_cut_part">part</string>
+    <string name="voice_cut_keep">keep</string>
+    <string name="voice_cut_auto">as cut</string>
 
     <!-- Recording -->
     <string name="sound_stereo">stereo</string>
