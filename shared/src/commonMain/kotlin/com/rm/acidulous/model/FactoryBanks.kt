@@ -2663,82 +2663,122 @@ internal object FactoryBanks {
         family = "voices")
 
     private fun diction1() = Patch("Diction", "Deep",
-        mapOf("formant" to 0.25f, "vibrato" to 0.22f, "vibratorate" to 0.333333343f),
+        mapOf("formant" to 0.25f, "vibrato" to 0.22f, "vibratorate" to 0.333333343f, "effort" to 0.4f),
         family = "voices")
 
-    private fun diction2() = Patch("Diction", "Low",
-        mapOf("formant" to 0.375f),
+    private fun diction2() = Patch("Diction", "High",
+        mapOf("formant" to 0.6666667f, "vibrato" to 0.28f, "effort" to 0.6f),
         family = "voices")
 
-    private fun diction3() = Patch("Diction", "High",
-        mapOf("formant" to 0.625f, "vibrato" to 0.28f),
+    private fun diction3() = Patch("Diction", "Child",
+        mapOf("formant" to 0.7916667f, "breath" to 0.25f, "vibrato" to 0.15f, "track" to 0.65f),
         family = "voices")
 
-    private fun diction4() = Patch("Diction", "Light",
-        mapOf("formant" to 0.7083333f, "breath" to 0.25f, "vibrato" to 0.2f),
-        family = "voices")
-
-    private fun diction5() = Patch("Diction", "Neither",
+    private fun diction4() = Patch("Diction", "Neither",
         mapOf("formant" to 0.5416667f, "breath" to 0.3f, "vibrato" to 0.15f, "drift" to 0.2f),
         family = "voices")
 
-    private fun diction6() = Patch("Diction", "Oo",
-        mapOf("vowel" to 0f),
-        family = "vowels")
+    private fun diction5() = Patch("Diction", "Giant",
+        mapOf("formant" to 0.0833333358f, "vibrato" to 0.1f, "effort" to 0.65f, "growl" to 0.2f, "track" to 0.35f),
+        family = "voices")
 
-    private fun diction7() = Patch("Diction", "Oh",
-        mapOf("vowel" to 0.25f),
-        family = "vowels")
+    private fun diction6() = Patch("Diction", "Soft",
+        mapOf("breath" to 0.5f, "vibrato" to 0.15f, "attack" to 0.599823236f, "effort" to 0.099999994f),
+        family = "colour")
 
-    private fun diction8() = Patch("Diction", "Eh",
-        mapOf("vowel" to 0.75f),
-        family = "vowels")
+    private fun diction7() = Patch("Diction", "Belter",
+        mapOf("vibrato" to 0.45f, "vibratodelay" to 0.25f, "effort" to 1f, "rasp" to 0.1f, "scoop" to 0.65f),
+        family = "colour")
 
-    private fun diction9() = Patch("Diction", "Ee",
-        mapOf("vowel" to 1f),
-        family = "vowels")
+    private fun diction8() = Patch("Diction", "Rasp",
+        mapOf("drift" to 0.5f, "effort" to 0.7f, "rasp" to 0.55f),
+        family = "colour")
 
-    private fun diction10() = Patch("Diction", "Chant",
+    private fun diction9() = Patch("Diction", "Growl",
+        mapOf("formant" to 0.416666657f, "effort" to 0.8f, "growl" to 0.7f, "scoop" to 0.6f),
+        family = "colour")
+
+    private fun diction10() = Patch("Diction", "Whisper",
+        mapOf("vibrato" to 0f, "attack" to 0.523296058f, "volume" to 0.766666651f, "whisper" to 1f),
+        family = "colour")
+
+    private fun diction11() = Patch("Diction", "Pure",
+        mapOf("breath" to 0f, "vibrato" to 0.12f, "drift" to 0.1f, "clean" to 1f),
+        family = "colour")
+
+    private fun diction12() = Patch("Diction", "Chant",
         mapOf("vowel" to 0.25f, "vibrato" to 0f, "drift" to 0.05f, "glide" to 0.05f),
         family = "style")
 
-    private fun diction11() = Patch("Diction", "Ballad",
-        mapOf("vibrato" to 0.25f, "vibratodelay" to 0.3f, "drift" to 0.55f, "glide" to 0.12f),
+    private fun diction13() = Patch("Diction", "Ballad",
+        mapOf("breath" to 0.3f, "vibrato" to 0.25f, "vibratodelay" to 0.3f, "drift" to 0.55f, "glide" to 0.12f, "effort" to 0.35f, "scoop" to 0.625f),
         family = "style")
 
-    private fun diction12() = Patch("Diction", "Opera",
-        mapOf("formant" to 0.458333343f, "breath" to 0.04f, "vibrato" to 0.7f, "vibratorate" to 0.5f, "vibratodelay" to 0.1f),
+    private fun diction14() = Patch("Diction", "Opera",
+        mapOf("formant" to 0.458333343f, "breath" to 0.04f, "vibrato" to 0.7f, "vibratorate" to 0.5f, "vibratodelay" to 0.1f, "effort" to 0.75f),
         family = "style")
 
-    private fun diction13() = Patch("Diction", "Breathy",
-        mapOf("breath" to 0.7f, "vibrato" to 0.15f, "attack" to 0.599823236f),
+    private fun diction15() = Patch("Diction", "Crooner",
+        mapOf("formant" to 0.416666657f, "vibrato" to 0.25f, "vibratodelay" to 0.35f, "glide" to 0.15f, "effort" to 0.3f, "scoop" to 0.75f),
         family = "style")
 
-    private fun diction14() = Patch("Diction", "Lullaby",
-        mapOf("vowel" to 0.25f, "breath" to 0.35f, "vibrato" to 0.15f, "vibratodelay" to 0.45f, "glide" to 0.15f, "attack" to 0.738351941f),
+    private fun diction16() = Patch("Diction", "Lullaby",
+        mapOf("vowel" to 0.25f, "breath" to 0.35f, "vibrato" to 0.15f, "vibratodelay" to 0.45f, "glide" to 0.15f, "attack" to 0.738351941f, "effort" to 0.25f),
         family = "style")
 
-    private fun diction15() = Patch("Diction", "Swoop",
-        mapOf("drift" to 0.6f, "glide" to 0.25f),
+    private fun diction17() = Patch("Diction", "Swoop",
+        mapOf("drift" to 0.6f, "glide" to 0.25f, "scoop" to 0.875f),
         family = "style")
 
-    private fun diction16() = Patch("Diction", "Giant",
-        mapOf("formant" to 0f, "vibrato" to 0.12f, "vibratorate" to 0.166666672f),
+    private fun diction18() = Patch("Diction", "Robot",
+        mapOf("vibrato" to 0f, "drift" to 0f, "glide" to 0f, "volume" to 0.333333343f, "clean" to 1f, "effort" to 0.65f, "source" to 1f),
+        family = "style")
+
+    private fun diction19() = Patch("Diction", "Duo",
+        mapOf("singers" to 0.2f, "spread" to 0.3f),
+        family = "choir")
+
+    private fun diction20() = Patch("Diction", "Choir",
+        mapOf("vibrato" to 0.2f, "attack" to 0.565412f, "release" to 0.696236f, "singers" to 1f),
+        family = "choir")
+
+    private fun diction21() = Patch("Diction", "Chamber",
+        mapOf("vibrato" to 0.18f, "clean" to 0.5f, "singers" to 0.6f, "spread" to 0.25f),
+        family = "choir")
+
+    private fun diction22() = Patch("Diction", "Crowd",
+        mapOf("drift" to 0.6f, "rasp" to 0.2f, "singers" to 1f, "spread" to 1f),
+        family = "choir")
+
+    private fun diction23() = Patch("Diction", "Chorale",
+        mapOf("vibrato" to 0.15f, "attack" to 0.599823236f, "release" to 0.738351941f, "singers" to 0.4f, "spread" to 0.4f, "harmony" to 1f),
+        family = "choir")
+
+    private fun diction24() = Patch("Diction", "Harmony",
+        mapOf("singers" to 0.2f, "spread" to 0.2f, "harmony" to 1f),
+        family = "choir")
+
+    private fun diction25() = Patch("Diction", "Chipmunk",
+        mapOf("formant" to 0.625f, "track" to 1f),
         family = "strange")
 
-    private fun diction17() = Patch("Diction", "Tiny",
-        mapOf("formant" to 1f, "vibrato" to 0.35f, "vibratorate" to 0.75f),
+    private fun diction26() = Patch("Diction", "Undertow",
+        mapOf("formant" to 0.333333343f, "glide" to 0.3f, "growl" to 0.4f, "track" to 0f),
         family = "strange")
 
-    private fun diction18() = Patch("Diction", "Machine",
-        mapOf("breath" to 0f, "vibrato" to 0f, "drift" to 0f, "glide" to 0f, "attack" to 0f),
+    private fun diction27() = Patch("Diction", "Fry",
+        mapOf("formant" to 0.375f, "effort" to 0.35f, "growl" to 1f),
         family = "strange")
 
-    private fun diction19() = Patch("Diction", "Ghost",
-        mapOf("formant" to 0.5833333f, "breath" to 1f, "attack" to 0.827060044f, "release" to 0.945703149f),
+    private fun diction28() = Patch("Diction", "Ghosts",
+        mapOf("release" to 0.827060044f, "volume" to 0.933333337f, "whisper" to 0.7f, "singers" to 0.6f, "spread" to 1f),
         family = "strange")
 
-    private val diction: List<Patch> by lazy { listOf(diction0(), diction1(), diction2(), diction3(), diction4(), diction5(), diction6(), diction7(), diction8(), diction9(), diction10(), diction11(), diction12(), diction13(), diction14(), diction15(), diction16(), diction17(), diction18(), diction19()) }
+    private fun diction29() = Patch("Diction", "Buzz",
+        mapOf("formant" to 0.5833333f, "volume" to 0.333333343f, "effort" to 0.9f, "rasp" to 0.15f, "source" to 1f, "throat" to 0.5f),
+        family = "strange")
+
+    private val diction: List<Patch> by lazy { listOf(diction0(), diction1(), diction2(), diction3(), diction4(), diction5(), diction6(), diction7(), diction8(), diction9(), diction10(), diction11(), diction12(), diction13(), diction14(), diction15(), diction16(), diction17(), diction18(), diction19(), diction20(), diction21(), diction22(), diction23(), diction24(), diction25(), diction26(), diction27(), diction28(), diction29()) }
 
     private fun bias0() = Patch("Bias", "Init", emptyMap(),
         family = "clean")
