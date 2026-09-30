@@ -150,6 +150,17 @@ int main(int argc, char **argv) {
         m->params().set(Diction::Octave, m->params().def(Diction::Octave).unmap(octave));
         if (const char *c = std::getenv("CONSONANTS")) m->params().set(Diction::Consonants, m->params().def(Diction::Consonants).unmap(std::strtof(c, nullptr)));
         if (const char *b = std::getenv("BREATH")) m->params().set(Diction::Breath, m->params().def(Diction::Breath).unmap(std::strtof(b, nullptr)));
+        if (const char *c = std::getenv("CLEAN")) m->params().set(Diction::Clean, m->params().def(Diction::Clean).unmap(std::strtof(c, nullptr)));
+        // Any others by name: PARAMS="vibrato=0,drift=0".
+        if (const char *list = std::getenv("PARAMS")) {
+            std::stringstream in(list);
+            for (std::string item; std::getline(in, item, ',');) {
+                const auto eq = item.find('=');
+                const int32_t i = eq == std::string::npos ? -1 : m->params().indexOf(item.substr(0, eq).c_str());
+                if (i >= 0) m->params().set(i, m->params().def(i).unmap(std::strtof(item.c_str() + eq + 1, nullptr)));
+                else std::fprintf(stderr, "  no param %s\n", item.c_str());
+            }
+        }
         m->params().jumpAll();
         m->reset();
         if (voice) m->swapObject(0, voice.get());

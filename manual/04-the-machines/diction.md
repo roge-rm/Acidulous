@@ -43,6 +43,9 @@ when the note ends.
 - **breath** - how much air is in the voice. In a recorded voice, how much
   of the singer's own breath is kept: down is clean, all the way up is as
   it was sung.
+- **clean** - takes more breath out of a recorded voice's vowels than
+  **breath** can. All the way up, a held vowel sounds almost like an
+  instrument. It does nothing to the built-in voice or to the consonants.
 - **consonants** - how long the consonants take.
 - **level** - how loud a recorded voice's consonants are against its vowels.
 - **from…** - which of a recorded voice's takes each consonant is formed

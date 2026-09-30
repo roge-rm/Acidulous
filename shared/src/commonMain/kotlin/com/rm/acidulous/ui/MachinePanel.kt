@@ -3585,6 +3585,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelVowelKnob(b, "vowel", "vowel")
                     PanelKnob(b, "formant", "formant", PanelAmber)
                     PanelKnob(b, "breath", "breath")
+                    PanelKnob(b, "clean", "clean", PanelPink)
                 }
                 Group("words") {
                     PanelKnob(b, "consonants", "consonants", PanelPink)

@@ -52,7 +52,8 @@ class Diction final : public Machine {
         // each, which of the singer's takes it's formed from (see kFromOrder).
         ConsonantLevel,
         From,
-        Count = From + 24
+        Clean = From + 24,
+        Count
     };
     /** The consonants the From parameters are for, in order. */
     static const char *const kFromOrder[24];
@@ -303,6 +304,15 @@ class Diction final : public Machine {
     float untilGrain = 0.0f;
     std::vector<float> acc = std::vector<float>(kAccum, 0.0f);
     int32_t accHead = 0;
+    /**
+     * The clean knob's comb: what came out, how much of it is mixed back, and
+     * the last grain's period and whether it was of a held vowel.
+     */
+    std::vector<float> combLine = std::vector<float>(kAccum, 0.0f);
+    int32_t combHead = 0;
+    float comb = 0.0f;
+    float grainPeriod = 1.0f;
+    bool grainHeld = false;
 };
 
 } // namespace acidulous::machine

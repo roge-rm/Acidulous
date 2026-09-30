@@ -343,6 +343,7 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "**vowel** - oo, oh, ah, eh or ee, from the back of the mouth to the front. In between, it sings the vowel between them, so turning it moves through the vowels."),
                 ManualBlock(ManualKind.Bullet, "**formant** - the size of the throat, without changing the pitch. Down is bigger and darker, up is smaller and brighter. Low notes with the formant down sound like a man, high notes with it up like a woman or a child, and in between is neither."),
                 ManualBlock(ManualKind.Bullet, "**breath** - how much air is in the voice. In a recorded voice, how much of the singer's own breath is kept: down is clean, all the way up is as it was sung."),
+                ManualBlock(ManualKind.Bullet, "**clean** - takes more breath out of a recorded voice's vowels than **breath** can. All the way up, a held vowel sounds almost like an instrument. It does nothing to the built-in voice or to the consonants."),
                 ManualBlock(ManualKind.Bullet, "**consonants** - how long the consonants take."),
                 ManualBlock(ManualKind.Bullet, "**level** - how loud a recorded voice's consonants are against its vowels."),
                 ManualBlock(ManualKind.Bullet, "**from…** - which of a recorded voice's takes each consonant is formed from: the one sung between **ah**s, **ee**s or **oo**s, or **word**, the one whose vowel is nearest the word's. Ah is usually the clearest. The window has a page each for stops, hisses, and hums and glides."),

@@ -457,8 +457,31 @@ int main() {
             check(soft < loud * 0.6f, "the consonant level turns it down", std::to_string(20.0f * std::log10(soft / loud)) + " dB");
         }
 
-        // The same words twice, with a reset between, come out the same.
-        auto m = singer({});
+        // Clean: the harmonics of a held ah further clear of what's between them.
+        {
+            auto clearOfNoise = [&](float clean) {
+                auto m = singer({{Diction::Clean, clean}, {Diction::Vibrato, 0.0f}, {Diction::Drift, 0.0f}});
+                m->swapObject(0, &voice);
+                std::vector<uint8_t> ah{code("AA")};
+                const auto x = render(*m, 1.0f, [&](int32_t b) { if (b == 0) { m->lyric(ah.data(), 1); m->noteOn(45, 100); } });
+                m->swapObject(0, nullptr);
+                std::vector<float> part(x.begin() + static_cast<long>(0.4f * kSr), x.begin() + static_cast<long>(0.9f * kSr));
+                const float f0 = pitchOf(part);
+                float on = 0.0f, between = 0.0f;
+                for (float k = std::ceil(1000.0f / f0); k * f0 < 4000.0f; k += 1.0f) {
+                    on += audition::magnitudeAt(part, 0, k * f0);
+                    between += audition::magnitudeAt(part, 0, (k + 0.5f) * f0);
+                }
+                return 20.0f * std::log10(on / std::max(between, 1e-9f));
+            };
+            const float plain = clearOfNoise(0.0f), cleaned = clearOfNoise(1.0f);
+            check(cleaned > plain + 6.0f, "clean takes the breath out of a held vowel",
+                  std::to_string(plain) + " dB, then " + std::to_string(cleaned));
+        }
+
+        // The same words twice, with a reset between, come out the same,
+        // with the clean knob's comb on so it's reset too.
+        auto m = singer({{Diction::Clean, 1.0f}});
         m->swapObject(0, &voice);
         std::vector<uint8_t> la{code("L"), code("AA")};
         auto phrase = [&]() {

@@ -137,6 +137,8 @@ const ParamDef *Diction::paramDefs(int32_t &count) const {
         FROM("f"), FROM("v"), FROM("th"), FROM("dh"), FROM("s"), FROM("z"), FROM("sh"), FROM("zh"), FROM("hh"),
         FROM("m"), FROM("n"), FROM("ng"), FROM("l"), FROM("r"), FROM("w"), FROM("y"),
 #undef FROM
+        // A recorded voice with its breath taken out: none to as much as can be.
+        {"clean", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -199,6 +201,11 @@ void Diction::reset() {
     untilGrain = 0.0f;
     std::fill(acc.begin(), acc.end(), 0.0f);
     accHead = 0;
+    std::fill(combLine.begin(), combLine.end(), 0.0f);
+    combHead = 0;
+    comb = 0.0f;
+    grainPeriod = 1.0f;
+    grainHeld = false;
     aheadCount = 0;
     earlyCount = 0;
     pitchIn = 0;
@@ -1202,6 +1209,10 @@ bool Diction::render(float *L, float *R, int32_t frames) {
     const float panL = std::cos((pan + 1.0f) * 0.25f * dsp::kPi);
     const float panR = std::sin((pan + 1.0f) * 0.25f * dsp::kPi);
     const float referencePeriod = sampleRate / Throat::kReferenceHz;
+    // Up to 0.8: harmonics 19 dB clear of what's between them, and a pulse
+    // down to a tenth in ten periods.
+    const float clean = 0.8f * clampf(paramOf(Clean), 0.0f, 1.0f);
+    const float combStep = 1.0f / (0.005f * sampleRate);
 
     for (int32_t i = 0; i < frames; ++i) {
         if (--untilControl < 0) {
@@ -1223,10 +1234,38 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 if (fade < 1.0f) layGrain(fading, 1.0f - fade, period, ratio);
                 layGrain(reading, fade, period, ratio);
                 untilGrain += period;
+                grainPeriod = period;
+                grainHeld = lead.held && (e == nullptr || e->voiced);
             }
             untilGrain -= 1.0f;
             recorded = acc[static_cast<size_t>(accHead)];
             acc[static_cast<size_t>(accHead)] = 0.0f;
+            // Clean: what's sung, part mixed with itself a period ago. What
+            // repeats from pulse to pulse adds up and stays; breath doesn't.
+            // Each grain is a different pulse of the singer's, and the
+            // difference between them is the breath heard, so it's taken
+            // out here, at the pitch being sung. Only on a held vowel: a
+            // consonant's hiss rides on its voice (a V, a Z), and the comb
+            // rang on into a P's closure.
+            const float wantComb = grainHeld ? clean : 0.0f;
+            comb += clampf(wantComb - comb, -combStep, combStep);
+            if (comb > 0.0f) {
+                const float back = static_cast<float>(combHead) - grainPeriod;
+                const float wrapped = back < 0.0f ? back + static_cast<float>(kAccum) : back;
+                const auto i0 = static_cast<int32_t>(wrapped);
+                const float t = wrapped - static_cast<float>(i0);
+                // Four-point Hermite: a straight line between two, fed back
+                // round a loop, took the top off the vowel each time round.
+                auto y = [&](int32_t k) { return combLine[static_cast<size_t>((i0 + k) & (kAccum - 1))]; };
+                const float ym = y(-1), y0 = y(0), y1 = y(1), y2 = y(2);
+                const float c1 = 0.5f * (y1 - ym);
+                const float c2 = ym - 2.5f * y0 + 2.0f * y1 - 0.5f * y2;
+                const float c3 = 0.5f * (y2 - ym) + 1.5f * (y0 - y1);
+                const float before = ((c3 * t + c2) * t + c1) * t + y0;
+                recorded += comb * (before - recorded);
+            }
+            combLine[static_cast<size_t>(combHead)] = recorded;
+            combHead = (combHead + 1) & (kAccum - 1);
             accHead = (accHead + 1) & (kAccum - 1);
             advance(reading);
             if (fade < 1.0f) {
@@ -1282,6 +1321,8 @@ bool Diction::render(float *L, float *R, int32_t frames) {
             reading = fading = Reader{};
             fade = 1.0f;
             std::fill(acc.begin(), acc.end(), 0.0f);
+            std::fill(combLine.begin(), combLine.end(), 0.0f);
+            comb = 0.0f;
             untilGrain = 0.0f;
             break;
         }
