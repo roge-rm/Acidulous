@@ -3604,6 +3604,11 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelKnob(b, "rasp", "rasp")
                     PanelKnob(b, "growl", "growl", PanelPink)
                 }
+                Group("choir") {
+                    PanelKnob(b, "singers", "singers", PanelAmber)
+                    PanelKnob(b, "spread", "spread")
+                    PanelSwitch(b, "harmony", listOf("off", "on"), "harmony")
+                }
             }
             2 -> {
                 Group("vibrato") {

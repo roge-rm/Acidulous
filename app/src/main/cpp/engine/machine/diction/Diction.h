@@ -57,6 +57,9 @@ class Diction final : public Machine {
         // How the voice comes out: how hard it's sung, how rough, whispered,
         // how it arrives at a note, and whether the throat follows the pitch.
         Effort, Rasp, Growl, Whisper, Scoop, Track,
+        // More singers from the one voice, how unlike each other they are,
+        // and whether a chord sings on every note.
+        Singers, Spread, Harmony,
         Count
     };
     /** The consonants the From parameters are for, in order. */
@@ -185,6 +188,12 @@ class Diction final : public Machine {
     static const audio::Epoch *epochOf(const Reader &r);
     /** Lays one grain of [r] at [weight] into the buffer, for a period [period] frames long. */
     void layGrain(const Reader &r, float weight, float period, float ratio);
+    /** Where a grain read at [pos] comes from and how it's laid. */
+    struct GrainShape {
+        int32_t idx = 0, n = 0;
+        float half = 0.0f, gain = 0.0f, wStep = 0.0f, span = 0.0f, from = 0.0f;
+    };
+    bool shapeGrain(const Reader &r, float pos, float weight, float period, float ratio, GrainShape &g) const;
     /** Moves [r] on a frame. */
     static void advance(Reader &r);
 
@@ -268,7 +277,8 @@ class Diction final : public Machine {
      * Rasp and growl for the next pulse: its period moved, and the size it's
      * laid at returned.
      */
-    float pulseCharacter(float &period);
+    float pulseCharacter(float &period) { return pulseCharacter(period, oddPulse, pulseSeed); }
+    float pulseCharacter(float &period, bool &odd, uint32_t &random);
     /** Effort's tilt: the source below about 1 kHz, the rest turned up or down against it. */
     float tiltLow = 0.0f;
     /** Track's move of the throat, for a voice whose own pitch is [rootHz], at the pitch sung. */
@@ -335,6 +345,72 @@ class Diction final : public Machine {
     /** What the grains made before clean, for whisper, and its level and whisper's, followed. */
     std::vector<float> rawLine = std::vector<float>(kAccum, 0.0f);
     float loudIn = 0.0f, loudOut = 0.0f;
+
+    // --- more singers from the one voice ------------------------------------------
+    // Each is a clock of its own laying grains from the same readers: a
+    // choir's copies a little late, off pitch, with their own throat and
+    // place, and a chord's other notes at their own pitch.
+    static constexpr int kClocks = 12;
+    static constexpr int kHarmony = 4;
+    static constexpr int kRing = 8192;
+    static constexpr int kGrains = 8;
+    /** One of another singer's grains, played a sample at a time. */
+    struct Grain {
+        const audio::Utterance *sound = nullptr;
+        float from = 0.0f, ratio = 1.0f, wStep = 0.0f, gain = 0.0f;
+        int32_t k = 0, n = 0;
+    };
+    struct Clock {
+        /** Wanted: fading in or sounding. Let go, it fades out and is free once silent. */
+        bool on = false;
+        /** 0 follows the lead; otherwise the harmony note it sings. */
+        uint8_t note = 0;
+        /** 0 is the note itself, then its choir copies. */
+        int32_t copy = 0;
+        float gain = 0.0f;
+        float untilGrain = 0.0f;
+        /** A copy's own wander off the pitch, in cents. */
+        float cents = 0.0f, centsTarget = 0.0f;
+        float wanderIn = 0.0f;
+        uint32_t random = 1;
+        bool odd = false;
+        /** How late it is in frames, its throat against the lead's, its place, and how far on it reads. */
+        int32_t delay = 0;
+        float ratio = 1.0f;
+        float panL = 0.70710678f, panR = 0.70710678f;
+        float shift = 0.0f;
+        // The built-in voice's folds.
+        float phase = 1.0f, phaseStep = 0.0f, strength = 1.0f, previousFlow = 0.0f, pulseScale = 1.0f;
+        // A recorded voice's grains.
+        Grain grains[kGrains]{};
+        int32_t grainCount = 0;
+    };
+    Clock clocks[kClocks]{};
+    /** Whether any clock is sounding, so a voice without any runs as it always did. */
+    bool anyClocks = false;
+    /** A chord's other notes, sung as harmony. */
+    uint8_t harmony[kHarmony]{};
+    int32_t harmonyCount = 0;
+    /** The lead's pitch less its note, in semitones: vibrato, wander and scoop, which the others follow. */
+    float wobble = 0.0f;
+    std::vector<float> ringL = std::vector<float>(kRing, 0.0f), ringR = std::vector<float>(kRing, 0.0f);
+    int32_t ringHead = 0;
+    float tiltLowL = 0.0f, tiltLowR = 0.0f;
+    /** Brings the singers together to about one's level. */
+    float together = 1.0f;
+    bool harmonyOn() const { return steppedOf(Harmony) > 0; }
+    void addHarmony(uint8_t n);
+    void dropHarmony(uint8_t n);
+    /** The clocks wanted for the singers and the harmony, and what each copy is like. In [control]. */
+    void assignClocks();
+    /** A clock's pitch before any wobble, in semitones. */
+    float clockPitch(const Clock &c) const;
+    /** A clock's next period, moving its wander on. */
+    float clockPeriod(Clock &c);
+    /** Begins a grain of [r] for [c], at [weight]. */
+    void startGrain(Clock &c, const Reader &r, float weight, float period, float ratio);
+    /** [c]'s grains' next sample. */
+    float nextOf(Clock &c);
 };
 
 } // namespace acidulous::machine

@@ -110,6 +110,7 @@
     <string name="pw_character">character</string>
     <string name="pw_chiff">chiff</string>
     <string name="pw_chip">chip</string>
+    <string name="pw_choir">choir</string>
     <string name="pw_choke">choke</string>
     <string name="pw_chord">Chord</string>
     <string name="pw_chord_4b3a0b">chord</string>
@@ -333,6 +334,7 @@
     <string name="pw_harmon">harmon</string>
     <string name="pw_harmonic">harmonic</string>
     <string name="pw_harmonizer">Harmonizer</string>
+    <string name="pw_harmony">harmony</string>
     <string name="pw_hats">hats</string>
     <string name="pw_head_bump">head bump</string>
     <string name="pw_hi">hi</string>
@@ -737,6 +739,7 @@
     <string name="pw_sine">sine</string>
     <string name="pw_sing">sing</string>
     <string name="pw_singer">singer</string>
+    <string name="pw_singers">singers</string>
     <string name="pw_single">single</string>
     <string name="pw_size">size</string>
     <string name="pw_skew">skew</string>

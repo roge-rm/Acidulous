@@ -454,7 +454,13 @@ Result timeMachine(const std::string &name) {
  * a second. Every note gets words, with clusters and diphthongs, since a
  * recorded voice's consonants cost more than its vowels.
  */
-Result timeDiction(const std::string &label, const std::string &spec, double rate) {
+/**
+ * Diction singing [rate] words a second, legato, in its own voice or the
+ * recorded one [spec], with [knobs] set by name, and with harmony a chord of
+ * [chord] notes held under each.
+ */
+Result timeDiction(const std::string &label, const std::string &spec, double rate,
+                   std::initializer_list<std::pair<const char *, float>> knobs = {}, int32_t chord = 1) {
     using machine::diction::RecordedVoice;
     static const char *kWords[] = {"T W IHC NG", "K AX L", "S T R IY M", "L IHC", "R OWP", "B OWP T",
                                    "HH AW S", "Y UW", "D AWP N", "AY", "W AH N", "DH AX"};
@@ -481,6 +487,10 @@ Result timeDiction(const std::string &label, const std::string &spec, double rat
     }
     std::unique_ptr<Machine> m(MachineRegistry::create("Diction"));
     m->prepare(kSr);
+    for (const auto &k : knobs) {
+        const int32_t i = m->params().indexOf(k.first);
+        if (i >= 0) m->params().set(i, m->params().def(i).unmap(k.second));
+    }
     m->reset();
     m->params().jumpAll();
     if (voice) m->swapObject(0, voice.get());
@@ -496,7 +506,11 @@ Result timeDiction(const std::string &label, const std::string &spec, double rat
             const auto next = static_cast<uint8_t>(45 + (word * 5) % 12);
             m->lyric(phones, n);
             m->noteOn(next, 100);
-            if (pitch != 0) m->noteOff(pitch);
+            if (pitch != 0) {
+                m->noteOff(pitch);
+                for (int32_t c = 1; c < chord; ++c) m->noteOff(static_cast<uint8_t>(pitch - 4 * c));
+            }
+            for (int32_t c = 1; c < chord; ++c) m->noteOn(static_cast<uint8_t>(next - 4 * c), 100);
             pitch = next;
             ++word;
         }
@@ -787,6 +801,15 @@ int main(int argc, char **argv) {
                 std::snprintf(label, sizeof(label), "recorded %.0f/s", rate);
                 rows.push_back(timeDiction(label, spec, rate));
             }
+        }
+        // More singers: a choir, a chord, and a chord of choirs (12 clocks).
+        rows.push_back(timeDiction("built-in 6 singers", "", 4.0, {{"singers", 6.0f}}));
+        rows.push_back(timeDiction("built-in chord of 3", "", 4.0, {{"harmony", 1.0f}}, 3));
+        if (!spec.empty()) {
+            rows.push_back(timeDiction("recorded 6 singers", spec, 4.0, {{"singers", 6.0f}}));
+            rows.push_back(timeDiction("recorded chord of 3", spec, 4.0, {{"harmony", 1.0f}}, 3));
+            rows.push_back(timeDiction("recorded 3 x 3 singers", spec, 4.0, {{"harmony", 1.0f}, {"singers", 3.0f}}, 3));
+            rows.push_back(timeDiction("recorded 4 x 3 singers", spec, 4.0, {{"harmony", 1.0f}, {"singers", 3.0f}}, 4));
         }
         report(rows);
         return 0;

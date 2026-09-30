@@ -18,10 +18,6 @@ import com.rm.acidulous.model.lyrics.Lyrics
 import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.stringResource
 
-/** A singer's notes in the order they're sung. */
-internal fun sungOrder(clip: Clip): List<Int> =
-    clip.notes.indices.sortedWith(compareBy({ clip.notes[it].tick + clip.notes[it].nudge }, { clip.notes[it].pitch }))
-
 /**
  * The words from one note to the end of the clip, as a line: a syllable a
  * note, "hel-lo" for a word over two. Under it, the sounds each note will
@@ -32,15 +28,31 @@ internal fun sungOrder(clip: Clip): List<Int> =
 @Composable
 fun WordsDialog(clip: Clip, from: Int, accent: Accent, onDismiss: () -> Unit, onApply: (List<Note>) -> Unit, only: Set<Int> = emptySet()) {
     val order = remember(clip, from, only) {
-        sungOrder(clip).let { o -> if (only.isNotEmpty()) o.filter { it in only } else o.drop(o.indexOf(from).coerceAtLeast(0)) }
+        // A chord is one place in the line, whichever of its notes was tapped or selected.
+        fun start(i: Int) = clip.notes[i].tick + clip.notes[i].nudge
+        Lyrics.sungOrder(clip.notes).let { o ->
+            if (only.isNotEmpty()) {
+                val chosen = only.filter { it in clip.notes.indices }.map { start(it) }.toSet()
+                o.filter { start(it) in chosen }
+            } else {
+                val at = if (from in clip.notes.indices) start(from) else Int.MIN_VALUE
+                o.filter { start(it) >= at }
+            }
+        }
     }
     var line by remember(clip, from) { mutableStateOf(Lyrics.gather(order.map { clip.notes[it].lyric })) }
 
-    // The notes with the line applied, from which both the readout and the result come.
+    // The notes with the line applied, from which both the readout and the
+    // result come. A chord's other notes sing no words of their own.
     fun applied(): List<Note> {
         val pieces = Lyrics.spread(line.replace('\n', ' '))
         val notes = clip.notes.toMutableList()
         order.forEachIndexed { k, i -> notes[i] = notes[i].copy(lyric = pieces.getOrElse(k) { "" }) }
+        val starts = order.map { clip.notes[it].tick + clip.notes[it].nudge }.toSet()
+        val sung = order.toSet()
+        notes.indices.forEach { i ->
+            if (i !in sung && notes[i].tick + notes[i].nudge in starts) notes[i] = notes[i].copy(lyric = "")
+        }
         return notes
     }
 

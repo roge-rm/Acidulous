@@ -264,6 +264,30 @@ int main() {
         check(highTracked / lowTracked > 1.3f * highPlain / lowPlain, "track moves the throat with the pitch",
               std::to_string(highPlain / lowPlain) + ", then " + std::to_string(highTracked / lowTracked));
 
+        // Harmony: a key with no words while one is sung joins it.
+        {
+            auto hz = [](int n) { return 440.0f * std::exp2((n - 69) / 12.0f); };
+            auto at = [&](const std::vector<float> &x, float from, float to, float f) {
+                std::vector<float> part(x.begin() + static_cast<long>(from * kSr), x.begin() + static_cast<long>(to * kSr));
+                return audition::magnitudeAt(part, 0, f);
+            };
+            auto m = singer({{Diction::Harmony, 1.0f}});
+            const auto x = render(*m, 1.6f, [&](int32_t b) {
+                if (b == 0) { m->noteOn(57, 100); m->noteOn(61, 100); m->noteOn(64, 100); }
+                if (b == static_cast<int32_t>(0.8f * kSr / kBlock)) m->noteOff(61);
+            });
+            const float a = at(x, 0.3f, 0.7f, hz(57)), cs = at(x, 0.3f, 0.7f, hz(61)), e = at(x, 0.3f, 0.7f, hz(64));
+            check(cs > a * 0.3f && e > a * 0.3f, "a chord sings on every note",
+                  std::to_string(a) + ", " + std::to_string(cs) + ", " + std::to_string(e));
+            const float gone = at(x, 1.0f, 1.5f, hz(61)), kept = at(x, 1.0f, 1.5f, hz(64));
+            check(gone < cs * 0.1f && kept > e * 0.5f, "and a note let go stops",
+                  std::to_string(gone / cs) + " of it left, " + std::to_string(kept / e) + " of the other");
+            auto mono = singer({});
+            const auto y = render(*mono, 0.8f, [&](int32_t b) { if (b == 0) { mono->noteOn(57, 100); mono->noteOn(64, 100); } });
+            check(at(y, 0.3f, 0.7f, hz(57)) < at(y, 0.3f, 0.7f, hz(64)) * 0.1f, "without harmony it's one singer",
+                  std::to_string(at(y, 0.3f, 0.7f, hz(57)) / at(y, 0.3f, 0.7f, hz(64))));
+        }
+
         auto r = singer({{Diction::Release, 0.1f}});
         const auto y = render(*r, 1.5f, [&](int32_t b) {
             if (b == 0) r->noteOn(57, 100);
@@ -552,16 +576,68 @@ int main() {
                   std::to_string(sungClear) + " dB, then " + std::to_string(whisperClear));
         }
 
+        // More singers from the one recorded voice.
+        {
+            std::vector<uint8_t> ah{code("AA")};
+            auto hz = [](int n) { return 440.0f * std::exp2((n - 69) / 12.0f); };
+            auto part = [&](const std::vector<float> &x, float from, float to) {
+                return std::vector<float>(x.begin() + static_cast<long>(from * kSr), x.begin() + static_cast<long>(to * kSr));
+            };
+            // A choir: wide, and about as loud as one.
+            auto choir = [&](float singers) {
+                auto m = singer({{Diction::Singers, singers}});
+                m->swapObject(0, &voice);
+                std::vector<float> l, r;
+                float L[kBlock], R[kBlock];
+                for (int32_t b = 0; b < static_cast<int32_t>(kSr / kBlock); ++b) {
+                    if (b == 0) { m->lyric(ah.data(), 1); m->noteOn(45, 100); }
+                    std::fill(L, L + kBlock, 0.0f);
+                    std::fill(R, R + kBlock, 0.0f);
+                    m->render(L, R, kBlock);
+                    l.insert(l.end(), L, L + kBlock);
+                    r.insert(r.end(), R, R + kBlock);
+                }
+                m->swapObject(0, nullptr);
+                double side = 0.0, mid = 0.0;
+                for (size_t i = static_cast<size_t>(0.3f * kSr); i < l.size(); ++i) {
+                    side += (l[i] - r[i]) * (l[i] - r[i]);
+                    mid += (l[i] + r[i]) * (l[i] + r[i]);
+                }
+                return std::make_pair(static_cast<float>(10.0 * std::log10(side / mid + 1e-12)), static_cast<float>(10.0 * std::log10(mid)));
+            };
+            const auto one = choir(1.0f), four = choir(4.0f);
+            check(one.first < -60.0f && four.first > -25.0f, "a choir spreads across the stereo",
+                  std::to_string(one.first) + " dB side, then " + std::to_string(four.first));
+            check(std::fabs(four.second - one.second) < 4.0f, "and is about as loud as one singer",
+                  std::to_string(four.second - one.second) + " dB");
+            // Harmony, the key with the words coming after the one without,
+            // against the same keys sung by one singer.
+            auto sungWith = [&](float harmony) {
+                auto m = singer({{Diction::Harmony, harmony}});
+                m->swapObject(0, &voice);
+                const auto x = render(*m, 1.0f, [&](int32_t b) {
+                    if (b == 0) { m->noteOn(52, 100); m->lyric(ah.data(), 1); m->noteOn(45, 100); }
+                });
+                m->swapObject(0, nullptr);
+                const auto held = part(x, 0.4f, 0.9f);
+                return std::make_pair(audition::magnitudeAt(held, 0, hz(45)), audition::magnitudeAt(held, 0, hz(52)));
+            };
+            const auto both = sungWith(1.0f), alone = sungWith(0.0f);
+            check(both.second > alone.second * 4.0f && both.first > alone.first * 0.3f, "a recorded voice sings a chord",
+                  std::to_string(both.first) + " and " + std::to_string(both.second) + "; one singer " +
+                      std::to_string(alone.first) + " and " + std::to_string(alone.second));
+        }
+
         // The same words twice, with a reset between, come out the same,
         // with everything that keeps state of its own on so it's reset too.
         auto m = singer({{Diction::Clean, 1.0f}, {Diction::Whisper, 0.5f}, {Diction::Rasp, 0.5f}, {Diction::Growl, 0.5f},
-                         {Diction::Effort, 0.5f}});
+                         {Diction::Effort, 0.5f}, {Diction::Singers, 3.0f}, {Diction::Harmony, 1.0f}});
         m->swapObject(0, &voice);
         std::vector<uint8_t> la{code("L"), code("AA")};
         auto phrase = [&]() {
             return render(*m, 0.8f, [&](int32_t b) {
-                if (b == 0) { m->lyric(la.data(), 2); m->noteOn(50, 100); }
-                if (b == 300) m->noteOff(50);
+                if (b == 0) { m->lyric(la.data(), 2); m->noteOn(50, 100); m->noteOn(54, 100); }
+                if (b == 300) { m->noteOff(50); m->noteOff(54); }
             });
         };
         const auto first = phrase();

@@ -28,12 +28,33 @@ object Lyrics {
         ).toSet()
 
     /**
+     * The notes a singer sings words on, in the order they're sung: one a
+     * start, since a chord sings one syllable, the rest of it harmony. The top
+     * note, where a tune usually is; with [byWords], the top one that has
+     * words, if any does.
+     */
+    fun sungOrder(notes: List<Note>, byWords: Boolean = false): List<Int> {
+        val sorted = notes.indices.sortedWith(compareBy({ notes[it].tick + notes[it].nudge }, { -notes[it].pitch }))
+        val out = ArrayList<Int>()
+        var i = 0
+        while (i < sorted.size) {
+            val start = notes[sorted[i]].tick + notes[sorted[i]].nudge
+            var j = i
+            while (j < sorted.size && notes[sorted[j]].tick + notes[sorted[j]].nudge == start) j++
+            val chord = sorted.subList(i, j)
+            out += if (byWords) chord.firstOrNull { notes[it].lyric.isNotBlank() } ?: chord[0] else chord[0]
+            i = j
+        }
+        return out
+    }
+
+    /**
      * Each note's sounds, in [notes]' order, as the engine's phone names split
      * by spaces ("" for a note with no words). Null when no note has words.
      */
     fun forNotes(notes: List<Note>, accent: Accent, dictionary: Dictionary?): List<String>? {
         if (notes.none { it.lyric.isNotBlank() }) return null
-        val order = notes.indices.sortedWith(compareBy({ notes[it].tick + notes[it].nudge }, { notes[it].pitch }))
+        val order = sungOrder(notes, byWords = true)
         val sounds = Array(notes.size) { mutableListOf<String>() }
 
         // A word being built across notes: its text so far and which note

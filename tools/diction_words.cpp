@@ -7,7 +7,7 @@
 // sends it: "V|PHONE|path|holdFrom|holdTo" a held vowel, "C|PHONE|VOWEL|path|
 // from|to" a consonant. The sounds are what the dictionary and the accent
 // would give: "|" between notes, "~" at the end of a note joins it to the
-// next.
+// next. A chord is "60+64+67": the first note has the words.
 #include <engine/format/WavWriter.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/diction/Diction.h>
@@ -69,6 +69,8 @@ const Phrase kPhrases[] = {
 
 struct Note {
     int32_t pitch;
+    /** A chord's other notes, "60+64+67": keys with no words, for harmony. */
+    std::vector<int32_t> chord;
     float beats;
     std::vector<uint8_t> phones;
     bool tied;
@@ -86,7 +88,10 @@ std::vector<Note> parse(const char *text) {
         if (one.empty()) continue;
         Note n{};
         const size_t c1 = one.find(':'), c2 = one.find(':', c1 + 1);
-        n.pitch = std::atoi(one.substr(0, c1).c_str());
+        const std::string pitches = one.substr(0, c1);
+        n.pitch = std::atoi(pitches.c_str());
+        for (size_t plus = pitches.find('+'); plus != std::string::npos; plus = pitches.find('+', plus + 1))
+            n.chord.push_back(std::atoi(pitches.c_str() + plus + 1));
         n.beats = std::strtof(one.substr(c1 + 1, c2 - c1 - 1).c_str(), nullptr);
         std::string sounds = one.substr(c2 + 1);
         if (!sounds.empty() && sounds.back() == '~') {
@@ -198,10 +203,14 @@ int main(int argc, char **argv) {
                 if (on[i] == b) {
                     m->lyric(notes[i].phones.data(), static_cast<int32_t>(notes[i].phones.size()));
                     m->noteOn(static_cast<uint8_t>(notes[i].pitch), 100);
+                    for (int32_t p : notes[i].chord) m->noteOn(static_cast<uint8_t>(p), 100);
                 }
             }
             for (size_t i = 0; i < notes.size(); ++i) {
-                if (off[i] == b) m->noteOff(static_cast<uint8_t>(notes[i].pitch));
+                if (off[i] == b) {
+                    m->noteOff(static_cast<uint8_t>(notes[i].pitch));
+                    for (int32_t p : notes[i].chord) m->noteOff(static_cast<uint8_t>(p));
+                }
             }
             std::fill(L, L + kBlock, 0.0f);
             std::fill(R, R + kBlock, 0.0f);

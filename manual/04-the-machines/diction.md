@@ -4,7 +4,8 @@
 
 Diction sings. It's one singer, so it plays one note at a time, and it
 slides from note to note while you hold them. Give its notes words and it
-sings them. A note without words sings the **vowel** knob's vowel.
+sings them. A note without words sings the **vowel** knob's vowel. Turn on
+**harmony** and it sings chords, and **singers** makes it a choir.
 
 ## Words
 
@@ -27,6 +28,9 @@ note shows its syllable on the roll too.
 
 Consonants come before the vowel at the start of a note, and the ones after it
 when the note ends.
+
+A chord gets one syllable, on its top note. With **harmony** on, the rest of
+the chord sings it too.
 
 ## The voice
 
@@ -66,6 +70,11 @@ when the note ends.
 - **rasp** - a rough voice.
 - **growl** - a pulse skipped every other time: a crackle at first, a growl
   an octave down at the top.
+- **singers** - how many sing: one, or a choir of up to six.
+- **spread** - how unlike each other the singers are. Up, they're later, more
+  out of tune, with throats of their own, and wider apart.
+- **harmony** - off, or a chord sings the words on every note. Hold a note
+  while you play others and they join it; let one go and it stops.
 
 ## Expression
 

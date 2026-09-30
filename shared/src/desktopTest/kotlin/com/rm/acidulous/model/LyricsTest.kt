@@ -21,6 +21,26 @@ class LyricsTest {
             accent, dictionary)
 
     @Test
+    fun aChordSingsOneSyllableOnItsTopNote() {
+        // "hel-" on a chord of three, "lo" on one note: the word carries across
+        // the chord, and its other notes sing nothing of their own.
+        val notes = listOf(
+            Note(tick = 0, length = 96, pitch = 60, velocity = 100),
+            Note(tick = 0, length = 96, pitch = 67, velocity = 100, lyric = "hel-"),
+            Note(tick = 0, length = 96, pitch = 64, velocity = 100),
+            Note(tick = 96, length = 96, pitch = 65, velocity = 100, lyric = "lo"),
+        )
+        assertEquals(listOf(1, 3), Lyrics.sungOrder(notes))
+        val sounds = Lyrics.forNotes(notes, Accent.Prairie, dictionary)!!
+        assertEquals("", sounds[0])
+        assertEquals("", sounds[2])
+        assertEquals(say("hello", Accent.Prairie), (sounds[1] + " " + sounds[3]).trim())
+        // Words already on a lower note are still sung.
+        val lower = notes.mapIndexed { i, n -> if (i == 0) n.copy(lyric = "hel-") else if (i == 1) n.copy(lyric = "") else n }
+        assertEquals(listOf(0, 3), Lyrics.sungOrder(lower, byWords = true))
+    }
+
+    @Test
     fun theDictionaryIsSearched() {
         assertTrue(dictionary.size > 100_000)
         assertEquals(listOf("AH0", "B", "AW1", "T"), dictionary.lookup("about"))

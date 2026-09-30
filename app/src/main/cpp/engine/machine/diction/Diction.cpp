@@ -153,6 +153,13 @@ const ParamDef *Diction::paramDefs(int32_t &count) const {
         // The throat moving with the pitch: all the way up, played up an
         // octave it's a throat half the size; below zero, the other way.
         {"track", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+
+        // How many sing, and how unlike each other: late, off pitch, a
+        // throat of their own and spread across the stereo.
+        {"singers", 1.0f, 6.0f, 1.0f, Curve::Stepped, 6, ""},
+        {"spread", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        // Off, or a chord sings the words on every note.
+        {"harmony", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
     };
     count = Count;
     return defs;
@@ -184,22 +191,109 @@ float ringAt(const std::vector<float> &line, int32_t head, float back, int32_t s
 
 } // namespace
 
-float Diction::pulseCharacter(float &period) {
+float Diction::pulseCharacter(float &period, bool &odd, uint32_t &random) {
     const float rasp = clampf(paramOf(Rasp), 0.0f, 1.0f);
     const float growl = clampf(paramOf(Growl), 0.0f, 1.0f);
     float gain = 1.0f;
     if (rasp > 0.0f) {
-        period *= 1.0f + 0.06f * rasp * bipolar(pulseSeed);
-        gain *= 1.0f + 0.4f * rasp * bipolar(pulseSeed);
+        period *= 1.0f + 0.06f * rasp * bipolar(random);
+        gain *= 1.0f + 0.4f * rasp * bipolar(random);
     }
     if (growl > 0.0f) {
         // A pair of pulses, the second weaker and later, the first as much
         // earlier, so the pitch is still the note.
-        oddPulse = !oddPulse;
-        if (oddPulse) gain *= 1.0f - 0.85f * growl;
-        period *= 1.0f + (oddPulse ? 0.12f : -0.12f) * growl;
+        odd = !odd;
+        if (odd) gain *= 1.0f - 0.85f * growl;
+        period *= 1.0f + (odd ? 0.12f : -0.12f) * growl;
     }
     return gain;
+}
+
+void Diction::addHarmony(uint8_t n) {
+    for (int32_t i = 0; i < harmonyCount; ++i) if (harmony[i] == n) return;
+    if (harmonyCount < kHarmony) harmony[harmonyCount++] = n;
+}
+
+void Diction::dropHarmony(uint8_t n) {
+    int32_t kept = 0;
+    for (int32_t i = 0; i < harmonyCount; ++i) if (harmony[i] != n) harmony[kept++] = harmony[i];
+    harmonyCount = kept;
+}
+
+void Diction::assignClocks() {
+    const int32_t singers = std::clamp(steppedOf(Singers), 1, 6);
+    // The clocks wanted: the lead's copies, then each harmony note and its copies.
+    struct Want { uint8_t note; int32_t copy; };
+    Want want[kClocks];
+    int32_t wanted = 0;
+    for (int32_t k = 1; k < singers && wanted < kClocks; ++k) want[wanted++] = {0, k};
+    if (harmonyOn()) {
+        for (int32_t h = 0; h < harmonyCount; ++h) {
+            for (int32_t k = 0; k < singers && wanted < kClocks; ++k) want[wanted++] = {harmony[h], k};
+        }
+    }
+    bool have[kClocks]{};
+    for (Clock &c : clocks) {
+        if (!c.on && c.gain <= 0.0f) continue;
+        c.on = false;
+        for (int32_t w = 0; w < wanted; ++w) {
+            if (!have[w] && want[w].note == c.note && want[w].copy == c.copy) { c.on = have[w] = true; break; }
+        }
+    }
+    for (int32_t w = 0; w < wanted; ++w) {
+        if (have[w]) continue;
+        for (Clock &c : clocks) {
+            if (c.on || c.gain > 0.0f) continue;
+            c = Clock{};
+            c.on = true;
+            c.note = want[w].note;
+            c.copy = want[w].copy;
+            c.random = 0x9e3779b9u * static_cast<uint32_t>(c.copy + 1) + 0x7f4a7c15u * c.note + 1u;
+            break;
+        }
+    }
+    // What each copy is like, from its number, so it's the same copy whenever it's there.
+    const float spread = clampf(paramOf(Spread), 0.0f, 1.0f);
+    const bool had = anyClocks;
+    anyClocks = false;
+    for (Clock &c : clocks) {
+        if (!c.on && c.gain <= 0.0f) continue;
+        anyClocks = true;
+        if (c.copy == 0) continue;
+        uint32_t h = 0x2545f491u * static_cast<uint32_t>(c.copy) + 0x51ee7u;
+        auto unit = [&h]() { return 0.5f * (bipolar(h) + 1.0f); };
+        c.delay = static_cast<int32_t>(spread * (0.006f + 0.028f * unit()) * sampleRate);
+        c.ratio = std::exp2(spread * bipolar(h) * 1.5f / 12.0f);
+        const float side = (c.copy % 2 == 1 ? -1.0f : 1.0f) * spread * (0.35f + 0.65f * unit());
+        c.panL = std::cos((side + 1.0f) * 0.25f * dsp::kPi);
+        c.panR = std::sin((side + 1.0f) * 0.25f * dsp::kPi);
+        c.shift = spread * (0.05f + 0.2f * unit()) * sampleRate;
+    }
+    // The last singer gone quiet: nothing left in the ring for the next ones.
+    if (had && !anyClocks) {
+        std::fill(ringL.begin(), ringL.end(), 0.0f);
+        std::fill(ringR.begin(), ringR.end(), 0.0f);
+        together = 1.0f;
+    }
+}
+
+float Diction::clockPitch(const Clock &c) const {
+    if (c.note == 0) return pitch;
+    return static_cast<float>(c.note) + static_cast<float>(steppedOf(Transpose)) + 12.0f * static_cast<float>(steppedOf(Octave)) + bend;
+}
+
+float Diction::clockPeriod(Clock &c) {
+    const float period = clampf(sampleRate / noteHz(clockPitch(c) + wobble + c.cents * 0.01f), 8.0f, 2000.0f);
+    // A copy wanders off the pitch on its own, up to 18 cents at full spread.
+    if (c.copy > 0) {
+        c.cents += (c.centsTarget - c.cents) * (1.0f - std::exp(-period / (0.3f * sampleRate)));
+        c.wanderIn -= period;
+        if (c.wanderIn <= 0.0f) {
+            c.centsTarget = bipolar(c.random) * 18.0f * clampf(paramOf(Spread), 0.0f, 1.0f);
+            c.wanderIn = sampleRate * (0.3f + 0.25f * (bipolar(c.random) + 1.0f));
+        }
+    }
+    return period;
 }
 
 void Diction::reset() {
@@ -226,6 +320,15 @@ void Diction::reset() {
     oddPulse = false;
     tiltLow = 0.0f;
     loudIn = loudOut = 0.0f;
+    for (Clock &c : clocks) c = Clock{};
+    anyClocks = false;
+    harmonyCount = 0;
+    wobble = 0.0f;
+    std::fill(ringL.begin(), ringL.end(), 0.0f);
+    std::fill(ringR.begin(), ringR.end(), 0.0f);
+    ringHead = 0;
+    tiltLowL = tiltLowR = 0.0f;
+    together = 1.0f;
     std::fill(rawLine.begin(), rawLine.end(), 0.0f);
     phase = 1.0f;
     phaseStep = 0.0f;
@@ -278,6 +381,9 @@ void *Diction::swapObject(int32_t slot, void *object) {
     }
     fade = 1.0f;
     std::fill(acc.begin(), acc.end(), 0.0f);
+    for (Clock &c : clocks) c.grainCount = 0;
+    std::fill(ringL.begin(), ringL.end(), 0.0f);
+    std::fill(ringR.begin(), ringR.end(), 0.0f);
     void *old = const_cast<RecordedVoice *>(voice);
     voice = static_cast<const RecordedVoice *>(object);
     return old;
@@ -376,17 +482,17 @@ const audio::Epoch *Diction::epochOf(const Reader &r) {
     return idx < 0 ? nullptr : &r.sound->epochs[static_cast<size_t>(idx)];
 }
 
-void Diction::layGrain(const Reader &r, float weight, float period, float ratio) {
-    if (r.sound == nullptr) return;
+bool Diction::shapeGrain(const Reader &r, float pos, float weight, float period, float ratio, GrainShape &g) const {
+    if (r.sound == nullptr) return false;
     const audio::Utterance &u = *r.sound;
-    const int32_t idx = u.epochAt(r.pos);
-    if (idx < 0) return;
+    const int32_t idx = u.epochAt(pos);
+    if (idx < 0) return false;
     const audio::Epoch &e = u.epochs[static_cast<size_t>(idx)];
     // Half a grain is the source's period, so a grain holds one glottal
     // pulse, read faster or slower to move the formants.
     const float half = clampf(e.period, 2.0f, 2000.0f);
     const auto n = static_cast<int32_t>(2.0f * half / ratio);
-    if (n < 2 || n >= kAccum) return;
+    if (n < 2 || n >= kAccum) return false;
     // Laid closer than half overlap as the pitch rises, the windows sum to
     // more, but the pulses they hold don't line up, so they don't add up in
     // full: the square root of the windows' correction keeps a scale on one
@@ -401,11 +507,26 @@ void Diction::layGrain(const Reader &r, float weight, float period, float ratio)
                                       clampf((static_cast<float>(r.quietTo) + ramp - at) / ramp, 0.0f, 1.0f));
         gain *= 1.0f + (r.quiet - 1.0f) * inside;
     }
-    const float *window = hannTable();
-    const float wStep = static_cast<float>(kWindowSize - 1) / static_cast<float>(n - 1);
     const int32_t frames = u.frames;
     const float span = static_cast<float>(n - 1) * ratio;
-    const float from = clampf(static_cast<float>(e.at) - half, 0.0f, std::max(0.0f, static_cast<float>(frames - 2) - span));
+    g.idx = idx;
+    g.half = half;
+    g.n = n;
+    g.gain = gain;
+    g.wStep = static_cast<float>(kWindowSize - 1) / static_cast<float>(n - 1);
+    g.span = span;
+    g.from = clampf(static_cast<float>(e.at) - half, 0.0f, std::max(0.0f, static_cast<float>(frames - 2) - span));
+    return true;
+}
+
+void Diction::layGrain(const Reader &r, float weight, float period, float ratio) {
+    GrainShape g;
+    if (!shapeGrain(r, r.pos, weight, period, ratio, g)) return;
+    const audio::Utterance &u = *r.sound;
+    const audio::Epoch &e = u.epochs[static_cast<size_t>(g.idx)];
+    const float half = g.half, gain = g.gain, wStep = g.wStep, span = g.span, from = g.from;
+    const int32_t n = g.n, idx = g.idx, frames = u.frames;
+    const float *window = hannTable();
 
     // The singer's breath. Each pulse is blended with the one either side,
     // lined up on their own pitch marks: the voice repeats from pulse to
@@ -445,6 +566,56 @@ void Diction::layGrain(const Reader &r, float weight, float period, float ratio)
         }
         acc[static_cast<size_t>((accHead + k) & (kAccum - 1))] += x * window[static_cast<int32_t>(static_cast<float>(k) * wStep)] * gain;
     }
+}
+
+void Diction::startGrain(Clock &c, const Reader &r, float weight, float period, float ratio) {
+    // Another singer reads a held vowel a little further on, back and forth
+    // inside it as the reader goes, so its pulse is its own.
+    float pos = r.pos;
+    if (c.shift != 0.0f && r.held && r.to - 1 > r.from) {
+        const auto len = static_cast<float>(r.to - 1 - r.from);
+        float q = std::fmod(pos - static_cast<float>(r.from) + c.shift, 2.0f * len);
+        if (q > len) q = 2.0f * len - q;
+        pos = static_cast<float>(r.from) + q;
+    }
+    GrainShape g;
+    if (!shapeGrain(r, pos, weight, period, ratio, g)) return;
+    // Full, the oldest goes: it's the one nearly finished.
+    if (c.grainCount == kGrains) {
+        for (int32_t j = 1; j < kGrains; ++j) c.grains[j - 1] = c.grains[j];
+        --c.grainCount;
+    }
+    Grain &out = c.grains[c.grainCount++];
+    out.sound = r.sound;
+    out.from = g.from;
+    out.ratio = ratio;
+    out.k = 0;
+    out.n = g.n;
+    out.wStep = g.wStep;
+    out.gain = g.gain;
+}
+
+float Diction::nextOf(Clock &c) {
+    // One sample of each of its grains, so a singer's work is spread over
+    // its period rather than done a grain at a time: laid whole, a dozen
+    // singers' grains landing in one block took four times the average.
+    const float *window = hannTable();
+    float v = 0.0f;
+    for (int32_t j = 0; j < c.grainCount;) {
+        Grain &g = c.grains[j];
+        const float sp = g.from + static_cast<float>(g.k) * g.ratio;
+        const auto i0 = static_cast<int32_t>(sp);
+        if (g.k >= g.n || i0 + 1 >= g.sound->frames) {
+            g = c.grains[--c.grainCount];
+            continue;
+        }
+        const float frac = sp - static_cast<float>(i0);
+        const float x = g.sound->mono[static_cast<size_t>(i0)] * (1.0f - frac) + g.sound->mono[static_cast<size_t>(i0 + 1)] * frac;
+        v += x * window[static_cast<int32_t>(static_cast<float>(g.k) * g.wStep)] * g.gain;
+        ++g.k;
+        ++j;
+    }
+    return v;
 }
 
 // --- words into steps ---------------------------------------------------------
@@ -856,6 +1027,7 @@ void Diction::currentTargets(float f[3]) const {
 
 void Diction::control() {
     const float dt = static_cast<float>(kControl) / sampleRate;
+    if (anyClocks || steppedOf(Singers) > 1 || harmonyCount > 0) assignClocks();
     if (stepCount == 0) return;
 
     // --- through the words ----------------------------------------------------
@@ -1093,12 +1265,20 @@ void Diction::startNote(uint8_t n, uint8_t vel, bool legato) {
 }
 
 void Diction::startPlanned(uint8_t n, uint8_t vel, bool legato, const Step *planned, int32_t count) {
+    // With harmony, a new word while a key is still down leaves that key
+    // singing as harmony: a chord, not a move from one note to the next.
+    bool chord = false;
+    if (harmonyOn() && sounding && gate && n != note) {
+        for (int32_t i = 0; i < heldCount; ++i) chord |= held[i] == note;
+        if (chord) addHarmony(note);
+    }
+    dropHarmony(n);
     note = n;
     sinceOnset = 0.0f;
     // From a note still sounding, the pitch glides over from where it is.
     // From silence there's nothing to glide from.
     glideFrom = pitch;
-    glideDone = sounding && targetOf(Glide) > 0.0005f ? 0.0f : 1.0f;
+    glideDone = sounding && !chord && targetOf(Glide) > 0.0005f ? 0.0f : 1.0f;
 
     if (legato) {
         // Joined to the note before: the glide carries the pitch across and
@@ -1157,6 +1337,12 @@ void Diction::noteOn(uint8_t n, uint8_t vel) {
         --heldCount;
     }
     held[heldCount++] = n;
+    // With harmony, a key with no words of its own while something's sung
+    // joins it: the chord sings the words on every note.
+    if (harmonyOn() && pendingCount == 0 && ((sounding && gate) || earlyCount > 0) && n != note) {
+        addHarmony(n);
+        return;
+    }
     startNote(n, vel, gate);
 }
 
@@ -1164,14 +1350,18 @@ void Diction::noteOff(uint8_t n) {
     int32_t kept = 0;
     for (int32_t i = 0; i < heldCount; ++i) if (held[i] != n) held[kept++] = held[i];
     heldCount = kept;
+    for (int32_t i = 0; i < harmonyCount; ++i) {
+        if (harmony[i] == n) { dropHarmony(n); return; }
+    }
     // A note begun early can't end before it's begun: until it has, this is
     // an older note letting go under the new word.
     if (earlyCount > 0) return;
     if (!gate || n != note) return;
     if (heldCount > 0) {
         // Back to the last key still down, as a singer would, still on the
-        // same word.
+        // same word. With harmony, that key's own singer takes the lead.
         note = held[heldCount - 1];
+        dropHarmony(note);
         glideFrom = pitch;
         glideDone = targetOf(Glide) > 0.0005f ? 0.0f : 1.0f;
     } else {
@@ -1184,6 +1374,7 @@ void Diction::noteOff(uint8_t n) {
 }
 
 void Diction::allNotesOff() {
+    harmonyCount = 0;
     aheadCount = 0;
     earlyCount = 0;
     pitchIn = 0;
@@ -1231,6 +1422,7 @@ float Diction::nextPeriod() {
     // Ten cents of wander at most: enough to sound held by a person, and
     // still in tune.
     const float sung = pitch + vibrato + wander * paramOf(Drift) * 0.1f + scoop;
+    wobble = sung - pitch;
     const float period = clampf(sampleRate / noteHz(sung), 8.0f, 2000.0f);
 
     // Move the slow things on by one period.
@@ -1274,11 +1466,19 @@ bool Diction::render(float *L, float *R, int32_t frames) {
     // Effort: above about 1 kHz up to 9 dB up or down.
     const float effortTop = std::exp2(1.5f * clampf(paramOf(Effort), -1.0f, 1.0f));
     const float tiltCoef = 1.0f - std::exp(-kTwoPi * 1000.0f / sampleRate);
-    auto tilt = [&](float x) {
+    auto tiltWith = [&](float x, float &low) {
         // Level, it passes as it is: low + (x - low) doesn't round back to x.
-        if (effortTop == 1.0f) return tiltLow = x;
-        tiltLow += tiltCoef * (x - tiltLow);
-        return tiltLow + (x - tiltLow) * effortTop;
+        if (effortTop == 1.0f) return low = x;
+        low += tiltCoef * (x - low);
+        return low + (x - low) * effortTop;
+    };
+    auto tilt = [&](float x) { return tiltWith(x, tiltLow); };
+    const float clockStep = 1.0f / (0.03f * sampleRate);
+    const float togetherStep = 1.0f - std::exp(-1.0f / (0.02f * sampleRate));
+    // Each clock on its way in or out; what they come to together.
+    auto moveClock = [&](Clock &c, float &total) {
+        c.gain = clampf(c.gain + (c.on ? clockStep : -clockStep), 0.0f, 1.0f);
+        total += c.gain;
     };
 
     for (int32_t i = 0; i < frames; ++i) {
@@ -1308,6 +1508,39 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 grainHeld = lead.held && (e == nullptr || e->voiced);
             }
             untilGrain -= 1.0f;
+            if (anyClocks) {
+                // The other singers, from the same readers into the stereo
+                // ring, each where it's late to. Quiet through an S: one
+                // hiss, not a crowd's. Whispering, they fall silent.
+                const Reader &lead = fade >= 0.5f || fading.sound == nullptr ? reading : fading;
+                const audio::Epoch *e = nullptr;
+                bool looked = false;
+                float total = 0.0f;
+                for (Clock &c : clocks) {
+                    if (!c.on && c.gain <= 0.0f) continue;
+                    moveClock(c, total);
+                    if (c.untilGrain <= 0.0f) {
+                        float period = clockPeriod(c);
+                        const float character = pulseCharacter(period, c.odd, c.random);
+                        if (!looked) { e = epochOf(lead); looked = true; }
+                        if (e == nullptr || e->voiced) {
+                            float ratio = std::exp2(paramOf(Formant) / 12.0f) * c.ratio;
+                            if (lead.sound != nullptr && lead.sound->rootHz > 0.0f) ratio *= tracked(lead.sound->rootHz);
+                            const float w = c.gain * character * (1.0f - whisper);
+                            if (fade < 1.0f) startGrain(c, fading, (1.0f - fade) * w, period, ratio);
+                            startGrain(c, reading, fade * w, period, ratio);
+                        }
+                        c.untilGrain += period;
+                    }
+                    c.untilGrain -= 1.0f;
+                    // Into the ring where it's late to, in its own place.
+                    const float v = nextOf(c);
+                    const auto at = static_cast<size_t>((ringHead + c.delay) & (kRing - 1));
+                    ringL[at] += v * c.panL;
+                    ringR[at] += v * c.panR;
+                }
+                together += (1.0f / std::sqrt(1.0f + total) - together) * togetherStep;
+            }
             recorded = acc[static_cast<size_t>(accHead)];
             acc[static_cast<size_t>(accHead)] = 0.0f;
             // Whisper: what doesn't repeat from pulse to pulse, the voice
@@ -1365,7 +1598,30 @@ bool Diction::render(float *L, float *R, int32_t frames) {
             previousFlow = g;
             // A little breath while the folds are open.
             if (phase < 0.56f) glottal += 0.004f * bipolar(noiseSeed);
-            glottal = tilt(glottal * pulseScale);
+            if (anyClocks) {
+                // The other singers: more folds into the one throat.
+                float others = 0.0f, total = 0.0f;
+                for (Clock &c : clocks) {
+                    if (!c.on && c.gain <= 0.0f) continue;
+                    moveClock(c, total);
+                    if (c.phase >= 1.0f) {
+                        c.phase -= 1.0f;
+                        float period = clockPeriod(c);
+                        const float character = pulseCharacter(period, c.odd, c.random);
+                        c.phaseStep = 1.0f / period;
+                        c.strength = (1.0f + 0.03f * bipolar(c.random)) * character;
+                        c.pulseScale = period / referencePeriod;
+                    }
+                    const float f = throat.flow(c.phase) * c.strength;
+                    others += (f - c.previousFlow) * c.pulseScale * c.gain * (1.0f - whisper);
+                    c.previousFlow = f;
+                    c.phase += c.phaseStep;
+                }
+                together += (1.0f / std::sqrt(1.0f + total) - together) * togetherStep;
+                glottal = tilt((glottal * pulseScale + others) * together);
+            } else {
+                glottal = tilt(glottal * pulseScale);
+            }
             phase += phaseStep;
         }
 
@@ -1391,8 +1647,21 @@ bool Diction::render(float *L, float *R, int32_t frames) {
 
         const float env = amp.next();
         const float out = sung * env * velocity * (1.0f + pressure * 0.3f) * volume;
-        L[i] += out * panL;
-        R[i] += out * panR;
+        if (anyClocks && voice != nullptr) {
+            // The recorded voice's other singers, out of their ring, at the
+            // lead's level, and all of them brought to about one's. Each is
+            // panned on its own, then the lot by the pan (1 at the centre).
+            const float otherL = tiltWith(ringL[static_cast<size_t>(ringHead)], tiltLowL);
+            const float otherR = tiltWith(ringR[static_cast<size_t>(ringHead)], tiltLowR);
+            ringL[static_cast<size_t>(ringHead)] = ringR[static_cast<size_t>(ringHead)] = 0.0f;
+            ringHead = (ringHead + 1) & (kRing - 1);
+            const float level = voiced * env * velocity * (1.0f + pressure * 0.3f) * volume * together * 1.41421356f;
+            L[i] += out * together * panL + otherL * level * panL;
+            R[i] += out * together * panR + otherR * level * panR;
+        } else {
+            L[i] += out * panL;
+            R[i] += out * panR;
+        }
         if (!amp.active()) {
             // Done: sleep until the next note, with nothing left ringing.
             sounding = false;
@@ -1403,6 +1672,12 @@ bool Diction::render(float *L, float *R, int32_t frames) {
             std::fill(acc.begin(), acc.end(), 0.0f);
             std::fill(combLine.begin(), combLine.end(), 0.0f);
             comb = 0.0f;
+            for (Clock &c : clocks) c = Clock{};
+            anyClocks = false;
+            harmonyCount = 0;
+            std::fill(ringL.begin(), ringL.end(), 0.0f);
+            std::fill(ringR.begin(), ringR.end(), 0.0f);
+            together = 1.0f;
             untilGrain = 0.0f;
             break;
         }

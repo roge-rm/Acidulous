@@ -214,7 +214,8 @@ object MidiFile {
             words.count { (tick, _) -> starts.any { kotlin.math.abs(it - tick) <= WORD_SLACK } }
         }
         if (sung != null) {
-            val notes = parts.getValue(sung).sortedWith(compareBy({ it.tick }, { it.pitch })).toMutableList()
+            // A chord's syllable on its top note, as the editor puts it.
+            val notes = parts.getValue(sung).sortedWith(compareBy({ it.tick }, { -it.pitch })).toMutableList()
             var from = 0
             for ((tick, syllable) in words) {
                 val k = (from until notes.size).firstOrNull { kotlin.math.abs(notes[it].tick - tick) <= WORD_SLACK } ?: continue
