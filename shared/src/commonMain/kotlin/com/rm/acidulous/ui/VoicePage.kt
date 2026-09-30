@@ -219,6 +219,7 @@ internal fun VoicePage(
             VoiceBank.save(dir, next)
             bank = next
         }
+        com.rm.acidulous.engine.EngineSync.voicesChanged()
     }
 
     // A take is the voice as it is: the mic raw, and without the effects the
@@ -302,6 +303,7 @@ internal fun VoicePage(
                 VoiceBank.save(dir, next)
                 bank = next
                 banks = VoiceBank.all(root)
+                com.rm.acidulous.engine.EngineSync.voicesChanged()
                 singing = Singing.No
                 // On to the next one not done, after this one. A take that has
                 // to be sung again stays, saying why.

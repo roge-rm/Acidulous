@@ -73,6 +73,7 @@
     <string name="machine_no_take">no take</string>
     <string name="machine_no_loop">no loop</string>
     <string name="machine_no_file">no file</string>
+    <string name="diction_builtin">built-in</string>
     <string name="machine_import">import…</string>
     <string name="machine_samples">samples…</string>
     <string name="machine_record">record…</string>

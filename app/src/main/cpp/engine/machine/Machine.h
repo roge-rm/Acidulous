@@ -50,6 +50,15 @@ class Machine {
      * singer listens.
      */
     virtual void lyric(const uint8_t * /*phones*/, int32_t /*count*/) {}
+    /**
+     * A singer starts a word's consonants before its note, so the vowel lands
+     * on it. A machine that does says so here, and is then told of a clip
+     * note's words ahead of time with [wordsAhead]: the note, and how many
+     * frames until it's due. Its lyric() and note-on still come on time.
+     */
+    virtual bool wantsWordsAhead() const { return false; }
+    virtual void wordsAhead(const uint8_t * /*phones*/, int32_t /*count*/, uint8_t /*note*/, uint8_t /*velocity*/,
+                            int32_t /*inFrames*/) {}
     virtual void noteOn(uint8_t note, uint8_t velocity) = 0;
     virtual void noteOff(uint8_t note) = 0;
     virtual void allNotesOff() = 0;

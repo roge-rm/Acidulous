@@ -8,7 +8,10 @@
 #include <engine/core/Utterance.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/diction/Diction.h>
+#include <engine/format/WavWriter.h>
+#include <engine/machine/diction/Cutter.h>
 #include <engine/machine/diction/Phones.h>
+#include <engine/machine/diction/RecordedVoice.h>
 #include <sequencer/ClipPlayer.h>
 
 #include "audition_measure.h"
@@ -16,6 +19,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
 #include <memory>
 #include <vector>
 
@@ -265,6 +271,186 @@ int main() {
         }, [&](const uint8_t *ph, int32_t count) { events.push_back("words " + std::to_string(count) + " " + std::to_string(ph[0])); });
         const std::string got = events.size() == 3 ? events[0] + ", " + events[1] + ", " + events[2] : std::to_string(events.size());
         check(got == "words 2 " + std::to_string(see[0]) + ", on 60, on 62", "a clip sends a note's words before it", got);
+
+        // Words ahead: each note's once, across blocks of any size, into the
+        // next pass when the clip fits the pass, and not when it doesn't.
+        clip.noteLyric = {2u, 2u};
+        const int64_t len = clip.lengthTicks();
+        auto announced = [&](int64_t loop) {
+            seq::ClipPlayer p;
+            p.setClip(&clip);
+            std::string out;
+            for (int64_t t = 0; t < len + 30; t += 7) {
+                p.processWordsAhead(t + 100, t + 107, 0, loop, [&](const uint8_t *, int32_t, uint8_t pitch, uint8_t, int64_t tick) {
+                    out += std::to_string(pitch) + "@" + std::to_string(tick) + " ";
+                });
+            }
+            return out;
+        };
+        const std::string next = "60@" + std::to_string(len) + " 62@" + std::to_string(len + 20) + " ";
+        check(announced(len) == next, "words ahead: each note once, on into the next pass", announced(len));
+        // A pass 10 ticks longer than the clip: 960 is still in it, 980 isn't.
+        check(announced(len + 10) == "60@" + std::to_string(len) + " ", "and not past a pass the clip doesn't fit",
+              announced(len + 10));
+    }
+
+    std::printf("words ahead of their notes\n");
+    {
+        auto code = [](const char *name) { return static_cast<uint8_t>(machine::diction::phoneCode(name, static_cast<int32_t>(std::strlen(name)))); };
+        // "sta" on a note at 0.6 s, its words known half a second before.
+        std::vector<uint8_t> sta{code("S"), code("T"), code("AA")};
+        const int32_t noteBlock = static_cast<int32_t>(0.6f * kSr / kBlock);
+        const int32_t aheadBlock = noteBlock - static_cast<int32_t>(0.5f * kSr / kBlock);
+        auto sing = [&](bool ahead) {
+            auto m = singer({});
+            return render(*m, 1.2f, [&](int32_t b) {
+                if (ahead && b == aheadBlock) m->wordsAhead(sta.data(), 3, 57, 100, (noteBlock - b) * kBlock);
+                if (b == noteBlock) { m->lyric(sta.data(), 3); m->noteOn(57, 100); }
+            });
+        };
+        // Where the voice (under 1 kHz, where an S has next to nothing) first
+        // reaches half its held level.
+        auto vowelAt = [&](const std::vector<float> &x) {
+            const float heldLevel = rms(x, static_cast<size_t>(kSr * 0.9f), static_cast<size_t>(kSr * 0.2f));
+            for (size_t i = 0; i + 480 < x.size(); i += 240) {
+                if (rms(x, i, 480) > 0.5f * heldLevel) return static_cast<float>(i) / kSr;
+            }
+            return -1.0f;
+        };
+        const float noteAt = static_cast<float>(noteBlock * kBlock) / kSr;
+        const float late = vowelAt(sing(false)) - noteAt, onTime = vowelAt(sing(true)) - noteAt;
+        check(std::fabs(onTime) < 0.03f, "known ahead, the vowel lands on its note",
+              std::to_string(onTime * 1000.0f) + " ms, on time without: " + std::to_string(late * 1000.0f) + " ms");
+
+        // Two notes on one key, the second's words started early: the first
+        // letting go mustn't end the second.
+        auto m = singer({});
+        std::vector<uint8_t> ta{code("T"), code("AA")};
+        const int32_t second = static_cast<int32_t>(0.5f * kSr / kBlock);
+        const auto x = render(*m, 1.2f, [&](int32_t b) {
+            if (b == 0) { m->lyric(ta.data(), 2); m->noteOn(57, 100); }
+            if (b == 1) m->wordsAhead(ta.data(), 2, 57, 100, (second - b) * kBlock);
+            if (b == second) { m->noteOff(57); m->lyric(ta.data(), 2); m->noteOn(57, 100); }
+        });
+        const float kept = rms(x, static_cast<size_t>(kSr * 0.9f), static_cast<size_t>(kSr * 0.2f));
+        check(kept > 0.02f, "the same key again keeps singing", std::to_string(kept));
+    }
+
+    std::printf("a recorded voice\n");
+    {
+        // A voice recorded from the built-in one, as a singer would record it:
+        // held vowels, and an L between two ahs, each cut by the cutter.
+        char dirTemplate[] = "/tmp/diction_voice_XXXXXX";
+        const std::string dir = mkdtemp(dirTemplate);
+        auto code = [](const char *name) { return static_cast<uint8_t>(machine::diction::phoneCode(name, static_cast<int32_t>(std::strlen(name)))); };
+        auto take = [&](const char *file, std::initializer_list<const char *> sounds) {
+            auto m = singer({});
+            std::vector<uint8_t> first{code(*sounds.begin())};
+            std::vector<uint8_t> rest;
+            for (auto it = sounds.begin() + 1; it != sounds.end(); ++it) rest.push_back(code(*it));
+            const auto x = render(*m, 2.5f, [&](int32_t b) {
+                if (b == 30) { m->lyric(first.data(), 1); m->noteOn(45, 100); }
+                if (!rest.empty() && b == 30 + 700) { m->lyric(rest.data(), static_cast<int32_t>(rest.size())); m->noteOn(45, 100); }
+                if (b == 30 + 1500) m->noteOff(45);
+            });
+            std::vector<float> stereo;
+            for (float v : x) { stereo.push_back(v); stereo.push_back(v); }
+            const std::string path = dir + "/" + file;
+            WavWriter w;
+            std::string error;
+            w.open(path, kSr, 32, error);
+            w.write(stereo.data(), static_cast<int32_t>(x.size()));
+            w.close();
+            return std::make_pair(path, x);
+        };
+        machine::diction::RecordedVoice voice;
+        const float noteHz = 440.0f * std::exp2((45 - 69) / 12.0f);
+        std::string error;
+        for (const char *v : {"AA", "IY"}) {
+            const auto t = take((std::string(v) + ".wav").c_str(), {v});
+            const auto cut = machine::diction::cutTake(t.second, kSr, machine::diction::TakeKind::Held, noteHz);
+            voice.addVowel(t.first, code(v), cut.holdFrom, cut.holdTo, kSr, error);
+        }
+        // A diphthong: ah held, moving to ee at the end, as it's sung.
+        const auto ay = take("ay.wav", {"AY"});
+        const auto aycut = machine::diction::cutTake(ay.second, kSr, machine::diction::TakeKind::Glide, noteHz);
+        voice.addDiphthong(ay.first, code("AY"), aycut.holdFrom, aycut.holdTo, aycut.glideFrom, aycut.glideTo, kSr, error);
+        const auto l = take("aa-l.wav", {"AA", "L", "AA"});
+        const auto lcut = machine::diction::cutTake(l.second, kSr, machine::diction::TakeKind::Between, noteHz);
+        voice.addConsonant(l.first, code("L"), code("AA"), lcut.consonantFrom, lcut.consonantTo, kSr, error);
+        check(voice.vowels.size() == 2 && voice.joins.size() == 1 && voice.diphthongs.size() == 1,
+              "two vowels, a diphthong and an L go into the voice",
+              std::to_string(voice.vowels.size()) + " vowels, " + std::to_string(voice.diphthongs.size()) + " diphthongs, " +
+                  std::to_string(voice.joins.size()) + " consonants " + lcut.problem + aycut.problem);
+
+        auto sing = [&](std::initializer_list<const char *> sounds, uint8_t note) {
+            auto m = singer({});
+            m->swapObject(0, &voice);
+            std::vector<uint8_t> words;
+            for (const char *s : sounds) words.push_back(code(s));
+            auto x = render(*m, 1.2f, [&](int32_t b) {
+                if (b == 0) { m->lyric(words.data(), static_cast<int32_t>(words.size())); m->noteOn(note, 100); }
+            });
+            m->swapObject(0, nullptr);
+            return x;
+        };
+        for (uint8_t n : {45, 52, 57}) {
+            const auto x = sing({"AA"}, n);
+            const float want = 440.0f * std::exp2((n - 69) / 12.0f);
+            const float got = pitchOf(x);
+            check(std::fabs(cents(got, want)) < 15.0f, ("sings its ah on the note, " + std::to_string(n)).c_str(),
+                  std::to_string(got) + " Hz, wanted " + std::to_string(want));
+        }
+        const auto ah = sing({"AA"}, 45), ee = sing({"IY"}, 45);
+        check(band(ee, 1900, 2800) > band(ah, 1900, 2800) * 2.0f, "its ee is its ee and its ah its ah",
+              std::to_string(band(ee, 1900, 2800)) + " against " + std::to_string(band(ah, 1900, 2800)));
+        const auto builtIn = held(*singer({}), 45, 1.2f);
+        const float ratio = rms(ah, static_cast<size_t>(kSr * 0.4f), static_cast<size_t>(kSr * 0.6f)) /
+                            rms(builtIn, static_cast<size_t>(kSr * 0.4f), static_cast<size_t>(kSr * 0.6f));
+        check(std::fabs(20.0f * std::log10(ratio)) < 3.0f, "at the built-in voice's level", std::to_string(20.0f * std::log10(ratio)) + " dB");
+
+        // Eye, held and let go: ah while held, ee once it's let go.
+        {
+            auto m = singer({});
+            m->swapObject(0, &voice);
+            std::vector<uint8_t> eye{code("AY")};
+            const auto x = render(*m, 1.2f, [&](int32_t b) {
+                if (b == 0) { m->lyric(eye.data(), 1); m->noteOn(45, 100); }
+                if (b == static_cast<int32_t>(0.7f * kSr / kBlock)) m->noteOff(45);
+            });
+            m->swapObject(0, nullptr);
+            std::vector<float> heldPart(x.begin() + static_cast<long>(0.3f * kSr), x.begin() + static_cast<long>(0.6f * kSr));
+            std::vector<float> endPart(x.begin() + static_cast<long>(0.72f * kSr), x.begin() + static_cast<long>(0.82f * kSr));
+            // Energy between two frequencies, from the start of a stretch.
+            auto energy = [](const std::vector<float> &part, float lo, float hi) {
+                float sum = 0.0f;
+                for (float hz = lo; hz <= hi; hz += 25.0f) sum += audition::magnitudeAt(part, 0, hz);
+                return sum;
+            };
+            const float heldBright = energy(heldPart, 1900, 2800) / energy(heldPart, 500, 1200);
+            const float endBright = energy(endPart, 1900, 2800) / energy(endPart, 500, 1200);
+            check(endBright > heldBright * 1.5f, "eye holds its ah and moves to its ee when let go",
+                  std::to_string(heldBright) + " then " + std::to_string(endBright));
+        }
+
+        // The same words twice, with a reset between, come out the same.
+        auto m = singer({});
+        m->swapObject(0, &voice);
+        std::vector<uint8_t> la{code("L"), code("AA")};
+        auto phrase = [&]() {
+            return render(*m, 0.8f, [&](int32_t b) {
+                if (b == 0) { m->lyric(la.data(), 2); m->noteOn(50, 100); }
+                if (b == 300) m->noteOff(50);
+            });
+        };
+        const auto first = phrase();
+        m->reset();
+        const auto second = phrase();
+        m->swapObject(0, nullptr);
+        check(first == second, "sings the same after a reset");
+        const float onset = rms(first, static_cast<size_t>(kSr * 0.01f), static_cast<size_t>(kSr * 0.04f));
+        check(onset > 0.0f, "la starts with the recorded L", std::to_string(onset));
+        std::system(("rm -rf '" + dir + "'").c_str());
     }
 
     std::printf("\n%d checks, %d failures\n", checks, failures);

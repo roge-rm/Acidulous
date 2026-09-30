@@ -70,6 +70,10 @@ class Rack {
     void playSequenced(uint8_t status, uint8_t d1, uint8_t d2);
     /** A clip note's words, sent just before its note-on. See Machine::lyric. */
     void lyric(const uint8_t *phones, int32_t count);
+    /** Whether the machine wants a clip's words ahead of their notes. See Machine::wantsWordsAhead. */
+    bool wantsWordsAhead() const { return machine != nullptr && machine->wantsWordsAhead(); }
+    /** A clip note's words ahead of it, [inFrames] before it's due, transposed as its note-on will be. */
+    void wordsAhead(const uint8_t *phones, int32_t count, uint8_t note, uint8_t velocity, int32_t inFrames);
     void allNotesOff();
 
     /**

@@ -34,6 +34,7 @@ class ClipPlayer {
         // conditions start counting from that bar.
         passIndex_ = 0;
         lastBase_ = kNoBase;
+        aheadEnd_ = kNoBase;
     }
 
     /**
@@ -48,6 +49,7 @@ class ClipPlayer {
         lastFreePass_ = kNoBase;
         passIndex_ = 0;
         lastBase_ = kNoBase;
+        aheadEnd_ = kNoBase;
     }
 
     /** Whether Fill trigs play. Set by the transport, read by gate(). */
@@ -169,6 +171,46 @@ class ClipPlayer {
                     // t, not h: the curve runs across the whole ratchet
                     // instead of restarting on each hit.
                     schedule(note, t, off, sink);
+                }
+            }
+        }
+    }
+
+    /**
+     * The words of notes due in [start, end), ahead of the playhead, to
+     * [ahead](phones, count, note, velocity, tick) with the tick each is due.
+     * A singer starts a word's consonants that far early. Never the same
+     * stretch twice, whatever the tempo does to the window. Past
+     * [origin] + [loopTicks] only while the clip lies the same way in the next
+     * pass, which it does when it fits it a whole number of times; 0 for
+     * no end. A note on a condition gets its words on time instead: whether
+     * it plays isn't known until then.
+     */
+    template <class Ahead>
+    void processWordsAhead(int64_t start, int64_t end, int64_t origin, int64_t loopTicks, Ahead &&ahead) {
+        if (clip_ == nullptr || clip_->mute || clip_->notes.empty() || clip_->noteLyric.empty()) return;
+        const int64_t len = clip_->lengthTicks();
+        if (len <= 0) return;
+        // Ticks only grow while playing. A clip's length behind where it had
+        // got to, the transport started again or jumped back; a little behind
+        // is only the tempo slowing, which shortens the window.
+        if (aheadEnd_ != kNoBase && aheadEnd_ > end + len) aheadEnd_ = kNoBase;
+        if (loopTicks > 0 && loopTicks % len != 0) end = std::min(end, origin + loopTicks);
+        start = std::max(start, std::max(origin, aheadEnd_));
+        if (end <= start) return;
+        aheadEnd_ = end;
+        for (int64_t k = (start - origin) / len; origin + k * len < end; ++k) {
+            if (clip_->playMode == PlayMode::OneShot && k > 0) break;
+            const int64_t base = origin + k * len;
+            for (size_t index = 0; index < clip_->notes.size(); ++index) {
+                const ClipNote &note = clip_->notes[index];
+                const int64_t t = base + swung(note.tick);
+                if (t >= end) break;
+                if (t < start || note.conditional()) continue;
+                const uint32_t w = clip_->noteLyric[index];
+                const uint32_t first = w >> 8, count = w & 0xFFu;
+                if (count > 0 && first + count <= clip_->phones.size()) {
+                    ahead(clip_->phones.data() + first, static_cast<int32_t>(count), note.pitch, note.velocity, t);
                 }
             }
         }
@@ -360,6 +402,8 @@ class ClipPlayer {
     int64_t lastOrigin = -1;
     int64_t passIndex_ = 0;
     int64_t lastBase_ = kNoBase;
+    /** Where words ahead have been sent up to, in absolute ticks. */
+    int64_t aheadEnd_ = kNoBase;
     int64_t lastFreePass_ = kNoBase;
     uint32_t freeSeed_ = kFreeSeed;
     bool fill_ = false;

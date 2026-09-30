@@ -654,6 +654,7 @@ class SceneScheduler {
                     [&rack](Unit u, int32_t i, float v, bool jump) { rack.setParam(u, i, v, jump); },
                     [&rack](Unit u, int32_t i) { return rack.isTouched(u, i); });
             }
+            if (launcher.playing(r)) sendWordsAhead(rack, from, to, origin, 0);
             rack.clipPlayer.process(from, to, origin,
                                     [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); },
                                     [&rack](const uint8_t *p, int32_t n) { rack.lyric(p, n); });
@@ -719,6 +720,25 @@ class SceneScheduler {
         }
     }
 
+    /**
+     * A singer's words, half a second ahead of their notes (see
+     * Machine::wantsWordsAhead). [loop] is the pass length when the next pass
+     * is the same clip again, negative for the last pass, which they don't
+     * reach past, and 0 for a launched clip, which loops on.
+     */
+    void sendWordsAhead(Rack &rack, int64_t from, int64_t to, int64_t origin, int64_t loop) {
+        if (!rack.wantsWordsAhead() || clock == nullptr) return;
+        const double perTick = std::max(1.0, clock->samplesPerTickNow());
+        const auto ahead = static_cast<int64_t>(std::ceil(0.5 * kSampleRate / perTick));
+        int64_t end = to + ahead;
+        if (loop < 0) end = std::min(end, origin - loop);
+        rack.clipPlayer.processWordsAhead(
+            from + ahead, end, origin, loop > 0 ? loop : 0,
+            [&](const uint8_t *p, int32_t n, uint8_t note, uint8_t vel, int64_t tick) {
+                rack.wordsAhead(p, n, note, vel, static_cast<int32_t>(static_cast<double>(tick - from) * perTick));
+            });
+    }
+
     void fire(int64_t from, int64_t to) {
         for (int32_t r = 0; r < rackCount; ++r) {
             // Frozen racks get nothing. Their notes and automation are already in
@@ -731,6 +751,10 @@ class SceneScheduler {
                     to, iterationOrigin,
                     [&rack](Unit u, int32_t i, float v, bool jump) { rack.setParam(u, i, v, jump); },
                     [&rack](Unit u, int32_t i) { return rack.isTouched(u, i); });
+                // Into the next pass only when it's this scene again.
+                const SceneInfo &sc = snap->scenes[sceneIdx];
+                const int64_t iterLen = std::max<int64_t>(1, sc.iterationTicks());
+                sendWordsAhead(rack, from, to, iterationOrigin, repeatIdx + 1 < sc.repeat ? iterLen : -iterLen);
                 rack.clipPlayer.process(from, to, iterationOrigin,
                                         [&rack](uint8_t c, uint8_t a, uint8_t b) { rack.playSequenced(c, a, b); },
                                         [&rack](const uint8_t *p, int32_t n) { rack.lyric(p, n); });

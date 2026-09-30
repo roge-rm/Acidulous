@@ -211,58 +211,96 @@ Cut cutTake(const std::vector<float> &input, float sr, TakeKind kind, float note
         const float held = percentile(std::vector<float>(f.level.begin() + first, f.level.begin() + last + 1), 0.5f);
         int32_t voiced = last;
         while (voiced > first && f.level[static_cast<size_t>(voiced)] < held - 6.0f) --voiced;
-        const auto from = averageShape(f, first + n / 8, first + n / 3);
-        const int32_t tail = std::max(4, n / 15);
-        const auto to = averageShape(f, voiced - tail, voiced + 1);
-        const float apart = shapeDistance(from, to);
-        // Measured this way a vowel held throughout moves up to about 1.2 dB,
-        // just from its own wobble, and a prairie "oh", the smallest glide,
-        // from 1.4. Too close to tell apart, so a take is never turned down
-        // for having no glide: where none shows, it's put where it's sung, as
-        // the voice ends. Tuned on Diction's own voice.
-        const auto atTheEnd = [&] {
-            cut.glideFrom = std::max(first + 40, voiced - 12) * hop;
-            cut.glideTo = (voiced + 1) * hop;
-        };
-        // How far along each hop is, 0 at the first vowel and 1 at the second:
-        // how far its shape has moved in the direction from one to the other.
-        // Wobble in any other direction doesn't count, which matters when the
-        // move is as small as an "oh"'s. Smoothed over five hops, so one odd
-        // hop doesn't decide it.
-        if (apart < 1.3f) atTheEnd();
-        std::vector<float> along(static_cast<size_t>(f.hops), 0.0f);
-        float span = 0.0f;
-        for (int32_t b = 0; b < kBands; ++b) span += (to[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]) * (to[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]);
-        for (int32_t h = first; h <= voiced; ++h) {
-            const auto s = shapeOf(f, h);
-            float dot = 0.0f;
-            for (int32_t b = 0; b < kBands; ++b) dot += (s[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]) * (to[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]);
-            along[static_cast<size_t>(h)] = dot / span;
-        }
-        std::vector<float> smooth(along);
-        for (int32_t h = first + 2; h <= voiced - 2; ++h) {
+        // The first vowel from just after the voice starts. The second from
+        // wherever the voice gets furthest from it in the second half, not
+        // from its very end: a singer who glides all the way through, rather
+        // than holding and moving at the end, has turned back by the time
+        // they stop, and an eye sung that way came out with no move at all.
+        const auto fromEarly = averageShape(f, first + n / 20, first + n / 8);
+        // Read the old way, from a little later, clear of whatever the voice
+        // does as it starts.
+        const auto fromLater = averageShape(f, first + n / 8, first + n / 3);
+        std::vector<float> apartAt(static_cast<size_t>(f.hops), 0.0f);
+        for (int32_t h = first; h <= voiced; ++h) apartAt[static_cast<size_t>(h)] = shapeDistance(shapeOf(f, h), fromEarly);
+        int32_t farthest = voiced;
+        float mostApart = -1.0f;
+        for (int32_t h = std::max(first + 2, first + n / 2); h <= voiced - 2; ++h) {
             float sum = 0.0f;
-            for (int32_t k = h - 2; k <= h + 2; ++k) sum += along[static_cast<size_t>(k)];
-            smooth[static_cast<size_t>(h)] = sum / 5.0f;
+            for (int32_t k = h - 2; k <= h + 2; ++k) sum += apartAt[static_cast<size_t>(k)];
+            if (sum > mostApart) { mostApart = sum; farthest = h; }
         }
-        // The glide starts after the last hop that still sounds like the
-        // first vowel, and ends at the first after it that sounds like the
-        // second.
-        if (apart >= 1.3f) {
-            int32_t glideFrom = voiced;
-            while (glideFrom > first && smooth[static_cast<size_t>(glideFrom - 1)] > 0.3f) --glideFrom;
-            int32_t glideTo = glideFrom;
-            while (glideTo < voiced && smooth[static_cast<size_t>(glideTo)] < 0.7f) ++glideTo;
-            cut.glideFrom = glideFrom * hop;
-            cut.glideTo = (glideTo + 1) * hop;
-            // The first vowel has to be held long enough to hold a note on. Only
-            // a glide as clear as an "eye" can say it wasn't: a small one early
-            // on is as likely the vowel wobbling, and goes at the end instead.
-            if (glideFrom - first < 40) {
-                if (apart >= 2.5f) { cut.problem = "glide too soon"; return cut; }
-                atTheEnd();
+        // Returns false to be read again from the end, true when done.
+        const int32_t farthestFound = farthest;
+        auto locate = [&](bool endOnly) {
+            farthest = farthestFound;
+            const auto &from = endOnly ? fromLater : fromEarly;
+            // Only where the voice clearly turned back before it stopped; a small
+            // move like an oh's is at its farthest wherever the wobble is, so
+            // otherwise the end is the second vowel, as the prompt asks.
+            const int32_t tail = std::max(4, n / 15);
+            const auto atEnd = averageShape(f, voiced - tail, voiced + 1);
+            const auto atFarthest = averageShape(f, std::max(first, farthest - tail / 2), std::min(voiced + 1, farthest + tail / 2 + 1));
+            const bool turnedBack = shapeDistance(from, atEnd) < 0.75f * shapeDistance(from, atFarthest);
+            const bool useFarthest = turnedBack && !endOnly;
+            if (!useFarthest) farthest = voiced;
+            const auto to = useFarthest ? atFarthest : atEnd;
+            const float apart = shapeDistance(from, to);
+            // Measured this way a vowel held throughout moves up to about 1.2 dB,
+            // just from its own wobble, and a prairie "oh", the smallest glide,
+            // from 1.4. Too close to tell apart, so a take is never turned down
+            // for having no glide: where none shows, it's put where it's sung, as
+            // the voice ends. Tuned on Diction's own voice.
+            const auto atTheEnd = [&] {
+                cut.glideFrom = std::max(first + 40, voiced - 12) * hop;
+                cut.glideTo = (voiced + 1) * hop;
+            };
+            // How far along each hop is, 0 at the first vowel and 1 at the second:
+            // how far its shape has moved in the direction from one to the other.
+            // Wobble in any other direction doesn't count, which matters when the
+            // move is as small as an "oh"'s. Smoothed over five hops, so one odd
+            // hop doesn't decide it.
+            if (apart < 1.3f) atTheEnd();
+            std::vector<float> along(static_cast<size_t>(f.hops), 0.0f);
+            float span = 0.0f;
+            for (int32_t b = 0; b < kBands; ++b) span += (to[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]) * (to[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]);
+            for (int32_t h = first; h <= voiced; ++h) {
+                const auto sh = shapeOf(f, h);
+                float dot = 0.0f;
+                for (int32_t b = 0; b < kBands; ++b) dot += (sh[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]) * (to[static_cast<size_t>(b)] - from[static_cast<size_t>(b)]);
+                along[static_cast<size_t>(h)] = dot / span;
             }
-        }
+            std::vector<float> smooth(along);
+            for (int32_t h = first + 2; h <= voiced - 2; ++h) {
+                float sum = 0.0f;
+                for (int32_t k = h - 2; k <= h + 2; ++k) sum += along[static_cast<size_t>(k)];
+                smooth[static_cast<size_t>(h)] = sum / 5.0f;
+            }
+            // The glide starts after the last hop before the farthest point that
+            // still sounds like the first vowel, and ends at the first after it
+            // that sounds like the second.
+            if (apart >= 1.3f) {
+                int32_t glideFrom = farthest;
+                while (glideFrom > first && smooth[static_cast<size_t>(glideFrom - 1)] > 0.3f) --glideFrom;
+                int32_t glideTo = glideFrom;
+                while (glideTo < farthest && smooth[static_cast<size_t>(glideTo)] < 0.7f) ++glideTo;
+                cut.glideFrom = glideFrom * hop;
+                cut.glideTo = (glideTo + 1) * hop;
+                // The first vowel has to be held long enough to hold a note on. Only
+                // a glide as clear as an "eye" can say it wasn't: a small one early
+                // on is as likely the vowel wobbling, and goes at the end instead.
+                if (glideFrom - first < 40) {
+                    // Read from its start, or its farthest point, a take can
+                    // look as if it moved early when it didn't: read from later
+                    // on and from its end first, before saying so.
+                    if (!endOnly) return false;
+                    if (apart >= 2.5f) { cut.problem = "glide too soon"; return true; }
+                    atTheEnd();
+                }
+            }
+            return true;
+        };
+        if (!locate(false)) locate(true);
+        if (!cut.problem.empty()) return cut;
         const int32_t glideFrom = cut.glideFrom / hop;
         const int32_t before = glideFrom - first;
         const int32_t window = std::min(60, before * 6 / 10);

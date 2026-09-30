@@ -78,6 +78,9 @@ object EngineSync {
     private val loadedFormulas = arrayOfNulls<String>(RACKS) // the text a rack's Formulate was compiled from
     private val loadedTakes = arrayOfNulls<String>(RACKS)    // the file a rack's Pollen is granulating
     private val loadedReels = arrayOfNulls<String>(RACKS)    // the spec a rack's Bias was built from
+    private val loadedVoices = arrayOfNulls<String>(RACKS)   // the spec a rack's Diction sings from
+    /** Voice specs by setting, and the save they were read at, so an index isn't read on every sync. */
+    private val voiceSpecs = mutableMapOf<String, Pair<Int, String>>()
 
     /**
      * The result of the last formula compile, by rack: empty if it worked,
@@ -123,6 +126,7 @@ object EngineSync {
         loadedFormulas.fill(null)
         loadedTakes.fill(null)
         loadedReels.fill(null)
+        loadedVoices.fill(null)
         loadedPatches.fill(null)
         mountedSends.fill(null)
         mountedMasterInserts.fill(null)
@@ -201,6 +205,7 @@ object EngineSync {
                     for (pad in 0 until 13) loadedSamples.remove("$rack:$pad") // a new machine starts empty
                     loadedMaps[rack] = null
                     loadedTakes[rack] = null
+                    loadedVoices[rack] = null
                 } else {
                     Log.w(TAG, "could not mount ${track.machine.type} on rack $rack")
                 }
@@ -501,6 +506,40 @@ object EngineSync {
         }
     }
 
+    /**
+     * A Diction's recorded voice: its vowels analysed on a worker and mounted,
+     * or the built-in voice when none is chosen. Keyed by what's sent, so a
+     * vowel sung again is sent again.
+     */
+    fun ensureVoices(song: Song) {
+        val root = sampleRoot ?: return
+        val saves = com.rm.acidulous.model.voice.VoiceBank.saves
+        for (rack in 0 until RACKS) {
+            val track = song.tracks.getOrNull(rack)
+            val setting = track?.machine?.settings?.get(com.rm.acidulous.model.voice.VoiceBank.SETTING).orEmpty()
+            val wanted = when {
+                track == null || track.machine.type != "Diction" -> null
+                mounted[rack] != "Diction" -> null // wait for the machine
+                setting.isEmpty() -> ""
+                else -> voiceSpecs[setting]?.takeIf { it.first == saves }?.second
+                    ?: com.rm.acidulous.model.voice.VoiceBank.engineSpec(root, setting)
+                        .also { voiceSpecs[setting] = saves to it }
+            }
+            if (loadedVoices[rack] == wanted) continue
+            loadedVoices[rack] = wanted
+            if (wanted == null) continue
+            mapLoader.execute {
+                val error = NativeEngine.loadVoice(rack, wanted)
+                if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(setting.substringBeforeLast('/')), error)
+            }
+        }
+    }
+
+    /** A voice was sung into: a Diction singing it hears the new take. */
+    fun voicesChanged() {
+        synced?.let { ensureVoices(it) }
+    }
+
     /** The song as last synced, for [play] to reset automated values from. */
     private var synced: Song? = null
 
@@ -599,6 +638,7 @@ object EngineSync {
         ensureClouds(song)
         ensureFormulas(song)
         ensureTakes(song)
+        ensureVoices(song)
         ensureReels(song)
         ensureFrozen(song)
         ensureTunings(song)

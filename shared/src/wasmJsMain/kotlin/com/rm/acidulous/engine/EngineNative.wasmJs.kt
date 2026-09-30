@@ -145,6 +145,9 @@ private fun raw_nativeIsRunning(env: Int): Int =
 private fun async_nativeLoadUtterance(arena: Int, rack: Int, path: Int): Int =
     js("globalThis.acid._acid_async_nativeLoadUtterance(arena, rack, path)")
 
+private fun async_nativeLoadVoice(arena: Int, rack: Int, spec: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadVoice(arena, rack, spec)")
+
 private fun raw_nativeMountMachine(env: Int, rackId: Int, typeName: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeMountMachine(env, 0, rackId, typeName)")
 
@@ -878,6 +881,16 @@ internal actual object EngineNative {
         val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
         val ticket_ = async_nativeLoadUtterance(arena_, rack, jpath)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeLoadVoice(rack: Int, spec: String): String {
+        val arena_ = Jni.openArena()
+        val jspec = Jni.string(spec)
+        val ticket_ = async_nativeLoadVoice(arena_, rack, jspec)
         Jni.await(ticket_)
         val result_ = Jni.readString(Jni.resultInt(ticket_))
         Jni.releaseAsync(ticket_)

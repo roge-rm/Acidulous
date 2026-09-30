@@ -64,6 +64,7 @@ import com.rm.acidulous.engine.ParamInfo
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.SongEditor
+import com.rm.acidulous.engine.EngineAssets
 import com.rm.acidulous.model.Zone
 import com.rm.acidulous.model.Zones
 import com.rm.acidulous.model.Track
@@ -213,7 +214,7 @@ fun MachinePanel(
             "Resonance" -> ResonancePanel(binding, selectedPad)
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
             "Molt" -> MoltPanel(binding, track, trackIndex, editor, onImportOneSample)
-            "Diction" -> DictionPanel(binding)
+            "Diction" -> DictionPanel(binding, track, trackIndex, editor)
             "Trinity" -> TrinityPanel(binding)
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
@@ -3485,13 +3486,33 @@ private fun PanelVowelKnob(b: ParamBinding, name: String, label: String = name) 
     )
 }
 
+/** Which voice a Diction sings in: its own, or one recorded in the Sound window. */
 @Composable
-private fun DictionPanel(b: ParamBinding) {
+private fun DictionVoiceKnob(track: Track, trackIndex: Int, editor: SongEditor) {
+    val names = remember { com.rm.acidulous.model.voice.VoiceBank.all(EngineAssets.userRoot()).map { it.name } }
+    val choices = listOf(stringResource(Res.string.diction_builtin)) + names
+    val setting = track.machine.settings[com.rm.acidulous.model.voice.VoiceBank.SETTING].orEmpty()
+    val index = names.indexOf(com.rm.acidulous.model.voice.VoiceBank.nameOf(setting)) + 1
+    val last = (choices.size - 1).coerceAtLeast(1)
+    Knob(
+        label = panelWord("voice"), value = index.toFloat() / last, display = choices.getOrElse(index) { choices[0] },
+        steps = choices.size, accent = PanelAmber, modifier = panelKnobWidth(),
+        onChange = { v ->
+            val i = (v * last).roundToInt().coerceIn(0, choices.size - 1)
+            val want = if (i == 0) null else com.rm.acidulous.model.voice.VoiceBank.settingOf(names[i - 1])
+            if (want.orEmpty() != setting) editor.edit(trackIndex) { t -> t.withSetting(com.rm.acidulous.model.voice.VoiceBank.SETTING, want) }
+        },
+    )
+}
+
+@Composable
+private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
     PanelSections(listOf("voice", "expression", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
                 Group("voice") {
+                    DictionVoiceKnob(track, trackIndex, editor)
                     PanelVowelKnob(b, "vowel", "vowel")
                     PanelKnob(b, "formant", "formant", PanelAmber)
                     PanelKnob(b, "breath", "breath")

@@ -26,6 +26,9 @@ when the note ends.
 
 ## The voice
 
+- **voice** - **built-in**, or a voice recorded in the Sound window's
+  **voice** tab. A recorded voice sings in the voice that sang it, with its
+  consonants as long as they were sung.
 - **vowel** - oo, oh, ah, eh or ee, from the back of the mouth to the front.
   In between, it sings the vowel between them, so turning it moves through
   the vowels.
@@ -33,7 +36,9 @@ when the note ends.
   bigger and darker, up is smaller and brighter. Low notes with the formant
   down sound like a man, high notes with it up like a woman or a child, and
   in between is neither.
-- **breath** - how much air is in the voice.
+- **breath** - how much air is in the voice. In a recorded voice, how much
+  of the singer's own breath is kept: down is clean, all the way up is as
+  it was sung.
 - **consonants** - how long the consonants take.
 - **accent** - how the words are said. **prairie** is Canadian as it's spoken
   in Alberta, **central** is Canadian as in Ontario, and **american** is

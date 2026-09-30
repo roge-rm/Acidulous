@@ -109,7 +109,11 @@ object SongBundle {
                 for (token in value.split('\n', '|', ',')) {
                     val candidate = token.trim()
                     if (candidate.isEmpty() || candidate.startsWith("/")) continue
-                    if (File(userRoot, candidate).isFile) found += candidate
+                    if (!File(userRoot, candidate).isFile) continue
+                    found += candidate
+                    // A recorded voice is named by its index: its takes go too.
+                    found += com.rm.acidulous.model.voice.VoiceBank.filesOf(userRoot, candidate)
+                        .filter { File(userRoot, it).isFile }
                 }
             }
         }

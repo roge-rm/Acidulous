@@ -71,6 +71,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadUtterance")
     private external fun blocking_nativeLoadUtterance(rack: Int, path: String): String
     actual suspend fun nativeLoadUtterance(rack: Int, path: String): String = blocking_nativeLoadUtterance(rack, path)
+    @JvmName("nativeLoadVoice")
+    private external fun blocking_nativeLoadVoice(rack: Int, spec: String): String
+    actual suspend fun nativeLoadVoice(rack: Int, spec: String): String = blocking_nativeLoadVoice(rack, spec)
     actual external fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     actual external fun nativeUnmountMachine(rackId: Int)
     @JvmName("nativeRenderSong")

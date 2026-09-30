@@ -605,6 +605,14 @@ Java_com_rm_acidulous_engine_EngineNative_nativeLoadTake(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadVoice(JNIEnv *env, jobject, jint rack, jstring spec) {
+    const char *p = env->GetStringUTFChars(spec, nullptr);
+    const std::string out = host().loadVoice(rack, p != nullptr ? p : "");
+    if (p != nullptr) env->ReleaseStringUTFChars(spec, p);
+    return env->NewStringUTF(out.c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeLoadUtterance(JNIEnv *env, jobject, jint rack, jstring path) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
     const std::string out = host().loadUtterance(rack, p);

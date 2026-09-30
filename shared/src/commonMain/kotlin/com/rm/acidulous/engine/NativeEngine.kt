@@ -420,6 +420,11 @@ object NativeEngine {
      * what's mounted.
      */
     suspend fun loadUtterance(rack: Int, path: String): String = EngineNative.nativeLoadUtterance(rack, path)
+    /**
+     * A recorded voice for a Diction: a line per held vowel,
+     * "PHONE|path|holdFrom|holdTo" in frames, or "" for the built-in voice.
+     */
+    suspend fun loadVoice(rack: Int, spec: String): String = EngineNative.nativeLoadVoice(rack, spec)
 
     /** Compile and mount Formulate's expression and tables. Returns "" or the reason. */
     suspend fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =

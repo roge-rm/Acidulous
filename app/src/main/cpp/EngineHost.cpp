@@ -3,6 +3,7 @@
 #include <engine/dsp/Denormals.h>
 #include <engine/machine/diction/Cutter.h>
 #include <engine/machine/diction/Diction.h>
+#include <engine/machine/diction/RecordedVoice.h>
 #include <engine/machine/diction/Phones.h>
 #include <engine/machine/molt/Molt.h>
 #include <engine/core/Settings.h>
@@ -1869,6 +1870,54 @@ std::string EngineHost::loadUtterance(int rack, const std::string &path) {
     return mountUtterance(*this, rack, std::move(utterance));
 }
 
+
+std::string EngineHost::loadVoice(int rack, const std::string &spec) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (awaitMachine(sEngine, rack, "Diction") == nullptr) return "that rack is not a Diction";
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.rack = rack;
+    mount.slot = 0;
+    mount.object = nullptr;
+    mount.deleter = deleteAs<machine::diction::RecordedVoice>;
+    if (spec.empty()) return mountObjectWithRetry(mount) ? "" : "mount queue full";
+    auto voice = std::make_unique<machine::diction::RecordedVoice>();
+    std::string firstError;
+    size_t at = 0;
+    while (at < spec.size()) {
+        size_t end = spec.find('\n', at);
+        if (end == std::string::npos) end = spec.size();
+        const std::string line = spec.substr(at, end - at);
+        at = end + 1;
+        std::vector<std::string> f;
+        size_t from = 0;
+        for (size_t bar; (bar = line.find('|', from)) != std::string::npos; from = bar + 1) f.push_back(line.substr(from, bar - from));
+        f.push_back(line.substr(from));
+        auto code = [&](const std::string &name) { return machine::diction::phoneCode(name.c_str(), static_cast<int32_t>(name.size())); };
+        std::string error;
+        bool added = false;
+        if (f.size() == 5 && f[0] == "V" && code(f[1]) > 0) {
+            added = voice->addVowel(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()),
+                                    static_cast<float>(kSampleRate), error);
+        } else if (f.size() == 7 && f[0] == "D" && code(f[1]) > 0) {
+            added = voice->addDiphthong(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()),
+                                        std::atoi(f[5].c_str()), std::atoi(f[6].c_str()), static_cast<float>(kSampleRate), error);
+        } else if (f.size() == 6 && f[0] == "C" && code(f[1]) > 0 && code(f[2]) > 0) {
+            added = voice->addConsonant(f[3], static_cast<uint8_t>(code(f[1])), static_cast<uint8_t>(code(f[2])),
+                                        std::atoi(f[4].c_str()), std::atoi(f[5].c_str()), static_cast<float>(kSampleRate), error);
+        } else {
+            continue;
+        }
+        if (!added && firstError.empty()) firstError = f[1] + ": " + (error.empty() ? "unknown sound" : error);
+    }
+    if (voice->vowels.empty()) return firstError.empty() ? "no vowels in that voice" : firstError;
+    LOGI("diction voice on rack %d: %zu vowels, %zu diphthongs, %zu consonants", rack, voice->vowels.size(),
+         voice->diphthongs.size(), voice->joins.size());
+    mount.object = voice.get();
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    voice.release();
+    return "";
+}
 
 std::string EngineHost::loadFormula(int rack, const std::string &formula, const std::string &arp,
                                     const std::string &duty, const std::string &vol) {

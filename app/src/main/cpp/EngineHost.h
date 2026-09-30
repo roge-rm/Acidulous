@@ -313,6 +313,14 @@ class EngineHost {
      * worker, then mounted. An empty path clears it.
      */
     std::string loadUtterance(int rack, const std::string &path);
+    /**
+     * A recorded voice for the Diction on [rack], from [spec]: a line per
+     * held vowel, "V|PHONE|path|holdFrom|holdTo", per diphthong,
+     * "D|PHONE|path|holdFrom|holdTo|glideFrom|glideTo", and per consonant,
+     * "C|PHONE|VOWEL|path|from|to", in frames. Empty puts the built-in voice
+     * back. Returns "" or why it failed. Worker thread.
+     */
+    std::string loadVoice(int rack, const std::string &spec);
 
     /**
      * Compiles Formulate's expression and its three step tables and mounts

@@ -220,6 +220,16 @@ void Rack::lyric(const uint8_t *phones, int32_t count) {
     if (machine != nullptr) machine->lyric(phones, count);
 }
 
+void Rack::wordsAhead(const uint8_t *phones, int32_t count, uint8_t note, uint8_t velocity, int32_t inFrames) {
+    if (machine == nullptr || lastOutMode == OutMidi) return;
+    // As toMachine will send its note-on.
+    const int32_t shift = static_cast<int32_t>(std::lround(channel.target(Transpose)));
+    const auto to = static_cast<uint8_t>(std::clamp(static_cast<int32_t>(note) + shift, 0, 127));
+    const int32_t fixed = static_cast<int32_t>(std::lround(channel.target(Velocity)));
+    const auto vel = fixed > 0 ? static_cast<uint8_t>(std::min(fixed, 127)) : velocity;
+    machine->wordsAhead(phones, count, to, vel, inFrames);
+}
+
 void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, float bendSemis) {
     if (machine == nullptr) return;
     note = sentTo[note & 0x7f];

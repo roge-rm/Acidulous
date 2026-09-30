@@ -62,6 +62,7 @@ internal expect object EngineNative {
     fun nativeStop()
     fun nativeIsRunning(): Boolean
     suspend fun nativeLoadUtterance(rack: Int, path: String): String
+    suspend fun nativeLoadVoice(rack: Int, spec: String): String
     fun nativeMountMachine(rackId: Int, typeName: String): Boolean
     fun nativeUnmountMachine(rackId: Int)
     suspend fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String

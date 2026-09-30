@@ -1,18 +1,25 @@
 // Sings phrases from written-out sounds, for listening: whether the words
 // can be understood is an ear's call, not a harness's.
 //
-//   diction_words <folder> [formant]
+//   diction_words <folder> [formant] [voice spec] [octave]
 //
-// Writes one WAV a phrase. The sounds are what the dictionary and the accent
+// Writes one WAV a phrase. A voice spec sings in a recorded voice, as the app
+// sends it: "V|PHONE|path|holdFrom|holdTo" a held vowel, "C|PHONE|VOWEL|path|
+// from|to" a consonant. The sounds are what the dictionary and the accent
 // would give: "|" between notes, "~" at the end of a note joins it to the
 // next.
 #include <engine/format/WavWriter.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/diction/Diction.h>
 #include <engine/machine/diction/Phones.h>
+#include <engine/machine/diction/RecordedVoice.h>
+
+#include <fstream>
+#include <sstream>
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,12 +43,19 @@ const Phrase kPhrases[] = {
     {"row-row-row", 100,
      "60:1:R OWP|60:1:R OWP|60:0.75:R OWP|62:0.25:Y OR R|64:2:B OWP T|"
      "64:0.75:JH EHC N|62:0.25:T L IY|64:0.75:D AWP N|65:0.25:DH AX|67:2:S T R IY M"},
+    // The same in 6/8, as it's mostly sung: boat as long as each row. In
+    // eighths at 200, a dotted quarter is 0.9 s.
+    {"row-row-row-6-8", 200,
+     "60:3:R OWP|60:3:R OWP|60:2:R OWP|62:1:Y OR R|64:3:B OWP T|"
+     "64:2:JH EHC N|62:1:T L IY|64:2:D AWP N|65:1:DH AX|67:6:S T R IY M"},
     {"twinkle", 90,
      "60:1:T W IHC NG|60:1:K AX L|67:1:T W IHC NG|67:1:K AX L|69:1:L IHC|69:1:DX AX L|67:2:S T AA R|"
      "65:1:HH AW|65:1:AY|64:1:W AH N|64:1:DX ER|62:1:W AH T|62:1:Y UW|60:2:AA R"},
     {"happy-birthday", 100,
      "55:0.75:HH AEC~|55:0.25:P IY|57:1:B ER TH|55:1:D EYP|60:1:T UW|59:2:Y UW"},
     {"hello", 90, "64:1:HH AX~|67:2:L OWP"},
+    {"vowels", 80, "57:2:IY|59:2:EH|60:2:AA|62:2:OW|64:2:UW|62:1:AE|60:1:AH|59:2:ER|57:3:AY"},
+    {"ah-scale", 120, "57:1:AA~|59:1:AA~|61:1:AA~|62:1:AA~|64:1:AA~|66:1:AA~|68:1:AA~|69:3:AA"},
     {"words-one-note", 80,
      "57:1:S IY|57:1:S OC|57:1:SH UW|57:1:M UW N|57:1:N AY N|57:1:T EHC N|57:1:G OWP|57:1:D EYP|"
      "57:1:Y EHC S|57:1:W AH T|57:1:F AY V|57:1:TH IHC NG K|57:1:K AEC T|57:1:B AEC D|57:1:L AY T"},
@@ -92,12 +106,67 @@ std::vector<Note> parse(const char *text) {
 int main(int argc, char **argv) {
     const std::string folder = argc > 1 ? argv[1] : ".";
     const float formant = argc > 2 ? std::strtof(argv[2], nullptr) : 0.0f;
-    for (const Phrase &phrase : kPhrases) {
+    const std::string specPath = argc > 3 ? argv[3] : "";
+    const float octave = argc > 4 ? std::strtof(argv[4], nullptr) : 0.0f;
+    std::unique_ptr<machine::diction::RecordedVoice> voice;
+    if (!specPath.empty()) {
+        voice = std::make_unique<machine::diction::RecordedVoice>();
+        std::ifstream in(specPath);
+        for (std::string line; std::getline(in, line);) {
+            std::vector<std::string> f;
+            std::stringstream ss(line);
+            for (std::string part; std::getline(ss, part, '|');) f.push_back(part);
+            auto code = [](const std::string &s) { return machine::diction::phoneCode(s.c_str(), static_cast<int32_t>(s.size())); };
+            std::string error;
+            bool ok = false;
+            if (f.size() == 5 && f[0] == "V" && code(f[1]) > 0) {
+                ok = voice->addVowel(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()), kSr, error);
+            } else if (f.size() == 7 && f[0] == "D" && code(f[1]) > 0) {
+                ok = voice->addDiphthong(f[2], static_cast<uint8_t>(code(f[1])), std::atoi(f[3].c_str()), std::atoi(f[4].c_str()),
+                                         std::atoi(f[5].c_str()), std::atoi(f[6].c_str()), kSr, error);
+            } else if (f.size() == 6 && f[0] == "C" && code(f[1]) > 0 && code(f[2]) > 0) {
+                ok = voice->addConsonant(f[3], static_cast<uint8_t>(code(f[1])), static_cast<uint8_t>(code(f[2])),
+                                         std::atoi(f[4].c_str()), std::atoi(f[5].c_str()), kSr, error);
+            }
+            if (!ok) std::fprintf(stderr, "  %s: %s\n", line.c_str(), error.c_str());
+        }
+        std::printf("  voice: %zu vowels, %zu diphthongs, %zu consonants\n", voice->vowels.size(), voice->diphthongs.size(),
+                    voice->joins.size());
+    }
+    // Phrases from a file instead, one a line, "name|bpm|notes", with the
+    // notes as above but separated by ";": for checking every sound.
+    std::vector<std::string> owned;
+    std::vector<Phrase> phrases(std::begin(kPhrases), std::end(kPhrases));
+    if (const char *file = std::getenv("DICTION_PHRASES")) {
+        phrases.clear();
+        std::ifstream in(file);
+        for (std::string line; std::getline(in, line);) {
+            const size_t a = line.find('|'), b = line.find('|', a + 1);
+            if (a == std::string::npos || b == std::string::npos) continue;
+            owned.push_back(line.substr(0, a));
+            std::string notes = line.substr(b + 1);
+            for (char &c : notes) if (c == ';') c = '|';
+            owned.push_back(notes);
+        }
+        std::ifstream again(file);
+        size_t k = 0;
+        for (std::string line; std::getline(again, line);) {
+            const size_t a = line.find('|'), b = line.find('|', a + 1);
+            if (a == std::string::npos || b == std::string::npos) continue;
+            phrases.push_back(Phrase{owned[k].c_str(), std::strtof(line.substr(a + 1, b - a - 1).c_str(), nullptr), owned[k + 1].c_str()});
+            k += 2;
+        }
+    }
+    for (const Phrase &phrase : phrases) {
         std::unique_ptr<Machine> m(MachineRegistry::create("Diction"));
         m->prepare(static_cast<int32_t>(kSr));
         m->params().set(Diction::Formant, m->params().def(Diction::Formant).unmap(formant));
+        m->params().set(Diction::Octave, m->params().def(Diction::Octave).unmap(octave));
+        if (const char *c = std::getenv("CONSONANTS")) m->params().set(Diction::Consonants, m->params().def(Diction::Consonants).unmap(std::strtof(c, nullptr)));
+        if (const char *b = std::getenv("BREATH")) m->params().set(Diction::Breath, m->params().def(Diction::Breath).unmap(std::strtof(b, nullptr)));
         m->params().jumpAll();
         m->reset();
+        if (voice) m->swapObject(0, voice.get());
 
         const std::vector<Note> notes = parse(phrase.notes);
         const float beat = 60.0f / phrase.bpm * kSr;
@@ -105,7 +174,8 @@ int main(int argc, char **argv) {
         // as the next begins; the others leave a small gap, as a singer
         // breathes between words.
         std::vector<int64_t> on, off;
-        float t = kSr * 0.2f;
+        // From a file, room before the first note for its consonants to start early.
+        float t = kSr * (std::getenv("DICTION_PHRASES") ? 0.6f : 0.2f);
         for (const Note &n : notes) {
             on.push_back(static_cast<int64_t>(t / kBlock));
             const float length = n.beats * beat;
@@ -116,7 +186,15 @@ int main(int argc, char **argv) {
 
         std::vector<float> stereo;
         float L[kBlock], R[kBlock];
+        // Words half a second ahead of their notes, as the scheduler sends them.
+        const auto aheadBlocks = static_cast<int64_t>(0.5f * kSr / kBlock);
         for (int64_t b = 0; b < blocks; ++b) {
+            for (size_t i = 0; i < notes.size(); ++i) {
+                if (on[i] - aheadBlocks == b || (b == 0 && on[i] - aheadBlocks < 0)) {
+                    m->wordsAhead(notes[i].phones.data(), static_cast<int32_t>(notes[i].phones.size()),
+                                  static_cast<uint8_t>(notes[i].pitch), 100, static_cast<int32_t>((on[i] - b) * kBlock));
+                }
+            }
             for (size_t i = 0; i < notes.size(); ++i) {
                 // A tied note's next begins in the same block its note ends:
                 // the new note first, so it's legato.
@@ -149,6 +227,7 @@ int main(int argc, char **argv) {
         w.write(stereo.data(), static_cast<int32_t>(stereo.size() / 2));
         w.close();
         std::printf("  %-18s %5.1f s  peak %.2f\n", phrase.name, static_cast<float>(stereo.size() / 2) / kSr, peak);
+        if (voice) m->swapObject(0, nullptr);
     }
     return 0;
 }

@@ -4,7 +4,9 @@
 #include <engine/dsp/Adsr.h>
 #include <engine/machine/Machine.h>
 #include <engine/machine/diction/Phones.h>
+#include <engine/machine/diction/RecordedVoice.h>
 #include <engine/machine/diction/Throat.h>
+#include <vector>
 
 // Diction sings.
 //
@@ -16,6 +18,10 @@
 // formants move from sound to sound. The voice control moves the throat on
 // its own, apart from the pitch, which makes the one voice a man, a woman or
 // neither.
+//
+// Or it sings in a voice somebody recorded: each vowel and consonant is the
+// singer's own, laid down a glottal pulse at a time at the note's pitch, as
+// Molt does.
 namespace acidulous::machine {
 
 class Diction final : public Machine {
@@ -30,6 +36,11 @@ class Diction final : public Machine {
     static constexpr int kControl = 16;
     /** While the formants move, the levels are worked out again every this many control periods. */
     static constexpr int kLevelsEvery = 4;
+    /**
+     * A recorded voice's overlap-add buffer, a power of two so the ring wraps
+     * by mask: two periods at the lowest pitch, with room for the formant.
+     */
+    static constexpr int kAccum = 4096;
 
     enum P : int32_t {
         Vowel = 0, Formant, Breath, Consonants, Accent,
@@ -47,6 +58,8 @@ class Diction final : public Machine {
     void prepare(int32_t sampleRate) override;
     void reset() override;
     void lyric(const uint8_t *phones, int32_t count) override;
+    bool wantsWordsAhead() const override { return true; }
+    void wordsAhead(const uint8_t *phones, int32_t count, uint8_t note, uint8_t velocity, int32_t inFrames) override;
     void noteOn(uint8_t note, uint8_t velocity) override;
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
@@ -54,6 +67,8 @@ class Diction final : public Machine {
     void pitchBend(int16_t value14) override;
     void channelPressure(uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
+    /** Slot 0 is a recorded voice (diction::RecordedVoice), or null for the built-in one. */
+    void *swapObject(int32_t slot, void *object) override;
 
   private:
     /**
@@ -74,10 +89,41 @@ class Diction final : public Machine {
         float edge;
         /** The vowel control's vowel, followed live, instead of [f]. */
         bool knob;
+        /** A recorded voice's consonant, and the part of it this step plays, in frames of its sound. */
+        const diction::RecordedVoice::Join *join = nullptr;
+        int32_t from = 0, to = 0;
+        /** How much faster than it was sung the consonant itself is read. */
+        float speed = 1.0f;
+        /** And all of it, squeezed to fit between quick notes. */
+        float rate = 1.0f;
+        /**
+         * A recorded diphthong: its first vowel held, or with [once], its move
+         * to the second played once through, between [from] and [to].
+         */
+        const diction::RecordedVoice::Unit *unit = nullptr;
+        bool once = false;
     };
 
     /** The steps for [count] phones. Returns how many were added to [out]. */
     int32_t planSyllable(const uint8_t *phones, int32_t count, Step *out, int32_t capacity) const;
+    /** The same in a recorded voice: its vowels, and each consonant as it was sung. */
+    int32_t planRecorded(const uint8_t *phones, int32_t count, Step *out, int32_t capacity) const;
+    /** The steps for a note's words, or the vowel control's vowel when it has none. */
+    int32_t planWords(const uint8_t *phones, int32_t count, Step *out) const;
+    /** Starts note [n] singing [planned]. */
+    void startPlanned(uint8_t n, uint8_t vel, bool legato, const Step *planned, int32_t count);
+    /** Seconds before its vowel that a word's steps start: its consonants before the vowel. */
+    float onsetOf(const Step *planned, int32_t count) const;
+    /** Whether [s] is where a note's own time begins: its vowel, or anything held. */
+    bool beginsNote(const Step &s) const;
+    /** Shortens a timed step to [f] of its length, a recorded one read that much faster. */
+    static void squeeze(Step &s, float f);
+    /** Whether a step is an R, L, W or Y, a movement that squeezing turns into another sound. */
+    bool keepsLength(const Step &s) const;
+    /** Seconds the word being sung still has to say before another can start: what's after the held sound. */
+    float stillToSay() const;
+    /** Once a block: starts a word known ahead when its time comes, and lets go of one whose note never came. */
+    void wordsDue(int32_t frames);
     /** Start the steps in [steps], keeping whatever the last note still had to say. */
     void beginSteps(const Step *steps, int32_t count, bool fromSilence);
     void enterStep(int32_t index);
@@ -94,6 +140,43 @@ class Diction final : public Machine {
     float targetNote() const;
     void startNote(uint8_t note, uint8_t velocity, bool legato);
 
+    /**
+     * Where a recorded sound is being read: which, between where, and how
+     * far into it. A held one goes back and forth between [from] and [to];
+     * one played once goes on through, into what was sung after it.
+     */
+    struct Reader {
+        /** The unit or join, to tell one from another. */
+        const void *owner = nullptr;
+        const audio::Utterance *sound = nullptr;
+        float gain = 1.0f;
+        int32_t from = 0, to = 0;
+        bool held = true;
+        float pos = 0.0f;
+        float dir = 1.0f;
+        /**
+         * A consonant's own part, turned down by [quiet] (see
+         * RecordedVoice::Join::consonantGain) and read [speed] times faster
+         * than it was sung. The vowel either side is read as it was.
+         */
+        int32_t quietFrom = 0, quietTo = 0;
+        float quiet = 1.0f;
+        float speed = 1.0f;
+        float rate = 1.0f;
+        /** A hiss taken off a little at the top; see RecordedVoice::Join::bright. */
+        bool soften = false;
+    };
+    /** In [control]: the recorded vowel for the step being sung, crossfaded to when it changes. */
+    void chooseUnit(const Step &s, const float target[3]);
+    /** Crossfades to [r] over [seconds]. */
+    void startReading(const Reader &r, float seconds);
+    /** The pitch mark [r] is at, or null. */
+    static const audio::Epoch *epochOf(const Reader &r);
+    /** Lays one grain of [r] at [weight] into the buffer, for a period [period] frames long. */
+    void layGrain(const Reader &r, float weight, float period, float ratio);
+    /** Moves [r] on a frame. */
+    static void advance(Reader &r);
+
     float paramOf(int32_t i) const { return params_.get(i); }
     // Rounded, not truncated: octave and transpose go below zero, where
     // adding a half and truncating made -1 into 0.
@@ -107,6 +190,41 @@ class Diction final : public Machine {
     // The next note's words, from the clip, until it starts.
     uint8_t pending[kMaxPhones]{};
     int32_t pendingCount = 0;
+
+    // Words known ahead of their notes, oldest first, each started early by
+    // the length of its consonants so its vowel lands on its note.
+    struct Ahead {
+        uint8_t phones[kMaxPhones];
+        int32_t count;
+        uint8_t note, velocity;
+        /** Frames until its note is due. */
+        int32_t in;
+        /** Seconds of consonants before its vowel. */
+        float onset;
+    };
+    static constexpr int kAhead = 4;
+    Ahead ahead[kAhead]{};
+    int32_t aheadCount = 0;
+    /**
+     * Notes begun early, oldest first, waiting for their note-ons. The last
+     * is let go if its note-on hasn't come [wait] frames on.
+     */
+    struct Early {
+        uint8_t note;
+        int32_t wait;
+    };
+    Early earlies[kAhead]{};
+    int32_t earlyCount = 0;
+    /** The newest word's vowel in [steps], or -1 for none. */
+    int32_t newestVowel = -1;
+    /** Whether the word being sung has sung enough of its vowel for the next to begin. */
+    bool readyForNext() const;
+    /**
+     * The last word's end is sung at its own pitch: the next note's comes in
+     * [pitchIn] frames, once it's said, and is then [nextNote].
+     */
+    int32_t pitchIn = 0;
+    uint8_t nextNote = 0;
 
     // The one singer.
     uint8_t held[kHeld]{};
@@ -169,6 +287,16 @@ class Diction final : public Machine {
     bool snapLevels = false;
 
     dsp::Adsr amp;
+
+    // A recorded voice, when one is chosen.
+    const diction::RecordedVoice *voice = nullptr;
+    /** The vowel sung now, and the one it's taking over from while [fade] runs 0 to 1. */
+    Reader reading, fading;
+    float fade = 1.0f, fadeStep = 0.0f;
+    /** Frames until the next grain. */
+    float untilGrain = 0.0f;
+    std::vector<float> acc = std::vector<float>(kAccum, 0.0f);
+    int32_t accHead = 0;
 };
 
 } // namespace acidulous::machine
