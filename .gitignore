@@ -39,3 +39,6 @@ local.properties
 /web/engine/build/
 /web/engine/out/
 /web/app/build/
+
+# Python caches from the tools
+__pycache__/
