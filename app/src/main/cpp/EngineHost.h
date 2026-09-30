@@ -320,7 +320,7 @@ class EngineHost {
      * "C|PHONE|VOWEL|path|from|to", in frames. Empty puts the built-in voice
      * back. Returns "" or why it failed. Worker thread.
      */
-    std::string loadVoice(int rack, const std::string &spec);
+    std::string loadVoice(int rack, int slot, const std::string &spec);
 
     /**
      * Compiles Formulate's expression and its three step tables and mounts

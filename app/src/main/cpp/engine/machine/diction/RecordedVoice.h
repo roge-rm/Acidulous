@@ -38,19 +38,29 @@ struct RecordedVoice {
         /** The source's level at each pitch mark. */
         std::vector<float> gain;
         /**
-         * The tilt the prediction left in the source, as how much each sample
-         * follows the one before in its voiced parts, 0 to 0.95: an even
-         * source given this is the singer's colour.
+         * The throat at each mark as line spectral frequencies, kOrder a mark
+         * in radians: the sum polynomial's roots then the difference's, each
+         * rising. Blended between two throats, each formant moves from one's
+         * place to the other's, where blended reflection coefficients
+         * smeared an ah between two voices across a kilohertz. A mark whose
+         * roots couldn't all be found starts with -1. Empty unless the voice
+         * was asked for them (see [fromSpec]): they took a quarter of loading
+         * a voice, and only a morph uses them.
          */
-        float colour = 0.0f;
+        std::vector<float> lsf;
+        /** Line spectral frequencies [lsf] back to reflection coefficients [k], kOrder of each. */
+        static void fromLsf(const float *lsf, float *k);
     };
-    /** [u]'s tract. Worker thread. */
-    static void analyseTract(const audio::Utterance &u, float sampleRate, Tract &t);
+    /** [u]'s tract, with its line spectral frequencies if [lsf]. Worker thread. */
+    static void analyseTract(const audio::Utterance &u, float sampleRate, Tract &t, bool lsf);
+    /** Whether its takes' tracts get their line spectral frequencies. */
+    bool wantLsf = false;
 
     /**
      * A voice from the lines the app sends: "V|PHONE|path|holdFrom|holdTo" a
      * held vowel, "D|PHONE|path|holdFrom|holdTo|glideFrom|glideTo" a
-     * diphthong, "C|PHONE|VOWEL|path|from|to" a consonant, in frames. Its
+     * diphthong, "C|PHONE|VOWEL|path|from|to" a consonant, in frames, and
+     * "LSF" on a line of its own for a voice that's morphed from or to. Its
      * takes are read and analysed on up to [threads] threads, since finding
      * a whole voice's pulses on one took most of a second here and about ten
      * on a phone. [error] gets the first take that couldn't be used. Worker

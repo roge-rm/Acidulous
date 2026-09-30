@@ -52,12 +52,133 @@ constexpr float kEmphasis = 0.97f;
 
 } // namespace
 
-void RecordedVoice::analyseTract(const audio::Utterance &u, float sampleRate, Tract &t) {
+namespace {
+
+/**
+ * The roots in (0, pi) of a symmetric polynomial of even degree [n] with
+ * coefficients [c], evaluated on the unit circle as a sum of cosines: found
+ * on a grid of [grid] and closed in on by false position. Up to [most] of
+ * them into [out]; returns how many.
+ */
+int32_t circleRoots(const double *c, int32_t n, int32_t grid, float *out, int32_t most) {
+    const int32_t half = n / 2;
+    auto at = [&](double x) {
+        // In x = cos w: c[half] + 2 sum c[half - m] T_m(x), by the recurrence.
+        double tPrev = 1.0, tNow = x, sum = c[half];
+        for (int32_t m = 1; m <= half; ++m) {
+            sum += 2.0 * c[half - m] * tNow;
+            const double next = 2.0 * x * tNow - tPrev;
+            tPrev = tNow;
+            tNow = next;
+        }
+        return sum;
+    };
+    int32_t found = 0;
+    double x0 = 1.0, f0 = at(1.0);
+    for (int32_t g = 1; g <= grid && found < most; ++g) {
+        const double x1 = std::cos(3.14159265358979 * g / grid), f1 = at(x1);
+        if ((f0 < 0.0) != (f1 < 0.0)) {
+            // False position, the Illinois way: a curve this smooth is closed
+            // in on in a few steps, where halving took twenty. Timed on a
+            // whole voice, this and the coarser grid took the frequencies
+            // from 800 ms to ...
+            double lo = x0, hi = x1, flo = f0, fhi = f1;
+            int32_t side = 0;
+            double x = 0.5 * (lo + hi);
+            for (int32_t i = 0; i < 12 && std::fabs(hi - lo) > 1e-9; ++i) {
+                x = (lo * fhi - hi * flo) / (fhi - flo);
+                const double fx = at(x);
+                if ((fx < 0.0) == (flo < 0.0)) {
+                    lo = x;
+                    flo = fx;
+                    if (side == -1) fhi *= 0.5;
+                    side = -1;
+                } else {
+                    hi = x;
+                    fhi = fx;
+                    if (side == 1) flo *= 0.5;
+                    side = 1;
+                }
+                if (fx == 0.0) break;
+            }
+            out[found++] = static_cast<float>(std::acos(std::clamp(x, -1.0, 1.0)));
+        }
+        x0 = x1;
+        f0 = f1;
+    }
+    return found;
+}
+
+/** The line spectral frequencies of A(z) = [a] (order p, a[0] = 1) into [lsf]; false if not all were found. */
+bool toLsf(const double *a, int32_t p, float *lsf) {
+    // P(z) = A(z) + z^-(p+1) A(1/z) and Q(z) = A(z) - z^-(p+1) A(1/z), with
+    // their roots at -1 and 1 divided out: two symmetric polynomials of
+    // degree p whose roots on the circle interleave.
+    std::vector<double> sum(static_cast<size_t>(p + 2)), diff(static_cast<size_t>(p + 2));
+    for (int32_t i = 0; i <= p + 1; ++i) {
+        const double x = i <= p ? a[i] : 0.0, y = p + 1 - i <= p ? a[p + 1 - i] : 0.0;
+        sum[static_cast<size_t>(i)] = x + y;
+        diff[static_cast<size_t>(i)] = x - y;
+    }
+    std::vector<double> ps(static_cast<size_t>(p + 1)), qs(static_cast<size_t>(p + 1));
+    ps[0] = sum[0];
+    qs[0] = diff[0];
+    for (int32_t i = 1; i <= p; ++i) {
+        ps[static_cast<size_t>(i)] = sum[static_cast<size_t>(i)] - ps[static_cast<size_t>(i - 1)];
+        qs[static_cast<size_t>(i)] = diff[static_cast<size_t>(i)] + qs[static_cast<size_t>(i - 1)];
+    }
+    const int32_t half = p / 2;
+    // A grid of 128, and where a close pair was missed, of 1024.
+    for (int32_t grid : {128, 1024}) {
+        if (circleRoots(ps.data(), p, grid, lsf, half) == half && circleRoots(qs.data(), p, grid, lsf + half, half) == half)
+            return true;
+    }
+    return false;
+}
+
+} // namespace
+
+void RecordedVoice::Tract::fromLsf(const float *lsf, float *k) {
+    constexpr int p = kOrder, half = kOrder / 2;
+    // Each set's roots multiplied out, (1 - 2 cos w z^-1 + z^-2) each, then
+    // the roots at -1 and 1 put back, and A = (P + Q) / 2.
+    double ps[p + 2] = {1.0}, qs[p + 2] = {1.0};
+    int32_t degree = 0;
+    for (int32_t r = 0; r < half; ++r) {
+        const double cp = -2.0 * std::cos(static_cast<double>(lsf[r]));
+        const double cq = -2.0 * std::cos(static_cast<double>(lsf[half + r]));
+        for (int32_t i = degree + 2; i >= 0; --i) {
+            const double p1 = i >= 1 ? ps[i - 1] : 0.0, p2 = i >= 2 ? ps[i - 2] : 0.0;
+            const double q1 = i >= 1 ? qs[i - 1] : 0.0, q2 = i >= 2 ? qs[i - 2] : 0.0;
+            ps[i] = (i <= degree ? ps[i] : 0.0) + cp * p1 + p2;
+            qs[i] = (i <= degree ? qs[i] : 0.0) + cq * q1 + q2;
+        }
+        degree += 2;
+    }
+    double a[p + 1];
+    for (int32_t i = 0; i <= p; ++i) {
+        const double pFull = ps[i] + (i >= 1 ? ps[i - 1] : 0.0);
+        const double qFull = qs[i] - (i >= 1 ? qs[i - 1] : 0.0);
+        a[i] = 0.5 * (pFull + qFull);
+    }
+    // And back to reflection coefficients, stepping the order down.
+    for (int32_t m = p; m >= 1; --m) {
+        const double km = std::clamp(a[m], -0.9999, 0.9999);
+        k[m - 1] = static_cast<float>(km);
+        const double scale = 1.0 / (1.0 - km * km);
+        double prev[p + 1];
+        for (int32_t j = 1; j < m; ++j) prev[j] = (a[j] - km * a[m - j]) * scale;
+        for (int32_t j = 1; j < m; ++j) a[j] = prev[j];
+    }
+}
+
+void RecordedVoice::analyseTract(const audio::Utterance &u, float sampleRate, Tract &t, bool lsf) {
     constexpr int p = Tract::kOrder;
     const auto frames = static_cast<size_t>(u.frames);
     const size_t marks = u.epochs.size();
     t.k.assign(marks * p, 0.0f);
     t.gain.assign(marks, 0.0f);
+    if (lsf) t.lsf.assign(marks * p, 0.0f);
     t.source.assign(frames, 0.0f);
     if (frames < 2 || marks == 0) return;
     std::vector<float> pre(frames);
@@ -123,6 +244,7 @@ void RecordedVoice::analyseTract(const audio::Utterance &u, float sampleRate, Tr
             t.k[m * p + static_cast<size_t>(order - 1)] = static_cast<float>(k);
         }
         for (int32_t j = 0; j <= p; ++j) a[m * (p + 1) + static_cast<size_t>(j)] = static_cast<float>(coef[j]);
+        if (lsf && !toLsf(coef, p, &t.lsf[m * p])) t.lsf[m * p] = -1.0f;
         t.gain[m] = static_cast<float>(std::sqrt(std::max(0.0, err) / std::max(energy, 1e-9)));
     }
     // The source: each stretch from one mark to the next through its own
@@ -149,25 +271,6 @@ void RecordedVoice::analyseTract(const audio::Utterance &u, float sampleRate, Tr
             t.source[i] = pre[i] + s0 + s1 + s2 + s3;
         }
     }
-    // The tilt left in the voiced parts, before the emphasis is taken back
-    // off: in the harmonics only, each sample averaged with the one a period
-    // back, since breath fills the rest and measured as it was, the source
-    // looked even.
-    double r0 = 0.0, r1 = 0.0;
-    for (size_t m = 0; m < marks; ++m) {
-        if (!u.epochs[m].voiced) continue;
-        const auto period = static_cast<size_t>(std::lround(u.epochs[m].period));
-        const auto begin = static_cast<size_t>(std::max(0, u.epochs[m].at)) + 1;
-        const size_t end = m + 1 < marks ? static_cast<size_t>(std::max(0, u.epochs[m + 1].at)) : frames;
-        if (period < 2 || begin < period + 1) continue;
-        for (size_t i = begin; i < end && i < frames; ++i) {
-            const double h0 = 0.5 * (static_cast<double>(t.source[i]) + t.source[i - period]);
-            const double h1 = 0.5 * (static_cast<double>(t.source[i - 1]) + t.source[i - 1 - period]);
-            r0 += h0 * h0;
-            r1 += h0 * h1;
-        }
-    }
-    t.colour = r0 > 0.0 ? static_cast<float>(std::clamp(r1 / r0, 0.0, 0.95)) : 0.0;
     for (size_t i = 1; i < frames; ++i) t.source[i] += kEmphasis * t.source[i - 1];
 }
 
@@ -204,6 +307,7 @@ double powerOver(const std::vector<float> &x, int32_t from, int32_t to) {
 std::unique_ptr<RecordedVoice> RecordedVoice::fromSpec(const std::string &spec, float sampleRate, int threads,
                                                        std::string &error) {
     std::vector<std::vector<std::string>> lines;
+    bool lsf = false;
     size_t at = 0;
     while (at < spec.size()) {
         size_t end = spec.find('\n', at);
@@ -215,11 +319,13 @@ std::unique_ptr<RecordedVoice> RecordedVoice::fromSpec(const std::string &spec, 
         for (size_t bar; (bar = line.find('|', from)) != std::string::npos; from = bar + 1) f.push_back(line.substr(from, bar - from));
         f.push_back(line.substr(from));
         if (f.size() >= 5) lines.push_back(std::move(f));
+        else if (line == "LSF") lsf = true;
     }
     // Each thread builds a voice of its own from a run of the lines, and they
     // go together in order, so the result doesn't depend on the threads.
     const auto parts = static_cast<size_t>(std::clamp(threads, 1, 8));
     std::vector<RecordedVoice> built(parts);
+    for (RecordedVoice &b : built) b.wantLsf = lsf;
     std::vector<std::string> errors(parts);
     auto work = [&](size_t part) {
         const size_t begin = lines.size() * part / parts, end = lines.size() * (part + 1) / parts;
@@ -247,6 +353,7 @@ std::unique_ptr<RecordedVoice> RecordedVoice::fromSpec(const std::string &spec, 
     work(0);
     for (auto &t : pool) t.join();
     auto voice = std::make_unique<RecordedVoice>();
+    voice->wantLsf = lsf;
     for (size_t part = 0; part < parts; ++part) {
         for (auto &u : built[part].vowels) voice->vowels.push_back(std::move(u));
         for (auto &u : built[part].diphthongs) voice->diphthongs.push_back(std::move(u));
@@ -331,7 +438,7 @@ bool RecordedVoice::addConsonant(const std::string &path, uint8_t phone, uint8_t
     join.sound.name = table[phone].name;
     join.sound.analyse(sampleRate);
     if (!join.sound.usable()) { error = "no pitch found"; return false; }
-    analyseTract(join.sound, sampleRate, join.tract);
+    analyseTract(join.sound, sampleRate, join.tract, wantLsf);
     join.from = std::clamp(from, start, end) - start;
     join.to = std::clamp(to, start, end) - start;
     // Its level from the vowels either side, clear of the consonant, so a
@@ -426,7 +533,7 @@ bool RecordedVoice::addVowel(const std::string &path, uint8_t phone, int32_t hol
     unit.sound.name = table[phone].name;
     unit.sound.analyse(sampleRate);
     if (!unit.sound.usable()) { error = "no pitch found"; return false; }
-    analyseTract(unit.sound, sampleRate, unit.tract);
+    analyseTract(unit.sound, sampleRate, unit.tract, wantLsf);
     unit.from = std::clamp(holdFrom, from, to) - from;
     unit.to = std::clamp(holdTo, from, to) - from;
 

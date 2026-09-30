@@ -377,6 +377,7 @@ val PANEL_LABELS: Map<String, String> = mapOf(
     "Diction:glide" to "singer|glide",
     "Diction:growl" to "tone|growl",
     "Diction:harmony" to "choir|harmony",
+    "Diction:morph" to "morph",
     "Diction:octave" to "tuning|octave",
     "Diction:pan" to "out|pan",
     "Diction:rasp" to "tone|rasp",

@@ -460,7 +460,8 @@ Result timeMachine(const std::string &name) {
  * [chord] notes held under each.
  */
 Result timeDiction(const std::string &label, const std::string &spec, double rate,
-                   std::initializer_list<std::pair<const char *, float>> knobs = {}, int32_t chord = 1) {
+                   std::initializer_list<std::pair<const char *, float>> knobs = {}, int32_t chord = 1,
+                   bool morphToSelf = false) {
     using machine::diction::RecordedVoice;
     static const char *kWords[] = {"T W IHC NG", "K AX L", "S T R IY M", "L IHC", "R OWP", "B OWP T",
                                    "HH AW S", "Y UW", "D AWP N", "AY", "W AH N", "DH AX"};
@@ -475,7 +476,7 @@ Result timeDiction(const std::string &label, const std::string &spec, double rat
         std::stringstream all;
         all << in.rdbuf();
         std::string error;
-        voice = RecordedVoice::fromSpec(all.str(), static_cast<float>(kSr), 4, error);
+        voice = RecordedVoice::fromSpec(all.str() + (morphToSelf ? "\nLSF" : ""), static_cast<float>(kSr), 4, error);
         if (voice->vowels.empty()) { printf("  %s: no voice in %s\n", label.c_str(), spec.c_str()); return r; }
         static bool told = false;
         if (!told) {
@@ -494,6 +495,8 @@ Result timeDiction(const std::string &label, const std::string &spec, double rat
     m->reset();
     m->params().jumpAll();
     if (voice) m->swapObject(0, voice.get());
+    // Morphing costs the same whichever voice it's to: the same one will do.
+    if (voice && morphToSelf) m->swapObject(1, voice.get());
     const auto stride = std::max(1, static_cast<int32_t>(static_cast<double>(kSr) / (rate * kBlock) + 0.5));
     std::vector<float> L(kBlock), R(kBlock);
     int32_t word = 0;
@@ -523,6 +526,7 @@ Result timeDiction(const std::string &label, const std::string &spec, double rat
     }
     r.finish();
     if (voice) m->swapObject(0, nullptr);
+    if (voice && morphToSelf) m->swapObject(1, nullptr);
     return r;
 }
 
@@ -814,6 +818,7 @@ int main(int argc, char **argv) {
             rows.push_back(timeDiction("recorded, built-in folds", spec, 4.0, {{"source", 1.0f}}));
             rows.push_back(timeDiction("recorded, built-in throat", spec, 4.0, {{"throat", 1.0f}}));
             rows.push_back(timeDiction("recorded, half and half", spec, 4.0, {{"source", 0.5f}, {"throat", 0.5f}}));
+            rows.push_back(timeDiction("recorded, morphed halfway", spec, 4.0, {{"morph", 0.5f}}, 1, true));
         }
         report(rows);
         return 0;

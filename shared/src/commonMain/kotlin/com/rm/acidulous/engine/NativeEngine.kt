@@ -424,7 +424,8 @@ object NativeEngine {
      * A recorded voice for a Diction: a line per held vowel,
      * "PHONE|path|holdFrom|holdTo" in frames, or "" for the built-in voice.
      */
-    suspend fun loadVoice(rack: Int, spec: String): String = EngineNative.nativeLoadVoice(rack, spec)
+    /** A Diction's recorded voice: slot 0 the one it sings in, 1 the one it morphs to. */
+    suspend fun loadVoice(rack: Int, slot: Int, spec: String): String = EngineNative.nativeLoadVoice(rack, slot, spec)
 
     /** Compile and mount Formulate's expression and tables. Returns "" or the reason. */
     suspend fun loadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String =

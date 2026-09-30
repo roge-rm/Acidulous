@@ -7,7 +7,8 @@
 // sends it: "V|PHONE|path|holdFrom|holdTo" a held vowel, "C|PHONE|VOWEL|path|
 // from|to" a consonant. The sounds are what the dictionary and the accent
 // would give: "|" between notes, "~" at the end of a note joins it to the
-// next. A chord is "60+64+67": the first note has the words.
+// next. A chord is "60+64+67": the first note has the words. MORPH_SPEC is
+// a second voice's spec, for the morph knob.
 #include <engine/format/WavWriter.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/diction/Diction.h>
@@ -119,10 +120,20 @@ int main(int argc, char **argv) {
         std::stringstream all;
         all << in.rdbuf();
         std::string error;
-        voice = machine::diction::RecordedVoice::fromSpec(all.str(), kSr, 4, error);
+        // Morphing, both voices want their throats' line spectral frequencies.
+        voice = machine::diction::RecordedVoice::fromSpec(all.str() + (std::getenv("MORPH_SPEC") ? "\nLSF" : ""), kSr, 4, error);
         if (!error.empty()) std::fprintf(stderr, "  %s\n", error.c_str());
         std::printf("  voice: %zu vowels, %zu diphthongs, %zu consonants\n", voice->vowels.size(), voice->diphthongs.size(),
                     voice->joins.size());
+    }
+    // A second voice to morph to, from MORPH_SPEC.
+    std::unique_ptr<machine::diction::RecordedVoice> voiceB;
+    if (const char *morphSpec = std::getenv("MORPH_SPEC")) {
+        std::ifstream in(morphSpec);
+        std::stringstream all;
+        all << in.rdbuf();
+        std::string error;
+        voiceB = machine::diction::RecordedVoice::fromSpec(all.str() + "\nLSF", kSr, 4, error);
     }
     // Phrases from a file instead, one a line, "name|bpm|notes", with the
     // notes as above but separated by ";": for checking every sound.
@@ -169,6 +180,7 @@ int main(int argc, char **argv) {
         m->params().jumpAll();
         m->reset();
         if (voice) m->swapObject(0, voice.get());
+        if (voiceB) m->swapObject(1, voiceB.get());
 
         const std::vector<Note> notes = parse(phrase.notes);
         const float beat = 60.0f / phrase.bpm * kSr;
@@ -234,6 +246,7 @@ int main(int argc, char **argv) {
         w.close();
         std::printf("  %-18s %5.1f s  peak %.2f\n", phrase.name, static_cast<float>(stereo.size() / 2) / kSr, peak);
         if (voice) m->swapObject(0, nullptr);
+        if (voiceB) m->swapObject(1, nullptr);
     }
     return 0;
 }

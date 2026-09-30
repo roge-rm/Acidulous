@@ -164,6 +164,7 @@ const ParamDef *Diction::paramDefs(int32_t &count) const {
         // The built-in voice's folds instead of the singer's, and its throat.
         {"source", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"throat", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"morph", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -346,10 +347,8 @@ void Diction::reset() {
     levelThroatOut = levelSungOut = 0.0f;
     throatMatch = 1.0f;
     tiltLowCross = 0.0f;
-    clickNext = 0.0f;
-    deemphasis = 0.0f;
-    colour = colourTarget = coloured = 0.0f;
-    foldsBefore = foldsEarlier = levelEven = 0.0f;
+    foldsBefore = foldsEarlier = deemphasis = levelEven = 0.0f;
+    for (float &k : morphK) k = 0.0f;
     std::fill(rawLine.begin(), rawLine.end(), 0.0f);
     phase = 1.0f;
     phaseStep = 0.0f;
@@ -392,6 +391,16 @@ void Diction::reset() {
 }
 
 void *Diction::swapObject(int32_t slot, void *object) {
+    if (slot == 1) {
+        // What's paired belongs to the old voice to morph to.
+        for (Reader *r : {&reading, &fading}) {
+            r->soundB = nullptr;
+            r->tractB = nullptr;
+        }
+        void *old = const_cast<RecordedVoice *>(voiceB);
+        voiceB = static_cast<const RecordedVoice *>(object);
+        return old;
+    }
     if (slot != 0) return object;
     // What's being read belongs to the old voice.
     reading = fading = Reader{};
@@ -465,12 +474,59 @@ void Diction::chooseUnit(const Step &s, const float target[3]) {
     r.owner = u;
     r.sound = &u->sound;
     r.tract = &u->tract;
+    pairWithB(r, u, nullptr);
     r.gain = u->gain;
     r.from = u->from;
     r.to = u->to;
     r.held = true;
     r.pos = static_cast<float>(u->from);
     startReading(r, std::max(kShortestFade, s.glide));
+}
+
+void Diction::pairWithB(Reader &r, const RecordedVoice::Unit *unit, const RecordedVoice::Join *join) const {
+    r.soundB = nullptr;
+    r.tractB = nullptr;
+    if (voiceB == nullptr) return;
+    if (unit != nullptr) {
+        // A diphthong with the other's diphthong, a vowel with its vowel or the nearest.
+        const RecordedVoice::Unit *b = unit->glideTo > 0 ? voiceB->diphthong(unit->phone) : voiceB->forPhone(unit->phone);
+        if (b == nullptr) b = voiceB->nearest(unit->f);
+        if (b == nullptr) return;
+        r.soundB = &b->sound;
+        r.tractB = &b->tract;
+        r.gainB = b->gain;
+        r.aFrom = unit->from;
+        r.aTo = unit->to;
+        r.bFrom = b->from;
+        r.bTo = b->to;
+    } else if (join != nullptr) {
+        // The consonant between the same vowels, or the other's nearest.
+        const RecordedVoice::Join *b = nullptr;
+        for (const RecordedVoice::Join &j : voiceB->joins) {
+            if (j.phone == join->phone && j.carrier == join->carrier) { b = &j; break; }
+        }
+        if (b == nullptr) b = voiceB->consonant(join->phone, join->f, RecordedVoice::From::Word);
+        if (b == nullptr) return;
+        r.soundB = &b->sound;
+        r.tractB = &b->tract;
+        r.gainB = b->gain;
+        r.aFrom = join->from;
+        r.aTo = join->to;
+        r.bFrom = b->from;
+        r.bTo = b->to;
+    }
+}
+
+float Diction::mapToB(const Reader &r, float pos) {
+    // Three stretches: before the part that matters, the part, and after it.
+    const auto framesA = static_cast<float>(r.sound->frames), framesB = static_cast<float>(r.soundB->frames);
+    const auto aFrom = static_cast<float>(r.aFrom), aTo = static_cast<float>(r.aTo);
+    const auto bFrom = static_cast<float>(r.bFrom), bTo = static_cast<float>(r.bTo);
+    float at;
+    if (pos < aFrom) at = aFrom > 0.0f ? pos / aFrom * bFrom : bFrom;
+    else if (pos < aTo) at = bFrom + (pos - aFrom) / std::max(1.0f, aTo - aFrom) * (bTo - bFrom);
+    else at = bTo + (pos - aTo) / std::max(1.0f, framesA - aTo) * (framesB - bTo);
+    return clampf(at, 0.0f, framesB - 1.0f);
 }
 
 void Diction::startReading(const Reader &r, float seconds) {
@@ -1018,6 +1074,7 @@ void Diction::enterStep(int32_t index) {
         r.owner = &s;
         r.sound = &s.unit->sound;
         r.tract = &s.unit->tract;
+        pairWithB(r, s.unit, nullptr);
         r.gain = s.unit->gain;
         r.from = s.from;
         r.to = s.to;
@@ -1031,6 +1088,7 @@ void Diction::enterStep(int32_t index) {
         r.owner = &s;
         r.sound = &s.join->sound;
         r.tract = &s.join->tract;
+        pairWithB(r, nullptr, s.join);
         r.gain = s.join->gain;
         r.from = s.from;
         r.to = s.to;
@@ -1508,11 +1566,12 @@ bool Diction::render(float *L, float *R, int32_t frames) {
     auto tilt = [&](float x) { return tiltWith(x, tiltLow); };
     const float crossSource = voice != nullptr ? clampf(paramOf(CrossSource), 0.0f, 1.0f) : 0.0f;
     const float crossThroat = voice != nullptr ? clampf(paramOf(CrossThroat), 0.0f, 1.0f) : 0.0f;
-    const bool crossing = crossSource > 0.0f || crossThroat > 0.0f;
+    const float morph = voice != nullptr && voiceB != nullptr ? clampf(paramOf(Morph), 0.0f, 1.0f) : 0.0f;
+    const bool crossing = crossSource > 0.0f || crossThroat > 0.0f || morph > 0.0f;
     float crossSung = 0.0f, throatShare = 0.0f;
     // The built-in throat's path needs the singer's source in grains, and
     // the folds' level is followed whenever either is wanted.
-    sourceGrains = crossThroat > 0.0f && crossSource < 1.0f;
+    sourceGrains = (crossThroat > 0.0f || morph > 0.0f) && crossSource < 1.0f;
     const float crossStep = 1.0f / (0.005f * sampleRate);
     const float slow = 1.0f - std::exp(-1.0f / (0.1f * sampleRate));
     const float latSmooth = 1.0f - std::exp(-1.0f / (0.004f * sampleRate));
@@ -1557,7 +1616,33 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                         if (idx < lead.tract->gain.size()) {
                             latTarget = &lead.tract->k[idx * kOrder];
                             latGainTarget = lead.tract->gain[idx] * lead.gain;
-                            colourTarget = lead.tract->colour;
+                            // Morphing: the throat between this mark's and the
+                            // other voice's at the same place, blended as line
+                            // spectral frequencies (RecordedVoice::Tract::lsf).
+                            if (morph > 0.0f && lead.soundB != nullptr && lead.tractB != nullptr) {
+                                const int32_t idxB = lead.soundB->epochAt(mapToB(lead, lead.pos));
+                                if (idxB >= 0 && static_cast<size_t>(idxB) < lead.tractB->gain.size()) {
+                                    const float *la = lead.tract->lsf.empty() ? nullptr : &lead.tract->lsf[idx * kOrder];
+                                    const float *lb = lead.tractB->lsf.empty() ? nullptr : &lead.tractB->lsf[static_cast<size_t>(idxB) * kOrder];
+                                    if (la != nullptr && lb != nullptr && la[0] >= 0.0f && lb[0] >= 0.0f) {
+                                        float between[kOrder];
+                                        for (int32_t k = 0; k < kOrder; ++k) between[k] = la[k] + morph * (lb[k] - la[k]);
+                                        RecordedVoice::Tract::fromLsf(between, morphK);
+                                    } else {
+                                        // A mark without them: as log area ratios.
+                                        const float *a = latTarget, *b = &lead.tractB->k[static_cast<size_t>(idxB) * kOrder];
+                                        for (int32_t k = 0; k < kOrder; ++k) {
+                                            auto area = [](float c) {
+                                                const float x = clampf(c, -0.999f, 0.999f);
+                                                return std::log((1.0f + x) / (1.0f - x));
+                                            };
+                                            morphK[k] = std::tanh(0.5f * ((1.0f - morph) * area(a[k]) + morph * area(b[k])));
+                                        }
+                                    }
+                                    latTarget = morphK;
+                                    latGainTarget += morph * (lead.tractB->gain[static_cast<size_t>(idxB)] * lead.gainB - latGainTarget);
+                                }
+                            }
                         }
                     }
                 }
@@ -1647,18 +1732,9 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 levelSung += slow * (sung * sung - levelSung);
                 // The built-in folds.
                 float folds = 0.0f;
-                // And the same pulses as clicks, an even spectrum, split
-                // between two samples where one falls between them.
-                float click = clickNext;
-                clickNext = 0.0f;
                 if (voicedPeriod > 0.0f) {
                     if (phase >= 1.0f) {
                         phase -= 1.0f;
-                        // Sized so a period's clicks carry the same power at any pitch.
-                        const float size = std::sqrt(voicedPeriod);
-                        const float late = phaseStep > 0.0f ? clampf(phase / phaseStep, 0.0f, 1.0f) : 0.0f;
-                        click += size * (1.0f - late);
-                        clickNext = size * late;
                         phaseStep = 1.0f / voicedPeriod;
                         pulseScale = voicedPeriod / referencePeriod;
                     }
@@ -1668,38 +1744,44 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                     phase += phaseStep;
                     levelFolds += slow * (folds * folds - levelFolds);
                 }
-                // Through the singer's throat. Clicks rather than the folds'
-                // own pulse: the throat measured keeps some of the singer's
-                // tilt, and the folds' tilt on top of it took an ee's second
-                // formant down 7 dB. Given the rest of the singer's tilt, it's
-                // the singer's whole colour, sung by a perfectly steady source.
+                // The singer's source, in grains beside the voice.
+                const float own = accSource[static_cast<size_t>(accHead)];
+                levelSource += slow * (own * own - levelSource);
+                // Through the singer's throat, or one morphed toward the other
+                // voice's: sung by the singer's own source, or with source up by
+                // the built-in folds' pulse with two tilts taken off. The
+                // throat measured keeps some of the singer's tilt, and the
+                // folds' own tilt on top of it took an ee's second formant
+                // down 7 dB; taken off, Dan's vowels came out within 3 dB a
+                // band of his voice as it is.
                 float mixed = sung;
-                if (sE > 0.0f && tE < 1.0f && latTarget != nullptr) {
+                // Morphing, all of it comes this way (brought in over the first
+                // tenth of the knob) and the source knob chooses what sings it;
+                // not, it's the source knob's share.
+                const float share = morph > 0.0f ? std::min(1.0f, morph * 10.0f) * crossVoiced : sIn;
+                if (share > 0.0f && tE < 1.0f && latTarget != nullptr) {
                     for (int32_t k = 0; k < kOrder; ++k) latK[k] += latSmooth * (latTarget[k] - latK[k]);
                     latGain += latSmooth * (latGainTarget - latGain);
-                    // The folds' pulse with two tilts taken off, at a steady level.
                     const float even = folds - 1.8f * foldsBefore + 0.81f * foldsEarlier;
                     foldsEarlier = foldsBefore;
                     foldsBefore = folds;
                     levelEven += slow * (even * even - levelEven);
-                    float f = even / std::sqrt(levelEven + 1e-12f) * latGain;
+                    // The emphasis the analysis took off, put back on the folds;
+                    // the singer's source has it already.
+                    deemphasis = even / std::sqrt(levelEven + 1e-12f) * latGain + 0.97f * deemphasis;
+                    float f = morph > 0.0f ? own * sOut + deemphasis * sIn : deemphasis;
                     for (int32_t k = kOrder - 1; k >= 0; --k) {
                         f -= latK[k] * latB[k];
                         latB[k + 1] = latK[k] * f + latB[k];
                     }
                     latB[0] = f;
-                    // The analysis's emphasis taken back off.
-                    deemphasis = f + 0.97f * deemphasis;
-                    const float through = deemphasis;
-                    levelThroat += slow * (through * through - levelThroat);
-                    const float matched = through * std::min(10.0f, std::sqrt(levelSung / (levelThroat + 1e-12f)));
-                    mixed = sung * sOut + matched * sIn;
+                    levelThroat += slow * (f * f - levelThroat);
+                    const float matched = f * std::min(10.0f, std::sqrt(levelSung / (levelThroat + 1e-12f)));
+                    mixed = sung * std::sqrt(std::max(0.0f, 1.0f - share * share)) + matched * share;
                 }
                 // Into the built-in throat, at the built-in folds' level.
                 float into = 0.0f;
                 if (tE > 0.0f) {
-                    const float own = accSource[static_cast<size_t>(accHead)];
-                    levelSource += slow * (own * own - levelSource);
                     const float ownMatched = own * std::min(10.0f, std::sqrt(levelFolds / (levelSource + 1e-12f)));
                     // Brought to the recorded voice's level coming out, since the
                     // singer's source fills the throat unlike the built-in folds.

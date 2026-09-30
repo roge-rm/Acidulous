@@ -78,7 +78,7 @@ object EngineSync {
     private val loadedFormulas = arrayOfNulls<String>(RACKS) // the text a rack's Formulate was compiled from
     private val loadedTakes = arrayOfNulls<String>(RACKS)    // the file a rack's Pollen is granulating
     private val loadedReels = arrayOfNulls<String>(RACKS)    // the spec a rack's Bias was built from
-    private val loadedVoices = arrayOfNulls<String>(RACKS)   // the spec a rack's Diction sings from
+    private val loadedVoices = arrayOfNulls<String>(RACKS * 2) // the specs a rack's Diction sings and morphs from
     /** Voice specs by setting, and the save they were read at, so an index isn't read on every sync. */
     private val voiceSpecs = mutableMapOf<String, Pair<Int, String>>()
 
@@ -205,7 +205,8 @@ object EngineSync {
                     for (pad in 0 until 13) loadedSamples.remove("$rack:$pad") // a new machine starts empty
                     loadedMaps[rack] = null
                     loadedTakes[rack] = null
-                    loadedVoices[rack] = null
+                    loadedVoices[rack * 2] = null
+                    loadedVoices[rack * 2 + 1] = null
                 } else {
                     Log.w(TAG, "could not mount ${track.machine.type} on rack $rack")
                 }
@@ -514,22 +515,29 @@ object EngineSync {
     fun ensureVoices(song: Song) {
         val root = sampleRoot ?: return
         val saves = com.rm.acidulous.model.voice.VoiceBank.saves
-        for (rack in 0 until RACKS) {
+        for (at in 0 until RACKS * 2) {
+            val rack = at / 2
+            val slot = at % 2
+            val key = if (slot == 0) com.rm.acidulous.model.voice.VoiceBank.SETTING else com.rm.acidulous.model.voice.VoiceBank.SETTING_MORPH
             val track = song.tracks.getOrNull(rack)
-            val setting = track?.machine?.settings?.get(com.rm.acidulous.model.voice.VoiceBank.SETTING).orEmpty()
+            val setting = track?.machine?.settings?.get(key).orEmpty()
+            // Morphing, both voices need their throats as line spectral
+            // frequencies, which take a quarter of loading one; asked for so,
+            // the voice sung in is loaded again once one to morph to is chosen.
+            val morphing = track?.machine?.settings?.get(com.rm.acidulous.model.voice.VoiceBank.SETTING_MORPH).orEmpty().isNotEmpty()
             val wanted = when {
                 track == null || track.machine.type != "Diction" -> null
                 mounted[rack] != "Diction" -> null // wait for the machine
                 setting.isEmpty() -> ""
-                else -> voiceSpecs[setting]?.takeIf { it.first == saves }?.second
+                else -> (voiceSpecs[setting]?.takeIf { it.first == saves }?.second
                     ?: com.rm.acidulous.model.voice.VoiceBank.engineSpec(root, setting)
-                        .also { voiceSpecs[setting] = saves to it }
+                        .also { voiceSpecs[setting] = saves to it }) + if (slot == 1 || morphing) "\nLSF" else ""
             }
-            if (loadedVoices[rack] == wanted) continue
-            loadedVoices[rack] = wanted
+            if (loadedVoices[at] == wanted) continue
+            loadedVoices[at] = wanted
             if (wanted == null) continue
             mapLoader.execute {
-                val error = NativeEngine.loadVoice(rack, wanted)
+                val error = NativeEngine.loadVoice(rack, slot, wanted)
                 if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(setting.substringBeforeLast('/')), error)
             }
         }

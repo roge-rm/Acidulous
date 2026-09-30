@@ -63,6 +63,8 @@ class Diction final : public Machine {
         // A recorded voice crossed with the built-in one: the built-in
         // folds for the singer's, and the built-in throat for the singer's.
         CrossSource, CrossThroat,
+        // Toward a second recorded voice: its throat, sung by the first's source.
+        Morph,
         Count
     };
     /** The consonants the From parameters are for, in order. */
@@ -168,6 +170,14 @@ class Diction final : public Machine {
         const audio::Utterance *sound = nullptr;
         /** Its throat and source, for crossing with the built-in voice. */
         const diction::RecordedVoice::Tract *tract = nullptr;
+        /**
+         * The same sound in the voice being morphed to, and where the two
+         * line up: [aFrom] to [aTo] here is [bFrom] to [bTo] there.
+         */
+        const audio::Utterance *soundB = nullptr;
+        const diction::RecordedVoice::Tract *tractB = nullptr;
+        float gainB = 1.0f;
+        int32_t aFrom = 0, aTo = 0, bFrom = 0, bTo = 0;
         float gain = 1.0f;
         int32_t from = 0, to = 0;
         bool held = true;
@@ -404,7 +414,15 @@ class Diction final : public Machine {
     /** Brings the singers together to about one's level. */
     float together = 1.0f;
 
-    // --- crossed with the built-in voice ------------------------------------------
+    // --- crossed with the built-in voice, and morphed to another ---------------------
+    /** The voice being morphed to, if one is chosen. */
+    const diction::RecordedVoice *voiceB = nullptr;
+    /** Pairs [r] with the same sound in [voiceB]: the unit [unit] or the consonant [join] of the first voice. */
+    void pairWithB(Reader &r, const diction::RecordedVoice::Unit *unit, const diction::RecordedVoice::Join *join) const;
+    /** Where [pos] in [r]'s sound is in its pair's. */
+    static float mapToB(const Reader &r, float pos);
+    /** The throat between the two, as the lattice wants it. */
+    float morphK[diction::RecordedVoice::Tract::kOrder]{};
     static constexpr int kOrder = diction::RecordedVoice::Tract::kOrder;
     /** The singer's source, laid in grains beside the voice when the built-in throat is wanted. */
     std::vector<float> accSource = std::vector<float>(kAccum, 0.0f);
@@ -423,11 +441,8 @@ class Diction final : public Machine {
     float levelSung = 0.0f, levelThroat = 0.0f, levelFolds = 0.0f, levelSource = 0.0f;
     float levelThroatOut = 0.0f, levelSungOut = 0.0f, throatMatch = 1.0f;
     float tiltLowCross = 0.0f;
-    /** The rest of a click that fell between two samples, and the emphasis filter's memory. */
-    float clickNext = 0.0f, deemphasis = 0.0f;
-    /** The singer's source's tilt given to the clicks, and its memory. */
-    float colour = 0.0f, colourTarget = 0.0f, coloured = 0.0f;
-    float foldsBefore = 0.0f, foldsEarlier = 0.0f, levelEven = 0.0f;
+    /** The folds' pulse with its tilts taken off: its memory, the emphasis put back, and its level. */
+    float foldsBefore = 0.0f, foldsEarlier = 0.0f, deemphasis = 0.0f, levelEven = 0.0f;
     bool harmonyOn() const { return steppedOf(Harmony) > 0; }
     void addHarmony(uint8_t n);
     void dropHarmony(uint8_t n);

@@ -53,6 +53,9 @@ the chord sings it too.
   singer's throat for the built-in voice's, which follows the words. Both up is
   the built-in voice singing with the recorded voice's timing. Consonants
   like S and T stay the singer's.
+- **morph** - a second recorded voice to morph to, and how far. The throat
+  moves from one voice's to the other's, sung by the first voice. Choosing a
+  voice to morph to loads the first voice again, which takes a moment.
 - **consonants** - how long the consonants take.
 - **level** - how loud a recorded voice's consonants are against its vowels.
 - **from…** - which of a recorded voice's takes each consonant is formed

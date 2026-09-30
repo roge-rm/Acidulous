@@ -3555,10 +3555,13 @@ private fun DictionConsonantsWindow(b: ParamBinding, onDismiss: () -> Unit) {
 
 /** Which voice a Diction sings in: its own, or one recorded in the Sound window. */
 @Composable
-private fun DictionVoiceKnob(track: Track, trackIndex: Int, editor: SongEditor) {
+private fun DictionVoiceKnob(
+    track: Track, trackIndex: Int, editor: SongEditor,
+    key: String = com.rm.acidulous.model.voice.VoiceBank.SETTING, none: String = stringResource(Res.string.diction_builtin),
+) {
     val names = remember { com.rm.acidulous.model.voice.VoiceBank.all(EngineAssets.userRoot()).map { it.name } }
-    val choices = listOf(stringResource(Res.string.diction_builtin)) + names
-    val setting = track.machine.settings[com.rm.acidulous.model.voice.VoiceBank.SETTING].orEmpty()
+    val choices = listOf(none) + names
+    val setting = track.machine.settings[key].orEmpty()
     val index = names.indexOf(com.rm.acidulous.model.voice.VoiceBank.nameOf(setting)) + 1
     val last = (choices.size - 1).coerceAtLeast(1)
     Knob(
@@ -3567,7 +3570,7 @@ private fun DictionVoiceKnob(track: Track, trackIndex: Int, editor: SongEditor) 
         onChange = { v ->
             val i = (v * last).roundToInt().coerceIn(0, choices.size - 1)
             val want = if (i == 0) null else com.rm.acidulous.model.voice.VoiceBank.settingOf(names[i - 1])
-            if (want.orEmpty() != setting) editor.edit(trackIndex) { t -> t.withSetting(com.rm.acidulous.model.voice.VoiceBank.SETTING, want) }
+            if (want.orEmpty() != setting) editor.edit(trackIndex) { t -> t.withSetting(key, want) }
         },
     )
 }
@@ -3589,6 +3592,10 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("cross") {
                     PanelKnob(b, "source", "source", PanelPink)
                     PanelKnob(b, "throat", "throat", PanelPink)
+                }
+                Group("morph") {
+                    DictionVoiceKnob(track, trackIndex, editor, com.rm.acidulous.model.voice.VoiceBank.SETTING_MORPH, panelWord("off"))
+                    PanelKnob(b, "morph", "morph", PanelPink)
                 }
                 Group("words") {
                     PanelKnob(b, "consonants", "consonants", PanelPink)

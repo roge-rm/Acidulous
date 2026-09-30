@@ -1871,13 +1871,14 @@ std::string EngineHost::loadUtterance(int rack, const std::string &path) {
 }
 
 
-std::string EngineHost::loadVoice(int rack, const std::string &spec) {
+std::string EngineHost::loadVoice(int rack, int slot, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (slot < 0 || slot > 1) return "no such voice slot";
     if (awaitMachine(sEngine, rack, "Diction") == nullptr) return "that rack is not a Diction";
     Mount mount;
     mount.kind = Mount::Kind::Object;
     mount.rack = rack;
-    mount.slot = 0;
+    mount.slot = slot;
     mount.object = nullptr;
     mount.deleter = deleteAs<machine::diction::RecordedVoice>;
     if (spec.empty()) return mountObjectWithRetry(mount) ? "" : "mount queue full";

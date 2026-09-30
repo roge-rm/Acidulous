@@ -11,6 +11,7 @@
 #include <engine/format/WavWriter.h>
 #include <engine/machine/diction/Cutter.h>
 #include <engine/machine/diction/Phones.h>
+#include <engine/format/WavReader.h>
 #include <engine/machine/diction/RecordedVoice.h>
 #include <sequencer/ClipPlayer.h>
 
@@ -428,8 +429,8 @@ int main() {
         char dirTemplate[] = "/tmp/diction_voice_XXXXXX";
         const std::string dir = mkdtemp(dirTemplate);
         auto code = [](const char *name) { return static_cast<uint8_t>(machine::diction::phoneCode(name, static_cast<int32_t>(std::strlen(name)))); };
-        auto take = [&](const char *file, std::initializer_list<const char *> sounds) {
-            auto m = singer({});
+        auto take = [&](const char *file, std::initializer_list<const char *> sounds, float formant = 0.0f) {
+            auto m = singer({{Diction::Formant, formant}});
             std::vector<uint8_t> first{code(*sounds.begin())};
             std::vector<uint8_t> rest;
             for (auto it = sounds.begin() + 1; it != sounds.end(); ++it) rest.push_back(code(*it));
@@ -612,6 +613,57 @@ int main() {
                 const float db = 20.0f * std::log10(rms(ah, from, len) / plain);
                 check(std::fabs(db) < 3.0f, ("and as loud: " + which).c_str(), std::to_string(db) + " dB");
             }
+        }
+
+        // Morphed to a second voice: the built-in one with a throat five
+        // semitones smaller, recorded the same way.
+        {
+            machine::diction::RecordedVoice other;
+            other.wantLsf = true;
+            for (const char *v : {"AA", "IY"}) {
+                const auto t = take((std::string("small-") + v + ".wav").c_str(), {v}, 5.0f);
+                const auto cut = machine::diction::cutTake(t.second, kSr, machine::diction::TakeKind::Held, noteHz);
+                other.addVowel(t.first, code(v), cut.holdFrom, cut.holdTo, kSr, error);
+            }
+            machine::diction::RecordedVoice first;
+            first.wantLsf = true;
+            for (const char *v : {"AA", "IY"}) {
+                const std::string path = dir + "/" + v + ".wav";
+                std::string e;
+                const auto data = WavReader::read(path, static_cast<int32_t>(kSr), e);
+                std::vector<float> mono(data->left.begin(), data->left.begin() + data->frames);
+                const auto cut = machine::diction::cutTake(mono, kSr, machine::diction::TakeKind::Held, noteHz);
+                first.addVowel(path, code(v), cut.holdFrom, cut.holdTo, kSr, error);
+            }
+            auto morphed = [&](float morph, const machine::diction::RecordedVoice *to) {
+                auto m = singer({{Diction::Morph, morph}});
+                m->swapObject(0, &first);
+                m->swapObject(1, const_cast<machine::diction::RecordedVoice *>(to));
+                std::vector<uint8_t> ah{code("AA")};
+                const auto x = render(*m, 1.2f, [&](int32_t b) { if (b == 0) { m->lyric(ah.data(), 1); m->noteOn(45, 100); } });
+                m->swapObject(1, nullptr);
+                m->swapObject(0, nullptr);
+                return std::vector<float>(x.begin() + static_cast<long>(0.3f * kSr), x.end());
+            };
+            auto smallAh = [&]() {
+                auto m = singer({});
+                m->swapObject(0, &other);
+                std::vector<uint8_t> ah{code("AA")};
+                const auto x = render(*m, 1.2f, [&](int32_t b) { if (b == 0) { m->lyric(ah.data(), 1); m->noteOn(45, 100); } });
+                m->swapObject(0, nullptr);
+                return std::vector<float>(x.begin() + static_cast<long>(0.3f * kSr), x.end());
+            };
+            const float from = throat(morphed(0.0f, &other)), to = throat(smallAh());
+            const float half = throat(morphed(0.5f, &other)), full = throat(morphed(1.0f, &other));
+            check(std::fabs(full - to) < 0.35f * std::fabs(from - to) && half > std::min(from, full) && half < std::max(from, full),
+                  "morph moves the throat to the other voice's, through the middle",
+                  std::to_string(from) + " Hz, " + std::to_string(half) + ", " + std::to_string(full) + "; the other " + std::to_string(to));
+            const auto plain = morphed(0.0f, &other), all = morphed(1.0f, &other);
+            const float db = 20.0f * std::log10(rms(all, static_cast<size_t>(0.2f * kSr), static_cast<size_t>(0.5f * kSr)) /
+                                                rms(plain, static_cast<size_t>(0.2f * kSr), static_cast<size_t>(0.5f * kSr)));
+            check(std::fabs(db) < 3.0f, "and keeps the level", std::to_string(db) + " dB");
+            const auto none = morphed(1.0f, nullptr);
+            check(none == plain, "with no voice to morph to, the knob does nothing");
         }
 
         // More singers from the one recorded voice.

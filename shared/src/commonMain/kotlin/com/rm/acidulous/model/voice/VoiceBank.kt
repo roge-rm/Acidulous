@@ -50,6 +50,8 @@ data class VoiceBank(
 
         /** The machine setting a Diction sings a recorded voice by. */
         const val SETTING = "voice"
+        /** And the one it morphs to. */
+        const val SETTING_MORPH = "morphvoice"
 
         /** A voice's setting: its index's path under the user folder, which a song bundle follows to its takes. */
         fun settingOf(name: String): String = "voices/$name/$INDEX"
