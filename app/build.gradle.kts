@@ -164,15 +164,18 @@ android {
         // in the app; lyrics on the roll and from MIDI files; clean, whisper,
         // effort, rasp, growl, choir, harmony, the built-in voice's folds or
         // throat, and a morph to a second voice; octave below zero fixed.
+        // 0.9.12: tempo-locked LFOs step through triplets and dotted notes
+        // (songs and patches move onto the new list as they load); wobble
+        // patches for the Filter and Trinity.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 26
+        val release = 27
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.9.11"
+        versionName = "0.9.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
