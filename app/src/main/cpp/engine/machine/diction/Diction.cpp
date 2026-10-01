@@ -165,6 +165,9 @@ const ParamDef *Diction::paramDefs(int32_t &count) const {
         {"source", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"throat", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"morph", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // Off, or the track whose sound it mouths the words with. Named as an
+        // effect's, so the engine and the app treat it the same.
+        {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };
     count = Count;
     return defs;
@@ -175,6 +178,18 @@ void Diction::prepare(int32_t sr) {
     phones = phoneTable(phoneCount);
     throat.prepare(sampleRate);
     amp.setSampleRate(sampleRate);
+    // The folds' pulse at the reference pitch, as the throat gets it, for talking.
+    {
+        const auto period = static_cast<int32_t>(sampleRate / Throat::kReferenceHz);
+        double power = 0.0;
+        float before = throat.flow(0.0f);
+        for (int32_t i = 1; i <= period; ++i) {
+            const float f = throat.flow(static_cast<float>(i) / static_cast<float>(period));
+            power += static_cast<double>(f - before) * (f - before);
+            before = f;
+        }
+        foldsRms = static_cast<float>(std::sqrt(power / period));
+    }
     reset();
 }
 
@@ -1567,7 +1582,11 @@ bool Diction::render(float *L, float *R, int32_t frames) {
     const float crossSource = voice != nullptr ? clampf(paramOf(CrossSource), 0.0f, 1.0f) : 0.0f;
     const float crossThroat = voice != nullptr ? clampf(paramOf(CrossThroat), 0.0f, 1.0f) : 0.0f;
     const float morph = voice != nullptr && voiceB != nullptr ? clampf(paramOf(Morph), 0.0f, 1.0f) : 0.0f;
-    const bool crossing = crossSource > 0.0f || crossThroat > 0.0f || morph > 0.0f;
+    // Talking: another track's sound in place of the folds (sidechainRack()).
+    const float *talkKey = key_;
+    const bool talking = talkKey != nullptr;
+    const float talkToFolds = foldsRms / kTalkNominal;
+    const bool crossing = crossSource > 0.0f || crossThroat > 0.0f || morph > 0.0f || (talking && voice != nullptr);
     float crossSung = 0.0f, throatShare = 0.0f;
     // The built-in throat's path needs the singer's source in grains, and
     // the folds' level is followed whenever either is wanted.
@@ -1721,7 +1740,9 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 // throat; and the built-in throat, sung through by the
                 // singer's source or the built-in folds.
                 crossVoiced = clampf(crossVoiced + (crossWanted ? crossStep : -crossStep), 0.0f, 1.0f);
-                const float sE = crossSource * crossVoiced, tE = crossThroat * crossVoiced;
+                // Talking, the other track is the source and the source knob
+                // has nothing to choose.
+                const float sE = talking ? 0.0f : crossSource * crossVoiced, tE = crossThroat * crossVoiced;
                 // Equal power: the paths aren't in step, and half of each
                 // added plainly came out 3 dB quiet.
                 const float sIn = std::sin(0.5f * dsp::kPi * sE), sOut = std::cos(0.5f * dsp::kPi * sE);
@@ -1730,6 +1751,7 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 const float sung = recorded;
                 crossSung = sung;
                 levelSung += slow * (sung * sung - levelSung);
+                const float talk = talking ? talkKey[i] : 0.0f;
                 // The built-in folds.
                 float folds = 0.0f;
                 if (voicedPeriod > 0.0f) {
@@ -1758,7 +1780,8 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 // Morphing, all of it comes this way (brought in over the first
                 // tenth of the knob) and the source knob chooses what sings it;
                 // not, it's the source knob's share.
-                const float share = morph > 0.0f ? std::min(1.0f, morph * 10.0f) * crossVoiced : sIn;
+                // Talking, all of what's voiced: the track through the throat.
+                const float share = talking ? crossVoiced : morph > 0.0f ? std::min(1.0f, morph * 10.0f) * crossVoiced : sIn;
                 if (share > 0.0f && tE < 1.0f && latTarget != nullptr) {
                     for (int32_t k = 0; k < kOrder; ++k) latK[k] += latSmooth * (latTarget[k] - latK[k]);
                     latGain += latSmooth * (latGainTarget - latGain);
@@ -1769,14 +1792,24 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                     // The emphasis the analysis took off, put back on the folds;
                     // the singer's source has it already.
                     deemphasis = even / std::sqrt(levelEven + 1e-12f) * latGain + 0.97f * deemphasis;
-                    float f = morph > 0.0f ? own * sOut + deemphasis * sIn : deemphasis;
+                    float f = talking ? talk : morph > 0.0f ? own * sOut + deemphasis * sIn : deemphasis;
                     for (int32_t k = kOrder - 1; k >= 0; --k) {
                         f -= latK[k] * latB[k];
                         latB[k + 1] = latK[k] * f + latB[k];
                     }
                     latB[0] = f;
                     levelThroat += slow * (f * f - levelThroat);
-                    const float matched = f * std::min(10.0f, std::sqrt(levelSung / (levelThroat + 1e-12f)));
+                    float matched;
+                    if (talking) {
+                        // A filter like this one raises the power of an even
+                        // input by 1 / prod(1 - k^2), so that's taken off, and
+                        // the nominal synth comes out at the voice's level.
+                        double gain = 1.0;
+                        for (int32_t k = 0; k < kOrder; ++k) gain *= 1.0 - static_cast<double>(latK[k]) * latK[k];
+                        matched = f * static_cast<float>(std::sqrt(std::max(gain, 1e-12))) * (Throat::kLevel / kTalkNominal);
+                    } else {
+                        matched = f * std::min(10.0f, std::sqrt(levelSung / (levelThroat + 1e-12f)));
+                    }
                     mixed = sung * std::sqrt(std::max(0.0f, 1.0f - share * share)) + matched * share;
                 }
                 // Into the built-in throat, at the built-in folds' level.
@@ -1785,7 +1818,10 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                     const float ownMatched = own * std::min(10.0f, std::sqrt(levelFolds / (levelSource + 1e-12f)));
                     // Brought to the recorded voice's level coming out, since the
                     // singer's source fills the throat unlike the built-in folds.
-                    into = tiltWith(ownMatched * sOut + folds * sIn, tiltLowCross) * tIn * throatMatch;
+                    // Talking, the track at the folds' level, and the throat's
+                    // own levels set for the folds: nothing to match afterwards.
+                    into = talking ? tiltWith(talk * talkToFolds, tiltLowCross) * tIn
+                                   : tiltWith(ownMatched * sOut + folds * sIn, tiltLowCross) * tIn * throatMatch;
                 }
                 recorded = tilt(mixed) * tOut;
                 glottal = into;
@@ -1841,6 +1877,12 @@ bool Diction::render(float *L, float *R, int32_t frames) {
                 glottal = tilt(glottal * pulseScale);
             }
             phase += phaseStep;
+            if (talking) {
+                // Talking: the other track in place of the folds, brought to
+                // their level, through the throat that follows the words.
+                // The words' own hiss and breath still come from the throat.
+                glottal = tiltWith(talkKey[i] * talkToFolds, tiltLowCross);
+            }
         }
 
         // The sources on their way to the step's levels.
@@ -1861,7 +1903,7 @@ bool Diction::render(float *L, float *R, int32_t frames) {
         const float fromThroat = throat.process(glottal * voiceGain * voiced,
                                                 air > 0.0f ? bipolar(noiseSeed) * airGain * air : 0.0f,
                                                 level[2] > 0.0f ? bipolar(noiseSeed) * level[2] : 0.0f);
-        if (crossing && throatShare > 0.05f) {
+        if (crossing && !talking && throatShare > 0.05f) {
             // The built-in throat's level for what goes in at full, against the recorded voice's.
             const float unit = fromThroat / (throatShare * throatMatch);
             levelThroatOut += slow * (unit * unit - levelThroatOut);

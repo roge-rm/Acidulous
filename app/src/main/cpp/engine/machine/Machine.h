@@ -1,4 +1,5 @@
 #pragma once
+#include <cstring>
 #include <cmath>
 #include <cstdint>
 #include <engine/core/Params.h>
@@ -104,6 +105,18 @@ class Machine {
     // free. A machine that doesn't use it returns `object` itself.
     virtual void *swapObject(int32_t /*slot*/, void *object) { return object; }
 
+    /**
+     * The rack this machine listens to, as an effect's detector does (see
+     * Effect::sidechainRack): a stepped parameter named `sidechain`, 0 for
+     * none and 1..16 for a rack. -1 for none, or a machine without one.
+     */
+    int32_t sidechainRack() const {
+        if (sidechainIndex_ < 0) return -1;
+        return static_cast<int32_t>(params_.get(sidechainIndex_) + 0.5f) - 1;
+    }
+    /** That rack's sound this block, mono, or null. Set by the engine before render. */
+    void setKey(const float *key) { key_ = key; }
+
     void handleMidi(uint8_t status, uint8_t d1, uint8_t d2) {
         switch (status & 0xf0) {
         case 0x90:
@@ -123,8 +136,13 @@ class Machine {
         int32_t n = 0;
         const ParamDef *defs = paramDefs(n);
         params_.init(defs, n);
+        sidechainIndex_ = -1;
+        for (int32_t i = 0; i < n; ++i) if (std::strcmp(defs[i].name, "sidechain") == 0) sidechainIndex_ = i;
     }
     ParamSet params_;
+    /** The sidechain for this block, or null: see `setKey`. */
+    const float *key_ = nullptr;
+    int32_t sidechainIndex_ = -1;
 
     /**
      * The ways to read a parameter.

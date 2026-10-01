@@ -356,6 +356,8 @@ void Engine::renderBlock(const float *in, float *out) {
             for (int32_t s = 0; s < kEffectSlots; ++s) {
                 if (Effect *e = racks[r].currentEffect(s)) e->setKey(keyFor(e->sidechainRack(), r));
             }
+            // A machine can listen too: Diction mouthing another track's sound.
+            if (Machine *m = racks[r].currentMachine()) m->setKey(keyFor(m->sidechainRack(), r));
             const auto tRack = std::chrono::steady_clock::now();
             if (racks[r].frozenActive()) {
                 racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
@@ -513,12 +515,14 @@ const float *Engine::keyFor(int32_t source, int32_t self) const {
 void Engine::sidechainOrder(int32_t *order) const {
     bool placed[kRackCount] = {};
     const auto ready = [&](int32_t r) {
+        const auto waiting = [&](int32_t src) {
+            return src >= 0 && src < kRackCount && src != r && racks[src].isActive() && !placed[src];
+        };
         for (int32_t s = 0; s < kEffectSlots; ++s) {
             const Effect *e = racks[r].currentEffect(s);
-            if (e == nullptr) continue;
-            const int32_t src = e->sidechainRack();
-            if (src >= 0 && src < kRackCount && src != r && racks[src].isActive() && !placed[src]) return false;
+            if (e != nullptr && waiting(e->sidechainRack())) return false;
         }
+        if (const Machine *m = racks[r].currentMachine(); m != nullptr && waiting(m->sidechainRack())) return false;
         return true;
     };
     int32_t n = 0;

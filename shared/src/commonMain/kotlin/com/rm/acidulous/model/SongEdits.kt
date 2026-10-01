@@ -138,7 +138,8 @@ const val SIDECHAIN_STEPS = 17
  * position: `sidechain` is 0 for its own input and 1..16 for a track, since
  * that's how the engine, lanes and controller mappings address it. So moving
  * tracks has to update it everywhere it can live: the inserts, the send
- * buses, and any automation lane on it. [f] takes and returns the 1-based
+ * buses, a machine that listens (Diction talking), and any automation lane
+ * on it. [f] takes and returns the 1-based
  * track, or 0.
  */
 fun Song.remapSidechains(f: (Int) -> Int): Song {
@@ -155,6 +156,7 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
     return copy(
         tracks = tracks.map { t ->
             t.copy(
+                machine = t.machine.params[SIDECHAIN_PARAM]?.let { v -> t.machine.copy(params = t.machine.params + (SIDECHAIN_PARAM to remap(v))) } ?: t.machine,
                 effects = t.effects.map { it.remapped() },
                 clips = t.clips.mapValues { (_, c) ->
                     if (c.automation.keys.none { it.endsWith(lane) }) c

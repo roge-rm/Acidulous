@@ -200,6 +200,12 @@ int main(int argc, char **argv) {
 
         std::vector<float> stereo;
         float L[kBlock], R[kBlock];
+        // TALK: a synth track for it to mouth, two detuned saws playing the
+        // phrase's notes, handed over as the engine hands a sidechain.
+        const bool talk = std::getenv("TALK") != nullptr;
+        if (talk) m->params().set(Diction::Talk, 1.0f);
+        float key[kBlock];
+        float saw1 = 0.0f, saw2 = 0.0f, keyHz = 0.0f;
         // Words half a second ahead of their notes, as the scheduler sends them.
         const auto aheadBlocks = static_cast<int64_t>(0.5f * kSr / kBlock);
         for (int64_t b = 0; b < blocks; ++b) {
@@ -223,6 +229,20 @@ int main(int argc, char **argv) {
                     m->noteOff(static_cast<uint8_t>(notes[i].pitch));
                     for (int32_t p : notes[i].chord) m->noteOff(static_cast<uint8_t>(p));
                 }
+            }
+            if (talk) {
+                keyHz = 0.0f;
+                for (size_t i = 0; i < notes.size(); ++i) {
+                    if (b >= on[i] && b < off[i]) keyHz = 440.0f * std::exp2((notes[i].pitch + 12.0f * octave - 69) / 12.0f);
+                }
+                for (int32_t i = 0; i < kBlock; ++i) {
+                    key[i] = keyHz > 0.0f ? 0.15f * (2.0f * saw1 - 1.0f) + 0.15f * (2.0f * saw2 - 1.0f) : 0.0f;
+                    saw1 += keyHz / kSr;
+                    saw2 += keyHz * 1.004f / kSr;
+                    if (saw1 >= 1.0f) saw1 -= 1.0f;
+                    if (saw2 >= 1.0f) saw2 -= 1.0f;
+                }
+                m->setKey(key);
             }
             std::fill(L, L + kBlock, 0.0f);
             std::fill(R, R + kBlock, 0.0f);

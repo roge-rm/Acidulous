@@ -75,6 +75,32 @@ std::vector<float> render(Machine &m, float seconds, Play play) {
     return out;
 }
 
+/**
+ * [seconds] of the machine with another track's sound as its sidechain key: a
+ * saw at [keyHz] (or silence at 0), as the engine hands it over each block.
+ */
+template <typename Play>
+std::vector<float> renderKeyed(Machine &m, float seconds, float keyHz, Play play) {
+    std::vector<float> out;
+    float L[kBlock], R[kBlock], key[kBlock];
+    float phase = 0.0f;
+    const int32_t blocks = static_cast<int32_t>(seconds * kSr / kBlock);
+    for (int32_t b = 0; b < blocks; ++b) {
+        for (int32_t i = 0; i < kBlock; ++i) {
+            key[i] = keyHz > 0.0f ? 0.3f * (2.0f * phase - 1.0f) : 0.0f;
+            phase += keyHz / kSr;
+            if (phase >= 1.0f) phase -= 1.0f;
+        }
+        play(b);
+        m.setKey(key);
+        std::fill(L, L + kBlock, 0.0f);
+        std::fill(R, R + kBlock, 0.0f);
+        m.render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(0.5f * (L[i] + R[i]));
+    }
+    return out;
+}
+
 std::vector<float> held(Machine &m, uint8_t note, float seconds) {
     return render(m, seconds, [&](int32_t b) { if (b == 0) m.noteOn(note, 100); });
 }
@@ -287,6 +313,24 @@ int main() {
             const auto y = render(*mono, 0.8f, [&](int32_t b) { if (b == 0) { mono->noteOn(57, 100); mono->noteOn(64, 100); } });
             check(at(y, 0.3f, 0.7f, hz(57)) < at(y, 0.3f, 0.7f, hz(64)) * 0.1f, "without harmony it's one singer",
                   std::to_string(at(y, 0.3f, 0.7f, hz(57)) / at(y, 0.3f, 0.7f, hz(64))));
+        }
+
+        // Talking: another track's sound mouths the words.
+        {
+            auto talked = [&](const char *vowel, float keyHz) {
+                auto m = singer({{Diction::Talk, 1.0f}});
+                std::vector<uint8_t> v{static_cast<uint8_t>(machine::diction::phoneCode(vowel, static_cast<int32_t>(std::strlen(vowel))))};
+                return renderKeyed(*m, 1.2f, keyHz, [&](int32_t b) { if (b == 0) { m->lyric(v.data(), 1); m->noteOn(57, 100); } });
+            };
+            const auto ah = talked("AA", 98.0f), ee = talked("IY", 98.0f);
+            const float hz = pitchOf(ah);
+            check(std::fabs(cents(hz, 98.0f)) < 20.0f, "talking, it sounds at the other track's pitch, not the note's",
+                  std::to_string(hz) + " Hz");
+            check(band(ee, 1900, 2800) > band(ah, 1900, 2800) * 2.0f, "and says its vowels",
+                  std::to_string(band(ee, 1900, 2800)) + " against " + std::to_string(band(ah, 1900, 2800)));
+            const auto quiet = talked("AA", 0.0f);
+            check(rms(quiet, static_cast<size_t>(0.3f * kSr), static_cast<size_t>(0.6f * kSr)) < 1e-4f,
+                  "and is quiet while the other track is", std::to_string(rms(quiet, static_cast<size_t>(0.3f * kSr), static_cast<size_t>(0.6f * kSr))));
         }
 
         auto r = singer({{Diction::Release, 0.1f}});
@@ -664,6 +708,23 @@ int main() {
             check(std::fabs(db) < 3.0f, "and keeps the level", std::to_string(db) + " dB");
             const auto none = morphed(1.0f, nullptr);
             check(none == plain, "with no voice to morph to, the knob does nothing");
+        }
+
+        // Talking through the singer's own throat.
+        {
+            auto talked = [&](const char *vowel) {
+                auto m = singer({{Diction::Talk, 1.0f}});
+                m->swapObject(0, &voice);
+                std::vector<uint8_t> v{code(vowel)};
+                auto x = renderKeyed(*m, 1.2f, 98.0f, [&](int32_t b) { if (b == 0) { m->lyric(v.data(), 1); m->noteOn(45, 100); } });
+                m->swapObject(0, nullptr);
+                return std::vector<float>(x.begin() + static_cast<long>(0.3f * kSr), x.end());
+            };
+            const auto ah = talked("AA"), ee = talked("IY");
+            check(std::fabs(cents(pitchOf(ah), 98.0f)) < 20.0f, "a recorded voice talks at the other track's pitch",
+                  std::to_string(pitchOf(ah)) + " Hz");
+            check(band(ee, 1900, 2800) > band(ah, 1900, 2800) * 1.3f, "with the singer's vowels",
+                  std::to_string(band(ee, 1900, 2800)) + " against " + std::to_string(band(ah, 1900, 2800)));
         }
 
         // More singers from the one recorded voice.

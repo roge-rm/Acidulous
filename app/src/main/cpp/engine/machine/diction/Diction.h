@@ -65,6 +65,8 @@ class Diction final : public Machine {
         CrossSource, CrossThroat,
         // Toward a second recorded voice: its throat, sung by the first's source.
         Morph,
+        // Another track's sound for the folds, mouthing the words: a talkbox.
+        Talk,
         Count
     };
     /** The consonants the From parameters are for, in order. */
@@ -443,6 +445,16 @@ class Diction final : public Machine {
     float tiltLowCross = 0.0f;
     /** The folds' pulse with its tilts taken off: its memory, the emphasis put back, and its level. */
     float foldsBefore = 0.0f, foldsEarlier = 0.0f, deemphasis = 0.0f, levelEven = 0.0f;
+    /**
+     * Talking, the other track is taken at a nominal level, a synth at about
+     * -14 dB, and so follows it up and down as a talkbox does: brought to the
+     * built-in folds' own level ([foldsRms], from their pulse at the
+     * reference pitch) for the built-in throat, and to the voice's level
+     * through the singer's. Followed levels instead, starting from nothing,
+     * made every note's start ten times too loud.
+     */
+    static constexpr float kTalkNominal = 0.2f;
+    float foldsRms = 1.0f;
     bool harmonyOn() const { return steppedOf(Harmony) > 0; }
     void addHarmony(uint8_t n);
     void dropHarmony(uint8_t n);

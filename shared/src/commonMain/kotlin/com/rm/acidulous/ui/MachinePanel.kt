@@ -63,6 +63,7 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Patch
+import com.rm.acidulous.model.SIDECHAIN_STEPS
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.engine.EngineAssets
 import com.rm.acidulous.model.Zone
@@ -3592,6 +3593,12 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("cross") {
                     PanelKnob(b, "source", "source", PanelPink)
                     PanelKnob(b, "throat", "throat", PanelPink)
+                    // Another track's sound mouthing the words: off, or the track.
+                    val off = panelWord("off")
+                    val talkLabels = listOf(off) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1}"
+                    }
+                    PanelStepKnob(b, "sidechain", talkLabels, "talk", PanelAmber)
                 }
                 Group("morph") {
                     DictionVoiceKnob(track, trackIndex, editor, com.rm.acidulous.model.voice.VoiceBank.SETTING_MORPH, panelWord("off"))

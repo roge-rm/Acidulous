@@ -53,6 +53,13 @@ the chord sings it too.
   singer's throat for the built-in voice's, which follows the words. Both up is
   the built-in voice singing with the recorded voice's timing. Consonants
   like S and T stay the singer's.
+- **talk** - another track's sound mouths the words, like a talkbox. Play a
+  synth on that track: Diction's notes only say when the words come, and what
+  you hear is the synth at its own pitch, shaped into the words by the throat
+  (yours with a recorded voice, or the built-in one with **throat** up). The S's
+  and T's still come from Diction, so the words are clearer than a real
+  talkbox's. Turn the synth track's fader down to hear only the talking; Diction
+  still hears it.
 - **morph** - a second recorded voice to morph to, and how far. The throat
   moves from one voice's to the other's, sung by the first voice. Choosing a
   voice to morph to loads the first voice again, which takes a moment.

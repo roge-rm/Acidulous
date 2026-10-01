@@ -169,6 +169,11 @@ class SongEditsTest {
         assertEquals(key(3), gone.master.sends[1].params[SIDECHAIN_PARAM])
         assertEquals(listOf(0f, key(3)), gone.tracks[1].clips["s"]!!.automation["effect1:sidechain"]!!.points.map { it.value })
 
+        // Diction talking with the hat's sound follows it the same way.
+        val talking = song.addTrack("Diction").updateTrack(4) { t -> t.copy(machine = t.machine.copy(params = mapOf(SIDECHAIN_PARAM to key(4)))) }
+        assertEquals(key(5), talking.duplicateTrack(0).tracks[5].machine.params[SIDECHAIN_PARAM])
+        assertEquals(key(3), talking.deleteTrack(1).tracks[3].machine.params[SIDECHAIN_PARAM])
+
         // A track's output is a mixer group index, so moving tracks leaves it
         // alone.
         val grouped = song.addGroup("Drums").updateTrack(3) { it.copy(mixer = it.mixer.copy(output = 1)) }

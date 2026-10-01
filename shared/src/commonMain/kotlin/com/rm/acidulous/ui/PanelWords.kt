@@ -819,6 +819,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "tables" to Res.string.pw_tables,
     "take" to Res.string.pw_take,
     "takes" to Res.string.pw_takes,
+    "talk" to Res.string.pw_talk,
     "tape" to Res.string.pw_tape,
     "tempo" to Res.string.pw_tempo,
     "tension" to Res.string.pw_tension,
