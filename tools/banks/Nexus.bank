@@ -18,7 +18,7 @@
 #
 # Families: basic, house, macro, morph, generative, texture.
 #
-# The spread across this bank is wide on purpose. Plucked, Leslie String and
+# The spread across this bank is wide on purpose. Plucked, Rotor String and
 # Listening are a struck string and a grain cloud among held notes: `loud` is
 # the loudest four hundred milliseconds, and a pluck spends most of that
 # window decaying. Their peaks sit with everything else.
@@ -56,12 +56,12 @@ patch Plucked family=house
   s05_p1         0.95
   volume         1.00
 
-patch "Leslie String" family=house
+patch "Rotor String" family=house
   # And through Manual's cabinet, which is the other block nothing else can
   # offer. A plucked string in a rotating speaker is not a sound anybody has.
   #
   # Both of the cabinet's outputs go to the sink - `c|5.1|6.2` is the right
-  # one - because a Leslie heard through a single microphone is not a Leslie.
+  # one - because a rotary speaker heard through a single microphone is not one.
   # Until the sink grew a second input there was nowhere for that cable to go,
   # and this patch was two bit-identical channels.
   set nexus "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"
@@ -96,7 +96,7 @@ patch Listening family=house input=break
   #
   # The cabinet came off: a rotary swells and falls on its own cycle, so a
   # render that happens to end on a swell reads as a tail getting louder,
-  # which is what a runaway looks like from outside. Leslie String next door
+  # which is what a runaway looks like from outside. Rotor String next door
   # is where the cabinet belongs, under something that decays.
   set nexus "v|1\nm|0|audioin|mono\nm|1|grain|mono\nm|2|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0"
   s01_p2         0.18

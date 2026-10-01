@@ -173,7 +173,7 @@ patch "Morph Sweep" family=pad  note=55 range=36..79 role=pad
   o6_ratio       8
   volume         0.60
 
-patch Rhodes family=keys  note=60 range=36..84 role=keys
+patch "Stage Keys" family=keys  note=60 range=36..84 role=keys
   # Two pairs, the modulator a fourth above its carrier and decaying
   # faster than it. The whole electric piano is that one relationship.
   algoa          #6
@@ -199,7 +199,7 @@ patch Rhodes family=keys  note=60 range=36..84 role=keys
   o6_level       0
   volume         0.72
 
-patch Wurly family=keys  note=60 range=36..84 role=keys
+patch "Reed Keys" family=keys  note=60 range=36..84 role=keys
   # Harder and hollower than the tine: the modulator is a square, which
   # puts a reed's buzz on the front of every note.
   algoa          #6
@@ -225,7 +225,7 @@ patch Wurly family=keys  note=60 range=36..84 role=keys
   o6_level       0
   volume         0.77
 
-patch Clavi family=keys  note=60 range=36..84 role=keys
+patch "Funk Keys" family=keys  note=60 range=36..84 role=keys
   # A stack of three with feedback on the top of it, decaying almost at
   # once. Feedback is what turns a sine into a saw here.
   algoa          #5

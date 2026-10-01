@@ -500,17 +500,17 @@ internal object FactoryBanks {
         family = "pad",
         low = 36, high = 79)
 
-    private fun ratio8() = Patch("Ratio", "Rhodes",
+    private fun ratio8() = Patch("Ratio", "Stage Keys",
         mapOf("o1_level" to 0.9f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.2f, "o1_release" to 0.656523347f, "o2_ratio" to 0.5f, "o2_level" to 0.42f, "o2_decay" to 0.618813455f, "o2_sustain" to 0f, "o2_vel" to 0.8f, "o3_level" to 0.5f, "o3_decay" to 0.79919f, "o3_sustain" to 0.15f, "o4_ratio" to 0.600919366f, "o4_level" to 0.22f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.72f),
         family = "keys",
         low = 36, high = 84)
 
-    private fun ratio9() = Patch("Ratio", "Wurly",
+    private fun ratio9() = Patch("Ratio", "Reed Keys",
         mapOf("o1_level" to 0.9f, "o1_decay" to 0.7848632f, "o1_sustain" to 0.18f, "o2_wave" to 0.533333361f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.578839362f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.4f, "o3_decay" to 0.762373149f, "o3_sustain" to 0.1f, "o4_ratio" to 0.448120326f, "o4_level" to 0.3f, "o4_decay" to 0.5161209f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.77f),
         family = "keys",
         low = 36, high = 84)
 
-    private fun ratio10() = Patch("Ratio", "Clavi",
+    private fun ratio10() = Patch("Ratio", "Funk Keys",
         mapOf("o1_level" to 1f, "o1_decay" to 0.656523347f, "o1_sustain" to 0.05f, "o1_release" to 0.5161209f, "o2_ratio" to 0.448120326f, "o2_level" to 1f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o3_level" to 1f, "o3_fb" to 0.45f, "o3_decay" to 0.5161209f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "f_type" to 0.181818187f, "f_freq" to 0.76701f, "f_key" to 0.6f, "volume" to 1f),
         family = "keys",
         low = 36, high = 84)
@@ -1824,7 +1824,7 @@ internal object FactoryBanks {
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0"),
         family = "house")
 
-    private fun nexus3() = Patch("Nexus", "Leslie String",
+    private fun nexus3() = Patch("Nexus", "Rotor String",
         mapOf("s02_p3" to 0.02f, "s04_p2" to 0.95f, "s06_p1" to 0.95f, "volume" to 1f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
         family = "house")
