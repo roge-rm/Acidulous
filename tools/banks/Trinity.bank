@@ -752,6 +752,51 @@ patch Reese family=bass  note=36 range=24..55 role=bass
   a_release      0.25 s
   volume         0.48
 
+patch Wobble family=bass  note=36 range=24..55 role=bass
+  # The Reese's two saws through a resonant low pass that LFO 1 opens and
+  # closes in eighth triplets, restarting with each note. Lock l1_sync on the
+  # steps (1/4, 1/8, 1/8T, 1/16) and the bass talks.
+  o1_wave        #0
+  o1_level       1.00
+  o2_wave        #0
+  o2_fine        -18
+  o2_level       1.00
+  o1_drift       0.1
+  f1_type        #3
+  f1_freq        200 Hz
+  f1_res         0.55
+  f1_env         0.1
+  f1_drive       0.45
+  l1_sync        #4
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.8
+  a_attack       0.005 s
+  a_decay        1.5 s
+  a_sustain      1.0
+  a_release      0.12 s
+  volume         0.45
+
+patch Wub family=bass  note=36 range=24..55 role=bass
+  # Slower and darker: a quarter-note wub on a square and a sub.
+  o1_wave        #1
+  o1_level       1.00
+  o2_wave        #0
+  o2_coarse      #12
+  o2_level       0.8
+  f1_type        #3
+  f1_freq        160 Hz
+  f1_res         0.5
+  f1_drive       0.3
+  l1_sync        #9
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.85
+  a_attack       0.005 s
+  a_sustain      1.0
+  a_release      0.15 s
+  volume         0.5
+
 patch "Pluck Bass" family=bass  note=36 range=24..55 role=bass
   # Short, filtered, and with the filter envelope faster than the amplitude
   # one so the note darkens while it is still loud.

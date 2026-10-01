@@ -860,7 +860,7 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "**cutoff** - 20 Hz to 20 kHz."),
                 ManualBlock(ManualKind.Bullet, "**reso** - resonance, up to the edge of self-oscillation."),
                 ManualBlock(ManualKind.Bullet, "**mode** - low pass, band pass or high pass."),
-                ManualBlock(ManualKind.Bullet, "**lforate** *(extra)* - the LFO speed as a note value, so it stays in time."),
+                ManualBlock(ManualKind.Bullet, "**lforate** *(extra)* - the LFO speed as a note value, so it stays in time: 1/32 to 8 bars, with the triplets (**T**) and dotted ones (**.**) between."),
                 ManualBlock(ManualKind.Bullet, "**lfodepth** *(extra)* - how far the LFO moves the cutoff. Negative sweeps down instead of up."),
                 ManualBlock(ManualKind.Bullet, "**envdepth** *(extra)* - how much the signal's level moves the cutoff. Positive opens it when you play harder (auto-wah), and negative closes it."),
                 ManualBlock(ManualKind.Bullet, "**sidechain** - whose level moves it: **own** or another track. With a negative **envdepth** and the kick as the source, the filter closes on every kick and opens again after."),
@@ -868,6 +868,7 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "A negative depth leaves the filter open and makes it dip, which sounds quite different from a sweep up."),
                 ManualBlock(ManualKind.Bullet, "Combine a slow LFO with a little envelope so it moves with the song and with what's played."),
                 ManualBlock(ManualKind.Bullet, "Resonance and band pass lose level, so use **gain** to make it up."),
+                ManualBlock(ManualKind.Bullet, "For a dubstep wobble, put it after a thick bass and start from a **wobble** patch. A wobble talks by changing speed: lock **lforate** on the steps (1/4, 1/8, 1/8T, 1/16), or map it to a knob or the mod wheel and play it. Distortion after it makes it gnarly. Trinity's **Wobble** and **Wub** bass patches have the same thing built in, on LFO 1's **sync**."),
             )),
             ManualSection("Flanger", "A short sweeping delay, with negative feedback for the hollow sound.", listOf(
                 ManualBlock(ManualKind.Para, "One very short delay, swept and mixed back with the dry sound."),

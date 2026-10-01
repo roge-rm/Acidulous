@@ -17,7 +17,7 @@ patch Ensemble family=classic
   # width rather than depth, so the modulation stays shallow and the spread
   # does the work.
   voices         #1
-  rate           #5
+  rate           #14
   depth          0.35
   spread         0.9
   drift          0.1
@@ -28,7 +28,7 @@ patch Lush family=classic
   # Four voices with more depth and a slower sweep. Thick enough that a single
   # oscillator sounds like a section, which is the only honest use for this.
   voices         #2
-  rate           #6
+  rate           #15
   depth          0.6
   spread         0.8
   drift          0.2
@@ -39,7 +39,7 @@ patch Duo family=voices
   # Two voices, hard apart, nearly no modulation: a doubler rather than a
   # chorus. What you put on a part that should be wide and still in tune.
   voices         #0
-  rate           #7
+  rate           #16
   depth          0.15
   spread         1.0
   drift          0.05
@@ -50,7 +50,7 @@ patch Quartet family=voices
   # Four voices at the sweep's fastest useful rate. Dense, and just short of
   # the point where the modulation becomes a vibrato you can hear counting.
   voices         #2
-  rate           #3
+  rate           #11
   depth          0.5
   spread         0.7
   drift          0.15
@@ -61,7 +61,7 @@ patch Tape family=drift
   # name and never right for long. Depth low, because the drift is doing the
   # moving.
   voices         #1
-  rate           #6
+  rate           #15
   depth          0.2
   spread         0.6
   drift          0.6
@@ -73,7 +73,7 @@ patch Seasick family=drift
   # them settling - past the point of being a chorus and into something that
   # sounds broken on purpose.
   voices         #2
-  rate           #7
+  rate           #16
   depth          0.3
   spread         0.9
   drift          1.0

@@ -33,6 +33,8 @@ object SongStore {
         // Groups were Bus tracks in 0.7.0 and are mixer strips now.
         song = song.busTracksToGroups()
         song = renamed(song)
+        // The LFOs' rates grew from eight to seventeen.
+        song = RateMigration.song(song)
         // Songs from before swing worked have 0 here, which now means a
         // percentage. 50 is straight.
         if (song.swing < SWING_STRAIGHT) song = song.copy(swing = SWING_STRAIGHT)

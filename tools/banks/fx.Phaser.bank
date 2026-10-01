@@ -15,7 +15,7 @@ patch "Four Stage" family=classic
   # The standard, and the reason `stages` defaults where it does. Two notches
   # moving together, feedback enough to give them an edge.
   stages         #1
-  rate           #5
+  rate           #14
   depth          0.7
   feedback       0.35
   mix            0.5
@@ -25,7 +25,7 @@ patch "Six Stage" family=classic
   # Three notches. Denser without turning into the swirl that eight gives, and
   # the most useful setting on anything with a lot of harmonics already.
   stages         #2
-  rate           #4
+  rate           #13
   depth          0.75
   feedback       0.45
   spread         0.6
@@ -36,7 +36,7 @@ patch Deep family=deep
   # remove most of what is between them, so the sweep is the sound rather than
   # a colour on it.
   stages         #3
-  rate           #5
+  rate           #14
   depth          0.95
   feedback       0.8
   spread         0.7
@@ -45,7 +45,7 @@ patch Jet family=deep
   # Feedback at its limit, where the notches ring. Named for what it does to
   # noise, which is the material it was always for.
   stages         #3
-  rate           #3
+  rate           #11
   depth          1.0
   feedback       0.9
   spread         1.0
@@ -55,7 +55,7 @@ patch Drift family=slow
   # Eight bars a cycle. Slow enough that you never hear it move, only that the
   # loop has not repeated - which is what a phaser is for on a long part.
   stages         #2
-  rate           #7
+  rate           #16
   depth          0.6
   feedback       0.25
   spread         0.5

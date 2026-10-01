@@ -16,7 +16,7 @@ patch Jet family=classic
   # The sound the word is for: deep, fed back hard, sweeping over a couple of
   # bars. On anything broadband it is a jet going over; on a single note it is
   # a slow bend that is not a bend.
-  rate           #5
+  rate           #14
   depth          0.85
   feedback       0.8
   spread         0.5
@@ -26,7 +26,7 @@ patch Metallic family=classic
   # Feedback at the top with the sweep nearly stopped. The comb sits still and
   # rings, so the source picks up a fixed pitched resonance - metal rather than
   # movement.
-  rate           #7
+  rate           #16
   depth          0.15
   feedback       0.95
   spread         0.3
@@ -37,7 +37,7 @@ patch "Through Zero" family=through
   # doubling. The hole in the middle of the sweep is the whole effect, and it
   # is what tape flanging sounded like and pedals rarely do.
   negative       #1
-  rate           #6
+  rate           #15
   depth          0.9
   feedback       0.6
   spread         0.4
@@ -46,7 +46,7 @@ patch "Through Zero" family=through
 patch Doubler family=subtle
   # No feedback, shallow, fast: not a flanger at all but the short delay
   # underneath one, which thickens a part without colouring it.
-  rate           #4
+  rate           #13
   depth          0.2
   feedback       0.0
   spread         0.8
@@ -56,7 +56,7 @@ patch Chorused family=subtle
   # Slow, wide, and no feedback - a flanger pretending to be a chorus, which is
   # what a flanger at these settings is. Worth having so the difference between
   # this and the Chorus next door is audible.
-  rate           #6
+  rate           #15
   depth          0.45
   feedback       0.1
   spread         1.0

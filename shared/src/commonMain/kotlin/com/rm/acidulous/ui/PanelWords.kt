@@ -7,8 +7,7 @@ import org.jetbrains.compose.resources.StringResource
 
 /** A panel's English word -> the resource that says it; see PanelText.kt. */
 internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
-    "1 bar" to Res.string.pw_1_bar,
-    "1' bar" to Res.string.pw_1_bar_b0dc9e,
+    "1' bar" to Res.string.pw_1_bar,
     "16 step" to Res.string.pw_16_step,
     "16ths" to Res.string.pw_16ths,
     "1st" to Res.string.pw_1st,
@@ -902,7 +901,6 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "volume" to Res.string.pw_volume,
     "Vowel" to Res.string.pw_vowel,
     "vowel" to Res.string.pw_vowel_f2d494,
-    "vowels" to Res.string.pw_vowels,
     "vspread" to Res.string.pw_vspread,
     "w" to Res.string.pw_w,
     "walk" to Res.string.pw_walk,

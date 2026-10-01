@@ -658,7 +658,8 @@ data class Master(
 
 @Serializable
 data class Song(
-    val version: Int = 1,
+    /** 2 from 0.9.12: the LFOs' seventeen rates ([RateMigration]). */
+    val version: Int = RateMigration.SONG_VERSION,
     val name: String,
     val tempo: Float = 120f,
     /**

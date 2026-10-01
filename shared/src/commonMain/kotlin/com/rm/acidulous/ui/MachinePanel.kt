@@ -1548,7 +1548,7 @@ val TRINITY_WAVES = listOf("saw", "square", "tri", "sine", "Sweep", "Glass", "Vo
 val TRINITY_FILTERS = listOf("LP6", "LP12", "LP18", "LP24", "HP6", "HP12", "HP18", "HP24", "BP6", "BP12", "notch", "peak")
 val TRINITY_DRIVES = listOf("clean", "valve", "diode", "clip", "fold", "crush")
 val TRINITY_LFO_WAVES = listOf("sine", "tri", "saw+", "saw-", "sqr", "s&h", "rand", "step8", "step16")
-val TRINITY_LFO_SYNC = listOf("free", "1/16", "1/8", "1/4", "1/2", "1 bar", "2", "4", "8")
+val TRINITY_LFO_SYNC = listOf("free") + NOTE_RATES.map { if (it == "1") "1 bar" else it }
 val TRINITY_SOURCES = listOf("off", "on", "mod", "after", "vel", "key", "rand", "envA", "envF", "env3", "env4", "env5", "env6", "lfo1", "lfo2", "lfo3")
 val TRINITY_DESTS = listOf(
     "off", "pitch", "pitch1", "pitch2", "pitch3", "pos1", "pos2", "pos3", "lvl1", "lvl2", "lvl3",

@@ -489,9 +489,11 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float thr = p.get(Threshold), ratio = p.get(Ratio), makeup = dbToGain(p.get(Makeup));
     const float atk = dsp::onePoleCoeff(p.get(Attack) * 0.001f, sr), rel = dsp::onePoleCoeff(p.get(Release) * 0.001f, sr);
     const float pump = p.get(Pump);
-    const int rateIdx = static_cast<int>(p.get(PumpRate) + 0.5f);
-    float phase = Lfo::phaseAt(tick, rateIdx);
-    const float inc = Lfo::phaseInc(rateIdx, bpm, sr);
+    // The pump's own four, which aren't the LFOs' list: 1/16, 1/8, 1/4, 1/2.
+    static constexpr float kPumpBeats[4] = {0.25f, 0.5f, 1.0f, 2.0f};
+    const float beats = kPumpBeats[std::clamp(static_cast<int>(p.get(PumpRate) + 0.5f), 0, 3)];
+    float phase = Lfo::phaseAt(tick, beats);
+    const float inc = Lfo::phaseInc(beats, bpm, sr);
     const float slope = 1.0f - 1.0f / ratio;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
@@ -526,7 +528,7 @@ const ParamDef *Filter::paramDefs(int32_t &count) const {
         {"cutoff", 20.0f, 20000.0f, 1500.0f, Curve::Exponential, 0, "Hz"},
         {"reso", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
         {"mode", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""}, // LP BP HP
-        {"lforate", 0.0f, 7.0f, 4.0f, Curve::Stepped, Lfo::kRates, ""},
+        {"lforate", 0.0f, Lfo::kRates - 1.0f, 13.0f, Curve::Stepped, Lfo::kRates, ""},
         {"lfodepth", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"envdepth", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
@@ -548,9 +550,9 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float cutoff = p.get(Cutoff), reso = p.get(Reso), lfoDepth = p.get(LfoDepth), envDepth = p.get(EnvDepth);
     const int mode = static_cast<int>(p.get(Mode) + 0.5f);
-    const int rateIdx = static_cast<int>(p.get(LfoRate) + 0.5f);
-    float phase = Lfo::phaseAt(tick, rateIdx);
-    const float inc = Lfo::phaseInc(rateIdx, bpm, sr);
+    const float beats = Lfo::beatsOf(static_cast<int>(p.get(LfoRate) + 0.5f));
+    float phase = Lfo::phaseAt(tick, beats);
+    const float inc = Lfo::phaseInc(beats, bpm, sr);
     const float atk = dsp::onePoleCoeff(0.004f, sr), rel = dsp::onePoleCoeff(0.12f, sr);
     const int chans = stereoIn ? 2 : 1;
     for (int32_t i = 0; i < frames; ++i) {
@@ -641,7 +643,7 @@ bool Bitcrusher::process(float *L, float *R, int32_t frames, bool stereoIn) {
 
 const ParamDef *Phaser::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"rate", 0.0f, 7.0f, 5.0f, Curve::Stepped, Lfo::kRates, ""},
+        {"rate", 0.0f, Lfo::kRates - 1.0f, 14.0f, Curve::Stepped, Lfo::kRates, ""},
         {"depth", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
         {"feedback", 0.0f, 0.9f, 0.3f, Curve::Linear, 0, ""},
         {"stages", 0.0f, 3.0f, 1.0f, Curve::Stepped, 4, ""}, // 2 4 6 8
@@ -660,8 +662,7 @@ bool Phaser::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float depth = p.get(Depth), feedback = p.get(Feedback), spread = p.get(Spread), mix = p.get(Mix);
     const int stages = 2 * (static_cast<int>(p.get(Stages) + 0.5f) + 1);
-    const int rateIdx = static_cast<int>(p.get(Rate) + 0.5f);
-    const float phase = Lfo::phaseAt(tick, rateIdx);
+    const float phase = Lfo::phaseAt(tick, Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f)));
     // Sweep 120 Hz .. 5 kHz, the right channel offset by up to half a cycle.
     for (int c = 0; c < 2; ++c) {
         float ph = phase + (c == 1 ? spread * 0.5f : 0.0f);
@@ -686,7 +687,7 @@ bool Phaser::process(float *L, float *R, int32_t frames, bool stereoIn) {
 
 const ParamDef *Flanger::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"rate", 0.0f, 7.0f, 5.0f, Curve::Stepped, Lfo::kRates, ""},
+        {"rate", 0.0f, Lfo::kRates - 1.0f, 14.0f, Curve::Stepped, Lfo::kRates, ""},
         {"depth", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
         {"feedback", 0.0f, 0.95f, 0.5f, Curve::Linear, 0, ""},
         {"negative", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
@@ -709,9 +710,9 @@ bool Flanger::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float depth = p.get(Depth), spread = p.get(Spread), mix = p.get(Mix);
     const float feedback = p.get(Feedback) * (p.get(Negative) >= 0.5f ? -1.0f : 1.0f);
-    const int rateIdx = static_cast<int>(p.get(Rate) + 0.5f);
-    float phase = Lfo::phaseAt(tick, rateIdx);
-    const float inc = Lfo::phaseInc(rateIdx, bpm, sr);
+    const float beats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
+    float phase = Lfo::phaseAt(tick, beats);
+    const float inc = Lfo::phaseInc(beats, bpm, sr);
     const float base = 0.0006f * sr, range = depth * 0.008f * sr; // 0.6 ms .. 8.6 ms
     for (int32_t i = 0; i < frames; ++i) {
         const float in[2] = {L[i], stereoIn ? R[i] : L[i]};
@@ -737,7 +738,7 @@ bool Flanger::process(float *L, float *R, int32_t frames, bool stereoIn) {
 
 const ParamDef *Chorus::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"rate", 0.0f, 7.0f, 4.0f, Curve::Stepped, Lfo::kRates, ""},
+        {"rate", 0.0f, Lfo::kRates - 1.0f, 13.0f, Curve::Stepped, Lfo::kRates, ""},
         {"depth", 0.0f, 1.0f, 0.45f, Curve::Linear, 0, ""},
         {"voices", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""}, // 2 3 4
         {"spread", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
@@ -767,7 +768,7 @@ bool Chorus::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float depth = p.get(Depth), spread = p.get(Spread), mix = p.get(Mix);
     const float driftAmt = p.get(Drift);
     const int voices = static_cast<int>(p.get(Voices) + 0.5f) + 2;
-    const float phase = Lfo::phaseAt(tick, static_cast<int>(p.get(Rate) + 0.5f));
+    const float phase = Lfo::phaseAt(tick, Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f)));
 
     // 8 ms at the centre, swept by up to 5 ms either way. Much past 15 ms it
     // stops sounding like a chorus.
@@ -810,7 +811,7 @@ bool Chorus::process(float *L, float *R, int32_t frames, bool stereoIn) {
 
 const ParamDef *Tremolo::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"rate", 0.0f, 7.0f, 2.0f, Curve::Stepped, Lfo::kRates, ""},
+        {"rate", 0.0f, Lfo::kRates - 1.0f, 8.0f, Curve::Stepped, Lfo::kRates, ""},
         {"depth", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
         {"shape", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""}, // sine, triangle, square
         {"pan", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -829,12 +830,12 @@ bool Tremolo::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float depth = p.get(Depth), pan = p.get(Pan), skew = p.get(Skew), mix = p.get(Mix);
     const int shape = static_cast<int>(p.get(Shape) + 0.5f);
-    const int rateIdx = static_cast<int>(p.get(Rate) + 0.5f);
-    const float base = Lfo::phaseAt(tick, rateIdx);
+    const float beats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
+    const float base = Lfo::phaseAt(tick, beats);
     // The phase advances per sample between blocks, using the same table as
     // the block phase so there's no step at block boundaries. `kBeats` is in
     // quarter notes, so a cycle is `beats * 60 / bpm` seconds.
-    const float hz = bpm / (60.0f * Lfo::kBeats[rateIdx]);
+    const float hz = bpm / (60.0f * beats);
     const float inc = hz / sr;
 
     for (int32_t i = 0; i < frames; ++i) {

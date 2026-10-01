@@ -490,7 +490,11 @@ val CHORD_NAMES = listOf(
 private val ARP_MODES = listOf("up", "down", "up-down", "down-up", "up&down", "converge", "diverge", "random", "walk", "played", "chord", "pinky", "thumb")
 private val ARP_RATES = listOf("1/1", "1/2", "1/2T", "1/4", "1/4T", "1/8", "1/8T", "1/16", "1/16T", "1/32")
 
-private val NOTE_RATES = listOf("1/16", "1/8", "1/4", "1/2", "1", "2", "4", "8")
+/** A tempo-locked LFO's rates, shortest first, as dsp::Lfo::kBeats has them. */
+internal val NOTE_RATES = listOf(
+    "1/32", "1/16T", "1/16", "1/8T", "1/16.", "1/8", "1/4T", "1/8.",
+    "1/4", "1/2T", "1/4.", "1/2", "1/2.", "1", "2", "4", "8",
+)
 
 private fun switchLabels(type: String, name: String, steps: Int): List<String>? = when {
     name == "mode" && type == "Scale" -> listOf("snap", "degree")
@@ -523,7 +527,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "mode" && type == "Filter" -> listOf("LP", "BP", "HP")
     name == "stack" && type == "Amp" -> listOf("us", "uk", "modern")
     name == "stages" -> listOf("2", "4", "6", "8")
-    name == "pumprate" -> NOTE_RATES.take(4)
+    name == "pumprate" -> listOf("1/16", "1/8", "1/4", "1/2")
     name == "lforate" || name == "rate" -> NOTE_RATES
     else -> null
 }

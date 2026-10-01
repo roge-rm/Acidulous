@@ -1,5 +1,6 @@
 #include "Ratio.h"
 #include <engine/machine/Voices.h>
+#include <engine/dsp/Lfo.h>
 
 #include <cstdio>
 
@@ -15,8 +16,9 @@ namespace {
 
 // How many radians of phase modulation a full-level operator delivers.
 constexpr float kIndex = 7.0f;
-constexpr int kSyncCount = 9;
-constexpr float kSyncBeats[kSyncCount] = {0.0f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f, 16.0f, 32.0f};
+// Free, then the tempo-locked LFOs' note values (dsp::Lfo).
+constexpr int kSyncCount = 1 + dsp::Lfo::kRates;
+inline float syncBeats(int sync) { return sync <= 0 ? 0.0f : dsp::Lfo::beatsOf(sync - 1); }
 // Partials of a struck bar, for the bell snap.
 constexpr float kBellPartials[8] = {0.5f, 1.0f, 2.0f, 2.76f, 5.40f, 8.93f, 13.34f, 18.64f};
 
@@ -380,7 +382,7 @@ void Ratio::updateVoiceMod(Voice &v, float blockSeconds) {
         const int32_t b = LfoBase + l * LfoParams;
         const int sync = stepOf(b + LSync);
         float hz = paramOf(b + LRate);
-        if (sync > 0) hz = bpm / (60.0f * kSyncBeats[sync]);
+        if (sync > 0) hz = bpm / (60.0f * syncBeats(sync));
         hz *= std::exp2(v.mod[DstLfo1Rate + l] * 4.0f);
         v.lfo[l].advance(stepOf(b + LWave), hz, blockSeconds, 0.0f, false);
     }

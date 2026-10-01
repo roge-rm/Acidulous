@@ -58,7 +58,7 @@ patch "Slow Sweep" family=sweep
   # that the loop is not repeating.
   cutoff         800 Hz
   reso           0.25
-  lforate        #6
+  lforate        #15
   lfodepth       0.85
 
 patch Scream family=extreme
@@ -68,7 +68,7 @@ patch Scream family=extreme
   # Just under where it rings on its own. At 0.97 it peaked seven decibels
   # over full scale, which is not a patch, it is a fault with a name.
   reso           0.88
-  lforate        #2
+  lforate        #8
   lfodepth       0.6
 
 patch Rhythmic family=extreme
@@ -76,6 +76,50 @@ patch Rhythmic family=extreme
   # it makes a part that was not played.
   cutoff         500 Hz
   reso           0.72
-  lforate        #0
+  lforate        #2
   lfodepth       0.9
   envdepth       0.3
+
+# The wobble: a resonant low pass swept wide and in time. Each is the same
+# filter at a different speed; a dubstep line talks by moving between them,
+# so lock lforate on the steps, or map it to a knob or the mod wheel.
+
+patch "Half Wub" family=wobble
+  mode           #0
+  cutoff         180 Hz
+  reso           0.55
+  lforate        #11
+  lfodepth       1.0
+  gain           3 dB
+
+patch Wub family=wobble
+  mode           #0
+  cutoff         220 Hz
+  reso           0.55
+  lforate        #8
+  lfodepth       0.9
+  gain           4 dB
+
+patch Wobble family=wobble
+  mode           #0
+  cutoff         220 Hz
+  reso           0.6
+  lforate        #5
+  lfodepth       0.9
+  gain           4 dB
+
+patch "Triplet Wobble" family=wobble
+  mode           #0
+  cutoff         240 Hz
+  reso           0.6
+  lforate        #3
+  lfodepth       0.85
+  gain           4 dB
+
+patch Flutter family=wobble
+  mode           #0
+  cutoff         300 Hz
+  reso           0.5
+  lforate        #2
+  lfodepth       0.7
+  gain           4 dB

@@ -355,102 +355,112 @@ internal object FactoryBanks {
         family = "bass",
         low = 24, high = 55)
 
-    private fun trinity32() = Patch("Trinity", "Pluck Bass",
+    private fun trinity32() = Patch("Trinity", "Wobble",
+        mapOf("o1_level" to 1f, "o1_drift" to 0.1f, "o2_fine" to 0.32f, "o2_level" to 1f, "f1_freq" to 0.333333343f, "f1_res" to 0.55f, "f1_drive" to 0.45f, "f1_env" to 0.55f, "a_decay" to 0.7419396f, "a_sustain" to 1f, "a_release" to 0.4588705f, "l1_sync" to 0.235294119f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.9f, "volume" to 0.45f),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity33() = Patch("Trinity", "Wub",
+        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.8f, "f1_freq" to 0.30102998f, "f1_res" to 0.5f, "f1_drive" to 0.3f, "a_sustain" to 1f, "a_release" to 0.483879149f, "l1_sync" to 0.5294118f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.925f, "volume" to 0.5f),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity34() = Patch("Trinity", "Pluck Bass",
         mapOf("o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.75f, "o2_level" to 0.69f, "o2_pw" to 0.34374997f, "f1_freq" to 0.46598f, "f1_res" to 0.35f, "f1_env" to 0.85f, "a_attack" to 0.075257495f, "a_decay" to 0.618813455f, "a_sustain" to 0.15f, "a_release" to 0.5161209f, "f_decay" to 0.4588705f, "f_sustain" to 0f, "volume" to 0.99f),
         family = "bass",
         low = 24, high = 55)
 
-    private fun trinity33() = Patch("Trinity", "Growl Bass",
+    private fun trinity35() = Patch("Trinity", "Growl Bass",
         mapOf("o1_wave" to 0.909090936f, "o1_pos" to 0.4f, "o1_warp" to 0.5f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.65f, "f1_freq" to 0.492373765f, "f1_res" to 0.3f, "f1_drivetype" to 0.4f, "f1_drive" to 0.3f, "f1_env" to 0.7f, "a_attack" to 0.15051499f, "a_decay" to 0.69649744f, "a_release" to 0.5161209f, "volume" to 1f),
         family = "bass",
         low = 24, high = 55)
 
-    private fun trinity34() = Patch("Trinity", "Wide Bass",
+    private fun trinity36() = Patch("Trinity", "Wide Bass",
         mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.2f, "o2_wave" to 0.272727281f, "o2_level" to 0.74f, "f1_freq" to 0.426251173f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.194537818f, "a_decay" to 0.716931f, "a_sustain" to 0.75f, "a_release" to 0.5161209f, "volume" to 0.62f),
         family = "bass",
         low = 24, high = 55)
 
-    private fun trinity35() = Patch("Trinity", "Square Bass",
+    private fun trinity37() = Patch("Trinity", "Square Bass",
         mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o1_pw" to 0.37499997f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.25f, "o2_level" to 0.64f, "f1_type" to 0.181818187f, "f1_freq" to 0.551070869f, "f1_res" to 0.05f, "f1_env" to 0.6f, "a_attack" to 0.119280316f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "volume" to 0.46f),
         family = "bass",
         low = 24, high = 55)
 
-    private fun trinity36() = Patch("Trinity", "Ring Bass",
+    private fun trinity38() = Patch("Trinity", "Ring Bass",
         mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.395833343f, "o2_level" to 1f, "ring12" to 0.65f, "f1_freq" to 0.53402f, "f1_res" to 0.25f, "f1_env" to 0.7f, "a_attack" to 0.119280316f, "a_decay" to 0.6846892f, "a_sustain" to 0.5f, "a_release" to 0.5161209f, "volume" to 0.58f),
         family = "bass",
         low = 24, high = 55)
 
-    private fun trinity37() = Patch("Trinity", "Square Lead",
+    private fun trinity39() = Patch("Trinity", "Square Lead",
         mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_fine" to 0.44f, "o2_level" to 0.64f, "o2_pw" to 0.447916627f, "f1_freq" to 0.7046478f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5411295f, "glide" to 0.015f, "volume" to 0.27f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity38() = Patch("Trinity", "Saw Lead",
+    private fun trinity40() = Patch("Trinity", "Saw Lead",
         mapOf("o1_level" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "o3_fine" to 0.45f, "o3_level" to 0.83f, "f1_freq" to 0.651414156f, "f1_res" to 0.25f, "f1_key" to 0.8f, "a_attack" to 0.2257725f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "volume" to 0.39f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity39() = Patch("Trinity", "Fifth Lead",
+    private fun trinity41() = Patch("Trinity", "Fifth Lead",
         mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.6458333f, "o2_level" to 0.91f, "o3_wave" to 0.09090909f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "volume" to 0.24f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity40() = Patch("Trinity", "Soft Lead",
+    private fun trinity42() = Patch("Trinity", "Soft Lead",
         mapOf("o1_wave" to 0.181818187f, "o1_level" to 1f, "o1_drift" to 0.2f, "o2_wave" to 0.272727281f, "o2_level" to 0.81f, "f1_type" to 0.09090909f, "f1_freq" to 0.634363353f, "f1_env" to 0.6f, "a_attack" to 0.444537818f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.618813455f, "glide" to 0.045f, "volume" to 0.37f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity41() = Patch("Trinity", "Hard Sync",
+    private fun trinity43() = Patch("Trinity", "Hard Sync",
         mapOf("o1_level" to 0.82f, "o2_coarse" to 0.8958333f, "o2_level" to 1f, "o2_sync" to 1f, "f1_type" to 0.181818187f, "f1_freq" to 0.76701f, "f1_env" to 0.7f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5161209f, "volume" to 0.52f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity42() = Patch("Trinity", "PWM Lead",
+    private fun trinity44() = Patch("Trinity", "PWM Lead",
         mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_fine" to 0.46f, "o2_level" to 0.96f, "f1_freq" to 0.71537596f, "f1_res" to 0.12f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.4589631f, "m01_src" to 0.8666667f, "m01_dest" to 0.333333343f, "m01_depth" to 0.7f, "m02_src" to 0.8666667f, "m02_dest" to 0.363636374f, "m02_depth" to 0.325f, "volume" to 0.22f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity43() = Patch("Trinity", "Vowel Lead",
+    private fun trinity45() = Patch("Trinity", "Vowel Lead",
         mapOf("o1_wave" to 0.545454562f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.2f, "o2_wave" to 0.545454562f, "o2_pos" to 0.5f, "o2_fine" to 0.56f, "o2_level" to 0.93f, "f1_type" to 0.181818187f, "f1_res" to 0.2f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.8f, "volume" to 1f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity44() = Patch("Trinity", "Whistle",
+    private fun trinity46() = Patch("Trinity", "Whistle",
         mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o1_drift" to 0.35f, "o2_wave" to 0.272727281f, "o2_fine" to 0.53f, "o2_level" to 0.49f, "f1_type" to 0.09090909f, "f1_freq" to 0.799313366f, "a_attack" to 0.4247425f, "a_decay" to 0.69649744f, "a_sustain" to 0.9f, "a_release" to 0.593804836f, "glide" to 0.06f, "volume" to 0.36f),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity45() = Patch("Trinity", "Noise Sweep",
+    private fun trinity47() = Patch("Trinity", "Noise Sweep",
         mapOf("o1_level" to 0f, "o2_level" to 0f, "noise" to 1f, "noisecol" to 0.5f, "f1_type" to 0.09090909f, "f1_freq" to 0.440739781f, "f1_res" to 0.45f, "f1_env" to 0.95f, "a_attack" to 0.650515f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.774181366f, "f_attack" to 0.861789465f, "f_decay" to 0.81962353f, "f_sustain" to 0.9f, "volume" to 1f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity46() = Patch("Trinity", "Ring Bells",
+    private fun trinity48() = Patch("Trinity", "Ring Bells",
         mapOf("o1_wave" to 0.272727281f, "o1_level" to 0.98f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.625f, "o2_level" to 0.98f, "o3_wave" to 0.6363636f, "o3_coarse" to 0.75f, "o3_level" to 0.41f, "ring12" to 0.9f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "a_attack" to 0.075257495f, "a_decay" to 0.79919f, "a_sustain" to 0f, "a_release" to 0.716931f, "volume" to 0.39f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity47() = Patch("Trinity", "Drone",
+    private fun trinity49() = Patch("Trinity", "Drone",
         mapOf("o1_wave" to 1f, "o1_level" to 1f, "o1_drift" to 0.55f, "o2_wave" to 1f, "o2_coarse" to 0.6458333f, "o2_level" to 0.75f, "o2_drift" to 0.5f, "o3_wave" to 1f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "o3_drift" to 0.6f, "f1_type" to 0.09090909f, "f1_freq" to 0.6930604f, "a_attack" to 0.8252575f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.81962353f, "volume" to 0.56f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity48() = Patch("Trinity", "Metallic",
+    private fun trinity50() = Patch("Trinity", "Metallic",
         mapOf("o1_wave" to 0.8181818f, "o1_pos" to 0.8f, "o1_warp" to 0.75f, "o1_level" to 1f, "o2_wave" to 0.8181818f, "o2_pos" to 0.3f, "o2_coarse" to 0.625f, "o2_level" to 0.81f, "f1_type" to 1f, "f1_freq" to 0.651414156f, "f1_res" to 0.6f, "a_attack" to 0.24999997f, "a_decay" to 0.81962353f, "a_sustain" to 0.3f, "a_release" to 0.7419396f, "volume" to 0.33f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity49() = Patch("Trinity", "Sweep Down",
+    private fun trinity51() = Patch("Trinity", "Sweep Down",
         mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o2_wave" to 0.909090936f, "o2_level" to 0.55f, "noise" to 0.35f, "f1_freq" to 0.8844042f, "f1_res" to 0.45f, "f1_env" to 0.025000006f, "a_attack" to 0.24999997f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.7419396f, "f_attack" to 0.24999997f, "f_decay" to 0.8518653f, "f_sustain" to 0f, "volume" to 0.42f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity50() = Patch("Trinity", "Air",
+    private fun trinity52() = Patch("Trinity", "Air",
         mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.9f, "o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.5f, "o1_drift" to 0.6f, "noise" to 0.3f, "noisecol" to 0.9f, "f1_type" to 0.454545468f, "f1_freq" to 0.492373765f, "f1_res" to 0.2f, "f1_key" to 0.8f, "a_attack" to 0.7940228f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "volume" to 0.95f),
         family = "texture",
         low = 36, high = 79)
 
-    private val trinity: List<Patch> by lazy { listOf(trinity0(), trinity1(), trinity2(), trinity3(), trinity4(), trinity5(), trinity6(), trinity7(), trinity8(), trinity9(), trinity10(), trinity11(), trinity12(), trinity13(), trinity14(), trinity15(), trinity16(), trinity17(), trinity18(), trinity19(), trinity20(), trinity21(), trinity22(), trinity23(), trinity24(), trinity25(), trinity26(), trinity27(), trinity28(), trinity29(), trinity30(), trinity31(), trinity32(), trinity33(), trinity34(), trinity35(), trinity36(), trinity37(), trinity38(), trinity39(), trinity40(), trinity41(), trinity42(), trinity43(), trinity44(), trinity45(), trinity46(), trinity47(), trinity48(), trinity49(), trinity50()) }
+    private val trinity: List<Patch> by lazy { listOf(trinity0(), trinity1(), trinity2(), trinity3(), trinity4(), trinity5(), trinity6(), trinity7(), trinity8(), trinity9(), trinity10(), trinity11(), trinity12(), trinity13(), trinity14(), trinity15(), trinity16(), trinity17(), trinity18(), trinity19(), trinity20(), trinity21(), trinity22(), trinity23(), trinity24(), trinity25(), trinity26(), trinity27(), trinity28(), trinity29(), trinity30(), trinity31(), trinity32(), trinity33(), trinity34(), trinity35(), trinity36(), trinity37(), trinity38(), trinity39(), trinity40(), trinity41(), trinity42(), trinity43(), trinity44(), trinity45(), trinity46(), trinity47(), trinity48(), trinity49(), trinity50(), trinity51(), trinity52()) }
 
     private fun ratio0() = Patch("Ratio", "Init", emptyMap(),
         family = "keys")
@@ -3090,18 +3100,38 @@ internal object FactoryBanks {
         family = "sweep")
 
     private fun fx_filter6() = Patch("fx.Filter", "Slow Sweep",
-        mapOf("cutoff" to 0.53402f, "reso" to 0.25f, "lforate" to 0.857142866f, "lfodepth" to 0.925f),
+        mapOf("cutoff" to 0.53402f, "reso" to 0.25f, "lforate" to 0.9375f, "lfodepth" to 0.925f),
         family = "sweep")
 
     private fun fx_filter7() = Patch("fx.Filter", "Scream",
-        mapOf("cutoff" to 0.492373765f, "reso" to 0.88f, "lforate" to 0.2857143f, "lfodepth" to 0.8f),
+        mapOf("cutoff" to 0.492373765f, "reso" to 0.88f, "lforate" to 0.5f, "lfodepth" to 0.8f),
         family = "extreme")
 
     private fun fx_filter8() = Patch("fx.Filter", "Rhythmic",
-        mapOf("cutoff" to 0.46598f, "reso" to 0.72f, "lforate" to 0f, "lfodepth" to 0.95f, "envdepth" to 0.65f),
+        mapOf("cutoff" to 0.46598f, "reso" to 0.72f, "lforate" to 0.125f, "lfodepth" to 0.95f, "envdepth" to 0.65f),
         family = "extreme")
 
-    private val fx_filter: List<Patch> by lazy { listOf(fx_filter0(), fx_filter1(), fx_filter2(), fx_filter3(), fx_filter4(), fx_filter5(), fx_filter6(), fx_filter7(), fx_filter8()) }
+    private fun fx_filter9() = Patch("fx.Filter", "Half Wub",
+        mapOf("cutoff" to 0.318080842f, "reso" to 0.55f, "lforate" to 0.6875f, "lfodepth" to 1f, "gain" to 0.5833333f),
+        family = "wobble")
+
+    private fun fx_filter10() = Patch("fx.Filter", "Wub",
+        mapOf("cutoff" to 0.3471309f, "reso" to 0.55f, "lforate" to 0.5f, "lfodepth" to 0.95f, "gain" to 0.6111111f),
+        family = "wobble")
+
+    private fun fx_filter11() = Patch("fx.Filter", "Wobble",
+        mapOf("cutoff" to 0.3471309f, "reso" to 0.6f, "lforate" to 0.3125f, "lfodepth" to 0.95f, "gain" to 0.6111111f),
+        family = "wobble")
+
+    private fun fx_filter12() = Patch("fx.Filter", "Triplet Wobble",
+        mapOf("cutoff" to 0.359727085f, "reso" to 0.6f, "lforate" to 0.1875f, "lfodepth" to 0.925f, "gain" to 0.6111111f),
+        family = "wobble")
+
+    private fun fx_filter13() = Patch("fx.Filter", "Flutter",
+        mapOf("cutoff" to 0.392030418f, "reso" to 0.5f, "lforate" to 0.125f, "lfodepth" to 0.85f, "gain" to 0.6111111f),
+        family = "wobble")
+
+    private val fx_filter: List<Patch> by lazy { listOf(fx_filter0(), fx_filter1(), fx_filter2(), fx_filter3(), fx_filter4(), fx_filter5(), fx_filter6(), fx_filter7(), fx_filter8(), fx_filter9(), fx_filter10(), fx_filter11(), fx_filter12(), fx_filter13()) }
 
     private fun fx_bitcrusher0() = Patch("fx.Bitcrusher", "Init", emptyMap(),
         family = "bits")
@@ -3144,7 +3174,7 @@ internal object FactoryBanks {
         family = "classic")
 
     private fun fx_phaser2() = Patch("fx.Phaser", "Six Stage",
-        mapOf("rate" to 0.5714286f, "depth" to 0.75f, "feedback" to 0.5f, "stages" to 0.6666667f, "spread" to 0.6f, "gain" to 0.5972222f),
+        mapOf("rate" to 0.8125f, "depth" to 0.75f, "feedback" to 0.5f, "stages" to 0.6666667f, "spread" to 0.6f, "gain" to 0.5972222f),
         family = "classic")
 
     private fun fx_phaser3() = Patch("fx.Phaser", "Deep",
@@ -3152,7 +3182,7 @@ internal object FactoryBanks {
         family = "deep")
 
     private fun fx_phaser4() = Patch("fx.Phaser", "Jet",
-        mapOf("rate" to 0.428571433f, "depth" to 1f, "feedback" to 1f, "stages" to 1f, "spread" to 1f, "mix" to 0.65f),
+        mapOf("rate" to 0.6875f, "depth" to 1f, "feedback" to 1f, "stages" to 1f, "spread" to 1f, "mix" to 0.65f),
         family = "deep")
 
     private fun fx_phaser5() = Patch("fx.Phaser", "Drift",
@@ -3173,15 +3203,15 @@ internal object FactoryBanks {
         family = "classic")
 
     private fun fx_flanger3() = Patch("fx.Flanger", "Through Zero",
-        mapOf("rate" to 0.857142866f, "depth" to 0.9f, "feedback" to 0.631579f, "negative" to 1f),
+        mapOf("rate" to 0.9375f, "depth" to 0.9f, "feedback" to 0.631579f, "negative" to 1f),
         family = "through")
 
     private fun fx_flanger4() = Patch("fx.Flanger", "Doubler",
-        mapOf("rate" to 0.5714286f, "depth" to 0.2f, "feedback" to 0f, "spread" to 0.8f, "mix" to 0.35f),
+        mapOf("rate" to 0.8125f, "depth" to 0.2f, "feedback" to 0f, "spread" to 0.8f, "mix" to 0.35f),
         family = "subtle")
 
     private fun fx_flanger5() = Patch("fx.Flanger", "Chorused",
-        mapOf("rate" to 0.857142866f, "depth" to 0.45f, "feedback" to 0.105263159f, "spread" to 1f, "mix" to 0.45f),
+        mapOf("rate" to 0.9375f, "depth" to 0.45f, "feedback" to 0.105263159f, "spread" to 1f, "mix" to 0.45f),
         family = "subtle")
 
     private val fx_flanger: List<Patch> by lazy { listOf(fx_flanger0(), fx_flanger1(), fx_flanger2(), fx_flanger3(), fx_flanger4(), fx_flanger5()) }
@@ -3190,11 +3220,11 @@ internal object FactoryBanks {
         family = "classic")
 
     private fun fx_chorus1() = Patch("fx.Chorus", "Ensemble",
-        mapOf("rate" to 0.714285731f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.55f, "gain" to 0.608333349f),
+        mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.55f, "gain" to 0.608333349f),
         family = "classic")
 
     private fun fx_chorus2() = Patch("fx.Chorus", "Lush",
-        mapOf("rate" to 0.857142866f, "depth" to 0.6f, "voices" to 1f, "spread" to 0.8f, "drift" to 0.2f, "mix" to 0.6f, "gain" to 0.608333349f),
+        mapOf("rate" to 0.9375f, "depth" to 0.6f, "voices" to 1f, "spread" to 0.8f, "drift" to 0.2f, "mix" to 0.6f, "gain" to 0.608333349f),
         family = "classic")
 
     private fun fx_chorus3() = Patch("fx.Chorus", "Duo",
@@ -3202,11 +3232,11 @@ internal object FactoryBanks {
         family = "voices")
 
     private fun fx_chorus4() = Patch("fx.Chorus", "Quartet",
-        mapOf("rate" to 0.428571433f, "depth" to 0.5f, "voices" to 1f, "spread" to 0.7f, "gain" to 0.6472222f),
+        mapOf("rate" to 0.6875f, "depth" to 0.5f, "voices" to 1f, "spread" to 0.7f, "gain" to 0.6472222f),
         family = "voices")
 
     private fun fx_chorus5() = Patch("fx.Chorus", "Tape",
-        mapOf("rate" to 0.857142866f, "depth" to 0.2f, "drift" to 0.6f, "gain" to 0.6222222f),
+        mapOf("rate" to 0.9375f, "depth" to 0.2f, "drift" to 0.6f, "gain" to 0.6222222f),
         family = "drift")
 
     private fun fx_chorus6() = Patch("fx.Chorus", "Seasick",
@@ -3223,11 +3253,11 @@ internal object FactoryBanks {
         family = "tremolo")
 
     private fun fx_tremolo2() = Patch("fx.Tremolo", "Choppy",
-        mapOf("rate" to 0.142857149f, "depth" to 0.9f, "shape" to 0.5f, "gain" to 0.658333361f),
+        mapOf("rate" to 0.3125f, "depth" to 0.9f, "shape" to 0.5f, "gain" to 0.658333361f),
         family = "tremolo")
 
     private fun fx_tremolo3() = Patch("fx.Tremolo", "Square",
-        mapOf("rate" to 0f, "depth" to 1f, "shape" to 1f),
+        mapOf("rate" to 0.125f, "depth" to 1f, "shape" to 1f),
         family = "tremolo")
 
     private fun fx_tremolo4() = Patch("fx.Tremolo", "Auto Pan",
@@ -3235,15 +3265,15 @@ internal object FactoryBanks {
         family = "pan")
 
     private fun fx_tremolo5() = Patch("fx.Tremolo", "Wide",
-        mapOf("rate" to 0.5714286f, "depth" to 0.7f, "pan" to 0.5f),
+        mapOf("rate" to 0.8125f, "depth" to 0.7f, "pan" to 0.5f),
         family = "pan")
 
     private fun fx_tremolo6() = Patch("fx.Tremolo", "Stab",
-        mapOf("rate" to 0.142857149f, "depth" to 0.95f, "shape" to 0.5f, "skew" to 0.12f, "gain" to 0.5861111f),
+        mapOf("rate" to 0.3125f, "depth" to 0.95f, "shape" to 0.5f, "skew" to 0.12f, "gain" to 0.5861111f),
         family = "skew")
 
     private fun fx_tremolo7() = Patch("fx.Tremolo", "Swell",
-        mapOf("rate" to 0.428571433f, "depth" to 0.9f, "shape" to 0.5f, "skew" to 0.88f, "gain" to 0.591666639f),
+        mapOf("rate" to 0.6875f, "depth" to 0.9f, "shape" to 0.5f, "skew" to 0.88f, "gain" to 0.591666639f),
         family = "skew")
 
     private val fx_tremolo: List<Patch> by lazy { listOf(fx_tremolo0(), fx_tremolo1(), fx_tremolo2(), fx_tremolo3(), fx_tremolo4(), fx_tremolo5(), fx_tremolo6(), fx_tremolo7()) }

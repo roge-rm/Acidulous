@@ -31,6 +31,12 @@ data class Patch(
      * go in their own group. Comes from the bank's `family=`.
      */
     val family: String = "",
+    /**
+     * 2 from 0.9.12, when the LFOs' rates grew from eight to seventeen. Not
+     * written for a default, so a patch saved before reads as 1 and is moved
+     * onto the seventeen ([RateMigration]).
+     */
+    val version: Int = 1,
 )
 
 /**
@@ -58,11 +64,15 @@ object PatchStore {
         if (machine.startsWith(FX)) "patches/fx/${machine.removePrefix(FX)}" else "patches/$machine"
 
     fun save(patch: Patch): File =
-        File(directory(patch.machine), "${safe(patch.name)}.json").also { it.writeTextSafely(json.encodeToString(Patch.serializer(), patch)) }
+        File(directory(patch.machine), "${safe(patch.name)}.json").also {
+            it.writeTextSafely(json.encodeToString(Patch.serializer(), patch.copy(version = RateMigration.PATCH_VERSION)))
+        }
 
     fun load(machine: String, name: String): Patch? =
         factory(machine).firstOrNull { it.name == name }
-            ?: File(directory(machine), "${safe(name)}.json").takeIf { it.isFile }?.let { json.decodeFromString(Patch.serializer(), it.readText()) }
+            ?: File(directory(machine), "${safe(name)}.json").takeIf { it.isFile }?.let {
+                RateMigration.patch(json.decodeFromString(Patch.serializer(), it.readText()))
+            }
 
     fun list(machine: String): List<String> = factoryNames(machine) + userList(machine)
 
