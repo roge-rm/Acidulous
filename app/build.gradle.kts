@@ -167,15 +167,20 @@ android {
         // 0.9.12: tempo-locked LFOs step through triplets and dotted notes
         // (songs and patches move onto the new list as they load); wobble
         // patches for the Filter and Trinity.
+        // 0.9.13: Hammer, modelled pianos: grand, upright, honky-tonk,
+        // fortepiano, electric grand, tine and reed electric pianos, a tangent
+        // keyboard, celesta, toy piano, dulcimer and cimbalom, with half
+        // pedalling and preparations; Diction talks with another track's
+        // sound; drum grid hits are heard and can be taken out again.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 27
+        val release = 28
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.9.12"
+        versionName = "0.9.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
