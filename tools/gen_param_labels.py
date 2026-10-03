@@ -20,7 +20,7 @@ PANELS = {
     "ManualPanel": "Manual", "CipherPanel": "Cipher", "FilamentPanel": "Filament",
     "NexusPanel": "Nexus", "CumulusPanel": "Cumulus", "FormulatePanel": "Formulate",
     "PollenPanel": "Pollen", "ResonancePanel": "Resonance", "DicePanel": "Dice", "GenesisPanel": "Genesis",
-    "BrazenPanel": "Brazen", "TimberPanel": "Timber", "MoltPanel": "Molt", "DictionPanel": "Diction",
+    "BrazenPanel": "Brazen", "HammerPanel": "Hammer", "TimberPanel": "Timber", "MoltPanel": "Molt", "DictionPanel": "Diction",
     "DictionConsonantsWindow": "Diction",
     "BiasPanel": "Bias",
 }

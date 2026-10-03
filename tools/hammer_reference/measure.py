@@ -293,7 +293,12 @@ def note(path, key, sr=None, partials=12):
         t, db = envelope(x, sr, start, fr, f0)
         if len(t) == 0:
             continue
-        fit = two_slopes(t, db, floor)
+        # Each partial against the floor beside it, halfway to the next: the
+        # whole signal's tail is the fundamental still ringing in a render,
+        # which would cut the upper partials off before their aftersound.
+        _, beside = envelope(x, sr, start, fr + 0.5 * f0 * (1 + B * (2 * k + 1)), f0)
+        own = float(np.median(beside[-max(4, len(beside) // 4):])) if len(beside) else floor
+        fit = two_slopes(t, db, max(own, floor - 30))
         rows.append({'n': k, 'hz': fr, 'start': float(db[:5].max()), 'fit': fit})
     out['partials'] = rows
 

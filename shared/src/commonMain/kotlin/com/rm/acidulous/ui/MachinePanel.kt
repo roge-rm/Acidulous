@@ -224,6 +224,7 @@ fun MachinePanel(
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding)
             "Brazen" -> BrazenPanel(binding)
+            "Hammer" -> HammerPanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3446,6 +3447,75 @@ private fun BrazenPanel(b: ParamBinding) {
                     PanelKnob(b, "drive", "drive", PanelPink)
                     PanelKnob(b, "volume", "volume")
                     PanelKnob(b, "pan", "pan")
+                }
+            }
+        }
+    }
+}
+
+// --- Hammer -----------------------------------------------------------------
+//
+// The hammer first, since how hard it is and how hard it's thrown is most of a
+// piano's colour. Then how the strings ring, the dampers, and out.
+
+private val HAMMER_STRINGS = listOf("auto", "1", "2", "3")
+private val HAMMER_VOICES = listOf("4", "6", "8", "10", "12", "16", "20", "24", "32")
+
+@Composable
+private fun HammerPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("hammer", "strings", "dampers", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("felt") {
+                    PanelKnob(b, "hardness", "hardness", PanelAmber)
+                    PanelKnob(b, "hardkey", "by key")
+                    PanelKnob(b, "weight", "weight")
+                    PanelKnob(b, "position", "strike at", PanelPink)
+                }
+                Group("touch") {
+                    PanelKnob(b, "velocity", "velocity", PanelAmber)
+                }
+            }
+            1 -> {
+                Group("ring") {
+                    PanelKnob(b, "sustain", "sustain", PanelAmber)
+                    PanelKnob(b, "sustainkey", "by key")
+                    PanelKnob(b, "tone", "tone", PanelAmber)
+                    PanelKnob(b, "tonekey", "by key")
+                }
+                Group("strings") {
+                    PanelKnob(b, "stiffness", "stiffness", PanelPink)
+                    PanelKnob(b, "stretch", "stretch")
+                    PanelStepKnob(b, "strings", HAMMER_STRINGS, "strings")
+                }
+                Group("unison") {
+                    PanelKnob(b, "unison", "unison", PanelAmber)
+                    PanelKnob(b, "couple", "couple")
+                    PanelKnob(b, "polar", "across")
+                }
+            }
+            2 -> {
+                Group("dampers") {
+                    PanelKnob(b, "dampers", "dampers", PanelAmber)
+                    PanelKnob(b, "damp time", "time")
+                }
+            }
+            else -> {
+                Group("out") {
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                    PanelKnob(b, "width", "width")
+                }
+                Group("tuning") {
+                    PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                    PanelKnob(b, "octave", "octave")
+                    PanelKnob(b, "transpose", "transpose")
+                    PanelKnob(b, "fine", "fine")
+                }
+                Group("voices") {
+                    PanelStepKnob(b, "voices", HAMMER_VOICES, "voices")
+                    PanelSwitch(b, "detail", listOf("auto", "full"), "detail")
                 }
             }
         }

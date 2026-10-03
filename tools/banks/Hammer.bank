@@ -1,0 +1,33 @@
+# Hammer - the modelled piano, voiced against the debug build.
+#
+# What each key is comes from a recorded concert grand, measured
+# (tools/hammer_reference): how stiff its strings are, how long each part of
+# it rings, how far the first fast decay falls before the slow one takes
+# over, how bright the strike is and how that changes with velocity. Init is
+# that grand. The patches move the hammer and the strings away from it.
+#
+# Values are in each parameter's own units; `audition params Hammer` lists
+# them. A patch names only what it changes.
+
+machine Hammer
+role    keys
+
+patch Init family=grand
+
+patch "Mellow Grand" family=grand
+  # Softer felt, darker as it rings.
+  hardness      -0.35
+  tone          -0.3
+
+patch "Bright Grand" family=grand
+  # Harder felt, struck a little nearer the end, the top ringing on.
+  hardness       0.4
+  hardkey        0.2
+  position      -0.2
+  tone           0.3
+
+patch "Felt Room" family=grand
+  # A worn-in hammer and short strings: an intimate, close sound.
+  hardness      -0.7
+  sustain       -0.4
+  unison         0.6

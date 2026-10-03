@@ -19,6 +19,7 @@
     <string name="machine_about_manual">organ with two manuals, pedals and a rotary cabinet</string>
     <string name="machine_about_filament">modelled strings: pluck, pick, bow or blow</string>
     <string name="machine_about_brazen">modelled brass, from trumpet to tuba</string>
+    <string name="machine_about_hammer">modelled piano: felt hammers, strings and a soundboard</string>
     <string name="machine_about_timber">modelled woodwinds: reeds and flutes</string>
     <string name="machine_about_mosaic">multisample player for SoundFonts and your samples</string>
     <string name="machine_about_pollen">granular clouds from a file or the live input</string>

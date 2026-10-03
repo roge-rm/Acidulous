@@ -2,6 +2,7 @@
 """Turns a survey into what Hammer is built to: smooth curves over the keyboard.
 
     tables.py <set or folder>[:group] [more ...]
+    tables.py --emit <name> <set>[:group]     the anchors as C++, for KeyTables.h
 
 A set holding several instruments (one instrument file each) is told apart by
 group, the instrument file's folder: electric-a:Wurl takes the groups whose
@@ -135,9 +136,46 @@ def show(name, t):
         print('    keys %-7s ' % reg + '  '.join(f'{k} {v:+.2f}' if v is not None else f'{k} -' for k, v in d.items()))
 
 
+EMIT = ['B', 'cents', 't60 1 prompt', 't60 1 after', 't60 2-4 prompt', 't60 2-4 after', 't60 5-10 prompt',
+        't60 5-10 after', 'knee dB', 'wobble dB', 'reach Hz', 'bright x f0']
+
+
+def literal(v, spec):
+    """A C++ float literal: always a point or an exponent, so 725 is 725.0f, not 725f."""
+    text = format(v, spec)
+    if not any(ch in text for ch in '.eEn'):
+        text += '.0'
+    return text + 'f'
+
+
+def emit(name, t):
+    """The anchors as a C++ table: numbers only, under an anonymous name."""
+    print(f'// {name}: measured from a reference recording by tools/hammer_reference/tables.py --emit.')
+    print(f'// Columns: key, ' + ', '.join(EMIT) + '.')
+    print(f'constexpr Anchor k{name}[] = {{')
+    for i, k in enumerate(t['anchors']):
+        cells = []
+        for c in EMIT:
+            v = t[c][i]
+            cells.append('kGap' if v is None else literal(v, '.3e' if c == 'B' else '.4g'))
+        print(f'    {{{k}, ' + ', '.join(cells) + '},')
+    print('};')
+    regions = t['per 10 velocity']
+    print(f'// Per 10 velocity steps, keys 21-47 / 48-71 / 72-108: brightness % and reach %.')
+    print(f'constexpr VelocityShape k{name}Velocity[3] = {{')
+    for d in regions.values():
+        print(f'    {{{literal(d["bright %"] or 0, '.3g')}, {literal(d["reach %"] or 0, '.3g')}}},')
+    print('};')
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
+    if sys.argv[1] == '--emit':
+        name, arg = sys.argv[2], sys.argv[3]
+        set_, _, group = arg.partition(':')
+        emit(name, summarise(folder_of(set_), group))
+        return
     for arg in sys.argv[1:]:
         name, _, group = arg.partition(':')
         folder = folder_of(name)

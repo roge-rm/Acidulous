@@ -25,6 +25,7 @@
     <string name="pw_a_sine_bent_by_itself">a sine bent by itself</string>
     <string name="pw_above">above</string>
     <string name="pw_accent">accent</string>
+    <string name="pw_across">across</string>
     <string name="pw_aeg">aeg</string>
     <string name="pw_after">after</string>
     <string name="pw_against_x">against x</string>
@@ -96,6 +97,7 @@
     <string name="pw_busy">busy</string>
     <string name="pw_buzz">buzz</string>
     <string name="pw_buzz_the_classic_shape">buzz - the classic shape</string>
+    <string name="pw_by_key">by key</string>
     <string name="pw_bypass">bypass</string>
     <string name="pw_c">c</string>
     <string name="pw_cab">cab</string>
@@ -167,6 +169,7 @@
     <string name="pw_damp_time">damp time</string>
     <string name="pw_damper">damper</string>
     <string name="pw_damper_at">damper at</string>
+    <string name="pw_dampers">dampers</string>
     <string name="pw_damping">damping</string>
     <string name="pw_dark">dark</string>
     <string name="pw_dec">dec</string>
@@ -181,6 +184,7 @@
     <string name="pw_depth_a">depth A</string>
     <string name="pw_depth_b">depth B</string>
     <string name="pw_destination">destination</string>
+    <string name="pw_detail">detail</string>
     <string name="pw_detect">detect</string>
     <string name="pw_detune">detune</string>
     <string name="pw_diatonic">diatonic</string>
@@ -262,6 +266,7 @@
     <string name="pw_feedback">feedback</string>
     <string name="pw_feel">feel</string>
     <string name="pw_feg">feg</string>
+    <string name="pw_felt">felt</string>
     <string name="pw_fenv">fenv</string>
     <string name="pw_fifths">fifths</string>
     <string name="pw_file">file</string>
@@ -294,6 +299,7 @@
     <string name="pw_freq">freq</string>
     <string name="pw_frequency">frequency</string>
     <string name="pw_from">from</string>
+    <string name="pw_full">full</string>
     <string name="pw_fwd">fwd</string>
     <string name="pw_fx">fx</string>
     <string name="pw_fxn">fx%d</string>
@@ -784,6 +790,7 @@
     <string name="pw_strange">strange</string>
     <string name="pw_stretch">stretch</string>
     <string name="pw_strike">strike</string>
+    <string name="pw_strike_at">strike at</string>
     <string name="pw_string">string</string>
     <string name="pw_strings">strings</string>
     <string name="pw_struck">struck</string>
@@ -904,6 +911,7 @@
     <string name="pw_wave">wave</string>
     <string name="pw_wave_a">wave a</string>
     <string name="pw_wave_b">wave b</string>
+    <string name="pw_weight">weight</string>
     <string name="pw_wet">wet</string>
     <string name="pw_wet_mix">wet mix</string>
     <string name="pw_what_changes">what changes</string>
@@ -928,7 +936,7 @@
     <string name="pw_zones">zones</string>
     <string name="pw_zoom">zoom</string>
     <string name="pw_at_9a10ce">· at</string>
-    <string name="pw_by_key">· by key</string>
+    <string name="pw_by_key_71eaf8">· by key</string>
     <string name="pw_jitter_0b9695">· jitter</string>
     <string name="pw_rate_87928b">· rate</string>
     <string name="pw_spread_c42c7f">· spread</string>

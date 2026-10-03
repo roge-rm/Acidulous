@@ -28,6 +28,7 @@ internal object FactoryBanks {
         "Molt" -> molt
         "Diction" -> diction
         "Bias" -> bias
+        "Hammer" -> hammer
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -2858,6 +2859,23 @@ internal object FactoryBanks {
         family = "worn")
 
     private val bias: List<Patch> by lazy { listOf(bias0(), bias1(), bias2(), bias3(), bias4(), bias5(), bias6(), bias7(), bias8(), bias9(), bias10(), bias11(), bias12(), bias13(), bias14(), bias15(), bias16()) }
+
+    private fun hammer0() = Patch("Hammer", "Init", emptyMap(),
+        family = "grand")
+
+    private fun hammer1() = Patch("Hammer", "Mellow Grand",
+        mapOf("hardness" to 0.325f, "tone" to 0.35f),
+        family = "grand")
+
+    private fun hammer2() = Patch("Hammer", "Bright Grand",
+        mapOf("hardness" to 0.7f, "hardkey" to 0.6f, "position" to 0.4f, "tone" to 0.65f),
+        family = "grand")
+
+    private fun hammer3() = Patch("Hammer", "Felt Room",
+        mapOf("hardness" to 0.15f, "sustain" to 0.3f, "unison" to 0.2f),
+        family = "grand")
+
+    private val hammer: List<Patch> by lazy { listOf(hammer0(), hammer1(), hammer2(), hammer3()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")
