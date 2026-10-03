@@ -671,6 +671,8 @@ fun EditScreen(
                     val others = c.notes.filter { !(it.tick == tick && it.pitch == note) }
                     c.copy(notes = (if (hit != null) others + hit else others).sortedBy { it.tick })
                 }
+                // A new hit is heard, as a note put in the roll is.
+                if (hit != null && clip.notes.none { it.tick == tick && it.pitch == note }) preview(note)
             },
             lockMode = lockMode,
             selectedTicks = lockTicks,

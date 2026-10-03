@@ -217,8 +217,11 @@ fun DrumGrid(
                     val hit = hits[s] ?: return
                     if (!lockMode) onSetHit(tickOf(s), voice.note, hit.copy(velocity = if (accented(s)) 90 else 110))
                 }
-                val latestPress by rememberUpdatedState(::press)
-                val latestHold by rememberUpdatedState(::hold)
+                // Lambdas, not ::press: a reference to a local function equals
+                // the last one, so the state kept the first and every tap after
+                // saw the row as it was then (a hit put in couldn't be taken out).
+                val latestPress by rememberUpdatedState<(Int) -> Unit>({ s -> press(s) })
+                val latestHold by rememberUpdatedState<(Int) -> Unit>({ s -> hold(s) })
                 Row(
                     Modifier.fillMaxWidth().height(rowHeight.dp)
                         // The cells are drawn here in one go, not each by
