@@ -441,14 +441,16 @@ namespace {
 constexpr int32_t kWindowSize = 1024;
 
 const float *hannTable() {
+    // Built once, by whichever thread asks first: the static's initialiser
+    // runs exactly once even with two Diction tracks starting together.
     static float table[kWindowSize];
-    static bool made = false;
-    if (!made) {
+    static const bool built = [] {
         for (int32_t i = 0; i < kWindowSize; ++i) {
             table[i] = 0.5f - 0.5f * std::cos(kTwoPi * static_cast<float>(i) / static_cast<float>(kWindowSize - 1));
         }
-        made = true;
-    }
+        return true;
+    }();
+    (void)built;
     return table;
 }
 
