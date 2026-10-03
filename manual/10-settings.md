@@ -56,6 +56,8 @@
 - **scheduler hint** - whether the phone accepted the app's request to treat the
   audio as time-critical. Some phones refuse, and there's nothing to do about it
   here.
+- **audio thread** - on a phone with fast and slow cores, how many fast ones the
+  sound is made on.
 
 ## record
 

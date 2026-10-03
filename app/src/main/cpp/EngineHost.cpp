@@ -2220,6 +2220,7 @@ float EngineHost::interruptedPercent() const { return sEngine.interruptedPercent
 bool EngineHost::hintRunning() const { return sAudio.hintRunning(); }
 bool EngineHost::hintAvailable() const { return sAudio.hintAvailable(); }
 int32_t EngineHost::hintState() const { return sAudio.hintState(); }
+int32_t EngineHost::fastCores() const { return sAudio.fastCores(); }
 int32_t EngineHost::rackCostUs(int32_t rack) const { return sEngine.rackCostUs(rack); }
 int64_t EngineHost::lateCallbacks() const { return sAudio.getLateCallbacks(); }
 int64_t EngineHost::stalledCallbacks() const { return sAudio.getStalledCallbacks(); }

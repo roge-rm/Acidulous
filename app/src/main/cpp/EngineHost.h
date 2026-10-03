@@ -421,6 +421,8 @@ class EngineHost {
     bool hintAvailable() const;
     /** 0 no API, 1 waiting, 2 the audio thread never registered, 3 refused, 4 on. */
     int32_t hintState() const;
+    /** How many fast cores the audio thread is pinned to; 0 when it isn't (one kind of core, or not a phone). */
+    int32_t fastCores() const;
     int32_t rackCostUs(int32_t rack) const;
     int32_t worstCallbackCpuUs();
     int32_t recentCallbackUs() const;

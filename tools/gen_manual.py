@@ -134,6 +134,8 @@ DESKTOP_SENTENCES = {
         "",
     "**scheduler hint** - whether the phone accepted the app's request to treat the audio as time-critical. Some phones refuse, and there's nothing to do about it here.":
         "**scheduler hint** - only on phones. On a computer it always says not available.",
+    "**audio thread** - on a phone with fast and slow cores, how many fast ones the sound is made on.":
+        "",
     "Acidulous works with built in, USB, or Bluetooth keyboards.":
         "Acidulous works with the computer's keyboard.",
 }

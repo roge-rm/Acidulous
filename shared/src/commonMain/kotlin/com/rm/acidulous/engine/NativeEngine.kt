@@ -553,6 +553,8 @@ object NativeEngine {
     val hintAvailable: Boolean get() = EngineNative.nativeHintAvailable()
     /** 0 no API, 1 waiting, 2 the audio thread never named itself, 3 refused, 4 on. */
     val hintState: Int get() = EngineNative.nativeHintState()
+    /** How many fast cores the audio thread is pinned to; 0 when it isn't. */
+    val fastCores: Int get() = EngineNative.nativeFastCores()
 
     /** What this rack has cost recently, in microseconds. Decays by itself and isn't cleared by reading. */
     fun rackCostUs(rack: Int): Int = EngineNative.nativeRackCostUs(rack)

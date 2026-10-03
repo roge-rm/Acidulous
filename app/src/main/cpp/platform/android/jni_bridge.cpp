@@ -797,6 +797,11 @@ Java_com_rm_acidulous_engine_EngineNative_nativeHintState(JNIEnv *, jobject) {
 }
 
 JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeFastCores(JNIEnv *, jobject) {
+    return host().fastCores();
+}
+
+JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeRecentCallbackUs(JNIEnv *, jobject) {
     return host().recentCallbackUs();
 }

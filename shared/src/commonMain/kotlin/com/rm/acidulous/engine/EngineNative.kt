@@ -133,6 +133,7 @@ internal expect object EngineNative {
     fun nativeHintRunning(): Boolean
     fun nativeHintAvailable(): Boolean
     fun nativeHintState(): Int
+    fun nativeFastCores(): Int
     fun nativeRackCostUs(rack: Int): Int
     fun nativeRecentCallbackUs(): Int
     fun nativeWorstCallbackCpuUs(): Int

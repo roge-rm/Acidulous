@@ -89,6 +89,8 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     bool hintRunning() const { return perfHint.running(); }
     bool hintAvailable() const { return perfHint.available(); }
     int32_t hintState() const { return static_cast<int32_t>(perfHint.state()); }
+    /** How many fast cores the audio thread was put on; 0 if it wasn't. */
+    int32_t fastCores() const { return pinnedCores.load(std::memory_order_relaxed); }
     void setHintWanted(bool on) { hintWanted.store(on, std::memory_order_relaxed); }
 
     /** Worst callback since the last read, in microseconds. Reading clears it. */
@@ -204,6 +206,8 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
      */
     acidulous::platform::PerfHint perfHint;
     std::atomic<int32_t> audioThreadId{0};
+    /** How many fast cores the audio thread was put on, or 0 if it wasn't (one kind of core, or refused). */
+    std::atomic<int32_t> pinnedCores{0};
     std::atomic<bool> hintWanted{true};
     /**
      * Which stream the waiting hint thread belongs to. The stream can be

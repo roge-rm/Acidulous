@@ -174,6 +174,7 @@ internal actual object EngineNative {
     actual external fun nativeHintRunning(): Boolean
     actual external fun nativeHintAvailable(): Boolean
     actual external fun nativeHintState(): Int
+    actual external fun nativeFastCores(): Int
     actual external fun nativeRackCostUs(rack: Int): Int
     actual external fun nativeRecentCallbackUs(): Int
     actual external fun nativeWorstCallbackCpuUs(): Int

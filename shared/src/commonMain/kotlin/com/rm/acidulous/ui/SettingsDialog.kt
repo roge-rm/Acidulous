@@ -252,6 +252,9 @@ private fun AudioTab(trackNames: List<String>) {
         3 -> "this device refused it"
         else -> "on"
     }
+    // On a phone with fast and slow cores, the sound is made on the fast
+    // ones; a phone with one kind of core, or a computer, doesn't say.
+    NativeEngine.fastCores.takeIf { it > 0 }?.let { lines += "audio thread  on the $it fast cores" }
     if (UiPrefs.showDiagnostics) WindowCards {
         WindowCard("readings · since opened") {
             // Text in a card of controls: a fixed width column when the cards

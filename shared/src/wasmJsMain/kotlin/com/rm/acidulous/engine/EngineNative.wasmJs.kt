@@ -358,6 +358,9 @@ private fun raw_nativeHintAvailable(env: Int): Int =
 private fun raw_nativeHintState(env: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeHintState(env, 0)")
 
+private fun raw_nativeFastCores(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeFastCores(env, 0)")
+
 private fun raw_nativeRackCostUs(env: Int, rack: Int): Int =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRackCostUs(env, 0, rack)")
 
@@ -1424,6 +1427,13 @@ internal actual object EngineNative {
 
     actual fun nativeHintState(): Int {
         val raw_ = raw_nativeHintState(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeFastCores(): Int {
+        val raw_ = raw_nativeFastCores(Jni.env)
         val result_ = raw_
         Jni.release()
         return result_

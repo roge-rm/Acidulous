@@ -13,6 +13,52 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
+#include <sched.h>
+#include <cstdio>
+
+namespace {
+
+/**
+ * The phone's fast cores, if it has more than one kind: those Android rates
+ * (cpu_capacity, else the top frequency) at three quarters of the fastest or
+ * more, so a prime core and the big ones beside it. Empty on a phone of one
+ * kind of core, where there's nothing to choose.
+ */
+bool findFastCores(cpu_set_t &mask, int &count) {
+    CPU_ZERO(&mask);
+    count = 0;
+    const long cores = sysconf(_SC_NPROCESSORS_CONF);
+    if (cores <= 1 || cores > CPU_SETSIZE) return false;
+    long rating[CPU_SETSIZE] = {};
+    long best = 0, worst = 0;
+    for (long c = 0; c < cores; ++c) {
+        long v = 0;
+        for (const char *file : {"cpu_capacity", "cpufreq/cpuinfo_max_freq"}) {
+            char path[96];
+            std::snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%ld/%s", c, file);
+            if (FILE *f = std::fopen(path, "r")) {
+                if (std::fscanf(f, "%ld", &v) != 1) v = 0;
+                std::fclose(f);
+            }
+            if (v > 0) break;
+        }
+        if (v <= 0) return false;
+        rating[c] = v;
+        best = std::max(best, v);
+        worst = c == 0 ? v : std::min(worst, v);
+    }
+    if (worst * 4 >= best * 3) return false; // one kind of core
+    for (long c = 0; c < cores; ++c) {
+        if (rating[c] * 4 >= best * 3) {
+            CPU_SET(static_cast<int>(c), &mask);
+            ++count;
+        }
+    }
+    return count > 0;
+}
+
+} // namespace
+
 AudioDriver::~AudioDriver() {
     stop();
 }
@@ -80,10 +126,16 @@ bool AudioDriver::start() {
     // detached thread waits for the id because start() is called from the UI
     // thread and mustn't block.
     audioThreadId.store(0, std::memory_order_relaxed);
-    if (perfHint.load()) {
+    // The same helper puts the audio thread on the fast cores. Left to
+    // itself Android ran it on the slow ones: on a phone with four of each
+    // (Dan's, 2026-10-03), every sample of a playing song had it on cores
+    // 0-3, 2.3 times slower, and with no hint sessions on that phone
+    // nothing told the scheduler otherwise.
+    const bool hints = perfHint.load();
+    {
         const int64_t targetNanos = static_cast<int64_t>(budgetFor(actualFramesPerBurst)) * 1000;
         const int32_t generation = hintGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
-        std::thread([this, targetNanos, generation] {
+        std::thread([this, targetNanos, generation, hints] {
             const auto ours = [this, generation] {
                 return hintGeneration.load(std::memory_order_relaxed) == generation;
             };
@@ -94,9 +146,20 @@ bool AudioDriver::start() {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
             if (tid == 0) {
-                if (ours()) perfHint.gaveUp();
+                if (ours() && hints) perfHint.gaveUp();
                 return;
             }
+            cpu_set_t fast;
+            int fastCount = 0;
+            if (findFastCores(fast, fastCount)) {
+                if (sched_setaffinity(tid, sizeof(fast), &fast) == 0) {
+                    pinnedCores.store(fastCount, std::memory_order_relaxed);
+                    LOGI("audio thread %d on the %d fast cores", tid, fastCount);
+                } else {
+                    LOGI("couldn't put audio thread %d on the fast cores", tid);
+                }
+            }
+            if (!hints) return;
             // Some devices refuse a session right after the stream starts but
             // accept one later, once the power HAL is up or the app counts as
             // foreground. Try four times over about seventeen seconds before

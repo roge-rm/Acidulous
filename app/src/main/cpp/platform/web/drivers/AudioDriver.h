@@ -109,6 +109,7 @@ class AudioDriver {
     bool hintRunning() const { return false; }
     bool hintAvailable() const { return false; }
     int32_t hintState() const { return 0; }
+    int32_t fastCores() const { return 0; }
     void setHintWanted(bool) {}
 
     int32_t readCallbackPeakUs() { return callbackPeakUs.exchange(0, std::memory_order_relaxed); }
