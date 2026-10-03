@@ -114,7 +114,7 @@ patch "Felt Upright" family=upright note=60 range=21..108
   model          1
   felt           0.8
   lid            0.3
-  volume         1.50
+  volume         1.16
 
 patch Honky-Tonk family=upright note=60 range=21..108
   model          2      # honky-tonk

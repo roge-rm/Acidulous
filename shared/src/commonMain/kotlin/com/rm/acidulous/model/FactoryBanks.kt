@@ -2915,7 +2915,7 @@ internal object FactoryBanks {
         low = 21, high = 108)
 
     private fun hammer11() = Patch("Hammer", "Felt Upright",
-        mapOf("model" to 0.09090909f, "felt" to 0.8f, "lid" to 0.3f, "volume" to 1f),
+        mapOf("model" to 0.09090909f, "felt" to 0.8f, "lid" to 0.3f, "volume" to 0.7733333f),
         family = "upright",
         low = 21, high = 108)
 

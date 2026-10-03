@@ -591,7 +591,11 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
     // Tacks in the felt make a soft blow nearly as hard as a loud one; a
     // strip of felt between hammer and strings (the moderator) makes every
     // blow soft.
-    const float K = stiffness[model][key] * std::pow(10.0f, 1.5f * hard - 0.4f * shift + 0.9f * tacks - 1.6f * moderator) *
+    // The moderator softens the treble less: a soft blow lasting several
+    // periods of a high note cancels itself, and with it on, the top two
+    // octaves of an upright were 10 to 15 dB under the middle.
+    const float treble = clampf((static_cast<float>(key) - 60.0f) / 36.0f, 0.0f, 1.0f);
+    const float K = stiffness[model][key] * std::pow(10.0f, 1.5f * hard - 0.4f * shift + 0.9f * tacks - 1.6f * moderator * (1.0f - 0.6f * treble)) *
                     std::pow(speed / 2.0f, k.hardening * (1.0f - 0.6f * tacks));
     v.felt.set(k.mass * std::exp2(targetOf(Weight)), k.exponent, K, k.impedance, 1.5e-4f);
     // The strings never take the blow quite equally.
@@ -607,7 +611,14 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
     float makeup = 1.0f;
     prepFor(key, k.impedance, &makeup);
     v.gainTarget = velocityGain(velocity01, targetOf(VelocityAmount)) * kHouse * k.level * makeup /
-                   (speed * k.impedance * static_cast<float>(d.lanes)) * (1.0f - 0.3f * corda);
+                   (speed * k.impedance * static_cast<float>(d.lanes)) * (1.0f - 0.3f * corda) *
+                   // The moderator darkens the treble, and took its level too:
+                   // with it on, the upright's top half sat 15 to 20 dB under
+                   // its bass. The level is given back up the keyboard, 12 dB
+                   // by C6; the darkness stays. (A fortepiano's light leather
+                   // hammers never lost it.)
+                   std::pow(10.0f, (model == hammer::Fortepiano ? 0.0f : 12.0f) * moderator *
+                                       clampf((static_cast<float>(key) - 48.0f) / 36.0f, 0.0f, 1.0f) / 20.0f);
     if (v.gain <= 0.0f) v.gain = v.gainTarget;
     // The knock grows more slowly than the note: against it, 4 to 11 dB
     // louder at velocity 30 than at 124 in the recordings. The key's level

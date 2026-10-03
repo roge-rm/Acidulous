@@ -197,7 +197,7 @@ class Course {
             for (int s = 0; s < kGapSections; ++s) gapS1[s][i] = gapS2[s][i] = 0.0f;
         }
         bridgeBefore = 0.0f;
-        for (int i = 0; i < kLanes; ++i) prepY[i] = prepV[i] = rattleY[i] = rattleV[i] = 0.0f;
+        for (int i = 0; i < kLanes; ++i) prepY[i] = prepV[i] = rattleY[i] = rattleV[i] = pushing[i] = pushed[i] = 0.0f;
         gapLive = 0;
         for (int i = 0; i < kLanes; ++i) {
             gapIn[i] = 0.0f;
@@ -272,6 +272,20 @@ class Course {
         gap = std::fmax(gap, 1.0f);
         tapOut = clampf(half - 0.5f * gap, 1.0f, static_cast<float>(delay[0]) - 2.0f);
         tapBack = clampf(half + 0.5f * gap, 1.0f, static_cast<float>(delay[0]) - 2.0f);
+        // A push between two samples lands partly in the cell the same tap
+        // reads the next sample: frac (1 - frac) of it, at each tap. At the
+        // top, where the strike is so near the end that the taps are a
+        // sample or two apart, the hammer heard its own push as the string
+        // running away from it, stayed on for 4 ms instead of 0.6, and every
+        // key whose taps fell on half samples came out 10 to 20 dB under its
+        // neighbours. There, what it reads of its own last push is taken
+        // back out. (Pushing a sample later instead made every key stick:
+        // the reflection it needs to feel came late too. Further down the
+        // taps are far apart and the grand was calibrated as it is.)
+        {
+            auto overlap = [](float age) { const float f = age - std::floor(age); return f * (1.0f - f); };
+            selfRead = gap < 3.0f ? overlap(tapOut) + overlap(tapBack) : 0.0f;
+        }
         // A preparation's point, the same way round: out and back, on whole
         // samples. Between two, what it pushes into the later one is read
         // back a sample on, and a light rattle fed on itself and screamed
@@ -302,12 +316,15 @@ class Course {
     }
 
     /** The string's velocity where the hammer strikes, before this sample's push. */
-    float strikeVelocity(int lane) const { return readAge(tapOut, lane) - readAge(tapBack, lane); }
+    float strikeVelocity(int lane) const {
+        return readAge(tapOut, lane) - readAge(tapBack, lane) - selfRead * pushed[lane];
+    }
 
     /** Pushes a velocity wave of [dv] both ways from the strike point. */
     void push(int lane, float dv) {
         // The wave on its way back is stored as it will be after the far
         // end turns it over.
+        pushing[lane] += dv;
         addAge(tapBack, lane, -dv);
         if (gapStages == 0 && gapSections == 0) {
             addAge(tapOut, lane, dv);
@@ -329,6 +346,10 @@ class Course {
 
     /** One sample: every string round its loop and through the bridge. Returns what reaches the bridge. */
     float step() {
+        for (int i = 0; i < kLanes; ++i) {
+            pushed[i] = pushing[i];
+            pushing[i] = 0.0f;
+        }
         if (prepared) stepPrep();
         // Every filter runs over all four lanes at once, a lane that isn't
         // used held at zero: four floats side by side, which the compiler
@@ -911,6 +932,9 @@ class Course {
     float thiranState[kLanes] = {}, lossIn[kLanes] = {}, lossOut[kLanes] = {};
     /** The gap's share of the stiffness, for the wave that leaves late (see tune()). */
     static constexpr int kGapStages = 4;
+    /** How much of its own last push the strike point reads back (see tune()), and that push, by lane. */
+    float selfRead = 0.0f;
+    float pushing[kLanes] = {}, pushed[kLanes] = {};
     /** How long the gap's stages ring on after the last push, samples. */
     static constexpr int kGapTail = 4800;
     int gapStages = 0, gapSections = 0, gapLive = 0;

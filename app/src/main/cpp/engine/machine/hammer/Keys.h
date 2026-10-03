@@ -146,12 +146,17 @@ inline KeySpec grandKey(float key) {
         s.level = factor(&Adjust::level);
         s.knock = factor(&Adjust::knock);
     }
-    // The top played under the recording's against middle C, after the
-    // level calibration above: 5 dB by D7, 15 by C8 (velocities 60 and 92).
-    // Lifted from F#6.
-    if (key > 90.0f) {
-        const float lift = key < 98.0f ? 5.0f * (key - 90.0f) / 8.0f : 5.0f + (key - 98.0f);
-        s.level *= std::pow(10.0f, lift / 20.0f);
+    // Around F#6 the level calibrated against the old strike (which stuck to
+    // the strings from there up) came out 3 to 12 dB over the recording's:
+    // taken down 5 dB at F#6, nothing by D6 and A#6.
+    if (key > 86.0f && key < 94.0f) s.level *= std::pow(10.0f, -5.0f * (1.0f - std::fabs(key - 90.0f) / 4.0f) / 20.0f);
+    // With the lighter treble hammers (below) the top played hard came out
+    // 4 to 10 dB over the recording from D#6 to G7: 4 dB less from A#6,
+    // nothing again by C8, where it matched.
+    {
+        const float broad = key < 92.0f ? 0.0f : key < 94.0f ? (key - 92.0f) / 2.0f : key < 102.0f ? 1.0f
+                          : clampf((108.0f - key) / 6.0f, 0.0f, 1.0f);
+        s.level *= std::pow(10.0f, -4.0f * broad / 20.0f);
     }
     // A grand's lowest notes have one string, then two, then three.
     s.strings = key < 28.5f ? 1 : (key < 45.5f ? 2 : 3);
@@ -172,6 +177,14 @@ inline KeySpec grandKey(float key) {
              : key < 78.0f ? detail::lerp(0.12f, 0.09f, (key - 63.0f) / 15.0f)
                            : detail::lerp(0.09f, 0.075f, clampf((key - 78.0f) / 30.0f, 0.0f, 1.0f));
     s.mass = across(key, 11.0e-3f, 6.5e-3f, true);
+    // From C6 up, the hammer lighter, to a sixth by C7. Against these
+    // light strings a 6.5 g hammer stayed on them for 1 ms, two to six
+    // periods of the note, and a blow that long has gaps in its spectrum:
+    // where each key's note fell among them was luck, and neighbouring keys
+    // came out 10 to 25 dB apart, differently at every velocity. Lighter,
+    // it stays on 0.4 to 0.6 ms, as a real treble hammer does, and
+    // neighbours are within a few dB.
+    if (key > 84.0f) s.mass /= 1.0f + 5.0f * clampf((key - 84.0f) / 12.0f, 0.0f, 1.0f);
     s.exponent = across(key, 2.3f, 3.0f, false);
     // Calibrated to how the spectrum's shape changes with velocity in the
     // reference, band by band over the first 300 ms (tools/hammer_reference,
@@ -179,6 +192,10 @@ inline KeySpec grandKey(float key) {
     // more than a stiffening felt alone would leave them.
     s.hardening = key < 72.0f ? 0.32f : detail::lerp(0.32f, 0.2f, clampf((key - 72.0f) / 36.0f, 0.0f, 1.0f));
     s.contact = across(key, 4.0e-3f, 0.6e-3f, true) * s.contactAdjust;
+    // The treble felt no softer than a blow of 1.1 periods of the note on
+    // something rigid: with the light hammers there (below), softer felt
+    // let the soft notes of the top octave fall 20 to 26 dB.
+    s.contact = std::fmin(s.contact, 1.1f / (440.0f * std::exp2((key - 69.0f) / 12.0f)));
     // Wound bass strings are heavy: about 12 kg/s at A0, 2.2 at middle C, 1.5 at the top.
     s.impedance = key < 60.0f ? std::exp(detail::lerp(std::log(12.0f), std::log(2.2f), clampf((key - 21.0f) / 39.0f, 0.0f, 1.0f)))
                               : std::exp(detail::lerp(std::log(2.2f), std::log(1.5f), clampf((key - 60.0f) / 48.0f, 0.0f, 1.0f)));
