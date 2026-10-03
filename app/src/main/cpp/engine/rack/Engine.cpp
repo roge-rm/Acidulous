@@ -250,6 +250,8 @@ void Engine::renderBlock(const float *in, float *out) {
     // The bus renders count-in clicks even with the metronome off, and
     // borrows the limiter's headroom for them.
     master.setCountingIn(counting);
+    // What the scheduler sends each rack is queued for the rack's own job.
+    for (int32_t r = 0; r < kRackCount; ++r) racks[r].queue();
     if (playing && !counting) {
         scheduler.setSwingPair(swingPair.load(std::memory_order_relaxed));
         if (!scheduler.process(clock.blockStart(), clock.blockEnd())) {
@@ -344,36 +346,19 @@ void Engine::renderBlock(const float *in, float *out) {
     // block as the kick. Worked out every block because a sidechain is a
     // parameter and can be automated. If two racks listen to each other, the
     // lower-numbered one goes first and hears the other a block late.
-    settleRouting();
     int32_t order[kRackCount];
     sidechainOrder(order);
+    for (int32_t n = 0; n < kRackCount; ++n) renderPlace[order[n]] = n;
+    // Last block's taps, for a listener that renders before its source.
+    for (int32_t r = 0; r < kRackCount; ++r) std::memcpy(racks[r].keyPrev, racks[r].keyBuf, sizeof(racks[r].keyBuf));
     for (int32_t n = 0; n < kRackCount; ++n) {
         const int32_t r = order[n];
-        if (racks[r].isActive()) {
-            // Give each detector its key for this block: the source's tap
-            // (this block's if it has rendered, otherwise the last one's), or
-            // silence for an empty rack.
-            for (int32_t s = 0; s < kEffectSlots; ++s) {
-                if (Effect *e = racks[r].currentEffect(s)) e->setKey(keyFor(e->sidechainRack(), r));
-            }
-            // A machine can listen too: Diction mouthing another track's sound.
-            if (Machine *m = racks[r].currentMachine()) m->setKey(keyFor(m->sidechainRack(), r));
-            const auto tRack = std::chrono::steady_clock::now();
-            if (racks[r].frozenActive()) {
-                racks[r].syncFrozen(scheduler.rackTick(r), clock.bpm());
-            } else {
-                racks[r].onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
-            }
-            racks[r].render(kBlockFrames);
-            const auto rackUs = static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(
-                                                         std::chrono::steady_clock::now() - tRack)
-                                                         .count());
-            // Held rather than published, since whether it was a cost or an
-            // interruption isn't known until the whole block is timed.
-            rackUsThisBlock[r] = rackUs;
-            rackFrozenThisBlock[r] = racks[r].frozenActive();
-        }
+        if (racks[r].isActive()) renderRack(r, &rackUsThisBlock[r], &rackFrozenThisBlock[r]);
     }
+    // Anything queued for a rack with nothing to render it.
+    for (int32_t r = 0; r < kRackCount; ++r) racks[r].playQueued();
+    // Read after the racks, which is where a lane on a rack's output lands.
+    settleRouting();
 
     const auto tRacks = std::chrono::steady_clock::now();
 
@@ -497,6 +482,32 @@ void Engine::renderBlock(const float *in, float *out) {
     }
 }
 
+void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
+    Rack &rack = racks[r];
+    const auto tRack = std::chrono::steady_clock::now();
+    // The notes, lanes and words the scheduler sent, first, as they would
+    // have landed at the block's start.
+    rack.playQueued();
+    // Give each detector its key for this block (see keyFor), or silence for
+    // an empty rack.
+    for (int32_t s = 0; s < kEffectSlots; ++s) {
+        if (Effect *e = rack.currentEffect(s)) e->setKey(keyFor(e->sidechainRack(), r));
+    }
+    // A machine can listen too: Diction mouthing another track's sound.
+    if (Machine *m = rack.currentMachine()) m->setKey(keyFor(m->sidechainRack(), r));
+    if (rack.frozenActive()) {
+        rack.syncFrozen(scheduler.rackTick(r), clock.bpm());
+    } else {
+        rack.onBlock(clock.blockStart(), clock.blockEnd(), clock.bpm());
+    }
+    rack.render(kBlockFrames);
+    // Held rather than published, since whether it was a cost or an
+    // interruption isn't known until the whole block is timed.
+    *usOut = static_cast<int32_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - tRack).count());
+    *frozenOut = rack.frozenActive();
+}
+
 void Engine::settleRouting() {
     // output 1..4 is a mixer group, anything else is the master.
     for (int32_t r = 0; r < kRackCount; ++r) {
@@ -509,7 +520,8 @@ void Engine::settleRouting() {
 const float *Engine::keyFor(int32_t source, int32_t self) const {
     static const float kSilence[kBlockFrames] = {};
     if (source < 0 || source >= kRackCount || source == self) return nullptr; // its own input
-    return racks[source].isActive() ? racks[source].keyBuf : kSilence;
+    if (!racks[source].isActive()) return kSilence;
+    return self < 0 || renderPlace[source] < renderPlace[self] ? racks[source].keyBuf : racks[source].keyPrev;
 }
 
 void Engine::sidechainOrder(int32_t *order) const {

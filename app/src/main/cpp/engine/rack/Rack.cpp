@@ -230,13 +230,57 @@ void Rack::forgetHeld(uint8_t note) {
 
 void Rack::handleMidi(uint8_t status, uint8_t d1, uint8_t d2) { deliver(0, status, d1, d2); }
 
-void Rack::playSequenced(uint8_t status, uint8_t d1, uint8_t d2) { toMachine(status, d1, d2, false); }
+bool Rack::keep(Queued h, const uint8_t *phones, int32_t count) {
+    if (!queueing) return false;
+    count = phones == nullptr ? 0 : std::max(count, 0);
+    if (queuedCount >= kMaxQueued || queuedPhoneCount + count > kMaxQueuedPhones) {
+        replayQueued();
+        return false;
+    }
+    h.from = queuedPhoneCount;
+    h.count = count;
+    if (count > 0) std::memcpy(queuedPhones + queuedPhoneCount, phones, static_cast<size_t>(count));
+    queuedPhoneCount += count;
+    queued[queuedCount++] = h;
+    return true;
+}
+
+void Rack::replayQueued() {
+    const bool was = queueing;
+    queueing = false;
+    for (int32_t n = 0; n < queuedCount; ++n) {
+        const Queued &h = queued[n];
+        const uint8_t *phones = queuedPhones + h.from;
+        switch (h.kind) {
+        case Queued::Note: playSequenced(h.a, h.b, h.c); break;
+        case Queued::Lyric: lyric(phones, h.count); break;
+        case Queued::Words: wordsAhead(phones, h.count, h.a, h.b, h.i); break;
+        case Queued::Expression: noteExpressionValue(h.i, h.a, h.v); break;
+        case Queued::Param: setParam(static_cast<Unit>(h.a), h.i, h.v, h.b != 0); break;
+        }
+    }
+    queuedCount = 0;
+    queuedPhoneCount = 0;
+    queueing = was;
+}
+
+void Rack::playQueued() {
+    replayQueued();
+    queueing = false;
+}
+
+void Rack::playSequenced(uint8_t status, uint8_t d1, uint8_t d2) {
+    if (keep({Queued::Note, status, d1, d2, 0, 0.0f, 0, 0})) return;
+    toMachine(status, d1, d2, false);
+}
 
 void Rack::lyric(const uint8_t *phones, int32_t count) {
+    if (keep({Queued::Lyric, 0, 0, 0, 0, 0.0f, 0, 0}, phones, count)) return;
     if (machine != nullptr) machine->lyric(phones, count);
 }
 
 void Rack::wordsAhead(const uint8_t *phones, int32_t count, uint8_t note, uint8_t velocity, int32_t inFrames) {
+    if (keep({Queued::Words, note, velocity, 0, inFrames, 0.0f, 0, 0}, phones, count)) return;
     if (machine == nullptr || lastOutMode == OutMidi) return;
     // As toMachine will send its note-on.
     const int32_t shift = static_cast<int32_t>(std::lround(channel.target(Transpose)));
@@ -262,6 +306,7 @@ void Rack::noteExpression(uint8_t kind, uint8_t note, uint8_t d1, uint8_t d2, fl
 }
 
 void Rack::noteExpressionValue(int32_t kind, uint8_t note, float v01) {
+    if (keep({Queued::Expression, note, 0, 0, kind, v01, 0, 0})) return;
     if (machine == nullptr) return;
     note = sentTo[note & 0x7f];
     switch (static_cast<Expr>(kind)) {
@@ -604,6 +649,7 @@ InputMod *Rack::swapInputMod(int32_t slot, InputMod *next) {
 }
 
 void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
+    if (keep({Queued::Param, static_cast<uint8_t>(unit), static_cast<uint8_t>(jump ? 1 : 0), 0, index, v01, 0, 0})) return;
     switch (unit) {
     case Unit::Machine:
         if (machine) {

@@ -93,9 +93,41 @@ class Rack {
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm);
     void render(int32_t frames);
 
+    /**
+     * While the scheduler runs, what it sends the track (notes, lanes, words,
+     * expression) is queued in order and played at the start of the track's
+     * own render, so a note-on's cost (some machines do real work there) is
+     * part of the track's job rather than the scheduler's. Every event in a
+     * block lands at its start either way, so nothing sounds different.
+     */
+    void queue() { queueing = true; }
+    /** Plays what's queued, in the order it came, and stops queueing. */
+    void playQueued();
+
   private:
     /** The frozen clip at its own rate, a plain read from memory. */
     void readFrozenPlain(int32_t frames);
+
+    /** One queued event: what it was, and its values (see queue()). */
+    struct Queued {
+        enum Kind : uint8_t { Note, Lyric, Words, Expression, Param } kind;
+        uint8_t a, b, c;
+        int32_t i;
+        float v;
+        int32_t from, count; // its phones, in queuedPhones
+    };
+    static constexpr int32_t kMaxQueued = 512, kMaxQueuedPhones = 2048;
+    Queued queued[kMaxQueued];
+    uint8_t queuedPhones[kMaxQueuedPhones];
+    int32_t queuedCount = 0, queuedPhoneCount = 0;
+    bool queueing = false;
+    /**
+     * Keeps [h] (and [count] phones) if queueing. Full, it plays what's queued
+     * so far and says no, so the caller plays this one now: in the same order.
+     */
+    bool keep(Queued h, const uint8_t *phones = nullptr, int32_t count = 0);
+    /** Plays what's queued and empties it; still queueing after. */
+    void replayQueued();
 
   public:
 
@@ -187,6 +219,8 @@ class Rack {
      * Engine::renderRacks for when it's read).
      */
     float keyBuf[kBlockFrames]{};
+    /** keyBuf as last block left it, for a listener that renders first (Engine::keyFor). */
+    float keyPrev[kBlockFrames]{};
 
     /**
      * The mixer group this rack's output should go to (0..3), or -1 for the

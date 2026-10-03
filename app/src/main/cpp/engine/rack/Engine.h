@@ -152,9 +152,19 @@ class Engine : public Rack::ModifiedNoteSink {
     /**
      * The key signal an effect on rack [self] hears from rack [source]: null
      * for its own input (no source, or itself), silence for an empty rack, and
-     * otherwise that rack's pre-fader tap. [self] is -1 for a send.
+     * otherwise that rack's pre-fader tap: this block's if [source] renders
+     * before [self] (see renderOrder), last block's if not. [self] is -1 for
+     * a send, which hears this block's.
      */
     const float *keyFor(int32_t source, int32_t self) const;
+    /**
+     * One rack's share of a block, a job on its own: the events held for it,
+     * its keys, its render, and what it cost. Every rack it listens to has
+     * rendered by then, except across a loop, where it hears the last block.
+     */
+    void renderRack(int32_t r, int32_t *usOut, bool *frozenOut);
+    /** Each rack's place in this block's order (renderOrder), for keyFor. */
+    int32_t renderPlace[kRackCount]{};
     /**
      * The order racks render this block, with every sidechain source before its
      * listeners. Groups are in the master, after every rack, so they don't
