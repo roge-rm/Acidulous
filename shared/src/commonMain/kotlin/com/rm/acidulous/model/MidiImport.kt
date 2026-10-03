@@ -55,7 +55,10 @@ object MidiImport {
                 machine = Machine(type),
             ) to notesFor(part, type)
         }
-        val lanesOf = chosen.map { parsed.parts[it].lanes }
+        val lanesOf = chosen.map { parsed.parts[it].lanes }.mapIndexed { t, byName ->
+            val half = MachineUi.halfPedal(tracks[t].first.machine.type)
+            byName.mapValues { (name, pts) -> if (name in PEDALS) pedalLaneFor(Lane(pts, linear = false), half).points else pts }
+        }
         val firstTempo = (parsed.tempo ?: 120f).coerceIn(20f, 300f)
         // The tempo at a tick, following the file's tempo changes.
         fun tempoAt(tick: Int): Float =

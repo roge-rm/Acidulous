@@ -973,6 +973,17 @@ struct PedalRig {
         m->params().jumpAll();
     }
     void pedal(int32_t which, bool down) { rack.setParam(Unit::Performance, which, down ? 1.0f : 0.0f); }
+    /** A pedal part of the way down, 0 to 1, as a lane or a half-pedalled controller sends it. */
+    void pedalAt(int32_t which, float depth) { rack.setParam(Unit::Performance, which, depth); }
+    /** The RMS of [blocks] blocks. */
+    float level(int32_t blocks) {
+        double sum = 0.0;
+        for (int32_t b = 0; b < blocks; ++b) {
+            f.engine.renderBlock(nullptr, scratch);
+            for (float v : scratch) sum += static_cast<double>(v) * v;
+        }
+        return static_cast<float>(std::sqrt(sum / (blocks * kBlockFrames * 2.0)));
+    }
     /** The loudest sample over [blocks] blocks. */
     float run(int32_t blocks) {
         float peak = 0.0f;
@@ -1039,6 +1050,51 @@ void thePedalsHoldWhatTheyShould() {
         const float full = loud(false), softened = loud(true);
         ok("soft plays what comes in softer", softened < full * 0.95f && softened > 0.0f,
            std::to_string(softened) + " of " + std::to_string(full));
+    }
+    {
+        // Half a pedal: a machine that only knows on and off reads under 64
+        // as up and 64 and over as down, as before.
+        auto after = [](float depth) {
+            PedalRig r("Trinity");
+            r.rack.playSequenced(0x90, 60, 100);
+            r.run(50);
+            r.pedalAt(kPerfSustain, depth);
+            r.rack.playSequenced(0x80, 60, 0);
+            r.run(1400);
+            return r.run(50);
+        };
+        const float under = after(0.45f), over = after(0.55f);
+        ok("half a pedal on Trinity is up under 64 and down over it", under < 1e-4f && over > 0.01f,
+           std::to_string(under) + ", " + std::to_string(over));
+    }
+    {
+        // Hammer takes the pedal as it is: the further down, the more of a
+        // released note rings on.
+        auto ringing = [](float depth) {
+            PedalRig r("Hammer");
+            r.pedalAt(kPerfSustain, depth);
+            r.rack.playSequenced(0x90, 60, 100);
+            r.run(30);
+            r.rack.playSequenced(0x80, 60, 0);
+            r.run(300);
+            return r.level(50);
+        };
+        const float up = ringing(0.0f), half = ringing(0.45f), down = ringing(1.0f);
+        ok("Hammer rings on more the further the pedal is down", up < half && half < down,
+           std::to_string(up) + " < " + std::to_string(half) + " < " + std::to_string(down));
+        // Sostenuto is still the rack's: the key down when it went down is held.
+        auto caught = [](bool sostenuto) {
+            PedalRig r("Hammer");
+            r.rack.playSequenced(0x90, 60, 100);
+            r.run(20);
+            if (sostenuto) r.pedal(kPerfSostenuto, true);
+            r.rack.playSequenced(0x80, 60, 0);
+            r.run(300);
+            return r.level(50);
+        };
+        const float held = caught(true), free = caught(false);
+        ok("Hammer's sostenuto holds the key that was down", held > free * 10.0f,
+           std::to_string(held) + " against " + std::to_string(free));
     }
     {
         // Filament with its sympathetic bank switched off: the pedal down

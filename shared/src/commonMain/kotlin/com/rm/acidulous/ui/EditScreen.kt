@@ -877,12 +877,13 @@ fun EditScreen(
             onGestureBegin = { editor.beginGesture(trackIndex) },
             onDraw = { key, points ->
                 editor.updateGestureClip(sceneId) { base ->
-                    val pedal = com.rm.acidulous.model.isPedalLane(key)
+                    // A pedal is up or down, so drawing snaps to one or the
+                    // other, and only where it changes; a piano's pedal can
+                    // be drawn part of the way down.
+                    val pedal = com.rm.acidulous.model.isPedalLane(key) && !MachineUi.halfPedal(track.machine.type)
                     var lane = base.automation[key]
                         ?: com.rm.acidulous.model.newLaneFor(key, points.keys.minOrNull() ?: 0)
-                    // A pedal is up or down, so drawing snaps to one or the other.
                     for ((t, v) in points) lane = lane.withPoint(t, if (pedal) (if (v >= 0.5f) 1f else 0f) else v)
-                    // Only keep the points where the pedal changes.
                     if (pedal) lane = lane.copy(points = lane.points.filterIndexed { i, p -> i == 0 || lane.points[i - 1].value != p.value })
                     base.copy(automation = base.automation + (key to lane))
                 }

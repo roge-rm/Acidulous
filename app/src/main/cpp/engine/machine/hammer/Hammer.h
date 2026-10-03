@@ -52,6 +52,8 @@ class Hammer final : public Machine {
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
     void setDampers(bool lifted) override;
+    bool takesPedals() const override { return true; }
+    void pedal(int32_t which, float level01) override;
     void pitchBend(int16_t value14) override;
     bool render(float *L, float *R, int32_t frames) override;
 
@@ -59,7 +61,8 @@ class Hammer final : public Machine {
     // read or adjust (then refreshKeys) when calibrating against references.
     int activeVoices() const;
     int lastContactSamples() const { return lastContact; }
-    hammer::KeySpec &keySpec(int key) { return keys[key < 0 ? 0 : (key > kKeys - 1 ? kKeys - 1 : key)]; }
+    /** [key] of the instrument the model parameter has now. */
+    hammer::KeySpec &keySpec(int key) { return keys[modelNow()][key < 0 ? 0 : (key > kKeys - 1 ? kKeys - 1 : key)]; }
     void refreshKeys();
 
   private:
@@ -67,13 +70,20 @@ class Hammer final : public Machine {
     static constexpr int kKeys = 128;
     /** Longest strike-to-bridge delay, samples (A0 is about 800). */
     static constexpr int kKnockLine = 2048;
+    /** The instruments made of strings, which have key tables (the first in hammer::Model). */
+    static constexpr int kStringModels = hammer::ElectricGrand + 1;
 
     struct Voice {
         bool used = false;
         /** The key is down (the dampers are off it while it is, and while the pedal is). */
         bool held = false;
+        /** Fading out to make room for another note, by [fade] a sample. */
+        bool retiring = false;
+        float fade = 0.0f;
         int key = 0;
         int note = 0;
+        /** What its key is, on the instrument it was struck on. */
+        const hammer::KeySpec *spec = nullptr;
         hammer::Course course;
         hammer::Felt felt;
         hammer::Course::Design design;
@@ -107,15 +117,59 @@ class Hammer final : public Machine {
     void applyDamper(Voice &v);
     int voiceCap() const;
     bool fullDetail() const;
+    /** What [key]'s strings are made of, at [hz], with this detail. */
+    hammer::Course::Design designFor(int key, float hz, bool full);
+    /** The bass keys' stiffness sections, lean and full, designed ahead. */
+    void designSections();
 
     float paramOf(int32_t i) const { return params_.get(i); }
+    /** The instrument the model parameter asks for, as far as there are key tables (the rest play the grand, for now). */
+    int modelNow() const;
+    /** [key]'s note at [shifted] (a MIDI note, fractional), stretched as the instrument is tuned. */
+    float hzOf(int key, float shifted) const;
+    /** The board as the instrument, the lid and the mic make it. */
+    hammer::Board::Voicing voicing() const;
+    /** What's on [key]'s strings, if anything (the prepare section), and the level that makes up for it. */
+    hammer::Course::Prep prepFor(int key, float impedance, float *makeup) const;
 
     float sampleRate = 48000.0f;
     Voice voices[kVoices];
-    hammer::KeySpec keys[kKeys];
-    float stiffness[kKeys] = {};
+    hammer::KeySpec keys[kStringModels][kKeys];
+    float stiffness[kStringModels][kKeys] = {};
     hammer::Board board;
-    bool dampersUp = false;
+    /** Keys below this have stiffness sections (Hammer.cpp), kept here, lean and full. */
+    static constexpr int kSectionKeys = 36;
+    hammer::Course::Sections kept[kSectionKeys][2];
+    /** A course only for designing [kept]. */
+    hammer::Course warmer;
+    bool warmed = false;
+    /**
+     * The next bass key to design sections for, a key a block, after
+     * something that changes them (the instrument, its size, the stiffness):
+     * the first note on each would otherwise wait for its own.
+     */
+    int warmKey = kSectionKeys;
+    float warmFor[4] = {};
+    /** How far down the sustain and soft pedals are, 0 to 1. */
+    float sustainPedal = 0.0f, softPedal = 0.0f;
+    /** How far the pedal has the dampers off the strings, 0 to 1 (pedal at, pedal span). */
+    float lift() const;
+    /** Where [v]'s damper goes now: on the strings, off, or between with half a pedal. */
+    float damperFor(const Voice &v) const;
+    /**
+     * Strings nobody played that ring with the pedal down: tuned to keys
+     * that share partials with what was struck (an octave, a twelfth, a
+     * fifth away), driven by what the played strings bring to the bridge.
+     * Lean uses the first two.
+     */
+    static constexpr int kBank = 12, kLeanBank = 2;
+    Voice bank[kBank];
+    int bankNext = 0;
+    /** Gives [key]'s partials somewhere to ring, if the pedal's down. */
+    void wakeSympathy(int key);
+    /** The pedal's own thump, waiting to go into the board. */
+    float pedalThump = 0.0f;
+    float excite[kBlockFrames] = {};
     float bend = 0.0f;
     int64_t clock = 0;
     int lastContact = 0;

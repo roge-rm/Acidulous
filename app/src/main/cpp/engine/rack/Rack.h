@@ -280,15 +280,19 @@ class Rack {
      * gets them. Sustain holds every note past its key, sostenuto only the keys
      * down when it was pressed, and soft plays notes softer. A note held only
      * by a pedal has its note-off waiting in pedalHeld and is released when
-     * neither pedal needs it.
+     * neither pedal needs it. A machine that takes the pedals (a piano with
+     * half-pedal) gets how far down each one is, and handles sustain and soft
+     * itself.
      */
+    uint8_t pedalValue[3]{};
     bool sustainDown = false;
     bool sostenutoDown = false;
     bool softDown = false;
     bool keyDown[128]{};
     bool pedalHeld[128]{};
     bool sostenutoSet[128]{};
-    void setPedal(int32_t which, bool down);
+    void setPedal(int32_t which, uint8_t value);
+    bool machineTakesPedals() const { return machine != nullptr && machine->takesPedals(); }
     void releasePedalled();
     void resetPedals();
 

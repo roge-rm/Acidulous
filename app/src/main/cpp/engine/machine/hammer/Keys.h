@@ -26,6 +26,10 @@ struct KeySpec {
     float unison = 1.0f;
     /** How unevenly the hammer meets the strings: what starts the aftersound. */
     float uneven = 0.3f;
+    /** How much the strings move across the board, against the polar knob. */
+    float across = 1.0f;
+    /** How long the high end rings at the least, against the grand's (Course::Design::highRing). */
+    float highRing = 1.0f;
     /** How much less than one B says the partials stretch high up: B / (1 + bend k) at partial k. */
     float bend = 0.0f;
     /** Where the hammer strikes, a fraction of the string from the agraffe. */
@@ -171,6 +175,163 @@ inline KeySpec grandKey(float key) {
     s.zone = key < 48.0f ? 0 : (key < 72.0f ? 1 : 2);
     // As the player hears it: bass on the left.
     s.pan = clampf((key - 64.0f) / 44.0f, -1.0f, 1.0f) * 0.6f;
+    return s;
+}
+
+/**
+ * [s], the grand's key, made into another instrument's from what [table]
+ * measured of it against the grand: its own stiffness and stretch, its
+ * decays and the reach of its strike as the grand's times the ratio of the
+ * two recordings. The grand's calibration (what the model needs on top of a
+ * measurement) carries over that way, where the other recordings are too
+ * short or too few to calibrate against on their own.
+ */
+inline KeySpec measuredAgainstGrand(KeySpec s, const Anchor *table, int n, float key) {
+    using detail::between;
+    constexpr int g = static_cast<int>(sizeof(kGrandA) / sizeof(kGrandA[0]));
+    auto ratio = [&](float Anchor::*field) {
+        auto get = [field](const Anchor &a) { return a.*field; };
+        const float mine = between(table, n, key, get, true), grand = between(kGrandA, g, key, get, true);
+        return mine > 0.0f && grand > 0.0f ? mine / grand : 1.0f;
+    };
+    s.B *= ratio(&Anchor::B);
+    s.stretchCents = between(table, n, key, [](const Anchor &a) { return a.cents; }, false);
+    // A ring time the short recordings couldn't give takes the nearest
+    // anchor's ratio; held within reason, as a stray fit can be anything.
+    auto ring = [&](float Anchor::*field) { return clampf(ratio(field), 0.1f, 3.0f); };
+    s.prompt1 *= ring(&Anchor::prompt1);
+    s.after1 *= ring(&Anchor::after1);
+    s.prompt3 *= ring(&Anchor::prompt3);
+    s.after3 *= ring(&Anchor::after3);
+    s.prompt7 *= ring(&Anchor::prompt7);
+    s.after7 *= ring(&Anchor::after7);
+    s.after1 = std::fmax(s.after1, s.prompt1);
+    s.after3 = std::fmax(s.after3, s.prompt3);
+    s.after7 = std::fmax(s.after7, s.prompt7);
+    // A strike that reaches twice as high is about half as long on the strings.
+    s.contact /= clampf(ratio(&Anchor::reachHz), 0.4f, 2.5f);
+    return s;
+}
+
+/** The instruments, in the order of the model parameter. */
+enum Model : int {
+    Grand = 0, Upright, Honky, Fortepiano, ElectricGrand, Tine, Reed, Tangent, Celesta, Toy, Dulcimer, Cimbalom,
+    kModels
+};
+
+/** [model]'s key [key], before size, age and the knobs. */
+inline KeySpec keyFor(int model, float key) {
+    using detail::across;
+    using detail::lerp;
+    KeySpec s = grandKey(key);
+    switch (model) {
+    case Upright: {
+        constexpr int n = static_cast<int>(sizeof(kUprightA) / sizeof(kUprightA[0]));
+        s = measuredAgainstGrand(s, kUprightA, n, key);
+        // Shorter strings: one to C#1, two to E2. A lighter action, a
+        // board half the size that rings the knock louder (the recording's
+        // knock is 3 to 6 dB up on the grand's through the middle).
+        s.strings = key < 25.5f ? 1 : (key < 40.5f ? 2 : 3);
+        s.impedance *= across(key, 0.75f, 0.9f, true);
+        s.mass *= 0.9f;
+        s.knock *= across(key, 1.0f, 2.0f, true);
+        // Its aftersound is stronger against the prompt sound than a
+        // grand's (the recording's knee is 2 to 26 dB, not 5 to 43, but
+        // its notes are too short to say how far). The strike reached 1.4
+        // times as high as the recording's.
+        s.unison *= 1.3f;
+        s.across = 1.5f;
+        s.contact *= 1.4f;
+        // Its notes die sooner, so a phrase is 5 dB under the grand's at the
+        // same peak: brought up most of the way.
+        s.level *= 1.4f;
+        break;
+    }
+    case Honky: {
+        constexpr int n = static_cast<int>(sizeof(kHonkyA) / sizeof(kHonkyA[0]));
+        s = measuredAgainstGrand(s, kHonkyA, n, key);
+        s.strings = key < 25.5f ? 1 : (key < 40.5f ? 2 : 3);
+        s.impedance *= across(key, 0.75f, 0.9f, true);
+        s.knock *= 1.4f;
+        s.uneven = 0.45f;
+        s.across = 1.5f;
+        s.highRing = 0.4f;
+        // Its upper partials rang 1.3 to 2.7 times too long from C3 up, and
+        // partials 2-4 from C6 up, against the recording.
+        {
+            const float upper = lerp(1.0f, 0.4f, clampf((key - 45.0f) / 45.0f, 0.0f, 1.0f));
+            const float middle = lerp(1.0f, 0.5f, clampf((key - 76.0f) / 32.0f, 0.0f, 1.0f));
+            s.prompt7 *= upper;
+            s.after7 *= upper;
+            s.prompt3 *= middle;
+            s.after3 *= middle;
+        }
+        break;
+    }
+    case Fortepiano: {
+        // No open recording to measure: from what's written about the
+        // instruments of around 1800. Thin strings at low tension (less
+        // stiff, lighter, quicker to die), small leather-covered hammers,
+        // two strings in the bass and three above, wooden dampers that
+        // don't stop a note dead, and a light case that the action knocks.
+        s.B *= across(key, 0.45f, 0.6f, true);
+        s.stretchCents *= 0.7f;
+        const float shorter = across(key, 0.35f, 0.5f, true);
+        s.prompt1 *= shorter;
+        s.after1 *= shorter * 0.8f;
+        s.prompt3 *= shorter;
+        s.after3 *= shorter * 0.8f;
+        s.prompt7 *= shorter * 0.9f;
+        s.after7 *= shorter * 0.7f;
+        s.strings = key < 53.5f ? 2 : 3;
+        s.impedance *= 0.45f;
+        s.mass *= across(key, 0.5f, 0.45f, true);
+        s.exponent = across(key, 2.2f, 2.6f, false);
+        s.contact *= 0.6f;
+        s.hardening *= 0.5f;
+        s.strike = across(key, 0.11f, 0.09f, false);
+        s.damper = key < 101.0f;
+        s.dampedT60 *= 3.0f;
+        s.knock *= 2.5f;
+        s.unison *= 1.4f;
+        s.highRing = 0.4f;
+        break;
+    }
+    case ElectricGrand: {
+        constexpr int n = static_cast<int>(sizeof(kElectricGrandA) / sizeof(kElectricGrandA[0]));
+        s = measuredAgainstGrand(s, kElectricGrandA, n, key);
+        // Short strings with pickups under the bridge and no board to
+        // speak of: little double decay (the recording's knee is 0 to 25
+        // dB, the grand's 5 to 43) and hardly any knock. The grand's
+        // calibration of its prompt sound doesn't carry over (it rang half
+        // as long as the recording): the recording's own times, and an
+        // aftersound not far behind them where it rings out too long to say.
+        auto own = [&](float Anchor::*field) {
+            return detail::between(kElectricGrandA, n, key, [field](const Anchor &a) { return a.*field; }, true);
+        };
+        s.prompt1 = own(&Anchor::prompt1);
+        // The upper partials as designed rang 1.5 to 3.5 times the
+        // recording's through the middle: the bridge's share of them is held
+        // down (Course::kHighT60), so they ask for less.
+        s.prompt3 = own(&Anchor::prompt3) * lerp(1.0f, 0.6f, clampf((key - 33.0f) / 27.0f, 0.0f, 1.0f));
+        s.prompt7 = own(&Anchor::prompt7) *
+                    (key < 57.0f ? lerp(0.8f, 0.33f, clampf((key - 33.0f) / 24.0f, 0.0f, 1.0f))
+                                 : lerp(0.33f, 0.7f, clampf((key - 57.0f) / 31.0f, 0.0f, 1.0f)));
+        s.after1 = key < 84.0f ? 1.6f * s.prompt1 : std::fmax(own(&Anchor::after1), s.prompt1);
+        s.after3 = 1.6f * s.prompt3;
+        s.after7 = 1.6f * s.prompt7;
+        s.strings = key < 36.5f ? 1 : (key < 52.5f ? 2 : 3);
+        s.impedance *= across(key, 0.5f, 0.85f, true);
+        s.knock *= 0.25f;
+        s.unison *= 0.6f;
+        s.highRing = 0.35f;
+        // The strike reached 1.2 to 1.4 times as high as the recording's from C3 up.
+        s.contact *= lerp(1.0f, 1.3f, clampf((key - 36.0f) / 24.0f, 0.0f, 1.0f));
+        break;
+    }
+    default:
+        break;
+    }
     return s;
 }
 

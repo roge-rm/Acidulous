@@ -287,6 +287,28 @@ class MidiImportTest {
     }
 
     @Test
+    fun aPianoKeepsHalfAPedalAndEverythingElseUpOrDown() {
+        // A slow press: 30, 31 (a controller step from 30, dropped), 70,
+        // 100, then let up.
+        val bytes = file(1, PPQN, track(
+            0 to b(0x90, 60, 100),
+            0 to b(0xb0, 64, 30),
+            10 to b(0xb0, 64, 31),
+            10 to b(0xb0, 64, 70),
+            10 to b(0xb0, 64, 100),
+            PPQN to b(0x80, 60, 0),
+            0 to b(0xb0, 64, 0),
+        ))
+        fun pedalOn(type: String): List<LanePoint> {
+            val song = MidiImport.build("half", MidiFile.read(bytes), listOf(type), 4)
+            return song.tracks.single().clips.values.first().automation[laneKey("performance", "sustain")]!!.points
+        }
+        assertEquals(listOf(30f, 70f, 100f, 0f).map { it / 127f }, pedalOn("Hammer").map { it.value })
+        // 30 is up, 70 down: the only changes are down at 70 and up at the end.
+        assertEquals(listOf(0f, 1f, 0f), pedalOn("Trinity").map { it.value })
+    }
+
+    @Test
     fun aTempoChangeGivesTheScenesAfterItTheirOwnTempo() {
         val bytes = file(1, PPQN, track(
             0 to b(0xff, 0x51, 3, 0x07, 0xa1, 0x20),   // 120

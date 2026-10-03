@@ -129,8 +129,14 @@ A pedal plugged into your keyboard works on every melodic machine:
   pressed it, and notes you play after that stop as usual.
 - **Soft** (the left one) plays notes in more quietly while it's down.
 
+Hammer takes a pedal part of the way down, as a piano does: half a sustain pedal
+lets the dampers only touch the strings. Every other machine hears a pedal as
+up or down, with the halfway point counting as down. MIDI out sends the pedal as
+far down as it is.
+
 Pedals are recorded as lanes in the automation strip, one each, and you can draw
-them there by hand too. Drum machines ignore them.
+them there by hand too. On Hammer a lane keeps how far down the pedal was, and
+where it moved; on everything else it's up or down. Drum machines ignore them.
 
 ## Mapping a controller
 

@@ -21,7 +21,7 @@ These copy how the real instrument works, so they play like one.
 - [**Brazen**](04-the-machines/brazen.md) - brass, from trumpet to tuba.
 - [**Timber**](04-the-machines/timber.md) - woodwinds, reeds and flutes.
 - [**Resonance**](04-the-machines/resonance.md) - eight struck objects that ring into each other.
-- [**Hammer**](04-the-machines/hammer.md) - a grand piano, from felt hammers, strings and a soundboard.
+- [**Hammer**](04-the-machines/hammer.md) - grand, upright and other pianos, from felt hammers, strings and a soundboard.
 
 ## Drums
 

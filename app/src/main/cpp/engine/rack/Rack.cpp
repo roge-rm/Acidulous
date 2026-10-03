@@ -129,13 +129,14 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
     const bool off = kind == 0x80 || (kind == 0x90 && d2 == 0);
     // Pedals. A key released while a pedal holds it isn't released yet: its
     // note-off waits in pedalHeld until the pedal comes up.
+    const bool takes = machine->takesPedals();
     if (on) {
         keyDown[d1 & 0x7f] = true;
         pedalHeld[d1 & 0x7f] = false;
-        if (softDown) d2 = static_cast<uint8_t>(std::max(1, (d2 * 5) / 8));
+        if (softDown && !takes) d2 = static_cast<uint8_t>(std::max(1, (d2 * 5) / 8));
     } else if (off) {
         keyDown[d1 & 0x7f] = false;
-        if (sustainDown || sostenutoSet[d1 & 0x7f]) {
+        if ((sustainDown && !takes) || sostenutoSet[d1 & 0x7f]) {
             pedalHeld[d1 & 0x7f] = true;
             return;
         }
@@ -162,14 +163,22 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
     machine->handleMidi(status, d1, d2);
 }
 
-void Rack::setPedal(int32_t which, bool down) {
-    // Send the pedal itself to MIDI out. External synths have their own pedal
-    // handling, so holding their note-offs here too would hold them twice.
+void Rack::setPedal(int32_t which, uint8_t value) {
+    const int32_t slot = which == kPerfSustain ? 0 : which == kPerfSostenuto ? 1 : 2;
+    if (value == pedalValue[slot]) return;
+    pedalValue[slot] = value;
+    // Send the pedal itself to MIDI out, as far down as it is. External synths
+    // have their own pedal handling, so holding their note-offs here too would
+    // hold them twice.
     const uint8_t cc = which == kPerfSustain ? 64 : which == kPerfSostenuto ? 66 : 67;
     if (lastOutMode != OutInternal && outQueue != nullptr) {
-        outQueue->push({outFrame, static_cast<uint8_t>(0xb0 | lastOutChannel), cc,
-                        static_cast<uint8_t>(down ? 127 : 0), static_cast<uint8_t>(rackIndex)});
+        outQueue->push({outFrame, static_cast<uint8_t>(0xb0 | lastOutChannel), cc, value,
+                        static_cast<uint8_t>(rackIndex)});
     }
+    const bool takes = machineTakesPedals();
+    if (takes) machine->pedal(which, static_cast<float>(value) / 127.0f);
+    // 64 and up is down, as in MIDI.
+    const bool down = value >= 64;
     if (which == kPerfSoft) {
         softDown = down;
         return;
@@ -177,7 +186,7 @@ void Rack::setPedal(int32_t which, bool down) {
     if (which == kPerfSustain) {
         if (down == sustainDown) return;
         sustainDown = down;
-        if (machine != nullptr) machine->setDampers(down);
+        if (machine != nullptr && !takes) machine->setDampers(down);
     } else {
         if (down == sostenutoDown) return;
         sostenutoDown = down;
@@ -189,8 +198,9 @@ void Rack::setPedal(int32_t which, bool down) {
 
 void Rack::releasePedalled() {
     if (machine == nullptr) return;
+    const bool takes = machine->takesPedals();
     for (int32_t n = 0; n < 128; ++n) {
-        if (!pedalHeld[n] || sustainDown || sostenutoSet[n]) continue;
+        if (!pedalHeld[n] || (sustainDown && !takes) || sostenutoSet[n]) continue;
         pedalHeld[n] = false;
         forgetHeld(static_cast<uint8_t>(n));
         machine->handleMidi(0x80, static_cast<uint8_t>(n), 0);
@@ -200,7 +210,13 @@ void Rack::releasePedalled() {
 void Rack::resetPedals() {
     sustainDown = sostenutoDown = softDown = false;
     for (int32_t n = 0; n < 128; ++n) keyDown[n] = pedalHeld[n] = sostenutoSet[n] = false;
-    if (machine != nullptr) machine->setDampers(false);
+    for (uint8_t &v : pedalValue) v = 0;
+    if (machine != nullptr) {
+        machine->setDampers(false);
+        if (machine->takesPedals()) {
+            for (int32_t which : {kPerfSustain, kPerfSostenuto, kPerfSoft}) machine->pedal(which, 0.0f);
+        }
+    }
 }
 
 void Rack::forgetHeld(uint8_t note) {
@@ -563,6 +579,12 @@ Machine *Rack::swapMachine(Machine *next) {
     if (old != nullptr) old->allNotesOff();
     heldCount = 0; // the notes went with the machine
     machine = next;
+    // A machine that takes the pedals starts where they are.
+    if (next != nullptr && next->takesPedals()) {
+        next->pedal(kPerfSustain, pedalValue[0] / 127.0f);
+        next->pedal(kPerfSostenuto, pedalValue[1] / 127.0f);
+        next->pedal(kPerfSoft, pedalValue[2] / 127.0f);
+    }
     return old;
 }
 
@@ -621,8 +643,7 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
         } else if (index == kPerfPressure) {
             handleMidi(0xd0, byte, 0);
         } else if (index == kPerfSustain || index == kPerfSostenuto || index == kPerfSoft) {
-            // 64 and up is down, as in MIDI.
-            setPedal(index, byte >= 64);
+            setPedal(index, byte);
         }
         break;
     }

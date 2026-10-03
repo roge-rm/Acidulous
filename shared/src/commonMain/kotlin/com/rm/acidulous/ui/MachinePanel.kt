@@ -3458,26 +3458,46 @@ private fun BrazenPanel(b: ParamBinding) {
 // The hammer first, since how hard it is and how hard it's thrown is most of a
 // piano's colour. Then how the strings ring, the dampers, and out.
 
+/** In the order of hammer::Model. */
+private val HAMMER_MODELS = listOf(
+    "grand", "upright", "honky-tonk", "fortepiano", "electric grand", "tine", "reed",
+    "tangent", "celesta", "toy", "dulcimer", "cimbalom",
+)
+private val HAMMER_MICS = listOf("player", "audience", "close", "room")
+private val HAMMER_PREPS = listOf("none", "rubber", "screw", "bolt", "paper", "mixed")
+private val HAMMER_PREP_KEYS = listOf("all", "white", "black", "low", "high", "random")
 private val HAMMER_STRINGS = listOf("auto", "1", "2", "3")
 private val HAMMER_VOICES = listOf("4", "6", "8", "10", "12", "16", "20", "24", "32")
 
 @Composable
 private fun HammerPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("hammer", "strings", "dampers", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("instrument", "hammer", "strings", "pedals", "sound", "prepare", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
+                Group("instrument") {
+                    PanelStepKnob(b, "model", HAMMER_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "size", "size")
+                    PanelKnob(b, "age", "age")
+                    PanelStepKnob(b, "seed", (0..7).map { "$it" }, "seed")
+                }
+            }
+            1 -> {
                 Group("felt") {
                     PanelKnob(b, "hardness", "hardness", PanelAmber)
                     PanelKnob(b, "hardkey", "by key")
                     PanelKnob(b, "weight", "weight")
                     PanelKnob(b, "position", "strike at", PanelPink)
                 }
+                Group("over the felt") {
+                    PanelKnob(b, "tacks", "tacks")
+                    PanelKnob(b, "felt", "moderator")
+                }
                 Group("touch") {
                     PanelKnob(b, "velocity", "velocity", PanelAmber)
                 }
             }
-            1 -> {
+            2 -> {
                 Group("ring") {
                     PanelKnob(b, "sustain", "sustain", PanelAmber)
                     PanelKnob(b, "sustainkey", "by key")
@@ -3495,17 +3515,44 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelKnob(b, "polar", "across")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("dampers") {
                     PanelKnob(b, "dampers", "dampers", PanelAmber)
                     PanelKnob(b, "damp time", "time")
+                }
+                Group("sustain pedal") {
+                    PanelKnob(b, "pedal at", "lifts at", PanelPink)
+                    PanelKnob(b, "pedal span", "span")
+                    PanelKnob(b, "sympathy", "sympathy", PanelAmber)
+                    PanelKnob(b, "noises", "noises")
+                }
+                Group("soft pedal") {
+                    PanelKnob(b, "una corda", "una corda")
+                }
+            }
+            4 -> {
+                Group("board") {
+                    PanelKnob(b, "board", "board", PanelAmber)
+                    PanelKnob(b, "lid", "lid")
+                    PanelKnob(b, "tail", "room")
+                }
+                Group("heard from") {
+                    PanelStepKnob(b, "mic", HAMMER_MICS, "mic", PanelPink)
+                    PanelKnob(b, "width", "width")
+                }
+            }
+            5 -> {
+                Group("prepare") {
+                    PanelStepKnob(b, "prep", HAMMER_PREPS, "what", PanelAmber)
+                    PanelStepKnob(b, "prepkeys", HAMMER_PREP_KEYS, "keys")
+                    PanelKnob(b, "prep at", "where", PanelPink)
+                    PanelKnob(b, "prepamt", "amount")
                 }
             }
             else -> {
                 Group("out") {
                     PanelKnob(b, "volume", "volume")
                     PanelKnob(b, "pan", "pan")
-                    PanelKnob(b, "width", "width")
                 }
                 Group("tuning") {
                     PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")

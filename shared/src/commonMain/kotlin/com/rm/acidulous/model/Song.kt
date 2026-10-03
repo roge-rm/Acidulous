@@ -190,6 +190,23 @@ fun laneKey(unit: String, name: String): String = "$unit:$name"
 val PEDAL_LANES = listOf("sustain", "sostenuto", "soft")
 fun isPedalLane(key: String): Boolean = laneUnit(key) == "performance" && laneParam(key) in PEDAL_LANES
 
+/**
+ * A pedal lane as a machine plays it: kept as it is where [halfPedal], with
+ * points less than 2/127 from the one before dropped (a slow press is a
+ * handful of points, not one per controller message); otherwise up or down,
+ * only where it changes.
+ */
+fun pedalLaneFor(lane: Lane, halfPedal: Boolean): Lane {
+    val kept = mutableListOf<LanePoint>()
+    for (p in lane.points) {
+        val v = if (halfPedal) p.value else if (p.value >= 64f / 127f) 1f else 0f
+        val last = kept.lastOrNull()
+        if (last != null && kotlin.math.abs(last.value - v) < (if (halfPedal) 2f / 127f else 0.5f)) continue
+        kept += LanePoint(p.tick, v)
+    }
+    return lane.copy(points = kept)
+}
+
 /** A new empty lane for [key]: stepped and resting up for a pedal, a plain glide otherwise. */
 fun newLaneFor(key: String, firstTick: Int): Lane =
     if (isPedalLane(key)) Lane(if (firstTick > 0) listOf(LanePoint(0, 0f)) else emptyList(), linear = false)

@@ -85,6 +85,43 @@ class Course {
         float prompt1 = 8.0f, prompt3 = 5.0f, prompt7 = 3.0f;
     };
 
+    /**
+     * The stiffness sections designed for one note, kept where every voice
+     * can use them: designing them takes 50 to 100 us, and a bass note can't
+     * wait that long for its strings at every note-on (Hammer designs its
+     * bass keys' as it's loaded). What they were made for, the curve, the
+     * sections in order of frequency, and the late wave's share.
+     */
+    struct Sections {
+        float hz = 0.0f, B = 0.0f, bend = 0.0f;
+        int cap = 0, made = 0;
+        double line = 0.0, top = 1.0, total = 0.0;
+        float a1[kSections] = {}, a2[kSections] = {};
+        float gapFor = 0.0f;
+        int gapCount = 0;
+        float gapA1[kGapSections] = {}, gapA2[kGapSections] = {};
+    };
+
+    /**
+     * Something put on the strings at one point, as the force it puts on
+     * them there, in the strings' own units (a force over twice their
+     * impedance, a sample at a time): rubber is a [loss] and a [spring] to
+     * the frame, a screw a [mass] that moves with the strings, a bolt or
+     * paper a [rattle] mass that sits loose, [gap] apart, and only meets
+     * them past that (with its own [rattleLoss], and paper a
+     * [rattleSpring] back to where it was put). All zero is nothing.
+     */
+    struct Prep {
+        float at = 0.3f;
+        float loss = 0.0f, spring = 0.0f, mass = 0.0f;
+        float rattle = 0.0f, gap = 0.0f, rattleLoss = 0.0f, rattleSpring = 0.0f;
+        bool any() const { return loss > 0.0f || spring > 0.0f || mass > 0.0f || rattle > 0.0f; }
+        bool operator==(const Prep &o) const {
+            return at == o.at && loss == o.loss && spring == o.spring && mass == o.mass && rattle == o.rattle &&
+                   gap == o.gap && rattleLoss == o.rattleLoss && rattleSpring == o.rattleSpring;
+        }
+    };
+
     struct Design {
         /** The note, Hz, and the strings the hammer strikes (with [polar], up to kLanes in all). */
         float hz = 261.6f;
@@ -117,9 +154,31 @@ class Course {
         int sections = 0;
         /** How much less the sections stretch the high partials than [B] says: B / (1 + bend k) at partial k. */
         float bend = 0.0f;
+        /** Where to keep the sections designed for this note (null: the course's own). */
+        Sections *kept = nullptr;
         Decay decay;
         /** Where the hammer strikes, a fraction of the string from the far end. */
         float strike = 0.12f;
+        /** What's on the strings, if anything. */
+        Prep prep;
+        /**
+         * How long the high end rings at the least, against the grand's
+         * (kHighT60, kHighAfterT60): shorter, thinner strings let the top
+         * go sooner.
+         */
+        float highRing = 1.0f;
+
+        /** Field by field: the bytes between them (around [kept]) are anything. */
+        bool operator==(const Design &o) const {
+            for (int i = 0; i < kLanes; ++i) {
+                if (unison[i] != o.unison[i] || detune[i] != o.detune[i]) return false;
+            }
+            return hz == o.hz && lanes == o.lanes && polar == o.polar && couple == o.couple && B == o.B &&
+                   stages == o.stages && sections == o.sections && bend == o.bend && kept == o.kept &&
+                   decay.after1 == o.decay.after1 && decay.after3 == o.decay.after3 && decay.after7 == o.decay.after7 &&
+                   decay.prompt1 == o.decay.prompt1 && decay.prompt3 == o.decay.prompt3 &&
+                   decay.prompt7 == o.decay.prompt7 && strike == o.strike && prep == o.prep && highRing == o.highRing;
+        }
     };
 
     void prepare(float sampleRate) {
@@ -138,6 +197,7 @@ class Course {
             for (int s = 0; s < kGapSections; ++s) gapS1[s][i] = gapS2[s][i] = 0.0f;
         }
         bridgeBefore = 0.0f;
+        for (int i = 0; i < kLanes; ++i) prepY[i] = prepV[i] = rattleY[i] = rattleV[i] = 0.0f;
         gapLive = 0;
         for (int i = 0; i < kLanes; ++i) {
             gapIn[i] = 0.0f;
@@ -169,6 +229,7 @@ class Course {
         const float wanted = 0.5f * (sr / f0) * d.B * static_cast<float>(K * K - 1);
         const float stiffB = d.B * std::fmax(0.0f, 1.0f - lossDrop / std::fmax(wanted, 1e-9f));
         sections = 0;
+        sd = d.kept != nullptr ? d.kept : &own;
         if (d.sections > 0 && d.B > 0.0f) designSections(f0, stiffB, std::fmax(d.bend, 0.0f), std::min(d.sections, kSections));
         if (sections > 0) {
             stages = 0;
@@ -182,7 +243,7 @@ class Course {
             laneHz[i] = f0 * std::exp2(cents / 1200.0f);
             const float w = 6.28318530718f * laneHz[i] / sr;
             double lag = 0.0;
-            for (int m = 0; m < sections; ++m) lag += sectionLag(madeA1[m], madeA2[m], w);
+            for (int m = 0; m < sections; ++m) lag += sectionLag(sd->a1[m], sd->a2[m], w);
             laneStiff[i] = static_cast<float>(stages) * allpassDelay(disperse, w) + static_cast<float>(lag / w);
             solveLane(i, laneHz[i]);
         }
@@ -205,12 +266,23 @@ class Course {
         };
         float gap = gapOf();
         while (gap < 2.0f && (gapStages > 0 || gapSections > 0)) {
-            if (gapStages > 0) --gapStages; else if (--gapSections > 0) { gapMadeFor = 0.0f; lay(gapSections, gapA1, gapA2); }
+            if (gapStages > 0) --gapStages; else if (--gapSections > 0) lay(gapSections, gapA1, gapA2);
             gap = gapOf();
         }
         gap = std::fmax(gap, 1.0f);
         tapOut = clampf(half - 0.5f * gap, 1.0f, static_cast<float>(delay[0]) - 2.0f);
         tapBack = clampf(half + 0.5f * gap, 1.0f, static_cast<float>(delay[0]) - 2.0f);
+        // A preparation's point, the same way round: out and back, on whole
+        // samples. Between two, what it pushes into the later one is read
+        // back a sample on, and a light rattle fed on itself and screamed
+        // (paper, from about C5 up).
+        prepared = d.prep.any();
+        if (prepared) {
+            const float span = clampf(d.prep.at, 0.02f, 0.48f) * static_cast<float>(delay[0]);
+            prepOut = std::round(clampf(half - 0.5f * span, 1.0f, static_cast<float>(delay[0]) - 2.0f));
+            prepBack = std::round(clampf(half + 0.5f * span, 1.0f, static_cast<float>(delay[0]) - 2.0f));
+            if (prepBack <= prepOut) prepBack = prepOut + 1.0f;
+        }
         // A stiff string's highs travel faster than its lows, so they reach
         // the bridge first: at A0 the blow is heard bright about 10 ms
         // before the low part of the note arrives. With all the stiffness
@@ -245,8 +317,18 @@ class Course {
         }
     }
 
+    /**
+     * What the bridge's motion gives a string it doesn't belong to, [x] into
+     * every struck lane as it leaves the bridge: an unplayed string ringing
+     * in sympathy. Called after step().
+     */
+    void drive(float x) {
+        for (int i = 0; i < struck; ++i) addAge(1.0f, i, x);
+    }
+
     /** One sample: every string round its loop and through the bridge. Returns what reaches the bridge. */
     float step() {
+        if (prepared) stepPrep();
         // Every filter runs over all four lanes at once, a lane that isn't
         // used held at zero: four floats side by side, which the compiler
         // turns into one vector operation each.
@@ -358,6 +440,43 @@ class Course {
 
   private:
     static size_t index(int32_t i) { return static_cast<size_t>(i & (kSize - 1)) * kLanes; }
+
+    /**
+     * The preparation, a sample: each struck string's velocity where it
+     * sits, the force it answers with, pushed both ways as the hammer's is.
+     * Everything is solved together with the string's own velocity this
+     * sample (backward Euler), the rattle's contact too: from where the
+     * string and the rattle would be with no force between them, whether
+     * they meet, and the force that keeps them the gap apart. Worked out
+     * from last sample's places instead, a light rattle gave energy at
+     * every bounce and buzzed on for ever.
+     */
+    void stepPrep() {
+        const Prep &p = design.prep;
+        const float rigid = 1.0f + p.loss + p.spring + p.mass + kHold;
+        const float heavy = p.rattle * (1.0f + p.rattleLoss) + p.rattleSpring;
+        for (int i = 0; i < struck; ++i) {
+            const float vin = readAge(prepOut, i) - readAge(prepBack, i);
+            const float free = vin - (p.spring + kHold) * prepY[i] + p.mass * prepV[i];
+            float hit = 0.0f;
+            if (p.rattle > 0.0f) {
+                const float rattleFree = (p.rattle * rattleV[i] - p.rattleSpring * rattleY[i]) / heavy;
+                const float apart = prepY[i] + free / rigid - rattleY[i] - rattleFree;
+                const float past = std::fabs(apart) - p.gap;
+                if (past > 0.0f) {
+                    hit = kRattleStiff * (apart > 0.0f ? past : -past) / (1.0f + kRattleStiff / rigid + kRattleStiff / heavy);
+                }
+                rattleV[i] = rattleFree + hit / heavy;
+                rattleY[i] += rattleV[i];
+            }
+            const float v = (free - hit) / rigid;
+            prepV[i] = v;
+            prepY[i] += v;
+            const float dv = v - vin;
+            addAge(prepBack, i, -dv);
+            addAge(prepOut, i, dv);
+        }
+    }
 
     float readAge(float age, int lane) const {
         const float back = static_cast<float>(write) - age;
@@ -480,12 +599,14 @@ class Course {
      * 80th. With [bend], partial k is at k f0 sqrt(1 + B k^2 / (1 + bend k)).
      */
     void designSections(float f0, float B, float bend, int cap) {
-        if (f0 != madeHz || B != madeB || bend != madeBend || cap != madeCap) {
-            madeHz = f0;
-            madeB = B;
-            madeBend = bend;
-            madeCap = cap;
-            gapMadeFor = 0.0f;
+        // A few cents off is the same design: the loop is tuned from the
+        // sections' own phase, so the note is exact either way.
+        if (std::fabs(f0 - sd->hz) > 0.005f * f0 || B != sd->B || bend != sd->bend || cap != sd->cap) {
+            sd->hz = f0;
+            sd->B = B;
+            sd->bend = bend;
+            sd->cap = cap;
+            sd->gapFor = 0.0f;
             constexpr double tau2pi = 6.283185307179586;
             auto totalTo = [&](double top) { return wantedPhase(tau2pi * top / sr, groupDelayAt(top)); };
             double top = std::fmin(kSectionsTopHz, 0.42 * sr);
@@ -497,26 +618,26 @@ class Course {
                 }
                 top = lo;
             }
-            madeLine = groupDelayAt(top);
-            madeTop = tau2pi * top / sr;
-            madeTotal = totalTo(top);
-            made = std::min(cap, static_cast<int>(std::lround(madeTotal / tau2pi)));
-            if (made >= 2) lay(made, madeA1, madeA2); else made = 0;
+            sd->line = groupDelayAt(top);
+            sd->top = tau2pi * top / sr;
+            sd->total = totalTo(top);
+            sd->made = std::min(cap, static_cast<int>(std::lround(sd->total / tau2pi)));
+            if (sd->made >= 2) lay(sd->made, sd->a1, sd->a2); else sd->made = 0;
         }
-        sections = made;
+        sections = sd->made;
     }
 
     /** Where partial k sits, as a multiple of f0, squared, for the sections' curve; and its slope. */
-    double stretchSquare(double k) const { return k * k + madeB * k * k * k * k / (1.0 + madeBend * k); }
+    double stretchSquare(double k) const { return k * k + sd->B * k * k * k * k / (1.0 + sd->bend * k); }
     double stretchSlope(double k) const {
-        const double q = 1.0 + madeBend * k;
-        return 2.0 * k + madeB * (4.0 * k * k * k * q - madeBend * k * k * k * k) / (q * q);
+        const double q = 1.0 + sd->bend * k;
+        return 2.0 * k + sd->B * (4.0 * k * k * k * q - sd->bend * k * k * k * k) / (q * q);
     }
     /** Which partial (fractional) is at [hz]. */
     double partialAt(double hz) const {
-        const double r = hz / madeHz, b = std::fmax(static_cast<double>(madeB), 1e-7);
+        const double r = hz / sd->hz, b = std::fmax(static_cast<double>(sd->B), 1e-7);
         double k = std::sqrt((-1.0 + std::sqrt(1.0 + 4.0 * b * r * r)) / (2.0 * b));
-        if (madeBend > 0.0f) {
+        if (sd->bend > 0.0f) {
             for (int it = 0; it < 8; ++it) k = std::fmax(k - (stretchSquare(k) - r * r) / stretchSlope(k), 0.0);
         }
         return k;
@@ -524,8 +645,8 @@ class Course {
     /** The loop's group delay at [hz], samples: sr dk/df. */
     double groupDelayAt(double hz) const {
         const double k = partialAt(hz);
-        if (k < 1e-9) return sr / madeHz;
-        return sr / madeHz * 2.0 * std::sqrt(stretchSquare(k)) / stretchSlope(k);
+        if (k < 1e-9) return sr / sd->hz;
+        return sr / sd->hz * 2.0 * std::sqrt(stretchSquare(k)) / stretchSlope(k);
     }
     /** The stiffness's phase at [w], with the line's [line] samples taken out. */
     double wantedPhase(double w, double line) const {
@@ -541,12 +662,12 @@ class Course {
         // bracket (the slope falls to nothing at the top).
         double from = 0.0;
         auto reach = [&](double phase) {
-            double lo = from, hi = madeTop, w = 0.5 * (lo + hi);
+            double lo = from, hi = sd->top, w = 0.5 * (lo + hi);
             for (int it = 0; it < 60; ++it) {
-                const double e = wantedPhase(w, madeLine) - phase;
+                const double e = wantedPhase(w, sd->line) - phase;
                 if (std::fabs(e) < 1e-9) break;
                 (e > 0.0 ? hi : lo) = w;
-                const double slope = groupDelayAt(w * sr / 6.283185307179586) - madeLine;
+                const double slope = groupDelayAt(w * sr / 6.283185307179586) - sd->line;
                 double next = slope > 1e-12 ? w - e / slope : 0.5 * (lo + hi);
                 if (!(next > lo && next < hi)) next = 0.5 * (lo + hi);
                 w = next;
@@ -556,8 +677,8 @@ class Course {
         };
         double edge = 0.0;
         for (int i = 0; i < n; ++i) {
-            const double centre = reach((i + 0.5) * madeTotal / n);
-            const double next = i + 1 < n ? reach((i + 1.0) * madeTotal / n) : madeTop;
+            const double centre = reach((i + 0.5) * sd->total / n);
+            const double next = i + 1 < n ? reach((i + 1.0) * sd->total / n) : sd->top;
             const double rho = std::exp(-0.5 * kSectionWidth * (next - edge));
             a1[i] = static_cast<float>(-2.0 * rho * std::cos(centre));
             a2[i] = static_cast<float>(rho * rho);
@@ -575,8 +696,8 @@ class Course {
         for (int i = 0; i < sections; ++i) {
             const bool toJunction = (i + 1) * junctionSections / std::max(sections, 1) > i * junctionSections / std::max(sections, 1);
             const int at = toJunction && j < junctionSections ? j++ : r++;
-            sectionA1[at] = madeA1[i];
-            sectionA2[at] = madeA2[i];
+            sectionA1[at] = sd->a1[i];
+            sectionA2[at] = sd->a2[i];
         }
     }
 
@@ -588,11 +709,15 @@ class Course {
      * strong).
      */
     void layGapSections(float n) {
-        gapSections = sections > 0 ? std::clamp(static_cast<int>(std::lround(madeTotal / n / 6.283185307179586)), 0, kGapSections) : 0;
-        if (gapSections > 0 && n != gapMadeFor) {
-            gapMadeFor = n;
-            lay(gapSections, gapA1, gapA2);
+        gapSections = sections > 0 ? std::clamp(static_cast<int>(std::lround(sd->total / n / 6.283185307179586)), 0, kGapSections) : 0;
+        if (gapSections == 0) return;
+        if (n != sd->gapFor || gapSections != sd->gapCount) {
+            sd->gapFor = n;
+            sd->gapCount = gapSections;
+            lay(gapSections, sd->gapA1, sd->gapA2);
         }
+        std::copy(sd->gapA1, sd->gapA1 + gapSections, gapA1);
+        std::copy(sd->gapA2, sd->gapA2 + gapSections, gapA2);
     }
 
     /**
@@ -679,7 +804,8 @@ class Course {
         // for kHighAfterT60 at kHighHz at least (a one-pole fitted at a bass
         // string's first partials took 4 kHz away at hundreds of dB/s).
         const double wH = wHc;
-        const double wantH = std::fmin(want3, (perTurn(std::fmin(kHighAfterT60, t3)) / g1) * (perTurn(std::fmin(kHighAfterT60, t3)) / g1));
+        const double highAfter = kHighAfterT60 * design.highRing;
+        const double wantH = std::fmin(want3, (perTurn(std::fmin(highAfter, t3)) / g1) * (perTurn(std::fmin(highAfter, t3)) / g1));
         double a = 0.0, b = onePole();
         double za = 0.0, pb = 0.0;
         // On a low string the seventh partial is a few hundred hertz, and a
@@ -721,7 +847,7 @@ class Course {
         // they show: nothing faster than kHighT60 at kHighHz.
         const double wHigh = std::fmin(6.283185307179586 * kHighHz / sr, 3.0);
         if (wHigh > w1 * hHigh) {
-            const double cap = shareAt(wHigh, kHighT60, kHighT60 * 4.0);
+            const double cap = shareAt(wHigh, kHighT60 * design.highRing, kHighT60 * design.highRing * 4.0);
             const double room = (1.0 - std::cos(wHigh)) - (1.0 - std::cos(w1));
             if (room > 1e-12) riseShare = std::fmin(riseShare, std::fmax(0.0, (cap - s1) / room));
         }
@@ -762,12 +888,9 @@ class Course {
     int gapStages = 0, gapSections = 0, gapLive = 0;
     float gapIn[kLanes] = {}, gapState[kGapStages][kLanes] = {};
     float gapA1[kGapSections] = {}, gapA2[kGapSections] = {}, gapS1[kGapSections][kLanes] = {}, gapS2[kGapSections][kLanes] = {};
-    /** The sections as designed, in order of frequency, and what they were designed for. */
-    float madeA1[kSections] = {}, madeA2[kSections] = {};
-    float madeHz = 0.0f, madeB = 0.0f, madeBend = 0.0f, gapMadeFor = 0.0f;
-    int madeCap = 0, made = 0;
-    /** The made curve: the line's delay, the top (radians a sample) and the stiffness's whole phase there. */
-    double madeLine = 0.0, madeTop = 1.0, madeTotal = 0.0;
+    /** The sections as designed: the course's own, or kept for it by the machine. */
+    Sections own;
+    Sections *sd = &own;
     /** The sections in the loop, the junction's first, and each lane's stiffness delay at its note. */
     int sections = 0;
     float sectionA1[kSections] = {}, sectionA2[kSections] = {};
@@ -776,6 +899,12 @@ class Course {
     float laneOn[kLanes] = {}, takes[kLanes] = {};
     float laneStiff[kLanes] = {};
     float allpassState[kStages][kLanes] = {};
+    /** The preparation: where it sits (out and back), the string's motion there, and the rattle's. */
+    /** How stiffly a rattle meets the strings, and a spring too weak to hear that keeps the point from drifting. */
+    static constexpr float kRattleStiff = 1.0f, kHold = 1e-4f;
+    bool prepared = false;
+    float prepOut = 10.0f, prepBack = 20.0f;
+    float prepY[kLanes] = {}, prepV[kLanes] = {}, rattleY[kLanes] = {}, rattleV[kLanes] = {};
     float level = 0.0f;
 };
 

@@ -70,6 +70,15 @@ class Machine {
      * in sympathy. Most machines ignore it.
      */
     virtual void setDampers(bool /*lifted*/) {}
+    /**
+     * A machine that takes the pedals itself, how far down each is: half a
+     * pedal is half lifted dampers on a piano. The rack then leaves its
+     * sustain and soft to it (it still holds notes for sostenuto). Every
+     * other machine gets them as on and off, and its note-offs held.
+     */
+    virtual bool takesPedals() const { return false; }
+    /** [which] is kPerfSustain, kPerfSostenuto or kPerfSoft (Messages.h); [level01] how far down. */
+    virtual void pedal(int32_t /*which*/, float /*level01*/) {}
     virtual void channelPressure(uint8_t /*value*/) {}
     virtual void pitchBend(int16_t /*value14*/) {}
 

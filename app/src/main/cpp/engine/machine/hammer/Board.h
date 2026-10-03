@@ -22,13 +22,33 @@
 // nothing else lives). The felt's force drives it, so a hard blow is a
 // short, wide thump and a soft one a narrower, duller one.
 //
-// The case's tail and the mic positions come later.
+// Each instrument voices it its own way (Voicing): a smaller board barely
+// radiates the bass, a closed lid takes the top, and an electric grand's
+// pickups hear the strings with hardly any board at all.
 namespace acidulous::machine::hammer {
 using dsp::clampf;
 
 class Board {
   public:
     static constexpr int kModes = 48;
+
+    /** How an instrument's board and case sound, and where it's heard from. */
+    struct Voicing {
+        /** Below this the board barely radiates the strings, Hz. */
+        float radiateHz = 85.0f;
+        /** The body curve, as a share of the grand's; the bass bridge's peak, dB. */
+        float body = 1.0f, bassBodyDb = 7.0f;
+        /** The presence peak at 2.5 kHz and the top's shelf at 6 kHz, dB. */
+        float presenceDb = 2.0f, topDb = -12.0f;
+        /** How hard the board's modes ring, against the grand's: the knock and the strings' share. */
+        float modes = 1.0f;
+        /** How much of the room. */
+        float room = 1.0f;
+        bool operator==(const Voicing &o) const {
+            return radiateHz == o.radiateHz && body == o.body && bassBodyDb == o.bassBodyDb &&
+                   presenceDb == o.presenceDb && topDb == o.topDb && modes == o.modes && room == o.room;
+        }
+    };
 
     void prepare(float sampleRate) {
         sr = sampleRate;
@@ -66,13 +86,6 @@ class Board {
             pathL[p].prepare(kPathMs[p] * 0.001f * sr, kPathGain);
             pathR[p].prepare(kPathMs[p] * 0.001f * sr, kPathGain);
         }
-        for (int i = 0; i < kBodyBands; ++i) {
-            const BodyBand &b = kBody[i];
-            if (b.kind == 0) { bodyL[i].peak(b.hz, b.db, b.q, sr); bodyR[i].peak(b.hz, b.db, b.q, sr); }
-            else { bodyL[i].highShelf(b.hz, b.db, sr); bodyR[i].highShelf(b.hz, b.db, sr); }
-        }
-        bassBodyL.peak(kBassBodyHz, kBassBodyDb, 1.3f, sr);
-        bassBodyR.peak(kBassBodyHz, kBassBodyDb, 1.3f, sr);
         room.prepare(sr);
         // The room hears what the board radiates, not the thump under it.
         roomCut.highpass(45.0f, 0.707f, sr);
@@ -80,19 +93,15 @@ class Board {
         room.setDecay(kRoomLowT60, kRoomHighT60);
         lowCut.highpass(32.0f, 0.707f, sr);
         lowCutR.highpass(32.0f, 0.707f, sr);
-        // A board this size barely radiates below about 85 Hz: a bass note's
-        // fundamental is heard far under its third and fourth partials (A0's
-        // by 40 dB in the recordings). The strings only; the knock keeps its
-        // thump.
-        for (int i = 0; i < 2; ++i) {
-            radiateL[i].highpass(85.0f, i == 0 ? 0.541f : 1.307f, sr);
-            radiateR[i].highpass(85.0f, i == 0 ? 0.541f : 1.307f, sr);
-        }
-        presence.peak(2500.0f, 2.0f, 0.8f, sr);
-        presenceR.peak(2500.0f, 2.0f, 0.8f, sr);
-        top.highShelf(6000.0f, -12.0f, sr);
-        topR.highShelf(6000.0f, -12.0f, sr);
+        designVoicing();
         clear();
+    }
+
+    /** Voices it for an instrument: the filters are designed again only if it changed. */
+    void voice(const Voicing &v) {
+        if (v == voicing) return;
+        voicing = v;
+        designVoicing();
     }
 
     void clear() {
@@ -132,7 +141,7 @@ class Board {
         }
         const float sum = left + right;
         // The modes take the change in force, so they hold no DC.
-        const float drive = kStrings * (sum - inBefore) + knock;
+        const float drive = (kStrings * (sum - inBefore) + knock) * voicing.modes;
         inBefore = sum;
         float ml = 0.0f, mr = 0.0f;
         // Lean, every fourth mode, each driven harder to keep the thump's
@@ -196,7 +205,7 @@ class Board {
 
     /** How much of the room is heard (0 for none), and with its full eight lines or four. */
     void setRoom(float mix, bool full) {
-        roomMix = kRoom * mix;
+        roomMix = kRoom * mix * voicing.room;
         roomLines = full ? Room::kLines : 4;
         if ((modeStep == 1) != full) {
             // Modes left out lean ring on from where they were: quiet them.
@@ -209,12 +218,37 @@ class Board {
     float loudness() const { return level + room.loudness(); }
 
   private:
+    void designVoicing() {
+        // A grand's board barely radiates below about 85 Hz: a bass note's
+        // fundamental is heard far under its third and fourth partials (A0's
+        // by 40 dB in the recordings). The strings only; the knock keeps its
+        // thump.
+        const float hz = clampf(voicing.radiateHz, 20.0f, 400.0f);
+        for (int i = 0; i < 2; ++i) {
+            radiateL[i].highpass(hz, i == 0 ? 0.541f : 1.307f, sr);
+            radiateR[i].highpass(hz, i == 0 ? 0.541f : 1.307f, sr);
+        }
+        for (int i = 0; i < kBodyBands; ++i) {
+            const BodyBand &b = kBody[i];
+            const float db = b.db * voicing.body;
+            if (b.kind == 0) { bodyL[i].peak(b.hz, db, b.q, sr); bodyR[i].peak(b.hz, db, b.q, sr); }
+            else { bodyL[i].highShelf(b.hz, db, sr); bodyR[i].highShelf(b.hz, db, sr); }
+        }
+        bassBodyL.peak(kBassBodyHz, voicing.bassBodyDb, 1.3f, sr);
+        bassBodyR.peak(kBassBodyHz, voicing.bassBodyDb, 1.3f, sr);
+        presence.peak(2500.0f, voicing.presenceDb, 0.8f, sr);
+        presenceR.peak(2500.0f, voicing.presenceDb, 0.8f, sr);
+        top.highShelf(6000.0f, voicing.topDb, sr);
+        topR.highShelf(6000.0f, voicing.topDb, sr);
+    }
+
+    Voicing voicing;
     /** One band of the body curve: a peak (kind 0) or a high shelf (kind 1). */
     struct BodyBand { int kind; float hz, db, q; };
     static constexpr int kBodyBands = 4;
     static constexpr BodyBand kBody[kBodyBands] = {{0, 250.0f, -2.1f, 0.9f}, {1, 700.0f, 1.80f, 0.7f}, {0, 1600.0f, 0.60f, 0.8f}, {0, 3200.0f, 0.90f, 1.0f}};
     dsp::Biquad bodyL[kBodyBands], bodyR[kBodyBands];
-    static constexpr float kBassBodyHz = 1900.0f, kBassBodyDb = 7.0f;
+    static constexpr float kBassBodyHz = 1900.0f;
     dsp::Biquad bassBodyL, bassBodyR;
     /** A Schroeder allpass: one of the board's many paths. */
     struct Path {

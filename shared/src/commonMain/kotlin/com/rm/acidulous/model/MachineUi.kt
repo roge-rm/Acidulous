@@ -50,6 +50,13 @@ object MachineUi {
     fun takesTuning(type: String): Boolean = kindOf(type) == MachineKind.Keyboard
 
     /**
+     * Machines that take a pedal part of the way down (a piano's half-pedal):
+     * their pedal lanes keep how far down it was. Every other machine's
+     * pedal is up or down, and its lanes are kept that way.
+     */
+    fun halfPedal(type: String): Boolean = type == "Hammer"
+
+    /**
      * Machines that hold one sample under the plain key "sample", unlike
      * Forage where each of the thirteen pads has its own.
      */

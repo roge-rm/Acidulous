@@ -8,7 +8,8 @@
 //
 // name=value sets a parameter by its name, in its own units ("sustain=0.5").
 // --seconds fixes every note's length; otherwise it follows the key, as the
-// recordings' lengths do. --release lets the key go after S seconds.
+// recordings' lengths do (the grand's, or with --lengths key:seconds,...
+// another set's, the nearest key's). --release lets the key go after S seconds.
 // --adjust multiplies what the keys are (Keys.h) before rendering, for
 // calibrate.py: each line a key and field=factor pairs (B, prompt1, after1,
 // prompt3, after3, prompt7, after7, unison, uneven, contact, level, knock, hardening, bend), read between the keys
@@ -85,6 +86,7 @@ int main(int argc, char **argv) {
     std::vector<int> keys(std::begin(kAnchors), std::end(kAnchors));
     std::vector<int> velocities = {30, 60, 90, 120};
     float fixedSeconds = 0.0f, release = -1.0f;
+    std::map<int, float> lengths;
     std::vector<std::pair<std::string, float>> knobs;
     std::map<int, std::map<std::string, float>> adjust;
     for (int i = 2; i < argc; ++i) {
@@ -94,6 +96,15 @@ int main(int argc, char **argv) {
             if (v != "anchors") keys = listOf(v.c_str());
         } else if (a == "--velocities" && i + 1 < argc) {
             velocities = listOf(argv[++i]);
+        } else if (a == "--lengths" && i + 1 < argc) {
+            for (const char *p = argv[++i]; *p != '\0';) {
+                const int key = std::atoi(p);
+                while (*p != '\0' && *p != ':') ++p;
+                if (*p == ':') ++p;
+                lengths[key] = static_cast<float>(std::atof(p));
+                while (*p != '\0' && *p != ',') ++p;
+                if (*p == ',') ++p;
+            }
         } else if (a == "--seconds" && i + 1 < argc) {
             fixedSeconds = static_cast<float>(std::atof(argv[++i]));
         } else if (a == "--adjust" && i + 1 < argc) {
@@ -174,7 +185,13 @@ int main(int argc, char **argv) {
                 std::fprintf(stderr, "%s\n", error.c_str());
                 return 1;
             }
-            const float seconds = fixedSeconds > 0.0f ? fixedSeconds : secondsFor(key);
+            float seconds = fixedSeconds > 0.0f ? fixedSeconds : secondsFor(key);
+            if (fixedSeconds <= 0.0f && !lengths.empty()) {
+                int best = 1000;
+                for (const auto &l : lengths) {
+                    if (std::abs(l.first - key) < best) { best = std::abs(l.first - key); seconds = l.second; }
+                }
+            }
             const int32_t blocks = static_cast<int32_t>(seconds * kSr / kBlock);
             const int32_t letGo = release >= 0.0f ? static_cast<int32_t>(release * kSr / kBlock) : -1;
             // A short lead-in, as a recording has before the note.

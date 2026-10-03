@@ -181,10 +181,12 @@ object MidiFile {
                         val where = t to channel
                         if (kind == 0xb0) when (d1) {
                             1 -> control(where, "mod", ticks(at), d2 / 127f)
-                            // The pedals are switches: 64 and up is down.
-                            64 -> control(where, "sustain", ticks(at), if (d2 >= 64) 1f else 0f)
-                            66 -> control(where, "sostenuto", ticks(at), if (d2 >= 64) 1f else 0f)
-                            67 -> control(where, "soft", ticks(at), if (d2 >= 64) 1f else 0f)
+                            // The pedals as far down as they were: a piano
+                            // takes half a pedal, and the import makes them
+                            // up or down for every other machine.
+                            64 -> control(where, "sustain", ticks(at), d2 / 127f)
+                            66 -> control(where, "sostenuto", ticks(at), d2 / 127f)
+                            67 -> control(where, "soft", ticks(at), d2 / 127f)
                             // Registered parameter 0 is the bend range, set
                             // by data entry after 101 and 100 have picked it.
                             101 -> rpn[where] = (d2 shl 7) or ((rpn[where] ?: 0) and 0x7f)

@@ -6,6 +6,7 @@ import com.rm.acidulous.util.Log
 import com.rm.acidulous.model.CurveBuilder
 import com.rm.acidulous.model.Lane
 import com.rm.acidulous.model.LanePoint
+import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.trimmedTo
 import com.rm.acidulous.model.Song
@@ -222,12 +223,23 @@ class Recorder {
         // Held performance effects aren't quantised, since a quick press and
         // its release could land on the same grid line and the release would
         // win. The repeat keeps time by itself from the engine's grid.
-        val tick = if (quantise && unit != "perform") (((raw + g / 2) / g) * g) % len else raw
+        // A piano's pedal is played part of the way down and eased up, so
+        // it's kept where it happened, as far down as it was, without the
+        // points closer together than a controller step or two. Every other
+        // machine's pedal is up or down.
+        val pedal = unit == "performance" && name in com.rm.acidulous.model.PEDAL_LANES
+        val half = pedal && MachineUi.halfPedal(track.machine.type)
+        val tick = if (quantise && unit != "perform" && !half) (((raw + g / 2) / g) * g) % len else raw
         val key = laneKey(unit, name)
+        val kept = if (pedal && !half) (if (value >= 64f / 127f) 1f else 0f) else value
+        val before = clip.automation[key]
+        if (pedal && before != null && before.points.isNotEmpty() &&
+            kotlin.math.abs(before.valueAt(tick) - kept) < (if (half) 2f / 127f else 0.5f)
+        ) return null
         dirty = true
         return song.updateClip(rack, sceneId, { clip }) { c ->
             val lane = c.automation[key] ?: newLane(unit, name, tick)
-            c.copy(automation = c.automation + (key to lane.withPoint(tick, value)))
+            c.copy(automation = c.automation + (key to lane.withPoint(tick, kept)))
         }
     }
 

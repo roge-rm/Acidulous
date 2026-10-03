@@ -35,6 +35,7 @@
     <string name="pw_air">air</string>
     <string name="pw_algo">algo</string>
     <string name="pw_algorithm">algorithm</string>
+    <string name="pw_all">all</string>
     <string name="pw_all_six">all six</string>
     <string name="pw_alt">alt</string>
     <string name="pw_altissimo">altissimo</string>
@@ -53,6 +54,7 @@
     <string name="pw_at">at</string>
     <string name="pw_att">att</string>
     <string name="pw_attack">attack</string>
+    <string name="pw_audience">audience</string>
     <string name="pw_auto">auto</string>
     <string name="pw_aux">aux</string>
     <string name="pw_a_b">A→B</string>
@@ -77,10 +79,13 @@
     <string name="pw_bitcrusher">Bitcrusher</string>
     <string name="pw_bite">bite</string>
     <string name="pw_bits">bits</string>
+    <string name="pw_black">black</string>
     <string name="pw_bleed">bleed</string>
     <string name="pw_blend">blend</string>
     <string name="pw_bloom">bloom</string>
+    <string name="pw_board">board</string>
     <string name="pw_body">body</string>
+    <string name="pw_bolt">bolt</string>
     <string name="pw_bow">bow</string>
     <string name="pw_bowl">bowl</string>
     <string name="pw_bp">BP</string>
@@ -104,6 +109,7 @@
     <string name="pw_cabinet">cabinet</string>
     <string name="pw_cable_n">cable %d</string>
     <string name="pw_carrier">carrier</string>
+    <string name="pw_celesta">celesta</string>
     <string name="pw_central">central</string>
     <string name="pw_ch">ch</string>
     <string name="pw_chance">chance</string>
@@ -116,6 +122,7 @@
     <string name="pw_chord">Chord</string>
     <string name="pw_chord_4b3a0b">chord</string>
     <string name="pw_chorus">Chorus</string>
+    <string name="pw_cimbalom">cimbalom</string>
     <string name="pw_circuit">circuit</string>
     <string name="pw_clap">Clap</string>
     <string name="pw_clap_c19ab8">clap</string>
@@ -126,6 +133,7 @@
     <string name="pw_click">click</string>
     <string name="pw_clip">clip</string>
     <string name="pw_clock">clock</string>
+    <string name="pw_close">close</string>
     <string name="pw_closed">closed</string>
     <string name="pw_closed_hat">Closed Hat</string>
     <string name="pw_cloud">cloud</string>
@@ -210,6 +218,7 @@
     <string name="pw_dry">dry</string>
     <string name="pw_dub">dub</string>
     <string name="pw_duck">duck</string>
+    <string name="pw_dulcimer">dulcimer</string>
     <string name="pw_duty">duty</string>
     <string name="pw_e3">e3</string>
     <string name="pw_e4">e4</string>
@@ -224,6 +233,7 @@
     <string name="pw_eg1">eg1</string>
     <string name="pw_eg2">eg2</string>
     <string name="pw_eg3">eg3</string>
+    <string name="pw_electric_grand">electric grand</string>
     <string name="pw_electro">electro</string>
     <string name="pw_embouchure">embouchure</string>
     <string name="pw_end">end</string>
@@ -292,6 +302,7 @@
     <string name="pw_forked">forked</string>
     <string name="pw_formant">formant</string>
     <string name="pw_formula">formula</string>
+    <string name="pw_fortepiano">fortepiano</string>
     <string name="pw_forward">forward</string>
     <string name="pw_frame">frame</string>
     <string name="pw_free">free</string>
@@ -322,6 +333,7 @@
     <string name="pw_gong">gong</string>
     <string name="pw_grain">grain</string>
     <string name="pw_grains">grains</string>
+    <string name="pw_grand">grand</string>
     <string name="pw_grid">grid</string>
     <string name="pw_grit">Grit</string>
     <string name="pw_grit_69794c">grit</string>
@@ -343,6 +355,7 @@
     <string name="pw_harmony">harmony</string>
     <string name="pw_hats">hats</string>
     <string name="pw_head_bump">head bump</string>
+    <string name="pw_heard_from">heard from</string>
     <string name="pw_hi">hi</string>
     <string name="pw_hi_tom">Hi Tom</string>
     <string name="pw_high">high</string>
@@ -354,6 +367,7 @@
     <string name="pw_hold">hold</string>
     <string name="pw_holes">holes</string>
     <string name="pw_hollow">hollow</string>
+    <string name="pw_honky_tonk">honky-tonk</string>
     <string name="pw_honour">honour</string>
     <string name="pw_horn">horn</string>
     <string name="pw_house">house</string>
@@ -431,6 +445,8 @@
     <string name="pw_lfo3">lfo3</string>
     <string name="pw_lfodepth">lfodepth</string>
     <string name="pw_lforate">lforate</string>
+    <string name="pw_lid">lid</string>
+    <string name="pw_lifts_at">lifts at</string>
     <string name="pw_lips">lips</string>
     <string name="pw_listen">listen</string>
     <string name="pw_listening">listening</string>
@@ -489,6 +505,7 @@
     <string name="pw_minor">minor</string>
     <string name="pw_mirror">mirror</string>
     <string name="pw_mix">mix</string>
+    <string name="pw_mixed">mixed</string>
     <string name="pw_mixer">mixer</string>
     <string name="pw_mixture">mixture</string>
     <string name="pw_mod">mod</string>
@@ -496,6 +513,7 @@
     <string name="pw_modn">mod%d</string>
     <string name="pw_mode">mode</string>
     <string name="pw_model">model</string>
+    <string name="pw_moderator">moderator</string>
     <string name="pw_modern">modern</string>
     <string name="pw_modes">modes</string>
     <string name="pw_modifier">modifier</string>
@@ -518,6 +536,8 @@
     <string name="pw_ng">ng</string>
     <string name="pw_noise">noise</string>
     <string name="pw_noise_gated_by_the_clock">noise, gated by the clock</string>
+    <string name="pw_noises">noises</string>
+    <string name="pw_none">none</string>
     <string name="pw_not">not</string>
     <string name="pw_notch">notch</string>
     <string name="pw_note">note</string>
@@ -549,6 +569,7 @@
     <string name="pw_osc_n">osc %d</string>
     <string name="pw_oscillator">oscillator</string>
     <string name="pw_out">out</string>
+    <string name="pw_over_the_felt">over the felt</string>
     <string name="pw_own">own</string>
     <string name="pw_p">p</string>
     <string name="pw_pad">pad</string>
@@ -556,6 +577,7 @@
     <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pan">pan</string>
     <string name="pw_panel">panel</string>
+    <string name="pw_paper">paper</string>
     <string name="pw_para">para</string>
     <string name="pw_partials">partials</string>
     <string name="pw_pass">pass</string>
@@ -690,6 +712,7 @@
     <string name="pw_rotor">rotor</string>
     <string name="pw_route">route</string>
     <string name="pw_routing">routing</string>
+    <string name="pw_rubber">rubber</string>
     <string name="pw_run">run</string>
     <string name="pw_s">S</string>
     <string name="pw_s_a0f149">s</string>
@@ -727,6 +750,7 @@
     <string name="pw_scanner">scanner</string>
     <string name="pw_scatter">scatter</string>
     <string name="pw_scoop">scoop</string>
+    <string name="pw_screw">screw</string>
     <string name="pw_section">section</string>
     <string name="pw_seed">seed</string>
     <string name="pw_semi">semi</string>
@@ -764,8 +788,11 @@
     <string name="pw_snare">Snare</string>
     <string name="pw_snare_c1104d">snare</string>
     <string name="pw_soft">soft</string>
+    <string name="pw_soft_pedal">soft pedal</string>
     <string name="pw_song">song</string>
+    <string name="pw_sound">sound</string>
     <string name="pw_source">source</string>
+    <string name="pw_span">span</string>
     <string name="pw_speed">speed</string>
     <string name="pw_split">split</string>
     <string name="pw_spray">spray</string>
@@ -804,6 +831,7 @@
     <string name="pw_super">super</string>
     <string name="pw_sus">sus</string>
     <string name="pw_sustain">sustain</string>
+    <string name="pw_sustain_pedal">sustain pedal</string>
     <string name="pw_sustained">sustained</string>
     <string name="pw_swap">swap</string>
     <string name="pw_sweep">Sweep</string>
@@ -819,9 +847,11 @@
     <string name="pw_t_follows">t follows</string>
     <string name="pw_table">table</string>
     <string name="pw_tables">tables</string>
+    <string name="pw_tacks">tacks</string>
     <string name="pw_take">take</string>
     <string name="pw_takes">takes</string>
     <string name="pw_talk">talk</string>
+    <string name="pw_tangent">tangent</string>
     <string name="pw_tape">tape</string>
     <string name="pw_tempo">tempo</string>
     <string name="pw_tension">tension</string>
@@ -844,12 +874,14 @@
     <string name="pw_timbre">timbre</string>
     <string name="pw_time">time</string>
     <string name="pw_times">times</string>
+    <string name="pw_tine">tine</string>
     <string name="pw_to">to</string>
     <string name="pw_toms">toms</string>
     <string name="pw_tone">tone</string>
     <string name="pw_tonewheel">tonewheel</string>
     <string name="pw_tongue">tongue</string>
     <string name="pw_touch">touch</string>
+    <string name="pw_toy">toy</string>
     <string name="pw_track">track</string>
     <string name="pw_tracker">tracker</string>
     <string name="pw_tracking">tracking</string>
@@ -872,6 +904,7 @@
     <string name="pw_two_shifts_arguing">two shifts arguing</string>
     <string name="pw_type">type</string>
     <string name="pw_uk">uk</string>
+    <string name="pw_una_corda">una corda</string>
     <string name="pw_uni">uni</string>
     <string name="pw_unison">unison</string>
     <string name="pw_unvoiced">unvoiced</string>
@@ -883,6 +916,7 @@
     <string name="pw_upper">upper</string>
     <string name="pw_upper_a">upper A</string>
     <string name="pw_upper_b">upper B</string>
+    <string name="pw_upright">upright</string>
     <string name="pw_us">us</string>
     <string name="pw_v">v</string>
     <string name="pw_v1">V1</string>
@@ -914,10 +948,12 @@
     <string name="pw_weight">weight</string>
     <string name="pw_wet">wet</string>
     <string name="pw_wet_mix">wet mix</string>
+    <string name="pw_what">what</string>
     <string name="pw_what_changes">what changes</string>
     <string name="pw_wheel">wheel</string>
     <string name="pw_where">where</string>
     <string name="pw_whisper">whisper</string>
+    <string name="pw_white">white</string>
     <string name="pw_width">Width</string>
     <string name="pw_width_70bec8">width</string>
     <string name="pw_wind">wind</string>
