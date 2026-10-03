@@ -18,6 +18,8 @@
     <string name="voice_share">share</string>
     <string name="voice_zipping">zipping %1$d/%2$d</string>
     <string name="voice_share_failed">The voice couldn\'t be shared.</string>
+    <string name="voice_import">import…</string>
+    <string name="voice_import_failed">That isn\'t a voice shared from Acidulous.</string>
     <!-- Asking before a voice is deleted: its name. -->
     <string name="voice_delete_title">Delete %1$s?</string>
     <!-- How many takes go with it. -->

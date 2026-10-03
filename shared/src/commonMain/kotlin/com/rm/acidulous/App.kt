@@ -988,14 +988,28 @@ fun App(modifier: Modifier = Modifier) {
                 }.onFailure { notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_open_failed, name, it.message) }
             }
             "zip" -> scope.launch {
+                // A song bundle, or a voice someone shared from the voice page.
+                var voice: String? = null
                 val song = withContext(Dispatchers.IO) {
                     runCatching {
                         val tmp = File(EngineAssets.cacheRoot(), "import.zip")
                         AppHost.current.copyFromDoc(uri, tmp)
-                        com.rm.acidulous.model.SongBundle.read(tmp, EngineAssets.userRoot()).also { tmp.delete() }
+                        try {
+                            if (com.rm.acidulous.model.voice.VoiceImport.kindOf(tmp) == com.rm.acidulous.model.voice.VoiceImport.Kind.Voice) {
+                                voice = com.rm.acidulous.model.voice.VoiceImport.read(tmp, EngineAssets.userRoot())
+                                null
+                            } else {
+                                com.rm.acidulous.model.SongBundle.read(tmp, EngineAssets.userRoot())
+                            }
+                        } finally {
+                            tmp.delete()
+                        }
                     }.getOrNull()
                 }
-                if (song == null) {
+                if (voice != null) {
+                    com.rm.acidulous.engine.EngineSync.voicesChanged()
+                    notice = AppStrings.getString(Res.string.app_voice_imported_title) to AppStrings.getString(Res.string.app_voice_imported, voice)
+                } else if (song == null) {
                     notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_not_a_bundle, name)
                 } else {
                     val named = song.copy(name = freeSongName(song.name))

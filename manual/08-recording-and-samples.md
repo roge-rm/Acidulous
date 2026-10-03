@@ -21,7 +21,8 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
 - **Library** - everything you've recorded or imported.
 - **Voice** - records your voice for Diction, a short prompt at a time.
   - **new voice** starts one, and **delete** deletes the one chosen, with its
-    takes. **share** sends it as a zip, its takes and all. **note** is the note every prompt is sung on;
+    takes. **share** sends it as a zip, its takes and all, and **import…** takes
+    in a voice someone shared. **note** is the note every prompt is sung on;
     pick one that's easy for you, since it can't change after the first take.
   - Tap **sing** and listen to the note. It counts 3, 2, 1, then the prompt
     turns red: sing it on the note, in whatever octave suits your voice. The

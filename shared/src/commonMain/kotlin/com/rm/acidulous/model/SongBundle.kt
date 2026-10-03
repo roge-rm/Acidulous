@@ -49,9 +49,14 @@ object SongBundle {
      * is reused. A different one is saved under a new name and the song is
      * pointed at that instead.
      *
-     * Zip entries with paths leading outside the folder are skipped.
+     * Zip entries with paths leading outside the folder are skipped, and a
+     * zip with no song in it unpacks nothing (a shared voice used to leave
+     * its folder behind on the way to "not a bundle").
      */
     suspend fun read(bundle: File, userRoot: File): Song? {
+        var hasSong = false
+        readZip(bundle) { name, isDirectory, _ -> if (!isDirectory && name == SONG_ENTRY) hasSong = true }
+        if (!hasSong) return null
         var song: Song? = null
         val rootPath = userRoot.canonicalFile
         val renamed = LinkedHashMap<String, String>()

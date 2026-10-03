@@ -126,7 +126,7 @@ DESKTOP_SENTENCES = {
         "When an export finishes, **Share** opens the folder it was saved in, to send it on from there.",
     "**Share song…** in the file menu sends the open song as a bundle, samples included, for someone else to open in Acidulous.":
         "**Share song…** in the file menu saves the open song as a bundle, samples included, and opens its folder so you can send it to someone.",
-    "The other way works too. Open a MIDI file, a bundle or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it.":
+    "The other way works too. Open a MIDI file, a bundle, a shared voice or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it; a voice goes to the voice page in **Sound**.":
         "",
     "dark, light, high contrast or follow the phone.":
         "dark, light, high contrast or follow the system.",

@@ -46,7 +46,9 @@
     <string name="app_open_failed_title">That didn\'t open</string>
     <!-- A file, then what went wrong. -->
     <string name="app_open_failed">%1$s - %2$s.</string>
-    <string name="app_not_a_bundle">%s is not a song bundle from Acidulous.</string>
+    <string name="app_not_a_bundle">%s is not a song bundle or a voice from Acidulous.</string>
+    <string name="app_voice_imported_title">Voice imported</string>
+    <string name="app_voice_imported">%s is in Sound, on the voice page.</string>
     <string name="app_sound_added_title">Added to the sound library</string>
     <string name="app_sound_added">%s is in the library now, ready for any machine that plays samples.</string>
     <string name="app_tuning_added_title">Tuning added</string>

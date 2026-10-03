@@ -77,5 +77,6 @@ together.
 **Share song…** in the file menu sends the open song as a bundle, samples
 included, for someone else to open in Acidulous.
 
-The other way works too. Open a MIDI file, a bundle or a sound with Acidulous,
-or share one to it, and it goes wherever **Import…** would have put it.
+The other way works too. Open a MIDI file, a bundle, a shared voice or a sound
+with Acidulous, or share one to it, and it goes wherever **Import…** would have
+put it; a voice goes to the voice page in **Sound**.

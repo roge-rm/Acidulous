@@ -35,6 +35,7 @@ import com.rm.acidulous.io.File
 import com.rm.acidulous.io.absolutePath
 import com.rm.acidulous.io.deleteRecursively
 import com.rm.acidulous.io.ZipWriter
+import com.rm.acidulous.model.voice.VoiceImport
 import com.rm.acidulous.AppHost
 import kotlinx.coroutines.Dispatchers
 import com.rm.acidulous.util.IO
@@ -351,7 +352,31 @@ internal fun VoicePage(
         }
     }
 
-    val busy = singing != Singing.No || zipping
+    // A voice someone shared: into the voices folder, and chosen.
+    var importing by remember { mutableStateOf(false) }
+    val importPicker = com.rm.acidulous.rememberOpenDocument { doc ->
+        if (doc == null) return@rememberOpenDocument
+        importing = true
+        scope.launch {
+            val name = withContext(Dispatchers.IO) {
+                runCatching {
+                    val tmp = File(EngineAssets.cacheRoot(), "voice-import.zip")
+                    AppHost.current.copyFromDoc(doc, tmp)
+                    try { VoiceImport.read(tmp, root) } finally { tmp.delete() }
+                }.getOrNull()
+            }
+            importing = false
+            if (name == null) {
+                message = resources.getString(Res.string.voice_import_failed)
+            } else {
+                banks = VoiceBank.all(root)
+                bank = banks.firstOrNull { it.name == name }
+                com.rm.acidulous.engine.EngineSync.voicesChanged()
+            }
+        }
+    }
+
+    val busy = singing != Singing.No || zipping || importing
 
     WindowCards {
         WindowCard(stringResource(Res.string.voice_card)) {
@@ -365,6 +390,9 @@ internal fun VoicePage(
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = { naming = true }, enabled = !busy) {
                     Text(stringResource(Res.string.voice_new), color = c.accent, fontSize = 12.sp)
+                }
+                TextButton(onClick = { importPicker(arrayOf("application/zip")) }, enabled = !busy) {
+                    Text(stringResource(Res.string.voice_import), color = c.accent, fontSize = 12.sp)
                 }
                 if (bank != null) {
                     TextButton(onClick = { share() }, enabled = !busy && bank?.takes?.isNotEmpty() == true) {
