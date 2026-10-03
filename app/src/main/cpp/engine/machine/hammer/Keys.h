@@ -30,6 +30,12 @@ struct KeySpec {
     float across = 1.0f;
     /** How long the high end rings at the least, against the grand's (Course::Design::highRing). */
     float highRing = 1.0f;
+    /** A bar's first overtone (tine, reed): its ratio to the note, level against it, and T60, s. */
+    float overtone = 7.1f, overtoneLevel = 0.25f, overtoneT60 = 0.3f;
+    /** Its second overtone's ratio to the note (0: 2.8 times the first, as a bar fixed at one end has it). */
+    float overtone2 = 0.0f;
+    /** How long a bar's resonator (a tine's tonebar, a celesta's box) rings against the bar, and how much of the note it holds. */
+    float resonator = 2.0f, resonatorShare = 0.5f;
     /** How much less than one B says the partials stretch high up: B / (1 + bend k) at partial k. */
     float bend = 0.0f;
     /** Where the hammer strikes, a fraction of the string from the agraffe. */
@@ -140,6 +146,13 @@ inline KeySpec grandKey(float key) {
         s.level = factor(&Adjust::level);
         s.knock = factor(&Adjust::knock);
     }
+    // The top played under the recording's against middle C, after the
+    // level calibration above: 5 dB by D7, 15 by C8 (velocities 60 and 92).
+    // Lifted from F#6.
+    if (key > 90.0f) {
+        const float lift = key < 98.0f ? 5.0f * (key - 90.0f) / 8.0f : 5.0f + (key - 98.0f);
+        s.level *= std::pow(10.0f, lift / 20.0f);
+    }
     // A grand's lowest notes have one string, then two, then three.
     s.strings = key < 28.5f ? 1 : (key < 45.5f ? 2 : 3);
     // From the literature (hammer masses 11 to 6.5 g, felt exponents 2.3 to
@@ -195,7 +208,10 @@ inline KeySpec measuredAgainstGrand(KeySpec s, const Anchor *table, int n, float
         return mine > 0.0f && grand > 0.0f ? mine / grand : 1.0f;
     };
     s.B *= ratio(&Anchor::B);
-    s.stretchCents = between(table, n, key, [](const Anchor &a) { return a.cents; }, false);
+    // The shape of its tuning, not where the recorded instrument happened to
+    // sit against A 440 (the upright was 5 cents flat, the honky-tonk 7 sharp).
+    auto cents = [](const Anchor &a) { return a.cents; };
+    s.stretchCents = between(table, n, key, cents, false) - between(table, n, 69.0f, cents, false);
     // A ring time the short recordings couldn't give takes the nearest
     // anchor's ratio; held within reason, as a stray fit can be anything.
     auto ring = [&](float Anchor::*field) { return clampf(ratio(field), 0.1f, 3.0f); };
@@ -327,6 +343,172 @@ inline KeySpec keyFor(int model, float key) {
         s.highRing = 0.35f;
         // The strike reached 1.2 to 1.4 times as high as the recording's from C3 up.
         s.contact *= lerp(1.0f, 1.3f, clampf((key - 36.0f) / 24.0f, 0.0f, 1.0f));
+        break;
+    }
+    case Tine: {
+        // The bar rings at its note for as long as the recording's
+        // fundamental (31 s at A1, 18 at middle C, 2.4 at C7); the tonebar
+        // holds most of that, the tine itself half as long. The rest of the
+        // recording's partials are the pickup's.
+        constexpr int n = static_cast<int>(sizeof(kTineA) / sizeof(kTineA[0]));
+        const float ring = detail::between(kTineA, n, key, [](const Anchor &a) { return a.prompt1; }, true) *
+                           (key > 96.0f ? std::exp2(-(key - 96.0f) / 12.0f) : 1.0f);
+        s.after1 = ring;
+        s.prompt1 = 0.5f * ring;
+        // A bar's partials are the pickup's, all whole multiples: tuned straight.
+        s.stretchCents = 0.0f;
+        // The bell: the tine's second mode, about 7 times the note, gone in
+        // a few tenths of a second in the bass and much less at the top.
+        s.overtone = lerp(6.8f, 7.4f, clampf((key - 28.0f) / 68.0f, 0.0f, 1.0f));
+        s.overtoneLevel = 0.25f;
+        s.overtoneT60 = across(key, 0.6f, 0.05f, true);
+        // A neoprene tip: longer on the bar than felt on a string.
+        s.contact = across(key, 2.5e-3f, 0.7e-3f, true);
+        s.damper = key < 89.0f;
+        s.dampedT60 = across(key, 0.4f, 0.1f, true);
+        s.strings = 1;
+        s.knock = 0.0f;
+        // Each instrument's level: its plain patch as loud as the grand's
+        // to the ear (audition's loud column, the piano phrase).
+        s.level = 0.56f;
+        break;
+    }
+    case Reed: {
+        // A steel reed, no tonebar: its note rings for less (the recording's
+        // fits, 9 s at middle C, 2.3 at G6; its notes are cut short, so held
+        // to 30 s in the bass).
+        constexpr int n = static_cast<int>(sizeof(kReedA) / sizeof(kReedA[0]));
+        const float ring = std::fmin(30.0f, detail::between(kReedA, n, key, [](const Anchor &a) { return a.prompt1; }, true));
+        s.after1 = s.prompt1 = ring;
+        s.stretchCents = 0.0f;
+        // A tip weighted with solder to tune it: its second mode lower than a plain bar's.
+        s.overtone = 6.3f;
+        s.overtoneLevel = 0.15f;
+        s.overtoneT60 = across(key, 0.25f, 0.04f, true);
+        s.contact = across(key, 1.8e-3f, 0.6e-3f, true);
+        s.damper = key < 100.0f;
+        s.dampedT60 = across(key, 0.3f, 0.08f, true);
+        s.strings = 1;
+        s.knock = 0.0f;
+        s.level = 0.42f;
+        break;
+    }
+    case Tangent: {
+        // A struck-and-held string: one string a key, thin and light, a hard
+        // metal tangent near one end that stays on it while the key is down,
+        // yarn on the other side that stops it dead when the key comes up.
+        // No board: two pickups under the strings. From the literature.
+        s.strings = 1;
+        s.B *= 0.7f;
+        s.stretchCents *= 0.5f;
+        s.impedance = 1.0f;
+        const float ring = across(key, 8.0f, 1.2f, true);
+        s.prompt1 = s.after1 = ring;
+        s.prompt3 = s.after3 = 0.6f * ring;
+        s.prompt7 = s.after7 = 0.35f * ring;
+        s.strike = 0.05f;
+        s.mass = 3.0e-3f;
+        s.exponent = 2.0f;
+        s.contact = 0.15e-3f;
+        s.hardening = 0.0f;
+        s.damper = true;
+        s.dampedT60 = 0.03f;
+        s.knock = 0.0f;
+        s.unison = 0.0f;
+        s.uneven = 0.0f;
+        s.level = 0.33f;
+        s.highRing = 0.3f;
+        s.bend = 0.0f;
+        break;
+    }
+    case Celesta: {
+        // Steel bars, free at both ends, struck by felt hammers, each over a
+        // wooden box tuned to it that blooms with the note and lets it go
+        // soon after. A bar free at both ends has its overtones at 2.76 and
+        // 5.40 times the note, and they're gone in a moment. From the
+        // literature: about 2.5 s at middle C, 0.6 s at the top.
+        const float ring = across(key, 4.0f, 0.5f, true);
+        s.prompt1 = ring;
+        s.after1 = ring;
+        s.resonator = 0.4f;
+        s.resonatorShare = 0.5f;
+        s.overtone = 2.756f;
+        s.overtone2 = 5.404f;
+        s.overtoneLevel = 0.12f;
+        s.overtoneT60 = 0.25f * ring;
+        s.stretchCents = 0.0f;
+        s.contact = across(key, 1.5e-3f, 0.6e-3f, true);
+        s.damper = true;
+        s.dampedT60 = 0.15f;
+        s.strings = 1;
+        s.knock = 0.3f;
+        s.level = 0.8f;
+        break;
+    }
+    case Toy: {
+        // Metal rods fixed at one end, struck by small hard hammers, in a
+        // plastic box: clangy, short, never quite in tune, no dampers.
+        const float ring = across(key, 4.0f, 0.8f, true);
+        s.prompt1 = ring;
+        s.after1 = ring;
+        s.resonatorShare = 0.0f;
+        s.overtone = 6.27f;
+        s.overtone2 = 17.55f;
+        s.overtoneLevel = 0.45f;
+        s.overtoneT60 = 0.35f * ring;
+        s.stretchCents = 0.0f;
+        s.contact = across(key, 0.6e-3f, 0.25e-3f, true);
+        s.damper = false;
+        s.strings = 1;
+        s.knock = 0.75f;
+        s.level = 0.33f;
+        break;
+    }
+    case Dulcimer: {
+        // Courses of thin plain strings over a small trapezoid box, struck
+        // with light wooden hammers, no dampers at all: everything rings
+        // into everything. Unisons that never quite agree.
+        s.strings = key < 52.0f ? 2 : 3;
+        s.B *= 0.6f;
+        s.stretchCents *= 0.5f;
+        s.bend = 0.0f;
+        const float ring = across(key, 1.2f, 1.6f, true);
+        s.prompt1 *= ring;
+        s.after1 *= ring;
+        s.impedance = across(key, 3.0f, 1.2f, true);
+        s.mass = 2.0e-3f;
+        s.exponent = 2.2f;
+        s.contact = across(key, 0.5e-3f, 0.25e-3f, true);
+        s.hardening = 0.1f;
+        s.strike = 0.12f;
+        s.damper = false;
+        s.unison *= 2.5f;
+        s.uneven = 0.45f;
+        s.knock *= 1.5f;
+        s.level *= 0.51f;
+        s.highRing = 0.7f;
+        break;
+    }
+    case Cimbalom: {
+        // A concert dulcimer: heavier strings, wound in the bass, struck
+        // with hammers wrapped in cotton, and a damper pedal.
+        s.strings = key < 40.0f ? 3 : 4;
+        s.B *= 0.8f;
+        s.stretchCents *= 0.7f;
+        const float ring = across(key, 0.9f, 1.4f, true);
+        s.prompt1 *= ring;
+        s.after1 *= ring;
+        s.impedance *= 0.6f;
+        s.mass = 3.0e-3f;
+        s.exponent = 2.3f;
+        s.contact = across(key, 1.0e-3f, 0.4e-3f, true);
+        s.hardening = 0.2f;
+        s.damper = true;
+        s.dampedT60 *= 2.0f;
+        s.unison *= 1.6f;
+        s.uneven = 0.4f;
+        s.knock *= 1.2f;
+        s.level *= 0.79f;
         break;
     }
     default:

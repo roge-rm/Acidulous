@@ -28,6 +28,7 @@
     <string name="pw_across">across</string>
     <string name="pw_aeg">aeg</string>
     <string name="pw_after">after</string>
+    <string name="pw_against">against</string>
     <string name="pw_against_x">against x</string>
     <string name="pw_age">age</string>
     <string name="pw_ah">ah</string>
@@ -71,6 +72,7 @@
     <string name="pw_bell">Bell</string>
     <string name="pw_bell_04bf88">bell</string>
     <string name="pw_bell_clave">bell / clave</string>
+    <string name="pw_bells">bells</string>
     <string name="pw_below">below</string>
     <string name="pw_bend">bend</string>
     <string name="pw_beyond">beyond</string>
@@ -86,6 +88,7 @@
     <string name="pw_board">board</string>
     <string name="pw_body">body</string>
     <string name="pw_bolt">bolt</string>
+    <string name="pw_both">both</string>
     <string name="pw_bow">bow</string>
     <string name="pw_bowl">bowl</string>
     <string name="pw_bp">BP</string>
@@ -95,6 +98,7 @@
     <string name="pw_brake">brake</string>
     <string name="pw_brassiness">brassiness</string>
     <string name="pw_breath">breath</string>
+    <string name="pw_bridge">bridge</string>
     <string name="pw_bright">bright</string>
     <string name="pw_broadcast">broadcast</string>
     <string name="pw_buffer">buffer</string>
@@ -233,6 +237,7 @@
     <string name="pw_eg1">eg1</string>
     <string name="pw_eg2">eg2</string>
     <string name="pw_eg3">eg3</string>
+    <string name="pw_electric">electric</string>
     <string name="pw_electric_grand">electric grand</string>
     <string name="pw_electro">electro</string>
     <string name="pw_embouchure">embouchure</string>
@@ -531,7 +536,9 @@
     <string name="pw_muted">muted</string>
     <string name="pw_n">n</string>
     <string name="pw_natural">natural</string>
+    <string name="pw_near">near</string>
     <string name="pw_nearest">nearest</string>
+    <string name="pw_neck">neck</string>
     <string name="pw_negative">negative</string>
     <string name="pw_ng">ng</string>
     <string name="pw_noise">noise</string>
@@ -597,6 +604,8 @@
     <string name="pw_phaser">Phaser</string>
     <string name="pw_phrase">phrase</string>
     <string name="pw_pick">pick</string>
+    <string name="pw_pickup">pickup</string>
+    <string name="pw_pickups">pickups</string>
     <string name="pw_pingpong">pingpong</string>
     <string name="pw_pinky">pinky</string>
     <string name="pw_pipe">pipe</string>
@@ -878,6 +887,7 @@
     <string name="pw_to">to</string>
     <string name="pw_toms">toms</string>
     <string name="pw_tone">tone</string>
+    <string name="pw_tonebar">tonebar</string>
     <string name="pw_tonewheel">tonewheel</string>
     <string name="pw_tongue">tongue</string>
     <string name="pw_touch">touch</string>

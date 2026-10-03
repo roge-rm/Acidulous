@@ -126,7 +126,7 @@ object MachineUi {
     fun usesPerformance(type: String): Boolean =
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
-            type == "Brazen" || type == "Timber" || type == "Molt" || type == "Diction"
+            type == "Brazen" || type == "Timber" || type == "Molt" || type == "Diction" || type == "Hammer"
 
     /** Genesis's kit, in the Voice order of engine/machine/genesis/Genesis.h. */
     val genesisVoices: List<DrumVoice> = listOf(

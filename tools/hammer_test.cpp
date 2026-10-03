@@ -405,7 +405,7 @@ int main() {
         bool finite = true;
         double peak = 0.0;
         const auto x = render(*s, 3.0f, [&](int32_t b) {
-            if (b % 50 == 0) s->noteOn(static_cast<uint8_t>(36 + (b / 50) * 5), 100);
+            if (b % 50 == 0) s->noteOn(static_cast<uint8_t>(36 + ((b / 50) * 5) % 60), 100);
             if (b % 100 == 75) {
                 for (int32_t p = 0; p < n; ++p) {
                     if (std::string(defs[p].name) == "model") s->params().set(p, defs[p].unmap(static_cast<float>((b / 100) % 5)));
@@ -417,6 +417,124 @@ int main() {
             peak = std::max(peak, static_cast<double>(std::fabs(v)));
         }
         check(finite && peak < 1.0, "switching the instrument while notes ring", fmt("peak %.2f", peak));
+    }
+
+    std::printf("electric\n");
+    {
+        // In tune: a bar at its note, the tangent's string where its stiffness puts it.
+        double worst = 0.0;
+        int at = 0, which = 0;
+        for (int model = 5; model <= 7; ++model) {
+            for (int key = 29; key <= 96; key += 7) {
+                auto m = piano({{"model", static_cast<float>(model)}, {"stretch", 0.0f}, {"drive", 0.0f}});
+                const auto x = strike(*m, static_cast<uint8_t>(key), 60, 1.5f);
+                const double want = 440.0 * std::exp2((key - 69) / 12.0) * (model == 7 ? std::sqrt(1.0 + m->keySpec(key).B) : 1.0);
+                const double cents = 1200.0 * std::log2(peakNear(x, kSr / 10, kSr, want) / want);
+                if (std::fabs(cents) > std::fabs(worst)) { worst = cents; at = key; which = model; }
+            }
+        }
+        check(std::fabs(worst) < 3.0, "tine, reed and tangent in tune", fmt("worst %+.2f c at key %.0f, model %.0f", worst, at, which));
+
+        // A hard blow swings the bar into the pickup's curve: the 2nd harmonic comes up.
+        auto second = [&](int model, uint8_t velocity) {
+            auto m = piano({{"model", static_cast<float>(model)}, {"drive", 0.0f}});
+            const auto x = strike(*m, 60, velocity, 0.5f);
+            return dB(magnitudeAt(x, kSr / 20, kSr / 4, 523.25)) - dB(magnitudeAt(x, kSr / 20, kSr / 4, 261.63));
+        };
+        const double tineBark = second(5, 120) - second(5, 30), reedBark = second(6, 120) - second(6, 30);
+        check(tineBark > 12.0 && reedBark > 12.0, "a hard blow barks: the 2nd harmonic comes up",
+              fmt("tine %+.0f dB, reed %+.0f dB, velocity 120 against 30", tineBark, reedBark));
+
+        // Velocity follows the house law here too.
+        auto level = [&](uint8_t velocity) {
+            auto m = piano({{"model", 5.0f}, {"drive", 0.0f}});
+            const auto x = strike(*m, 60, velocity, 0.5f);
+            return dB(rms(x, kSr / 20, kSr / 4));
+        };
+        const double got = level(64) - level(127), law = dB(velocityGain(64.0f / 127.0f, 1.0f) / velocityGain(1.0f, 1.0f));
+        check(std::fabs(got - law) < 4.0, "a tine's velocity follows the house law", fmt("%+.1f dB, law %+.1f", got, law));
+
+        // The tremolo, from its knob or the mod wheel.
+        auto swing = [&](float tremolo, uint8_t wheel) {
+            auto m = piano({{"model", 5.0f}, {"tremolo", tremolo}, {"tremrate", 4.0f}, {"tremwide", 0.0f}});
+            m->controlChange(1, wheel);
+            const auto x = strike(*m, 72, 90, 1.5f);
+            double lo = 1e9, hi = 0.0;
+            for (size_t b = kSr / 2; b + kSr / 50 < x.size(); b += kSr / 50) {
+                const double r = rms(x, b, b + kSr / 50);
+                lo = std::min(lo, r);
+                hi = std::max(hi, r);
+            }
+            return dB(hi) - dB(lo);
+        };
+        const double still = swing(0.0f, 0), knob = swing(0.8f, 0), wheel = swing(0.0f, 127);
+        check(knob > still + 6.0 && wheel > still + 6.0, "the tremolo swings, from its knob or the mod wheel",
+              fmt("%.1f dB still, %.1f knob, %.1f wheel", still, knob, wheel));
+
+        // A tangent's note stops dead when the key comes up.
+        {
+            auto m = piano({{"model", 7.0f}});
+            const auto x = strike(*m, 60, 100, 1.0f, 0.4f);
+            const double held = dB(rms(x, kSr / 4, kSr * 2 / 5)), after = dB(rms(x, kSr * 2 / 5 + kSr / 5, kSr * 2 / 5 + kSr / 4));
+            check(held - after > 40.0, "a tangent's note stops when the key comes up", fmt("%.0f dB down 0.2 s after", held - after));
+            auto p = piano({{"model", 7.0f}});
+            p->pedal(kPerfSustain, 1.0f);
+            const auto y = strike(*p, 60, 100, 1.0f, 0.4f);
+            const double pedalled = dB(rms(y, kSr / 4, kSr * 2 / 5)) - dB(rms(y, kSr * 2 / 5 + kSr / 5, kSr * 2 / 5 + kSr / 4));
+            check(pedalled > 40.0, "even with the sustain pedal down", fmt("%.0f dB down 0.2 s after", pedalled));
+        }
+        // Its pickups: the first, the second, both, and both against each other sound different.
+        {
+            double levels[4];
+            for (int p = 0; p < 4; ++p) {
+                auto m = piano({{"model", 7.0f}, {"pickups", static_cast<float>(p)}});
+                const auto x = strike(*m, 48, 100, 0.5f);
+                levels[p] = dB(magnitudeAt(x, kSr / 20, kSr / 4, 3.0 * 130.81)) - dB(magnitudeAt(x, kSr / 20, kSr / 4, 130.81));
+            }
+            const bool differ = std::fabs(levels[0] - levels[1]) > 1.0 && std::fabs(levels[2] - levels[3]) > 1.0;
+            check(differ, "the tangent's pickups sound different", fmt("3rd against 1st: %+.0f %+.0f %+.0f", levels[0], levels[1], levels[2]) + fmt(" %+.0f dB", levels[3]));
+        }
+    }
+
+    std::printf("bars and courses\n");
+    {
+        // In tune: the celesta's bars, the dulcimer's and cimbalom's courses.
+        // A toy piano is out of tune on purpose: within 15 cents. Rung long:
+        // a celesta's short note is a wide peak, and the board's colour
+        // leaned it 3.5 cents (the bar alone was exact).
+        double worst = 0.0, over = 0.0;
+        int at = 0, which = 0;
+        for (int model = 8; model <= 11; ++model) {
+            for (int key = 48; key <= 96; key += 8) {
+                auto m = piano({{"model", static_cast<float>(model)}, {"stretch", 0.0f}, {"unison", 0.0f}, {"polar", 0.0f}, {"sustain", 1.0f}});
+                const auto x = strike(*m, static_cast<uint8_t>(key), 70, 1.2f);
+                const bool course = model >= 10;
+                const double want = 440.0 * std::exp2((key - 69) / 12.0) * (course ? std::sqrt(1.0 + m->keySpec(key).B) : 1.0);
+                const double allowed = model == 9 ? 16.0 : 3.0;
+                const double cents = 1200.0 * std::log2(peakNear(x, kSr / 10, kSr * 4 / 5, want, model == 9 ? 25.0 : 15.0) / want);
+                if (std::fabs(cents) / allowed > over) { over = std::fabs(cents) / allowed; worst = cents; at = key; which = model; }
+            }
+        }
+        check(over < 1.0, "celesta, toy, dulcimer, cimbalom in tune", fmt("worst %+.2f c at key %.0f, model %.0f", worst, at, which));
+
+        // A dulcimer has no dampers: let go, it rings on.
+        auto held = [&](float model) {
+            auto m = piano({{"model", model}});
+            const auto x = strike(*m, 67, 90, 1.2f, 0.3f);
+            return dB(rms(x, kSr * 9 / 10, kSr)) - dB(rms(x, kSr / 5, kSr * 3 / 10));
+        };
+        const double dulcimer = held(10.0f), celesta = held(8.0f);
+        check(dulcimer > -15.0, "a dulcimer rings on when let go", fmt("%.0f dB 0.6 s after", dulcimer));
+        check(celesta < -40.0, "a celesta's dampers stop it", fmt("%.0f dB 0.6 s after", celesta));
+
+        // And its unplayed strings always ring along, no pedal needed.
+        auto c3 = [&](float sympathy) {
+            auto m = piano({{"model", 10.0f}, {"tail", 0.0f}, {"sympathy", sympathy}});
+            const auto y = strike(*m, 60, 100, 2.0f, 0.3f);
+            return dB(magnitudeAt(y, static_cast<size_t>(1.0 * kSr), kSr / 2, 130.81) + 1e-12);
+        };
+        const double sym = c3(1.0f) - c3(0.0f);
+        check(sym > 10.0, "a dulcimer's unplayed strings ring along", fmt("C3 %.0f dB over none", sym));
     }
 
     std::printf("preparations\n");

@@ -26,6 +26,7 @@
 
 #include <engine/core/Constants.h>
 #include <engine/core/InputBus.h>
+#include <engine/core/Messages.h>
 #include <engine/format/WavReader.h>
 #include <engine/format/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
@@ -59,6 +60,8 @@ struct NoteEvent {
     int64_t frame;
     uint8_t note;
     uint8_t velocity; // 0 = note off
+    /** The sustain pedal moving to this depth, 0-127, instead of a note; -1 for a note. */
+    int16_t pedal = -1;
 };
 
 struct Phrase {
@@ -93,6 +96,11 @@ int64_t hit(Phrase &p, float atSeconds, float forSeconds, int note, int vel) {
     p.events.push_back({on, static_cast<uint8_t>(note), static_cast<uint8_t>(vel)});
     p.events.push_back({off, static_cast<uint8_t>(note), 0});
     return off;
+}
+
+/** The sustain pedal moving to [depth] (0 up, 127 down) at [atSeconds]. */
+void pedalAt(Phrase &p, float atSeconds, int depth) {
+    p.events.push_back({secondsToFrames(atSeconds), 0, 0, static_cast<int16_t>(depth)});
 }
 
 /**
@@ -267,6 +275,32 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         };
         for (const Step &st : kLine) p.lastOff = hit(p, st.at, st.len, note + st.step, st.vel);
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "piano") {
+        // A piano played as one: a left hand and chords under a tune, the
+        // pedal changed at each bar (up just before, down just after the
+        // bass), so the bars ring into each other and are cleared. Then the
+        // pedal up and three notes alone, low, high and higher, held and let
+        // go, to hear the dampers - and that the top has none.
+        static const int kBass[4] = {-24, -27, -31, -29};
+        static const int kChord[4][3] = {{-8, -5, 0}, {-8, -3, 0}, {-7, -3, 0}, {-10, -5, -1}};
+        static const int kTune[16] = {12, 14, 16, 19, 16, 14, 12, 9, 12, 14, 17, 16, 14, 11, 14, 19};
+        const float bar = beat * 4.0f;
+        for (int b = 0; b < 4; ++b) {
+            const float at = static_cast<float>(b) * bar;
+            pedalAt(p, std::max(0.0f, at - 0.02f), 0);
+            pedalAt(p, at + 0.05f, 127);
+            p.lastOff = std::max(p.lastOff, hit(p, at, beat, note + kBass[b], 80));
+            for (const int c : kChord[b]) p.lastOff = std::max(p.lastOff, hit(p, at + beat, beat * 2.0f, note + c, 62));
+            for (int i = 0; i < 4; ++i) {
+                p.lastOff = std::max(p.lastOff, hit(p, at + beat * static_cast<float>(i), beat * 0.9f, note + kTune[b * 4 + i], i == 0 ? 92 : 72));
+            }
+        }
+        const float end = 4.0f * bar;
+        pedalAt(p, end, 0);
+        p.lastOff = std::max(p.lastOff, hit(p, end + 0.2f, 1.8f, note - 32, 110));
+        p.lastOff = std::max(p.lastOff, hit(p, end + 2.2f, 1.0f, note + 24, 100));
+        p.lastOff = std::max(p.lastOff, hit(p, end + 3.3f, 0.7f, note + 36, 100));
+        p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "keys") {
         // A root in the left hand and chords on the off beats above it.
         // Shows whether the machine has enough voices for both and how
@@ -752,8 +786,14 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
     for (int64_t at = 0; at < phrase.frames; at += kBlock) {
         while (next < phrase.events.size() && phrase.events[next].frame < at + kBlock) {
             const NoteEvent &e = phrase.events[next];
-            if (e.velocity > 0) m->noteOn(e.note, e.velocity);
-            else m->noteOff(e.note);
+            if (e.pedal >= 0) {
+                if (m->takesPedals()) m->pedal(kPerfSustain, static_cast<float>(e.pedal) / 127.0f);
+                else m->setDampers(e.pedal >= 64);
+            } else if (e.velocity > 0) {
+                m->noteOn(e.note, e.velocity);
+            } else {
+                m->noteOff(e.note);
+            }
             ++next;
         }
         if (!mat.input.empty()) {
@@ -1655,7 +1695,7 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|bell|hold\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold\n"
         "          |chip|drone|mallets|gospel|chorale|combo|swell|chromatic\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"

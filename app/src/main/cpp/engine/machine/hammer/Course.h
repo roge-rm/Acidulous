@@ -296,6 +296,7 @@ class Course {
         junctionStages = junction < shortest - 2 ? std::clamp(static_cast<int>(std::lround(way * static_cast<float>(stages))), 0, stages) : 0;
         junctionSections = junction < shortest - 2 ? std::clamp(static_cast<int>(std::lround(way * static_cast<float>(sections))), 0, sections) : 0;
         placeSections();
+        placePickups();
         arrival = static_cast<float>(shortest - junction) + static_cast<float>(junctionStages) * allpassDelay(disperse, w1) +
                   sectionsDelay(w1, 0, junctionSections);
     }
@@ -416,6 +417,23 @@ class Course {
         return arriving;
     }
 
+    /**
+     * Where two pickups sit under the strings, as shares of the string from
+     * the bridge; then pickup() is what each hears.
+     */
+    void setPickups(float first, float second) {
+        pickAt[0] = first;
+        pickAt[1] = second;
+        placePickups();
+    }
+
+    /** What a magnetic pickup hears, [which] of the two: the struck strings' velocity over it. */
+    float pickup(int which) const {
+        float v = 0.0f;
+        for (int i = 0; i < struck; ++i) v += readAge(pickOut[which], i) - readAge(pickBack[which], i);
+        return v;
+    }
+
     /** A slow follower of what reaches the bridge, for retiring a voice. */
     float loudness() const { return level; }
     /** How long the blow takes to reach the bridge from where it's struck, samples. */
@@ -440,6 +458,16 @@ class Course {
 
   private:
     static size_t index(int32_t i) { return static_cast<size_t>(i & (kSize - 1)) * kLanes; }
+
+    /** The pickups' places in the line: a wave leaving the bridge, and coming back to it. */
+    void placePickups() {
+        const float d = static_cast<float>(delay[0]);
+        for (int p = 0; p < 2; ++p) {
+            const float way = clampf(pickAt[p], 0.01f, 0.5f) * 0.5f * d;
+            pickOut[p] = clampf(way, 1.0f, d - 2.0f);
+            pickBack[p] = clampf(d - way, 1.0f, d - 2.0f);
+        }
+    }
 
     /**
      * The preparation, a sample: each struck string's velocity where it
@@ -903,6 +931,7 @@ class Course {
     /** How stiffly a rattle meets the strings, and a spring too weak to hear that keeps the point from drifting. */
     static constexpr float kRattleStiff = 1.0f, kHold = 1e-4f;
     bool prepared = false;
+    float pickAt[2] = {0.1f, 0.25f}, pickOut[2] = {5.0f, 10.0f}, pickBack[2] = {50.0f, 45.0f};
     float prepOut = 10.0f, prepBack = 20.0f;
     float prepY[kLanes] = {}, prepV[kLanes] = {}, rattleY[kLanes] = {}, rattleV[kLanes] = {};
     float level = 0.0f;

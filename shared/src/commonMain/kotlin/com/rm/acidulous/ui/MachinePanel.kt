@@ -3467,12 +3467,14 @@ private val HAMMER_MICS = listOf("player", "audience", "close", "room")
 private val HAMMER_PREPS = listOf("none", "rubber", "screw", "bolt", "paper", "mixed")
 private val HAMMER_PREP_KEYS = listOf("all", "white", "black", "low", "high", "random")
 private val HAMMER_STRINGS = listOf("auto", "1", "2", "3")
+/** The tangent keyboard's two pickups: either, both, or both against each other. */
+private val HAMMER_PICKUPS = listOf("bridge", "neck", "both", "against")
 private val HAMMER_VOICES = listOf("4", "6", "8", "10", "12", "16", "20", "24", "32")
 
 @Composable
 private fun HammerPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("instrument", "hammer", "strings", "pedals", "sound", "prepare", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("instrument", "hammer", "strings", "pedals", "sound", "prepare", "electric", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
                 Group("instrument") {
@@ -3547,6 +3549,26 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelStepKnob(b, "prepkeys", HAMMER_PREP_KEYS, "keys")
                     PanelKnob(b, "prep at", "where", PanelPink)
                     PanelKnob(b, "prepamt", "amount")
+                }
+            }
+            6 -> {
+                Group("pickup") {
+                    PanelKnob(b, "pickup", "near", PanelAmber)
+                    PanelKnob(b, "offset", "offset")
+                    PanelKnob(b, "tonebar", "tonebar")
+                }
+                Group("tangent") {
+                    PanelStepKnob(b, "pickups", HAMMER_PICKUPS, "pickups", PanelPink)
+                    PanelKnob(b, "mute", "mute")
+                }
+                Group("amp") {
+                    PanelKnob(b, "drive", "drive", PanelAmber)
+                }
+                Group("tremolo") {
+                    PanelKnob(b, "tremolo", "depth", PanelAmber)
+                    PanelKnob(b, "tremrate", "rate")
+                    PanelStepKnob(b, "tremsync", TRINITY_LFO_SYNC, "sync")
+                    PanelKnob(b, "tremwide", "pan")
                 }
             }
             else -> {

@@ -60,7 +60,7 @@ All six are the demo song, Squelch.
 | **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
 | **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
 | **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
-| **Hammer** | Modelled pianos, grand to upright to fortepiano: felt hammers thrown at stiff strings that ring through a soundboard. |
+| **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
 | **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
 | **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
 | **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |

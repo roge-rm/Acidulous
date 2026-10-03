@@ -5,6 +5,7 @@
 #include <cstring>
 #include <engine/core/Messages.h>
 #include <engine/core/Settings.h>
+#include <engine/dsp/Lfo.h>
 #include <engine/machine/Voices.h>
 
 namespace acidulous::machine {
@@ -42,6 +43,19 @@ constexpr float kKnock = 0.1f;
 float swingAt(int key) { return 10.0f * std::exp2((48.0f - static_cast<float>(key)) / 24.0f); }
 /** How stiffly paper springs back, against its mass: its own ring at about 400 Hz. */
 constexpr float kPaperSpring = 0.0027f;
+/**
+ * How far a tine or reed swings per m/s of the hammer, in the pickup's
+ * reach at its middle setting: 0.12 at velocity 30, 0.9 at 115, so a soft
+ * note is nearly pure and a hard one barks (tools/hammer_reference: the
+ * recordings' second harmonic 27 dB under the note soft, level with it hard).
+ */
+constexpr float kSwing = 0.2f;
+/** The electric pianos' level against the grand's, and the tangent's pickups' against its bridge. */
+constexpr float kElectricLevel = 0.8f, kPickupLevel = 2.4f;
+/** A bar's knock against a string's, for its blow's units: a celesta's action 25 dB under its notes, a toy's clack 12. */
+constexpr float kBarKnock = 28.0f;
+/** The level a mf electric note reaches at the amp, for its drive. */
+constexpr float kAmpNominal = 0.1f;
 /** A voice let go and this quiet (on its slow follower) for a few blocks is free. */
 constexpr float kSilent = 2e-5f;
 
@@ -136,11 +150,15 @@ const ParamDef *Hammer::paramDefs(int32_t &count) const {
 
 void Hammer::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
-    for (int m = 0; m < kStringModels; ++m) {
+    for (int m = 0; m < kKeyModels; ++m) {
         for (int k = 0; k < kKeys; ++k) keys[m][k] = hammer::keyFor(m, clampf(static_cast<float>(k), 21.0f, 108.0f));
     }
     refreshKeys();
-    for (Voice &v : voices) v.course.prepare(sampleRate);
+    for (Voice &v : voices) {
+        v.course.prepare(sampleRate);
+        v.bar.prepare(sampleRate);
+    }
+    amp.prepare(sampleRate);
     for (Voice &b : bank) b.course.prepare(sampleRate);
     warmer.prepare(sampleRate);
     board.prepare(sampleRate);
@@ -155,7 +173,7 @@ void Hammer::prepare(int32_t sr) {
 }
 
 void Hammer::refreshKeys() {
-    for (int m = 0; m < kStringModels; ++m) {
+    for (int m = 0; m < kKeyModels; ++m) {
         for (int k = 0; k < kKeys; ++k) {
             stiffness[m][k] = hammer::Felt::stiffnessFor(keys[m][k].mass, keys[m][k].exponent, keys[m][k].contact);
         }
@@ -177,8 +195,14 @@ void Hammer::reset() {
         v.knockAt = v.knockLive = 0;
         v.age = 0;
         v.quietBlocks = 0;
+        v.bar.clear();
+        v.pick.reset();
+        v.barX = 0.0f;
+        v.speed = 0.0f;
     }
     board.clear();
+    amp.clear();
+    modWheel = 0.0f;
     sustainPedal = softPedal = 0.0f;
     pedalThump = 0.0f;
     bankNext = 0;
@@ -199,7 +223,7 @@ bool Hammer::fullDetail() const { return fullQuality() || steppedTargetOf(Detail
 
 int Hammer::modelNow() const {
     const int m = steppedTargetOf(Model);
-    return m >= 0 && m < kStringModels ? m : hammer::Grand;
+    return m >= 0 && m < kKeyModels ? m : hammer::Grand;
 }
 
 namespace {
@@ -247,6 +271,43 @@ hammer::Board::Voicing Hammer::voicing() const {
         v.topDb = -6.0f;
         v.modes = 0.2f;
         v.room = 0.15f;
+        break;
+    case hammer::Celesta:
+        // A cabinet with a box under each bar: warm, no bass to speak of.
+        v.radiateHz = 180.0f;
+        v.body = 0.5f;
+        v.bassBodyDb = 0.0f;
+        v.presenceDb = 1.0f;
+        v.topDb = -10.0f;
+        v.modes = 0.8f;
+        break;
+    case hammer::Toy:
+        // A small plastic box: a honk in the middle, nothing below it.
+        v.radiateHz = 300.0f;
+        v.body = 0.0f;
+        v.bassBodyDb = 0.0f;
+        v.presenceDb = 6.0f;
+        v.topDb = -6.0f;
+        v.modes = 2.0f;
+        v.room = 0.6f;
+        break;
+    case hammer::Dulcimer:
+        // A small trapezoid box: bright, a little hollow.
+        v.radiateHz = 130.0f;
+        v.body = 0.6f;
+        v.bassBodyDb = 2.0f;
+        v.presenceDb = 4.0f;
+        v.topDb = -8.0f;
+        v.modes = 1.8f;
+        v.room = 0.8f;
+        break;
+    case hammer::Cimbalom:
+        v.radiateHz = 90.0f;
+        v.body = 0.8f;
+        v.bassBodyDb = 4.0f;
+        v.presenceDb = 3.0f;
+        v.topDb = -10.0f;
+        v.modes = 1.4f;
         break;
     default:
         break;
@@ -301,14 +362,16 @@ hammer::Course::Prep Hammer::prepFor(int key, float impedance, float *makeup) co
     p.at = (0.03f + 0.45f * clampf(targetOf(PrepAt), 0.0f, 1.0f)) * (0.9f + 0.2f * hash());
     // A mass in the strings' units: kg over twice their impedance, a sample at a time.
     const float perKg = sampleRate / (2.0f * impedance);
-    // What each takes from a note's peak through the middle (5 to 7 dB, paper
-    // 3.5), mostly made up: a prepared note is played as loud as any other.
-    static constexpr float kMakeup[5] = {1.0f, 1.78f, 1.78f, 1.78f, 1.41f};
+    // What each takes from a note's loudness, mostly made up: a prepared
+    // note is played as loud as any other. (Rubber stops a note within the
+    // ear's 400 ms, and needs the most.)
+    static constexpr float kMakeup[5] = {1.0f, 3.5f, 2.5f, 2.5f, 2.0f};
     if (makeup != nullptr) *makeup = kMakeup[kind];
     switch (kind) {
     case 1: // rubber, wedged between the strings: mostly a loss, a little spring
         p.loss = 0.08f + 0.7f * amount;
-        p.spring = 0.001f + 0.01f * amount;
+        // (Ten times this was a spring that held the note 27 cents sharp.)
+        p.spring = 0.0001f + 0.001f * amount;
         break;
     case 2: // a screw: a mass that goes with the strings
         p.mass = (1.0e-3f + 9.0e-3f * amount) * perKg;
@@ -323,7 +386,10 @@ hammer::Course::Prep Hammer::prepFor(int key, float impedance, float *makeup) co
     default: // paper, woven through: light, springing back against the strings, buzzing
         p.rattle = std::fmax(0.2f, 0.3e-3f * perKg);
         p.rattleSpring = p.rattle * kPaperSpring;
-        p.gap = 0.25f * swingAt(key) * (1.2f - amount);
+        // Loose enough to touch only near the top of a loud note's swing:
+        // pressed on the strings all the time, it was a spring and the note
+        // 24 cents sharp.
+        p.gap = 1.5f * swingAt(key) * (1.2f - amount);
         p.rattleLoss = 0.01f;
         p.loss = 0.005f + 0.02f * amount;
         break;
@@ -360,7 +426,7 @@ Hammer::Voice *Hammer::voiceFor(int key) {
     for (int pass = 0; pass < 2 && best == nullptr; ++pass) {
         for (Voice &v : voices) {
             if (!v.used || v.retiring || (pass == 0 && v.held)) continue;
-            const float loud = v.course.loudness() * v.gain;
+            const float loud = loudnessOf(v);
             if (loud < quietest) { quietest = loud; best = &v; }
         }
     }
@@ -382,7 +448,9 @@ void Hammer::noteOn(uint8_t note, uint8_t velocity) {
     Voice *v = voiceFor(key);
     if (v == nullptr) return;
     v->note = note;
-    strike(*v, key, hzOf(key, shifted + targetOf(Fine) / 100.0f), static_cast<float>(velocity) / 127.0f);
+    const int model = modelNow();
+    if (isBar(model)) strikeBar(*v, model, key, hzOf(key, shifted + targetOf(Fine) / 100.0f), static_cast<float>(velocity) / 127.0f);
+    else strike(*v, key, hzOf(key, shifted + targetOf(Fine) / 100.0f), static_cast<float>(velocity) / 127.0f);
     asleep = false;
 }
 
@@ -427,7 +495,8 @@ hammer::Course::Design Hammer::designFor(int key, float hz, bool full) {
     }
     // The strings' motion across the board, if there's a lane left for it:
     // tuned a little off the motion into it.
-    if (lanes < (full ? hammer::Course::kLanes : 2) && targetOf(Polar) > 0.0f) {
+    // (Not a tangent keyboard's: its pickups hear the strings' motion one way.)
+    if (lanes < (full ? hammer::Course::kLanes : 2) && targetOf(Polar) > 0.0f && model != hammer::Tangent) {
         d.polar = std::fmin(1.0f, targetOf(Polar) * k.across);
         d.unison[lanes] = 0.4f * within * jitter();
         d.detune[lanes] = keyOff;
@@ -446,9 +515,12 @@ hammer::Course::Design Hammer::designFor(int key, float hz, bool full) {
     d.sections = key < kSectionKeys ? (full ? 40 : 10) : 0;
     // How long the strings ring, as a multiple of the measured times; tone
     // moves the third partial's ring against the fundamental's.
+    // A tangent keyboard's mute: a felt strip on the strings by the bridge,
+    // shorter and duller.
+    const float mute = model == hammer::Tangent ? targetOf(Mute) : 0.0f;
     const float ring = std::pow(4.0f, targetOf(Sustain) + targetOf(SustainKey) * (static_cast<float>(key) - 64.0f) / 44.0f) *
-                       (1.0f - 0.4f * smaller * bass) * (1.0f - 0.25f * age);
-    const float tone = std::pow(2.0f, targetOf(Tone) + targetOf(ToneKey) * (static_cast<float>(key) - 64.0f) / 44.0f - 0.6f * age);
+                       (1.0f - 0.4f * smaller * bass) * (1.0f - 0.25f * age) * (1.0f - 0.85f * mute);
+    const float tone = std::pow(2.0f, targetOf(Tone) + targetOf(ToneKey) * (static_cast<float>(key) - 64.0f) / 44.0f - 0.6f * age - 1.5f * mute);
     hammer::Course::Decay &t = d.decay;
     t.after1 = k.after1 * ring;
     t.after3 = std::fmin(k.after3 * ring * tone, t.after1);
@@ -476,6 +548,7 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
     const int model = modelNow();
     const hammer::KeySpec &k = keys[model][key];
     v.spec = &k;
+    v.model = model;
     const bool full = fullDetail();
     const hammer::Course::Design d = designFor(key, hz, full);
     // Struck again with nothing changed, the strings keep ringing: no retune.
@@ -486,6 +559,8 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
         v.design = d;
         v.designed = true;
     }
+    // A tangent keyboard's two pickups, under the strings near the bridge.
+    if (model == hammer::Tangent) v.course.setPickups(0.06f, 0.16f);
     v.key = key;
     v.used = true;
     v.held = true;
@@ -525,13 +600,14 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
     if (d.lanes == 3) takes[2] *= 1.0f - 0.95f * shift;
     else if (d.lanes == 2) takes[1] *= 1.0f - 0.5f * shift;
     v.felt.strike(speed, sampleRate, takes, d.lanes);
+    v.speed = speed;
     // The level is the house velocity law; the physics only sets the colour.
     // What reaches the bridge grows with the hammer's speed and the strings'
     // impedance, so both are divided out.
     float makeup = 1.0f;
     prepFor(key, k.impedance, &makeup);
     v.gainTarget = velocityGain(velocity01, targetOf(VelocityAmount)) * kHouse * k.level * makeup /
-                   (speed * k.impedance * static_cast<float>(d.lanes)) * (1.0f - 0.3f * corda) * (1.0f - 0.35f * moderator);
+                   (speed * k.impedance * static_cast<float>(d.lanes)) * (1.0f - 0.3f * corda);
     if (v.gain <= 0.0f) v.gain = v.gainTarget;
     // The knock grows more slowly than the note: against it, 4 to 11 dB
     // louder at velocity 30 than at 124 in the recordings. The key's level
@@ -544,7 +620,101 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
     v.panR = std::sin((pan + 1.0f) * 0.785398f);
     v.age = clock;
     v.quietBlocks = 0;
-    wakeSympathy(key);
+    if (!isElectric(model)) wakeSympathy(key);
+}
+
+void Hammer::strikeBar(Voice &v, int model, int key, float hz, float velocity01) {
+    const hammer::KeySpec &k = keys[model][key];
+    if (!v.used || v.key != key) {
+        v.bar.clear();
+        v.barX = 0.0f;
+    }
+    v.spec = &k;
+    v.model = model;
+    v.key = key;
+    v.used = true;
+    v.held = true;
+    v.retiring = false;
+    v.designed = false;
+    v.damp = v.dampTarget = 0.0f;
+    // How long it rings, and how long its bell does, as the strings' knobs say.
+    const float ring = std::pow(4.0f, targetOf(Sustain) + targetOf(SustainKey) * (static_cast<float>(key) - 64.0f) / 44.0f);
+    const float tone = std::pow(2.0f, targetOf(Tone) + targetOf(ToneKey) * (static_cast<float>(key) - 64.0f) / 44.0f);
+    hammer::Bar::Spec b;
+    // A toy piano is never quite in tune: each key its own way, up to 15
+    // cents, as the seed has it.
+    if (model == hammer::Toy) {
+        uint32_t h = static_cast<uint32_t>(key) * 2654435761u + static_cast<uint32_t>(steppedTargetOf(Seed)) * 97u + 1u;
+        h ^= h >> 13;
+        h *= 1274126177u;
+        h ^= h >> 16;
+        hz *= std::exp2(15.0f * (static_cast<float>(h >> 8) / 8388608.0f - 1.0f) / 1200.0f);
+    }
+    b.hz = hz;
+    // A tine's tonebar, or a celesta's box, which blooms and lets go sooner.
+    b.tonebar = model == hammer::Tine ? targetOf(Tonebar) : k.resonatorShare;
+    b.ring = k.prompt1 * ring;
+    b.barRing = (model == hammer::Celesta ? k.resonator * k.prompt1 : k.after1) * ring;
+    b.ratio[0] = k.overtone;
+    b.ratio[1] = k.overtone2 > 0.0f ? k.overtone2 : k.overtone * 2.8f;
+    const float hard = targetOf(Hardness) + targetOf(HardKey) * (static_cast<float>(key) - 64.0f) / 44.0f;
+    b.level[0] = k.overtoneLevel * std::exp2(hard);
+    b.level[1] = 0.3f * b.level[0];
+    b.overRing[0] = k.overtoneT60 * tone;
+    b.overRing[1] = 0.3f * k.overtoneT60 * tone;
+    v.barSpec = b;
+    v.bar.tune(b);
+    // The blow: harder is a shorter one, which reaches the bell.
+    const float speed = kSlowest * std::pow(kFastest / kSlowest, clampf(velocity01, 0.0f, 1.0f));
+    // No longer than a third of the note's period: a blow three quarters of
+    // a period long cancels most of its own push at the note, and the tine's
+    // top octave played 25 dB under its middle.
+    const float contact = std::fmin(k.contact * std::pow(10.0f, -0.5f * hard) * std::exp2(targetOf(Weight)) * std::pow(speed / 2.0f, -0.3f),
+                                    0.33f / hz);
+    // A reed swings half as far as a tine for the same blow, nearer its
+    // plate (below): soft, it's nearly pure; hard, its 2nd harmonic comes up
+    // 16 dB (the recording, 15; with a tine's swing, 11).
+    const float swing = kSwing * speed * (model == hammer::Reed ? 0.5f : 1.0f);
+    v.bar.strike(swing, contact);
+    v.speed = speed;
+    // Nearer the pickup bends sooner; further off its axis, purer. A reed
+    // already sits off its plate, so offset moves it nearer, and it sits
+    // closer to begin with: at a tine's distance its hardest notes had
+    // their 3rd harmonic 23 dB under the note, the recording's 1 dB.
+    const float reach = (1.6f - 1.2f * targetOf(Pickup)) * (model == hammer::Reed ? 0.4f : 1.0f);
+    const float off = model == hammer::Tine ? 1.5f * targetOf(Offset) : 0.15f + 0.25f * targetOf(Offset);
+    // A celesta and a toy piano are heard through the air: no pickup's curve.
+    const hammer::Pickup::Kind kind = model == hammer::Tine ? hammer::Pickup::Magnetic
+                                    : model == hammer::Reed ? hammer::Pickup::Electrostatic : hammer::Pickup::Linear;
+    v.pick.set(kind, reach, off, 6.28318530718f * hz / sampleRate);
+    v.pick.reset(v.barX);
+    // The level is the house law against the swing the pickup hears.
+    v.gainTarget = velocityGain(velocity01, targetOf(VelocityAmount)) * kHouse * kElectricLevel * k.level / swing;
+    if (v.gain <= 0.0f) v.gain = v.gainTarget;
+    // What the case hears of the blow: a celesta's action, a toy's clack.
+    // (The blow is in the swing's units and the gain already over the
+    // swing: no more of it here.)
+    v.knock = k.knock * kBarKnock;
+    v.force = 0.0f;
+    v.knockLive = 0;
+    const float pan = clampf(k.pan * targetOf(Width) / 0.7f, -1.0f, 1.0f);
+    v.panL = std::cos((pan + 1.0f) * 0.785398f);
+    v.panR = std::sin((pan + 1.0f) * 0.785398f);
+    v.age = clock;
+    v.quietBlocks = 0;
+}
+
+float Hammer::loudnessOf(const Voice &v) const {
+    return (isBar(v.model) ? v.bar.loudness() : v.course.loudness() * v.spec->impedance) * v.gain;
+}
+
+void Hammer::controlChange(uint8_t cc, uint8_t value) {
+    if (cc == 1) modWheel = static_cast<float>(value) / 127.0f;
+}
+
+void Hammer::onBlock(int64_t tickStart, int64_t, float tempo) {
+    tick = tickStart;
+    bpm = tempo > 1.0f ? tempo : 120.0f;
 }
 
 void Hammer::noteOff(uint8_t note) {
@@ -552,6 +722,9 @@ void Hammer::noteOff(uint8_t note) {
         if (v.used && v.held && v.note == note) {
             v.held = false;
             v.dampTarget = damperFor(v);
+            // A tangent leaving its string lets it snap back as the yarn
+            // takes it: a small pluck as the note stops.
+            if (v.model == hammer::Tangent && v.dampTarget > 0.0f) v.course.push(0, -0.3f * v.speed);
         }
     }
 }
@@ -567,6 +740,8 @@ float Hammer::lift() const {
 
 float Hammer::damperFor(const Voice &v) const {
     if (v.held || v.spec == nullptr || !v.spec->damper) return 0.0f;
+    // A tangent keyboard's yarn is always on its strings: no pedal lifts it.
+    if (v.model == hammer::Tangent) return clampf(targetOf(Dampers), 0.0f, 1.0f);
     return clampf(targetOf(Dampers), 0.0f, 1.0f) * (1.0f - lift());
 }
 
@@ -581,7 +756,7 @@ void Hammer::pedal(int32_t which, float level01) {
     const float now = lift();
     // The dampers leaving the strings and landing on them again: a thump
     // through the board, more for a pedal stamped than eased.
-    pedalThump += targetOf(Noises) * (now - was);
+    if (!isElectric(modelNow())) pedalThump += targetOf(Noises) * (now - was);
     for (Voice &v : voices) {
         if (v.used && !v.held && !v.retiring) v.dampTarget = damperFor(v);
     }
@@ -593,7 +768,8 @@ void Hammer::pedal(int32_t which, float level01) {
 
 void Hammer::wakeSympathy(int key) {
     const float level = targetOf(Sympathy);
-    if (level <= 0.0f || lift() <= 0.0f) return;
+    // A dulcimer's strings are never damped: they always ring along.
+    if (level <= 0.0f || (lift() <= 0.0f && modelNow() != hammer::Dulcimer)) return;
     const bool full = fullDetail();
     const int slots = full ? kBank : kLeanBank;
     if (slots <= 0) return;
@@ -661,6 +837,12 @@ void Hammer::applyDamper(Voice &v) {
         const float t = clampf(e * bias, 0.0f, 1.0f);
         return std::exp(std::log(free) * (1.0f - t) + std::log(std::fmin(stopped, free)) * t);
     };
+    if (isBar(v.model)) {
+        const hammer::Bar::Spec &b = v.barSpec;
+        v.bar.setRing(blend(b.ring, damped, 1.0f), blend(b.barRing, damped, 1.0f), blend(b.overRing[0], damped * 0.3f, 1.6f),
+                      blend(b.overRing[1], damped * 0.3f, 1.6f));
+        return;
+    }
     const hammer::Course::Decay &free = v.design.decay;
     hammer::Course::Decay t;
     t.after1 = blend(free.after1, damped, 1.0f);
@@ -681,7 +863,7 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
         std::copy(sig, sig + 4, warmFor);
         warmKey = 21;
     }
-    if (warmKey < kSectionKeys) {
+    if (warmKey < kSectionKeys && !isBar(modelNow())) {
         warmer.tune(designFor(warmKey, hzOf(warmKey, static_cast<float>(warmKey)), fullDetail()));
         ++warmKey;
     }
@@ -690,7 +872,9 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
         for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
         return true;
     }
-    for (int32_t i = 0; i < frames; ++i) busL[i] = busR[i] = lowL[i] = lowR[i] = knockBus[i] = 0.0f;
+    for (int32_t i = 0; i < frames; ++i) busL[i] = busR[i] = lowL[i] = lowR[i] = knockBus[i] = elecL[i] = elecR[i] = 0.0f;
+    bool electric = false, acoustic = false;
+    const int pickups = steppedTargetOf(Pickups);
     // The board's share of each blow: the knock under the note.
     const float knockLevel = kKnock * paramOf(BoardLevel) / 0.7f;
     const float ramp = 1.0f / (kGainRamp * sampleRate);
@@ -705,13 +889,54 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
                                            : std::fmax(v.dampTarget, v.damp - damperStep);
             applyDamper(v);
         }
+        if (isBar(v.model)) {
+            // A bar through its pickup, to the amp; a celesta's or a toy's
+            // through the air, to the board (their case), its blow too.
+            const bool viaAmp = isElectric(v.model);
+            (viaAmp ? electric : acoustic) = true;
+            float *outL = viaAmp ? elecL : busL, *outR = viaAmp ? elecR : busR;
+            const bool knocks = !viaAmp && v.knock > 0.0f;
+            for (int32_t i = 0; i < frames; ++i) {
+                v.barX = v.bar.step();
+                const float s = v.pick.hear(v.barX);
+                if (v.retiring) v.gain = std::fmax(0.0f, v.gain - v.fade);
+                else v.gain += clampf(v.gainTarget - v.gain, -ramp * v.gainTarget, ramp * v.gainTarget);
+                const float out = s * v.gain;
+                outL[i] += out * v.panL;
+                outR[i] += out * v.panR;
+                if (knocks) {
+                    const float f = v.bar.blow();
+                    knockBus[i] += (f - v.force) * v.gain * v.knock * knockLevel;
+                    v.force = f;
+                }
+            }
+            const float loud = loudnessOf(v);
+            if (v.retiring && v.gain <= 0.0f) {
+                v.used = v.retiring = false;
+                v.gain = 0.0f;
+            } else if (!v.held && !v.bar.striking() && loud < kSilent) {
+                if (++v.quietBlocks > 8) v.used = false;
+            } else {
+                v.quietBlocks = 0;
+            }
+            continue;
+        }
+        const bool tangent = v.model == hammer::Tangent;
+        // A tangent keyboard is heard by its pickups, not through a board.
+        auto heard = [&]() {
+            const float atBridge = v.course.step();
+            if (!tangent) return atBridge;
+            const float a = v.course.pickup(0), b = v.course.pickup(1);
+            return kPickupLevel * (pickups == 0 ? a : pickups == 1 ? b : pickups == 2 ? 0.5f * (a + b) : a - b);
+        };
         const float impedance = v.spec->impedance;
-        float *busOutL = v.spec->zone == 0 ? lowL : busL;
-        float *busOutR = v.spec->zone == 0 ? lowR : busR;
+        float *busOutL = tangent ? elecL : (v.spec->zone == 0 ? lowL : busL);
+        float *busOutR = tangent ? elecR : (v.spec->zone == 0 ? lowR : busR);
+        (tangent ? electric : acoustic) = true;
         if (!v.felt.touching() && v.force == 0.0f && v.knockLive == 0 && phantom == 0.0f && !v.retiring) {
             // Only ringing: the strings, the gain and the pan.
             for (int32_t i = 0; i < frames; ++i) {
-                const float s = v.course.step();
+                const float s = heard();
                 v.gain += clampf(v.gainTarget - v.gain, -ramp * v.gainTarget, ramp * v.gainTarget);
                 const float out = s * v.gain * impedance;
                 busOutL[i] += out * v.panL;
@@ -731,7 +956,7 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
                 v.knockAt = (v.knockAt + 1) & (kKnockLine - 1);
                 v.knockLive = (v.felt.touching() || v.force != 0.0f) ? v.knockDelay + 1 : v.knockLive - 1;
             }
-            const float s = v.course.step();
+            const float s = heard();
             if (v.retiring) v.gain = std::fmax(0.0f, v.gain - v.fade);
             else v.gain += clampf(v.gainTarget - v.gain, -ramp * v.gainTarget, ramp * v.gainTarget);
             // The strings stretch as they swing, and their tension follows
@@ -746,7 +971,7 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
             busOutR[i] += out * v.panR;
         }
         // Let go and fallen silent: free.
-        const float loud = v.course.loudness() * v.gain * v.spec->impedance;
+        const float loud = loudnessOf(v);
         if (v.retiring && v.gain <= 0.0f) {
             v.used = v.retiring = v.designed = false;
             v.gain = 0.0f;
@@ -782,8 +1007,12 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
                 outL[i] += out * b.panL;
                 outR[i] += out * b.panR;
             }
-            if (lifted <= 0.0f && b.course.loudness() * impedance < kSilent) {
-                if (++b.quietBlocks > 8) b.used = false;
+            // With the pedal up it goes once it's quiet. A dulcimer's are
+            // never damped, so they get a second to start ringing first:
+            // freed after eight quiet blocks, a quiet note's never did.
+            const bool undamped = b.spec != nullptr && !b.spec->damper;
+            if ((lifted <= 0.0f || undamped) && b.course.loudness() * impedance < kSilent) {
+                if (++b.quietBlocks > (undamped ? 750 : 8)) b.used = false;
             } else {
                 b.quietBlocks = 0;
             }
@@ -799,13 +1028,39 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
     const float volume = paramOf(Volume);
     const float pan = paramOf(Pan);
     const float gl = std::cos((pan + 1.0f) * 0.785398f) * 1.41421f, gr = std::sin((pan + 1.0f) * 0.785398f) * 1.41421f;
-    for (int32_t i = 0; i < frames; ++i) {
-        float l, r;
-        float bl = lowL[i], br = lowR[i];
-        board.spreadBass(bl, br);
-        board.step(busL[i] + bl, busR[i] + br, knockBus[i], l, r);
-        L[i] = l * volume * gl;
-        R[i] = r * volume * gr;
+    // The board only while something's in it or it still rings: the
+    // electric pianos don't go through it.
+    if (acoustic || banked || knockBus[0] != 0.0f || board.loudness() > 1e-7f) {
+        for (int32_t i = 0; i < frames; ++i) {
+            float l, r;
+            float bl = lowL[i], br = lowR[i];
+            board.spreadBass(bl, br);
+            board.step(busL[i] + bl, busR[i] + br, knockBus[i], l, r);
+            L[i] = l * volume * gl;
+            R[i] = r * volume * gr;
+        }
+    } else {
+        for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
+    }
+    if (electric) {
+        const int model = modelNow();
+        if (isElectric(model)) amp.voice(model == hammer::Tine ? hammer::Amp::Tine : model == hammer::Reed ? hammer::Amp::Reed : hammer::Amp::Tangent);
+        // The mod wheel brings the tremolo in, up to all of it.
+        const float depth = clampf(targetOf(Tremolo) + (1.0f - targetOf(Tremolo)) * modWheel, 0.0f, 1.0f);
+        const int sync = steppedTargetOf(TremSync);
+        float rate = paramOf(TremRate), phase = -1.0f;
+        if (sync > 0) {
+            const float beats = dsp::Lfo::beatsOf(sync - 1);
+            rate = bpm / (60.0f * beats);
+            // Locked to the song while it moves; stopped, it runs on.
+            if (tick != syncedTick) phase = dsp::Lfo::phaseAt(tick, beats);
+            syncedTick = tick;
+        }
+        amp.process(elecL, elecR, frames, paramOf(Drive), kAmpNominal, depth, rate, phase, paramOf(TremWide));
+        for (int32_t i = 0; i < frames; ++i) {
+            L[i] += elecL[i] * volume * gl;
+            R[i] += elecR[i] * volume * gr;
+        }
     }
     clock += frames;
     if (!any && board.loudness() < 1e-6f) {

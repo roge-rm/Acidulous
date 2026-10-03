@@ -3,6 +3,7 @@
 #include <engine/machine/Machine.h>
 #include <engine/machine/hammer/Board.h>
 #include <engine/machine/hammer/Course.h>
+#include <engine/machine/hammer/Electric.h>
 #include <engine/machine/hammer/Felt.h>
 #include <engine/machine/hammer/Keys.h>
 
@@ -55,6 +56,8 @@ class Hammer final : public Machine {
     bool takesPedals() const override { return true; }
     void pedal(int32_t which, float level01) override;
     void pitchBend(int16_t value14) override;
+    void controlChange(uint8_t cc, uint8_t value) override;
+    void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
     bool render(float *L, float *R, int32_t frames) override;
 
     // For tools/hammer_test and tools/hammer_render: what each key is, to
@@ -70,8 +73,14 @@ class Hammer final : public Machine {
     static constexpr int kKeys = 128;
     /** Longest strike-to-bridge delay, samples (A0 is about 800). */
     static constexpr int kKnockLine = 2048;
-    /** The instruments made of strings, which have key tables (the first in hammer::Model). */
-    static constexpr int kStringModels = hammer::ElectricGrand + 1;
+    /** The instruments with key tables (all of hammer::Model). */
+    static constexpr int kKeyModels = hammer::Cimbalom + 1;
+    /** A tine, a reed, a celesta or a toy piano: a bar, not strings. */
+    static bool isBar(int model) {
+        return model == hammer::Tine || model == hammer::Reed || model == hammer::Celesta || model == hammer::Toy;
+    }
+    /** Heard through pickups and the amp, not the board. */
+    static bool isElectric(int model) { return model >= hammer::Tine && model <= hammer::Tangent; }
 
     struct Voice {
         bool used = false;
@@ -82,8 +91,16 @@ class Hammer final : public Machine {
         float fade = 0.0f;
         int key = 0;
         int note = 0;
-        /** What its key is, on the instrument it was struck on. */
+        /** What its key is, on the instrument it was struck on, and which instrument. */
         const hammer::KeySpec *spec = nullptr;
+        int model = 0;
+        /** A tine's or reed's bar, as struck, and its pickup; where the bar is. */
+        hammer::Bar bar;
+        hammer::Bar::Spec barSpec;
+        hammer::Pickup pick;
+        float barX = 0.0f;
+        /** How fast it was struck, m/s: what a tangent's release gives back. */
+        float speed = 0.0f;
         hammer::Course course;
         hammer::Felt felt;
         hammer::Course::Design design;
@@ -111,6 +128,10 @@ class Hammer final : public Machine {
 
     /** The key's strike: the course designed for it (if it changed) and the hammer thrown. */
     void strike(Voice &v, int key, float hz, float velocity01);
+    /** A tine's or reed's strike: its bar tuned and struck, its pickup placed. */
+    void strikeBar(Voice &v, int model, int key, float hz, float velocity01);
+    /** How loud [v] is now, whatever it is. */
+    float loudnessOf(const Voice &v) const;
     /** A voice for [key]: its own if it still rings, otherwise a free one or the quietest let go. */
     Voice *voiceFor(int key);
     /** The damper's decay times blended in for [v] at its damper position. */
@@ -134,8 +155,8 @@ class Hammer final : public Machine {
 
     float sampleRate = 48000.0f;
     Voice voices[kVoices];
-    hammer::KeySpec keys[kStringModels][kKeys];
-    float stiffness[kStringModels][kKeys] = {};
+    hammer::KeySpec keys[kKeyModels][kKeys];
+    float stiffness[kKeyModels][kKeys] = {};
     hammer::Board board;
     /** Keys below this have stiffness sections (Hammer.cpp), kept here, lean and full. */
     static constexpr int kSectionKeys = 36;
@@ -178,6 +199,11 @@ class Hammer final : public Machine {
     float busL[kBlockFrames] = {}, busR[kBlockFrames] = {}, knockBus[kBlockFrames] = {};
     /** The bass keys' own bus, for the bass bridge's way across the board. */
     float lowL[kBlockFrames] = {}, lowR[kBlockFrames] = {};
+    /** The electric pianos' bus, into the amp. */
+    float elecL[kBlockFrames] = {}, elecR[kBlockFrames] = {};
+    hammer::Amp amp;
+    float modWheel = 0.0f, bpm = 120.0f;
+    int64_t tick = 0, syncedTick = -1;
 };
 
 } // namespace acidulous::machine

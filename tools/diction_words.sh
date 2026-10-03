@@ -5,7 +5,7 @@
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"
-OUT="${1:-/srv/downloads/temp/debug/audition/Diction-words}"
+OUT="${1:-/srv/downloads/temp/debug/acidulous/audition/Diction-words}"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
 LIB=$("$ROOT/tools/host_engine.sh") || exit 1

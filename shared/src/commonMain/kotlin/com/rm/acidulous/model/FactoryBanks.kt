@@ -2861,21 +2861,235 @@ internal object FactoryBanks {
     private val bias: List<Patch> by lazy { listOf(bias0(), bias1(), bias2(), bias3(), bias4(), bias5(), bias6(), bias7(), bias8(), bias9(), bias10(), bias11(), bias12(), bias13(), bias14(), bias15(), bias16()) }
 
     private fun hammer0() = Patch("Hammer", "Init", emptyMap(),
-        family = "grand")
+        family = "grand",
+        low = 21, high = 108)
 
     private fun hammer1() = Patch("Hammer", "Mellow Grand",
-        mapOf("hardness" to 0.325f, "tone" to 0.35f),
-        family = "grand")
+        mapOf("hardness" to 0.325f, "tone" to 0.35f, "volume" to 0.74f),
+        family = "grand",
+        low = 21, high = 108)
 
     private fun hammer2() = Patch("Hammer", "Bright Grand",
         mapOf("hardness" to 0.7f, "hardkey" to 0.6f, "position" to 0.4f, "tone" to 0.65f),
-        family = "grand")
+        family = "grand",
+        low = 21, high = 108)
 
     private fun hammer3() = Patch("Hammer", "Felt Room",
-        mapOf("hardness" to 0.15f, "sustain" to 0.3f, "unison" to 0.2f),
-        family = "grand")
+        mapOf("hardness" to 0.15f, "sustain" to 0.3f, "unison" to 0.2f, "volume" to 1f),
+        family = "grand",
+        low = 21, high = 108)
 
-    private val hammer: List<Patch> by lazy { listOf(hammer0(), hammer1(), hammer2(), hammer3()) }
+    private fun hammer4() = Patch("Hammer", "Baby Grand",
+        mapOf("size" to 0f, "hardness" to 0.55f, "volume" to 0.5733333f),
+        family = "grand",
+        low = 21, high = 108)
+
+    private fun hammer5() = Patch("Hammer", "Salon Grand",
+        mapOf("size" to 0.5f, "lid" to 0.5f, "tail" to 0.8f, "mic" to 1f),
+        family = "grand",
+        low = 21, high = 108)
+
+    private fun hammer6() = Patch("Hammer", "Pop Grand",
+        mapOf("hardness" to 0.8f, "hardkey" to 0.65f, "stretch" to 0.65f, "mic" to 0.6666667f, "width" to 1f, "volume" to 0.566666663f),
+        family = "grand",
+        low = 21, high = 108)
+
+    private fun hammer7() = Patch("Hammer", "Jazz Club",
+        mapOf("age" to 0.45f, "hardness" to 0.425f, "tone" to 0.4f, "tail" to 0.7f, "mic" to 0.333333343f, "volume" to 0.78f),
+        family = "grand",
+        low = 21, high = 108)
+
+    private fun hammer8() = Patch("Hammer", "Concert Hall",
+        mapOf("hardness" to 0.4f, "sustain" to 0.65f, "sympathy" to 0.8f, "tail" to 1f, "mic" to 0.333333343f),
+        family = "grand",
+        low = 21, high = 108)
+
+    private fun hammer9() = Patch("Hammer", "Upright",
+        mapOf("model" to 0.09090909f),
+        family = "upright",
+        low = 21, high = 108)
+
+    private fun hammer10() = Patch("Hammer", "Parlour Upright",
+        mapOf("model" to 0.09090909f, "age" to 0.5f, "seed" to 0.428571433f, "hardness" to 0.375f, "volume" to 0.94f),
+        family = "upright",
+        low = 21, high = 108)
+
+    private fun hammer11() = Patch("Hammer", "Felt Upright",
+        mapOf("model" to 0.09090909f, "felt" to 0.8f, "lid" to 0.3f, "volume" to 1f),
+        family = "upright",
+        low = 21, high = 108)
+
+    private fun hammer12() = Patch("Hammer", "Honky-Tonk",
+        mapOf("model" to 0.181818187f),
+        family = "upright",
+        low = 21, high = 108)
+
+    private fun hammer13() = Patch("Hammer", "Tack Piano",
+        mapOf("model" to 0.181818187f, "tacks" to 0.85f, "unison" to 0.2f),
+        family = "upright",
+        low = 21, high = 108)
+
+    private fun hammer14() = Patch("Hammer", "Saloon",
+        mapOf("model" to 0.181818187f, "age" to 0.8f, "seed" to 0.714285731f, "hardness" to 0.65f, "unison" to 0.533333361f, "volume" to 0.586666644f),
+        family = "upright",
+        low = 21, high = 108)
+
+    private fun hammer15() = Patch("Hammer", "Tine",
+        mapOf("model" to 0.454545468f),
+        family = "electric",
+        low = 28, high = 100)
+
+    private fun hammer16() = Patch("Hammer", "Tine Bark",
+        mapOf("model" to 0.454545468f, "pickup" to 0.85f, "offset" to 0.55f, "drive" to 0.35f, "volume" to 0.453333348f),
+        family = "electric",
+        low = 28, high = 100)
+
+    private fun hammer17() = Patch("Hammer", "Tine Autopan",
+        mapOf("model" to 0.454545468f, "tremolo" to 0.55f, "tremrate" to 0.7104212f, "volume" to 0.9066667f),
+        family = "electric",
+        low = 28, high = 100)
+
+    private fun hammer18() = Patch("Hammer", "Tine Ballad",
+        mapOf("model" to 0.454545468f, "hardness" to 0.35f, "pickup" to 0.2f, "offset" to 0.75f, "tonebar" to 0.8f),
+        family = "electric",
+        low = 28, high = 100)
+
+    private fun hammer19() = Patch("Hammer", "Glass Tine",
+        mapOf("model" to 0.454545468f, "sustain" to 0.7f, "offset" to 0.475f, "tonebar" to 0.9f, "volume" to 0.353333324f),
+        family = "electric",
+        low = 28, high = 100)
+
+    private fun hammer20() = Patch("Hammer", "Reed",
+        mapOf("model" to 0.545454562f),
+        family = "electric",
+        low = 33, high = 96)
+
+    private fun hammer21() = Patch("Hammer", "Reed Growl",
+        mapOf("model" to 0.545454562f, "pickup" to 0.75f, "drive" to 0.6f, "volume" to 0.5733333f),
+        family = "electric",
+        low = 33, high = 96)
+
+    private fun hammer22() = Patch("Hammer", "Reed Tremolo",
+        mapOf("model" to 0.545454562f, "tremolo" to 0.6f, "tremrate" to 0.8004371f, "tremwide" to 0f, "volume" to 0.880000055f),
+        family = "electric",
+        low = 33, high = 96)
+
+    private fun hammer23() = Patch("Hammer", "Electric Grand",
+        mapOf("model" to 0.363636374f),
+        family = "electric",
+        low = 21, high = 108)
+
+    private fun hammer24() = Patch("Hammer", "Tangent",
+        mapOf("model" to 0.6363636f),
+        family = "keys",
+        low = 29, high = 88)
+
+    private fun hammer25() = Patch("Hammer", "Tangent Muted",
+        mapOf("model" to 0.6363636f, "pickups" to 0.333333343f, "mute" to 0.7f),
+        family = "keys",
+        low = 29, high = 88)
+
+    private fun hammer26() = Patch("Hammer", "Tangent Funk",
+        mapOf("model" to 0.6363636f, "pickups" to 1f, "drive" to 0.4f, "volume" to 0.599999964f),
+        family = "keys",
+        low = 29, high = 88)
+
+    private fun hammer27() = Patch("Hammer", "Fortepiano",
+        mapOf("model" to 0.272727281f),
+        family = "keys",
+        low = 29, high = 89)
+
+    private fun hammer28() = Patch("Hammer", "Fortepiano Moderator",
+        mapOf("model" to 0.272727281f, "felt" to 0.7f),
+        family = "keys",
+        low = 29, high = 89)
+
+    private fun hammer29() = Patch("Hammer", "Celesta",
+        mapOf("model" to 0.727272749f),
+        family = "bells",
+        low = 60, high = 108)
+
+    private fun hammer30() = Patch("Hammer", "Celesta Box",
+        mapOf("model" to 0.727272749f, "hardness" to 0.3f, "sustain" to 0.7f, "mic" to 1f, "volume" to 0.50666666f),
+        family = "bells",
+        low = 60, high = 108)
+
+    private fun hammer31() = Patch("Hammer", "Music Box",
+        mapOf("model" to 0.727272749f, "hardness" to 0.9f, "sustain" to 0.25f, "volume" to 0.9066667f, "octave" to 0.6666667f),
+        family = "bells",
+        low = 67, high = 108)
+
+    private fun hammer32() = Patch("Hammer", "Toy Piano",
+        mapOf("model" to 0.8181818f),
+        family = "bells",
+        low = 55, high = 96)
+
+    private fun hammer33() = Patch("Hammer", "Toy Lullaby",
+        mapOf("model" to 0.8181818f, "hardness" to 0.25f, "tail" to 1f, "mic" to 1f, "volume" to 0.74f),
+        family = "bells",
+        low = 55, high = 96)
+
+    private fun hammer34() = Patch("Hammer", "Bell Tine",
+        mapOf("model" to 0.454545468f, "hardness" to 0.85f, "sustain" to 0.75f, "offset" to 1f, "tonebar" to 0.05f, "volume" to 0.586666644f),
+        family = "bells",
+        low = 48, high = 100)
+
+    private fun hammer35() = Patch("Hammer", "Dulcimer",
+        mapOf("model" to 0.909090936f),
+        family = "strings",
+        low = 50, high = 88)
+
+    private fun hammer36() = Patch("Hammer", "Bright Dulcimer",
+        mapOf("model" to 0.909090936f, "hardness" to 0.8f),
+        family = "strings",
+        low = 50, high = 88)
+
+    private fun hammer37() = Patch("Hammer", "Soft Dulcimer",
+        mapOf("model" to 0.909090936f, "hardness" to 0.199999988f, "sustain" to 0.7f),
+        family = "strings",
+        low = 50, high = 88)
+
+    private fun hammer38() = Patch("Hammer", "Cimbalom",
+        mapOf("model" to 1f),
+        family = "strings",
+        low = 40, high = 88)
+
+    private fun hammer39() = Patch("Hammer", "Cotton Cimbalom",
+        mapOf("model" to 1f, "hardness" to 0.15f, "dampers" to 0.2f, "volume" to 0.8666666f),
+        family = "strings",
+        low = 40, high = 88)
+
+    private fun hammer40() = Patch("Hammer", "Rubber Mutes",
+        mapOf("prep" to 0.2f, "prep at" to 0.4f, "prepamt" to 0.6f, "volume" to 1f),
+        family = "strange",
+        low = 21, high = 108)
+
+    private fun hammer41() = Patch("Hammer", "Screws and Bolts",
+        mapOf("seed" to 0.2857143f, "prep" to 1f, "prepamt" to 0.7f, "volume" to 0.84f),
+        family = "strange",
+        low = 21, high = 108)
+
+    private fun hammer42() = Patch("Hammer", "Paper Buzz",
+        mapOf("prep" to 0.8f, "prepamt" to 0.6f, "volume" to 0.82f),
+        family = "strange",
+        low = 21, high = 108)
+
+    private fun hammer43() = Patch("Hammer", "Gamelan Keys",
+        mapOf("model" to 0.09090909f, "prep" to 0.4f, "prepkeys" to 0.4f, "prep at" to 0.25f, "prepamt" to 0.8f, "volume" to 0.46f),
+        family = "strange",
+        low = 36, high = 96)
+
+    private fun hammer44() = Patch("Hammer", "Stiff Wire",
+        mapOf("hardness" to 0.65f, "stiffness" to 1f, "stretch" to 1f, "volume" to 0.5f),
+        family = "strange",
+        low = 21, high = 96)
+
+    private fun hammer45() = Patch("Hammer", "Ghost Strings",
+        mapOf("hardness" to 0.099999994f, "sustain" to 0.8f, "sympathy" to 1f, "tail" to 1f, "mic" to 1f, "volume" to 0.84f),
+        family = "strange",
+        low = 21, high = 108)
+
+    private val hammer: List<Patch> by lazy { listOf(hammer0(), hammer1(), hammer2(), hammer3(), hammer4(), hammer5(), hammer6(), hammer7(), hammer8(), hammer9(), hammer10(), hammer11(), hammer12(), hammer13(), hammer14(), hammer15(), hammer16(), hammer17(), hammer18(), hammer19(), hammer20(), hammer21(), hammer22(), hammer23(), hammer24(), hammer25(), hammer26(), hammer27(), hammer28(), hammer29(), hammer30(), hammer31(), hammer32(), hammer33(), hammer34(), hammer35(), hammer36(), hammer37(), hammer38(), hammer39(), hammer40(), hammer41(), hammer42(), hammer43(), hammer44(), hammer45()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

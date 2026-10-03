@@ -1,6 +1,7 @@
 # Hammer
 
-> Modelled pianos: felt hammers, strings and a soundboard.
+> Modelled pianos and their relatives: hammers striking strings and bars,
+> heard through a soundboard or pickups.
 
 Hammer doesn't play recordings. A felt hammer is thrown at real strings that
 ring through a soundboard, so it plays like a piano: harder is brighter as well
@@ -21,8 +22,20 @@ grand.
 - **fortepiano** - a piano from around 1800: light leather hammers, thin
   strings, a quick, clear sound with a knock in it.
 - **electric grand** - short strings heard by pickups instead of a board.
-
-The other models are still to come and play the grand for now.
+- **tine** - a hammer strikes a thin metal tine beside a tuned bar, and a
+  pickup hears it: a bell on top, a long warm note, a bark when you dig in.
+- **reed** - a steel reed and a pickup that hears it more on one side than the
+  other: reedier, quicker to die, a growl when played hard.
+- **tangent** - a metal tangent strikes a string and stays on it while the key
+  is down; let go and the note stops dead. Two pickups under the strings.
+- **celesta** - felt hammers on steel bars, each over a small wooden box: a
+  soft bell, with dampers and a pedal.
+- **toy** - hard little hammers on metal rods in a plastic box: clangy, short,
+  never quite in tune (the seed picks how), no dampers.
+- **dulcimer** - light wooden hammers on courses of thin strings, with no
+  dampers at all, so everything rings into everything.
+- **cimbalom** - a big dulcimer: heavier strings, soft hammers, and a damper
+  pedal.
 
 **size** goes from a baby grand to a concert grand: a smaller one has a
 thinner, stiffer bass. **age** wears the piano in. The hammers get harder,
@@ -110,6 +123,24 @@ Things put on the strings, as a prepared piano has them.
 - **where** - how far along the string. Near the end changes less.
 - **amount** - how heavy, how loose, how much.
 
+## Electric
+
+For the tine, reed and tangent models.
+
+- **near** - how close the pickup is. Nearer barks sooner.
+- **offset** - how far the tine sits off the pickup's centre. Near the centre
+  it sounds an octave up and hollow; further off it's the note, purer.
+- **tonebar** - how much of a tine's note its tonebar holds: more is longer and
+  smoother, less is more bell.
+- **pickups** - which of the tangent's pickups you hear: the one by the
+  **bridge** (bright), the **neck** one (fuller), **both**, or both
+  **against** each other (thin and hollow). **mute** is a felt strip on the
+  strings: short and plucky.
+- **drive** - the amp, from clean to rough.
+- **depth**, **rate** and **pan** are the tremolo. **sync** locks it to the
+  tempo. With **pan** at the top it swings from side to side instead of up
+  and down. The mod wheel brings the tremolo in.
+
 ## Out
 
 **volume** and **pan**, and the tuning: **bend**, **octave**,
@@ -125,3 +156,4 @@ plays the whole model.
 - For an older piano, turn up **age**, or **tone** down and **unison** up a
   little.
 - Hold the sustain pedal and play low: the strings ring into each other.
+- For a tine piano that growls, turn **near** up and play hard.

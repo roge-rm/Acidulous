@@ -226,4 +226,77 @@ constexpr VelocityShape kElectricGrandAVelocity[3] = {
     {3.67f, 13.5f},
 };
 
+// The electric pianos: a tine instrument and a reed one. Their partials
+// are the pickups' (their bars are nearly pure), so what's used is how long
+// the fundamental rings. The reed recording's notes are cut short; its
+// times are what a fit over a few seconds says.
+
+// TineA: measured from a reference recording by tools/hammer_reference/tables.py --emit.
+// Columns: key, B, cents, t60 1 prompt, t60 1 after, t60 2-4 prompt, t60 2-4 after, t60 5-10 prompt, t60 5-10 after, knee dB, wobble dB, reach Hz, bright x f0.
+constexpr Anchor kTineA[] = {
+    {21, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {24, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {28, 6.801e-11f, 2.783f, 31.51f, 31.62f, 9.001f, 14.03f, 4.82f, 6.542f, 6.925f, 3.437f, 865.5f, 4.842f},
+    {33, 9.448e-09f, 3.268f, 31.33f, 31.38f, 8.869f, 12.85f, 4.315f, 6.139f, 9.196f, 2.871f, 828.7f, 3.674f},
+    {36, 8.111e-08f, 3.493f, 30.79f, 30.81f, 8.662f, 12.1f, 3.961f, 5.842f, 10.35f, 2.559f, 813.3f, 3.152f},
+    {40, 6.260e-07f, 3.726f, 29.6f, 29.59f, 8.252f, 11.07f, 3.455f, 5.397f, 11.66f, 2.177f, 800.1f, 2.607f},
+    {45, 2.608e-06f, 3.921f, 27.46f, 27.42f, 7.555f, 9.765f, 2.809f, 4.785f, 12.92f, 1.751f, 794.8f, 2.104f},
+    {48, 3.738e-06f, 3.995f, 25.89f, 25.84f, 7.061f, 8.987f, 2.434f, 4.402f, 13.47f, 1.524f, 797.5f, 1.874f},
+    {52, 3.822e-06f, 4.051f, 23.55f, 23.49f, 6.343f, 7.972f, 1.966f, 3.886f, 13.96f, 1.254f, 807.9f, 1.629f},
+    {57, 2.293e-06f, 4.067f, 20.38f, 20.33f, 5.397f, 6.766f, 1.452f, 3.256f, 14.2f, 0.9685f, 832.6f, 1.399f},
+    {60, 1.406e-06f, 4.056f, 18.42f, 18.39f, 4.827f, 6.084f, 1.187f, 2.895f, 14.14f, 0.8254f, 854.0f, 1.293f},
+    {64, 6.683e-07f, 4.024f, 15.85f, 15.83f, 4.089f, 5.234f, 0.888f, 2.442f, 13.82f, 0.6674f, 891.0f, 1.182f},
+    {69, 2.771e-07f, 3.973f, 12.8f, 12.79f, 3.233f, 4.275f, 0.5957f, 1.933f, 13.05f, 0.5224f, 952.6f, 1.08f},
+    {72, 1.863e-07f, 3.942f, 11.1f, 11.1f, 2.767f, 3.756f, 0.4599f, 1.661f, 12.38f, 0.4636f, 998.9f, 1.036f},
+    {76, 1.444e-07f, 3.912f, 9.033f, 9.05f, 2.21f, 3.134f, 0.3184f, 1.34f, 11.25f, 0.4178f, 1073.0f, 0.9947f},
+    {81, 1.986e-07f, 3.903f, 6.803f, 6.83f, 1.624f, 2.463f, kGap, kGap, 9.454f, 0.4132f, 1190.0f, 0.9675f},
+    {84, 3.752e-07f, 3.921f, 5.659f, 5.691f, 1.33f, 2.115f, kGap, kGap, 8.175f, 0.4385f, 1276.0f, 0.9635f},
+    {88, 1.663e-06f, 3.981f, 4.357f, 4.391f, 1.002f, 1.711f, kGap, kGap, 6.232f, 0.5049f, 1412.0f, 0.972f},
+    {93, 3.643e-05f, 4.126f, 3.061f, 3.095f, 0.6838f, 1.294f, kGap, kGap, 3.423f, 0.6406f, 1625.0f, 1.006f},
+    {96, 4.958e-04f, 4.259f, 2.443f, 2.475f, 0.5359f, 1.086f, kGap, kGap, 1.534f, 0.7501f, 1780.0f, 1.04f},
+    {100, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {105, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {108, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+};
+// Per 10 velocity steps, keys 21-47 / 48-71 / 72-108: brightness % and reach %.
+constexpr VelocityShape kTineAVelocity[3] = {
+    {24.1f, 33.6f},
+    {11.3f, 18.6f},
+    {0.0213f, 0.0415f},
+};
+
+// ReedA: measured from a reference recording by tools/hammer_reference/tables.py --emit.
+// Columns: key, B, cents, t60 1 prompt, t60 1 after, t60 2-4 prompt, t60 2-4 after, t60 5-10 prompt, t60 5-10 after, knee dB, wobble dB, reach Hz, bright x f0.
+constexpr Anchor kReedA[] = {
+    {21, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {24, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {28, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {33, 2.081e-07f, 5.408f, kGap, kGap, 68.01f, kGap, 25.11f, kGap, 0.7507f, 0.07329f, 932.9f, 5.98f},
+    {36, 1.389e-07f, 5.931f, kGap, kGap, 45.34f, kGap, 23.27f, kGap, 0.3594f, 0.09958f, 982.5f, 5.073f},
+    {40, 8.839e-08f, 6.19f, 81.38f, kGap, 27.23f, kGap, 20.17f, kGap, -0.04259f, 0.1298f, 1047.0f, 4.119f},
+    {45, 6.166e-08f, 5.934f, 42.46f, kGap, 15.12f, kGap, 15.8f, kGap, -0.3526f, 0.1598f, 1125.0f, 3.234f},
+    {48, 5.736e-08f, 5.536f, 29.66f, kGap, 10.91f, kGap, 13.17f, kGap, -0.4359f, 0.1736f, 1170.0f, 2.825f},
+    {52, 6.417e-08f, 4.798f, 19.06f, kGap, 7.277f, kGap, 9.911f, kGap, -0.4273f, 0.1872f, 1226.0f, 2.385f},
+    {57, 1.102e-07f, 3.663f, 11.64f, kGap, 4.609f, kGap, 6.504f, kGap, -0.224f, 0.1964f, 1289.0f, 1.966f},
+    {60, 1.952e-07f, 2.934f, 8.93f, kGap, 3.598f, kGap, 4.877f, kGap, 0.0006051f, 0.1978f, 1322.0f, 1.767f},
+    {64, 5.822e-07f, 1.985f, 6.508f, kGap, 2.666f, kGap, 3.187f, kGap, 0.4198f, 0.1948f, 1361.0f, 1.551f},
+    {69, 4.139e-06f, 0.954f, 4.648f, kGap, 1.926f, kGap, kGap, kGap, 1.136f, 0.1833f, 1401.0f, 1.342f},
+    {72, 1.909e-05f, 0.485f, 3.919f, kGap, 1.627f, kGap, kGap, kGap, 1.669f, 0.1722f, 1419.0f, 1.243f},
+    {76, 2.303e-04f, 0.1102f, 3.239f, kGap, 1.339f, kGap, kGap, kGap, 2.499f, 0.1526f, 1435.0f, 1.134f},
+    {81, kGap, 0.1674f, 2.706f, kGap, 1.103f, kGap, kGap, kGap, 3.728f, 0.1203f, 1445.0f, 1.03f},
+    {84, kGap, 0.5476f, 2.507f, kGap, 1.008f, kGap, kGap, kGap, 4.569f, 0.09681f, 1444.0f, 0.9818f},
+    {88, kGap, 1.535f, 2.349f, kGap, 0.9223f, kGap, kGap, kGap, 5.809f, 0.0606f, 1437.0f, 0.9315f},
+    {93, kGap, 3.663f, 2.297f, kGap, kGap, kGap, kGap, kGap, 7.552f, 0.00755f, 1415.0f, 0.8882f},
+    {96, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {100, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {105, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+    {108, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap, kGap},
+};
+// Per 10 velocity steps, keys 21-47 / 48-71 / 72-108: brightness % and reach %.
+constexpr VelocityShape kReedAVelocity[3] = {
+    {13.2f, 21.5f},
+    {11.4f, 14.6f},
+    {0.597f, 9.35f},
+};
+
 } // namespace acidulous::machine::hammer

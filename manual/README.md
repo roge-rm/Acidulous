@@ -15,7 +15,7 @@
     - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
     - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.
     - [Genesis](04-the-machines/genesis.md) - the big drum box, with a bus compressor the kick ducks.
-    - [Hammer](04-the-machines/hammer.md) - modelled pianos: felt hammers, strings and a soundboard.
+    - [Hammer](04-the-machines/hammer.md) - heard through a soundboard or pickups.
     - [Hexbeat](04-the-machines/hexbeat.md) - synthesized drums in the style of the classic small boxes, with a bigger kit.
     - [Manual](04-the-machines/manual.md) - the organ: two manuals and pedals, four models and a rotary cabinet.
     - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
