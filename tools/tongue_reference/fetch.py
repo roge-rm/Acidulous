@@ -10,7 +10,8 @@ set without one is refused.
     fetch.py [set ...]     every set when none is named
 
 A set is a "url" (an archive, unpacked by "unpack": tar, 7z, zip or none),
-"urls" (single files), or "api_dir" (a GitHub folder, every file in it). It
+"urls" (single files), or "api_dir" / "api_dirs" (GitHub folders, every
+file in each). It
 lands in <folder>/<set>/, with `fetched.json` recording what came and its
 sha256, so it isn't fetched again.
 """
@@ -75,8 +76,8 @@ def fetch(name, spec, root):
             unpack(archive, here, spec['unpack'])
             os.remove(archive)
     urls = list(spec.get('urls', []))
-    if 'api_dir' in spec:
-        with urllib.request.urlopen(spec['api_dir']) as r:
+    for listing in ([spec['api_dir']] if 'api_dir' in spec else []) + list(spec.get('api_dirs', [])):
+        with urllib.request.urlopen(listing) as r:
             urls += [item['download_url'] for item in json.load(r) if item.get('type') == 'file']
     for u in urls:
         path = os.path.join(here, urllib.parse.unquote(os.path.basename(urllib.parse.urlparse(u).path)))
