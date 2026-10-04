@@ -1816,17 +1816,22 @@ fun App(modifier: Modifier = Modifier) {
     // the song and transport when they run rather than holding them, for the
     // same reason.
     val hidden = screen !is Screen.Main
+    // What the main screen last saw, kept while it's hidden behind the editor.
+    val heldPosition = remember { arrayOf(position) }
+    val heldLaunches = remember { arrayOf(launchStates) }
     val playingNow by rememberUpdatedState(playing)
     com.rm.acidulous.ui.KeepBuilt(!hidden) {
         MainScreen(
-            song = heldWhile(hidden, song), editor = editor, position = heldWhile(hidden, position),
+            song = heldWhile(hidden, song), editor = editor,
+            // Read inside the screen, where it's shown: see MainScreen.
+            position = { if (hidden) heldPosition[0] else position.also { heldPosition[0] = it } },
             playing = heldWhile(hidden, playing), armed = heldWhile(hidden, armed),
             performTrack = heldWhile(hidden, midiTrack),
             looper = looper,
             countInBeats = heldWhile(hidden, countInBeats),
-            elapsedSeconds = heldWhile(hidden, elapsedSeconds),
+            elapsedSeconds = { elapsedSeconds },
             clipMode = heldWhile(hidden, com.rm.acidulous.ui.UiPrefs.clipMode),
-            launchStates = heldWhile(hidden, launchStates),
+            launchStates = { if (hidden) heldLaunches[0] else launchStates.also { heldLaunches[0] = it } },
             onClipMode = onClipMode,
             loopScene = heldWhile(hidden, loopScene), stopAtEnd = heldWhile(hidden, stopAtEnd),
             queuedScene = heldWhile(hidden, queuedScene),

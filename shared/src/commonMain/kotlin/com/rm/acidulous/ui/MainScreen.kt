@@ -18,6 +18,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -118,10 +119,11 @@ import com.rm.acidulous.res.*
 fun MainScreen(
     song: Song,
     editor: SongEditor,
-    position: Position,
+    /** Read where it's shown: the screen itself recomposes only when the scene or repeat changes. */
+    position: () -> Position,
     countInBeats: Int = 0,
     /** Whole seconds played since play, held after a stop. */
-    elapsedSeconds: Int = 0,
+    elapsedSeconds: () -> Int = { 0 },
     playing: Boolean,
     armed: Boolean,
     loopScene: Boolean,
@@ -129,7 +131,8 @@ fun MainScreen(
     queuedScene: Int,
     /** Clip mode: the grid as a launcher, one state per track. */
     clipMode: Boolean,
-    launchStates: List<LaunchState>,
+    /** Read like [position]: each track's launch, its tick changing every poll. */
+    launchStates: () -> List<LaunchState>,
     onClipMode: (Boolean) -> Unit,
     bpm: Float,
     /** Read by the readout itself, so the numbers changing redraw it and nothing else. */
@@ -200,10 +203,16 @@ fun MainScreen(
     // readout stays at the bottom either way, there's no room for it up there.
     val shape = screenShape()
     val landscape = shape == ScreenShape.Wide
-    val scene = song.scenes.getOrNull(position.scene)
-    val ticksPerBar = scene?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
-    val bar = position.tickInIteration / ticksPerBar + 1
-    val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
+    // The scene, the repeat and each track's launch without its tick change
+    // rarely, so the screen recomposes only when they do. The ticks change
+    // every poll and are read where they're shown: the readout, the scene
+    // headers' bars and the clips' playheads. Read in the screen itself, they
+    // rebuilt the whole grid every 80 ms, a core's worth on a slow tablet.
+    val positionNow by rememberUpdatedState(position)
+    val launchNow by rememberUpdatedState(launchStates)
+    val atScene by remember { derivedStateOf { positionNow().scene } }
+    val atRepeat by remember { derivedStateOf { positionNow().repeat } }
+    val launches by remember { derivedStateOf { launchNow().map { it.copy(tickInCycle = 0L) } } }
     /**
      * Song position and engine load.
      *
@@ -218,7 +227,7 @@ fun MainScreen(
                     // through its own clip's cycle it is. Every track keeps
                     // its own count.
                     val live = song.tracks.indices.mapNotNull { t ->
-                        val st = launchStates.getOrElse(t) { LaunchState.idle }
+                        val st = launchNow().getOrElse(t) { LaunchState.idle }
                         if (!st.playing) {
                             null
                         } else {
@@ -236,24 +245,28 @@ fun MainScreen(
                     // The count-in replaces the position while it runs.
                     stringResource(Res.string.main_counting_in, countInBeats)
                 } else {
+                    val at = positionNow()
+                    val scene = song.scenes.getOrNull(at.scene)
+                    val ticksPerBar = scene?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
                     stringResource(
                         Res.string.main_where_song,
-                        position.scene + 1, scene?.name ?: "-",
-                        position.repeat + 1, scene?.repeat ?: 1, bar.toInt(), beat.toInt(),
+                        at.scene + 1, scene?.name ?: "-", at.repeat + 1, scene?.repeat ?: 1,
+                        (at.tickInIteration / ticksPerBar + 1).toInt(), ((at.tickInIteration % ticksPerBar) / PPQN + 1).toInt(),
                     )
                 }
             val whereColour = if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi
             // The time, on the right. In clip mode only the time since play
             // means anything; in song mode a tap goes through the three.
             val time = if (clipMode) {
-                stringResource(Res.string.main_time_since, clock(elapsedSeconds))
+                stringResource(Res.string.main_time_since, clock(elapsedSeconds()))
             } else {
                 val length = song.durationSeconds()
-                val at = song.secondsAt(position.scene, position.repeat, position.tickInIteration)
+                val now = positionNow()
+                val at = song.secondsAt(now.scene, now.repeat, now.tickInIteration)
                 when (UiPrefs.songTime) {
                     SongTime.Position -> stringResource(Res.string.main_time_at, clock(at.toInt()), clock(length.toInt()))
                     SongTime.Remaining -> stringResource(Res.string.main_time_left, clock(kotlin.math.ceil(length - at).toInt().coerceAtLeast(0)))
-                    SongTime.Elapsed -> stringResource(Res.string.main_time_since, clock(elapsedSeconds))
+                    SongTime.Elapsed -> stringResource(Res.string.main_time_since, clock(elapsedSeconds()))
                 }
             }
             val timeLabel = stringResource(Res.string.main_time_switch)
@@ -346,8 +359,8 @@ fun MainScreen(
             ) {
                 // In clip mode stop has two stages: once to let every clip
                 // finish its cycle, again to cut.
-                val anyLaunched = clipMode && launchStates.any { it.playing }
-                val anyStopping = clipMode && launchStates.any { it.stopping }
+                val anyLaunched = clipMode && launches.any { it.playing }
+                val anyStopping = clipMode && launches.any { it.stopping }
                 // Upright the whole row is one bar: panic and the song pill at
                 // the left, the transport on the right, and the slack between
                 // them.
@@ -416,7 +429,7 @@ fun MainScreen(
                     holdName = stringResource(Res.string.a11y_stop_all),
                 ) {
                     when {
-                        !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else position.scene, clipMode)
+                        !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else positionNow().scene, clipMode)
                         clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
                         else -> NativeEngine.transportStop()
                     }
@@ -428,10 +441,10 @@ fun MainScreen(
     // See ui/Keys.kt.
     KeyScope(
         KeyAction.PlayStop to {
-            val anyLaunched = clipMode && launchStates.any { it.playing }
-            val anyStopping = clipMode && launchStates.any { it.stopping }
+            val anyLaunched = clipMode && launches.any { it.playing }
+            val anyStopping = clipMode && launches.any { it.stopping }
             when {
-                !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else position.scene, clipMode)
+                !playing -> com.rm.acidulous.engine.EngineSync.play(if (clipMode) 0 else positionNow().scene, clipMode)
                 clipMode && anyLaunched && !anyStopping -> NativeEngine.stopAllClips()
                 else -> NativeEngine.transportStop()
             }
@@ -697,10 +710,10 @@ fun MainScreen(
                         // header is live when some rack is sounding a clip from
                         // it, and its progress is that rack's own cycle.
                         val onThisScene = if (!clipMode) null else song.tracks.indices.firstNotNullOfOrNull { t ->
-                            launchStates.getOrElse(t) { LaunchState.idle }
+                            launches.getOrElse(t) { LaunchState.idle }
                                 .takeIf { it.playing && it.scene == index }?.let { t to it }
                         }
-                        val isCurrent = if (clipMode) onThisScene != null else playing && position.scene == index
+                        val isCurrent = if (clipMode) onThisScene != null else playing && atScene == index
                         val bars = song.barsOf(scene)
                         val iterTicks = bars * song.signatureOf(scene).ticksPerBar
                         // bars x repeat, the same cycle the launcher counts.
@@ -714,21 +727,24 @@ fun MainScreen(
                             // Which way the tempo ramp goes, if the scene has
                             // one.
                             rampMark = scene.ramp?.let { r -> if (r.toBpm < (scene.tempo?.bpm ?: song.tempo)) "↘" else "↗" },
+                            // Read as the bar draws, not here.
                             progress = when {
-                                onThisScene != null && cycleTicks > 0 ->
-                                    onThisScene.second.tickInCycle.toFloat() / cycleTicks
-                                !clipMode && isCurrent && iterTicks > 0 ->
-                                    position.tickInIteration.toFloat() / iterTicks
+                                onThisScene != null && cycleTicks > 0 -> {
+                                    { launchNow().getOrElse(onThisScene.first) { LaunchState.idle }.tickInCycle.toFloat() / cycleTicks }
+                                }
+                                !clipMode && isCurrent && iterTicks > 0 -> {
+                                    { positionNow().tickInIteration.toFloat() / iterTicks }
+                                }
                                 else -> null
                             },
                             // Repeats, holding and finishing are arranger
                             // things. In clip mode each cell shows its own
                             // queue and stop, so the header shows nothing.
-                            repeatIdx = if (isCurrent && !clipMode) position.repeat else null,
+                            repeatIdx = if (isCurrent && !clipMode) atRepeat else null,
                             holding = isCurrent && loopScene && playing && !clipMode,
                             finishing = isCurrent && playing && stopAtEnd && !clipMode,
                             queued = if (clipMode) {
-                                launchStates.indices.any { t -> launchStates[t].pending == index }
+                                launches.indices.any { t -> launches[t].pending == index }
                             } else {
                                 playing && !isCurrent && queuedScene == index
                             },
@@ -788,8 +804,8 @@ fun MainScreen(
                         for (sceneIndex in shownScenes) {
                             val scene = song.scenes[sceneIndex]
                             val clip = track.clips[scene.id]
-                            val launch = launchStates.getOrElse(trackIndex) { LaunchState.idle }
-                            val live = if (clipMode) launch.scene == sceneIndex else position.scene == sceneIndex
+                            val launch = launches.getOrElse(trackIndex) { LaunchState.idle }
+                            val live = if (clipMode) launch.scene == sceneIndex else atScene == sceneIndex
                             ClipCell(
                                 clip = clip,
                                 name = stringResource(Res.string.a11y_cell, track.name, scene.name),
@@ -807,7 +823,7 @@ fun MainScreen(
                                         val len = song.clipLengthTicks(scene.id, clip)
                                         // In clip mode each track has its own
                                         // tick.
-                                        val at = if (clipMode) launch.tickInCycle else position.tickInIteration
+                                        val at = if (clipMode) launchNow().getOrElse(trackIndex) { LaunchState.idle }.tickInCycle else positionNow().tickInIteration
                                         (at % len).toFloat() / len
                                     }
                                 } else {
@@ -883,7 +899,7 @@ fun MainScreen(
                 when (panelPage) {
                     1 -> HoldPage(song, editor, performTrack, performState, pageModifier)
                     2 -> PadPage(song, editor, performTrack, performState, pageModifier)
-                    3 -> LivePage(song, editor, playing, position.scene, pageModifier)
+                    3 -> LivePage(song, editor, playing, atScene, pageModifier)
                     else -> MixerPanel(
                         song, editor, rackPeaks, masterPeak, clickOn, onClick,
                         Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } }.together(),
@@ -1050,7 +1066,8 @@ private sealed class Dialog {
 private fun SceneHeader(
     index: Int, name: String, repeat: Int, bars: Int, hasTempo: Boolean,
     rampMark: String? = null,
-    progress: Float?, repeatIdx: Int?, holding: Boolean, finishing: Boolean, queued: Boolean,
+    /** How far through it is, read as the bar draws; null when it isn't playing. */
+    progress: (() -> Float)?, repeatIdx: Int?, holding: Boolean, finishing: Boolean, queued: Boolean,
     onAudition: () -> Unit, onLoopThis: () -> Unit, onPlayThrough: () -> Unit,
     onSettings: () -> Unit, onInsertAfter: () -> Unit,
     onDuplicate: () -> Unit, onDelete: () -> Unit, onMoveLeft: () -> Unit, onMoveRight: () -> Unit,
@@ -1095,7 +1112,12 @@ private fun SceneHeader(
             ),
     ) {
         if (progress != null) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).background(Acid.colors.sceneProgress))
+            val fill = Acid.colors.sceneProgress
+            Box(
+                Modifier.fillMaxSize().drawBehind {
+                    drawRect(fill, size = androidx.compose.ui.geometry.Size(size.width * progress().coerceIn(0f, 1f), size.height))
+                },
+            )
         }
         Column(Modifier.padding(horizontal = 6.dp, vertical = 2.dp)) {
             Text(
