@@ -67,18 +67,82 @@ void sleepWhile(std::atomic<uint32_t> &a, uint32_t seen) {
 #endif
 }
 
+#if defined(__linux__) && !defined(__ANDROID__)
 /**
- * As high as the system lets a worker go, so it isn't put aside for ordinary
- * work while the audio thread waits on its track. Where it isn't allowed it
- * stays as it was.
+ * On a chip with fast and slow cores (Intel's P- and E-cores), the fast ones:
+ * rated (cpu_capacity, else the top frequency) at three quarters of the
+ * fastest or more. False on a chip of one kind, where any core will do.
  */
-void raisePriority() {
+bool fastCores(cpu_set_t &mask) {
+    CPU_ZERO(&mask);
+    long rating[CPU_SETSIZE] = {};
+    long best = 0, worst = 0;
+    int cores = 0;
+    for (int c = 0; c < CPU_SETSIZE; ++c) {
+        long v = 0;
+        bool found = false;
+        for (const char *file : {"cpu_capacity", "cpufreq/cpuinfo_max_freq"}) {
+            char path[96];
+            std::snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/%s", c, file);
+            if (FILE *f = std::fopen(path, "r")) {
+                found = true;
+                if (std::fscanf(f, "%ld", &v) != 1) v = 0;
+                std::fclose(f);
+            }
+            if (v > 0) break;
+        }
+        if (!found) break;
+        if (v <= 0) return false;
+        rating[c] = v;
+        best = v > best ? v : best;
+        worst = cores == 0 || v < worst ? v : worst;
+        ++cores;
+    }
+    if (cores < 2 || worst * 4 >= best * 3) return false;
+    for (int c = 0; c < cores; ++c) {
+        if (rating[c] * 4 >= best * 3) CPU_SET(c, &mask);
+    }
+    return true;
+}
+#endif
+
+/**
+ * Sets a worker up to be there when the audio thread needs it: as high a
+ * priority as the system allows, and on a fast core.
+ *
+ * Windows: MMCSS's Pro Audio class, as WASAPI's and ASIO's own threads have
+ * (else the highest ordinary priority), and no power throttling, which keeps
+ * it off the efficiency cores. Linux: real-time at the lowest real-time
+ * priority where the system allows it (the audio thread, at miniaudio's
+ * highest, stays above), and on the fast cores of a chip that has slow ones.
+ * Android's workers are placed by AudioDriver::prepareWorker instead.
+ */
+void prepareThread() {
 #if defined(_WIN32)
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    bool mmcss = false;
+    if (HMODULE avrt = LoadLibraryW(L"avrt.dll")) {
+        using AvSet = HANDLE(WINAPI *)(LPCWSTR, LPDWORD);
+        if (auto set = reinterpret_cast<AvSet>(reinterpret_cast<void *>(GetProcAddress(avrt, "AvSetMmThreadCharacteristicsW")))) {
+            DWORD task = 0;
+            mmcss = set(L"Pro Audio", &task) != nullptr;
+        }
+    }
+    if (!mmcss) SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    // THREAD_POWER_THROTTLING_STATE: version 1, execution speed controlled,
+    // and not throttled. ThreadPowerThrottling is 3. Looked up, as Windows
+    // before 10 1709 doesn't have it.
+    struct { ULONG version, controlMask, stateMask; } notThrottled{1, 1, 0};
+    using SetInfo = BOOL(WINAPI *)(HANDLE, int, LPVOID, DWORD);
+    if (auto setInfo = reinterpret_cast<SetInfo>(reinterpret_cast<void *>(
+            GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetThreadInformation")))) {
+        setInfo(GetCurrentThread(), 3, &notThrottled, sizeof(notThrottled));
+    }
 #elif defined(__linux__) && !defined(__ANDROID__)
     sched_param p{};
     p.sched_priority = sched_get_priority_min(SCHED_FIFO);
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &p);
+    cpu_set_t fast;
+    if (fastCores(fast)) sched_setaffinity(0, sizeof(fast), &fast);
 #endif
 }
 
@@ -272,7 +336,7 @@ void TrackPool::run(int32_t count, const uint32_t *needs, const int32_t *pick, J
 
 void TrackPool::workerLoop(int32_t index, void (*onStart)(int32_t)) {
     dsp::flushDenormalsOnce();
-    raisePriority();
+    prepareThread();
     if (onStart != nullptr) onStart(index);
     uint32_t seen = round.load(std::memory_order_acquire);
     while (!quit.load(std::memory_order_relaxed)) {
