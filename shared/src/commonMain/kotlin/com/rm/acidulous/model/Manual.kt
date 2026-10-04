@@ -751,6 +751,12 @@ object Manual {
                 ManualBlock(ManualKind.Bullet, "**voices** - one harp, or up to four. With one, a new note replucks the same harp at the new pitch."),
                 ManualBlock(ManualKind.Bullet, "**octave**, **bend** - the octave, and the pitch bend range in semitones."),
                 ManualBlock(ManualKind.Bullet, "**volume**."),
+                ManualBlock(ManualKind.Heading, "Tips"),
+                ManualBlock(ManualKind.Bullet, "Start with the **model**. The kinds differ more than any knob moves them."),
+                ManualBlock(ManualKind.Bullet, "The tune is in the mouth. Leave **play** on **drone**, hold a note, and move the mod wheel, or put **play** on **mouth** and play the tune on the keys."),
+                ManualBlock(ManualKind.Bullet, "A **pattern** on one held note is most of jaw harp playing. Try **gallop**."),
+                ManualBlock(ManualKind.Bullet, "Low drones talk best: around D3 and below, the harmonics the mouth picks are close together and the tune comes through clearly."),
+                ManualBlock(ManualKind.Bullet, "For a sound that never stops, turn **breath** and **sustain** up."),
             )),
             ManualSection("Trinity", "Three oscillators, wavetables, two filters and a mod matrix: the all-rounder.", listOf(
                 ManualBlock(ManualKind.Para, "Trinity is the general-purpose poly synth, three oscillators into two filters with a modulation matrix on top."),

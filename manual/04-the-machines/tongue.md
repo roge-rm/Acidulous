@@ -139,3 +139,13 @@ In mouth mode the pattern plucks the drone while the keys play the tune.
   harp at the new pitch.
 - **octave**, **bend** - the octave, and the pitch bend range in semitones.
 - **volume**.
+
+## Tips
+
+- Start with the **model**. The kinds differ more than any knob moves them.
+- The tune is in the mouth. Leave **play** on **drone**, hold a note, and move
+  the mod wheel, or put **play** on **mouth** and play the tune on the keys.
+- A **pattern** on one held note is most of jaw harp playing. Try **gallop**.
+- Low drones talk best: around D3 and below, the harmonics the mouth picks
+  are close together and the tune comes through clearly.
+- For a sound that never stops, turn **breath** and **sustain** up.

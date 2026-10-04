@@ -3111,97 +3111,194 @@ internal object FactoryBanks {
         family = "steel",
         low = 48, high = 67)
 
-    private fun tongue4() = Patch("Tongue", "Munnharpe",
+    private fun tongue4() = Patch("Tongue", "Low Steel",
+        mapOf("ring" to 0.942959547f, "depth" to 0.65f, "glide" to 0.6901056f, "volume" to 0.83f),
+        family = "steel",
+        low = 36, high = 52)
+
+    private fun tongue5() = Patch("Tongue", "Paired Steel",
+        mapOf("reeds" to 0.4f, "chord" to 0.166666672f, "strum" to 0.0533333346f),
+        family = "steel",
+        low = 48, high = 62)
+
+    private fun tongue6() = Patch("Tongue", "Munnharpe",
         mapOf("model" to 0.111111112f),
         family = "northern",
         low = 40, high = 55)
 
-    private fun tongue5() = Patch("Tongue", "Khomus",
+    private fun tongue7() = Patch("Tongue", "Khomus",
         mapOf("model" to 0.222222224f, "breath" to 0.25f, "air" to 0.5f),
         family = "northern",
         low = 48, high = 62)
 
-    private fun tongue6() = Patch("Tongue", "Temir Komuz",
+    private fun tongue8() = Patch("Tongue", "Temir Komuz",
         mapOf("model" to 0.444444448f),
         family = "northern",
         low = 50, high = 64)
 
-    private fun tongue7() = Patch("Tongue", "Morsing",
+    private fun tongue9() = Patch("Tongue", "Breathing Khomus",
+        mapOf("model" to 0.222222224f, "breath" to 0.55f, "air" to 0.6f, "sustain" to 0.75f, "volume" to 0.51f),
+        family = "northern",
+        low = 48, high = 62)
+
+    private fun tongue10() = Patch("Tongue", "Sweet Munnharpe",
+        mapOf("model" to 0.111111112f, "pluck" to 0.35f, "mouth" to 0.3f, "focus" to 0.85f, "depth" to 0.75f),
+        family = "northern",
+        low = 40, high = 55)
+
+    private fun tongue11() = Patch("Tongue", "Temir Pair",
+        mapOf("model" to 0.444444448f, "reeds" to 0.4f, "chord" to 0.166666672f, "strum" to 0.08f),
+        family = "northern",
+        low = 50, high = 64)
+
+    private fun tongue12() = Patch("Tongue", "Morsing",
         mapOf("model" to 0.333333343f),
         family = "southern",
         low = 44, high = 56)
 
-    private fun tongue8() = Patch("Tongue", "Brass Harp",
+    private fun tongue13() = Patch("Tongue", "Brass Harp",
         mapOf("model" to 0.5555556f),
         family = "southern",
         low = 45, high = 60)
 
-    private fun tongue9() = Patch("Tongue", "Bamboo Harp",
+    private fun tongue14() = Patch("Tongue", "Brass Whisper",
+        mapOf("model" to 0.5555556f, "pluck" to 0.3f, "depth" to 0.85f, "breath" to 0.25f, "air" to 0.75f, "volume" to 0.79f),
+        family = "southern",
+        low = 45, high = 60)
+
+    private fun tongue15() = Patch("Tongue", "Bright Brass",
+        mapOf("model" to 0.5555556f, "edge" to 0.85f, "focus" to 0.9f),
+        family = "southern",
+        low = 45, high = 62)
+
+    private fun tongue16() = Patch("Tongue", "Ringing Morsing",
+        mapOf("model" to 0.333333343f, "ring" to 0.9730675f, "stop" to 0f, "volume" to 0.56f),
+        family = "southern",
+        low = 44, high = 56)
+
+    private fun tongue17() = Patch("Tongue", "Bamboo Harp",
         mapOf("model" to 0.6666667f),
         family = "bamboo",
         low = 50, high = 64)
 
-    private fun tongue10() = Patch("Tongue", "Mukkuri",
+    private fun tongue18() = Patch("Tongue", "Mukkuri",
         mapOf("model" to 0.7777778f),
         family = "bamboo",
         low = 45, high = 60)
 
-    private fun tongue11() = Patch("Tongue", "Genggong",
+    private fun tongue19() = Patch("Tongue", "Genggong",
         mapOf("model" to 0.8888889f),
         family = "bamboo",
         low = 48, high = 62)
 
-    private fun tongue12() = Patch("Tongue", "Kouxian",
+    private fun tongue20() = Patch("Tongue", "Kouxian",
         mapOf("model" to 1f, "strum" to 0.4f),
         family = "bamboo",
         low = 52, high = 67)
 
-    private fun tongue13() = Patch("Tongue", "Fifths",
+    private fun tongue21() = Patch("Tongue", "Bamboo Whisper",
+        mapOf("model" to 0.6666667f, "pluck" to 0.2f, "depth" to 0.8f, "breath" to 0.35f, "air" to 0.85f, "volume" to 0.62f),
+        family = "bamboo",
+        low = 50, high = 64)
+
+    private fun tongue22() = Patch("Tongue", "Slow Mukkuri",
+        mapOf("model" to 0.7777778f, "pluck" to 0.15f, "mouth" to 0.2f, "depth" to 0.9f, "volume" to 0.96f),
+        family = "bamboo",
+        low = 45, high = 60)
+
+    private fun tongue23() = Patch("Tongue", "Fifths",
         mapOf("volume" to 0.8f, "reeds" to 0.4f, "chord" to 0.5f),
         family = "reeds",
         low = 45, high = 60)
 
-    private fun tongue14() = Patch("Tongue", "Strummed Major",
+    private fun tongue24() = Patch("Tongue", "Strummed Major",
         mapOf("reeds" to 0.8f, "chord" to 0.6666667f, "strum" to 0.3f, "order" to 0.333333343f),
         family = "reeds",
         low = 48, high = 62)
 
-    private fun tongue15() = Patch("Tongue", "Reeds In Turn",
+    private fun tongue25() = Patch("Tongue", "Reeds In Turn",
         mapOf("model" to 0.6666667f, "reeds" to 1f, "chord" to 1f, "order" to 0.6666667f),
         family = "reeds",
         low = 48, high = 62)
 
-    private fun tongue16() = Patch("Tongue", "Mouth Tunes",
+    private fun tongue26() = Patch("Tongue", "Octave Harp",
+        mapOf("volume" to 0.79f, "reeds" to 0.4f, "chord" to 0.333333343f),
+        family = "reeds",
+        low = 40, high = 60)
+
+    private fun tongue27() = Patch("Tongue", "Minor Strum",
+        mapOf("reeds" to 0.8f, "chord" to 0.8333333f, "strum" to 0.466666669f),
+        family = "reeds",
+        low = 48, high = 62)
+
+    private fun tongue28() = Patch("Tongue", "Scattered Kouxian",
+        mapOf("model" to 1f, "volume" to 0.79f, "reeds" to 1f, "strum" to 0.266666681f, "order" to 1f),
+        family = "reeds",
+        low = 52, high = 67)
+
+    private fun tongue29() = Patch("Tongue", "Mouth Tunes",
         mapOf("focus" to 0.8f, "volume" to 0.47f, "play" to 1f, "repluck" to 1f, "pattern" to 0.5f),
         family = "rhythm",
         low = 50, high = 86)
 
-    private fun tongue17() = Patch("Tongue", "Khomus Gallop",
+    private fun tongue30() = Patch("Tongue", "Khomus Gallop",
         mapOf("model" to 0.222222224f, "breath" to 0.2f, "volume" to 0.5f, "pattern" to 0.5f, "accent" to 0.7f),
         family = "rhythm",
         low = 48, high = 62)
 
-    private fun tongue18() = Patch("Tongue", "Genggong Runs",
+    private fun tongue31() = Patch("Tongue", "Genggong Runs",
         mapOf("model" to 0.8888889f, "volume" to 0.45f, "pattern" to 0.8333333f, "accent" to 0.6f),
         family = "rhythm",
         low = 48, high = 62)
 
-    private fun tongue19() = Patch("Tongue", "Morsing Groupings",
+    private fun tongue32() = Patch("Tongue", "Morsing Groupings",
         mapOf("model" to 0.333333343f, "volume" to 0.54f, "pattern" to 1f, "accent" to 0.8f, "ratchet" to 0.15f),
         family = "rhythm",
         low = 44, high = 56)
 
-    private fun tongue20() = Patch("Tongue", "Talking Steel",
+    private fun tongue33() = Patch("Tongue", "Talking Steel",
         mapOf("focus" to 0.4f, "depth" to 0.8f, "stop" to 0f, "volume" to 0.8f),
         family = "rhythm",
         low = 45, high = 60)
 
-    private fun tongue21() = Patch("Tongue", "Follow Track 1",
+    private fun tongue34() = Patch("Tongue", "Follow Track 1",
         mapOf("focus" to 0.8f, "volume" to 0.6f, "pattern" to 0.5f, "sidechain" to 0.0625f),
         family = "rhythm",
         low = 45, high = 60)
 
-    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19(), tongue20(), tongue21()) }
+    private fun tongue35() = Patch("Tongue", "Steel Triplets",
+        mapOf("pattern" to 0.6666667f, "accent" to 0.6f),
+        family = "rhythm",
+        low = 48, high = 62)
+
+    private fun tongue36() = Patch("Tongue", "Glass Harp",
+        mapOf("model" to 0.444444448f, "edge" to 1f, "ring" to 1f, "pluck" to 1f, "overtones" to 1f, "focus" to 1f, "depth" to 1f, "stop" to 0f, "volume" to 0.31f),
+        family = "strange",
+        low = 52, high = 72)
+
+    private fun tongue37() = Patch("Tongue", "Sub Harp",
+        mapOf("edge" to 0.3f, "ring" to 1f, "depth" to 0.7f, "volume" to 0.84f),
+        mapOf("0.5" to ""),
+        family = "strange",
+        low = 28, high = 43)
+
+    private fun tongue38() = Patch("Tongue", "Buzz Choir",
+        mapOf("breath" to 0.6f, "air" to 0.4f, "sustain" to 0.8f, "volume" to 0.45f, "reeds" to 1f, "chord" to 0.166666672f),
+        family = "strange",
+        low = 45, high = 60)
+
+    private fun tongue39() = Patch("Tongue", "Robot Words",
+        mapOf("focus" to 1f, "depth" to 1f, "glide" to 0f, "volume" to 0.28f, "play" to 1f, "pattern" to 0.333333343f, "ratchet" to 0.3f),
+        family = "strange",
+        low = 50, high = 86)
+
+    private fun tongue40() = Patch("Tongue", "Broken Gallop",
+        mapOf("model" to 0.8888889f, "volume" to 0.38f, "pattern" to 1f, "accent" to 1f, "ratchet" to 0.6f),
+        mapOf("-0.6" to ""),
+        family = "strange",
+        low = 48, high = 62)
+
+    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19(), tongue20(), tongue21(), tongue22(), tongue23(), tongue24(), tongue25(), tongue26(), tongue27(), tongue28(), tongue29(), tongue30(), tongue31(), tongue32(), tongue33(), tongue34(), tongue35(), tongue36(), tongue37(), tongue38(), tongue39(), tongue40()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")
