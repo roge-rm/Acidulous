@@ -101,6 +101,12 @@ interface AppHost {
      */
     val onDesktop: Boolean get() = false
 
+    /**
+     * A debug build: Android's debuggable flag, or the desktop app run from
+     * Gradle. Only these have the diagnostics numbers (UiPrefs.showDiagnostics).
+     */
+    val debugBuild: Boolean get() = false
+
     /** Whether the screen can be kept on while playing (Android's window flag). */
     val canKeepScreenOn: Boolean get() = true
     /**

@@ -14,6 +14,7 @@ import java.io.OutputStream
 /** The Android app's [AppHost]: package info, assets, files and crash reports. */
 class AndroidHost(private val context: Context) : AppHost {
     private val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+    override val debugBuild: Boolean = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
     override val cleansInput: Boolean get() = true
     /** On the clean input's session while it's open. Not every phone has both. */

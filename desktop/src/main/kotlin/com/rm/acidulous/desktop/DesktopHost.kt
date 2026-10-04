@@ -69,6 +69,8 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override val hasDriverSdk: Boolean = onWindows
     override val usesMouse: Boolean = true
     override val onDesktop: Boolean = true
+    /** Set only by `gradle :desktop:run` (desktop/build.gradle.kts), never by the packages. */
+    override val debugBuild: Boolean = System.getProperty("acidulous.debug") == "true"
     /** The app doesn't hold off the screen saver on desktop. */
     override val canKeepScreenOn: Boolean = false
     override val canEncodeAac: Boolean = false

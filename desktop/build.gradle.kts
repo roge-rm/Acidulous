@@ -165,7 +165,9 @@ sourceSets.main { resources.srcDir(stageLicences.map { it.destinationDir.parentF
 compose.desktop {
     application {
         mainClass = "com.rm.acidulous.desktop.MainKt"
-        jvmArgs += listOf("-Djava.library.path=${nativeBuild.asFile.absolutePath}", "--enable-native-access=ALL-UNNAMED")
+        // acidulous.debug: run from here it's a debug build, with the
+        // diagnostics numbers (AppHost.debugBuild). The packages don't set it.
+        jvmArgs += listOf("-Djava.library.path=${nativeBuild.asFile.absolutePath}", "--enable-native-access=ALL-UNNAMED", "-Dacidulous.debug=true")
     }
 }
 

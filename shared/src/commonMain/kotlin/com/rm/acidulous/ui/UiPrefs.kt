@@ -32,12 +32,6 @@ const val KeysStretchMin = 0.65f
 const val KeysStretchMax = 3f
 
 /**
- * Whether the diagnostics numbers show by default. Set to false for 1.0;
- * until then everyone using it is testing it and the numbers help reports.
- */
-const val DIAGNOSTICS_BY_DEFAULT = true
-
-/**
  * Settings that belong to the user and the device, not the song. They
  * carry across tracks, songs and sessions.
  *
@@ -228,10 +222,11 @@ object UiPrefs {
     var keepAwake by mutableStateOf(true)
     /**
      * Show the diagnostics numbers: the line under the transport, the readings
-     * in Settings, the MIDI counters and the editor's note count. See
-     * [DIAGNOSTICS_BY_DEFAULT].
+     * in Settings, the MIDI counters and the editor's note count. Only in a
+     * debug build (AppHost.debugBuild), where they're on unless switched off;
+     * a release has neither the numbers nor the switch.
      */
-    var showDiagnostics by mutableStateOf(DIAGNOSTICS_BY_DEFAULT)
+    var showDiagnostics by mutableStateOf(false)
         private set
     /** Was Link on last time? Acted on by MainActivity, which has a Context. */
     var linkWanted by mutableStateOf(false)
@@ -352,7 +347,7 @@ object UiPrefs {
         inputClean = p.getBoolean(KEY_INPUT_CLEAN, false)
         readZooms(p.getString(KEY_ZOOMS, null))
         keepAwake = p.getBoolean(KEY_AWAKE, true)
-        showDiagnostics = p.getBoolean(KEY_DIAGNOSTICS, DIAGNOSTICS_BY_DEFAULT)
+        showDiagnostics = com.rm.acidulous.AppHost.current.debugBuild && p.getBoolean(KEY_DIAGNOSTICS, true)
         linkWanted = p.getBoolean(KEY_LINK, false)
         com.rm.acidulous.engine.LinkHub.chooseStartStop(p.getBoolean(KEY_LINK_STARTSTOP, true))
         mappings = runCatching {
@@ -763,7 +758,7 @@ object UiPrefs {
     }
 
     fun chooseDiagnostics(on: Boolean) {
-        showDiagnostics = on
+        showDiagnostics = on && com.rm.acidulous.AppHost.current.debugBuild
         store?.edit()?.putBoolean(KEY_DIAGNOSTICS, on)?.apply()
     }
 

@@ -98,8 +98,9 @@ private fun DisplayTab() {
                     UiPrefs.chooseKeepAwake(it == 0)
                 }
             }
-            // Show the diagnostics numbers everywhere they appear.
-            SwitchGrid(stringResource(Res.string.settings_diagnostics), stringArrayResource(Res.array.settings_diagnostics_choices).toList(), if (UiPrefs.showDiagnostics) 0 else 1) {
+            // Show the diagnostics numbers everywhere they appear. Debug
+            // builds only: a release has none.
+            if (com.rm.acidulous.AppHost.current.debugBuild) SwitchGrid(stringResource(Res.string.settings_diagnostics), stringArrayResource(Res.array.settings_diagnostics_choices).toList(), if (UiPrefs.showDiagnostics) 0 else 1) {
                 UiPrefs.chooseDiagnostics(it == 0)
             }
             // Its own window, since twenty actions would make every page this tall.
