@@ -174,6 +174,10 @@ object UiPrefs {
     var voiceLimit by mutableStateOf(0)
         private set
 
+    /** Cores tracks render on, the audio thread's included; 0 is auto. */
+    var cores by mutableStateOf(0)
+        private set
+
     /** Full is everything; lean cuts reverb density and distortion oversampling. */
     var fullQuality by mutableStateOf(true)
         private set
@@ -324,6 +328,7 @@ object UiPrefs {
         buffer = runCatching { Buffer.valueOf(p.getString(KEY_BUFFER, null) ?: "Balanced") }
             .getOrDefault(Buffer.Balanced)
         voiceLimit = p.getInt(KEY_VOICES, 0)
+        cores = p.getInt(KEY_CORES, 0)
         fullQuality = p.getBoolean(KEY_QUALITY, true)
         autoQuality = p.getBoolean(KEY_AUTO_QUALITY, false)
         qualityNow = fullQuality
@@ -411,6 +416,7 @@ object UiPrefs {
         NativeEngine.setBufferBursts(buffer.bursts)
         NativeEngine.setInputClean(inputClean)
         NativeEngine.setVoiceLimit(voiceLimit)
+        NativeEngine.setCores(cores)
         NativeEngine.setQuality(if (fullQuality) 1 else 0)
         NativeEngine.setRecordBits(recordBits)
         NativeEngine.setLauncher(clipMode)
@@ -570,6 +576,12 @@ object UiPrefs {
         buffer = b
         store?.edit()?.putString(KEY_BUFFER, b.name)?.apply()
         NativeEngine.setBufferBursts(b.bursts)
+    }
+
+    fun chooseCores(n: Int) {
+        cores = n
+        store?.edit()?.putInt(KEY_CORES, n)?.apply()
+        NativeEngine.setCores(n)
     }
 
     fun chooseVoiceLimit(notes: Int) {
@@ -824,6 +836,7 @@ object UiPrefs {
     private const val KEY_OUTPUT_DEVICE = "output_device"
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"
+    private const val KEY_CORES = "cores"
     private const val KEY_QUALITY = "quality_full"
     private const val KEY_AUTO_QUALITY = "quality_auto"
     private const val KEY_BITS = "record_bits"

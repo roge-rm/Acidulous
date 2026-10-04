@@ -91,6 +91,13 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     int32_t hintState() const { return static_cast<int32_t>(perfHint.state()); }
     /** How many fast cores the audio thread was put on; 0 if it wasn't. */
     int32_t fastCores() const { return pinnedCores.load(std::memory_order_relaxed); }
+    /**
+     * The cores the track workers go on: the fast ones on a phone with more
+     * than one kind, else all of them.
+     */
+    static int32_t workerCores();
+    /** Run first on each track worker: puts it on those cores at the audio priority. */
+    static void prepareWorker(int32_t index);
     void setHintWanted(bool on) { hintWanted.store(on, std::memory_order_relaxed); }
 
     /** Worst callback since the last read, in microseconds. Reading clears it. */

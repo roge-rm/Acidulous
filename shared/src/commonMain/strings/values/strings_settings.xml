@@ -57,6 +57,8 @@
     <string name="settings_buffer_safe">safe</string>
     <string name="settings_voices">voices</string>
     <string name="settings_voices_all">all</string>
+    <string name="settings_cores">cores</string>
+    <string name="settings_cores_auto">auto</string>
     <string name="settings_quality">quality</string>
     <string-array name="settings_quality_choices">
         <item>full</item>

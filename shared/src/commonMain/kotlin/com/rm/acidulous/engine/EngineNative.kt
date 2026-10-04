@@ -70,6 +70,10 @@ internal expect object EngineNative {
     fun nativeSetCountInBars(bars: Int)
     fun nativeCountInRemaining(): Long
     fun nativeElapsedMs(): Long
+    fun nativeSetCores(cores: Int)
+    fun nativeCoresInUse(): Int
+    fun nativeCoresMax(): Int
+    fun nativeReadWorkerWaitPeakUs(): Int
     fun nativeCancelRender()
     fun nativeIsRendering(): Boolean
     fun nativeRenderedSeconds(): Float

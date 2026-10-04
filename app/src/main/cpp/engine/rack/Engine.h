@@ -173,6 +173,12 @@ class Engine : public Rack::ModifiedNoteSink {
      */
     void setWorkers(int32_t workers, void (*onStart)(int32_t) = nullptr) { pool.start(workers, onStart); }
     int32_t workers() const { return pool.workers(); }
+    /** How many of the workers take tracks; the rest sleep. Any thread. */
+    void setActiveWorkers(int32_t n) { pool.setActive(n); }
+    int32_t activeWorkers() const { return pool.activeWorkers(); }
+    /** The longest the audio thread waited for a worker's track since the last read, in microseconds. Reading clears it. */
+    int32_t readWorkerWaitPeakUs() { return workerWaitPeakUs.exchange(0, std::memory_order_relaxed); }
+    std::atomic<int32_t> workerWaitPeakUs{0};
     /** The workers that render tracks beside the audio thread (see TrackPool). */
     TrackPool pool;
     // This block's jobs: the rack each renders, and what it cost and whether it

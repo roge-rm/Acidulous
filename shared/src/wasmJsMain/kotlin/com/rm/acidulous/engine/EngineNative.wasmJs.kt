@@ -169,6 +169,18 @@ private fun raw_nativeCountInRemaining(env: Int): Long =
 private fun raw_nativeElapsedMs(env: Int): Long =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeElapsedMs(env, 0)")
 
+private fun raw_nativeSetCores(env: Int, cores: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetCores(env, 0, cores)")
+
+private fun raw_nativeCoresInUse(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCoresInUse(env, 0)")
+
+private fun raw_nativeCoresMax(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCoresMax(env, 0)")
+
+private fun raw_nativeReadWorkerWaitPeakUs(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeReadWorkerWaitPeakUs(env, 0)")
+
 private fun raw_nativeCancelRender(env: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCancelRender(env, 0)")
 
@@ -952,6 +964,32 @@ internal actual object EngineNative {
 
     actual fun nativeElapsedMs(): Long {
         val raw_ = raw_nativeElapsedMs(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeSetCores(cores: Int) {
+        raw_nativeSetCores(Jni.env, cores)
+        Jni.release()
+    }
+
+    actual fun nativeCoresInUse(): Int {
+        val raw_ = raw_nativeCoresInUse(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeCoresMax(): Int {
+        val raw_ = raw_nativeCoresMax(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeReadWorkerWaitPeakUs(): Int {
+        val raw_ = raw_nativeReadWorkerWaitPeakUs(Jni.env)
         val result_ = raw_
         Jni.release()
         return result_

@@ -67,6 +67,13 @@ static int64_t threadCpuUs() {
 void Engine::renderBlock(const float *in, float *out) {
     const auto t0 = std::chrono::steady_clock::now();
     const int64_t cpu0 = threadCpuUs();
+    // If the tracks will be spread this block, the workers wake while the
+    // input and the sequencer run, rather than after.
+    {
+        int32_t lastTotal = 0;
+        for (int32_t r = 0; r < kRackCount; ++r) lastTotal += lastRackUs[r];
+        if (lastTotal >= wakeFloorUs) pool.wakeEarly();
+    }
 
     // The tuner hears the input first, as it arrived. Costs one branch when
     // it's off, which is almost always.
@@ -397,6 +404,9 @@ void Engine::renderBlock(const float *in, float *out) {
     int32_t lastTotal = 0;
     for (int32_t r = 0; r < kRackCount; ++r) lastTotal += lastRackUs[r];
     pool.run(jobs, needs, pick, &Engine::rackJob, this, lastTotal >= wakeFloorUs);
+    if (const int32_t waited = pool.lastWaitUs(); waited > workerWaitPeakUs.load(std::memory_order_relaxed)) {
+        workerWaitPeakUs.store(waited, std::memory_order_relaxed);
+    }
     // What the racks sent out while rendering, in render order.
     for (int32_t j = 0; j < jobs; ++j) racks[jobRack[j]].sendHeld();
     for (int32_t r = 0; r < kRackCount; ++r) lastRackUs[r] = blockRackUs[r];
@@ -493,7 +503,10 @@ void Engine::renderBlock(const float *in, float *out) {
     // CLOCK_THREAD_CPUTIME_ID is a real syscall here. If the whole block ran
     // uninterrupted, every span inside it can be trusted.
     const int64_t cpuUs = threadCpuUs() - cpu0;
-    const bool interrupted = us - cpuUs > kPreemptedUs;
+    // Time spent waiting for a worker's track isn't an interruption, though
+    // the thread may have slept through it.
+    const int32_t waitedUs = pool.lastWaitUs();
+    const bool interrupted = us - cpuUs - waitedUs > kPreemptedUs;
     // An EMA of how often blocks are interrupted, so a per-track list that
     // never updates can be told apart from one with nothing to report. Like
     // the driver's stall counter, it says whether to optimise the DSP or
@@ -504,8 +517,9 @@ void Engine::renderBlock(const float *in, float *out) {
     if (interrupted) return;
 
     // CPU time rather than elapsed time. They're the same on a clean block,
-    // and this only runs on clean blocks.
-    keepPeak(blockPeak, static_cast<int32_t>(cpuUs));
+    // and this only runs on clean blocks, unless it waited for a worker, when
+    // the block took as long as the wait made it.
+    keepPeak(blockPeak, static_cast<int32_t>(waitedUs > 0 ? us : cpuUs));
     const auto span = [](auto a, auto b) {
         return static_cast<int32_t>(std::chrono::duration_cast<std::chrono::microseconds>(b - a).count());
     };

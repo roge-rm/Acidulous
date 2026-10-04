@@ -15,6 +15,7 @@
 
 #include <sched.h>
 #include <cstdio>
+#include <sys/resource.h>
 
 namespace {
 
@@ -58,6 +59,25 @@ bool findFastCores(cpu_set_t &mask, int &count) {
 }
 
 } // namespace
+
+int32_t AudioDriver::workerCores() {
+    cpu_set_t fast;
+    int count = 0;
+    if (findFastCores(fast, count)) return count;
+    return static_cast<int32_t>(sysconf(_SC_NPROCESSORS_CONF));
+}
+
+void AudioDriver::prepareWorker(int32_t index) {
+    const pid_t tid = gettid();
+    cpu_set_t fast;
+    int count = 0;
+    if (findFastCores(fast, count) && sched_setaffinity(tid, sizeof(fast), &fast) != 0) {
+        LOGI("couldn't put track worker %d on the fast cores", index);
+    }
+    // The urgent-audio niceness an app may give its own threads, so the
+    // scheduler doesn't put a worker aside while the audio thread waits on it.
+    if (setpriority(PRIO_PROCESS, tid, -19) != 0) LOGI("track worker %d stays at normal priority", index);
+}
 
 AudioDriver::~AudioDriver() {
     stop();

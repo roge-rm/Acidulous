@@ -99,6 +99,9 @@ PHONE_ONLY = {
 }
 
 DESKTOP_SENTENCES = {
+    # A computer has no fast and slow cores to choose between.
+    "**auto** uses all of the phone's fast cores but one, which it leaves for the screen.":
+        "**auto** uses half the computer's cores.",
     # Only a browser can clean the input.
     "**mic** is **raw** for an instrument, or **clean** for a voice, with noise suppression and level control.":
         "In a browser, **mic** is **raw** for an instrument, or **clean** for a voice, with noise suppression and level control.",

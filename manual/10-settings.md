@@ -38,6 +38,9 @@
   it. Give it a few seconds of playing before trusting it.
 - **voices** - how many notes a track can hold at once. The oldest note is
   dropped first.
+- **cores** - how many cores the tracks are made on at once. **auto** uses all
+  of the phone's fast cores but one, which it leaves for the screen. **1** makes
+  every track on the same core. A light song stays on one core either way.
 - **quality** - what to give up when the phone can't keep up. **lean**:
   - runs the **amp** and **distortion** without oversampling (about half the
     amp's cost)
@@ -58,6 +61,10 @@
   here.
 - **audio thread** - on a phone with fast and slow cores, how many fast ones the
   sound is made on.
+- **tracks** (with **diagnostics** on) - how many cores the tracks are on, and
+  the longest the sound waited for another core to finish a track. It's
+  normal for that to be as long as your heaviest track takes. Much longer
+  means something else is busy on those cores; try fewer **cores**.
 
 ## record
 

@@ -782,4 +782,12 @@ object NativeEngine {
     /** Milliseconds played since play, after any count-in. Held after a stop until the next play. */
     val elapsedMs: Long get() = EngineNative.nativeElapsedMs()
 
+    /** Cores to render tracks on, the audio thread's included; 0 is auto. */
+    fun setCores(cores: Int) = EngineNative.nativeSetCores(cores)
+    /** Cores rendering tracks now, and the most there can be on this device. */
+    val coresInUse: Int get() = EngineNative.nativeCoresInUse()
+    val coresMax: Int get() = EngineNative.nativeCoresMax()
+    /** The longest the sound waited on another core's track since the last read, in microseconds. Reading clears it. */
+    fun readWorkerWaitPeakUs(): Int = EngineNative.nativeReadWorkerWaitPeakUs()
+
 }

@@ -85,6 +85,10 @@ internal actual object EngineNative {
     actual external fun nativeSetCountInBars(bars: Int)
     actual external fun nativeCountInRemaining(): Long
     actual external fun nativeElapsedMs(): Long
+    actual external fun nativeSetCores(cores: Int)
+    actual external fun nativeCoresInUse(): Int
+    actual external fun nativeCoresMax(): Int
+    actual external fun nativeReadWorkerWaitPeakUs(): Int
     actual external fun nativeCancelRender()
     actual external fun nativeIsRendering(): Boolean
     actual external fun nativeRenderedSeconds(): Float

@@ -907,6 +907,26 @@ Java_com_rm_acidulous_engine_EngineNative_nativeElapsedMs(JNIEnv *, jobject) {
     return static_cast<jlong>(host().elapsedMs());
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeSetCores(JNIEnv *, jobject, jint cores) {
+    host().setCores(cores);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeCoresInUse(JNIEnv *, jobject) {
+    return host().coresInUse();
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeCoresMax(JNIEnv *, jobject) {
+    return host().coresMax();
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeReadWorkerWaitPeakUs(JNIEnv *, jobject) {
+    return host().readWorkerWaitPeakUs();
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeIsRendering(JNIEnv *, jobject) { return host().isRendering() ? JNI_TRUE : JNI_FALSE; }
 

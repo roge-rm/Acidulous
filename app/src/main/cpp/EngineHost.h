@@ -497,8 +497,17 @@ class EngineHost {
     void setCountInBars(int32_t bars);
     /** Ticks left of the count-in, for display. 0 when not counting. */
     int64_t countInRemaining() const;
-    /** How many threads render tracks beside the audio thread on this platform. */
+    /** How many threads are started to render tracks beside the audio thread on this platform. */
     static int32_t trackWorkers();
+    /** How many of them auto uses. */
+    static int32_t autoWorkers();
+    /** Cores to render tracks on, counting the audio thread's: 0 for auto. */
+    void setCores(int32_t cores);
+    /** Cores rendering tracks now (the audio thread's and the workers'), and the most it can be set to. */
+    int32_t coresInUse() const;
+    int32_t coresMax() const;
+    /** The longest the audio thread waited on a worker since the last read, in us. */
+    int32_t readWorkerWaitPeakUs();
     /** Milliseconds played since play (see Transport::publishElapsed). */
     int64_t elapsedMs() const;
 
@@ -528,6 +537,8 @@ class EngineHost {
     std::string cacheRoot;
 
     bool running = false;
+    /** The cores setting, kept so a restart of the stream keeps it. */
+    int32_t coresWanted = 0;
     std::string mountedType[16];
     std::atomic<bool> rendering{false}, renderCancel{false};
     // The zone, read on the MIDI thread and written from the UI.

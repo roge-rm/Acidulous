@@ -98,8 +98,12 @@ EngineHost &EngineHost::instance() {
 EngineHost::~EngineHost() { stop(); }
 
 int32_t EngineHost::trackWorkers() {
-#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+#if defined(__EMSCRIPTEN__)
     return 0;
+#elif defined(__ANDROID__)
+    // Up to three, on the fast cores beside the audio thread's. More doesn't
+    // split sixteen tracks in a 1.33 ms block usefully, and is heat.
+    return std::clamp(AudioDriver::workerCores() - 1, 0, 3);
 #else
     // ACIDULOUS_WORKERS sets it, for timing; otherwise half the physical
     // cores, at most seven. A desktop core does a phone's work several times
@@ -109,10 +113,33 @@ int32_t EngineHost::trackWorkers() {
 #endif
 }
 
+int32_t EngineHost::autoWorkers() {
+#if defined(__ANDROID__)
+    // Leave one fast core for the screen.
+    return std::clamp(AudioDriver::workerCores() - 2, 0, trackWorkers());
+#else
+    return trackWorkers();
+#endif
+}
+
+void EngineHost::setCores(int32_t cores) {
+    coresWanted = cores;
+    sEngine.setActiveWorkers(cores <= 0 ? autoWorkers() : cores - 1);
+}
+
+int32_t EngineHost::coresInUse() const { return sEngine.activeWorkers() + 1; }
+int32_t EngineHost::coresMax() const { return sEngine.workers() + 1; }
+int32_t EngineHost::readWorkerWaitPeakUs() { return sEngine.readWorkerWaitPeakUs(); }
+
 bool EngineHost::start() {
     if (running) return true;
     sEngine.start();
+#if defined(__ANDROID__)
+    sEngine.setWorkers(trackWorkers(), &AudioDriver::prepareWorker);
+#else
     sEngine.setWorkers(trackWorkers());
+#endif
+    setCores(coresWanted);
     sAudio.registerCallback([](float *in, float *out, unsigned long) { sEngine.renderBlock(in, out); });
     if (!sAudio.start()) {
         LOGE("audio failed to start");
@@ -121,8 +148,8 @@ bool EngineHost::start() {
         return false;
     }
     running = true;
-    LOGI("engine started: %d racks, %d Hz, block %d, %d track workers", kRackCount, sAudio.getSampleRate(), kBlockFrames,
-         sEngine.workers());
+    LOGI("engine started: %d racks, %d Hz, block %d, %d track workers (%d in use)", kRackCount, sAudio.getSampleRate(),
+         kBlockFrames, sEngine.workers(), sEngine.activeWorkers());
     return true;
 }
 

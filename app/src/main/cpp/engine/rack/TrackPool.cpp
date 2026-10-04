@@ -33,11 +33,39 @@ inline void pause() {
 #endif
 }
 
-// How long a worker keeps looking for the next block before it sleeps. A
-// block is 1.33 ms; most of a callback's blocks follow each other closely.
-constexpr auto kSpin = std::chrono::microseconds(100);
+// How long a worker keeps looking for the next block before it sleeps: long
+// enough to cover the master and the sequencer between two blocks of one
+// callback on a phone, so it stays up through the callback.
+constexpr auto kSpin = std::chrono::microseconds(250);
+
+// How long the audio thread spins waiting for a worker's job before it
+// sleeps. It runs at real-time priority, so spinning on the core the worker
+// was put aside on would keep the worker off it until the scheduler moved it.
+constexpr auto kAudioSpin = std::chrono::microseconds(20);
 
 uint32_t *word(std::atomic<uint32_t> &a) { return reinterpret_cast<uint32_t *>(&a); }
+
+/** Wakes every thread asleep in sleepWhile on [a]. */
+void wake(std::atomic<uint32_t> &a) {
+#if defined(_WIN32)
+    WakeByAddressAll(word(a));
+#elif defined(__linux__)
+    syscall(SYS_futex, word(a), FUTEX_WAKE_PRIVATE, INT_MAX, nullptr, nullptr, 0);
+#else
+    (void)a;
+#endif
+}
+
+/** Sleeps while [a] holds [seen]; it may also return early. */
+void sleepWhile(std::atomic<uint32_t> &a, uint32_t seen) {
+#if defined(_WIN32)
+    WaitOnAddress(word(a), &seen, sizeof(seen), INFINITE);
+#elif defined(__linux__)
+    syscall(SYS_futex, word(a), FUTEX_WAIT_PRIVATE, seen, nullptr, nullptr, 0);
+#else
+    if (a.load() == seen) std::this_thread::yield();
+#endif
+}
 
 /**
  * As high as the system lets a worker go, so it isn't put aside for ordinary
@@ -99,35 +127,25 @@ void TrackPool::start(int32_t workers, void (*onStart)(int32_t)) {
     quit.store(false);
     for (int32_t i = 0; i < workers; ++i) threads[i] = std::thread(&TrackPool::workerLoop, this, i, onStart);
     workerCount = workers > 0 ? workers : 0;
+    active.store(static_cast<uint32_t>(workerCount));
 #endif
 }
 
 void TrackPool::stop() {
     if (workerCount == 0) return;
+    active.store(0);
     quit.store(true);
     // A new round number gets a worker about to sleep past its check.
     round.fetch_add(1);
-    wakeAll();
+    wake(round);
+    wake(active);
     for (int32_t i = 0; i < workerCount; ++i) threads[i].join();
     workerCount = 0;
 }
 
-void TrackPool::wakeAll() {
-#if defined(_WIN32)
-    WakeByAddressAll(word(round));
-#elif defined(__linux__)
-    syscall(SYS_futex, word(round), FUTEX_WAKE_PRIVATE, INT_MAX, nullptr, nullptr, 0);
-#endif
-}
-
-void TrackPool::sleepWhile(uint32_t seen) {
-#if defined(_WIN32)
-    WaitOnAddress(word(round), &seen, sizeof(seen), INFINITE);
-#elif defined(__linux__)
-    syscall(SYS_futex, word(round), FUTEX_WAIT_PRIVATE, seen, nullptr, nullptr, 0);
-#else
-    while (round.load() == seen && !quit.load()) std::this_thread::yield();
-#endif
+void TrackPool::setActive(int32_t n) {
+    active.store(static_cast<uint32_t>(n < 0 ? 0 : n > workerCount ? workerCount : n));
+    wake(active);
 }
 
 int32_t TrackPool::claim(uint32_t r) {
@@ -161,14 +179,22 @@ void TrackPool::work(uint32_t r) {
         // still that round's.
         jobFn.load(std::memory_order_relaxed)(jobContext.load(std::memory_order_relaxed), j);
         done.fetch_or(1u << j, std::memory_order_acq_rel);
+        finished.fetch_add(1, std::memory_order_seq_cst);
+        if (waiter.load(std::memory_order_seq_cst) != 0) wake(finished);
     }
 }
 
-void TrackPool::run(int32_t count, const uint32_t *needs, const int32_t *pick, JobFn fn, void *context, bool wake) {
+void TrackPool::wakeEarly() {
+    // A woken worker finds the round unchanged and spins for kSpin.
+    if (active.load(std::memory_order_relaxed) > 0 && sleepers.load(std::memory_order_seq_cst) > 0) wake(round);
+}
+
+void TrackPool::run(int32_t count, const uint32_t *needs, const int32_t *pick, JobFn fn, void *context, bool useWorkers) {
     if (count <= 0) return;
     if (count > kMaxJobs) count = kMaxJobs;
     const uint32_t all = count == 32 ? 0xffffffffu : (1u << count) - 1;
-    if (!wake || workerCount == 0) {
+    waitedUs = 0;
+    if (!useWorkers || active.load(std::memory_order_relaxed) == 0) {
         // In pick order, as far as each job's needs allow.
         uint32_t doneBits = 0;
         while (doneBits != all) {
@@ -197,16 +223,50 @@ void TrackPool::run(int32_t count, const uint32_t *needs, const int32_t *pick, J
     // seq_cst with the workers' sleepers count: either a worker sees the new
     // round before it sleeps or this sees it asleep and wakes it.
     round.store(r, std::memory_order_seq_cst);
-    if (workerCount > 0 && sleepers.load(std::memory_order_seq_cst) > 0) wakeAll();
+    if (sleepers.load(std::memory_order_seq_cst) > 0) wake(round);
     // Work too, and wait only for jobs someone else is part way through.
+    bool waiting = false;
+    std::chrono::steady_clock::time_point waitFrom;
     while (static_cast<uint32_t>(done.load(std::memory_order_acquire)) != all) {
         const int32_t j = claim(r);
         if (j < 0) {
-            pause();
+            const auto now = std::chrono::steady_clock::now();
+            if (!waiting) {
+                waiting = true;
+                waitFrom = now;
+            }
+            if (now - waitFrom < kAudioSpin) {
+                pause();
+                continue;
+            }
+            // Asleep until a job finishes. Looked at again after saying so, so
+            // a job finishing in between isn't missed.
+            const uint32_t seen = finished.load(std::memory_order_seq_cst);
+            waiter.store(1, std::memory_order_seq_cst);
+            const int32_t ready = claim(r);
+            if (ready < 0 && static_cast<uint32_t>(done.load(std::memory_order_seq_cst)) != all) {
+                sleepWhile(finished, seen);
+            }
+            waiter.store(0, std::memory_order_seq_cst);
+            if (ready < 0) continue;
+            waitedUs += static_cast<int32_t>(
+                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - waitFrom).count());
+            waiting = false;
+            fn(context, ready);
+            done.fetch_or(1u << ready, std::memory_order_acq_rel);
             continue;
+        }
+        if (waiting) {
+            waiting = false;
+            waitedUs += static_cast<int32_t>(
+                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - waitFrom).count());
         }
         fn(context, j);
         done.fetch_or(1u << j, std::memory_order_acq_rel);
+    }
+    if (waiting) {
+        waitedUs += static_cast<int32_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - waitFrom).count());
     }
 }
 
@@ -216,6 +276,14 @@ void TrackPool::workerLoop(int32_t index, void (*onStart)(int32_t)) {
     if (onStart != nullptr) onStart(index);
     uint32_t seen = round.load(std::memory_order_acquire);
     while (!quit.load(std::memory_order_relaxed)) {
+        // Set aside: asleep until that changes, and not counted as a sleeper,
+        // so the audio thread doesn't wake it every block.
+        const uint32_t inUse = active.load(std::memory_order_acquire);
+        if (static_cast<uint32_t>(index) >= inUse) {
+            if (!quit.load()) sleepWhile(active, inUse);
+            seen = round.load(std::memory_order_acquire);
+            continue;
+        }
         // Wait for the next round, spinning briefly, then asleep.
         const auto until = std::chrono::steady_clock::now() + kSpin;
         uint32_t now = round.load(std::memory_order_acquire);
@@ -225,11 +293,12 @@ void TrackPool::workerLoop(int32_t index, void (*onStart)(int32_t)) {
         }
         if (now == seen) {
             sleepers.fetch_add(1, std::memory_order_seq_cst);
-            if (round.load(std::memory_order_seq_cst) == seen && !quit.load()) sleepWhile(seen);
+            if (round.load(std::memory_order_seq_cst) == seen && !quit.load()) sleepWhile(round, seen);
             sleepers.fetch_sub(1, std::memory_order_seq_cst);
             continue;
         }
         seen = now;
+        if (static_cast<uint32_t>(index) >= active.load(std::memory_order_relaxed)) continue; // set aside since
         // Take jobs until the round is done or moves on. A job waiting on one
         // another thread holds is worth waiting a moment for.
         const uint32_t all = allJobs.load(std::memory_order_relaxed);

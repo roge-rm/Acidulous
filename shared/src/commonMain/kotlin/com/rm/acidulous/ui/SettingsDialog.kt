@@ -152,6 +152,17 @@ private fun AudioTab(trackNames: List<String>) {
                 stringResource(Res.string.settings_voices), li, 0 until limits.size, if (UiPrefs.voiceLimit == 0) all else "${UiPrefs.voiceLimit}",
                 choices = limits.map { if (it == 0) all else "$it" },
             ) { UiPrefs.chooseVoiceLimit(limits[it]) }
+            // Only where there's more than one core to give: not in a browser.
+            val most = NativeEngine.coresMax
+            if (most > 1) {
+                val auto = stringResource(Res.string.settings_cores_auto)
+                val ci = UiPrefs.cores.coerceIn(0, most)
+                CountKnob(
+                    stringResource(Res.string.settings_cores), ci, 0..most,
+                    if (ci == 0) "$auto ${NativeEngine.coresInUse}" else "$ci",
+                    choices = listOf(auto) + (1..most).map { "$it" },
+                ) { UiPrefs.chooseCores(it) }
+            }
             // Auto picks between the other two, so while it's on they show which
             // one it chose.
             SwitchGrid(
@@ -176,6 +187,10 @@ private fun AudioTab(trackNames: List<String>) {
     // Whether each track was playing frozen audio when it set that peak.
     var rackFrozen by remember { mutableStateOf(BooleanArray(RACKS)) }
     var interrupted by remember { mutableStateOf(0f) }
+    var coresNow by remember { mutableStateOf(1) }
+    // The peak since this was opened.
+    remember { NativeEngine.readWorkerWaitPeakUs() }
+    var waitPeak by remember { mutableStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
             worst = maxOf(worst, NativeEngine.worstBlockUs)
@@ -196,6 +211,8 @@ private fun AudioTab(trackNames: List<String>) {
             racks = byRack
             rackFrozen = wasFrozen
             interrupted = NativeEngine.interruptedPercent
+            coresNow = NativeEngine.coresInUse
+            waitPeak = maxOf(waitPeak, NativeEngine.readWorkerWaitPeakUs())
             delay(120)
         }
     }
@@ -255,6 +272,10 @@ private fun AudioTab(trackNames: List<String>) {
     // On a phone with fast and slow cores, the sound is made on the fast
     // ones; a phone with one kind of core, or a computer, doesn't say.
     NativeEngine.fastCores.takeIf { it > 0 }?.let { lines += "audio thread  on the $it fast cores" }
+    if (NativeEngine.coresMax > 1) {
+        lines += "tracks  on %d core%s".format(coresNow, if (coresNow == 1) "" else "s") +
+            if (coresNow > 1) " · longest wait for another core %.2f ms".format(waitPeak / 1000f) else ""
+    }
     if (UiPrefs.showDiagnostics) WindowCards {
         WindowCard("readings · since opened") {
             // Text in a card of controls: a fixed width column when the cards
