@@ -226,7 +226,7 @@ fun EditScreen(
     // not saved in the song.
     var noteProp by remember(trackIndex) { mutableStateOf(NoteProp.Velocity) }
     // A singer's notes have words; the note tapped in the words row, while its window is open.
-    val sings = track.machine.type == "Diction"
+    val sings = com.rm.acidulous.model.MachineUi.takesWords(track.machine.type)
     if (!sings && noteProp == NoteProp.Words) noteProp = NoteProp.Velocity
     var wordsFrom by remember(trackIndex, sceneId) { mutableStateOf<Int?>(null) }
     // Which pitch the note lane shows, or every pitch. Keyed on the track so
@@ -1301,7 +1301,7 @@ fun EditScreen(
             // Opened from a note that's selected with others: the line goes
             // over the selection.
             only = selection.takeIf { from in it && it.size > 1 && it.all { i -> i in clip.notes.indices } }.orEmpty(),
-            accent = com.rm.acidulous.model.lyrics.Accent.of(track.machine.params["accent"] ?: 0f),
+            accent = com.rm.acidulous.model.lyrics.Accent.of(com.rm.acidulous.model.MachineUi.wordsAccent(track.machine.type, track.machine.params)),
             onDismiss = { wordsFrom = null },
             onApply = { notes ->
                 editor.editClip(trackIndex, sceneId) { it.copy(notes = notes) }

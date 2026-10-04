@@ -154,3 +154,20 @@ patch "Morsing Groupings" family=rhythm note=49 range=44..56
   accent         0.8
   ratchet        0.15
   volume         0.54
+
+# --- words and following -----------------------------------------------------
+
+patch "Talking Steel" family=rhythm note=50 range=45..60
+  # Give its notes words: a deep, open mouth that says them, ringing on.
+  depth          0.8
+  focus          0.4
+  stop           0
+  words          1
+  volume         0.8
+
+patch "Follow Track 1" family=rhythm note=50 range=45..60
+  # A drone galloping while track 1's melody moves the mouth.
+  sidechain      1
+  pattern        3      # gallop
+  focus          0.8
+  volume         0.6

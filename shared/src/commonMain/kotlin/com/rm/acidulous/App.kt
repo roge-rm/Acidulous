@@ -1537,7 +1537,7 @@ fun App(modifier: Modifier = Modifier) {
 
     // The singer's dictionary, the first time a song has a singer. Its words
     // were said from their spelling until now, so the song goes again.
-    val hasSinger = song.tracks.any { it.machine.type == "Diction" }
+    val hasSinger = song.tracks.any { com.rm.acidulous.model.MachineUi.takesWords(it.machine.type) }
     LaunchedEffect(hasSinger) {
         if (!hasSinger || com.rm.acidulous.model.lyrics.Lexicon.dictionary != null) return@LaunchedEffect
         val loaded = runCatching {

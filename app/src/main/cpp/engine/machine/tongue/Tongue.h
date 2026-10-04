@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <engine/dsp/PitchFollow.h>
 #include <engine/machine/Machine.h>
+#include <engine/machine/diction/Phones.h>
 #include <engine/machine/diction/Throat.h>
 #include <engine/machine/tongue/Reed.h>
 
@@ -23,7 +25,10 @@ namespace acidulous::machine {
  *
  * Keys play it two ways: a harp at each key's pitch, or one harp on a drone
  * note with each key moving the mouth onto the drone's nearest harmonic, as
- * a player does. A pattern replucks held harps on the song's grid.
+ * a player does. A pattern replucks held harps on the song's grid. The
+ * mouth can follow another track's melody instead (`sidechain`): its pitch,
+ * folded into the drone's 3rd to 12th harmonics. And it can say a clip's
+ * words: each note's sounds move the mouth, the hissing ones with a hiss.
  */
 class Tongue final : public Machine {
   public:
@@ -34,6 +39,7 @@ class Tongue final : public Machine {
         Voices, VelocityAmount, BendRange, Octave, Volume,
         Reeds, Chord, Strum, Order,
         Play, Drone, Repluck, Pattern, Accent, Ratchet,
+        Sidechain, Words,
         Count
     };
     static_assert(Count <= kMaxParams, "too many parameters");
@@ -65,6 +71,7 @@ class Tongue final : public Machine {
     void pitchBend(int16_t value14) override;
     void controlChange(uint8_t cc, uint8_t value) override;
     void channelPressure(uint8_t value) override;
+    void lyric(const uint8_t *phones, int32_t count) override;
     bool render(float *L, float *R, int32_t frames) override;
 
     /** Voices sounding, for tests. */
@@ -72,6 +79,8 @@ class Tongue final : public Machine {
     /** How many times a harp has been plucked since reset, and when (samples since reset) the last 64 were; for tests. */
     int strikes() const { return strikeCount; }
     int64_t strikeTime(int i) const { return strikeLog[i & 63]; }
+    /** Where the mouth's formants are going, Hz; for tests. */
+    float formantTarget(int k) const { return mouthGoal[k]; }
     /** Where the mouth's picking resonance is going, Hz, or 0 when it's off; for tests. */
     float pickTarget() const { return pickOn ? pickHz : 0.0f; }
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
@@ -159,6 +168,16 @@ class Tongue final : public Machine {
         uint32_t age = 0;
     };
 
+    /** One step of a word: where the mouth goes, its hiss, and for how long (-1 held). */
+    struct Said {
+        float f[3];
+        float noise;
+        float band[2][3];
+        int32_t samples;
+    };
+    static constexpr int kSaid = 24;
+    static constexpr int kMaxPhones = 32;
+
     /** A pluck waiting for its sample: from a pattern step or a ratchet. */
     struct Due {
         int64_t at = 0;
@@ -177,6 +196,18 @@ class Tongue final : public Machine {
     void startHarp(Voice &v, uint8_t note, float noteNumber, float vel);
     /** Mouth mode: the harmonic of the drone nearest [note], as Hz. */
     float harmonicFor(uint8_t note) const;
+    /** The harmonic of the drone nearest [hz], from the 2nd up; folded by octaves into the 3rd to 12th when [fold]. */
+    float harmonicNear(float hz, bool fold) const;
+    /** Turns the next note's words into steps for the mouth. */
+    void planWords();
+    /** The mouth's hiss for the word step it's on. */
+    void startSaid();
+    /** The note is let go: its word's end sounds. */
+    void endWords();
+    /** Following has stopped: the mouth goes back to the keys, or off in drone mode. */
+    void letGoOfFollow();
+    /** The drone as it sounds: the lowest reed, or the drone note when nothing does. */
+    float droneHz() const;
     /** The pattern's steps from here to the end of the block, as plucks due. */
     void schedulePattern(int32_t frames);
     void addDue(int64_t at, float velocity);
@@ -200,6 +231,21 @@ class Tongue final : public Machine {
     float pickHz = 0.0f, pickAt = 0.0f;
     bool pickOn = false;
     uint8_t keys[kKeys] = {};
+    /** Following another track: its pitch, blocks to the next look, and blocks since it was last sure. */
+    dsp::PitchFollow follower;
+    int followLeft = 0, followLost = 0;
+    bool following = false;
+    float followHz = 0.0f;
+    /** The words: the next note's sounds, the steps they make, and where in them the mouth is. */
+    uint8_t pending[kMaxPhones] = {};
+    int pendingCount = 0;
+    Said said[kSaid];
+    int saidCount = 0, saidAt = 0, heldStep = 0;
+    int32_t saidLeft = 0;
+    bool saying = false;
+    diction::Bandpass hissBands[2];
+    float hissShare[2] = {0.0f, 0.0f}, hissLevel = 0.0f;
+    float mouthGoal[3] = {730, 1090, 2440};
     int keyCount = 0;
     float lastVelocity = 0.8f;
     /** The song's position in ticks at the start of this block, kept to the sample, and its tempo. */

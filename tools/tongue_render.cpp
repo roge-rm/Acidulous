@@ -8,6 +8,10 @@
 //
 // One pluck by default; --rate plucks again that often, as the recordings are
 // played. --hold lets the key go after S seconds (default: held to the end).
+// --words "HH AH L OW|W ER L D" says the next word on each pluck, in
+// dictionary sounds. --follow 69,72,74,76 plays that melody as a saw into the
+// sidechain, a note every --step seconds (0.5), for the follow knob
+// (sidechain=1 turns it on).
 // --wheel moves the mod wheel (the mouth) up and down that often. --spread
 // varies each pluck's velocity by up to that much either way, and its time by
 // up to 15 ms, as a player does.
@@ -15,6 +19,7 @@
 #include <engine/core/Constants.h>
 #include <engine/format/WavWriter.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/diction/Phones.h>
 
 #include <cmath>
 #include <cstdio>
@@ -30,13 +35,18 @@ using namespace acidulous;
 int main(int argc, char **argv) {
     _mm_setcsr(_mm_getcsr() | 0x8040);
     if (argc < 2) {
-        std::fprintf(stderr, "usage: tongue_render <out.wav> [--note N] [--velocity V] [--seconds S] [--rate R] [--hold S] [--wheel R] [--spread V] [name=value ...]\n");
+        std::fprintf(stderr, "usage: tongue_render <out.wav> [--note N] [--velocity V] [--seconds S] [--rate R] [--hold S] [--wheel R] [--spread V] [--words W|W] [--follow N,N] [--step S] [name=value ...]\n");
         return 2;
     }
     const std::string out = argv[1];
     int note = 55, velocity = 100;
     float seconds = 3.0f, rate = 0.0f, hold = -1.0f, wheel = 0.0f;
     int spread = 0;
+    std::vector<std::string> words;
+    std::vector<int> melody;
+    float step = 0.5f;
+    size_t wordAt = 0;
+    double sawPhase = 0.0;
     uint32_t seed = 12345u;
     std::unique_ptr<Machine> m(MachineRegistry::create("Tongue"));
     m->prepare(kSampleRate);
@@ -53,6 +63,26 @@ int main(int argc, char **argv) {
         else if (a == "--hold") hold = static_cast<float>(next());
         else if (a == "--wheel") wheel = static_cast<float>(next());
         else if (a == "--spread") spread = static_cast<int>(next());
+        else if (a == "--step") step = static_cast<float>(next());
+        else if (a == "--words" && i + 1 < argc) {
+            std::string all = argv[++i];
+            size_t from = 0;
+            while (from <= all.size()) {
+                const size_t bar = all.find('|', from);
+                words.push_back(all.substr(from, bar == std::string::npos ? std::string::npos : bar - from));
+                if (bar == std::string::npos) break;
+                from = bar + 1;
+            }
+        } else if (a == "--follow" && i + 1 < argc) {
+            std::string all = argv[++i];
+            size_t from = 0;
+            while (from < all.size()) {
+                melody.push_back(std::atoi(all.c_str() + from));
+                const size_t comma = all.find(',', from);
+                if (comma == std::string::npos) break;
+                from = comma + 1;
+            }
+        }
         else if (a.find('=') != std::string::npos) {
             const std::string name = a.substr(0, a.find('='));
             const float value = static_cast<float>(std::atof(a.c_str() + a.find('=') + 1));
@@ -78,6 +108,13 @@ int main(int argc, char **argv) {
             const int64_t jitter = spread > 0 ? static_cast<int64_t>((seed >> 12) % 1441u) - 720 : 0;
             nextPluck += every + jitter;
             const int v = velocity + (spread > 0 ? static_cast<int>((seed >> 8) % static_cast<uint32_t>(2 * spread + 1)) - spread : 0);
+            if (!words.empty()) {
+                // Each word is its own note, let go before the next so its end is said.
+                if (down) m->noteOff(static_cast<uint8_t>(note));
+                uint8_t codes[32];
+                const int n = machine::diction::parsePhones(words[wordAt++ % words.size()].c_str(), codes, 32);
+                m->lyric(codes, n);
+            }
             m->noteOn(static_cast<uint8_t>(note), static_cast<uint8_t>(std::clamp(v, 1, 127)));
             down = true;
         }
@@ -86,6 +123,17 @@ int main(int argc, char **argv) {
             const float phase = std::fmod(static_cast<float>(t) / kSampleRate * wheel, 1.0f);
             const float up = phase < 0.5f ? 2.0f * phase : 2.0f - 2.0f * phase;
             m->controlChange(1, static_cast<uint8_t>(std::lround(up * 127.0f)));
+        }
+        float key[kBlockFrames];
+        if (!melody.empty()) {
+            const size_t at = static_cast<size_t>(static_cast<double>(t) / (step * kSampleRate)) % melody.size();
+            const double hz = 440.0 * std::pow(2.0, (melody[at] - 69) / 12.0);
+            for (int i = 0; i < kBlockFrames; ++i) {
+                sawPhase += hz / kSampleRate;
+                sawPhase -= std::floor(sawPhase);
+                key[i] = static_cast<float>(0.3 * (2.0 * sawPhase - 1.0));
+            }
+            m->setKey(key);
         }
         m->render(L, R, kBlockFrames);
         for (int i = 0; i < kBlockFrames; ++i) {

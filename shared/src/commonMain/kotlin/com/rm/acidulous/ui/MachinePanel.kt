@@ -224,7 +224,7 @@ fun MachinePanel(
             "Filament" -> FilamentPanel(binding)
             "Brazen" -> BrazenPanel(binding)
             "Hammer" -> HammerPanel(binding)
-            "Tongue" -> TonguePanel(binding)
+            "Tongue" -> TonguePanel(binding, editor)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3530,7 +3530,7 @@ private val TONGUE_PATTERNS = listOf("off", "eighths", "sixteenths", "gallop", "
 
 /** Tongue: the harp, its reeds, the mouth that picks its harmonics with the breath, and the rest. */
 @Composable
-private fun TonguePanel(b: ParamBinding) {
+private fun TonguePanel(b: ParamBinding, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
     PanelSections(listOf("harp", "reeds", "mouth", "keys", "out"), section, { section = it }) { sec ->
         when (sec) {
@@ -3564,6 +3564,7 @@ private fun TonguePanel(b: ParamBinding) {
                     PanelKnob(b, "focus", "focus", PanelAmber)
                     PanelKnob(b, "depth", "depth")
                     PanelKnob(b, "glide", "glide")
+                    PanelKnob(b, "words", "words")
                 }
                 Group("breath") {
                     PanelKnob(b, "breath", "breath", PanelAmber)
@@ -3576,6 +3577,11 @@ private fun TonguePanel(b: ParamBinding) {
                     PanelStepKnob(b, "play", TONGUE_PLAYS, "play", PanelAmber)
                     PanelStepKnob(b, "drone", TONGUE_DRONES, "drone")
                     PanelStepKnob(b, "repluck", TONGUE_REPLUCKS, "repluck")
+                    // Another track whose melody moves the mouth: off, or the track.
+                    val followLabels = listOf(panelWord("off")) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1}"
+                    }
+                    PanelStepKnob(b, "sidechain", followLabels, "follow", PanelPink)
                 }
                 Group("rhythm") {
                     PanelStepKnob(b, "pattern", TONGUE_PATTERNS, "pattern", PanelPink)

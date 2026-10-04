@@ -67,6 +67,21 @@ constexpr Rhythm kRhythms[Tongue::kPatterns] = {
 /** The picking resonance's share against the vowel's formants: it leads. */
 constexpr float kPickShare = 2.0f;
 
+/**
+ * A speech formant (Diction's sounds) where a harp player's mouth puts it:
+ * higher, as kMouths is. A straight line per formant through Diction's knob
+ * vowels and Tongue's mouths, so the vowels keep their order.
+ */
+float harpFormant(int k, float hz) {
+    static constexpr float kSlope[3] = {2.184f, 0.692f, 1.016f};
+    static constexpr float kOffset[3] = {-96.7f, 1142.9f, 485.6f};
+    return kSlope[k] * hz + kOffset[k];
+}
+/** A word's steps glide over this long, seconds: quicker than the glide knob, as speech is. */
+constexpr float kSayGlide = 0.02f;
+/** A word's hiss against a sound's own noise level: a talking player hisses hard to be heard over the buzz. */
+constexpr float kSayHiss = 8.0f;
+
 } // namespace
 
 // Steel, khomus, morsing, brass, munnharpe and temir komuz are fitted to
@@ -127,6 +142,10 @@ const ParamDef *Tongue::paramDefs(int32_t &count) const {
         {"pattern", 0.0f, static_cast<float>(kPatterns - 1), 0.0f, Curve::Stepped, kPatterns, ""},
         {"accent", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"ratchet", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // Another track the mouth follows: 0 for none, 1..16 for a track.
+        {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
+        // How far a clip's words move the mouth, against the vowel knob.
+        {"words", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -137,6 +156,7 @@ void Tongue::prepare(int32_t rate) {
     for (Voice &v : voices) {
         for (Tine &t : v.tines) t.reed.prepare(sampleRate);
     }
+    follower.prepare(sampleRate);
     reset();
 }
 
@@ -166,6 +186,16 @@ void Tongue::reset() {
     for (int k = 0; k < 3; ++k) formants[k] = kMouths[2][k];
     pick.clear();
     pickOn = false;
+    follower.reset();
+    pendingCount = saidCount = saidAt = 0;
+    saidLeft = 0;
+    saying = false;
+    hissBands[0].clear();
+    hissBands[1].clear();
+    hissLevel = 0.0f;
+    followLeft = followLost = 0;
+    following = false;
+    followHz = 0.0f;
     pickHz = pickAt = 0.0f;
     keyCount = 0;
     lastVelocity = 0.8f;
@@ -234,6 +264,13 @@ void Tongue::pluckTine(const Voice &v, Tine &t, float swing, float contact, floa
 void Tongue::noteOn(uint8_t note, uint8_t velocity) {
     const float vel = static_cast<float>(velocity) / 127.0f;
     lastVelocity = vel;
+    // A note with words says them; one without goes back to the vowel knob.
+    if (pendingCount > 0) {
+        planWords();
+        pendingCount = 0;
+    } else {
+        saying = false;
+    }
     if (steppedTargetOf(Play) == MouthKeys) {
         // One harp on the drone; the key moves the mouth.
         for (int k = 0; k < keyCount; ++k) {
@@ -362,6 +399,7 @@ void Tongue::noteOff(uint8_t note) {
             } else if (voices[0].used && voices[0].held) {
                 voices[0].held = false;
                 retune(voices[0]);
+                endWords();
             }
             return;
         }
@@ -370,6 +408,7 @@ void Tongue::noteOff(uint8_t note) {
         if (v.used && v.held && v.note == note) {
             v.held = false;
             retune(v);
+            if (v.age == clock) endWords();
         }
     }
 }
@@ -392,20 +431,45 @@ void Tongue::pitchBend(int16_t value14) {
     }
 }
 
-float Tongue::harmonicFor(uint8_t note) const {
-    // The drone as it sounds: the harp's first reed, or the note it will play.
-    const Voice &v = voices[0];
-    const float drone = v.used ? v.tines[0].reed.hz()
-                               : noteHz(static_cast<float>(steppedTargetOf(Drone)) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) +
-                                        targetOf(Tune) / 100.0f);
+float Tongue::droneHz() const {
+    float hz = 0.0f;
+    for (const Voice &v : voices) {
+        if (!v.used) continue;
+        for (int r = 0; r < v.count; ++r) {
+            const float f = v.tines[r].reed.hz();
+            if (hz == 0.0f || f < hz) hz = f;
+        }
+    }
+    if (hz > 0.0f) return hz;
+    return noteHz(static_cast<float>(steppedTargetOf(Drone)) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f);
+}
+
+float Tongue::harmonicNear(float hz, bool fold) const {
+    const float drone = std::fmax(droneHz(), 1.0f);
+    float ratio = hz / drone;
+    // Another track's note is wanted for its name, not its octave: brought
+    // into the harmonics a mouth picks out best.
+    if (fold) {
+        while (ratio < 2.5f) ratio *= 2.0f;
+        while (ratio > 12.5f) ratio *= 0.5f;
+    }
     // The nearest harmonic in pitch, from the 2nd up, below the formants' reach.
-    const float ratio = noteHz(static_cast<float>(note)) / std::fmax(drone, 1.0f);
     const float lower = std::floor(ratio), upper = lower + 1.0f;
     float n = lower >= 1.0f && std::log(ratio / lower) < std::log(upper / ratio) ? lower : upper;
-    const float top = std::floor(std::fmin(5000.0f, 0.45f * sampleRate) / std::fmax(drone, 1.0f));
+    const float top = std::floor(std::fmin(5000.0f, 0.45f * sampleRate) / drone);
     n = std::clamp(n, 2.0f, std::fmax(2.0f, top));
     return n * drone;
 }
+
+void Tongue::letGoOfFollow() {
+    if (keyCount > 0) {
+        pickHz = harmonicFor(keys[keyCount - 1]);
+    } else if (steppedTargetOf(Play) != MouthKeys) {
+        pickOn = false;
+    }
+}
+
+float Tongue::harmonicFor(uint8_t note) const { return harmonicNear(noteHz(static_cast<float>(note)), false); }
 
 void Tongue::onBlock(int64_t tickStart, int64_t, float bpm) {
     samplesPerTick = static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(bpm > 1.0f ? bpm : 120.0f) * kPPQN);
@@ -468,6 +532,77 @@ void Tongue::repluckHeld(float velocity) {
     }
 }
 
+void Tongue::lyric(const uint8_t *phones, int32_t count) {
+    pendingCount = std::clamp(count, 0, kMaxPhones);
+    for (int i = 0; i < pendingCount; ++i) pending[i] = phones[i];
+}
+
+void Tongue::planWords() {
+    int32_t tableSize = 0;
+    const diction::Phone *table = diction::phoneTable(tableSize);
+    // The held sound: the last vowel, or failing one the last sound.
+    int held = -1;
+    for (int i = 0; i < pendingCount; ++i) {
+        const int c = pending[i];
+        if (c <= 0 || c >= tableSize) continue;
+        const diction::Kind kind = table[c].kind;
+        if (kind == diction::Kind::Vowel || kind == diction::Kind::Diphthong || held < 0) held = i;
+    }
+    saidCount = 0;
+    heldStep = 0;
+    const auto add = [&](const diction::Phone &ph, const float *f, float seconds) {
+        if (saidCount == kSaid) return;
+        Said &s = said[saidCount++];
+        for (int k = 0; k < 3; ++k) s.f[k] = harpFormant(k, f[k]);
+        s.noise = ph.noise;
+        for (int b = 0; b < 2; ++b) {
+            for (int k = 0; k < 3; ++k) s.band[b][k] = ph.band[b][k];
+        }
+        s.samples = seconds < 0.0f ? -1 : std::max(1, static_cast<int32_t>(seconds * sampleRate));
+    };
+    for (int i = 0; i < pendingCount; ++i) {
+        const int c = pending[i];
+        if (c <= 0 || c >= tableSize) continue;
+        const diction::Phone &ph = table[c];
+        const bool last = i == held;
+        if (last) heldStep = ph.kind == diction::Kind::Diphthong ? saidCount + 1 : saidCount;
+        if (ph.kind == diction::Kind::Diphthong) {
+            add(ph, ph.f, last ? 0.12f : ph.length * 0.5f);
+            add(ph, ph.to, last ? -1.0f : ph.length * 0.5f);
+        } else {
+            // Most consonants are quicker on a harp than in a song: the mouth
+            // only passes through them. A hiss keeps its length, to be heard.
+            const bool vowel = ph.kind == diction::Kind::Vowel;
+            const bool hissing = ph.kind == diction::Kind::Fricative || ph.kind == diction::Kind::Affricate;
+            add(ph, ph.f, last ? -1.0f : std::fmax(0.015f, ph.length * (vowel ? 0.8f : hissing ? 1.0f : 0.6f)));
+        }
+    }
+    // The sounds after the held one are the note's end, said when it's let go;
+    // the mouth stays on the last.
+    if (saidCount > 0) said[saidCount - 1].samples = -1;
+    heldStep = std::min(heldStep, saidCount - 1);
+    saidAt = 0;
+    saidLeft = saidCount > 0 ? said[0].samples : 0;
+    saying = saidCount > 0;
+    if (saying) startSaid();
+}
+
+void Tongue::endWords() {
+    if (!saying || saidAt != heldStep || heldStep + 1 >= saidCount) return;
+    ++saidAt;
+    startSaid();
+    saidLeft = said[saidAt].samples;
+}
+
+void Tongue::startSaid() {
+    const Said &s = said[saidAt];
+    for (int b = 0; b < 2; ++b) {
+        hissBands[b].set(s.band[b][0], s.band[b][1], sampleRate);
+        hissShare[b] = s.band[b][2];
+    }
+    hissLevel = s.noise;
+}
+
 void Tongue::controlChange(uint8_t cc, uint8_t value) {
     if (cc == 1) wheel = static_cast<float>(value) / 127.0f;
 }
@@ -483,7 +618,14 @@ void Tongue::moveMouth(bool jump) {
     const float t = m - static_cast<float>(lo);
     float target[3];
     for (int k = 0; k < 3; ++k) target[k] = kMouths[lo][k] + (kMouths[lo + 1][k] - kMouths[lo][k]) * t;
-    const float follow = jump ? 1.0f : 1.0f - std::exp(-static_cast<float>(kControl) / (knob(Glide) * 0.001f * sampleRate));
+    // A note's words take the mouth where they say, as far as the words knob goes.
+    const float words = clampf(knob(Words), 0.0f, 1.0f);
+    if (saying && words > 0.0f) {
+        for (int k = 0; k < 3; ++k) target[k] += (said[saidAt].f[k] - target[k]) * words;
+    }
+    for (int k = 0; k < 3; ++k) mouthGoal[k] = target[k];
+    const float seconds = saying && words > 0.0f ? kSayGlide : knob(Glide) * 0.001f;
+    const float follow = jump ? 1.0f : 1.0f - std::exp(-static_cast<float>(kControl) / (seconds * sampleRate));
     for (int k = 0; k < 3; ++k) formants[k] += (target[k] - formants[k]) * follow;
     if (pickOn) pickAt += (pickHz - pickAt) * follow;
     // Focus narrows the lower formants until each brings out one harmonic.
@@ -552,6 +694,43 @@ bool Tongue::render(float *L, float *R, int32_t frames) {
         return true;
     }
     schedulePattern(frames);
+    // The words move on a step at a time; the held one stays.
+    if (saying && saidLeft >= 0) {
+        saidLeft -= frames;
+        while (saying && saidLeft < 0 && saidAt + 1 < saidCount) {
+            const int32_t over = -saidLeft;
+            ++saidAt;
+            startSaid();
+            saidLeft = said[saidAt].samples < 0 ? -1 : said[saidAt].samples - over;
+            if (said[saidAt].samples < 0) break;
+        }
+    }
+    const float wordsHiss = saying ? kSayHiss * hissLevel * clampf(paramOf(Words), 0.0f, 1.0f) * kHouse * lastVelocity : 0.0f;
+    // Following another track: a look at its pitch spread over four blocks;
+    // sure, the mouth goes to it, and a while unsure, back to the keys.
+    if (sidechainRack() >= 0 && key_ != nullptr) {
+        follower.push(key_, frames);
+        follower.update(0.25f);
+        if (--followLeft <= 0) {
+            followLeft = 4;
+            if (follower.sureness() > 0.8f) {
+                followHz = follower.pitch();
+                following = true;
+                followLost = 0;
+            } else if (following && ++followLost > 8) {
+                following = false;
+                letGoOfFollow();
+            }
+        }
+        if (following) {
+            pickHz = harmonicNear(followHz, true);
+            if (!pickOn) pickAt = pickHz;
+            pickOn = true;
+        }
+    } else if (following) {
+        following = false;
+        letGoOfFollow();
+    }
 
     // The block's settings.
     const float edgeKnob = paramOf(Edge) - kEdgeHome;
@@ -670,7 +849,12 @@ bool Tongue::render(float *L, float *R, int32_t frames) {
         }
         if (pickOn) peaks += kPickShare * pick.process(dry);
         const float shaped = dry + kMouthBoost * depth * peaks;
-        const float wet = mouthGain * shaped + breathed;
+        float wet = mouthGain * shaped + breathed;
+        // A word's hissing sounds, in their own colours.
+        if (wordsHiss > 0.0f) {
+            const float n = white(noise) * wordsHiss;
+            wet += hissShare[0] * hissBands[0].process(n) + hissShare[1] * hissBands[1].process(n);
+        }
         // No DC out of a mouth.
         const float y = wet - dcIn + dcPole * dcOut;
         dcIn = wet;

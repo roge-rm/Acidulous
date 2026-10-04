@@ -3191,7 +3191,17 @@ internal object FactoryBanks {
         family = "rhythm",
         low = 44, high = 56)
 
-    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19()) }
+    private fun tongue20() = Patch("Tongue", "Talking Steel",
+        mapOf("focus" to 0.4f, "depth" to 0.8f, "stop" to 0f, "volume" to 0.8f),
+        family = "rhythm",
+        low = 45, high = 60)
+
+    private fun tongue21() = Patch("Tongue", "Follow Track 1",
+        mapOf("focus" to 0.8f, "volume" to 0.6f, "pattern" to 0.5f, "sidechain" to 0.0625f),
+        family = "rhythm",
+        low = 45, high = 60)
+
+    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19(), tongue20(), tongue21()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

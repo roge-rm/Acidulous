@@ -5,6 +5,7 @@
 //   tongue_test.sh
 #include <engine/core/Constants.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/diction/Phones.h>
 #include <engine/machine/tongue/Tongue.h>
 
 #include <cmath>
@@ -47,6 +48,9 @@ struct Harp {
     std::vector<float> out;
     double tick = 0.0;
     float bpm = 120.0f;
+    /** Another track's sound for the sidechain: a saw at [keyHz], or nothing at 0. */
+    float keyHz = 0.0f;
+    double keyPhase = 0.0;
 
     explicit Harp(std::initializer_list<std::pair<const char *, float>> knobs = {}) {
         owned.reset(MachineRegistry::create("Tongue"));
@@ -74,6 +78,13 @@ struct Harp {
             const auto start = static_cast<int64_t>(tick);
             tick += ticksPerBlock;
             t->onBlock(start, static_cast<int64_t>(tick), bpm);
+            float key[kBlock];
+            for (int i = 0; i < kBlock; ++i) {
+                keyPhase += keyHz / kRate;
+                keyPhase -= std::floor(keyPhase);
+                key[i] = keyHz > 0.0f ? 0.3f * static_cast<float>(2.0 * keyPhase - 1.0) : 0.0f;
+            }
+            t->setKey(key);
             t->render(L, R, kBlock);
             out.insert(out.end(), L, L + kBlock);
         }
@@ -265,6 +276,102 @@ void patterns() {
     }
 }
 
+void follow() {
+    std::printf("follow\n");
+    const double drone = noteHz(50.0);
+    Harp h({{"play", 1}, {"drone", 50}, {"sidechain", 3}});
+    h.t->noteOn(81, 100); // A5: the drone's 6th harmonic, when nothing is followed
+    h.keyHz = 440.0f; // A4: the drone's 3rd harmonic, near enough
+    h.play(0.5);
+    const float a = h.t->pickTarget();
+    h.keyHz = static_cast<float>(noteHz(72.0)); // C5: nearest the 4th
+    h.play(0.3);
+    const float c = h.t->pickTarget();
+    h.keyHz = static_cast<float>(noteHz(38.0)); // D2, three octaves down: folded up to the 4th
+    h.play(0.3);
+    const float d = h.t->pickTarget();
+    check(std::fabs(cents(a, drone * 3)) < 5.0 && std::fabs(cents(c, drone * 4)) < 5.0 && std::fabs(cents(d, drone * 4)) < 5.0,
+          "the mouth follows another track's melody, octave folded", fmt("%.0f, %.0f, %.0f Hz", a, c, d));
+    h.keyHz = 0.0f;
+    h.play(0.6);
+    check(std::fabs(cents(h.t->pickTarget(), drone * 6)) < 5.0, "and goes back to the key when it falls silent",
+          fmt("%.0f Hz", h.t->pickTarget()));
+    Harp off({{"sidechain", 3}});
+    off.t->noteOn(55, 100);
+    off.keyHz = 440.0f;
+    off.play(0.5);
+    const bool onA = off.t->pickTarget() > 0.0f;
+    off.keyHz = 0.0f;
+    off.play(0.6);
+    check(onA && off.t->pickTarget() == 0.0f, "in drone mode the pick comes and goes with what it follows");
+}
+
+/** Says [words] (dictionary sounds) on the next note. */
+void say(Harp &h, const char *words) {
+    uint8_t codes[32];
+    const int n = machine::diction::parsePhones(words, codes, 32);
+    h.t->lyric(codes, n);
+}
+
+/** The level above 4 kHz over [from, to) seconds, dB: a hiss shows here. */
+double highs(const Harp &h, double from, double to) {
+    double sum = 0.0;
+    int n = 0;
+    for (double f = 4000.0; f < 9000.0; f += 250.0) {
+        sum += std::pow(10.0, h.level(f, from, to) / 10.0);
+        ++n;
+    }
+    return 10.0 * std::log10(sum / n + 1e-24);
+}
+
+void words() {
+    std::printf("words\n");
+    Harp ee, oo;
+    say(ee, "IY");
+    ee.t->noteOn(55, 100);
+    ee.play(0.3);
+    say(oo, "UW");
+    oo.t->noteOn(55, 100);
+    oo.play(0.3);
+    const float eeF2 = ee.t->formantTarget(1), ooF2 = oo.t->formantTarget(1);
+    const float eeF1 = ee.t->formantTarget(0), ooF1 = oo.t->formantTarget(0);
+    check(eeF2 > ooF2 + 600.0f, "ee takes the mouth's second formant well above oo", fmt("%.0f against %.0f Hz", eeF2, ooF2));
+    check(eeF1 >= 400.0f && ooF1 >= 400.0f && eeF1 <= 1700.0f, "in a harp player's range, not speech's", fmt("F1 %.0f and %.0f Hz", eeF1, ooF1));
+
+    Harp knob({{"words", 0}});
+    say(knob, "IY");
+    knob.t->noteOn(55, 100);
+    knob.play(0.3);
+    Harp plain;
+    plain.t->noteOn(55, 100);
+    plain.play(0.3);
+    check(std::fabs(knob.t->formantTarget(1) - plain.t->formantTarget(1)) < 1.0f, "words at 0 leave the mouth to the vowel knob",
+          fmt("%.0f against %.0f Hz", knob.t->formantTarget(1), plain.t->formantTarget(1)));
+
+    Harp hiss, quiet;
+    say(hiss, "S IY");
+    hiss.t->noteOn(55, 100);
+    hiss.play(0.4);
+    say(quiet, "IY");
+    quiet.t->noteOn(55, 100);
+    quiet.play(0.4);
+    const double lift = highs(hiss, 0.0, 0.08) - highs(quiet, 0.0, 0.08);
+    check(lift > 6.0, "an S hisses at the start of its note", fmt("%+.1f dB above 4 kHz", lift));
+
+    // "cat": the vowel held until the note's let go, then the T.
+    Harp cat;
+    say(cat, "K AE T");
+    cat.t->noteOn(55, 100);
+    cat.play(0.5);
+    const float held = cat.t->formantTarget(0);
+    cat.t->noteOff(55);
+    cat.play(0.3);
+    const float after = cat.t->formantTarget(0);
+    const double ae = 2.184 * 660.0 - 96.7;
+    check(std::fabs(held - ae) < 250.0f && std::fabs(after - held) > 50.0f, "a word's vowel is held, its end said on letting go",
+          fmt("F1 %.0f Hz held, %.0f after", held, after));
+}
+
 } // namespace
 
 int main() {
@@ -274,6 +381,8 @@ int main() {
     chords();
     mouth();
     patterns();
+    follow();
+    words();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

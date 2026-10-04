@@ -58,8 +58,6 @@ import org.jetbrains.compose.resources.StringResource
  * edit.
  */
 object EngineSync {
-    /** The machine that reads a note's words. */
-    private const val SINGER = "Diction"
 
 
     private const val TAG = "Acidulous.Sync"
@@ -711,8 +709,8 @@ object EngineSync {
                 // Unchanged since the last push? Then it's one lookup, not a marshal.
                 // A singer's words depend on the accent and on whether the
                 // dictionary has loaded yet, not only on the clip.
-                val sings = track.machine.type == SINGER && clip.notes.any { it.lyric.isNotBlank() }
-                val accent = Accent.of(track.machine.params["accent"] ?: 0f)
+                val sings = MachineUi.takesWords(track.machine.type) && clip.notes.any { it.lyric.isNotBlank() }
+                val accent = Accent.of(MachineUi.wordsAccent(track.machine.type, track.machine.params))
                 val rev = lockedRev(track, clip).let { r ->
                     if (implicit.isEmpty()) r else r xor (implicit.sorted().hashCode().toLong() shl 20) xor 0x5a5a
                 }.let { r ->

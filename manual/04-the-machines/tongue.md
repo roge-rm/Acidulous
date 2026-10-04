@@ -77,9 +77,25 @@ go instead, and **pluck** sets how quickly.
   single harmonic and the tune gets clearer.
 - **depth** - how much of the sound goes through the mouth.
 - **glide** - how long the mouth takes to move to a new vowel, in ms.
+- **words** - how far a clip's words move the mouth. See below.
 
 The mouth keeps the level steady, so moving it changes the colour and not the
 loudness.
+
+## Words and following
+
+Tongue can talk. Give its notes words in the editor's **words** lane, as for
+Diction, and the mouth shapes each note's word: the vowel held while the note
+is down, the sounds before it on the way in, and the ones after it when you
+let go. An S or a T hisses. A harp only talks so clearly, so short, open
+words with plenty of vowel come through best.
+
+The mouth can also follow another track. Set **follow** to that track, and
+its melody moves the mouth onto the drone's nearest harmonic, as the keys do
+in mouth mode. Its octave doesn't matter: every note is brought into the
+harmonics the mouth picks out best, the 3rd to the 12th. When that track
+goes quiet the mouth goes back to the keys. Hold a drone with a pattern on
+and the harp plays the other track's tune.
 
 ## Breath
 
