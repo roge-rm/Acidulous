@@ -83,6 +83,23 @@ class Course {
         float after1 = 30.0f, after3 = 15.0f, after7 = 10.0f;
         /** The prompt sound at the fundamental, the third and the seventh partial. */
         float prompt1 = 8.0f, prompt3 = 5.0f, prompt7 = 3.0f;
+        bool operator==(const Decay &o) const {
+            return after1 == o.after1 && after3 == o.after3 && after7 == o.after7 && prompt1 == o.prompt1 &&
+                   prompt3 == o.prompt3 && prompt7 == o.prompt7;
+        }
+    };
+
+    /**
+     * The loss designed for one note, kept where every voice can use it, as
+     * the sections are: its fitting takes most of a note-on's tuning, and a
+     * voice that moves to a key with nothing changed gets the same answer.
+     * What it was made from, and what it made.
+     */
+    struct Loss {
+        bool made = false;
+        float f0 = 0.0f, sr = 0.0f, highRing = 0.0f, couple = 0.0f;
+        Decay decay;
+        float zero = 0.0f, pole = 0.0f, gain = 0.0f, bridgeLow = 0.0f, bridgeRise = 0.0f;
     };
 
     /**
@@ -156,6 +173,8 @@ class Course {
         float bend = 0.0f;
         /** Where to keep the sections designed for this note (null: the course's own). */
         Sections *kept = nullptr;
+        /** Where to keep the loss designed for this note (null: designed each time). Not compared: it's a place, not a setting. */
+        Loss *keptLoss = nullptr;
         Decay decay;
         /** Where the hammer strikes, a fraction of the string from the far end. */
         float strike = 0.12f;
@@ -188,8 +207,11 @@ class Course {
     }
 
     void clear() {
-        std::fill(buffer.begin(), buffer.end(), 0.0f);
+        // The line (64 KB) is zeroed only as far back as the new strings
+        // read, as they're tuned (keepClean).
         write = 0;
+        dirty = true;
+        cleanFrom = kSize;
         for (int i = 0; i < kLanes; ++i) {
             thiranState[i] = lossIn[i] = lossOut[i] = 0.0f;
             for (int s = 0; s < kStages; ++s) allpassState[s][i] = 0.0f;
@@ -218,7 +240,7 @@ class Course {
         }
         stages = d.stages < 0 ? 0 : (d.stages > kStages ? kStages : d.stages);
         const float f0 = clampf(d.hz, 20.0f, sr * 0.45f);
-        designLoss(f0, d.decay);
+        designLoss(f0, d.decay, d.keptLoss);
         // The loss's phase sharpens the upper partials a little too: the
         // stiffness makes up the rest, judged at a partial that matters for
         // the register (P B (K^2 - 1) / 2 is how much less delay a stiff
@@ -434,6 +456,7 @@ class Course {
         }
         for (int i = lanes; i < kLanes; ++i) out[i] = 0.0f;
         write = (write + 1) & (kSize - 1);
+        if (write == 0) dirty = false; // round once since clear(): every cell is this note's
         level += (std::fabs(arriving) - level) * 0.0005f;
         return arriving;
     }
@@ -479,6 +502,23 @@ class Course {
 
   private:
     static size_t index(int32_t i) { return static_cast<size_t>(i & (kSize - 1)) * kLanes; }
+
+    /**
+     * Since clear(), zeroes whatever a read [age] samples back could find of
+     * the strings before: the cells behind where this note started writing.
+     * Every read in the loop is within a lane's delay, so this runs as each
+     * delay is set, and only zeroes what no earlier call did.
+     */
+    void keepClean(int age) {
+        if (!dirty) return;
+        const int back = age + 2 - write; // reaching this far behind cell 0
+        if (back <= 0) return;
+        const int from = std::max(0, kSize - back);
+        if (from >= cleanFrom) return;
+        std::fill(buffer.begin() + static_cast<std::ptrdiff_t>(index(from)),
+                  buffer.begin() + static_cast<std::ptrdiff_t>(static_cast<size_t>(cleanFrom) * kLanes), 0.0f);
+        cleanFrom = from;
+    }
 
     /** The pickups' places in the line: a wave leaving the bridge, and coming back to it. */
     void placePickups() {
@@ -577,6 +617,7 @@ class Course {
             d = clampf(d + (fracWanted - allpassDelay(e, w)), 0.4f, 1.6f);
         }
         delay[lane] = n;
+        keepClean(n);
         eta[lane] = (1.0f - d) / (1.0f + d);
     }
 
@@ -777,7 +818,16 @@ class Course {
      * seventh (the third, likewise). A T60 is a time: the loss per turn
      * follows from it and the period, so a note rings as long at any pitch.
      */
-    void designLoss(float f0, const Decay &t) {
+    void designLoss(float f0, const Decay &t, Loss *keep = nullptr) {
+        if (keep != nullptr && keep->made && keep->f0 == f0 && keep->sr == sr && keep->highRing == design.highRing &&
+            keep->couple == design.couple && keep->decay == t) {
+            lossZero = keep->zero;
+            lossPole = keep->pole;
+            lossGain = keep->gain;
+            bridgeLow = keep->bridgeLow;
+            bridgeRise = keep->bridgeRise;
+            return;
+        }
         // In double: a long bass string loses a few parts in a hundred
         // thousand a turn, and in float the shelf's pole and zero came out on
         // top of each other near 1 with the loss far too high (C2 rang 2 s).
@@ -911,11 +961,15 @@ class Course {
         }
         bridgeLow = static_cast<float>(lowShare);
         bridgeRise = static_cast<float>(riseShare);
+        if (keep != nullptr) *keep = {true, f0, sr, design.highRing, design.couple, t, lossZero, lossPole, lossGain, bridgeLow, bridgeRise};
     }
 
     std::vector<float> buffer;
     float sr = 48000.0f;
     int32_t write = 0;
+    /** Since clear(), the line still holds the old strings from [cleanFrom] up (see keepClean). */
+    bool dirty = false;
+    int cleanFrom = kSize;
     Design design;
     int lanes = 1, struck = 1, stages = 0;
     float across = 0.0f;

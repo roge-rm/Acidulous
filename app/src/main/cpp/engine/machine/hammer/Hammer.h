@@ -161,6 +161,8 @@ class Hammer final : public Machine {
     /** Keys below this have stiffness sections (Hammer.cpp), kept here, lean and full. */
     static constexpr int kSectionKeys = 36;
     hammer::Course::Sections kept[kSectionKeys][2];
+    /** Each key's loss as last designed, lean and full (see Course::Loss). */
+    hammer::Course::Loss keptLoss[kKeys][2];
     /** A course only for designing [kept]. */
     hammer::Course warmer;
     bool warmed = false;

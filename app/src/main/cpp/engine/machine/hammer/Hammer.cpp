@@ -532,6 +532,7 @@ hammer::Course::Design Hammer::designFor(int key, float hz, bool full) {
     d.prep = prepFor(key, k.impedance, nullptr);
     d.highRing = k.highRing;
     if (key < kSectionKeys) d.kept = &kept[key][full ? 1 : 0];
+    d.keptLoss = &keptLoss[key][full ? 1 : 0];
     return d;
 }
 
