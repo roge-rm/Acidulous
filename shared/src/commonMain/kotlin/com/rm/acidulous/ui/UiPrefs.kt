@@ -128,6 +128,10 @@ object UiPrefs {
     var launchQuantise by mutableStateOf(0)
         private set
 
+    /** What the time on the readout shows in song mode: one of [SongTime]. */
+    var songTime by mutableStateOf(SongTime.Position)
+        private set
+
     // --- Appearance ------------------------------------------------------
     /** Auto follows the phone; the other two ignore it. */
     var theme by mutableStateOf(ThemeMode.Dark)
@@ -303,6 +307,7 @@ object UiPrefs {
             .coerceIn(KeysStretchMin, KeysStretchMax)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
         launchQuantise = p.getInt(KEY_LAUNCH_Q, 0)
+        songTime = SongTime.entries.getOrElse(p.getInt(KEY_SONG_TIME, 0)) { SongTime.Position }
         loopBars = p.getInt(KEY_LOOP_BARS, 0)
         keyBindings = DEFAULT_KEYS + decodeKeys(p.getString(KEY_KEYS, null).orEmpty())
         padJobs = p.getString(KEY_PAD_JOBS, null).orEmpty().split(';').mapNotNull { e ->
@@ -501,6 +506,12 @@ object UiPrefs {
     fun chooseQuantise(bars: Int) {
         launchQuantise = bars
         store?.edit()?.putInt(KEY_LAUNCH_Q, bars)?.apply()
+    }
+
+    /** The next of [SongTime], for a tap on the time. */
+    fun nextSongTime() {
+        songTime = SongTime.entries[(songTime.ordinal + 1) % SongTime.entries.size]
+        store?.edit()?.putInt(KEY_SONG_TIME, songTime.ordinal)?.apply()
     }
 
     /** New keys for one action; an empty list leaves it with none. */
@@ -802,6 +813,7 @@ object UiPrefs {
     private const val KEY_KEYS_STRETCH = "keys_stretch"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
+    private const val KEY_SONG_TIME = "song_time"
     private const val KEY_LOOP_BARS = "loop_bars"
     private const val KEY_THEME = "theme"
     private const val KEY_KEYS = "key_bindings"
@@ -886,3 +898,6 @@ object UiPrefs {
     fun newSong(name: String): Song =
         SongStore.blank(name, newTempo, newSignature, newMachine).withDefaultScale(0)
 }
+
+/** The time on the readout in song mode: where the playhead is in the song, the time left, or the time since play. */
+enum class SongTime { Position, Remaining, Elapsed }

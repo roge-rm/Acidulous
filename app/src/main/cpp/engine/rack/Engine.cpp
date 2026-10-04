@@ -128,6 +128,7 @@ void Engine::renderBlock(const float *in, float *out) {
     if (transport.applyRequests()) {
         if (transport.isPlaying()) {
             clock.reset();
+            playedFrames = 0;
             // A count-in is some bars of clicks before the song moves. The
             // clock runs through them (it counts the clicks) but the scheduler
             // isn't started, so nothing sounds or records until it's done. The
@@ -160,6 +161,7 @@ void Engine::renderBlock(const float *in, float *out) {
             scheduler.stopLauncher();
             transport.clearLaunchRequests();
             linkWaiting = false;
+            timing = false;
             // If a lane pressed repeat and playback stopped before release, the
             // song would keep looping a beat in silence.
             master.perform.release();
@@ -205,7 +207,9 @@ void Engine::renderBlock(const float *in, float *out) {
             scheduler.resume();
         } else {
             scheduler.start(transport.requestedStartScene());
+            playedFrames = 0;
         }
+        timing = true;
         startPending = false;
     }
 
@@ -427,6 +431,8 @@ void Engine::renderBlock(const float *in, float *out) {
     }
 
     transport.publishPosition(scheduler.packedPosition());
+    if (timing) playedFrames += kBlockFrames;
+    transport.publishElapsed(playedFrames * 1000 / kSampleRate);
     framesRendered += kBlockFrames;
 
     // Block budget at 48 kHz / 64 frames is 1333 us.

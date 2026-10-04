@@ -2302,6 +2302,7 @@ bool EngineHost::captureOverflowed() const { return sEngine.capture.overflowed()
 void EngineHost::panic() { sEngine.panicFlag.store(true, std::memory_order_release); }
 void EngineHost::setCountInBars(int32_t bars) { sEngine.transport.setCountInBars(bars); }
 int64_t EngineHost::countInRemaining() const { return sEngine.transport.countInRemaining(); }
+int64_t EngineHost::elapsedMs() const { return sEngine.transport.elapsedMs(); }
 
 uint32_t EngineHost::notesOn(int rack) const {
     return (rack >= 0 && rack < kRackCount) ? sEngine.racks[rack].clipPlayer.notesOn() : 0;

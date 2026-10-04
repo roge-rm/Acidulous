@@ -779,4 +779,7 @@ object NativeEngine {
     /** Ticks left of the count-in, or 0 when not counting in. */
     val countInRemaining: Long get() = EngineNative.nativeCountInRemaining()
 
+    /** Milliseconds played since play, after any count-in. Held after a stop until the next play. */
+    val elapsedMs: Long get() = EngineNative.nativeElapsedMs()
+
 }

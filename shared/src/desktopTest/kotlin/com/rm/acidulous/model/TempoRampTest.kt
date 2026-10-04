@@ -28,6 +28,18 @@ class TempoRampTest {
     }
 
     @Test
+    fun theTimeAtThePlayheadFollowsTheTempo() {
+        val s = song(TempoRamp(60f, 1), repeat = 3)
+        val bar = 4 * PPQN.toLong()
+        assertEquals(0f, s.secondsAt(0, 0, 0), 1e-4f)
+        assertEquals(2f, s.secondsAt(0, 0, bar), 1e-4f)
+        assertEquals(4f * 2 + 2f, s.secondsAt(0, 2, bar), 1e-3f)
+        // Two beats into the ramp, down to 90: 4 ln(4/3).
+        assertEquals(4f * 2 + 2f + 4f * kotlin.math.ln(4f / 3f), s.secondsAt(0, 2, bar + bar / 2), 1e-3f)
+        assertEquals(s.durationSeconds(), s.secondsAt(0, 2, 2 * bar), 1e-3f)
+    }
+
+    @Test
     fun aRampIsWrittenIntoAMidiFileAsATempoEveryBeat() {
         val tmp = java.io.File.createTempFile("ramp", ".mid")
         try {

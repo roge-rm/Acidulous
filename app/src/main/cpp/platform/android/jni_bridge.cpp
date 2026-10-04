@@ -902,6 +902,11 @@ Java_com_rm_acidulous_engine_EngineNative_nativeCountInRemaining(JNIEnv *, jobje
     return static_cast<jlong>(host().countInRemaining());
 }
 
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeElapsedMs(JNIEnv *, jobject) {
+    return static_cast<jlong>(host().elapsedMs());
+}
+
 JNIEXPORT jboolean JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeIsRendering(JNIEnv *, jobject) { return host().isRendering() ? JNI_TRUE : JNI_FALSE; }
 

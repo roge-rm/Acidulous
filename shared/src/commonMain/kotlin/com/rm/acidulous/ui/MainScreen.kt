@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -78,6 +79,8 @@ import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.Action
 import com.rm.acidulous.model.ClipClipboard
 import com.rm.acidulous.model.PPQN
+import com.rm.acidulous.model.durationSeconds
+import com.rm.acidulous.model.secondsAt
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.clipLengthTicks
@@ -117,6 +120,8 @@ fun MainScreen(
     editor: SongEditor,
     position: Position,
     countInBeats: Int = 0,
+    /** Whole seconds played since play, held after a stop. */
+    elapsedSeconds: Int = 0,
     playing: Boolean,
     armed: Boolean,
     loopScene: Boolean,
@@ -199,7 +204,6 @@ fun MainScreen(
     val ticksPerBar = scene?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
     val bar = position.tickInIteration / ticksPerBar + 1
     val beat = (position.tickInIteration % ticksPerBar) / PPQN + 1
-    val tick = position.tickInIteration % PPQN
     /**
      * Song position and engine load.
      *
@@ -210,9 +214,9 @@ fun MainScreen(
     val readoutSlot: @Composable ColumnScope.() -> Unit = {
             val where =
                 if (clipMode) {
-                    // One entry per sounding track: which scene its clip came
-                    // from and how far through its own cycle it is. Every track
-                    // keeps its own count.
+                    // One entry per sounding track: its name and how far
+                    // through its own clip's cycle it is. Every track keeps
+                    // its own count.
                     val live = song.tracks.indices.mapNotNull { t ->
                         val st = launchStates.getOrElse(t) { LaunchState.idle }
                         if (!st.playing) {
@@ -222,35 +226,59 @@ fun MainScreen(
                                 ?.let { song.signatureOf(it).ticksPerBar } ?: (4 * PPQN)
                             val sc = song.scenes.getOrNull(st.scene)
                             val cyc = (song.tracks[t].clips[sc?.id]?.bars ?: 1) * (sc?.repeat ?: 1)
-                            "%d>%d %d.%d/%d".format(t + 1, st.scene + 1,
-                                st.tickInCycle / tpb + 1, (st.tickInCycle % tpb) / PPQN + 1, cyc)
+                            stringResource(Res.string.main_where_clip, song.tracks[t].name,
+                                (st.tickInCycle / tpb + 1).toInt(), ((st.tickInCycle % tpb) / PPQN + 1).toInt(), cyc)
                         }
                     }
-                    if (live.isEmpty()) stringResource(Res.string.main_where_clips_idle, quantiseShort(UiPrefs.launchQuantise))
-                    else stringResource(Res.string.main_where_clips, live.joinToString("  "), quantiseShort(UiPrefs.launchQuantise))
+                    if (live.isEmpty()) stringResource(Res.string.main_where_clips_idle)
+                    else live.joinToString("  ")
                 } else if (countInBeats > 0) {
                     // The count-in replaces the position while it runs.
                     stringResource(Res.string.main_counting_in, countInBeats)
                 } else {
                     stringResource(
                         Res.string.main_where_song,
-                        position.scene + 1, song.scenes.size, scene?.name ?: "-",
-                        position.repeat + 1, scene?.repeat ?: 1, bar, beat, tick,
+                        position.scene + 1, scene?.name ?: "-",
+                        position.repeat + 1, scene?.repeat ?: 1, bar.toInt(), beat.toInt(),
                     )
                 }
             val whereColour = if (countInBeats > 0) Acid.colors.accent else Acid.colors.textHi
+            // The time, on the right. In clip mode only the time since play
+            // means anything; in song mode a tap goes through the three.
+            val time = if (clipMode) {
+                stringResource(Res.string.main_time_since, clock(elapsedSeconds))
+            } else {
+                val length = song.durationSeconds()
+                val at = song.secondsAt(position.scene, position.repeat, position.tickInIteration)
+                when (UiPrefs.songTime) {
+                    SongTime.Position -> stringResource(Res.string.main_time_at, clock(at.toInt()), clock(length.toInt()))
+                    SongTime.Remaining -> stringResource(Res.string.main_time_left, clock(kotlin.math.ceil(length - at).toInt().coerceAtLeast(0)))
+                    SongTime.Elapsed -> stringResource(Res.string.main_time_since, clock(elapsedSeconds))
+                }
+            }
+            val timeLabel = stringResource(Res.string.main_time_switch)
+            val timeText: @Composable RowScope.() -> Unit = {
+                Box(
+                    Modifier.alignByBaseline().padding(start = 12.dp)
+                        .then(if (clipMode) Modifier else Modifier.clickable(onClickLabel = timeLabel) { UiPrefs.nextSongTime() }),
+                ) { BarReadout(time, Acid.colors.textHi) }
+            }
             // Square screens get one line instead of two, since the grid pays
             // for every line here: the position first, then the engine's
             // numbers cut where they run out.
             if (shape == ScreenShape.Square) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    BarReadout(where, whereColour)
-                    if (UiPrefs.showDiagnostics) Box(Modifier.weight(1f).padding(start = 12.dp)) {
-                        LiveReadout(diagnostics, Acid.colors.textFaint, size = 10)
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f, fill = false).alignByBaseline()) { BarReadout(where, whereColour) }
+                    Box(Modifier.weight(1f).padding(start = 12.dp).alignByBaseline()) {
+                        if (UiPrefs.showDiagnostics) LiveReadout(diagnostics, Acid.colors.textFaint, size = 10)
                     }
+                    timeText()
                 }
             } else {
-                BarReadout(where, whereColour)
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f).alignByBaseline()) { BarReadout(where, whereColour) }
+                    timeText()
+                }
                 if (UiPrefs.showDiagnostics) LiveReadout(diagnostics, Acid.colors.textFaint, size = 10)
             }
     }
@@ -1510,4 +1538,10 @@ private const val SquareMixerShare = 0.55f
 @Composable
 private fun LiveReadout(text: () -> String, color: androidx.compose.ui.graphics.Color, size: Int) {
     BarReadout(text(), color, size = size)
+}
+
+/** m:ss, or h:mm:ss from an hour. */
+private fun clock(seconds: Int): String {
+    val s = seconds.coerceAtLeast(0)
+    return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s / 60 % 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
 }

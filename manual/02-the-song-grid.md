@@ -16,6 +16,11 @@ the next scene starts.
   just the current scene. Hold it to choose **⟳** to loop forever or **⇥ end**
   to play through once and stop.
 - After a stop, play starts again from the top of the song.
+- The readout above the bottom bar shows the playing scene, which of its
+  repeats it's on (**×1/2** is the first of two) and the bar and beat. The
+  time on its right shows where you are in the song and how long it is. Tap
+  it to show the time left instead, or the time since you pressed play, and
+  tap again to go back.
 - If something keeps sounding, hold play to silence every note, echo and
   tail. **Panic** in About… does the same.
 - Playing stops by itself when a call comes in, another app starts playing or
@@ -69,7 +74,8 @@ plays its own clip from any scene.
 - Tap a playing clip to stop it at the end of its loop. Tap stop twice to stop
   everything.
 - Each track keeps its own position, and stop leaves them where they are. The
-  readout above the bottom bar shows where each one is.
+  readout above the bottom bar shows where each one is, and on the right the
+  time since you pressed play.
 
 ### Looping
 

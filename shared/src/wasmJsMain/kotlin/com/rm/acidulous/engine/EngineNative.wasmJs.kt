@@ -166,6 +166,9 @@ private fun raw_nativeSetCountInBars(env: Int, bars: Int): Unit =
 private fun raw_nativeCountInRemaining(env: Int): Long =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCountInRemaining(env, 0)")
 
+private fun raw_nativeElapsedMs(env: Int): Long =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeElapsedMs(env, 0)")
+
 private fun raw_nativeCancelRender(env: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCancelRender(env, 0)")
 
@@ -942,6 +945,13 @@ internal actual object EngineNative {
 
     actual fun nativeCountInRemaining(): Long {
         val raw_ = raw_nativeCountInRemaining(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeElapsedMs(): Long {
+        val raw_ = raw_nativeElapsedMs(Jni.env)
         val result_ = raw_
         Jni.release()
         return result_

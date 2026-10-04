@@ -3,13 +3,21 @@
     <string name="main_freezing">Freezing</string>
 
     <!-- The readout under the grid -->
-    <!-- Clip mode with nothing playing; then what a tapped clip waits for. -->
-    <string name="main_where_clips_idle">clip  -  q:%s</string>
-    <!-- Clip mode: each playing track as track>scene bar.beat/cycle, then the quantise. -->
-    <string name="main_where_clips">clip  %1$s  q:%2$s</string>
+    <!-- Clip mode with nothing playing. -->
+    <string name="main_where_clips_idle">-</string>
+    <!-- Clip mode: one playing track as its name, then bar.beat/bars in its clip's cycle. -->
+    <string name="main_where_clip">%1$s %2$d.%3$d/%4$d</string>
     <string name="main_counting_in">counting in… %d</string>
-    <!-- S scene/scenes, the scene\'s name, r repeat/repeats, then bar.beat.tick. -->
-    <string name="main_where_song">S%1$d/%2$d %3$-8s r%4$d/%5$d  %6$d.%7$d.%8$03d</string>
+    <!-- The scene\'s number and name as on its header, the pass of its repeats (×1/2), then bar.beat. -->
+    <string name="main_where_song">%1$d %2$s \u0020×%3$d/%4$d \u0020bar %5$d.%6$d</string>
+    <!-- The time on the right: where the playhead is in the song / the song's length. -->
+    <string name="main_time_at">%1$s/%2$s</string>
+    <!-- The time left to the end of the song. -->
+    <string name="main_time_left">-%s</string>
+    <!-- The time since play was pressed. -->
+    <string name="main_time_since">+%s</string>
+    <!-- What a tap on the time does, for a screen reader. -->
+    <string name="main_time_switch">switch the time shown</string>
 
     <!-- The bar at the foot -->
     <string name="main_quantise_pill">q: %s</string>

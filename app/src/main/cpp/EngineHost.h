@@ -497,6 +497,8 @@ class EngineHost {
     void setCountInBars(int32_t bars);
     /** Ticks left of the count-in, for display. 0 when not counting. */
     int64_t countInRemaining() const;
+    /** Milliseconds played since play (see Transport::publishElapsed). */
+    int64_t elapsedMs() const;
 
     uint32_t notesOn(int rack) const;
     uint32_t notesOff(int rack) const;

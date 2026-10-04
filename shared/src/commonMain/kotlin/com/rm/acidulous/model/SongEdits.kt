@@ -463,6 +463,37 @@ fun Song.passSeconds(scene: Scene, last: Boolean): Float {
 }
 
 /**
+ * Seconds into the song at [repeat] of scene [sceneIndex], [tick] into that
+ * pass, timed as [durationSeconds] is.
+ */
+fun Song.secondsAt(sceneIndex: Int, repeat: Int, tick: Long): Float {
+    var total = 0f
+    for (i in 0 until sceneIndex.coerceAtMost(scenes.size)) {
+        val s = scenes[i]
+        total += passSeconds(s, last = false) * (s.repeat - 1) + passSeconds(s, last = true)
+    }
+    val scene = scenes.getOrNull(sceneIndex) ?: return total
+    val r = repeat.coerceIn(0, scene.repeat - 1)
+    return total + passSeconds(scene, last = false) * r + secondsIntoPass(scene, last = r == scene.repeat - 1, tick)
+}
+
+/** Seconds [tick] into one pass of [scene]; a ramp is integrated as in [passSeconds]. */
+private fun Song.secondsIntoPass(scene: Scene, last: Boolean, tick: Long): Float {
+    val bpm = scene.tempo?.bpm ?: tempo
+    val ticksPerBar = signatureOf(scene).ticksPerBar
+    val bars = barsOf(scene)
+    val t = tick.coerceIn(0L, bars.toLong() * ticksPerBar).toFloat()
+    val ramp = scene.ramp?.takeIf { last && it.toBpm > 0f && it.toBpm != bpm }
+        ?: return t / PPQN * 60f / bpm
+    val rampStart = (bars - ramp.bars.coerceIn(1, bars)).toFloat() * ticksPerBar
+    if (t <= rampStart) return t / PPQN * 60f / bpm
+    val beats = (bars.toFloat() * ticksPerBar - rampStart) / PPQN
+    val x = (t - rampStart) / PPQN
+    val now = bpm + (ramp.toBpm - bpm) * x / beats
+    return rampStart / PPQN * 60f / bpm + 60f * beats * kotlin.math.ln(now / bpm) / (ramp.toBpm - bpm)
+}
+
+/**
  * Sets a master parameter by name, so a mapped controller reaches it the same
  * way it reaches a track.
  *

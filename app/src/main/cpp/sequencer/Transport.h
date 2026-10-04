@@ -249,10 +249,13 @@ class Transport {
                (tickInIteration & 0xffffffffffffLL);
     }
     void publishPosition(int64_t packed) { positionForUi.store(packed, std::memory_order_relaxed); }
+    /** Milliseconds played since play, not counting a count-in. Held after a stop. */
+    void publishElapsed(int64_t ms) { elapsedForUi.store(ms, std::memory_order_relaxed); }
 
     // --- Either thread --------------------------------------------------------
     int64_t position() const { return positionForUi.load(std::memory_order_relaxed); }
     bool isPlayingForUi() const { return playingForUi.load(std::memory_order_relaxed); }
+    int64_t elapsedMs() const { return elapsedForUi.load(std::memory_order_relaxed); }
 
   private:
     std::atomic<Request> request{Request::None};
@@ -279,6 +282,7 @@ class Transport {
     bool playing = false; // audio-thread truth
     std::atomic<bool> playingForUi{false};
     std::atomic<int64_t> positionForUi{0};
+    std::atomic<int64_t> elapsedForUi{0};
 };
 
 } // namespace acidulous::seq

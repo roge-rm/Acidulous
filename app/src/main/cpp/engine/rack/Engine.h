@@ -339,6 +339,9 @@ class Engine : public Rack::ModifiedNoteSink {
      *  the audio stream presents on, so a MIDI event's frame can be turned
      *  into a clock time. */
     int64_t framesRendered = 0;
+    /** Frames played since the song started (after any count-in); kept after a stop. */
+    int64_t playedFrames = 0;
+    bool timing = false;
     int64_t lastClockTick = -1;
     std::atomic<float> load{0.0f};
     std::atomic<int32_t> blockPeak{0};

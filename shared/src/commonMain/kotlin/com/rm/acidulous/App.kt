@@ -588,6 +588,8 @@ fun App(modifier: Modifier = Modifier) {
     var position by remember { mutableStateOf(Position(0, 0, 0)) }
     // Beats left of a count-in, or 0 when not counting in.
     var countInBeats by remember { mutableStateOf(0) }
+    // Whole seconds since play, from the engine's count of what it played.
+    var elapsedSeconds by remember { mutableStateOf(0) }
 
     // Exporting: the dialog chooses what and in which format, the system
     // picker gives somewhere to put it, and the engine renders into the cache
@@ -1566,6 +1568,7 @@ fun App(modifier: Modifier = Modifier) {
             }
             position = Position.unpack(NativeEngine.positionPacked)
             countInBeats = countInBeatsOf(NativeEngine.countInRemaining)
+            elapsedSeconds = (NativeEngine.elapsedMs / 1000).toInt()
             bpm = NativeEngine.tempo
             armed = NativeEngine.recordArmed
             notesOn = NativeEngine.notesOn(0)
@@ -1804,6 +1807,7 @@ fun App(modifier: Modifier = Modifier) {
             performTrack = heldWhile(hidden, midiTrack),
             looper = looper,
             countInBeats = heldWhile(hidden, countInBeats),
+            elapsedSeconds = heldWhile(hidden, elapsedSeconds),
             clipMode = heldWhile(hidden, com.rm.acidulous.ui.UiPrefs.clipMode),
             launchStates = heldWhile(hidden, launchStates),
             onClipMode = onClipMode,
