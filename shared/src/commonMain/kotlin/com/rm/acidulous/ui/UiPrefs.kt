@@ -170,6 +170,20 @@ object UiPrefs {
     var buffer by mutableStateOf(Buffer.Balanced)
         private set
 
+    /**
+     * The smallest output buffer this device has been found to hold, frames
+     * (see NativeEngine.bufferFloor), so a run starts there rather than finding
+     * it again with a dropout or two.
+     */
+    var bufferFloor = 0
+        private set
+
+    fun keepBufferFloor(frames: Int) {
+        if (frames <= bufferFloor) return
+        bufferFloor = frames
+        store?.edit()?.putInt(KEY_BUFFER_FLOOR, frames)?.apply()
+    }
+
     /** Held notes per track, 0 for as many as the machine has. */
     var voiceLimit by mutableStateOf(0)
         private set
@@ -329,6 +343,7 @@ object UiPrefs {
             .getOrDefault(Buffer.Balanced)
         voiceLimit = p.getInt(KEY_VOICES, 0)
         cores = p.getInt(KEY_CORES, 0)
+        bufferFloor = p.getInt(KEY_BUFFER_FLOOR, 0)
         fullQuality = p.getBoolean(KEY_QUALITY, true)
         autoQuality = p.getBoolean(KEY_AUTO_QUALITY, false)
         qualityNow = fullQuality
@@ -416,6 +431,7 @@ object UiPrefs {
      * preferences of its own.
      */
     fun applyToEngine() {
+        NativeEngine.setBufferFloor(bufferFloor)
         NativeEngine.setBufferBursts(buffer.bursts)
         NativeEngine.setInputClean(inputClean)
         NativeEngine.setVoiceLimit(voiceLimit)
@@ -860,6 +876,7 @@ object UiPrefs {
     private const val KEY_BUFFER = "buffer"
     private const val KEY_VOICES = "voice_limit"
     private const val KEY_CORES = "cores"
+    private const val KEY_BUFFER_FLOOR = "buffer_floor"
     private const val KEY_QUALITY = "quality_full"
     private const val KEY_AUTO_QUALITY = "quality_auto"
     private const val KEY_BITS = "record_bits"

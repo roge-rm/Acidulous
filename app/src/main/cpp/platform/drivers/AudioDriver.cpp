@@ -141,6 +141,13 @@ bool AudioDriver::start() {
     {
         const auto x = stream->getXRunCount();
         xrunsSeen = x ? x.value() : 0;
+        // Where this device was found to need, last time, if more.
+        tunedFloor = std::max(actualFramesPerBurst * bufferBursts, startFloor.load(std::memory_order_relaxed));
+        learnedFloor.store(tunedFloor, std::memory_order_relaxed);
+        stream->setBufferSizeInFrames(tunedFloor);
+        quietFrames = 0;
+        sinceShrink = -1;
+        retune.store(false);
     }
 
     result = stream->requestStart();
@@ -383,19 +390,7 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     if (audioThreadId.load(std::memory_order_relaxed) == 0) {
         audioThreadId.store(static_cast<int32_t>(gettid()), std::memory_order_release);
     }
-    // Ran dry since the last callback: a burst more buffer, up to the
-    // capacity. The setting is where it starts; a device whose mixer takes
-    // more at a time than that grows it to what it needs, once.
-    if (audioStream != nullptr) {
-        const auto x = audioStream->getXRunCount();
-        if (x && x.value() > xrunsSeen) {
-            xrunsSeen = x.value();
-            const int32_t size = audioStream->getBufferSizeInFrames();
-            if (size + actualFramesPerBurst <= audioStream->getBufferCapacityInFrames()) {
-                audioStream->setBufferSizeInFrames(size + actualFramesPerBurst);
-            }
-        }
-    }
+    if (audioStream != nullptr) tuneBuffer(audioStream, numFrames);
     auto *out = static_cast<float *>(audioData);
     int32_t written = 0;
     // Busy until the last engine block has read the input (see liveInput).
@@ -504,7 +499,60 @@ void AudioDriver::setBufferBursts(int32_t bursts) {
     if (bursts < 1) bursts = 1;
     if (bursts > 8) bursts = 8;
     bufferBursts = bursts;
-    if (stream != nullptr) stream->setBufferSizeInFrames(actualFramesPerBurst * bufferBursts);
+    // The callback owns the size while the stream runs (tuneBuffer).
+    retune.store(true, std::memory_order_release);
+}
+
+void AudioDriver::setBufferFloor(int32_t frames) {
+    startFloor.store(frames < 0 ? 0 : frames, std::memory_order_relaxed);
+    retune.store(true, std::memory_order_release);
+}
+
+void AudioDriver::tuneBuffer(oboe::AudioStream *s, int32_t frames) {
+    // The setting is the size asked for. A device whose mixer takes more at a
+    // time than that runs dry, so the buffer grows half a burst at a time
+    // until it doesn't, and after ten quiet seconds tries half a burst less,
+    // back towards the setting. If it runs dry within ten seconds of
+    // shrinking, that size was too small: the one above is a floor it won't
+    // go under again. A dropout at any other time (a busy moment) grows it
+    // for a while without moving the floor. So it stays as small, and as
+    // quick to answer a key, as the device allows.
+    const int32_t asked = actualFramesPerBurst * bufferBursts;
+    const int32_t step = std::max(64, actualFramesPerBurst / 2);
+    const int32_t capacity = s->getBufferCapacityInFrames();
+    if (retune.exchange(false, std::memory_order_acq_rel)) {
+        tunedFloor = std::max(asked, startFloor.load(std::memory_order_relaxed));
+        learnedFloor.store(tunedFloor, std::memory_order_relaxed);
+        quietFrames = 0;
+        sinceShrink = -1;
+        s->setBufferSizeInFrames(tunedFloor);
+    }
+    const int32_t size = s->getBufferSizeInFrames();
+    const auto x = s->getXRunCount();
+    if (x && x.value() > xrunsSeen) {
+        xrunsSeen = x.value();
+        quietFrames = 0;
+        if (size + step <= capacity) {
+            const auto set = s->setBufferSizeInFrames(size + step);
+            const int32_t grown = set ? set.value() : size + step;
+            if (sinceShrink >= 0) {
+                tunedFloor = std::max(tunedFloor, grown);
+                learnedFloor.store(tunedFloor, std::memory_order_relaxed);
+            }
+        }
+        sinceShrink = -1;
+        return;
+    }
+    quietFrames += frames;
+    if (sinceShrink >= 0) {
+        sinceShrink += frames;
+        if (sinceShrink > kQuietFrames) sinceShrink = -1;
+    }
+    if (quietFrames >= kQuietFrames && size - step >= std::max(tunedFloor, asked)) {
+        s->setBufferSizeInFrames(size - step);
+        quietFrames = 0;
+        sinceShrink = 0;
+    }
 }
 
 int32_t AudioDriver::getBufferFrames() const {

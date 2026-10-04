@@ -163,6 +163,12 @@ private fun async_nativeRenderStems(arena: Int, paths: Int, racks: Int, tailSeco
 private fun raw_nativeSetCountInBars(env: Int, bars: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetCountInBars(env, 0, bars)")
 
+private fun raw_nativeSetBufferFloor(env: Int, frames: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetBufferFloor(env, 0, frames)")
+
+private fun raw_nativeBufferFloor(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeBufferFloor(env, 0)")
+
 private fun raw_nativeSetRecordModes(env: Int, onNote: Int, once: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetRecordModes(env, 0, onNote, once)")
 
@@ -956,6 +962,18 @@ internal actual object EngineNative {
     actual fun nativeSetCountInBars(bars: Int) {
         raw_nativeSetCountInBars(Jni.env, bars)
         Jni.release()
+    }
+
+    actual fun nativeSetBufferFloor(frames: Int) {
+        raw_nativeSetBufferFloor(Jni.env, frames)
+        Jni.release()
+    }
+
+    actual fun nativeBufferFloor(): Int {
+        val raw_ = raw_nativeBufferFloor(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
     }
 
     actual fun nativeSetRecordModes(onNote: Boolean, once: Boolean) {

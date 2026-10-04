@@ -2234,6 +2234,13 @@ std::string EngineHost::loadFrozenSet(int rack, const std::vector<std::pair<int6
 }
 
 void EngineHost::setBufferBursts(int32_t bursts) { sAudio.setBufferBursts(bursts); }
+#if defined(__ANDROID__)
+void EngineHost::setBufferFloor(int32_t frames) { sAudio.setBufferFloor(frames); }
+int32_t EngineHost::bufferFloor() const { return sAudio.bufferFloor(); }
+#else
+void EngineHost::setBufferFloor(int32_t) {}
+int32_t EngineHost::bufferFloor() const { return 0; }
+#endif
 int32_t EngineHost::bufferFrames() const { return sAudio.getBufferFrames(); }
 void EngineHost::setVoiceLimit(int32_t notes) {
     EngineSettings::get().voiceLimit.store(notes < 0 ? 0 : notes, std::memory_order_relaxed);

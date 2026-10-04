@@ -701,6 +701,16 @@ Java_com_rm_acidulous_engine_EngineNative_nativeSetBufferBursts(JNIEnv *, jobjec
     host().setBufferBursts(bursts);
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeSetBufferFloor(JNIEnv *, jobject, jint frames) {
+    host().setBufferFloor(frames);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeBufferFloor(JNIEnv *, jobject) {
+    return host().bufferFloor();
+}
+
 JNIEXPORT jint JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeBufferFrames(JNIEnv *, jobject) {
     return host().bufferFrames();

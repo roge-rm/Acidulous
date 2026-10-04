@@ -385,6 +385,9 @@ class EngineHost {
     // --- Settings that belong to the device -----------------------------
     /** Output buffer depth in bursts: 1 tight, 2 default, 4 safe. */
     void setBufferBursts(int32_t bursts);
+    /** The smallest output buffer this device holds, frames (Android; 0 elsewhere). See AudioDriver::tuneBuffer. */
+    void setBufferFloor(int32_t frames);
+    int32_t bufferFloor() const;
     int32_t bufferFrames() const;
     /** Held notes per rack, 0 for no limit. */
     void setVoiceLimit(int32_t notes);

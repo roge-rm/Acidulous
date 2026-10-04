@@ -91,6 +91,9 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     int32_t hintState() const { return static_cast<int32_t>(perfHint.state()); }
     /** How many fast cores the audio thread was put on; 0 if it wasn't. */
     int32_t fastCores() const { return pinnedCores.load(std::memory_order_relaxed); }
+    /** The smallest buffer this device has been found to hold, frames: given back at start, read to keep. */
+    void setBufferFloor(int32_t frames);
+    int32_t bufferFloor() const { return learnedFloor.load(std::memory_order_relaxed); }
     /**
      * The cores the track workers go on: the fast ones on a phone with more
      * than one kind, else all of them.
@@ -215,8 +218,21 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     std::atomic<int32_t> audioThreadId{0};
     /** How many fast cores the audio thread was put on, or 0 if it wasn't (one kind of core, or refused). */
     std::atomic<int32_t> pinnedCores{0};
-    /** Xruns already answered by growing the buffer (see onAudioReady). Audio thread, and set at open. */
+    /**
+     * The buffer's size as the device needs it (tuneBuffer): the xruns already
+     * answered, the smallest size known to hold, frames since the last xrun
+     * and since the last shrink (-1: none lately). Audio thread, and set at
+     * open; a new setting reaches it through [retune].
+     */
+    void tuneBuffer(oboe::AudioStream *s, int32_t frames);
     int32_t xrunsSeen = 0;
+    int32_t tunedFloor = 0;
+    int64_t quietFrames = 0, sinceShrink = -1;
+    std::atomic<bool> retune{false};
+    /** The floor found on an earlier run, to start from; and the one in force now, for the app to keep. */
+    std::atomic<int32_t> startFloor{0}, learnedFloor{0};
+    /** Ten seconds at 48 kHz. */
+    static constexpr int64_t kQuietFrames = 480000;
     /** The most the buffer may grow to, frames: about 170 ms. */
     static constexpr int32_t kBufferCapacity = 8192;
     std::atomic<bool> hintWanted{true};

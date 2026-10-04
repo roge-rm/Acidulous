@@ -18,7 +18,8 @@
 <!-- desktop: - **output** - which output to play through, or the system default. On Windows an interface's own driver is listed too, marked **low latency**. It's the quickest way to the interface, and while it plays the recorder's inputs are that interface's inputs, two at a time. -->
 - **buffer** - tight, balanced or safe. Tight has the lowest latency but may
   crackle on a slower phone, and safe gives the phone more time. If the sound
-  still breaks up, the buffer grows by itself until it doesn't. With
+  still breaks up, the buffer grows by itself, then comes back down to the
+  smallest size the device can hold, and remembers it for next time. With
   **diagnostics** on, a line under it shows the buffer size, the latency and how
   many dropouts there have been.
 - **worst block** (with **diagnostics** on) - the longest any block of audio

@@ -1579,6 +1579,7 @@ fun App(modifier: Modifier = Modifier) {
             notesOn = NativeEngine.notesOn(0)
             notesOff = NativeEngine.notesOff(0)
             load = NativeEngine.loadAvg
+            com.rm.acidulous.ui.UiPrefs.keepBufferFloor(NativeEngine.bufferFloor)
             // Peak-hold values, and reading clears them, so only this place
             // may read them. Held across polls rather than shown raw, since
             // at 80 ms a reading would flash past too fast to read.

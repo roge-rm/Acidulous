@@ -476,6 +476,10 @@ object NativeEngine {
     // --- Settings that belong to the device ----------------------------------
     /** Output buffer size in bursts: 1 tight, 2 default, 4 safe. */
     fun setBufferBursts(bursts: Int) = EngineNative.nativeSetBufferBursts(bursts)
+
+    /** The smallest output buffer this device has been found to hold, frames; kept between runs so it starts there. 0 off Android. */
+    fun setBufferFloor(frames: Int) = EngineNative.nativeSetBufferFloor(frames)
+    val bufferFloor: Int get() = EngineNative.nativeBufferFloor()
     /** What the stream actually buffers, which the device may round. */
     val bufferFrames: Int get() = EngineNative.nativeBufferFrames()
     /** Held notes per rack, 0 for no limit. */
