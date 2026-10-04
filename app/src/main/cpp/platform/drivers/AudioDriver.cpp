@@ -1,6 +1,7 @@
 #include "AudioDriver.h"
 #include <unistd.h>
 #include <thread>
+#include <atomic>
 
 #include <chrono>
 #include <engine/dsp/Denormals.h>
@@ -67,8 +68,15 @@ int32_t AudioDriver::workerCores() {
     return static_cast<int32_t>(sysconf(_SC_NPROCESSORS_CONF));
 }
 
+namespace {
+/** The track workers' threads, so the audio thread's helper can place them beside it. */
+constexpr int kMaxWorkerTids = 8;
+std::atomic<pid_t> workerTids[kMaxWorkerTids]{};
+} // namespace
+
 void AudioDriver::prepareWorker(int32_t index) {
     const pid_t tid = gettid();
+    if (index >= 0 && index < kMaxWorkerTids) workerTids[index].store(tid, std::memory_order_relaxed);
     cpu_set_t fast;
     int count = 0;
     if (findFastCores(fast, count) && sched_setaffinity(tid, sizeof(fast), &fast) != 0) {
@@ -108,6 +116,11 @@ bool AudioDriver::start() {
         // so the engine doesn't play out of tune.
         ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Medium)
         ->setUsage(oboe::Usage::Game)
+        // Room to grow (see onAudioReady). Left to Oboe, a device without a
+        // fast mixer (a Fire tablet) gave two bursts, 1920 frames, against
+        // a mixer taking 1536 at a time, and it ran dry several times a
+        // second however little the engine had to do.
+        ->setBufferCapacityInFrames(kBufferCapacity)
         ->setDataCallback(this)
         ->setErrorCallback(this);
 
@@ -125,6 +138,10 @@ bool AudioDriver::start() {
     // Two bursts is low enough to feel responsive and deep enough to absorb a
     // late callback. AAudio tunes down from here and Settings can change it.
     stream->setBufferSizeInFrames(actualFramesPerBurst * bufferBursts);
+    {
+        const auto x = stream->getXRunCount();
+        xrunsSeen = x ? x.value() : 0;
+    }
 
     result = stream->requestStart();
     if (result != oboe::Result::OK) {
@@ -178,6 +195,19 @@ bool AudioDriver::start() {
                 } else {
                     LOGI("couldn't put audio thread %d on the fast cores", tid);
                 }
+            }
+            // Some devices (Fire OS) run the callback as an ordinary thread,
+            // at nice -16. There it goes to -19, the most an app may give, and
+            // the workers to -18: at -19 themselves they'd outrank the thread
+            // they work for, and a worker spinning between blocks would take
+            // its core from it.
+            const int policy = sched_getscheduler(tid);
+            if (policy != SCHED_FIFO && policy != SCHED_RR) {
+                const bool raised = setpriority(PRIO_PROCESS, tid, -19) == 0;
+                for (auto &w : workerTids) {
+                    if (const pid_t worker = w.load(std::memory_order_relaxed)) setpriority(PRIO_PROCESS, worker, -18);
+                }
+                LOGI("audio thread %d isn't real-time: %s", tid, raised ? "at -19, workers -18" : "couldn't raise it");
             }
             if (!hints) return;
             // Some devices refuse a session right after the stream starts but
@@ -352,6 +382,19 @@ oboe::DataCallbackResult AudioDriver::onAudioReady(oboe::AudioStream *audioStrea
     // After that this is just a relaxed read.
     if (audioThreadId.load(std::memory_order_relaxed) == 0) {
         audioThreadId.store(static_cast<int32_t>(gettid()), std::memory_order_release);
+    }
+    // Ran dry since the last callback: a burst more buffer, up to the
+    // capacity. The setting is where it starts; a device whose mixer takes
+    // more at a time than that grows it to what it needs, once.
+    if (audioStream != nullptr) {
+        const auto x = audioStream->getXRunCount();
+        if (x && x.value() > xrunsSeen) {
+            xrunsSeen = x.value();
+            const int32_t size = audioStream->getBufferSizeInFrames();
+            if (size + actualFramesPerBurst <= audioStream->getBufferCapacityInFrames()) {
+                audioStream->setBufferSizeInFrames(size + actualFramesPerBurst);
+            }
+        }
     }
     auto *out = static_cast<float *>(audioData);
     int32_t written = 0;

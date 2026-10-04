@@ -215,6 +215,10 @@ class AudioDriver : public oboe::AudioStreamDataCallback,
     std::atomic<int32_t> audioThreadId{0};
     /** How many fast cores the audio thread was put on, or 0 if it wasn't (one kind of core, or refused). */
     std::atomic<int32_t> pinnedCores{0};
+    /** Xruns already answered by growing the buffer (see onAudioReady). Audio thread, and set at open. */
+    int32_t xrunsSeen = 0;
+    /** The most the buffer may grow to, frames: about 170 ms. */
+    static constexpr int32_t kBufferCapacity = 8192;
     std::atomic<bool> hintWanted{true};
     /**
      * Which stream the waiting hint thread belongs to. The stream can be

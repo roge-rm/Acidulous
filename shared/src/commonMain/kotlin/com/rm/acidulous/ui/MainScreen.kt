@@ -1060,10 +1060,7 @@ private fun SceneHeader(
 ) {
     val cell = LocalSongCell.current
     var menu by remember { mutableStateOf(false) }
-    val pulse by rememberInfiniteTransition(label = "finishing").animateFloat(
-        initialValue = 1f, targetValue = 0.25f,
-        animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "finishing",
-    )
+    val pulse = pulseWhile(finishing || queued, 1f, 0.25f, 520, "finishing")
     Box(
         Modifier
             .width(cell.cellW).height(cell.sceneH).padding(3.dp)
@@ -1163,12 +1160,7 @@ private fun TrackHeader(
     var menu by remember { mutableStateOf(false) }
     // A slow fade in and out instead of a blink, so it reads as a state and not
     // an alarm. It never stops anything.
-    val glow by rememberInfiniteTransition(label = "hot").animateFloat(
-        initialValue = 0.18f,
-        targetValue = 0.42f,
-        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
-        label = "glow",
-    )
+    val glow = pulseWhile(hot, 0.18f, 0.42f, 900, "hot")
     Box(
         Modifier
             .width(cell.trackW).height(cell.cellH).padding(3.dp)
@@ -1247,10 +1239,7 @@ private fun ClipCell(
     val settingsNow by rememberUpdatedState(onSettings)
     val doubleTapMs = LocalViewConfiguration.current.doubleTapTimeoutMillis
     var lastTap by remember { mutableStateOf(0L) }
-    val pulse by rememberInfiniteTransition(label = "queuedclip").animateFloat(
-        initialValue = 1f, targetValue = 0.3f,
-        animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse), label = "queuedclip",
-    )
+    val pulse = pulseWhile(loopPhase == Looper.Phase.Open || queued || stopping, 1f, 0.3f, 520, "queuedclip")
     val recording = loopPhase == Looper.Phase.Open || loopPhase == Looper.Phase.Overdub
     // What TalkBack says: which cell, what's in it, and what it's doing.
     val said = listOfNotNull(
@@ -1544,4 +1533,20 @@ private fun LiveReadout(text: () -> String, color: androidx.compose.ui.graphics.
 private fun clock(seconds: Int): String {
     val s = seconds.coerceAtLeast(0)
     return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s / 60 % 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
+}
+
+/**
+ * A value going from [from] to [to] and back every [ms], while [on]; [from]
+ * when not. An infinite transition asks for every frame for as long as it's
+ * on screen, whether or not anything shows it, so one in every cell kept the
+ * whole grid redrawing even when stopped.
+ */
+@Composable
+internal fun pulseWhile(on: Boolean, from: Float, to: Float, ms: Int, label: String): Float {
+    if (!on) return from
+    val value by rememberInfiniteTransition(label = label).animateFloat(
+        initialValue = from, targetValue = to,
+        animationSpec = infiniteRepeatable(tween(ms), RepeatMode.Reverse), label = label,
+    )
+    return value
 }

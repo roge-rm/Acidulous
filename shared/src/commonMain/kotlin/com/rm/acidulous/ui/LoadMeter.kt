@@ -36,11 +36,15 @@ data class EngineLoad(val level: Float, val dropped: Boolean)
 
 @Composable
 fun rememberEngineLoad(): EngineLoad {
-    var load by remember { mutableStateOf(0f) }
+    // What's shown, in steps of the bar's height: the smoothed figure moves a
+    // little every poll, and a state that changes every poll redraws the
+    // screen every poll, which on a slow tablet cost more than the audio.
+    var level by remember { mutableStateOf(0f) }
     var dropped by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         var lastXruns = NativeEngine.xRunCount
         var lit = 0
+        var load = 0f
         while (true) {
             // Take the worse of the average and the worst case. The engine's
             // average is a one-pole with a 27 ms memory, so a spike has decayed
@@ -55,6 +59,8 @@ fun rememberEngineLoad(): EngineLoad {
             val now = maxOf(NativeEngine.loadAvg, worst)
             // Smooth it, faster up than down, so the meter is readable.
             load += (now - load) * (if (now > load) 0.6f else 0.2f)
+            val target = (load / 100f).coerceIn(0f, 1f)
+            if (kotlin.math.abs(target - level) >= LEVEL_STEP) level = kotlin.math.round(target / LEVEL_STEP) * LEVEL_STEP
             val xruns = NativeEngine.xRunCount
             if (xruns != lastXruns) { lastXruns = xruns; lit = 15 }
             if (lit > 0) --lit
@@ -62,8 +68,11 @@ fun rememberEngineLoad(): EngineLoad {
             delay(200)
         }
     }
-    return EngineLoad((load / 100f).coerceIn(0f, 1f), dropped)
+    return EngineLoad(level, dropped)
 }
+
+/** The smallest change the bar shows: a dp of its 22. */
+private const val LEVEL_STEP = 1f / 22f
 
 /**
  * Teal to about half, amber past that, red past 80%, which is roughly where a
