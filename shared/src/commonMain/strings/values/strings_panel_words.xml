@@ -217,6 +217,7 @@
     <string name="pw_down_up">down-up</string>
     <string name="pw_drift">drift</string>
     <string name="pw_drive">drive</string>
+    <string name="pw_drone">drone</string>
     <string name="pw_drop">drop</string>
     <string name="pw_dropouts">dropouts</string>
     <string name="pw_drum">drum</string>
@@ -239,6 +240,7 @@
     <string name="pw_eg1">eg1</string>
     <string name="pw_eg2">eg2</string>
     <string name="pw_eg3">eg3</string>
+    <string name="pw_eighths">eighths</string>
     <string name="pw_electric">electric</string>
     <string name="pw_electric_grand">electric grand</string>
     <string name="pw_electro">electro</string>
@@ -331,6 +333,7 @@
     <string name="pw_g_size">g.size</string>
     <string name="pw_g_spray">g.spray</string>
     <string name="pw_gain">gain</string>
+    <string name="pw_gallop">gallop</string>
     <string name="pw_gate">Gate</string>
     <string name="pw_gate_3c5b49">gate</string>
     <string name="pw_generative">generative</string>
@@ -347,6 +350,7 @@
     <string name="pw_grid">grid</string>
     <string name="pw_grit">Grit</string>
     <string name="pw_grit_69794c">grit</string>
+    <string name="pw_groupings">groupings</string>
     <string name="pw_growl">growl</string>
     <string name="pw_guitar">guitar</string>
     <string name="pw_h">h</string>
@@ -561,6 +565,7 @@
     <string name="pw_not">not</string>
     <string name="pw_notch">notch</string>
     <string name="pw_note">note</string>
+    <string name="pw_notes">notes</string>
     <string name="pw_number">number</string>
     <string name="pw_object">object</string>
     <string name="pw_object_n">Object %d</string>
@@ -704,6 +709,7 @@
     <string name="pw_remap">remap</string>
     <string name="pw_repeat">repeat</string>
     <string name="pw_replace">replace</string>
+    <string name="pw_repluck">repluck</string>
     <string name="pw_res">res</string>
     <string name="pw_reset">reset</string>
     <string name="pw_reso">reso</string>
@@ -738,6 +744,7 @@
     <string name="pw_routing">routing</string>
     <string name="pw_rubber">rubber</string>
     <string name="pw_run">run</string>
+    <string name="pw_runs">runs</string>
     <string name="pw_s">S</string>
     <string name="pw_s_a0f149">s</string>
     <string name="pw_s_h">s&amp;h</string>
@@ -796,6 +803,7 @@
     <string name="pw_singer">singer</string>
     <string name="pw_singers">singers</string>
     <string name="pw_single">single</string>
+    <string name="pw_sixteenths">sixteenths</string>
     <string name="pw_size">size</string>
     <string name="pw_skew">skew</string>
     <string name="pw_skip">skip</string>
@@ -925,6 +933,7 @@
     <string name="pw_triad">triad</string>
     <string name="pw_trig">trig</string>
     <string name="pw_trigger">trigger</string>
+    <string name="pw_triplets">triplets</string>
     <string name="pw_tuba_trpt">tuba→trpt</string>
     <string name="pw_tube">tube</string>
     <string name="pw_tukey">tukey</string>

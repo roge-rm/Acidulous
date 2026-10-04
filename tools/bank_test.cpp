@@ -425,10 +425,10 @@ void checkBank(const Bank &bank) {
         }
         // Only fast level swings count, since a slow one is a swell. Skipped
         // for effects, where moving the level is often the point, and for
-        // kits and the jaw harp's gallop, whose repeated plucks look like a
+        // kits and the jaw harp's phrases, whose repeated plucks look like a
         // fast swing.
         const std::string &role = patch.role.empty() ? bank.role : patch.role;
-        if (!bank.isEffect() && kitFor(bank.typeName()) == nullptr && role != "jaw" &&
+        if (!bank.isEffect() && kitFor(bank.typeName()) == nullptr && role != "jaw" && role != "harmonics" &&
             out.m.swingDb > 8.0f && out.m.swingHz > 3.0f) {
             std::snprintf(warnText, sizeof(warnText), "wobbles %.0f dB at %.1f Hz inside one note",
                           static_cast<double>(out.m.swingDb), static_cast<double>(out.m.swingHz));

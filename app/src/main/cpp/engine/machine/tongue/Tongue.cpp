@@ -1,4 +1,5 @@
 #include "Tongue.h"
+#include <engine/core/Constants.h>
 #include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
@@ -43,6 +44,28 @@ constexpr float kChordSteps[Tongue::kChords][5] = {
     {0, 3, 7, 12, 15},
     {0, 2, 4, 7, 9},
 };
+
+/** A plucking rhythm: a step length in ticks and each step's weight, 0 for a rest. */
+struct Rhythm {
+    int32_t step;
+    int32_t length;
+    float weight[16];
+};
+constexpr int32_t k16th = kPPQN / 4;
+constexpr Rhythm kRhythms[Tongue::kPatterns] = {
+    {k16th, 1, {0}},
+    {kPPQN / 2, 2, {1.0f, 0.7f}},
+    {k16th, 4, {1.0f, 0.55f, 0.75f, 0.55f}},
+    // Long, short short: an eighth and two sixteenths.
+    {k16th, 4, {1.0f, 0.0f, 0.65f, 0.65f}},
+    {kPPQN / 3, 3, {1.0f, 0.6f, 0.6f}},
+    // Quick runs of pulls and a rest, as a genggong is played.
+    {kPPQN / 8, 8, {1.0f, 0.6f, 0.6f, 0.8f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    // Sixteenths grouped 4 + 3 + 3 + 3 + 3, each group's first stressed.
+    {k16th, 16, {1.0f, 0.5f, 0.5f, 0.5f, 1.0f, 0.5f, 0.5f, 1.0f, 0.5f, 0.5f, 1.0f, 0.5f, 0.5f, 1.0f, 0.5f, 0.5f}},
+};
+/** The picking resonance's share against the vowel's formants: it leads. */
+constexpr float kPickShare = 2.0f;
 
 } // namespace
 
@@ -97,6 +120,13 @@ const ParamDef *Tongue::paramDefs(int32_t &count) const {
         {"chord", 0.0f, static_cast<float>(kChords - 1), 0.0f, Curve::Stepped, kChords, ""},
         {"strum", 0.0f, 150.0f, 0.0f, Curve::Linear, 0, "ms"},
         {"order", 0.0f, static_cast<float>(kOrders - 1), 0.0f, Curve::Stepped, kOrders, ""},
+        {"play", 0.0f, static_cast<float>(kPlays - 1), 0.0f, Curve::Stepped, kPlays, ""},
+        // The drone's note in mouth mode, as MIDI.
+        {"drone", 36.0f, 72.0f, 50.0f, Curve::Stepped, 37, ""},
+        {"repluck", 0.0f, static_cast<float>(kReplucks - 1), 1.0f, Curve::Stepped, kReplucks, ""},
+        {"pattern", 0.0f, static_cast<float>(kPatterns - 1), 0.0f, Curve::Stepped, kPatterns, ""},
+        {"accent", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"ratchet", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -134,6 +164,18 @@ void Tongue::reset() {
     quietSamples = 0;
     asleep = true;
     for (int k = 0; k < 3; ++k) formants[k] = kMouths[2][k];
+    pick.clear();
+    pickOn = false;
+    pickHz = pickAt = 0.0f;
+    keyCount = 0;
+    lastVelocity = 0.8f;
+    nextStep = -1;
+    stepCount = 0;
+    now = 0;
+    dueCount = 0;
+    lastKeyPluck = -1000000;
+    strikeCount = 0;
+    sampleNow = 0;
     moveMouth(true);
     mouthGain = mouthGainTarget;
 }
@@ -190,30 +232,77 @@ void Tongue::pluckTine(const Voice &v, Tine &t, float swing, float contact, floa
 }
 
 void Tongue::noteOn(uint8_t note, uint8_t velocity) {
-    Voice *v = voiceFor(note);
     const float vel = static_cast<float>(velocity) / 127.0f;
-    const bool ringing = v->used && v->note == note;
-    v->kind = std::clamp(steppedTargetOf(Model), 0, kKinds - 1);
-    const KindVoice &k = kKindVoices[v->kind];
+    lastVelocity = vel;
+    if (steppedTargetOf(Play) == MouthKeys) {
+        // One harp on the drone; the key moves the mouth.
+        for (int k = 0; k < keyCount; ++k) {
+            if (keys[k] == note) {
+                for (int m = k; m + 1 < keyCount; ++m) keys[m] = keys[m + 1];
+                --keyCount;
+                break;
+            }
+        }
+        if (keyCount == kKeys) {
+            for (int m = 0; m + 1 < kKeys; ++m) keys[m] = keys[m + 1];
+            --keyCount;
+        }
+        keys[keyCount++] = note;
+        Voice &v = voices[0];
+        const bool sounding = v.used && v.held;
+        const int when = steppedTargetOf(Repluck);
+        const bool pluck = !sounding || when == EveryNote || (when == LoudNotes && velocity >= 100);
+        const uint8_t drone = static_cast<uint8_t>(std::clamp(steppedTargetOf(Drone), 0, 127));
+        if (pluck) {
+            startHarp(v, drone, static_cast<float>(drone), vel);
+        } else {
+            v.held = true;
+        }
+        pickHz = harmonicFor(note);
+        if (!pickOn) pickAt = pickHz;
+        pickOn = true;
+        return;
+    }
+    pickOn = false;
+    Voice *v = voiceFor(note);
+    startHarp(*v, note, static_cast<float>(note), vel);
+}
+
+void Tongue::startHarp(Voice &v, uint8_t note, float noteNumber, float vel) {
+    const bool ringing = v.used && v.note == note;
+    v.kind = std::clamp(steppedTargetOf(Model), 0, kKinds - 1);
+    const KindVoice &k = kKindVoices[v.kind];
     const int reeds = steppedTargetOf(Reeds);
     const int count = std::clamp(reeds > 0 ? reeds : k.reeds, 1, kReeds);
     const int chordKnob = steppedTargetOf(Chord);
     const int chord = std::clamp(chordKnob > 0 ? chordKnob : k.chord, 1, kChords - 1);
-    if (!ringing || count != v->count) {
+    if (!ringing || count != v.count) {
         // A new harp: reeds that weren't sounding start still.
-        for (int i = v->count; i < count; ++i) {
-            v->tines[i].reed.clear();
-            v->tines[i].q = v->tines[i].air = v->tines[i].level = v->tines[i].swing = 0.0f;
+        for (int i = v.count; i < count; ++i) {
+            v.tines[i].reed.clear();
+            v.tines[i].q = v.tines[i].air = v.tines[i].level = v.tines[i].swing = 0.0f;
         }
-        v->next = 0;
+        v.next = 0;
     }
-    v->count = count;
-    for (int i = 0; i < count; ++i) v->tines[i].offset = kChordSteps[chord][i];
-    v->note = note;
-    v->baseNote = static_cast<float>(note) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
-    v->held = true;
-    retune(*v);
+    v.count = count;
+    for (int i = 0; i < count; ++i) v.tines[i].offset = kChordSteps[chord][i];
+    v.note = note;
+    v.baseNote = noteNumber + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
+    v.held = true;
+    retune(v);
+    strike(v, vel);
+    lastKeyPluck = now;
+    v.used = true;
+    v.quietBlocks = 0;
+    v.age = ++clock;
+    asleep = false;
+    quietSamples = 0;
+}
 
+void Tongue::strike(Voice &v, float vel) {
+    strikeLog[strikeCount++ & 63] = sampleNow;
+    const KindVoice &k = kKindVoices[v.kind];
+    const int count = v.count;
     // Harder is a bigger swing (brighter, as more of it is out of the slot)
     // and a shorter flick of the finger (more of the overtones). The flick
     // is timed for a G3 reed and scales with the reed, so every note has
@@ -237,15 +326,15 @@ void Tongue::noteOn(uint8_t note, uint8_t velocity) {
         for (int i = count - 1; i > 0; --i) std::swap(scatter[i], scatter[nextRandom(noise) % static_cast<uint32_t>(i + 1)]);
     }
     for (int i = 0; i < count; ++i) {
-        Tine &t = v->tines[i];
+        Tine &t = v.tines[i];
         int place = i;
         if (order == Down) place = count - 1 - i;
         else if (order == Scatter) place = scatter[i];
-        else if (order == InTurn) place = i == v->next % count ? 0 : -1;
+        else if (order == InTurn) place = i == v.next % count ? 0 : -1;
         if (place < 0) continue;
         const float c = contactFor(t);
         if (place * step == 0) {
-            pluckTine(*v, t, swing, c, snap, gain);
+            pluckTine(v, t, swing, c, snap, gain);
             t.wait = -1;
         } else {
             t.wait = place * step;
@@ -255,18 +344,28 @@ void Tongue::noteOn(uint8_t note, uint8_t velocity) {
             t.waitGain = gain;
         }
     }
-    if (order == InTurn) v->next = (v->next + 1) % count;
+    if (order == InTurn) v.next = (v.next + 1) % count;
     // The frame rings too, once a pluck.
-    v->knock.set(k.frameHz, k.frameRing, sampleRate);
-    v->knock.strike(k.frameLevel * kHouse * k.level * velocityGain(vel, targetOf(VelocityAmount)) * swing);
-    v->used = true;
-    v->quietBlocks = 0;
-    v->age = ++clock;
-    asleep = false;
-    quietSamples = 0;
+    v.knock.set(k.frameHz, k.frameRing, sampleRate);
+    v.knock.strike(k.frameLevel * kHouse * k.level * velocityGain(vel, targetOf(VelocityAmount)) * swing);
 }
 
 void Tongue::noteOff(uint8_t note) {
+    // Mouth mode: the mouth goes back to the key still down; the harp is let
+    // go with the last.
+    for (int k = 0; k < keyCount; ++k) {
+        if (keys[k] == note) {
+            for (int m = k; m + 1 < keyCount; ++m) keys[m] = keys[m + 1];
+            --keyCount;
+            if (keyCount > 0) {
+                pickHz = harmonicFor(keys[keyCount - 1]);
+            } else if (voices[0].used && voices[0].held) {
+                voices[0].held = false;
+                retune(voices[0]);
+            }
+            return;
+        }
+    }
     for (Voice &v : voices) {
         if (v.used && v.held && v.note == note) {
             v.held = false;
@@ -276,6 +375,8 @@ void Tongue::noteOff(uint8_t note) {
 }
 
 void Tongue::allNotesOff() {
+    keyCount = 0;
+    dueCount = 0;
     for (Voice &v : voices) {
         if (v.used && v.held) {
             v.held = false;
@@ -288,6 +389,82 @@ void Tongue::pitchBend(int16_t value14) {
     bend = static_cast<float>(value14) / 8192.0f;
     for (Voice &v : voices) {
         if (v.used) retune(v);
+    }
+}
+
+float Tongue::harmonicFor(uint8_t note) const {
+    // The drone as it sounds: the harp's first reed, or the note it will play.
+    const Voice &v = voices[0];
+    const float drone = v.used ? v.tines[0].reed.hz()
+                               : noteHz(static_cast<float>(steppedTargetOf(Drone)) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) +
+                                        targetOf(Tune) / 100.0f);
+    // The nearest harmonic in pitch, from the 2nd up, below the formants' reach.
+    const float ratio = noteHz(static_cast<float>(note)) / std::fmax(drone, 1.0f);
+    const float lower = std::floor(ratio), upper = lower + 1.0f;
+    float n = lower >= 1.0f && std::log(ratio / lower) < std::log(upper / ratio) ? lower : upper;
+    const float top = std::floor(std::fmin(5000.0f, 0.45f * sampleRate) / std::fmax(drone, 1.0f));
+    n = std::clamp(n, 2.0f, std::fmax(2.0f, top));
+    return n * drone;
+}
+
+void Tongue::onBlock(int64_t tickStart, int64_t, float bpm) {
+    samplesPerTick = static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(bpm > 1.0f ? bpm : 120.0f) * kPPQN);
+    // Kept to the sample between blocks; a jump (a locate, a loop) starts again.
+    if (std::fabs(ticks - static_cast<double>(tickStart)) > 2.0) {
+        ticks = static_cast<double>(tickStart);
+        nextStep = -1;
+    }
+}
+
+void Tongue::addDue(int64_t at, float velocity) {
+    if (dueCount == kDue) return;
+    int i = dueCount++;
+    while (i > 0 && due[i - 1].at > at) {
+        due[i] = due[i - 1];
+        --i;
+    }
+    due[i] = {at, velocity};
+}
+
+void Tongue::schedulePattern(int32_t frames) {
+    const int which = std::clamp(steppedTargetOf(Pattern), 0, kPatterns - 1);
+    bool held = false;
+    for (const Voice &v : voices) held = held || (v.used && v.held);
+    const double end = ticks + static_cast<double>(frames) / samplesPerTick;
+    if (which == NoPattern || !held) {
+        nextStep = -1;
+        return;
+    }
+    const Rhythm &r = kRhythms[which];
+    // On the song's grid, so a pattern lines up with the beat.
+    if (nextStep < 0) nextStep = static_cast<int64_t>(std::ceil(ticks / r.step)) * r.step;
+    const float accent = clampf(paramOf(Accent), 0.0f, 1.0f);
+    const float ratchet = clampf(paramOf(Ratchet), 0.0f, 1.0f);
+    const double stepSamples = static_cast<double>(r.step) * samplesPerTick;
+    while (static_cast<double>(nextStep) < end) {
+        const float weight = r.weight[(nextStep / r.step) % r.length];
+        const int64_t at = now + static_cast<int64_t>(std::llround((static_cast<double>(nextStep) - ticks) * samplesPerTick));
+        nextStep += r.step;
+        // A step too close after a key's own pluck is the key's.
+        if (weight <= 0.0f || static_cast<double>(at - lastKeyPluck) < stepSamples / 3.0) continue;
+        const float vel = lastVelocity * (1.0f - accent * (1.0f - weight));
+        // Now and then a step is two or three quick plucks; more on the weak steps.
+        const float chance = ratchet * (weight < 1.0f ? 1.0f : 0.5f);
+        const bool split = chance > 0.0f && static_cast<float>(nextRandom(noise) >> 8) * (1.0f / 16777216.0f) < chance;
+        const int parts = split ? 2 + static_cast<int>(nextRandom(noise) % 2u) : 1;
+        for (int p = 0; p < parts; ++p) {
+            addDue(at + static_cast<int64_t>(stepSamples * p / parts), vel * (p == 0 ? 1.0f : 0.8f));
+        }
+    }
+}
+
+void Tongue::repluckHeld(float velocity) {
+    if (keyCount > 0) {
+        if (voices[0].used && voices[0].held) strike(voices[0], velocity);
+        return;
+    }
+    for (Voice &v : voices) {
+        if (v.used && v.held) strike(v, velocity);
     }
 }
 
@@ -308,6 +485,7 @@ void Tongue::moveMouth(bool jump) {
     for (int k = 0; k < 3; ++k) target[k] = kMouths[lo][k] + (kMouths[lo + 1][k] - kMouths[lo][k]) * t;
     const float follow = jump ? 1.0f : 1.0f - std::exp(-static_cast<float>(kControl) / (knob(Glide) * 0.001f * sampleRate));
     for (int k = 0; k < 3; ++k) formants[k] += (target[k] - formants[k]) * follow;
+    if (pickOn) pickAt += (pickHz - pickAt) * follow;
     // Focus narrows the lower formants until each brings out one harmonic.
     const float focus = clampf(knob(Focus), 0.0f, 1.0f);
     for (int k = 0; k < 3; ++k) {
@@ -330,12 +508,14 @@ void Tongue::moveMouth(bool jump) {
     }
     if (hz <= 0.0f) hz = 196.0f;
     const float lift = kMouthBoost * clampf(knob(Depth), 0.0f, 1.0f);
+    // Mouth mode's pick: narrow enough to stand on one harmonic of the drone.
+    if (pickOn) pick.set(pickAt, std::fmax(8.0f, hz * (0.5f - 0.4f * focus)), sampleRate);
     // Only worked out again when the mouth, its depth or the pitch has moved.
-    const float now[6] = {formants[0], formants[1], formants[2], focus, lift, hz};
+    const float state[8] = {formants[0], formants[1], formants[2], focus, lift, hz, pickOn ? pickAt : 0.0f, pickOn ? 1.0f : 0.0f};
     bool moved = jump;
-    for (int k = 0; k < 6; ++k) moved = moved || std::fabs(now[k] - lastMouth[k]) > 1e-3f * std::fabs(now[k]) + 1e-6f;
+    for (int k = 0; k < 8; ++k) moved = moved || std::fabs(state[k] - lastMouth[k]) > 1e-3f * std::fabs(state[k]) + 1e-6f;
     if (!moved) return;
-    for (int k = 0; k < 6; ++k) lastMouth[k] = now[k];
+    for (int k = 0; k < 8; ++k) lastMouth[k] = state[k];
     // At most 24 of the first 48 harmonics, spread evenly.
     const int top = std::min(48, static_cast<int>(0.45f * sampleRate / hz));
     const int stride = (top + 23) / 24;
@@ -349,6 +529,10 @@ void Tongue::moveMouth(bool jump) {
             response += static_cast<double>(lift * kFormantShare[k]) * (static_cast<double>(f.b0) + static_cast<double>(f.b2) * z2) /
                         (1.0 + static_cast<double>(f.a1) * z1 + static_cast<double>(f.a2) * z2);
         }
+        if (pickOn) {
+            response += static_cast<double>(lift * kPickShare) * (static_cast<double>(pick.b0) + static_cast<double>(pick.b2) * z2) /
+                        (1.0 + static_cast<double>(pick.a1) * z1 + static_cast<double>(pick.a2) * z2);
+        }
         const double low = (h / 3.5) * (h / 3.5), high = (h / 16.0) * (h / 16.0);
         const double weight = low / (1.0 + low) / (1.0 + high);
         sum += std::norm(response) * weight;
@@ -360,7 +544,14 @@ void Tongue::moveMouth(bool jump) {
 bool Tongue::render(float *L, float *R, int32_t frames) {
     params_.tick();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
-    if (asleep) return true;
+    const double blockTicks = static_cast<double>(frames) / samplesPerTick;
+    if (asleep) {
+        ticks += blockTicks;
+        now += frames;
+        sampleNow = now;
+        return true;
+    }
+    schedulePattern(frames);
 
     // The block's settings.
     const float edgeKnob = paramOf(Edge) - kEdgeHome;
@@ -412,6 +603,13 @@ bool Tongue::render(float *L, float *R, int32_t frames) {
             moveMouth(false);
         }
         mouthGain += (mouthGainTarget - mouthGain) * gainFollow;
+        sampleNow = now + i;
+        while (dueCount > 0 && due[0].at <= now + i) {
+            const float velocity = due[0].velocity;
+            for (int d = 1; d < dueCount; ++d) due[d - 1] = due[d];
+            --dueCount;
+            repluckHeld(velocity);
+        }
         float push = 0.0f, air = 0.0f, hiss = 0.0f;
         // Breath moves across the block: the air is a change, so a step would click.
         blown += breathStep;
@@ -470,6 +668,7 @@ bool Tongue::render(float *L, float *R, int32_t frames) {
             peaks += kFormantShare[k] * mouth[k].process(dry);
             breathed += kFormantShare[k] * mouthAir[k].process(hiss);
         }
+        if (pickOn) peaks += kPickShare * pick.process(dry);
         const float shaped = dry + kMouthBoost * depth * peaks;
         const float wet = mouthGain * shaped + breathed;
         // No DC out of a mouth.
@@ -493,6 +692,9 @@ bool Tongue::render(float *L, float *R, int32_t frames) {
             v.quietBlocks = 0;
         }
     }
+    ticks += blockTicks;
+    now += frames;
+    sampleNow = now;
     quietSamples = any || activeVoices() > 0 ? 0 : quietSamples + frames;
     if (quietSamples > 8192) asleep = true;
     return true;

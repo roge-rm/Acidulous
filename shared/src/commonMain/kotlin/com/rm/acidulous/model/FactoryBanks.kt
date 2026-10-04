@@ -3171,7 +3171,27 @@ internal object FactoryBanks {
         family = "reeds",
         low = 48, high = 62)
 
-    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15()) }
+    private fun tongue16() = Patch("Tongue", "Mouth Tunes",
+        mapOf("focus" to 0.8f, "volume" to 0.47f, "play" to 1f, "repluck" to 1f, "pattern" to 0.5f),
+        family = "rhythm",
+        low = 50, high = 86)
+
+    private fun tongue17() = Patch("Tongue", "Khomus Gallop",
+        mapOf("model" to 0.222222224f, "breath" to 0.2f, "volume" to 0.5f, "pattern" to 0.5f, "accent" to 0.7f),
+        family = "rhythm",
+        low = 48, high = 62)
+
+    private fun tongue18() = Patch("Tongue", "Genggong Runs",
+        mapOf("model" to 0.8888889f, "volume" to 0.45f, "pattern" to 0.8333333f, "accent" to 0.6f),
+        family = "rhythm",
+        low = 48, high = 62)
+
+    private fun tongue19() = Patch("Tongue", "Morsing Groupings",
+        mapOf("model" to 0.333333343f, "volume" to 0.54f, "pattern" to 1f, "accent" to 0.8f, "ratchet" to 0.15f),
+        family = "rhythm",
+        low = 44, high = 56)
+
+    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

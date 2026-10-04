@@ -408,6 +408,20 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         wheelAt(p, at, 0);
         p.lastOff = std::max(p.lastOff, hit(p, at, beat * 2.0f, note, 100));
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "harmonics") {
+        // A jaw harp in mouth mode: the note is the drone, and legato keys at
+        // its harmonics walk a tune, each a little over the next; the louder
+        // ones pluck again.
+        static const int kWalk[] = {4, 5, 6, 5, 4, 6, 8, 6, 5, 6, 8, 9, 8, 6, 5, 4};
+        float at = 0.0f;
+        for (int i = 0; i < 16; ++i) {
+            const int key = note + static_cast<int>(std::lround(12.0 * std::log2(static_cast<double>(kWalk[i]))));
+            const int vel = i % 4 == 0 ? 110 : 80;
+            p.lastOff = std::max(p.lastOff, hit(p, at, beat * 0.55f, key, vel));
+            at += beat * 0.5f;
+        }
+        p.lastOff = std::max(p.lastOff, hit(p, at, beat * 2.0f, note + 24, 110));
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "drone") {
         // One chord held much longer than any other phrase. A spectral pad
         // is about slow movement (drift, morph) that's slower than the pad
@@ -1721,7 +1735,7 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|jaw\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|jaw|harmonics\n"
         "          |chip|drone|mallets|gospel|chorale|combo|swell|chromatic\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"

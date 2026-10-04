@@ -20,6 +20,10 @@ namespace acidulous::machine {
  * Ten kinds of harp share the model, each with its own reed, slot, ring and
  * frame (kKindVoices); the knobs move each kind's sound from where it sits.
  * A harp can have up to five reeds, tuned as a chord.
+ *
+ * Keys play it two ways: a harp at each key's pitch, or one harp on a drone
+ * note with each key moving the mouth onto the drone's nearest harmonic, as
+ * a player does. A pattern replucks held harps on the song's grid.
  */
 class Tongue final : public Machine {
   public:
@@ -29,6 +33,7 @@ class Tongue final : public Machine {
         Breath, Air, Sustain, Stop,
         Voices, VelocityAmount, BendRange, Octave, Volume,
         Reeds, Chord, Strum, Order,
+        Play, Drone, Repluck, Pattern, Accent, Ratchet,
         Count
     };
     static_assert(Count <= kMaxParams, "too many parameters");
@@ -41,6 +46,12 @@ class Tongue final : public Machine {
     enum ChordKind : int32_t { AutoChord = 0, Unison, Octaves, Fifths, Major, Minor, Pentatonic, kChords };
     /** The order a harp's reeds are plucked in, for `order`. */
     enum OrderKind : int32_t { Up = 0, Down, InTurn, Scatter, kOrders };
+    /** What the keys do, for `play`. */
+    enum PlayKind : int32_t { DroneKeys = 0, MouthKeys, kPlays };
+    /** When a key in mouth mode plucks the harp again, for `repluck`. */
+    enum RepluckKind : int32_t { EveryNote = 0, FirstNote, LoudNotes, kReplucks };
+    /** The plucking rhythms, for `pattern`. */
+    enum PatternKind : int32_t { NoPattern = 0, Eighths, Sixteenths, Gallop, Triplets, Runs, Groupings, kPatterns };
 
     Tongue();
 
@@ -58,6 +69,12 @@ class Tongue final : public Machine {
 
     /** Voices sounding, for tests. */
     int activeVoices() const;
+    /** How many times a harp has been plucked since reset, and when (samples since reset) the last 64 were; for tests. */
+    int strikes() const { return strikeCount; }
+    int64_t strikeTime(int i) const { return strikeLog[i & 63]; }
+    /** Where the mouth's picking resonance is going, Hz, or 0 when it's off; for tests. */
+    float pickTarget() const { return pickOn ? pickHz : 0.0f; }
+    void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
 
     /**
      * What makes each kind itself. set, edge and pluck are where the kind
@@ -142,9 +159,29 @@ class Tongue final : public Machine {
         uint32_t age = 0;
     };
 
+    /** A pluck waiting for its sample: from a pattern step or a ratchet. */
+    struct Due {
+        int64_t at = 0;
+        float velocity = 0.0f;
+    };
+    static constexpr int kDue = 16;
+    /** A key down in mouth mode. */
+    static constexpr int kKeys = 16;
+
     float paramOf(int32_t i) const { return params_.get(i); }
     Voice *voiceFor(uint8_t note);
     void retune(Voice &v);
+    /** Plucks a sounding harp again, all its reeds as the order says. */
+    void strike(Voice &v, float vel);
+    /** Starts a harp on [note] and plucks it. */
+    void startHarp(Voice &v, uint8_t note, float noteNumber, float vel);
+    /** Mouth mode: the harmonic of the drone nearest [note], as Hz. */
+    float harmonicFor(uint8_t note) const;
+    /** The pattern's steps from here to the end of the block, as plucks due. */
+    void schedulePattern(int32_t frames);
+    void addDue(int64_t at, float velocity);
+    /** A pattern or ratchet pluck: every held harp, or the drone. */
+    void repluckHeld(float velocity);
     /** Sets a reed going now: by finger or string, as its kind is played. */
     void pluckTine(const Voice &v, Tine &t, float swing, float contact, float snap, float gain);
     /** The mouth: formants from the vowel control, narrowed by focus, and the gain that keeps the level. */
@@ -156,8 +193,29 @@ class Tongue final : public Machine {
     float sampleRate = 48000.0f;
     float formants[3] = {730, 1090, 2440};
     float mouthGain = 1.0f, mouthGainTarget = 1.0f;
-    /** What the mouth's gain was last worked out for: formants, focus, lift and pitch. */
-    float lastMouth[6] = {};
+    /** What the mouth's gain was last worked out for: formants, focus, lift, pitch and the pick. */
+    float lastMouth[8] = {};
+    /** Mouth mode's picking resonance: on one harmonic of the drone, gliding to [pickHz]. */
+    diction::Bandpass pick;
+    float pickHz = 0.0f, pickAt = 0.0f;
+    bool pickOn = false;
+    uint8_t keys[kKeys] = {};
+    int keyCount = 0;
+    float lastVelocity = 0.8f;
+    /** The song's position in ticks at the start of this block, kept to the sample, and its tempo. */
+    double ticks = 0.0, samplesPerTick = 100.0;
+    int64_t nextStep = -1;
+    int64_t stepCount = 0;
+    /** Samples rendered since reset, to time plucks due. */
+    int64_t now = 0;
+    int strikeCount = 0;
+    int64_t strikeLog[64] = {};
+    /** The sample being rendered, like [now]: when a strike happens. */
+    int64_t sampleNow = 0;
+    /** When a key last plucked, in samples like [now]. */
+    int64_t lastKeyPluck = -1000000;
+    Due due[kDue];
+    int dueCount = 0;
     float bend = 0.0f, wheel = 0.0f, pressure = 0.0f;
     /** The breath this sample, on its way to the block's. */
     float blown = 0.0f;

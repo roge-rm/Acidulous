@@ -3523,12 +3523,16 @@ private val TONGUE_MODELS = listOf(
 private val TONGUE_REEDS = listOf("auto", "1", "2", "3", "4", "5")
 private val TONGUE_CHORDS = listOf("auto", "unison", "octaves", "fifths", "major", "minor", "pentatonic")
 private val TONGUE_ORDERS = listOf("up", "down", "in turn", "scatter")
+private val TONGUE_PLAYS = listOf("drone", "mouth")
+private val TONGUE_DRONES = (36..72).map { noteName(it) }
+private val TONGUE_REPLUCKS = listOf("every", "first", "loud")
+private val TONGUE_PATTERNS = listOf("off", "eighths", "sixteenths", "gallop", "triplets", "runs", "groupings")
 
 /** Tongue: the harp, its reeds, the mouth that picks its harmonics with the breath, and the rest. */
 @Composable
 private fun TonguePanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("harp", "reeds", "mouth", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("harp", "reeds", "mouth", "keys", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
                 Group("harp") {
@@ -3567,8 +3571,20 @@ private fun TonguePanel(b: ParamBinding) {
                     PanelKnob(b, "sustain", "sustain", PanelPink)
                 }
             }
+            3 -> {
+                Group("keys") {
+                    PanelStepKnob(b, "play", TONGUE_PLAYS, "play", PanelAmber)
+                    PanelStepKnob(b, "drone", TONGUE_DRONES, "drone")
+                    PanelStepKnob(b, "repluck", TONGUE_REPLUCKS, "repluck")
+                }
+                Group("rhythm") {
+                    PanelStepKnob(b, "pattern", TONGUE_PATTERNS, "pattern", PanelPink)
+                    PanelKnob(b, "accent", "accent")
+                    PanelKnob(b, "ratchet", "ratchet")
+                }
+            }
             else -> {
-                Group("play") {
+                Group("notes") {
                     PanelKnob(b, "stop", "stop")
                     PanelStepKnob(b, "voices", (1..4).map { "$it" }, "voices")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")

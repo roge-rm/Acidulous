@@ -13,7 +13,8 @@ There are ten kinds of harp, and the metal ones were fitted to recordings of
 real ones. A harp can have up to five reeds, tuned as a chord.
 
 The mod wheel moves the mouth, so you can play the drone with one hand and the
-tune with the other. Pressure is breath.
+tune with the other. Or put **play** on **mouth**, and the keys play the tune
+the way a player does, over a drone that stays put. Pressure is breath.
 
 ## Harp
 
@@ -86,6 +87,33 @@ loudness.
 - **air** - how much of that air you hear as a hiss.
 - **sustain** - breath hard enough to keep the reed going while the key is
   down. With **breath** and **sustain** both up, a held note doesn't die.
+
+## Keys
+
+- **play** - what the keys do.
+  - **drone** - each key plucks a harp at its own pitch.
+  - **mouth** - one harp stays on the **drone** note, and each key moves the
+    mouth onto the drone's harmonic nearest to it, so the tune is in the
+    harmonics, as on a real harp. Keys snap to the nearest harmonic, from the
+    2nd up. Letting go of a key goes back to the one still down.
+- **drone** - the drone's note in mouth mode.
+- **repluck** - in mouth mode, when a key plucks the harp again: **every**
+  key, only the **first** after the others are let go, or **loud** keys
+  (velocity 100 and up).
+
+## Rhythm
+
+While a key is down the harp is plucked again in a rhythm, in time with the
+song, even when it's stopped.
+
+- **pattern** - **off**, **eighths**, **sixteenths**, **gallop** (long, short,
+  short), **triplets**, **runs** (quick runs of four and a rest, as a genggong
+  is pulled) or **groupings** (sixteenths in groups of four and three, as on
+  a morsing).
+- **accent** - how much softer the weak steps are.
+- **ratchet** - how often a step is two or three quick plucks.
+
+In mouth mode the pattern plucks the drone while the keys play the tune.
 
 ## Out
 

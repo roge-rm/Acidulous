@@ -120,3 +120,37 @@ patch "Reeds In Turn" family=reeds note=55 range=48..62
   reeds          5
   chord          6      # pentatonic
   order          2      # in turn
+
+# --- keys and rhythm ---------------------------------------------------------
+
+patch "Mouth Tunes" family=rhythm note=50 range=50..86 role=harmonics
+  # The keys move the mouth over a D drone, in a gallop.
+  play           1      # mouth
+  drone          50
+  repluck        2      # loud
+  pattern        3      # gallop
+  focus          0.8
+  volume         0.47
+
+patch "Khomus Gallop" family=rhythm note=55 range=48..62
+  # A khomus galloping on the beat, breathed.
+  model          2      # khomus
+  pattern        3      # gallop
+  accent         0.7
+  breath         0.2
+  volume         0.50
+
+patch "Genggong Runs" family=rhythm note=55 range=48..62
+  # Quick runs of pulls and a rest.
+  model          8      # genggong
+  pattern        5      # runs
+  accent         0.6
+  volume         0.45
+
+patch "Morsing Groupings" family=rhythm note=49 range=44..56
+  # Sixteenths in groups of four and three, now and then doubled.
+  model          3      # morsing
+  pattern        6      # groupings
+  accent         0.8
+  ratchet        0.15
+  volume         0.54
