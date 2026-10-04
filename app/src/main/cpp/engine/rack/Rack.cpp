@@ -78,11 +78,34 @@ void Rack::updateMidiOut(int64_t frame) {
     if ((mode != lastOutMode || ch != lastOutChannel) && lastOutMode != OutInternal && outQueue != nullptr) {
         // It was sending to MIDI and now isn't, or to a different channel. End
         // whatever it left sounding there.
-        outQueue->push({frame, static_cast<uint8_t>(0xb0 | lastOutChannel), 123, 0,
-                        static_cast<uint8_t>(rackIndex)});
+        sendOut({Outgoing::Midi, static_cast<uint8_t>(0xb0 | lastOutChannel), 123, 0, 0, 0.0f, frame});
     }
     lastOutMode = mode;
     lastOutChannel = ch;
+}
+
+void Rack::sendOut(const Outgoing &o) {
+    if (!holding) {
+        emit(o);
+    } else if (outgoingCount < kMaxOutgoing) {
+        outgoing[outgoingCount++] = o;
+    }
+}
+
+void Rack::emit(const Outgoing &o) {
+    switch (o.kind) {
+    case Outgoing::Midi:
+        outQueue->push({o.frame, o.status, o.d1, o.d2, static_cast<uint8_t>(rackIndex)});
+        break;
+    case Outgoing::Recorded: modifiedSink->onModifiedNote(rackIndex, o.status, o.d1, o.d2); break;
+    case Outgoing::Perform: performSink->set(o.index, o.v); break;
+    }
+}
+
+void Rack::sendHeld() {
+    holding = false;
+    for (int32_t n = 0; n < outgoingCount; ++n) emit(outgoing[n]);
+    outgoingCount = 0;
 }
 
 void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
@@ -90,7 +113,7 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
     // acting on one, so that's what gets recorded (the arpeggio, not the key
     // that started it). A clip's own notes come in the other way and aren't
     // recorded again.
-    if (live && modifiedSink != nullptr) modifiedSink->onModifiedNote(rackIndex, status, d1, d2);
+    if (live && modifiedSink != nullptr) sendOut({Outgoing::Recorded, status, d1, d2, 0, 0.0f, 0});
 
     // Transpose and fixed velocity, after the recording tap so a take keeps
     // what was played, and before MIDI out so external gear hears what the
@@ -119,8 +142,7 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
     // machine.
     const int32_t mode = lastOutMode;
     if (mode != OutInternal && outQueue != nullptr) {
-        outQueue->push({outFrame, static_cast<uint8_t>((status & 0xf0) | lastOutChannel), d1, d2,
-                        static_cast<uint8_t>(rackIndex)});
+        sendOut({Outgoing::Midi, static_cast<uint8_t>((status & 0xf0) | lastOutChannel), d1, d2, 0, 0.0f, outFrame});
     }
     if (mode == OutMidi) return;
     if (machine == nullptr) return;
@@ -172,8 +194,7 @@ void Rack::setPedal(int32_t which, uint8_t value) {
     // hold them twice.
     const uint8_t cc = which == kPerfSustain ? 64 : which == kPerfSostenuto ? 66 : 67;
     if (lastOutMode != OutInternal && outQueue != nullptr) {
-        outQueue->push({outFrame, static_cast<uint8_t>(0xb0 | lastOutChannel), cc, value,
-                        static_cast<uint8_t>(rackIndex)});
+        sendOut({Outgoing::Midi, static_cast<uint8_t>(0xb0 | lastOutChannel), cc, value, 0, 0.0f, outFrame});
     }
     const bool takes = machineTakesPedals();
     if (takes) machine->pedal(which, static_cast<float>(value) / 127.0f);
@@ -693,7 +714,7 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
         }
         break;
     }
-    case Unit::Perform: if (performSink != nullptr) performSink->set(index, v01); break;
+    case Unit::Perform: if (performSink != nullptr) sendOut({Outgoing::Perform, 0, 0, 0, index, v01, 0}); break;
     case Unit::Master: break; // never sent to a rack
     }
 }

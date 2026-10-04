@@ -42,7 +42,10 @@ constexpr int32_t kBar = kPPQN * 4;
  * what most of the checks below depend on.
  */
 struct Fixture {
-    Engine engine;
+    // On the heap: an engine is most of a megabyte, and under the sanitizer
+    // a test function holding several of them runs out of stack.
+    std::unique_ptr<Engine> owned = std::make_unique<Engine>();
+    Engine &engine = *owned;
     std::shared_ptr<SongSnapshot> snap = std::make_shared<SongSnapshot>();
     std::vector<std::shared_ptr<const Clip>> keep;
 
@@ -301,7 +304,10 @@ void aTracksCostIsAPercentile() {
  * or a listener rendered before its source would hear it a block late.
  */
 struct SideFixture {
-    Engine engine;
+    // On the heap: an engine is most of a megabyte, and under the sanitizer
+    // a test function holding several of them runs out of stack.
+    std::unique_ptr<Engine> owned = std::make_unique<Engine>();
+    Engine &engine = *owned;
     std::shared_ptr<SongSnapshot> snap = std::make_shared<SongSnapshot>();
     std::vector<std::shared_ptr<const Clip>> keep;
     static constexpr int32_t kListener = 2, kSource = 5;
@@ -443,7 +449,10 @@ void aTrackCanListenToAnother() {
  * master's group 0, which has two inserts and a fader of its own.
  */
 struct GroupFixture {
-    Engine engine;
+    // On the heap: an engine is most of a megabyte, and under the sanitizer
+    // a test function holding several of them runs out of stack.
+    std::unique_ptr<Engine> owned = std::make_unique<Engine>();
+    Engine &engine = *owned;
     std::shared_ptr<SongSnapshot> snap = std::make_shared<SongSnapshot>();
     std::vector<std::shared_ptr<const Clip>> keep;
     static constexpr int32_t kA = 1, kB = 5, kGroup = 0;

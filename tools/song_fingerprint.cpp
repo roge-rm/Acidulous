@@ -1,7 +1,18 @@
 // A fingerprint of a busy song rendered through the whole engine, to prove a
 // change to how a block is rendered leaves the sound exactly as it was.
 //
-//   song_fingerprint [seconds]
+//   song_fingerprint [seconds] [workers] [b]
+//
+// "b" plays the other twelve machines instead, for a ThreadSanitizer run to
+// cover every machine.
+//
+// PACED=1 renders as a sound card asks: four blocks every 5.33 ms, sleeping
+// between, so the workers sleep and wake as they would live. It prints how
+// long the callbacks took (the middle one, 1 in 100, the worst) against the
+// 5.33 ms they have. The hash is the same either way.
+//
+// With workers, the tracks render on that many threads beside this one, woken
+// every block; the hash must be the same for any number.
 //
 // Twelve tracks of real machines, two scenes of two bars (so the song
 // crosses a scene change twice), notes on every track, automation lanes, a
@@ -15,7 +26,10 @@
 #include <engine/rack/Engine.h>
 #include <sequencer/Song.h>
 
+#include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <thread>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -55,14 +69,20 @@ void set(ParamSet &p, const char *name, float value) {
 int main(int argc, char **argv) {
     _mm_setcsr(_mm_getcsr() | 0x8040);
     const float seconds = argc > 1 ? static_cast<float>(std::atof(argv[1])) : 10.0f;
+    const int32_t workers = argc > 2 ? std::atoi(argv[2]) : 0;
     auto engine = std::make_unique<Engine>();
     Engine &e = *engine;
+    e.setWorkers(workers);
+    e.wakeFloorUs = 0;
     auto snap = std::make_shared<SongSnapshot>();
     std::vector<std::shared_ptr<const Clip>> keep;
 
-    static const char *kMachines[] = {"Genesis", "Hexbeat", "Reflux", "Reflux", "Ratio", "Trinity",
-                                      "Filament", "Hammer", "Timber", "Trinity", "Manual", "Resonance"};
-    constexpr int32_t kTracks = static_cast<int32_t>(sizeof(kMachines) / sizeof(kMachines[0]));
+    static const char *kSetA[] = {"Genesis", "Hexbeat", "Reflux", "Reflux", "Ratio", "Trinity",
+                                  "Filament", "Hammer", "Timber", "Trinity", "Manual", "Resonance"};
+    static const char *kSetB[] = {"Forage", "Dice", "Cumulus", "Formulate", "Nexus", "Brazen",
+                                  "Diction", "Mosaic", "Cipher", "Pollen", "Bias", "Molt"};
+    const char *const *kMachines = argc > 3 && argv[3][0] == 'b' ? kSetB : kSetA;
+    constexpr int32_t kTracks = 12;
     Machine *machines[kTracks];
     for (int32_t r = 0; r < kTracks; ++r) {
         Machine *m = machines[r] = MachineRegistry::create(kMachines[r]);
@@ -137,7 +157,7 @@ int main(int argc, char **argv) {
             // On rack 3, a lane on the decay its notes start with, stepping on
             // the notes' own ticks: a lane played after the notes in a block
             // instead of before them is heard.
-            if (r == 3) {
+            if (r == 3 && machines[r]->params().indexOf("decay") >= 0) {
                 Lane decay;
                 decay.unit = Unit::Machine;
                 decay.index = machines[r]->params().indexOf("decay");
@@ -159,7 +179,21 @@ int main(int argc, char **argv) {
     const int32_t blocks = static_cast<int32_t>(seconds * kSampleRate / kBlockFrames);
     uint64_t hash = 1469598103934665603ull;
     float peak = 0.0f;
+    const bool paced = std::getenv("PACED") != nullptr && std::getenv("PACED")[0] == '1';
+    std::vector<double> callbacks;
+    auto callbackStart = std::chrono::steady_clock::now();
+    const auto period = std::chrono::nanoseconds(static_cast<int64_t>(4.0e9 * kBlockFrames / kSampleRate));
+    auto next = callbackStart;
+    const auto started = std::chrono::steady_clock::now();
     for (int32_t b = 0; b < blocks; ++b) {
+        if (paced && b % 4 == 0) {
+            if (b > 0) {
+                callbacks.push_back(std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - callbackStart).count());
+            }
+            next += period;
+            std::this_thread::sleep_until(next);
+            callbackStart = std::chrono::steady_clock::now();
+        }
         e.renderBlock(nullptr, scratch);
         for (float v : scratch) {
             uint32_t bits;
@@ -168,7 +202,18 @@ int main(int argc, char **argv) {
             peak = std::fmax(peak, std::fabs(v));
         }
     }
-    std::printf("fingerprint %016llx  peak %.4f  %d blocks\n", static_cast<unsigned long long>(hash), peak, blocks);
+    const double took = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
+    std::printf("fingerprint %016llx  peak %.4f  %d blocks  %.0f us a block\n", static_cast<unsigned long long>(hash), peak,
+                blocks, took * 1e6 / blocks);
+    if (paced && !callbacks.empty()) {
+        std::sort(callbacks.begin(), callbacks.end());
+        const auto at = [&](double q) { return callbacks[static_cast<size_t>(q * (callbacks.size() - 1))]; };
+        const double budget = 4.0e6 * kBlockFrames / kSampleRate;
+        const auto late = std::count_if(callbacks.begin(), callbacks.end(), [&](double us) { return us > budget; });
+        std::printf("callbacks of 4 blocks: middle %.0f us, 1 in 100 %.0f us, worst %.0f us, of %.0f; %d of %d late\n", at(0.5),
+                    at(0.99), callbacks.back(), budget, static_cast<int>(late), static_cast<int>(callbacks.size()));
+    }
+    e.setWorkers(0);
     for (int32_t r = 0; r < kTracks; ++r) {
         for (int32_t s = 0; s < kEffectSlots; ++s) delete e.racks[r].swapEffect(s, nullptr);
         delete e.racks[r].swapMachine(nullptr);

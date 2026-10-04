@@ -10,6 +10,7 @@
 #include <engine/machine/nexus/Nexus.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <android/log.h>
 #include <cstdio>
 #include <cstring>
@@ -96,17 +97,32 @@ EngineHost &EngineHost::instance() {
 
 EngineHost::~EngineHost() { stop(); }
 
+int32_t EngineHost::trackWorkers() {
+#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+    return 0;
+#else
+    // ACIDULOUS_WORKERS sets it, for timing; otherwise half the physical
+    // cores, at most seven. A desktop core does a phone's work several times
+    // over, so most songs never wake them.
+    if (const char *forced = std::getenv("ACIDULOUS_WORKERS")) return std::clamp(std::atoi(forced), 0, TrackPool::kMaxWorkers);
+    return std::clamp(TrackPool::physicalCores() / 2, 0, TrackPool::kMaxWorkers);
+#endif
+}
+
 bool EngineHost::start() {
     if (running) return true;
     sEngine.start();
+    sEngine.setWorkers(trackWorkers());
     sAudio.registerCallback([](float *in, float *out, unsigned long) { sEngine.renderBlock(in, out); });
     if (!sAudio.start()) {
         LOGE("audio failed to start");
+        sEngine.setWorkers(0);
         sEngine.stop();
         return false;
     }
     running = true;
-    LOGI("engine started: %d racks, %d Hz, block %d", kRackCount, sAudio.getSampleRate(), kBlockFrames);
+    LOGI("engine started: %d racks, %d Hz, block %d, %d track workers", kRackCount, sAudio.getSampleRate(), kBlockFrames,
+         sEngine.workers());
     return true;
 }
 
@@ -114,6 +130,7 @@ void EngineHost::stop() {
     if (!running) return;
     running = false;
     sAudio.stop(); // once the callback has stopped nothing else touches the racks
+    sEngine.setWorkers(0);
     sEngine.stop();
     for (auto &t : mountedType) t.clear();
     for (auto &r : mountedEffectType) for (auto &t : r) t.clear();

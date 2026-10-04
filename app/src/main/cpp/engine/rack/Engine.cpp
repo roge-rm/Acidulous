@@ -343,8 +343,12 @@ void Engine::renderBlock(const float *in, float *out) {
     const auto tSeq = std::chrono::steady_clock::now();
 
     // Render the racks, then the master.
-    int32_t rackUsThisBlock[kRackCount]{};
-    bool rackFrozenThisBlock[kRackCount]{};
+    int32_t *rackUsThisBlock = blockRackUs;
+    bool *rackFrozenThisBlock = blockRackFrozen;
+    for (int32_t r = 0; r < kRackCount; ++r) {
+        blockRackUs[r] = 0;
+        blockRackFrozen[r] = false;
+    }
     // Sources before listeners. A rack whose compressor, gate or filter
     // listens to another is rendered after it, so the duck lands in the same
     // block as the kick. Worked out every block because a sidechain is a
@@ -355,10 +359,47 @@ void Engine::renderBlock(const float *in, float *out) {
     for (int32_t n = 0; n < kRackCount; ++n) renderPlace[order[n]] = n;
     // Last block's taps, for a listener that renders before its source.
     for (int32_t r = 0; r < kRackCount; ++r) std::memcpy(racks[r].keyPrev, racks[r].keyBuf, sizeof(racks[r].keyBuf));
+    // Each playing rack is a job. One that listens to a rack rendering before
+    // it waits for that rack; one that renders after hears last block's key
+    // and waits for nothing. On the workers, the audio thread works too.
+    int32_t jobOf[kRackCount];
+    int32_t jobs = 0;
     for (int32_t n = 0; n < kRackCount; ++n) {
         const int32_t r = order[n];
-        if (racks[r].isActive()) renderRack(r, &rackUsThisBlock[r], &rackFrozenThisBlock[r]);
+        jobOf[r] = -1;
+        if (racks[r].isActive()) {
+            jobOf[r] = jobs;
+            jobRack[jobs++] = r;
+        }
     }
+    uint32_t needs[kRackCount]{};
+    int32_t pick[kRackCount];
+    for (int32_t j = 0; j < jobs; ++j) {
+        const int32_t r = jobRack[j];
+        const auto need = [&](int32_t source) {
+            if (source >= 0 && source < kRackCount && source != r && jobOf[source] >= 0 &&
+                renderPlace[source] < renderPlace[r]) {
+                needs[j] |= 1u << jobOf[source];
+            }
+        };
+        for (int32_t s = 0; s < kEffectSlots; ++s) {
+            if (Effect *e = racks[r].currentEffect(s)) need(e->sidechainRack());
+        }
+        if (Machine *m = racks[r].currentMachine()) need(m->sidechainRack());
+        // Heaviest first, by last block's cost; ties keep the render order.
+        int32_t at = j;
+        while (at > 0 && lastRackUs[jobRack[pick[at - 1]]] < lastRackUs[r]) {
+            pick[at] = pick[at - 1];
+            --at;
+        }
+        pick[at] = j;
+    }
+    int32_t lastTotal = 0;
+    for (int32_t r = 0; r < kRackCount; ++r) lastTotal += lastRackUs[r];
+    pool.run(jobs, needs, pick, &Engine::rackJob, this, lastTotal >= wakeFloorUs);
+    // What the racks sent out while rendering, in render order.
+    for (int32_t j = 0; j < jobs; ++j) racks[jobRack[j]].sendHeld();
+    for (int32_t r = 0; r < kRackCount; ++r) lastRackUs[r] = blockRackUs[r];
     // Anything queued for a rack with nothing to render it.
     for (int32_t r = 0; r < kRackCount; ++r) racks[r].playQueued();
     // Read after the racks, which is where a lane on a rack's output lands.
@@ -488,9 +529,17 @@ void Engine::renderBlock(const float *in, float *out) {
     }
 }
 
+void Engine::rackJob(void *engine, int32_t job) {
+    Engine &e = *static_cast<Engine *>(engine);
+    const int32_t r = e.jobRack[job];
+    e.renderRack(r, &e.blockRackUs[r], &e.blockRackFrozen[r]);
+}
+
 void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
     Rack &rack = racks[r];
     const auto tRack = std::chrono::steady_clock::now();
+    // On a worker, what it sends out waits for the audio thread (sendHeld).
+    rack.holdOutgoing();
     // The notes, lanes and words the scheduler sent, first, as they would
     // have landed at the block's start.
     rack.playQueued();

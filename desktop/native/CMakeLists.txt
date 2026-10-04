@@ -90,7 +90,7 @@ if(WIN32)
     set_target_properties(acidulous mp3lame PROPERTIES PREFIX "")
     set_target_properties(mp3lame PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     target_compile_definitions(acidulous PRIVATE _WIN32_WINNT=0x0A00 WINVER=0x0A00 NOMINMAX WIN32_LEAN_AND_MEAN)
-    target_link_libraries(acidulous mp3lame ableton_link Threads::Threads ole32 advapi32 user32)
+    target_link_libraries(acidulous mp3lame ableton_link Threads::Threads ole32 advapi32 user32 synchronization)
     target_include_directories(acidulous SYSTEM PRIVATE ${ASIOSDK}/common ${ASIOSDK}/host ${ASIOSDK}/host/pc)
     # Steinberg's code, built with its warnings off. It and the code using it
     # need COM, which WIN32_LEAN_AND_MEAN leaves out.

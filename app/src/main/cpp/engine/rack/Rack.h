@@ -104,6 +104,17 @@ class Rack {
     /** Plays what's queued, in the order it came, and stops queueing. */
     void playQueued();
 
+    /**
+     * While a track renders it may be on a worker thread, so what it sends out
+     * of itself (MIDI out, notes to the recorder, perform lanes to the master)
+     * is kept until sendHeld(), which the audio thread calls for each track in
+     * render order. That's the order they went out in when one thread
+     * rendered everything.
+     */
+    void holdOutgoing() { holding = true; }
+    /** Audio thread: sends what holdOutgoing() kept, in order, and stops holding. */
+    void sendHeld();
+
   private:
     /** The frozen clip at its own rate, a plain read from memory. */
     void readFrozenPlain(int32_t frames);
@@ -121,6 +132,22 @@ class Rack {
     uint8_t queuedPhones[kMaxQueuedPhones];
     int32_t queuedCount = 0, queuedPhoneCount = 0;
     bool queueing = false;
+
+    /** One write out of the track, kept while holding. */
+    struct Outgoing {
+        enum Kind : uint8_t { Midi, Recorded, Perform } kind;
+        uint8_t status, d1, d2;
+        int32_t index;
+        float v;
+        int64_t frame;
+    };
+    static constexpr int32_t kMaxOutgoing = 512;
+    Outgoing outgoing[kMaxOutgoing];
+    int32_t outgoingCount = 0;
+    bool holding = false;
+    /** Sends [o] now, or keeps it while holding. Past kMaxOutgoing in one block the rest are dropped. */
+    void sendOut(const Outgoing &o);
+    void emit(const Outgoing &o);
     /**
      * Keeps [h] (and [count] phones) if queueing. Full, it plays what's queued
      * so far and says no, so the caller plays this one now: in the same order.

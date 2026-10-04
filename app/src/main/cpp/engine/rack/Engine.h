@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "MasterBus.h"
 #include "Rack.h"
+#include "TrackPool.h"
 #include <atomic>
 #include <chrono>
 #include <engine/core/Audition.h>
@@ -165,6 +166,28 @@ class Engine : public Rack::ModifiedNoteSink {
     void renderRack(int32_t r, int32_t *usOut, bool *frozenOut);
     /** Each rack's place in this block's order (renderOrder), for keyFor. */
     int32_t renderPlace[kRackCount]{};
+    /**
+     * Starts [workers] threads that render tracks beside the audio thread, or
+     * none for every track on the audio thread. Not while blocks are being
+     * rendered.
+     */
+    void setWorkers(int32_t workers, void (*onStart)(int32_t) = nullptr) { pool.start(workers, onStart); }
+    int32_t workers() const { return pool.workers(); }
+    /** The workers that render tracks beside the audio thread (see TrackPool). */
+    TrackPool pool;
+    // This block's jobs: the rack each renders, and what it cost and whether it
+    // played frozen, written by whichever thread rendered it.
+    int32_t jobRack[kRackCount]{};
+    int32_t blockRackUs[kRackCount]{};
+    bool blockRackFrozen[kRackCount]{};
+    /** Last block's cost of each rack, to start the heaviest first. */
+    int32_t lastRackUs[kRackCount]{};
+    /**
+     * Below this many microseconds of tracks last block, every track renders
+     * on the audio thread and the workers sleep. 0 always wakes them.
+     */
+    int32_t wakeFloorUs = 200;
+    static void rackJob(void *engine, int32_t job);
     /**
      * The order racks render this block, with every sidechain source before its
      * listeners. Groups are in the master, after every rack, so they don't

@@ -29,7 +29,7 @@ SRC="$SRC $CPP/engine/core/Tuner.cpp"
 SRC="$SRC $(find "$CPP/engine/inputmod" -name '*.cpp') $CPP/engine/rack/Rack.cpp"
 # The Engine itself, for render_test. The sequencer is all headers and
 # LinkFollower.h only needs Constants and Timebase, so no Link comes with it.
-SRC="$SRC $CPP/engine/rack/Engine.cpp $CPP/engine/rack/MasterBus.cpp $CPP/engine/core/Capture.cpp"
+SRC="$SRC $CPP/engine/rack/Engine.cpp $CPP/engine/rack/TrackPool.cpp $CPP/engine/rack/MasterBus.cpp $CPP/engine/core/Capture.cpp"
 SRC="$SRC $CPP/engine/core/ReelCache.cpp $CPP/engine/format/WavStream.cpp"
 SRC="$SRC $CPP/engine/format/WavWriter.cpp $CPP/engine/format/WavReader.cpp"
 SRC="$SRC $CPP/engine/format/Decoded.cpp $CPP/engine/format/AiffReader.cpp $CPP/engine/format/FlacReader.cpp"
