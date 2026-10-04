@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -1223,17 +1222,12 @@ internal fun Group(
             // No IntrinsicSize.Max here. A flow row measures each line from its
             // own children, and PanelSwitch still has its own PanelControlH
             // cap.
-            FlowRow(
+            EvenLines(
                 // Packed, the card may be stretched past its controls to fill a
                 // line, and they stay centred.
                 if (packed) Modifier.align(Alignment.CenterHorizontally) else Modifier.fillMaxWidth(),
-                horizontalArrangement = if (centred) {
-                    Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
-                } else {
-                    Arrangement.spacedBy(6.dp)
-                },
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                maxItemsInEachRow = perLine,
+                perLine = perLine,
+                centred = centred,
             ) { content() }
             return@Column
         }
@@ -1242,6 +1236,69 @@ internal fun Group(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.Bottom,
         ) { content() }
+    }
+}
+
+/**
+ * A stacked card's controls in as few lines as fit, at most [perLine] to a
+ * line, shared out so the lines are as even as their widths allow: five
+ * controls four to a line are two lines of two and three, not four and one
+ * left on its own. In order, left to right, then down.
+ */
+@Composable
+private fun EvenLines(modifier: Modifier, perLine: Int, centred: Boolean, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.Layout(content, modifier) { measurables, constraints ->
+        val gap = 6.dp.roundToPx()
+        val lineGap = 4.dp.roundToPx()
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val placeables = measurables.map { it.measure(loose) }
+        val n = placeables.size
+        val most = if (constraints.hasBoundedWidth) constraints.maxWidth else Int.MAX_VALUE
+        val widths = placeables.map { it.width }
+        fun lineWidth(from: Int, to: Int) = (from until to).sumOf { widths[it] } + gap * (to - from - 1).coerceAtLeast(0)
+        fun fits(from: Int, to: Int) = to - from <= perLine.coerceAtLeast(1) && (to - from == 1 || lineWidth(from, to) <= most)
+        // The fewest lines it takes, then the split into that many whose
+        // widest line is narrowest (ties go to the earlier, fuller lines).
+        val breaks = mutableListOf<Int>()
+        if (n > 0) {
+            var lines = 1
+            while (lines < n) {
+                // best[k][i]: the narrowest widest line putting the first i in k lines.
+                val inf = Int.MAX_VALUE
+                val best = Array(lines + 1) { IntArray(n + 1) { inf } }
+                val from = Array(lines + 1) { IntArray(n + 1) { -1 } }
+                best[0][0] = 0
+                for (k in 1..lines) for (i in 1..n) for (j in k - 1 until i) {
+                    if (best[k - 1][j] == inf || !fits(j, i)) continue
+                    val worst = maxOf(best[k - 1][j], lineWidth(j, i))
+                    if (worst < best[k][i]) { best[k][i] = worst; from[k][i] = j }
+                }
+                if (best[lines][n] != inf) {
+                    var i = n
+                    for (k in lines downTo 1) { breaks.add(0, i); i = from[k][i] }
+                    break
+                }
+                lines++
+            }
+            if (breaks.isEmpty()) for (i in 1..n) breaks.add(i)
+        }
+        // Each line as wide as its controls and as tall as its tallest.
+        var start = 0
+        val rows = breaks.map { end -> (start until end).also { start = end } }
+        val width = maxOf(constraints.minWidth, rows.maxOfOrNull { lineWidth(it.first, it.last + 1) } ?: 0).coerceAtMost(most)
+        val heights = rows.map { r -> r.maxOf { placeables[it].height } }
+        val height = (heights.sum() + lineGap * (rows.size - 1).coerceAtLeast(0)).coerceAtLeast(constraints.minHeight)
+        layout(width, height) {
+            var y = 0
+            rows.forEachIndexed { line, r ->
+                var x = if (centred) ((width - lineWidth(r.first, r.last + 1)) / 2).coerceAtLeast(0) else 0
+                for (i in r) {
+                    placeables[i].placeRelative(x, y)
+                    x += placeables[i].width + gap
+                }
+                y += heights[line] + lineGap
+            }
+        }
     }
 }
 
@@ -3660,7 +3717,7 @@ private fun DictionConsonantsWindow(b: ParamBinding, onDismiss: () -> Unit) {
             },
             {
                 WindowCards {
-                    // The two th's by a word with each.
+                    // The two th's by a word with each, and h, the breath, at the end.
                     WindowCard(panelWord("hisses")) {
                         PanelStepKnob(b, "fromf", DICTION_FROM, "f", PanelAmber)
                         PanelStepKnob(b, "fromv", DICTION_FROM, "v", PanelAmber)
@@ -3670,8 +3727,8 @@ private fun DictionConsonantsWindow(b: ParamBinding, onDismiss: () -> Unit) {
                         PanelStepKnob(b, "fromz", DICTION_FROM, "z", PanelAmber)
                         PanelStepKnob(b, "fromsh", DICTION_FROM, "sh", PanelAmber)
                         PanelStepKnob(b, "fromzh", DICTION_FROM, "zh", PanelAmber)
+                        PanelStepKnob(b, "fromhh", DICTION_FROM, "h", PanelAmber)
                     }
-                    WindowCard(panelWord("breath")) { PanelStepKnob(b, "fromhh", DICTION_FROM, "h", PanelAmber) }
                 }
             },
             {

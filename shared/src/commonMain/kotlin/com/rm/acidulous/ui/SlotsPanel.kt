@@ -380,7 +380,7 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
     ),
     "Scale" to listOf(
         "scale" to listOf("mode", "key", "scale"),
-        "how" to listOf("snap", "octave"),
+        "how" to listOf("snap", "octave", "transpose"),
     ),
 )
 

@@ -232,8 +232,9 @@ private fun ScatterPage(voices: List<DrumVoice>, changed: () -> Unit) {
             ShareKnob(stringResource(Res.string.generate_density), l.density, 0.05f) { set(l.copy(density = it)) }
             RollButton(l.seed) { set(l.copy(seed = l.seed + 1)) }
             StepSwitch(l.stepTicks) { set(l.copy(stepTicks = it)) }
+            // Which drum, in the same card rather than one of its own.
+            VoiceSwitch(voices, changed)
         }
-        Card(stringResource(Res.string.generate_note)) { VoiceSwitch(voices, changed) }
     }
 }
 

@@ -63,6 +63,15 @@ fun TrackSettingsDialog(
         onConfirm = { onConfirm(track.copy(name = name.trim().ifEmpty { original.name })) },
         spacing = 6.dp,
     ) {
+        // Where the track goes: the master or a group.
+        val outputKnob: @Composable () -> Unit = {
+            val out = track.mixer.output.takeIf { it in 0..groups.size } ?: 0
+            val master = stringResource(Res.string.track_output_master)
+            CountKnob(
+                stringResource(Res.string.track_output), out, 0..groups.size, if (out == 0) master else groups[out - 1],
+                choices = listOf(master) + groups,
+            ) { track = track.copy(mixer = track.mixer.copy(output = it)) }
+        }
         WindowCards {
             WindowCard(stringResource(Res.string.track_track)) {
                 // A fixed width so it looks the same stacked upright and in a row
@@ -74,6 +83,9 @@ fun TrackSettingsDialog(
                     )
                     ColourRow(trackColour(index, track.colour)) { track = track.copy(colour = it) }
                 }
+                // A tape has nothing else to route, so its output sits here
+                // rather than alone in a card of its own.
+                if (kind == MachineKind.Audio) outputKnob()
             }
             // A tape plays recordings, so none of these apply to it.
             if (kind != MachineKind.Audio) {
@@ -104,23 +116,16 @@ fun TrackSettingsDialog(
                     ) { track = track.copy(swing = if (it == 0) null else (swingSteps.first + it - 1).toFloat()) }
                 }
             }
-            WindowCard(stringResource(Res.string.track_routing)) {
-                if (kind != MachineKind.Audio) {
-                    val m = track.mixer
-                    SwitchGrid(stringResource(Res.string.track_midi_out), stringArrayResource(Res.array.track_midi_out_choices).toList(), m.midiMode, columns = 3) {
-                        track = track.copy(mixer = m.copy(midiMode = it))
-                    }
-                    CountKnob(
-                        stringResource(Res.string.track_channel), m.midiChannel + 1, 1..16, "${m.midiChannel + 1}",
-                        choices = (1..16).map { "$it" },
-                    ) { track = track.copy(mixer = m.copy(midiChannel = it - 1)) }
+            if (kind != MachineKind.Audio) WindowCard(stringResource(Res.string.track_routing)) {
+                val m = track.mixer
+                SwitchGrid(stringResource(Res.string.track_midi_out), stringArrayResource(Res.array.track_midi_out_choices).toList(), m.midiMode, columns = 3) {
+                    track = track.copy(mixer = m.copy(midiMode = it))
                 }
-                val out = track.mixer.output.takeIf { it in 0..groups.size } ?: 0
-                val master = stringResource(Res.string.track_output_master)
                 CountKnob(
-                    stringResource(Res.string.track_output), out, 0..groups.size, if (out == 0) master else groups[out - 1],
-                    choices = listOf(master) + groups,
-                ) { track = track.copy(mixer = track.mixer.copy(output = it)) }
+                    stringResource(Res.string.track_channel), m.midiChannel + 1, 1..16, "${m.midiChannel + 1}",
+                    choices = (1..16).map { "$it" },
+                ) { track = track.copy(mixer = m.copy(midiChannel = it - 1)) }
+                outputKnob()
             }
         }
     }

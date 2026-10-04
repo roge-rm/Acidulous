@@ -362,12 +362,11 @@ private fun NewSongSection() {
             // The machine on a new song's first track, picked with the same
             // picker as the arranger's "+ track".
             SwitchGrid(stringResource(Res.string.settings_machine), listOf(UiPrefs.newMachine), -1) { pickingMachine = true }
-        }
-        // The scale a new track starts in. A Scale modifier is set to it, so the
-        // keyboard and roll match the song from the first note. Root and scale
-        // are knobs that open as lists on a hold.
-        WindowCard(stringResource(Res.string.settings_new_scale)) {
-            SwitchGrid(stringResource(Res.string.settings_use), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.newScaleOn) 1 else 0) { UiPrefs.chooseNewScale(it == 1) }
+            // The scale a new track starts in, in the same card so a lone
+            // switch doesn't get a row of its own. A Scale modifier is set to
+            // it, so the keyboard and roll match the song from the first note.
+            // Root and scale are knobs that open as lists on a hold.
+            SwitchGrid(stringResource(Res.string.settings_track_scale), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.newScaleOn) 1 else 0) { UiPrefs.chooseNewScale(it == 1) }
             if (UiPrefs.newScaleOn) {
                 val key = UiPrefs.newScaleKey
                 val scale = UiPrefs.newScaleIndex

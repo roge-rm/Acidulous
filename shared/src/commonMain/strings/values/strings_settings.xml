@@ -75,8 +75,7 @@
     <string name="settings_tempo">tempo</string>
     <string name="settings_signature">signature</string>
     <string name="settings_machine">machine</string>
-    <string name="settings_new_scale">new track scale</string>
-    <string name="settings_use">use</string>
+    <string name="settings_track_scale">track scale</string>
     <string name="settings_root">root</string>
     <string name="settings_scale">scale</string>
     <string name="settings_arriving">where arriving notes go</string>
