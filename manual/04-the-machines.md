@@ -22,7 +22,7 @@ These copy how the real instrument works, so they play like one.
 - [**Timber**](04-the-machines/timber.md) - woodwinds, reeds and flutes.
 - [**Resonance**](04-the-machines/resonance.md) - eight struck objects that ring into each other.
 - [**Hammer**](04-the-machines/hammer.md) - grand, upright and electric pianos, celesta, toy piano, dulcimer and cimbalom.
-- [**Tongue**](04-the-machines/tongue.md) - a jaw harp, with the mouth on the mod wheel.
+- [**Tongue**](04-the-machines/tongue.md) - jaw harps, ten kinds, with the mouth on the mod wheel.
 
 ## Drums
 

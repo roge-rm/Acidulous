@@ -9,22 +9,40 @@ That's the buzz, with every harmonic in it at much the same level. Your mouth
 is in front of it, and as it changes shape it brings one harmonic forward and
 then another: that's the tune, over a drone that stays on the note you play.
 
-The steel harp was fitted to recordings of real ones.
+There are ten kinds of harp, and the metal ones were fitted to recordings of
+real ones. A harp can have up to five reeds, tuned as a chord.
 
 The mod wheel moves the mouth, so you can play the drone with one hand and the
 tune with the other. Pressure is breath.
 
 ## Harp
 
-- **model** - the kind of harp. **steel** is the common steel harp with a
-  long ring.
+- **model** - the kind of harp:
+  - **steel** - the common steel harp, with a long ring.
+  - **munnharpe** - a low Norwegian harp, soft and round.
+  - **khomus** - a Sakha harp, darker on top than steel, often breathed
+    through as it's played.
+  - **morsing** - a big South Indian harp: low, dark and short, for rhythm.
+  - **temir komuz** - a Kyrgyz harp: a close fit, bright and ringing.
+  - **brass** - a thin brass harp cut from its own frame: high, buzzy and
+    quiet, with the frame ringing too.
+  - **bamboo** - a reed cut from a strip of bamboo: soft, airy and short,
+    with a woody tock.
+  - **mukkuri** - a bamboo harp played by pulling a string tied to its frame.
+  - **genggong** - a palm harp, also string-pulled: a quick tug and a buzz.
+  - **kouxian** - a harp of several reeds, three tuned to a pentatonic chord
+    unless you set **reeds** and **chord** yourself.
 - **tune** - in cents.
 - **set** - where the reed rests in the slot. In the middle the puffs come
   evenly and the odd harmonics are louder; off to one side the even ones come
   up with them.
 - **fit** - how closely the reed fits the slot. A close fit makes sharper
   puffs and more high harmonics; a loose one is softer and hollower.
-- **ring** - how long a pluck rings, in seconds.
+- **ring** - how long a steel harp rings, in seconds. The other kinds ring
+  longer or shorter than that.
+
+**set**, **fit** and **pluck** start where each kind sits, so a morsing with
+those knobs at their defaults is already a morsing.
 
 ## Pluck
 
@@ -35,7 +53,20 @@ tune with the other. Pressure is breath.
 - **velocity** - how much playing harder changes the level.
 
 Pluck a key that's still ringing and the finger catches the reed first, so it
-doesn't keep getting louder.
+doesn't keep getting louder. The string-pulled kinds are drawn back and let
+go instead, and **pluck** sets how quickly.
+
+## Reeds
+
+- **reeds** - how many reeds the harp has, or **auto** for the kind's own.
+- **chord** - how they're tuned against the note you play: **unison** (a few
+  cents apart), **octaves**, **fifths**, **major**, **minor** or
+  **pentatonic**, or **auto** for the kind's own.
+- **strum** - the time between one reed and the next, in ms. At 0 they're
+  plucked together.
+- **order** - **up** or **down** the chord, **scatter** in a different order
+  each time, or **in turn**: each note plucks only the next reed, and the
+  others keep ringing, so playing a rhythm on one key plays the chord.
 
 ## Mouth
 

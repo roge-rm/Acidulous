@@ -3520,12 +3520,15 @@ private fun BrazenPanel(b: ParamBinding) {
 private val TONGUE_MODELS = listOf(
     "steel", "munnharpe", "khomus", "morsing", "temir komuz", "brass", "bamboo", "mukkuri", "genggong", "kouxian",
 )
+private val TONGUE_REEDS = listOf("auto", "1", "2", "3", "4", "5")
+private val TONGUE_CHORDS = listOf("auto", "unison", "octaves", "fifths", "major", "minor", "pentatonic")
+private val TONGUE_ORDERS = listOf("up", "down", "in turn", "scatter")
 
-/** Tongue: the harp, the mouth that picks its harmonics, the breath, and the rest. */
+/** Tongue: the harp, its reeds, the mouth that picks its harmonics with the breath, and the rest. */
 @Composable
 private fun TonguePanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("harp", "mouth", "breath", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("harp", "reeds", "mouth", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
                 Group("harp") {
@@ -3544,14 +3547,20 @@ private fun TonguePanel(b: ParamBinding) {
                 }
             }
             1 -> {
+                Group("reeds") {
+                    PanelStepKnob(b, "reeds", TONGUE_REEDS, "reeds", PanelAmber)
+                    PanelStepKnob(b, "chord", TONGUE_CHORDS, "chord", PanelAmber)
+                    PanelKnob(b, "strum", "strum", PanelPink)
+                    PanelStepKnob(b, "order", TONGUE_ORDERS, "order")
+                }
+            }
+            2 -> {
                 Group("mouth") {
                     PanelKnob(b, "mouth", "vowel", PanelAmber)
                     PanelKnob(b, "focus", "focus", PanelAmber)
                     PanelKnob(b, "depth", "depth")
                     PanelKnob(b, "glide", "glide")
                 }
-            }
-            2 -> {
                 Group("breath") {
                     PanelKnob(b, "breath", "breath", PanelAmber)
                     PanelKnob(b, "air", "air")

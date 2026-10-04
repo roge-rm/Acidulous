@@ -403,6 +403,7 @@
     <string name="pw_in_r">in R</string>
     <string name="pw_in_sings">in sings</string>
     <string name="pw_in_speaks">in speaks</string>
+    <string name="pw_in_turn">in turn</string>
     <string name="pw_input">input</string>
     <string name="pw_input_is">input is</string>
     <string name="pw_instrument">instrument</string>
@@ -556,6 +557,7 @@
     <string name="pw_noise_gated_by_the_clock">noise, gated by the clock</string>
     <string name="pw_noises">noises</string>
     <string name="pw_none">none</string>
+    <string name="pw_northern">northern</string>
     <string name="pw_not">not</string>
     <string name="pw_notch">notch</string>
     <string name="pw_note">note</string>
@@ -607,6 +609,7 @@
     <string name="pw_pedal">pedal</string>
     <string name="pw_pedal_at">pedal at</string>
     <string name="pw_pedals">pedals</string>
+    <string name="pw_pentatonic">pentatonic</string>
     <string name="pw_per_note">per note</string>
     <string name="pw_perc">perc</string>
     <string name="pw_percussion">percussion</string>
@@ -814,6 +817,7 @@
     <string name="pw_song">song</string>
     <string name="pw_sound">sound</string>
     <string name="pw_source">source</string>
+    <string name="pw_southern">southern</string>
     <string name="pw_span">span</string>
     <string name="pw_speed">speed</string>
     <string name="pw_split">split</string>

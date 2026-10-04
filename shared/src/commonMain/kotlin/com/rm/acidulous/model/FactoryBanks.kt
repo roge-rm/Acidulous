@@ -3097,12 +3097,12 @@ internal object FactoryBanks {
         low = 48, high = 67)
 
     private fun tongue1() = Patch("Tongue", "Bright Steel",
-        mapOf("edge" to 0.85f, "pluck" to 0.9f, "focus" to 0.85f, "volume" to 0.67f),
+        mapOf("edge" to 0.85f, "pluck" to 0.9f, "focus" to 0.85f, "volume" to 0.75f),
         family = "steel",
         low = 48, high = 67)
 
     private fun tongue2() = Patch("Tongue", "Soft Steel",
-        mapOf("edge" to 0.35f, "ring" to 0.76577574f, "pluck" to 0.2f, "mouth" to 0.2f, "depth" to 0.6f, "volume" to 1f),
+        mapOf("edge" to 0.35f, "ring" to 0.76577574f, "pluck" to 0.2f, "mouth" to 0.2f, "depth" to 0.6f, "volume" to 0.97f),
         family = "steel",
         low = 48, high = 67)
 
@@ -3111,7 +3111,67 @@ internal object FactoryBanks {
         family = "steel",
         low = 48, high = 67)
 
-    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3()) }
+    private fun tongue4() = Patch("Tongue", "Munnharpe",
+        mapOf("model" to 0.111111112f),
+        family = "northern",
+        low = 40, high = 55)
+
+    private fun tongue5() = Patch("Tongue", "Khomus",
+        mapOf("model" to 0.222222224f, "breath" to 0.25f, "air" to 0.5f),
+        family = "northern",
+        low = 48, high = 62)
+
+    private fun tongue6() = Patch("Tongue", "Temir Komuz",
+        mapOf("model" to 0.444444448f),
+        family = "northern",
+        low = 50, high = 64)
+
+    private fun tongue7() = Patch("Tongue", "Morsing",
+        mapOf("model" to 0.333333343f),
+        family = "southern",
+        low = 44, high = 56)
+
+    private fun tongue8() = Patch("Tongue", "Brass Harp",
+        mapOf("model" to 0.5555556f),
+        family = "southern",
+        low = 45, high = 60)
+
+    private fun tongue9() = Patch("Tongue", "Bamboo Harp",
+        mapOf("model" to 0.6666667f),
+        family = "bamboo",
+        low = 50, high = 64)
+
+    private fun tongue10() = Patch("Tongue", "Mukkuri",
+        mapOf("model" to 0.7777778f),
+        family = "bamboo",
+        low = 45, high = 60)
+
+    private fun tongue11() = Patch("Tongue", "Genggong",
+        mapOf("model" to 0.8888889f),
+        family = "bamboo",
+        low = 48, high = 62)
+
+    private fun tongue12() = Patch("Tongue", "Kouxian",
+        mapOf("model" to 1f, "strum" to 0.4f),
+        family = "bamboo",
+        low = 52, high = 67)
+
+    private fun tongue13() = Patch("Tongue", "Fifths",
+        mapOf("volume" to 0.8f, "reeds" to 0.4f, "chord" to 0.5f),
+        family = "reeds",
+        low = 45, high = 60)
+
+    private fun tongue14() = Patch("Tongue", "Strummed Major",
+        mapOf("reeds" to 0.8f, "chord" to 0.6666667f, "strum" to 0.3f, "order" to 0.333333343f),
+        family = "reeds",
+        low = 48, high = 62)
+
+    private fun tongue15() = Patch("Tongue", "Reeds In Turn",
+        mapOf("model" to 0.6666667f, "reeds" to 1f, "chord" to 1f, "order" to 0.6666667f),
+        family = "reeds",
+        low = 48, high = 62)
+
+    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")
