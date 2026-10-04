@@ -26,6 +26,7 @@
     - [Reflux](04-the-machines/reflux.md) - acid bass: one oscillator, one filter that screams, and lines you play in.
     - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
+    - [Tongue](04-the-machines/tongue.md) - out its harmonics.
     - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the all-rounder.
 5. [Effects and mixing](05-effects-and-mixing.md)
     - [Amp](05-effects-and-mixing/amp.md) - a guitar amp with a cabinet you can resize.

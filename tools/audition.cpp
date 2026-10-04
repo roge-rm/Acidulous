@@ -62,6 +62,8 @@ struct NoteEvent {
     uint8_t velocity; // 0 = note off
     /** The sustain pedal moving to this depth, 0-127, instead of a note; -1 for a note. */
     int16_t pedal = -1;
+    /** The mod wheel moving to this, 0-127, instead of a note; -1 for a note. */
+    int16_t wheel = -1;
 };
 
 struct Phrase {
@@ -96,6 +98,11 @@ int64_t hit(Phrase &p, float atSeconds, float forSeconds, int note, int vel) {
     p.events.push_back({on, static_cast<uint8_t>(note), static_cast<uint8_t>(vel)});
     p.events.push_back({off, static_cast<uint8_t>(note), 0});
     return off;
+}
+
+/** The mod wheel moving to [value] (0-127) at [atSeconds]. */
+void wheelAt(Phrase &p, float atSeconds, int value) {
+    p.events.push_back({secondsToFrames(atSeconds), 0, 0, -1, static_cast<int16_t>(value)});
 }
 
 /** The sustain pedal moving to [depth] (0 up, 127 down) at [atSeconds]. */
@@ -384,6 +391,23 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, note + st.step, st.vel));
         }
         p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "jaw") {
+        // A jaw harp: one note plucked in a gallop (an accent and two
+        // lighter), the mouth (the mod wheel) stepping through vowels to pick
+        // out a tune of harmonics, then one pluck left to ring.
+        static const int kTune[] = {0, 40, 80, 120, 80, 40, 100, 60};
+        float at = 0.0f;
+        for (int bar = 0; bar < 4; ++bar) {
+            for (int step = 0; step < 6; ++step) {
+                const int vel = step % 3 == 0 ? 110 : 80;
+                p.lastOff = std::max(p.lastOff, hit(p, at, beat * 0.25f, note, vel));
+                if (step % 3 == 0) wheelAt(p, at, kTune[(bar * 2 + step / 3) % 8]);
+                at += beat * (step % 3 == 0 ? 0.5f : 0.25f);
+            }
+        }
+        wheelAt(p, at, 0);
+        p.lastOff = std::max(p.lastOff, hit(p, at, beat * 2.0f, note, 100));
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "drone") {
         // One chord held much longer than any other phrase. A spectral pad
         // is about slow movement (drift, morph) that's slower than the pad
@@ -786,7 +810,9 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
     for (int64_t at = 0; at < phrase.frames; at += kBlock) {
         while (next < phrase.events.size() && phrase.events[next].frame < at + kBlock) {
             const NoteEvent &e = phrase.events[next];
-            if (e.pedal >= 0) {
+            if (e.wheel >= 0) {
+                m->controlChange(1, static_cast<uint8_t>(e.wheel));
+            } else if (e.pedal >= 0) {
                 if (m->takesPedals()) m->pedal(kPerfSustain, static_cast<float>(e.pedal) / 127.0f);
                 else m->setDampers(e.pedal >= 64);
             } else if (e.velocity > 0) {
@@ -1695,7 +1721,7 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|jaw\n"
         "          |chip|drone|mallets|gospel|chorale|combo|swell|chromatic\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"

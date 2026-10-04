@@ -1,0 +1,52 @@
+# Tongue - jaw harps: a reed ringing through a slot, and a mouth that picks
+# out its harmonics.
+#
+# The steel harp is fitted to measured recordings (tools/tongue_reference):
+# its harmonics close to level up to the 16th, the odd and even about equal,
+# the mouth's formants at 0.5 to 1.6 kHz and 1.4 to 3.2 kHz bringing out the
+# 3rd to 10th, a pluck falling about 36 dB a second when played 7 times a
+# second, its fundamental and 2nd falling at half that. The other kinds come
+# in a later part.
+#
+# Each patch plays the `jaw` phrase: one note plucked in a gallop, the mod
+# wheel (the mouth) stepping through vowels, then a pluck left to ring.
+# Values are in each parameter's own units; `audition params Tongue` lists
+# them. A patch names only what it changes.
+#
+# What is still wrong:
+#   - Only the steel harp so far; every model plays it.
+#   - Breath is set by ear: the recordings were too quick to measure it.
+#   - The fit to the recordings' median (tools/tongue_reference/fit.py) is
+#     2.4 dB rms over the first twelve harmonics, a ripple every third
+#     harmonic from the slot. A real recording against the median of the
+#     others is 6.3 dB, the closest 2.6, so this is inside their scatter.
+
+machine Tongue
+role    jaw
+
+# --- steel -------------------------------------------------------------------
+
+patch Init family=steel note=55 range=48..67
+
+patch "Bright Steel" family=steel note=55 range=48..67
+  # A close-fitting reed flicked hard: every harmonic up, the mouth narrow.
+  edge           0.85
+  pluck          0.9
+  focus          0.85
+  volume         0.67
+
+patch "Soft Steel" family=steel note=55 range=48..67
+  # Plucked gently with the pad of the finger, the mouth doing more of the work.
+  pluck          0.2
+  edge           0.35
+  ring           4
+  depth          0.6
+  mouth          0.2
+  volume         1.0
+
+patch "Breathing Steel" family=steel note=55 range=48..67
+  # Breathed through as it's played, the breath keeping it going.
+  breath         0.5
+  air            0.5
+  sustain        0.6
+  volume         0.53

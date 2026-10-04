@@ -172,4 +172,23 @@ class Throat {
 /** Moves a formant by the formant control: fully below 1.2 kHz, a third as far above 1.8 kHz. */
 float shiftFormant(float hz, float ratio);
 
+// Shared with Tongue, whose mouth is this throat.
+
+/** The vowel control's vowels, oo oh ah eh ee: from the back of the mouth to the front. F1 to F3, Hz. */
+constexpr float kKnobVowels[5][3] = {
+    {300, 870, 2240}, {520, 900, 2400}, {730, 1090, 2440}, {530, 1840, 2480}, {270, 2290, 3010},
+};
+/** The fourth and fifth formants, where a voice gathers its ring. Much the same for every sound. */
+constexpr float kHigh[2] = {3350, 3800};
+constexpr float kHighWidth[2] = {200, 250};
+
+/** How wide formant [k] is where it is, Hz: wider the higher it sits, as measured in real voices. */
+inline float widthOf(int32_t k, float hz) {
+    switch (k) {
+    case 0: return 50.0f + 0.04f * hz;
+    case 1: return 75.0f + 0.015f * hz;
+    default: return 30.0f + 0.045f * hz;
+    }
+}
+
 } // namespace acidulous::machine::diction

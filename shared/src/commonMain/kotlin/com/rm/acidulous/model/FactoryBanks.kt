@@ -29,6 +29,7 @@ internal object FactoryBanks {
         "Diction" -> diction
         "Bias" -> bias
         "Hammer" -> hammer
+        "Tongue" -> tongue
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -3090,6 +3091,27 @@ internal object FactoryBanks {
         low = 21, high = 108)
 
     private val hammer: List<Patch> by lazy { listOf(hammer0(), hammer1(), hammer2(), hammer3(), hammer4(), hammer5(), hammer6(), hammer7(), hammer8(), hammer9(), hammer10(), hammer11(), hammer12(), hammer13(), hammer14(), hammer15(), hammer16(), hammer17(), hammer18(), hammer19(), hammer20(), hammer21(), hammer22(), hammer23(), hammer24(), hammer25(), hammer26(), hammer27(), hammer28(), hammer29(), hammer30(), hammer31(), hammer32(), hammer33(), hammer34(), hammer35(), hammer36(), hammer37(), hammer38(), hammer39(), hammer40(), hammer41(), hammer42(), hammer43(), hammer44(), hammer45()) }
+
+    private fun tongue0() = Patch("Tongue", "Init", emptyMap(),
+        family = "steel",
+        low = 48, high = 67)
+
+    private fun tongue1() = Patch("Tongue", "Bright Steel",
+        mapOf("edge" to 0.85f, "pluck" to 0.9f, "focus" to 0.85f, "volume" to 0.67f),
+        family = "steel",
+        low = 48, high = 67)
+
+    private fun tongue2() = Patch("Tongue", "Soft Steel",
+        mapOf("edge" to 0.35f, "ring" to 0.76577574f, "pluck" to 0.2f, "mouth" to 0.2f, "depth" to 0.6f, "volume" to 1f),
+        family = "steel",
+        low = 48, high = 67)
+
+    private fun tongue3() = Patch("Tongue", "Breathing Steel",
+        mapOf("breath" to 0.5f, "air" to 0.5f, "sustain" to 0.6f, "volume" to 0.53f),
+        family = "steel",
+        low = 48, high = 67)
+
+    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

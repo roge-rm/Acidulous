@@ -22,7 +22,7 @@ PANELS = {
     "PollenPanel": "Pollen", "ResonancePanel": "Resonance", "DicePanel": "Dice", "GenesisPanel": "Genesis",
     "BrazenPanel": "Brazen", "HammerPanel": "Hammer", "TimberPanel": "Timber", "MoltPanel": "Molt", "DictionPanel": "Diction",
     "DictionConsonantsWindow": "Diction",
-    "BiasPanel": "Bias",
+    "BiasPanel": "Bias", "TonguePanel": "Tongue",
 }
 # Some panels name every control for the selected pad, so one panel covers
 # all the pads' parameters.

@@ -224,6 +224,7 @@ fun MachinePanel(
             "Filament" -> FilamentPanel(binding)
             "Brazen" -> BrazenPanel(binding)
             "Hammer" -> HammerPanel(binding)
+            "Tongue" -> TonguePanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3516,6 +3517,62 @@ private fun BrazenPanel(b: ParamBinding) {
 // piano's colour. Then how the strings ring, the dampers, and out.
 
 /** In the order of hammer::Model. */
+private val TONGUE_MODELS = listOf(
+    "steel", "munnharpe", "khomus", "morsing", "temir komuz", "brass", "bamboo", "mukkuri", "genggong", "kouxian",
+)
+
+/** Tongue: the harp, the mouth that picks its harmonics, the breath, and the rest. */
+@Composable
+private fun TonguePanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("harp", "mouth", "breath", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("harp") {
+                    PanelStepKnob(b, "model", TONGUE_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("reed") {
+                    PanelKnob(b, "set", "set", PanelAmber)
+                    PanelKnob(b, "edge", "fit", PanelAmber)
+                    PanelKnob(b, "ring", "ring")
+                }
+                Group("pluck") {
+                    PanelKnob(b, "pluck", "pluck", PanelPink)
+                    PanelKnob(b, "overtones", "overtones")
+                    PanelKnob(b, "velocity", "velocity")
+                }
+            }
+            1 -> {
+                Group("mouth") {
+                    PanelKnob(b, "mouth", "vowel", PanelAmber)
+                    PanelKnob(b, "focus", "focus", PanelAmber)
+                    PanelKnob(b, "depth", "depth")
+                    PanelKnob(b, "glide", "glide")
+                }
+            }
+            2 -> {
+                Group("breath") {
+                    PanelKnob(b, "breath", "breath", PanelAmber)
+                    PanelKnob(b, "air", "air")
+                    PanelKnob(b, "sustain", "sustain", PanelPink)
+                }
+            }
+            else -> {
+                Group("play") {
+                    PanelKnob(b, "stop", "stop")
+                    PanelStepKnob(b, "voices", (1..4).map { "$it" }, "voices")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
+
 private val HAMMER_MODELS = listOf(
     "grand", "upright", "honky-tonk", "fortepiano", "electric grand", "tine", "reed",
     "tangent", "celesta", "toy", "dulcimer", "cimbalom",
