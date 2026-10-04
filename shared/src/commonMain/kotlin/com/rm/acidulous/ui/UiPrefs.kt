@@ -349,6 +349,9 @@ object UiPrefs {
         clickDivision = p.getInt(KEY_CLICK_DIV, 1)
         clickVolume = p.getFloat(KEY_CLICK_VOL, 0.5f)
         countInBars = p.getInt(KEY_COUNT_IN, 0)
+        recordReplace = p.getBoolean(KEY_RECORD_REPLACE, false)
+        recordOnNote = p.getBoolean(KEY_RECORD_ON_NOTE, false)
+        recordOnce = p.getBoolean(KEY_RECORD_ONCE, false)
         recordQuantise = p.getBoolean(KEY_RECORD_Q, true)
         recordStrength = p.getInt(KEY_RECORD_Q_AMOUNT, 100)
         clickWhen = p.getInt(KEY_CLICK_WHEN, 0)
@@ -425,6 +428,7 @@ object UiPrefs {
         // re-sends it when the time signature changes.
         NativeEngine.setLaunchQuantise(launchQuantise * 4 * 240)
         NativeEngine.setCountInBars(countInBars)
+        NativeEngine.setRecordModes(recordOnNote, recordOnce)
         pushClick()
     }
 
@@ -717,6 +721,25 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_RECORD_Q, on)?.putInt(KEY_RECORD_Q_AMOUNT, recordStrength)?.apply()
     }
 
+    /** A take replaces the notes it plays over, rather than adding to them. */
+    var recordReplace by mutableStateOf(false)
+        private set
+    /** Armed and stopped, the first note played starts the song. */
+    var recordOnNote by mutableStateOf(false)
+        private set
+    /** Recording stops by itself after one pass of the clip. */
+    var recordOnce by mutableStateOf(false)
+        private set
+
+    fun chooseRecordTake(replace: Boolean = recordReplace, onNote: Boolean = recordOnNote, once: Boolean = recordOnce) {
+        recordReplace = replace
+        recordOnNote = onNote
+        recordOnce = once
+        store?.edit()?.putBoolean(KEY_RECORD_REPLACE, replace)?.putBoolean(KEY_RECORD_ON_NOTE, onNote)
+            ?.putBoolean(KEY_RECORD_ONCE, once)?.apply()
+        NativeEngine.setRecordModes(onNote, once)
+    }
+
     fun chooseCountInBars(bars: Int) {
         countInBars = bars.coerceIn(0, 4)
         store?.edit()?.putInt(KEY_COUNT_IN, countInBars)?.apply()
@@ -853,6 +876,9 @@ object UiPrefs {
     private const val KEY_RECORD_Q = "record_quantise"
     private const val KEY_RECORD_Q_AMOUNT = "record_quantise_amount"
     private const val KEY_COUNT_IN = "count_in"
+    private const val KEY_RECORD_REPLACE = "record_replace"
+    private const val KEY_RECORD_ON_NOTE = "record_on_note"
+    private const val KEY_RECORD_ONCE = "record_once"
     private const val KEY_CLICK_WHEN = "click_when"
     private const val KEY_TEMPO = "new_tempo"
     private const val KEY_BEATS = "new_beats"

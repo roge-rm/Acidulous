@@ -309,6 +309,13 @@ class Engine : public Rack::ModifiedNoteSink {
     EarlyNote earlyNotes[kMaxEarlyNotes];
     int32_t earlyCount = 0;
     double preRollFrames = 0.0;
+    /** The song was started by a note while armed (Transport::startsOnNote); the notes in earlyNotes go at its start. */
+    bool noteStart = false;
+    /** Recording: since when, and with Transport::recordsOnce the tick it stops at (-1 not known yet). */
+    bool wasRecording = false;
+    int64_t recordFrom = 0, passEnd = -1;
+    /** Notes when recording starts, and stops it after one pass if asked to. */
+    void endPassIfDone();
     float inputScratch[kBlockFrames * 2] = {};
     /** The input chain, on the block about to be published. */
     void runInputChain();

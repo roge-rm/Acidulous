@@ -37,6 +37,17 @@ class Recorder {
     var quantise: Boolean = true
     /** How far a note moves towards its grid line when [quantise] is on. 1 is all the way. */
     var strength: Float = 1f
+    /** A take replaces the notes it plays over: see [Replacing]. */
+    var replace: Boolean = false
+
+    /**
+     * A track replacing what it plays over: from its first note in a take, the
+     * notes its clip had then are taken out as the playhead passes them, so
+     * what's left is the take. [from] is where the playhead had got to, in the
+     * clip's straight ticks.
+     */
+    private class Replacing(val sceneId: String, val old: List<Note>, var from: Int)
+    private val replacing = HashMap<Int, Replacing>()
 
     private val buffer = LongArray(128 * 5)
     private val paramNames = HashMap<String, List<String>>()
@@ -75,7 +86,11 @@ class Recorder {
      *   hear it on the next one.
      * @return the updated song, and whether the caller should push it now
      */
-    fun poll(song: Song, position: Position, playing: Boolean, sceneIdOf: (Long) -> String?, cycleWrapped: Boolean = false): Result {
+    fun poll(
+        song: Song, position: Position, playing: Boolean, sceneIdOf: (Long) -> String?, cycleWrapped: Boolean = false,
+        /** Where a track's playhead is: its clip's scene id and how far in, as heard. For [replace]. */
+        playhead: (Int) -> Pair<String, Long>? = { null },
+    ): Result {
         var doc = song
         val n = NativeEngine.drainRecorded(buffer)
         for (i in 0 until n) {
@@ -112,12 +127,18 @@ class Recorder {
             val isOn = cmd == 0x90 && p2 > 0
             val isOff = cmd == 0x80 || (cmd == 0x90 && p2 == 0)
             when {
-                isOn -> open[key] = OpenNote(absTick, sceneId, tickInIteration, p2)
+                isOn -> {
+                    open[key] = OpenNote(absTick, sceneId, tickInIteration, p2)
+                    if (replace && rack !in replacing) startReplacing(doc, rack, sceneIdOf(sceneId), tickInIteration)
+                }
                 isOff -> open.remove(key)?.let { on ->
                     doc = commit(doc, rack, p1, on, absTick, sceneIdOf) ?: doc
                 }
             }
         }
+
+        if (!playing) replacing.clear()
+        if (replace) doc = takeOutPassed(doc, playhead)
 
         // Iteration boundary: the scene changed, or the tick wrapped.
         val wrapped = position.scene != lastScene || position.tickInIteration < lastTick
@@ -138,9 +159,59 @@ class Recorder {
             doc = commit(doc, rack, pitch, on, on.absTick + 1, sceneIdOf) ?: doc
         }
         open.clear()
+        replacing.clear()
         val push = dirty
         dirty = false
         return Result(doc, push)
+    }
+
+    /** Where in [sceneId]'s clip on [rack] a heard tick is, in straight ticks, and the clip's length; null if it has none. */
+    private fun straightTick(song: Song, rack: Int, sceneId: String, heard: Long): Pair<Int, Int>? {
+        val track = song.tracks.getOrNull(rack) ?: return null
+        val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
+        val len = song.clipLengthTicks(sceneId, clip)
+        if (len <= 0) return null
+        return Swing.from((heard % len).toInt(), song.swingOf(track), song.swingPair) to len
+    }
+
+    internal fun startReplacing(song: Song, rack: Int, sceneId: String?, heard: Long) {
+        if (sceneId == null) return
+        val (tick, _) = straightTick(song, rack, sceneId, heard) ?: return
+        replacing[rack] = Replacing(sceneId, song.tracks[rack].clips[sceneId]?.notes ?: emptyList(), tick)
+    }
+
+    /**
+     * Takes out each replacing track's old notes the playhead has passed since
+     * the last poll. A track that's moved on to another clip loses the rest of
+     * the one it left, and replaces in the new one from its start.
+     */
+    internal fun takeOutPassed(song: Song, playhead: (Int) -> Pair<String, Long>?): Song {
+        var doc = song
+        for ((rack, r) in replacing.entries.toList()) {
+            val (sceneId, heard) = playhead(rack) ?: continue
+            if (sceneId != r.sceneId) {
+                doc = takeOut(doc, rack, r, r.from, Int.MAX_VALUE)
+                replacing[rack] = Replacing(sceneId, doc.tracks.getOrNull(rack)?.clips?.get(sceneId)?.notes ?: emptyList(), 0)
+                continue
+            }
+            val (now, len) = straightTick(doc, rack, sceneId, heard) ?: continue
+            doc = if (now >= r.from) {
+                takeOut(doc, rack, r, r.from, now)
+            } else {
+                takeOut(takeOut(doc, rack, r, r.from, len), rack, r, 0, now)
+            }
+            r.from = now
+        }
+        return doc
+    }
+
+    /** [r]'s old notes starting in [from, until) out of its clip. */
+    private fun takeOut(song: Song, rack: Int, r: Replacing, from: Int, until: Int): Song {
+        val clip = song.tracks.getOrNull(rack)?.clips?.get(r.sceneId) ?: return song
+        val gone = clip.notes.filter { n -> n.tick in from until until && r.old.any { it === n } }
+        if (gone.isEmpty()) return song
+        dirty = true
+        return song.updateClip(rack, r.sceneId, { clip }) { c -> c.copy(notes = c.notes.filterNot { n -> gone.any { it === n } }) }
     }
 
     private fun commit(

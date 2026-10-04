@@ -897,6 +897,11 @@ Java_com_rm_acidulous_engine_EngineNative_nativeSetCountInBars(JNIEnv *, jobject
     host().setCountInBars(bars);
 }
 
+JNIEXPORT void JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeSetRecordModes(JNIEnv *, jobject, jboolean onNote, jboolean once) {
+    host().setRecordModes(onNote, once);
+}
+
 JNIEXPORT jlong JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeCountInRemaining(JNIEnv *, jobject) {
     return static_cast<jlong>(host().countInRemaining());

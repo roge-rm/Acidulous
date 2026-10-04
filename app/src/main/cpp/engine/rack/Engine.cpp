@@ -143,7 +143,9 @@ void Engine::renderBlock(const float *in, float *out) {
             //
             // Only when armed. A count-in is for recording, so a plain play
             // doesn't make you sit through four bars of clicks.
-            const int32_t bars = transport.isRecordArmed() ? transport.countInBarsWanted() : 0;
+            // Started by a note (Transport::startsOnNote), the note was the
+            // downbeat: no count-in, and the notes waiting are kept.
+            const int32_t bars = transport.isRecordArmed() && !noteStart ? transport.countInBarsWanted() : 0;
             const int64_t ticks = bars > 0 ? static_cast<int64_t>(bars) * scheduler.songTicksPerBar() : 0;
             // Counted in frames, as a double. A block is 0.64 ticks at 120 bpm,
             // so counting whole ticks per block would drain the count too fast
@@ -151,7 +153,7 @@ void Engine::renderBlock(const float *in, float *out) {
             countInFrames = static_cast<double>(ticks) * clock.samplesPerTickNow();
             countInPerTick = clock.samplesPerTickNow();
             preRollFrames = countInPerTick * static_cast<double>(kPreRollTicks);
-            earlyCount = 0;
+            if (!noteStart) earlyCount = 0;
             startPending = countInFrames <= 0.0;
             // With Link, a plain play waits for the session's next downbeat so
             // we join its phase. A count-in has its own bar line, so it doesn't
@@ -174,6 +176,8 @@ void Engine::renderBlock(const float *in, float *out) {
             master.perform.release();
             // And any mute waiting for a bar that won't come now.
             for (PendingParam &waiting : pendingParams) waiting.waiting = false;
+            noteStart = false;
+            passEnd = -1;
             // Stop goes back to the start of the song. There's no separate
             // pause, and a stop button is expected to go back to the top.
             //
@@ -233,6 +237,9 @@ void Engine::renderBlock(const float *in, float *out) {
     // Mounts before parameters. The UI queues a unit and then its values, so
     // this order puts the values on the new unit, not the old one.
     applyMounts();
+    // Before the notes, so the block that starts recording knows when it did
+    // and the block that ends a pass records none.
+    endPassIfDone();
     drainMidi();
     drainParams();
 
@@ -868,6 +875,27 @@ void Engine::followTimebase() {
                           (static_cast<int64_t>(errMicro) & 0xffffffffLL));
 }
 
+void Engine::endPassIfDone() {
+    // When recording starts, and with Transport::recordsOnce where its pass
+    // ends: one pass of the scene in song mode; in clip mode it's known at
+    // the first note (onModifiedNote), from that track's clip.
+    const bool rec = recordingNow();
+    if (rec && !wasRecording) {
+        recordFrom = clock.position();
+        passEnd = -1;
+        if (transport.recordsOnce() && !scheduler.launcherActive()) {
+            if (const seq::SceneInfo *sc = scheduler.currentSceneInfo()) {
+                passEnd = recordFrom + std::max<int64_t>(1, sc->iterationTicks());
+            }
+        }
+    }
+    wasRecording = rec;
+    if (rec && passEnd >= 0 && clock.position() >= passEnd) {
+        transport.setRecordArmed(false);
+        passEnd = -1;
+    }
+}
+
 void Engine::drainMidi() {
     // Record the notes played just before the downbeat, now that there's a
     // scene. They go on tick 0, since the player meant the start of the bar.
@@ -885,6 +913,7 @@ void Engine::drainMidi() {
             recordQueue.push(ev);
         }
         earlyCount = 0;
+        noteStart = false;
     }
     MidiMessage m;
     while (midiIn.pop(m)) {
@@ -951,10 +980,22 @@ void Engine::onModifiedNote(int32_t rack, uint8_t status, uint8_t d1, uint8_t d2
     // hold it rather than lose it. Flushed at the start of the first block
     // that's actually recording, when the scene is known.
     if (!recordingNow()) {
-        if (countInPreRoll() && earlyCount < kMaxEarlyNotes) {
+        // Armed and stopped, waiting for a note: the first one starts the
+        // song, and it and any played with it go at the start of the take.
+        const bool on = (status & 0xf0) == 0x90 && d2 > 0;
+        if (on && !noteStart && !playing && transport.isRecordArmed() && transport.startsOnNote()) {
+            noteStart = true;
+            transport.requestPlay();
+        }
+        if ((countInPreRoll() || noteStart) && earlyCount < kMaxEarlyNotes) {
             earlyNotes[earlyCount++] = {rack, status, d1, d2};
         }
         return;
+    }
+    // Recording once in clip mode: one pass of the clip the first note goes
+    // into, counted from when recording started.
+    if (transport.recordsOnce() && passEnd < 0 && scheduler.launcherActive()) {
+        passEnd = recordFrom + std::max<int64_t>(1, scheduler.rackCycleTicks(rack));
     }
     seq::RecordedEvent ev;
     ev.absTick = clock.position();

@@ -62,9 +62,10 @@ A knob that already has a drawn lane can't be locked, and shows ∿ instead.
 ## Recording
 
 Press record, then play, and what you play goes into the clip on the clip's
-grid. The **record** card in the tempo window's **click** tab sets a count-in
-and whether recording quantises. **off** leaves notes exactly where you played
-them, and **amount** moves them only part of the way.
+grid. How a take works is set in Settings, **record**: a count-in, whether it
+quantises, whether it adds to the notes there or replaces them, whether it
+starts with play or on the first note you play, and whether it keeps going
+round or stops after one pass.
 
 Each take is one step of undo, from when recording and playback are both
 running until either stops.

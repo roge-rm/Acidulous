@@ -240,10 +240,11 @@ fun App(modifier: Modifier = Modifier) {
         }
     }
     val recorder = remember { Recorder() }
-    // Record quantise, as set in the tempo window's record card.
+    // Record quantise and replace, as set in Settings, record.
     androidx.compose.runtime.SideEffect {
         recorder.quantise = com.rm.acidulous.ui.UiPrefs.recordQuantise
         recorder.strength = com.rm.acidulous.ui.UiPrefs.recordStrength / 100f
+        recorder.replace = com.rm.acidulous.ui.UiPrefs.recordReplace
     }
     var screen by rememberSaveable(saver = Screen.Saver) { mutableStateOf<Screen>(Screen.Main) }
     // Hardware notes go to the track of the last opened clip, which is the
@@ -1570,7 +1571,11 @@ fun App(modifier: Modifier = Modifier) {
             countInBeats = countInBeatsOf(NativeEngine.countInRemaining)
             elapsedSeconds = (NativeEngine.elapsedMs / 1000).toInt()
             bpm = NativeEngine.tempo
-            armed = NativeEngine.recordArmed
+            // The engine disarms by itself at the end of a pass recorded once:
+            // the take ends there as it would on the button.
+            val armedNow = NativeEngine.recordArmed
+            if (armed && !armedNow) onArm(false)
+            armed = armedNow
             notesOn = NativeEngine.notesOn(0)
             notesOff = NativeEngine.notesOff(0)
             load = NativeEngine.loadAvg
@@ -1704,7 +1709,19 @@ fun App(modifier: Modifier = Modifier) {
                 }
             }
             if (!hot.contentEquals(rackHot)) rackHot = hot
-            if (armed || playing) applyRecorded(recorder.poll(song, position, playing, sceneIdOf, cycleWrapped))
+            if (armed || playing) {
+                // Each track's clip and how far in, for a take that replaces.
+                val heads = launchStates
+                val inClips = com.rm.acidulous.ui.UiPrefs.clipMode
+                val playhead: (Int) -> Pair<String, Long>? = { rack ->
+                    if (inClips) {
+                        heads.getOrNull(rack)?.takeIf { it.playing }?.let { st -> song.scenes.getOrNull(st.scene)?.id?.let { it to st.tickInCycle } }
+                    } else {
+                        song.scenes.getOrNull(position.scene)?.id?.let { it to position.tickInIteration }
+                    }
+                }
+                applyRecorded(recorder.poll(song, position, playing, sceneIdOf, cycleWrapped, playhead))
+            }
             // A take is one pass of armed and playing. Stopping either ends it.
             if (!(armed && playing)) editor.endTake()
             delay(80)

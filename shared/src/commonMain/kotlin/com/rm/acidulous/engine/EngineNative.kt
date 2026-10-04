@@ -68,6 +68,7 @@ internal expect object EngineNative {
     suspend fun nativeRenderSong(path: String, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
     suspend fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
     fun nativeSetCountInBars(bars: Int)
+    fun nativeSetRecordModes(onNote: Boolean, once: Boolean)
     fun nativeCountInRemaining(): Long
     fun nativeElapsedMs(): Long
     fun nativeSetCores(cores: Int)

@@ -79,6 +79,17 @@ class Transport {
     // REC arms recording: while armed, playing (or starting to play) records.
     void setRecordArmed(bool on) { recordArmed.store(on, std::memory_order_relaxed); }
     bool isRecordArmed() const { return recordArmed.load(std::memory_order_relaxed); }
+    /**
+     * How a take starts and ends: with [onNote], armed and stopped, the first
+     * note played starts the song and is recorded at its start; with [once],
+     * recording stops by itself after one pass of the clip.
+     */
+    void setRecordModes(bool onNote, bool once) {
+        recordOnNote.store(onNote, std::memory_order_relaxed);
+        recordOnce.store(once, std::memory_order_relaxed);
+    }
+    bool startsOnNote() const { return recordOnNote.load(std::memory_order_relaxed); }
+    bool recordsOnce() const { return recordOnce.load(std::memory_order_relaxed); }
     void setLoopSong(bool on) { loopSongFlag.store(on, std::memory_order_relaxed); }
 
     // --- Clip mode ------------------------------------------------------------
@@ -268,6 +279,8 @@ class Transport {
     std::atomic<bool> rewindFlag{false};
     std::atomic<int32_t> queuedScene{-1};
     std::atomic<bool> recordArmed{false};
+    std::atomic<bool> recordOnNote{false};
+    std::atomic<bool> recordOnce{false};
     std::atomic<bool> launcherFlag{false};
     std::atomic<bool> fillFlag{false};
     std::atomic<bool> clockOutFlag{false};

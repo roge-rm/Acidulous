@@ -2345,6 +2345,7 @@ bool EngineHost::captureOverflowed() const { return sEngine.capture.overflowed()
 
 void EngineHost::panic() { sEngine.panicFlag.store(true, std::memory_order_release); }
 void EngineHost::setCountInBars(int32_t bars) { sEngine.transport.setCountInBars(bars); }
+void EngineHost::setRecordModes(bool onNote, bool once) { sEngine.transport.setRecordModes(onNote, once); }
 int64_t EngineHost::countInRemaining() const { return sEngine.transport.countInRemaining(); }
 int64_t EngineHost::elapsedMs() const { return sEngine.transport.elapsedMs(); }
 

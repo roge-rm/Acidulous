@@ -336,10 +336,30 @@ private fun AudioTab(trackNames: List<String>) {
 @Composable
 private fun RecordTab() {
     WindowCards {
-        // Always 48 kHz; only the bit depth is a choice.
         WindowCard(stringResource(Res.string.settings_recording)) {
+            // Always 48 kHz; only the bit depth is a choice, for recordings and exports.
             SwitchGrid(stringResource(Res.string.settings_depth), stringArrayResource(Res.array.settings_depth_choices).toList(), if (UiPrefs.recordBits == 24) 0 else 1) {
                 UiPrefs.chooseRecordBits(if (it == 0) 24 else 16)
+            }
+            SwitchGrid(stringResource(Res.string.settings_count_in), listOf(stringResource(Res.string.none), "1", "2", "3", "4"), UiPrefs.countInBars, columns = 5) { UiPrefs.chooseCountInBars(it) }
+            // Quantising what's played onto the clip's grid, fully or partly.
+            SwitchGrid(stringResource(Res.string.settings_quantise), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.recordQuantise) 1 else 0) {
+                UiPrefs.chooseRecordQuantise(on = it == 1)
+            }
+            if (UiPrefs.recordQuantise) {
+                CountKnob(stringResource(Res.string.settings_amount), UiPrefs.recordStrength, 0..100, "${UiPrefs.recordStrength}%") {
+                    UiPrefs.chooseRecordQuantise(strength = it)
+                }
+            }
+            // What a take does to the notes there, when it starts, and when it stops.
+            SwitchGrid(stringResource(Res.string.settings_take), stringArrayResource(Res.array.settings_take_choices).toList(), if (UiPrefs.recordReplace) 1 else 0) {
+                UiPrefs.chooseRecordTake(replace = it == 1)
+            }
+            SwitchGrid(stringResource(Res.string.settings_start), stringArrayResource(Res.array.settings_start_choices).toList(), if (UiPrefs.recordOnNote) 1 else 0) {
+                UiPrefs.chooseRecordTake(onNote = it == 1)
+            }
+            SwitchGrid(stringResource(Res.string.settings_passes), stringArrayResource(Res.array.settings_passes_choices).toList(), if (UiPrefs.recordOnce) 1 else 0) {
+                UiPrefs.chooseRecordTake(once = it == 1)
             }
         }
     }

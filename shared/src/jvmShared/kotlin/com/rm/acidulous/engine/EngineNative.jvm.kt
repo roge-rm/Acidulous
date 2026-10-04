@@ -83,6 +83,7 @@ internal actual object EngineNative {
     private external fun blocking_nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String
     actual suspend fun nativeRenderStems(paths: Array<String>, racks: IntArray, tailSeconds: Float, format: Int, bits: Int, startScene: Int, maxSeconds: Float): String = blocking_nativeRenderStems(paths, racks, tailSeconds, format, bits, startScene, maxSeconds)
     actual external fun nativeSetCountInBars(bars: Int)
+    actual external fun nativeSetRecordModes(onNote: Boolean, once: Boolean)
     actual external fun nativeCountInRemaining(): Long
     actual external fun nativeElapsedMs(): Long
     actual external fun nativeSetCores(cores: Int)

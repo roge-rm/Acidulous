@@ -65,8 +65,32 @@
         <item>lean</item>
         <item>auto</item>
     </string-array>
-    <string name="settings_recording">recording and export</string>
+    <string name="settings_recording">recording</string>
+    <!-- Bits per sample for recordings and exports. -->
     <string name="settings_depth">depth</string>
+    <!-- Bars of clicks before recording starts. -->
+    <string name="settings_count_in">count-in</string>
+    <!-- Whether recorded notes are moved onto the clip's grid, and how far. -->
+    <string name="settings_quantise">quantise</string>
+    <string name="settings_amount">amount</string>
+    <!-- Whether a take adds to the clip's notes or replaces the ones it plays over. -->
+    <string name="settings_take">take</string>
+    <string-array name="settings_take_choices">
+        <item>add</item>
+        <item>replace</item>
+    </string-array>
+    <!-- Whether recording starts with play, or waits for the first note played. -->
+    <string name="settings_start">start</string>
+    <string-array name="settings_start_choices">
+        <item>on play</item>
+        <item>first note</item>
+    </string-array>
+    <!-- Whether recording carries on round the loop, or stops after one pass. -->
+    <string name="settings_passes">passes</string>
+    <string-array name="settings_passes_choices">
+        <item>loop</item>
+        <item>once</item>
+    </string-array>
     <string-array name="settings_depth_choices">
         <item>24-bit</item>
         <item>16-bit</item>

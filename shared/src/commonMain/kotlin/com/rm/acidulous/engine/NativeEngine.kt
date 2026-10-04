@@ -776,6 +776,9 @@ object NativeEngine {
     /** Bars of clicks before playback actually starts. 0 is none. */
     fun setCountInBars(bars: Int) = EngineNative.nativeSetCountInBars(bars)
 
+    /** Armed and stopped, the first note starts the song ([onNote]); recording stops after one pass ([once]). */
+    fun setRecordModes(onNote: Boolean, once: Boolean) = EngineNative.nativeSetRecordModes(onNote, once)
+
     /** Ticks left of the count-in, or 0 when not counting in. */
     val countInRemaining: Long get() = EngineNative.nativeCountInRemaining()
 

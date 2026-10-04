@@ -495,6 +495,8 @@ class EngineHost {
     void panic();
     /** Bars of count-in clicks before playback starts. 0 is none. */
     void setCountInBars(int32_t bars);
+    /** See Transport::setRecordModes. */
+    void setRecordModes(bool onNote, bool once);
     /** Ticks left of the count-in, for display. 0 when not counting. */
     int64_t countInRemaining() const;
     /** How many threads are started to render tracks beside the audio thread on this platform. */

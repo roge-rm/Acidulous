@@ -163,6 +163,9 @@ private fun async_nativeRenderStems(arena: Int, paths: Int, racks: Int, tailSeco
 private fun raw_nativeSetCountInBars(env: Int, bars: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetCountInBars(env, 0, bars)")
 
+private fun raw_nativeSetRecordModes(env: Int, onNote: Int, once: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetRecordModes(env, 0, onNote, once)")
+
 private fun raw_nativeCountInRemaining(env: Int): Long =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCountInRemaining(env, 0)")
 
@@ -952,6 +955,11 @@ internal actual object EngineNative {
 
     actual fun nativeSetCountInBars(bars: Int) {
         raw_nativeSetCountInBars(Jni.env, bars)
+        Jni.release()
+    }
+
+    actual fun nativeSetRecordModes(onNote: Boolean, once: Boolean) {
+        raw_nativeSetRecordModes(Jni.env, if (onNote) 1 else 0, if (once) 1 else 0)
         Jni.release()
     }
 

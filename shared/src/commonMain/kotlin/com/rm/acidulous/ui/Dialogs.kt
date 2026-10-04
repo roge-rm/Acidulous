@@ -962,19 +962,6 @@ private fun ClickPage() {
                 UiPrefs.chooseClickVolume(it / 100f)
             }
         }
-        // Recording settings: count-in, and quantising what's played onto
-        // the clip's grid, fully or partly.
-        WindowCard(stringResource(Res.string.click_record)) {
-            SwitchGrid(stringResource(Res.string.click_count_in), listOf(stringResource(Res.string.none), "1", "2", "3", "4"), UiPrefs.countInBars, columns = 5) { UiPrefs.chooseCountInBars(it) }
-            SwitchGrid(stringResource(Res.string.click_quantise), stringArrayResource(Res.array.off_on).toList(), if (UiPrefs.recordQuantise) 1 else 0) {
-                UiPrefs.chooseRecordQuantise(on = it == 1)
-            }
-            if (UiPrefs.recordQuantise) {
-                CountKnob(stringResource(Res.string.click_amount), UiPrefs.recordStrength, 0..100, "${UiPrefs.recordStrength}%") {
-                    UiPrefs.chooseRecordQuantise(strength = it)
-                }
-            }
-        }
     }
 }
 

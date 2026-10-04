@@ -68,7 +68,18 @@
 
 ## record
 
-The bit depth for recordings and exports.
+- **depth** - the bit depth for recordings and exports.
+- **count-in** - bars of clicks before recording starts.
+- **quantise** - moves what you play onto the clip's grid. **off** leaves notes
+  exactly where you played them, and **amount** moves them only part of the
+  way.
+- **take** - **add** puts what you play in with the notes already there.
+  **replace** takes out the notes the playhead passes from your first note on,
+  so what's left is what you played. Either way the take is one step of undo.
+- **start** - **on play** records from when you press play. **first note** waits:
+  arm, then play a note and the song starts with it, with no count-in.
+- **passes** - **loop** keeps recording round and round until you stop it.
+  **once** stops recording after one pass of the clip and leaves it playing.
 
 ## songs
 
