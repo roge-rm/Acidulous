@@ -178,15 +178,19 @@ android {
         // shared Diction voices import; Hammer's top keys even and its chords
         // cheaper; the audio buffer settles on the smallest size the device
         // holds; slow tablets like the Fire HD 8 play without breaking up.
+        // 0.10.1: Tongue, modelled jaw harps: ten kinds, up to five reeds as
+        // a chord, the keys playing the drone's harmonics, plucking patterns,
+        // words said by the mouth and another track's melody followed; Diction
+        // and Molt knobs work while they play; diagnostics in debug builds only.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 29
+        val release = 30
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.10.0"
+        versionName = "0.10.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
