@@ -172,15 +172,21 @@ android {
         // keyboard, celesta, toy piano, dulcimer and cimbalom, with half
         // pedalling and preparations; Diction talks with another track's
         // sound; drum grid hits are heard and can be taken out again.
+        // 0.10.0: tracks play on more than one core (a cores setting), on a
+        // phone's fast ones; the running time in the readout; recording
+        // takes that replace, start on the first note or stop after one pass;
+        // shared Diction voices import; Hammer's top keys even and its chords
+        // cheaper; the audio buffer settles on the smallest size the device
+        // holds; slow tablets like the Fire HD 8 play without breaking up.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 28
+        val release = 29
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.9.13"
+        versionName = "0.10.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
