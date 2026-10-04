@@ -54,6 +54,7 @@ echo "--- gate";  "$ROOT/tools/gate_test.sh" | tail -2 || fail=1
 echo "--- tuner"; "$ROOT/tools/tuner_test.sh" | tail -2 || fail=1
 echo "--- swing"; "$ROOT/tools/swing_test.sh" | tail -2 || fail=1
 echo "--- record"; "$ROOT/tools/record_test.sh" | tail -2 || fail=1
+echo "--- params follow"; "$ROOT/tools/param_follow_test.sh" | tail -2 || fail=1
 echo "--- inputmod"; "$ROOT/tools/inputmod_test.sh" | tail -2 || fail=1
 # Not pass/fail. The cost table is for reading, since a threshold would only
 # hold on the machine that set it. Check it when touching DSP.

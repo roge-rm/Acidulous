@@ -290,6 +290,7 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
 }
 
 bool Molt::render(float *L, float *R, int32_t frames) {
+    params_.tick();
     // The rack's buffer still holds its last block; the voices add into a clear one.
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     // --- the block's settings ----------------------------------------------
