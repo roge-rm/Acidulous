@@ -3,7 +3,12 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
@@ -26,7 +31,18 @@ actual fun rememberTopCutout(): TopCutout? {
     val left = insets.getLeft(density, direction)
     val right = insets.getRight(density, direction)
     val size = LocalWindowInfo.current.containerSize
-    return remember(top, bottom, left, right, size, view) {
+    // A screen made again at once (a new language recreates the activity)
+    // can be composed before its view has its window insets, which reads as
+    // a hole the width of the screen. So for its first second it looks
+    // again each frame, until the hole it sees stops changing.
+    var seen by remember(view) { mutableStateOf(holeOf(view)) }
+    LaunchedEffect(view) {
+        repeat(60) {
+            withFrameNanos { }
+            seen = holeOf(view)
+        }
+    }
+    return remember(top, bottom, left, right, size, view, seen) {
         if (top <= 0) return@remember null
         val blocked = TopCutout(0, size.width, top)
         val cutout = ViewCompat.getRootWindowInsets(view)?.displayCutout ?: return@remember blocked
@@ -49,3 +65,8 @@ actual fun rememberTopCutout(): TopCutout? {
     }
 }
 
+/** What the view knows of the top cutout now, to tell when it changes: its rectangles and safe inset, or null. */
+private fun holeOf(view: android.view.View): String? {
+    val cutout = ViewCompat.getRootWindowInsets(view)?.displayCutout ?: return null
+    return cutout.boundingRects.joinToString() + "/" + cutout.safeInsetTop
+}
