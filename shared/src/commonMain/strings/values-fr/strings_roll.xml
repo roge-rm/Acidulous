@@ -1,0 +1,78 @@
+<resources>
+    <!-- The editor's smaller parts: zones, note lanes, scale, automation, tape lanes, steps. Note names are notation and aren't translated. -->
+
+    <!-- ui/ZoneMap.kt: one zone of a multisample. -->
+    <string name="zone_title">Zone</string>
+    <string name="zone_range">plage</string>
+    <string name="zone_low_key">touche basse</string>
+    <string name="zone_high_key">touche haute</string>
+    <string name="zone_low_vel">vél. basse</string>
+    <string name="zone_high_vel">vél. haute</string>
+    <string name="zone_sound">son</string>
+    <string name="zone_root">racine</string>
+    <string name="zone_tune">accord</string>
+    <string name="zone_gain">gain</string>
+    <string name="zone_pan">pano</string>
+    <string name="zone_zone">zone</string>
+    <string name="zone_loop">boucle</string>
+    <string name="zone_remove">retirer</string>
+    <string name="zone_delete">supprimer</string>
+
+    <!-- ui/NoteLane.kt: what the lane under the roll edits, short and in full. -->
+    <string name="note_prop_velocity_short">vél</string>
+    <string name="note_prop_velocity">volume de la note</string>
+    <string name="note_prop_chance_short">prob</string>
+    <string name="note_prop_chance">probabilité</string>
+    <string name="note_prop_cond_short">cond</string>
+    <string name="note_prop_cond">condition de déclenchement</string>
+    <string name="note_prop_ratchet_short">ratch</string>
+    <string name="note_prop_ratchet">ratchet</string>
+    <string name="note_prop_nudge_short">décal</string>
+    <string name="note_prop_nudge">micro-décalage</string>
+    <string name="note_lane_all_notes">toutes les notes</string>
+    <string name="note_prop_words_short">paroles</string>
+    <string name="note_prop_words">paroles</string>
+    <string name="words_title">paroles</string>
+    <string name="a11y_words_field">les paroles à partir de cette note, une syllabe par note</string>
+
+    <!-- ui/PianoKeys.kt: the scale chip and window. Scale names are names and aren't translated. -->
+    <string name="scale_chip">gamme</string>
+    <string name="scale_title">Gamme</string>
+    <string name="scale_group_modes">Modes</string>
+    <string name="scale_group_minor">Variantes mineures</string>
+    <string name="scale_group_pentatonic">Pentatonique et blues</string>
+    <string name="scale_group_world">Du monde et exotiques</string>
+    <string name="scale_group_jazz">Jazz</string>
+    <string name="scale_group_symmetric">Symétriques</string>
+    <string name="scale_off">aucune</string>
+    <string name="scale_snap">aligner</string>
+    <string name="scale_degrees">degrés</string>
+    <string-array name="scale_snap_choices">
+        <item>plus proche</item>
+        <item>dessous</item>
+        <item>dessus</item>
+    </string-array>
+
+    <!-- ui/PianoRoll.kt: the roll's corner, which says how it shows a scale: none, all, dimmed, fitted. -->
+    <string name="roll_scale_none">gam</string>
+    <string name="roll_scale_chromatic">chr</string>
+    <string name="roll_scale_dim">pâle</string>
+    <string name="roll_scale_fit">ajus</string>
+
+    <!-- ui/AutomationStrip.kt -->
+    <!-- The lane strip with no lane chosen. -->
+    <string name="auto_none">∿ auto</string>
+    <string name="auto_clear">Vider %s</string>
+
+    <!-- ui/AudioLanes.kt: a tape\'s lanes. -->
+    <!-- A muted lane, one letter. -->
+    <string name="tape_muted_short">M</string>
+    <string name="tape_comp_failed">Impossible d’aplatir cette cellule (%s).</string>
+    <!-- Flatten the lanes into one take. -->
+    <string name="tape_comp">comp</string>
+
+    <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
+    <string name="step_on">act</string>
+    <string name="step_accent">acc</string>
+    <string name="step_slide">gli</string>
+</resources>

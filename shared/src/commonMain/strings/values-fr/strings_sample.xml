@@ -1,0 +1,14 @@
+<resources>
+    <!-- ui/SampleDialog.kt: one pad of a sample machine, and its trim. -->
+    <string name="pad_title">Pad %d</string>
+    <string name="pad_no_sample">aucun échantillon</string>
+    <string name="pad_play">jouer</string>
+    <!-- Trim back out to the whole sample. -->
+    <string name="pad_all">tout</string>
+    <!-- Zoom back out to show the whole sample. -->
+    <string name="pad_fit">ajuster</string>
+    <string name="pad_empty">Ce pad n’a aucun échantillon. Chargez-en un depuis le panneau de la machine.</string>
+    <string name="pad_start">début %.3f s</string>
+    <string name="pad_end">fin %.3f s</string>
+    <string name="pad_plays">durée %.3f s</string>
+</resources>

@@ -1,0 +1,42 @@
+<resources>
+    <!-- ui/HelpDialog.kt and ui/AboutDialog.kt. The manual itself is generated from manual/*.md. -->
+    <string name="help_title">Aide</string>
+    <string name="help_manual">le manuel</string>
+    <string name="help_back">Retour</string>
+    <string name="help_in_detail">en détail</string>
+
+    <string name="about_title">À propos</string>
+    <string-array name="about_tabs">
+        <item>appli</item>
+        <item>licence</item>
+        <item>composants</item>
+    </string-array>
+    <string name="about_version">version %s</string>
+    <string name="about_version_unknown">inconnue</string>
+    <!-- %1$s is empty on Android; in other builds it is about_for_platform, with a space before it. -->
+    <string name="about_what">Un studio de musique pour Android%1$s. Combinez jusqu’à 16 synthétiseurs, boîtes à rythmes, générateurs de bruit et processeurs en scènes musicales.</string>
+    <!-- The platform name, "Linux", shown straight after "for Android" in the line above. -->
+    <string name="about_for_platform">(pour %s)</string>
+    <string name="about_panic">Panique · couper tout le son</string>
+    <string name="about_share_crash">Partager le dernier rapport de plantage</string>
+    <string name="about_gpl_1">Ce programme est un logiciel libre : vous pouvez le redistribuer ou le modifier selon les termes de la Licence publique générale GNU, publiée par la Free Software Foundation, soit la version 3 de la licence, soit (à votre choix) toute version ultérieure.</string>
+    <string name="about_gpl_2">Il est distribué dans l’espoir qu’il sera utile, mais SANS AUCUNE GARANTIE, sans même la garantie implicite de QUALITÉ MARCHANDE ou d’ADÉQUATION À UN USAGE PARTICULIER. Consultez la licence pour les détails.</string>
+    <string name="about_licence_itself">la licence elle-même</string>
+    <string name="about_licence_app">l’appli est sous cette licence</string>
+    <string name="about_not_ours">pas de nous</string>
+    <string name="about_not_ours_note">Tout le reste a été écrit pour cette appli, y compris le moteur, les machines et les effets, le séquenceur et l’écriture des fichiers. Aucun code DSP, son prédéfini ni échantillon ne vient d’ailleurs.</string>
+    <!-- A component: its name and version, then what it does here. -->
+    <string name="about_oboe">Oboe 1.10.0 · le flux audio</string>
+    <!-- The desktop's audio, in Oboe's place. -->
+    <string name="about_miniaudio">miniaudio 0.11.22 · le flux audio</string>
+    <!-- The desktop's too: Linux MIDI. -->
+    <string name="about_alsa">alsa-lib 1.2.14 · le MIDI, par le séquenceur d’ALSA</string>
+    <!-- Windows only. The app doesn't name the technology, because of Steinberg's trademark rules. -->
+    <string name="about_driver_sdk">SDK de pilotes de Steinberg 2.3.4 · les pilotes à faible latence des interfaces</string>
+    <string name="about_lame">LAME 3.100 · l’encodage MP3, dans sa propre bibliothèque</string>
+    <string name="about_cmudict">CMU Pronouncing Dictionary · comment Diction prononce les mots anglais</string>
+    <string name="about_link">Ableton Link 4.0 · un tempo partagé par Wi-Fi</string>
+    <string name="about_asio">asio 1.36.0 · le réseau, sous Link</string>
+    <string name="about_read">lire</string>
+    <string name="about_licence_missing">Le texte de la licence manque dans cette version. Voir %s.</string>
+</resources>

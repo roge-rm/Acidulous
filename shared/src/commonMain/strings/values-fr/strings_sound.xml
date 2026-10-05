@@ -1,0 +1,149 @@
+<resources>
+    <!-- ui/RecorderDialog.kt: the sound window - record, edit, library. -->
+    <string name="sound_title">Son</string>
+    <string name="sound_recording_button">Enregistrement…</string>
+    <string-array name="sound_tabs">
+        <item>enregistrer</item>
+        <item>modifier</item>
+        <item>bibliothèque</item>
+        <item>voix</item>
+    </string-array>
+
+    <!-- Recording a voice for Diction: short prompts sung one at a time on one note. -->
+    <string name="voice_card">voix</string>
+    <string name="voice_which">voix</string>
+    <string name="voice_new">nouvelle voix</string>
+    <string name="voice_default_name">ma voix</string>
+    <string name="voice_delete">supprimer</string>
+    <string name="voice_share">partager</string>
+    <string name="voice_zipping">compression %1$d/%2$d</string>
+    <string name="voice_share_failed">Impossible de partager la voix.</string>
+    <string name="voice_import">importer…</string>
+    <string name="voice_import_failed">Ce n’est pas une voix partagée depuis Acidulous.</string>
+    <!-- Asking before a voice is deleted: its name. -->
+    <string name="voice_delete_title">Supprimer %1$s?</string>
+    <!-- How many takes go with it. -->
+    <string name="voice_delete_note">Ses %1$d prises sont aussi supprimées.</string>
+    <string name="voice_note">note</string>
+    <!-- A stage of the prompts: its number, then how many are sung of how many. -->
+    <!-- The first stage is what a voice needs to sing; the others are the consonants between other vowels, which the consonant window can choose. -->
+    <string name="voice_stage">à chanter %1$d/%2$d</string>
+    <string name="voice_stage_extra">entre les %1$s %2$d/%3$d</string>
+    <string name="voice_prompt">chantez</string>
+    <!-- A word with the sound in it. -->
+    <string name="voice_like">comme dans %1$s</string>
+    <!-- A consonant prompt: which consonant, as it sounds in a word. "the h in high". -->
+    <string name="voice_the_in">le %1$s de %2$s</string>
+    <string name="voice_listen">écouter…</string>
+    <string name="voice_mic">micro</string>
+    <string name="voice_sing_again">%1$s : chantez de nouveau</string>
+    <string name="voice_problem_quiet">trop faible</string>
+    <string name="voice_problem_loud">trop fort</string>
+    <string name="voice_problem_short">trop court</string>
+    <string name="voice_problem_note">aucune note claire</string>
+    <string name="voice_problem_consonant">aucune consonne entendue</string>
+    <string name="voice_problem_unclear">consonne pas claire</string>
+    <string name="voice_problem_glide">bougé trop tôt</string>
+    <string name="voice_problem_unreadable">illisible</string>
+    <string name="voice_sing_now">chantez</string>
+    <!-- How far the voice is from the note, e.g. +12 ct. -->
+    <string name="voice_cents">%1$s ct</string>
+    <string name="voice_count">%1$d sur %2$d</string>
+    <string name="voice_sing">chanter</string>
+    <string name="voice_again">encore</string>
+    <string name="voice_play">jouer</string>
+    <!-- Moving where a take was cut, by hand: the button, the part the marks hold, keeping it, and the cutter's cut back. -->
+    <string name="voice_cut">couper…</string>
+    <string name="voice_cut_part">partie</string>
+    <string name="voice_cut_keep">garder</string>
+    <string name="voice_cut_auto">coupe auto</string>
+
+    <!-- Recording -->
+    <string name="sound_stereo">stéréo</string>
+    <string name="sound_mono">mono</string>
+    <!-- What the input opened as: channels, then its rate. -->
+    <string name="sound_opened">%1$s · %2$d Hz</string>
+    <string name="sound_opened_resampled">%1$s · %2$d Hz · rééchantillonné</string>
+    <string name="sound_name">nom</string>
+    <string name="sound_saved">enregistré</string>
+    <string name="sound_saved_take">%1$s enregistré, %2$.1f s</string>
+    <string name="sound_stop">arrêter</string>
+    <string name="sound_record">enregistrer</string>
+    <string name="sound_recording">enregistrement  %1$.1f s  crête %2$.2f</string>
+    <string name="sound_overflowed">l’enregistreur a pris du retard, cette prise a un trou</string>
+    <string name="sound_deaf">aucune entrée : cette prise est muette</string>
+    <string name="sound_permission">L’enregistrement a besoin d’accéder au microphone.</string>
+    <string name="sound_allow">autoriser</string>
+    <string name="sound_take">prise</string>
+    <string name="sound_source">source</string>
+    <string-array name="sound_source_choices">
+        <item>entrée</item>
+        <item>rééchant.</item>
+    </string-array>
+    <string name="sound_input">entrée</string>
+    <string name="sound_bits">bits</string>
+    <string name="sound_input_card">entrée · écoute au casque seulement</string>
+    <!-- The input's own tab, on a square phone where the record page can't fit it. -->
+    <string name="sound_tab_input">entrée</string>
+    <string name="sound_gain">gain</string>
+    <string name="sound_monitor">écoute</string>
+    <!-- The microphone as it is, or with the phone's noise suppression and level control. -->
+    <string name="sound_mic">micro</string>
+    <string-array name="sound_mic_choices">
+        <item>brut</item>
+        <item>propre</item>
+    </string-array>
+    <string name="sound_printed">gravé dans la prise</string>
+    <!-- Kinds of input. Anything else is called by its product name. -->
+    <string name="sound_input_default">par défaut</string>
+    <string name="sound_input_builtin">intégré</string>
+    <string name="sound_input_headset">casque</string>
+    <string name="sound_input_usb">usb</string>
+    <string name="sound_input_bluetooth">bluetooth</string>
+    <string name="sound_input_line">ligne</string>
+
+    <!-- Editing -->
+    <string name="sound_edit_none">Enregistrez quelque chose ou choisissez un échantillon dans la bibliothèque pour le modifier ici.</string>
+    <string name="sound_play">jouer</string>
+    <!-- Trim back out to the whole sample. -->
+    <string name="sound_all">tout</string>
+    <!-- Short for normalise, on a small button. -->
+    <string name="sound_norm">norm</string>
+    <!-- Short for reverse, on a small button. -->
+    <string name="sound_rev">inv</string>
+    <!-- Zoom back out to show the whole sample. -->
+    <string name="sound_fit">ajuster</string>
+    <string name="sound_unreadable">Impossible de lire ce fichier.</string>
+    <!-- The file, its length, stereo or mono, and how much of it the trim keeps. -->
+    <string name="sound_file_readout">%1$s · %2$.2f s · %3$s · garde %4$.2f s</string>
+    <string name="sound_level">niveau</string>
+    <string name="sound_fade_in">fondu entrant</string>
+    <string name="sound_fade_out">fondu sortant</string>
+    <string name="sound_squash">écraser</string>
+    <string name="sound_off">non</string>
+    <string name="sound_tone">timbre</string>
+    <string name="sound_low_cut">coupe-bas</string>
+    <string name="sound_cutoff">coupure</string>
+    <string name="sound_reso">rés.</string>
+    <string name="sound_filter">filtre</string>
+    <string-array name="sound_filter_choices">
+        <item>bas</item>
+        <item>haut</item>
+    </string-array>
+    <string name="sound_save_as">enregistrer sous</string>
+    <string name="sound_saved_file">%s enregistré</string>
+    <string name="sound_apply">appliquer</string>
+    <string name="sound_revert">revenir</string>
+
+    <!-- The library -->
+    <string name="sound_library_none">Rien ici pour l’instant. Enregistrez-en un, ou importez un WAV.</string>
+    <string name="sound_delete_armed">supprimer? touchez la croix de nouveau</string>
+    <!-- The same for the desktop build, where the pointer is a mouse. -->
+    <string name="sound_delete_armed_mouse">supprimer? cliquez la croix de nouveau</string>
+    <!-- When the file was made, and its size. -->
+    <string name="sound_file_info">%1$s · %2$.0f ko</string>
+    <string name="sound_file_info_used">%1$s · %2$.0f ko · une piste le joue</string>
+    <string name="sound_edit">modifier</string>
+    <string name="sound_rename">renommer</string>
+    <string name="sound_rename_title">Renommer</string>
+</resources>

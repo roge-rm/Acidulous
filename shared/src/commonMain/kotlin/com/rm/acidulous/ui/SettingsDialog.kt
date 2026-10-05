@@ -81,6 +81,13 @@ private fun DisplayTab() {
                 when (UiPrefs.theme) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2; ThemeMode.HighContrast -> 3 },
                 columns = 2,
             ) { UiPrefs.chooseTheme(listOf(ThemeMode.Auto, ThemeMode.Light, ThemeMode.Dark, ThemeMode.HighContrast)[it]) }
+            // Each language named in itself, so it can be found from any other.
+            if (com.rm.acidulous.AppHost.current.canChooseLanguage) {
+                SwitchGrid(
+                    stringResource(Res.string.settings_language), stringArrayResource(Res.array.settings_language_choices).toList(),
+                    UiPrefs.language.ordinal, columns = 3,
+                ) { UiPrefs.chooseLanguage(UiPrefs.Language.entries[it]) }
+            }
             // Changes the size of this window too, as you tap it.
             SwitchGrid(stringResource(Res.string.settings_size), stringArrayResource(Res.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
                 UiPrefs.chooseUiScale(UiScaleSteps[it])

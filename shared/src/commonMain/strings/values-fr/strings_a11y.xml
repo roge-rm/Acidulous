@@ -1,0 +1,235 @@
+<resources>
+    <!-- What TalkBack says about controls that are drawn instead of made of text: ui/Accessibility.kt and its callers. -->
+    <string name="a11y_reset">Réinitialiser</string>
+    <string name="a11y_choose">Choisir dans une liste</string>
+    <!-- After a knob's value, when lane or step locks are moving it. -->
+    <string name="a11y_automated">%s, automatisé</string>
+    <string name="a11y_locked">%s, verrouillé sur certains pas</string>
+    <!-- A control's name and one of its choices, or its value: "wave: saw". -->
+    <string name="a11y_named">%1$s : %2$s</string>
+
+    <!-- The transport -->
+    <string name="a11y_play">Jouer</string>
+    <string name="a11y_stop">Arrêter</string>
+    <string name="a11y_stop_all">Couper tout le son</string>
+    <string name="a11y_undo">Annuler</string>
+    <string name="a11y_redo">Rétablir</string>
+    <string name="a11y_mapping_on">Activer l’assignation MIDI</string>
+    <string name="a11y_mapping_off">Désactiver l’assignation MIDI</string>
+    <string name="a11y_panel">Pages mixage et performance</string>
+    <string name="a11y_open">ouvert</string>
+    <string name="a11y_closed">fermé</string>
+    <string name="a11y_record">Enregistrer</string>
+    <string name="a11y_armed">armé</string>
+    <string name="a11y_not_armed">non armé</string>
+    <!-- Record's state when the metronome is on too. -->
+    <string name="a11y_with_click">%s, clic activé</string>
+    <string name="a11y_click_on">Activer le clic</string>
+    <string name="a11y_click_off">Désactiver le clic</string>
+    <string name="a11y_loop">Boucle</string>
+    <string name="a11y_loop_song">tout le morceau</string>
+    <string name="a11y_loop_scene">cette scène</string>
+    <string name="a11y_loop_none">joue jusqu’à la fin et s’arrête</string>
+    <string name="a11y_loop_stop">Jouer jusqu’à la fin et arrêter</string>
+    <string name="a11y_loop_again">Boucler de nouveau</string>
+    <string name="a11y_on">activé</string>
+    <string name="a11y_off">désactivé</string>
+
+    <!-- The editor's bar and header -->
+    <string name="a11y_back">Retour</string>
+    <string name="a11y_generate">Générer des notes</string>
+    <string name="a11y_quantise">Quantifier les notes</string>
+    <string name="a11y_lock">Verrouiller les pas</string>
+    <string name="a11y_prev_page">Page précédente</string>
+    <string name="a11y_next_page">Page suivante</string>
+    <string name="a11y_page">page %1$d sur %2$d</string>
+    <string name="a11y_velocity">Vélocité</string>
+    <string name="a11y_velocity_touch">selon l’endroit touché</string>
+    <!-- The same for the desktop build, where the pointer is a mouse. -->
+    <string name="a11y_velocity_touch_mouse">selon l’endroit cliqué</string>
+    <string name="a11y_velocity_full">maximale</string>
+    <string name="a11y_step_view">Vue des pas</string>
+    <string name="a11y_edit_mode">Mode d’édition</string>
+    <string name="a11y_draw">dessin</string>
+    <string name="a11y_select">sélection</string>
+    <string name="a11y_fill_start">Maintenir le fill</string>
+    <string name="a11y_fill_stop">Relâcher le fill</string>
+    <string name="a11y_held">maintenu</string>
+
+    <!-- The song grid -->
+    <!-- A cell: its track and scene. -->
+    <string name="a11y_cell">%1$s, %2$s</string>
+    <string name="a11y_cell_empty">vide</string>
+    <plurals name="a11y_cell_bars">
+        <item quantity="one">%d mesure</item>
+        <item quantity="other">%d mesures</item>
+    </plurals>
+    <string name="a11y_cell_once">joue une fois</string>
+    <string name="a11y_cell_muted">muet</string>
+    <string name="a11y_cell_frozen">figé</string>
+    <string name="a11y_cell_stale">figé à un autre tempo</string>
+    <plurals name="a11y_cell_takes">
+        <item quantity="one">%d enregistrement</item>
+        <item quantity="other">%d enregistrements</item>
+    </plurals>
+    <string name="a11y_playing">en lecture</string>
+    <string name="a11y_queued">en attente de départ</string>
+    <string name="a11y_stopping">s’arrête à la fin de sa boucle</string>
+    <string name="a11y_looping">enregistre une boucle</string>
+    <string name="a11y_clip_settings">Réglages du clip</string>
+    <string name="a11y_open_editor">Ouvrir dans l’éditeur</string>
+    <string name="a11y_launch">Lancer</string>
+
+    <!-- A scene's header -->
+    <string name="a11y_scene">Scène %1$d, %2$s</string>
+    <plurals name="a11y_scene_repeats">
+        <item quantity="one">joue une fois</item>
+        <item quantity="other">joue %d fois</item>
+    </plurals>
+    <string name="a11y_scene_tempo">tempo propre</string>
+    <string name="a11y_scene_ramp">le tempo glisse à la fin</string>
+    <string name="a11y_scene_looping">en boucle</string>
+    <string name="a11y_scene_finishing">se termine</string>
+    <string name="a11y_scene_menu">Menu de la scène</string>
+
+    <!-- A track's header -->
+    <string name="a11y_track">%1$s, %2$s</string>
+    <string name="a11y_track_hot">coûte le plus quand le téléphone prend du retard</string>
+    <string name="a11y_track_settings">Réglages de la piste</string>
+
+    <string name="a11y_grid_mode">Grille</string>
+    <string name="a11y_grid_song">le morceau, joué dans l’ordre</string>
+    <string name="a11y_grid_clips">le lanceur de clips</string>
+    <string name="a11y_tempo">Tempo, %s bpm</string>
+    <string name="a11y_step_gate">Gate</string>
+    <string name="a11y_step_accent">Accent</string>
+    <string name="a11y_step_slide">Glissé</string>
+
+    <!-- The mixer: each control named for its strip -->
+    <string name="a11y_volume">Volume de %s</string>
+    <string name="a11y_pan">Panoramique de %s</string>
+    <string name="a11y_send">%1$s, envoi %2$s</string>
+    <string name="a11y_mute">Muet, %s</string>
+    <string name="a11y_solo">Solo, %s</string>
+    <string name="a11y_midi_out">Sortie MIDI de %s</string>
+    <string name="a11y_midi_channel">Canal MIDI de %s</string>
+    <string name="a11y_output">Sortie de %s</string>
+    <string name="a11y_centre">centre</string>
+    <string name="a11y_left">gauche %d</string>
+    <string name="a11y_right">droite %d</string>
+    <string name="a11y_master">Sortie principale</string>
+    <string name="a11y_limit_drive">Saturation du limiteur</string>
+    <string name="a11y_limiter">Limiteur</string>
+    <!-- An effect slot: whose, which, and what is in it. -->
+    <string name="a11y_insert">%1$s, insertion %2$d : %3$s</string>
+    <string name="a11y_send_slot">Envoi %1$d : %2$s</string>
+    <string name="a11y_slot_empty">vide</string>
+    <string name="a11y_edit">Modifier</string>
+    <string name="a11y_click">Métronome</string>
+    <string name="a11y_file_menu">Menu fichier</string>
+
+    <!-- The drum grid: a voice and a step -->
+    <string name="a11y_step">%1$s, pas %2$d</string>
+    <string name="a11y_step_hit">activé</string>
+    <string name="a11y_hit_accent">accentué</string>
+    <string name="a11y_step_empty">désactivé</string>
+    <string name="a11y_step_condition">%s, avec une condition</string>
+    <string name="a11y_step_locked">%s, verrouillé</string>
+    <string name="a11y_step_chosen">%s, choisi</string>
+    <string name="a11y_accent_add">Accentuer</string>
+    <string name="a11y_accent_remove">Retirer l’accent</string>
+
+    <!-- Pads and keys -->
+    <string name="a11y_pad_selected">sélectionné</string>
+    <string name="a11y_pad_empty">aucun échantillon</string>
+    <!-- A note's name spoken: its letter, an accidental, and the octave. -->
+    <string name="a11y_note_sharp">%1$s dièse %2$d</string>
+    <string name="a11y_note_flat">%1$s bémol %2$d</string>
+    <string name="a11y_note">%1$s %2$d</string>
+    <string name="a11y_open_it">Ouvrir</string>
+
+    <!-- The machine panel's header -->
+    <string name="a11y_fold">Replier le panneau</string>
+    <string name="a11y_unfold">Déplier le panneau</string>
+    <string name="a11y_next_patch">Son suivant</string>
+    <string name="a11y_prev_patch">Son précédent</string>
+    <string name="a11y_browse_patches">Parcourir les sons</string>
+    <string name="a11y_save_patch">Enregistrer comme son</string>
+
+    <!-- The piano roll, which TalkBack hears as a summary -->
+    <string name="a11y_roll_empty">Grille de notes, aucune note. Jouez sur le clavier pendant l’enregistrement pour en ajouter.</string>
+    <plurals name="a11y_roll">
+        <item quantity="one">Grille de notes, %1$d note : %2$s</item>
+        <item quantity="other">Grille de notes, %1$d notes, de %2$s à %3$s</item>
+    </plurals>
+
+    <!-- The perform pages. TalkBack can't hold, so a double tap switches a held effect on and off. -->
+    <string name="a11y_xy">Pad : %1$s à %2$s en largeur, %3$s vers le haut</string>
+    <string name="a11y_xy_press">Appuyer au centre</string>
+    <string name="a11y_xy_release">Relâcher</string>
+    <string name="a11y_muted">muet</string>
+    <string name="a11y_mute_pending">change à la prochaine division</string>
+
+    <string name="a11y_octave_down">Octave plus bas</string>
+    <string name="a11y_octave_up">Octave plus haut</string>
+    <string name="a11y_keys_from">Clavier à partir de %s</string>
+    <!-- A step in the acid line's step view. -->
+    <string name="a11y_step_n">Pas %d</string>
+    <string name="a11y_word_locked">verrouillé</string>
+    <string name="a11y_word_chosen">choisi</string>
+
+    <!-- The lanes under the grid, and folding things away -->
+    <string name="a11y_auto_lane">Couloir d’automatisation</string>
+    <string name="a11y_note_lane">Couloir par note</string>
+    <string name="a11y_choose_lane">Choisir un couloir</string>
+    <string name="a11y_none_chosen">aucun choisi</string>
+    <string name="a11y_fold_lane">Replier le couloir d’automatisation</string>
+    <string name="a11y_unfold_lane">Déplier le couloir d’automatisation</string>
+    <string name="a11y_fold_note_lane">Replier le couloir par note</string>
+    <string name="a11y_unfold_note_lane">Déplier le couloir par note</string>
+    <string name="a11y_fold_keys">Replier le clavier</string>
+    <string name="a11y_unfold_keys">Déplier le clavier</string>
+    <string name="a11y_fold_slot">Replier cet effet</string>
+    <string name="a11y_unfold_slot">Déplier cet effet</string>
+
+    <!-- The tempo window -->
+    <string name="a11y_tempo_down">Plus lent</string>
+    <string name="a11y_tempo_up">Plus rapide</string>
+    <string name="a11y_tempo_field">Tempo en temps par minute</string>
+
+    <!-- The four-track's lanes -->
+    <string name="a11y_lane_mute">Muet, couloir %d</string>
+    <string name="a11y_lane_arm">Enregistrer, couloir %d</string>
+    <!-- A sample's trim, as a share of the whole sound. -->
+    <string name="a11y_trim_start">Début de la coupe</string>
+    <string name="a11y_trim_end">Fin de la coupe</string>
+    <!-- The multisample map -->
+    <plurals name="a11y_zones">
+        <item quantity="one">Carte des zones, %d zone</item>
+        <item quantity="other">Carte des zones, %d zones</item>
+    </plurals>
+    <string name="a11y_edit_zone">Modifier la zone %1$d, %2$s</string>
+    <!-- The modular's canvas -->
+    <plurals name="a11y_patch">
+        <item quantity="one">Patch, %1$d module, %2$s. Choisissez un module dans les actions pour voir ses boutons.</item>
+        <item quantity="other">Patch, %1$d modules, %2$s. Choisissez un module dans les actions pour voir ses boutons.</item>
+    </plurals>
+    <plurals name="a11y_patch_cables">
+        <item quantity="one">%d câble</item>
+        <item quantity="other">%d câbles</item>
+    </plurals>
+    <string name="a11y_select_module">Sélectionner %1$d, %2$s</string>
+    <!-- The cross at the end of a song in the list. -->
+    <string name="a11y_delete">Supprimer %1$s</string>
+    <!-- The song grid's pages of scenes, with TalkBack on. -->
+    <string name="a11y_prev_scenes">Scènes précédentes</string>
+    <string name="a11y_next_scenes">Scènes suivantes</string>
+    <string name="a11y_scene_page">Scènes %1$d à %2$d sur %3$d</string>
+    <string name="a11y_scene_page_one">Scène %1$d sur %2$d</string>
+    <!-- The wheels beside the keyboard, and the pressure strip. -->
+    <string name="a11y_mod_wheel">Molette de modulation</string>
+    <string name="a11y_bend_wheel">Pitch-bend</string>
+    <string name="a11y_pressure">Pression</string>
+    <string name="a11y_bend_up">vers le haut, %1$d %%</string>
+    <string name="a11y_bend_down">vers le bas, %1$d %%</string>
+</resources>

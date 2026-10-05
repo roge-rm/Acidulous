@@ -1,0 +1,159 @@
+<resources>
+    <!-- ui/Dialogs.kt: the scene, clip, tempo and picker windows. -->
+
+    <!-- The scene window -->
+    <string name="scene_title">Scène</string>
+    <string name="scene_name">nom</string>
+    <string name="scene_time">temps</string>
+    <string name="scene_signature">chiffrage</string>
+    <!-- The first signature choice: follow the song's, which it names. -->
+    <string name="scene_signature_song">morceau %1$d/%2$d</string>
+    <string name="scene_repeat">répéter</string>
+    <string name="scene_fade_in">fondu entrant</string>
+    <string name="scene_fade_out">fondu sortant</string>
+    <string name="scene_tempo">tempo</string>
+    <string name="scene_tempo_from">source</string>
+    <string-array name="scene_tempo_from_choices">
+        <item>morceau</item>
+        <item>propre</item>
+    </string-array>
+    <string name="scene_bpm">bpm</string>
+    <string name="scene_change">changement</string>
+    <string-array name="scene_change_choices">
+        <item>saut</item>
+        <item>glissé</item>
+    </string-array>
+    <string name="scene_ramp">rampe à la fin</string>
+    <string name="scene_ramp_to">vers</string>
+    <string name="scene_ramp_over">sur</string>
+
+    <!-- The clip window -->
+    <string name="clip_title">Clip</string>
+    <plurals name="clip_notes">
+        <item quantity="one">%d note</item>
+        <item quantity="other">%d notes</item>
+    </plurals>
+    <plurals name="clip_lanes">
+        <item quantity="one">%d couloir</item>
+        <item quantity="other">%d couloirs</item>
+    </plurals>
+    <string name="clip_frozen">figé</string>
+    <string name="clip_empty">vide</string>
+    <!-- The card's title: what is in the clip, e.g. "clip · 3 notes, 1 lane". -->
+    <string name="clip_card">clip · %s</string>
+    <!-- Where the clip on the clipboard came from: a track and a scene. -->
+    <string name="clip_clipboard_has">contient %s</string>
+    <string name="clip_clipboard">presse-papiers</string>
+    <string-array name="clip_actions">
+        <item>copier</item>
+        <item>couper</item>
+        <item>coller</item>
+        <item>vider</item>
+    </string-array>
+    <string name="clip_stale">périmé</string>
+    <string name="clip_audio">audio</string>
+    <string name="clip_thaw">défiger</string>
+    <string name="clip_freeze">figer</string>
+    <string name="clip_length">longueur</string>
+    <string name="clip_bars">mesures</string>
+    <string name="clip_grid">grille</string>
+    <string name="clip_plays">lecture</string>
+    <string name="clip_mode">mode</string>
+    <string-array name="clip_mode_choices">
+        <item>boucle</item>
+        <item>une fois</item>
+    </string-array>
+    <string name="clip_mute">muet</string>
+    <string name="clip_dice">dés</string>
+    <string-array name="clip_dice_choices">
+        <item>fixes</item>
+        <item>libres</item>
+    </string-array>
+    <string name="clip_seed">graine</string>
+    <string name="clip_stale_note">Figé à %1$.0f bpm, mais le morceau est à %2$.0f, donc la machine joue à sa place. Figez-le de nouveau.</string>
+    <string name="clip_paste_title">Coller sur ce clip?</string>
+    <string name="clip_paste">Coller</string>
+    <string name="clip_paste_note">Coller remplace tout le contenu de ce clip (notes, automatisation et longueur) par %s.</string>
+    <string name="clip_clear_title">Vider ce clip?</string>
+    <string name="clip_clear">Vider</string>
+    <string name="clip_clear_note">Retire les notes, l’automatisation et tout audio figé. La longueur du clip, son mode de lecture, son état muet et sa grille ne changent pas.</string>
+
+    <!-- Pickers -->
+    <string name="picker_machine">Machine</string>
+    <string name="picker_empty">Rien ici pour l’instant.</string>
+
+    <!-- The tempo window -->
+    <string name="tempo_title">Tempo</string>
+    <string-array name="tempo_tabs">
+        <item>tempo</item>
+        <item>clic</item>
+        <item>link</item>
+    </string-array>
+    <!-- The key's own tab, on a square phone where it doesn't fit beside the tempo. -->
+    <string name="tempo_tab_key">tonalité</string>
+    <string name="tempo_tempo">tempo</string>
+    <string name="tempo_bpm">bpm</string>
+    <string name="tempo_tap">tempo tapé</string>
+    <string name="tempo_tap_button">taper</string>
+    <string name="tempo_bar">mesure</string>
+    <string name="tempo_signature">chiffrage</string>
+    <string name="tempo_swing">swing</string>
+    <string name="tempo_straight">droit</string>
+    <string name="tempo_swing_on">swing sur</string>
+    <string name="tempo_feel">ressenti</string>
+    <string-array name="tempo_feel_choices">
+        <item>droit</item>
+        <item>triolet</item>
+    </string-array>
+    <string name="tempo_key">tonalité</string>
+    <string name="tempo_root">tonique</string>
+    <string name="tempo_scale">gamme</string>
+    <string name="tempo_tuning">accordage</string>
+
+    <!-- The click tab -->
+    <string name="click_card">clic</string>
+    <string name="click_sound">son</string>
+    <string-array name="click_voices">
+        <item>blip</item>
+        <item>baguette</item>
+        <item>cloche</item>
+    </string-array>
+    <string name="click_ticks_on">clic sur</string>
+    <string-array name="click_divisions">
+        <item>mesure</item>
+        <item>temps</item>
+        <item>1/8</item>
+        <item>1/16</item>
+        <item>1/8T</item>
+    </string-array>
+    <string name="click_plays">joue</string>
+    <string-array name="click_when">
+        <item>toujours</item>
+        <item>enregistrement</item>
+        <item>décompte</item>
+    </string-array>
+    <string name="click_level">niveau</string>
+    <!-- The tempo window's record card: count-in and record quantise, both for when armed. -->
+
+    <!-- The link tab -->
+    <string name="link_card">link</string>
+    <string name="link_tempo_sync">sync. du tempo</string>
+    <string name="link_start_stop">départ et arrêt</string>
+    <string-array name="link_start_stop_choices">
+        <item>partagés</item>
+        <item>locaux</item>
+    </string-array>
+    <string name="link_session">la session</string>
+    <string name="link_session_note">Les tempos des scènes et les rampes douces sont ignorés, et la lecture attend le premier temps de la session.</string>
+    <string name="link_session_note_no_multicast">Les tempos des scènes et les rampes douces sont ignorés, et la lecture attend le premier temps de la session. Impossible d’obtenir un verrou multicast, donc les autres apps Link ne seront pas trouvées sur ce Wi-Fi.</string>
+    <plurals name="link_peers">
+        <item quantity="one">%d pair</item>
+        <item quantity="other">%d pairs</item>
+    </plurals>
+    <string name="link_session_tempo">%.2f bpm</string>
+    <string name="link_no_tempo">pas encore de tempo</string>
+    <string name="link_multicast_held">obtenu</string>
+    <string name="link_multicast_not_held">NON obtenu</string>
+    <!-- Peers, the session tempo, and whether the multicast lock is held. -->
+    <string name="link_readout">%1$s · %2$s · phase %3$+.2f ms · multicast %4$s</string>
+</resources>

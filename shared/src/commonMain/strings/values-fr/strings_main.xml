@@ -1,0 +1,102 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/MainScreen.kt: the song grid, its header, menus and readout. -->
+    <string name="main_freezing">Figeage</string>
+
+    <!-- The readout under the grid -->
+    <!-- Clip mode with nothing playing. -->
+    <string name="main_where_clips_idle">-</string>
+    <!-- Clip mode: one playing track as its name, then bar.beat/bars in its clip's cycle. -->
+    <string name="main_where_clip">%1$s %2$d.%3$d/%4$d</string>
+    <string name="main_counting_in">décompte… %d</string>
+    <!-- The scene\'s number and name as on its header, the pass of its repeats (×1/2), then bar.beat. -->
+    <string name="main_where_song">%1$d %2$s  ×%3$d/%4$d  mesure %5$d.%6$d</string>
+    <!-- The time on the right: where the playhead is in the song / the song's length. -->
+    <string name="main_time_at">%1$s/%2$s</string>
+    <!-- The time left to the end of the song. -->
+    <string name="main_time_left">-%s</string>
+    <!-- The time since play was pressed. -->
+    <string name="main_time_since">+%s</string>
+    <!-- What a tap on the time does, for a screen reader. -->
+    <string name="main_time_switch">changer le temps affiché</string>
+
+    <!-- The bar at the foot -->
+    <string name="main_quantise_pill">q : %s</string>
+    <!-- Play runs to the end of the song and stops. -->
+    <string name="main_loop_end">⇥ fin</string>
+    <string name="main_loop_scene">⟳ scène</string>
+    <string name="main_loop_song">⟳ morceau</string>
+
+    <!-- The header -->
+    <string name="main_save">sauver</string>
+    <string name="main_file">fichier ▾</string>
+    <string name="main_new_song">Nouveau morceau…</string>
+    <string name="main_save_as">Enregistrer sous…</string>
+    <string name="main_songs">Morceaux…</string>
+    <string name="main_import">Importer…</string>
+    <string name="main_export">Exporter…</string>
+    <string name="main_share_song">Partager le morceau…</string>
+    <string name="main_midi">MIDI…</string>
+    <string name="main_sound">Son…</string>
+    <string name="main_settings">Réglages…</string>
+    <string name="main_help">Aide…</string>
+    <string name="main_about">À propos…</string>
+    <string name="main_mode_clip">▶ clip</string>
+    <string name="main_mode_song">☰ morceau</string>
+
+    <!-- The grid -->
+    <string name="main_add_track">+ piste</string>
+    <string name="main_add_scene">+ scène</string>
+    <!-- The scenes on the page, with TalkBack on: first to last, of how many. -->
+    <string name="main_scene_page">%1$d–%2$d / %3$d</string>
+    <!-- A number of bars, where there is room for a number and a letter: "4b". -->
+    <string name="main_bars_short">%dm</string>
+    <!-- Which pass of a repeating scene is playing: "r2". -->
+    <string name="main_repeat_short">r%d</string>
+    <!-- On a clip: it plays once, rather than looping. -->
+    <string name="main_clip_once_short">1</string>
+    <!-- On a clip: it is muted. -->
+    <string name="main_clip_mute_short">M</string>
+    <string name="main_track_name">Nom de la piste</string>
+    <string name="main_save_as_title">Enregistrer sous</string>
+    <string name="main_new_song_title">Nouveau morceau</string>
+    <string name="main_untitled">Sans titre</string>
+
+    <!-- A scene\'s menu -->
+    <string name="main_loop_this_scene">Boucler cette scène</string>
+    <string name="main_play_on">Jouer à partir d’ici</string>
+    <string name="main_freeze_scene">Figer la scène (%d)</string>
+    <string name="main_thaw_scene">Défiger la scène (%d)</string>
+    <string name="main_insert_after">Insérer après</string>
+    <string name="main_duplicate">Dupliquer</string>
+    <string name="main_move_left">Déplacer à gauche</string>
+    <string name="main_move_right">Déplacer à droite</string>
+    <string name="main_delete">Supprimer</string>
+
+    <!-- A track\'s menu -->
+    <string name="main_change_machine">Changer de machine…</string>
+    <string name="main_rename">Renommer…</string>
+    <string name="main_freeze_track">Figer la piste (%d)</string>
+    <string name="main_thaw_track">Défiger la piste (%d)</string>
+
+    <!-- Launch quantise -->
+    <string name="quantise_title">Quantification du lancement</string>
+    <string name="quantise_clips_start">les clips partent sur</string>
+    <string name="quantise_clips_start_note">Un clip touché attend cette ligne.</string>
+    <!-- The same for the desktop build, where the pointer is a mouse. -->
+    <string name="quantise_clips_start_note_mouse">Un clip cliqué attend cette ligne.</string>
+    <string name="quantise_clip_end">fin du clip</string>
+    <!-- A line every so many bars; one word whatever the number. -->
+    <string name="quantise_bars" tools:ignore="PluralsCandidate">%d mes.</string>
+    <string name="quantise_end_short">fin</string>
+    <string name="quantise_loops_record">durée des boucles enregistrées</string>
+    <string name="quantise_until_tapped">jusqu’au toucher</string>
+    <string name="quantise_until_tapped_mouse">jusqu’au clic</string>
+
+    <!-- The slide-up panel\'s pages, turned on their side. -->
+    <string-array name="main_panel_pages">
+        <item>mix</item>
+        <item>tenir</item>
+        <item>pad</item>
+        <item>direct</item>
+    </string-array>
+</resources>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Acidulous</string>
+    <string name="app_name" translatable="false">Acidulous</string>
     <!-- The notification while the transport runs, and its channel in the system settings. -->
     <string name="playing">Playing</string>
     <string name="playing_channel_note">Shown while the transport is running.</string>

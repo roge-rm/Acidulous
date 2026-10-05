@@ -129,6 +129,10 @@ object UiPrefs {
     // --- Appearance ------------------------------------------------------
     /** Auto follows the phone; the other two ignore it. */
     var theme by mutableStateOf(ThemeMode.Dark)
+
+    /** The app's language: the system's, or one chosen in settings. [tag] is BCP 47. */
+    enum class Language(val tag: String?) { System(null), English("en"), French("fr-CA") }
+    var language by mutableStateOf(Language.System)
         private set
 
     /**
@@ -330,6 +334,8 @@ object UiPrefs {
         noteLayout = runCatching { NoteLayout.valueOf(p.getString(KEY_NOTE_LAYOUT, null) ?: "Piano") }.getOrDefault(NoteLayout.Piano)
         theme = runCatching { ThemeMode.valueOf(p.getString(KEY_THEME, null) ?: "Dark") }
             .getOrDefault(ThemeMode.Dark)
+        language = runCatching { Language.valueOf(p.getString(KEY_LANGUAGE, null) ?: "System") }
+            .getOrDefault(Language.System)
         uiScale = p.getFloat(KEY_UI_SCALE, 1f)
             .coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         screenScale = p.getFloat(KEY_SCREEN_SCALE, 0f).takeIf { it in ScreenScaleSteps } ?: 0f
@@ -560,6 +566,13 @@ object UiPrefs {
             padJobs + (keyCode to job)
         }
         store?.edit()?.putString(KEY_PAD_JOBS, padJobs.entries.joinToString(";") { (c, j) -> "$c=${Pad.encode(j)}" })?.apply()
+    }
+
+    fun chooseLanguage(l: Language) {
+        if (l == language) return
+        language = l
+        store?.edit()?.putString(KEY_LANGUAGE, l.name)?.apply()
+        com.rm.acidulous.AppHost.current.applyLanguage(l.tag)
     }
 
     fun chooseTheme(mode: ThemeMode) {
@@ -862,6 +875,7 @@ object UiPrefs {
     private const val KEY_SONG_TIME = "song_time"
     private const val KEY_LOOP_BARS = "loop_bars"
     private const val KEY_THEME = "theme"
+    private const val KEY_LANGUAGE = "language"
     private const val KEY_KEYS = "key_bindings"
     private const val KEY_PAD_JOBS = "pad_jobs"
     private const val KEY_NOTE_LAYOUT = "note_layout"

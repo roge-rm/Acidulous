@@ -1,0 +1,5 @@
+<resources>
+    <!-- The notification while the transport runs, and its channel in the system settings. -->
+    <string name="playing">Lecture</string>
+    <string name="playing_channel_note">Affichée pendant la lecture.</string>
+</resources>

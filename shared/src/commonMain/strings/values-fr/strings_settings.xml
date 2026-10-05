@@ -1,0 +1,120 @@
+<resources>
+    <!-- ui/SettingsDialog.kt. The readings card shows only with diagnostics on and stays in English. -->
+    <string name="settings_title">Réglages</string>
+    <string-array name="settings_tabs">
+        <item>affichage</item>
+        <item>audio</item>
+        <item>enregistrer</item>
+        <item>morceaux</item>
+    </string-array>
+    <string name="settings_screen">écran</string>
+    <string name="settings_theme">thème</string>
+    <string name="settings_language">langue</string>
+    <!-- The system's language, then each language named in itself: those two stay as they are in every translation. -->
+    <string-array name="settings_language_choices">
+        <item>système</item>
+        <item>English</item>
+        <item>français</item>
+    </string-array>
+    <string-array name="settings_theme_choices">
+        <item>auto</item>
+        <item>clair</item>
+        <item>sombre</item>
+        <item>contraste élevé</item>
+    </string-array>
+    <string name="settings_size">taille</string>
+    <!-- The desktop build's output choice; the phone has none. -->
+    <string name="settings_output">sortie</string>
+    <string name="settings_output_device">jouer par</string>
+    <string name="settings_output_default">défaut du système</string>
+    <!-- An audio interface's own driver in a computer's list of outputs: its maker's name for it, marked as the fast option. -->
+    <string name="settings_output_driver">%1$s · faible latence</string>
+    <!-- Desktop build only: how big a dp is on this screen. "system" uses the computer's own value. -->
+    <string name="settings_screen_scale">échelle d’écran</string>
+    <string-array name="settings_screen_scale_choices">
+        <item>système</item>
+        <item>1×</item>
+        <item>1,5×</item>
+        <item>2×</item>
+        <item>2,5×</item>
+        <item>3×</item>
+    </string-array>
+    <string-array name="settings_size_choices">
+        <item>normale</item>
+        <item>grande</item>
+        <item>plus grande</item>
+        <item>très grande</item>
+    </string-array>
+    <string name="settings_while_playing">pendant la lecture</string>
+    <string-array name="settings_while_playing_choices">
+        <item>rester éveillé</item>
+        <item>mise en veille</item>
+    </string-array>
+    <string name="settings_diagnostics">diagnostics</string>
+    <string-array name="settings_diagnostics_choices">
+        <item>afficher</item>
+        <item>masquer</item>
+    </string-array>
+    <!-- Under the size switch, when the screen is too small for the size chosen. -->
+    <string name="settings_size_capped">Cet écran n’a de place que pour %.2fx.</string>
+    <string name="settings_engine">moteur</string>
+    <string name="settings_buffer">tampon</string>
+    <string name="settings_buffer_tight">serré</string>
+    <string name="settings_buffer_balanced">équilibré</string>
+    <string name="settings_buffer_safe">sûr</string>
+    <string name="settings_voices">voix</string>
+    <string name="settings_voices_all">toutes</string>
+    <string name="settings_cores">cœurs</string>
+    <string name="settings_cores_auto">auto</string>
+    <string name="settings_quality">qualité</string>
+    <string-array name="settings_quality_choices">
+        <item>pleine</item>
+        <item>légère</item>
+        <item>auto</item>
+    </string-array>
+    <string name="settings_recording">enregistrement</string>
+    <!-- Bits per sample for recordings and exports. -->
+    <string name="settings_depth">résolution</string>
+    <!-- Bars of clicks before recording starts. -->
+    <string name="settings_count_in">décompte</string>
+    <!-- Whether recorded notes are moved onto the clip's grid, and how far. -->
+    <string name="settings_quantise">quantifier</string>
+    <string name="settings_amount">force</string>
+    <!-- Whether a take adds to the clip's notes or replaces the ones it plays over. -->
+    <string name="settings_take">prise</string>
+    <string-array name="settings_take_choices">
+        <item>ajouter</item>
+        <item>remplacer</item>
+    </string-array>
+    <!-- Whether recording starts with play, or waits for the first note played. -->
+    <string name="settings_start">départ</string>
+    <string-array name="settings_start_choices">
+        <item>à la lecture</item>
+        <item>1re note</item>
+    </string-array>
+    <!-- Whether recording carries on round the loop, or stops after one pass. -->
+    <string name="settings_passes">passages</string>
+    <string-array name="settings_passes_choices">
+        <item>boucle</item>
+        <item>une fois</item>
+    </string-array>
+    <string-array name="settings_depth_choices">
+        <item>24 bits</item>
+        <item>16 bits</item>
+    </string-array>
+    <string name="settings_new_song">nouveau morceau</string>
+    <string name="settings_tempo">tempo</string>
+    <string name="settings_signature">chiffrage</string>
+    <string name="settings_machine">machine</string>
+    <string name="settings_track_scale">gamme de piste</string>
+    <string name="settings_root">tonique</string>
+    <string name="settings_scale">gamme</string>
+    <string name="settings_arriving">où vont les notes entrantes</string>
+    <string name="settings_arriving_to">vers</string>
+    <string-array name="settings_arriving_choices">
+        <item>suivre</item>
+        <item>fixe</item>
+        <item>par canal</item>
+    </string-array>
+    <string name="settings_arriving_track">piste</string>
+</resources>

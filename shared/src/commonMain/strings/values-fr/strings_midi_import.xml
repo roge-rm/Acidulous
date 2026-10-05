@@ -1,0 +1,23 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/MidiImportDialog.kt: bringing a MIDI file in as a new song. -->
+    <string name="import_title">Importer un MIDI</string>
+    <string name="import_confirm">Importer</string>
+    <string name="import_arrangement">arrangement · %s</string>
+    <string name="import_scenes_of">scènes de</string>
+    <plurals name="import_scenes">
+        <item quantity="one">%d scène</item>
+        <item quantity="other">%d scènes</item>
+    </plurals>
+    <!-- Scenes, bars, then the tempo and time signature the file set. -->
+    <string name="import_summary">%1$s · %2$s · %3$.0f bpm · %4$d/%5$d</string>
+    <string name="import_tracks">pistes</string>
+    <plurals name="import_notes">
+        <item quantity="one">%d note</item>
+        <item quantity="other">%d notes</item>
+    </plurals>
+    <!-- A part: its MIDI channel and how many notes. -->
+    <string name="import_part">ch %1$d · %2$s</string>
+    <!-- The same, when the chosen machine has no sound for some of them. -->
+    <string name="import_part_lost" tools:ignore="PluralsCandidate">ch %1$d · %2$s · %3$d sans son ici</string>
+    <string name="import_skip">ignorer</string>
+</resources>

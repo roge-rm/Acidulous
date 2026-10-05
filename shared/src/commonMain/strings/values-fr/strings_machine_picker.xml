@@ -1,0 +1,35 @@
+<resources>
+    <!-- model/MachineUi.kt: the machine picker. Machine names are names and aren't translated. -->
+    <string name="machines_synths">synthés</string>
+    <string name="machines_drums">batteries</string>
+    <!-- Instruments modelled on real ones. The picker sets a trailing "ish" in italic, where there is one. -->
+    <string name="machines_realish">réalistes</string>
+    <!-- Machines that play recorded sound: samples, a granular cloud, a sung take. -->
+    <string name="machines_samples">échantillons</string>
+    <string name="machines_beyond">au-delà</string>
+    <!-- One line per machine: what it is, not what it has. -->
+    <string name="machine_about_reflux">basse acid : un oscillateur et un filtre qui hurle</string>
+    <string name="machine_about_trinity">synthé polyphonique à trois oscillateurs, avec tables d’ondes et deux filtres</string>
+    <string name="machine_about_ratio">FM à six opérateurs qui passe d’un algorithme à l’autre</string>
+    <string name="machine_about_cumulus">grandes nappes bâties à partir d’un spectre</string>
+    <string name="machine_about_formulate">synthé 8 bits, et des formes d’onde que vous tapez en formules</string>
+    <string name="machine_about_hexbeat">batterie synthétisée, à la manière des petites boîtes classiques</string>
+    <string name="machine_about_genesis">la grosse boîte à rythmes, avec une grosse caisse qui fait pomper le kit</string>
+    <string name="machine_about_resonance">huit objets frappés qui résonnent les uns dans les autres</string>
+    <string name="machine_about_dice">découpeur de boucles avec du hasard sur chaque tranche</string>
+    <string name="machine_about_forage">boîte à rythmes à échantillons, avec treize pads</string>
+    <string name="machine_about_manual">orgue à deux claviers, pédalier et cabine rotative</string>
+    <string name="machine_about_filament">cordes modélisées : pincées, au médiator, à l’archet ou soufflées</string>
+    <string name="machine_about_brazen">cuivres modélisés, de la trompette au tuba</string>
+    <string name="machine_about_hammer">piano modélisé : marteaux de feutre, cordes et table d’harmonie</string>
+    <string name="machine_about_tongue">guimbarde modélisée : une lame dans une fente, et une bouche qui choisit ses harmoniques</string>
+    <string name="machine_about_draw">anches libres modélisées : harmonicas, accordéons, mélodica, harmonium et les anches des tuyaux</string>
+    <string name="machine_about_timber">bois modélisés : anches et flûtes</string>
+    <string name="machine_about_mosaic">lecteur multi-échantillons pour SoundFont et vos échantillons</string>
+    <string name="machine_about_pollen">nuages granulaires tirés d’un fichier ou de l’entrée en direct</string>
+    <string name="machine_about_molt">chantez une prise et accordez-la dans la grille de notes</string>
+    <string name="machine_about_diction">un synthé vocal entraîné sur votre voix et poussé plus loin</string>
+    <string name="machine_about_cipher">vocodeur avec une carte de bandes que vous pouvez réarranger</string>
+    <string name="machine_about_nexus">synthé modulaire bâti à partir des autres machines</string>
+    <string name="machine_about_bias">quatre-pistes pour enregistrements audio</string>
+</resources>

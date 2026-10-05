@@ -9,6 +9,13 @@
     </string-array>
     <string name="settings_screen">screen</string>
     <string name="settings_theme">theme</string>
+    <string name="settings_language">language</string>
+    <!-- The system's language, then each language named in itself: those two stay as they are in every translation. -->
+    <string-array name="settings_language_choices">
+        <item>system</item>
+        <item>English</item>
+        <item>français</item>
+    </string-array>
     <string-array name="settings_theme_choices">
         <item>auto</item>
         <item>light</item>

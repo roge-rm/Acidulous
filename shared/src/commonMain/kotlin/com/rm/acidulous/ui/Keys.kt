@@ -113,16 +113,16 @@ data class KeyChord(
 fun KeyChord.words(): String = buildString {
     if (ctrl) append("Ctrl+")
     if (alt) append("Alt+")
-    if (shift) append("Shift+")
+    if (shift) append(AppStrings.getString(Res.string.keys_name_shift) + "+")
     if (meta) append("Meta+")
     append(keyName(key))
 }
 
 internal fun keyName(code: Int): String = when (code) {
-    KeyCodes.KEYCODE_SPACE -> "Space"
+    KeyCodes.KEYCODE_SPACE -> AppStrings.getString(Res.string.keys_name_space)
     KeyCodes.KEYCODE_GRAVE -> "`"
     KeyCodes.KEYCODE_SYM -> "Sym"
-    KeyCodes.KEYCODE_ESCAPE -> "Esc"
+    KeyCodes.KEYCODE_ESCAPE -> AppStrings.getString(Res.string.keys_name_esc)
     KeyCodes.KEYCODE_LEFT_BRACKET -> "["
     KeyCodes.KEYCODE_RIGHT_BRACKET -> "]"
     KeyCodes.KEYCODE_SLASH -> "/"
@@ -132,7 +132,7 @@ internal fun keyName(code: Int): String = when (code) {
     KeyCodes.KEYCODE_EQUALS -> "="
     KeyCodes.KEYCODE_SEMICOLON -> ";"
     KeyCodes.KEYCODE_APOSTROPHE -> "'"
-    KeyCodes.KEYCODE_ENTER -> "Enter"
+    KeyCodes.KEYCODE_ENTER -> AppStrings.getString(Res.string.keys_name_enter)
     KeyCodes.KEYCODE_TAB -> "Tab"
     else -> KeyCodes.keyCodeToString(code).removePrefix("KEYCODE_").lowercase().replaceFirstChar { it.uppercase() }
 }
@@ -573,8 +573,8 @@ fun KeysOverlay(onDismiss: () -> Unit) {
             for ((what, keys) in listOf(
                 Res.string.keys_full_screen to "F11",
                 Res.string.keys_right_click to stringResource(Res.string.keys_right_click_keys),
-                Res.string.keys_wheel_sideways to "Shift+wheel",
-                Res.string.keys_wheel_zoom to "Ctrl+wheel",
+                Res.string.keys_wheel_sideways to stringResource(Res.string.keys_name_shift) + "+" + stringResource(Res.string.keys_name_wheel),
+                Res.string.keys_wheel_zoom to "Ctrl+" + stringResource(Res.string.keys_name_wheel),
             )) {
                 androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth()) {
                     androidx.compose.material3.Text(stringResource(what), color = c.text, fontSize = 13.sp, modifier = Modifier.weight(1f))

@@ -128,6 +128,10 @@ def from_panels():
                 continue
             args = split_args(text, m.end() - 1)
             words.update(template(a[1:-1]) for a in args if re.fullmatch(r'"[^"]*"', a))
+        # A word looked up directly: panelWord("stops").
+        words.update(template(w) for w in re.findall(r'\bpanelWords?\(\s*"([^"]*)"\s*\)', text))
+        # A word with its sense after a tilde, "key~music", wherever it is: see PanelText.kt.
+        words.update(re.findall(r'"([A-Za-z][^"~$]*~[a-z]+)"', text))
         # "word" to "shorter word", "group title" to listOf(...), "more" to rest.
         for m in re.finditer(r'"([^"]*)"\s+to\b(?:\s+"([^"]*)")?', text):
             words.add(template(m.group(1)))
@@ -205,7 +209,8 @@ def render(words):
         name = slug(w, taken)
         # A literal percent in a word that isn't a template mustn't be read as one.
         attr = ' formatted="false"' if "%" in w.replace("%d", "") else ""
-        rows.append('    <string name="%s"%s>%s</string>' % (name, attr, xml_escape(w)))
+        # "key~music" is "key" in English, with its own word in another language.
+        rows.append('    <string name="%s"%s>%s</string>' % (name, attr, xml_escape(w.split("~")[0])))
         kt.append('    "%s" to Res.string.%s,' % (w.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$"), name))
     # Abbreviations and ranges, which spelling and typography lint would flag.
     xml = ('<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="Typos,TypographyDashes">\n'

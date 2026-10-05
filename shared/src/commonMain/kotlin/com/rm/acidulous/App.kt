@@ -121,6 +121,8 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
         com.rm.acidulous.ui.LocalBaseDensity provides base,
     ) {
     AcidulousTheme(com.rm.acidulous.ui.UiPrefs.theme) {
+    // Everything is built again in a new language: strings are read as screens are made.
+    androidx.compose.runtime.key(com.rm.acidulous.ui.UiPrefs.language) {
         // For the platform's own bars.
         val light = !com.rm.acidulous.ui.theme.Acid.colors.dark
         androidx.compose.runtime.LaunchedEffect(light) { onLightTheme(light) }
@@ -153,6 +155,7 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
             splashing = false
         }
         if (splashing) com.rm.acidulous.ui.SplashScreen()
+    }
     }
     }
 }

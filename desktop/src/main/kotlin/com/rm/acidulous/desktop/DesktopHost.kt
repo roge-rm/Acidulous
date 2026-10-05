@@ -17,6 +17,11 @@ import java.io.OutputStream
  * folder the file is in.
  */
 class DesktopHost(private val configDir: File, private val crashes: CrashReports) : AppHost {
+    // Strings follow the default locale; AppRoot rebuilds the screen for the new language.
+    override fun applyLanguage(tag: String?) {
+        java.util.Locale.setDefault(tag?.let { java.util.Locale.forLanguageTag(it) } ?: systemLocale)
+    }
+
     override val versionName: String? = VERSION_NAME
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
 
@@ -85,4 +90,9 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     }
 
     private val Doc.file: File get() = handle as File
+
+    companion object {
+        /** The system's own language, from before the app set one. */
+        var systemLocale: java.util.Locale = java.util.Locale.getDefault()
+    }
 }

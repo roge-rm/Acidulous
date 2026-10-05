@@ -132,6 +132,14 @@ interface AppHost {
     /** Which library provides the audio stream, for the About window's credits. */
     val audioStream: AudioStream get() = AudioStream.Oboe
 
+    /**
+     * Whether the app can switch its own language. Not in a browser, which
+     * loads its strings once, in the browser's language, before it starts.
+     */
+    val canChooseLanguage: Boolean get() = true
+    /** Puts the app in [tag]'s language (a BCP 47 tag), or the system's for null. */
+    fun applyLanguage(tag: String?) {}
+
     companion object {
         lateinit var current: AppHost
     }

@@ -14,6 +14,11 @@ import java.io.OutputStream
 /** The Android app's [AppHost]: package info, assets, files and crash reports. */
 class AndroidHost(private val context: Context) : AppHost {
     private val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+    // The activity starts again in the new language: AppLanguage makes its context.
+    override fun applyLanguage(tag: String?) {
+        (context as? android.app.Activity)?.recreate()
+    }
+
     override val debugBuild: Boolean = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
     override val cleansInput: Boolean get() = true

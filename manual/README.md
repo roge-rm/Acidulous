@@ -11,12 +11,12 @@
     - [Cumulus](04-the-machines/cumulus.md) - pads built from a spectrum of partials.
     - [Dice](04-the-machines/dice.md) - a loop slicer with chance on every slice.
     - [Diction](04-the-machines/diction.md) - a vocal synthesizer trained on your voice and taken to the next level.
-    - [Draw](04-the-machines/draw.md) - reeds that sound through pipes.
+    - [Draw](04-the-machines/draw.md) - modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.
     - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
     - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
     - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.
     - [Genesis](04-the-machines/genesis.md) - the big drum box, with a bus compressor the kick ducks.
-    - [Hammer](04-the-machines/hammer.md) - heard through a soundboard or pickups.
+    - [Hammer](04-the-machines/hammer.md) - modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.
     - [Hexbeat](04-the-machines/hexbeat.md) - synthesized drums in the style of the classic small boxes, with a bigger kit.
     - [Manual](04-the-machines/manual.md) - the organ: two manuals and pedals, four models and a rotary cabinet.
     - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
@@ -27,7 +27,7 @@
     - [Reflux](04-the-machines/reflux.md) - acid bass: one oscillator, one filter that screams, and lines you play in.
     - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
-    - [Tongue](04-the-machines/tongue.md) - out its harmonics.
+    - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.
     - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the all-rounder.
 5. [Effects and mixing](05-effects-and-mixing.md)
     - [Amp](05-effects-and-mixing/amp.md) - a guitar amp with a cabinet you can resize.

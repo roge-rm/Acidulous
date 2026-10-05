@@ -16,7 +16,7 @@ Please do all of these things and then let me know what works, what doesn't work
 
 And please join me in the #acidulous channel **[on my discord](https://discord.gg/9Wun47jGC6)**  to share comments, ask questions, report bugs or issues with different devices, or to request new features. Or feel free to open an issue here.
 
-The manual is in [manual/](manual/) and in the app in the **Help…** window.
+The manual is in [manual/](manual/) and in the app in the **Help…** window. The app and its manual are in English and Canadian French ([manual/fr/](manual/fr/)); choose under **Settings…**, or let it follow the phone.
 
 Disclaimer: I am not a great programmer and this was made using Claude Opus 5.0/5.5
 

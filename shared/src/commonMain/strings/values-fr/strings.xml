@@ -1,0 +1,22 @@
+<resources>
+    <!--
+        Words every window shares. Everything else is in strings_<area>.xml,
+        named for where it appears, since the same English word in two places
+        may need two different words in another language.
+    -->
+    <string name="ok">OK</string>
+    <string name="cancel">Annuler</string>
+    <string name="done">Terminé</string>
+    <string name="close">Fermer</string>
+    <string name="none">aucun</string>
+    <string-array name="off_on">
+        <item>non</item>
+        <item>oui</item>
+    </string-array>
+    <!-- Between the items of a short list: "2 notes, 1 lane, frozen". -->
+    <string name="list_separator">", "</string>
+    <plurals name="bars">
+        <item quantity="one">%d mesure</item>
+        <item quantity="other">%d mesures</item>
+    </plurals>
+</resources>

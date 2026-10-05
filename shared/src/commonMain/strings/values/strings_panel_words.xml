@@ -70,12 +70,14 @@
     <string name="pw_bank">bank</string>
     <string name="pw_bar">bar</string>
     <string name="pw_bars">bars</string>
+    <string name="pw_bars_organ">bars</string>
     <string name="pw_basic">basic</string>
     <string name="pw_bass">bass</string>
     <string name="pw_bell">Bell</string>
     <string name="pw_bell_04bf88">bell</string>
     <string name="pw_bell_clave">bell / clave</string>
     <string name="pw_bells">bells</string>
+    <string name="pw_bell_brass">bell</string>
     <string name="pw_below">below</string>
     <string name="pw_bend">bend</string>
     <string name="pw_beyond">beyond</string>
@@ -239,6 +241,7 @@
     <string name="pw_e5">e5</string>
     <string name="pw_e6">e6</string>
     <string name="pw_edge">edge</string>
+    <string name="pw_edge_cone">edge</string>
     <string name="pw_ee">ee</string>
     <string name="pw_effect">effect</string>
     <string name="pw_effort">effort</string>
@@ -350,6 +353,7 @@
     <string name="pw_glass">Glass</string>
     <string name="pw_glide">glide</string>
     <string name="pw_glide_on">glide on</string>
+    <string name="pw_glides">glides</string>
     <string name="pw_glue">glue</string>
     <string name="pw_gong">gong</string>
     <string name="pw_grain">grain</string>
@@ -378,6 +382,7 @@
     <string name="pw_harmonizer">Harmonizer</string>
     <string name="pw_harmony">harmony</string>
     <string name="pw_harp">harp</string>
+    <string name="pw_harp_jaw">harp</string>
     <string name="pw_hats">hats</string>
     <string name="pw_head_bump">head bump</string>
     <string name="pw_heard_from">heard from</string>
@@ -389,6 +394,7 @@
     <string name="pw_highfreq">highfreq</string>
     <string name="pw_highgain">highgain</string>
     <string name="pw_hiss">hiss</string>
+    <string name="pw_hisses">hisses</string>
     <string name="pw_hold">hold</string>
     <string name="pw_holes">holes</string>
     <string name="pw_hollow">hollow</string>
@@ -407,6 +413,8 @@
     <string name="pw_hum">hum</string>
     <string name="pw_human">human</string>
     <string name="pw_humanise">humanise</string>
+    <string name="pw_hums">hums</string>
+    <string name="pw_hums_glides">hums &amp; glides</string>
     <string name="pw_hybrid">hybrid</string>
     <string name="pw_hyst">hyst</string>
     <string name="pw_hz">Hz</string>
@@ -440,6 +448,8 @@
     <string name="pw_keyed">keyed</string>
     <string name="pw_keys">keys</string>
     <string name="pw_keytrack">keytrack</string>
+    <string name="pw_key_detector">key</string>
+    <string name="pw_key_music">key</string>
     <string name="pw_khaen">khaen</string>
     <string name="pw_khomus">khomus</string>
     <string name="pw_kick">Kick</string>
@@ -562,6 +572,7 @@
     <string name="pw_mutate">mutate</string>
     <string name="pw_mute">mute</string>
     <string name="pw_muted">muted</string>
+    <string name="pw_mute_lane">mute</string>
     <string name="pw_n">n</string>
     <string name="pw_natural">natural</string>
     <string name="pw_near">near</string>
@@ -745,6 +756,7 @@
     <string name="pw_ring_loop">ring loop</string>
     <string name="pw_ring12">ring12</string>
     <string name="pw_ring23">ring23</string>
+    <string name="pw_ring_level">ring</string>
     <string name="pw_rise">rise</string>
     <string name="pw_rnd">rnd</string>
     <string name="pw_robot">robot</string>
@@ -836,6 +848,7 @@
     <string name="pw_smooth">smooth</string>
     <string name="pw_snap">snap</string>
     <string name="pw_snappy">snappy</string>
+    <string name="pw_snap_snare">snap</string>
     <string name="pw_snare">Snare</string>
     <string name="pw_snare_c1104d">snare</string>
     <string name="pw_soft">soft</string>
@@ -867,6 +880,7 @@
     <string name="pw_stiff">stiff</string>
     <string name="pw_stiffness">stiffness</string>
     <string name="pw_stop">stop</string>
+    <string name="pw_stops">stops</string>
     <string name="pw_straight">straight</string>
     <string name="pw_strange">strange</string>
     <string name="pw_stretch">stretch</string>
@@ -941,6 +955,7 @@
     <string name="pw_track">track</string>
     <string name="pw_tracker">tracker</string>
     <string name="pw_tracking">tracking</string>
+    <string name="pw_track_follow">track</string>
     <string name="pw_transport">transport</string>
     <string name="pw_transpose">transpose</string>
     <string name="pw_treble">treble</string>
@@ -1008,6 +1023,7 @@
     <string name="pw_what">what</string>
     <string name="pw_what_changes">what changes</string>
     <string name="pw_wheel">wheel</string>
+    <string name="pw_wheel_organ">wheel</string>
     <string name="pw_where">where</string>
     <string name="pw_whisper">whisper</string>
     <string name="pw_white">white</string>

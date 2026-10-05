@@ -1,0 +1,24 @@
+<resources>
+    <!-- ui/TrackSettings.kt: a track's own settings. -->
+    <string name="track_title">Réglages · %s</string>
+    <string name="track_track">piste</string>
+    <string name="track_notes">notes</string>
+    <string name="track_transpose">transposer</string>
+    <!-- The first tuning choice: follow the song's. -->
+    <string name="track_tuning_song">morceau</string>
+    <string name="track_velocity">vélocité</string>
+    <string name="track_velocity_as_played">telle que jouée</string>
+    <string name="track_swing">swing</string>
+    <string name="track_swing_song">morceau</string>
+    <string name="track_swing_straight">droit</string>
+    <string name="track_routing">routage</string>
+    <string name="track_midi_out">sortie midi</string>
+    <string-array name="track_midi_out_choices">
+        <item>non</item>
+        <item>les deux</item>
+        <item>seule</item>
+    </string-array>
+    <string name="track_channel">canal</string>
+    <string name="track_output">sortie</string>
+    <string name="track_output_master">général</string>
+</resources>

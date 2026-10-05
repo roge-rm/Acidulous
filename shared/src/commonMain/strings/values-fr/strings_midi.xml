@@ -1,0 +1,137 @@
+<resources>
+    <!-- ui/MidiDialog.kt. Readouts shown only with diagnostics on stay in English. -->
+    <string name="midi_title">MIDI</string>
+    <string-array name="midi_tabs">
+        <item>appareils</item>
+        <item>notes</item>
+        <item>contrôle</item>
+    </string-array>
+    <string name="midi_unsupported">Cet appareil ne prend pas en charge le MIDI.</string>
+    <!-- The marks are the ones the rows use: a cable, and Bluetooth. -->
+    <string name="midi_inputs">entrées · ⎓ câble, ᛒ bluetooth</string>
+    <!-- The same, where the app doesn't search for Bluetooth instruments itself (desktop). -->
+    <string name="midi_inputs_cable">entrées · ⎓ câble</string>
+    <string name="midi_listening">à l’écoute</string>
+    <string name="midi_tap_to_open">touchez pour ouvrir</string>
+    <!-- The same for the desktop build, where the pointer is a mouse. -->
+    <string name="midi_tap_to_open_mouse">cliquez pour ouvrir</string>
+    <string name="midi_no_inputs">rien de branché : branchez en USB, ou cherchez</string>
+    <!-- The same, with no search to point at. -->
+    <string name="midi_no_inputs_cable">rien de branché : branchez en USB</string>
+    <string name="midi_bluetooth">bluetooth</string>
+    <string name="midi_bluetooth_off">le bluetooth est désactivé</string>
+    <string name="midi_search">chercher</string>
+    <string name="midi_stop">arrêter</string>
+    <!-- A Bluetooth device's address, when it didn't say it speaks MIDI. -->
+    <string name="midi_no_service">%s  (aucun service MIDI)</string>
+    <string name="midi_connect">connecter</string>
+    <string name="midi_outputs">sorties</string>
+    <string name="midi_sending">envoi</string>
+    <string name="midi_no_outputs">rien à qui envoyer</string>
+    <string name="midi_send_ahead">envoi anticipé</string>
+    <string name="midi_test">test</string>
+    <string-array name="midi_test_notes">
+        <item>note</item>
+        <item>molette</item>
+    </string-array>
+    <string name="midi_nothing_received">rien reçu pour l’instant</string>
+    <string name="midi_test_launchpad">launchpad</string>
+    <string name="midi_velocity">vélocité</string>
+    <string name="midi_velocity_as_sent">telle quelle</string>
+    <string name="midi_velocity_softer">plus doux %1$d</string>
+    <string name="midi_velocity_harder">plus fort %1$d</string>
+    <!-- How many messages, and the last one. -->
+    <plurals name="midi_received">
+        <item quantity="one">%1$d message · %2$s</item>
+        <item quantity="other">%1$d messages · %2$s</item>
+    </plurals>
+    <string name="midi_clock">horloge</string>
+    <string name="midi_clock_send">envoyer</string>
+    <string name="midi_clock_follow">suivre</string>
+    <string-array name="midi_clock_follow_choices">
+        <item>non</item>
+        <item>auto</item>
+        <item>oui</item>
+    </string-array>
+    <string name="midi_test_clock">horloge</string>
+    <string name="midi_follow_link">Link a le tempo, et suivre désactive Link</string>
+    <string name="midi_follow_off">ne suit pas</string>
+    <string name="midi_follow_nothing">rien n’arrive · horloge propre</string>
+    <string name="midi_follow_waiting">suit · rien n’arrive</string>
+    <!-- The tempo followed, whether it has settled, and how far the last pulse was from where it was expected. -->
+    <string name="midi_following">suit %1$.2f bpm · %2$s · phase %3$+.2f ms · tempos des scènes ignorés</string>
+    <string name="midi_follow_locked">verrouillé</string>
+    <string name="midi_follow_settling">en stabilisation</string>
+    <string name="midi_mapping">affectation · aussi en maintenant rétablir ↷</string>
+    <string name="midi_mapping_mode">mode</string>
+    <string name="midi_device_mappings">affectations de l’appareil</string>
+    <string name="midi_forget">oublier</string>
+    <!-- Whose a mapping is: it travels with the song, or with this phone. -->
+    <string name="midi_mapping_song">morceau</string>
+    <string name="midi_mapping_device">appareil</string>
+    <string name="midi_nothing_mapped">rien d’affecté</string>
+    <string name="midi_mapping_track">%1$s  (piste %2$d)</string>
+    <!-- A list of notes that a mapping has taken over. -->
+    <string name="midi_claimed_notes">les notes %s déclenchent leur affectation au lieu de jouer</string>
+    <!-- A Launchpad Pro: played by this app, or left to work as itself. -->
+    <string name="midi_launchpad">launchpad</string>
+    <string-array name="midi_launchpad_choices">
+        <item>acidulous</item>
+        <item>le sien</item>
+    </string-array>
+    <!-- An Exquis controller's pads: the played track's scale set as the Exquis's own (in its own colours), highlighted in green over the pads, or left alone. -->
+    <string name="midi_exquis_pads">pads exquis</string>
+    <string-array name="midi_exquis_pads_choices">
+        <item>ses couleurs</item>
+        <item>surbrillance</item>
+        <item>non</item>
+    </string-array>
+    <!-- An Exquis's play, record, loop, clips, undo and redo buttons: worked by the app, or left as the Exquis's own. Shares the launchpad switch's choices. -->
+    <string name="midi_exquis_buttons">boutons exquis</string>
+    <string name="midi_mpe">mpe</string>
+    <string name="midi_mpe_zone">zone</string>
+    <!-- In the order shown: auto, off, lower, upper. -->
+    <string-array name="midi_mpe_zone_choices">
+        <item>auto</item>
+        <item>non</item>
+        <item>basse</item>
+        <item>haute</item>
+    </string-array>
+    <!-- Auto, before any MPE controller has been heard. -->
+    <string name="midi_mpe_auto_waiting">en attente d’un contrôleur MPE</string>
+    <!-- Auto, set by the controller's own MPE message: zone, fingers, bend range in semitones. -->
+    <string name="midi_mpe_auto_config">%1$s · %2$d doigts · ±%3$d st · annoncée</string>
+    <!-- Auto, recognised from notes on several channels at once. -->
+    <string name="midi_mpe_auto_fingers">%1$s · %2$d doigts · ±%3$d st · reconnue</string>
+    <string name="midi_mpe_fingers">doigts</string>
+    <string name="midi_mpe_bend">bend</string>
+    <!-- A pitch bend range in semitones. -->
+    <string name="midi_mpe_bend_st">±%d st</string>
+    <string name="midi_mpe_cc74">cc 74</string>
+    <string-array name="midi_mpe_cc74_choices">
+        <item>timbre</item>
+        <item>simple</item>
+    </string-array>
+    <string name="midi_mpe_none_held">aucun canal membre ne tient de note</string>
+    <string name="midi_mpe_held">les canaux %s tiennent une note</string>
+    <string name="midi_test_mpe">mpe</string>
+
+    <!-- midi/MidiHub.kt: what the hub says about devices and scans. -->
+    <!-- A device that gave no name. -->
+    <string name="midi_device">Appareil MIDI</string>
+    <string name="midi_unnamed">sans nom</string>
+    <plurals name="midi_released">
+        <item quantity="one">%d note tenue relâchée</item>
+        <item quantity="other">%d notes tenues relâchées</item>
+    </plurals>
+    <string name="midi_scan_running">une recherche est déjà en cours</string>
+    <string name="midi_scan_refused_restart">Android a refusé la recherche : désactivez puis réactivez le Bluetooth</string>
+    <string name="midi_scan_unsupported">ce téléphone ne peut pas chercher d’appareils Bluetooth LE</string>
+    <string name="midi_scan_failed">la recherche a échoué (code %d)</string>
+    <string name="midi_scan_refused">Android a refusé la recherche : autorisez Appareils à proximité</string>
+    <string name="midi_scan_widened">Rien n’annonce de MIDI, alors voici tout ce qui est à proximité. Un appareil qui n’indique le MIDI que dans sa réponse de recherche s’ouvrira quand même.</string>
+    <string name="midi_scan_nothing">Rien de trouvé. Vérifiez que l’appareil est allumé et qu’il n’est pas déjà jumelé dans les réglages Bluetooth d’Android, car un appareil BLE MIDI jumelé cesse de s’annoncer.</string>
+    <string name="midi_opening">ouverture…</string>
+    <string name="midi_open_failed">Impossible d’ouvrir cet appareil. S’il est jumelé dans les réglages Bluetooth d’Android, oubliez-le là et relancez la recherche.</string>
+    <string name="midi_connect_refused">Android a refusé la connexion : autorisez Appareils à proximité</string>
+</resources>

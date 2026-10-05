@@ -1,0 +1,122 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/MachinePanel.kt: what the panels say besides their controls' labels, which are in strings_panel_words.xml. -->
+
+    <!-- A track with no patch chosen. -->
+    <string name="machine_patch">son</string>
+    <!-- A patch that has been changed since it was loaded. -->
+    <string name="machine_patch_edited">%s *</string>
+    <string name="machine_patch_menu">%s ▾</string>
+    <string name="machine_patch_name">Nom du son</string>
+
+    <!-- The drum kit (Forage) -->
+    <string name="kit_clear_title">Vider le kit</string>
+    <string name="kit_clear">Vider</string>
+    <string name="kit_clear_note">Retire les échantillons des treize pads et le fichier découpé. Les fichiers restent dans l’appli, sous échantillons….</string>
+    <string name="kit_pad">pad %d</string>
+    <string name="kit_not_loaded">%s (non chargé)</string>
+    <string name="kit_no_sample">aucun échantillon</string>
+    <!-- A pad's sample: its name, its length, and stereo or mono. -->
+    <string name="kit_sample_info">%1$s  %2$s %3$s</string>
+    <string name="kit_stereo_short">st</string>
+    <string name="kit_mono">mono</string>
+    <!-- A pad playing part of the slice file, and which part. -->
+    <string name="kit_slice_of">tranche %1$d de %2$s  %3$.0f %%-%4$.0f %%</string>
+    <string name="kit_load">charger…</string>
+    <string name="kit_samples">échantillons…</string>
+    <string name="kit_edit">modifier…</string>
+    <string name="kit_clear_pad">vider</string>
+    <string name="kit_kit">kit…</string>
+    <string name="kit_slice">découper…</string>
+    <string name="kit_slicing">découpage…</string>
+    <!-- Level the pads against each other. -->
+    <string name="kit_match">égaliser</string>
+    <string name="kit_clear_kit">vider</string>
+
+    <!-- Slicing a file across the pads -->
+    <string name="slice_title">Découper sur les pads</string>
+    <string name="slice_confirm">Découper</string>
+    <string name="slice_no_file">aucun fichier choisi</string>
+    <string name="slice_choose">choisir…</string>
+    <string name="slice_change">changer…</string>
+    <string name="slice_where">où couper</string>
+    <string-array name="slice_modes">
+        <item>attaques</item>
+        <item>égal</item>
+    </string-array>
+    <string name="slice_transients_note">Coupe aux frappes. S’il y en a trop, il garde les plus fortes, et s’il y en a trop peu, il coupe en parts égales.</string>
+    <string name="slice_even_note">Parts égales.</string>
+    <string name="slice_count">tranches</string>
+    <string name="slice_count_note" tools:ignore="PluralsCandidate">Les pads 1 à %d reçoivent chacun une tranche. Les pads qui ont leur propre échantillon le gardent : videz-les pour utiliser la tranche.</string>
+
+    <!-- The organ\'s input, and other listening -->
+    <string name="machine_input">entrée</string>
+    <string name="machine_listening">écoute</string>
+    <string name="machine_open">ouvrir</string>
+
+    <!-- Formulate -->
+    <string name="formula_none">aucune formule</string>
+    <string name="formula_edit">modifier…</string>
+    <string name="formula_title">Formule</string>
+    <!-- The letters are the formula\'s own variables and stay as they are. -->
+    <string name="formula_expression">expression en t, f, n, v, x, a, b, c, s, r</string>
+    <string name="formula_examples">exemples</string>
+    <string name="formula_tables">tables de pas : valeurs, et | là où ça reboucle</string>
+    <string name="formula_arp">arpège, demi-tons</string>
+    <string name="formula_duty" tools:ignore="TypographyDashes">rapport cyclique 0-255</string>
+    <string name="formula_volume" tools:ignore="TypographyDashes">volume 0-255</string>
+
+    <!-- Resonance -->
+    <string name="resonance_object">objet %d</string>
+    <string name="resonance_about">un objet frappé qui résonne avec les autres</string>
+
+    <!-- Files a machine plays -->
+    <string name="machine_no_take">aucune prise</string>
+    <string name="machine_no_loop">aucune boucle</string>
+    <string name="machine_no_file">aucun fichier</string>
+    <string name="diction_builtin">intégrée</string>
+    <string name="diction_from">depuis…</string>
+    <string name="diction_consonants_title">Consonnes</string>
+    <string name="machine_import">importer…</string>
+    <string name="machine_samples">échantillons…</string>
+    <string name="machine_record">enregistrer…</string>
+    <string name="dice_slice">tranche %d : choisie avec les pads</string>
+    <!-- Under a Dice loop's name: how long it is, and so what tempo it was played at. -->
+    <plurals name="dice_loop_tempo">
+        <item quantity="one">%1$s mesure à %2$d bpm</item>
+        <item quantity="other">%1$s mesures à %2$d bpm</item>
+    </plurals>
+    <string name="dice_loop_no_tempo">tempo inconnu : réglez ses mesures</string>
+    <string name="pollen_live">entrée en direct : non sauvegardée avec le morceau, muette dans les exports</string>
+
+    <!-- Bias: a lane\'s take, when it was sung at another tempo. -->
+    <string name="bias_take_bpm">%.1f bpm</string>
+    <string name="bias_audio">audio…</string>
+    <string name="bias_clear">vider</string>
+
+    <!-- Nexus -->
+    <plurals name="nexus_modules">
+        <item quantity="one">%d module</item>
+        <item quantity="other">%d modules</item>
+    </plurals>
+    <plurals name="nexus_cables">
+        <item quantity="one">%d câble</item>
+        <item quantity="other">%d câbles</item>
+    </plurals>
+    <string name="nexus_patch">patch…</string>
+
+    <!-- Mosaic -->
+    <string name="mosaic_soundfont">SoundFont : %1$s   %2$s</string>
+    <string name="mosaic_loading">chargement…</string>
+    <string name="mosaic_nothing">rien de chargé</string>
+    <!-- A SoundFont preset: zones, samples, and how long they are in all. -->
+    <string name="mosaic_preset_info">%1$s zones · %2$s échantillons · %3$.1f s</string>
+    <string name="mosaic_import_soundfont">soundfont…</string>
+    <string name="mosaic_preset">préréglage…</string>
+    <string name="mosaic_samples">échantillons…</string>
+    <plurals name="mosaic_zones">
+        <item quantity="one">%d zone</item>
+        <item quantity="other">%d zones</item>
+    </plurals>
+    <string name="mosaic_spread">étalement</string>
+    <string name="mosaic_clear">vider</string>
+</resources>

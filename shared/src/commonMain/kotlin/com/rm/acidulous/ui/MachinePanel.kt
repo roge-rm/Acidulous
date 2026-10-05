@@ -1831,7 +1831,7 @@ private fun RatioPanel(b: ParamBinding) {
 // the usual style. Two registrations are shown since the machine morphs
 // between them.
 
-private val MANUAL_MODELS = listOf("wheel", "combo", "pipe", "reed")
+private val MANUAL_MODELS = listOf("wheel~organ", "combo", "pipe", "reed")
 private val MANUAL_VIB = listOf("V1", "V2", "V3", "C1", "C2", "C3")
 private val MANUAL_ROT = listOf("brake", "slow", "fast")
 private val MANUAL_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
@@ -1877,7 +1877,7 @@ private fun Drawbars(b: ParamBinding, prefix: String, names: List<String>, colou
 @Composable
 private fun ManualPanel(b: ParamBinding) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("bars", "perc", "vib", "rotary", "voice", "wind", "mod", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("bars~organ", "perc", "vib", "rotary", "voice", "wind", "mod", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
                 Group("upper A") { Drawbars(b, "ua_", MANUAL_BARS, BAR_COLOURS) }
@@ -2619,7 +2619,7 @@ private fun GenesisPanel(b: ParamBinding) {
                 Group("snare") {
                     PanelKnob(b, "snaretune", "tune", PanelAmber)
                     PanelKnob(b, "snaredecay", "decay", PanelAmber)
-                    PanelKnob(b, "snaresnap", "snap", PanelAmber)
+                    PanelKnob(b, "snaresnap", "snap~snare", PanelAmber)
                     PanelKnob(b, "snaretone", "tone")
                     PanelKnob(b, "snarelevel", "level")
                 }
@@ -3093,7 +3093,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "spread", "amount", PanelAmber)
                     PanelStepKnob(b, "scatter", POLLEN_SCATTER, "onto")
                     PanelStepKnob(b, "scale", POLLEN_SCALES, "scale")
-                    PanelStepKnob(b, "key", POLLEN_KEYS, "key")
+                    PanelStepKnob(b, "key", POLLEN_KEYS, "key~music")
                 }
             }
             3 -> {
@@ -3282,7 +3282,7 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                 PanelKnob(b, "lane${lane + 1}", "level")
                 // Labelled for the automation list, otherwise inside a card
                 // titled "lane 2" the list would read "lane 2 lane".
-                PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute"), "mute")
+                PanelSwitch(b, "mute${lane + 1}", listOf("on", "mute~lane"), "mute~lane")
             }
         }
     }
@@ -3297,7 +3297,7 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
 private val FILAMENT_EXCITERS = listOf("pluck", "pick", "hammer", "bow", "breath", "input")
 private val FILAMENT_SYM = listOf("octaves", "fifths", "major", "minor", "harmonic", "course")
 private val FILAMENT_SOURCES = listOf(
-    "off", "on", "mod", "prs", "vel", "key", "rand", "eg1", "eg2", "lfo1", "lfo2", "ring",
+    "off", "on", "mod", "prs", "vel", "key", "rand", "eg1", "eg2", "lfo1", "lfo2", "ring~level",
 )
 private val FILAMENT_DESTS = listOf(
     "off", "pitch", "sustain", "tone", "bright", "position", "pressure", "damper at", "damper",
@@ -3439,7 +3439,7 @@ private fun BrazenPanel(b: ParamBinding) {
             0 -> {
                 Group("tube") {
                     PanelKnob(b, "size", "tuba→trpt", PanelAmber)
-                    PanelKnob(b, "bell", "bell", PanelAmber)
+                    PanelKnob(b, "bell", "bell~brass", PanelAmber)
                     PanelKnob(b, "loss", "loss")
                 }
                 Group("mute") {
@@ -3564,7 +3564,7 @@ private fun DrawPanel(b: ParamBinding) {
                     PanelStepKnob(b, "low rank", (-24..-1).map { "$it" }, "low")
                 }
                 Group("harp") {
-                    PanelStepKnob(b, "harp key", DRAW_HARP_KEYS, "key", PanelAmber)
+                    PanelStepKnob(b, "harp key", DRAW_HARP_KEYS, "key~music", PanelAmber)
                     PanelStepKnob(b, "playing", listOf("player", "straight"), "playing")
                 }
             }
@@ -3604,10 +3604,10 @@ private fun DrawPanel(b: ParamBinding) {
 @Composable
 private fun TonguePanel(b: ParamBinding, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("harp", "reeds", "mouth", "keys", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("harp~jaw", "reeds", "mouth", "keys", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
-                Group("harp") {
+                Group("harp~jaw") {
                     PanelStepKnob(b, "model", TONGUE_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
                 }
@@ -3944,7 +3944,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     DictionVoiceKnob(track, trackIndex, editor)
                     PanelVowelKnob(b, "vowel", "vowel")
                     PanelKnob(b, "formant", "formant", PanelAmber)
-                    PanelKnob(b, "track", "track")
+                    PanelKnob(b, "track", "track~follow")
                 }
                 Group("cross") {
                     PanelKnob(b, "source", "source", PanelPink)
@@ -4032,7 +4032,7 @@ private fun TimberPanel(b: ParamBinding) {
                     PanelKnob(b, "body", "lowest", PanelAmber)
                 }
                 Group("end") {
-                    PanelKnob(b, "bell", "bell")
+                    PanelKnob(b, "bell", "bell~brass")
                     PanelKnob(b, "loss", "loss")
                 }
                 Group("filter") {

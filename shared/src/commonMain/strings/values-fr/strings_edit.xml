@@ -1,0 +1,95 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/EditScreen.kt, ui/PerformPanel.kt, ui/PatchEditor.kt. -->
+
+    <!-- The editor's bar: show the instrument, as pads or keys; the effects; the fill. -->
+    <string name="edit_pads">pads</string>
+    <string name="edit_keys">clavier</string>
+    <string name="edit_fx">fx</string>
+    <string name="edit_fill">fill</string>
+    <!-- How many notes are selected, on the header line. -->
+    <string name="edit_selected" tools:ignore="PluralsCandidate">%d sél.</string>
+
+    <!-- The perform pages -->
+    <string name="perform_repeat">répéter</string>
+    <string name="perform_gate">gate</string>
+    <string name="perform_reverse">inverse</string>
+    <string name="perform_stop">arrêt</string>
+    <string name="perform_riser">montée</string>
+    <string name="perform_echo">écho</string>
+    <string name="perform_feedback">retour</string>
+    <string name="perform_mute">muet</string>
+    <string name="perform_fill">fill</string>
+    <string name="perform_mute_on">muet</string>
+    <string name="perform_latch">verrou</string>
+    <!-- A setting you tap through: its name, then what it is set to. -->
+    <string name="perform_setting">%1$s : %2$s</string>
+    <!-- Where the held effects run: the whole mix, or one group. -->
+    <string name="perform_on">sur %s</string>
+    <string name="perform_on_all">tout</string>
+    <!-- The pad's two axes. -->
+    <string name="perform_x">x</string>
+    <string name="perform_y">y</string>
+    <!-- The pad's edge labels: across, low to high or rate to bits; up, how much goes into the effect. -->
+    <string name="perform_pad_low">grave</string>
+    <string name="perform_pad_high">aigu</string>
+    <string name="perform_pad_rate">fréq.</string>
+    <string name="perform_pad_bits">bits</string>
+    <string name="perform_pad_throw">envoi</string>
+    <string name="perform_pad_wash">nappe</string>
+    <string-array name="perform_kills">
+        <item>coupe grave</item>
+        <item>coupe médium</item>
+        <item>coupe aigu</item>
+    </string-array>
+    <!-- How long a tape stop takes. -->
+    <string-array name="perform_stop_lengths" tools:ignore="TypographyFractions">
+        <item>1/4</item>
+        <item>1/2</item>
+        <item>1 temps</item>
+        <item>2 temps</item>
+    </string-array>
+    <!-- How long the riser takes to climb. -->
+    <string-array name="perform_riser_lengths">
+        <item>1 mesure</item>
+        <item>2 mesures</item>
+        <item>4 mesures</item>
+    </string-array>
+    <!-- When a mute tapped on the live page lands. -->
+    <string-array name="perform_mute_on_choices">
+        <item>mesure</item>
+        <item>temps</item>
+        <item>direct</item>
+    </string-array>
+    <!-- What the pad does across. -->
+    <string-array name="perform_pad_x_modes">
+        <item>filtre</item>
+        <item>crush</item>
+    </string-array>
+    <!-- What the pad does up. -->
+    <string-array name="perform_pad_y_modes">
+        <item>écho</item>
+        <item>nappe</item>
+    </string-array>
+
+    <!-- The modular's patch editor. Module names are names and aren't translated. -->
+    <plurals name="patch_modules">
+        <item quantity="one">%d module</item>
+        <item quantity="other">%d modules</item>
+    </plurals>
+    <plurals name="patch_cables">
+        <item quantity="one">%d câble</item>
+        <item quantity="other">%d câbles</item>
+    </plurals>
+    <string name="patch_add">ajouter</string>
+    <string name="patch_fit">cadrer</string>
+    <!-- On a module on the canvas that plays one voice. -->
+    <string name="patch_mono_tag">" ·mono"</string>
+    <string name="patch_gone">disparu</string>
+    <string name="patch_poly">poly</string>
+    <string name="patch_mono">mono</string>
+    <string name="patch_remove">retirer</string>
+    <!-- A cable past the ones that have automatable depths. -->
+    <string name="patch_beyond">au-delà des deux douzaines automatisables</string>
+    <string name="patch_cut">couper</string>
+    <string name="patch_add_title">Ajouter un module</string>
+</resources>

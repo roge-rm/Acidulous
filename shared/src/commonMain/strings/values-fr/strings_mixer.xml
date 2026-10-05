@@ -1,0 +1,51 @@
+<resources>
+    <!-- ui/MixerPanel.kt: channel strips, groups, the master. Effect names and their short forms are names and aren't translated. -->
+    <!-- An empty send slot. -->
+    <string name="mixer_send">envoi %d</string>
+    <string name="mixer_group_name_title">Nom du groupe</string>
+    <!-- A new group\'s name. -->
+    <string name="mixer_group_default">Groupe %d</string>
+    <string name="mixer_group_delete_title">Supprimer %s?</string>
+    <string name="mixer_delete">Supprimer</string>
+    <string name="mixer_group_delete_note">Ses pistes retournent à la sortie principale.</string>
+    <!-- A group\'s insert slot: the group\'s name, then which slot. -->
+    <string name="mixer_group_insert">%1$s fx%2$d</string>
+    <!-- An empty insert slot. -->
+    <string name="mixer_fx_slot">fx%d</string>
+    <string name="mixer_pan">pano</string>
+    <string name="mixer_nothing_routed">rien n’est routé ici</string>
+    <!-- Mute and solo, one letter each. -->
+    <string name="mixer_mute_short">M</string>
+    <string name="mixer_solo_short">S</string>
+    <!-- Written sideways, at the end of the groups. -->
+    <string name="mixer_add_group">+ groupe</string>
+    <string name="mixer_clear_title">Vider l’automatisation de %s?</string>
+    <string name="mixer_clear">Vider</string>
+    <!-- The channel\'s controls that have lanes, as a list. -->
+    <plurals name="mixer_clear_note">
+        <item quantity="one">Sur ce canal, %s est automatisé, donc le contrôle ne restera pas où vous le placez. Vider retire ces couloirs de chaque clip de cette piste. Les notes restent intactes.</item>
+        <item quantity="other">Sur ce canal, %s sont automatisés, donc le contrôle ne restera pas où vous le placez. Vider retire ces couloirs de chaque clip de cette piste. Les notes restent intactes.</item>
+    </plurals>
+    <!-- Where the track\'s notes go: MIDI out and the machine, MIDI out only, or the machine only. -->
+    <string name="mixer_midi_both">les deux</string>
+    <string name="mixer_midi_out">sortie</string>
+    <string name="mixer_midi_off">midi</string>
+    <string name="mixer_to">→ %s</string>
+    <string name="mixer_master">général</string>
+    <!-- A master insert slot. -->
+    <string name="mixer_master_insert">général %d</string>
+    <string name="mixer_limit_drive">sat. limiteur</string>
+    <!-- Short-term loudness, and true peak. -->
+    <string name="mixer_lufs_short">S</string>
+    <string name="mixer_true_peak">TP</string>
+    <!-- An empty send, on a small button. -->
+    <string name="mixer_send_short">env%d</string>
+    <!-- The limiter, on a small button. -->
+    <string name="mixer_limiter">lim</string>
+    <!-- An effect on the way in. -->
+    <string name="mixer_input">à l’entrée %d</string>
+    <!-- An empty input slot, on a small button. -->
+    <string name="mixer_input_short">ent%d</string>
+    <string name="mixer_none">aucun</string>
+    <string name="mixer_menu">%s ▾</string>
+</resources>

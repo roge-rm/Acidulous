@@ -59,6 +59,9 @@ class WebHost : AppHost {
     }
 
     // The browser's own noise suppression and level control: see the driver.
+    // A page loads its strings once, in the browser's language.
+    override val canChooseLanguage: Boolean get() = false
+
     override val cleansInput: Boolean get() = true
 
     override val versionName: String? = VERSION_NAME

@@ -285,7 +285,7 @@ private fun SlotFace(
                 val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
                 // A knob is 58 dp wide and some names aren't. Shortened here, not in the
                 // engine, because patch files, lanes and mappings all use the engine name.
-                val shortLabel = SHORT_LABELS[p.name] ?: p.name
+                val shortLabel = shortLabelOf(type, p.name)
                 when {
                     // A few choices: buttons. Many (note values): a stepped knob that names its step.
                     p.curve == 2 && labels != null && labels.size <= 4 -> PanelSwitch(b, p.name, labels, label = shortLabel)
@@ -554,7 +554,7 @@ internal fun SongSlotFace(
     val control: @Composable (ParamInfo) -> Unit = { p ->
         val labels = switchLabels(type, p.name, p.steps)
         val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
-        val shortLabel = SHORT_LABELS[p.name] ?: p.name
+        val shortLabel = shortLabelOf(type, p.name)
         val v = value(p.name)
         when {
             p.curve == 2 && labels != null && labels.size <= 4 -> SwitchGrid(
@@ -639,3 +639,18 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                 }
             }
         }
+
+/**
+ * A slot knob's label: shortened where the engine's name is too long, and
+ * told apart where one name means different things (see PanelText.kt): a
+ * musical key from the gate's detector filter, the amp's speaker edge.
+ */
+private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name] ?: when {
+    name == "key" && type.lowercase() in MUSICAL_KEYS -> "key~music"
+    name == "key" && type.lowercase() == "gate" -> "key~detector"
+    name == "edge" && type.lowercase() == "amp" -> "edge~cone"
+    else -> name
+}
+
+/** The slots whose `key` is a musical key, not a filter's tracking. */
+private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer")

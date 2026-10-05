@@ -70,4 +70,11 @@
     <!-- The button in Settings that opens the keys window. -->
     <string name="settings_keyboard">keyboard</string>
     <string name="settings_keys_button">keys…</string>
+    <!-- Key names as a keyboard prints them, in the chips that show a shortcut. Ctrl, Alt, Tab and letters stay as they are. -->
+    <string name="keys_name_space">Space</string>
+    <string name="keys_name_enter">Enter</string>
+    <string name="keys_name_esc">Esc</string>
+    <string name="keys_name_shift">Shift</string>
+    <!-- The mouse wheel, after a key: "Ctrl+wheel". -->
+    <string name="keys_name_wheel">wheel</string>
 </resources>

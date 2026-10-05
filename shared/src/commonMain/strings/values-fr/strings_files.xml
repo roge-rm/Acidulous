@@ -1,0 +1,75 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- ui/ExportOptionsDialog.kt and ui/FileDialogs.kt: songs, patches, export. -->
+
+    <!-- The export options -->
+    <string name="export_title">Exporter</string>
+    <string name="export_confirm">Exporter</string>
+    <string name="export_file">fichier</string>
+    <string name="export_format">format</string>
+    <!-- The format that is the song and its samples in one zip. The other formats go by their own names. -->
+    <string name="export_format_bundle">paquet</string>
+    <string name="export_what">quoi</string>
+    <string name="export_what_song">morceau</string>
+    <string name="export_what_scene">cette scène</string>
+    <string name="export_what_stems">par piste</string>
+    <string name="export_sound">son</string>
+    <string name="export_kbps">kbit/s</string>
+    <string name="export_bits">bits</string>
+    <string name="export_bits_float">32 flottant</string>
+    <string name="export_tail">queue</string>
+    <string-array name="export_tail_choices">
+        <item>aucune</item>
+        <item>2 s</item>
+        <item>5 s</item>
+    </string-array>
+    <string name="export_loudness">niveau</string>
+    <string name="export_loudness_as_mixed">tel que mixé</string>
+    <string name="export_loudness_lufs">%d LUFS</string>
+    <string name="export_about_aiff">Un WAV avec un autre en-tête.</string>
+    <string name="export_about_flac">Sans perte, environ la moitié de la taille.</string>
+    <!-- LAME's licence asks for its use to be acknowledged, so keep the name. -->
+    <string name="export_about_mp3">Avec perte. Encodé par LAME.</string>
+    <string name="export_about_aac">Avec perte.</string>
+    <string name="export_about_midi">Les notes, sans le son.</string>
+    <string name="export_about_bundle">Le morceau et tous ses échantillons, dans un seul fichier.</string>
+    <string name="export_about_song">Toutes les scènes dans l’ordre, avec leurs répétitions.</string>
+    <!-- The same, naming the scene. -->
+    <string name="export_about_scene_named">La scène ouverte, une fois. (%s)</string>
+    <string name="export_about_stems">Un fichier par piste (après le volume), plus le mixage.</string>
+    <string name="export_about_normalise">Deux rendus : un pour mesurer, un pour écrire.</string>
+    <string name="export_about_no_tail">Coupe toute réverbération sur la dernière note.</string>
+    <!-- Between the lines above, which run on as one paragraph. -->
+    <string name="export_about_separator">" "</string>
+
+    <!-- The export running, and done -->
+    <string name="export_share">Partager</string>
+    <string name="export_rendering">rendu de %1$.1f s sur environ %2$.1f s</string>
+    <!-- Only ever more than one. -->
+    <plurals name="export_files_in">
+        <item quantity="one">%1$d fichier dans %2$s/</item>
+        <item quantity="other">%1$d fichiers dans %2$s/</item>
+    </plurals>
+    <!-- Length, format, depth or rate, and the loudest sample. -->
+    <string name="export_done">%1$.1f s · 48 kHz · %2$s · %3$s stéréo · crête %4$.3f</string>
+    <string name="export_kbit" tools:ignore="PluralsCandidate">%d kbit</string>
+    <string name="export_bit_float">flottant 32 bits</string>
+    <string name="export_bit">%d bits</string>
+    <string name="export_failed">Échec de l’exportation : %s</string>
+
+    <!-- Songs -->
+    <string name="songs_title">Morceaux</string>
+    <string name="songs_none">Rien d’enregistré pour l’instant.</string>
+    <string name="songs_open">ouvrir</string>
+    <string name="songs_delete_title">Supprimer « %s »?</string>
+    <string name="songs_delete">Supprimer</string>
+    <string name="songs_delete_note">Ceci supprime le fichier. Si c’est le morceau ouvert, il reste ouvert.</string>
+
+    <!-- Patches -->
+    <string name="patches_title">Sons : %s</string>
+    <string name="patches_factory">usine</string>
+    <string name="patches_user">perso</string>
+    <string name="patches_other">autres</string>
+    <string name="patches_user_none">Rien d’enregistré pour l’instant. Utilisez « enregistrer sous… » sur le panneau.</string>
+    <!-- Where a browser saves exports: the only folder a web page can write to. -->
+    <string name="files_downloads_web">Téléchargements</string>
+</resources>

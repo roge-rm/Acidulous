@@ -132,6 +132,11 @@ internal fun shareCrashReport(context: android.content.Context, report: File) {
 }
 
 class MainActivity : ComponentActivity() {
+    // In the app's own language from the first frame (see AppLanguage).
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
+
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         incomingFrom(intent)

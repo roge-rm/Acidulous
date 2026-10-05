@@ -72,6 +72,9 @@ fun main() {
     // Same setup as MainActivity.onCreate on Android, in the same order.
     AppHost.current = DesktopHost(config, crashes)
     UiPrefs.init(FilePrefs(File(config, "ui.properties")))
+    // The app's language: the one chosen in settings, or the system's.
+    DesktopHost.systemLocale = java.util.Locale.getDefault()
+    UiPrefs.language.tag?.let { java.util.Locale.setDefault(java.util.Locale.forLanguageTag(it)) }
     // Restore the last chosen output before the engine opens a stream.
     DesktopAudio.chooseOutput(UiPrefs.outputDevice)
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
