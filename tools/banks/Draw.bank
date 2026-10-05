@@ -2,27 +2,30 @@
 # reeds in pipes.
 #
 # Each note is a reed blown by the pressure across it (draw::FreeReed): it
-# speaks, settles and stops by itself, its jet turbulent. Reeds and bodies
-# are fitted to recordings note by note (tools/draw_reference/fit.py), on the
+# speaks, settles and stops by itself, its jet turbulent. A harmonica note is
+# a hole instead (draw::HarpHole): two reeds in a channel and the player's
+# mouth behind them, so bends come from the mouth. Reeds and bodies are
+# fitted to recordings note by note (tools/draw_reference/fit.py), on the
 # shape of the first twelve harmonics: accordion 5.2 dB rms (two reeds 25
 # cents apart, as the recording's are; its recordings against each other
-# 4.3), harmonica 5.1 (6.0), melodica 7.7 (7.2), brightness within half a
-# semitone; the noise between the harmonics to within 5 dB (natural.py),
-# the harmonica's pitch drift to 0.2 cents (alive.py). The accordion sounds
-# two reeds a note, 15 cents apart unless a patch says.
+# 4.3), harmonica 7.3 (6.0), melodica 7.7 (7.2), brightness within about a
+# semitone; the noise between the harmonics to within 5 dB (natural.py).
+# The accordion sounds two reeds a note, 15 cents apart unless a patch says.
 
 # Accordion patches play the `chord` phrase, the others `tune`. Values are in
 # each parameter's own units; `audition params Draw` lists them. A patch
 # names only what it changes.
 #
 # What is still wrong:
-#   - The harmonica's cycles vary in size three times as much as a played
-#     one's and in length two thirds as much; its tone moves less. The
-#     player's mouth and hands come in part 3.
+#   - A harmonica's tone moves about half as much from moment to moment as a
+#     played one's: more breath wander puts its bends out of tune.
+#   - Hole 1 hardly bends and holes 8 to 10 bend a little less than a real
+#     harp's; those notes play on a reed of their own instead.
+#   - The top hole (C7) is too bright.
 #   - The accordion's 3rd and 4th harmonics are about 10 dB strong; the
 #     melodica's middle harmonics weak.
-#   - Only accordion, melodica and a plain harmonica reed so far; the other
-#     kinds play the nearest of those.
+#   - Harmonium, concertina, bandoneon and the pipes play the nearest of the
+#     others.
 
 machine Draw
 role    tune
@@ -64,6 +67,31 @@ patch "Breathy Melodica" family=melodica note=64 range=53..77
 
 # --- harmonica ---------------------------------------------------------------
 
-patch "Plain Harp" family=harmonica note=60 range=60..84
-  # A harmonica's reed on its own, before its mouth and hands.
+patch "Harp" family=harmonica note=60 range=60..84
+  # A C harp played like a player: notes off the harp bent or on a reed of their own.
   model          0      # diatonic
+
+patch "Cupped Harp" family=harmonica note=60 range=60..84
+  # Hands round the harp and a throat vibrato.
+  model          0      # diatonic
+  cup            0.55
+  vibrato        0.35
+  "vib rate"     5.5
+
+patch "Straight Harp" family=harmonica note=60 range=60..84
+  # Every note on a reed of its own: no bends, every note as clean as the next.
+  model          0      # diatonic
+  playing        1      # straight
+
+patch "Chromatic" family=harmonica note=60 range=60..84
+  model          1      # chromatic
+  vibrato        0.2
+  "vib rate"     6
+
+patch "Tremolo Harp" family=harmonica note=60 range=60..84
+  # Two reeds a note, 12 cents apart.
+  model          2      # tremolo harp
+  detune         12
+
+patch "Octave Harp" family=harmonica note=60 range=60..84
+  model          3      # octave harp

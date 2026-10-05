@@ -3,6 +3,7 @@
 #include <engine/machine/Machine.h>
 #include <engine/machine/draw/DrawKinds.h>
 #include <engine/machine/draw/FreeReed.h>
+#include <engine/machine/draw/HarpHole.h>
 
 namespace acidulous::machine {
 
@@ -15,6 +16,11 @@ namespace acidulous::machine {
  * stops on its own. Velocity and pressure blow harder, which brightens the
  * sound as a real reed's does; the level follows the house law. Each reed is
  * tuned to sound its note (DrawTuning.h, as a maker files a reed).
+ *
+ * Harmonicas are holes instead (draw::HarpHole): two reeds in a channel and
+ * the player's mouth behind them. Played like a player, a note goes where a
+ * player would find it on a Richter harp in the harp's key, natural or bent,
+ * and the pitch wheel bends it by moving the tongue (DrawHarp.h).
  */
 class Draw final : public Machine {
   public:
@@ -22,6 +28,7 @@ class Draw final : public Machine {
         Model = 0, Tune, Pressure, Attack, Release, Set, Chamber, Air,
         Voices, VelocityAmount, BendRange, Octave, Volume,
         Reeds, Detune,
+        HarpKey, Playing, Cup, Vibrato, VibratoRate,
         Count
     };
     static_assert(Count <= kMaxParams, "too many parameters");
@@ -35,6 +42,7 @@ class Draw final : public Machine {
     void noteOn(uint8_t note, uint8_t velocity) override;
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
+    void controlChange(uint8_t cc, uint8_t value) override;
     void pitchBend(int16_t value14) override;
     void channelPressure(uint8_t value) override;
     void notePressure(uint8_t note, uint8_t value) override;
@@ -46,6 +54,8 @@ class Draw final : public Machine {
     const draw::FreeReed *reedFor(uint8_t note) const;
     /** Reeds a note sounds at most. */
     static constexpr int kReeds = 3;
+    /** How a harmonica note is played: on a hole as it is, bent, or on a reed of its own. */
+    enum HarpWay : int32_t { Natural = 0, Bent, Single };
 
   private:
     static constexpr int kVoices = 8;
@@ -72,6 +82,23 @@ class Draw final : public Machine {
         float level = 0.0f;
         /** The breath's or bellows' slow wander: a smoothed noise, two poles. */
         float wander1 = 0.0f, wander2 = 0.0f;
+        /** A harmonica's holes (two on a tremolo or octave harp), none for other kinds. */
+        draw::HarpHole holes[2];
+        int holeCount = 0;
+        /** Blown (+1) or drawn (-1). */
+        float sign = 1.0f;
+        /** How the note is played, on which hole, and how far the note itself is bent, semitones. */
+        int32_t way = Single;
+        int hole = 0, bentBy = 0, key = 5;
+        /** The mouth's resonance, Hz, and where it's going. */
+        float mouth = 3000.0f, mouthAim = 3000.0f;
+        /** How fast the tongue is moving, octaves a second, and its unsteadiness, a smoothed noise. */
+        float mouthSpeed = 0.0f, tongue1 = 0.0f, tongue2 = 0.0f;
+        /** A bend held by ear: whether it's listening, the note it wants, Hz, and how far it has moved the tongue, octaves. */
+        bool listening = false;
+        float wanted = 440.0f, ear = 0.0f;
+        /** How much harder than the note's own breath a bend is blown, and where that's going. */
+        float breath = 1.0f, breathAim = 1.0f;
         int quietBlocks = 0;
         uint32_t age = 0;
     };
@@ -83,6 +110,10 @@ class Draw final : public Machine {
     /** The pressure a held voice is blown at, Pa. */
     float aimFor(const Voice &v) const;
     draw::ReedMake makeFor(int32_t kind) const;
+    /** Places a harmonica note: which hole and how, or a reed of its own. */
+    void planHarp(Voice &v);
+    /** Makes a harmonica voice's reeds and aims its mouth for the note and the pitch wheel. */
+    void retuneHarp(Voice &v);
 
     Voice voices[kVoices];
     float sampleRate = 48000.0f;
@@ -91,6 +122,13 @@ class Draw final : public Machine {
     float lowState = 0.0f;
     float bodyX1 = 0.0f, bodyX2 = 0.0f, bodyY1 = 0.0f, bodyY2 = 0.0f;
     float dcIn = 0.0f, dcOut = 0.0f;
+    /** The hands cupped round a harp: a low-pass, its two states, its coefficients and the share that leaks past. */
+    float cupLow = 0.0f, cupBand = 0.0f, cupG = 0.0f, cupK = 1.0f, cupLeak = 1.0f;
+    /** Where the hands are, 0 open to 1 closed, how fast they're moving, and their tremble. */
+    float hand = 0.0f, handSpeed = 0.0f, handNoise1 = 0.0f, handNoise2 = 0.0f;
+    /** The mod wheel, 0 to 1; the throat's vibrato, its phase in turns, and this cycle's rate and depth. */
+    float wheel = 0.0f, vibratoPhase = 0.0f, vibratoRate = 1.0f, vibratoDepth = 1.0f;
+    int mouthCountdown = 0;
     uint32_t noise = 0x2545f491u, clock = 0;
     int quietSamples = 0;
     bool asleep = true;

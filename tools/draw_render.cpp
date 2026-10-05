@@ -2,13 +2,18 @@
 // as it read the recordings.
 //
 //   draw_render <out.wav> [--note N[,N...]] [--velocity V] [--seconds S]
-//               [--hold S] [--pressure P] [name=value ...]
+//               [--hold S] [--pressure P] [--bend B] [--wheel W] [name=value ...]
 // One note (or a chord) held for --hold seconds (default: to the end), then
 // let go. --pressure sends that channel pressure (0 to 127) all along.
+// --bend and --wheel sweep the pitch bend (-1 to 1) and the mod wheel (0 to
+// 1) from nothing out to B or W and back, twice over the note; --steps K
+// moves them in K steps instead, as a player bends by semitones. --wah R
+// opens and closes the mod wheel about R times a second, unevenly.
 #include <engine/core/Constants.h>
 #include <engine/format/WavWriter.h>
 #include <engine/machine/MachineRegistry.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -33,6 +38,8 @@ int main(int argc, char **argv) {
     const std::string out = argv[1];
     std::vector<int> notes = {60};
     int velocity = 100, pressure = -1;
+    float bendTo = 0.0f, wheelTo = 0.0f, wah = 0.0f;
+    int steps = 0;
     float seconds = 3.0f, hold = -1.0f;
     std::unique_ptr<Machine> m(MachineRegistry::create("Draw"));
     m->prepare(kRate);
@@ -55,6 +62,10 @@ int main(int argc, char **argv) {
         else if (a == "--seconds") seconds = static_cast<float>(next());
         else if (a == "--hold") hold = static_cast<float>(next());
         else if (a == "--pressure") pressure = static_cast<int>(next());
+        else if (a == "--bend") bendTo = static_cast<float>(next());
+        else if (a == "--wheel") wheelTo = static_cast<float>(next());
+        else if (a == "--steps") steps = static_cast<int>(next());
+        else if (a == "--wah") wah = static_cast<float>(next());
         else if (a.find('=') != std::string::npos) {
             const std::string name = a.substr(0, a.find('='));
             const float value = static_cast<float>(std::atof(a.c_str() + a.find('=') + 1));
@@ -74,10 +85,30 @@ int main(int argc, char **argv) {
     float peak = 0.0f;
     double power = 0.0;
     bool down = true;
+    uint32_t seed = 12345u;
+    float wahNext = 0.5f;
+    bool wahShut = false;
     for (int64_t t = 0; t < total; t += kBlock) {
         if (down && t >= release) {
             for (int n : notes) m->noteOff(static_cast<uint8_t>(n));
             down = false;
+        }
+        if (bendTo != 0.0f || wheelTo != 0.0f) {
+            // Out and back twice: a triangle that starts after the note has spoken.
+            const float span = static_cast<float>(std::min(release, total)) / kRate - 0.4f;
+            const float at = static_cast<float>(t) / kRate - 0.4f;
+            const float phase = span > 0.0f ? std::fmod(std::fmax(at, 0.0f) / span * 2.0f, 1.0f) : 0.0f;
+            float tri = at <= 0.0f || at >= span ? 0.0f : 1.0f - std::fabs(2.0f * phase - 1.0f);
+            if (steps > 0) tri = std::round(tri * static_cast<float>(steps)) / static_cast<float>(steps);
+            if (bendTo != 0.0f) m->pitchBend(static_cast<int16_t>(std::clamp(bendTo * tri, -1.0f, 1.0f) * 8191.0f));
+            if (wheelTo != 0.0f) m->controlChange(1, static_cast<uint8_t>(std::clamp(wheelTo * tri, 0.0f, 1.0f) * 127.0f));
+        }
+        if (wah > 0.0f && static_cast<float>(t) / kRate >= wahNext && t < release) {
+            wahShut = !wahShut;
+            m->controlChange(1, wahShut ? 127 : 0);
+            seed = seed * 1664525u + 1013904223u;
+            const float spread = 0.7f + 0.6f * static_cast<float>(seed >> 8) / 16777216.0f;
+            wahNext += spread / (2.0f * wah);
         }
         m->render(L, R, kBlock);
         for (int i = 0; i < kBlock; ++i) {

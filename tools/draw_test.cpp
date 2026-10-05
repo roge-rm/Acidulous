@@ -1,11 +1,15 @@
 // Draw, the free reeds: in tune across the range, brighter and barely flatter
 // blown harder, the harmonics entering in order, silent when blown too
-// gently, stopping when let go, and pressure for one note at a time.
+// gently, stopping when let go, and pressure for one note at a time. The
+// harmonicas: every note of a harp played like a player in tune, natural
+// or bent (a bend wanders as a player's does, so to 10 cents on average); the straight and chromatic harps in tune; the wheel
+// bending a draw note down with the mouth; cupped hands darker.
 //
 //   draw_test.sh
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/draw/Draw.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
@@ -119,7 +123,7 @@ double noteHz(double n) { return 440.0 * std::pow(2.0, (n - 69.0) / 12.0); }
 void tuning() {
     std::printf("tuning\n");
     // Each instrument over the notes it's made for.
-    const int ranges[][3] = {{0, 48, 96}, {4, 33, 96}, {7, 53, 89}};
+    const int ranges[][3] = {{4, 33, 96}, {7, 53, 89}};
     for (const auto &range : ranges) {
         const int model = range[0];
         double worst = 0.0, at = 0.0;
@@ -203,6 +207,61 @@ void perNote() {
     check(g4 > 1.0 && std::fabs(c4) < 0.5, "a note's own pressure blows that note harder", fmt("G4 %+.1f dB, C4 %+.1f dB", g4, c4));
 }
 
+/** Plays [note] on [knobs] and returns how far from it the strongest pitch near it is, cents. */
+double playedCents(std::initializer_list<std::pair<const char *, float>> knobs, int note, double wheel = 0.0) {
+    Reeds r(knobs);
+    if (wheel != 0.0) r.d->pitchBend(static_cast<int16_t>(wheel * 8191.0));
+    r.d->noteOn(static_cast<uint8_t>(note), 100);
+    // Two seconds: a bend wanders as a player's does, and is in tune on average.
+    r.play(2.5);
+    const double f = noteHz(note);
+    const double lo = wheel < 0.0 ? f * std::pow(2.0, -4.0 / 12.0) : f * std::pow(2.0, -0.8 / 12.0);
+    // The pitch in 85 ms windows, and its median: a wandering bend is heard at the middle of its wander.
+    std::vector<double> track;
+    for (double t = 0.5; t + 0.085 <= 2.5; t += 0.085) track.push_back(cents(r.peak(lo, f * std::pow(2.0, 0.8 / 12.0), t, t + 0.085), f));
+    std::sort(track.begin(), track.end());
+    const double c = track[track.size() / 2];
+    if (std::getenv("VERBOSE")) std::printf("    note %d: %+.1f c\n", note, c);
+    return c;
+}
+
+void harps() {
+    std::printf("harmonicas\n");
+    // Like a player on a C harp: C4 to C7, every note there's a way to play.
+    double worst = 0.0;
+    int at = 0;
+    for (int note = 60; note <= 96; ++note) {
+        const double c = playedCents({{"model", 0.0f}}, note);
+        if (std::fabs(c) > std::fabs(worst)) { worst = c; at = note; }
+    }
+    check(std::fabs(worst) < 10.0, "a C harp like a player, every note in tune", fmt("worst %+.2f c at note %d", worst, at));
+    worst = 0.0;
+    for (int note = 55; note <= 91; note += 2) {
+        const double c = playedCents({{"model", 0.0f}, {"harp key", 0.0f}}, note);
+        if (std::fabs(c) > std::fabs(worst)) { worst = c; at = note; }
+    }
+    check(std::fabs(worst) < 10.0, "a G harp like a player, in tune", fmt("worst %+.2f c at note %d", worst, at));
+    for (const int model : {0, 1, 2, 3}) {
+        worst = 0.0;
+        for (int note = 48; note <= 96; note += 5) {
+            const double c = playedCents({{"model", static_cast<float>(model)}, {"playing", 1.0f}, {"detune", 0.0f}}, note);
+            if (std::fabs(c) > std::fabs(worst)) { worst = c; at = note; }
+        }
+        check(std::fabs(worst) < 5.0, fmt("straight, model %d, in tune", model).c_str(), fmt("worst %+.2f c at note %d", worst, at));
+    }
+    // Hole 3 draw (B4) bends three semitones; the wheel full down with a range of 3 takes it there.
+    const double bent = playedCents({{"model", 0.0f}, {"bend", 3.0f}}, 71, -1.0);
+    check(bent < -250.0 && bent > -330.0, "hole 3 draw, the wheel bends it down with the mouth", fmt("%+.0f c", bent));
+    Reeds open({{"model", 0.0f}}), cupped({{"model", 0.0f}, {"cup", 1.0f}});
+    open.d->noteOn(67, 100);
+    cupped.d->noteOn(67, 100);
+    open.play(0.8);
+    cupped.play(0.8);
+    const double f = noteHz(67);
+    check(cupped.centroid(f, 0.4, 0.8) < 0.8 * open.centroid(f, 0.4, 0.8), "cupped hands are darker",
+          fmt("centroid %.0f against %.0f Hz", cupped.centroid(f, 0.4, 0.8), open.centroid(f, 0.4, 0.8)));
+}
+
 } // namespace
 
 int main() {
@@ -213,6 +272,7 @@ int main() {
     attack();
     threshold();
     perNote();
+    harps();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -3335,12 +3335,37 @@ internal object FactoryBanks {
         family = "melodica",
         low = 53, high = 77)
 
-    private fun draw7() = Patch("Draw", "Plain Harp",
+    private fun draw7() = Patch("Draw", "Harp",
         mapOf("model" to 0f),
         family = "harmonica",
         low = 60, high = 84)
 
-    private val draw: List<Patch> by lazy { listOf(draw0(), draw1(), draw2(), draw3(), draw4(), draw5(), draw6(), draw7()) }
+    private fun draw8() = Patch("Draw", "Cupped Harp",
+        mapOf("model" to 0f, "cup" to 0.55f, "vibrato" to 0.35f, "vib rate" to 0.5f),
+        family = "harmonica",
+        low = 60, high = 84)
+
+    private fun draw9() = Patch("Draw", "Straight Harp",
+        mapOf("model" to 0f, "playing" to 1f),
+        family = "harmonica",
+        low = 60, high = 84)
+
+    private fun draw10() = Patch("Draw", "Chromatic",
+        mapOf("model" to 0.0833333358f, "vibrato" to 0.2f, "vib rate" to 0.5714286f),
+        family = "harmonica",
+        low = 60, high = 84)
+
+    private fun draw11() = Patch("Draw", "Tremolo Harp",
+        mapOf("model" to 0.166666672f, "detune" to 0.3f),
+        family = "harmonica",
+        low = 60, high = 84)
+
+    private fun draw12() = Patch("Draw", "Octave Harp",
+        mapOf("model" to 0.25f),
+        family = "harmonica",
+        low = 60, high = 84)
+
+    private val draw: List<Patch> by lazy { listOf(draw0(), draw1(), draw2(), draw3(), draw4(), draw5(), draw6(), draw7(), draw8(), draw9(), draw10(), draw11(), draw12()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

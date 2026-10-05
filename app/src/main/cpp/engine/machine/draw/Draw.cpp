@@ -1,6 +1,7 @@
 #include "Draw.h"
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
+#include <engine/machine/draw/DrawHarp.h>
 #include <engine/machine/draw/DrawTuning.h>
 #include <algorithm>
 #include <cmath>
@@ -23,14 +24,73 @@ constexpr float kLoudPower = 0.5f;
 /** The breath's own noise against the reed. */
 constexpr float kHiss = 0.03f;
 /**
+ * A reed behind a valve loses no air to a partner and sounds louder than a
+ * hole: this evens a harp's notes played either way.
+ */
+constexpr float kValvedReed = 0.62f;
+/** A harp hole sounds weaker than a lone reed at the same gain: the hiss against it, as a share. */
+constexpr float kHarpHiss = 0.5f;
+/**
  * White noise smoothed by two 4 Hz poles keeps about a tenth of its swing;
  * this brings it back so a kind's wander is the share it says.
  */
 constexpr float kWanderScale = 10.0f;
 /** A note's other reeds against its first: two reeds never match. */
 constexpr float kOtherReed = 0.8f;
+/** The mouth's sharpness behind a harp, as the hole tables were made with. */
+constexpr float kMouthQ = 6.0f;
+/** How often the mouth and hands are moved, samples. */
+constexpr int kMouthEvery = 16;
+/**
+ * The tongue moves as a muscle does, a little past where it's going, Hz and
+ * damping; and is never held quite still, a share of the mouth's resonance.
+ * An unbent note hardly notices; a bend, which hangs on the mouth, wanders.
+ */
+constexpr float kTongueHz = 10.0f, kTongueDamping = 0.6f, kTongueWander = 0.12f, kTongueWanderHz = 3.0f;
+/**
+ * The player's ear: on a bend, the tongue is moved toward the note heard
+ * against the note wanted, octaves of mouth a second per octave out; and
+ * never further than this from where the tables put it, octaves.
+ */
+constexpr float kEarGain = 12.0f, kEarReach = 0.15f;
+/** A player draws harder into a bend: the breath's rise per semitone bent, up to two. */
+constexpr float kBendBreath = 0.8f;
+/** Where a bent note starts: this far from the bend toward the unbent note, in octaves of the mouth as a share. */
+constexpr float kScoop = 0.3f;
+/**
+ * The throat's vibrato at full: mostly the airway narrowing, which takes the
+ * level down with little change of pitch, and a little of the breath and of
+ * the mouth's resonance. Shares of each.
+ */
+constexpr float kThroatLevel = 0.5f, kThroatPressure = 0.08f, kThroatMouth = 0.004f;
+/** No two vibrato cycles alike: how far each one's rate and depth stray. */
+constexpr float kVibratoRateSpread = 0.3f, kVibratoDepthSpread = 0.7f;
+/** The hands: how fast they move, Hz and damping, and how much they tremble, a share of their travel. */
+constexpr float kHandHz = 4.0f, kHandDamping = 0.7f, kHandTremor = 0.05f, kHandTremorHz = 6.0f;
+/** Cupped hands: the low-pass open and closed, Hz; and what leaks past the fingers closed. */
+constexpr float kCupOpen = 7000.0f, kCupClosed = 900.0f, kCupLeak = 0.25f;
 /** Below this a voice is silent. */
 constexpr float kSilent = 2e-5f;
+
+bool isHarp(int32_t kind) { return kind <= OctaveHarp; }
+
+/** A valved reed's tuning at [note] (DrawHarp.h), between notes in a straight line. */
+float singleTune(float note) {
+    const float at = clampf(note - static_cast<float>(kHarpSingleLow), 0.0f, static_cast<float>(kHarpSingleCount - 1));
+    const int lo = std::min(kHarpSingleCount - 2, static_cast<int>(at));
+    return kHarpSingle[lo] + (kHarpSingle[lo + 1] - kHarpSingle[lo]) * (at - static_cast<float>(lo));
+}
+
+/** The mouth for a bend of [quarters] quarter semitones on a hole, as deep as the hole goes. */
+float bendMouthAt(const HarpHoleMap &m, float quarters) {
+    int deepest = 0;
+    while (deepest < 12 && m.bendMouth[deepest + 1] > 0.0f) ++deepest;
+    const float q = clampf(quarters, 0.0f, static_cast<float>(deepest));
+    const int lo = std::min(static_cast<int>(q), std::max(deepest - 1, 0));
+    if (deepest == 0) return m.bendMouth[0];
+    const float t = q - static_cast<float>(lo);
+    return m.bendMouth[lo] * std::pow(m.bendMouth[lo + 1] / m.bendMouth[lo], t);
+}
 
 uint32_t nextRandom(uint32_t &s) {
     s ^= s << 13;
@@ -67,6 +127,14 @@ const ParamDef *Draw::paramDefs(int32_t &count) const {
         {"reeds", 0.0f, static_cast<float>(kReeds), 0.0f, Curve::Stepped, kReeds + 1, ""},
         // How far a note's reeds are tuned apart: dry at 0, wet at 25 and more.
         {"detune", 0.0f, 40.0f, 15.0f, Curve::Linear, 0, "cents"},
+        // A harmonica's key, G up to F#; C by default.
+        {"harp key", 0.0f, static_cast<float>(kHarpKeys - 1), 5.0f, Curve::Stepped, kHarpKeys, ""},
+        // Like a player (each note on a hole, bent where a player bends it) or straight (each note a reed of its own).
+        {"playing", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        // The hands round the harp, open to closed; the mod wheel adds to it.
+        {"cup", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"vibrato", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"vib rate", 2.0f, 9.0f, 5.0f, Curve::Linear, 0, "Hz"},
     };
     count = Count;
     return defs;
@@ -76,6 +144,7 @@ void Draw::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
     for (Voice &v : voices) {
         for (FreeReed &r : v.reeds) r.prepare(sampleRate);
+        for (HarpHole &h : v.holes) h.prepare(sampleRate);
     }
     reset();
 }
@@ -87,6 +156,11 @@ void Draw::reset() {
             r.clear();
             r.seed(seed += 0x9e3779b9u);
         }
+        for (HarpHole &h : v.holes) {
+            h.clear();
+            h.seed(seed += 0x9e3779b9u);
+        }
+        v.holeCount = 0;
         v.wander1 = v.wander2 = 0.0f;
         v.used = v.held = false;
         v.blown = v.aim = 0.0f;
@@ -98,6 +172,13 @@ void Draw::reset() {
     lowState = 0.0f;
     bodyX1 = bodyX2 = bodyY1 = bodyY2 = 0.0f;
     dcIn = dcOut = 0.0f;
+    cupLow = cupBand = 0.0f;
+    hand = handSpeed = handNoise1 = handNoise2 = 0.0f;
+    cupG = 0.0f;
+    cupK = cupLeak = 1.0f;
+    wheel = vibratoPhase = 0.0f;
+    vibratoRate = vibratoDepth = 1.0f;
+    mouthCountdown = 0;
     noise = 0x2545f491u;
     clock = 0;
     quietSamples = 0;
@@ -148,6 +229,10 @@ ReedMake Draw::makeFor(int32_t kind) const {
 }
 
 void Draw::retune(Voice &v) {
+    if (v.holeCount > 0) {
+        retuneHarp(v);
+        return;
+    }
     const float note = v.baseNote + bend * paramOf(BendRange);
     // Each reed is filed to sound its note: the table says how far its own
     // frequency sits from what it plays, between notes in a straight line.
@@ -163,6 +248,84 @@ void Draw::retune(Voice &v) {
         const float off = v.count == 3 ? apart * static_cast<float>(i - 1) : apart * static_cast<float>(i);
         v.reeds[i].make(clampf(noteHz(note) * std::pow(2.0f, (cents + off) / 1200.0f), 27.5f, 4500.0f), make);
     }
+}
+
+void Draw::planHarp(Voice &v) {
+    v.key = std::clamp(steppedTargetOf(HarpKey), 0, kHarpKeys - 1);
+    v.holeCount = v.kind == TremoloHarp || v.kind == OctaveHarp ? 2 : 1;
+    v.way = Single;
+    v.sign = 1.0f;
+    v.hole = v.bentBy = 0;
+    if (v.kind != Diatonic || steppedTargetOf(Playing) != 0) return;
+    // As a player finds it: a hole's own note first, then a bend.
+    const int note = static_cast<int>(std::lround(v.baseNote)) - 60 - kHarpKeyShift[v.key];
+    for (int h = 0; h < kHarpHoles; ++h) {
+        if (note == kRichterBlow[h] || note == kRichterDraw[h]) {
+            v.way = Natural;
+            v.hole = h;
+            v.sign = note == kRichterBlow[h] ? 1.0f : -1.0f;
+            return;
+        }
+    }
+    for (int h = 0; h < kHarpHoles; ++h) {
+        const int high = std::max(kRichterBlow[h], kRichterDraw[h]), low = std::min(kRichterBlow[h], kRichterDraw[h]);
+        if (note > low && note < high && kHarpMaps[v.key][h].bendMouth[4 * (high - note)] > 0.0f) {
+            v.way = Bent;
+            v.hole = h;
+            v.bentBy = high - note;
+            v.sign = kRichterDraw[h] > kRichterBlow[h] ? -1.0f : 1.0f;
+            return;
+        }
+    }
+    // Anything else, overblows and overdraws among it, sounds on a reed of
+    // its own: an overblow is the one reed speaking above its note, and
+    // only steady in a narrow band of the breath and the mouth.
+}
+
+void Draw::retuneHarp(Voice &v) {
+    const ReedMake make = makeFor(v.kind);
+    const float wheelBend = bend * paramOf(BendRange);
+    if (v.way == Single) {
+        // A reed of its own behind a valve; the wheel moves the note.
+        const float note = v.baseNote + wheelBend;
+        const float apart = clampf(targetOf(Detune), 0.0f, 40.0f);
+        for (int h = 0; h < v.holeCount; ++h) {
+            // A tremolo harp's second reed is tuned apart; an octave harp's an octave up.
+            const float at = v.kind == OctaveHarp && h == 1 ? note + 12.0f : note;
+            const float off = v.kind == TremoloHarp && h == 1 ? apart : 0.0f;
+            const float hz = noteHz(at) * std::pow(2.0f, (singleTune(at) + off) / 1200.0f);
+            v.holes[h].make(clampf(hz, 27.5f, 4500.0f), clampf(hz * 1.122462f, 27.5f, 4500.0f), make);
+            v.holes[h].valves(true);
+        }
+        v.mouthAim = openMouth(noteHz(note), noteHz(note) * 1.122462f);
+        v.listening = false;
+        v.breathAim = 1.0f;
+        return;
+    }
+    const HarpHoleMap &m = kHarpMaps[v.key][v.hole];
+    const float shift = static_cast<float>(kHarpKeyShift[v.key]);
+    // What the note's tune leaves over the hole's own notes is put right by moving both reeds.
+    float cents = (v.baseNote - std::round(v.baseNote)) * 100.0f;
+    const bool bends = v.way == Bent || (kRichterDraw[v.hole] > kRichterBlow[v.hole]) == (v.sign < 0.0f);
+    if (bends) {
+        // The wheel down bends further with the tongue, as deep as the hole goes; up moves the reeds.
+        const float quarters = 4.0f * (static_cast<float>(v.bentBy) + std::fmax(0.0f, -wheelBend));
+        v.mouthAim = bendMouthAt(m, quarters);
+        // A bend is held by ear, to the note it's meant to be, and blown harder.
+        v.listening = quarters > 0.0f;
+        v.breathAim = 1.0f + kBendBreath * std::fmin(2.0f, 0.25f * quarters);
+        v.wanted = noteHz(v.baseNote + wheelBend);
+        cents += 100.0f * std::fmax(0.0f, wheelBend);
+    } else {
+        v.listening = false;
+        v.breathAim = 1.0f;
+        v.mouthAim = m.bendMouth[0];
+        cents += 100.0f * wheelBend;
+    }
+    const float blowHz = noteHz(60.0f + shift + static_cast<float>(kRichterBlow[v.hole])) * std::pow(2.0f, (m.blowTune + cents) / 1200.0f);
+    const float drawHz = noteHz(60.0f + shift + static_cast<float>(kRichterDraw[v.hole])) * std::pow(2.0f, (m.drawTune + cents) / 1200.0f);
+    v.holes[0].make(clampf(blowHz, 27.5f, 4500.0f), clampf(drawHz, 27.5f, 4500.0f), make);
+    v.holes[0].valves(false);
 }
 
 float Draw::aimFor(const Voice &v) const {
@@ -187,15 +350,30 @@ void Draw::noteOn(uint8_t note, uint8_t velocity) {
     v->held = true;
     v->pressure = -1.0f;
     const int knob = steppedTargetOf(Reeds);
-    const int count = std::clamp(knob > 0 ? knob : kKindVoices[v->kind].reeds, 1, kReeds);
-    if (!sounding || count != v->count) {
+    const int count = isHarp(v->kind) ? 1 : std::clamp(knob > 0 ? knob : kKindVoices[v->kind].reeds, 1, kReeds);
+    const int wasHoles = v->holeCount, wasHole = v->hole, wasWay = v->way;
+    const float wasSign = v->sign;
+    v->holeCount = 0;
+    if (isHarp(v->kind)) planHarp(*v);
+    // Played again the same way, the reeds go on swinging; otherwise they start from rest.
+    const bool same = sounding && count == v->count && v->holeCount == wasHoles &&
+                      (v->holeCount == 0 || (v->hole == wasHole && v->way == wasWay && v->sign == wasSign));
+    if (!same) {
         for (FreeReed &r : v->reeds) r.clear();
+        for (HarpHole &h : v->holes) h.clear();
         v->blown = 0.0f;
     }
     v->count = count;
     // Reeds sounding together share the level.
-    v->share = 1.0f / std::sqrt(static_cast<float>(count));
+    v->share = 1.0f / std::sqrt(static_cast<float>(v->holeCount > 1 ? v->holeCount : count));
     retune(*v);
+    if (!same) {
+        // A bend is scooped into from a little above, as a player does: the reed speaks at once and is taken down.
+        v->mouth = v->holeCount > 0 && v->way == Bent ? v->mouthAim * std::pow(kHarpMaps[v->key][v->hole].bendMouth[0] / v->mouthAim, kScoop) : v->mouthAim;
+        v->breath = v->breathAim;
+        v->mouthSpeed = v->tongue1 = v->tongue2 = v->ear = 0.0f;
+        for (int h = 0; h < v->holeCount; ++h) v->holes[h].shapeMouth(v->mouth, kMouthQ);
+    }
     v->aim = aimFor(*v);
     v->struck = std::fmax(v->aim, 1.0f);
     v->squeeze = 1.0f;
@@ -204,6 +382,7 @@ void Draw::noteOn(uint8_t note, uint8_t velocity) {
     const KindVoice &k = kKindVoices[v->kind];
     v->gain = kHouse * k.level * velocityGain(v->velocity, targetOf(VelocityAmount)) /
               std::pow(std::fmax(v->aim, 1.0f) / k.pressure, kLoudPower);
+    if (v->holeCount > 0 && v->way == Single) v->gain *= kValvedReed;
     v->used = true;
     v->quietBlocks = 0;
     v->age = ++clock;
@@ -227,6 +406,10 @@ void Draw::allNotesOff() {
             v.aim = 0.0f;
         }
     }
+}
+
+void Draw::controlChange(uint8_t cc, uint8_t value) {
+    if (cc == 1) wheel = static_cast<float>(value) / 127.0f;
 }
 
 void Draw::pitchBend(int16_t value14) {
@@ -271,6 +454,17 @@ bool Draw::render(float *L, float *R, int32_t frames) {
     const float release = std::fmax(0.005f, targetOf(Release) * 0.001f) * sampleRate;
     const float squeezeFollow = 1.0f - std::exp(-1.0f / (0.02f * sampleRate));
     const float wanderFollow = 1.0f - std::exp(-6.2831853f * 4.0f / sampleRate);
+    // The tongue and hands move every kMouthEvery samples, as a muscle does:
+    // a spring toward where they're going, a little underdamped.
+    const float control = static_cast<float>(kMouthEvery) / sampleRate;
+    const float tongueW = 6.2831853f * kTongueHz, handW = 6.2831853f * kHandHz;
+    const float tongueNoiseFollow = 1.0f - std::exp(-6.2831853f * kTongueWanderHz * control);
+    const float handNoiseFollow = 1.0f - std::exp(-6.2831853f * kHandTremorHz * control);
+    // The throat's vibrato moves the breath and, a little, the mouth.
+    const float vibrato = clampf(paramOf(Vibrato), 0.0f, 1.0f);
+    const float vibratoStep = clampf(paramOf(VibratoRate), 2.0f, 9.0f) / sampleRate;
+    const float handAim = clampf(paramOf(Cup) + wheel, 0.0f, 1.0f);
+    const float breathFollow = 1.0f - std::exp(-1.0f / (0.03f * sampleRate));
 
     // Each voice's breath or bellows: a straight rise to the pressure over
     // the attack, and down over the release.
@@ -286,6 +480,29 @@ bool Draw::render(float *L, float *R, int32_t frames) {
     bool any = false;
     for (int32_t i = 0; i < frames; ++i) {
         float sum = 0.0f;
+        vibratoPhase += vibratoStep * vibratoRate;
+        if (vibratoPhase >= 1.0f) {
+            // Each cycle its own speed and depth, as a throat's are.
+            vibratoPhase -= 1.0f;
+            vibratoRate = 1.0f + kVibratoRateSpread * white(noise);
+            vibratoDepth = 1.0f + kVibratoDepthSpread * white(noise);
+        }
+        const float throat = vibrato > 0.0f ? vibrato * vibratoDepth * std::sin(6.2831853f * vibratoPhase) : 0.0f;
+        const bool reshape = --mouthCountdown <= 0;
+        if (reshape) {
+            mouthCountdown = kMouthEvery;
+            // The hands, trembling only when they're round the harp.
+            handNoise1 += (white(noise) - handNoise1) * handNoiseFollow;
+            handNoise2 += (handNoise1 - handNoise2) * handNoiseFollow;
+            const float tremor = kHandTremor * kWanderScale * handNoise2 * std::fmin(1.0f, 4.0f * handAim);
+            handSpeed += (handW * handW * (handAim + tremor - hand) - 2.0f * kHandDamping * handW * handSpeed) * control;
+            hand = clampf(hand + handSpeed * control, 0.0f, 1.0f);
+            if (hand > 1e-4f) {
+                cupG = std::tan(3.14159265f * kCupOpen * std::pow(kCupClosed / kCupOpen, hand) / sampleRate);
+                cupK = 1.0f / (0.6f + 0.4f * hand);
+                cupLeak = 1.0f - (1.0f - kCupLeak) * hand;
+            }
+        }
         for (int n = 0; n < kVoices; ++n) {
             Voice &v = voices[n];
             if (!v.used) continue;
@@ -301,16 +518,46 @@ bool Draw::render(float *L, float *R, int32_t frames) {
             // brighter, as a player squeezing a key expects.
             if (v.held) v.squeeze += (v.aim / v.struck - v.squeeze) * squeezeFollow;
             float out = 0.0f;
-            for (int r = 0; r < v.count; ++r) {
-                // No two reeds are quite alike: the others a little softer than the first.
-                const float one = v.reeds[r].step(blowing, k.supply) * (r == 0 ? 1.0f : kOtherReed);
-                // A reed driven somewhere it can't follow starts again rather than sounding.
-                if (std::isfinite(one)) out += one;
-                else v.reeds[r].clear();
+            if (v.holeCount > 0) {
+                if (reshape) {
+                    // The ear: a bend heard sharp takes the tongue down, flat up.
+                    // Anything far off the note (the reed not yet speaking, or caught on the other's) isn't listened to.
+                    const float heard = v.holes[0].heard();
+                    const float off = heard > 0.0f ? std::log2(heard / v.wanted) : 1.0f;
+                    if (v.listening && std::fabs(off) < 0.1f) {
+                        v.ear = clampf(v.ear - kEarGain * off * control, -kEarReach, kEarReach);
+                    } else {
+                        v.ear *= 1.0f - 4.0f * control;
+                    }
+                    // The tongue, in octaves of the mouth's resonance, and its unsteadiness.
+                    const float at = std::log2(v.mouth);
+                    v.mouthSpeed += (tongueW * tongueW * (std::log2(v.mouthAim) + v.ear - at) - 2.0f * kTongueDamping * tongueW * v.mouthSpeed) * control;
+                    v.mouth = std::exp2(at + v.mouthSpeed * control);
+                    v.tongue1 += (white(noise) - v.tongue1) * tongueNoiseFollow;
+                    v.tongue2 += (v.tongue1 - v.tongue2) * tongueNoiseFollow;
+                    const float shaped = v.mouth * (1.0f + kThroatMouth * throat) * (1.0f + kTongueWander * kWanderScale * v.tongue2);
+                    for (int h = 0; h < v.holeCount; ++h) v.holes[h].shapeMouth(shaped, kMouthQ);
+                }
+                v.breath += (v.breathAim - v.breath) * breathFollow;
+                const float breath = blowing * v.breath * (1.0f + kThroatPressure * throat) * v.sign;
+                for (int h = 0; h < v.holeCount; ++h) {
+                    const float one = v.holes[h].step(breath) * (h == 0 ? 1.0f : kOtherReed);
+                    if (std::isfinite(one)) out += one;
+                    else v.holes[h].clear();
+                }
+            } else {
+                for (int r = 0; r < v.count; ++r) {
+                    // No two reeds are quite alike: the others a little softer than the first.
+                    const float one = v.reeds[r].step(blowing, k.supply) * (r == 0 ? 1.0f : kOtherReed);
+                    // A reed driven somewhere it can't follow starts again rather than sounding.
+                    if (std::isfinite(one)) out += one;
+                    else v.reeds[r].clear();
+                }
             }
             out *= v.gain * v.squeeze * v.share;
+            if (v.holeCount > 0) out *= 1.0f + kThroatLevel * 0.5f * throat;
             // The breath's own noise, as strong as it's blown.
-            const float hiss = white(noise) * 2.0f * airAmount * kHiss * v.gain * v.blown / k.pressure;
+            const float hiss = white(noise) * 2.0f * airAmount * kHiss * (v.holeCount > 0 ? kHarpHiss : 1.0f) * v.gain * v.blown / k.pressure;
             const float s = out + hiss;
             v.level += (std::fabs(out) - v.level) * 0.001f;
             sum += s;
@@ -322,7 +569,17 @@ bool Draw::render(float *L, float *R, int32_t frames) {
         bodyX1 = bodyIn;
         bodyY2 = bodyY1;
         bodyY1 = bp;
-        const float wet = bodyIn + body.bodyLift * bp;
+        float wet = bodyIn + body.bodyLift * bp;
+        if (hand > 1e-4f) {
+            // A state-variable low-pass, trapezoidal.
+            const float high = (wet - (cupK + cupG) * cupBand - cupLow) / (1.0f + cupG * (cupK + cupG));
+            const float band = cupG * high + cupBand;
+            const float low = cupG * band + cupLow;
+            cupBand = cupG * high + band;
+            cupLow = cupG * band + low;
+            // Some always gets past the fingers.
+            wet = cupLeak * wet + (1.0f - cupLeak) * low;
+        }
         const float y = wet - dcIn + dcPole * dcOut;
         dcIn = wet;
         dcOut = y;

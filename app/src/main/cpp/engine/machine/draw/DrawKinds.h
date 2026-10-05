@@ -47,10 +47,10 @@ inline constexpr ReedMake kMakes_[kMakes] = {
 };
 
 inline constexpr KindVoice kKindVoices[kKinds] = {// make         supply  pressure most    lowPass   bodyHz    bodyWidth lift  level wander reeds
-    {HarpReed, 5e-6f, 600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 1.2000e+00f, 0.6f, 0.06f, 1},  // diatonic
-    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.6f, 0.06f, 1},  // chromatic
-    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.6f, 0.06f, 1},  // tremolo harp
-    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.6f, 0.06f, 1},  // octave harp
+    {HarpReed, 5e-6f, 600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 1.2000e+00f, 0.85f, 0.12f, 1},  // diatonic
+    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.97f, 0.06f, 1},  // chromatic
+    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.97f, 0.06f, 1},  // tremolo harp
+    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.97f, 0.06f, 1},  // octave harp
     {AccordionReed, 2e-5f, 450.0f, 900.0f, 2.8000e+03f, 2.1120e+03f, 900.0f, 2.5000e-01f, 0.7f, 0.05f, 2},  // accordion
     {AccordionReed, 2e-5f, 450.0f, 900.0f, 2.8000e+03f, 2.1120e+03f, 900.0f, 4.0000e-01f, 0.7f, 0.05f, 2},  // bandoneon
     {AccordionReed, 2e-5f, 450.0f, 900.0f, 2.8000e+03f, 2.1120e+03f, 900.0f, 4.0000e-01f, 1.0f, 0.05f, 1},  // concertina
