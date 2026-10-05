@@ -72,15 +72,16 @@ object MachineUi {
     /**
      * The machines in groups, each with a line saying what it is, since a
      * name like "Cipher" doesn't tell you it's a vocoder. Within a group
-     * they're in the order they were built, which is roughly simplest first.
+     * they're in alphabetical order.
      */
     data class MachineGroup(val label: StringResource, val machines: List<String>)
 
     val machineGroups: List<MachineGroup> = listOf(
-        MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
-        MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt", "Hammer", "Tongue", "Draw")),
-        MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Diction", "Bias")),
+        MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate").sorted()),
+        MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice").sorted()),
+        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Hammer", "Tongue", "Draw").sorted()),
+        MachineGroup(Res.string.machines_samples, listOf("Mosaic", "Pollen", "Molt").sorted()),
+        MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Diction", "Bias").sorted()),
     )
 
     /** One line per machine saying what it is. */

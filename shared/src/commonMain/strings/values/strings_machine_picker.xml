@@ -4,6 +4,8 @@
     <string name="machines_drums">drums</string>
     <!-- Instruments modelled on real ones. The picker sets a trailing "ish" in italic, where there is one. -->
     <string name="machines_realish">realish</string>
+    <!-- Machines that play recorded sound: samples, a granular cloud, a sung take. -->
+    <string name="machines_samples">samples</string>
     <string name="machines_beyond">beyond</string>
     <!-- One line per machine: what it is, not what it has. -->
     <string name="machine_about_reflux">acid bass: one oscillator and a screaming filter</string>
