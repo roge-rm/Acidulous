@@ -23,6 +23,7 @@ These copy how the real instrument works, so they play like one.
 - [**Resonance**](04-the-machines/resonance.md) - eight struck objects that ring into each other.
 - [**Hammer**](04-the-machines/hammer.md) - grand, upright and electric pianos, celesta, toy piano, dulcimer and cimbalom.
 - [**Tongue**](04-the-machines/tongue.md) - jaw harps, ten kinds, with the mouth on the mod wheel.
+- [**Draw**](04-the-machines/draw.md) - free reeds: harmonicas, accordions, melodica and more.
 
 ## Drums
 

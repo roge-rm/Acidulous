@@ -79,7 +79,7 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate")),
         MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice")),
-        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt", "Hammer", "Tongue")),
+        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Mosaic", "Pollen", "Molt", "Hammer", "Tongue", "Draw")),
         MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Diction", "Bias")),
     )
 
@@ -100,6 +100,7 @@ object MachineUi {
         "Brazen" -> Res.string.machine_about_brazen
         "Hammer" -> Res.string.machine_about_hammer
         "Tongue" -> Res.string.machine_about_tongue
+        "Draw" -> Res.string.machine_about_draw
         "Timber" -> Res.string.machine_about_timber
         "Mosaic" -> Res.string.machine_about_mosaic
         "Pollen" -> Res.string.machine_about_pollen
@@ -134,7 +135,7 @@ object MachineUi {
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
             type == "Brazen" || type == "Timber" || type == "Molt" || type == "Diction" || type == "Hammer" ||
-            type == "Tongue"
+            type == "Tongue" || type == "Draw"
 
     /** Genesis's kit, in the Voice order of engine/machine/genesis/Genesis.h. */
     val genesisVoices: List<DrumVoice> = listOf(

@@ -6,12 +6,17 @@ by default ~/acidulous-material/draw-reference, holding `sources.json`.
 
     fetch.py [set ...]     every set when none is named
 """
+import importlib.util
 import json
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'tongue_reference'))
-import fetch as shared
+# Tongue's fetch, by its path: putting its folder on the module path would
+# shadow this folder's measure.py with Tongue's.
+_spec = importlib.util.spec_from_file_location(
+    'tongue_fetch', os.path.join(os.path.dirname(__file__), '..', 'tongue_reference', 'fetch.py'))
+shared = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(shared)
 
 
 def folder():

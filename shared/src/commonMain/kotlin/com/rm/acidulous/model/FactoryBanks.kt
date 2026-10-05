@@ -30,6 +30,7 @@ internal object FactoryBanks {
         "Bias" -> bias
         "Hammer" -> hammer
         "Tongue" -> tongue
+        "Draw" -> draw
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -3299,6 +3300,47 @@ internal object FactoryBanks {
         low = 48, high = 62)
 
     private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19(), tongue20(), tongue21(), tongue22(), tongue23(), tongue24(), tongue25(), tongue26(), tongue27(), tongue28(), tongue29(), tongue30(), tongue31(), tongue32(), tongue33(), tongue34(), tongue35(), tongue36(), tongue37(), tongue38(), tongue39(), tongue40()) }
+
+    private fun draw0() = Patch("Draw", "Init", emptyMap(),
+        family = "accordion",
+        low = 45, high = 81)
+
+    private fun draw1() = Patch("Draw", "Soft Accordion",
+        mapOf("pressure" to 0.3f, "attack" to 0.696023047f, "release" to 0.6261961f),
+        family = "accordion",
+        low = 45, high = 81)
+
+    private fun draw2() = Patch("Draw", "Pushed Accordion",
+        mapOf("pressure" to 0.8f, "attack" to 0.229475543f),
+        family = "accordion",
+        low = 45, high = 81)
+
+    private fun draw3() = Patch("Draw", "Dry Accordion",
+        mapOf("detune" to 0f),
+        family = "accordion",
+        low = 45, high = 81)
+
+    private fun draw4() = Patch("Draw", "Wet Accordion",
+        mapOf("detune" to 0.625f),
+        family = "accordion",
+        low = 45, high = 81)
+
+    private fun draw5() = Patch("Draw", "Melodica",
+        mapOf("model" to 0.5833333f),
+        family = "melodica",
+        low = 53, high = 77)
+
+    private fun draw6() = Patch("Draw", "Breathy Melodica",
+        mapOf("model" to 0.5833333f, "pressure" to 0.35f, "attack" to 0.5512401f, "air" to 0.6f),
+        family = "melodica",
+        low = 53, high = 77)
+
+    private fun draw7() = Patch("Draw", "Plain Harp",
+        mapOf("model" to 0f),
+        family = "harmonica",
+        low = 60, high = 84)
+
+    private val draw: List<Patch> by lazy { listOf(draw0(), draw1(), draw2(), draw3(), draw4(), draw5(), draw6(), draw7()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

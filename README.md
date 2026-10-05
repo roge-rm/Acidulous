@@ -46,7 +46,7 @@ All six are the demo song, Squelch.
 
 ## What's in it
 
-### Twenty-three machines
+### Twenty-four machines
 
 | | |
 |---|---|
@@ -62,6 +62,7 @@ All six are the demo song, Squelch.
 | **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
 | **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
 | **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
+| **Draw** | Modelled free reeds: accordion and melodica so far, harmonicas, harmonium and the reeds in pipes to come. |
 | **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
 | **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
 | **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |
@@ -149,7 +150,7 @@ Works with TalkBack. Every control says what it is and what it's set to, knobs a
 
 The easiest way to install Acidulous on Android and keep it up to date is my F-Droid repo:
 
-[https://roge-rm.gitlab.io/repo](https://roge-rm.gitlab.io/repo?fingerprint=80438B253C257BCCE05CDCB9E3AC9B6174C2250659962B14FCBE7F32FD42D53E)
+[https://hunke.ws/fdroid/repo](https://hunke.ws/fdroid/repo?fingerprint=80438B253C257BCCE05CDCB9E3AC9B6174C2250659962B14FCBE7F32FD42D53E)
 
 Then search for Acidulous in F-Droid, and it will offer each new version as an update.
 
@@ -178,7 +179,7 @@ its own low-latency driver, pick it in **Settings › audio › output**.
 
 ### In a browser
 
-[https://roge-rm.gitlab.io/play/acidulous](https://roge-rm.gitlab.io/play/acidulous/)
+[https://hunke.ws/fdroid/play/acidulous](https://hunke.ws/fdroid/play/acidulous/)
 
 Chrome or Edge work best, since they have MIDI. You can install it from the
 address bar, and after the first visit it works offline. Your songs are kept

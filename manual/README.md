@@ -11,6 +11,7 @@
     - [Cumulus](04-the-machines/cumulus.md) - pads built from a spectrum of partials.
     - [Dice](04-the-machines/dice.md) - a loop slicer with chance on every slice.
     - [Diction](04-the-machines/diction.md) - a vocal synthesizer trained on your voice and taken to the next level.
+    - [Draw](04-the-machines/draw.md) - reeds that sound through pipes.
     - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
     - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
     - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.

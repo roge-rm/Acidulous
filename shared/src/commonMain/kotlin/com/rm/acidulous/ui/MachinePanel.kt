@@ -225,6 +225,7 @@ fun MachinePanel(
             "Brazen" -> BrazenPanel(binding)
             "Hammer" -> HammerPanel(binding)
             "Tongue" -> TonguePanel(binding, editor)
+            "Draw" -> DrawPanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3527,6 +3528,52 @@ private val TONGUE_PLAYS = listOf("drone", "mouth")
 private val TONGUE_DRONES = (36..72).map { noteName(it) }
 private val TONGUE_REPLUCKS = listOf("every", "first", "loud")
 private val TONGUE_PATTERNS = listOf("off", "eighths", "sixteenths", "gallop", "triplets", "runs", "groupings")
+
+private val DRAW_MODELS = listOf(
+    "diatonic", "chromatic", "tremolo", "octave", "accordion", "bandoneon", "concertina",
+    "melodica", "harmonium", "sheng", "shō", "khaen", "pitch pipe",
+)
+
+/** Draw: the reeds, the breath or bellows, and the rest. */
+@Composable
+private fun DrawPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("reeds", "breath", "out"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("instrument") {
+                    PanelStepKnob(b, "model", DRAW_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("reed") {
+                    PanelKnob(b, "set", "set", PanelAmber)
+                    PanelKnob(b, "chamber", "chamber")
+                    PanelStepKnob(b, "reeds", listOf("auto", "1", "2", "3"), "reeds")
+                    PanelKnob(b, "detune", "detune", PanelPink)
+                }
+            }
+            1 -> {
+                Group("breath") {
+                    PanelKnob(b, "pressure", "pressure", PanelAmber)
+                    PanelKnob(b, "attack", "attack")
+                    PanelKnob(b, "release", "release")
+                    PanelKnob(b, "air", "air")
+                }
+            }
+            else -> {
+                Group("play") {
+                    PanelStepKnob(b, "voices", (1..8).map { "$it" }, "voices")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
 
 /** Tongue: the harp, its reeds, the mouth that picks its harmonics with the breath, and the rest. */
 @Composable

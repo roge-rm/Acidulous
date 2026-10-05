@@ -1,0 +1,69 @@
+# Draw - free reeds: harmonicas, accordions, melodica, harmonium and the
+# reeds in pipes.
+#
+# Each note is a reed blown by the pressure across it (draw::FreeReed): it
+# speaks, settles and stops by itself, its jet turbulent. Reeds and bodies
+# are fitted to recordings note by note (tools/draw_reference/fit.py), on the
+# shape of the first twelve harmonics: accordion 5.2 dB rms (two reeds 25
+# cents apart, as the recording's are; its recordings against each other
+# 4.3), harmonica 5.1 (6.0), melodica 7.7 (7.2), brightness within half a
+# semitone; the noise between the harmonics to within 5 dB (natural.py),
+# the harmonica's pitch drift to 0.2 cents (alive.py). The accordion sounds
+# two reeds a note, 15 cents apart unless a patch says.
+
+# Accordion patches play the `chord` phrase, the others `tune`. Values are in
+# each parameter's own units; `audition params Draw` lists them. A patch
+# names only what it changes.
+#
+# What is still wrong:
+#   - The harmonica's cycles vary in size three times as much as a played
+#     one's and in length two thirds as much; its tone moves less. The
+#     player's mouth and hands come in part 3.
+#   - The accordion's 3rd and 4th harmonics are about 10 dB strong; the
+#     melodica's middle harmonics weak.
+#   - Only accordion, melodica and a plain harmonica reed so far; the other
+#     kinds play the nearest of those.
+
+machine Draw
+role    tune
+
+# --- accordion ---------------------------------------------------------------
+
+patch Init family=accordion note=57 range=45..81 role=chord
+
+patch "Soft Accordion" family=accordion note=57 range=45..81 role=chord
+  # The bellows drawn gently, the reeds slow to speak.
+  pressure       0.3
+  attack         140
+  release        120
+
+patch "Pushed Accordion" family=accordion note=57 range=45..81 role=chord
+  # The bellows pushed hard: brighter, quicker.
+  pressure       0.8
+  attack         15
+
+patch "Dry Accordion" family=accordion note=57 range=45..81 role=chord
+  # Two reeds tuned together: no beat, as a concert accordion.
+  detune         0
+
+patch "Wet Accordion" family=accordion note=57 range=45..81 role=chord
+  # Two reeds 25 cents apart: the fast beat of an Irish musette.
+  detune         25
+
+# --- melodica ----------------------------------------------------------------
+
+patch "Melodica" family=melodica note=64 range=53..77
+  model          7      # melodica
+
+patch "Breathy Melodica" family=melodica note=64 range=53..77
+  # Blown softly, the breath heard.
+  model          7      # melodica
+  pressure       0.35
+  air            0.6
+  attack         70
+
+# --- harmonica ---------------------------------------------------------------
+
+patch "Plain Harp" family=harmonica note=60 range=60..84
+  # A harmonica's reed on its own, before its mouth and hands.
+  model          0      # diatonic

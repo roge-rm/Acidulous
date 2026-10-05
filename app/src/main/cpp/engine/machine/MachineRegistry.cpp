@@ -12,6 +12,7 @@
 #include "filament/Filament.h"
 #include "hammer/Hammer.h"
 #include "tongue/Tongue.h"
+#include "draw/Draw.h"
 #include "nexus/Nexus.h"
 #include "pollen/Pollen.h"
 #include "dice/Dice.h"
@@ -26,7 +27,7 @@
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Reflux", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Diction", "Bias", "Hammer", "Tongue"};
+const char *const kNames[] = {"Reflux", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Diction", "Bias", "Hammer", "Tongue", "Draw"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
@@ -54,6 +55,7 @@ Machine *MachineRegistry::create(const char *typeName) {
     if (std::strcmp(typeName, "Diction") == 0) return new machine::Diction();
     if (std::strcmp(typeName, "Hammer") == 0) return new machine::Hammer();
     if (std::strcmp(typeName, "Tongue") == 0) return new machine::Tongue();
+    if (std::strcmp(typeName, "Draw") == 0) return new machine::Draw();
     return nullptr;
 }
 
@@ -108,6 +110,10 @@ const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count)
     }
     if (std::strcmp(typeName, "Tongue") == 0) {
         static const machine::Tongue probe;
+        return probe.paramDefs(count);
+    }
+    if (std::strcmp(typeName, "Draw") == 0) {
+        static const machine::Draw probe;
         return probe.paramDefs(count);
     }
     if (std::strcmp(typeName, "Nexus") == 0) {

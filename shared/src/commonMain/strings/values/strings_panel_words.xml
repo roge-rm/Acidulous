@@ -25,6 +25,7 @@
     <string name="pw_a_sine_bent_by_itself">a sine bent by itself</string>
     <string name="pw_above">above</string>
     <string name="pw_accent">accent</string>
+    <string name="pw_accordion">accordion</string>
     <string name="pw_across">across</string>
     <string name="pw_aeg">aeg</string>
     <string name="pw_after">after</string>
@@ -64,6 +65,7 @@
     <string name="pw_bamboo">bamboo</string>
     <string name="pw_band">band</string>
     <string name="pw_band_pass">band pass</string>
+    <string name="pw_bandoneon">bandoneon</string>
     <string name="pw_bands">bands</string>
     <string name="pw_bank">bank</string>
     <string name="pw_bar">bar</string>
@@ -118,6 +120,7 @@
     <string name="pw_celesta">celesta</string>
     <string name="pw_central">central</string>
     <string name="pw_ch">ch</string>
+    <string name="pw_chamber">chamber</string>
     <string name="pw_chance">chance</string>
     <string name="pw_channel">channel</string>
     <string name="pw_character">character</string>
@@ -128,6 +131,7 @@
     <string name="pw_chord">Chord</string>
     <string name="pw_chord_4b3a0b">chord</string>
     <string name="pw_chorus">Chorus</string>
+    <string name="pw_chromatic">chromatic</string>
     <string name="pw_cimbalom">cimbalom</string>
     <string name="pw_circuit">circuit</string>
     <string name="pw_clap">Clap</string>
@@ -150,6 +154,7 @@
     <string name="pw_combo">combo</string>
     <string name="pw_compress">compress</string>
     <string name="pw_compressor">Compressor</string>
+    <string name="pw_concertina">concertina</string>
     <string name="pw_cone">cone</string>
     <string name="pw_consonants">consonants</string>
     <string name="pw_converge">converge</string>
@@ -365,6 +370,8 @@
     <string name="pw_harm">harm</string>
     <string name="pw_harmon">harmon</string>
     <string name="pw_harmonic">harmonic</string>
+    <string name="pw_harmonica">harmonica</string>
+    <string name="pw_harmonium">harmonium</string>
     <string name="pw_harmonizer">Harmonizer</string>
     <string name="pw_harmony">harmony</string>
     <string name="pw_harp">harp</string>
@@ -430,6 +437,7 @@
     <string name="pw_keyed">keyed</string>
     <string name="pw_keys">keys</string>
     <string name="pw_keytrack">keytrack</string>
+    <string name="pw_khaen">khaen</string>
     <string name="pw_khomus">khomus</string>
     <string name="pw_kick">Kick</string>
     <string name="pw_kick_eac613">kick</string>
@@ -511,6 +519,7 @@
     <string name="pw_master">master</string>
     <string name="pw_medium">medium</string>
     <string name="pw_mega">mega</string>
+    <string name="pw_melodica">melodica</string>
     <string name="pw_membrane">membrane</string>
     <string name="pw_metal">metal</string>
     <string name="pw_mic">mic</string>
@@ -632,6 +641,7 @@
     <string name="pw_pipes">pipes</string>
     <string name="pw_pitch">pitch</string>
     <string name="pw_pitch_env">pitch env</string>
+    <string name="pw_pitch_pipe">pitch pipe</string>
     <string name="pw_pitch1">pitch1</string>
     <string name="pw_pitch2">pitch2</string>
     <string name="pw_pitch3">pitch3</string>
@@ -790,11 +800,13 @@
     <string name="pw_set">set</string>
     <string name="pw_sh">sh</string>
     <string name="pw_shape">shape</string>
+    <string name="pw_sheng">sheng</string>
     <string name="pw_shift">shift</string>
     <string name="pw_shifter">Shifter</string>
     <string name="pw_shimmer">shimmer</string>
     <string name="pw_short">short</string>
     <string name="pw_shuffle">shuffle</string>
+    <string name="pw_sh_8177c9">shō</string>
     <string name="pw_sidechain">sidechain</string>
     <string name="pw_sin12">sin12</string>
     <string name="pw_sin8">sin8</string>
