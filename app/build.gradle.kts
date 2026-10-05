@@ -187,15 +187,18 @@ android {
         // bandoneon, concertina, melodica, harmonium, sheng, sho and khaen; a
         // talking harmonica; MPE on Hammer, Tongue and Draw (Hammer's pitch
         // wheel works); negative octaves and transposes no longer off by one.
+        // 0.10.3: Canadian French, the app and the manual, with a language
+        // setting; the machine picker in alphabetical order, with a samples
+        // group.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 31
+        val release = 32
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.10.2"
+        versionName = "0.10.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
