@@ -69,6 +69,9 @@ class Tongue final : public Machine {
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
+    void notePressure(uint8_t note, uint8_t value) override;
+    void noteTimbre(uint8_t note, uint8_t value) override;
     void controlChange(uint8_t cc, uint8_t value) override;
     void channelPressure(uint8_t value) override;
     void lyric(const uint8_t *phones, int32_t count) override;
@@ -164,6 +167,8 @@ class Tongue final : public Machine {
         bool used = false, held = false;
         uint8_t note = 0;
         float baseNote = 60.0f;
+        /** A finger's own bend (semitones), pressure (0 to 1, -1 for the channel's) and slide (0 to 1), MPE. */
+        float noteBend = 0.0f, pressure = -1.0f, slide = 0.0f;
         int quietBlocks = 0;
         uint32_t age = 0;
     };

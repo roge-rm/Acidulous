@@ -56,6 +56,7 @@ class Hammer final : public Machine {
     bool takesPedals() const override { return true; }
     void pedal(int32_t which, float level01) override;
     void pitchBend(int16_t value14) override;
+    void noteBend(uint8_t note, float semitones) override;
     void controlChange(uint8_t cc, uint8_t value) override;
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
     bool render(float *L, float *R, int32_t frames) override;
@@ -91,6 +92,8 @@ class Hammer final : public Machine {
         float fade = 0.0f;
         int key = 0;
         int note = 0;
+        /** A finger's own bend, semitones (MPE). */
+        float noteBend = 0.0f;
         /** What its key is, on the instrument it was struck on, and which instrument. */
         const hammer::KeySpec *spec = nullptr;
         int model = 0;
@@ -128,6 +131,8 @@ class Hammer final : public Machine {
 
     /** The key's strike: the course designed for it (if it changed) and the hammer thrown. */
     void strike(Voice &v, int key, float hz, float velocity01);
+    /** Bends a voice's strings or bar by the wheel's and its finger's bend. */
+    void bendVoice(Voice &v);
     /** A tine's or reed's strike: its bar tuned and struck, its pickup placed. */
     void strikeBar(Voice &v, int model, int key, float hz, float velocity01);
     /** How loud [v] is now, whatever it is. */

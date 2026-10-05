@@ -448,9 +448,12 @@ void Hammer::noteOn(uint8_t note, uint8_t velocity) {
     Voice *v = voiceFor(key);
     if (v == nullptr) return;
     v->note = note;
+    v->noteBend = 0.0f;
     const int model = modelNow();
     if (isBar(model)) strikeBar(*v, model, key, hzOf(key, shifted + targetOf(Fine) / 100.0f), static_cast<float>(velocity) / 127.0f);
     else strike(*v, key, hzOf(key, shifted + targetOf(Fine) / 100.0f), static_cast<float>(velocity) / 127.0f);
+    // A new note takes the wheel where it is.
+    bendVoice(*v);
     asleep = false;
 }
 
@@ -835,8 +838,26 @@ void Hammer::allNotesOff() {
 
 void Hammer::setDampers(bool lifted) { pedal(kPerfSustain, lifted ? 1.0f : 0.0f); }
 
+void Hammer::bendVoice(Voice &v) {
+    const float ratio = std::exp2((bend + v.noteBend) / 12.0f);
+    if (isBar(v.model)) v.bar.setPitch(ratio);
+    else v.course.setPitch(ratio);
+}
+
+void Hammer::noteBend(uint8_t note, float semitones) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) {
+            v.noteBend = semitones;
+            bendVoice(v);
+        }
+    }
+}
+
 void Hammer::pitchBend(int16_t value14) {
     bend = static_cast<float>(value14) / 8192.0f * static_cast<float>(steppedTargetOf(BendRange));
+    for (Voice &v : voices) {
+        if (v.used) bendVoice(v);
+    }
 }
 
 void Hammer::applyDamper(Voice &v) {

@@ -295,12 +295,16 @@ Draw::Voice *Draw::voiceFor(uint8_t note) {
     return pick;
 }
 
-ReedMake Draw::makeFor(int32_t kind) const {
-    ReedMake k = kMakes_[kKindVoices[kind].make];
+float Draw::bendOf(const Voice &v) const { return bend * paramOf(BendRange) + v.noteBend; }
+
+ReedMake Draw::makeFor(const Voice &v) const {
+    ReedMake k = kMakes_[kKindVoices[v.kind].make];
     // The knobs move each kind's make from where it sits: twice or half either way.
     k.set *= std::pow(2.0f, (clampf(targetOf(Set), 0.0f, 1.0f) - 0.5f) * 1.0f);
     k.cell *= std::pow(2.0f, (clampf(targetOf(Chamber), 0.0f, 1.0f) - 0.5f) * 1.5f);
     k.turbulence *= 2.0f * clampf(targetOf(Air), 0.0f, 1.0f);
+    // A finger's slide brings that note's reeds closer to their slots, which brightens them.
+    k.set *= std::pow(2.0f, -0.8f * v.slide);
     return k;
 }
 
@@ -312,9 +316,9 @@ void Draw::retune(Voice &v) {
     if (v.pipeCount > 0) {
         // Each pipe tuned to its note; its reed filed to sound it (the reed sets the pitch, the pipe rings with it).
         const float *table = kReedTuning[kKindVoices[v.kind].make];
-        const ReedMake make = makeFor(v.kind);
+        const ReedMake make = makeFor(v);
         const PipeMake &pipe = kPipeMakes[v.kind - Sheng];
-        const float shift = v.baseNote - static_cast<float>(v.note) + bend * paramOf(BendRange);
+        const float shift = v.baseNote - static_cast<float>(v.note) + bendOf(v);
         for (int i = 0; i < v.pipeCount; ++i) {
             const float sounds = v.pipeNote[i] + shift;
             const int pc = static_cast<int>(std::lround(v.pipeNote[i])) % 12;
@@ -328,11 +332,11 @@ void Draw::retune(Voice &v) {
         }
         return;
     }
-    const float note = v.baseNote + bend * paramOf(BendRange);
+    const float note = v.baseNote + bendOf(v);
     // Each reed is filed to sound its note: the table says how far its own
     // frequency sits from what it plays, between notes in a straight line.
     const float *table = kReedTuning[kKindVoices[v.kind].make];
-    const ReedMake make = makeFor(v.kind);
+    const ReedMake make = makeFor(v);
     // The register's ranks: 16' an octave down, 4' an octave up, the 8's
     // tuned apart by the detune knob for musette.
     const float apart = clampf(targetOf(Detune), 0.0f, 40.0f);
@@ -421,8 +425,8 @@ void Draw::planHarp(Voice &v) {
 }
 
 void Draw::retuneHarp(Voice &v) {
-    const ReedMake make = makeFor(v.kind);
-    const float wheelBend = bend * paramOf(BendRange);
+    const ReedMake make = makeFor(v);
+    const float wheelBend = bendOf(v);
     if (v.way == Single) {
         // A reed of its own behind a valve; the wheel moves the note.
         const float note = v.baseNote + wheelBend;
@@ -487,6 +491,7 @@ void Draw::noteOn(uint8_t note, uint8_t velocity) {
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->held = true;
     v->pressure = -1.0f;
+    v->noteBend = v->slide = 0.0f;
     const int knob = std::clamp(steppedTargetOf(Register), 0, kRegisterCount - 1);
     const int32_t stops = isHarp(v->kind) ? 1 : (knob > 0 ? knob : kKindVoices[v->kind].stops);
     const int count = kRegisters[stops].count;
@@ -611,6 +616,24 @@ void Draw::pitchBend(int16_t value14) {
     bend = static_cast<float>(value14) / 8192.0f;
     for (Voice &v : voices) {
         if (v.used) retune(v);
+    }
+}
+
+void Draw::noteBend(uint8_t note, float semitones) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) {
+            v.noteBend = semitones;
+            retune(v);
+        }
+    }
+}
+
+void Draw::noteTimbre(uint8_t note, uint8_t value) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) {
+            v.slide = static_cast<float>(value) / 127.0f;
+            retune(v);
+        }
     }
 }
 

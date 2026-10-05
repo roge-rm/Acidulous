@@ -51,6 +51,8 @@ class Draw final : public Machine {
     void pitchBend(int16_t value14) override;
     void channelPressure(uint8_t value) override;
     void notePressure(uint8_t note, uint8_t value) override;
+    void noteBend(uint8_t note, float semitones) override;
+    void noteTimbre(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
 
     /** Voices sounding, for tests. */
@@ -89,6 +91,8 @@ class Draw final : public Machine {
         float squeeze = 1.0f;
         /** The note's own pressure (MPE), 0 to 1, or -1 for the channel's. */
         float pressure = -1.0f;
+        /** The note's own bend (MPE), semitones, and its slide, 0 to 1 (0 until a finger sends one). */
+        float noteBend = 0.0f, slide = 0.0f;
         float velocity = 0.8f;
         float gain = 0.0f;
         float level = 0.0f;
@@ -125,7 +129,9 @@ class Draw final : public Machine {
     void retune(Voice &v);
     /** The pressure a held voice is blown at, Pa. */
     float aimFor(const Voice &v) const;
-    draw::ReedMake makeFor(int32_t kind) const;
+    draw::ReedMake makeFor(const Voice &v) const;
+    /** The bend a voice plays at: the channel's and its own finger's, semitones. */
+    float bendOf(const Voice &v) const;
     /** Turns the words waiting for the next note into the mouth's steps. */
     void planWords();
     /** Places a pipe instrument's note: its pipes, a shō's chord. */

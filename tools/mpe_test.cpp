@@ -253,6 +253,10 @@ int main() {
     // patch leaves the same at both ends, so it isn't checked.
     check("Cumulus", true, false);
     check("Formulate", false, false);
+    // The three latest machines.
+    check("Hammer", false, false);
+    check("Tongue", true, true);
+    check("Draw", true, true);
     organ();
     std::printf("\nReflux is monophonic and implements no pitch bend at all, so there is\n"
                 "nothing here for it to answer. Dice is a slicer and Manual is 91 wheels on\n"

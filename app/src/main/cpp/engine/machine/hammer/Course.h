@@ -207,6 +207,7 @@ class Course {
     }
 
     void clear() {
+        pitch = 1.0f;
         // The line (64 KB) is zeroed only as far back as the new strings
         // read, as they're tuned (keepClean).
         write = 0;
@@ -267,7 +268,7 @@ class Course {
             double lag = 0.0;
             for (int m = 0; m < sections; ++m) lag += sectionLag(sd->a1[m], sd->a2[m], w);
             laneStiff[i] = static_cast<float>(stages) * allpassDelay(disperse, w) + static_cast<float>(lag / w);
-            solveLane(i, laneHz[i]);
+            solveLane(i, laneHz[i] * pitch);
         }
         // The strike point on the way out and on the way back, in samples
         // old. Striking 1/n of the way along silences partial n, and 2n, 3n
@@ -497,7 +498,18 @@ class Course {
      */
     void setDecay(const Decay &decay) {
         designLoss(clampf(design.hz, 20.0f, sr * 0.45f), decay);
-        for (int i = 0; i < lanes; ++i) solveLane(i, laneHz[i]);
+        for (int i = 0; i < lanes; ++i) solveLane(i, laneHz[i] * pitch);
+    }
+
+    /**
+     * Bends the strings by [ratio] of their tuned pitch, ringing on: only the
+     * lines' lengths move, the stiffness and loss stay as designed, which
+     * holds over a few semitones.
+     */
+    void setPitch(float ratio) {
+        if (ratio == pitch) return;
+        pitch = ratio;
+        for (int i = 0; i < lanes; ++i) solveLane(i, laneHz[i] * pitch);
     }
 
   private:
@@ -974,6 +986,8 @@ class Course {
     int lanes = 1, struck = 1, stages = 0;
     float across = 0.0f;
     int delay[kLanes] = {100, 100, 100, 100};
+    /** The bend on the strings, as a ratio of their tuned pitch. */
+    float pitch = 1.0f;
     float laneHz[kLanes] = {261.6f, 261.6f, 261.6f, 261.6f};
     float eta[kLanes] = {};
     float disperse = 0.0f;

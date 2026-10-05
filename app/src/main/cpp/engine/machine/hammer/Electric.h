@@ -51,6 +51,7 @@ class Bar {
     void prepare(float sampleRate) { sr = sampleRate; clear(); }
 
     void clear() {
+        pitch = 1.0f;
         for (int m = 0; m < kModes; ++m) y1[m] = y2[m] = 0.0f;
         pulseLeft = 0;
         lastForce = 0.0f;
@@ -63,11 +64,26 @@ class Bar {
         const float hz[kModes] = {s.hz, s.hz * std::exp2(s.tonebarCents / 1200.0f), s.hz * s.ratio[0], s.hz * s.ratio[1]};
         const float amp[kModes] = {1.0f - 0.6f * s.tonebar, 0.6f * s.tonebar, s.level[0], s.level[1]};
         for (int m = 0; m < kModes; ++m) {
-            w[m] = 6.28318530718f * clampf(hz[m], 10.0f, 0.45f * sr) / sr;
+            baseHz[m] = hz[m];
+            baseAmp[m] = amp[m];
+            w[m] = 6.28318530718f * clampf(hz[m] * pitch, 10.0f, 0.45f * sr) / sr;
             // Past what the rate can hold, a mode isn't there.
-            gain[m] = hz[m] < 0.45f * sr ? std::sin(w[m]) * amp[m] : 0.0f;
+            gain[m] = hz[m] * pitch < 0.45f * sr ? std::sin(w[m]) * amp[m] : 0.0f;
         }
         setRing(s.ring, s.barRing, s.overRing[0], s.overRing[1]);
+    }
+
+    /** Bends the bar by [ratio] of its tuned pitch, ringing on: each mode's decay kept. */
+    void setPitch(float ratio) {
+        if (ratio == pitch) return;
+        pitch = ratio;
+        for (int m = 0; m < kModes; ++m) {
+            const float hz = baseHz[m] * ratio;
+            w[m] = 6.28318530718f * clampf(hz, 10.0f, 0.45f * sr) / sr;
+            gain[m] = hz < 0.45f * sr ? std::sin(w[m]) * baseAmp[m] : 0.0f;
+            const float r = std::sqrt(std::fmax(-a2[m], 0.0f));
+            a1[m] = 2.0f * r * std::cos(w[m]);
+        }
     }
 
     /** How long each mode rings, T60s: the bar, the tonebar, the overtones (for a damper too). */
@@ -121,6 +137,8 @@ class Bar {
     Spec spec;
     float w[kModes] = {}, gain[kModes] = {}, a1[kModes] = {}, a2[kModes] = {};
     float y1[kModes] = {}, y2[kModes] = {};
+    /** The modes as tuned, before a bend, and the bend now. */
+    float baseHz[kModes] = {}, baseAmp[kModes] = {}, pitch = 1.0f;
     int pulseLeft = 0, pulseLength = 1;
     float pulseScale = 0.0f, lastForce = 0.0f;
     float level = 0.0f;

@@ -24,16 +24,19 @@ found. Choose **lower** or **upper** to set the zone and bend range by hand.
 
 What each gesture does:
 
-- **Bend** moves the note's pitch on every melodic machine except Reflux and the
-  organ, which bend as a whole.
-- **Pressure** opens the sound up and makes it louder. On Brazen and Timber it's
-  breath, and on Filament it leans on the bow too. **press** on a machine's panel
-  sets how much.
-- **Slide** (CC 74) brightens the note. It opens the filter on Trinity, Ratio and
-  Mosaic, moves the pick up the string on Filament, tightens the lips or reed on
-  Brazen and Timber, and moves Cumulus's morph. **slide** on the panel sets how
-  much. In Nexus, the **touch** module gives each voice its finger's pressure and
-  slide to patch.
+- **Bend** moves the note's pitch on every melodic machine except Reflux, the
+  organ and Diction, which bend as a whole. On a Draw harmonica played like a
+  player, bending down bends with the tongue, as far as the hole goes.
+- **Pressure** opens the sound up and makes it louder. On Brazen, Timber, Draw
+  and Tongue it's breath, and on Filament it leans on the bow too. Hammer takes
+  none: a piano has nothing to press once it's struck. **press** on a machine's
+  panel sets how much.
+- **Slide** (CC 74) brightens the note. It opens the filter on Trinity, Ratio
+  and Mosaic, moves the pick up the string on Filament, tightens the lips or
+  reed on Brazen and Timber, brings Draw's reeds closer to their slots, fits
+  Tongue's reed tighter in its frame, and moves Cumulus's morph. **slide** on
+  the panel sets how much. In Nexus, the **touch** module gives each voice its
+  finger's pressure and slide to patch.
 
 A keyboard that sends poly aftertouch presses each note on its own too, with no
 zone needed. Other controllers on a finger's channel, like the mod wheel or the

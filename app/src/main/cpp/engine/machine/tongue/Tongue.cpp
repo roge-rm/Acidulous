@@ -239,7 +239,7 @@ void Tongue::retune(Voice &v) {
     const float stopped = v.held ? ring : ring + (0.04f - ring) * std::sqrt(clampf(targetOf(Stop), 0.0f, 1.0f));
     for (int i = 0; i < v.count; ++i) {
         Tine &t = v.tines[i];
-        const float hz = noteHz(v.baseNote + t.offset + bend * paramOf(BendRange));
+        const float hz = noteHz(v.baseNote + t.offset + bend * paramOf(BendRange) + v.noteBend);
         t.reed.setRatios(k.ratio2, k.ratio3);
         t.reed.tune(hz, stopped, targetOf(Overtones), k.overRing);
         t.perRadian = sampleRate / (6.28318530718f * hz);
@@ -326,6 +326,10 @@ void Tongue::startHarp(Voice &v, uint8_t note, float noteNumber, float vel) {
     v.note = note;
     v.baseNote = noteNumber + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
     v.held = true;
+    if (!ringing) {
+        v.noteBend = v.slide = 0.0f;
+        v.pressure = -1.0f;
+    }
     retune(v);
     strike(v, vel);
     lastKeyPluck = now;
@@ -609,6 +613,27 @@ void Tongue::controlChange(uint8_t cc, uint8_t value) {
 
 void Tongue::channelPressure(uint8_t value) { pressure = static_cast<float>(value) / 127.0f; }
 
+void Tongue::noteBend(uint8_t note, float semitones) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) {
+            v.noteBend = semitones;
+            retune(v);
+        }
+    }
+}
+
+void Tongue::notePressure(uint8_t note, uint8_t value) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) v.pressure = static_cast<float>(value) / 127.0f;
+    }
+}
+
+void Tongue::noteTimbre(uint8_t note, uint8_t value) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) v.slide = static_cast<float>(value) / 127.0f;
+    }
+}
+
 void Tongue::moveMouth(bool jump) {
     // A jump (a reset) takes where the knobs are going, not where they are.
     const auto knob = [&](int32_t p) { return jump ? targetOf(p) : paramOf(p); };
@@ -749,7 +774,10 @@ bool Tongue::render(float *L, float *R, int32_t frames) {
         Voice &v = voices[n];
         if (!v.used) continue;
         const KindVoice &k = kKindVoices[v.kind];
-        const float halfWidth = 0.25f - 0.23f * clampf(k.edge + edgeKnob, 0.0f, 1.0f);
+        // A finger's slide fits that harp's reed closer in its frame, as the fit knob does.
+        const float halfWidth = 0.25f - 0.23f * clampf(k.edge + edgeKnob + 0.5f * v.slide, 0.0f, 1.0f);
+        // A finger's pressure is that harp's own breath; otherwise the channel's.
+        const float voiceBreath = v.pressure >= 0.0f ? clampf(paramOf(Breath) + v.pressure, 0.0f, 1.0f) : breath;
         // The reed rests off the slot's middle by up to five eighths of a
         // full swing: the pulses come unevenly and the even harmonics up with
         // them. Never more than kReach of the swing it has, so a dying note
@@ -768,10 +796,15 @@ bool Tongue::render(float *L, float *R, int32_t frames) {
             // A pulse's power goes with the slot's width: scaled back to the
             // default fit's (edge 0.55) so the fit changes the colour, not the level.
             t.fit = std::sqrt(t.width * kDefaultWidth);
-            t.reed.setDrive(v.held ? sustain * breath * (6.907755f / ring + 6.0f) * lack : 0.0f);
+            t.reed.setDrive(v.held ? sustain * voiceBreath * (6.907755f / ring + 6.0f) * lack : 0.0f);
         }
     }
-    const float breathStep = (breath - blown) / static_cast<float>(frames);
+    // One breath for the player: the hardest any held harp is blown.
+    float breathHeard = breath;
+    for (const Voice &v : voices) {
+        if (v.used && v.held && v.pressure >= 0.0f) breathHeard = std::fmax(breathHeard, clampf(paramOf(Breath) + v.pressure, 0.0f, 1.0f));
+    }
+    const float breathStep = (breathHeard - blown) / static_cast<float>(frames);
     const float dcPole = 1.0f - 6.28318530718f * 20.0f / sampleRate;
     const float gainFollow = 1.0f - std::exp(-1.0f / (0.005f * sampleRate));
 
