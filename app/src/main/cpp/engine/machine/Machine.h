@@ -168,7 +168,8 @@ class Machine {
     float paramOfIndex(int32_t p) const { return params_.get(p); }
     float targetOf(int32_t p) const { return params_.target(p); }
     int32_t steppedTargetOf(int32_t p) const {
-        return static_cast<int32_t>(params_.target(p) + 0.5f);
+        // To the nearest step either side of zero: an octave of -1 is -1.
+        return static_cast<int32_t>(std::lround(params_.target(p)));
     }
 
   protected:
