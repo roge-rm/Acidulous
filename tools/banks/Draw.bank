@@ -16,15 +16,20 @@
 # sho's or khaen's reed sounds into a pipe (draw::PipeReed) that rings with
 # it and filters it: the sheng's even harmonics 35 dB down.
 
-# Accordion patches play the `chord` phrase, the others `tune`. Values are in
-# each parameter's own units; `audition params Draw` lists them. A patch
-# names only what it changes.
+# Families: accordion, button (bandoneon and concertina), harmonium,
+# melodica, harmonica, pipes (sheng, sho, khaen, pitch pipe). Accordion and
+# harmonium patches play the `chord` phrase, the others `tune`. Values are
+# in each parameter's own units; `audition params Draw` lists them. A patch
+# names only what it changes. The talking harp needs words in the clip and
+# breath from a track another track: neither shows in a patch alone.
 #
 # What is still wrong:
 #   - A harmonica's tone moves about half as much from moment to moment as a
 #     played one's: more breath wander puts its bends out of tune.
 #   - Hole 1 hardly bends and holes 8 to 10 bend a little less than a real
 #     harp's; those notes play on a reed of their own instead.
+#   - Overblows and overdraws play on a reed of their own: modelled, they
+#     only speak in a narrow band of breath and mouth and wandered 50 cents.
 #   - The top hole (C7) is too bright.
 #   - The accordion's 3rd and 4th harmonics are about 10 dB strong; the
 #     melodica's middle harmonics weak.
@@ -91,6 +96,13 @@ patch "Shaken in Time" family=accordion note=57 range=45..81 role=chord
   # The bellows turned on the song's sixteenths.
   sync           4      # 1/16
 
+patch "Cajun Accordion" family=accordion note=57 range=45..81 role=chord
+  # Three reeds, wet and pushed hard, as a dance accordion.
+  register       3      # 8' 8' 8'
+  detune         22
+  pressure       0.75
+  attack         15
+
 patch "Fifths Accordion" family=accordion note=57 range=45..81 role=chord
   # The 4' rank moved down to a fifth: every note a bare fifth.
   register       7      # 8' 4'
@@ -111,6 +123,12 @@ patch "Tango Bandoneon" family=button note=57 range=40..84
 
 patch "Concertina" family=button note=64 range=55..91
   model          6      # concertina
+
+patch "English Concertina" family=button note=64 range=55..91
+  # One dry reed a note, light and sweet.
+  model          6      # concertina
+  register       1      # 8'
+  pressure       0.4
 
 patch "Anglo Concertina" family=button note=64 range=55..91
   # Two reeds a note, a little apart, and the bellows shaken.
@@ -148,6 +166,13 @@ patch "Tierce Harmonium" family=harmonium note=57 range=40..84 role=chord
   "high rank"    16
   attack         80
   release        90
+
+patch "Indian Harmonium" family=harmonium note=57 range=40..84 role=chord
+  # The hand-pumped harmonium: an 8' and its octave, quick to speak, its bellows uneven.
+  model          8      # harmonium
+  attack         35
+  release        70
+  air            0.7
 
 patch "Celeste Harmonium" family=harmonium note=57 range=40..84 role=chord
   # Two 8' stops, one tuned a little sharp.
@@ -189,6 +214,15 @@ patch "Khaen" family=pipes note=57 range=45..81
   # Its reeds heard in the wind chest as well as the pipes: buzzier.
   model          11     # khaen
 
+patch "Khaen Drone" family=pipes note=45 range=40..64
+  # Two pipes a note, a little apart, slow to come and go, for a drone.
+  model          11     # khaen
+  register       2      # 8' 8'
+  detune         5
+  attack         120
+  release        200
+  volume         0.42
+
 patch "Pitch Pipe" family=pipes note=69 range=60..84
   model          12     # pitch pipe
 
@@ -196,6 +230,20 @@ patch "Pitch Pipe" family=pipes note=69 range=60..84
 
 patch "Melodica" family=melodica note=64 range=53..77
   model          7      # melodica
+
+patch "Melodica Lead" family=melodica note=64 range=53..77
+  # Blown hard and quick, for a tune.
+  model          7      # melodica
+  pressure       0.75
+  attack         12
+  vibrato        0.2
+  "vib rate"     5.5
+
+patch "Soft Melodica" family=melodica note=64 range=53..77
+  model          7      # melodica
+  pressure       0.25
+  attack         110
+  release        150
 
 patch "Breathy Melodica" family=melodica note=64 range=53..77
   # Blown softly, the breath heard.
@@ -216,6 +264,18 @@ patch "Cupped Harp" family=harmonica note=60 range=60..84
   cup            0.55
   vibrato        0.35
   "vib rate"     5.5
+
+patch "G Harp" family=harmonica note=55 range=55..84
+  # The lowest of the usual keys, a fourth under the C harp.
+  model          0      # diatonic
+  "harp key"     0      # G
+
+patch "Wah Harp" family=harmonica note=60 range=60..84
+  # Hands half closed and a slow throat vibrato; the mod wheel opens and shuts them.
+  model          0      # diatonic
+  cup            0.4
+  vibrato        0.5
+  "vib rate"     3.5
 
 patch "Straight Harp" family=harmonica note=60 range=60..84
   # Every note on a reed of its own: no bends, every note as clean as the next.

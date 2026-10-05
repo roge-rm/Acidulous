@@ -62,7 +62,7 @@ All six are the demo song, Squelch.
 | **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
 | **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
 | **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
-| **Draw** | Modelled free reeds: accordion and melodica so far, harmonicas, harmonium and the reeds in pipes to come. |
+| **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
 | **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
 | **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
 | **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |
