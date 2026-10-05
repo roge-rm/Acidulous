@@ -31,6 +31,7 @@ class Draw final : public Machine {
         Register, Detune,
         HarpKey, Playing, Cup, Vibrato, VibratoRate,
         Cassotto, Shake,
+        Sync, Sidechain, Words, HighRank, LowRank,
         Count
     };
     static_assert(Count <= kMaxParams, "too many parameters");
@@ -45,6 +46,8 @@ class Draw final : public Machine {
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
     void controlChange(uint8_t cc, uint8_t value) override;
+    void lyric(const uint8_t *phones, int32_t count) override;
+    void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
     void pitchBend(int16_t value14) override;
     void channelPressure(uint8_t value) override;
     void notePressure(uint8_t note, uint8_t value) override;
@@ -123,6 +126,8 @@ class Draw final : public Machine {
     /** The pressure a held voice is blown at, Pa. */
     float aimFor(const Voice &v) const;
     draw::ReedMake makeFor(int32_t kind) const;
+    /** Turns the words waiting for the next note into the mouth's steps. */
+    void planWords();
     /** Places a pipe instrument's note: its pipes, a shō's chord. */
     void planPipes(Voice &v);
     /** Places a harmonica note: which hole and how, or a reed of its own. */
@@ -149,6 +154,27 @@ class Draw final : public Machine {
     bool pulling = false;
     /** The bellows' pressure as many reeds draw on them, a share. */
     float sag = 1.0f;
+    /** The song's clock, ticks, kept to the sample; and samples a tick. */
+    double ticks = 0.0, samplesPerTick = 100.0;
+    /** Another track's level, followed, for breath from a track. */
+    float trackLevel = 0.0f;
+    /** A harp player's words: the phones waiting, the mouth's steps for the note, and where it is in them. */
+    static constexpr int kMaxPhones = 32, kSaid = 48;
+    struct Said {
+        float f1, f2;
+        bool lips;
+        int32_t samples; // -1 held
+    };
+    uint8_t pending[kMaxPhones] = {};
+    int pendingCount = 0;
+    Said said[kSaid];
+    int saidCount = 0, saidAt = 0;
+    int32_t saidLeft = 0;
+    /** The formants the words have the mouth at now, Hz, and whether the lips are shut. */
+    float talkF1 = 500.0f, talkF2 = 1500.0f, talkLips = 0.0f;
+    bool talking = false;
+    /** The words' formants on the way out: two band-passes, their states. */
+    float talkLow1 = 0.0f, talkBand1 = 0.0f, talkLow2 = 0.0f, talkBand2 = 0.0f;
     uint32_t noise = 0x2545f491u, clock = 0;
     int quietSamples = 0;
     bool asleep = true;

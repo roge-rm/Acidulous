@@ -87,6 +87,15 @@ patch "Shaken Accordion" family=accordion note=57 range=45..81 role=chord
   # The bellows turned back and forth eight times a second.
   shake          8
 
+patch "Shaken in Time" family=accordion note=57 range=45..81 role=chord
+  # The bellows turned on the song's sixteenths.
+  sync           4      # 1/16
+
+patch "Fifths Accordion" family=accordion note=57 range=45..81 role=chord
+  # The 4' rank moved down to a fifth: every note a bare fifth.
+  register       7      # 8' 4'
+  "high rank"    7
+
 # --- bandoneon and concertina -----------------------------------------------
 
 patch "Bandoneon" family=button note=57 range=40..84
@@ -132,6 +141,14 @@ patch "Full Harmonium" family=harmonium note=57 range=40..84 role=chord
   attack         80
   release        90
 
+patch "Tierce Harmonium" family=harmonium note=57 range=40..84 role=chord
+  # Every stop, the top one moved to a tenth, as an organ's tierce.
+  model          8      # harmonium
+  register       9      # 16' 8' 4'
+  "high rank"    16
+  attack         80
+  release        90
+
 patch "Celeste Harmonium" family=harmonium note=57 range=40..84 role=chord
   # Two 8' stops, one tuned a little sharp.
   model          8      # harmonium
@@ -150,6 +167,12 @@ patch "Sheng Octaves" family=pipes note=69 range=55..93
   # Two pipes a key, an octave apart, as a sheng player often doubles.
   model          9      # sheng
   register       7      # 8' 4'
+
+patch "Sheng Fifths" family=pipes note=69 range=55..93
+  # A pipe a fifth above each note.
+  model          9      # sheng
+  register       7      # 8' 4'
+  "high rank"    7
 
 patch "Sho" family=pipes note=69 range=57..93 role=chord
   # Each key its chord (aitake) where the sho has one, in the sho's own tuning.

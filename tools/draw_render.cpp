@@ -8,10 +8,14 @@
 // --bend and --wheel sweep the pitch bend (-1 to 1) and the mod wheel (0 to
 // 1) from nothing out to B or W and back, twice over the note; --steps K
 // moves them in K steps instead, as a player bends by semitones. --wah R
-// opens and closes the mod wheel about R times a second, unevenly.
+// opens and closes the mod wheel about R times a second, unevenly. --say
+// "W1|W2|..." plays the --note list one after another, each said with its
+// word (phone names, as `say` takes them).
+// --bpm B runs the song's clock, for the bellows on the grid.
 #include <engine/core/Constants.h>
 #include <engine/format/WavWriter.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/diction/Phones.h>
 
 #include <algorithm>
 #include <cmath>
@@ -38,7 +42,8 @@ int main(int argc, char **argv) {
     const std::string out = argv[1];
     std::vector<int> notes = {60};
     int velocity = 100, pressure = -1;
-    float bendTo = 0.0f, wheelTo = 0.0f, wah = 0.0f;
+    float bendTo = 0.0f, wheelTo = 0.0f, wah = 0.0f, bpm = 0.0f;
+    std::vector<std::string> words;
     int steps = 0;
     float seconds = 3.0f, hold = -1.0f;
     std::unique_ptr<Machine> m(MachineRegistry::create("Draw"));
@@ -66,6 +71,16 @@ int main(int argc, char **argv) {
         else if (a == "--wheel") wheelTo = static_cast<float>(next());
         else if (a == "--steps") steps = static_cast<int>(next());
         else if (a == "--wah") wah = static_cast<float>(next());
+        else if (a == "--bpm") bpm = static_cast<float>(next());
+        else if (a == "--say" && i + 1 < argc) {
+            const std::string all = argv[++i];
+            for (size_t from = 0; from <= all.size();) {
+                const size_t bar = all.find('|', from);
+                words.push_back(all.substr(from, bar == std::string::npos ? std::string::npos : bar - from));
+                if (bar == std::string::npos) break;
+                from = bar + 1;
+            }
+        }
         else if (a.find('=') != std::string::npos) {
             const std::string name = a.substr(0, a.find('='));
             const float value = static_cast<float>(std::atof(a.c_str() + a.find('=') + 1));
@@ -80,7 +95,14 @@ int main(int argc, char **argv) {
     const int64_t total = static_cast<int64_t>(seconds * kRate);
     const int64_t release = hold >= 0.0f ? static_cast<int64_t>(hold * kRate) : total + 1;
     if (pressure >= 0) m->channelPressure(static_cast<uint8_t>(pressure));
-    for (int n : notes) m->noteOn(static_cast<uint8_t>(n), static_cast<uint8_t>(velocity));
+    // Said, the notes are a tune, one after another; otherwise a chord.
+    const bool tune = !words.empty();
+    const int64_t each = tune ? static_cast<int64_t>(static_cast<float>(std::min(release, total)) / static_cast<float>(notes.size())) : 0;
+    size_t sung = 0;
+    if (!tune) {
+        for (int n : notes) m->noteOn(static_cast<uint8_t>(n), static_cast<uint8_t>(velocity));
+    }
+    double tick = 0.0;
     float L[kBlock], R[kBlock], inter[kBlock * 2];
     float peak = 0.0f;
     double power = 0.0;
@@ -89,9 +111,23 @@ int main(int argc, char **argv) {
     float wahNext = 0.5f;
     bool wahShut = false;
     for (int64_t t = 0; t < total; t += kBlock) {
+        if (tune && sung < notes.size() && t >= static_cast<int64_t>(sung) * each) {
+            if (sung > 0) m->noteOff(static_cast<uint8_t>(notes[sung - 1]));
+            uint8_t codes[32];
+            const std::string &w = words[std::min(sung, words.size() - 1)];
+            const int n = machine::diction::parsePhones(w.c_str(), codes, 32);
+            m->lyric(codes, n);
+            m->noteOn(static_cast<uint8_t>(notes[sung]), static_cast<uint8_t>(velocity));
+            ++sung;
+        }
         if (down && t >= release) {
             for (int n : notes) m->noteOff(static_cast<uint8_t>(n));
             down = false;
+        }
+        if (bpm > 0.0f) {
+            const double perBlock = kBlock * bpm * kPPQN / (60.0 * kRate);
+            m->onBlock(static_cast<int64_t>(tick), static_cast<int64_t>(tick + perBlock), bpm);
+            tick += perBlock;
         }
         if (bendTo != 0.0f || wheelTo != 0.0f) {
             // Out and back twice: a triangle that starts after the note has spoken.

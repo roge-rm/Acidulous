@@ -1,5 +1,7 @@
 #include "Draw.h"
+#include <engine/core/Constants.h>
 #include <engine/dsp/Math.h>
+#include <engine/machine/diction/Phones.h>
 #include <engine/machine/Voices.h>
 #include <engine/machine/draw/DrawHarp.h>
 #include <engine/machine/draw/DrawTuning.h>
@@ -52,6 +54,16 @@ constexpr float kShakeEdge = 3.0f, kShakeSpread = 0.12f;
 constexpr float kPullCents = 2.5f;
 /** A pipe's reed against true, cents at most: a shō's doubled octaves beat a few times a second. */
 constexpr float kFiled = 1.5f;
+/** Bellows turns a quarter note for each setting of `sync` (0 is free, the shake knob's own speed). */
+constexpr int kSyncTurns[7] = {0, 1, 2, 3, 4, 6, 8};
+/** Breath from a track: the track's peak that blows as hard as the knobs say, and the follower's times, seconds. */
+constexpr float kTrackFull = 0.25f, kTrackRise = 0.005f, kTrackFall = 0.08f;
+/**
+ * A talking harp: how far the words' second formant moves the mouth (as a
+ * power of it against a neutral 1500 Hz), how fast the mouth moves between
+ * sounds, seconds, and how much of the sound the words' formants colour.
+ */
+constexpr float kTalkMouth = 0.6f, kTalkGlide = 0.03f, kTalkColour = 0.9f;
 /** The mouth's sharpness behind a harp, as the hole tables were made with. */
 constexpr float kMouthQ = 6.0f;
 /** How often the mouth and hands are moved, samples. */
@@ -171,6 +183,15 @@ const ParamDef *Draw::paramDefs(int32_t &count) const {
         {"cassotto", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         // The bellows turned back and forth, turns a second; 0 is steady.
         {"shake", 0.0f, 16.0f, 0.0f, Curve::Linear, 0, "/s"},
+        // The bellows turned on the song's grid: free (the shake knob's speed), then turns a quarter (kSyncTurns).
+        {"sync", 0.0f, 6.0f, 0.0f, Curve::Stepped, 7, ""},
+        // Breath from a track: 0 none, else the rack whose level blows the reeds.
+        {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
+        // How much a harp player's words shape the mouth.
+        {"words", 0.0f, 1.0f, 0.8f, Curve::Linear, 0, ""},
+        // Where the register's 4' and 16' ranks sound, semitones: an octave either way, or any interval.
+        {"high rank", 1.0f, 24.0f, 12.0f, Curve::Stepped, 24, "st"},
+        {"low rank", -24.0f, -1.0f, -12.0f, Curve::Stepped, 24, "st"},
     };
     count = Count;
     return defs;
@@ -217,6 +238,15 @@ void Draw::reset() {
     dcIn = dcOut = 0.0f;
     shakePhase = 0.0f;
     shakeRate = sag = 1.0f;
+    ticks = 0.0;
+    trackLevel = 0.0f;
+    pendingCount = saidCount = saidAt = 0;
+    saidLeft = 0;
+    talkF1 = 500.0f;
+    talkF2 = 1500.0f;
+    talkLips = 0.0f;
+    talking = false;
+    talkLow1 = talkBand1 = talkLow2 = talkBand2 = 0.0f;
     pulling = false;
     cupLow = cupBand = 0.0f;
     hand = handSpeed = handNoise1 = handNoise2 = 0.0f;
@@ -308,9 +338,10 @@ void Draw::retune(Voice &v) {
     const float apart = clampf(targetOf(Detune), 0.0f, 40.0f);
     const bool cassotto = steppedTargetOf(Cassotto) != 0;
     const draw::Register &reg = kRegisters[v.stops];
+    const float high = static_cast<float>(steppedTargetOf(HighRank)), low = static_cast<float>(steppedTargetOf(LowRank));
     for (int i = 0; i < v.count; ++i) {
         const Rank &rank = reg.ranks[i];
-        const float sounds = note + 12.0f * static_cast<float>(rank.octave);
+        const float sounds = note + (rank.octave > 0 ? high : rank.octave < 0 ? low : 0.0f);
         const float at = clampf(sounds, 0.0f, 127.0f);
         const int lo = std::min(126, static_cast<int>(at));
         float cents = table[lo] + (table[lo + 1] - table[lo]) * (at - static_cast<float>(lo)) + apart * static_cast<float>(rank.apart);
@@ -350,7 +381,11 @@ void Draw::planPipes(Voice &v) {
     // Otherwise the register's ranks, each a pipe: a sheng often doubles at the octave.
     const int knob = std::clamp(steppedTargetOf(Register), 0, kRegisterCount - 1);
     const draw::Register &reg = kRegisters[knob > 0 ? knob : 1];
-    for (int i = 0; i < reg.count && i < kPipes; ++i) v.pipeNote[v.pipeCount++] = static_cast<float>(key + 12 * reg.ranks[i].octave);
+    const int high = steppedTargetOf(HighRank), low = steppedTargetOf(LowRank);
+    for (int i = 0; i < reg.count && i < kPipes; ++i) {
+        const int8_t o = reg.ranks[i].octave;
+        v.pipeNote[v.pipeCount++] = static_cast<float>(key + (o > 0 ? high : o < 0 ? low : 0));
+    }
 }
 
 void Draw::planHarp(Voice &v) {
@@ -496,6 +531,11 @@ void Draw::noteOn(uint8_t note, uint8_t velocity) {
     v->used = true;
     v->quietBlocks = 0;
     v->age = ++clock;
+    // A harp player says the words waiting, over the note.
+    if (pendingCount > 0) {
+        if (isHarp(v->kind)) planWords();
+        else pendingCount = 0;
+    }
     asleep = false;
     quietSamples = 0;
 }
@@ -516,6 +556,51 @@ void Draw::allNotesOff() {
             v.aim = 0.0f;
         }
     }
+}
+
+void Draw::lyric(const uint8_t *phones, int32_t count) {
+    pendingCount = std::clamp(count, 0, kMaxPhones);
+    for (int i = 0; i < pendingCount; ++i) pending[i] = phones[i];
+}
+
+void Draw::onBlock(int64_t tickStart, int64_t, float bpm) {
+    samplesPerTick = static_cast<double>(sampleRate) * 60.0 / (static_cast<double>(bpm > 1.0f ? bpm : 120.0f) * kPPQN);
+    // Kept to the sample between blocks; a jump (a locate, a loop) starts again.
+    if (std::fabs(ticks - static_cast<double>(tickStart)) > 2.0) ticks = static_cast<double>(tickStart);
+}
+
+void Draw::planWords() {
+    int32_t tableSize = 0;
+    const diction::Phone *table = diction::phoneTable(tableSize);
+    // The held sound: the last vowel, or failing one the last sound. Sounds after it are left unsaid.
+    int held = -1;
+    for (int i = 0; i < pendingCount; ++i) {
+        const int c = pending[i];
+        if (c <= 0 || c >= tableSize) continue;
+        if (table[c].kind == diction::Kind::Vowel || table[c].kind == diction::Kind::Diphthong || held < 0) held = i;
+    }
+    saidCount = 0;
+    const auto add = [&](const float *f, bool lips, float seconds) {
+        if (saidCount == kSaid) return;
+        said[saidCount++] = {f[0], f[1], lips, seconds < 0.0f ? -1 : std::max(1, static_cast<int32_t>(seconds * sampleRate))};
+    };
+    for (int i = 0; i <= held; ++i) {
+        const int c = pending[i];
+        if (c <= 0 || c >= tableSize) continue;
+        const diction::Phone &ph = table[c];
+        const bool last = i == held;
+        const bool lips = ph.place == diction::Place::Lips;
+        if (ph.kind == diction::Kind::Diphthong) {
+            add(ph.f, lips, last ? 0.12f : ph.length * 0.5f);
+            add(ph.to, lips, last ? -1.0f : ph.length * 0.5f);
+        } else {
+            add(ph.f, lips, last ? -1.0f : std::fmax(0.03f, ph.length * 0.7f));
+        }
+    }
+    pendingCount = 0;
+    saidAt = 0;
+    saidLeft = saidCount > 0 ? said[0].samples : 0;
+    talking = saidCount > 0;
 }
 
 void Draw::controlChange(uint8_t cc, uint8_t value) {
@@ -586,6 +671,19 @@ bool Draw::render(float *L, float *R, int32_t frames) {
         sag += (sagAim - sag) * (1.0f - std::exp(-static_cast<float>(frames) / (0.1f * sampleRate)));
     }
     const float shakeHz = clampf(paramOf(Shake), 0.0f, 16.0f) * 0.5f;
+    // On the grid, the bellows turn kSyncTurns a quarter: their phase is the song's clock.
+    const int syncTurns = kSyncTurns[std::clamp(steppedTargetOf(Sync), 0, 6)];
+    const double ticksPerTurn = syncTurns > 0 ? static_cast<double>(kPPQN) / syncTurns : 0.0;
+    const double tickStep = 1.0 / samplesPerTick;
+    // Breath from a track: its level, followed, blows the reeds.
+    const float *track = sidechainRack() >= 0 ? key_ : nullptr;
+    const bool fromTrack = sidechainRack() >= 0;
+    const float trackRise = 1.0f - std::exp(-1.0f / (kTrackRise * sampleRate));
+    const float trackFall = 1.0f - std::exp(-1.0f / (kTrackFall * sampleRate));
+    // A harp player's words: the mouth's formants glide between sounds.
+    const float words = clampf(paramOf(Words), 0.0f, 1.0f);
+    const bool harpModel = isHarp(std::clamp(steppedTargetOf(Model), 0, kKinds - 1));
+    const float talkFollow = 1.0f - std::exp(-static_cast<float>(kMouthEvery) / (kTalkGlide * sampleRate));
 
     // Each voice's breath or bellows: a straight rise to the pressure over
     // the attack, and down over the release.
@@ -611,27 +709,57 @@ bool Draw::render(float *L, float *R, int32_t frames) {
         const float throat = vibrato > 0.0f ? vibrato * vibratoDepth * std::sin(6.2831853f * vibratoPhase) : 0.0f;
         // The bellows shaken: the pressure dips at each turn, and the other set of reeds speaks.
         float shake = 1.0f;
-        if (shakeHz > 0.0f) {
+        const double tickWas = ticks;
+        ticks += tickStep;
+        if (syncTurns > 0 || shakeHz > 0.0f) {
             const float was = shakePhase;
-            shakePhase += shakeHz * shakeRate / sampleRate;
-            if (shakePhase >= 1.0f) shakePhase -= 1.0f;
+            if (syncTurns > 0) {
+                // A push and a pull are two turns of the grid.
+                const double turns = ticks / ticksPerTurn;
+                shakePhase = static_cast<float>(0.5 * turns - std::floor(0.5 * turns));
+                (void)tickWas;
+            } else {
+                shakePhase += shakeHz * shakeRate / sampleRate;
+                if (shakePhase >= 1.0f) shakePhase -= 1.0f;
+            }
             if ((was < 0.5f) != (shakePhase < 0.5f)) {
                 pulling = !pulling;
-                shakeRate = 1.0f + kShakeSpread * white(noise);
+                // A hand on its own keeps time unevenly; on the grid the song keeps it.
+                shakeRate = syncTurns > 0 ? 1.0f : 1.0f + kShakeSpread * white(noise);
                 for (Voice &v : voices) {
                     if (v.used && isBellows(v.kind)) retune(v);
                 }
             }
             shake = std::fmin(1.0f, kShakeEdge * std::fabs(std::sin(6.2831853f * shakePhase)));
         }
+        // The other track's level, followed quickly up and slowly down.
+        float fromTrackScale = 1.0f;
+        if (fromTrack) {
+            const float x = track != nullptr ? std::fabs(track[i]) : 0.0f;
+            trackLevel += (x - trackLevel) * (x > trackLevel ? trackRise : trackFall);
+            fromTrackScale = std::fmin(1.5f, trackLevel / kTrackFull);
+        }
         const bool reshape = --mouthCountdown <= 0;
         if (reshape) {
             mouthCountdown = kMouthEvery;
+            // The words: step through the sounds, the mouth gliding to each.
+            if (talking) {
+                if (saidLeft > 0) {
+                    saidLeft -= kMouthEvery;
+                    if (saidLeft <= 0 && saidAt + 1 < saidCount) saidLeft = said[++saidAt].samples;
+                }
+                const Said &now = said[saidAt];
+                talkF1 += (now.f1 - talkF1) * talkFollow;
+                talkF2 += (now.f2 - talkF2) * talkFollow;
+                talkLips += ((now.lips ? 1.0f : 0.0f) - talkLips) * talkFollow;
+            }
             // The hands, trembling only when they're round the harp.
             handNoise1 += (white(noise) - handNoise1) * handNoiseFollow;
             handNoise2 += (handNoise1 - handNoise2) * handNoiseFollow;
-            const float tremor = kHandTremor * kWanderScale * handNoise2 * std::fmin(1.0f, 4.0f * handAim);
-            handSpeed += (handW * handW * (handAim + tremor - hand) - 2.0f * kHandDamping * handW * handSpeed) * control;
+            // Lips shut on a word close the hands too, as a talking-harp player cups on m, b, p and w.
+            const float aimNow = clampf(handAim + (talking ? words * talkLips : 0.0f), 0.0f, 1.0f);
+            const float tremor = kHandTremor * kWanderScale * handNoise2 * std::fmin(1.0f, 4.0f * aimNow);
+            handSpeed += (handW * handW * (aimNow + tremor - hand) - 2.0f * kHandDamping * handW * handSpeed) * control;
             hand = clampf(hand + handSpeed * control, 0.0f, 1.0f);
             if (hand > 1e-4f) {
                 cupG = std::tan(3.14159265f * kCupOpen * std::pow(kCupClosed / kCupOpen, hand) / sampleRate);
@@ -649,7 +777,7 @@ bool Draw::render(float *L, float *R, int32_t frames) {
             const float w = white(noise);
             v.wander1 += (w - v.wander1) * wanderFollow;
             v.wander2 += (v.wander1 - v.wander2) * wanderFollow;
-            const float blowing = v.blown * (1.0f + k.wander * kWanderScale * v.wander2);
+            const float blowing = v.blown * (1.0f + k.wander * kWanderScale * v.wander2) * fromTrackScale;
             // Pressure added after the note started is louder as well as
             // brighter, as a player squeezing a key expects.
             if (v.held) v.squeeze += (v.aim / v.struck - v.squeeze) * squeezeFollow;
@@ -671,7 +799,9 @@ bool Draw::render(float *L, float *R, int32_t frames) {
                     v.mouth = std::exp2(at + v.mouthSpeed * control);
                     v.tongue1 += (white(noise) - v.tongue1) * tongueNoiseFollow;
                     v.tongue2 += (v.tongue1 - v.tongue2) * tongueNoiseFollow;
-                    const float shaped = v.mouth * (1.0f + kThroatMouth * throat) * (1.0f + kTongueWander * kWanderScale * v.tongue2);
+                    // A talking player's tongue moves with the words' second formant, and the note bends with it where it can.
+                    const float talk = talking ? std::pow(talkF2 / 1500.0f, kTalkMouth * words) : 1.0f;
+                    const float shaped = v.mouth * talk * (1.0f + kThroatMouth * throat) * (1.0f + kTongueWander * kWanderScale * v.tongue2);
                     for (int h = 0; h < v.holeCount; ++h) v.holes[h].shapeMouth(shaped, kMouthQ);
                 }
                 v.breath += (v.breathAim - v.breath) * breathFollow;
@@ -721,6 +851,23 @@ bool Draw::render(float *L, float *R, int32_t frames) {
         bodyY2 = bodyY1;
         bodyY1 = bp;
         float wet = bodyIn + body.bodyLift * bp;
+        // The words' formants on the harp's sound: two band-passes, the first strongest.
+        if (talking && harpModel && words > 0.0f) {
+            const float g1 = std::tan(3.14159265f * clampf(talkF1, 150.0f, 0.4f * sampleRate) / sampleRate);
+            const float g2 = std::tan(3.14159265f * clampf(talkF2, 300.0f, 0.4f * sampleRate) / sampleRate);
+            const float kq = 1.0f / 6.0f;
+            const auto band = [&](float g, float &low, float &bandState) {
+                const float hi = (wet - (kq + g) * bandState - low) / (1.0f + g * (kq + g));
+                const float b = g * hi + bandState;
+                const float l = g * b + low;
+                bandState = g * hi + b;
+                low = g * b + l;
+                return b * kq;
+            };
+            const float b1 = band(g1, talkLow1, talkBand1), b2 = band(g2, talkLow2, talkBand2);
+            const float colour = kTalkColour * words;
+            wet = wet * (1.0f - colour) + colour * 3.0f * (b1 + b2);
+        }
         if (hand > 1e-4f) {
             // A state-variable low-pass, trapezoidal.
             const float high = (wet - (cupK + cupG) * cupBand - cupLow) / (1.0f + cupG * (cupK + cupG));

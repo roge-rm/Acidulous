@@ -3559,6 +3559,10 @@ private fun DrawPanel(b: ParamBinding) {
                     PanelKnob(b, "detune", "detune", PanelPink)
                     PanelStepKnob(b, "cassotto", listOf("off", "on"), "cassotto")
                 }
+                Group("ranks") {
+                    PanelStepKnob(b, "high rank", (1..24).map { "+$it" }, "high")
+                    PanelStepKnob(b, "low rank", (-24..-1).map { "$it" }, "low")
+                }
                 Group("harp") {
                     PanelStepKnob(b, "harp key", DRAW_HARP_KEYS, "key", PanelAmber)
                     PanelStepKnob(b, "playing", listOf("player", "straight"), "playing")
@@ -3571,11 +3575,14 @@ private fun DrawPanel(b: ParamBinding) {
                     PanelKnob(b, "release", "release")
                     PanelKnob(b, "air", "air")
                     PanelKnob(b, "shake", "shake")
+                    PanelStepKnob(b, "sync", listOf("free", "1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32"), "sync")
+                    PanelStepKnob(b, "sidechain", listOf("off") + (1..16).map { "$it" }, "from track")
                 }
                 Group("hands") {
                     PanelKnob(b, "cup", "cup", PanelPink)
                     PanelKnob(b, "vibrato", "vibrato")
                     PanelKnob(b, "vib rate", "rate")
+                    PanelKnob(b, "words", "words")
                 }
             }
             else -> {

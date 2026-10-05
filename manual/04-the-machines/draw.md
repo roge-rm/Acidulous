@@ -33,6 +33,10 @@ of real ones, and the bandoneon to the one recording there was.
   side. On a harmonium, two 8′ reeds a little apart are its celeste.
 - **cassotto** - the 16′ and the first 8′ reeds speak into a tone chamber,
   which makes them mellower.
+- **high**, **low** - where the register's 4′ and 16′ ranks sound, in
+  semitones: an octave up and down to start with, or any interval, as an
+  organ's mutation stops. A 4′ moved to +7 gives every note a bare fifth;
+  +16 a tenth. They move the sheng's and khaen's extra pipes too.
 
 Reeds never quite agree, so a note on two or three reeds beats, each
 harmonic at its own speed. That's most of what makes an accordion sound like
@@ -86,6 +90,11 @@ The register works on the sheng and khaen as well: 4′ adds the octave above.
 - **shake** - the bellows turned back and forth, turns a second, as an
   accordion player shakes them. Each turn the sound dips and the other set
   of reeds speaks. Only on the accordion, bandoneon and concertina.
+- **sync** - turns the bellows on the song's grid instead: quarters,
+  eighths, triplets, sixteenths and so on, in time with the song.
+- **from track** - another track's sound blows the reeds: they speak as
+  loud as it plays and fall silent when it stops. Hold the notes and let
+  the other track play them in.
 
 The accordion, bandoneon, concertina and harmonium share one bellows, so a
 big chord lowers its pressure a little.
@@ -100,6 +109,10 @@ own, makes that note louder and brighter.
 - **vibrato** - a throat vibrato. Like a player's, it's mostly in the level
   and no two cycles are quite alike.
 - **rate** - its speed, in Hz.
+- **words** - how much a clip's words shape a harmonica, as a talking-harp
+  player does. Type words into the notes as you would for Diction: the
+  vowels colour the sound and move the player's tongue, so a note that can
+  bend bends with them, and m, b, p and w close the hands.
 
 ## Out
 

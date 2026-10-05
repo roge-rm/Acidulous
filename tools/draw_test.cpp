@@ -7,6 +7,8 @@
 //
 //   draw_test.sh
 #include <engine/machine/MachineRegistry.h>
+#include <engine/core/Constants.h>
+#include <engine/machine/diction/Phones.h>
 #include <engine/machine/draw/Draw.h>
 
 #include <algorithm>
@@ -67,9 +69,19 @@ struct Reeds {
         }
         p.jump(i, p.def(i).unmap(value));
     }
+    /** The song's clock, when a test plays on the grid; and a track to breathe from. */
+    double tick = 0.0;
+    float bpm = 0.0f;
+    const float *track = nullptr;
     void play(double seconds) {
         float L[kBlock], R[kBlock];
         for (int b = 0; b < static_cast<int>(seconds * kRate / kBlock); ++b) {
+            if (bpm > 0.0f) {
+                const double perBlock = kBlock * bpm * kPPQN / (60.0 * kRate);
+                d->onBlock(static_cast<int64_t>(tick), static_cast<int64_t>(tick + perBlock), bpm);
+                tick += perBlock;
+            }
+            d->setKey(track);
             d->render(L, R, kBlock);
             out.insert(out.end(), L, L + kBlock);
         }
@@ -310,6 +322,69 @@ void pipes() {
     }
 }
 
+void extras() {
+    std::printf("extras\n");
+    // The bellows on the grid: eighths at 120 are four turns a second, the first on the beat.
+    {
+        Reeds r({{"sync", 2.0f}});
+        r.bpm = 120.0f;
+        r.d->noteOn(57, 100);
+        r.play(3.0);
+        std::vector<double> lv;
+        for (double t = 1.0; t < 3.0; t += 0.005) lv.push_back(r.rms(t, t + 0.005));
+        const double top = *std::max_element(lv.begin(), lv.end());
+        int dips = 0;
+        double firstDip = -1.0;
+        bool in = false;
+        for (size_t i = 0; i < lv.size(); ++i) {
+            if (!in && lv[i] < top - 10.0) {
+                ++dips;
+                in = true;
+                if (firstDip < 0.0) firstDip = 1.0 + 0.005 * static_cast<double>(i);
+            }
+            if (in && lv[i] > top - 4.0) in = false;
+        }
+        // Turns fall on multiples of 0.25 s; the dip's middle is the turn.
+        const double off = std::fmod(firstDip + 0.01, 0.25);
+        check(std::fabs(dips / 2.0 - 4.0) < 0.6 && off < 0.04, "the bellows on the grid turn on the eighths",
+              fmt("%.1f turns a second, the first %.0f ms after an eighth", dips / 2.0, off * 1000.0));
+    }
+    // Breath from a track: nothing while the track is silent, the note while it plays.
+    {
+        static float loud[kBlock], quiet[kBlock];
+        for (int i = 0; i < kBlock; ++i) loud[i] = 0.5f * std::sin(6.2831853 * 220.0 * i / kRate);
+        Reeds silent({{"sidechain", 1.0f}}), playing({{"sidechain", 1.0f}});
+        silent.track = quiet;
+        playing.track = loud;
+        silent.d->noteOn(57, 100);
+        playing.d->noteOn(57, 100);
+        silent.play(0.8);
+        playing.play(0.8);
+        check(silent.rms(0.4, 0.8) < playing.rms(0.4, 0.8) - 40.0, "breath from a track: silent with it, sounding with it",
+              fmt("%.0f dB against %.0f", silent.rms(0.4, 0.8), playing.rms(0.4, 0.8)));
+    }
+    // Words on a harp: "ee" is brighter than "oo".
+    {
+        const auto said = [](const char *word) {
+            Reeds r({{"model", 0.0f}});
+            uint8_t codes[8];
+            const int n = machine::diction::parsePhones(word, codes, 8);
+            r.d->lyric(codes, n);
+            r.d->noteOn(67, 100);
+            r.play(1.0);
+            return r.centroid(noteHz(67), 0.4, 1.0);
+        };
+        const double ee = said("IY"), oo = said("UW");
+        check(ee > 1.2 * oo, "a talking harp: ee is brighter than oo", fmt("centroid %.0f against %.0f Hz", ee, oo));
+    }
+    // A 4' rank moved to a fifth sounds a fifth up.
+    {
+        const double f = noteHz(57);
+        const double fifth = heard({{"register", 5.0f}, {"high rank", 7.0f}}, 57, f * 1.4983) - heard({{"register", 5.0f}, {"high rank", 7.0f}}, 57, f);
+        check(fifth > 30.0, "a rank moved to a fifth sounds a fifth up", fmt("%+.0f dB over the note", fifth));
+    }
+}
+
 void harps() {
     std::printf("harmonicas\n");
     // Like a player on a C harp: C4 to C7, every note there's a way to play.
@@ -359,6 +434,7 @@ int main() {
     perNote();
     bellows();
     pipes();
+    extras();
     harps();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;

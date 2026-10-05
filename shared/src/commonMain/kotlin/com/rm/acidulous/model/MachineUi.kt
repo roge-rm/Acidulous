@@ -50,7 +50,7 @@ object MachineUi {
     fun takesTuning(type: String): Boolean = kindOf(type) == MachineKind.Keyboard
 
     /** Machines that take a clip's words: Diction sings them, Tongue says them with the mouth. */
-    fun takesWords(type: String): Boolean = type == "Diction" || type == "Tongue"
+    fun takesWords(type: String): Boolean = type == "Diction" || type == "Tongue" || type == "Draw"
 
     /** The accent a track's words are said in. Only Diction has one; Tongue's `accent` is a rhythm's. */
     fun wordsAccent(type: String, params: Map<String, Float>): Float = if (type == "Diction") params["accent"] ?: 0f else 0f
