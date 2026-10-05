@@ -50,6 +50,8 @@ constexpr float kSag = 0.012f;
 constexpr float kShakeEdge = 3.0f, kShakeSpread = 0.12f;
 /** A note's pull reeds against its push reeds: filed to match, never quite, cents at most. */
 constexpr float kPullCents = 2.5f;
+/** A pipe's reed against true, cents at most: a shō's doubled octaves beat a few times a second. */
+constexpr float kFiled = 1.5f;
 /** The mouth's sharpness behind a harp, as the hole tables were made with. */
 constexpr float kMouthQ = 6.0f;
 /** How often the mouth and hands are moved, samples. */
@@ -86,6 +88,14 @@ constexpr float kCupOpen = 7000.0f, kCupClosed = 900.0f, kCupLeak = 0.25f;
 constexpr float kSilent = 2e-5f;
 
 bool isHarp(int32_t kind) { return kind <= OctaveHarp; }
+/** Kinds whose reeds sound into pipes. */
+bool isPipe(int32_t kind) { return kind == Sheng || kind == Sho || kind == Khaen; }
+/** How far a pipe's reed is filed from true, cents: fixed for the pipe, so a chord's octaves beat slowly. */
+float filedCents(float note) {
+    uint32_t h = static_cast<uint32_t>(note * 16.0f) * 2246822519u;
+    h ^= h >> 13;
+    return kFiled * (static_cast<float>(h & 0xffff) / 32767.5f - 1.0f);
+}
 /** Kinds blown by bellows a hand moves, which can be shaken. */
 bool isBellows(int32_t kind) { return kind == Accordion || kind == Bandoneon || kind == Concertina; }
 
@@ -171,6 +181,7 @@ void Draw::prepare(int32_t rate) {
     for (Voice &v : voices) {
         for (FreeReed &r : v.reeds) r.prepare(sampleRate);
         for (HarpHole &h : v.holes) h.prepare(sampleRate);
+        for (PipeReed &p : v.pipes) p.prepare(sampleRate);
     }
     reset();
 }
@@ -186,6 +197,11 @@ void Draw::reset() {
             h.clear();
             h.seed(seed += 0x9e3779b9u);
         }
+        for (PipeReed &p : v.pipes) {
+            p.clear();
+            p.seed(seed += 0x9e3779b9u);
+        }
+        v.pipeCount = 0;
         v.holeCount = 0;
         for (float &c : v.chamberLow) c = 0.0f;
         v.wander1 = v.wander2 = 0.0f;
@@ -263,6 +279,25 @@ void Draw::retune(Voice &v) {
         retuneHarp(v);
         return;
     }
+    if (v.pipeCount > 0) {
+        // Each pipe tuned to its note; its reed filed to sound it (the reed sets the pitch, the pipe rings with it).
+        const float *table = kReedTuning[kKindVoices[v.kind].make];
+        const ReedMake make = makeFor(v.kind);
+        const PipeMake &pipe = kPipeMakes[v.kind - Sheng];
+        const float shift = v.baseNote - static_cast<float>(v.note) + bend * paramOf(BendRange);
+        for (int i = 0; i < v.pipeCount; ++i) {
+            const float sounds = v.pipeNote[i] + shift;
+            const int pc = static_cast<int>(std::lround(v.pipeNote[i])) % 12;
+            // The shō is tuned in fifths from A.
+            const float temper = v.kind == Sho ? kPythagorean[(pc + 12) % 12] : 0.0f;
+            const float at = clampf(sounds, 0.0f, 127.0f);
+            const int lo = std::min(126, static_cast<int>(at));
+            const float cents = table[lo] + (table[lo + 1] - table[lo]) * (at - static_cast<float>(lo));
+            const float hz = noteHz(sounds) * std::pow(2.0f, (temper + filedCents(v.pipeNote[i])) / 1200.0f);
+            v.pipes[i].make(hz, hz * std::pow(2.0f, cents / 1200.0f), make, pipe);
+        }
+        return;
+    }
     const float note = v.baseNote + bend * paramOf(BendRange);
     // Each reed is filed to sound its note: the table says how far its own
     // frequency sits from what it plays, between notes in a straight line.
@@ -291,6 +326,31 @@ void Draw::retune(Voice &v) {
         const bool inside = cassotto && (rank.octave < 0 || (rank.octave == 0 && rank.apart == 0));
         v.chamber[i] = 1.0f - (1.0f - own) * (inside ? 1.0f - kCassottoDepth : 1.0f);
     }
+}
+
+void Draw::planPipes(Voice &v) {
+    v.pipeCount = 0;
+    const int key = static_cast<int>(v.note);
+    const int aitake = v.kind == Sho && steppedTargetOf(Playing) == 0 ? kAitakeFor[key % 12] : -1;
+    if (aitake >= 0) {
+        // Played like a player, a shō key sounds its chord, at the shō's own pitch, or moved by octaves toward the key.
+        const int chord = key % 12 == 9 && key >= 81 ? 9 : aitake;
+        const int root = kAitake[chord == 9 ? 9 : chord][0];
+        const int rootPc = kAitake[chord][0] % 12;
+        (void)root;
+        int base = kAitake[chord][0];
+        for (int i = 0; i < kPipes && kAitake[chord][i] != 0; ++i) {
+            if (kAitake[chord][i] % 12 == key % 12) { base = kAitake[chord][i]; break; }
+        }
+        (void)rootPc;
+        const int octaves = static_cast<int>(std::lround(static_cast<float>(key - base) / 12.0f)) * 12;
+        for (int i = 0; i < kPipes && kAitake[chord][i] != 0; ++i) v.pipeNote[v.pipeCount++] = static_cast<float>(kAitake[chord][i] + octaves);
+        return;
+    }
+    // Otherwise the register's ranks, each a pipe: a sheng often doubles at the octave.
+    const int knob = std::clamp(steppedTargetOf(Register), 0, kRegisterCount - 1);
+    const draw::Register &reg = kRegisters[knob > 0 ? knob : 1];
+    for (int i = 0; i < reg.count && i < kPipes; ++i) v.pipeNote[v.pipeCount++] = static_cast<float>(key + 12 * reg.ranks[i].octave);
 }
 
 void Draw::planHarp(Voice &v) {
@@ -397,20 +457,25 @@ void Draw::noteOn(uint8_t note, uint8_t velocity) {
     const int count = kRegisters[stops].count;
     const int wasHoles = v->holeCount, wasHole = v->hole, wasWay = v->way;
     const float wasSign = v->sign;
+    const int wasPipes = v->pipeCount;
     v->holeCount = 0;
+    v->pipeCount = 0;
     if (isHarp(v->kind)) planHarp(*v);
+    if (isPipe(v->kind)) planPipes(*v);
     // Played again the same way, the reeds go on swinging; otherwise they start from rest.
-    const bool same = sounding && stops == v->stops && v->holeCount == wasHoles &&
+    const bool same = sounding && stops == v->stops && v->holeCount == wasHoles && v->pipeCount == wasPipes &&
                       (v->holeCount == 0 || (v->hole == wasHole && v->way == wasWay && v->sign == wasSign));
     if (!same) {
         for (FreeReed &r : v->reeds) r.clear();
         for (HarpHole &h : v->holes) h.clear();
+        for (PipeReed &p : v->pipes) p.clear();
         v->blown = 0.0f;
     }
     v->count = count;
     v->stops = stops;
     // Reeds sounding together share the level, though more of them are a little louder.
-    v->share = v->holeCount > 1 ? 1.0f / std::sqrt(static_cast<float>(v->holeCount)) : std::pow(static_cast<float>(count), -0.35f);
+    v->share = v->holeCount > 1 ? 1.0f / std::sqrt(static_cast<float>(v->holeCount))
+                                : std::pow(static_cast<float>(v->pipeCount > 0 ? v->pipeCount : count), -0.35f);
     retune(*v);
     if (!same) {
         // A bend is scooped into from a little above, as a player does: the reed speaks at once and is taken down.
@@ -615,6 +680,12 @@ bool Draw::render(float *L, float *R, int32_t frames) {
                     const float one = v.holes[h].step(breath) * (h == 0 ? 1.0f : kOtherReed);
                     if (std::isfinite(one)) out += one;
                     else v.holes[h].clear();
+                }
+            } else if (v.pipeCount > 0) {
+                for (int p = 0; p < v.pipeCount; ++p) {
+                    const float one = v.pipes[p].step(blowing, k.supply);
+                    if (std::isfinite(one)) out += one;
+                    else v.pipes[p].clear();
                 }
             } else {
                 const bool bellows = isBellows(v.kind) || v.kind == Harmonium;

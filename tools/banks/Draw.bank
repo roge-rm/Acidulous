@@ -12,7 +12,9 @@
 # accordion's registers rank by rank 6.9, brightness within about a
 # semitone; the noise between the harmonics to within 5 dB (natural.py).
 # The accordion sounds two reeds a note, 15 cents apart unless a patch says;
-# registers choose 16', 8' and 4' ranks, as its switches do.
+# registers choose 16', 8' and 4' ranks, as its switches do. A sheng's,
+# sho's or khaen's reed sounds into a pipe (draw::PipeReed) that rings with
+# it and filters it: the sheng's even harmonics 35 dB down.
 
 # Accordion patches play the `chord` phrase, the others `tune`. Values are in
 # each parameter's own units; `audition params Draw` lists them. A patch
@@ -32,7 +34,9 @@
 #   - The bandoneon is fitted to one low note, 3 semitones bright; the
 #     concertina is voiced by ear, with no recording to fit.
 #   - The shaken patches warn of a wobble: that's the shake.
-#   - The sheng, sho, khaen and pitch pipe play the nearest of the others.
+#   - The pipes are driven by their reeds and don't pull them: a pipe can't
+#     choke a reed or lock it to a different note, as a real one can.
+#   - The sho tunes A to 440, not its traditional 430; tune -40 for that.
 
 machine Draw
 role    tune
@@ -135,6 +139,35 @@ patch "Celeste Harmonium" family=harmonium note=57 range=40..84 role=chord
   detune         7
   attack         90
   release        100
+
+# --- pipes ------------------------------------------------------------------
+
+patch "Sheng" family=pipes note=69 range=55..93
+  # Each reed in its pipe: nearly pure, the pipe ringing with it.
+  model          9      # sheng
+
+patch "Sheng Octaves" family=pipes note=69 range=55..93
+  # Two pipes a key, an octave apart, as a sheng player often doubles.
+  model          9      # sheng
+  register       7      # 8' 4'
+
+patch "Sho" family=pipes note=69 range=57..93 role=chord
+  # Each key its chord (aitake) where the sho has one, in the sho's own tuning.
+  model          10     # sho
+  attack         300
+  release        400
+
+patch "Sho Pipes" family=pipes note=81 range=69..90
+  # The sho's pipes one at a time.
+  model          10     # sho
+  playing        1      # straight
+
+patch "Khaen" family=pipes note=57 range=45..81
+  # Its reeds heard in the wind chest as well as the pipes: buzzier.
+  model          11     # khaen
+
+patch "Pitch Pipe" family=pipes note=69 range=60..84
+  model          12     # pitch pipe
 
 # --- melodica ----------------------------------------------------------------
 

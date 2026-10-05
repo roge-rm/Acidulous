@@ -123,7 +123,7 @@ double noteHz(double n) { return 440.0 * std::pow(2.0, (n - 69.0) / 12.0); }
 void tuning() {
     std::printf("tuning\n");
     // Each instrument over the notes it's made for.
-    const int ranges[][3] = {{4, 33, 96}, {5, 33, 91}, {6, 48, 96}, {7, 53, 89}, {8, 40, 96}};
+    const int ranges[][3] = {{4, 33, 96}, {5, 33, 91}, {6, 48, 96}, {7, 53, 89}, {8, 40, 96}, {9, 55, 93}, {11, 45, 81}, {12, 60, 84}};
     for (const auto &range : ranges) {
         const int model = range[0];
         double worst = 0.0, at = 0.0;
@@ -280,6 +280,36 @@ void bellows() {
     }
 }
 
+void pipes() {
+    std::printf("pipes\n");
+    // A reed in a closed pipe: the pipe rings at the note and its odd harmonics, so the 2nd is far down.
+    {
+        Reeds r({{"model", 9.0f}});
+        r.d->noteOn(69, 100);
+        r.play(1.0);
+        const double h2 = r.level(880.0, 0.4, 1.0) - r.level(440.0, 0.4, 1.0);
+        check(h2 < -20.0, "a sheng's pipe takes out the even harmonics", fmt("2nd %+.0f dB", h2));
+    }
+    // A sho key sounds its chord: kotsu, on A, is A4 E5 A5 B5 E6 F#6, tuned in fifths from A.
+    {
+        Reeds r({{"model", 10.0f}});
+        r.d->noteOn(69, 100);
+        r.play(2.0);
+        const double a4 = r.level(440.0, 1.0, 2.0);
+        double weakest = 0.0, worst = 0.0;
+        const int pipes[] = {69, 76, 81, 83, 88, 90};
+        for (int n : pipes) {
+            const double pyth[12] = {-5.9, 7.8, -2.0, 11.7, 2.0, -7.8, 5.9, -3.9, 9.8, 0.0, -9.8, 3.9};
+            const double f = noteHz(n) * std::pow(2.0, pyth[n % 12] / 1200.0);
+            const double got = r.peak(f * 0.99, f * 1.01, 1.0, 2.0);
+            weakest = std::min(weakest, r.level(f, 1.0, 2.0) - a4);
+            if (std::fabs(cents(got, f)) > std::fabs(worst)) worst = cents(got, f);
+        }
+        check(weakest > -30.0 && std::fabs(worst) < 4.0, "a sho key sounds its chord, in fifths from A",
+              fmt("quietest pipe %+.0f dB against A4, worst %+.1f c", weakest, worst));
+    }
+}
+
 void harps() {
     std::printf("harmonicas\n");
     // Like a player on a C harp: C4 to C7, every note there's a way to play.
@@ -328,6 +358,7 @@ int main() {
     threshold();
     perNote();
     bellows();
+    pipes();
     harps();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;

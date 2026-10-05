@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <engine/machine/draw/FreeReed.h>
+#include <engine/machine/draw/PipeReed.h>
 
 // What makes each kind of free reed instrument itself: its reeds, how the
 // player's breath or the bellows feed them, and what the sound passes
@@ -94,10 +95,40 @@ inline constexpr KindVoice kKindVoices[kKinds] = {// make         supply  pressu
     {ConcertinaReed, 2e-5f, 450.0f, 900.0f, 4.5000e+03f, 2.8000e+03f, 1200.0f, 3.0000e-01f, 0.9f, 0.05f, 1},  // concertina
     {MelodicaReed,  4e-6f,  550.0f, 1000.0f, 2600.0f,  1000.0f, 1200.0f, 0.8f, 0.82f, 0.06f, 1},  // melodica
     {HarmoniumReed, 2e-5f, 900.0f, 1600.0f, 2.0000e+03f, 2.1120e+03f, 900.0f, 4.0000e-01f, 0.33f, 0.05f, 7},  // harmonium
-    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.6f, 0.06f, 1},  // sheng
-    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.6f, 0.06f, 1},  // sho
-    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.6f, 0.06f, 1},  // khaen
-    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.6f, 0.06f, 1},  // pitch pipe
+    {HarpReed,      5e-6f,  600.0f, 1100.0f, 12000.0f, 5000.0f, 1800.0f, 0.0f, 0.24f, 0.06f, 1},  // sheng
+    {HarpReed,      5e-6f,  600.0f, 1100.0f, 12000.0f, 5000.0f, 1800.0f, 0.0f, 0.19f, 0.06f, 1},  // sho
+    {HarpReed,      5e-6f,  600.0f, 1100.0f, 12000.0f, 5000.0f, 1800.0f, 0.0f, 0.32f, 0.06f, 1},  // khaen
+    {HarpReed,      5e-6f,  600.0f, 1100.0f, 16000.0f, 5000.0f, 1800.0f, 0.6f, 0.75f, 0.06f, 1},  // pitch pipe
 };
+
+/** The pipes of the sheng, shō and khaen, in that order: bore, reflection, corner, reed heard, stray. */
+inline constexpr PipeMake kPipeMakes[3] = {
+    {8e-3f, 0.99f, 6.0f, 0.05f, 0.4f},  // sheng
+    {7e-3f, 0.995f, 5.0f, 0.02f, 0.3f}, // shō: narrow and pure
+    {9e-3f, 0.97f, 8.0f, 0.4f, 0.5f},   // khaen: its reeds heard in the wind chest too
+};
+
+/**
+ * The shō's fifteen pipes, MIDI notes (Pythagorean, from A), and its eleven
+ * chords (aitake), each up to six of them, 0 past the last.
+ */
+inline constexpr int kShoAitake = 11;
+inline constexpr int kAitake[kShoAitake][6] = {
+    {69, 76, 81, 83, 88, 90}, // kotsu (A)
+    {71, 74, 76, 81, 83, 90}, // ichi (B)
+    {73, 74, 76, 80, 81, 83}, // ku (C#)
+    {74, 76, 81, 83, 88, 90}, // bo (D)
+    {76, 81, 83, 86, 88, 90}, // otsu (E)
+    {78, 80, 81, 83, 86, 90}, // ge (F#)
+    {78, 79, 81, 83, 86, 88}, // ju (G)
+    {79, 81, 83, 86, 88, 0},  // ju, sojo
+    {80, 81, 83, 84, 86, 90}, // bi (G#)
+    {81, 83, 86, 88, 90, 0},  // gyo (A, high)
+    {81, 83, 84, 86, 88, 90}, // hi (C)
+};
+/** The aitake each pitch class plays (C up to B), -1 for none; A is kotsu below the high A, gyo from it. */
+inline constexpr int kAitakeFor[12] = {10, 2, 3, -1, 4, -1, 5, 6, 8, 0, -1, 1};
+/** Pythagorean tuning from A, cents against equal temperament, C up to B. */
+inline constexpr float kPythagorean[12] = {-5.9f, 7.8f, -2.0f, 11.7f, 2.0f, -7.8f, 5.9f, -3.9f, 9.8f, 0.0f, -9.8f, 3.9f};
 
 } // namespace acidulous::machine::draw

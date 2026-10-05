@@ -3390,47 +3390,77 @@ internal object FactoryBanks {
         family = "harmonium",
         low = 40, high = 84)
 
-    private fun draw18() = Patch("Draw", "Melodica",
+    private fun draw18() = Patch("Draw", "Sheng",
+        mapOf("model" to 0.75f),
+        family = "pipes",
+        low = 55, high = 93)
+
+    private fun draw19() = Patch("Draw", "Sheng Octaves",
+        mapOf("model" to 0.75f, "register" to 0.5833333f),
+        family = "pipes",
+        low = 55, high = 93)
+
+    private fun draw20() = Patch("Draw", "Sho",
+        mapOf("model" to 0.8333333f, "attack" to 0.85521704f, "release" to 0.863423944f),
+        family = "pipes",
+        low = 57, high = 93)
+
+    private fun draw21() = Patch("Draw", "Sho Pipes",
+        mapOf("model" to 0.8333333f, "playing" to 1f),
+        family = "pipes",
+        low = 69, high = 90)
+
+    private fun draw22() = Patch("Draw", "Khaen",
+        mapOf("model" to 0.9166667f),
+        family = "pipes",
+        low = 45, high = 81)
+
+    private fun draw23() = Patch("Draw", "Pitch Pipe",
+        mapOf("model" to 1f),
+        family = "pipes",
+        low = 60, high = 84)
+
+    private fun draw24() = Patch("Draw", "Melodica",
         mapOf("model" to 0.5833333f),
         family = "melodica",
         low = 53, high = 77)
 
-    private fun draw19() = Patch("Draw", "Breathy Melodica",
+    private fun draw25() = Patch("Draw", "Breathy Melodica",
         mapOf("model" to 0.5833333f, "pressure" to 0.35f, "attack" to 0.5512401f, "air" to 0.6f),
         family = "melodica",
         low = 53, high = 77)
 
-    private fun draw20() = Patch("Draw", "Harp",
+    private fun draw26() = Patch("Draw", "Harp",
         mapOf("model" to 0f),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw21() = Patch("Draw", "Cupped Harp",
+    private fun draw27() = Patch("Draw", "Cupped Harp",
         mapOf("model" to 0f, "cup" to 0.55f, "vibrato" to 0.35f, "vib rate" to 0.5f),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw22() = Patch("Draw", "Straight Harp",
+    private fun draw28() = Patch("Draw", "Straight Harp",
         mapOf("model" to 0f, "playing" to 1f),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw23() = Patch("Draw", "Chromatic",
+    private fun draw29() = Patch("Draw", "Chromatic",
         mapOf("model" to 0.0833333358f, "vibrato" to 0.2f, "vib rate" to 0.5714286f),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw24() = Patch("Draw", "Tremolo Harp",
+    private fun draw30() = Patch("Draw", "Tremolo Harp",
         mapOf("model" to 0.166666672f, "detune" to 0.3f),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw25() = Patch("Draw", "Octave Harp",
+    private fun draw31() = Patch("Draw", "Octave Harp",
         mapOf("model" to 0.25f),
         family = "harmonica",
         low = 60, high = 84)
 
-    private val draw: List<Patch> by lazy { listOf(draw0(), draw1(), draw2(), draw3(), draw4(), draw5(), draw6(), draw7(), draw8(), draw9(), draw10(), draw11(), draw12(), draw13(), draw14(), draw15(), draw16(), draw17(), draw18(), draw19(), draw20(), draw21(), draw22(), draw23(), draw24(), draw25()) }
+    private val draw: List<Patch> by lazy { listOf(draw0(), draw1(), draw2(), draw3(), draw4(), draw5(), draw6(), draw7(), draw8(), draw9(), draw10(), draw11(), draw12(), draw13(), draw14(), draw15(), draw16(), draw17(), draw18(), draw19(), draw20(), draw21(), draw22(), draw23(), draw24(), draw25(), draw26(), draw27(), draw28(), draw29(), draw30(), draw31()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

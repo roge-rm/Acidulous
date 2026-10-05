@@ -9,15 +9,14 @@ note and stops when the air does, the way a real reed does. Blow harder and
 it gets brighter and louder while the pitch hardly moves.
 
 The accordion, harmonium, melodica and harmonicas were fitted to recordings
-of real ones, and the bandoneon to the one recording there was. The reeds
-in pipes are still to come.
+of real ones, and the bandoneon to the one recording there was.
 
 ## Reeds
 
 - **model** - the instrument. The harmonicas (**diatonic**, **chromatic**,
   **tremolo harp**, **octave harp**), **accordion**, **bandoneon**,
-  **concertina**, **melodica** and **harmonium** are ready; the sheng, shō,
-  khaen and pitch pipe play the nearest of these for now.
+  **concertina**, **melodica**, **harmonium**, the reeds in pipes
+  (**sheng**, **shō**, **khaen**) and the **pitch pipe**.
 - **tune** - in cents.
 - **set** - how far each reed rests from its slot. Closer speaks sooner and
   brighter, and chokes sooner when blown hard.
@@ -60,6 +59,20 @@ Pitch bend down on a diatonic harp played like a player bends the note with
 your tongue, as far as its hole will go: a lot on holes 2 and 3, a little on
 the others. Bend up, and on the notes that don't bend, moves the note
 instead.
+
+## Pipes
+
+The sheng, shō and khaen sound each reed into a bamboo pipe, which rings
+with it and takes most of its edge off: they're close to pure. The khaen's
+reeds are heard in its wind chest too, so it's buzzier.
+
+On the shō, **playing** set to **player** gives each key its chord
+(aitake) where the shō has one, at the shō's own pitch, tuned in fifths
+from A: A, B, C, C♯, D, E, F♯, G, G♯ and the high A each have one. The
+other keys, and **straight**, play single pipes. Its pipes are never
+filed quite alike, so its chords shimmer.
+
+The register works on the sheng and khaen as well: 4′ adds the octave above.
 
 ## Breath
 

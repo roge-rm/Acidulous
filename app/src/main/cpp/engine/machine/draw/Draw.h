@@ -4,6 +4,7 @@
 #include <engine/machine/draw/DrawKinds.h>
 #include <engine/machine/draw/FreeReed.h>
 #include <engine/machine/draw/HarpHole.h>
+#include <engine/machine/draw/PipeReed.h>
 
 namespace acidulous::machine {
 
@@ -55,6 +56,8 @@ class Draw final : public Machine {
     const draw::FreeReed *reedFor(uint8_t note) const;
     /** Reeds a note sounds at most. */
     static constexpr int kReeds = 5;
+    /** Pipes a note sounds at most: a shō's chord. */
+    static constexpr int kPipes = 6;
     /** How a harmonica note is played: on a hole as it is, bent, or on a reed of its own. */
     enum HarpWay : int32_t { Natural = 0, Bent, Single };
 
@@ -88,6 +91,10 @@ class Draw final : public Machine {
         float level = 0.0f;
         /** The breath's or bellows' slow wander: a smoothed noise, two poles. */
         float wander1 = 0.0f, wander2 = 0.0f;
+        /** A pipe instrument's pipes for the note, and the MIDI note each sounds (before bend and tune). */
+        draw::PipeReed pipes[kPipes];
+        int pipeCount = 0;
+        float pipeNote[kPipes] = {};
         /** A harmonica's holes (two on a tremolo or octave harp), none for other kinds. */
         draw::HarpHole holes[2];
         int holeCount = 0;
@@ -116,6 +123,8 @@ class Draw final : public Machine {
     /** The pressure a held voice is blown at, Pa. */
     float aimFor(const Voice &v) const;
     draw::ReedMake makeFor(int32_t kind) const;
+    /** Places a pipe instrument's note: its pipes, a shō's chord. */
+    void planPipes(Voice &v);
     /** Places a harmonica note: which hole and how, or a reed of its own. */
     void planHarp(Voice &v);
     /** Makes a harmonica voice's reeds and aims its mouth for the note and the pitch wheel. */
