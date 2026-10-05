@@ -8,24 +8,32 @@ a slot, blown by the air pressing on it. It starts slowly, settles on its
 note and stops when the air does, the way a real reed does. Blow harder and
 it gets brighter and louder while the pitch hardly moves.
 
-The accordion, melodica and harmonicas were fitted to recordings of real
-ones. The other kinds are still to come.
+The accordion, harmonium, melodica and harmonicas were fitted to recordings
+of real ones, and the bandoneon to the one recording there was. The reeds
+in pipes are still to come.
 
 ## Reeds
 
 - **model** - the instrument. The harmonicas (**diatonic**, **chromatic**,
-  **tremolo harp**, **octave harp**), **accordion** and **melodica** are
-  ready; the others play the nearest of these for now.
+  **tremolo harp**, **octave harp**), **accordion**, **bandoneon**,
+  **concertina**, **melodica** and **harmonium** are ready; the sheng, shō,
+  khaen and pitch pipe play the nearest of these for now.
 - **tune** - in cents.
 - **set** - how far each reed rests from its slot. Closer speaks sooner and
   brighter, and chokes sooner when blown hard.
 - **chamber** - the size of the space behind each reed. It changes how the
   reed starts and the colour of the note.
-- **reeds** - how many reeds each note sounds, up to three, or **auto** for
-  the instrument's own: two on an accordion, one on the rest.
-- **detune** - how far a note's reeds are tuned apart, in cents. At 0 they
-  agree (dry); 10 to 15 beats gently (tremolo); 25 and more beats fast (a wet
-  musette). With three, one sits on the note and the others either side.
+- **register** - which reeds each note sounds, as an accordion's register
+  switches do. They're named by footage: 8′ sounds the note, 16′ an octave
+  down and 4′ an octave up, and up to three 8′ reeds can sound together.
+  **auto** is the instrument's own: two 8′ on an accordion, 16′ and 8′ on a
+  bandoneon, 8′ and 4′ on a harmonium, one 8′ on the rest.
+- **detune** - how far a note's 8′ reeds are tuned apart, in cents. At 0
+  they agree (dry); 10 to 15 beats gently (tremolo); 25 and more beats fast
+  (a wet musette). With three, one sits on the note and the others either
+  side. On a harmonium, two 8′ reeds a little apart are its celeste.
+- **cassotto** - the 16′ and the first 8′ reeds speak into a tone chamber,
+  which makes them mellower.
 
 Reeds never quite agree, so a note on two or three reeds beats, each
 harmonic at its own speed. That's most of what makes an accordion sound like
@@ -62,6 +70,12 @@ instead.
 - **air** - the air you hear: the breath, and the turbulence of the air
   through each reed. No breath or bellows is quite even, and the reeds wander
   a little with it.
+- **shake** - the bellows turned back and forth, turns a second, as an
+  accordion player shakes them. Each turn the sound dips and the other set
+  of reeds speaks. Only on the accordion, bandoneon and concertina.
+
+The accordion, bandoneon, concertina and harmonium share one bellows, so a
+big chord lowers its pressure a little.
 
 Pressure added while a note is held, from aftertouch or a key that sends its
 own, makes that note louder and brighter.

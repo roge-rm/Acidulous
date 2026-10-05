@@ -123,13 +123,13 @@ double noteHz(double n) { return 440.0 * std::pow(2.0, (n - 69.0) / 12.0); }
 void tuning() {
     std::printf("tuning\n");
     // Each instrument over the notes it's made for.
-    const int ranges[][3] = {{4, 33, 96}, {7, 53, 89}};
+    const int ranges[][3] = {{4, 33, 96}, {5, 33, 91}, {6, 48, 96}, {7, 53, 89}, {8, 40, 96}};
     for (const auto &range : ranges) {
         const int model = range[0];
         double worst = 0.0, at = 0.0;
         for (int note = range[1]; note <= range[2]; note += 5) {
             // One reed: a pair a few cents apart is closer than the window can part.
-            Reeds r({{"model", static_cast<float>(model)}, {"reeds", 1.0f}});
+            Reeds r({{"model", static_cast<float>(model)}, {"register", 1.0f}, {"shake", 0.0f}});
             r.d->noteOn(static_cast<uint8_t>(note), 100);
             r.play(1.0);
             const double f = noteHz(note);
@@ -196,7 +196,7 @@ void threshold() {
 void perNote() {
     std::printf("pressure for one note\n");
     // One reed a note, so neither beats against its pair between the two stretches.
-    Reeds r({{"reeds", 1.0f}});
+    Reeds r({{"register", 1.0f}});
     r.d->noteOn(60, 90);
     r.d->noteOn(67, 90);
     r.play(0.5);
@@ -223,6 +223,61 @@ double playedCents(std::initializer_list<std::pair<const char *, float>> knobs, 
     const double c = track[track.size() / 2];
     if (std::getenv("VERBOSE")) std::printf("    note %d: %+.1f c\n", note, c);
     return c;
+}
+
+/** The fundamental's level, dB, of [hz] in a note held with these knobs. */
+double heard(std::initializer_list<std::pair<const char *, float>> knobs, int note, double hz) {
+    Reeds r(knobs);
+    r.d->noteOn(static_cast<uint8_t>(note), 100);
+    r.play(1.0);
+    return r.level(hz, 0.4, 1.0);
+}
+
+void bellows() {
+    std::printf("bellows\n");
+    // A 16' reed sounds an octave below the note, where an 8' has nothing;
+    // a 4' has nothing at the note itself.
+    const double f = noteHz(57);
+    const double low = heard({{"register", 4.0f}}, 57, f / 2) - heard({{"register", 1.0f}}, 57, f / 2);
+    const double high = heard({{"register", 1.0f}}, 57, f) - heard({{"register", 5.0f}}, 57, f);
+    check(low > 30.0 && high > 30.0, "16' sounds an octave down, 4' an octave up", fmt("16' %+.0f dB an octave down, 8' %+.0f dB over a 4' at the note", low, high));
+    // Two 8' reeds 20 cents apart beat at the difference: the fundamental's level swings at it.
+    {
+        Reeds r({{"register", 2.0f}, {"detune", 20.0f}});
+        r.d->noteOn(69, 100);
+        r.play(3.0);
+        const double want = 440.0 * (std::pow(2.0, 20.0 / 1200.0) - 1.0);
+        // The beat's rate: count the fundamental's level dips over two seconds in 20 ms windows.
+        std::vector<double> lv;
+        for (double t = 1.0; t < 3.0; t += 0.02) lv.push_back(r.level(440.0 * std::pow(2.0, 10.0 / 1200.0), t, t + 0.04));
+        int dips = 0;
+        for (size_t i = 1; i + 1 < lv.size(); ++i) dips += lv[i] < lv[i - 1] && lv[i] <= lv[i + 1] && lv[i] < *std::max_element(lv.begin(), lv.end()) - 6.0;
+        check(std::fabs(dips / 2.0 - want) < 1.0, "musette: two reeds 20 cents apart beat at the difference", fmt("%.1f beats/s, wanted %.1f", dips / 2.0, want));
+    }
+    // The cassotto darkens the 16' and first 8'.
+    Reeds open({{"register", 6.0f}}), boxed({{"register", 6.0f}, {"cassotto", 1.0f}});
+    open.d->noteOn(57, 100);
+    boxed.d->noteOn(57, 100);
+    open.play(1.0);
+    boxed.play(1.0);
+    check(boxed.centroid(f / 2, 0.4, 1.0) < 0.97 * open.centroid(f / 2, 0.4, 1.0), "the cassotto is darker",
+          fmt("centroid %.0f against %.0f Hz", boxed.centroid(f / 2, 0.4, 1.0), open.centroid(f / 2, 0.4, 1.0)));
+    // Shaken 8 times a second, the level dips about 8 times a second.
+    {
+        Reeds r({{"shake", 8.0f}});
+        r.d->noteOn(57, 100);
+        r.play(3.0);
+        std::vector<double> lv;
+        for (double t = 1.0; t < 3.0; t += 0.01) lv.push_back(r.rms(t, t + 0.01));
+        const double top = *std::max_element(lv.begin(), lv.end());
+        int dips = 0;
+        bool in = false;
+        for (double l : lv) {
+            if (!in && l < top - 10.0) { ++dips; in = true; }
+            if (in && l > top - 4.0) in = false;
+        }
+        check(std::fabs(dips / 2.0 - 8.0) < 1.5, "the bellows shaken 8 times a second dip 8 times", fmt("%.1f a second", dips / 2.0));
+    }
 }
 
 void harps() {
@@ -272,6 +327,7 @@ int main() {
     attack();
     threshold();
     perNote();
+    bellows();
     harps();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;

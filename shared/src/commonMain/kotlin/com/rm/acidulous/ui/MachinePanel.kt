@@ -3534,6 +3534,11 @@ private val DRAW_MODELS = listOf(
     "melodica", "harmonium", "sheng", "shō", "khaen", "pitch pipe",
 )
 
+private val DRAW_REGISTERS = listOf(
+    "auto", "8′", "8′ 8′", "8′ 8′ 8′", "16′", "4′", "16′ 8′", "8′ 4′", "16′ 4′",
+    "16′ 8′ 4′", "8′ 8′ 4′", "16′ 8′ 8′ 4′", "16′ 8′ 8′ 8′ 4′",
+)
+
 private val DRAW_HARP_KEYS = listOf("G", "A♭", "A", "B♭", "B", "C", "D♭", "D", "E♭", "E", "F", "F♯")
 
 /** Draw: the reeds, the breath or bellows, and the rest. */
@@ -3550,8 +3555,9 @@ private fun DrawPanel(b: ParamBinding) {
                 Group("reed") {
                     PanelKnob(b, "set", "set", PanelAmber)
                     PanelKnob(b, "chamber", "chamber")
-                    PanelStepKnob(b, "reeds", listOf("auto", "1", "2", "3"), "reeds")
+                    PanelStepKnob(b, "register", DRAW_REGISTERS, "register", PanelAmber)
                     PanelKnob(b, "detune", "detune", PanelPink)
+                    PanelStepKnob(b, "cassotto", listOf("off", "on"), "cassotto")
                 }
                 Group("harp") {
                     PanelStepKnob(b, "harp key", DRAW_HARP_KEYS, "key", PanelAmber)
@@ -3564,6 +3570,7 @@ private fun DrawPanel(b: ParamBinding) {
                     PanelKnob(b, "attack", "attack")
                     PanelKnob(b, "release", "release")
                     PanelKnob(b, "air", "air")
+                    PanelKnob(b, "shake", "shake")
                 }
                 Group("hands") {
                     PanelKnob(b, "cup", "cup", PanelPink)

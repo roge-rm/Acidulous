@@ -27,8 +27,9 @@ class Draw final : public Machine {
     enum P : int32_t {
         Model = 0, Tune, Pressure, Attack, Release, Set, Chamber, Air,
         Voices, VelocityAmount, BendRange, Octave, Volume,
-        Reeds, Detune,
+        Register, Detune,
         HarpKey, Playing, Cup, Vibrato, VibratoRate,
+        Cassotto, Shake,
         Count
     };
     static_assert(Count <= kMaxParams, "too many parameters");
@@ -53,7 +54,7 @@ class Draw final : public Machine {
     /** A voice's first reed, for tests: the one playing [note], or null. */
     const draw::FreeReed *reedFor(uint8_t note) const;
     /** Reeds a note sounds at most. */
-    static constexpr int kReeds = 3;
+    static constexpr int kReeds = 5;
     /** How a harmonica note is played: on a hole as it is, bent, or on a reed of its own. */
     enum HarpWay : int32_t { Natural = 0, Bent, Single };
 
@@ -61,9 +62,14 @@ class Draw final : public Machine {
     static constexpr int kVoices = 8;
 
     struct Voice {
-        /** The note's reeds, tuned apart by the detune knob; [count] of them sound. */
+        /** The note's reeds, one for each rank of its register; [count] of them sound. */
         draw::FreeReed reeds[kReeds];
         int count = 1;
+        int32_t stops = 1;
+        /** Each reed's level against the first, and how much its rank and the cassotto darken it, with their low-pass. */
+        float rankLevel[kReeds] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+        float chamber[kReeds] = {};
+        float chamberLow[kReeds] = {};
         float share = 1.0f;
         bool used = false, held = false;
         uint8_t note = 0;
@@ -129,6 +135,11 @@ class Draw final : public Machine {
     /** The mod wheel, 0 to 1; the throat's vibrato, its phase in turns, and this cycle's rate and depth. */
     float wheel = 0.0f, vibratoPhase = 0.0f, vibratoRate = 1.0f, vibratoDepth = 1.0f;
     int mouthCountdown = 0;
+    /** The bellows shaken: where in a push and a pull they are, in turns, this one's speed, and which way they go. */
+    float shakePhase = 0.0f, shakeRate = 1.0f;
+    bool pulling = false;
+    /** The bellows' pressure as many reeds draw on them, a share. */
+    float sag = 1.0f;
     uint32_t noise = 0x2545f491u, clock = 0;
     int quietSamples = 0;
     bool asleep = true;

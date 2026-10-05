@@ -37,6 +37,19 @@ constexpr float kHarpHiss = 0.5f;
 constexpr float kWanderScale = 10.0f;
 /** A note's other reeds against its first: two reeds never match. */
 constexpr float kOtherReed = 0.8f;
+/** A 16' reed and a 4' against an 8', as an accordion's ranks are voiced: level, and how much darker. */
+constexpr float kLowRank = 0.9f, kHighRank = 0.6f, kLowDark = 0.5f, kHighDark = 0.7f;
+/** The cassotto: a chamber the 16' and first 8' reeds speak into, darker above this, Hz, by this share. */
+constexpr float kCassottoHz = 1000.0f, kCassottoDepth = 0.7f;
+/** Many reeds drawing on one bellows lower its pressure: the share lost per reed beyond two. */
+constexpr float kSag = 0.012f;
+/**
+ * The bellows shaken: how sharply the pressure dips at each turn (higher is
+ * a briefer dip), and how unevenly a hand keeps time, a share.
+ */
+constexpr float kShakeEdge = 3.0f, kShakeSpread = 0.12f;
+/** A note's pull reeds against its push reeds: filed to match, never quite, cents at most. */
+constexpr float kPullCents = 2.5f;
 /** The mouth's sharpness behind a harp, as the hole tables were made with. */
 constexpr float kMouthQ = 6.0f;
 /** How often the mouth and hands are moved, samples. */
@@ -73,6 +86,15 @@ constexpr float kCupOpen = 7000.0f, kCupClosed = 900.0f, kCupLeak = 0.25f;
 constexpr float kSilent = 2e-5f;
 
 bool isHarp(int32_t kind) { return kind <= OctaveHarp; }
+/** Kinds blown by bellows a hand moves, which can be shaken. */
+bool isBellows(int32_t kind) { return kind == Accordion || kind == Bandoneon || kind == Concertina; }
+
+/** How far a note's pull reed for [rank] sits from its push reed, cents: fixed for the note, as filed. */
+float pullCents(int note, int rank) {
+    uint32_t h = static_cast<uint32_t>(note * 131 + rank * 7919) * 2654435761u;
+    h ^= h >> 15;
+    return kPullCents * (static_cast<float>(h & 0xffff) / 32767.5f - 1.0f);
+}
 
 /** A valved reed's tuning at [note] (DrawHarp.h), between notes in a straight line. */
 float singleTune(float note) {
@@ -123,8 +145,8 @@ const ParamDef *Draw::paramDefs(int32_t &count) const {
         {"bend", 0.0f, 12.0f, 2.0f, Curve::Linear, 0, "st"},
         {"octave", -2.0f, 2.0f, 0.0f, Curve::Stepped, 5, ""},
         {"volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
-        // 0 is auto: the kind's own (an accordion's are two).
-        {"reeds", 0.0f, static_cast<float>(kReeds), 0.0f, Curve::Stepped, kReeds + 1, ""},
+        // 0 is auto: the kind's own (an accordion's two 8' reeds); then by footage, as kRegisters.
+        {"register", 0.0f, static_cast<float>(kRegisterCount - 1), 0.0f, Curve::Stepped, kRegisterCount, ""},
         // How far a note's reeds are tuned apart: dry at 0, wet at 25 and more.
         {"detune", 0.0f, 40.0f, 15.0f, Curve::Linear, 0, "cents"},
         // A harmonica's key, G up to F#; C by default.
@@ -135,6 +157,10 @@ const ParamDef *Draw::paramDefs(int32_t &count) const {
         {"cup", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"vibrato", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"vib rate", 2.0f, 9.0f, 5.0f, Curve::Linear, 0, "Hz"},
+        // The 16' and first 8' reeds speaking into a tone chamber.
+        {"cassotto", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        // The bellows turned back and forth, turns a second; 0 is steady.
+        {"shake", 0.0f, 16.0f, 0.0f, Curve::Linear, 0, "/s"},
     };
     count = Count;
     return defs;
@@ -161,6 +187,7 @@ void Draw::reset() {
             h.seed(seed += 0x9e3779b9u);
         }
         v.holeCount = 0;
+        for (float &c : v.chamberLow) c = 0.0f;
         v.wander1 = v.wander2 = 0.0f;
         v.used = v.held = false;
         v.blown = v.aim = 0.0f;
@@ -172,6 +199,9 @@ void Draw::reset() {
     lowState = 0.0f;
     bodyX1 = bodyX2 = bodyY1 = bodyY2 = 0.0f;
     dcIn = dcOut = 0.0f;
+    shakePhase = 0.0f;
+    shakeRate = sag = 1.0f;
+    pulling = false;
     cupLow = cupBand = 0.0f;
     hand = handSpeed = handNoise1 = handNoise2 = 0.0f;
     cupG = 0.0f;
@@ -237,16 +267,29 @@ void Draw::retune(Voice &v) {
     // Each reed is filed to sound its note: the table says how far its own
     // frequency sits from what it plays, between notes in a straight line.
     const float *table = kReedTuning[kKindVoices[v.kind].make];
-    const float at = clampf(note, 0.0f, 127.0f);
-    const int lo = std::min(126, static_cast<int>(at));
-    const float cents = table[lo] + (table[lo + 1] - table[lo]) * (at - static_cast<float>(lo));
-    // Free reeds are made from about 27 Hz to 4.5 kHz; keys beyond play the nearest.
     const ReedMake make = makeFor(v.kind);
-    // Two reeds sit at 0 and +detune; three at -detune, 0 and +detune, as a French musette.
+    // The register's ranks: 16' an octave down, 4' an octave up, the 8's
+    // tuned apart by the detune knob for musette.
     const float apart = clampf(targetOf(Detune), 0.0f, 40.0f);
+    const bool cassotto = steppedTargetOf(Cassotto) != 0;
+    const draw::Register &reg = kRegisters[v.stops];
     for (int i = 0; i < v.count; ++i) {
-        const float off = v.count == 3 ? apart * static_cast<float>(i - 1) : apart * static_cast<float>(i);
-        v.reeds[i].make(clampf(noteHz(note) * std::pow(2.0f, (cents + off) / 1200.0f), 27.5f, 4500.0f), make);
+        const Rank &rank = reg.ranks[i];
+        const float sounds = note + 12.0f * static_cast<float>(rank.octave);
+        const float at = clampf(sounds, 0.0f, 127.0f);
+        const int lo = std::min(126, static_cast<int>(at));
+        float cents = table[lo] + (table[lo + 1] - table[lo]) * (at - static_cast<float>(lo)) + apart * static_cast<float>(rank.apart);
+        // Pulled, a bellows instrument sounds its other set of reeds.
+        if (pulling && isBellows(v.kind)) cents += pullCents(v.note, i);
+        // Free reeds are made from about 27 Hz to 4.5 kHz; keys beyond play the nearest.
+        v.reeds[i].make(clampf(noteHz(sounds) * std::pow(2.0f, cents / 1200.0f), 27.5f, 4500.0f), make);
+        // A harmonium's octave stop is voiced as strongly as its 8'; an accordion's 4' is quieter and darker.
+        const bool fullOctave = v.kind == Harmonium && rank.octave > 0;
+        v.rankLevel[i] = (rank.octave < 0 ? kLowRank : fullOctave ? 1.0f : rank.octave > 0 ? kHighRank : 1.0f) * (rank.apart != 0 ? kOtherReed : 1.0f);
+        // Darkened by its rank's voicing and, for the 16' and first 8', the cassotto.
+        const float own = rank.octave < 0 ? kLowDark : rank.octave > 0 && !fullOctave ? kHighDark : 0.0f;
+        const bool inside = cassotto && (rank.octave < 0 || (rank.octave == 0 && rank.apart == 0));
+        v.chamber[i] = 1.0f - (1.0f - own) * (inside ? 1.0f - kCassottoDepth : 1.0f);
     }
 }
 
@@ -349,14 +392,15 @@ void Draw::noteOn(uint8_t note, uint8_t velocity) {
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->held = true;
     v->pressure = -1.0f;
-    const int knob = steppedTargetOf(Reeds);
-    const int count = isHarp(v->kind) ? 1 : std::clamp(knob > 0 ? knob : kKindVoices[v->kind].reeds, 1, kReeds);
+    const int knob = std::clamp(steppedTargetOf(Register), 0, kRegisterCount - 1);
+    const int32_t stops = isHarp(v->kind) ? 1 : (knob > 0 ? knob : kKindVoices[v->kind].stops);
+    const int count = kRegisters[stops].count;
     const int wasHoles = v->holeCount, wasHole = v->hole, wasWay = v->way;
     const float wasSign = v->sign;
     v->holeCount = 0;
     if (isHarp(v->kind)) planHarp(*v);
     // Played again the same way, the reeds go on swinging; otherwise they start from rest.
-    const bool same = sounding && count == v->count && v->holeCount == wasHoles &&
+    const bool same = sounding && stops == v->stops && v->holeCount == wasHoles &&
                       (v->holeCount == 0 || (v->hole == wasHole && v->way == wasWay && v->sign == wasSign));
     if (!same) {
         for (FreeReed &r : v->reeds) r.clear();
@@ -364,8 +408,9 @@ void Draw::noteOn(uint8_t note, uint8_t velocity) {
         v->blown = 0.0f;
     }
     v->count = count;
-    // Reeds sounding together share the level.
-    v->share = 1.0f / std::sqrt(static_cast<float>(v->holeCount > 1 ? v->holeCount : count));
+    v->stops = stops;
+    // Reeds sounding together share the level, though more of them are a little louder.
+    v->share = v->holeCount > 1 ? 1.0f / std::sqrt(static_cast<float>(v->holeCount)) : std::pow(static_cast<float>(count), -0.35f);
     retune(*v);
     if (!same) {
         // A bend is scooped into from a little above, as a player does: the reed speaks at once and is taken down.
@@ -465,6 +510,17 @@ bool Draw::render(float *L, float *R, int32_t frames) {
     const float vibratoStep = clampf(paramOf(VibratoRate), 2.0f, 9.0f) / sampleRate;
     const float handAim = clampf(paramOf(Cup) + wheel, 0.0f, 1.0f);
     const float breathFollow = 1.0f - std::exp(-1.0f / (0.03f * sampleRate));
+    const float chamberFollow = 1.0f - std::exp(-6.2831853f * kCassottoHz / sampleRate);
+    // One bellows for every note: the more reeds draw on it, the lower it sits.
+    {
+        int drawing = 0;
+        for (const Voice &v : voices) {
+            if (v.used && v.holeCount == 0 && v.blown > 0.0f && (isBellows(v.kind) || v.kind == Harmonium)) drawing += v.count;
+        }
+        const float sagAim = 1.0f / (1.0f + kSag * static_cast<float>(std::max(0, drawing - 2)));
+        sag += (sagAim - sag) * (1.0f - std::exp(-static_cast<float>(frames) / (0.1f * sampleRate)));
+    }
+    const float shakeHz = clampf(paramOf(Shake), 0.0f, 16.0f) * 0.5f;
 
     // Each voice's breath or bellows: a straight rise to the pressure over
     // the attack, and down over the release.
@@ -488,6 +544,21 @@ bool Draw::render(float *L, float *R, int32_t frames) {
             vibratoDepth = 1.0f + kVibratoDepthSpread * white(noise);
         }
         const float throat = vibrato > 0.0f ? vibrato * vibratoDepth * std::sin(6.2831853f * vibratoPhase) : 0.0f;
+        // The bellows shaken: the pressure dips at each turn, and the other set of reeds speaks.
+        float shake = 1.0f;
+        if (shakeHz > 0.0f) {
+            const float was = shakePhase;
+            shakePhase += shakeHz * shakeRate / sampleRate;
+            if (shakePhase >= 1.0f) shakePhase -= 1.0f;
+            if ((was < 0.5f) != (shakePhase < 0.5f)) {
+                pulling = !pulling;
+                shakeRate = 1.0f + kShakeSpread * white(noise);
+                for (Voice &v : voices) {
+                    if (v.used && isBellows(v.kind)) retune(v);
+                }
+            }
+            shake = std::fmin(1.0f, kShakeEdge * std::fabs(std::sin(6.2831853f * shakePhase)));
+        }
         const bool reshape = --mouthCountdown <= 0;
         if (reshape) {
             mouthCountdown = kMouthEvery;
@@ -546,12 +617,21 @@ bool Draw::render(float *L, float *R, int32_t frames) {
                     else v.holes[h].clear();
                 }
             } else {
+                const bool bellows = isBellows(v.kind) || v.kind == Harmonium;
+                const float wind = blowing * (bellows ? sag : 1.0f) * (isBellows(v.kind) ? shake : 1.0f);
                 for (int r = 0; r < v.count; ++r) {
-                    // No two reeds are quite alike: the others a little softer than the first.
-                    const float one = v.reeds[r].step(blowing, k.supply) * (r == 0 ? 1.0f : kOtherReed);
+                    // No two reeds are quite alike: each rank voiced against the first.
+                    float one = v.reeds[r].step(wind, k.supply) * v.rankLevel[r];
                     // A reed driven somewhere it can't follow starts again rather than sounding.
-                    if (std::isfinite(one)) out += one;
-                    else v.reeds[r].clear();
+                    if (!std::isfinite(one)) {
+                        v.reeds[r].clear();
+                        continue;
+                    }
+                    if (v.chamber[r] > 0.0f) {
+                        v.chamberLow[r] += (one - v.chamberLow[r]) * chamberFollow;
+                        one -= v.chamber[r] * (one - v.chamberLow[r]);
+                    }
+                    out += one;
                 }
             }
             out *= v.gain * v.squeeze * v.share;
