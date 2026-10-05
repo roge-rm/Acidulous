@@ -182,15 +182,20 @@ android {
         // a chord, the keys playing the drone's harmonics, plucking patterns,
         // words said by the mouth and another track's melody followed; Diction
         // and Molt knobs work while they play; diagnostics in debug builds only.
+        // 0.10.2: Draw, modelled free reeds: harmonicas bent with the tongue
+        // and played like a player, accordions with registers and shake,
+        // bandoneon, concertina, melodica, harmonium, sheng, sho and khaen; a
+        // talking harmonica; MPE on Hammer, Tongue and Draw (Hammer's pitch
+        // wheel works); negative octaves and transposes no longer off by one.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 30
+        val release = 31
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.10.1"
+        versionName = "0.10.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
