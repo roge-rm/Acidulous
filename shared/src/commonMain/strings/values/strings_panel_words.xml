@@ -108,6 +108,7 @@
     <string name="pw_buffer">buffer</string>
     <string name="pw_bus">bus</string>
     <string name="pw_busy">busy</string>
+    <string name="pw_button">button</string>
     <string name="pw_buzz">buzz</string>
     <string name="pw_buzz_the_classic_shape">buzz - the classic shape</string>
     <string name="pw_by_key">by key</string>
@@ -117,6 +118,7 @@
     <string name="pw_cabinet">cabinet</string>
     <string name="pw_cable_n">cable %d</string>
     <string name="pw_carrier">carrier</string>
+    <string name="pw_cassotto">cassotto</string>
     <string name="pw_celesta">celesta</string>
     <string name="pw_central">central</string>
     <string name="pw_ch">ch</string>
@@ -326,6 +328,7 @@
     <string name="pw_freq">freq</string>
     <string name="pw_frequency">frequency</string>
     <string name="pw_from">from</string>
+    <string name="pw_from_track">from track</string>
     <string name="pw_full">full</string>
     <string name="pw_fwd">fwd</string>
     <string name="pw_fx">fx</string>
@@ -651,6 +654,7 @@
     <string name="pw_played">played</string>
     <string name="pw_player">player</string>
     <string name="pw_players">players</string>
+    <string name="pw_playing">playing</string>
     <string name="pw_plays_at">plays at</string>
     <string name="pw_pluck">pluck</string>
     <string name="pw_plucked">plucked</string>
@@ -694,6 +698,7 @@
     <string name="pw_ramp_181f09">ramp↓</string>
     <string name="pw_rand">rand</string>
     <string name="pw_random">random</string>
+    <string name="pw_ranks">ranks</string>
     <string name="pw_rasp">rasp</string>
     <string name="pw_ratchet">ratchet</string>
     <string name="pw_ratchetchance">ratchetchance</string>
@@ -799,6 +804,7 @@
     <string name="pw_serial">serial</string>
     <string name="pw_set">set</string>
     <string name="pw_sh">sh</string>
+    <string name="pw_shake">shake</string>
     <string name="pw_shape">shape</string>
     <string name="pw_sheng">sheng</string>
     <string name="pw_shift">shift</string>
