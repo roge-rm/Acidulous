@@ -18,8 +18,6 @@ And please join me in the #acidulous channel **[on my discord](https://discord.g
 
 The manual is in [manual/](manual/) and in the app in the **Help…** window. The app and its manual are in English and Canadian French ([manual/fr/](manual/fr/)); choose under **Settings…**, or let it follow the phone.
 
-Disclaimer: I am not a great programmer and this was made using Claude Opus 5.0/5.5
-
 Enjoy,<br>
 Dan (rm)
 
@@ -262,3 +260,5 @@ app's About window.
 Everything else, including the engine, the machines and effects, the
 sequencer and the file writers, was written for this project. No DSP code,
 presets or samples come from anywhere else.
+
+Disclaimer: I am not a great programmer and this was made using Claude Opus 5.0/5.5
