@@ -2,6 +2,12 @@ package com.rm.acidulous.ui
 
 import com.rm.acidulous.util.format
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,10 +21,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,32 +33,44 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.withParam
 import androidx.compose.ui.text.drawText
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.model.FACE_HEADER
+import com.rm.acidulous.model.FACE_LABEL_GAP
 import com.rm.acidulous.model.NEXUS_CABLES
 import com.rm.acidulous.model.NEXUS_KNOBS
 import com.rm.acidulous.model.NEXUS_SLOTS
 import com.rm.acidulous.model.NexusCable
+import com.rm.acidulous.model.NexusFace
+import com.rm.acidulous.model.NexusFaces
 import com.rm.acidulous.model.NexusModule
 import com.rm.acidulous.model.NexusFamily
 import com.rm.acidulous.model.nexusFamilyOf
@@ -62,17 +78,19 @@ import com.rm.acidulous.model.NexusPalette
 import com.rm.acidulous.model.NexusPatch
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.Track
+import com.rm.acidulous.model.laneKey
 import com.rm.acidulous.model.nexusCableA
 import com.rm.acidulous.model.nexusCableB
 import com.rm.acidulous.model.nexusKnob
 import com.rm.acidulous.model.arranged
-import com.rm.acidulous.model.NEXUS_NODE_H
-import com.rm.acidulous.model.NEXUS_NODE_W
 import kotlinx.coroutines.delay
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.log10
 import kotlin.math.min
+import kotlin.math.sin
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.ui.theme.AcidColors
 import androidx.compose.ui.layout.onSizeChanged
@@ -81,17 +99,29 @@ import com.rm.acidulous.res.*
 // The patch editor for Nexus. A graph needs more room than a knob strip, so
 // it gets its own screen.
 //
+// Modules are drawn as modular panels hanging on rails, with their knobs and
+// jacks on the face (see NexusFace for where everything goes). Cables hang
+// off the jacks in front of the panels and sag under their own weight.
+//
 // One gesture loop handles everything, because two pointerInput modifiers
 // fight over the first touch and a one-finger drag on a node must not pan the
-// canvas. Down on a jack pulls a cable, down on a node moves it, down on
-// nothing pans, and a second finger anywhere starts a pinch.
+// canvas. Down on a jack pulls a cable, down on a knob turns it, down on a
+// module moves it, down on nothing pans, and a second finger anywhere starts
+// a pinch.
 
-private const val NODE_W = NEXUS_NODE_W
-private const val NODE_H = NEXUS_NODE_H
 private const val JACK_R = 7f
 private const val GRID = 10f
 /** Room left round a fitted patch, in its own units. */
 private const val FIT_MARGIN = 10f
+/** How far up a finger goes, in patch units, to turn a knob from one end to the other. Zooming in makes it finer. */
+private const val KNOB_TRAVEL = 140f
+/** Two taps on a knob this close together put it back. */
+private const val DOUBLE_TAP_MS = 300L
+private const val MIN_ZOOM = 0.35f
+/** Further in than Fit goes, for fine knob moves. */
+private const val MAX_ZOOM = 4f
+/** How far a cable sags at most, in patch units. */
+private const val MAX_SAG = 110f
 
 private sealed class Selection {
     object None : Selection()
@@ -101,12 +131,26 @@ private sealed class Selection {
 
 private data class Jack(val slot: Int, val port: Int, val output: Boolean)
 
-private fun jackPosition(m: NexusModule, port: Int, output: Boolean, ports: Int): Offset {
-    val span = NODE_H - 26f
-    val step = if (ports <= 1) 0f else span / (ports - 1)
-    val y = m.y + 22f + (if (ports <= 1) span * 0.5f else port * step)
-    return Offset(if (output) m.x + NODE_W else m.x, y)
+/** A knob on a faceplate: [index] is the slot knob it turns, 0 to 7. */
+private data class FaceKnobHit(val slot: Int, val index: Int)
+
+private fun faceOf(m: NexusModule): NexusFace = NexusFaces.of(m.type)
+
+private fun jackPosition(m: NexusModule, port: Int, output: Boolean): Offset {
+    val face = faceOf(m)
+    val p = (if (output) face.outputs else face.inputs).getOrNull(port)
+        ?: return Offset(m.x + face.w / 2f, m.y + face.h / 2f)
+    return Offset(m.x + p.x, m.y + p.y)
 }
+
+/**
+ * The slot knobs a module shows, by number, in the order the face places
+ * them. Unnamed knobs aren't drawn.
+ */
+private fun namedKnobs(type: String): List<Pair<Int, String>> =
+    NexusPalette.of(type)?.knobs.orEmpty().withIndex()
+        .filter { it.value.isNotEmpty() && it.index < NEXUS_KNOBS }
+        .map { it.index to it.value }
 
 @Composable
 fun PatchScreen(
@@ -135,13 +179,57 @@ fun PatchScreen(
     var activity by remember { mutableStateOf(FloatArray(NEXUS_SLOTS + NEXUS_CABLES)) }
     // The canvas size in pixels, which Fit fits the patch to.
     var canvasPx by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    // The last tap on a face knob, for a double tap to reset it.
+    var lastKnobTap by remember { mutableStateOf<Pair<String, Long>?>(null) }
 
     val info = remember(track.machine.settings["nexus"]) { NativeEngine.nexusPalette() }
-    val measurer = rememberTextMeasurer()
+    // Every label on every faceplate is measured each frame while the patch
+    // moves, so it keeps plenty.
+    val measurer = rememberTextMeasurer(cacheSize = 512)
     val monoTag = stringResource(Res.string.patch_mono_tag)
     val resources = AppStrings
     val word: (String) -> String = remember(resources) { { resources.panelWord(it) } }
     val binding = rememberParamBinding(trackIndex, "Nexus", remember { NativeEngine.machineParamInfo("Nexus") }, editor)
+
+    // Mapping mode on the canvas: the same three colours as Modifier.mappable,
+    // teal mappable, green mapped and blinking amber waiting for hardware.
+    val mapMode = UiPrefs.mapMode
+    val mapWaiting = UiPrefs.mapWaiting
+    val mapped = (LocalSongMappings.current + UiPrefs.mappings)
+        .filter { it.unit == binding.unit }.mapNotNull { it.name }.toSet()
+    val blink = if (mapMode) {
+        val b by rememberInfiniteTransition(label = "map").animateFloat(
+            initialValue = 1f, targetValue = 0.35f,
+            animationSpec = infiniteRepeatable(tween(450, easing = LinearEasing), RepeatMode.Reverse),
+            label = "blink",
+        )
+        b
+    } else 1f
+    val marks = AutomationMarks.lanes
+    val locks = AutomationMarks.locks
+    val knobLook = KnobLook(
+        value = { binding.value(it) },
+        display = { binding.display(it) },
+        turning = binding.draggingName,
+        ring = { name ->
+            if (!mapMode) null else {
+                val target = MapTargets.param(trackIndex, binding.unit, name)
+                when {
+                    mapWaiting == target -> c.accent.copy(alpha = blink)
+                    name in mapped -> c.green
+                    else -> c.teal
+                }
+            }
+        },
+        mark = { name ->
+            val key = laneKey(binding.unit, name)
+            when {
+                key in locks -> KnobMark.Lock
+                key in marks -> KnobMark.Automated
+                else -> KnobMark.None
+            }
+        },
+    )
 
     fun write(next: NexusPatch) {
         editor.edit(trackIndex) { t -> t.withSetting("nexus", next.encode()) }
@@ -190,16 +278,16 @@ fun PatchScreen(
             // it. The new layout is one undo step. See NexusPatch.arranged.
             HeaderTextButton(stringResource(Res.string.patch_fit)) {
                 if (patch.modules.isNotEmpty() && canvasPx.width > 0 && canvasPx.height > 0) {
-                    val next = patch.arranged(canvasPx.width / canvasPx.height.toFloat(), NODE_W, NODE_H)
+                    val next = patch.arranged(canvasPx.width / canvasPx.height.toFloat(), NexusFaces::size)
                     if (next != patch) write(next)
-                    // Includes the cables, since one wrapping to the next row bows out past
-                    // the modules at either end.
+                    // Includes the rails and the cables, since one wrapping to the
+                    // next row sags below the modules.
                     val box = patchBounds(next)
                     val left = box.left - FIT_MARGIN
                     val top = box.top - FIT_MARGIN
                     val w = box.width + 2 * FIT_MARGIN
                     val h = box.height + 2 * FIT_MARGIN
-                    zoom = (min(canvasPx.width / w, canvasPx.height / h) / density).coerceIn(0.35f, 2.6f)
+                    zoom = (min(canvasPx.width / w, canvasPx.height / h) / density).coerceIn(MIN_ZOOM, 2.6f)
                     // Centred in whichever direction there's room to spare.
                     val s = zoom * density
                     pan = Offset(left - (canvasPx.width / s - w) / 2f, top - (canvasPx.height / s - h) / 2f)
@@ -237,24 +325,31 @@ fun PatchScreen(
                         val start = world(down.position)
                         val current = patchState
 
-                        // What's under the finger: a jack beats the node it sits on, a node
-                        // beats the canvas.
+                        // What's under the finger: a jack beats a knob, a knob beats the
+                        // module it sits on, a module beats the canvas. The nearest
+                        // jack or knob wins, since their touch areas are bigger than
+                        // they are and neighbours' can meet.
                         var jack: Jack? = null
+                        var jackD = JACK_R * 2.4f
+                        var knob: FaceKnobHit? = null
+                        var knobD = Float.MAX_VALUE
                         for (m in current.modules) {
-                            val meta = NexusPalette.of(m.type) ?: continue
-                            meta.outputs.forEachIndexed { i, _ ->
-                                if ((jackPosition(m, i, true, meta.outputs.size) - start).getDistance() < JACK_R * 2.4f) {
-                                    jack = Jack(m.slot, i, true)
+                            val face = faceOf(m)
+                            for (output in listOf(false, true)) {
+                                val ports = if (output) face.outputs else face.inputs
+                                for (i in ports.indices) {
+                                    val d = (jackPosition(m, i, output) - start).getDistance()
+                                    if (d < jackD) { jackD = d; jack = Jack(m.slot, i, output) }
                                 }
                             }
-                            meta.inputs.forEachIndexed { i, _ ->
-                                if ((jackPosition(m, i, false, meta.inputs.size) - start).getDistance() < JACK_R * 2.4f) {
-                                    jack = Jack(m.slot, i, false)
-                                }
+                            namedKnobs(m.type).zip(face.knobs).forEach { (k, fk) ->
+                                val d = hypot(m.x + fk.x - start.x, m.y + fk.y - start.y)
+                                if (d < fk.ring && d < knobD) { knobD = d; knob = FaceKnobHit(m.slot, k.first) }
                             }
                         }
                         val node = current.modules.lastOrNull {
-                            start.x >= it.x && start.x <= it.x + NODE_W && start.y >= it.y && start.y <= it.y + NODE_H
+                            val face = faceOf(it)
+                            start.x >= it.x && start.x <= it.x + face.w && start.y >= it.y && start.y <= it.y + face.h
                         }
 
                         if (jack != null) {
@@ -271,15 +366,13 @@ fun PatchScreen(
                             }
                             // Landed on a jack of the opposite kind? Then it's a cable.
                             var target: Jack? = null
+                            var targetD = JACK_R * 3.0f
                             for (m in patchState.modules) {
-                                val meta = NexusPalette.of(m.type) ?: continue
-                                val list = if (jack!!.output) meta.inputs else meta.outputs
-                                list.forEachIndexed { i, _ ->
-                                    if ((jackPosition(m, i, !jack!!.output, list.size) - cursor)
-                                            .getDistance() < JACK_R * 3.0f
-                                    ) {
-                                        target = Jack(m.slot, i, !jack!!.output)
-                                    }
+                                val face = faceOf(m)
+                                val list = if (jack!!.output) face.inputs else face.outputs
+                                for (i in list.indices) {
+                                    val d = (jackPosition(m, i, !jack!!.output) - cursor).getDistance()
+                                    if (d < targetD) { targetD = d; target = Jack(m.slot, i, !jack!!.output) }
                                 }
                             }
                             pulling = null
@@ -289,6 +382,61 @@ fun PatchScreen(
                                 val to = if (jack!!.output) t else jack!!
                                 write(patchState.copy(cables = patchState.cables +
                                     NexusCable(from.slot, from.port, to.slot, to.port)))
+                            }
+                        } else if (knob != null) {
+                            val hit = knob!!
+                            val name = nexusKnob(hit.slot, hit.index)
+                            selection = Selection.Module(hit.slot)
+                            down.consume()
+                            if (UiPrefs.mapMode) {
+                                // As Modifier.mappable: a tap arms the knob, a long press
+                                // clears what drives it.
+                                val target = MapTargets.param(trackIndex, binding.unit, name)
+                                val lifted = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                    while (true) {
+                                        val event = awaitPointerEvent()
+                                        event.changes.forEach { it.consume() }
+                                        if (event.changes.none { it.pressed }) break
+                                    }
+                                }
+                                if (lifted != null) {
+                                    UiPrefs.chooseMapWaiting(target)
+                                } else {
+                                    clearMapping(target)
+                                    while (true) {
+                                        val event = awaitPointerEvent()
+                                        event.changes.forEach { it.consume() }
+                                        if (event.changes.none { it.pressed }) break
+                                    }
+                                }
+                            } else {
+                                val tap = lastKnobTap
+                                val now = down.uptimeMillis
+                                // Up and down to turn, measured in patch units, so the same
+                                // finger travel turns it less the further in you zoom.
+                                val from = binding.value(name)
+                                var turning = false
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                    val dy = (change.position.y - down.position.y) / (zoom * density)
+                                    if (!turning && abs(change.position.y - down.position.y) > viewConfiguration.touchSlop) {
+                                        turning = true
+                                        binding.start(name)
+                                    }
+                                    if (turning) binding.change(name, (from - dy / KNOB_TRAVEL).coerceIn(0f, 1f))
+                                    change.consume()
+                                    if (!change.pressed) break
+                                }
+                                if (turning) {
+                                    binding.end()
+                                    lastKnobTap = null
+                                } else if (tap != null && tap.first == name && now - tap.second < DOUBLE_TAP_MS) {
+                                    binding.reset(name)
+                                    lastKnobTap = null
+                                } else {
+                                    lastKnobTap = name to now
+                                }
                             }
                         } else if (node != null) {
                             val grabbed = node.slot
@@ -328,7 +476,7 @@ fun PatchScreen(
                                     if (lastSpan > 1f) {
                                         val factor = (span / lastSpan).coerceIn(0.8f, 1.25f)
                                         val before = Offset(centre.x / (zoom * density) + pan.x, centre.y / (zoom * density) + pan.y)
-                                        zoom = (zoom * factor).coerceIn(0.35f, 2.6f)
+                                        zoom = (zoom * factor).coerceIn(MIN_ZOOM, MAX_ZOOM)
                                         val after = Offset(centre.x / (zoom * density) + pan.x, centre.y / (zoom * density) + pan.y)
                                         pan += before - after
                                     }
@@ -346,7 +494,7 @@ fun PatchScreen(
                     }
                 },
             ) {
-                drawPatch(patch, pan, scale, zoom, selection, pulling, scope, activity, measurer, c, monoTag, word)
+                drawPatch(patch, pan, scale, zoom, selection, pulling, scope, activity, measurer, c, monoTag, word, knobLook)
             }
         }
 
@@ -409,40 +557,71 @@ fun PatchScreen(
     }
 }
 
-/** The curve drawPatch draws for a cable from an output at [a] to an input at [b]. */
-private fun cablePath(a: Offset, b: Offset, bend: Float): Path = Path().apply {
-    moveTo(a.x, a.y)
-    cubicTo(a.x + bend, a.y, b.x - bend, b.y, b.x, b.y)
+/** What a face knob shows besides its position. */
+private enum class KnobMark { None, Automated, Lock }
+
+/** How the canvas reads the knobs it draws, so drawPatch needn't know about bindings or mapping. */
+private class KnobLook(
+    val value: (String) -> Float,
+    /** The value as the inspector would write it, for the tip shown while turning. */
+    val display: (String) -> String,
+    /** The knob being turned, if any. */
+    val turning: String?,
+    /** The mapping ring's colour, or null outside mapping mode. */
+    val ring: (String) -> Color?,
+    val mark: (String) -> KnobMark,
+)
+
+/** The control points of a cable's curve from an output at [a] to an input at [b], in any units. */
+private fun cableControls(a: Offset, b: Offset, unit: Float): Pair<Offset, Offset> {
+    val dx = b.x - a.x
+    // The plugs point out of the panel, so the cord drops straight from each
+    // and sags in between like a real one, more the longer it is.
+    val sag = min(MAX_SAG * unit, 18f * unit + (b - a).getDistance() * 0.28f)
+    return Offset(a.x + dx * 0.15f, a.y + sag) to Offset(b.x - dx * 0.15f, b.y + sag)
 }
 
-/** How far a cable's ends bend out, in the units of [a] and [b]; [unit] is one patch unit in them. */
-private fun cableBend(a: Offset, b: Offset, unit: Float) = abs(b.x - a.x) * 0.4f + 24f * unit
+/** The curve drawPatch draws for a cable from an output at [a] to an input at [b]. */
+private fun cablePath(a: Offset, b: Offset, unit: Float): Path = Path().apply {
+    val (p1, p2) = cableControls(a, b, unit)
+    moveTo(a.x, a.y)
+    cubicTo(p1.x, p1.y, p2.x, p2.y, b.x, b.y)
+}
 
-/** The bounds of everything the patch draws, in patch units: modules and cable curves. */
-private fun patchBounds(patch: NexusPatch): androidx.compose.ui.geometry.Rect {
-    var left = patch.modules.minOf { it.x }
-    var top = patch.modules.minOf { it.y }
-    var right = patch.modules.maxOf { it.x } + NODE_W
-    var bottom = patch.modules.maxOf { it.y } + NODE_H
+private fun cablePoint(a: Offset, b: Offset, t: Float, unit: Float = 1f): Offset {
+    val (p1, p2) = cableControls(a, b, unit)
+    val u = 1f - t
+    return a * (u * u * u) + p1 * (3 * u * u * t) + p2 * (3 * u * t * t) + b * (t * t * t)
+}
+
+/**
+ * How far the rails reach past a module's sides, how deep they are, and how
+ * far they run under its top and bottom edges, where its screws go in.
+ */
+private const val RAIL_REACH = 10f
+private const val RAIL_DEPTH = 10f
+private const val RAIL_UNDER = 2f
+
+/** The bounds of everything the patch draws, in patch units: modules, their rails and the cable curves. */
+private fun patchBounds(patch: NexusPatch): Rect {
+    var left = patch.modules.minOf { it.x } - RAIL_REACH
+    var top = patch.modules.minOf { it.y } - RAIL_DEPTH + RAIL_UNDER
+    var right = patch.modules.maxOf { it.x + faceOf(it).w } + RAIL_REACH
+    var bottom = patch.modules.maxOf { it.y + faceOf(it).h } + RAIL_DEPTH - RAIL_UNDER
     for (c in patch.cables) {
         val from = patch.moduleAt(c.fromSlot) ?: continue
         val to = patch.moduleAt(c.toSlot) ?: continue
-        val a = jackPosition(from, c.fromPort, true, NexusPalette.of(from.type)?.outputs?.size ?: 1)
-        val b = jackPosition(to, c.toPort, false, NexusPalette.of(to.type)?.inputs?.size ?: 1)
+        val a = jackPosition(from, c.fromPort, true)
+        val b = jackPosition(to, c.toPort, false)
         // Walks the curve, since a Path's bounds include its control points,
         // which reach well past the curve itself.
-        val bend = cableBend(a, b, 1f)
-        val p1 = Offset(a.x + bend, a.y)
-        val p2 = Offset(b.x - bend, b.y)
         for (i in 1 until 16) {
-            val t = i / 16f
-            val u = 1f - t
-            val at = a * (u * u * u) + p1 * (3 * u * u * t) + p2 * (3 * u * t * t) + b * (t * t * t)
+            val at = cablePoint(a, b, i / 16f)
             left = minOf(left, at.x); right = maxOf(right, at.x)
             top = minOf(top, at.y); bottom = maxOf(bottom, at.y)
         }
     }
-    return androidx.compose.ui.geometry.Rect(left, top, right, bottom)
+    return Rect(left, top, right, bottom)
 }
 
 private fun nearestCable(patch: NexusPatch, at: Offset): Int? {
@@ -451,14 +630,32 @@ private fun nearestCable(patch: NexusPatch, at: Offset): Int? {
     patch.cables.forEachIndexed { index, c ->
         val from = patch.moduleAt(c.fromSlot) ?: return@forEachIndexed
         val to = patch.moduleAt(c.toSlot) ?: return@forEachIndexed
-        val a = jackPosition(from, c.fromPort, true, NexusPalette.of(from.type)?.outputs?.size ?: 1)
-        val b = jackPosition(to, c.toPort, false, NexusPalette.of(to.type)?.inputs?.size ?: 1)
-        val mid = (a + b) * 0.5f
-        val d = (mid - at).getDistance()
+        val a = jackPosition(from, c.fromPort, true)
+        val b = jackPosition(to, c.toPort, false)
+        // The middle of the cord, which hangs well below the straight line.
+        val d = (cablePoint(a, b, 0.5f) - at).getDistance()
         if (d < bestD) { bestD = d; best = index }
     }
     return best
 }
+
+/** A colour for each kind of module: its stripe, its LED and the cables it sends. */
+private fun familyColour(type: String, col: AcidColors): Color = when (nexusFamilyOf(type)) {
+    NexusFamily.Source -> col.accent
+    NexusFamily.Voice -> col.pink
+    NexusFamily.Shape -> col.teal
+    NexusFamily.Mod -> col.green
+    NexusFamily.Time -> col.sceneQueued
+    NexusFamily.Io -> col.textDim
+}
+
+/**
+ * A cable takes the colour of the module it comes from, the way players
+ * colour-code real patch cables, so you can see what kind of signal it is.
+ * Modulators use a lighter green than their stripe, which is too dark for a cord.
+ */
+private fun cableColour(type: String, col: AcidColors): Color =
+    if (nexusFamilyOf(type) == NexusFamily.Mod) col.modCable else familyColour(type, col)
 
 private fun DrawScope.drawPatch(
     patch: NexusPatch,
@@ -477,6 +674,7 @@ private fun DrawScope.drawPatch(
     monoTag: String,
     /** Translates a jack's name, see PanelText.kt. */
     word: (String) -> String,
+    knobs: KnobLook,
 ) {
     fun screen(w: Offset) = Offset((w.x - pan.x) * zoom, (w.y - pan.y) * zoom)
 
@@ -491,126 +689,351 @@ private fun DrawScope.drawPatch(
     fun cableLit(index: Int) =
         if (index in 0 until NEXUS_CABLES) lit(activity[NEXUS_SLOTS + index]) else 0f
 
-    // A grid, so panning is visible.
-    val step = 50f * zoom
-    if (step > 8f) {
+    // The case: perforated, so panning is visible.
+    val step = 16f * zoom
+    if (step > 7f) {
+        val dots = ArrayList<Offset>()
         var x = -((pan.x * zoom) % step)
-        while (x < size.width) { drawLine(col.canvasGrid, Offset(x, 0f), Offset(x, size.height), 1f); x += step }
-        var y = -((pan.y * zoom) % step)
-        while (y < size.height) { drawLine(col.canvasGrid, Offset(0f, y), Offset(size.width, y), 1f); y += step }
+        while (x < size.width) {
+            var y = -((pan.y * zoom) % step)
+            while (y < size.height) { dots += Offset(x, y); y += step }
+            x += step
+        }
+        drawPoints(dots, PointMode.Points, col.canvasGrid, strokeWidth = (1.8f * zoom).coerceIn(1.5f, 4f), cap = StrokeCap.Round)
     }
 
-    // Cables behind the boxes.
+    fun visible(m: NexusModule): Boolean {
+        val face = faceOf(m)
+        val at = screen(Offset(m.x - RAIL_REACH, m.y - RAIL_DEPTH + RAIL_UNDER))
+        val w = (face.w + 2 * RAIL_REACH) * zoom
+        val h = (face.h + 2 * (RAIL_DEPTH - RAIL_UNDER)) * zoom
+        return !(at.x > size.width || at.y > size.height || at.x + w < 0f || at.y + h < 0f)
+    }
+
+    // Rails behind everything, so modules side by side share one.
+    for (m in patch.modules) if (visible(m)) drawRails(m, ::screen, zoom, col)
+
+    for (m in patch.modules) {
+        if (!visible(m)) continue
+        drawModule(
+            m, screen(Offset(m.x, m.y)), zoom, textZoom,
+            selected = (selection as? Selection.Module)?.slot == m.slot,
+            live = slotLit(m.slot), scope = scope, measurer = measurer, col = col,
+            monoTag = monoTag, word = word, knobs = knobs,
+        )
+    }
+
+    // Cables in front of the panels, as they hang in a real case.
+    val plugged = ArrayList<Pair<Offset, Color>>()
     patch.cables.forEachIndexed { index, c ->
         val from = patch.moduleAt(c.fromSlot) ?: return@forEachIndexed
         val to = patch.moduleAt(c.toSlot) ?: return@forEachIndexed
-        val a = screen(jackPosition(from, c.fromPort, true, NexusPalette.of(from.type)?.outputs?.size ?: 1))
-        val b = screen(jackPosition(to, c.toPort, false, NexusPalette.of(to.type)?.inputs?.size ?: 1))
+        val a = screen(jackPosition(from, c.fromPort, true))
+        val b = screen(jackPosition(to, c.toPort, false))
         val selected = (selection as? Selection.Cable)?.index == index
-        val path = cablePath(a, b, cableBend(a, b, zoom))
-        // The dark cable is always drawn so an idle patch still shows its cables.
-        // Signal is drawn over it in a second pass, since the glow is both brighter
-        // and thicker.
-        drawPath(path, if (selected) col.accent else col.cable, style = Stroke(if (selected) 3.5f else 2.2f))
-        val glow = cableLit(index)
-        if (glow > 0.01f) {
-            val tint = if (selected) col.accent else col.teal
-            drawPath(path, tint.copy(alpha = 0.10f + 0.22f * glow), style = Stroke(2.2f + 7f * glow))
-            drawPath(path, tint.copy(alpha = 0.35f + 0.65f * glow), style = Stroke(1.6f + 2.2f * glow))
-        }
-        if (selected) drawCircle(col.accent, 5f, (a + b) * 0.5f)
+        val tint = if (selected) col.accent else cableColour(from.type, col)
+        drawCable(a, b, tint, cableLit(index), zoom, col, thick = selected)
+        if (selected) drawCircle(col.accent, 4f * zoom, cablePoint(a, b, 0.5f, zoom))
+        plugged += a to tint
+        plugged += b to tint
     }
+    for ((at, tint) in plugged) drawPlug(at, tint, zoom, col)
+
     pulling?.let { (jack, at) ->
         val m = patch.moduleAt(jack.slot)
         if (m != null) {
-            val meta = NexusPalette.of(m.type)
-            val ports = if (jack.output) meta?.outputs?.size ?: 1 else meta?.inputs?.size ?: 1
-            val a = screen(jackPosition(m, jack.port, jack.output, ports))
+            val a = screen(jackPosition(m, jack.port, jack.output))
             val b = screen(at)
-            drawLine(col.accent, a, b, 2.5f)
+            if (jack.output) drawCable(a, b, col.accent, 0f, zoom, col, thick = false)
+            else drawCable(b, a, col.accent, 0f, zoom, col, thick = false)
+            drawPlug(a, col.accent, zoom, col)
         }
     }
 
-    for (m in patch.modules) {
-        val meta = NexusPalette.of(m.type)
-        val at = screen(Offset(m.x, m.y))
-        val w = NODE_W * zoom
-        val h = NODE_H * zoom
-        if (at.x > size.width || at.y > size.height || at.x + w < 0f || at.y + h < 0f) continue
-        val selected = (selection as? Selection.Module)?.slot == m.slot
-        // A colour band across the top by module family, so you can see at a
-        // glance where the sound starts, where it's shaped and what moves it.
-        val family = nexusFamilyOf(m.type)
-        val tint = when (family) {
-            NexusFamily.Source -> col.accent
-            NexusFamily.Voice -> col.pink
-            NexusFamily.Shape -> col.teal
-            NexusFamily.Mod -> col.green
-            NexusFamily.Time -> col.sceneQueued
-            NexusFamily.Io -> col.textDim
-        }
-        // How hard this module is working, shown by the colour band and the halo
-        // below. A silent module keeps its family colour at the normal strength.
-        val live = slotLit(m.slot)
-        if (live > 0.01f) {
-            drawRoundRect(
-                tint.copy(alpha = 0.16f * live),
-                at - Offset(5f * zoom, 5f * zoom), Size(w + 10f * zoom, h + 10f * zoom),
-                androidx.compose.ui.geometry.CornerRadius(10f, 10f),
-            )
-        }
-        drawRoundRect(col.nodeBg, at, Size(w, h), androidx.compose.ui.geometry.CornerRadius(6f, 6f))
-        val band = 14f * zoom
-        drawRoundRect(
-            tint.copy(alpha = 0.22f + 0.55f * live), at, Size(w, band + 6f * zoom),
-            androidx.compose.ui.geometry.CornerRadius(6f, 6f),
+    // The value of the knob being turned, over it, like the inspector's readout.
+    knobs.turning?.let { name ->
+        val slot = name.substring(1, 3).toIntOrNull() ?: return@let
+        val index = name.substringAfter("_p").toIntOrNull()?.minus(1) ?: return@let
+        val m = patch.moduleAt(slot) ?: return@let
+        val at = namedKnobs(m.type).zip(faceOf(m).knobs).firstOrNull { it.first.first == index } ?: return@let
+        val (named, fk) = at
+        val text = measurer.measure(
+            AnnotatedString("${word(named.second)} ${knobs.display(name)}"),
+            TextStyle(color = col.accent, fontSize = (9f * textZoom).sp, fontFamily = FontFamily.Monospace),
         )
-        drawRect(col.nodeBg, at + Offset(0f, band), Size(w, 6f * zoom))
-        drawRoundRect(
-            if (selected) col.accent else col.nodeEdge, at, Size(w, h),
-            androidx.compose.ui.geometry.CornerRadius(6f, 6f), style = Stroke(if (selected) 2.5f else 1.2f),
-        )
-        if (textZoom > 0.55f) {
-            val title = measurer.measure(
-                AnnotatedString("${m.slot} ${m.type}${if (m.poly) "" else monoTag}"),
-                TextStyle(color = tint, fontSize = (9f * textZoom).sp, fontFamily = FontFamily.Monospace),
-            )
-            drawText(title, topLeft = at + Offset(6f * zoom, 2f * zoom))
-        }
-        // Jacks and their names.
-        val labels = textZoom > 0.85f
-        meta?.inputs?.forEachIndexed { i, name ->
-            val pos = screen(jackPosition(m, i, false, meta.inputs.size))
-            drawCircle(col.teal, JACK_R * zoom, pos)
-            if (labels && name.isNotEmpty()) {
-                val t = measurer.measure(
-                    AnnotatedString(word(name)),
-                    TextStyle(color = col.textDim, fontSize = (7f * textZoom).sp, fontFamily = FontFamily.Monospace),
-                )
-                drawText(t, topLeft = pos + Offset(JACK_R * zoom + 2f * zoom, -t.size.height / 2f))
+        val centre = screen(Offset(m.x + fk.x, m.y + fk.y - fk.ring - 12f))
+        val pad = 4f * zoom
+        val box = Size(text.size.width + 2 * pad, text.size.height + pad)
+        val corner = centre - Offset(box.width / 2f, box.height / 2f)
+        drawRoundRect(col.tip, corner, box, CornerRadius(4f * zoom))
+        drawText(text, topLeft = corner + Offset(pad, pad / 2f))
+    }
+}
+
+/** The rails a module hangs on, above and below it. Their holes line up along the whole canvas. */
+private fun DrawScope.drawRails(m: NexusModule, screen: (Offset) -> Offset, zoom: Float, col: AcidColors) {
+    val face = faceOf(m)
+    for (y in listOf(m.y - RAIL_DEPTH + RAIL_UNDER, m.y + face.h - RAIL_UNDER)) {
+        val at = screen(Offset(m.x - RAIL_REACH, y))
+        val size = Size((face.w + 2 * RAIL_REACH) * zoom, RAIL_DEPTH * zoom)
+        drawRect(Brush.verticalGradient(listOf(lerp(col.rail, col.nodeHi, 0.35f), col.rail), at.y, at.y + size.height), at, size)
+        if (zoom > 0.9f) {
+            val pitch = 12f
+            var x = kotlin.math.ceil((m.x - RAIL_REACH + 2f) / pitch) * pitch
+            while (x + 5f <= m.x + face.w + RAIL_REACH) {
+                drawRoundRect(col.railHole, screen(Offset(x, y + 3.5f)), Size(5f * zoom, 3f * zoom), CornerRadius(1.5f * zoom))
+                x += pitch
             }
         }
-        meta?.outputs?.forEachIndexed { i, name ->
-            val pos = screen(jackPosition(m, i, true, meta.outputs.size))
-            drawCircle(col.accent, JACK_R * zoom, pos)
-            if (labels && name.isNotEmpty()) {
-                val t = measurer.measure(
-                    AnnotatedString(word(name)),
-                    TextStyle(color = col.textDim, fontSize = (7f * textZoom).sp, fontFamily = FontFamily.Monospace),
-                )
-                drawText(t, topLeft = pos - Offset(t.size.width + JACK_R * zoom + 2f * zoom, t.size.height / 2f))
-            }
+    }
+}
+
+/** A label in patch units at [size], shrunk to fit [maxWidth] pixels if it's too wide. */
+private fun TextMeasurer.fitted(
+    text: String, size: Float, textZoom: Float, color: Color, maxWidth: Float,
+    bold: Boolean = false, spaced: Boolean = false,
+): TextLayoutResult {
+    fun style(s: Float) = TextStyle(
+        color = color, fontSize = (s * textZoom).sp, fontFamily = FontFamily.Monospace,
+        fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold,
+        letterSpacing = if (spaced) 0.2.em else 0.em,
+    )
+    val first = measure(AnnotatedString(text), style(size), maxLines = 1, softWrap = false)
+    if (first.size.width <= maxWidth || maxWidth <= 0f) return first
+    val smaller = (size * maxWidth / first.size.width).coerceAtLeast(size * 0.6f)
+    return measure(AnnotatedString(text), style(smaller), maxLines = 1, softWrap = false)
+}
+
+private fun DrawScope.drawModule(
+    m: NexusModule,
+    at: Offset,
+    zoom: Float,
+    textZoom: Float,
+    selected: Boolean,
+    /** How hard the module is working, 0 to 1, which its LED shows. */
+    live: Float,
+    scope: FloatArray,
+    measurer: TextMeasurer,
+    col: AcidColors,
+    monoTag: String,
+    word: (String) -> String,
+    knobs: KnobLook,
+) {
+    val face = faceOf(m)
+    val meta = NexusPalette.of(m.type)
+    fun u(x: Float, y: Float) = Offset(at.x + x * zoom, at.y + y * zoom)
+    val w = face.w * zoom
+    val h = face.h * zoom
+    val corner = CornerRadius(2.5f * zoom)
+    val tint = familyColour(m.type, col)
+    val labels = textZoom > 0.75f
+
+    // Shadow, so the panel stands off the case, then the plate, lit from the
+    // top left like brushed aluminium.
+    drawRoundRect(col.faceShadow.copy(alpha = col.faceShadow.alpha * 0.5f), u(-2f, 2f), Size(w + 4f * zoom, h + 7f * zoom), CornerRadius(5f * zoom))
+    drawRoundRect(col.faceShadow, u(1f, 4f), Size(w, h), corner)
+    drawRoundRect(Brush.linearGradient(listOf(col.nodeHi, col.nodeBg), at, u(face.w * 0.3f, face.h)), at, Size(w, h), corner)
+
+    // The stripe with the module's name, in its family's colour.
+    val band = FACE_HEADER * zoom
+    drawRoundRect(tint, at, Size(w, band), corner)
+    drawRect(tint, u(0f, FACE_HEADER - 3f), Size(w, 3f * zoom))
+    drawRect(
+        Brush.verticalGradient(listOf(col.cableShine.copy(alpha = col.cableShine.alpha * 0.5f), col.faceShadow.copy(alpha = 0.12f)), at.y, at.y + band),
+        at, Size(w, band),
+    )
+    if (textZoom > 0.45f) {
+        val title = measurer.fitted(
+            m.type.uppercase(), 9.5f, textZoom, col.onAccent, w - 26f * zoom, bold = true, spaced = true,
+        )
+        drawText(title, topLeft = Offset(at.x + (w - title.size.width) / 2f, at.y + (band - title.size.height) / 2f))
+    }
+
+    // Slot number and mono tag on a little badge, and the LED opposite.
+    if (labels) {
+        val badge = measurer.fitted(
+            "%02d".format(m.slot) + if (m.poly) "" else monoTag, 7f, textZoom, col.textDim, w - 26f * zoom,
+        )
+        val pad = 3f * zoom
+        val badgeAt = u(5f, FACE_HEADER + 4f)
+        drawRoundRect(col.faceShadow.copy(alpha = 0.3f), badgeAt, Size(badge.size.width + 2 * pad, badge.size.height + pad), CornerRadius(3f * zoom))
+        drawText(badge, topLeft = badgeAt + Offset(pad, pad / 2f))
+    }
+    val led = u(face.w - 10f, FACE_HEADER + 10f)
+    if (live > 0.01f) drawCircle(tint.copy(alpha = 0.35f * live), 7f * zoom, led)
+    drawCircle(lerp(col.jackHole, tint, 0.25f + 0.75f * live), 3.2f * zoom, led)
+    drawCircle(col.faceShadow, 3.2f * zoom, led, style = Stroke(0.8f * zoom))
+    drawCircle(col.cableShine, 1f * zoom, led - Offset(zoom, zoom))
+
+    // Screws: four on a wide panel, two across the corners of a narrow one.
+    val wide = face.w > 70f
+    val screws = if (wide) {
+        listOf(9f to 5f, face.w - 9f to 5f, 9f to face.h - 7f, face.w - 9f to face.h - 7f)
+    } else {
+        listOf(9f to 5f, face.w - 9f to face.h - 7f)
+    }
+    screws.forEachIndexed { i, (x, y) -> drawScrew(u(x, y), zoom, m.slot * 4 + i, col) }
+
+    // The scope's screen, with its trace.
+    face.screen?.let { r ->
+        val topLeft = u(r.x, r.y)
+        val sz = Size(r.w * zoom, r.h * zoom)
+        drawRoundRect(col.screen, topLeft, sz, CornerRadius(4f * zoom))
+        for (i in 1 until 6) {
+            val x = topLeft.x + sz.width * i / 6f
+            drawLine(col.screenGrid, Offset(x, topLeft.y), Offset(x, topLeft.y + sz.height), 0.6f * zoom)
         }
-        // A scope draws its own trace.
-        if (m.type == "scope" && scope.isNotEmpty() && textZoom > 0.5f) {
+        for (i in 1 until 4) {
+            val y = topLeft.y + sz.height * i / 4f
+            drawLine(col.screenGrid, Offset(topLeft.x, y), Offset(topLeft.x + sz.width, y), 0.6f * zoom)
+        }
+        if (scope.isNotEmpty()) {
             val path = Path()
             scope.forEachIndexed { i, v ->
-                val x = at.x + 8f * zoom + (w - 16f * zoom) * i / (scope.size - 1).coerceAtLeast(1)
-                val y = at.y + h * 0.62f - v.coerceIn(-1f, 1f) * h * 0.28f
+                val x = topLeft.x + 3f * zoom + (sz.width - 6f * zoom) * i / (scope.size - 1).coerceAtLeast(1)
+                val y = topLeft.y + sz.height / 2f - v.coerceIn(-1f, 1f) * sz.height * 0.42f
                 if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            drawPath(path, col.teal, style = Stroke(1.6f))
+            drawPath(path, col.screenTrace.copy(alpha = 0.25f), style = Stroke(3.5f * zoom))
+            drawPath(path, col.screenTrace, style = Stroke(1.1f * zoom))
         }
+        drawRoundRect(col.faceShadow, topLeft, sz, CornerRadius(4f * zoom), style = Stroke(1.2f * zoom))
+    }
+
+    // Outputs sit in a dark box, as on real modules.
+    face.outBox?.let { r -> drawRoundRect(col.outBox, u(r.x, r.y), Size(r.w * zoom, r.h * zoom), CornerRadius(4f * zoom)) }
+
+    // Knobs. The first is the module's main control, amber like the inspector's.
+    namedKnobs(m.type).zip(face.knobs).forEachIndexed { i, (named, fk) ->
+        val (index, label) = named
+        val name = nexusKnob(m.slot, index)
+        drawFaceKnob(
+            u(fk.x, fk.y), fk.r * zoom, fk.arc * zoom, fk.ring * zoom, knobs.value(name),
+            if (i == 0) col.accent else col.teal, knobs.ring(name), knobs.mark(name), zoom, col,
+        )
+        if (labels) {
+            val t = measurer.fitted(word(label).uppercase(), 6.6f, textZoom, col.textDim, (face.span - 2f) * zoom)
+            drawText(t, topLeft = u(fk.x, fk.y + fk.arc + FACE_LABEL_GAP) - Offset(t.size.width / 2f, 0f))
+        }
+    }
+
+    // Jacks, teal in and amber out.
+    for (output in listOf(false, true)) {
+        val points = if (output) face.outputs else face.inputs
+        val names = if (output) meta?.outputs.orEmpty() else meta?.inputs.orEmpty()
+        points.forEachIndexed { i, p ->
+            drawSocket(u(p.x, p.y), if (output) col.accent else col.teal, zoom, col)
+            val name = names.getOrNull(i).orEmpty()
+            if (labels && name.isNotEmpty()) {
+                val t = measurer.fitted(
+                    word(name).uppercase(), 6.4f, textZoom, if (output) col.outBoxText else col.textDim, (face.span - 2f) * zoom,
+                )
+                drawText(t, topLeft = u(p.x, p.y + 8.5f) - Offset(t.size.width / 2f, 0f))
+            }
+        }
+    }
+
+    drawRoundRect(
+        if (selected) col.accent else col.nodeEdge, at, Size(w, h), corner,
+        style = Stroke(if (selected) 2.5f * zoom.coerceAtMost(1.5f) else 1f),
+    )
+}
+
+private fun DrawScope.drawScrew(at: Offset, zoom: Float, seed: Int, col: AcidColors) {
+    val r = 3.4f * zoom
+    drawCircle(Brush.radialGradient(listOf(col.screwHi, col.screw), at - Offset(zoom, zoom), r * 1.1f), r, at)
+    drawCircle(col.faceShadow, r, at, style = Stroke(0.6f * zoom))
+    // Each screw turned a different way, as they end up in a real case.
+    val a = (seed * 2.399f) % PI.toFloat()
+    val d = Offset(cos(a), sin(a)) * (2.3f * zoom)
+    drawLine(col.screwSlot, at - d, at + d, 1.1f * zoom)
+}
+
+/** A 3.5 mm socket: a hex nut, a coloured ring and the hole. */
+private fun DrawScope.drawSocket(at: Offset, ring: Color, zoom: Float, col: AcidColors) {
+    val r = 6.6f * zoom
+    val nut = Path().apply {
+        for (i in 0 until 6) {
+            val a = PI.toFloat() / 6f + i * PI.toFloat() / 3f
+            val p = at + Offset(cos(a), sin(a)) * r
+            if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+        }
+        close()
+    }
+    drawPath(nut, Brush.verticalGradient(listOf(col.jackNutHi, col.jackNut), at.y - r, at.y + r))
+    drawPath(nut, col.faceShadow, style = Stroke(0.6f * zoom))
+    drawCircle(ring, 4.4f * zoom, at)
+    drawCircle(col.jackHole, 2.6f * zoom, at)
+}
+
+/** A plug pushed into a socket, in its cable's colour. */
+private fun DrawScope.drawPlug(at: Offset, tint: Color, zoom: Float, col: AcidColors) {
+    val r = 5.4f * zoom
+    drawCircle(col.cableShadow, r, at + Offset(0f, 1.5f * zoom))
+    drawCircle(Brush.radialGradient(listOf(lerp(tint, col.nodeHi, 0.4f), lerp(tint, col.jackHole, 0.2f)), at - Offset(1.5f * zoom, 1.5f * zoom), r * 1.1f), r, at)
+    drawCircle(col.faceShadow, 2.2f * zoom, at)
+}
+
+/** A patch cable from [a] to [b]: shadow, cord, its shine, and a glow while signal runs through it. */
+private fun DrawScope.drawCable(a: Offset, b: Offset, tint: Color, glow: Float, zoom: Float, col: AcidColors, thick: Boolean) {
+    val path = cablePath(a, b, zoom)
+    val w = (if (thick) 4.4f else 3.4f) * zoom
+    val round = { width: Float -> Stroke(width.coerceAtLeast(1f), cap = StrokeCap.Round) }
+    val shadowOffset = Offset(1.5f * zoom, 4f * zoom)
+    drawPath(Path().apply { addPath(path, shadowOffset) }, col.cableShadow, style = round(w * 1.6f))
+    drawPath(path, lerp(tint, col.jackHole, 0.3f), style = round(w * 1.35f))
+    drawPath(path, tint, style = round(w))
+    if (glow > 0.01f) drawPath(path, tint.copy(alpha = 0.10f + 0.22f * glow), style = round(w + 7f * zoom * glow))
+    drawPath(Path().apply { addPath(path, Offset(-0.6f * zoom, -0.9f * zoom)) }, col.cableShine, style = round(0.9f * zoom))
+}
+
+private fun DrawScope.drawFaceKnob(
+    at: Offset,
+    r: Float,
+    arc: Float,
+    ring: Float,
+    value: Float,
+    accent: Color,
+    /** The mapping ring's colour, or null when not mapping. */
+    mapRing: Color?,
+    mark: KnobMark,
+    zoom: Float,
+    col: AcidColors,
+) {
+    val v = value.coerceIn(0f, 1f)
+    val arcStroke = Stroke(2f * zoom, cap = StrokeCap.Round)
+    val arcTopLeft = at - Offset(arc, arc)
+    val arcSize = Size(arc * 2f, arc * 2f)
+    drawArc(col.raised, 135f, 270f, false, arcTopLeft, arcSize, style = arcStroke)
+    if (v > 0.001f) drawArc(accent, 135f, 270f * v, false, arcTopLeft, arcSize, style = arcStroke)
+
+    // The cap, lit from the top left, with a knurled edge when it's big enough to see.
+    drawCircle(col.faceShadow, r, at + Offset(0f, 1.5f * zoom))
+    drawCircle(Brush.radialGradient(listOf(col.knobCapHi, col.knobCap), at - Offset(r * 0.35f, r * 0.4f), r * 1.1f), r, at)
+    if (r > 10f) {
+        for (j in 0 until 24) {
+            val a = j / 24f * 2f * PI.toFloat()
+            val d = Offset(cos(a), sin(a))
+            drawLine(col.faceShadow, at + d * (r * 0.86f), at + d * r, 0.5f * zoom)
+        }
+    }
+    val a = (135f + 270f * v) * PI.toFloat() / 180f
+    val d = Offset(cos(a), sin(a))
+    drawLine(col.knobPointer, at + d * (r * 0.25f), at + d * (r * 0.85f), (r * 0.16f).coerceAtLeast(1.3f * zoom), cap = StrokeCap.Round)
+
+    when (mark) {
+        KnobMark.None -> {}
+        KnobMark.Automated -> drawCircle(col.accentSoft, 2f * zoom, at + Offset(arc * 0.8f, -arc * 0.8f))
+        KnobMark.Lock -> drawRect(col.accentSoft, at + Offset(arc * 0.8f - 1.8f * zoom, -arc * 0.8f - 1.8f * zoom), Size(3.6f * zoom, 3.6f * zoom))
+    }
+
+    // The mapping ring stays inside the room NexusFace gave it, so neighbours' rings never touch.
+    if (mapRing != null) {
+        val width = 1.4f * zoom
+        drawCircle(
+            mapRing, ring - width / 2f, at,
+            style = Stroke(width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f * zoom, 2f * zoom))),
+        )
     }
 }
 

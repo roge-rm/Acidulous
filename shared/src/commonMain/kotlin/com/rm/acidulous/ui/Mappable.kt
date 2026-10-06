@@ -148,7 +148,7 @@ fun Modifier.onLongPress(action: () -> Unit): Modifier = pointerInput(action) {
 }
 
 /** Long press: clear whatever drives this target, in the song and on the device. */
-private fun clearMapping(target: String) {
+internal fun clearMapping(target: String) {
     val parts = target.split(":")
     val unit = if (parts.size == 3) parts[1] else null
     val name = if (parts.size == 3) parts[2] else null
