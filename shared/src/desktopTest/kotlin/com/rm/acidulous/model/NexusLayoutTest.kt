@@ -9,8 +9,10 @@ import org.junit.Test
  * window's shape, and nothing overlaps.
  */
 class NexusLayoutTest {
-    private val w = 150f
-    private val h = 92f
+    // The plain faceplate, which every module gets here since the tests don't
+    // load the engine to ask what knobs and jacks it has.
+    private val w = nexusFace(2, 2, 1).w
+    private val h = nexusFace(2, 2, 1).h
 
     /** [n] modules in a line, each feeding the next. */
     private fun chain(n: Int) = NexusPatch(

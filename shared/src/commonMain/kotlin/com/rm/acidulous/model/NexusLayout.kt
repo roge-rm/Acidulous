@@ -9,60 +9,83 @@ import kotlin.math.roundToInt
  * Lays the patch out again to fill a window [aspect] times as wide as it is
  * tall, for the patch editor's fit button.
  *
- * Inputs are on a module's left and outputs on its right, so the signal has
- * to flow left to right or cables double back. Modules go into columns by how
- * far along the signal they are, sources first and the output last, and a
+ * Jacks are on the faceplates with inputs above outputs, but the signal
+ * still reads best left to right, so modules go into columns by how far
+ * along the signal they are, sources first and the output last, and a
  * column too tall for the window spills into the next. The columns are then
- * wrapped into bands like lines of text: a sideways phone gets one long band,
- * an upright one several short ones. The layout that draws the patch biggest
- * wins, with a bonus for fewer bands, since cables that wrap to the next band
- * are the hardest to follow.
+ * wrapped into bands like rows in a rack: a sideways phone gets one long
+ * band, an upright one several short ones. The layout that draws the patch
+ * biggest wins, with a bonus for fewer bands, since cables that wrap to the
+ * next band are the hardest to follow.
  *
- * [nodeW] and [nodeH] are a module's size in the patch's own units.
+ * [size] is a module's width and height in the patch's own units. A column
+ * is as wide as its widest module.
  */
-fun NexusPatch.arranged(aspect: Float, nodeW: Float, nodeH: Float): NexusPatch {
+fun NexusPatch.arranged(aspect: Float, size: (NexusModule) -> Pair<Float, Float>): NexusPatch {
     if (modules.isEmpty()) return this
+    val bySlot = modules.associateBy { it.slot }
+    val width = { slot: Int -> size(bySlot.getValue(slot)).first }
+    val cellH = modules.maxOf { size(it).second } + GAP_Y
     val columns = flowColumns()
     val n = modules.size
-    val cellW = nodeW + GAP_X
-    val cellH = nodeH + GAP_Y
     val want = aspect.coerceIn(0.2f, 5f)
 
     var best: Layout? = null
     for (rows in 1..n) {
         // A flow column taller than [rows] continues in the next one.
         val chunks = columns.flatMap { it.chunked(rows) }
+        val chunkW = chunks.map { c -> c.maxOf(width) + GAP_X }
         for (perBand in 1..chunks.size) {
             val bands = ceil(chunks.size / perBand.toFloat()).toInt()
-            val w = perBand * cellW - GAP_X
+            val w = chunkW.chunked(perBand).maxOf { it.sum() } - GAP_X
             val h = bands * rows * cellH - GAP_Y + (bands - 1) * BAND_GAP
             // How big the patch can be drawn in a window of this shape.
-            val size = min(want / w, 1f / h)
-            val score = size * BAND_KEEP.pow(bands - 1)
+            val scale = min(want / w, 1f / h)
+            val score = scale * BAND_KEEP.pow(bands - 1)
             if (best == null || score > best.score) best = Layout(score, rows, perBand, chunks)
         }
     }
     val layout = best ?: return this
 
     val at = HashMap<Int, Pair<Float, Float>>()
+    var x = 0f
     layout.chunks.forEachIndexed { i, chunk ->
         val band = i / layout.perBand
-        val col = i % layout.perBand
-        // A short column is centred in its band.
+        if (i % layout.perBand == 0) x = 0f
+        val colW = chunk.maxOf(width)
+        // A short column is centred in its band, and a narrow module in its column.
         val drop = (layout.rows - chunk.size) * cellH / 2f
         val top = band * (layout.rows * cellH + BAND_GAP) + drop
-        chunk.forEachIndexed { row, slot -> at[slot] = col * cellW to top + row * cellH }
+        chunk.forEachIndexed { row, slot -> at[slot] = x + (colW - width(slot)) / 2f to top + row * cellH }
+        x += colW + GAP_X
     }
     return copy(modules = modules.map { m ->
-        val (x, y) = at[m.slot] ?: return@map m
-        m.copy(x = snap(x), y = snap(y))
+        val (mx, my) = at[m.slot] ?: return@map m
+        m.copy(x = snap(mx), y = snap(my))
     })
 }
 
-/** Space between columns for the cables to bend, and between rows. */
-private const val GAP_X = 70f
-private const val GAP_Y = 30f
-/** Extra space between bands so they read as separate. */
+/** The same for modules all one size, [nodeW] by [nodeH]. */
+fun NexusPatch.arranged(aspect: Float, nodeW: Float, nodeH: Float): NexusPatch =
+    arranged(aspect) { nodeW to nodeH }
+
+/** Whether any two modules, [size] big, lie on top of each other. */
+fun NexusPatch.overlaps(size: (NexusModule) -> Pair<Float, Float>): Boolean {
+    val boxes = modules.map { m -> val (w, h) = size(m); floatArrayOf(m.x, m.y, m.x + w, m.y + h) }
+    for (i in boxes.indices) for (j in i + 1 until boxes.size) {
+        val a = boxes[i]; val b = boxes[j]
+        if (a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]) return true
+    }
+    return false
+}
+
+/**
+ * Space between columns, between rows, and between bands. Cables hang off
+ * the faceplates instead of leaving from their sides, so columns can sit
+ * close, but they need room to droop between rows.
+ */
+private const val GAP_X = 20f
+private const val GAP_Y = 60f
 private const val BAND_GAP = 40f
 /**
  * How much of its drawn size a layout keeps for each band after the first,

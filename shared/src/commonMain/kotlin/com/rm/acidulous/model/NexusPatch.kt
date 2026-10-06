@@ -94,25 +94,27 @@ data class NexusPatch(
             // With no positions at all (every factory patch) it's laid out
             // the way the fit button does, along the signal, for a square
             // window since the screen size isn't known here.
-            if (positions.isEmpty()) return NexusPatch(modules, cables).arranged(1f, NEXUS_NODE_W, NEXUS_NODE_H)
+            if (positions.isEmpty()) return NexusPatch(modules, cables).arranged(1f, NexusFaces::size)
             var placed = 0
-            return NexusPatch(
+            val stepX = modules.maxOfOrNull { NexusFaces.size(it).first }?.plus(20f) ?: 0f
+            val patch = NexusPatch(
                 modules.map { m ->
                     positions[m.slot]?.let { m.copy(x = it.first, y = it.second) } ?: run {
                         val i = placed++
-                        m.copy(x = 60f + (i % 4) * 190f, y = 60f + (i / 4) * 130f)
+                        m.copy(x = 60f + (i % 4) * stepX, y = 60f + (i / 4) * (FACE_H + 60f))
                     }
                 },
                 cables,
             )
+            // Modules were smaller boxes before they were faceplates, so a patch
+            // placed by hand then can have them on top of each other now. That
+            // one is laid out again; one that still fits keeps its places.
+            return if (patch.overlaps(NexusFaces::size)) patch.arranged(1f, NexusFaces::size) else patch
         }
     }
 }
 
 const val NEXUS_SLOTS = 16
-/** A module's size on the patch canvas, in the patch's own units. */
-const val NEXUS_NODE_W = 150f
-const val NEXUS_NODE_H = 92f
 const val NEXUS_CABLES = 24
 const val NEXUS_KNOBS = 8
 
@@ -135,9 +137,20 @@ data class NexusModuleInfo(
  * the engine sends it over instead.
  */
 object NexusPalette {
-    val types: List<NexusModuleInfo> by lazy { parse(NativeEngine.nexusPalette()) }
+    // Kept once the engine has answered. An empty answer, from an engine
+    // that isn't up yet, is asked again next time instead of kept.
+    private var loaded: List<NexusModuleInfo>? = null
+    val types: List<NexusModuleInfo>
+        get() = loaded ?: parse(NativeEngine.nexusPalette()).also { if (it.isNotEmpty()) loaded = it }
 
     fun of(name: String): NexusModuleInfo? = types.firstOrNull { it.name == name }
+
+    /**
+     * Like [of], but null when the engine can't be asked, as in the unit
+     * tests, which don't load it. For working out sizes, where a plain
+     * faceplate will do.
+     */
+    fun ofOrNull(name: String): NexusModuleInfo? = runCatching { of(name) }.getOrNull()
 
     /** Everything a player can place, i.e. not the blank placeholder. */
     val placeable: List<NexusModuleInfo> get() = types.filter { it.name != "blank" }
