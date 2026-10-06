@@ -4,7 +4,7 @@
 Each track has two insert effect slots. **fx** in the editor's bottom bar shows
 them in place of the machine panel.
 
-There are seventeen effects. Each one has the usual controls plus one extra,
+There are twenty effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, since turning up the wet/dry mix can change the level.
 
@@ -16,6 +16,8 @@ Each effect has its own page below.
   can duck while you play.
 - [**Reverb**](05-effects-and-mixing/reverb.md) - a room that can also freeze,
   gate, shimmer or crush itself down to 8 bits.
+- [**Grain**](05-effects-and-mixing/grain.md) - a cloud of short slices of what
+  the track just played, which can freeze.
 
 ## Tone
 
@@ -52,6 +54,8 @@ Each effect has its own page below.
 - [**Phaser**](05-effects-and-mixing/phaser.md) - two to eight stages.
 - [**Tremolo**](05-effects-and-mixing/tremolo.md) - volume on an LFO, or
   auto-pan.
+- [**Rotary**](05-effects-and-mixing/rotary.md) - the organ's rotating speaker
+  cabinet, slow, fast or on the beat.
 
 ## Pitch
 
@@ -59,6 +63,8 @@ Each effect has its own page below.
   metallic and detuned sounds.
 - [**Harmonizer**](05-effects-and-mixing/harmonizer.md) - adds two voices at
   scale steps, so they stay in key.
+- [**Resonator**](05-effects-and-mixing/resonator.md) - strings tuned to a key,
+  ringing in sympathy with the track.
 
 ## Input effects
 

@@ -253,7 +253,7 @@ patch "Sing to the Piano" family=house input=break
   s01_p3         1.0
   volume         1.00
 
-patch "Squeezed Pad" family=texture
+patch "Wall Pad" family=texture
   # A saw pad with the Swell effect's compressor on every voice and a chorus
   # after: the tails and the movement come up to meet the attack.
   set nexus "v|1\nm|0|voice\nm|1|osc\nm|2|env\nm|3|vca\nm|4|swell\nm|5|chorus|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"

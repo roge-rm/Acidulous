@@ -48,6 +48,9 @@ internal object FactoryBanks {
         "fx.Amp" -> fx_amp
         "fx.Gate" -> fx_gate
         "fx.Swell" -> fx_swell
+        "fx.Rotary" -> fx_rotary
+        "fx.Grain" -> fx_grain
+        "fx.Resonator" -> fx_resonator
         else -> emptyList()
     }
 
@@ -1908,7 +1911,7 @@ internal object FactoryBanks {
         mapOf("nexus" to "v|1\nm|0|audioin|mono\nm|1|follow|mono\nm|2|piano|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|1.1|2.1|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"),
         family = "house")
 
-    private fun nexus19() = Patch("Nexus", "Squeezed Pad",
+    private fun nexus19() = Patch("Nexus", "Wall Pad",
         mapOf("s01_p1" to 0.66f, "s02_p1" to 0.4f, "s02_p4" to 0.6f, "s04_p3" to 0.8f, "s04_p5" to 0.4f),
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|env\nm|3|vca\nm|4|swell\nm|5|chorus|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
         family = "texture")
@@ -4241,4 +4244,119 @@ internal object FactoryBanks {
         family = "crush")
 
     private val fx_swell: List<Patch> by lazy { listOf(fx_swell0(), fx_swell1(), fx_swell2(), fx_swell3(), fx_swell4(), fx_swell5(), fx_swell6(), fx_swell7(), fx_swell8(), fx_swell9(), fx_swell10(), fx_swell11(), fx_swell12()) }
+
+    private fun fx_rotary0() = Patch("fx.Rotary", "Init", emptyMap(),
+        family = "slow")
+
+    private fun fx_rotary1() = Patch("fx.Rotary", "Chorale",
+        mapOf("slow" to 0.64956075f, "distance" to 0.25f, "angle" to 0.85f, "width" to 0.8f),
+        family = "slow")
+
+    private fun fx_rotary2() = Patch("fx.Rotary", "Distant",
+        mapOf("slow" to 0.7334516f, "distance" to 0.85f, "width" to 0.6f, "mix" to 0.8f),
+        family = "slow")
+
+    private fun fx_rotary3() = Patch("fx.Rotary", "Fast",
+        mapOf("speed" to 1f),
+        family = "fast")
+
+    private fun fx_rotary4() = Patch("fx.Rotary", "Tremolo",
+        mapOf("speed" to 1f, "fast" to 0.899021268f, "distance" to 0.1f, "width" to 0.4f),
+        family = "fast")
+
+    private fun fx_rotary5() = Patch("fx.Rotary", "Guitar",
+        mapOf("speed" to 1f, "fast" to 0.661541939f, "ramp" to 0.760425448f, "mix" to 0.6f),
+        family = "fast")
+
+    private fun fx_rotary6() = Patch("fx.Rotary", "Quarter",
+        mapOf("tempo" to 0.6f),
+        family = "tempo")
+
+    private fun fx_rotary7() = Patch("fx.Rotary", "Eighth",
+        mapOf("speed" to 1f, "distance" to 0.2f, "width" to 1f, "tempo" to 0.8f),
+        family = "tempo")
+
+    private fun fx_rotary8() = Patch("fx.Rotary", "Bar",
+        mapOf("distance" to 0.15f, "tempo" to 0.2f),
+        family = "tempo")
+
+    private val fx_rotary: List<Patch> by lazy { listOf(fx_rotary0(), fx_rotary1(), fx_rotary2(), fx_rotary3(), fx_rotary4(), fx_rotary5(), fx_rotary6(), fx_rotary7(), fx_rotary8()) }
+
+    private fun fx_grain0() = Patch("fx.Grain", "Init", emptyMap(),
+        family = "cloud")
+
+    private fun fx_grain1() = Patch("fx.Grain", "Haze",
+        mapOf("size" to 0.8217263f, "density" to 0.7385606f, "spray" to 0.15f, "width" to 0.9f, "mix" to 0.45f),
+        family = "cloud")
+
+    private fun fx_grain2() = Patch("fx.Grain", "Swarm",
+        mapOf("size" to 0.349485f, "density" to 0.977121234f, "spray" to 0.8f, "width" to 1f, "mix" to 0.6f),
+        family = "cloud")
+
+    private fun fx_grain3() = Patch("fx.Grain", "Stutter",
+        mapOf("size" to 0.451545f, "density" to 0.451545f, "spray" to 0.05f, "width" to 0.5f),
+        family = "cloud")
+
+    private fun fx_grain4() = Patch("fx.Grain", "Octave Up",
+        mapOf("size" to 0.6901056f, "density" to 0.772034049f, "pitch" to 0.75f, "mix" to 0.4f),
+        family = "pitch")
+
+    private fun fx_grain5() = Patch("fx.Grain", "Octave Down",
+        mapOf("size" to 0.7781513f, "density" to 0.69897f, "pitch" to 0.25f, "mix" to 0.45f),
+        family = "pitch")
+
+    private fun fx_grain6() = Patch("fx.Grain", "Backwards",
+        mapOf("size" to 0.858001649f, "reverse" to 1f),
+        family = "pitch")
+
+    private fun fx_grain7() = Patch("fx.Grain", "Sparkle",
+        mapOf("size" to 0.60205996f, "density" to 0.8266063f, "pitch" to 0.6458333f, "scatter" to 0.6f, "width" to 1f, "mix" to 0.35f),
+        family = "pitch")
+
+    private fun fx_grain8() = Patch("fx.Grain", "Bloom",
+        mapOf("size" to 0.840620637f, "density" to 0.7385606f, "spray" to 0.4f, "feedback" to 0.6666667f, "gain" to 0.416666657f),
+        family = "feedback")
+
+    private fun fx_grain9() = Patch("fx.Grain", "Rising",
+        mapOf("size" to 0.80103f, "density" to 0.69897f, "pitch" to 0.6458333f, "feedback" to 0.611111164f, "mix" to 0.45f, "gain" to 0.416666657f),
+        family = "feedback")
+
+    private val fx_grain: List<Patch> by lazy { listOf(fx_grain0(), fx_grain1(), fx_grain2(), fx_grain3(), fx_grain4(), fx_grain5(), fx_grain6(), fx_grain7(), fx_grain8(), fx_grain9()) }
+
+    private fun fx_resonator0() = Patch("fx.Resonator", "Init", emptyMap(),
+        family = "strings")
+
+    private fun fx_resonator1() = Patch("fx.Resonator", "Sympathy",
+        mapOf("decay" to 0.7316757f, "tone" to 0.45f, "mix" to 0.25f),
+        family = "strings")
+
+    private fun fx_resonator2() = Patch("fx.Resonator", "Harp",
+        mapOf("scale" to 0.28125f, "low" to 0.5f, "tone" to 0.75f, "width" to 0.9f),
+        family = "strings")
+
+    private fun fx_resonator3() = Patch("fx.Resonator", "Minor",
+        mapOf("key" to 0.8181818f, "scale" to 0.15625f, "decay" to 0.7861761f, "tone" to 0.35f, "mix" to 0.3f),
+        family = "strings")
+
+    private fun fx_resonator4() = Patch("fx.Resonator", "Drone",
+        mapOf("low" to 0.0833333358f, "strings" to 0.333333343f, "decay" to 0.9554699f, "tone" to 0.3f, "mix" to 0.4f),
+        family = "drone")
+
+    private fun fx_resonator5() = Patch("fx.Resonator", "Raga",
+        mapOf("scale" to 0.65625f, "decay" to 0.900969446f, "tone" to 0.65f, "metal" to 0.1f),
+        family = "drone")
+
+    private fun fx_resonator6() = Patch("fx.Resonator", "Bell",
+        mapOf("decay" to 0.8307062f, "tone" to 0.7f, "metal" to 0.6f),
+        family = "metal")
+
+    private fun fx_resonator7() = Patch("fx.Resonator", "Gong",
+        mapOf("scale" to 0.9375f, "low" to 0.125f, "decay" to 0.929736733f, "metal" to 0.9f, "mix" to 0.4f),
+        family = "metal")
+
+    private fun fx_resonator8() = Patch("fx.Resonator", "Glass",
+        mapOf("scale" to 0.28125f, "low" to 0.75f, "tone" to 0.85f, "metal" to 0.35f, "mix" to 0.3f),
+        family = "metal")
+
+    private val fx_resonator: List<Patch> by lazy { listOf(fx_resonator0(), fx_resonator1(), fx_resonator2(), fx_resonator3(), fx_resonator4(), fx_resonator5(), fx_resonator6(), fx_resonator7(), fx_resonator8()) }
 }

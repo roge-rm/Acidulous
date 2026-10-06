@@ -1,5 +1,6 @@
 #include "EffectRegistry.h"
 #include "Effects.h"
+#include "FromMachines.h"
 #include "amp/Amp.h"
 #include <cstring>
 
@@ -27,6 +28,9 @@ const Entry kEntries[] = {
     {"Amp", make<effect::Amp>},
     {"Gate", make<effect::Gate>},
     {"Swell", make<effect::Swell>},
+    {"Rotary", make<effect::Rotary>},
+    {"Grain", make<effect::Grain>},
+    {"Resonator", make<effect::Resonator>},
 };
 constexpr int32_t kCount = sizeof(kEntries) / sizeof(kEntries[0]);
 

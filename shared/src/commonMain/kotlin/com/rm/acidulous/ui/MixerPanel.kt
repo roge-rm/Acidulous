@@ -674,6 +674,9 @@ private fun shortFx(type: String): String = when (type) {
     "Width" -> "wide"
     "Shifter" -> "shft"
     "Harmonizer" -> "harm"
+    "Rotary" -> "rot"
+    "Grain" -> "grn"
+    "Resonator" -> "reso"
     else -> type.lowercase().take(4)
 }
 

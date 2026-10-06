@@ -323,8 +323,8 @@ class Gate final : public Effect {
  *
  * `split` blends from one band to three (low, mid, high), so each part of
  * the spectrum is brought up on its own. `release` sets how fast it
- * recovers after a peak: slow is close to normalising, fast squeezes
- * everything flat. See dsp/Swell.h.
+ * recovers after a peak: slow is close to normalising, fast flattens
+ * everything into a wall. See dsp/Swell.h.
  */
 class Swell final : public Effect {
   public:

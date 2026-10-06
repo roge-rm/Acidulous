@@ -1,0 +1,90 @@
+# Grain - a cloud of the last few seconds of the track.
+#
+# Short slices of what the track just played, `size` long, `density` of them
+# a second, each from a little further back by `spray`, then played at
+# `pitch`, an octave up or down by `scatter`, backwards by `reverse`, and
+# spread across the stereo field by `width`. Mixed in, a cloud follows the
+# part like a shadow; fully wet, the part is gone and only the cloud is left.
+#
+# The extras are `freeze`, which stops listening so the cloud keeps playing
+# what it has (a switch to play live), and `feedback`, which feeds the cloud
+# back into what it listens to, so it grows on itself.
+#
+# Families: cloud, pitch, feedback.
+
+machine fx.Grain
+
+patch Init family=cloud
+
+patch Haze family=cloud
+  # Long, soft grains close behind the part: a blur that trails it.
+  size           220 ms
+  density        30
+  spray          0.15
+  width          0.9
+  mix            0.45
+
+patch Swarm family=cloud
+  # Many short grains from all over the last few seconds.
+  size           25 ms
+  density        90
+  spray          0.8
+  width          1
+  mix            0.6
+
+patch Stutter family=cloud
+  # Few, short and close: the part chopped and thrown back.
+  size           40 ms
+  density        8
+  spray          0.05
+  width          0.5
+  mix            0.5
+
+patch "Octave Up" family=pitch
+  # A cloud an octave above the part.
+  pitch          12 st
+  size           120 ms
+  density        35
+  mix            0.4
+
+patch "Octave Down" family=pitch
+  # And one below it, darker and slower.
+  pitch          -12 st
+  size           180 ms
+  density        25
+  mix            0.45
+
+patch Backwards family=pitch
+  # Every grain reversed: swells where the part has attacks.
+  reverse        1
+  size           260 ms
+  density        20
+  spray          0.3
+  mix            0.5
+
+patch Sparkle family=pitch
+  # Octaves up and down at random over a fifth: a glittering halo.
+  pitch          7 st
+  scatter        0.6
+  size           80 ms
+  density        45
+  width          1
+  mix            0.35
+
+patch Bloom family=feedback
+  # The cloud fed back into itself: it thickens the longer the part plays.
+  feedback       0.6
+  size           240 ms
+  density        30
+  spray          0.4
+  mix            0.5
+  gain           -3 dB
+
+patch Rising family=feedback
+  # Fed back a fifth up each time round: the cloud climbs.
+  pitch          7 st
+  feedback       0.55
+  size           200 ms
+  density        25
+  mix            0.45
+  gain           -3 dB

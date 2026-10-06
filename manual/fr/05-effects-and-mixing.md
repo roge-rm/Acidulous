@@ -4,7 +4,7 @@
 Chaque piste a deux emplacements d’effet en insertion. **fx** dans la barre du
 bas de l’éditeur les affiche à la place du panneau de la machine.
 
-Il y a dix-sept effets. Chacun a les réglages habituels plus un extra, affiché
+Il y a vingt effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
 de sortie, puisque monter le mélange peut changer le niveau.
 
@@ -16,6 +16,8 @@ Chaque effet a sa propre page ci-dessous.
   note, qui peuvent s’atténuer pendant que vous jouez.
 - [**Reverb**](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se
   figer, se couper, miroiter ou s’écraser jusqu’à 8 bits.
+- [**Grain**](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de
+  ce que la piste vient de jouer, qui peut se figer.
 
 ## Timbre
 
@@ -54,6 +56,8 @@ Chaque effet a sa propre page ci-dessous.
 - [**Phaser**](05-effects-and-mixing/phaser.md) : deux à huit étages.
 - [**Tremolo**](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un
   panoramique automatique.
+- [**Rotary**](05-effects-and-mixing/rotary.md) : la cabine à haut-parleur
+  tournant de l’orgue, lente, rapide ou sur le temps.
 
 ## Hauteur
 
@@ -61,6 +65,8 @@ Chaque effet a sa propre page ci-dessous.
   pour des sons métalliques et désaccordés.
 - [**Harmonizer**](05-effects-and-mixing/harmonizer.md) : ajoute deux voix à
   des degrés de la gamme, pour qu’elles restent dans la tonalité.
+- [**Resonator**](05-effects-and-mixing/resonator.md) : des cordes accordées
+  dans une tonalité, qui résonnent avec la piste.
 
 ## Effets d’entrée
 

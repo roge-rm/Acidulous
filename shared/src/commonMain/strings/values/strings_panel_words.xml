@@ -359,7 +359,8 @@
     <string name="pw_glides">glides</string>
     <string name="pw_glue">glue</string>
     <string name="pw_gong">gong</string>
-    <string name="pw_grain">grain</string>
+    <string name="pw_grain">Grain</string>
+    <string name="pw_grain_ee4ddd">grain</string>
     <string name="pw_grains">grains</string>
     <string name="pw_grand">grand</string>
     <string name="pw_grid">grid</string>
@@ -747,6 +748,7 @@
     <string name="pw_reset">reset</string>
     <string name="pw_reso">reso</string>
     <string name="pw_resonance">resonance</string>
+    <string name="pw_resonator">Resonator</string>
     <string name="pw_response">response</string>
     <string name="pw_restart">restart</string>
     <string name="pw_rev">rev</string>
@@ -771,7 +773,8 @@
     <string name="pw_roll">roll</string>
     <string name="pw_room">room</string>
     <string name="pw_root">root</string>
-    <string name="pw_rotary">rotary</string>
+    <string name="pw_rotary">Rotary</string>
+    <string name="pw_rotary_bb7b80">rotary</string>
     <string name="pw_rotate">rotate</string>
     <string name="pw_rotor">rotor</string>
     <string name="pw_route">route</string>

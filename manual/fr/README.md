@@ -40,9 +40,12 @@
     - [Filter](05-effects-and-mixing/filter.md) : passe-bas, passe-bande ou passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste.
     - [Flanger](05-effects-and-mixing/flanger.md) : un court délai qui balaie, avec une réinjection négative pour le son creux.
     - [Gate](05-effects-and-mixing/gate.md) : une porte de bruit, avec un filtre sur ce qu’elle écoute et une entrée latérale.
+    - [Grain](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de ce que la piste vient de jouer.
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) : ajoute deux voix à des degrés de la gamme, pour qu’elles restent dans la tonalité.
     - [Phaser](05-effects-and-mixing/phaser.md) : deux à huit étages.
+    - [Resonator](05-effects-and-mixing/resonator.md) : des cordes accordées dans une tonalité, qui résonnent avec la piste.
     - [Reverb](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se figer, se couper, miroiter ou s’écraser.
+    - [Rotary](05-effects-and-mixing/rotary.md) : la cabine à haut-parleur tournant de l’orgue, pour n’importe quelle piste.
     - [Shifter](05-effects-and-mixing/shifter.md) : un décalage de fréquence, pour des sons métalliques et désaccordés.
     - [Swell](05-effects-and-mixing/swell.md) : une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.
     - [Tremolo](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un panoramique automatique.

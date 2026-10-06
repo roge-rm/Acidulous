@@ -40,9 +40,12 @@
     - [Filter](05-effects-and-mixing/filter.md) - low, band or high pass, moved by an LFO, the signal's level or another track.
     - [Flanger](05-effects-and-mixing/flanger.md) - a short sweeping delay, with negative feedback for the hollow sound.
     - [Gate](05-effects-and-mixing/gate.md) - a noise gate, with a filter on what it listens to and a sidechain.
+    - [Grain](05-effects-and-mixing/grain.md) - a cloud of short slices of what the track just played.
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) - adds two voices at scale steps, so they stay in key.
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
+    - [Resonator](05-effects-and-mixing/resonator.md) - strings tuned to a key, ringing in sympathy with the track.
     - [Reverb](05-effects-and-mixing/reverb.md) - a room that can also freeze, gate, shimmer or crush itself.
+    - [Rotary](05-effects-and-mixing/rotary.md) - the organ's rotating speaker cabinet, for any track.
     - [Shifter](05-effects-and-mixing/shifter.md) - frequency shifting, for metallic and detuned sounds.
     - [Swell](05-effects-and-mixing/swell.md) - upward compression: the quiet parts come up to meet the loud ones, in one band or three.
     - [Tremolo](05-effects-and-mixing/tremolo.md) - volume on an LFO, or auto-pan.

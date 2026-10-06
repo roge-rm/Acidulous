@@ -73,7 +73,7 @@ All six are the demo song, Squelch.
 | **Nexus** | A modular synth whose modules are the other machines. |
 | **Bias** | A four-track for audio recordings that runs along the song. |
 
-### Seventeen effects
+### Twenty effects
 
 Each has the usual controls plus one extra, and its own page in the manual.
 
@@ -96,6 +96,9 @@ Each has the usual controls plus one extra, and its own page in the manual.
 | **Tremolo** | Volume on an LFO, or auto-pan. |
 | **Shifter** | Frequency shifting, for metallic and detuned sounds. |
 | **Harmonizer** | Adds two voices at scale steps, so they stay in key. |
+| **Rotary** | The organ's rotating speaker cabinet for any track, slow, fast or on the beat. |
+| **Grain** | A cloud of short slices of what the track just played, which can freeze. |
+| **Resonator** | Strings tuned to a key, ringing in sympathy with the track. |
 
 ### Mixing
 

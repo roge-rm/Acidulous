@@ -24,6 +24,7 @@ machine/    Machine interface · MachineRegistry, then one directory each:
 effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
             Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
             Chorus Tremolo Width Shifter Harmonizer Amp Gate Swell
+            Rotary Grain Resonator (FromMachines.h)
 modifier/    InputMod interface + MidiSink · InputModRegistry · Scales.h (33 scales,
             25 chords) · InputMods: Scale Chord Arp
 rack/       Rack (clip player -> modifiers -> machine -> effects -> channel strip) ·

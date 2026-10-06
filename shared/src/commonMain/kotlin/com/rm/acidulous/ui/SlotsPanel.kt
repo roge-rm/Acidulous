@@ -465,6 +465,9 @@ private val EXTRA = mapOf(
     "Distortion" to setOf("mode", "bias"),
     "Compressor" to setOf("pump", "pumprate"),
     "Swell" to setOf("split"), // one band to three
+    "Rotary" to setOf("tempo"), // the horn turning on the beat
+    "Grain" to setOf("freeze", "feedback"),
+    "Resonator" to setOf("metal"), // stiff strings, toward a bell
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
     "Bitcrusher" to setOf("jitter", "tone"),
     "Phaser" to setOf("spread"),
@@ -520,6 +523,10 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     steps == 2 -> listOf("off", "on")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
+    name == "speed" && type == "Rotary" -> listOf("brake", "slow", "fast")
+    name == "tempo" && type == "Rotary" -> listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
+    name == "freeze" && type == "Grain" -> listOf("off", "on")
+    name == "strings" && type == "Resonator" -> (4..16).map { "$it" }
     // Scale degrees, not semitones, since that's how the Harmonizer works.
     (name == "interval" || name == "interval2") && type == "Harmonizer" ->
         (-7..7).map { if (it > 0) "+$it" else "$it" }
