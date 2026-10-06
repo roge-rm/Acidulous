@@ -18,6 +18,11 @@
 #
 # Families: basic, house, macro, morph, generative, texture.
 #
+# The last six use the modules lifted from the other machines and the insert
+# effects: Brazen's horn, Tongue's reed through Diction's throat, Formulate's
+# expressions (the `e|` line is the formula module's text), Molt's ear
+# playing Hammer, and Draw's reed beside Timber's pipe.
+#
 # The spread across this bank is wide on purpose. Plucked, Rotor String and
 # Listening are a struck string and a grain cloud among held notes: `loud` is
 # the loudest four hundred milliseconds, and a pluck spends most of that
@@ -207,3 +212,65 @@ patch "Feeding Back" family=texture
   s04_p4         0.3
   s06_p1         0.75
   volume         0.44
+
+patch "Horn in a Hall" family=house
+  # Brazen's horn as a block: the envelope is the player's breath, so the
+  # attack is how fast they blow and the release how fast they stop, and
+  # the lips lock to the tube on their own. Then the reverb, which is the
+  # insert effect itself, patched in after it.
+  set nexus "v|1\nm|0|voice\nm|1|env\nm|2|bore\nm|3|reverb|mono\nm|4|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|0.0|2.1|1.0\nc|2.0|3.0|1.0\nc|3.0|4.0|1.0\nc|3.1|4.2|1.0"
+  s01_p1         0.08
+  s01_p3         0.8
+  s01_p4         0.25
+  s03_p5         0.25
+  volume         1.00
+
+patch "Talking Harp" family=house
+  # Tongue's jaw harp reed, plucked by each note's gate, and Diction's throat
+  # as its mouth: an LFO moves the vowel, which is all a jaw harp player does.
+  set nexus "v|1\nm|0|voice\nm|1|jaw\nm|2|lfo|mono\nm|3|throat\nm|4|out|mono\nc|0.1|1.0|1.0\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|2.1|3.1|0.8\nc|3.0|4.0|1.0"
+  s01_p8         0.9
+  s02_p2         0.25
+  s03_p1         0.1
+  s03_p5         1.0
+  volume         1.00
+
+patch Bytebeat family=generative
+  # A formula as an oscillator: Formulate's expressions, run at the note's
+  # pitch, through the bitcrusher for the last of its edges. Change the
+  # formula in the patch editor.
+  set nexus "v|1\nm|0|voice\nm|1|formula\nm|2|env\nm|3|vca\nm|4|crush\nm|5|out|mono\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\ne|01|t * (t >> 5 | t >> 8)"
+  s01_p2         0.3
+  s02_p3         0.6
+  s04_p1         0.6
+  s05_p1         0.4
+  volume         0.80
+
+patch "Sing to the Piano" family=house input=break
+  # Whatever comes in, followed: its pitch plays Hammer's piano, a note each
+  # time it's sure of one. Hum into the phone and the piano answers.
+  set nexus "v|1\nm|0|audioin|mono\nm|1|follow|mono\nm|2|piano|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|1.1|2.1|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"
+  s01_p3         1.0
+  volume         1.00
+
+patch "Squeezed Pad" family=texture
+  # A saw pad with the Swell effect's compressor on every voice and a chorus
+  # after: the tails and the movement come up to meet the attack.
+  set nexus "v|1\nm|0|voice\nm|1|osc\nm|2|env\nm|3|vca\nm|4|swell\nm|5|chorus|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"
+  s01_p1         0.66
+  s02_p1         0.4
+  s02_p4         0.6
+  s04_p3         0.8
+  s04_p5         0.4
+  volume         0.80
+
+patch "Free Reeds" family=house
+  # Draw's accordion reed, blown by an envelope with a slow attack like a
+  # bellows, and a pipe an octave down for its body, the one blown alongside.
+  set nexus "v|1\nm|0|voice\nm|1|env\nm|2|reed\nm|3|pipe\nm|4|mix\nm|5|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|1.0|3.0|0.9\nc|0.0|2.1|1.0\nc|0.0|3.1|1.0\nc|2.0|4.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"
+  s01_p1         0.2
+  s01_p3         0.9
+  s02_p1         0.3
+  s03_p2         0.25
+  s03_p8         0.35
+  volume         1.00

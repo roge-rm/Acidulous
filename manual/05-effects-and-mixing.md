@@ -4,7 +4,7 @@
 Each track has two insert effect slots. **fx** in the editor's bottom bar shows
 them in place of the machine panel.
 
-There are sixteen effects. Each one has the usual controls plus one extra,
+There are seventeen effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, since turning up the wet/dry mix can change the level.
 
@@ -40,6 +40,8 @@ Each effect has its own page below.
   sidechain from any track and a tempo-synced pump.
 - [**Gate**](05-effects-and-mixing/gate.md) - a noise gate that another track
   can open.
+- [**Swell**](05-effects-and-mixing/swell.md) - upward compression, in one band
+  or three: the quiet parts come up to meet the loud ones.
 
 ## Movement
 

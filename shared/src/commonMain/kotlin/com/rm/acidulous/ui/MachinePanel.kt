@@ -2383,8 +2383,8 @@ private fun CumulusPanel(b: ParamBinding) {
 private val FORMULATE_WAVES = listOf("pulse", "tri", "saw", "noise", "off")
 private val FORMULATE_MODES = listOf("off", "replace", "ring", "gate", "xor")
 
-/** Example expressions to start from, all original. */
-private val FORMULA_EXAMPLES = listOf(
+/** Example expressions to start from, all original. Also offered for Nexus's formula module. */
+internal val FORMULA_EXAMPLES = listOf(
     "x" to "the chip, untouched",
     "x & (255 << (a >> 5))" to "crush it with knob a",
     "x * sin(t) >> 7" to "ring it against a sine",

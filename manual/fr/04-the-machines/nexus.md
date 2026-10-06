@@ -21,6 +21,53 @@ l’écran, puis zoome pour tout montrer. Tournez le téléphone et touchez-le d
 nouveau pour une disposition adaptée à ce sens. C’est une seule étape
 d’annulation, et les modules peuvent revenir où ils étaient.
 
+## Les modules sur le canevas
+
+Chaque module est un panneau sur des rails, aussi large que ses boutons et ses
+prises le demandent. Les entrées sont les prises turquoise et les sorties les
+prises ambre, dans la boîte sombre du bas. La couleur en haut dit de quel genre
+de module il s’agit, et le voyant à côté du nom montre à quel point il
+travaille. Les câbles prennent la couleur du module d’où ils viennent.
+
+Tournez un bouton sur un panneau en glissant vers le haut ou le bas. Zoomez
+pour des réglages plus fins, et touchez-le deux fois pour le remettre. Les
+mêmes boutons sont sous le canevas quand le module est sélectionné. En mode
+d’assignation, touchez un bouton sur un panneau pour l’assigner et maintenez-le
+pour effacer l’assignation.
+
+## Les effets en modules
+
+Les effets d’insertion sont aussi des modules, et un effet peut aller
+n’importe où dans un patch et être bougé par un câble : **reverb**, **chorus**,
+**phaser**, **crush**, **shift**, **drive** et **swell**. Chacun sonne
+exactement comme sur une piste. Leur deuxième entrée bouge le bouton dont elle
+porte le nom, comme **size** sur la réverbération ou **amount** sur swell. Chacun
+a une fraction de milliseconde de retard, qu’on n’entend pas.
+
+## Les instruments des autres machines
+
+D’autres machines sont des modules, chacun avec la partie qui fait son son :
+
+- **bore** : le cuivre de Brazen, des lèvres sur un tube avec un pavillon.
+- **pipe** : le tuyau de Timber, avec une anche, une anche double ou le jet
+  d’air d’une flûte.
+- **reed** : l’anche libre de Draw : harmonica, accordéon, mélodica, harmonium
+  ou concertina.
+- **jaw** : l’anche de la guimbarde de Tongue, pincée par son entrée **trig**.
+  Passez-la dans un **throat** et bougez la voyelle pour le son de guimbarde.
+- **piano** : tout Hammer, joué par une **pitch** et un **gate**.
+- **throat** : le conduit vocal de Diction en filtre : tout ce qui le traverse
+  devient une voyelle, de ou à i.
+- **formula** : les expressions de Formulate, en oscillateur ou pour façonner
+  ce qui arrive dans **x**. Sélectionnez-le et touchez **modifier…** pour taper
+  la formule.
+- **follow** : l’oreille de Molt : la hauteur de ce qui entre, un gate tant
+  qu’il en est sûr, et son niveau. Chantez dedans pour jouer le patch.
+
+Les instruments à vent (**bore**, **pipe** et **reed**) prennent leur air à
+l’entrée **breath**, depuis une enveloppe ou une source de pression. Sans rien
+dedans, ce sont les touches qui soufflent.
+
 ## Les macros
 
 Huit macros, **1** à **8** sous **macros**, plus **morph**. Le patch décide de

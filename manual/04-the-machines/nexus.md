@@ -21,6 +21,50 @@ screen, then zooms to show all of it. Turn the phone and press it again for a
 layout that suits that way round. It's one step of undo, so the modules can go
 back where they were.
 
+## Modules on the canvas
+
+Each module is a panel on rails, as wide as its knobs and jacks need. Inputs
+are the teal jacks and outputs the amber ones, in the dark box at the bottom.
+The colour along the top says what kind of module it is, and the light next to
+the name shows how hard it's working. Cables take the colour of the module they
+come from.
+
+Turn a knob on a panel by dragging up or down. Zoom in for finer moves, and tap
+twice to put it back. The same knobs are under the canvas when the module is
+selected. In mapping mode, tap a knob on a panel to map it and hold it to clear
+the mapping.
+
+## Effects as modules
+
+The insert effects are modules too, so an effect can go anywhere in a patch
+and be moved by a cable: **reverb**, **chorus**, **phaser**, **crush**,
+**shift**, **drive** and **swell**. Each sounds exactly as it does on a track.
+Their second input moves the knob it's named after, like **size** on the
+reverb or **amount** on swell. Each runs a fraction of a millisecond late,
+which you won't hear.
+
+## Instruments from the other machines
+
+More of the machines are modules, each with the part that makes its sound:
+
+- **bore** - Brazen's horn: lips on a tube with a bell.
+- **pipe** - Timber's pipe, with a reed, a double reed or a flute's air jet.
+- **reed** - Draw's free reed: harmonica, accordion, melodica, harmonium or
+  concertina.
+- **jaw** - Tongue's jaw harp reed, plucked by its **trig** input. Put it
+  through a **throat** and move the vowel for the twang.
+- **piano** - the whole of Hammer, played by a **pitch** and a **gate**.
+- **throat** - Diction's vocal tract as a filter: anything through it becomes
+  a vowel, from oo to ee.
+- **formula** - Formulate's expressions, as an oscillator or as a shaper of
+  what comes into **x**. Select it and press **edit** to type the formula.
+- **follow** - Molt's ear: the pitch of whatever's in its input, a gate while
+  it's sure of it, and its level. Sing into it to play the patch.
+
+The blown ones (**bore**, **pipe** and **reed**) take their air from the
+**breath** input, from an envelope or a pressure source. With nothing in it,
+the keys blow them.
+
 ## Macros
 
 Eight macros, **macro1** to **macro8**, plus **morph**. The patch decides what

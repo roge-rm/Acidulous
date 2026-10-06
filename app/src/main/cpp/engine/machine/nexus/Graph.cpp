@@ -48,6 +48,16 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
 
     // Pass one: the modules, so a cable can name a slot that appears later.
     std::vector<int32_t> slotToNode(kSlots, -1);
+    // A module's text: `e|07|t*(t>>5)`. Everything after the slot is the text,
+    // bars and all, since a formula can have `|` in it.
+    std::vector<std::string> textOf(kSlots);
+    for (const auto &line : lines) {
+        if (line.size() < 2 || line[0] != 'e' || line[1] != '|') continue;
+        const size_t bar = line.find('|', 2);
+        if (bar == std::string::npos) continue;
+        const int32_t slot = toInt(line.substr(2, bar - 2));
+        if (slot >= 0 && slot < kSlots) textOf[static_cast<size_t>(slot)] = line.substr(bar + 1);
+    }
     for (const auto &line : lines) {
         if (line.empty() || line[0] == '#') continue;
         const auto f = split(line, '|');
@@ -72,6 +82,7 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
                 g->warn = "unknown module \"" + f[2] + "\"";
             }
             const ModuleInfo &info = infoFor(n.type);
+            n.text = textOf[static_cast<size_t>(slot)];
             n.poly = f.size() >= 4 ? (f[3] == "poly") : true;
             if (!n.poly && (info.cap & CapMono) == 0) n.poly = true;
             if (n.poly && (info.cap & CapPoly) == 0) n.poly = false;
@@ -96,6 +107,10 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
         const int32_t copies = n.poly ? kVoices : 1;
         for (int32_t i = 0; i < copies; ++i) {
             n.inst.emplace_back(makeModule(n.unknown ? TBlank : n.type));
+            std::string why;
+            if (!n.inst.back()->setText(n.text, why) && i == 0) {
+                g->warn = std::string(infoFor(n.type).name) + " in slot " + std::to_string(n.slot) + ": " + why;
+            }
             n.inst.back()->prepare(sampleRate, kVoices);
         }
         if (n.type == TOut && g->outNode < 0) g->outNode = static_cast<int32_t>(&n - g->nodes.data());
@@ -210,7 +225,8 @@ void Graph::adoptFrom(Graph &old) {
     // moves only.
     for (auto &n : nodes) {
         for (auto &o : old.nodes) {
-            if (o.slot != n.slot || o.type != n.type || o.poly != n.poly) continue;
+            // A changed text is a different module: a new formula starts clean.
+            if (o.slot != n.slot || o.type != n.type || o.poly != n.poly || o.text != n.text) continue;
             if (o.inst.size() != n.inst.size()) continue;
             for (size_t i = 0; i < n.inst.size(); ++i) n.inst[i] = std::move(o.inst[i]);
             break;
@@ -221,6 +237,8 @@ void Graph::adoptFrom(Graph &old) {
         for (auto &i : n.inst) {
             if (i) continue;
             i.reset(makeModule(n.unknown ? TBlank : n.type));
+            std::string why;
+            i->setText(n.text, why);
             i->prepare(sampleRate, kVoices);
         }
     }

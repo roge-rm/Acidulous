@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string>
 #include <engine/core/Constants.h>
 
 // A module in a patch: eight knobs, some inputs, some outputs and a step()
@@ -86,6 +87,13 @@ class Module {
      * moves live instances into the new graph, with new wiring.
      */
     virtual void setConnected(uint32_t) {}
+
+    /**
+     * Worker thread, before prepare(): the module's text from the patch, for
+     * a module that's programmed with one (the formula's expression). False
+     * with a reason if it can't be used; the module then stays silent.
+     */
+    virtual bool setText(const std::string &, std::string &) { return true; }
 
     /**
      * One sample. `in` is kPorts wide, already summed and scaled by the

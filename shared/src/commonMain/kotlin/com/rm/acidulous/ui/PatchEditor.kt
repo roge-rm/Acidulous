@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -499,12 +500,14 @@ fun PatchScreen(
         }
 
         Inspector(patch, selection, binding, scope, landscape,
+            warning = com.rm.acidulous.engine.EngineSync.nexusWarnings[trackIndex].orEmpty(),
             onDelete = {
                 when (val s = selection) {
                     is Selection.Module -> {
                         write(patch.copy(
                             modules = patch.modules.filterNot { it.slot == s.slot },
                             cables = patch.cables.filterNot { it.fromSlot == s.slot || it.toSlot == s.slot },
+                            texts = patch.texts - s.slot,
                         ))
                         selection = Selection.None
                     }
@@ -520,6 +523,10 @@ fun PatchScreen(
                 write(patch.copy(modules = patch.modules.map {
                     if (it.slot == s.slot) it.copy(poly = !it.poly) else it
                 }))
+            },
+            onSetText = { text ->
+                val s = selection as? Selection.Module ?: return@Inspector
+                write(patch.copy(texts = if (text.isBlank()) patch.texts - s.slot else patch.texts + (s.slot to text.trim())))
             },
         )
         }
@@ -550,7 +557,7 @@ fun PatchScreen(
                     next.withSetting("nexus", p.copy(modules = p.modules + NexusModule(
                         slot, type, meta?.canPoly != false,
                         pan.x + 120f, pan.y + 100f,
-                    )).encode())
+                    ), texts = p.texts - slot).encode())
                 }
             }
         }
@@ -1047,6 +1054,10 @@ private fun Inspector(
     vertical: Boolean = false,
     onDelete: () -> Unit,
     onTogglePoly: () -> Unit,
+    /** What the engine said about the patch, such as a formula that doesn't parse. */
+    warning: String = "",
+    /** Sets the selected module's text: a formula module's expression. */
+    onSetText: (String) -> Unit = {},
 ) {
     val c = Acid.colors
     // Built from `GroupRow` and `Group` like the machine panels.
@@ -1085,6 +1096,10 @@ private fun Inspector(
                                     Text(stringResource(Res.string.patch_remove), color = Acid.colors.red, fontSize = 11.sp)
                                 }
                             }
+                        }
+                        // A formula module is programmed with text, kept in the patch.
+                        if (m.type == "formula") {
+                            Group("formula") { ModuleFormula(m.slot, patch.texts[m.slot].orEmpty(), warning, onSetText) }
                         }
                     }
                 }
@@ -1126,6 +1141,58 @@ private fun Inspector(
             }
         }
     }
+    }
+}
+
+/**
+ * A formula module's expression and whether it parses, with a button to
+ * edit it. It's applied on OK, so a half-typed one isn't built on every key.
+ */
+@Composable
+private fun ModuleFormula(slot: Int, text: String, warning: String, onSet: (String) -> Unit) {
+    val c = Acid.colors
+    var editing by remember { mutableStateOf(false) }
+    Column(Modifier.widthIn(min = 140.dp, max = 260.dp)) {
+        Text(
+            text.ifEmpty { stringResource(Res.string.formula_none) },
+            color = if (text.isEmpty()) c.textDim else c.textHi,
+            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
+        // The engine names the module and its slot, so only this one's is shown.
+        val prefix = "formula in slot $slot: "
+        if (warning.startsWith(prefix)) Text(warning.removePrefix(prefix), color = c.red, fontSize = 10.sp, maxLines = 2)
+        TextButton(onClick = { editing = true }) {
+            Text(stringResource(Res.string.formula_edit), color = c.accent, fontSize = 12.sp)
+        }
+    }
+    if (editing) {
+        var draft by remember { mutableStateOf(text) }
+        PlainDialog(
+            title = stringResource(Res.string.formula_title),
+            onDismiss = { editing = false },
+            confirmLabel = stringResource(Res.string.ok),
+            onConfirm = { editing = false; onSet(draft) },
+            spacing = 8.dp,
+        ) {
+            androidx.compose.material3.OutlinedTextField(
+                value = draft, onValueChange = { draft = it },
+                label = { Text(stringResource(Res.string.formula_expression)) },
+                textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                modifier = Modifier.typing() then Modifier.fillMaxWidth(),
+            )
+            Text(stringResource(Res.string.formula_examples), color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            for ((example, what) in FORMULA_EXAMPLES) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { draft = example }.padding(vertical = 3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(example, color = c.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.weight(1f), maxLines = 1)
+                    Text(panelWord(what), color = c.textDim, fontSize = 10.sp, maxLines = 1)
+                }
+            }
+        }
     }
 }
 

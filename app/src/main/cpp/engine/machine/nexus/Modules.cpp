@@ -1,4 +1,5 @@
 #include "Modules.h"
+#include "Instruments.h"
 
 // The module table. The engine publishes it to the UI, so the editor's
 // labels, jack names and module defaults all come from here, with no second
@@ -51,6 +52,24 @@ const ModuleInfo kInfo[TypeCount] = {
     {"quant",   {"scale", "root", kNone, kNone, kNone, kNone, kNone, kNone},             {0, 0, 0, 0, 0, 0, 0, 0},                      {"in"}, {"out", "trig"}, CapBoth},
     {"logic",   {"mode", kNone, kNone, kNone, kNone, kNone, kNone, kNone},               {0, 0, 0, 0, 0, 0, 0, 0},                      {"a", "b"}, {"out", "not"}, CapBoth},
     {"touch",   {kNone, kNone, kNone, kNone, kNone, kNone, kNone, kNone},                {0, 0, 0, 0, 0, 0, 0, 0},                      {kNone}, {"prs", "slide"}, CapPoly},
+    {"swell",   {"floor", "ceiling", "amount", "split", "release", "mix", kNone, kNone}, {0.5f, 0.9f, 0.5f, 1.0f, 0.57f, 1.0f, 0, 0},    {"in", "amount"}, {"out"}, CapBoth},
+    // The insert effects. Knobs and the second input are named after the
+    // effect's own parameters, which is how FxMod finds them.
+    {"reverb",  {"size", "damp", "tone", "predelay", "mix", "freeze", "shimmer", "wobble"}, {0.5f, 0.4f, 0.807f, 0.05f, 0.3f, 0, 0, 0}, {"in", "size"}, {"L", "R"}, CapMono},
+    {"chorus",  {"rate", "depth", "voices", "spread", "drift", "mix", kNone, kNone},  {0.812f, 0.45f, 0.5f, 0.6f, 0.15f, 0.5f, 0, 0}, {"in", "depth"}, {"L", "R"}, CapMono},
+    {"phaser",  {"rate", "depth", "feedback", "stages", "spread", "mix", kNone, kNone}, {0.875f, 0.7f, 0.333f, 0.333f, 0.5f, 0.5f, 0, 0}, {"in", "depth"}, {"L", "R"}, CapBoth},
+    {"crush",   {"bits", "rate", "jitter", "tone", "mix", kNone, kNone, kNone},       {0.467f, 0.696f, 0, 1.0f, 1.0f, 0, 0, 0},     {"in", "bits"}, {"out"}, CapBoth},
+    {"shift",   {"shift", "fine", "spread", "feedback", "mix", kNone, kNone, kNone},  {0.5f, 0.5f, 0, 0, 0.5f, 0, 0, 0},           {"in", "shift"}, {"L", "R"}, CapBoth},
+    {"drive",   {"drive", "tone", "mix", "mode", "bias", kNone, kNone, kNone},        {0.376f, 0.766f, 1.0f, 0, 0, 0, 0, 0},        {"in", "drive"}, {"out"}, CapBoth},
+    // The other machines' instruments. See Instruments.h.
+    {"bore",    {"semis", "tension", "bell", "size", "brass", "bite", "air", "level"},  {0.5f, 0.611f, 0.556f, 0.6f, 0.45f, 0.4f, 0.15f, 0.5f}, {"breath", "pitch"}, {"out"}, CapBoth},
+    {"pipe",    {"kind", "semis", "reed", "lip", "holes", "bell", "air", "level"},     {0, 0.5f, 0.47f, 0.46f, 0.537f, 0.41f, 0.12f, 0.5f}, {"breath", "pitch"}, {"out"}, CapBoth},
+    {"reed",    {"kind", "semis", "blow", "air", "level", kNone, kNone, kNone},        {0, 0.5f, 0.558f, 0.333f, 0.5f, 0, 0, 0},     {"breath", "pitch"}, {"out"}, CapBoth},
+    {"jaw",     {"kind", "semis", "ring", "overtones", "over ring", "snap", "drive", "level"}, {0, 0.5f, 0.6f, 0.3f, 0.37f, 0.5f, 0, 0.5f}, {"trig", "pitch", "drive"}, {"out"}, CapBoth},
+    {"piano",   {"model", "hardness", "tone", "sustain", "unison", "stiffness", "sympathy", "board"}, {0, 0.5f, 0.5f, 0.5f, 0.333f, 0.5f, 0.5f, 0.7f}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
+    {"throat",  {"vowel", "size", "nasal", "ring", "level", kNone, kNone, kNone},      {0.5f, 0.5f, 0, 0.5f, 0.5f, 0, 0, 0},         {"in", "vowel", "size"}, {"out"}, CapBoth},
+    {"formula", {"semis", "speed", "a", "b", "c", "keyed", "level", kNone},            {0.5f, 0.5f, 0, 0, 0, 1.0f, 0.5f, 0},          {"x", "pitch"}, {"out"}, CapBoth},
+    {"follow",  {"sure", "glide", "snap", kNone, kNone, kNone, kNone, kNone},          {0.46f, 0.35f, 0, 0, 0, 0, 0, 0},             {"in"}, {"pitch", "gate", "level"}, CapMono},
 };
 } // namespace
 
@@ -65,6 +84,15 @@ int32_t typeFromName(const char *name) {
         if (std::strcmp(kInfo[i].name, name) == 0) return i;
     }
     return -1; // unknown: the caller puts a blank in the slot and warns
+}
+
+void MachineMod::prepare(float sr, int32_t) {
+    if (host == nullptr) host = MachineRegistry::create(machine);
+    if (host == nullptr) return;
+    host->prepare(static_cast<int32_t>(sr));
+    const ModuleInfo &info = infoFor(type);
+    for (int i = 0; i < kKnobs; ++i) param[i] = info.knob[i] != nullptr ? host->params().indexOf(info.knob[i]) : -1;
+    reset();
 }
 
 Module *makeModule(int32_t type) {
@@ -100,6 +128,21 @@ Module *makeModule(int32_t type) {
     case TQuant: return new QuantMod();
     case TLogic: return new LogicMod();
     case TTouch: return new TouchMod();
+    case TSwell: return new SwellMod();
+    case TReverb: return new FxMod(type, "Reverb");
+    case TChorus: return new FxMod(type, "Chorus");
+    case TPhaser: return new FxMod(type, "Phaser");
+    case TCrush: return new FxMod(type, "Bitcrusher");
+    case TShift: return new FxMod(type, "Shifter");
+    case TDrive: return new FxMod(type, "Distortion");
+    case TBore: return new BoreMod();
+    case TPipe: return new PipeMod();
+    case TReed: return new ReedMod();
+    case TJaw: return new JawMod();
+    case TPiano: return new MachineMod(type, "Hammer");
+    case TThroat: return new ThroatMod();
+    case TFormula: return new FormulaMod();
+    case TFollow: return new FollowMod();
     default: return new BlankMod();
     }
 }

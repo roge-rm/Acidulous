@@ -44,6 +44,7 @@
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
     - [Reverb](05-effects-and-mixing/reverb.md) - a room that can also freeze, gate, shimmer or crush itself.
     - [Shifter](05-effects-and-mixing/shifter.md) - frequency shifting, for metallic and detuned sounds.
+    - [Swell](05-effects-and-mixing/swell.md) - upward compression: the quiet parts come up to meet the loud ones, in one band or three.
     - [Tremolo](05-effects-and-mixing/tremolo.md) - volume on an LFO, or auto-pan.
     - [Width](05-effects-and-mixing/width.md) - wider, narrower, mono below a frequency or rotated.
 6. [Modifiers](06-modifiers.md)

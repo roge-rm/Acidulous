@@ -1,7 +1,9 @@
 #pragma once
+#include <algorithm>
 #include <cstdint>
 #include <cmath>
 #include <cstring>
+#include <iterator>
 #include <engine/core/InputBus.h>
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/Biquad.h>
@@ -10,7 +12,9 @@
 #include <engine/dsp/Math.h>
 #include <engine/dsp/MultiFilter.h>
 #include <engine/dsp/Osc.h>
+#include <engine/dsp/Swell.h>
 #include <engine/dsp/Wavetable.h>
+#include <engine/effect/EffectRegistry.h>
 #include <engine/inputmod/Scales.h>
 #include <engine/machine/filament/Waveguide.h>
 #include <engine/machine/manual/Rotary.h>
@@ -34,7 +38,9 @@ enum Type : int32_t {
     TEnv, TLfo, TSnh, TSlew,
     TClock, TEuclid, TProb, TRand, TQuant, TLogic,
     // New modules go on the end.
-    TTouch,
+    TTouch, TSwell,
+    TReverb, TChorus, TPhaser, TCrush, TShift, TDrive,
+    TBore, TPipe, TReed, TJaw, TPiano, TThroat, TFormula, TFollow,
     TypeCount
 };
 
@@ -539,6 +545,107 @@ class DelayMod final : public Module {
   private:
     DelayLine line;
     float rate = 48000.0f, timeSec = 0.25f, feedback = 0.3f, tone = 0.5f, mix = 0.5f, lp = 0.0f;
+};
+
+/** The Swell effect's upward compressor, with a cable on the amount. */
+class SwellMod final : public Module {
+  public:
+    void prepare(float sr, int32_t) override { swell.prepare(sr); }
+    void reset() override { swell.reset(); }
+    void setKnobs(const float *k) override {
+        dsp::Swell::Settings s;
+        s.floorDb = lin(k[0], -80.0f, 0.0f);
+        s.ceilingDb = lin(k[1], -30.0f, 0.0f);
+        s.amount = amount = clampf(k[2], 0.0f, 1.0f);
+        s.split = clampf(k[3], 0.0f, 1.0f);
+        s.releaseSec = expo(k[4], 0.005f, 2.0f);
+        s.mix = clampf(k[5], 0.0f, 1.0f);
+        swell.set(s);
+    }
+    void step(const float *in, float *out, const Context &) override {
+        if (in[1] != 0.0f || moved) {
+            swell.setAmount(amount + in[1]);
+            moved = in[1] != 0.0f;
+        }
+        out[0] = swell.process(in[0]);
+    }
+  private:
+    dsp::Swell swell;
+    float amount = 0.5f;
+    bool moved = false; // the amount cable was in use last sample, so put the knob's back when it stops
+};
+
+const ModuleInfo &infoFor(int32_t type);
+
+/**
+ * One of the insert effects as a module: the effect itself, so it sounds
+ * exactly as it does on a track.
+ *
+ * The module's knobs are the effect's parameters of the same names, as
+ * 0..1, and its second input is added to the parameter it's named after.
+ * The effect runs in blocks of [kBlock], which is the module's latency:
+ * a third of a millisecond, short enough not to matter for these.
+ */
+class FxMod final : public Module {
+  public:
+    static constexpr int kBlock = 16;
+
+    FxMod(int32_t type, const char *effect) : type(type), effect(effect) {}
+    ~FxMod() override { delete fx; }
+
+    void prepare(float sr, int32_t) override {
+        if (fx == nullptr) fx = EffectRegistry::create(effect);
+        if (fx == nullptr) return;
+        fx->prepare(static_cast<int32_t>(sr));
+        const ModuleInfo &info = infoFor(type);
+        for (int i = 0; i < kKnobs; ++i) param[i] = info.knob[i] != nullptr ? fx->params().indexOf(info.knob[i]) : -1;
+        cvParam = info.in[1] != nullptr ? fx->params().indexOf(info.in[1]) : -1;
+        reset();
+    }
+    void reset() override {
+        if (fx != nullptr) fx->reset();
+        std::fill(std::begin(inBuf), std::end(inBuf), 0.0f);
+        std::fill(std::begin(outL), std::end(outL), 0.0f);
+        std::fill(std::begin(outR), std::end(outR), 0.0f);
+        pos = 0;
+    }
+    void setKnobs(const float *k) override {
+        for (int i = 0; i < kKnobs; ++i) knob[i] = k[i];
+    }
+    void step(const float *in, float *out, const Context &c) override {
+        out[0] = outL[pos];
+        out[1] = outR[pos];
+        inBuf[pos] = in[0];
+        if (pos == 0) {
+            // What the block's first sample saw, which is when the effect
+            // will think the block starts.
+            cv = in[1];
+            blockTick = c.tick;
+        }
+        if (++pos < kBlock) return;
+        pos = 0;
+        if (fx == nullptr) return;
+        for (int i = 0; i < kKnobs; ++i) {
+            if (param[i] < 0) continue;
+            const float v = knob[i] + (param[i] == cvParam ? cv : 0.0f);
+            fx->params().set(param[i], clampf(v, 0.0f, 1.0f));
+        }
+        fx->onBlock(static_cast<int64_t>(blockTick), static_cast<int64_t>(blockTick + c.tickInc * kBlock), c.bpm);
+        std::copy(std::begin(inBuf), std::end(inBuf), outL);
+        std::copy(std::begin(inBuf), std::end(inBuf), outR);
+        if (!fx->run(outL, outR, kBlock, false)) std::copy(std::begin(outL), std::end(outL), outR);
+    }
+  private:
+    int32_t type;
+    const char *effect;
+    Effect *fx = nullptr;
+    int32_t param[kKnobs]{};
+    int32_t cvParam = -1;
+    float knob[kKnobs]{};
+    float cv = 0.0f;
+    double blockTick = 0.0;
+    float inBuf[kBlock]{}, outL[kBlock]{}, outR[kBlock]{};
+    int pos = 0;
 };
 
 /** Manual's rotary cabinet. */

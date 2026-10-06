@@ -27,6 +27,7 @@ struct Node {
     // isn't wired.
     uint32_t inMask = 0;
     float x = 0.0f, y = 0.0f;   // canvas position; audio ignores it
+    std::string text;           // what an `e|` line gives the module, like a formula; empty for most
     std::vector<std::unique_ptr<Module>> inst; // one, or one per voice
 };
 

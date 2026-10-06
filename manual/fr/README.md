@@ -44,6 +44,7 @@
     - [Phaser](05-effects-and-mixing/phaser.md) : deux à huit étages.
     - [Reverb](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se figer, se couper, miroiter ou s’écraser.
     - [Shifter](05-effects-and-mixing/shifter.md) : un décalage de fréquence, pour des sons métalliques et désaccordés.
+    - [Swell](05-effects-and-mixing/swell.md) : une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.
     - [Tremolo](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un panoramique automatique.
     - [Width](05-effects-and-mixing/width.md) : plus large, plus étroit, mono sous une fréquence ou tourné.
 6. [Les modificateurs](06-modifiers.md)

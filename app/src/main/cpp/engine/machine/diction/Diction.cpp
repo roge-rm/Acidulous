@@ -25,41 +25,6 @@ float bipolar(uint32_t &s) { return static_cast<float>(nextRandom(s) >> 8) * (2.
 constexpr float kLevelsFollow = 0.003f;
 /** Seconds for hiss to stop once its sound is over. */
 constexpr float kHissGone = 0.008f;
-/** How much of the ring a moved throat loses is put back. All of it overshoots: the formants' skirts overlap. */
-constexpr float kRingBack = 0.75f;
-
-/**
- * The shape the throat takes for [f], with the formant control's move, sung
- * at [hz]. A note above the first formant would miss it and go thin, so the
- * first formant rises to stay above the note, as a soprano opens her mouth
- * wider on a high note, and the formants widen a little with the pitch.
- */
-Shape shapeOf(const float f[3], float nasal, float ratio, float hz) {
-    Shape s{};
-    for (int32_t k = 0; k < kFormants; ++k) {
-        const float at = k < 3 ? f[k] : kHigh[k - 3];
-        const float bw = k < 3 ? widthOf(k, at) : kHighWidth[k - 3];
-        const float moved = shiftFormant(at, ratio);
-        s.f[k] = moved;
-        s.bw[k] = std::max(bw * moved / at, k < 2 ? 0.3f * hz : 0.0f);
-    }
-    s.f[0] = std::max(s.f[0], 1.15f * hz);
-    s.f[1] = std::max(s.f[1], s.f[0] + 200.0f);
-    s.nasal = nasal;
-    return s;
-}
-
-/**
- * Each of the lower three formants sets the level above it by about the
- * square of how far it moved, so a moved throat's ring is put back by that
- * much, in dB.
- */
-float ringFor(const float f[3], const Shape &moved) {
-    float db = 0.0f;
-    for (int32_t k = 0; k < 3; ++k) db -= 40.0f * std::log10(moved.f[k] / f[k]);
-    return kRingBack * db;
-}
-
 bool isVowel(Kind k) { return k == Kind::Vowel || k == Kind::Diphthong; }
 /** A sound that can be held when a note has no vowel: mmm, sss. */
 bool holdable(Kind k) {

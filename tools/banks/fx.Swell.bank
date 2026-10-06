@@ -1,0 +1,133 @@
+# Swell - upward compression: the quiet parts come up to meet the loud ones.
+#
+# Everything above `floor` is pulled toward `ceiling`, by `amount`: at 0
+# nothing moves, at 1 every sound above the floor ends up at the ceiling.
+# Sounds under the floor are left exactly as they are, so a noise floor stays
+# where it was. `release` is how fast the gain comes back up after a peak.
+# Slow is close to normalising, a gentle lift that keeps the shape of a
+# phrase. Fast follows each cycle of the waveform and flattens everything
+# into a wall.
+#
+# The extra is `split`: from one band to three, at 300 Hz and 5 kHz. Split,
+# a quiet top end or a thin low end is brought up on its own, which is where
+# the air, the breath and the room come from. The bands add back to exactly
+# the input, so splitting never colours a sound that isn't being lifted.
+#
+# Families: lift, glue, thick, crush.
+
+machine fx.Swell
+
+patch Init family=lift
+
+patch Loud family=lift
+  # Louder without sounding squashed: a ceiling just under full scale and
+  # half the amount, so a quiet passage comes up and a loud one barely moves.
+  floor          -45 dB
+  ceiling        -2 dB
+  amount         0.45
+  split          0.6
+  release        400 ms
+
+patch Even family=lift
+  # For a vocal or a lead that comes and goes: slow enough that a phrase
+  # keeps its shape, strong enough that the quiet words are heard.
+  floor          -50 dB
+  ceiling        -8 dB
+  amount         0.6
+  split          0.3
+  release        900 ms
+
+patch Upfront family=lift
+  # Brings a part to the front of a mix. The top band comes up the most, so
+  # it's the consonants and the pick that get closer.
+  floor          -48 dB
+  ceiling        -6 dB
+  amount         0.55
+  split          1
+  release        200 ms
+  gain           -2 dB
+
+patch Bus family=glue
+  # On a drum or synth bus: a little of everything, so the parts sit closer
+  # in level without anything being pushed down.
+  floor          -40 dB
+  ceiling        -6 dB
+  amount         0.3
+  split          0.5
+  release        250 ms
+
+patch Master family=glue
+  # The gentlest: on the master, before the limiter. You should only hear it
+  # when you turn it off.
+  floor          -36 dB
+  ceiling        -3 dB
+  amount         0.2
+  split          0.7
+  release        600 ms
+
+patch Parallel family=glue
+  # Fully squashed but only a third of it mixed in, so the dynamics are all
+  # still there and the quiet detail sits on top of them.
+  floor          -60 dB
+  ceiling        -6 dB
+  amount         1
+  split          1
+  release        60 ms
+  mix            0.35
+
+patch Thick family=thick
+  # Pads and chords: three bands at a medium release, so the low end fills
+  # out and the top shimmers.
+  floor          -55 dB
+  ceiling        -6 dB
+  amount         0.75
+  split          1
+  release        120 ms
+  gain           -3 dB
+
+patch Tails family=thick
+  # Reverb and delay tails brought right up, for drums and plucks that hang
+  # in the air. A long release holds the lift through the tail.
+  floor          -65 dB
+  ceiling        -10 dB
+  amount         0.8
+  split          0.8
+  release        1200 ms
+
+patch Room family=thick
+  # The room on a drum loop: hits stay where they were and everything between
+  # them comes up.
+  floor          -55 dB
+  ceiling        -12 dB
+  amount         0.7
+  split          0.6
+  release        90 ms
+
+patch Crush family=crush
+  # All the way, fast: every sound flattened to the ceiling in three bands.
+  floor          -60 dB
+  ceiling        -6 dB
+  amount         1
+  split          1
+  release        30 ms
+  gain           -4 dB
+
+patch Wreck family=crush
+  # Faster than a cycle of a bass note, so it follows the waveform itself
+  # and turns into distortion. For when it should break.
+  floor          -70 dB
+  ceiling        -8 dB
+  amount         1
+  split          1
+  release        6 ms
+  gain           -4 dB
+
+patch Breath family=crush
+  # Every breath, string squeak and key click brought up to the note's
+  # level, on one band so they come up together.
+  floor          -75 dB
+  ceiling        -10 dB
+  amount         1
+  split          0
+  release        40 ms
+  gain           -2 dB

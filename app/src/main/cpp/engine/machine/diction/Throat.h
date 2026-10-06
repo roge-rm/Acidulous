@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -189,6 +191,43 @@ inline float widthOf(int32_t k, float hz) {
     case 1: return 75.0f + 0.015f * hz;
     default: return 30.0f + 0.045f * hz;
     }
+}
+
+// Also shared with Nexus's throat module.
+
+/** How much of the ring a moved throat loses is put back. All of it overshoots: the formants' skirts overlap. */
+inline constexpr float kRingBack = 0.75f;
+
+/**
+ * The shape the throat takes for [f], with the formant control's move, sung
+ * at [hz]. A note above the first formant would miss it and go thin, so the
+ * first formant rises to stay above the note, as a soprano opens her mouth
+ * wider on a high note, and the formants widen a little with the pitch.
+ */
+inline Shape shapeOf(const float f[3], float nasal, float ratio, float hz) {
+    Shape s{};
+    for (int32_t k = 0; k < kFormants; ++k) {
+        const float at = k < 3 ? f[k] : kHigh[k - 3];
+        const float bw = k < 3 ? widthOf(k, at) : kHighWidth[k - 3];
+        const float moved = shiftFormant(at, ratio);
+        s.f[k] = moved;
+        s.bw[k] = std::max(bw * moved / at, k < 2 ? 0.3f * hz : 0.0f);
+    }
+    s.f[0] = std::max(s.f[0], 1.15f * hz);
+    s.f[1] = std::max(s.f[1], s.f[0] + 200.0f);
+    s.nasal = nasal;
+    return s;
+}
+
+/**
+ * Each of the lower three formants sets the level above it by about the
+ * square of how far it moved, so a moved throat's ring is put back by that
+ * much, in dB.
+ */
+inline float ringFor(const float f[3], const Shape &moved) {
+    float db = 0.0f;
+    for (int32_t k = 0; k < 3; ++k) db -= 40.0f * std::log10(moved.f[k] / f[k]);
+    return kRingBack * db;
 }
 
 } // namespace acidulous::machine::diction

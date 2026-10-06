@@ -26,6 +26,7 @@ const Entry kEntries[] = {
     {"Harmonizer", make<effect::Harmonizer>},
     {"Amp", make<effect::Amp>},
     {"Gate", make<effect::Gate>},
+    {"Swell", make<effect::Swell>},
 };
 constexpr int32_t kCount = sizeof(kEntries) / sizeof(kEntries[0]);
 

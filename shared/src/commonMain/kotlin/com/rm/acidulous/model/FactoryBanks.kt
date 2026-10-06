@@ -47,6 +47,7 @@ internal object FactoryBanks {
         "fx.Harmonizer" -> fx_harmonizer
         "fx.Amp" -> fx_amp
         "fx.Gate" -> fx_gate
+        "fx.Swell" -> fx_swell
         else -> emptyList()
     }
 
@@ -1887,7 +1888,37 @@ internal object FactoryBanks {
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|delay|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|5.0|1.0\nc|5.0|3.0|0.5\nc|3.0|2.0|0.35\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
         family = "texture")
 
-    private val nexus: List<Patch> by lazy { listOf(nexus0(), nexus1(), nexus2(), nexus3(), nexus4(), nexus5(), nexus6(), nexus7(), nexus8(), nexus9(), nexus10(), nexus11(), nexus12(), nexus13(), nexus14()) }
+    private fun nexus15() = Patch("Nexus", "Horn in a Hall",
+        mapOf("s01_p1" to 0.08f, "s01_p3" to 0.8f, "s01_p4" to 0.25f, "s03_p5" to 0.25f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|env\nm|2|bore\nm|3|reverb|mono\nm|4|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|0.0|2.1|1.0\nc|2.0|3.0|1.0\nc|3.0|4.0|1.0\nc|3.1|4.2|1.0"),
+        family = "house")
+
+    private fun nexus16() = Patch("Nexus", "Talking Harp",
+        mapOf("s01_p8" to 0.9f, "s02_p2" to 0.25f, "s03_p1" to 0.1f, "s03_p5" to 1f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|jaw\nm|2|lfo|mono\nm|3|throat\nm|4|out|mono\nc|0.1|1.0|1.0\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|2.1|3.1|0.8\nc|3.0|4.0|1.0"),
+        family = "house")
+
+    private fun nexus17() = Patch("Nexus", "Bytebeat",
+        mapOf("s01_p2" to 0.3f, "s02_p3" to 0.6f, "s04_p1" to 0.6f, "s05_p1" to 0.4f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|formula\nm|2|env\nm|3|vca\nm|4|crush\nm|5|out|mono\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\ne|01|t * (t >> 5 | t >> 8)"),
+        family = "generative")
+
+    private fun nexus18() = Patch("Nexus", "Sing to the Piano",
+        mapOf("s01_p3" to 1f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|audioin|mono\nm|1|follow|mono\nm|2|piano|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|1.1|2.1|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"),
+        family = "house")
+
+    private fun nexus19() = Patch("Nexus", "Squeezed Pad",
+        mapOf("s01_p1" to 0.66f, "s02_p1" to 0.4f, "s02_p4" to 0.6f, "s04_p3" to 0.8f, "s04_p5" to 0.4f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|env\nm|3|vca\nm|4|swell\nm|5|chorus|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
+        family = "texture")
+
+    private fun nexus20() = Patch("Nexus", "Free Reeds",
+        mapOf("s01_p1" to 0.2f, "s01_p3" to 0.9f, "s02_p1" to 0.3f, "s03_p2" to 0.25f, "s03_p8" to 0.35f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|env\nm|2|reed\nm|3|pipe\nm|4|mix\nm|5|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|1.0|3.0|0.9\nc|0.0|2.1|1.0\nc|0.0|3.1|1.0\nc|2.0|4.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        family = "house")
+
+    private val nexus: List<Patch> by lazy { listOf(nexus0(), nexus1(), nexus2(), nexus3(), nexus4(), nexus5(), nexus6(), nexus7(), nexus8(), nexus9(), nexus10(), nexus11(), nexus12(), nexus13(), nexus14(), nexus15(), nexus16(), nexus17(), nexus18(), nexus19(), nexus20()) }
 
     private fun hexbeat0() = Patch("Hexbeat", "Init", emptyMap(),
         family = "classic")
@@ -4157,4 +4188,57 @@ internal object FactoryBanks {
         family = "tight")
 
     private val fx_gate: List<Patch> by lazy { listOf(fx_gate0(), fx_gate1(), fx_gate2(), fx_gate3(), fx_gate4(), fx_gate5(), fx_gate6(), fx_gate7(), fx_gate8(), fx_gate9(), fx_gate10(), fx_gate11(), fx_gate12()) }
+
+    private fun fx_swell0() = Patch("fx.Swell", "Init", emptyMap(),
+        family = "lift")
+
+    private fun fx_swell1() = Patch("fx.Swell", "Loud",
+        mapOf("floor" to 0.4375f, "ceiling" to 0.933333337f, "amount" to 0.45f, "split" to 0.6f, "release" to 0.7313782f),
+        family = "lift")
+
+    private fun fx_swell2() = Patch("fx.Swell", "Even",
+        mapOf("floor" to 0.375f, "ceiling" to 0.733333349f, "amount" to 0.6f, "split" to 0.3f, "release" to 0.8667258f),
+        family = "lift")
+
+    private fun fx_swell3() = Patch("fx.Swell", "Upfront",
+        mapOf("floor" to 0.4f, "ceiling" to 0.8f, "amount" to 0.55f, "release" to 0.6156891f, "gain" to 0.444444448f),
+        family = "lift")
+
+    private fun fx_swell4() = Patch("fx.Swell", "Bus",
+        mapOf("ceiling" to 0.8f, "amount" to 0.3f, "split" to 0.5f, "release" to 0.6529327f),
+        family = "glue")
+
+    private fun fx_swell5() = Patch("fx.Swell", "Master",
+        mapOf("floor" to 0.55f, "amount" to 0.2f, "split" to 0.7f, "release" to 0.799052f),
+        family = "glue")
+
+    private fun fx_swell6() = Patch("fx.Swell", "Parallel",
+        mapOf("floor" to 0.25f, "ceiling" to 0.8f, "amount" to 1f, "release" to 0.4147411f, "mix" to 0.35f),
+        family = "glue")
+
+    private fun fx_swell7() = Patch("fx.Swell", "Thick",
+        mapOf("floor" to 0.3125f, "ceiling" to 0.8f, "amount" to 0.75f, "release" to 0.5304302f, "gain" to 0.416666657f),
+        family = "thick")
+
+    private fun fx_swell8() = Patch("fx.Swell", "Tails",
+        mapOf("floor" to 0.1875f, "ceiling" to 0.6666667f, "amount" to 0.8f, "split" to 0.8f, "release" to 0.9147411f),
+        family = "thick")
+
+    private fun fx_swell9() = Patch("fx.Swell", "Room",
+        mapOf("floor" to 0.3125f, "ceiling" to 0.6f, "amount" to 0.7f, "split" to 0.6f, "release" to 0.4824149f),
+        family = "thick")
+
+    private fun fx_swell10() = Patch("fx.Swell", "Crush",
+        mapOf("floor" to 0.25f, "ceiling" to 0.8f, "amount" to 1f, "release" to 0.299052f, "gain" to 0.3888889f),
+        family = "crush")
+
+    private fun fx_swell11() = Patch("fx.Swell", "Wreck",
+        mapOf("floor" to 0.125f, "ceiling" to 0.733333349f, "amount" to 1f, "release" to 0.0304302219f, "gain" to 0.3888889f),
+        family = "crush")
+
+    private fun fx_swell12() = Patch("fx.Swell", "Breath",
+        mapOf("floor" to 0.0625f, "ceiling" to 0.6666667f, "amount" to 1f, "split" to 0f, "release" to 0.347067326f, "gain" to 0.444444448f),
+        family = "crush")
+
+    private val fx_swell: List<Patch> by lazy { listOf(fx_swell0(), fx_swell1(), fx_swell2(), fx_swell3(), fx_swell4(), fx_swell5(), fx_swell6(), fx_swell7(), fx_swell8(), fx_swell9(), fx_swell10(), fx_swell11(), fx_swell12()) }
 }

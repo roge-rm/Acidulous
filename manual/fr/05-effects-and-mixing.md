@@ -4,7 +4,7 @@
 Chaque piste a deux emplacements d’effet en insertion. **fx** dans la barre du
 bas de l’éditeur les affiche à la place du panneau de la machine.
 
-Il y a seize effets. Chacun a les réglages habituels plus un extra, affiché
+Il y a dix-sept effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
 de sortie, puisque monter le mélange peut changer le niveau.
 
@@ -42,6 +42,8 @@ Chaque effet a sa propre page ci-dessous.
   sur le tempo.
 - [**Gate**](05-effects-and-mixing/gate.md) : une porte de bruit qu’une autre
   piste peut ouvrir.
+- [**Swell**](05-effects-and-mixing/swell.md) : une compression vers le haut,
+  sur une bande ou trois. Les passages doux montent rejoindre les forts.
 
 ## Mouvement
 

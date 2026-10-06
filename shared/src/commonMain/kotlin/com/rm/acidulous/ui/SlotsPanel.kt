@@ -464,6 +464,7 @@ private val EXTRA = mapOf(
     "Eq" to setOf("tilt"),
     "Distortion" to setOf("mode", "bias"),
     "Compressor" to setOf("pump", "pumprate"),
+    "Swell" to setOf("split"), // one band to three
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
     "Bitcrusher" to setOf("jitter", "tone"),
     "Phaser" to setOf("spread"),

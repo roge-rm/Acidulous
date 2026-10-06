@@ -521,6 +521,43 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
     return stereoIn;
 }
 
+// --- Swell ------------------------------------------------------------------------
+
+const ParamDef *Swell::paramDefs(int32_t &count) const {
+    static const ParamDef defs[Count] = {
+        {"floor", -80.0f, 0.0f, -40.0f, Curve::Linear, 0, "dB"},
+        {"ceiling", -30.0f, 0.0f, -3.0f, Curve::Linear, 0, "dB"},
+        {"amount", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"split", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
+        {"release", 5.0f, 2000.0f, 150.0f, Curve::Exponential, 0, "ms"},
+        {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
+        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+    };
+    count = Count;
+    return defs;
+}
+
+void Swell::prepare(int32_t sampleRate) { swell.prepare(static_cast<float>(sampleRate)); }
+void Swell::reset() { swell.reset(); }
+
+bool Swell::process(float *L, float *R, int32_t frames, bool stereoIn) {
+    const auto &p = params_;
+    dsp::Swell::Settings s;
+    s.floorDb = p.get(Floor);
+    s.ceilingDb = p.get(Ceiling);
+    s.amount = p.get(Amount);
+    s.split = p.get(Split);
+    s.releaseSec = p.get(Release) * 0.001f;
+    s.mix = p.get(Mix);
+    swell.set(s);
+    if (stereoIn) {
+        for (int32_t i = 0; i < frames; ++i) swell.process(L[i], R[i]);
+    } else {
+        for (int32_t i = 0; i < frames; ++i) L[i] = swell.process(L[i]);
+    }
+    return stereoIn;
+}
+
 // --- Filter -----------------------------------------------------------------------
 
 const ParamDef *Filter::paramDefs(int32_t &count) const {

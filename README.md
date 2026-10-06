@@ -73,7 +73,7 @@ All six are the demo song, Squelch.
 | **Nexus** | A modular synth whose modules are the other machines. |
 | **Bias** | A four-track for audio recordings that runs along the song. |
 
-### Sixteen effects
+### Seventeen effects
 
 Each has the usual controls plus one extra, and its own page in the manual.
 
@@ -89,6 +89,7 @@ Each has the usual controls plus one extra, and its own page in the manual.
 | **Bitcrusher** | Fewer bits, a lower sample rate and an unsteady clock if you want one. |
 | **Compressor** | The usual controls, a sidechain from any track and a pump that follows the tempo. |
 | **Gate** | A noise gate that another track can open. |
+| **Swell** | Upward compression in one band or three: the quiet parts come up to meet the loud ones. |
 | **Chorus** | Two to four detuned voices that drift. |
 | **Flanger** | A short sweeping delay, with negative feedback for the hollow sound. |
 | **Phaser** | Two to eight stages. |

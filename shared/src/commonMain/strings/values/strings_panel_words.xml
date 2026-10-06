@@ -90,6 +90,7 @@
     <string name="pw_bleed">bleed</string>
     <string name="pw_blend">blend</string>
     <string name="pw_bloom">bloom</string>
+    <string name="pw_blow">blow</string>
     <string name="pw_board">board</string>
     <string name="pw_body">body</string>
     <string name="pw_bolt">bolt</string>
@@ -121,6 +122,7 @@
     <string name="pw_cable_n">cable %d</string>
     <string name="pw_carrier">carrier</string>
     <string name="pw_cassotto">cassotto</string>
+    <string name="pw_ceiling">ceiling</string>
     <string name="pw_celesta">celesta</string>
     <string name="pw_central">central</string>
     <string name="pw_ch">ch</string>
@@ -311,6 +313,7 @@
     <string name="pw_fixed">fixed</string>
     <string name="pw_flanger">Flanger</string>
     <string name="pw_flatten">flatten</string>
+    <string name="pw_floor">floor</string>
     <string name="pw_flute">flute</string>
     <string name="pw_flutter">flutter</string>
     <string name="pw_fm">fm</string>
@@ -485,7 +488,9 @@
     <string name="pw_lfodepth">lfodepth</string>
     <string name="pw_lforate">lforate</string>
     <string name="pw_lid">lid</string>
+    <string name="pw_lift">lift</string>
     <string name="pw_lifts_at">lifts at</string>
+    <string name="pw_lip">lip</string>
     <string name="pw_lips">lips</string>
     <string name="pw_listen">listen</string>
     <string name="pw_listening">listening</string>
@@ -574,6 +579,7 @@
     <string name="pw_muted">muted</string>
     <string name="pw_mute_lane">mute</string>
     <string name="pw_n">n</string>
+    <string name="pw_nasal">nasal</string>
     <string name="pw_natural">natural</string>
     <string name="pw_near">near</string>
     <string name="pw_nearest">nearest</string>
@@ -617,6 +623,7 @@
     <string name="pw_osc_n">osc %d</string>
     <string name="pw_oscillator">oscillator</string>
     <string name="pw_out">out</string>
+    <string name="pw_over_ring">over ring</string>
     <string name="pw_over_the_felt">over the felt</string>
     <string name="pw_overtones">overtones</string>
     <string name="pw_own">own</string>
@@ -897,6 +904,7 @@
     <string name="pw_sub_8ve">sub 8ve</string>
     <string name="pw_subtle">subtle</string>
     <string name="pw_super">super</string>
+    <string name="pw_sure">sure</string>
     <string name="pw_sus">sus</string>
     <string name="pw_sustain">sustain</string>
     <string name="pw_sustain_pedal">sustain pedal</string>
@@ -904,7 +912,8 @@
     <string name="pw_swap">swap</string>
     <string name="pw_sweep">Sweep</string>
     <string name="pw_sweep_ef4d07">sweep</string>
-    <string name="pw_swell">swell</string>
+    <string name="pw_swell">Swell</string>
+    <string name="pw_swell_eb684e">swell</string>
     <string name="pw_swing">swing</string>
     <string name="pw_sympathy">sympathy</string>
     <string name="pw_sync">sync</string>
@@ -930,6 +939,7 @@
     <string name="pw_the_odds">the odds</string>
     <string name="pw_the_room">the room</string>
     <string name="pw_the_same_roll">the same roll</string>
+    <string name="pw_thick">thick</string>
     <string name="pw_thin">thin</string>
     <string name="pw_thirds">thirds</string>
     <string name="pw_this">this</string>

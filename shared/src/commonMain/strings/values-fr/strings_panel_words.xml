@@ -90,6 +90,7 @@
     <string name="pw_bleed">fuite</string>
     <string name="pw_blend">fondu</string>
     <string name="pw_bloom">éclosion</string>
+    <string name="pw_blow">souffler</string>
     <string name="pw_board">table</string>
     <string name="pw_body">corps</string>
     <string name="pw_bolt">boulon</string>
@@ -121,6 +122,7 @@
     <string name="pw_cable_n">câble %d</string>
     <string name="pw_carrier">porteuse</string>
     <string name="pw_cassotto">cassotto</string>
+    <string name="pw_ceiling">plafond</string>
     <string name="pw_celesta">célesta</string>
     <string name="pw_central">centre</string>
     <string name="pw_ch">ch</string>
@@ -311,6 +313,7 @@
     <string name="pw_fixed">fixe</string>
     <string name="pw_flanger">Flanger</string>
     <string name="pw_flatten">aplatir</string>
+    <string name="pw_floor">plancher</string>
     <string name="pw_flute">flûte</string>
     <string name="pw_flutter">flutter</string>
     <string name="pw_fm">fm</string>
@@ -485,7 +488,9 @@
     <string name="pw_lfodepth">prof. lfo</string>
     <string name="pw_lforate">vit. lfo</string>
     <string name="pw_lid">capot</string>
+    <string name="pw_lift">relever</string>
     <string name="pw_lifts_at">lève à</string>
+    <string name="pw_lip">lèvre</string>
     <string name="pw_lips">lèvres</string>
     <string name="pw_listen">écouter</string>
     <string name="pw_listening">écoute</string>
@@ -574,6 +579,7 @@
     <string name="pw_mute_lane">muet</string>
     <string name="pw_muted">étouffé</string>
     <string name="pw_n">n</string>
+    <string name="pw_nasal">nasal</string>
     <string name="pw_natural">naturel</string>
     <string name="pw_near">proche</string>
     <string name="pw_nearest">plus proche</string>
@@ -617,6 +623,7 @@
     <string name="pw_osc_n">osc %d</string>
     <string name="pw_oscillator">oscillateur</string>
     <string name="pw_out">sortie</string>
+    <string name="pw_over_ring">tenue harm.</string>
     <string name="pw_over_the_felt">sur le feutre</string>
     <string name="pw_overtones">harmoniques</string>
     <string name="pw_own">propre</string>
@@ -897,6 +904,7 @@
     <string name="pw_sub_8ve">sous-oct.</string>
     <string name="pw_subtle">subtil</string>
     <string name="pw_super">super</string>
+    <string name="pw_sure">sûr</string>
     <string name="pw_sus">maint.</string>
     <string name="pw_sustain">maintien</string>
     <string name="pw_sustain_pedal">pédale maintien</string>
@@ -904,7 +912,8 @@
     <string name="pw_swap">échanger</string>
     <string name="pw_sweep">Balayage</string>
     <string name="pw_sweep_ef4d07">balayage</string>
-    <string name="pw_swell">crescendo</string>
+    <string name="pw_swell">Swell</string>
+    <string name="pw_swell_eb684e">crescendo</string>
     <string name="pw_swing">swing</string>
     <string name="pw_sympathy">sympathie</string>
     <string name="pw_sync">sync</string>
@@ -930,6 +939,7 @@
     <string name="pw_the_odds">les chances</string>
     <string name="pw_the_room">la salle</string>
     <string name="pw_the_same_roll">même tirage</string>
+    <string name="pw_thick">épais</string>
     <string name="pw_thin">thin</string>
     <string name="pw_thirds">tierces</string>
     <string name="pw_this">this</string>

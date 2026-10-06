@@ -6,6 +6,7 @@
 #include <engine/dsp/Filter.h>
 #include <engine/dsp/Lfo.h>
 #include <engine/dsp/Math.h>
+#include <engine/dsp/Swell.h>
 #include <engine/effect/Effect.h>
 
 // The insert effects. Each is the classic effect plus an extra or two.
@@ -312,6 +313,26 @@ class Gate final : public Effect {
     bool open = false;
     dsp::Svf key[2];
     float keyHz = -1.0f; // what the key filters are set to, so they aren't rebuilt every block
+};
+
+/**
+ * Upward compression: everything above the floor is pulled toward the
+ * ceiling, so the quiet parts of a sound come up to meet the loud ones.
+ * Gentle, it's loudness and detail; pushed, it's a wall of sound with every
+ * tail and breath brought forward.
+ *
+ * `split` blends from one band to three (low, mid, high), so each part of
+ * the spectrum is brought up on its own. `release` sets how fast it
+ * recovers after a peak: slow is close to normalising, fast squeezes
+ * everything flat. See dsp/Swell.h.
+ */
+class Swell final : public Effect {
+  public:
+    enum P { Floor, Ceiling, Amount, Split, Release, Mix, Gain, Count };
+    Swell() { initParams(); }
+    ACIDULOUS_EFFECT_COMMON(Swell)
+  private:
+    dsp::Swell swell;
 };
 
 #undef ACIDULOUS_EFFECT_COMMON

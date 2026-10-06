@@ -38,6 +38,11 @@ data class NexusCable(
 data class NexusPatch(
     val modules: List<NexusModule> = emptyList(),
     val cables: List<NexusCable> = emptyList(),
+    /**
+     * Text a module is programmed with, by slot: a formula module's
+     * expression. Part of the topology, since changing it rebuilds the module.
+     */
+    val texts: Map<Int, String> = emptyMap(),
 ) {
     /** What the engine is asked to build. Cable order fixes which depth parameters apply. */
     fun encode(): String = buildString {
@@ -49,6 +54,11 @@ data class NexusPatch(
             append("c|%02d.%d|%02d.%d|1.0|1.0|%02d.%d|%.4f\n".format(
                 it.fromSlot, it.fromPort, it.toSlot, it.toPort,
                 if (it.modSlot < 0) 99 else it.modSlot, it.modPort, it.modAmount))
+        }
+        // Everything after the slot is the text, `|` and all, since a formula
+        // can use it. Older builds skip the line.
+        texts.toSortedMap().forEach { (slot, text) ->
+            if (text.isNotBlank() && modules.any { it.slot == slot }) append("e|%02d|%s\n".format(slot, text.lines().joinToString(" ")))
         }
         modules.sortedBy { it.slot }.forEach { append("p|%02d|%.0f|%.0f\n".format(it.slot, it.x, it.y)) }
     }
@@ -65,7 +75,14 @@ data class NexusPatch(
             val modules = mutableListOf<NexusModule>()
             val cables = mutableListOf<NexusCable>()
             val positions = mutableMapOf<Int, Pair<Float, Float>>()
+            val texts = mutableMapOf<Int, String>()
             for (line in text.lineSequence()) {
+                if (line.startsWith("e|")) {
+                    val f = line.split('|', limit = 3)
+                    val slot = f.getOrNull(1)?.toIntOrNull()
+                    if (slot != null && f.size == 3) texts[slot] = f[2]
+                    continue
+                }
                 val f = line.split('|')
                 runCatching {
                     when (f.getOrNull(0)) {
@@ -94,7 +111,7 @@ data class NexusPatch(
             // With no positions at all (every factory patch) it's laid out
             // the way the fit button does, along the signal, for a square
             // window since the screen size isn't known here.
-            if (positions.isEmpty()) return NexusPatch(modules, cables).arranged(1f, NexusFaces::size)
+            if (positions.isEmpty()) return NexusPatch(modules, cables, texts).arranged(1f, NexusFaces::size)
             var placed = 0
             val stepX = modules.maxOfOrNull { NexusFaces.size(it).first }?.plus(20f) ?: 0f
             val patch = NexusPatch(
@@ -105,6 +122,7 @@ data class NexusPatch(
                     }
                 },
                 cables,
+                texts,
             )
             // Modules were smaller boxes before they were faceplates, so a patch
             // placed by hand then can have them on top of each other now. That
@@ -185,12 +203,16 @@ enum class NexusFamily { Source, Shape, Mod, Time, Voice, Io }
 
 /** Which family a module belongs to. */
 fun nexusFamilyOf(type: String): NexusFamily = when (type) {
-    "osc", "wtosc", "noise", "op", "audioin" -> NexusFamily.Source
+    "osc", "wtosc", "noise", "op", "audioin", "formula" -> NexusFamily.Source
     // The app's own instruments: a string, a tonewheel generator, a grain
     // cloud, a Leslie and a vocoder.
-    "string", "wheels", "grain", "rotary", "bands" -> NexusFamily.Voice
-    "filter", "vca", "mix", "math", "delay", "slew" -> NexusFamily.Shape
-    "env", "lfo", "snh", "rand", "macro", "perf", "touch" -> NexusFamily.Mod
+    "string", "wheels", "grain", "rotary", "bands",
+    // ...and their horn, pipe, reeds and piano.
+    "bore", "pipe", "reed", "jaw", "piano" -> NexusFamily.Voice
+    "filter", "vca", "mix", "math", "delay", "slew", "swell", "throat",
+    // The insert effects, as modules.
+    "reverb", "chorus", "phaser", "crush", "shift", "drive" -> NexusFamily.Shape
+    "env", "lfo", "snh", "rand", "macro", "perf", "touch", "follow" -> NexusFamily.Mod
     "clock", "euclid", "prob", "quant", "logic" -> NexusFamily.Time
     else -> NexusFamily.Io // voice, out, scope, blank
 }

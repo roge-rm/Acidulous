@@ -23,7 +23,7 @@ machine/    Machine interface · MachineRegistry, then one directory each:
             diction bias hammer tongue draw
 effect/     Effect interface (onBlock for tempo, run() with bypass) · EffectRegistry ·
             Delay Reverb Eq Distortion Compressor Filter Bitcrusher Phaser Flanger
-            Chorus Tremolo Width Shifter Harmonizer
+            Chorus Tremolo Width Shifter Harmonizer Amp Gate Swell
 modifier/    InputMod interface + MidiSink · InputModRegistry · Scales.h (33 scales,
             25 chords) · InputMods: Scale Chord Arp
 rack/       Rack (clip player -> modifiers -> machine -> effects -> channel strip) ·

@@ -86,6 +86,13 @@ object EngineSync {
      * fails silently.
      */
     val formulaErrors = androidx.compose.runtime.mutableStateMapOf<Int, String>()
+
+    /**
+     * What the engine said about the last Nexus patch it built, by rack:
+     * empty if all was well, otherwise why, such as a formula module whose
+     * expression doesn't parse. The patch editor shows it.
+     */
+    val nexusWarnings = androidx.compose.runtime.mutableStateMapOf<Int, String>()
     // Building a multisample means parsing and decoding, sometimes tens of
     // megabytes, so it never runs on the caller's thread.
     private val mapLoader = com.rm.acidulous.util.SerialWorker("Acidulous.MapLoader")
@@ -1023,6 +1030,7 @@ object EngineSync {
             mapLoader.execute {
                 val error = NativeEngine.loadNexusPatch(rack, spec)
                 patchStatus = error
+                nexusWarnings[rack] = error
                 if (error.isNotEmpty()) Log.w(TAG, "rack $rack patch: $error")
                 // The machine hadn't arrived: try again on the next sync.
                 if (error == "that rack is not a Nexus") loadedPatches[rack] = null
