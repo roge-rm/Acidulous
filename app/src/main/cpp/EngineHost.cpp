@@ -733,6 +733,8 @@ std::string EngineHost::soundFontPresets(const std::string &path, std::string &e
 }
 
 namespace {
+Machine *awaitMachine(Engine &engine, int rack, const char *type);
+
 bool mountMap(EngineHost &host, Engine &engine, int rack, SampleMap *built, std::string &error);
 }
 
@@ -808,6 +810,7 @@ bool mountMap(EngineHost &host, Engine &, int rack, SampleMap *built, std::strin
 
 std::string EngineHost::loadNexusPatch(int rack, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (awaitMachine(sEngine, rack, "Nexus") == nullptr) return "that rack is not a Nexus";
     const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
     Machine *m = sEngine.racks[rack].currentMachine();
     if (m == nullptr || std::strcmp(m->typeName(), "Nexus") != 0) return "that rack is not a Nexus";

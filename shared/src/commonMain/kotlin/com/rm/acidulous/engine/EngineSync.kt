@@ -1024,6 +1024,8 @@ object EngineSync {
                 val error = NativeEngine.loadNexusPatch(rack, spec)
                 patchStatus = error
                 if (error.isNotEmpty()) Log.w(TAG, "rack $rack patch: $error")
+                // The machine hadn't arrived: try again on the next sync.
+                if (error == "that rack is not a Nexus") loadedPatches[rack] = null
             }
         }
     }
