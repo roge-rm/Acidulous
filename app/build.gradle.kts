@@ -194,15 +194,18 @@ android {
         // canvas; twenty new Nexus modules, effects and machines among them;
         // Swell, Rotary, Grain, Resonator, Smash, Acid, Mouth, Tape, Slicer,
         // Magneto, Horn, Spectral and Formula effects.
+        // 0.11.1: Fret, Tine, Sympath, Palm, Chanter, Aviary and Fathom, with
+        // Nexus modules; a language menu with French as written in France; a
+        // new song can start with no machine.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 33
+        val release = 34
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.11.0"
+        versionName = "0.11.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
