@@ -40,7 +40,7 @@ object FrenchTypography {
                 val before = text[i - 1]
                 val space = if (c == ':') NBSP else NARROW
                 when {
-                    before == ' ' || before == NBSP || before == NARROW -> out.setCharAt(out.length - 1, space)
+                    before == ' ' || before == NBSP || before == NARROW -> out[out.length - 1] = space
                     before.isLetterOrDigit() || before in ")»\"’'%*…" -> out.append(space)
                 }
             }

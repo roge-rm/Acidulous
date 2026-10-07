@@ -146,7 +146,7 @@ class MidiImportTest {
         ))
         val parts = MidiFile.read(bytes).parts
         assertEquals(listOf("Bass 1", "Organ 2"), parts.map { it.name })
-        assertEquals(listOf("Trinity", "Manual"), parts.map { MidiImport.defaultMachine(it) })
+        assertEquals(listOf("Fret", "Manual"), parts.map { MidiImport.defaultMachine(it) })
     }
 
     @Test

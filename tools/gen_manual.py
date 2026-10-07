@@ -349,8 +349,13 @@ def kotlin(languages, used):
     ]
     kinds = {HEADING: "Heading", PARA: "Para", BULLET: "Bullet", STEP: "Step", SUBHEADING: "Subheading"}
 
-    def emit(title, summary, blocks, kids, pad):
-        out.append(f"{pad}ManualSection({q(unlink(title))}, {q(unlink(summary))}, listOf(")
+    # Each page is a function of its own, and each language's list is made
+    # the first time it's asked for. One list holding every page in place
+    # outgrows the JVM's 64 KB limit on a method.
+    pages = []
+
+    def emit(name, title, summary, blocks, kids):
+        body = [f"    private fun {name}() = ManualSection({q(unlink(title))}, {q(unlink(summary))}, listOf("]
         heading, sub = title, None
         for kind, text, only in blocks:
             if kind == HEADING:
@@ -365,22 +370,26 @@ def kotlin(languages, used):
                 under = (heading, None) if kind == HEADING else (heading, sub)
                 desktop = for_desktop(shown, under, used, rules)
             extra = f", {q(desktop)}" if desktop is not None else ""
-            out.append(f"{pad}    ManualBlock(ManualKind.{kinds[kind]}, {q(shown)}{extra}),")
+            body.append(f"        ManualBlock(ManualKind.{kinds[kind]}, {q(shown)}{extra}),")
         desk = for_desktop(unlink(summary), (title,), used, rules)
         tail = f", desktopSummary = {q(desk)}" if desk is not None else ""
-        if not kids:
-            out.append(f"{pad}){tail}),")
-            return
-        out.append(f"{pad}), listOf(")
-        for _, (t, s2, b2) in kids:
-            emit(t, s2, b2, [], pad + "    ")
-        out.append(f"{pad}){tail}),")
+        if kids:
+            body.append("    ), listOf(")
+            for j, (_, (t, s2, b2)) in enumerate(kids):
+                emit(f"{name}_{j}", t, s2, b2, [])
+                body.append(f"        {name}_{j}(),")
+        body.append(f"    ){tail})")
+        pages.extend(["", *body])
 
     for code, sections, rules in languages:
-        out += ["", f"    private val {code or 'en'}: List<ManualSection> = listOf("]
-        for (title, summary, blocks), kids in sections:
-            emit(title, summary, blocks, kids, "        ")
-        out.append("    )")
+        lang = code or "en"
+        names = []
+        for i, ((title, summary, blocks), kids) in enumerate(sections):
+            emit(f"{lang}{i}", title, summary, blocks, kids)
+            names.append(f"{lang}{i}()")
+        out += ["", f"    private val {lang}: List<ManualSection> by lazy {{ listOf("]
+        out += [f"        {n}," for n in names]
+        out.append("    ) }")
     if any(code == "fr" for code, _, _ in languages):
         out += [
             "",
@@ -396,6 +405,7 @@ def kotlin(languages, used):
             "        )",
             "    }",
         ]
+    out += pages
     out += ["}", ""]
     return "\n".join(out)
 
