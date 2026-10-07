@@ -10,11 +10,13 @@ many bits to spend.
 ## The controls
 
 - **mode** - the format:
-  - **SP** - the original. Clean, with the top cut a little above 16 kHz.
-  - **LP2** - half the bits. The top turns grainy and hits smear a little.
+  - **SP** - the original. The top stays nearly all the way up, with a fine
+    grain through the mids and highs.
+  - **LP2** - half the bits. The top is cut a little below 16 kHz, it turns
+    grainy and hits smear a little.
   - **LP4** - half again, with left and right sharing their bits. The highs
-    flicker in and out, quiet high detail disappears, and the top narrows
-    towards the middle.
+    flicker in and out above the cut at 14 kHz, quiet high detail disappears,
+    and the upper mids narrow almost to mono.
   - **HQ** - the later high-rate format. The cleanest, nearly clear.
   - **XLP** - the later format at its lowest rate, between LP2 and LP4.
 - **dubs** *(extra)* - copies it again, one to four generations, each

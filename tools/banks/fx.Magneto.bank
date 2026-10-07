@@ -1,9 +1,10 @@
 # Magneto - the sound of a small recordable disc's data-reduced formats.
 #
-# `mode` is the format. SP is the original: clean, the top cut a little
-# above 16 kHz. LP2 has half the bits: a grainy top and a little smear on
-# hits. LP4 has half again, with left and right sharing them: the highs
-# flicker in and out and the top narrows towards the middle. HQ is the
+# `mode` is the format. SP is the original: the top nearly all there, a
+# fine grain through the mids and highs. LP2 has half the bits: the top cut
+# below 16 kHz, grainy, a little smear on hits. LP4 has half again, with
+# left and right sharing them: the highs flicker in and out below a 14 kHz
+# cut and the upper mids narrow almost to mono. HQ is the
 # later high-rate format, the cleanest. XLP is its lowest rate, between LP2
 # and LP4. `dubs` copies it again, up to four generations, each losing a
 # little more.

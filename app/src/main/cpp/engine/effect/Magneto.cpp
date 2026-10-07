@@ -17,26 +17,56 @@ constexpr float kSpread = 9.0f;
 /** The longest word a band can get, in bits. */
 constexpr int kLongest = 15;
 
-/** The threshold of hearing, dB, lowest (about -5) near 3.3 kHz. */
+/**
+ * The threshold of hearing, dB, lowest (about -5) near 3.3 kHz. Held at its
+ * 16 kHz value above that: the formula climbs past 100 dB by 19 kHz, which
+ * would starve a format that keeps its top, as SP does.
+ */
 float hearingDb(float hz) {
-    const float k = std::max(hz, 20.0f) / 1000.0f;
+    const float k = std::clamp(hz, 20.0f, 16000.0f) / 1000.0f;
     return 3.64f * std::pow(k, -0.8f) - 6.5f * std::exp(-0.6f * (k - 3.3f) * (k - 3.3f)) + 0.001f * k * k * k * k;
+}
+/** How much of the side a curve keeps at [hz], as an amplitude. */
+float sideKeep(const float (*curve)[2], float hz) {
+    float db = 0.0f;
+    if (curve[0][0] > 0.0f && hz > curve[0][0]) {
+        db = curve[0][1];
+        for (int i = 0; i + 1 < Magneto::kSidePoints && curve[i + 1][0] > 0.0f; ++i) {
+            const float lo = curve[i][0], hi = curve[i + 1][0];
+            db = curve[i + 1][1];
+            if (hz <= hi) {
+                const float t = std::log2(hz / lo) / std::log2(hi / lo);
+                db = curve[i][1] + (curve[i + 1][1] - curve[i][1]) * t;
+                break;
+            }
+        }
+    }
+    return std::pow(10.0f, db / 20.0f);
 }
 } // namespace
 
 /*
- * Each format's numbers were set by measuring what the open encoder and a
- * decoder make of the same test music: where the top is cut, how much
- * noise each band carries, how much the bands flicker, the pre-echo and
- * the stereo width; see tools/magneto_test.
+ * Each format's numbers were set by measuring copies of the same test music
+ * (tools/magneto_reference): where the top is cut, how much noise each band
+ * carries, how much the bands flicker, the pre-echo and the stereo width.
+ * SP, LP2 and LP4 against real discs: SP as a recorder encodes it itself,
+ * LP2 and LP4 as the converter's remote encoder makes them. HQ against the
+ * open encoder at its own high rate; XLP set by ear between LP2 and LP4.
  */
 const Magneto::Format Magneto::kFormats[kModes] = {
-    // frame  kbps  eff    top       tilt   mask   floor   joint  sideFrom  slope  hold
-    {1024,  292, 0.75f, 16000.0f, 3.85f, 20.6f, 124.0f, false, 0.0f,     0.0f,  0.87f}, // SP
-    {1024,  132, 1.13f, 16100.0f, 3.05f,  8.0f, 130.0f, false, 0.0f,     0.0f,  0.98f}, // LP2
-    {1024,   66, 1.44f, 15000.0f, 2.93f, 12.5f,  89.5f, true,  6070.0f,  8.2f,  1.0f},  // LP4
-    {1024,  352, 0.81f, 17000.0f, 0.80f, 12.6f, 128.0f, false, 0.0f,     0.0f,  1.0f},  // HQ
-    {1024,   64, 2.00f, 14000.0f, 2.93f, 12.5f,  95.0f, true,  5000.0f, 10.0f,  1.0f},  // XLP
+    // frame  kbps  eff    top       tilt   mask   floor   joint  side  hold
+    {1024,  292, 0.74f, 22050.0f, 1.81f,  8.3f, 140.0f, false, -1, 0.92f}, // SP
+    {512,   132, 1.10f, 16000.0f, 3.08f, 13.4f, 138.4f, false, -1, 0.59f}, // LP2
+    {1024,   66, 2.62f, 14100.0f, -1.69f, 14.9f, 91.5f, true,   0, 0.66f}, // LP4
+    {1024,  352, 0.81f, 17000.0f, 0.80f, 12.6f, 128.0f, false, -1, 1.0f},  // HQ
+    {1024,   64, 2.00f, 14000.0f, 2.93f, 12.5f,  95.0f, true,   1, 1.0f},  // XLP
+};
+
+const float Magneto::kSideCurves[2][kSidePoints][2] = {
+    // LP4, as measured: the side gone in the upper mids, coming partly back above.
+    {{2700.0f, 0.0f}, {3000.0f, -40.0f}, {4800.0f, -40.0f}, {5400.0f, -17.0f}, {8000.0f, -11.0f}, {10000.0f, -8.0f}, {12500.0f, -5.0f}, {0.0f, 0.0f}},
+    // XLP: narrowing steadily from 5 kHz up.
+    {{5000.0f, 0.0f}, {10000.0f, -10.0f}, {14000.0f, -15.0f}, {0.0f, 0.0f}},
 };
 
 const ParamDef *Magneto::paramDefs(int32_t &count) const {
@@ -123,9 +153,8 @@ void Magneto::configure(int newMode, int dubCount) {
         // The quietest a bin can be and be heard: the threshold of hearing,
         // its lowest point put `floorDb` below full scale.
         threshold[static_cast<size_t>(bands)] = std::pow(10.0f, (hearingDb(centre) + 5.0f - format->floorDb) / 10.0f);
-        // A joint format narrows the top: the side fades out above sideFromHz.
-        narrow[static_cast<size_t>(bands)] = format->joint && centre > format->sideFromHz
-            ? std::max(0.0f, std::pow(10.0f, -format->sideSlope * std::log2(centre / format->sideFromHz) / 20.0f)) : 1.0f;
+        // A joint format keeps only part of the side, by its curve.
+        narrow[static_cast<size_t>(bands)] = format->joint && format->sideCurve >= 0 ? sideKeep(kSideCurves[format->sideCurve], centre) : 1.0f;
         worth[static_cast<size_t>(bands)] = centre > 1000.0f ? std::pow(10.0f, -format->tilt * std::log2(centre / 1000.0f) / 10.0f) : 1.0f;
         ++bands;
     }
@@ -233,28 +262,6 @@ void Magneto::codeFrame(Copy &copy, bool stereo) {
     const float scale = static_cast<float>(M_PI) / static_cast<float>(frame);
     float energy[2 * kBandsMax] = {};
     for (int c = 0; c < channels; ++c) fft->transform(re[c].data(), im[c].data(), false);
-    // A joint format keeps only the middle's detail at the top, with how far
-    // each band leans left or right: the balance stays, the spread goes.
-    float lean[kBandsMax] = {};
-    if (joint) {
-        for (int b = 0; b < bands; ++b) {
-            float el = 0.0f, er = 0.0f;
-            for (int32_t k = edge[static_cast<size_t>(b)]; k < edge[static_cast<size_t>(b + 1)]; ++k) {
-                const auto i = static_cast<size_t>(k);
-                const float lr = re[0][i] + re[1][i], li = im[0][i] + im[1][i];
-                const float rr = re[0][i] - re[1][i], ri = im[0][i] - im[1][i];
-                el += lr * lr + li * li;
-                er += rr * rr + ri * ri;
-            }
-            const float l = std::sqrt(el), r = std::sqrt(er);
-            lean[b] = l + r > 0.0f ? (l - r) / (l + r) : 0.0f;
-            const float keep = narrow[static_cast<size_t>(b)];
-            for (int32_t k = edge[static_cast<size_t>(b)]; k < edge[static_cast<size_t>(b + 1)]; ++k) {
-                re[1][static_cast<size_t>(k)] *= keep;
-                im[1][static_cast<size_t>(k)] *= keep;
-            }
-        }
-    }
     for (int c = 0; c < channels; ++c) {
         for (int b = 0; b < bands; ++b) {
             float e = 0.0f;
@@ -298,14 +305,14 @@ void Magneto::codeFrame(Copy &copy, bool stereo) {
             }
         }
     }
+    // A joint format keeps only part of the side, band by band, by its curve:
+    // coded as it is, then turned down, so what's kept still has its bits.
     if (joint) {
-        // The lean puts back what narrowing took from the side, as the middle panned.
         for (int b = 0; b < bands; ++b) {
-            const float add = (1.0f - narrow[static_cast<size_t>(b)]) * lean[b];
-            if (add == 0.0f) continue;
+            const float keep = narrow[static_cast<size_t>(b)];
             for (int32_t k = edge[static_cast<size_t>(b)]; k < edge[static_cast<size_t>(b + 1)]; ++k) {
-                re[1][static_cast<size_t>(k)] += add * re[0][static_cast<size_t>(k)];
-                im[1][static_cast<size_t>(k)] += add * im[0][static_cast<size_t>(k)];
+                re[1][static_cast<size_t>(k)] *= keep;
+                im[1][static_cast<size_t>(k)] *= keep;
             }
         }
     }

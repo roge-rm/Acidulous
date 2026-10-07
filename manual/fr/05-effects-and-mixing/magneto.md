@@ -10,12 +10,14 @@ que tant de bits à dépenser.
 ## Les réglages
 
 - **mode** : le format :
-  - **SP** : l’original. Propre, le haut coupé un peu au-dessus de 16 kHz.
-  - **LP2** : moitié moins de bits. Le haut devient granuleux et les coups
-    bavent un peu.
+  - **SP** : l’original. Le haut reste presque entier, avec un grain fin
+    dans les médiums et les aigus.
+  - **LP2** : moitié moins de bits. Le haut est coupé un peu sous 16 kHz,
+    il devient granuleux et les coups bavent un peu.
   - **LP4** : encore moitié moins, la gauche et la droite partageant leurs
-    bits. Les aigus vont et viennent, les détails aigus discrets
-    disparaissent et le haut se resserre vers le centre.
+    bits. Les aigus vont et viennent sous la coupure à 14 kHz, les détails
+    aigus discrets disparaissent et le haut-médium se resserre presque en
+    mono.
   - **HQ** : le format plus récent à haut débit. Le plus propre, presque
     transparent.
   - **XLP** : le format plus récent à son débit le plus bas, entre LP2 et

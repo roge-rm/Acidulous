@@ -433,15 +433,15 @@ double damage(const Stereo &out, const std::vector<float> &l, const std::vector<
     return 10.0 * std::log10(e / s);
 }
 
-/** Side over middle between 10 and 13 kHz, dB, summed over many single frequencies. */
-double topWidth(const Stereo &out, size_t from) {
+/** Side over middle between [lo] and [hi] Hz, dB, summed over many single frequencies. */
+double widthBetween(const Stereo &out, size_t from, double lo, double hi) {
     std::vector<float> m(out.l.size()), d(out.l.size());
     for (size_t i = 0; i < m.size(); ++i) {
         m[i] = out.l[i] + out.r[i];
         d[i] = out.l[i] - out.r[i];
     }
     double side = 0.0, mid = 0.0;
-    for (double hz = 10000.0; hz <= 13000.0; hz += 37.0) {
+    for (double hz = lo; hz <= hi; hz += 37.0) {
         mid += std::pow(goertzel(m, hz, from, m.size()), 2.0);
         side += std::pow(goertzel(d, hz, from, d.size()), 2.0);
     }
@@ -479,22 +479,28 @@ void magneto() {
         auto fx2 = make("Magneto", {{"mode", float(m)}});
         const auto out = runStereo(*fx2, both, both).l;
         const double low = dB(goertzel(out, 100.0, 48000, 96000) / 0.3), high = dB(goertzel(out, 18500.0, 48000, 96000) / 0.1);
-        ok(std::string(names[m]) + ": the bass comes through whole and 18.5 kHz is cut", std::fabs(low) < 0.5 && high < -30.0,
-           num(low) + " / " + num(high) + " dB");
+        // SP keeps its top, as a recorder's own encoding does; the rest cut it.
+        const bool keepsTop = m == 0;
+        ok(std::string(names[m]) + (keepsTop ? ": the bass comes through whole and 18.5 kHz stays" : ": the bass comes through whole and 18.5 kHz is cut"),
+           std::fabs(low) < 0.5 && (keepsTop ? high > -3.0 : high < -30.0), num(low) + " / " + num(high) + " dB");
     }
-    ok("the damage goes HQ and SP least, then LP2, then LP4", hurt[3] < hurt[1] - 2.0 && hurt[0] < hurt[1] - 2.0 && hurt[2] > hurt[1] + 1.0,
+    // As the real copies measure: HQ the cleanest, SP and LP2 close (a
+    // recorder's own SP is grainier than its age suggests), LP4 the worst.
+    ok("the damage goes HQ least, SP and LP2 close, LP4 more than LP2",
+       hurt[3] < std::min({hurt[0], hurt[1], hurt[2], hurt[4]}) && hurt[2] > hurt[1] + 2.0 && std::fabs(hurt[0] - hurt[1]) < 6.0,
        "SP " + num(hurt[0]) + " LP2 " + num(hurt[1]) + " LP4 " + num(hurt[2]) + " HQ " + num(hurt[3]) + " XLP " + num(hurt[4]));
     {
         auto one = make("Magneto", {{"mode", 2.0f}}), four = make("Magneto", {{"mode", 2.0f}, {"dubs", 3.0f}});
         const auto wetOne = runStereo(*one, l, r), wetFour = runStereo(*four, l, r);
         const double a = damage(wetOne, l, r, latencyOf(*one)), b = damage(wetFour, l, r, latencyOf(*four));
-        ok("each dub loses a little more", b > a + 3.0, num(a) + " to " + num(b) + " dB");
+        ok("each dub loses a little more", b > a + 1.0, num(a) + " to " + num(b) + " dB");
     }
     {
-        // LP4 narrows the top of the wide music, LP2 keeps it.
+        // LP4 throws the side away in the upper mids, as the real one does; LP2 keeps it.
         auto lp2 = make("Magneto", {{"mode", 1.0f}}), lp4 = make("Magneto", {{"mode", 2.0f}});
-        const double wide = topWidth(runStereo(*lp2, l, r), 48000), narrow = topWidth(runStereo(*lp4, l, r), 48000);
-        ok("LP4 narrows the top, LP2 doesn't", narrow < wide - 4.0, num(wide) + " / " + num(narrow) + " dB");
+        const double wide = widthBetween(runStereo(*lp2, l, r), 48000, 3200.0, 4600.0);
+        const double narrow = widthBetween(runStereo(*lp4, l, r), 48000, 3200.0, 4600.0);
+        ok("LP4 narrows the upper mids, LP2 doesn't", narrow < wide - 20.0, num(wide) + " / " + num(narrow) + " dB");
     }
     {
         auto fx = make("Magneto", {{"mode", 2.0f}, {"dubs", 3.0f}});

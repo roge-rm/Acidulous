@@ -13,8 +13,8 @@ namespace acidulous::effect {
  * gets a fixed number of bits to spend: the bands the ear would miss least
  * get fewest, or none, and the top end goes first. So the highs are cut,
  * quiet bands drop out and come back from frame to frame, attacks smear,
- * and at the lowest rate left and right share their bits and the top
- * narrows towards the middle.
+ * and at the lowest rates left and right share their bits and the upper
+ * mids narrow towards mono.
  *
  * `mode` is the format: SP, LP2, LP4, HQ or XLP. `dubs` copies it again,
  * up to four generations, each losing a little more. It runs a frame or
@@ -36,11 +36,13 @@ class Magneto final : public Effect {
         float maskDb;         // how far under a band's neighbours it can hide
         float floorDb;        // the quietest level kept, dB below full scale at 1-4 kHz
         bool joint;           // left and right as middle and side, sharing the bits
-        float sideFromHz;     // when joint: where the side starts to narrow
-        float sideSlope;      // when joint: how fast it narrows above that, dB an octave
+        int sideCurve;        // when joint: which of kSideCurves the side follows, -1 for none
         float hold;           // 0 to 1: how much a frame's loudness is flattened before coding, so noise keeps out of the quiet before an attack
     };
     static const Format kFormats[kModes];
+    /** How much of the side a joint format keeps, as (Hz, dB) points joined in log frequency; Hz 0 ends a curve. */
+    static constexpr int kSidePoints = 8;
+    static const float kSideCurves[2][kSidePoints][2];
 
     Magneto() { initParams(); }
     const char *typeName() const override { return "Magneto"; }

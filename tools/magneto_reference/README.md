@@ -15,5 +15,8 @@ To tune one of Magneto's modes against a real recorder:
    way, and move the mode's numbers in `kFormats`
    (`app/src/main/cpp/engine/effect/Magneto.cpp`) until the two agree.
 
-Measurements of real copies, once there are some, go in this directory as
-text, one file per mode.
+`sp.txt`, `lp2.txt` and `lp4.txt` are measurements of real copies, made by
+recording `test.wav` to a disc and downloading the tracks back digitally:
+SP as the recorder encoded it itself, LP2 and LP4 as the converter's remote
+encoder made them. Magneto's SP, LP2 and LP4 are fitted to these. HQ and
+XLP have no real copies yet.
