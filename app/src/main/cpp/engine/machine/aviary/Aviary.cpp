@@ -28,7 +28,7 @@ constexpr float kTracheaSeconds = 0.00025f, kTracheaEcho = -0.4f;
 /** Syllables a beat, by the rate knob. */
 constexpr float kRates[5] = {1.0f, 2.0f, 4.0f, 8.0f, 16.0f};
 /** A whistle's slide into its note, seconds. */
-constexpr float kWhistleGlide = 0.12f;
+constexpr float kWhistleGlide = 0.035f;
 
 } // namespace
 
@@ -152,7 +152,8 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
         // Two notes, the second a third lower; the rest of the flock answers in the gaps.
         b.slot = static_cast<int32_t>(beat / perBeat);
         const int which = (b.syllable - 1 + index) % 2;
-        b.from = which == 0 ? 0.0f : -4.0f;
+        // Each note droops half a semitone, mostly heard near its end, so it starts a little above.
+        b.from = (which == 0 ? 0.0f : -4.0f) + 0.4f;
         b.to = b.from - 0.5f;
         if (index > 0 && first) {
             // An answering bird waits its turn.
