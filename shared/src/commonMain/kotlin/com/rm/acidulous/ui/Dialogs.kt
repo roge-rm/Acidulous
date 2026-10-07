@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -1098,6 +1099,7 @@ private fun DialogShell(
     keys: List<Pair<KeyAction, () -> Unit>> = emptyList(),
     body: @Composable () -> Unit,
 ) {
+    var bodyViewport by remember { androidx.compose.runtime.mutableIntStateOf(Int.MAX_VALUE) }
     val c = com.rm.acidulous.ui.theme.Acid.colors
     // The height cap is the smaller of what was asked for and the screen.
     // 560dp suits an upright phone, but a turned phone has less than that,
@@ -1245,6 +1247,7 @@ private fun DialogShell(
                         // the button to the bottom of the screen.
                         Modifier.weight(1f, fill = false)
                             .heightIn(max = maxBodyHeight)
+                            .onSizeChanged { bodyViewport = it.height }
                             .verticalScrollWithBar(rememberScrollState())
                             .padding(end = 10.dp)
                             // Where the keyboard's first focus goes: the
@@ -1257,6 +1260,7 @@ private fun DialogShell(
                             LocalDialogHeaderRow provides headerRow,
                             LocalDialogCompact provides compact,
                             LocalDialogFit provides (if (wide && roomy) fit else null),
+                            LocalDialogViewport provides bodyViewport,
                         ) { body() }
                     }
                     // No dismiss label and no action means no footer at all,
@@ -1308,9 +1312,17 @@ private val FitMinTabsW = 640.dp
 /** The narrowest window that lays a window's cards side by side; see [DialogShell]. */
 private val WideCardsMinW = 600.dp
 
-/** Measures every page, shows one, and takes the height of the biggest. */
+/** How tall the window's body shows, in px, so a short page isn't padded past it. */
+private val LocalDialogViewport = androidx.compose.runtime.compositionLocalOf { Int.MAX_VALUE }
+
+/**
+ * Measures every page, shows one, and takes the height of the biggest, but
+ * no taller than the body shows: a page that fits never scrolls through
+ * space left for a longer one.
+ */
 @Composable
 private fun TallestOf(selected: Int, pages: List<@Composable () -> Unit>, spacing: Dp) {
+    val viewport = LocalDialogViewport.current
     androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
         val loose = constraints.copy(minHeight = 0)
         // Each page is wrapped in a column here rather than trusted to be one
@@ -1323,8 +1335,9 @@ private fun TallestOf(selected: Int, pages: List<@Composable () -> Unit>, spacin
                 }
             }.map { it.measure(loose) }
         }
-        val height = measured.maxOfOrNull { page -> page.maxOfOrNull { it.height } ?: 0 } ?: 0
+        val tallest = measured.maxOfOrNull { page -> page.maxOfOrNull { it.height } ?: 0 } ?: 0
         val shown = measured.getOrNull(selected).orEmpty()
+        val height = maxOf(shown.maxOfOrNull { it.height } ?: 0, minOf(tallest, viewport))
         layout(constraints.maxWidth, height) { shown.forEach { it.place(0, 0) } }
     }
 }

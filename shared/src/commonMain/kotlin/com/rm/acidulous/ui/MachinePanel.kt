@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.border
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.selection.toggleable
@@ -767,10 +768,51 @@ internal fun panelKnobWidth(): Modifier =
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
     val info = b.infoOf(name) ?: return
     val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
+    if (labels.size == 2) {
+        PanelPair(b, name, labels, label, idx)
+        return
+    }
     SwitchGrid(
         panelWord(label), panelWords(labels), idx,
         Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
     ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
+}
+
+/**
+ * A two-way parameter as one square the size of a knob's dial, split into a
+ * top and a bottom half, the chosen one lit; its name above, in line with the
+ * knobs beside it.
+ */
+@Composable
+private fun PanelPair(b: ParamBinding, name: String, labels: List<String>, label: String, idx: Int) {
+    val col = Acid.colors
+    val words = panelWords(labels)
+    Column(
+        panelKnobWidth().widthIn(min = 52.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(panelWord(label), color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        Column(
+            Modifier.size(52.dp).mappable(MapTargets.param(b.trackIndex, b.unit, name)),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            words.forEachIndexed { i, word ->
+                val lit = i == idx
+                Box(
+                    Modifier.fillMaxWidth().weight(1f)
+                        .clip(RoundedCornerShape(5.dp))
+                        .background(if (lit) col.accent else col.control)
+                        .border(1.dp, if (lit) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
+                        .selectable(selected = lit, role = Role.RadioButton) { b.set(name, i.toFloat()) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(word, color = if (lit) col.onAccent else col.text, fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+                }
+            }
+        }
+        // Where a knob shows its value, so the squares line up with the dials.
+        Text(" ", fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+    }
 }
 
 /**
@@ -2000,7 +2042,7 @@ private fun ManualPanel(b: ParamBinding) {
             }
             1 -> {
                 Group("percussion") {
-                    PanelSwitch(b, "perc", listOf("off", "on"), "perc")
+                    PanelOnOff(b, "perc", "perc")
                     PanelSwitch(b, "percharm", listOf("3rd", "2nd"), "harm")
                     PanelKnob(b, "perclvl", "level", PanelAmber)
                     PanelSwitch(b, "percfast", listOf("slow", "fast"), "decay")
@@ -2051,7 +2093,7 @@ private fun ManualPanel(b: ParamBinding) {
             }
             3 -> {
                 Group("cabinet") {
-                    PanelSwitch(b, "rotary", listOf("off", "on"), "rotary")
+                    PanelOnOff(b, "rotary", "rotary")
                     PanelStepKnob(b, "rotspeed", MANUAL_ROT, "speed", PanelAmber)
                     PanelStepKnob(b, "rotsync", MANUAL_SYNC, "sync")
                 }
@@ -2077,8 +2119,8 @@ private fun ManualPanel(b: ParamBinding) {
                 Group("manuals") {
                     PanelKnob(b, "split", "split", PanelAmber)
                     PanelKnob(b, "pedsplit", "pedal at", PanelAmber)
-                    PanelSwitch(b, "loweron", listOf("off", "on"), "lower")
-                    PanelSwitch(b, "pedalon", listOf("off", "on"), "pedals")
+                    PanelOnOff(b, "loweron", "lower")
+                    PanelOnOff(b, "pedalon", "pedals")
                 }
                 Group("balance") {
                     PanelKnob(b, "upper", "upper")
@@ -2292,7 +2334,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "wet", "wet", PanelAmber)
                 }
                 Group("tracking") {
-                    PanelSwitch(b, "track", listOf("off", "on"), "follow")
+                    PanelOnOff(b, "track", "follow")
                     PanelKnob(b, "trackamt", "amount", PanelAmber)
                     PanelKnob(b, "trackglide", "glide")
                 }
@@ -3458,7 +3500,7 @@ private fun FilamentPanel(b: ParamBinding) {
                     PanelKnob(b, "rattle at", "above")
                 }
                 Group("sympathy") {
-                    PanelSwitch(b, "sympathy", listOf("off", "on"), "strings")
+                    PanelOnOff(b, "sympathy", "strings")
                     PanelStepKnob(b, "symtune", FILAMENT_SYM, "tuned", PanelAmber)
                     PanelKnob(b, "symlevel", "level", PanelAmber)
                     PanelKnob(b, "symsustain", "sustain")
@@ -3467,7 +3509,7 @@ private fun FilamentPanel(b: ParamBinding) {
             }
             3 -> {
                 Group("body") {
-                    PanelSwitch(b, "body", listOf("off", "on"), "body")
+                    PanelOnOff(b, "body", "body")
                     PanelKnob(b, "size", "size", PanelAmber)
                     PanelKnob(b, "bodymix", "mix", PanelAmber)
                     PanelKnob(b, "bodydamp", "damp")
@@ -4492,7 +4534,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("choir") {
                     PanelKnob(b, "singers", "singers", PanelAmber)
                     PanelKnob(b, "spread", "spread")
-                    PanelSwitch(b, "harmony", listOf("off", "on"), "harmony")
+                    PanelOnOff(b, "harmony", "harmony")
                 }
             }
             2 -> {
@@ -4807,7 +4849,7 @@ private fun MosaicPanel(
                 }
             }
             2 -> Group("grains") {
-                PanelSwitch(b, "grain", listOf("off", "on"), "cloud")
+                PanelOnOff(b, "grain", "cloud")
                 PanelKnob(b, "gpos", "position", PanelAmber)
                 PanelKnob(b, "grate", "rate", PanelAmber)
                 PanelKnob(b, "gsize", "size", PanelAmber)
