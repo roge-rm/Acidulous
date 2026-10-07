@@ -81,6 +81,7 @@
     <string name="pw_basic">simple</string>
     <string name="pw_bass">basse</string>
     <string name="pw_bayan">bayan</string>
+    <string name="pw_beak">bec</string>
     <string name="pw_bell">Cloche</string>
     <string name="pw_bell_brass">pavillon</string>
     <string name="pw_bell_04bf88">cloche</string>
@@ -121,6 +122,7 @@
     <string name="pw_bright">brillant</string>
     <string name="pw_broadcast">radio</string>
     <string name="pw_broken">cassé</string>
+    <string name="pw_bubbles">bulles</string>
     <string name="pw_buffer">tampon</string>
     <string name="pw_bus">bus</string>
     <string name="pw_busy">actif</string>
@@ -134,6 +136,7 @@
     <string name="pw_cabinet">baffle</string>
     <string name="pw_cable_n">câble %d</string>
     <string name="pw_cajon">cajón</string>
+    <string name="pw_call">appel</string>
     <string name="pw_carrier">porteuse</string>
     <string name="pw_cassotto">cassotto</string>
     <string name="pw_ceiling">plafond</string>
@@ -148,12 +151,14 @@
     <string name="pw_chiff">chiff</string>
     <string name="pw_chikari">chikari</string>
     <string name="pw_chip">puce</string>
+    <string name="pw_chirp">gazouillis</string>
     <string name="pw_choir">chœur</string>
     <string name="pw_choke">étouffe</string>
     <string name="pw_chop_on_the_clock">hacher au rythme du compteur</string>
     <string name="pw_chord">Chord</string>
     <string name="pw_chord_4b3a0b">accord</string>
     <string name="pw_chorus">Chorus</string>
+    <string name="pw_chorus_4ce6d4">chœur</string>
     <string name="pw_chromatic">chromatique</string>
     <string name="pw_cimbalom">cymbalum</string>
     <string name="pw_circuit">circuit</string>
@@ -251,6 +256,7 @@
     <string name="pw_down">bas</string>
     <string name="pw_down_up">bas-haut</string>
     <string name="pw_drift">dérive</string>
+    <string name="pw_drips">gouttes</string>
     <string name="pw_drive">satur.</string>
     <string name="pw_drone">bourdon</string>
     <string name="pw_drones">bourdons</string>
@@ -317,6 +323,7 @@
     <string name="pw_f1res">f1rés</string>
     <string name="pw_f2freq">f2fréq</string>
     <string name="pw_f2res">f2rés</string>
+    <string name="pw_fade">fondu</string>
     <string name="pw_fall">descente</string>
     <string name="pw_fan">éventail</string>
     <string name="pw_fan_3_3">éventail 3 / 3</string>
@@ -338,11 +345,13 @@
     <string name="pw_filtfm">filtFM</string>
     <string name="pw_fine">précis</string>
     <string name="pw_finger">doigt</string>
+    <string name="pw_fire">feu</string>
     <string name="pw_first">première</string>
     <string name="pw_fit">ajust.</string>
     <string name="pw_fixed">fixe</string>
     <string name="pw_flanger">Flanger</string>
     <string name="pw_flatten">aplatir</string>
+    <string name="pw_flock">volée</string>
     <string name="pw_floor">plancher</string>
     <string name="pw_flute">flûte</string>
     <string name="pw_flutter">flutter</string>
@@ -409,6 +418,7 @@
     <string name="pw_groupings">groupes</string>
     <string name="pw_growl">grogne</string>
     <string name="pw_guitar">guitare</string>
+    <string name="pw_gust">rafale</string>
     <string name="pw_h">h</string>
     <string name="pw_haas">haas</string>
     <string name="pw_half">demi</string>
@@ -524,6 +534,7 @@
     <string name="pw_lattice">treillis</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">fuite</string>
+    <string name="pw_leaves">feuilles</string>
     <string name="pw_leg">leg</string>
     <string name="pw_legato">legato</string>
     <string name="pw_length">longueur</string>
@@ -786,6 +797,7 @@
     <string name="pw_quart">quart</string>
     <string name="pw_r">R</string>
     <string name="pw_r_4dc7c9">r</string>
+    <string name="pw_rain">pluie</string>
     <string name="pw_ramp">rampe</string>
     <string name="pw_ramp_9f2b78">rampe↑</string>
     <string name="pw_ramp_181f09">rampe↓</string>
@@ -954,6 +966,7 @@
     <string name="pw_source">source</string>
     <string name="pw_southern">sudiste</string>
     <string name="pw_sp">SP</string>
+    <string name="pw_space">espace</string>
     <string name="pw_span">étendue</string>
     <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">vitesse</string>
@@ -984,6 +997,7 @@
     <string name="pw_stoptime">durée arrêt</string>
     <string name="pw_straight">droite</string>
     <string name="pw_strange">étrange</string>
+    <string name="pw_stream">ruisseau</string>
     <string name="pw_stretch">étirer</string>
     <string name="pw_strike">frappe</string>
     <string name="pw_strike_at">frappe à</string>
@@ -1000,6 +1014,8 @@
     <string name="pw_subtle">subtil</string>
     <string name="pw_super">super</string>
     <string name="pw_sure">sûr</string>
+    <string name="pw_surf">ressac</string>
+    <string name="pw_surface">surface</string>
     <string name="pw_sus">maint.</string>
     <string name="pw_sustain">maintien</string>
     <string name="pw_sustain_pedal">pédale maintien</string>
@@ -1010,6 +1026,7 @@
     <string name="pw_swell">Swell</string>
     <string name="pw_swell_eb684e">crescendo</string>
     <string name="pw_swing">swing</string>
+    <string name="pw_syllables">syllabes</string>
     <string name="pw_sympathy">sympathie</string>
     <string name="pw_sync">sync</string>
     <string name="pw_sync1">sync1</string>
@@ -1017,6 +1034,7 @@
     <string name="pw_sync3">sync3</string>
     <string name="pw_synced">synchro</string>
     <string name="pw_synco">synco.</string>
+    <string name="pw_syrinx">syrinx</string>
     <string name="pw_t_follows">t suit</string>
     <string name="pw_tabla">tabla</string>
     <string name="pw_table">table</string>
@@ -1054,6 +1072,7 @@
     <string name="pw_timbre">timbre</string>
     <string name="pw_time">temps</string>
     <string name="pw_times">fois</string>
+    <string name="pw_tin">tôle</string>
     <string name="pw_tine">tige</string>
     <string name="pw_to">vers</string>
     <string name="pw_todi">todi</string>
@@ -1080,6 +1099,7 @@
     <string name="pw_triad">triade</string>
     <string name="pw_trig">déclen.</string>
     <string name="pw_trigger">déclench.</string>
+    <string name="pw_trill">trille</string>
     <string name="pw_triplets">triolets</string>
     <string name="pw_tuba_trpt">tuba→trp.</string>
     <string name="pw_tube">tube</string>
@@ -1088,6 +1108,7 @@
     <string name="pw_tuned">accordé</string>
     <string name="pw_tuning">accordage</string>
     <string name="pw_two_shifts_arguing">deux décalages qui se chicanent</string>
+    <string name="pw_two">deux</string>
     <string name="pw_type">type</string>
     <string name="pw_uk">R.-U.</string>
     <string name="pw_una_corda">una corda</string>
@@ -1129,12 +1150,16 @@
     <string name="pw_vspread">écart vél.</string>
     <string name="pw_w">w</string>
     <string name="pw_walk">marche</string>
+    <string name="pw_warble">babil</string>
     <string name="pw_warm">chaud</string>
     <string name="pw_warp">distors.</string>
     <string name="pw_wash">lavis</string>
+    <string name="pw_water">eau</string>
     <string name="pw_wave">onde</string>
     <string name="pw_wave_a">onde a</string>
     <string name="pw_wave_b">onde b</string>
+    <string name="pw_waves">houle</string>
+    <string name="pw_weather">temps</string>
     <string name="pw_weight">poids</string>
     <string name="pw_wet">traité</string>
     <string name="pw_wet_mix">traité</string>
@@ -1144,6 +1169,7 @@
     <string name="pw_wheel_organ">roue</string>
     <string name="pw_where">où</string>
     <string name="pw_whisper">chuchoter</string>
+    <string name="pw_whistle">sifflement</string>
     <string name="pw_white">blanches</string>
     <string name="pw_wide">large</string>
     <string name="pw_width">Width</string>

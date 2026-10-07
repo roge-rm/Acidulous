@@ -34,6 +34,9 @@ object MidiImport {
         if (program == 104 || program == 106) return "Sympath"
         // Bagpipe to the drones.
         if (program == 109) return "Chanter"
+        // Bird tweet to the birds; seashore and rain to the weather.
+        if (program == 123) return "Aviary"
+        if (program == 122 || program == 96) return "Fathom"
         return when (program?.let { it / 8 }) {
             2 -> "Manual"                  // organ
             3, 5 -> "Filament"             // acoustic guitar, strings

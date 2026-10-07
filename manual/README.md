@@ -5,6 +5,7 @@
 2. [The song grid](02-the-song-grid.md)
 3. [The editor](03-the-editor.md)
 4. [The machines](04-the-machines.md)
+    - [Aviary](04-the-machines/aviary.md) - modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles and calls in time with the song.
     - [Bias](04-the-machines/bias.md) - a four-track: recordings arranged along the song, four lanes at a time.
     - [Brazen](04-the-machines/brazen.md) - modelled brass, from trumpet to tuba, or a whole section.
     - [Chanter](04-the-machines/chanter.md) - modelled bagpipes and hurdy-gurdy: drones that go on between notes, grace notes, and a wheel whose loose bridge buzzes in time.
@@ -13,6 +14,7 @@
     - [Dice](04-the-machines/dice.md) - a loop slicer with chance on every slice.
     - [Diction](04-the-machines/diction.md) - a vocal synthesizer trained on your voice and taken to the next level.
     - [Draw](04-the-machines/draw.md) - modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.
+    - [Fathom](04-the-machines/fathom.md) - modelled water and weather: bubbles, drips, rain, streams, surf, wind and fire, played from the keys.
     - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
     - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
     - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.

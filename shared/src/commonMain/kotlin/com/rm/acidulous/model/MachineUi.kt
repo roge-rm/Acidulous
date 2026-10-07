@@ -79,7 +79,7 @@ object MachineUi {
     val machineGroups: List<MachineGroup> = listOf(
         MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate").sorted()),
         MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice").sorted()),
-        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Hammer", "Tongue", "Draw", "Fret", "Tine", "Sympath", "Palm", "Chanter").sorted()),
+        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Hammer", "Tongue", "Draw", "Fret", "Tine", "Sympath", "Palm", "Chanter", "Aviary", "Fathom").sorted()),
         MachineGroup(Res.string.machines_samples, listOf("Mosaic", "Pollen", "Molt").sorted()),
         MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Diction", "Bias").sorted()),
     )
@@ -107,6 +107,8 @@ object MachineUi {
         "Sympath" -> Res.string.machine_about_sympath
         "Palm" -> Res.string.machine_about_palm
         "Chanter" -> Res.string.machine_about_chanter
+        "Aviary" -> Res.string.machine_about_aviary
+        "Fathom" -> Res.string.machine_about_fathom
         "Timber" -> Res.string.machine_about_timber
         "Mosaic" -> Res.string.machine_about_mosaic
         "Pollen" -> Res.string.machine_about_pollen
@@ -141,7 +143,7 @@ object MachineUi {
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
             type == "Brazen" || type == "Timber" || type == "Molt" || type == "Diction" || type == "Hammer" ||
-            type == "Tongue" || type == "Draw" || type == "Fret" || type == "Tine" || type == "Sympath" || type == "Palm" || type == "Chanter"
+            type == "Tongue" || type == "Draw" || type == "Fret" || type == "Tine" || type == "Sympath" || type == "Palm" || type == "Chanter" || type == "Aviary" || type == "Fathom"
 
     /** Genesis's kit, in the Voice order of engine/machine/genesis/Genesis.h. */
     val genesisVoices: List<DrumVoice> = listOf(

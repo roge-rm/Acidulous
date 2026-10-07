@@ -1,0 +1,222 @@
+# Fathom - water and weather.
+#
+# Most of the sound of water is bubbles: air caught under the surface rings
+# at a pitch set by its size and rises as it nears the top. A drip is a
+# bubble and a tap; rain is many drips and what they land on; a stream is a
+# cloud of small bubbles and a few big ones; surf is a wave's rush. Wind is
+# air rushing past, in gusts, whistling where it's caught; fire is
+# crackles, hiss and roar.
+#
+# A held note keeps it going: the note sets the bubbles' size or the
+# wind's whistle, the velocity how much. `density` is how many events,
+# `size` how far their pitches spread, `rise` how far a bubble climbs,
+# `decay` how long each rings, `surface` what the rain falls on, `gust` how
+# much the wind, fire and waves come and go, `whistle` the wind caught in a
+# gap, `tone` how bright, `swell` beats from wave to wave, `fade` how long
+# it takes to come and go. Pressure and the mod wheel thicken it.
+#
+# Families: bubbles, drips, rain, stream, surf, wind, fire.
+
+machine Fathom
+role pad
+
+patch Init family=bubbles note=72 range=60..84
+
+patch "Fish Tank" family=bubbles note=79 range=67..91
+  # A steady line of small bubbles.
+  density        0.55
+  size           3 st
+  rise           0.5
+
+patch "Big Bubbles" family=bubbles note=60 range=48..72
+  # Slow, deep bubbles, long and round.
+  density        0.35
+  size           7 st
+  decay          0.8
+  rise           0.3
+
+patch "Boiling Pot" family=bubbles note=72 range=60..84
+  # Thick and fast.
+  density        0.85
+  size           9 st
+  rise           0.6
+  volume         0.6
+
+patch "Bubble Notes" family=bubbles note=72 range=48..96 role=tune
+  # One bubble a note, tuned: play a melody.
+  density        0
+  size           0 st
+  rise           0.2
+  decay          0.7
+  volume         1
+
+patch "Cave Drips" family=drips note=67 range=55..79
+  # Slow drips into a pool.
+  model          #1
+  density        0.45
+  size           4 st
+  decay          0.7
+
+patch "Tap Drip" family=drips note=72 range=60..84
+  # A leaking tap, steady.
+  model          #1
+  density        0.55
+  size           1 st
+
+patch "Drip Notes" family=drips note=67 range=48..84 role=tune
+  # One drip a note, tuned.
+  model          #1
+  density        0
+  size           0 st
+  volume         1
+
+patch "Gutter" family=drips note=64 range=52..76
+  # Faster, uneven drips.
+  model          #1
+  density        0.75
+  size           8 st
+
+patch "Light Rain" family=rain note=72 range=60..84
+  # A shower on water.
+  model          #2
+  density        0.35
+  tone           0.4
+  volume         1
+
+patch Downpour family=rain note=72 range=60..84
+  # Heavy rain, the hiss up.
+  model          #2
+  density        0.85
+  tone           0.6
+  volume         0.6
+
+patch "Rain on Leaves" family=rain note=72 range=60..84
+  # Drops on leaves: soft taps.
+  model          #2
+  density        0.6
+  surface        #1
+
+patch "Tin Roof" family=rain note=72 range=60..84
+  # Rain on a metal roof, ringing.
+  model          #2
+  density        0.55
+  surface        #2
+
+patch "Window" family=rain note=72 range=60..84
+  # Rain against glass, close.
+  model          #2
+  density        0.5
+  surface        #3
+  tone           0.3
+  volume         1
+
+patch Brook family=stream note=72 range=60..84
+  # A small stream over stones.
+  model          #3
+  density        0.4
+  size           8 st
+
+patch River family=stream note=60 range=48..72
+  # Deeper and wider, more of the big bubbles.
+  model          #3
+  density        0.6
+  size           12 st
+  volume         0.4
+
+patch Fountain family=stream note=79 range=67..91
+  # Fine, bright and busy.
+  model          #3
+  density        0.75
+  size           5 st
+  volume         0.4
+
+patch Trickle family=stream note=76 range=64..88
+  # Just a little water.
+  model          #3
+  density        0.2
+  size           6 st
+
+patch Surf family=surf note=48 range=36..60
+  # Waves every four beats.
+  model          #4
+  swell          4 beats
+  gust           0.8
+
+patch "Slow Swell" family=surf note=48 range=36..60
+  # Long waves, eight beats apart, dark.
+  model          #4
+  swell          8 beats
+  gust           0.9
+  tone           0.3
+
+patch Shore family=surf note=52 range=36..60
+  # Small waves, bright foam.
+  model          #4
+  swell          2 beats
+  gust           0.6
+  tone           0.7
+  density        0.7
+
+patch "Calm Sea" family=surf note=48 range=36..60
+  # Barely moving.
+  model          #4
+  swell          16 beats
+  gust           0.3
+  tone           0.25
+
+patch Breeze family=wind note=60 range=48..72
+  # A soft wind coming and going.
+  model          #5
+  gust           0.6
+  tone           0.4
+
+patch Gale family=wind note=67 range=55..79
+  # Strong, gusty, bright.
+  model          #5
+  gust           1
+  tone           0.8
+  volume         0.85
+
+patch "Whistling Wind" family=wind note=72 range=55..84 role=tune
+  # Wind through a gap, whistling the note.
+  model          #5
+  whistle        0.8
+  gust           0.7
+  volume         0.4
+
+patch "Moaning Wind" family=wind note=55 range=43..67 role=tune
+  # Low, hollow, whistling.
+  model          #5
+  whistle        0.6
+  gust           0.8
+  tone           0.25
+  volume         1
+
+patch Campfire family=fire note=60 range=48..72
+  # Crackles and a soft roar.
+  model          #6
+  density        0.55
+  volume         1
+
+patch Bonfire family=fire note=60 range=48..72
+  # Loud pops and a big roar.
+  model          #6
+  density        0.8
+  gust           0.8
+  volume         1
+
+patch Embers family=fire note=60 range=48..72
+  # Just the odd crackle.
+  model          #6
+  density        0.3
+  gust           0.2
+  tone           0.2
+  volume         1
+
+patch Hearth family=fire note=60 range=48..72
+  # A steady fire indoors.
+  model          #6
+  density        0.5
+  gust           0.4
+  tone           0.5
+  volume         1

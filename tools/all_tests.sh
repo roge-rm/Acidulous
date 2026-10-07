@@ -77,6 +77,8 @@ echo "--- tine"; "$ROOT/tools/tine_test.sh" | tail -2 || fail=1
 echo "--- sympath"; "$ROOT/tools/sympath_test.sh" | tail -2 || fail=1
 echo "--- palm"; "$ROOT/tools/palm_test.sh" | tail -2 || fail=1
 echo "--- chanter"; "$ROOT/tools/chanter_test.sh" | tail -2 || fail=1
+echo "--- aviary"; "$ROOT/tools/aviary_test.sh" | tail -2 || fail=1
+echo "--- fathom"; "$ROOT/tools/fathom_test.sh" | tail -2 || fail=1
 echo "--- overwrite"; "$ROOT/tools/overwrite_test.sh" | tail -2 || fail=1
 # Link takes about half a minute, mostly two sessions finding each other over
 # the local network.

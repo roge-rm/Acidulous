@@ -27,6 +27,8 @@ PANELS = {
     "SympathPanel": "Sympath",
     "PalmPanel": "Palm",
     "ChanterPanel": "Chanter",
+    "AviaryPanel": "Aviary",
+    "FathomPanel": "Fathom",
 }
 # Some panels name every control for the selected pad, so one panel covers
 # all the pads' parameters.

@@ -231,6 +231,8 @@ fun MachinePanel(
             "Sympath" -> SympathPanel(binding)
             "Palm" -> PalmPanel(binding)
             "Chanter" -> ChanterPanel(binding)
+            "Aviary" -> AviaryPanel(binding)
+            "Fathom" -> FathomPanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3875,6 +3877,105 @@ private fun ChanterPanel(b: ParamBinding) {
             }
             else -> {
                 Group("play") {
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
+
+private val AVIARY_PATTERNS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus")
+private val AVIARY_RATES = listOf("1", "2", "4", "8", "16")
+
+/** Aviary: the song, the bird's voice, and the flock. */
+@Composable
+private fun AviaryPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("pattern", "voice", "flock"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("pattern") {
+                    PanelStepKnob(b, "pattern", AVIARY_PATTERNS, "pattern", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("syllables") {
+                    PanelStepKnob(b, "rate", AVIARY_RATES, "rate")
+                    PanelKnob(b, "length", "length")
+                    PanelKnob(b, "sweep", "sweep", PanelPink)
+                }
+            }
+            1 -> {
+                Group("syrinx") {
+                    PanelKnob(b, "rasp", "rasp")
+                    PanelKnob(b, "two", "two", PanelAmber)
+                    PanelKnob(b, "interval", "interval")
+                    PanelKnob(b, "breath", "breath")
+                }
+                Group("throat") {
+                    PanelKnob(b, "throat", "throat")
+                    PanelKnob(b, "beak", "beak")
+                }
+            }
+            else -> {
+                Group("flock") {
+                    PanelStepKnob(b, "flock", (1..4).map { "$it" }, "flock", PanelAmber)
+                    PanelKnob(b, "spread", "spread")
+                    PanelKnob(b, "space", "space")
+                }
+                Group("play") {
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
+
+private val FATHOM_MODELS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire")
+private val FATHOM_SURFACES = listOf("water", "leaves", "tin", "window")
+
+/** Fathom: the water, the weather, and the player. */
+@Composable
+private fun FathomPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("water", "weather", "play"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("instrument") {
+                    PanelStepKnob(b, "model", FATHOM_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("bubbles") {
+                    PanelKnob(b, "density", "density", PanelAmber)
+                    PanelKnob(b, "size", "size")
+                    PanelKnob(b, "rise", "rise")
+                    PanelKnob(b, "decay", "decay")
+                }
+                Group("rain") {
+                    PanelStepKnob(b, "surface", FATHOM_SURFACES, "surface")
+                }
+            }
+            1 -> {
+                Group("weather") {
+                    PanelKnob(b, "gust", "gust", PanelAmber)
+                    PanelKnob(b, "whistle", "whistle")
+                    PanelKnob(b, "tone", "tone")
+                    PanelKnob(b, "swell", "waves")
+                }
+            }
+            else -> {
+                Group("play") {
+                    PanelKnob(b, "spread", "spread")
+                    PanelKnob(b, "fade", "fade")
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")

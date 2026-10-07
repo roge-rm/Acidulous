@@ -28,6 +28,8 @@
     <string name="machine_about_sympath">sitar, tanpura, veena et shamisen modélisés : des cordes sur un chevalet qui grésille, et des cordes sympathiques accordées sur une gamme</string>
     <string name="machine_about_palm">percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre et tambour d’aisselle, en frappes ouverte, claquée, étouffée, basse et sur le bord</string>
     <string name="machine_about_chanter">cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme</string>
+    <string name="machine_about_aviary">chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec qui chantent sifflements, gazouillis, trilles, babils et appels en mesure</string>
+    <string name="machine_about_fathom">l’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent et feu, joués au clavier</string>
     <string name="machine_about_draw">anches libres modélisées : harmonicas, accordéons, mélodica, harmonium et les anches des tuyaux</string>
     <string name="machine_about_timber">bois modélisés : anches et flûtes</string>
     <string name="machine_about_mosaic">lecteur multi-échantillons pour SoundFont et vos échantillons</string>

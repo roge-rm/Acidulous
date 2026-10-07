@@ -5,6 +5,7 @@
 2. [La grille du morceau](02-the-song-grid.md)
 3. [L’éditeur](03-the-editor.md)
 4. [Les machines](04-the-machines.md)
+    - [Aviary](04-the-machines/aviary.md) : chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils et appels en mesure.
     - [Bias](04-the-machines/bias.md) : un quatre-pistes : des enregistrements placés le long du morceau, quatre couloirs à la fois.
     - [Brazen](04-the-machines/brazen.md) : des cuivres modélisés, de la trompette au tuba, ou tout un pupitre.
     - [Chanter](04-the-machines/chanter.md) : cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.
@@ -13,6 +14,7 @@
     - [Dice](04-the-machines/dice.md) : un découpeur de boucles avec du hasard sur chaque tranche.
     - [Diction](04-the-machines/diction.md) : un synthé vocal entraîné sur votre voix et poussé plus loin.
     - [Draw](04-the-machines/draw.md) : des anches libres modélisées : harmonicas, accordéons, melodica, harmonium et les anches qui sonnent dans des tuyaux.
+    - [Fathom](04-the-machines/fathom.md) : l’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent et feu, joués au clavier.
     - [Filament](04-the-machines/filament.md) : des cordes modélisées : pincées, au médiator, frappées, frottées ou soufflées.
     - [Forage](04-the-machines/forage.md) : une boîte à rythmes à échantillons : treize pads pour vos propres sons.
     - [Formulate](04-the-machines/formulate.md) : un synthé 8 bits, et une forme d’onde que vous tapez comme une formule.

@@ -36,6 +36,8 @@ internal object FactoryBanks {
         "Sympath" -> sympath
         "Palm" -> palm
         "Chanter" -> chanter
+        "Aviary" -> aviary
+        "Fathom" -> fathom
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -4329,6 +4331,283 @@ internal object FactoryBanks {
         low = 70, high = 86)
 
     private val chanter: List<Patch> by lazy { listOf(chanter0(), chanter1(), chanter2(), chanter3(), chanter4(), chanter5(), chanter6(), chanter7(), chanter8(), chanter9(), chanter10(), chanter11(), chanter12(), chanter13(), chanter14(), chanter15(), chanter16(), chanter17(), chanter18(), chanter19(), chanter20(), chanter21(), chanter22(), chanter23(), chanter24()) }
+
+    private fun aviary0() = Patch("Aviary", "Init", emptyMap(),
+        family = "chirp",
+        low = 48, high = 72)
+
+    private fun aviary1() = Patch("Aviary", "Pure Whistle",
+        mapOf("pattern" to 0f, "sweep" to 0.5833333f),
+        family = "whistle",
+        low = 48, high = 72)
+
+    private fun aviary2() = Patch("Aviary", "Two-Voiced Whistle",
+        mapOf("pattern" to 0f, "sweep" to 0.5625f, "two" to 0.8f),
+        family = "whistle",
+        low = 48, high = 72)
+
+    private fun aviary3() = Patch("Aviary", "Slow Whistle",
+        mapOf("pattern" to 0f, "sweep" to 0.75f, "breath" to 0.3f),
+        family = "whistle",
+        low = 43, high = 67)
+
+    private fun aviary4() = Patch("Aviary", "Ringing Whistle",
+        mapOf("pattern" to 0f, "sweep" to 0.5416667f, "throat" to 0.9f, "beak" to 0.3f),
+        family = "whistle",
+        low = 48, high = 74)
+
+    private fun aviary5() = Patch("Aviary", "Down Chirps",
+        mapOf("length" to 0.368421048f, "sweep" to 0.6875f),
+        family = "chirp",
+        low = 48, high = 72)
+
+    private fun aviary6() = Patch("Aviary", "Up Chirps",
+        mapOf("length" to 0.368421048f, "sweep" to 0.3125f),
+        family = "chirp",
+        low = 48, high = 72)
+
+    private fun aviary7() = Patch("Aviary", "Sparrow Chips",
+        mapOf("rate" to 0.75f, "length" to 0.2631579f, "sweep" to 0.6041667f, "rasp" to 0.5f),
+        family = "chirp",
+        low = 52, high = 76)
+
+    private fun aviary8() = Patch("Aviary", "Swooping Chirps",
+        mapOf("rate" to 0.25f, "length" to 0.7894737f, "sweep" to 0.7916667f),
+        family = "chirp",
+        low = 45, high = 69)
+
+    private fun aviary9() = Patch("Aviary", "Fast Trill",
+        mapOf("pattern" to 0.4f, "length" to 0.578947365f, "sweep" to 0.5625f),
+        family = "trill",
+        low = 52, high = 76)
+
+    private fun aviary10() = Patch("Aviary", "Rattling Trill",
+        mapOf("pattern" to 0.4f, "rate" to 0.75f, "sweep" to 0.5416667f, "rasp" to 0.6f),
+        family = "trill",
+        low = 48, high = 72)
+
+    private fun aviary11() = Patch("Aviary", "Slow Trill",
+        mapOf("pattern" to 0.4f, "rate" to 0.25f, "length" to 0.684210539f, "sweep" to 0.6041667f),
+        family = "trill",
+        low = 48, high = 72)
+
+    private fun aviary12() = Patch("Aviary", "Two-Note Trill",
+        mapOf("pattern" to 0.4f, "two" to 0.7f, "interval" to 0.7083333f),
+        family = "trill",
+        low = 48, high = 74)
+
+    private fun aviary13() = Patch("Aviary", "Warbler",
+        mapOf("pattern" to 0.6f, "length" to 1f, "sweep" to 0.6875f),
+        family = "warble",
+        low = 48, high = 72)
+
+    private fun aviary14() = Patch("Aviary", "Quick Warbler",
+        mapOf("pattern" to 0.6f, "rate" to 0.75f, "length" to 1f, "beak" to 0.7f),
+        family = "warble",
+        low = 52, high = 76)
+
+    private fun aviary15() = Patch("Aviary", "Raspy Warbler",
+        mapOf("pattern" to 0.6f, "length" to 0.8947368f, "sweep" to 0.75f, "rasp" to 0.5f),
+        family = "warble",
+        low = 45, high = 69)
+
+    private fun aviary16() = Patch("Aviary", "Twin Warblers",
+        mapOf("pattern" to 0.6f, "length" to 1f, "sweep" to 0.6875f, "flock" to 0.333333343f, "spread" to 0.8f),
+        family = "warble",
+        low = 48, high = 72)
+
+    private fun aviary17() = Patch("Aviary", "Two-Note Call",
+        mapOf("pattern" to 0.8f, "rate" to 0.25f, "length" to 0.578947365f),
+        family = "call",
+        low = 48, high = 72)
+
+    private fun aviary18() = Patch("Aviary", "Call and Answer",
+        mapOf("pattern" to 0.8f, "rate" to 0.25f, "length" to 0.578947365f, "flock" to 0.333333343f, "spread" to 1f),
+        family = "call",
+        low = 48, high = 72)
+
+    private fun aviary19() = Patch("Aviary", "Distant Call",
+        mapOf("pattern" to 0.8f, "rate" to 0f, "space" to 0.8f, "volume" to 0.9f),
+        family = "call",
+        low = 43, high = 67)
+
+    private fun aviary20() = Patch("Aviary", "Hooting Call",
+        mapOf("pattern" to 0.8f, "rate" to 0f, "length" to 0.684210539f, "breath" to 0.25f, "throat" to 0.9f, "beak" to 0.1f),
+        family = "call",
+        low = 40, high = 62)
+
+    private fun aviary21() = Patch("Aviary", "Dawn Chorus",
+        mapOf("pattern" to 1f, "flock" to 1f, "spread" to 1f, "space" to 0.4f),
+        family = "chorus",
+        low = 48, high = 72)
+
+    private fun aviary22() = Patch("Aviary", "Garden Birds",
+        mapOf("pattern" to 1f, "flock" to 0.333333343f, "spread" to 0.7f),
+        family = "chorus",
+        low = 52, high = 76)
+
+    private fun aviary23() = Patch("Aviary", "Far Off Flock",
+        mapOf("pattern" to 1f, "flock" to 1f, "spread" to 1f, "space" to 0.85f, "volume" to 0.85f),
+        family = "chorus",
+        low = 48, high = 72)
+
+    private fun aviary24() = Patch("Aviary", "Busy Hedge",
+        mapOf("pattern" to 1f, "rate" to 0.75f, "flock" to 1f, "spread" to 0.8f),
+        family = "chorus",
+        low = 48, high = 74)
+
+    private val aviary: List<Patch> by lazy { listOf(aviary0(), aviary1(), aviary2(), aviary3(), aviary4(), aviary5(), aviary6(), aviary7(), aviary8(), aviary9(), aviary10(), aviary11(), aviary12(), aviary13(), aviary14(), aviary15(), aviary16(), aviary17(), aviary18(), aviary19(), aviary20(), aviary21(), aviary22(), aviary23(), aviary24()) }
+
+    private fun fathom0() = Patch("Fathom", "Init", emptyMap(),
+        family = "bubbles",
+        low = 60, high = 84)
+
+    private fun fathom1() = Patch("Fathom", "Fish Tank",
+        mapOf("density" to 0.55f, "size" to 0.125f, "rise" to 0.5f),
+        family = "bubbles",
+        low = 67, high = 91)
+
+    private fun fathom2() = Patch("Fathom", "Big Bubbles",
+        mapOf("density" to 0.35f, "size" to 0.291666657f, "rise" to 0.3f, "decay" to 0.8f),
+        family = "bubbles",
+        low = 48, high = 72)
+
+    private fun fathom3() = Patch("Fathom", "Boiling Pot",
+        mapOf("density" to 0.85f, "size" to 0.375f, "rise" to 0.6f, "volume" to 0.6f),
+        family = "bubbles",
+        low = 60, high = 84)
+
+    private fun fathom4() = Patch("Fathom", "Bubble Notes",
+        mapOf("density" to 0f, "size" to 0f, "rise" to 0.2f, "decay" to 0.7f, "volume" to 1f),
+        family = "bubbles",
+        low = 48, high = 96)
+
+    private fun fathom5() = Patch("Fathom", "Cave Drips",
+        mapOf("model" to 0.166666672f, "density" to 0.45f, "size" to 0.166666672f, "decay" to 0.7f),
+        family = "drips",
+        low = 55, high = 79)
+
+    private fun fathom6() = Patch("Fathom", "Tap Drip",
+        mapOf("model" to 0.166666672f, "density" to 0.55f, "size" to 0.0416666679f),
+        family = "drips",
+        low = 60, high = 84)
+
+    private fun fathom7() = Patch("Fathom", "Drip Notes",
+        mapOf("model" to 0.166666672f, "density" to 0f, "size" to 0f, "volume" to 1f),
+        family = "drips",
+        low = 48, high = 84)
+
+    private fun fathom8() = Patch("Fathom", "Gutter",
+        mapOf("model" to 0.166666672f, "density" to 0.75f, "size" to 0.333333343f),
+        family = "drips",
+        low = 52, high = 76)
+
+    private fun fathom9() = Patch("Fathom", "Light Rain",
+        mapOf("model" to 0.333333343f, "density" to 0.35f, "tone" to 0.4f, "volume" to 1f),
+        family = "rain",
+        low = 60, high = 84)
+
+    private fun fathom10() = Patch("Fathom", "Downpour",
+        mapOf("model" to 0.333333343f, "density" to 0.85f, "tone" to 0.6f, "volume" to 0.6f),
+        family = "rain",
+        low = 60, high = 84)
+
+    private fun fathom11() = Patch("Fathom", "Rain on Leaves",
+        mapOf("model" to 0.333333343f, "density" to 0.6f, "surface" to 0.333333343f),
+        family = "rain",
+        low = 60, high = 84)
+
+    private fun fathom12() = Patch("Fathom", "Tin Roof",
+        mapOf("model" to 0.333333343f, "density" to 0.55f, "surface" to 0.6666667f),
+        family = "rain",
+        low = 60, high = 84)
+
+    private fun fathom13() = Patch("Fathom", "Window",
+        mapOf("model" to 0.333333343f, "surface" to 1f, "tone" to 0.3f, "volume" to 1f),
+        family = "rain",
+        low = 60, high = 84)
+
+    private fun fathom14() = Patch("Fathom", "Brook",
+        mapOf("model" to 0.5f, "density" to 0.4f, "size" to 0.333333343f),
+        family = "stream",
+        low = 60, high = 84)
+
+    private fun fathom15() = Patch("Fathom", "River",
+        mapOf("model" to 0.5f, "density" to 0.6f, "size" to 0.5f, "volume" to 0.4f),
+        family = "stream",
+        low = 48, high = 72)
+
+    private fun fathom16() = Patch("Fathom", "Fountain",
+        mapOf("model" to 0.5f, "density" to 0.75f, "volume" to 0.4f),
+        family = "stream",
+        low = 67, high = 91)
+
+    private fun fathom17() = Patch("Fathom", "Trickle",
+        mapOf("model" to 0.5f, "density" to 0.2f, "size" to 0.25f),
+        family = "stream",
+        low = 64, high = 88)
+
+    private fun fathom18() = Patch("Fathom", "Surf",
+        mapOf("model" to 0.6666667f, "gust" to 0.8f),
+        family = "surf",
+        low = 36, high = 60)
+
+    private fun fathom19() = Patch("Fathom", "Slow Swell",
+        mapOf("model" to 0.6666667f, "gust" to 0.9f, "tone" to 0.3f, "swell" to 0.466666669f),
+        family = "surf",
+        low = 36, high = 60)
+
+    private fun fathom20() = Patch("Fathom", "Shore",
+        mapOf("model" to 0.6666667f, "density" to 0.7f, "gust" to 0.6f, "tone" to 0.7f, "swell" to 0.06666667f),
+        family = "surf",
+        low = 36, high = 60)
+
+    private fun fathom21() = Patch("Fathom", "Calm Sea",
+        mapOf("model" to 0.6666667f, "gust" to 0.3f, "tone" to 0.25f, "swell" to 1f),
+        family = "surf",
+        low = 36, high = 60)
+
+    private fun fathom22() = Patch("Fathom", "Breeze",
+        mapOf("model" to 0.8333333f, "gust" to 0.6f, "tone" to 0.4f),
+        family = "wind",
+        low = 48, high = 72)
+
+    private fun fathom23() = Patch("Fathom", "Gale",
+        mapOf("model" to 0.8333333f, "gust" to 1f, "tone" to 0.8f, "volume" to 0.85f),
+        family = "wind",
+        low = 55, high = 79)
+
+    private fun fathom24() = Patch("Fathom", "Whistling Wind",
+        mapOf("model" to 0.8333333f, "gust" to 0.7f, "whistle" to 0.8f, "volume" to 0.4f),
+        family = "wind",
+        low = 55, high = 84)
+
+    private fun fathom25() = Patch("Fathom", "Moaning Wind",
+        mapOf("model" to 0.8333333f, "gust" to 0.8f, "whistle" to 0.6f, "tone" to 0.25f, "volume" to 1f),
+        family = "wind",
+        low = 43, high = 67)
+
+    private fun fathom26() = Patch("Fathom", "Campfire",
+        mapOf("model" to 1f, "density" to 0.55f, "volume" to 1f),
+        family = "fire",
+        low = 48, high = 72)
+
+    private fun fathom27() = Patch("Fathom", "Bonfire",
+        mapOf("model" to 1f, "density" to 0.8f, "gust" to 0.8f, "volume" to 1f),
+        family = "fire",
+        low = 48, high = 72)
+
+    private fun fathom28() = Patch("Fathom", "Embers",
+        mapOf("model" to 1f, "density" to 0.3f, "gust" to 0.2f, "tone" to 0.2f, "volume" to 1f),
+        family = "fire",
+        low = 48, high = 72)
+
+    private fun fathom29() = Patch("Fathom", "Hearth",
+        mapOf("model" to 1f, "gust" to 0.4f, "volume" to 1f),
+        family = "fire",
+        low = 48, high = 72)
+
+    private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

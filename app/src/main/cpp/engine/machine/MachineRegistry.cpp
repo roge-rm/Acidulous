@@ -18,6 +18,8 @@
 #include "sympath/Sympath.h"
 #include "palm/Palm.h"
 #include "chanter/Chanter.h"
+#include "aviary/Aviary.h"
+#include "fathom/Fathom.h"
 #include "nexus/Nexus.h"
 #include "pollen/Pollen.h"
 #include "dice/Dice.h"
@@ -32,7 +34,7 @@
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Reflux", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Diction", "Bias", "Hammer", "Tongue", "Draw", "Fret", "Tine", "Sympath", "Palm", "Chanter"};
+const char *const kNames[] = {"Reflux", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Diction", "Bias", "Hammer", "Tongue", "Draw", "Fret", "Tine", "Sympath", "Palm", "Chanter", "Aviary", "Fathom"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
@@ -66,6 +68,8 @@ Machine *MachineRegistry::create(const char *typeName) {
     if (std::strcmp(typeName, "Sympath") == 0) return new machine::Sympath();
     if (std::strcmp(typeName, "Palm") == 0) return new machine::Palm();
     if (std::strcmp(typeName, "Chanter") == 0) return new machine::Chanter();
+    if (std::strcmp(typeName, "Aviary") == 0) return new machine::Aviary();
+    if (std::strcmp(typeName, "Fathom") == 0) return new machine::Fathom();
     return nullptr;
 }
 
@@ -144,6 +148,14 @@ const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count)
     }
     if (std::strcmp(typeName, "Chanter") == 0) {
         static const machine::Chanter probe;
+        return probe.paramDefs(count);
+    }
+    if (std::strcmp(typeName, "Aviary") == 0) {
+        static const machine::Aviary probe;
+        return probe.paramDefs(count);
+    }
+    if (std::strcmp(typeName, "Fathom") == 0) {
+        static const machine::Fathom probe;
         return probe.paramDefs(count);
     }
     if (std::strcmp(typeName, "Nexus") == 0) {
