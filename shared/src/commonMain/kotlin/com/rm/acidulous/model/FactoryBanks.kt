@@ -4480,92 +4480,92 @@ internal object FactoryBanks {
 
     private fun fathom0() = Patch("Fathom", "Init", emptyMap(),
         family = "bubbles",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom1() = Patch("Fathom", "Fish Tank",
         mapOf("density" to 0.55f, "size" to 0.125f, "rise" to 0.5f),
         family = "bubbles",
-        low = 67, high = 91)
+        low = 43, high = 67)
 
     private fun fathom2() = Patch("Fathom", "Big Bubbles",
         mapOf("density" to 0.35f, "size" to 0.291666657f, "rise" to 0.3f, "decay" to 0.8f),
         family = "bubbles",
-        low = 48, high = 72)
+        low = 24, high = 48)
 
     private fun fathom3() = Patch("Fathom", "Boiling Pot",
         mapOf("density" to 0.85f, "size" to 0.375f, "rise" to 0.6f, "volume" to 0.6f),
         family = "bubbles",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom4() = Patch("Fathom", "Bubble Notes",
         mapOf("density" to 0f, "size" to 0f, "rise" to 0.2f, "decay" to 0.7f, "volume" to 1f),
         family = "bubbles",
-        low = 48, high = 96)
+        low = 24, high = 72)
 
     private fun fathom5() = Patch("Fathom", "Cave Drips",
         mapOf("model" to 0.166666672f, "density" to 0.45f, "size" to 0.166666672f, "decay" to 0.7f),
         family = "drips",
-        low = 55, high = 79)
+        low = 31, high = 55)
 
     private fun fathom6() = Patch("Fathom", "Tap Drip",
         mapOf("model" to 0.166666672f, "density" to 0.55f, "size" to 0.0416666679f),
         family = "drips",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom7() = Patch("Fathom", "Drip Notes",
         mapOf("model" to 0.166666672f, "density" to 0f, "size" to 0f, "volume" to 1f),
         family = "drips",
-        low = 48, high = 84)
+        low = 24, high = 60)
 
     private fun fathom8() = Patch("Fathom", "Gutter",
         mapOf("model" to 0.166666672f, "density" to 0.75f, "size" to 0.333333343f),
         family = "drips",
-        low = 52, high = 76)
+        low = 28, high = 52)
 
     private fun fathom9() = Patch("Fathom", "Light Rain",
         mapOf("model" to 0.333333343f, "density" to 0.35f, "tone" to 0.4f, "volume" to 1f),
         family = "rain",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom10() = Patch("Fathom", "Downpour",
         mapOf("model" to 0.333333343f, "density" to 0.85f, "tone" to 0.6f, "volume" to 0.6f),
         family = "rain",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom11() = Patch("Fathom", "Rain on Leaves",
         mapOf("model" to 0.333333343f, "density" to 0.6f, "surface" to 0.333333343f),
         family = "rain",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom12() = Patch("Fathom", "Tin Roof",
         mapOf("model" to 0.333333343f, "density" to 0.55f, "surface" to 0.6666667f),
         family = "rain",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom13() = Patch("Fathom", "Window",
         mapOf("model" to 0.333333343f, "surface" to 1f, "tone" to 0.3f, "volume" to 1f),
         family = "rain",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom14() = Patch("Fathom", "Brook",
         mapOf("model" to 0.5f, "density" to 0.4f, "size" to 0.333333343f),
         family = "stream",
-        low = 60, high = 84)
+        low = 36, high = 60)
 
     private fun fathom15() = Patch("Fathom", "River",
         mapOf("model" to 0.5f, "density" to 0.6f, "size" to 0.5f, "volume" to 0.4f),
         family = "stream",
-        low = 48, high = 72)
+        low = 24, high = 48)
 
     private fun fathom16() = Patch("Fathom", "Fountain",
         mapOf("model" to 0.5f, "density" to 0.75f, "volume" to 0.4f),
         family = "stream",
-        low = 67, high = 91)
+        low = 43, high = 67)
 
     private fun fathom17() = Patch("Fathom", "Trickle",
         mapOf("model" to 0.5f, "density" to 0.2f, "size" to 0.25f),
         family = "stream",
-        low = 64, high = 88)
+        low = 40, high = 64)
 
     private fun fathom18() = Patch("Fathom", "Surf",
         mapOf("model" to 0.6666667f, "gust" to 0.8f),
@@ -4590,42 +4590,42 @@ internal object FactoryBanks {
     private fun fathom22() = Patch("Fathom", "Breeze",
         mapOf("model" to 0.8333333f, "gust" to 0.6f, "tone" to 0.4f),
         family = "wind",
-        low = 48, high = 72)
+        low = 24, high = 48)
 
     private fun fathom23() = Patch("Fathom", "Gale",
         mapOf("model" to 0.8333333f, "gust" to 1f, "tone" to 0.8f, "volume" to 0.85f),
         family = "wind",
-        low = 55, high = 79)
+        low = 31, high = 55)
 
     private fun fathom24() = Patch("Fathom", "Whistling Wind",
         mapOf("model" to 0.8333333f, "gust" to 0.7f, "whistle" to 0.8f, "volume" to 0.4f),
         family = "wind",
-        low = 55, high = 84)
+        low = 31, high = 60)
 
     private fun fathom25() = Patch("Fathom", "Moaning Wind",
         mapOf("model" to 0.8333333f, "gust" to 0.8f, "whistle" to 0.6f, "tone" to 0.25f, "volume" to 1f),
         family = "wind",
-        low = 43, high = 67)
+        low = 19, high = 43)
 
     private fun fathom26() = Patch("Fathom", "Campfire",
         mapOf("model" to 1f, "density" to 0.55f, "volume" to 1f),
         family = "fire",
-        low = 48, high = 72)
+        low = 24, high = 48)
 
     private fun fathom27() = Patch("Fathom", "Bonfire",
         mapOf("model" to 1f, "density" to 0.8f, "gust" to 0.8f, "volume" to 1f),
         family = "fire",
-        low = 48, high = 72)
+        low = 24, high = 48)
 
     private fun fathom28() = Patch("Fathom", "Embers",
         mapOf("model" to 1f, "density" to 0.3f, "gust" to 0.2f, "tone" to 0.2f, "volume" to 1f),
         family = "fire",
-        low = 48, high = 72)
+        low = 24, high = 48)
 
     private fun fathom29() = Patch("Fathom", "Hearth",
         mapOf("model" to 1f, "gust" to 0.4f, "volume" to 1f),
         family = "fire",
-        low = 48, high = 72)
+        low = 24, high = 48)
 
     private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29()) }
 

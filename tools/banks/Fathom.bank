@@ -20,29 +20,29 @@
 machine Fathom
 role pad
 
-patch Init family=bubbles note=72 range=60..84
+patch Init family=bubbles note=48 range=36..60
 
-patch "Fish Tank" family=bubbles note=79 range=67..91
+patch "Fish Tank" family=bubbles note=55 range=43..67
   # A steady line of small bubbles.
   density        0.55
   size           3 st
   rise           0.5
 
-patch "Big Bubbles" family=bubbles note=60 range=48..72
+patch "Big Bubbles" family=bubbles note=36 range=24..48
   # Slow, deep bubbles, long and round.
   density        0.35
   size           7 st
   decay          0.8
   rise           0.3
 
-patch "Boiling Pot" family=bubbles note=72 range=60..84
+patch "Boiling Pot" family=bubbles note=48 range=36..60
   # Thick and fast.
   density        0.85
   size           9 st
   rise           0.6
   volume         0.6
 
-patch "Bubble Notes" family=bubbles note=72 range=48..96 role=tune
+patch "Bubble Notes" family=bubbles note=48 range=24..72 role=tune
   # One bubble a note, tuned: play a melody.
   density        0
   size           0 st
@@ -50,59 +50,59 @@ patch "Bubble Notes" family=bubbles note=72 range=48..96 role=tune
   decay          0.7
   volume         1
 
-patch "Cave Drips" family=drips note=67 range=55..79
+patch "Cave Drips" family=drips note=43 range=31..55
   # Slow drips into a pool.
   model          #1
   density        0.45
   size           4 st
   decay          0.7
 
-patch "Tap Drip" family=drips note=72 range=60..84
+patch "Tap Drip" family=drips note=48 range=36..60
   # A leaking tap, steady.
   model          #1
   density        0.55
   size           1 st
 
-patch "Drip Notes" family=drips note=67 range=48..84 role=tune
+patch "Drip Notes" family=drips note=43 range=24..60 role=tune
   # One drip a note, tuned.
   model          #1
   density        0
   size           0 st
   volume         1
 
-patch "Gutter" family=drips note=64 range=52..76
+patch "Gutter" family=drips note=40 range=28..52
   # Faster, uneven drips.
   model          #1
   density        0.75
   size           8 st
 
-patch "Light Rain" family=rain note=72 range=60..84
+patch "Light Rain" family=rain note=48 range=36..60
   # A shower on water.
   model          #2
   density        0.35
   tone           0.4
   volume         1
 
-patch Downpour family=rain note=72 range=60..84
+patch Downpour family=rain note=48 range=36..60
   # Heavy rain, the hiss up.
   model          #2
   density        0.85
   tone           0.6
   volume         0.6
 
-patch "Rain on Leaves" family=rain note=72 range=60..84
+patch "Rain on Leaves" family=rain note=48 range=36..60
   # Drops on leaves: soft taps.
   model          #2
   density        0.6
   surface        #1
 
-patch "Tin Roof" family=rain note=72 range=60..84
+patch "Tin Roof" family=rain note=48 range=36..60
   # Rain on a metal roof, ringing.
   model          #2
   density        0.55
   surface        #2
 
-patch "Window" family=rain note=72 range=60..84
+patch "Window" family=rain note=48 range=36..60
   # Rain against glass, close.
   model          #2
   density        0.5
@@ -110,27 +110,27 @@ patch "Window" family=rain note=72 range=60..84
   tone           0.3
   volume         1
 
-patch Brook family=stream note=72 range=60..84
+patch Brook family=stream note=48 range=36..60
   # A small stream over stones.
   model          #3
   density        0.4
   size           8 st
 
-patch River family=stream note=60 range=48..72
+patch River family=stream note=36 range=24..48
   # Deeper and wider, more of the big bubbles.
   model          #3
   density        0.6
   size           12 st
   volume         0.4
 
-patch Fountain family=stream note=79 range=67..91
+patch Fountain family=stream note=55 range=43..67
   # Fine, bright and busy.
   model          #3
   density        0.75
   size           5 st
   volume         0.4
 
-patch Trickle family=stream note=76 range=64..88
+patch Trickle family=stream note=52 range=40..64
   # Just a little water.
   model          #3
   density        0.2
@@ -164,27 +164,27 @@ patch "Calm Sea" family=surf note=48 range=36..60
   gust           0.3
   tone           0.25
 
-patch Breeze family=wind note=60 range=48..72
+patch Breeze family=wind note=36 range=24..48
   # A soft wind coming and going.
   model          #5
   gust           0.6
   tone           0.4
 
-patch Gale family=wind note=67 range=55..79
+patch Gale family=wind note=43 range=31..55
   # Strong, gusty, bright.
   model          #5
   gust           1
   tone           0.8
   volume         0.85
 
-patch "Whistling Wind" family=wind note=72 range=55..84 role=tune
+patch "Whistling Wind" family=wind note=48 range=31..60 role=tune
   # Wind through a gap, whistling the note.
   model          #5
   whistle        0.8
   gust           0.7
   volume         0.4
 
-patch "Moaning Wind" family=wind note=55 range=43..67 role=tune
+patch "Moaning Wind" family=wind note=31 range=19..43 role=tune
   # Low, hollow, whistling.
   model          #5
   whistle        0.6
@@ -192,20 +192,20 @@ patch "Moaning Wind" family=wind note=55 range=43..67 role=tune
   tone           0.25
   volume         1
 
-patch Campfire family=fire note=60 range=48..72
+patch Campfire family=fire note=36 range=24..48
   # Crackles and a soft roar.
   model          #6
   density        0.55
   volume         1
 
-patch Bonfire family=fire note=60 range=48..72
+patch Bonfire family=fire note=36 range=24..48
   # Loud pops and a big roar.
   model          #6
   density        0.8
   gust           0.8
   volume         1
 
-patch Embers family=fire note=60 range=48..72
+patch Embers family=fire note=36 range=24..48
   # Just the odd crackle.
   model          #6
   density        0.3
@@ -213,7 +213,7 @@ patch Embers family=fire note=60 range=48..72
   tone           0.2
   volume         1
 
-patch Hearth family=fire note=60 range=48..72
+patch Hearth family=fire note=36 range=24..48
   # A steady fire indoors.
   model          #6
   density        0.5
