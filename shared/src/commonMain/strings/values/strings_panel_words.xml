@@ -57,6 +57,7 @@
     <string name="pw_around">around</string>
     <string name="pw_arp">Arp</string>
     <string name="pw_as_sung">as sung</string>
+    <string name="pw_asavari">asavari</string>
     <string name="pw_at">at</string>
     <string name="pw_att">att</string>
     <string name="pw_attack">attack</string>
@@ -86,7 +87,10 @@
     <string name="pw_below">below</string>
     <string name="pw_bend">bend</string>
     <string name="pw_beyond">beyond</string>
+    <string name="pw_bhairav">bhairav</string>
+    <string name="pw_bhairavi">bhairavi</string>
     <string name="pw_bias">bias</string>
+    <string name="pw_bilawal">bilawal</string>
     <string name="pw_bipolar">bipolar</string>
     <string name="pw_bitcrusher">Bitcrusher</string>
     <string name="pw_bite">bite</string>
@@ -138,6 +142,7 @@
     <string name="pw_channel">channel</string>
     <string name="pw_character">character</string>
     <string name="pw_chiff">chiff</string>
+    <string name="pw_chikari">chikari</string>
     <string name="pw_chip">chip</string>
     <string name="pw_choir">choir</string>
     <string name="pw_choke">choke</string>
@@ -240,6 +245,7 @@
     <string name="pw_drift">drift</string>
     <string name="pw_drive">drive</string>
     <string name="pw_drone">drone</string>
+    <string name="pw_drones">drones</string>
     <string name="pw_drop">drop</string>
     <string name="pw_dropouts">dropouts</string>
     <string name="pw_drum">drum</string>
@@ -366,6 +372,7 @@
     <string name="pw_g_spray">g.spray</string>
     <string name="pw_gain">gain</string>
     <string name="pw_gallop">gallop</string>
+    <string name="pw_gamak">gamak</string>
     <string name="pw_gate">Gate</string>
     <string name="pw_gate_3c5b49">gate</string>
     <string name="pw_generative">generative</string>
@@ -472,6 +479,8 @@
     <string name="pw_jitter">jitter</string>
     <string name="pw_jump">jump</string>
     <string name="pw_k">k</string>
+    <string name="pw_kafi">kafi</string>
+    <string name="pw_kalyan">kalyan</string>
     <string name="pw_keep">keep</string>
     <string name="pw_key">key</string>
     <string name="pw_key_noise">key noise</string>
@@ -483,6 +492,7 @@
     <string name="pw_key_detector">key</string>
     <string name="pw_key_music">key</string>
     <string name="pw_khaen">khaen</string>
+    <string name="pw_khamaj">khamaj</string>
     <string name="pw_khomus">khomus</string>
     <string name="pw_kick">Kick</string>
     <string name="pw_kick_eac613">kick</string>
@@ -559,6 +569,7 @@
     <string name="pw_lvl5">lvl5</string>
     <string name="pw_lvl6">lvl6</string>
     <string name="pw_m">m</string>
+    <string name="pw_ma">ma</string>
     <string name="pw_machine">machine</string>
     <string name="pw_macro">macro</string>
     <string name="pw_macros">macros</string>
@@ -570,8 +581,10 @@
     <string name="pw_manuals">manuals</string>
     <string name="pw_map">map</string>
     <string name="pw_marimba">marimba</string>
+    <string name="pw_marwa">marwa</string>
     <string name="pw_master">master</string>
     <string name="pw_medium">medium</string>
+    <string name="pw_meend">meend</string>
     <string name="pw_mega">mega</string>
     <string name="pw_melodica">melodica</string>
     <string name="pw_membrane">membrane</string>
@@ -626,6 +639,7 @@
     <string name="pw_neck">neck</string>
     <string name="pw_negative">negative</string>
     <string name="pw_ng">ng</string>
+    <string name="pw_ni">ni</string>
     <string name="pw_noise">noise</string>
     <string name="pw_noise_gated_by_the_clock">noise, gated by the clock</string>
     <string name="pw_noises">noises</string>
@@ -670,6 +684,7 @@
     <string name="pw_overtones">overtones</string>
     <string name="pw_own">own</string>
     <string name="pw_p">p</string>
+    <string name="pw_pa">pa</string>
     <string name="pw_pad">pad</string>
     <string name="pw_pad_n">Pad %d</string>
     <string name="pw_pad_n_bf5aa1">pad %d</string>
@@ -745,6 +760,7 @@
     <string name="pw_pump">pump</string>
     <string name="pw_pumprate">pumprate</string>
     <string name="pw_punch">punch</string>
+    <string name="pw_purvi">purvi</string>
     <string name="pw_push">push</string>
     <string name="pw_pw">pw</string>
     <string name="pw_pw1">pw1</string>
@@ -848,6 +864,7 @@
     <string name="pw_s14">s14</string>
     <string name="pw_s15">s15</string>
     <string name="pw_s16">s16</string>
+    <string name="pw_sa">sa</string>
     <string name="pw_sag">sag</string>
     <string name="pw_sample">sample</string>
     <string name="pw_sample_rate">sample rate</string>
@@ -875,6 +892,7 @@
     <string name="pw_set">set</string>
     <string name="pw_sh">sh</string>
     <string name="pw_shake">shake</string>
+    <string name="pw_shamisen">shamisen</string>
     <string name="pw_shape">shape</string>
     <string name="pw_sheng">sheng</string>
     <string name="pw_shift">shift</string>
@@ -891,6 +909,7 @@
     <string name="pw_singer">singer</string>
     <string name="pw_singers">singers</string>
     <string name="pw_single">single</string>
+    <string name="pw_sitar">sitar</string>
     <string name="pw_sixteenths">sixteenths</string>
     <string name="pw_size">size</string>
     <string name="pw_skew">skew</string>
@@ -989,8 +1008,10 @@
     <string name="pw_takes">takes</string>
     <string name="pw_talk">talk</string>
     <string name="pw_tangent">tangent</string>
+    <string name="pw_tanpura">tanpura</string>
     <string name="pw_tape">Tape</string>
     <string name="pw_tape_e9b6c7">tape</string>
+    <string name="pw_tarbs">tarbs</string>
     <string name="pw_temir_komuz">temir komuz</string>
     <string name="pw_tempo">tempo</string>
     <string name="pw_tension">tension</string>
@@ -1016,6 +1037,7 @@
     <string name="pw_times">times</string>
     <string name="pw_tine">tine</string>
     <string name="pw_to">to</string>
+    <string name="pw_todi">todi</string>
     <string name="pw_toms">toms</string>
     <string name="pw_tone">tone</string>
     <string name="pw_tonebar">tonebar</string>
@@ -1067,6 +1089,7 @@
     <string name="pw_v2">V2</string>
     <string name="pw_v3">V3</string>
     <string name="pw_valve">valve</string>
+    <string name="pw_veena">veena</string>
     <string name="pw_vel">vel</string>
     <string name="pw_vel_xf">vel xf</string>
     <string name="pw_velmode">velmode</string>

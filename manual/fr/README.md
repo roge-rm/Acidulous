@@ -27,6 +27,7 @@
     - [Ratio](04-the-machines/ratio.md) : la FM à six opérateurs, avec un bouton qui passe d’un algorithme à un autre.
     - [Reflux](04-the-machines/reflux.md) : la basse acid : un oscillateur, un filtre qui hurle, et des lignes que vous jouez.
     - [Resonance](04-the-machines/resonance.md) : huit objets frappés qui résonnent les uns dans les autres.
+    - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena et shamisen modélisés : des cordes pincées sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.
     - [Timber](04-the-machines/timber.md) : des bois modélisés : anches et flûtes.
     - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan et tambour à languettes.
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.

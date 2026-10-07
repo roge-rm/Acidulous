@@ -57,6 +57,7 @@
     <string name="pw_around">autour</string>
     <string name="pw_arp">Arp</string>
     <string name="pw_as_sung">tel quel</string>
+    <string name="pw_asavari">asavari</string>
     <string name="pw_at">selon</string>
     <string name="pw_att">att.</string>
     <string name="pw_attack">attaque</string>
@@ -86,7 +87,10 @@
     <string name="pw_below">dessous</string>
     <string name="pw_bend">bend</string>
     <string name="pw_beyond">au-delà</string>
+    <string name="pw_bhairav">bhairav</string>
+    <string name="pw_bhairavi">bhairavi</string>
     <string name="pw_bias">polar.</string>
+    <string name="pw_bilawal">bilawal</string>
     <string name="pw_bipolar">bipolaire</string>
     <string name="pw_bitcrusher">Bitcrusher</string>
     <string name="pw_bite">mordant</string>
@@ -138,6 +142,7 @@
     <string name="pw_channel">canal</string>
     <string name="pw_character">caractère</string>
     <string name="pw_chiff">chiff</string>
+    <string name="pw_chikari">chikari</string>
     <string name="pw_chip">puce</string>
     <string name="pw_choir">chœur</string>
     <string name="pw_choke">étouffe</string>
@@ -240,6 +245,7 @@
     <string name="pw_drift">dérive</string>
     <string name="pw_drive">satur.</string>
     <string name="pw_drone">bourdon</string>
+    <string name="pw_drones">bourdons</string>
     <string name="pw_drop">omettre</string>
     <string name="pw_dropouts">trous</string>
     <string name="pw_drum">tambour</string>
@@ -365,6 +371,7 @@
     <string name="pw_g_spray">g.disp</string>
     <string name="pw_gain">gain</string>
     <string name="pw_gallop">galop</string>
+    <string name="pw_gamak">gamak</string>
     <string name="pw_gate">Gate</string>
     <string name="pw_gate_3c5b49">gate</string>
     <string name="pw_generative">génératif</string>
@@ -469,6 +476,8 @@
     <string name="pw_jitter">gigue</string>
     <string name="pw_jump">saut</string>
     <string name="pw_k">k</string>
+    <string name="pw_kafi">kafi</string>
+    <string name="pw_kalyan">kalyan</string>
     <string name="pw_keep">garder</string>
     <string name="pw_key">clavier</string>
     <string name="pw_key_music">tonalité</string>
@@ -480,6 +489,7 @@
     <string name="pw_keys">touches</string>
     <string name="pw_keytrack">suivi clav.</string>
     <string name="pw_khaen">khaen</string>
+    <string name="pw_khamaj">khamaj</string>
     <string name="pw_khomus">khomus</string>
     <string name="pw_kick">G. caisse</string>
     <string name="pw_kick_eac613">g. caisse</string>
@@ -556,6 +566,7 @@
     <string name="pw_lvl5">niv5</string>
     <string name="pw_lvl6">niv6</string>
     <string name="pw_m">m</string>
+    <string name="pw_ma">ma</string>
     <string name="pw_machine">machine</string>
     <string name="pw_macro">macro</string>
     <string name="pw_macros">macros</string>
@@ -567,8 +578,10 @@
     <string name="pw_manuals">claviers</string>
     <string name="pw_map">carte</string>
     <string name="pw_marimba">marimba</string>
+    <string name="pw_marwa">marwa</string>
     <string name="pw_master">général</string>
     <string name="pw_medium">support</string>
+    <string name="pw_meend">meend</string>
     <string name="pw_mega">mega</string>
     <string name="pw_melodica">melodica</string>
     <string name="pw_membrane">membrane</string>
@@ -623,6 +636,7 @@
     <string name="pw_neck">manche</string>
     <string name="pw_negative">négatif</string>
     <string name="pw_ng">ng</string>
+    <string name="pw_ni">ni</string>
     <string name="pw_noise">bruit</string>
     <string name="pw_noise_gated_by_the_clock">bruit, coupé par l’horloge</string>
     <string name="pw_noises">bruits</string>
@@ -636,6 +650,7 @@
     <string name="pw_object">objet</string>
     <string name="pw_object_n">Objet %d</string>
     <string name="pw_oboe">hautbois</string>
+    <string name="pw_pa">pa</string>
     <string name="pw_peaks">crêtes</string>
     <string name="pw_oct">oct.</string>
     <string name="pw_octave">octave</string>
@@ -742,6 +757,7 @@
     <string name="pw_pump">pompage</string>
     <string name="pw_pumprate">vit. pompe</string>
     <string name="pw_punch">punch</string>
+    <string name="pw_purvi">purvi</string>
     <string name="pw_push">poussé</string>
     <string name="pw_pw">pw</string>
     <string name="pw_pw1">pw1</string>
@@ -845,6 +861,7 @@
     <string name="pw_s14">p14</string>
     <string name="pw_s15">p15</string>
     <string name="pw_s16">p16</string>
+    <string name="pw_sa">sa</string>
     <string name="pw_sag">affaiss.</string>
     <string name="pw_sample">échantillon</string>
     <string name="pw_sample_rate">fréq. éch.</string>
@@ -872,6 +889,7 @@
     <string name="pw_set">assise</string>
     <string name="pw_sh">sh</string>
     <string name="pw_shake">secousse</string>
+    <string name="pw_shamisen">shamisen</string>
     <string name="pw_shape">forme</string>
     <string name="pw_sheng">sheng</string>
     <string name="pw_shift">décalage</string>
@@ -888,6 +906,7 @@
     <string name="pw_singer">chanteur</string>
     <string name="pw_singers">chanteurs</string>
     <string name="pw_single">simple</string>
+    <string name="pw_sitar">sitar</string>
     <string name="pw_sixteenths">doubles croches</string>
     <string name="pw_size">taille</string>
     <string name="pw_skew">biais</string>
@@ -986,8 +1005,10 @@
     <string name="pw_takes">prises</string>
     <string name="pw_talk">parler</string>
     <string name="pw_tangent">tangente</string>
+    <string name="pw_tanpura">tanpura</string>
     <string name="pw_tape">Tape</string>
     <string name="pw_tape_e9b6c7">bande</string>
+    <string name="pw_tarbs">tarabs</string>
     <string name="pw_temir_komuz">temir komuz</string>
     <string name="pw_tempo">tempo</string>
     <string name="pw_tension">tension</string>
@@ -1013,6 +1034,7 @@
     <string name="pw_times">fois</string>
     <string name="pw_tine">tige</string>
     <string name="pw_to">vers</string>
+    <string name="pw_todi">todi</string>
     <string name="pw_toms">toms</string>
     <string name="pw_tone">ton</string>
     <string name="pw_tonebar">barre ton.</string>
@@ -1064,6 +1086,7 @@
     <string name="pw_v2">V2</string>
     <string name="pw_v3">V3</string>
     <string name="pw_valve">lampe</string>
+    <string name="pw_veena">veena</string>
     <string name="pw_vel">vél.</string>
     <string name="pw_vel_xf">fondu vél.</string>
     <string name="pw_velmode">mode vél.</string>

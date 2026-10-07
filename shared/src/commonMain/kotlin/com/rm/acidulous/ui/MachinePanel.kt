@@ -228,6 +228,7 @@ fun MachinePanel(
             "Draw" -> DrawPanel(binding)
             "Fret" -> FretPanel(binding)
             "Tine" -> TinePanel(binding)
+            "Sympath" -> SympathPanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3708,6 +3709,66 @@ private fun TinePanel(b: ParamBinding) {
                 }
                 Group("play") {
                     PanelStepKnob(b, "voices", (1..16).map { "$it" }, "voices")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
+
+private val SYMPATH_MODELS = listOf("sitar", "tanpura", "veena", "shamisen")
+private val SYMPATH_SCALES = listOf("bilawal", "khamaj", "kafi", "asavari", "bhairavi", "bhairav", "kalyan", "marwa", "purvi", "todi")
+private val SYMPATH_FIRSTS = listOf("pa", "ma", "ni", "sa")
+private val SYMPATH_CYCLES = listOf("2", "4", "6", "8")
+
+/** Sympath: the strings and their bridge, the drone and sympathetic strings, and the hands. */
+@Composable
+private fun SympathPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("strings", "drones", "hands"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("instrument") {
+                    PanelStepKnob(b, "model", SYMPATH_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("bridge") {
+                    PanelKnob(b, "bridge", "bridge", PanelAmber)
+                    PanelKnob(b, "curve", "curve")
+                }
+                Group("pluck") {
+                    PanelKnob(b, "pluck", "pluck")
+                    PanelKnob(b, "position", "position")
+                    PanelKnob(b, "sustain", "sustain")
+                    PanelKnob(b, "bright", "bright")
+                }
+            }
+            1 -> {
+                Group("tuning") {
+                    PanelStepKnob(b, "sa", KEY_NAMES, "sa", PanelAmber)
+                    PanelStepKnob(b, "scale", SYMPATH_SCALES, "scale")
+                }
+                Group("sympathy") {
+                    PanelKnob(b, "tarbs", "tarbs", PanelAmber)
+                    PanelKnob(b, "chikari", "chikari")
+                }
+                Group("tanpura") {
+                    PanelStepKnob(b, "first", SYMPATH_FIRSTS, "first")
+                    PanelStepKnob(b, "cycle", SYMPATH_CYCLES, "cycle")
+                }
+            }
+            else -> {
+                Group("hands") {
+                    PanelKnob(b, "meend", "meend", PanelAmber)
+                    PanelKnob(b, "gamak", "gamak")
+                }
+                Group("play") {
+                    PanelStepKnob(b, "voices", (1..4).map { "$it" }, "voices")
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")

@@ -27,6 +27,7 @@
     - [Ratio](04-the-machines/ratio.md) - six-operator FM, with a knob that morphs between two algorithms.
     - [Reflux](04-the-machines/reflux.md) - acid bass: one oscillator, one filter that screams, and lines you play in.
     - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
+    - [Sympath](04-the-machines/sympath.md) - modelled sitar, tanpura, veena and shamisen: plucked strings over a buzzing bridge, with strings ringing in sympathy.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
     - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan and tongue drum.
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.

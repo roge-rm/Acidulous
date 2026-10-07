@@ -30,6 +30,8 @@ object MidiImport {
         if (program != null && (program in 26..31 || program in 32..37)) return "Fret"
         // Mallets, music box, thumb piano and steel drums to the bars.
         if (program != null && (program in 8..13 || program == 108 || program == 114)) return "Tine"
+        // Sitar and shamisen to the buzzing bridge.
+        if (program == 104 || program == 106) return "Sympath"
         return when (program?.let { it / 8 }) {
             2 -> "Manual"                  // organ
             3, 5 -> "Filament"             // acoustic guitar, strings

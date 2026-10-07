@@ -33,6 +33,7 @@ internal object FactoryBanks {
         "Draw" -> draw
         "Fret" -> fret
         "Tine" -> tine
+        "Sympath" -> sympath
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -3893,6 +3894,157 @@ internal object FactoryBanks {
         low = 40, high = 67)
 
     private val tine: List<Patch> by lazy { listOf(tine0(), tine1(), tine2(), tine3(), tine4(), tine5(), tine6(), tine7(), tine8(), tine9(), tine10(), tine11(), tine12(), tine13(), tine14(), tine15(), tine16(), tine17(), tine18(), tine19(), tine20(), tine21(), tine22(), tine23(), tine24(), tine25(), tine26(), tine27(), tine28(), tine29(), tine30(), tine31(), tine32()) }
+
+    private fun sympath0() = Patch("Sympath", "Init", emptyMap(),
+        family = "sitar",
+        low = 48, high = 84)
+
+    private fun sympath1() = Patch("Sympath", "Sitar",
+        mapOf("tarbs" to 0.6f, "meend" to 0.2f, "voices" to 0f),
+        family = "sitar",
+        low = 48, high = 84)
+
+    private fun sympath2() = Patch("Sympath", "Sitar Chikari",
+        mapOf("chikari" to 0.5f, "meend" to 0.2f, "voices" to 0f),
+        family = "sitar",
+        low = 48, high = 84)
+
+    private fun sympath3() = Patch("Sympath", "Sitar Gamak",
+        mapOf("meend" to 0.13333334f, "gamak" to 0.5f, "voices" to 0f),
+        family = "sitar",
+        low = 48, high = 84)
+
+    private fun sympath4() = Patch("Sympath", "Bright Sitar",
+        mapOf("bridge" to 0.85f, "pluck" to 0.85f, "position" to 0.06521739f, "meend" to 0.166666672f, "voices" to 0f),
+        family = "sitar",
+        low = 48, high = 88)
+
+    private fun sympath5() = Patch("Sympath", "Sitar Kafi",
+        mapOf("scale" to 0.222222224f, "tarbs" to 0.8f, "meend" to 0.233333334f, "voices" to 0f),
+        family = "sitar",
+        low = 48, high = 84)
+
+    private fun sympath6() = Patch("Sympath", "Sitar Bhairav",
+        mapOf("scale" to 0.5555556f, "tarbs" to 0.8f, "meend" to 0.233333334f, "voices" to 0f),
+        family = "sitar",
+        low = 48, high = 84)
+
+    private fun sympath7() = Patch("Sympath", "Sitar Chords",
+        mapOf("sustain" to 0.6f),
+        family = "sitar",
+        low = 48, high = 84)
+
+    private fun sympath8() = Patch("Sympath", "Tanpura",
+        mapOf("model" to 0.333333343f),
+        family = "tanpura",
+        low = 36, high = 60)
+
+    private fun sympath9() = Patch("Sympath", "Tanpura Ma",
+        mapOf("model" to 0.333333343f, "first" to 0.333333343f),
+        family = "tanpura",
+        low = 36, high = 60)
+
+    private fun sympath10() = Patch("Sympath", "Tanpura Ni",
+        mapOf("model" to 0.333333343f, "first" to 0.6666667f),
+        family = "tanpura",
+        low = 36, high = 60)
+
+    private fun sympath11() = Patch("Sympath", "Slow Tanpura",
+        mapOf("model" to 0.333333343f, "sustain" to 0.75f, "cycle" to 1f),
+        family = "tanpura",
+        low = 36, high = 60)
+
+    private fun sympath12() = Patch("Sympath", "Quick Tanpura",
+        mapOf("model" to 0.333333343f, "sustain" to 0.4f, "cycle" to 0f),
+        family = "tanpura",
+        low = 36, high = 60)
+
+    private fun sympath13() = Patch("Sympath", "High Tanpura",
+        mapOf("model" to 0.333333343f, "bright" to 0.6f),
+        family = "tanpura",
+        low = 48, high = 72)
+
+    private fun sympath14() = Patch("Sympath", "Soft Tanpura",
+        mapOf("model" to 0.333333343f, "bridge" to 0.3f, "bright" to 0.35f),
+        family = "tanpura",
+        low = 36, high = 60)
+
+    private fun sympath15() = Patch("Sympath", "Veena",
+        mapOf("model" to 0.6666667f, "meend" to 0.25f, "voices" to 0f),
+        family = "veena",
+        low = 36, high = 79)
+
+    private fun sympath16() = Patch("Sympath", "Veena Tala",
+        mapOf("model" to 0.6666667f, "chikari" to 0.6f, "meend" to 0.25f, "voices" to 0f),
+        family = "veena",
+        low = 36, high = 79)
+
+    private fun sympath17() = Patch("Sympath", "Veena Gamak",
+        mapOf("model" to 0.6666667f, "meend" to 0.333333343f, "gamak" to 0.6f, "voices" to 0f),
+        family = "veena",
+        low = 36, high = 79)
+
+    private fun sympath18() = Patch("Sympath", "Low Veena",
+        mapOf("model" to 0.6666667f, "sustain" to 0.7f, "bright" to 0.35f),
+        family = "veena",
+        low = 31, high = 67)
+
+    private fun sympath19() = Patch("Sympath", "Veena Chords",
+        mapOf("model" to 0.6666667f, "pluck" to 0.35f),
+        family = "veena",
+        low = 36, high = 79)
+
+    private fun sympath20() = Patch("Sympath", "Shamisen",
+        mapOf("model" to 1f),
+        family = "shamisen",
+        low = 45, high = 81)
+
+    private fun sympath21() = Patch("Sympath", "Shamisen Sawari",
+        mapOf("model" to 1f, "sa" to 0.8181818f, "tarbs" to 1f),
+        family = "shamisen",
+        low = 45, high = 81)
+
+    private fun sympath22() = Patch("Sympath", "Soft Shamisen",
+        mapOf("model" to 1f, "pluck" to 0.1f, "tarbs" to 0.4f),
+        family = "shamisen",
+        low = 45, high = 81)
+
+    private fun sympath23() = Patch("Sympath", "Shamisen Slide",
+        mapOf("model" to 1f, "sustain" to 0.7f, "meend" to 0.15f, "voices" to 0f),
+        family = "shamisen",
+        low = 45, high = 81)
+
+    private fun sympath24() = Patch("Sympath", "Low Shamisen",
+        mapOf("model" to 1f, "sustain" to 0.75f, "bright" to 0.4f),
+        family = "shamisen",
+        low = 40, high = 72)
+
+    private fun sympath25() = Patch("Sympath", "Plain Bridge",
+        mapOf("bridge" to 0f, "tarbs" to 0.4f),
+        family = "bridge",
+        low = 40, high = 84)
+
+    private fun sympath26() = Patch("Sympath", "Grazing Bridge",
+        mapOf("bridge" to 0.8f, "curve" to 0f),
+        family = "bridge",
+        low = 40, high = 84)
+
+    private fun sympath27() = Patch("Sympath", "Heavy Buzz",
+        mapOf("bridge" to 1f, "curve" to 0.1f, "volume" to 0.6f),
+        family = "bridge",
+        low = 36, high = 79)
+
+    private fun sympath28() = Patch("Sympath", "Sympathy Only",
+        mapOf("scale" to 0.6666667f, "sustain" to 0.15f, "tarbs" to 1f),
+        family = "bridge",
+        low = 48, high = 84)
+
+    private fun sympath29() = Patch("Sympath", "Buzz Bass",
+        mapOf("model" to 0.6666667f, "bridge" to 0.9f),
+        family = "bridge",
+        low = 28, high = 55)
+
+    private val sympath: List<Patch> by lazy { listOf(sympath0(), sympath1(), sympath2(), sympath3(), sympath4(), sympath5(), sympath6(), sympath7(), sympath8(), sympath9(), sympath10(), sympath11(), sympath12(), sympath13(), sympath14(), sympath15(), sympath16(), sympath17(), sympath18(), sympath19(), sympath20(), sympath21(), sympath22(), sympath23(), sympath24(), sympath25(), sympath26(), sympath27(), sympath28(), sympath29()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")
