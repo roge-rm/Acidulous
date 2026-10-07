@@ -1,0 +1,445 @@
+#include "Palm.h"
+#include <algorithm>
+#include <cmath>
+#include <engine/dsp/Math.h>
+#include <engine/machine/Voices.h>
+
+namespace acidulous::machine {
+
+using dsp::clampf;
+
+namespace {
+
+/** Level for a note at velocity 100, set so the bank sits with the other machines. */
+constexpr float kHouse = 0.5f;
+constexpr float kSilent = 2e-5f;
+constexpr float kTwoPi = 6.28318530718f;
+constexpr int kRetuneEvery = 16;
+/** The pitch the drums' ring times are given at, Hz. */
+constexpr float kRefHz = 200.0f;
+/** How quickly a head that went sharp settles, seconds. */
+constexpr float kDropSettles = 0.08f;
+/** How much of a ringing head is left when it's struck again. */
+constexpr float kRestrikeKeeps = 0.7f;
+
+/** One mode of a head: its ratio to the note, its shape (m nodal diameters, n nodal circles), its share. */
+struct ModeDef {
+    float ratio;
+    int m, n;
+    float amp;
+};
+
+/**
+ * Each drum: its head's modes, how long it rings at kRefHz and how that
+ * changes with pitch and from mode to mode, its body's ring as a ratio of the
+ * note (0 for none), the snares or jingles, how far a hard stroke sends it
+ * sharp, the crack of a slap, and its level.
+ */
+struct Make {
+    int count;
+    ModeDef modes[Palm::kModes];
+    float t60, pitchFall, modeFall;
+    float body, bodyT60;
+    float rattleHz, rattle;
+    float drop;
+    float crackHz;
+    float level;
+};
+
+constexpr Make kMakes[Palm::KindCount] = {
+    // Tabla: the loaded centre tunes the head to a harmonic series, with the
+    // round, damped "tun" mode below it.
+    {8, {{0.6f, 0, 1, 0.5f}, {1.0f, 1, 1, 1.0f}, {2.0f, 2, 1, 0.7f}, {2.0f, 0, 2, 0.5f}, {3.0f, 3, 1, 0.5f},
+         {3.0f, 1, 2, 0.4f}, {4.0f, 4, 1, 0.3f}, {5.0f, 5, 1, 0.2f}},
+     1.4f, 0.3f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.3f, 2500.0f, 1.0f},
+    // Bayan: the big bass drum of the pair, loaded off centre.
+    {6, {{1.0f, 0, 1, 1.0f}, {1.9f, 1, 1, 0.6f}, {2.8f, 2, 1, 0.4f}, {3.0f, 0, 2, 0.3f}, {3.7f, 3, 1, 0.25f},
+         {4.6f, 1, 2, 0.15f}},
+     0.9f, 0.3f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.8f, 1500.0f, 1.0f},
+    // Djembe: a goatskin head, its goblet's air ringing low under a bass stroke, and the rattles.
+    {10, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.7f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.6f},
+          {2.918f, 1, 2, 0.4f}, {3.156f, 4, 1, 0.5f}, {3.501f, 2, 2, 0.3f}, {3.6f, 0, 3, 0.2f}, {3.652f, 5, 1, 0.4f}},
+     0.35f, 0.3f, 0.3f, 0.33f, 0.3f, 4000.0f, 0.4f, 0.5f, 3500.0f, 1.0f},
+    // Cajón: a thin plate on a box, its port ringing low, snares behind the plate.
+    {6, {{1.0f, 0, 1, 1.0f}, {1.6f, 1, 1, 0.7f}, {2.4f, 2, 1, 0.5f}, {2.6f, 0, 2, 0.5f}, {3.4f, 3, 1, 0.4f},
+         {4.1f, 1, 2, 0.3f}},
+     0.2f, 0.2f, 0.6f, 0.5f, 0.2f, 3200.0f, 0.4f, 0.2f, 2000.0f, 1.1f},
+    // Frame drum: a wide, thin head with nothing behind it, low and long, with jingles.
+    {10, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.6f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.5f},
+          {2.918f, 1, 2, 0.35f}, {3.156f, 4, 1, 0.4f}, {3.501f, 2, 2, 0.25f}, {3.6f, 0, 3, 0.2f}, {3.652f, 5, 1, 0.3f}},
+     0.6f, 0.4f, 0.5f, 0.0f, 0.0f, 6800.0f, 0.5f, 0.6f, 3000.0f, 0.9f},
+    // Talking drum: two heads laced together, squeezed under the arm.
+    {7, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.7f}, {2.136f, 2, 1, 0.5f}, {2.296f, 0, 2, 0.4f}, {2.653f, 3, 1, 0.4f},
+         {2.918f, 1, 2, 0.3f}, {3.156f, 4, 1, 0.3f}},
+     0.5f, 0.3f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 2000.0f, 1.0f},
+};
+
+/**
+ * The strokes: where on the head (0 the middle, 1 the edge), how long the
+ * hand stays on it, how much it damps the low modes and all of them by
+ * staying there, and how much crack.
+ */
+struct StrokeDef {
+    float where;
+    float contact;
+    float lowDamp, allDamp;
+    float crack;
+};
+constexpr StrokeDef kStrokes[Palm::ByVelocity] = {
+    {0.75f, 0.0006f, 1.0f, 1.0f, 0.1f},   // open: the fingers flat near the edge, lifted at once
+    {0.85f, 0.00025f, 0.15f, 1.0f, 0.7f}, // slap: the fingertips cracking, the hand left on the middle
+    {0.6f, 0.0012f, 1.0f, 0.15f, 0.05f},  // muted: the hand pressed down and left there
+    {0.05f, 0.004f, 1.0f, 1.0f, 0.0f},    // bass: the palm in the middle
+    {0.97f, 0.0003f, 0.3f, 1.0f, 0.5f},   // rim: the fingers on the edge and the shell
+};
+
+float poleFor(float t60, float sampleRate) { return std::pow(10.0f, -3.0f / (std::fmax(t60, 0.003f) * sampleRate)); }
+
+/**
+ * How much a stroke at [r] (0 the middle, 1 the edge) sets a mode ringing.
+ * Modes with nodal diameters have a node in the middle and come up towards
+ * the edge; each nodal circle moves where the head swings most. The edge
+ * itself is held, so nothing quite reaches it.
+ */
+float shapeAt(int m, int n, float r) {
+    const float rr = clampf(r, 0.0f, 0.95f);
+    const float across = m == 0 ? 1.0f : std::pow(std::sin(1.5707963f * std::fmin(rr / 0.8f, 1.0f)), static_cast<float>(m));
+    const float along = std::fabs(std::cos(1.5707963f * rr * static_cast<float>(2 * n - 1) * 0.9f));
+    return across * (0.15f + 0.85f * along);
+}
+
+} // namespace
+
+Palm::Palm() { initParams(); }
+
+const ParamDef *Palm::paramDefs(int32_t &count) const {
+    static const ParamDef defs[Count] = {
+        {"model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""}, // tabla, bayan, djembe, cajon, frame, talking
+        {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
+        {"stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""}, // open, slap, muted, bass, rim, by velocity
+        // Moves the stroke towards the middle or the edge.
+        {"position", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        // Soft fingertips and palms to hard, quick fingers.
+        {"hand", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"decay", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        // The other hand resting on the head.
+        {"damp", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // How sharp a hard stroke sends the head before it settles.
+        {"drop", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
+        // How far pressure (or the mod wheel) bends the head up, semitones.
+        {"squeeze", 0.0f, 12.0f, 2.0f, Curve::Linear, 0, "st"},
+        {"rattle", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"body", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        // Held notes struck again this many times a second; 0 strikes once.
+        {"roll", 0.0f, 24.0f, 0.0f, Curve::Linear, 0, "Hz"},
+        {"spread", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
+        {"voices", 1.0f, static_cast<float>(kVoices), static_cast<float>(kVoices), Curve::Stepped, kVoices, ""},
+        {"velocity", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        {"bend", 0.0f, 12.0f, 2.0f, Curve::Linear, 0, "st"},
+        {"octave", -2.0f, 2.0f, 0.0f, Curve::Stepped, 5, ""},
+        {"volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+    };
+    count = Count;
+    return defs;
+}
+
+void Palm::prepare(int32_t rate) {
+    sampleRate = static_cast<float>(rate);
+    for (Voice &v : voices) {
+        v.strike.assign(static_cast<size_t>(sampleRate * 0.012f) + 4, 0.0f);
+        v.crackTone.setSampleRate(sampleRate);
+        v.rattleTone.setSampleRate(sampleRate);
+    }
+    reset();
+}
+
+void Palm::reset() {
+    for (Voice &v : voices) {
+        for (Mode &m : v.modes) m.y1 = m.y2 = 0.0f;
+        v.used = v.held = false;
+        v.strikeLength = v.strikeAt = 0;
+        v.drop = 0.0f;
+        v.crack = v.crackLast = v.shake = 0.0f;
+        v.crackTone.reset();
+        v.rattleTone.reset();
+        v.noteBend = 0.0f;
+        v.pressure = -1.0f;
+        v.squeezed = 0.0f;
+        v.press = 0.0f;
+        v.builtPress = -1.0f;
+        v.builtPitch = -1000.0f;
+        v.level = 0.0f;
+        v.quietBlocks = 0;
+    }
+    bend = wheel = channelPressure_ = 0.0f;
+    retuneCountdown = 0;
+    noise = 0x68e31da4u;
+    clock = 0;
+    quietSamples = 0;
+    asleep = true;
+}
+
+int Palm::activeVoices() const {
+    int n = 0;
+    for (const Voice &v : voices) n += v.used ? 1 : 0;
+    return n;
+}
+
+Palm::Voice *Palm::voiceFor(uint8_t note) {
+    const int cap = std::clamp(steppedTargetOf(Voices), 1, kVoices);
+    for (int i = 0; i < cap; ++i) {
+        if (voices[i].used && voices[i].note == note) return &voices[i];
+    }
+    for (int i = 0; i < cap; ++i) {
+        if (!voices[i].used) return &voices[i];
+    }
+    Voice *pick = &voices[0];
+    for (int i = 0; i < cap; ++i) {
+        if (voices[i].age < pick->age) pick = &voices[i];
+    }
+    return pick;
+}
+
+int Palm::strokeFor(float velocity) const {
+    const int stroke = std::clamp(steppedTargetOf(Stroke), 0, StrokeCount - 1);
+    if (stroke != ByVelocity) return stroke;
+    // Soft notes are muted, the middle open, and the hardest slapped.
+    if (velocity < 0.35f) return Muted;
+    if (velocity < 0.8f) return Open;
+    return Slap;
+}
+
+void Palm::build(Voice &v) {
+    const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
+    const Make &k = kMakes[kind];
+    const StrokeDef &s = kStrokes[v.stroke];
+    const float f = noteHz(v.pitch);
+    const float where = clampf(s.where + clampf(targetOf(Position), 0.0f, 1.0f) - 0.5f, 0.0f, 1.0f);
+    const float damp = 1.0f - 0.9f * clampf(targetOf(Damp), 0.0f, 1.0f);
+    const float t60 = clampf(k.t60 * std::pow(4.0f, targetOf(Decay) - 0.5f) * std::pow(kRefHz / f, k.pitchFall), 0.01f, 10.0f) * damp;
+    v.modeCount = 0;
+    for (int i = 0; i < k.count; ++i) {
+        const ModeDef &d = k.modes[i];
+        if (f * d.ratio > sampleRate * 0.45f) continue;
+        Mode &m = v.modes[v.modeCount++];
+        m.ratio = d.ratio;
+        m.amp = d.amp * shapeAt(d.m, d.n, where);
+        // A hand left on the head damps what it touches: a slap's hand on
+        // the middle takes the low modes, a muted stroke all of them.
+        float keep = s.allDamp;
+        if (d.ratio < 2.0f) keep *= s.lowDamp;
+        // The tabla's lowest mode is the damped one.
+        if (kind == Tabla && i == 0) keep *= 0.25f;
+        m.t60 = t60 * std::pow(1.0f / d.ratio, k.modeFall) * keep;
+    }
+    // The body: air in a goblet or a box, rung by a stroke near the middle.
+    if (k.body > 0.0f && f * k.body > 20.0f) {
+        Mode &m = v.modes[v.modeCount++];
+        m.ratio = k.body;
+        m.amp = 1.5f * clampf(targetOf(Body), 0.0f, 1.0f) * (1.0f - where) * (1.0f - where);
+        m.t60 = k.bodyT60 * std::pow(4.0f, targetOf(Decay) - 0.5f) * damp * s.allDamp;
+    }
+    for (int i = 0; i < v.modeCount; ++i) v.modes[i].r = poleFor(v.modes[i].t60, sampleRate);
+    v.crackTone.set(v.stroke == Rim ? k.crackHz * 0.5f : k.crackHz, 0.4f);
+    v.rattleTone.set(k.rattleHz > 0.0f ? k.rattleHz : 4000.0f, kind == Frame ? 0.75f : 0.4f);
+    v.builtPitch = -1000.0f;
+    retune(v);
+}
+
+void Palm::retune(Voice &v) {
+    const float pitch = v.pitch + bend * paramOf(BendRange) + v.noteBend + v.drop + v.squeezed;
+    if (std::fabs(pitch - v.builtPitch) < 0.002f && v.press == v.builtPress) return;
+    v.builtPitch = pitch;
+    // A finger sliding onto the head (MPE slide) damps it as it rings.
+    const float pressDamp = 1.0f - 0.97f * v.press;
+    const bool pressChanged = v.press != v.builtPress;
+    v.builtPress = v.press;
+    const float f = noteHz(pitch);
+    for (int i = 0; i < v.modeCount; ++i) {
+        Mode &m = v.modes[i];
+        if (pressChanged) m.r = poleFor(m.t60 * pressDamp, sampleRate);
+        const float w = kTwoPi * std::fmin(f * m.ratio, sampleRate * 0.49f) / sampleRate;
+        m.a1 = 2.0f * m.r * std::cos(w);
+        m.a2 = -m.r * m.r;
+        m.b0 = m.amp * std::sin(w);
+    }
+}
+
+void Palm::strike(Voice &v, float velocity) {
+    const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
+    for (int m = 0; m < v.modeCount; ++m) {
+        v.modes[m].y1 *= kRestrikeKeeps;
+        v.modes[m].y2 *= kRestrikeKeeps;
+    }
+    v.stroke = strokeFor(velocity);
+    v.velocity = velocity;
+    build(v);
+    const StrokeDef &s = kStrokes[v.stroke];
+    // The hand's contact: softer and longer for a palm, and a harder stroke
+    // leaves sooner. Never longer than half the head's period.
+    const float hand = clampf(targetOf(Hand), 0.0f, 1.0f);
+    float seconds = s.contact * std::pow(3.0f, 0.5f - hand) * (1.3f - 0.6f * velocity);
+    seconds = std::fmin(seconds, 0.5f / noteHz(v.pitch));
+    const int len = std::clamp(static_cast<int>(seconds * sampleRate), 2, static_cast<int>(v.strike.size()));
+    const float peak = 3.14159265f / (2.0f * static_cast<float>(len));
+    for (int i = 0; i < len; ++i) {
+        v.strike[static_cast<size_t>(i)] = peak * std::sin(3.14159265f * (static_cast<float>(i) + 0.5f) / static_cast<float>(len));
+    }
+    v.strikeLength = len;
+    v.strikeAt = 0;
+    v.crack = s.crack * velocity;
+    v.drop = clampf(targetOf(Drop), 0.0f, 1.0f) * k.drop * velocity;
+}
+
+void Palm::noteOn(uint8_t note, uint8_t velocity) {
+    const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
+    Voice *v = voiceFor(note);
+    const bool fresh = !v->used || v->note != note;
+    v->note = note;
+    v->pitch = static_cast<float>(note) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
+    v->held = true;
+    v->noteBend = 0.0f;
+    v->pressure = -1.0f;
+    v->press = 0.0f;
+    v->builtPress = -1.0f;
+    const float vel = static_cast<float>(velocity) / 127.0f;
+    v->gain = kHouse * k.level * velocityGain(vel, targetOf(VelocityAmount));
+    if (fresh) {
+        for (Mode &m : v->modes) m.y1 = m.y2 = 0.0f;
+        v->crackTone.reset();
+        v->rattleTone.reset();
+        v->shake = 0.0f;
+        v->squeezed = 0.0f;
+    }
+    strike(*v, vel);
+    const float spread = clampf(targetOf(Spread), 0.0f, 1.0f);
+    v->pan = spread * clampf((v->pitch - 55.0f) / 24.0f, -1.0f, 1.0f);
+    const float roll = targetOf(Roll);
+    v->rollLeft = roll > 0.0f ? static_cast<int32_t>(sampleRate / roll) : 0;
+    v->used = true;
+    v->quietBlocks = 0;
+    v->age = ++clock;
+    asleep = false;
+    quietSamples = 0;
+}
+
+void Palm::noteOff(uint8_t note) {
+    // A struck head rings on; letting go only stops rolls and the hand's pressure.
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) v.held = false;
+    }
+}
+
+void Palm::allNotesOff() {
+    for (Voice &v : voices) v.held = false;
+}
+
+void Palm::controlChange(uint8_t cc, uint8_t value) {
+    // The mod wheel squeezes the head, as pressure does.
+    if (cc == 1) wheel = static_cast<float>(value) / 127.0f;
+}
+
+void Palm::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
+
+void Palm::channelPressure(uint8_t value) { channelPressure_ = static_cast<float>(value) / 127.0f; }
+
+void Palm::noteBend(uint8_t note, float semitones) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) v.noteBend = semitones;
+    }
+}
+
+void Palm::notePressure(uint8_t note, uint8_t value) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) v.pressure = static_cast<float>(value) / 127.0f;
+    }
+}
+
+void Palm::noteTimbre(uint8_t note, uint8_t value) {
+    for (Voice &v : voices) {
+        if (v.used && v.held && v.note == note) v.press = static_cast<float>(value) / 127.0f;
+    }
+}
+
+bool Palm::render(float *L, float *R, int32_t frames) {
+    params_.tick();
+    for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
+    if (asleep) return true;
+
+    const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
+    const float squeeze = paramOf(Squeeze);
+    const float rattle = clampf(paramOf(Rattle), 0.0f, 1.0f) * k.rattle;
+    const float roll = paramOf(Roll);
+    const float volume = paramOf(Volume);
+    const float crackFall = std::exp(-1.0f / (0.004f * sampleRate));
+    const float dropFall = std::exp(-static_cast<float>(kRetuneEvery) / (kDropSettles * sampleRate));
+    const float shakeFall = std::exp(-1.0f / (0.02f * sampleRate));
+    bool any = false;
+
+    for (Voice &v : voices) {
+        if (!v.used) continue;
+        float peak = 0.0f;
+        const float pl = std::sqrt(0.5f * (1.0f - v.pan)), pr = std::sqrt(0.5f * (1.0f + v.pan));
+        int countdown = retuneCountdown;
+        for (int32_t i = 0; i < frames; ++i) {
+            if (countdown-- <= 0) {
+                countdown = kRetuneEvery;
+                v.drop *= dropFall;
+                const float press = v.held ? (v.pressure >= 0.0f ? v.pressure : channelPressure_) : 0.0f;
+                const float aim = squeeze * std::fmax(press, wheel);
+                v.squeezed += (aim - v.squeezed) * 0.08f;
+                retune(v);
+            }
+            if (v.held && roll > 0.0f && --v.rollLeft <= 0) {
+                strike(v, clampf(v.velocity * (0.8f + 0.15f * white()), 0.05f, 1.0f));
+                v.rollLeft = static_cast<int32_t>(sampleRate / roll * (1.0f + 0.08f * white()));
+            }
+            float x = 0.0f;
+            if (v.strikeAt < v.strikeLength) x = v.strike[static_cast<size_t>(v.strikeAt++)] * v.gain;
+            float y = 0.0f;
+            for (int m = 0; m < v.modeCount; ++m) {
+                Mode &md = v.modes[m];
+                const float out = md.b0 * x + md.a1 * md.y1 + md.a2 * md.y2;
+                md.y2 = md.y1;
+                md.y1 = out;
+                y += out;
+            }
+            // The crack of the hand, or the knock on the shell.
+            if (v.crack > 1e-5f) {
+                const float n = v.crackTone.step(white() * v.crack * v.gain).bp * 0.8f;
+                y += n - v.crackLast;
+                v.crackLast = n;
+                v.crack *= crackFall;
+            }
+            // Snares and jingles, shaken by the head.
+            if (rattle > 0.0f) {
+                v.shake = std::fmax(std::fabs(y), v.shake * shakeFall);
+                y += rattle * v.rattleTone.step(white() * v.shake).bp * 0.4f;
+            }
+            y *= volume;
+            L[i] += y * pl;
+            R[i] += y * pr;
+            peak = std::fmax(peak, std::fabs(y));
+        }
+        v.level = peak;
+        const bool keeps = v.held && roll > 0.0f;
+        if (peak < kSilent && v.strikeAt >= v.strikeLength && !keeps) {
+            if (++v.quietBlocks > 4) v.used = false;
+        } else {
+            v.quietBlocks = 0;
+        }
+        any = any || v.used;
+    }
+    retuneCountdown -= frames;
+    while (retuneCountdown < 0) retuneCountdown += kRetuneEvery;
+
+    if (!any) {
+        quietSamples += frames;
+        if (quietSamples > 8192) asleep = true;
+    } else {
+        quietSamples = 0;
+    }
+    return true;
+}
+
+} // namespace acidulous::machine

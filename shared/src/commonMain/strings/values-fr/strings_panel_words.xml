@@ -79,6 +79,7 @@
     <string name="pw_bars_organ">tirettes</string>
     <string name="pw_basic">simple</string>
     <string name="pw_bass">basse</string>
+    <string name="pw_bayan">bayan</string>
     <string name="pw_bell">Cloche</string>
     <string name="pw_bell_brass">pavillon</string>
     <string name="pw_bell_04bf88">cloche</string>
@@ -131,6 +132,7 @@
     <string name="pw_cab">baffle</string>
     <string name="pw_cabinet">baffle</string>
     <string name="pw_cable_n">câble %d</string>
+    <string name="pw_cajon">cajón</string>
     <string name="pw_carrier">porteuse</string>
     <string name="pw_cassotto">cassotto</string>
     <string name="pw_ceiling">plafond</string>
@@ -239,6 +241,7 @@
     <string name="pw_distortion">Distortion</string>
     <string name="pw_diverge">diverge</string>
     <string name="pw_division">division</string>
+    <string name="pw_djembe">djembé</string>
     <string name="pw_double">double</string>
     <string name="pw_down">bas</string>
     <string name="pw_down_up">bas-haut</string>
@@ -351,6 +354,7 @@
     <string name="pw_fortepiano">fortepiano</string>
     <string name="pw_forward">avant</string>
     <string name="pw_frame">trame</string>
+    <string name="pw_frame_drum">cadre</string>
     <string name="pw_free">libre</string>
     <string name="pw_freeze">figer</string>
     <string name="pw_freq">fréq.</string>
@@ -402,6 +406,7 @@
     <string name="pw_half">demi</string>
     <string name="pw_halves">blanches</string>
     <string name="pw_hammer">marteau</string>
+    <string name="pw_hand">main</string>
     <string name="pw_handpan">handpan</string>
     <string name="pw_hands">mains</string>
     <string name="pw_hann">hann</string>
@@ -419,6 +424,7 @@
     <string name="pw_harp_jaw">guimbarde</string>
     <string name="pw_hats">charl.</string>
     <string name="pw_head_bump">bosse tête</string>
+    <string name="pw_head">peau</string>
     <string name="pw_heard_from">écouté de</string>
     <string name="pw_hi">aigu</string>
     <string name="pw_hi_tom">Tom aigu</string>
@@ -717,6 +723,7 @@
     <string name="pw_pipe">tuyau</string>
     <string name="pw_pipes">tuyaux</string>
     <string name="pw_pitch">hauteur</string>
+    <string name="pw_pitch_drop">chute</string>
     <string name="pw_pitch_env">env hauteur</string>
     <string name="pw_pitch_pipe">diapason</string>
     <string name="pw_pitch1">haut1</string>
@@ -944,6 +951,7 @@
     <string name="pw_sqr">car.</string>
     <string name="pw_square">carré</string>
     <string name="pw_squash">écraser</string>
+    <string name="pw_squeeze">serrer</string>
     <string name="pw_stack">étage</string>
     <string name="pw_stages">étages</string>
     <string name="pw_stairs">escalier</string>
@@ -998,12 +1006,14 @@
     <string name="pw_synced">synchro</string>
     <string name="pw_synco">synco.</string>
     <string name="pw_t_follows">t suit</string>
+    <string name="pw_tabla">tabla</string>
     <string name="pw_table">table</string>
     <string name="pw_tables">tables</string>
     <string name="pw_tacks">punaises</string>
     <string name="pw_take">prise</string>
     <string name="pw_takes">prises</string>
     <string name="pw_talk">parler</string>
+    <string name="pw_talking">aisselle</string>
     <string name="pw_tangent">tangente</string>
     <string name="pw_tanpura">tanpura</string>
     <string name="pw_tape">Tape</string>

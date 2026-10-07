@@ -23,6 +23,7 @@
     - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
     - [Mosaic](04-the-machines/mosaic.md) - a multisample player: zones across the keyboard and velocity, plus grain clouds.
     - [Nexus](04-the-machines/nexus.md) - a modular synth whose modules are the other machines.
+    - [Palm](04-the-machines/palm.md) - modelled hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, played with open, slap, muted, bass and rim strokes.
     - [Pollen](04-the-machines/pollen.md) - granular clouds from a file or the live input, whose grains can spawn more grains.
     - [Ratio](04-the-machines/ratio.md) - six-operator FM, with a knob that morphs between two algorithms.
     - [Reflux](04-the-machines/reflux.md) - acid bass: one oscillator, one filter that screams, and lines you play in.

@@ -25,6 +25,7 @@ PANELS = {
     "BiasPanel": "Bias", "TonguePanel": "Tongue", "DrawPanel": "Draw", "FretPanel": "Fret",
     "TinePanel": "Tine",
     "SympathPanel": "Sympath",
+    "PalmPanel": "Palm",
 }
 # Some panels name every control for the selected pad, so one panel covers
 # all the pads' parameters.

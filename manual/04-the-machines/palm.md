@@ -1,0 +1,52 @@
+# Palm
+
+> Modelled hand drums: tabla and bayan, djembe, cajón, frame drum and
+> talking drum, played with open, slap, muted, bass and rim strokes.
+
+Palm doesn't play recordings. Each note is a drum head tuned to the note. A
+plain head rings at the uneven ratios of a stretched circle, which is why
+most drums have no clear pitch; a tabla's head is loaded with a paste in the
+middle that pulls its overtones into a harmonic series, so it sings a note.
+
+The hand decides the rest: where it lands (the middle sounds the low modes,
+the edge the high ones), how long it stays on the head, and whether it stays
+there to damp it.
+
+## Drum
+
+- **model** - **tabla** (the small, tuned drum), **bayan** (its big bass
+  partner), **djembe**, **cajon**, **frame drum** or **talking** drum.
+- **tune** - in cents.
+- **stroke** - **open** (the fingers flat near the edge, lifted at once),
+  **slap** (the fingertips cracking, the hand left on the middle), **muted**
+  (pressed down and held), **bass** (the palm in the middle), **rim** (the
+  fingers on the edge), or **velocity**, which picks muted for soft notes,
+  open for the middle and slap for the hardest.
+- **position** - moves the stroke towards the middle or the edge.
+- **hand** - soft fingertips and palms, to hard, quick fingers.
+- **decay** - how long the head rings.
+- **damp** - the other hand resting on the head.
+
+## Body
+
+- **pitch drop** - how sharp a hard stroke sends the head before it settles.
+- **squeeze** - how many semitones pressure, or the mod wheel, bends the
+  head up: the wrist pressing a bayan, the arm squeezing a talking drum.
+- **rattle** - a cajón's snares, a djembe's rattles or a frame drum's
+  jingles.
+- **body** - a djembe's or a cajón's air, booming under a bass stroke.
+
+## Play
+
+- **rolls** - held notes struck again and again, this many times a second.
+- **spread** - low drums to the left, high to the right.
+- **voices**, **velocity**, **octave**, **bend** and **volume**.
+
+With MPE, sliding a finger up lays it on the head and damps it as it rings.
+
+## Tips
+
+- The **By Touch** presets play every stroke from one key: play softly for
+  muted, harder for open, hardest for a slap.
+- **Bayan Swoop** and **Talking Squeeze** are for pressing: play a note, then
+  lean on the key or push the mod wheel.

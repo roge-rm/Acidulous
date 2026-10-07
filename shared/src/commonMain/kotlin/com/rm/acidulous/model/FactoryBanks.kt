@@ -34,6 +34,7 @@ internal object FactoryBanks {
         "Fret" -> fret
         "Tine" -> tine
         "Sympath" -> sympath
+        "Palm" -> palm
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -4045,6 +4046,162 @@ internal object FactoryBanks {
         low = 28, high = 55)
 
     private val sympath: List<Patch> by lazy { listOf(sympath0(), sympath1(), sympath2(), sympath3(), sympath4(), sympath5(), sympath6(), sympath7(), sympath8(), sympath9(), sympath10(), sympath11(), sympath12(), sympath13(), sympath14(), sympath15(), sympath16(), sympath17(), sympath18(), sympath19(), sympath20(), sympath21(), sympath22(), sympath23(), sympath24(), sympath25(), sympath26(), sympath27(), sympath28(), sympath29()) }
+
+    private fun palm0() = Patch("Palm", "Init", emptyMap(),
+        family = "djembe",
+        low = 45, high = 67)
+
+    private fun palm1() = Patch("Palm", "Tabla Na",
+        mapOf("model" to 0f, "stroke" to 0.8f),
+        family = "tabla",
+        low = 55, high = 74)
+
+    private fun palm2() = Patch("Palm", "Tabla Tin",
+        mapOf("model" to 0f),
+        family = "tabla",
+        low = 55, high = 74)
+
+    private fun palm3() = Patch("Palm", "Tabla Tun",
+        mapOf("model" to 0f, "stroke" to 0.6f, "volume" to 1f),
+        family = "tabla",
+        low = 55, high = 74)
+
+    private fun palm4() = Patch("Palm", "Tabla Te",
+        mapOf("model" to 0f, "stroke" to 0.4f),
+        family = "tabla",
+        low = 55, high = 74)
+
+    private fun palm5() = Patch("Palm", "Tabla By Touch",
+        mapOf("model" to 0f, "stroke" to 1f, "hand" to 0.7f),
+        family = "tabla",
+        low = 55, high = 74)
+
+    private fun palm6() = Patch("Palm", "Bayan Ghe",
+        mapOf("model" to 0.2f, "stroke" to 0.6f, "drop" to 0.5f, "squeeze" to 0.333333343f),
+        family = "bayan",
+        low = 36, high = 55)
+
+    private fun palm7() = Patch("Palm", "Bayan Ke",
+        mapOf("model" to 0.2f, "stroke" to 0.4f, "volume" to 1f),
+        family = "bayan",
+        low = 36, high = 55)
+
+    private fun palm8() = Patch("Palm", "Bayan Swoop",
+        mapOf("model" to 0.2f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
+        family = "bayan",
+        low = 36, high = 55)
+
+    private fun palm9() = Patch("Palm", "Bayan Open",
+        mapOf("model" to 0.2f),
+        family = "bayan",
+        low = 36, high = 55)
+
+    private fun palm10() = Patch("Palm", "Djembe Bass",
+        mapOf("stroke" to 0.6f, "body" to 0.8f),
+        family = "djembe",
+        low = 45, high = 67)
+
+    private fun palm11() = Patch("Palm", "Djembe Tone",
+        mapOf("position" to 0.55f, "decay" to 0.6f),
+        family = "djembe",
+        low = 45, high = 67)
+
+    private fun palm12() = Patch("Palm", "Djembe Slap",
+        mapOf("stroke" to 0.2f),
+        family = "djembe",
+        low = 45, high = 67)
+
+    private fun palm13() = Patch("Palm", "Djembe By Touch",
+        mapOf("stroke" to 1f, "hand" to 0.65f),
+        family = "djembe",
+        low = 45, high = 67)
+
+    private fun palm14() = Patch("Palm", "Djembe Rattles",
+        mapOf("stroke" to 1f, "rattle" to 0.6f),
+        family = "djembe",
+        low = 45, high = 67)
+
+    private fun palm15() = Patch("Palm", "Djembe Muted",
+        mapOf("damp" to 0.7f),
+        family = "djembe",
+        low = 45, high = 67)
+
+    private fun palm16() = Patch("Palm", "Cajon Bass",
+        mapOf("model" to 0.6f, "stroke" to 0.6f, "rattle" to 0.2f),
+        family = "cajon",
+        low = 40, high = 60)
+
+    private fun palm17() = Patch("Palm", "Cajon Slap",
+        mapOf("model" to 0.6f, "stroke" to 0.2f, "rattle" to 0.8f, "volume" to 1f),
+        family = "cajon",
+        low = 40, high = 60)
+
+    private fun palm18() = Patch("Palm", "Cajon Snares",
+        mapOf("model" to 0.6f, "stroke" to 1f, "rattle" to 1f),
+        family = "cajon",
+        low = 40, high = 60)
+
+    private fun palm19() = Patch("Palm", "Cajon Dry",
+        mapOf("model" to 0.6f, "stroke" to 1f),
+        family = "cajon",
+        low = 40, high = 60)
+
+    private fun palm20() = Patch("Palm", "Cajon By Touch",
+        mapOf("model" to 0.6f, "stroke" to 1f, "rattle" to 0.5f),
+        family = "cajon",
+        low = 40, high = 60)
+
+    private fun palm21() = Patch("Palm", "Frame Doum",
+        mapOf("model" to 0.8f, "stroke" to 0.6f),
+        family = "frame",
+        low = 33, high = 57)
+
+    private fun palm22() = Patch("Palm", "Frame Tek",
+        mapOf("model" to 0.8f, "stroke" to 0.8f),
+        family = "frame",
+        low = 33, high = 57)
+
+    private fun palm23() = Patch("Palm", "Frame Jingles",
+        mapOf("model" to 0.8f, "rattle" to 1f),
+        family = "frame",
+        low = 33, high = 57)
+
+    private fun palm24() = Patch("Palm", "Frame Roll",
+        mapOf("model" to 0.8f, "hand" to 0.3f, "roll" to 0.5833333f, "volume" to 0.4f),
+        family = "frame",
+        low = 33, high = 57)
+
+    private fun palm25() = Patch("Palm", "Big Frame",
+        mapOf("model" to 0.8f, "stroke" to 0.6f, "decay" to 0.75f),
+        family = "frame",
+        low = 28, high = 52)
+
+    private fun palm26() = Patch("Palm", "Frame By Touch",
+        mapOf("model" to 0.8f, "stroke" to 1f, "rattle" to 0.3f),
+        family = "frame",
+        low = 33, high = 57)
+
+    private fun palm27() = Patch("Palm", "Talking Drum",
+        mapOf("model" to 1f, "stroke" to 0.6f, "squeeze" to 0.416666657f),
+        family = "talking",
+        low = 45, high = 67)
+
+    private fun palm28() = Patch("Palm", "Talking Squeeze",
+        mapOf("model" to 1f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
+        family = "talking",
+        low = 45, high = 67)
+
+    private fun palm29() = Patch("Palm", "Talking Open",
+        mapOf("model" to 1f, "squeeze" to 0.416666657f),
+        family = "talking",
+        low = 45, high = 67)
+
+    private fun palm30() = Patch("Palm", "Talking Roll",
+        mapOf("model" to 1f, "squeeze" to 0.416666657f, "roll" to 0.416666657f, "volume" to 0.45f),
+        family = "talking",
+        low = 45, high = 67)
+
+    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

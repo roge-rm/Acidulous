@@ -23,6 +23,7 @@
     - [Molt](04-the-machines/molt.md) : chantez une prise, et la grille de notes l’accorde.
     - [Mosaic](04-the-machines/mosaic.md) : un lecteur multi-échantillons : des zones sur le clavier et la vélocité, plus des nuages de grains.
     - [Nexus](04-the-machines/nexus.md) : un synthé modulaire dont les modules sont les autres machines.
+    - [Palm](04-the-machines/palm.md) : percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre et tambour d’aisselle, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.
     - [Pollen](04-the-machines/pollen.md) : des nuages granulaires tirés d’un fichier ou de l’entrée en direct, dont les grains peuvent en faire naître d’autres.
     - [Ratio](04-the-machines/ratio.md) : la FM à six opérateurs, avec un bouton qui passe d’un algorithme à un autre.
     - [Reflux](04-the-machines/reflux.md) : la basse acid : un oscillateur, un filtre qui hurle, et des lignes que vous jouez.

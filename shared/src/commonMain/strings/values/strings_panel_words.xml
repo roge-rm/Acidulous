@@ -79,6 +79,7 @@
     <string name="pw_bars_organ">bars</string>
     <string name="pw_basic">basic</string>
     <string name="pw_bass">bass</string>
+    <string name="pw_bayan">bayan</string>
     <string name="pw_bell">Bell</string>
     <string name="pw_bell_04bf88">bell</string>
     <string name="pw_bell_clave">bell / clave</string>
@@ -131,6 +132,7 @@
     <string name="pw_cab">cab</string>
     <string name="pw_cabinet">cabinet</string>
     <string name="pw_cable_n">cable %d</string>
+    <string name="pw_cajon">cajon</string>
     <string name="pw_carrier">carrier</string>
     <string name="pw_cassotto">cassotto</string>
     <string name="pw_ceiling">ceiling</string>
@@ -239,6 +241,7 @@
     <string name="pw_distortion">Distortion</string>
     <string name="pw_diverge">diverge</string>
     <string name="pw_division">division</string>
+    <string name="pw_djembe">djembe</string>
     <string name="pw_double">double</string>
     <string name="pw_down">down</string>
     <string name="pw_down_up">down-up</string>
@@ -352,6 +355,7 @@
     <string name="pw_fortepiano">fortepiano</string>
     <string name="pw_forward">forward</string>
     <string name="pw_frame">frame</string>
+    <string name="pw_frame_drum">frame drum</string>
     <string name="pw_free">free</string>
     <string name="pw_freeze">freeze</string>
     <string name="pw_freq">freq</string>
@@ -404,6 +408,7 @@
     <string name="pw_half">half</string>
     <string name="pw_halves">halves</string>
     <string name="pw_hammer">hammer</string>
+    <string name="pw_hand">hand</string>
     <string name="pw_handpan">handpan</string>
     <string name="pw_hands">hands</string>
     <string name="pw_hann">hann</string>
@@ -420,6 +425,7 @@
     <string name="pw_harp">harp</string>
     <string name="pw_harp_jaw">harp</string>
     <string name="pw_hats">hats</string>
+    <string name="pw_head">head</string>
     <string name="pw_head_bump">head bump</string>
     <string name="pw_heard_from">heard from</string>
     <string name="pw_hi">hi</string>
@@ -720,6 +726,7 @@
     <string name="pw_pipe">pipe</string>
     <string name="pw_pipes">pipes</string>
     <string name="pw_pitch">pitch</string>
+    <string name="pw_pitch_drop">pitch drop</string>
     <string name="pw_pitch_env">pitch env</string>
     <string name="pw_pitch_pipe">pitch pipe</string>
     <string name="pw_pitch1">pitch1</string>
@@ -947,6 +954,7 @@
     <string name="pw_sqr">sqr</string>
     <string name="pw_square">square</string>
     <string name="pw_squash">squash</string>
+    <string name="pw_squeeze">squeeze</string>
     <string name="pw_stack">stack</string>
     <string name="pw_stages">stages</string>
     <string name="pw_stairs">stairs</string>
@@ -1001,12 +1009,14 @@
     <string name="pw_synced">synced</string>
     <string name="pw_synco">synco</string>
     <string name="pw_t_follows">t follows</string>
+    <string name="pw_tabla">tabla</string>
     <string name="pw_table">table</string>
     <string name="pw_tables">tables</string>
     <string name="pw_tacks">tacks</string>
     <string name="pw_take">take</string>
     <string name="pw_takes">takes</string>
     <string name="pw_talk">talk</string>
+    <string name="pw_talking">talking</string>
     <string name="pw_tangent">tangent</string>
     <string name="pw_tanpura">tanpura</string>
     <string name="pw_tape">Tape</string>
