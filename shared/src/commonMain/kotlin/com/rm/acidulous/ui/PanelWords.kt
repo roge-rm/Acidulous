@@ -415,6 +415,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "groupings" to Res.string.pw_groupings,
     "growl" to Res.string.pw_growl,
     "guitar" to Res.string.pw_guitar,
+    "gurdy" to Res.string.pw_gurdy,
     "h" to Res.string.pw_h,
     "haas" to Res.string.pw_haas,
     "half" to Res.string.pw_half,
