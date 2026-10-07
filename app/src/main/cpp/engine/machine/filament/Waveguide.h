@@ -78,6 +78,19 @@ class Waveguide {
         refreshLoop();
     }
     void setTension(float amount01) { tension = clampf(amount01, 0.0f, 1.0f); }
+    /**
+     * Where the DC blocker sits, as a fraction of the note (kDcBelow unless
+     * set). It leads in phase at the note, and the loop is shortened to make
+     * up for it there, so the higher partials come out flat by as much: about
+     * 27 cents at a tenth. A plucked string with nothing pushing it can sit
+     * far lower and stay in tune all the way up.
+     */
+    void setDcCorner(float fraction) {
+        const float f = clampf(fraction, 0.002f, 0.2f);
+        if (f == dcBelow) return;
+        dcBelow = f;
+        refreshLoop();
+    }
     /** Where the damper sits, 0..1 along the string, and how hard it presses. */
     void setDamper(float position01, float pressure01) {
         const float p = clampf(position01, 0.0f, 1.0f), f = clampf(pressure01, 0.0f, 1.0f);
@@ -147,6 +160,14 @@ class Waveguide {
         return out;
     }
 
+    /**
+     * The string heard at [fraction] of a turn back from the last output, as
+     * a pickup or a finger hears it there. Reading only: the loop is untouched.
+     */
+    float tap(float fraction) const {
+        return read(clampf(baseDelay * fraction, 1.0f, static_cast<float>(buffer.size() - 2)));
+    }
+
     float level() const { return energy; }
     /** The last output sample, for a bow to push against. */
     float velocity() const { return lastOut; }
@@ -199,7 +220,7 @@ class Waveguide {
         // The loop filter, one pole at `tone`.
         float phase = -std::atan2((1.0f - tone) * sw, 1.0f - (1.0f - tone) * cw);
         // The DC blocker, which leads instead of lags, at a tenth of the note.
-        dcPole = std::exp(-6.28318530718f * kDcBelow / baseDelay);
+        dcPole = std::exp(-6.28318530718f * dcBelow / baseDelay);
         {
             const float nr = 1.0f - cw, ni = sw;
             const float dr = 1.0f - dcPole * cw, di = dcPole * sw;
@@ -273,6 +294,7 @@ class Waveguide {
     float allpassState[kAllpass] = {};
     float loopTrim = 0.0f; // what the rest of the loop already costs, in samples
     float dcIn = 0.0f, dcOut = 0.0f, dcPole = 0.999f;
+    float dcBelow = kDcBelow;
     // How much one turn keeps of a partial at the note, and the feedback
     // that makes up for it to give the requested gain.
     float loopKeeps = 1.0f, effGain = 0.995f;

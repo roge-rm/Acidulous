@@ -15,6 +15,7 @@
     - [Filament](04-the-machines/filament.md) : des cordes modélisées : pincées, au médiator, frappées, frottées ou soufflées.
     - [Forage](04-the-machines/forage.md) : une boîte à rythmes à échantillons : treize pads pour vos propres sons.
     - [Formulate](04-the-machines/formulate.md) : un synthé 8 bits, et une forme d’onde que vous tapez comme une formule.
+    - [Fret](04-the-machines/fret.md) : guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.
     - [Genesis](04-the-machines/genesis.md) : la grosse boîte à rythmes, avec un compresseur de bus que la grosse caisse fait plier.
     - [Hammer](04-the-machines/hammer.md) : des pianos modélisés et leurs cousins : des marteaux qui frappent des cordes et des barres, entendus par une table d’harmonie ou des capteurs.
     - [Hexbeat](04-the-machines/hexbeat.md) : des percussions synthétisées dans le style des petites boîtes classiques, avec un plus grand kit.

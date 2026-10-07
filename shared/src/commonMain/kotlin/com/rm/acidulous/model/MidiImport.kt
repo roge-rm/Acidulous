@@ -25,9 +25,12 @@ object MidiImport {
         if (part.channel == MidiFile.DRUM_CHANNEL) return "Hexbeat"
         // A part with words sings them.
         if (part.notes.any { it.lyric.isNotEmpty() }) return "Diction"
-        return when (part.program?.let { it / 8 }) {
+        // Electric guitars and basses (not the synth basses) to the electric ones.
+        val program = part.program
+        if (program != null && (program in 26..31 || program in 32..37)) return "Fret"
+        return when (program?.let { it / 8 }) {
             2 -> "Manual"                  // organ
-            3, 5 -> "Filament"             // guitar, strings
+            3, 5 -> "Filament"             // acoustic guitar, strings
             7 -> "Brazen"                  // brass
             8, 9 -> "Timber"               // reed, pipe
             11 -> "Cumulus"                // pad

@@ -23,6 +23,7 @@
     <string name="machine_about_brazen">modelled brass, from trumpet to tuba</string>
     <string name="machine_about_hammer">modelled piano: felt hammers, strings and a soundboard</string>
     <string name="machine_about_tongue">modelled jaw harp: a reed through a slot, and a mouth that picks its harmonics</string>
+    <string name="machine_about_fret">modelled electric guitars and basses: strings, pickups, a player's hands and an amp that feeds back</string>
     <string name="machine_about_draw">modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds in pipes</string>
     <string name="machine_about_timber">modelled woodwinds: reeds and flutes</string>
     <string name="machine_about_mosaic">multisample player for SoundFonts and your samples</string>

@@ -15,6 +15,7 @@
     - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
     - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
     - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.
+    - [Fret](04-the-machines/fret.md) - modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.
     - [Genesis](04-the-machines/genesis.md) - the big drum box, with a bus compressor the kick ducks.
     - [Hammer](04-the-machines/hammer.md) - modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.
     - [Hexbeat](04-the-machines/hexbeat.md) - synthesized drums in the style of the classic small boxes, with a bigger kit.

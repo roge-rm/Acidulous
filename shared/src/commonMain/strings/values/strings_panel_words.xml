@@ -3,6 +3,7 @@
          effect or modifier panel shows. The English is the key: translate the
          values in a values-xx copy of this file, and keep any %d. -->
     <string name="pw_1_bar">1\' bar</string>
+    <string name="pw_12_string">12-string</string>
     <string name="pw_16_step">16 step</string>
     <string name="pw_16ths">16ths</string>
     <string name="pw_1st">1st</string>
@@ -12,6 +13,7 @@
     <string name="pw_3rd">3rd</string>
     <string name="pw_4_pole">4 pole</string>
     <string name="pw_5_carriers">5 carriers</string>
+    <string name="pw_5_string">5-string</string>
     <string name="pw_5th">5th</string>
     <string name="pw_5ths">5ths</string>
     <string name="pw_6_5_4_3_2_1_w">6-5 : 4-3 : 2-1 w</string>
@@ -71,6 +73,7 @@
     <string name="pw_bands">bands</string>
     <string name="pw_bank">bank</string>
     <string name="pw_bar">bar</string>
+    <string name="pw_baritone">baritone</string>
     <string name="pw_bars">bars</string>
     <string name="pw_bars_organ">bars</string>
     <string name="pw_basic">basic</string>
@@ -160,6 +163,7 @@
     <string name="pw_closed_hat">Closed Hat</string>
     <string name="pw_cloud">cloud</string>
     <string name="pw_coarse">coarse</string>
+    <string name="pw_coil">coil</string>
     <string name="pw_colour">colour</string>
     <string name="pw_comb">Comb</string>
     <string name="pw_comb_e51f89">comb</string>
@@ -224,6 +228,7 @@
     <string name="pw_diode">diode</string>
     <string name="pw_dir">dir</string>
     <string name="pw_direct">direct</string>
+    <string name="pw_direction">direction</string>
     <string name="pw_dirty">dirty</string>
     <string name="pw_distance">distance</string>
     <string name="pw_distortion">Distortion</string>
@@ -318,6 +323,7 @@
     <string name="pw_filter_env">filter env</string>
     <string name="pw_filtfm">filtFM</string>
     <string name="pw_fine">fine</string>
+    <string name="pw_finger">finger</string>
     <string name="pw_first">first</string>
     <string name="pw_fit">fit</string>
     <string name="pw_fixed">fixed</string>
@@ -344,6 +350,7 @@
     <string name="pw_freeze">freeze</string>
     <string name="pw_freq">freq</string>
     <string name="pw_frequency">frequency</string>
+    <string name="pw_fretting">fretting</string>
     <string name="pw_from">from</string>
     <string name="pw_from_track">from track</string>
     <string name="pw_full">full</string>
@@ -435,6 +442,7 @@
     <string name="pw_hum">hum</string>
     <string name="pw_human">human</string>
     <string name="pw_humanise">humanise</string>
+    <string name="pw_humbucker">humbucker</string>
     <string name="pw_hums">hums</string>
     <string name="pw_hums_glides">hums &amp; glides</string>
     <string name="pw_hybrid">hybrid</string>
@@ -879,6 +887,7 @@
     <string name="pw_size">size</string>
     <string name="pw_skew">skew</string>
     <string name="pw_skip">skip</string>
+    <string name="pw_slap">slap</string>
     <string name="pw_slew">slew</string>
     <string name="pw_slice">slice</string>
     <string name="pw_slice_n">Slice %d</string>
@@ -935,6 +944,7 @@
     <string name="pw_strike_at">strike at</string>
     <string name="pw_string">string</string>
     <string name="pw_strings">strings</string>
+    <string name="pw_stroke">stroke</string>
     <string name="pw_struck">struck</string>
     <string name="pw_strum">strum</string>
     <string name="pw_strumdir">strumdir</string>

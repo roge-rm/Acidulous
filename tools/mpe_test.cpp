@@ -257,6 +257,8 @@ int main() {
     check("Hammer", false, false);
     check("Tongue", true, true);
     check("Draw", true, true);
+    // Pressure rocks a finger on the string.
+    check("Fret", true, false);
     organ();
     std::printf("\nReflux is monophonic and implements no pitch bend at all, so there is\n"
                 "nothing here for it to answer. Dice is a slicer and Manual is 91 wheels on\n"

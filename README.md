@@ -44,7 +44,7 @@ All six are the demo song, Squelch.
 
 ## What's in it
 
-### Twenty-four machines
+### Twenty-five machines
 
 | | |
 |---|---|
@@ -61,6 +61,7 @@ All six are the demo song, Squelch.
 | **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
 | **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
 | **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
+| **Fret** | Modelled electric guitars and basses: pickups at the neck or bridge, single coil or humbucker, palm muting, harmonics, slides, strummed chords, and an amp loud enough that held notes feed back. |
 | **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
 | **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
 | **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |

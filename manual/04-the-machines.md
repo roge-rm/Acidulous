@@ -24,6 +24,7 @@ These copy how the real instrument works, so they play like one.
 - [**Hammer**](04-the-machines/hammer.md) - grand, upright and electric pianos, celesta, toy piano, dulcimer and cimbalom.
 - [**Tongue**](04-the-machines/tongue.md) - jaw harps, ten kinds, with the mouth on the mod wheel.
 - [**Draw**](04-the-machines/draw.md) - free reeds: harmonicas, accordions, melodica and more.
+- [**Fret**](04-the-machines/fret.md) - electric guitars and basses, their pickups, a player's hands and an amp that feeds back.
 
 ## Drums
 

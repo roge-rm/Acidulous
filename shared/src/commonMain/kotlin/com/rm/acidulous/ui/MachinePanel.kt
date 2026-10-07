@@ -226,6 +226,7 @@ fun MachinePanel(
             "Hammer" -> HammerPanel(binding)
             "Tongue" -> TonguePanel(binding, editor)
             "Draw" -> DrawPanel(binding)
+            "Fret" -> FretPanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3588,6 +3589,71 @@ private fun DrawPanel(b: ParamBinding) {
             else -> {
                 Group("play") {
                     PanelStepKnob(b, "voices", (1..8).map { "$it" }, "voices")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
+
+private val FRET_MODELS = listOf("guitar", "12-string", "baritone", "bass", "5-string")
+private val FRET_PICKUPS = listOf("neck", "both", "bridge")
+private val FRET_COILS = listOf("single", "humbucker")
+private val FRET_STROKES = listOf("pick", "finger", "slap")
+private val FRET_HARMONICS = listOf("off", "12", "7", "5")
+private val FRET_DIRECTIONS = listOf("down", "up", "both")
+
+/** Fret: the guitar and its pickups, the hands, and the amp. */
+@Composable
+private fun FretPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("guitar", "hands", "amp"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("instrument") {
+                    PanelStepKnob(b, "model", FRET_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("pickups") {
+                    PanelStepKnob(b, "pickup", FRET_PICKUPS, "pickup", PanelAmber)
+                    PanelStepKnob(b, "coil", FRET_COILS, "coil")
+                    PanelKnob(b, "tone", "tone")
+                }
+                Group("strings") {
+                    PanelKnob(b, "sustain", "sustain")
+                    PanelKnob(b, "bright", "bright")
+                }
+            }
+            1 -> {
+                Group("pick") {
+                    PanelStepKnob(b, "stroke", FRET_STROKES, "stroke", PanelAmber)
+                    PanelKnob(b, "hardness", "hardness")
+                    PanelKnob(b, "position", "position")
+                }
+                Group("fretting") {
+                    PanelKnob(b, "mute", "mute", PanelPink)
+                    PanelStepKnob(b, "harmonic", FRET_HARMONICS, "harmonic")
+                    PanelKnob(b, "buzz", "buzz")
+                    PanelKnob(b, "slide", "slide")
+                    PanelKnob(b, "vibrato", "vibrato")
+                }
+                Group("strum") {
+                    PanelKnob(b, "strum", "strum", PanelAmber)
+                    PanelStepKnob(b, "direction", FRET_DIRECTIONS, "direction")
+                }
+            }
+            else -> {
+                Group("amp") {
+                    PanelKnob(b, "drive", "drive", PanelAmber)
+                    PanelKnob(b, "feedback", "feedback", PanelPink)
+                }
+                Group("play") {
+                    PanelStepKnob(b, "voices", (1..6).map { "$it" }, "voices")
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")
