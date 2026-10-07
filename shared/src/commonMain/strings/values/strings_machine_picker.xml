@@ -26,7 +26,7 @@
     <string name="machine_about_fret">modelled electric guitars and basses: strings, pickups, a player's hands and an amp that feeds back</string>
     <string name="machine_about_tine">modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan and tongue drum</string>
     <string name="machine_about_sympath">modelled sitar, tanpura, veena and shamisen: strings over a buzzing bridge, with sympathetic strings tuned to a scale</string>
-    <string name="machine_about_palm">modelled hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, played with open, slap, muted, bass and rim strokes</string>
+    <string name="machine_about_palm">modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos and darbuka, played with open, slap, muted, bass and rim strokes</string>
     <string name="machine_about_chanter">modelled bagpipes and hurdy-gurdy: drones that carry on between notes, grace notes, and a wheel whose loose bridge buzzes in time</string>
     <string name="machine_about_aviary">modelled birdsong: a two-voiced syrinx, throat and beak singing whistles, chirps, trills, warbles and calls in time</string>
     <string name="machine_about_fathom">modelled water and weather: bubbles, drips, rain, streams, surf, wind and fire, played from the keys</string>

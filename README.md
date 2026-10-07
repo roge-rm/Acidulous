@@ -79,7 +79,7 @@ All six are the demo song, Squelch.
 | **Fret** | Modelled electric guitars and basses: pickups at the neck or bridge, single coil or humbucker, palm muting, harmonics, slides, strummed chords, and an amp loud enough that held notes feed back. |
 | **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
 | **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
-| **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |
+| **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos and darbuka, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |
 | **Sympath** | Modelled sitar, tanpura, veena and shamisen: strings ringing a buzzing bridge on every swing, sympathetic strings tuned to a tonic and scale, drone strings, a tanpura that plucks its four strings in time, slides, and pressure pulling the string up. |
 | **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
 | **Tine** | Modelled bars, tines and pans: marimba, vibraphone with its turning discs and damper, xylophone, glockenspiel, thumb piano with rattles, music box, steel pan with its blooming octave, handpan and tongue drum. Rolls, and pressure bows a held bar. |

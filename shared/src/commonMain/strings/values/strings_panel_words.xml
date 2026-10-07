@@ -108,6 +108,7 @@
     <string name="pw_board">board</string>
     <string name="pw_body">body</string>
     <string name="pw_bolt">bolt</string>
+    <string name="pw_bongo">bongo</string>
     <string name="pw_both">both</string>
     <string name="pw_bow">bow</string>
     <string name="pw_bowl">bowl</string>
@@ -187,6 +188,7 @@
     <string name="pw_compressor">Compressor</string>
     <string name="pw_concertina">concertina</string>
     <string name="pw_cone">cone</string>
+    <string name="pw_conga">conga</string>
     <string name="pw_consonants">consonants</string>
     <string name="pw_converge">converge</string>
     <string name="pw_copies">copies</string>
@@ -223,6 +225,7 @@
     <string name="pw_damper_at">damper at</string>
     <string name="pw_dampers">dampers</string>
     <string name="pw_damping">damping</string>
+    <string name="pw_darbuka">darbuka</string>
     <string name="pw_dark">dark</string>
     <string name="pw_dec">dec</string>
     <string name="pw_decay">decay</string>

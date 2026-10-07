@@ -72,6 +72,21 @@ constexpr Make kMakes[Palm::KindCount] = {
     {7, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.7f}, {2.136f, 2, 1, 0.5f}, {2.296f, 0, 2, 0.4f}, {2.653f, 3, 1, 0.4f},
          {2.918f, 1, 2, 0.3f}, {3.156f, 4, 1, 0.3f}},
      0.5f, 0.3f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 2000.0f, 1.0f},
+    // Conga: a thick rawhide head on a tall staved barrel, its air ringing
+    // under the head; a clear open tone and a sharp slap.
+    {8, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.7f}, {2.136f, 2, 1, 0.5f}, {2.296f, 0, 2, 0.45f}, {2.653f, 3, 1, 0.4f},
+         {2.918f, 1, 2, 0.3f}, {3.156f, 4, 1, 0.3f}, {3.501f, 2, 2, 0.2f}},
+     0.45f, 0.3f, 0.45f, 0.45f, 0.15f, 0.0f, 0.0f, 0.4f, 3000.0f, 1.0f},
+    // Bongo: a pair of small, tight heads on short open shells: high, dry
+    // and quick.
+    {6, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.7f}, {2.136f, 2, 1, 0.5f}, {2.296f, 0, 2, 0.4f}, {2.653f, 3, 1, 0.35f},
+         {2.918f, 1, 2, 0.25f}},
+     0.25f, 0.35f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 4500.0f, 1.6f},
+    // Darbuka: a thin, tight head on a goblet. The middle gives a deep doum
+    // from the goblet's air, the edge a bright, ringing tek.
+    {8, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.7f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.6f},
+         {2.918f, 1, 2, 0.45f}, {3.156f, 4, 1, 0.5f}, {3.501f, 2, 2, 0.35f}},
+     0.4f, 0.3f, 0.25f, 0.3f, 0.25f, 0.0f, 0.0f, 0.3f, 5000.0f, 1.3f},
 };
 
 /**
@@ -114,7 +129,7 @@ Palm::Palm() { initParams(); }
 
 const ParamDef *Palm::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""}, // tabla, bayan, djembe, cajon, frame, talking
+        {"model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""}, // tabla, bayan, djembe, cajon, frame, talking, conga, bongo, darbuka
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""}, // open, slap, muted, bass, rim, by velocity
         // Moves the stroke towards the middle or the edge.
