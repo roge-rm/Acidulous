@@ -235,7 +235,7 @@ fun MachinePanel(
             "Sympath" -> SympathPanel(binding)
             "Palm" -> PalmPanel(binding, selectedPad)
             "Chanter" -> ChanterPanel(binding)
-            "Aviary" -> AviaryPanel(binding)
+            "Aviary" -> AviaryPanel(binding, selectedPad)
             "Fathom" -> FathomPanel(binding, selectedPad)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
@@ -4044,10 +4044,26 @@ private val AVIARY_RATES = listOf("1", "2", "4", "8", "16")
 
 /** Aviary: the song, the bird's voice, and the flock. */
 @Composable
-private fun AviaryPanel(b: ParamBinding) {
+private fun AviaryPanel(b: ParamBinding, pad: Int) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("pattern", "voice", "flock"), section, { section = it }) { sec ->
+    PanelSections(listOf("pattern", "voice", "flock", "kit"), section, { section = it }) { sec ->
         when (sec) {
+            3 -> {
+                // In kit mode the keys from C2 are sixteen pads; the pad picked on
+                // the drum grid is the one these knobs set.
+                val p = pad.coerceIn(0, 15)
+                fun n(name: String) = "p%02d_%s".format(p + 1, name)
+                val hot = Acid.colors.accent
+                Group("kit") {
+                    PanelOnOff(b, "kit")
+                }
+                Group("pad") {
+                    PanelStepKnob(b, n("song"), AVIARY_PATTERNS, "pattern", hot)
+                    PanelStepKnob(b, n("note"), (24..96).map { noteName(it) }, "pitch", hot)
+                    PanelStepKnob(b, n("flock"), (1..4).map { "$it" }, "birds", hot)
+                    PanelKnob(b, n("level"), "level", hot)
+                }
+            }
             0 -> {
                 Group("pattern") {
                     PanelStepKnob(b, "pattern", AVIARY_PATTERNS, "pattern", PanelAmber)

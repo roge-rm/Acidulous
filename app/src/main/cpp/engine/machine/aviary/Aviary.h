@@ -26,8 +26,15 @@ class Aviary final : public Machine {
         Pattern = 0, Tune, Rate, Length, Sweep, Rasp, Two, Interval,
         Breath, Throat, Beak, Flock, Spread, Space,
         VelocityAmount, BendRange, Octave, Volume,
-        Count
+        // Kit mode: each key from kBaseNote is a pad with its own song, pitch
+        // (a MIDI note), number of birds and level, kPadParams values each from PadFirst.
+        Kit, PadFirst,
+        Count = PadFirst + 16 * 4
     };
+    static constexpr int kPads = 16, kPadParams = 4;
+    enum PadParam : int32_t { PadSong = 0, PadNote, PadFlock, PadLevel };
+    static constexpr int32_t padParam(int pad, int which) { return PadFirst + pad * kPadParams + which; }
+    static constexpr uint8_t kBaseNote = 36;
     static_assert(Count <= kMaxParams, "too many parameters");
 
     enum Song : int32_t { Whistle = 0, Chirp, Trill, Warble, Call, Chorus, SongCount };
@@ -86,6 +93,8 @@ class Aviary final : public Machine {
         int birdCount = 1;
         bool used = false, held = false;
         uint8_t note = 0;
+        /** The pitch it sings around (the note, or its pad's), and its pad's level. */
+        float played = 60.0f, padLevel = 1.0f;
         float velocity = 0.8f;
         float noteBend = 0.0f, pressure = -1.0f;
         float level = 0.0f;

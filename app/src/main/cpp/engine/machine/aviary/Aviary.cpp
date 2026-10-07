@@ -58,6 +58,72 @@ const ParamDef *Aviary::paramDefs(int32_t &count) const {
         {"bend", 0.0f, 12.0f, 2.0f, Curve::Linear, 0, "st"},
         {"octave", -2.0f, 2.0f, 0.0f, Curve::Stepped, 5, ""},
         {"volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        // Kit mode, and the default kit: whistles, chirps, trills, warbles, calls and choruses.
+        {"kit", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        {"p01_song", 0.0f, static_cast<float>(SongCount - 1), 0.0f, Curve::Stepped, SongCount, ""},
+        {"p01_note", 24.0f, 96.0f, 60.0f, Curve::Stepped, 73, ""},
+        {"p01_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p01_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p02_song", 0.0f, static_cast<float>(SongCount - 1), 0.0f, Curve::Stepped, SongCount, ""},
+        {"p02_note", 24.0f, 96.0f, 67.0f, Curve::Stepped, 73, ""},
+        {"p02_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p02_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p03_song", 0.0f, static_cast<float>(SongCount - 1), 1.0f, Curve::Stepped, SongCount, ""},
+        {"p03_note", 24.0f, 96.0f, 64.0f, Curve::Stepped, 73, ""},
+        {"p03_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p03_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p04_song", 0.0f, static_cast<float>(SongCount - 1), 1.0f, Curve::Stepped, SongCount, ""},
+        {"p04_note", 24.0f, 96.0f, 72.0f, Curve::Stepped, 73, ""},
+        {"p04_flock", 1.0f, static_cast<float>(kBirds), 2.0f, Curve::Stepped, kBirds, ""},
+        {"p04_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p05_song", 0.0f, static_cast<float>(SongCount - 1), 2.0f, Curve::Stepped, SongCount, ""},
+        {"p05_note", 24.0f, 96.0f, 62.0f, Curve::Stepped, 73, ""},
+        {"p05_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p05_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p06_song", 0.0f, static_cast<float>(SongCount - 1), 2.0f, Curve::Stepped, SongCount, ""},
+        {"p06_note", 24.0f, 96.0f, 69.0f, Curve::Stepped, 73, ""},
+        {"p06_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p06_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p07_song", 0.0f, static_cast<float>(SongCount - 1), 3.0f, Curve::Stepped, SongCount, ""},
+        {"p07_note", 24.0f, 96.0f, 60.0f, Curve::Stepped, 73, ""},
+        {"p07_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p07_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p08_song", 0.0f, static_cast<float>(SongCount - 1), 3.0f, Curve::Stepped, SongCount, ""},
+        {"p08_note", 24.0f, 96.0f, 65.0f, Curve::Stepped, 73, ""},
+        {"p08_flock", 1.0f, static_cast<float>(kBirds), 2.0f, Curve::Stepped, kBirds, ""},
+        {"p08_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p09_song", 0.0f, static_cast<float>(SongCount - 1), 4.0f, Curve::Stepped, SongCount, ""},
+        {"p09_note", 24.0f, 96.0f, 55.0f, Curve::Stepped, 73, ""},
+        {"p09_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p09_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p10_song", 0.0f, static_cast<float>(SongCount - 1), 4.0f, Curve::Stepped, SongCount, ""},
+        {"p10_note", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""},
+        {"p10_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p10_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p11_song", 0.0f, static_cast<float>(SongCount - 1), 4.0f, Curve::Stepped, SongCount, ""},
+        {"p11_note", 24.0f, 96.0f, 60.0f, Curve::Stepped, 73, ""},
+        {"p11_flock", 1.0f, static_cast<float>(kBirds), 2.0f, Curve::Stepped, kBirds, ""},
+        {"p11_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p12_song", 0.0f, static_cast<float>(SongCount - 1), 5.0f, Curve::Stepped, SongCount, ""},
+        {"p12_note", 24.0f, 96.0f, 60.0f, Curve::Stepped, 73, ""},
+        {"p12_flock", 1.0f, static_cast<float>(kBirds), 3.0f, Curve::Stepped, kBirds, ""},
+        {"p12_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p13_song", 0.0f, static_cast<float>(SongCount - 1), 5.0f, Curve::Stepped, SongCount, ""},
+        {"p13_note", 24.0f, 96.0f, 64.0f, Curve::Stepped, 73, ""},
+        {"p13_flock", 1.0f, static_cast<float>(kBirds), 4.0f, Curve::Stepped, kBirds, ""},
+        {"p13_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p14_song", 0.0f, static_cast<float>(SongCount - 1), 1.0f, Curve::Stepped, SongCount, ""},
+        {"p14_note", 24.0f, 96.0f, 76.0f, Curve::Stepped, 73, ""},
+        {"p14_flock", 1.0f, static_cast<float>(kBirds), 3.0f, Curve::Stepped, kBirds, ""},
+        {"p14_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p15_song", 0.0f, static_cast<float>(SongCount - 1), 2.0f, Curve::Stepped, SongCount, ""},
+        {"p15_note", 24.0f, 96.0f, 74.0f, Curve::Stepped, 73, ""},
+        {"p15_flock", 1.0f, static_cast<float>(kBirds), 2.0f, Curve::Stepped, kBirds, ""},
+        {"p15_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p16_song", 0.0f, static_cast<float>(SongCount - 1), 0.0f, Curve::Stepped, SongCount, ""},
+        {"p16_note", 24.0f, 96.0f, 52.0f, Curve::Stepped, 73, ""},
+        {"p16_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
+        {"p16_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -173,6 +239,9 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
 }
 
 void Aviary::noteOn(uint8_t note, uint8_t velocity) {
+    const bool kit = steppedTargetOf(Kit) != 0;
+    const int pad = static_cast<int>(note) - kBaseNote;
+    if (kit && (pad < 0 || pad >= kPads)) return;
     Voice *v = voiceFor(note);
     const bool fresh = !v->used;
     v->note = note;
@@ -180,8 +249,11 @@ void Aviary::noteOn(uint8_t note, uint8_t velocity) {
     v->held = true;
     v->noteBend = 0.0f;
     v->pressure = -1.0f;
-    const int song = std::clamp(steppedTargetOf(Pattern), 0, SongCount - 1);
-    v->birdCount = std::clamp(steppedTargetOf(Flock), 1, kBirds);
+    const int song = std::clamp(steppedTargetOf(kit ? padParam(pad, PadSong) : static_cast<int32_t>(Pattern)), 0, SongCount - 1);
+    v->birdCount = std::clamp(steppedTargetOf(kit ? padParam(pad, PadFlock) : static_cast<int32_t>(Flock)), 1, kBirds);
+    v->played = kit ? static_cast<float>(steppedTargetOf(padParam(pad, PadNote))) : static_cast<float>(note);
+    // A pad's level is 0.75 for as loud as the bird played on its own.
+    v->padLevel = kit ? clampf(targetOf(padParam(pad, PadLevel)), 0.0f, 1.0f) / 0.75f : 1.0f;
     const float spread = clampf(targetOf(Spread), 0.0f, 1.0f);
     for (int i = 0; i < v->birdCount; ++i) {
         Bird &b = v->birds[i];
@@ -298,7 +370,7 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
                 }
                 ++b.at;
                 if ((i & (kRetuneEvery - 1)) == 0) {
-                    const float hz = noteHz(static_cast<float>(v.note) + base + v.noteBend + b.offset + b.pitch);
+                    const float hz = noteHz(v.played + base + v.noteBend + b.offset + b.pitch);
                     step0 = std::fmin(hz, sampleRate * 0.45f) / sampleRate;
                     step1 = std::fmin(hz * twoRatio, sampleRate * 0.45f) / sampleRate;
                     if (std::fabs(hz - b.builtHz) > b.builtHz * 0.002f) {
@@ -336,8 +408,8 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
                 const float shaped = y * (1.0f - 0.7f * throat) + throat * b.throat.step(y).bp * b.throat.bandNorm();
                 b.beak += (shaped - b.beak) * beakCoef;
                 const float out = b.beak * gain * volume;
-                L[i] += out * pl;
-                R[i] += out * pr;
+                L[i] += out * pl * v.padLevel;
+                R[i] += out * pr * v.padLevel;
                 peak = std::fmax(peak, std::fabs(out));
             }
         }

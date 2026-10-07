@@ -19,6 +19,7 @@ val PANEL_LABELS: Map<String, String> = mapOf(
     "Aviary:breath" to "syrinx|breath",
     "Aviary:flock" to "flock",
     "Aviary:interval" to "syrinx|interval",
+    "Aviary:kit" to "kit",
     "Aviary:length" to "syllables|length",
     "Aviary:octave" to "play|octave",
     "Aviary:pattern" to "pattern",

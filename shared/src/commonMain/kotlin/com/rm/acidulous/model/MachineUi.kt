@@ -38,7 +38,7 @@ object MachineUi {
         else -> MachineKind.Keyboard
     }
     /** Machines with a kit mode: their `kit` switch turns the keys from 36 into 16 pads. */
-    val kitMachines = setOf("Palm", "Fathom")
+    val kitMachines = setOf("Palm", "Fathom", "Aviary")
     fun isKit(machine: Machine): Boolean = machine.type in kitMachines && (machine.params["kit"] ?: 0f) >= 0.5f
     /** [kindOf] for this machine as it's set: a machine in kit mode is drums. */
     fun kindOf(machine: Machine): MachineKind = if (isKit(machine)) MachineKind.Drums else kindOf(machine.type)
@@ -56,8 +56,17 @@ object MachineUi {
             val name = FATHOM_SOUNDS[sound]
             DrumVoice(36 + pad, name, name.take(3))
         }
+        machine.type == "Aviary" && isKit(machine) -> (0 until 16).map { pad ->
+            val song = machine.params["p%02d_song".format(pad + 1)]?.let { kotlin.math.round(it * (AVIARY_SONGS.size - 1)).toInt() }
+                ?: AVIARY_KIT[pad]
+            val name = AVIARY_SONGS[song]
+            DrumVoice(36 + pad, name, name.take(3))
+        }
         else -> voicesOf(machine.type, machine.settings)
     }
+    private val AVIARY_SONGS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus")
+    /** Aviary's default kit, as in the engine. */
+    private val AVIARY_KIT = listOf(0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 1, 2, 0)
     private val FATHOM_SOUNDS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire")
     /** Fathom's default kit, as in the engine. */
     private val FATHOM_KIT = listOf(6, 6, 5, 5, 2, 2, 2, 1, 1, 1, 0, 0, 3, 3, 4, 4)

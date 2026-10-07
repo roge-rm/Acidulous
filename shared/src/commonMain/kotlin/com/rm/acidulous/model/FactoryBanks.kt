@@ -4481,7 +4481,12 @@ internal object FactoryBanks {
         family = "chorus",
         low = 48, high = 74)
 
-    private val aviary: List<Patch> by lazy { listOf(aviary0(), aviary1(), aviary2(), aviary3(), aviary4(), aviary5(), aviary6(), aviary7(), aviary8(), aviary9(), aviary10(), aviary11(), aviary12(), aviary13(), aviary14(), aviary15(), aviary16(), aviary17(), aviary18(), aviary19(), aviary20(), aviary21(), aviary22(), aviary23(), aviary24()) }
+    private fun aviary25() = Patch("Aviary", "Bird Kit",
+        mapOf("kit" to 1f),
+        family = "kit",
+        low = 36, high = 51)
+
+    private val aviary: List<Patch> by lazy { listOf(aviary0(), aviary1(), aviary2(), aviary3(), aviary4(), aviary5(), aviary6(), aviary7(), aviary8(), aviary9(), aviary10(), aviary11(), aviary12(), aviary13(), aviary14(), aviary15(), aviary16(), aviary17(), aviary18(), aviary19(), aviary20(), aviary21(), aviary22(), aviary23(), aviary24(), aviary25()) }
 
     private fun fathom0() = Patch("Fathom", "Init", emptyMap(),
         family = "bubbles",

@@ -45,6 +45,14 @@ the tempo. Let go and it stops.
 
 Pressure blows harder: louder and fuller. The mod wheel widens the sweeps.
 
+## Kit
+
+Turn on **kit** and the keys from C2 up are sixteen pads, each its own bird, so one track can play a whole hedge: a whistle on one pad, a trill on another, a pair calling back and forth on a third. The sequencer shows the drum grid, one lane per pad.
+
+- Tap a pad on the drum grid, then set it in the pad card: **pattern**, **pitch**, **birds** and **level**.
+- The other knobs (rate, sweep, rasp and so on) work on every pad.
+- **Bird Kit** starts with whistles, chirps, trills, warbles, calls and choruses.
+
 ## Tips
 
 - The patterns follow the tempo, so a chirp at **4** a beat lands on the

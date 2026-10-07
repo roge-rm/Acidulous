@@ -188,3 +188,7 @@ patch "Busy Hedge" family=chorus note=62 range=48..74 role=pad
   flock          #3
   rate           #3
   spread         0.8
+
+patch "Bird Kit" family=kit note=36 range=36..51
+  # Sixteen pads: whistles, chirps, trills, warbles, calls and choruses, a hedge on one track.
+  kit            1

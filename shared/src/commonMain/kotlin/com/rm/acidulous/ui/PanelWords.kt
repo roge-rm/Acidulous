@@ -100,6 +100,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "bias" to Res.string.pw_bias,
     "bilawal" to Res.string.pw_bilawal,
     "bipolar" to Res.string.pw_bipolar,
+    "birds" to Res.string.pw_birds,
     "Bitcrusher" to Res.string.pw_bitcrusher,
     "bite" to Res.string.pw_bite,
     "bits" to Res.string.pw_bits,
