@@ -4409,7 +4409,17 @@ internal object FactoryBanks {
         family = "kit",
         low = 36, high = 51)
 
-    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30(), palm31(), palm32(), palm33(), palm34(), palm35(), palm36(), palm37(), palm38(), palm39(), palm40(), palm41(), palm42(), palm43(), palm44(), palm45(), palm46(), palm47(), palm48(), palm49(), palm50(), palm51(), palm52(), palm53(), palm54(), palm55(), palm56(), palm57(), palm58(), palm59(), palm60(), palm61(), palm62(), palm63(), palm64(), palm65(), palm66(), palm67()) }
+    private fun palm68() = Patch("Palm", "African Kit",
+        mapOf("kit" to 1f, "p01_model" to 1f, "p04_note" to 0.3888889f, "p05_model" to 0.125f, "p05_stroke" to 0f, "p05_note" to 0.430555552f, "p06_model" to 0.125f, "p06_note" to 0.5f, "p07_model" to 0.125f, "p07_stroke" to 0.6f, "p07_note" to 0.2638889f, "p08_model" to 1f, "p08_note" to 0.3611111f, "p09_model" to 1f, "p09_stroke" to 0.2f, "p09_note" to 0.430555552f, "p10_model" to 0.3125f, "p10_stroke" to 0f, "p10_note" to 0.430555552f, "p11_model" to 0.3125f, "p11_stroke" to 0.6f, "p11_note" to 0.3611111f, "p12_model" to 0.3125f, "p12_note" to 0.5f, "p13_model" to 0.8125f, "p13_note" to 0.3611111f, "p14_model" to 0.8125f, "p14_stroke" to 0f, "p14_note" to 0.430555552f, "p15_model" to 0.8125f, "p15_stroke" to 0.2f, "p15_note" to 0.5277778f, "p16_model" to 0.125f, "p16_stroke" to 1f, "p16_note" to 0.3888889f),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun palm69() = Patch("Palm", "Arabic Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.5f, "p01_note" to 0.3611111f, "p02_model" to 0.5f, "p02_stroke" to 0.8f, "p02_note" to 0.4861111f, "p03_model" to 0.5f, "p03_stroke" to 0f, "p03_note" to 0.4861111f, "p04_model" to 0.5f, "p04_stroke" to 0.2f, "p04_note" to 0.5138889f, "p05_model" to 0.5625f, "p05_stroke" to 0f, "p05_note" to 0.5555556f, "p06_model" to 0.5625f, "p06_note" to 0.5833333f, "p07_model" to 0.5625f, "p07_stroke" to 0.4f, "p07_note" to 0.5555556f, "p08_model" to 0.625f, "p08_stroke" to 0.6f, "p08_note" to 0.291666657f, "p09_model" to 0.625f, "p09_note" to 0.3888889f, "p10_model" to 0.6875f, "p10_stroke" to 0.6f, "p10_note" to 0.319444448f, "p11_model" to 0.6875f, "p11_stroke" to 0.8f, "p11_note" to 0.3888889f, "p12_model" to 0.25f, "p12_stroke" to 0.6f, "p12_note" to 0.291666657f, "p13_note" to 0.3888889f, "p14_note" to 0.458333343f, "p15_model" to 0.5f, "p15_stroke" to 1f, "p16_model" to 0.5625f, "p16_stroke" to 1f, "p16_note" to 0.5555556f),
+        family = "kit",
+        low = 36, high = 51)
+
+    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30(), palm31(), palm32(), palm33(), palm34(), palm35(), palm36(), palm37(), palm38(), palm39(), palm40(), palm41(), palm42(), palm43(), palm44(), palm45(), palm46(), palm47(), palm48(), palm49(), palm50(), palm51(), palm52(), palm53(), palm54(), palm55(), palm56(), palm57(), palm58(), palm59(), palm60(), palm61(), palm62(), palm63(), palm64(), palm65(), palm66(), palm67(), palm68(), palm69()) }
 
     private fun chanter0() = Patch("Chanter", "Init", emptyMap(),
         family = "highland",

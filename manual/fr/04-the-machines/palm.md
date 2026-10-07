@@ -61,7 +61,7 @@ Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun so
 
 - Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **frappe**, **hauteur** et **niveau**.
 - Les autres boutons (position, main, déclin, etc.) agissent sur tous les pads.
-- **Hand Drum Kit** commence avec djembé, cajón, tabla, bayan, tambour sur cadre et tambour d’aisselle, **Latin Kit** avec congas, bongos, cajón et batá, et **Tabla Kit** avec tabla, bayan, mridangam, dholak et kanjira.
+- **Hand Drum Kit** commence avec djembé, cajón, tabla, bayan, tambour sur cadre et tambour d’aisselle, **African Kit** avec djembés, ashiko, tambour d’aisselle et batá, **Latin Kit** avec congas, bongos, cajón et batá, **Arabic Kit** avec darbouka, riq, tar, bendir et tambour sur cadre, et **Tabla Kit** avec tabla, bayan, mridangam, dholak et kanjira.
 - Désactivez kit pour rejouer un seul tambour sur tout le clavier.
 
 ## Astuces

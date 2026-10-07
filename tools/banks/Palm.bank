@@ -505,3 +505,107 @@ patch "Tabla Kit" family=kit note=36 range=36..51
   p16_model      #1
   p16_stroke     #5
   p16_note       43
+
+patch "African Kit" family=kit note=36 range=36..51
+  # Djembes, ashiko, talking drum and batá on sixteen pads.
+  kit            1
+  p01_model      #16
+  p01_stroke     #3
+  p01_note       43
+  p02_model      #2
+  p02_stroke     #0
+  p02_note       52
+  p03_model      #2
+  p03_stroke     #1
+  p03_note       57
+  p04_model      #2
+  p04_stroke     #2
+  p04_note       52
+  p05_model      #2
+  p05_stroke     #0
+  p05_note       55
+  p06_model      #2
+  p06_stroke     #1
+  p06_note       60
+  p07_model      #2
+  p07_stroke     #3
+  p07_note       43
+  p08_model      #16
+  p08_stroke     #0
+  p08_note       50
+  p09_model      #16
+  p09_stroke     #1
+  p09_note       55
+  p10_model      #5
+  p10_stroke     #0
+  p10_note       55
+  p11_model      #5
+  p11_stroke     #3
+  p11_note       50
+  p12_model      #5
+  p12_stroke     #1
+  p12_note       60
+  p13_model      #13
+  p13_stroke     #0
+  p13_note       50
+  p14_model      #13
+  p14_stroke     #0
+  p14_note       55
+  p15_model      #13
+  p15_stroke     #1
+  p15_note       62
+  p16_model      #2
+  p16_stroke     #5
+  p16_note       52
+
+patch "Arabic Kit" family=kit note=36 range=36..51
+  # Darbuka, riq, tar, bendir and frame drum on sixteen pads.
+  kit            1
+  p01_model      #8
+  p01_stroke     #3
+  p01_note       50
+  p02_model      #8
+  p02_stroke     #4
+  p02_note       59
+  p03_model      #8
+  p03_stroke     #0
+  p03_note       59
+  p04_model      #8
+  p04_stroke     #1
+  p04_note       61
+  p05_model      #9
+  p05_stroke     #0
+  p05_note       64
+  p06_model      #9
+  p06_stroke     #1
+  p06_note       66
+  p07_model      #9
+  p07_stroke     #2
+  p07_note       64
+  p08_model      #10
+  p08_stroke     #3
+  p08_note       45
+  p09_model      #10
+  p09_stroke     #4
+  p09_note       52
+  p10_model      #11
+  p10_stroke     #3
+  p10_note       47
+  p11_model      #11
+  p11_stroke     #4
+  p11_note       52
+  p12_model      #4
+  p12_stroke     #3
+  p12_note       45
+  p13_model      #4
+  p13_stroke     #0
+  p13_note       52
+  p14_model      #4
+  p14_stroke     #4
+  p14_note       57
+  p15_model      #8
+  p15_stroke     #5
+  p15_note       55
+  p16_model      #9
+  p16_stroke     #5
+  p16_note       64
