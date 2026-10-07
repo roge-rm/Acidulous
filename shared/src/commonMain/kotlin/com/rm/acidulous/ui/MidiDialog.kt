@@ -87,6 +87,30 @@ private fun DevicesTab() {
             Text(stringResource(Res.string.midi_unsupported), color = Acid.colors.red, fontSize = 12.sp)
         }
         WindowCard(stringResource(if (MidiHub.canFindBluetooth) Res.string.midi_inputs else Res.string.midi_inputs_cable)) {
+            // At the top, above the devices: the Bluetooth search, and how far
+            // ahead MIDI is sent.
+            androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
+                if (MidiHub.canFindBluetooth) {
+                    // A cable shows up by itself, a Bluetooth instrument has to be
+                    // scanned for.
+                    SwitchGrid(
+                        stringResource(if (MidiHub.bluetoothReady()) Res.string.midi_bluetooth else Res.string.midi_bluetooth_off),
+                        listOf(stringResource(if (MidiHub.scanning) Res.string.midi_stop else Res.string.midi_search)), if (MidiHub.scanning) 0 else -1,
+                    ) {
+                        if (MidiHub.scanning) {
+                            MidiHub.stopScan()
+                        } else {
+                            val missing = MidiHub.bluetoothPermissions().filter { !permissions.has(it) }
+                            if (missing.isEmpty()) MidiHub.scanBluetooth() else permissions.ask(*missing.toTypedArray())
+                        }
+                    }
+                }
+                // Raise it if the external part drags behind what you hear.
+                CountKnob(
+                    stringResource(Res.string.midi_send_ahead), MidiHub.outOffsetMs, -50..50, "%+d ms".format(MidiHub.outOffsetMs), PanelAmber,
+                    choices = (-50..50).map { "%+d ms".format(it) },
+                ) { UiPrefs.chooseMidiOffset(it) }
+            }
             // One column. In a wide window a card lays its controls side by
             // side, and full width rows after the first got no room at all.
             if (ports.isNotEmpty()) Line {
@@ -125,19 +149,6 @@ private fun DevicesTab() {
             // Only where the app finds Bluetooth instruments itself (on a
             // phone). Desktops pair them in the system settings.
             if (MidiHub.canFindBluetooth) {
-                // A cable shows up by itself, a Bluetooth instrument has to be
-                // scanned for.
-                SwitchGrid(
-                    stringResource(if (MidiHub.bluetoothReady()) Res.string.midi_bluetooth else Res.string.midi_bluetooth_off),
-                    listOf(stringResource(if (MidiHub.scanning) Res.string.midi_stop else Res.string.midi_search)), if (MidiHub.scanning) 0 else -1,
-                ) {
-                    if (MidiHub.scanning) {
-                        MidiHub.stopScan()
-                    } else {
-                        val missing = MidiHub.bluetoothPermissions().filter { !permissions.has(it) }
-                        if (missing.isEmpty()) MidiHub.scanBluetooth() else permissions.ask(*missing.toTypedArray())
-                    }
-                }
                 // The scan status, so a scan that finds nothing doesn't look
                 // like a broken one.
                 if (MidiHub.scanStatus.isNotEmpty()) Line { Readout(MidiHub.scanStatus) }
@@ -171,11 +182,6 @@ private fun DevicesTab() {
                 }
             }
             if (MidiHub.destinations.isEmpty()) Line { Readout(stringResource(Res.string.midi_no_outputs)) }
-            // Raise it if the external part drags behind what you hear.
-            CountKnob(
-                stringResource(Res.string.midi_send_ahead), MidiHub.outOffsetMs, -50..50, "%+d ms".format(MidiHub.outOffsetMs), PanelAmber,
-                choices = (-50..50).map { "%+d ms".format(it) },
-            ) { UiPrefs.chooseMidiOffset(it) }
             // Numbers to check when timing sounds loose. "late" is how far past
             // its own timestamp a message was handed to the system. If that
             // grows, the trim isn't the problem.
