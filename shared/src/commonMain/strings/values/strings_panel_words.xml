@@ -32,6 +32,7 @@
     <string name="pw_acid">Acid</string>
     <string name="pw_across">across</string>
     <string name="pw_aeg">aeg</string>
+    <string name="pw_africa">africa</string>
     <string name="pw_after">after</string>
     <string name="pw_against">against</string>
     <string name="pw_against_x">against x</string>
@@ -54,6 +55,7 @@
     <string name="pw_angle">angle</string>
     <string name="pw_answers">answers</string>
     <string name="pw_apart">apart</string>
+    <string name="pw_arabic">arabic</string>
     <string name="pw_around">around</string>
     <string name="pw_arp">Arp</string>
     <string name="pw_as_sung">as sung</string>
@@ -499,6 +501,7 @@
     <string name="pw_in_sings">in sings</string>
     <string name="pw_in_speaks">in speaks</string>
     <string name="pw_in_turn">in turn</string>
+    <string name="pw_india">india</string>
     <string name="pw_input">input</string>
     <string name="pw_input_is">input is</string>
     <string name="pw_instrument">instrument</string>
@@ -543,6 +546,7 @@
     <string name="pw_lane_n">lane %d</string>
     <string name="pw_lanes">lanes</string>
     <string name="pw_latch">latch</string>
+    <string name="pw_latin">latin</string>
     <string name="pw_lattice">lattice</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">leakage</string>

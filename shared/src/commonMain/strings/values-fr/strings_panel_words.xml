@@ -32,6 +32,7 @@
     <string name="pw_acid">Acid</string>
     <string name="pw_across">travers</string>
     <string name="pw_aeg">env a</string>
+    <string name="pw_africa">afrique</string>
     <string name="pw_after">after</string>
     <string name="pw_against">opposés</string>
     <string name="pw_against_x">contre x</string>
@@ -54,6 +55,7 @@
     <string name="pw_angle">angle</string>
     <string name="pw_answers">réponses</string>
     <string name="pw_apart">écart</string>
+    <string name="pw_arabic">arabe</string>
     <string name="pw_around">autour</string>
     <string name="pw_arp">Arp</string>
     <string name="pw_as_sung">tel quel</string>
@@ -496,6 +498,7 @@
     <string name="pw_in_sings">chante</string>
     <string name="pw_in_speaks">parle</string>
     <string name="pw_in_turn">tour à tour</string>
+    <string name="pw_india">inde</string>
     <string name="pw_input">entrée</string>
     <string name="pw_input_is">l’entrée</string>
     <string name="pw_instrument">instrument</string>
@@ -540,6 +543,7 @@
     <string name="pw_lane_n">couloir %d</string>
     <string name="pw_lanes">couloirs</string>
     <string name="pw_latch">verrou</string>
+    <string name="pw_latin">latin</string>
     <string name="pw_lattice">treillis</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">fuite</string>

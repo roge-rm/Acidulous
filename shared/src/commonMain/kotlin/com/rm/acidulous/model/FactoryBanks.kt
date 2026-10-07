@@ -4071,285 +4071,345 @@ internal object FactoryBanks {
     private val sympath: List<Patch> by lazy { listOf(sympath0(), sympath1(), sympath2(), sympath3(), sympath4(), sympath5(), sympath6(), sympath7(), sympath8(), sympath9(), sympath10(), sympath11(), sympath12(), sympath13(), sympath14(), sympath15(), sympath16(), sympath17(), sympath18(), sympath19(), sympath20(), sympath21(), sympath22(), sympath23(), sympath24(), sympath25(), sympath26(), sympath27(), sympath28(), sympath29()) }
 
     private fun palm0() = Patch("Palm", "Init", emptyMap(),
-        family = "djembe",
+        family = "africa",
         low = 45, high = 67)
 
-    private fun palm1() = Patch("Palm", "Tabla Na",
-        mapOf("model" to 0f, "stroke" to 0.8f),
-        family = "tabla",
-        low = 55, high = 74)
-
-    private fun palm2() = Patch("Palm", "Tabla Tin",
-        mapOf("model" to 0f),
-        family = "tabla",
-        low = 55, high = 74)
-
-    private fun palm3() = Patch("Palm", "Tabla Tun",
-        mapOf("model" to 0f, "stroke" to 0.6f, "volume" to 1f),
-        family = "tabla",
-        low = 55, high = 74)
-
-    private fun palm4() = Patch("Palm", "Tabla Te",
-        mapOf("model" to 0f, "stroke" to 0.4f),
-        family = "tabla",
-        low = 55, high = 74)
-
-    private fun palm5() = Patch("Palm", "Tabla By Touch",
-        mapOf("model" to 0f, "stroke" to 1f, "hand" to 0.7f),
-        family = "tabla",
-        low = 55, high = 74)
-
-    private fun palm6() = Patch("Palm", "Bayan Ghe",
-        mapOf("model" to 0.0625f, "stroke" to 0.6f, "drop" to 0.5f, "squeeze" to 0.333333343f),
-        family = "bayan",
-        low = 36, high = 55)
-
-    private fun palm7() = Patch("Palm", "Bayan Ke",
-        mapOf("model" to 0.0625f, "stroke" to 0.4f, "volume" to 1f),
-        family = "bayan",
-        low = 36, high = 55)
-
-    private fun palm8() = Patch("Palm", "Bayan Swoop",
-        mapOf("model" to 0.0625f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
-        family = "bayan",
-        low = 36, high = 55)
-
-    private fun palm9() = Patch("Palm", "Bayan Open",
-        mapOf("model" to 0.0625f),
-        family = "bayan",
-        low = 36, high = 55)
-
-    private fun palm10() = Patch("Palm", "Djembe Bass",
+    private fun palm1() = Patch("Palm", "Djembe Bass",
         mapOf("stroke" to 0.6f, "body" to 0.8f),
-        family = "djembe",
+        family = "africa",
         low = 45, high = 67)
 
-    private fun palm11() = Patch("Palm", "Djembe Tone",
+    private fun palm2() = Patch("Palm", "Djembe Tone",
         mapOf("position" to 0.55f, "decay" to 0.6f),
-        family = "djembe",
+        family = "africa",
         low = 45, high = 67)
 
-    private fun palm12() = Patch("Palm", "Djembe Slap",
+    private fun palm3() = Patch("Palm", "Djembe Slap",
         mapOf("stroke" to 0.2f),
-        family = "djembe",
+        family = "africa",
         low = 45, high = 67)
 
-    private fun palm13() = Patch("Palm", "Djembe By Touch",
+    private fun palm4() = Patch("Palm", "Djembe By Touch",
         mapOf("stroke" to 1f, "hand" to 0.65f),
-        family = "djembe",
+        family = "africa",
         low = 45, high = 67)
 
-    private fun palm14() = Patch("Palm", "Djembe Rattles",
+    private fun palm5() = Patch("Palm", "Djembe Rattles",
         mapOf("stroke" to 1f, "rattle" to 0.6f),
-        family = "djembe",
+        family = "africa",
         low = 45, high = 67)
 
-    private fun palm15() = Patch("Palm", "Djembe Muted",
+    private fun palm6() = Patch("Palm", "Djembe Muted",
         mapOf("damp" to 0.7f),
-        family = "djembe",
+        family = "africa",
         low = 45, high = 67)
 
-    private fun palm16() = Patch("Palm", "Cajon Bass",
+    private fun palm7() = Patch("Palm", "Talking Drum",
+        mapOf("model" to 0.3125f, "stroke" to 0.6f, "squeeze" to 0.416666657f),
+        family = "africa",
+        low = 45, high = 67)
+
+    private fun palm8() = Patch("Palm", "Talking Squeeze",
+        mapOf("model" to 0.3125f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
+        family = "africa",
+        low = 45, high = 67)
+
+    private fun palm9() = Patch("Palm", "Talking Open",
+        mapOf("model" to 0.3125f, "squeeze" to 0.416666657f),
+        family = "africa",
+        low = 45, high = 67)
+
+    private fun palm10() = Patch("Palm", "Talking Roll",
+        mapOf("model" to 0.3125f, "squeeze" to 0.416666657f, "roll" to 0.416666657f, "volume" to 0.45f),
+        family = "africa",
+        low = 45, high = 67)
+
+    private fun palm11() = Patch("Palm", "Ashiko",
+        mapOf("model" to 1f),
+        family = "africa",
+        low = 43, high = 57)
+
+    private fun palm12() = Patch("Palm", "Ashiko Bass",
+        mapOf("model" to 1f, "stroke" to 0.6f, "body" to 0.7f),
+        family = "africa",
+        low = 36, high = 50)
+
+    private fun palm13() = Patch("Palm", "Ashiko Slap",
+        mapOf("model" to 1f, "stroke" to 0.2f),
+        family = "africa",
+        low = 48, high = 62)
+
+    private fun palm14() = Patch("Palm", "Cajon Bass",
         mapOf("model" to 0.1875f, "stroke" to 0.6f, "rattle" to 0.2f),
-        family = "cajon",
+        family = "latin",
         low = 40, high = 60)
 
-    private fun palm17() = Patch("Palm", "Cajon Slap",
+    private fun palm15() = Patch("Palm", "Cajon Slap",
         mapOf("model" to 0.1875f, "stroke" to 0.2f, "rattle" to 0.8f, "volume" to 1f),
-        family = "cajon",
+        family = "latin",
         low = 40, high = 60)
 
-    private fun palm18() = Patch("Palm", "Cajon Snares",
+    private fun palm16() = Patch("Palm", "Cajon Snares",
         mapOf("model" to 0.1875f, "stroke" to 1f, "rattle" to 1f),
-        family = "cajon",
+        family = "latin",
         low = 40, high = 60)
 
-    private fun palm19() = Patch("Palm", "Cajon Dry",
+    private fun palm17() = Patch("Palm", "Cajon Dry",
         mapOf("model" to 0.1875f, "stroke" to 1f),
-        family = "cajon",
+        family = "latin",
         low = 40, high = 60)
 
-    private fun palm20() = Patch("Palm", "Cajon By Touch",
+    private fun palm18() = Patch("Palm", "Cajon By Touch",
         mapOf("model" to 0.1875f, "stroke" to 1f, "rattle" to 0.5f),
-        family = "cajon",
+        family = "latin",
         low = 40, high = 60)
 
-    private fun palm21() = Patch("Palm", "Frame Doum",
+    private fun palm19() = Patch("Palm", "Conga Open",
+        mapOf("model" to 0.375f),
+        family = "latin",
+        low = 50, high = 64)
+
+    private fun palm20() = Patch("Palm", "Quinto Slap",
+        mapOf("model" to 0.375f, "stroke" to 0.2f, "decay" to 0.4f, "volume" to 0.95f),
+        family = "latin",
+        low = 55, high = 69)
+
+    private fun palm21() = Patch("Palm", "Tumba",
+        mapOf("model" to 0.375f, "stroke" to 1f, "body" to 0.7f),
+        family = "latin",
+        low = 45, high = 59)
+
+    private fun palm22() = Patch("Palm", "Conga Muted",
+        mapOf("model" to 0.375f, "stroke" to 0.4f, "volume" to 1f),
+        family = "latin",
+        low = 50, high = 64)
+
+    private fun palm23() = Patch("Palm", "Bongo Macho",
+        mapOf("model" to 0.4375f, "stroke" to 1f),
+        family = "latin",
+        low = 62, high = 76)
+
+    private fun palm24() = Patch("Palm", "Bongo Hembra",
+        mapOf("model" to 0.4375f),
+        family = "latin",
+        low = 57, high = 71)
+
+    private fun palm25() = Patch("Palm", "Bongo Martillo",
+        mapOf("model" to 0.4375f, "stroke" to 1f, "roll" to 0.25f),
+        family = "latin",
+        low = 60, high = 74)
+
+    private fun palm26() = Patch("Palm", "Bata Iya",
+        mapOf("model" to 0.8125f, "body" to 0.6f),
+        family = "latin",
+        low = 43, high = 57)
+
+    private fun palm27() = Patch("Palm", "Bata Okonkolo",
+        mapOf("model" to 0.8125f, "stroke" to 0.2f, "volume" to 0.95f),
+        family = "latin",
+        low = 55, high = 69)
+
+    private fun palm28() = Patch("Palm", "Bata Itotele",
+        mapOf("model" to 0.8125f),
+        family = "latin",
+        low = 48, high = 62)
+
+    private fun palm29() = Patch("Palm", "Frame Doum",
         mapOf("model" to 0.25f, "stroke" to 0.6f),
-        family = "frame",
+        family = "arabic",
         low = 33, high = 57)
 
-    private fun palm22() = Patch("Palm", "Frame Tek",
+    private fun palm30() = Patch("Palm", "Frame Tek",
         mapOf("model" to 0.25f, "stroke" to 0.8f),
-        family = "frame",
+        family = "arabic",
         low = 33, high = 57)
 
-    private fun palm23() = Patch("Palm", "Frame Jingles",
+    private fun palm31() = Patch("Palm", "Frame Jingles",
         mapOf("model" to 0.25f, "rattle" to 1f),
-        family = "frame",
+        family = "arabic",
         low = 33, high = 57)
 
-    private fun palm24() = Patch("Palm", "Frame Roll",
+    private fun palm32() = Patch("Palm", "Frame Roll",
         mapOf("model" to 0.25f, "hand" to 0.3f, "roll" to 0.5833333f, "volume" to 0.4f),
-        family = "frame",
+        family = "arabic",
         low = 33, high = 57)
 
-    private fun palm25() = Patch("Palm", "Big Frame",
+    private fun palm33() = Patch("Palm", "Big Frame",
         mapOf("model" to 0.25f, "stroke" to 0.6f, "decay" to 0.75f),
-        family = "frame",
+        family = "arabic",
         low = 28, high = 52)
 
-    private fun palm26() = Patch("Palm", "Frame By Touch",
+    private fun palm34() = Patch("Palm", "Frame By Touch",
         mapOf("model" to 0.25f, "stroke" to 1f, "rattle" to 0.3f),
-        family = "frame",
+        family = "arabic",
         low = 33, high = 57)
 
-    private fun palm27() = Patch("Palm", "Talking Drum",
-        mapOf("model" to 0.3125f, "stroke" to 0.6f, "squeeze" to 0.416666657f),
-        family = "talking",
-        low = 45, high = 67)
+    private fun palm35() = Patch("Palm", "Darbuka Doum",
+        mapOf("model" to 0.5f, "stroke" to 0.6f, "body" to 0.7f),
+        family = "arabic",
+        low = 43, high = 57)
 
-    private fun palm28() = Patch("Palm", "Talking Squeeze",
-        mapOf("model" to 0.3125f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
-        family = "talking",
-        low = 45, high = 67)
+    private fun palm36() = Patch("Palm", "Darbuka Tek",
+        mapOf("model" to 0.5f, "stroke" to 0.8f),
+        family = "arabic",
+        low = 52, high = 66)
 
-    private fun palm29() = Patch("Palm", "Talking Open",
-        mapOf("model" to 0.3125f, "squeeze" to 0.416666657f),
-        family = "talking",
-        low = 45, high = 67)
+    private fun palm37() = Patch("Palm", "Darbuka Ka",
+        mapOf("model" to 0.5f, "position" to 0.7f),
+        family = "arabic",
+        low = 52, high = 66)
 
-    private fun palm30() = Patch("Palm", "Talking Roll",
-        mapOf("model" to 0.3125f, "squeeze" to 0.416666657f, "roll" to 0.416666657f, "volume" to 0.45f),
-        family = "talking",
-        low = 45, high = 67)
+    private fun palm38() = Patch("Palm", "Riq",
+        mapOf("model" to 0.5625f, "rattle" to 0.8f),
+        family = "arabic",
+        low = 57, high = 71)
 
-    private fun palm31() = Patch("Palm", "Hand Drum Kit",
+    private fun palm39() = Patch("Palm", "Riq Shake",
+        mapOf("model" to 0.5625f, "stroke" to 0.4f, "rattle" to 1f, "roll" to 0.5f),
+        family = "arabic",
+        low = 57, high = 71)
+
+    private fun palm40() = Patch("Palm", "Tar",
+        mapOf("model" to 0.625f, "stroke" to 0.6f),
+        family = "arabic",
+        low = 38, high = 52)
+
+    private fun palm41() = Patch("Palm", "Tar Edge",
+        mapOf("model" to 0.625f, "stroke" to 0.8f),
+        family = "arabic",
+        low = 45, high = 59)
+
+    private fun palm42() = Patch("Palm", "Bendir",
+        mapOf("model" to 0.6875f, "stroke" to 0.6f, "rattle" to 0.7f),
+        family = "arabic",
+        low = 40, high = 54)
+
+    private fun palm43() = Patch("Palm", "Riq Slap",
+        mapOf("model" to 0.5625f, "stroke" to 0.2f, "rattle" to 0.6f),
+        family = "arabic",
+        low = 59, high = 73)
+
+    private fun palm44() = Patch("Palm", "Tar Roll",
+        mapOf("model" to 0.625f, "decay" to 0.7f, "roll" to 0.416666657f, "volume" to 0.25f),
+        family = "arabic",
+        low = 38, high = 52)
+
+    private fun palm45() = Patch("Palm", "Bendir Edge",
+        mapOf("model" to 0.6875f, "stroke" to 0.8f, "rattle" to 0.6f),
+        family = "arabic",
+        low = 45, high = 59)
+
+    private fun palm46() = Patch("Palm", "Bendir Roll",
+        mapOf("model" to 0.6875f, "rattle" to 0.8f, "roll" to 0.333333343f, "volume" to 0.32f),
+        family = "arabic",
+        low = 40, high = 54)
+
+    private fun palm47() = Patch("Palm", "Tabla Na",
+        mapOf("model" to 0f, "stroke" to 0.8f),
+        family = "india",
+        low = 55, high = 74)
+
+    private fun palm48() = Patch("Palm", "Tabla Tin",
+        mapOf("model" to 0f),
+        family = "india",
+        low = 55, high = 74)
+
+    private fun palm49() = Patch("Palm", "Tabla Tun",
+        mapOf("model" to 0f, "stroke" to 0.6f, "volume" to 1f),
+        family = "india",
+        low = 55, high = 74)
+
+    private fun palm50() = Patch("Palm", "Tabla Te",
+        mapOf("model" to 0f, "stroke" to 0.4f),
+        family = "india",
+        low = 55, high = 74)
+
+    private fun palm51() = Patch("Palm", "Tabla By Touch",
+        mapOf("model" to 0f, "stroke" to 1f, "hand" to 0.7f),
+        family = "india",
+        low = 55, high = 74)
+
+    private fun palm52() = Patch("Palm", "Bayan Ghe",
+        mapOf("model" to 0.0625f, "stroke" to 0.6f, "drop" to 0.5f, "squeeze" to 0.333333343f),
+        family = "india",
+        low = 36, high = 55)
+
+    private fun palm53() = Patch("Palm", "Bayan Ke",
+        mapOf("model" to 0.0625f, "stroke" to 0.4f, "volume" to 1f),
+        family = "india",
+        low = 36, high = 55)
+
+    private fun palm54() = Patch("Palm", "Bayan Swoop",
+        mapOf("model" to 0.0625f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
+        family = "india",
+        low = 36, high = 55)
+
+    private fun palm55() = Patch("Palm", "Bayan Open",
+        mapOf("model" to 0.0625f),
+        family = "india",
+        low = 36, high = 55)
+
+    private fun palm56() = Patch("Palm", "Kanjira",
+        mapOf("model" to 0.75f, "squeeze" to 0.25f, "rattle" to 0.5f),
+        family = "india",
+        low = 55, high = 69)
+
+    private fun palm57() = Patch("Palm", "Mridangam",
+        mapOf("model" to 0.875f, "decay" to 0.7f),
+        family = "india",
+        low = 53, high = 67)
+
+    private fun palm58() = Patch("Palm", "Mridangam Thom",
+        mapOf("model" to 0.875f, "stroke" to 0.6f, "volume" to 1f),
+        family = "india",
+        low = 41, high = 55)
+
+    private fun palm59() = Patch("Palm", "Dholak",
+        mapOf("model" to 0.9375f),
+        family = "india",
+        low = 48, high = 62)
+
+    private fun palm60() = Patch("Palm", "Dholak Bass",
+        mapOf("model" to 0.9375f, "stroke" to 0.6f, "squeeze" to 0.333333343f),
+        family = "india",
+        low = 36, high = 50)
+
+    private fun palm61() = Patch("Palm", "Kanjira Slap",
+        mapOf("model" to 0.75f, "stroke" to 0.2f, "rattle" to 0.4f),
+        family = "india",
+        low = 57, high = 71)
+
+    private fun palm62() = Patch("Palm", "Kanjira Glide",
+        mapOf("model" to 0.75f, "decay" to 0.7f, "squeeze" to 0.416666657f),
+        family = "india",
+        low = 53, high = 67)
+
+    private fun palm63() = Patch("Palm", "Mridangam Chapu",
+        mapOf("model" to 0.875f, "stroke" to 0.8f),
+        family = "india",
+        low = 57, high = 71)
+
+    private fun palm64() = Patch("Palm", "Dholak Slap",
+        mapOf("model" to 0.9375f, "stroke" to 0.2f, "volume" to 1f),
+        family = "india",
+        low = 50, high = 64)
+
+    private fun palm65() = Patch("Palm", "Hand Drum Kit",
         mapOf("kit" to 1f),
         family = "kit",
         low = 36, high = 51)
 
-    private fun palm32() = Patch("Palm", "Conga Open",
-        mapOf("model" to 0.375f),
-        family = "conga",
-        low = 50, high = 64)
+    private fun palm66() = Patch("Palm", "Latin Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.375f, "p01_note" to 0.319444448f, "p02_model" to 0.375f, "p03_model" to 0.375f, "p03_note" to 0.3888889f, "p04_model" to 0.375f, "p04_note" to 0.3888889f, "p05_model" to 0.375f, "p05_stroke" to 0f, "p05_note" to 0.458333343f, "p06_model" to 0.375f, "p06_note" to 0.458333343f, "p07_model" to 0.4375f, "p07_stroke" to 0f, "p07_note" to 0.5555556f, "p08_model" to 0.4375f, "p08_stroke" to 0.2f, "p08_note" to 0.5555556f, "p09_model" to 0.4375f, "p09_stroke" to 0f, "p10_model" to 0.4375f, "p10_stroke" to 0.2f, "p10_note" to 0.625f, "p11_model" to 0.1875f, "p11_stroke" to 0.6f, "p11_note" to 0.222222224f, "p12_model" to 0.1875f, "p12_note" to 0.3888889f, "p13_model" to 0.8125f, "p13_note" to 0.3611111f, "p14_model" to 0.8125f, "p14_stroke" to 0.2f, "p14_note" to 0.5277778f, "p15_model" to 0.1875f, "p15_stroke" to 0.8f, "p15_note" to 0.458333343f, "p16_model" to 0.375f, "p16_stroke" to 1f, "p16_note" to 0.291666657f),
+        family = "kit",
+        low = 36, high = 51)
 
-    private fun palm33() = Patch("Palm", "Quinto Slap",
-        mapOf("model" to 0.375f, "stroke" to 0.2f, "decay" to 0.4f, "volume" to 0.95f),
-        family = "conga",
-        low = 55, high = 69)
+    private fun palm67() = Patch("Palm", "Tabla Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.0625f, "p01_note" to 0.222222224f, "p02_model" to 0f, "p02_stroke" to 0.8f, "p02_note" to 0.625f, "p03_model" to 0f, "p03_stroke" to 0.4f, "p03_note" to 0.5555556f, "p04_model" to 0f, "p04_stroke" to 0.2f, "p04_note" to 0.5277778f, "p05_model" to 0.0625f, "p05_stroke" to 0f, "p05_note" to 0.2638889f, "p06_model" to 0f, "p06_stroke" to 0f, "p06_note" to 0.5277778f, "p07_model" to 0.0625f, "p07_stroke" to 0.2f, "p07_note" to 0.333333343f, "p08_model" to 0.875f, "p08_note" to 0.5f, "p09_model" to 0.875f, "p09_stroke" to 0.6f, "p09_note" to 0.333333343f, "p10_model" to 0.875f, "p10_stroke" to 0.8f, "p11_model" to 0.9375f, "p11_note" to 0.430555552f, "p12_model" to 0.9375f, "p12_stroke" to 0.6f, "p12_note" to 0.2638889f, "p13_model" to 0.75f, "p13_note" to 0.5277778f, "p14_model" to 0.75f, "p14_stroke" to 0.2f, "p14_note" to 0.5555556f, "p15_model" to 0f, "p15_stroke" to 1f, "p15_note" to 0.5277778f, "p16_model" to 0.0625f, "p16_stroke" to 1f, "p16_note" to 0.2638889f),
+        family = "kit",
+        low = 36, high = 51)
 
-    private fun palm34() = Patch("Palm", "Tumba",
-        mapOf("model" to 0.375f, "stroke" to 1f, "body" to 0.7f),
-        family = "conga",
-        low = 45, high = 59)
-
-    private fun palm35() = Patch("Palm", "Conga Muted",
-        mapOf("model" to 0.375f, "stroke" to 0.4f, "volume" to 1f),
-        family = "conga",
-        low = 50, high = 64)
-
-    private fun palm36() = Patch("Palm", "Bongo Macho",
-        mapOf("model" to 0.4375f, "stroke" to 1f),
-        family = "bongo",
-        low = 62, high = 76)
-
-    private fun palm37() = Patch("Palm", "Bongo Hembra",
-        mapOf("model" to 0.4375f),
-        family = "bongo",
-        low = 57, high = 71)
-
-    private fun palm38() = Patch("Palm", "Bongo Martillo",
-        mapOf("model" to 0.4375f, "stroke" to 1f, "roll" to 0.25f),
-        family = "bongo",
-        low = 60, high = 74)
-
-    private fun palm39() = Patch("Palm", "Darbuka Doum",
-        mapOf("model" to 0.5f, "stroke" to 0.6f, "body" to 0.7f),
-        family = "darbuka",
-        low = 43, high = 57)
-
-    private fun palm40() = Patch("Palm", "Darbuka Tek",
-        mapOf("model" to 0.5f, "stroke" to 0.8f),
-        family = "darbuka",
-        low = 52, high = 66)
-
-    private fun palm41() = Patch("Palm", "Darbuka Ka",
-        mapOf("model" to 0.5f, "position" to 0.7f),
-        family = "darbuka",
-        low = 52, high = 66)
-
-    private fun palm42() = Patch("Palm", "Riq",
-        mapOf("model" to 0.5625f, "rattle" to 0.8f),
-        family = "riq",
-        low = 57, high = 71)
-
-    private fun palm43() = Patch("Palm", "Riq Shake",
-        mapOf("model" to 0.5625f, "stroke" to 0.4f, "rattle" to 1f, "roll" to 0.5f),
-        family = "riq",
-        low = 57, high = 71)
-
-    private fun palm44() = Patch("Palm", "Tar",
-        mapOf("model" to 0.625f, "stroke" to 0.6f),
-        family = "tar",
-        low = 38, high = 52)
-
-    private fun palm45() = Patch("Palm", "Tar Edge",
-        mapOf("model" to 0.625f, "stroke" to 0.8f),
-        family = "tar",
-        low = 45, high = 59)
-
-    private fun palm46() = Patch("Palm", "Bendir",
-        mapOf("model" to 0.6875f, "stroke" to 0.6f, "rattle" to 0.7f),
-        family = "bendir",
-        low = 40, high = 54)
-
-    private fun palm47() = Patch("Palm", "Kanjira",
-        mapOf("model" to 0.75f, "squeeze" to 0.25f, "rattle" to 0.5f),
-        family = "kanjira",
-        low = 55, high = 69)
-
-    private fun palm48() = Patch("Palm", "Bata Iya",
-        mapOf("model" to 0.8125f, "body" to 0.6f),
-        family = "bata",
-        low = 43, high = 57)
-
-    private fun palm49() = Patch("Palm", "Bata Okonkolo",
-        mapOf("model" to 0.8125f, "stroke" to 0.2f, "volume" to 0.95f),
-        family = "bata",
-        low = 55, high = 69)
-
-    private fun palm50() = Patch("Palm", "Mridangam",
-        mapOf("model" to 0.875f, "decay" to 0.7f),
-        family = "mridangam",
-        low = 53, high = 67)
-
-    private fun palm51() = Patch("Palm", "Mridangam Thom",
-        mapOf("model" to 0.875f, "stroke" to 0.6f, "volume" to 1f),
-        family = "mridangam",
-        low = 41, high = 55)
-
-    private fun palm52() = Patch("Palm", "Dholak",
-        mapOf("model" to 0.9375f),
-        family = "dholak",
-        low = 48, high = 62)
-
-    private fun palm53() = Patch("Palm", "Dholak Bass",
-        mapOf("model" to 0.9375f, "stroke" to 0.6f, "squeeze" to 0.333333343f),
-        family = "dholak",
-        low = 36, high = 50)
-
-    private fun palm54() = Patch("Palm", "Ashiko",
-        mapOf("model" to 1f),
-        family = "ashiko",
-        low = 43, high = 57)
-
-    private fun palm55() = Patch("Palm", "Ashiko Bass",
-        mapOf("model" to 1f, "stroke" to 0.6f, "body" to 0.7f),
-        family = "ashiko",
-        low = 36, high = 50)
-
-    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30(), palm31(), palm32(), palm33(), palm34(), palm35(), palm36(), palm37(), palm38(), palm39(), palm40(), palm41(), palm42(), palm43(), palm44(), palm45(), palm46(), palm47(), palm48(), palm49(), palm50(), palm51(), palm52(), palm53(), palm54(), palm55()) }
+    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30(), palm31(), palm32(), palm33(), palm34(), palm35(), palm36(), palm37(), palm38(), palm39(), palm40(), palm41(), palm42(), palm43(), palm44(), palm45(), palm46(), palm47(), palm48(), palm49(), palm50(), palm51(), palm52(), palm53(), palm54(), palm55(), palm56(), palm57(), palm58(), palm59(), palm60(), palm61(), palm62(), palm63(), palm64(), palm65(), palm66(), palm67()) }
 
     private fun chanter0() = Patch("Chanter", "Init", emptyMap(),
         family = "highland",

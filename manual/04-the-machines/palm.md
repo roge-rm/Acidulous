@@ -53,7 +53,7 @@ Turn on **kit** and the keys from C2 up are sixteen pads, each its own drum, so 
 
 - Tap a pad on the drum grid, then set it in the pad card: **drum**, **stroke**, **pitch** and **level**.
 - The other knobs (position, hand, decay and so on) work on every pad.
-- **Hand Drum Kit** starts with djembe, cajón, tabla, bayan, frame drum and talking drum.
+- **Hand Drum Kit** starts with djembe, cajón, tabla, bayan, frame drum and talking drum, **Latin Kit** with congas, bongos, cajón and batá, and **Tabla Kit** with tabla, bayan, mridangam, dholak and kanjira.
 - Turn kit off to play one drum across the keys again.
 
 ## Tips
