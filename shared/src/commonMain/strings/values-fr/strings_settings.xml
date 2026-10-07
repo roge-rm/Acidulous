@@ -107,6 +107,8 @@
     <string name="settings_tempo">tempo</string>
     <string name="settings_signature">chiffrage</string>
     <string name="settings_machine">machine</string>
+    <!-- Under None in the picker, when choosing what a new song starts with. -->
+    <string name="settings_machine_none_about">un nouveau morceau commence sans piste : ajoutez la première vous-même</string>
     <string name="settings_track_scale">gamme de piste</string>
     <string name="settings_root">tonique</string>
     <string name="settings_scale">gamme</string>

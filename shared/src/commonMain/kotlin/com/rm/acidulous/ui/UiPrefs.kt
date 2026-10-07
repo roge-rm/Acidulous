@@ -307,7 +307,8 @@ object UiPrefs {
 
     /**
      * The machine a new song's one track starts with. Hexbeat by default,
-     * since a new song usually starts with a beat.
+     * since a new song usually starts with a beat; empty for none, a song
+     * with no tracks.
      */
     var newMachine by mutableStateOf("Hexbeat")
         private set

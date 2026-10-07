@@ -120,6 +120,16 @@ class SongEditsTest {
     }
 
     @Test
+    fun aNewSongWithNoMachineHasNoTracks() {
+        // None in the settings: a new song with its scene and no tracks.
+        val empty = SongStore.blank("New", machine = "")
+        assertEquals(0, empty.tracks.size)
+        assertEquals(1, empty.scenes.size)
+        // A track added to it is the song's first.
+        assertEquals("Mosaic", empty.addTrack("Mosaic").tracks.single().name)
+    }
+
+    @Test
     fun newTracksAreNumberedOnlyWhenTheNameIsTaken() {
         val one = demo.addTrack("Mosaic")
         assertEquals("Mosaic", one.tracks.last().name)

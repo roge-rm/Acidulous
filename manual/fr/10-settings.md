@@ -70,7 +70,8 @@
 ## morceaux
 
 Ce avec quoi un nouveau morceau commence : le tempo, le chiffrage, la machine de
-la première piste, et s’il commence avec une gamme réglée.
+la première piste, et s’il commence avec une gamme réglée. Choisissez **Aucune**
+comme machine et un nouveau morceau commence sans aucune piste.
 
 ## TalkBack
 

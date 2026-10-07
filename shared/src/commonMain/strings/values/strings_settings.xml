@@ -107,6 +107,8 @@
     <string name="settings_tempo">tempo</string>
     <string name="settings_signature">signature</string>
     <string name="settings_machine">machine</string>
+    <!-- Under None in the picker, when choosing what a new song starts with. -->
+    <string name="settings_machine_none_about">a new song starts with no tracks: add the first yourself</string>
     <string name="settings_track_scale">track scale</string>
     <string name="settings_root">root</string>
     <string name="settings_scale">scale</string>

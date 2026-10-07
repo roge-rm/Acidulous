@@ -324,7 +324,16 @@ private fun chipLabel(label: String): androidx.compose.ui.text.AnnotatedString =
  * saying what it is.
  */
 @Composable
-fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String) -> Unit) {
+fun MachinePickerDialog(
+    current: String?,
+    onDismiss: () -> Unit,
+    /**
+     * A first row on every page for no machine at all, picked as "", and what
+     * it says. Null leaves it out, as on "+ track", which always wants one.
+     */
+    none: String? = null,
+    onPick: (String) -> Unit,
+) {
     val groups = com.rm.acidulous.model.MachineUi.machineGroups
     val known = remember { com.rm.acidulous.engine.NativeEngine.machineTypes.toSet() }
     var tab by rememberSaveable {
@@ -349,6 +358,20 @@ fun MachinePickerDialog(current: String?, onDismiss: () -> Unit, onPick: (String
         pages = contents.map { types ->
             {
                 run {
+                    if (none != null) {
+                        val on = current == ""
+                        Column(
+                            Modifier.fillMaxWidth().height(MACHINE_ROW_H)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (on) c.accentDim else c.control)
+                                .clickable { onPick("") }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(stringResource(Res.string.picker_machine_none), color = if (on) c.accent else c.text, fontSize = 14.sp)
+                            Text(none, color = c.textDim, fontSize = 11.sp, maxLines = 2)
+                        }
+                    }
                     for (type in types) {
                         val on = type == current
                         Column(

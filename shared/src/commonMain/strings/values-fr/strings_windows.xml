@@ -80,6 +80,8 @@
 
     <!-- Pickers -->
     <string name="picker_machine">Machine</string>
+    <!-- The machine picker's row for no machine, where settings offer it. -->
+    <string name="picker_machine_none">Aucune</string>
     <string name="picker_empty">Rien ici pour l’instant.</string>
 
     <!-- The tempo window -->

@@ -389,8 +389,10 @@ private fun NewSongSection() {
                 choices = SIGNATURES.map { "${it.beats}/${it.unit}" },
             ) { UiPrefs.chooseNewSignature(SIGNATURES[it]) }
             // The machine on a new song's first track, picked with the same
-            // picker as the arranger's "+ track".
-            SwitchGrid(stringResource(Res.string.settings_machine), listOf(UiPrefs.newMachine), -1) { pickingMachine = true }
+            // picker as the arranger's "+ track", or none for a song that
+            // starts with no tracks.
+            val machineLabel = UiPrefs.newMachine.ifEmpty { stringResource(Res.string.picker_machine_none) }
+            SwitchGrid(stringResource(Res.string.settings_machine), listOf(machineLabel), -1) { pickingMachine = true }
             // The scale a new track starts in, in the same card so a lone
             // switch doesn't get a row of its own. A Scale modifier is set to
             // it, so the keyboard and roll match the song from the first note.
@@ -412,6 +414,7 @@ private fun NewSongSection() {
         MachinePickerDialog(
             current = UiPrefs.newMachine,
             onDismiss = { pickingMachine = false },
+            none = stringResource(Res.string.settings_machine_none_about),
         ) { type -> UiPrefs.chooseNewMachine(type); pickingMachine = false }
     }
 }

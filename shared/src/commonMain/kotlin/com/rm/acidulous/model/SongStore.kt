@@ -143,6 +143,7 @@ object SongStore {
      * The caller picks the machine (`UiPrefs.newSong` passes the one from
      * settings, Hexbeat by default). The track is named after the machine,
      * the same rule `uniqueTrackName` uses for the first track of a machine.
+     * An empty [machine] is none: the song starts with no tracks.
      */
     fun blank(
         name: String,
@@ -153,7 +154,7 @@ object SongStore {
         name = name,
         tempo = tempo,
         signature = signature,
-        tracks = listOf(
+        tracks = if (machine.isEmpty()) emptyList() else listOf(
             Track(id = newId("t"), name = machine, machine = Machine(machine)),
         ),
         scenes = listOf(Scene(id = newId("s"), name = Names.scene(1))),

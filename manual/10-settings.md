@@ -59,7 +59,8 @@
 ## songs
 
 What a new song starts with: tempo, time signature, the first track's machine,
-and whether it starts with a scale set.
+and whether it starts with a scale set. Pick **None** for the machine and a new
+song starts with no tracks at all.
 
 ## TalkBack
 
