@@ -43,6 +43,7 @@
     - [Gate](05-effects-and-mixing/gate.md) : une porte de bruit, avec un filtre sur ce qu’elle écoute et une entrée latérale.
     - [Grain](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de ce que la piste vient de jouer.
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) : ajoute deux voix à des degrés de la gamme, pour qu’elles restent dans la tonalité.
+    - [Magneto](05-effects-and-mixing/magneto.md) : le son d’un petit disque enregistrable, dans chacun de ses formats.
     - [Mouth](05-effects-and-mixing/mouth.md) : la gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.
     - [Phaser](05-effects-and-mixing/phaser.md) : deux à huit étages.
     - [Resonator](05-effects-and-mixing/resonator.md) : des cordes accordées dans une tonalité, qui résonnent avec la piste.

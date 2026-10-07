@@ -3,6 +3,7 @@
 #include "FromMachines.h"
 #include "Acid.h"
 #include "Mouth.h"
+#include "Magneto.h"
 #include "Slicer.h"
 #include "Smash.h"
 #include "Tape.h"
@@ -41,6 +42,7 @@ const Entry kEntries[] = {
     {"Mouth", make<effect::Mouth>},
     {"Tape", make<effect::Tape>},
     {"Slicer", make<effect::Slicer>},
+    {"Magneto", make<effect::Magneto>},
 };
 constexpr int32_t kCount = sizeof(kEntries) / sizeof(kEntries[0]);
 

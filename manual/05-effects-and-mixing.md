@@ -4,7 +4,7 @@
 Each track has two insert effect slots. **fx** in the editor's bottom bar shows
 them in place of the machine panel.
 
-There are twenty-five effects. Each one has the usual controls plus one extra,
+There are twenty-six effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, since turning up the wet/dry mix can change the level.
 
@@ -43,6 +43,9 @@ Each effect has its own page below.
   resize.
 - [**Bitcrusher**](05-effects-and-mixing/bitcrusher.md) - fewer bits and a lower
   sample rate, with an unsteady clock if you want it.
+- [**Magneto**](05-effects-and-mixing/magneto.md) - the sound of a small
+  recordable disc's formats, from the clean original to the long-play
+  swirl, copied up to four times.
 
 ## Level
 

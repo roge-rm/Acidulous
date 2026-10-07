@@ -4,7 +4,7 @@
 Chaque piste a deux emplacements d’effet en insertion. **fx** dans la barre du
 bas de l’éditeur les affiche à la place du panneau de la machine.
 
-Il y a vingt-cinq effets. Chacun a les réglages habituels plus un extra, affiché
+Il y a vingt-six effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
 de sortie, puisque monter le mélange peut changer le niveau.
 
@@ -45,6 +45,9 @@ Chaque effet a sa propre page ci-dessous.
 - [**Bitcrusher**](05-effects-and-mixing/bitcrusher.md) : moins de bits et une
   fréquence d’échantillonnage plus basse, avec une horloge instable si vous
   voulez.
+- [**Magneto**](05-effects-and-mixing/magneto.md) : le son des formats d’un
+  petit disque enregistrable, de l’original propre au tourbillon de la longue
+  durée, recopié jusqu’à quatre fois.
 
 ## Niveau
 

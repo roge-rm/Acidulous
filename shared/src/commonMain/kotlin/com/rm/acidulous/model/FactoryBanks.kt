@@ -56,6 +56,7 @@ internal object FactoryBanks {
         "fx.Mouth" -> fx_mouth
         "fx.Tape" -> fx_tape
         "fx.Slicer" -> fx_slicer
+        "fx.Magneto" -> fx_magneto
         else -> emptyList()
     }
 
@@ -4565,4 +4566,45 @@ internal object FactoryBanks {
         family = "gate")
 
     private val fx_slicer: List<Patch> by lazy { listOf(fx_slicer0(), fx_slicer1(), fx_slicer2(), fx_slicer3(), fx_slicer4(), fx_slicer5(), fx_slicer6(), fx_slicer7(), fx_slicer8(), fx_slicer9()) }
+
+    private fun fx_magneto0() = Patch("fx.Magneto", "Init", emptyMap(),
+        family = "clean")
+
+    private fun fx_magneto1() = Patch("fx.Magneto", "Long Play",
+        mapOf("mode" to 0.25f),
+        family = "clean")
+
+    private fun fx_magneto2() = Patch("fx.Magneto", "Long Play x4",
+        mapOf("mode" to 0.5f),
+        family = "clean")
+
+    private fun fx_magneto3() = Patch("fx.Magneto", "High Rate",
+        mapOf("mode" to 0.75f),
+        family = "clean")
+
+    private fun fx_magneto4() = Patch("fx.Magneto", "Extra Long",
+        mapOf("mode" to 1f),
+        family = "clean")
+
+    private fun fx_magneto5() = Patch("fx.Magneto", "Copy of a Copy",
+        mapOf("mode" to 0.25f, "dubs" to 0.333333343f),
+        family = "dubbed")
+
+    private fun fx_magneto6() = Patch("fx.Magneto", "Fourth Generation",
+        mapOf("mode" to 0.5f, "dubs" to 1f),
+        family = "dubbed")
+
+    private fun fx_magneto7() = Patch("fx.Magneto", "Mixtape",
+        mapOf("dubs" to 0.6666667f),
+        family = "dubbed")
+
+    private fun fx_magneto8() = Patch("fx.Magneto", "Under the Mix",
+        mapOf("mode" to 0.5f, "mix" to 0.5f),
+        family = "blend")
+
+    private fun fx_magneto9() = Patch("fx.Magneto", "Shimmer",
+        mapOf("mode" to 1f, "dubs" to 1f, "mix" to 0.35f),
+        family = "blend")
+
+    private val fx_magneto: List<Patch> by lazy { listOf(fx_magneto0(), fx_magneto1(), fx_magneto2(), fx_magneto3(), fx_magneto4(), fx_magneto5(), fx_magneto6(), fx_magneto7(), fx_magneto8(), fx_magneto9()) }
 }

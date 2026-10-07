@@ -73,7 +73,7 @@ All six are the demo song, Squelch.
 | **Nexus** | A modular synth whose modules are the other machines. |
 | **Bias** | A four-track for audio recordings that runs along the song. |
 
-### Twenty-five effects
+### Twenty-six effects
 
 Each has the usual controls plus one extra, and its own page in the manual.
 
@@ -104,6 +104,7 @@ Each has the usual controls plus one extra, and its own page in the manual.
 | **Mouth** | Vowels, moved by an LFO, the track's level or another track. |
 | **Tape** | A worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop. |
 | **Slicer** | Cuts the track into slices on the beat and repeats, reverses or drops some of them. |
+| **Magneto** | The sound of a small recordable disc's formats, from the clean original to the long-play swirl, copied up to four times. |
 
 ### Mixing
 

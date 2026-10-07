@@ -238,6 +238,8 @@
     <string name="pw_drums">drums</string>
     <string name="pw_dry">dry</string>
     <string name="pw_dub">dub</string>
+    <string name="pw_dubbed">dubbed</string>
+    <string name="pw_dubs">dubs</string>
     <string name="pw_duck">duck</string>
     <string name="pw_dulcimer">dulcimer</string>
     <string name="pw_duty">duty</string>
@@ -419,6 +421,7 @@
     <string name="pw_hp18">HP18</string>
     <string name="pw_hp24">HP24</string>
     <string name="pw_hp6">HP6</string>
+    <string name="pw_hq">HQ</string>
     <string name="pw_hum">hum</string>
     <string name="pw_human">human</string>
     <string name="pw_humanise">humanise</string>
@@ -524,7 +527,9 @@
     <string name="pw_lp_d44294">lp</string>
     <string name="pw_lp12">LP12</string>
     <string name="pw_lp18">LP18</string>
+    <string name="pw_lp2">LP2</string>
     <string name="pw_lp24">LP24</string>
+    <string name="pw_lp4">LP4</string>
     <string name="pw_lp6">LP6</string>
     <string name="pw_lvl1">lvl1</string>
     <string name="pw_lvl2">lvl2</string>
@@ -536,6 +541,7 @@
     <string name="pw_machine">machine</string>
     <string name="pw_macro">macro</string>
     <string name="pw_macros">macros</string>
+    <string name="pw_magneto">Magneto</string>
     <string name="pw_major">major</string>
     <string name="pw_makeup">makeup</string>
     <string name="pw_manuals">manuals</string>
@@ -879,6 +885,7 @@
     <string name="pw_sound">sound</string>
     <string name="pw_source">source</string>
     <string name="pw_southern">southern</string>
+    <string name="pw_sp">SP</string>
     <string name="pw_span">span</string>
     <string name="pw_speed">speed</string>
     <string name="pw_split">split</string>
@@ -1070,6 +1077,7 @@
     <string name="pw_worn">worn</string>
     <string name="pw_wow">wow</string>
     <string name="pw_wreck">wreck</string>
+    <string name="pw_xlp">XLP</string>
     <string name="pw_xor">xor</string>
     <string name="pw_y">y</string>
     <string name="pw_z">z</string>

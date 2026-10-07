@@ -680,6 +680,7 @@ private fun shortFx(type: String): String = when (type) {
     "Smash" -> "smsh"
     "Mouth" -> "mth"
     "Slicer" -> "slce"
+    "Magneto" -> "mgnt"
     else -> type.lowercase().take(4)
 }
 

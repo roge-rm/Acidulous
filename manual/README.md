@@ -43,6 +43,7 @@
     - [Gate](05-effects-and-mixing/gate.md) - a noise gate, with a filter on what it listens to and a sidechain.
     - [Grain](05-effects-and-mixing/grain.md) - a cloud of short slices of what the track just played.
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) - adds two voices at scale steps, so they stay in key.
+    - [Magneto](05-effects-and-mixing/magneto.md) - the sound of a small recordable disc, in each of its formats.
     - [Mouth](05-effects-and-mixing/mouth.md) - diction's throat on any track: it shapes whatever goes through into a vowel.
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
     - [Resonator](05-effects-and-mixing/resonator.md) - strings tuned to a key, ringing in sympathy with the track.

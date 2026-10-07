@@ -1,0 +1,56 @@
+# Magneto - the sound of a small recordable disc's data-reduced formats.
+#
+# `mode` is the format. SP is the original: clean, the top cut a little
+# above 16 kHz. LP2 has half the bits: a grainy top and a little smear on
+# hits. LP4 has half again, with left and right sharing them: the highs
+# flicker in and out and the top narrows towards the middle. HQ is the
+# later high-rate format, the cleanest. XLP is its lowest rate, between LP2
+# and LP4. `dubs` copies it again, up to four generations, each losing a
+# little more.
+#
+# Families: clean, dubbed, blend.
+
+machine fx.Magneto
+
+patch Init family=clean
+
+patch "Long Play" family=clean
+  # LP2: twice the time on the disc, a grainier top.
+  mode           #1
+
+patch "Long Play x4" family=clean
+  # LP4: the highs come and go and the top goes narrow.
+  mode           #2
+
+patch "High Rate" family=clean
+  # HQ: the later format at its best, nearly clear.
+  mode           #3
+
+patch "Extra Long" family=clean
+  # XLP: the later format at its lowest rate.
+  mode           #4
+
+patch "Copy of a Copy" family=dubbed
+  # LP2 copied twice over.
+  mode           #1
+  dubs           #1
+
+patch "Fourth Generation" family=dubbed
+  # LP4 four times over: watery, swirling and thin.
+  mode           #2
+  dubs           #3
+
+patch "Mixtape" family=dubbed
+  # SP dubbed three times, the way a compilation was made.
+  dubs           #2
+
+patch "Under the Mix" family=blend
+  # LP4 half under the dry track: the grit without losing the top.
+  mode           #2
+  mix            0.5
+
+patch "Shimmer" family=blend
+  # XLP four times over, a little of it under the track for a swirl in the highs.
+  mode           #4
+  dubs           #3
+  mix            0.35

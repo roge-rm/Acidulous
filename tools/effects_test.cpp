@@ -11,6 +11,7 @@
 
 #include <engine/effect/Effect.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/effect/Magneto.h>
 
 using namespace acidulous;
 
@@ -358,6 +359,150 @@ void slicer() {
 
 } // namespace
 
+// --- Magneto --------------------------------------------------------------------
+
+/** Runs left and right through, both live. */
+Stereo runStereo(Effect &fx, const std::vector<float> &l, const std::vector<float> &r) {
+    Stereo s{l, r};
+    for (size_t at = 0; at < l.size(); at += kBlock) {
+        const int32_t n = static_cast<int32_t>(std::min<size_t>(kBlock, l.size() - at));
+        fx.run(s.l.data() + at, s.r.data() + at, n, true);
+    }
+    return s;
+}
+
+/** The strength of one frequency over [from, to), as an amplitude. */
+double goertzel(const std::vector<float> &x, double hz, size_t from, size_t to) {
+    const double w = 2.0 * M_PI * hz / kRate, c = 2.0 * std::cos(w);
+    double a = 0.0, b = 0.0;
+    for (size_t i = from; i < to; ++i) {
+        const double v = x[i] + c * a - b;
+        b = a;
+        a = v;
+    }
+    return 2.0 * std::sqrt(std::max(0.0, a * a + b * b - c * a * b)) / double(to - from);
+}
+
+/** Some music: a chord, a bass, a kick and hats. */
+std::vector<float> music(size_t n, uint32_t seed) {
+    std::vector<float> x(n, 0.0f);
+    const auto hats = noise(1.0f, n, seed);
+    float last = 0.0f;
+    for (size_t i = 0; i < n; ++i) {
+        const double t = double(i) / kRate;
+        for (double hz : {220.0, 277.18, 329.63}) x[i] += 0.1f * static_cast<float>(2.0 * std::fmod(hz * t, 1.0) - 1.0);
+        x[i] += 0.15f * static_cast<float>(std::sin(2.0 * M_PI * 55.0 * t));
+        const double beat = std::fmod(t, 0.5), off = std::fmod(t + 0.25, 0.5);
+        x[i] += 0.4f * static_cast<float>(std::sin(2.0 * M_PI * 60.0 * beat) * std::exp(-beat / 0.08));
+        const float bright = hats[i] - last; // the noise's top end
+        last = hats[i];
+        x[i] += 0.15f * bright * static_cast<float>(std::exp(-off / 0.02));
+    }
+    return x;
+}
+
+/** A one-pole low pass at [hz], run along [x]. */
+std::vector<float> lowPass(const std::vector<float> &x, double hz) {
+    const float a = static_cast<float>(std::exp(-2.0 * M_PI * hz / kRate));
+    std::vector<float> y(x.size());
+    float s = 0.0f;
+    for (size_t i = 0; i < x.size(); ++i) y[i] = s = x[i] + a * (s - x[i]);
+    return y;
+}
+
+/**
+ * How far the error stands under the signal, dB, against the input held back
+ * by [delay]. Taken below about 10 kHz, so the coding shows rather than
+ * where each format cuts its top.
+ */
+double damage(const Stereo &out, const std::vector<float> &l, const std::vector<float> &r, int32_t delay) {
+    double e = 0.0, s = 0.0;
+    for (int c = 0; c < 2; ++c) {
+        const auto &in = c == 0 ? l : r;
+        const auto &wet = c == 0 ? out.l : out.r;
+        std::vector<float> err(in.size(), 0.0f);
+        for (size_t i = 0; i + delay < wet.size(); ++i) err[i] = wet[i + delay] - in[i];
+        const auto le = lowPass(lowPass(err, 10000.0), 10000.0), li = lowPass(lowPass(in, 10000.0), 10000.0);
+        for (size_t i = 48000; i + delay < wet.size(); ++i) {
+            e += double(le[i]) * le[i];
+            s += double(li[i]) * li[i];
+        }
+    }
+    return 10.0 * std::log10(e / s);
+}
+
+/** Side over middle between 10 and 13 kHz, dB, summed over many single frequencies. */
+double topWidth(const Stereo &out, size_t from) {
+    std::vector<float> m(out.l.size()), d(out.l.size());
+    for (size_t i = 0; i < m.size(); ++i) {
+        m[i] = out.l[i] + out.r[i];
+        d[i] = out.l[i] - out.r[i];
+    }
+    double side = 0.0, mid = 0.0;
+    for (double hz = 10000.0; hz <= 13000.0; hz += 37.0) {
+        mid += std::pow(goertzel(m, hz, from, m.size()), 2.0);
+        side += std::pow(goertzel(d, hz, from, d.size()), 2.0);
+    }
+    return 10.0 * std::log10(side / mid);
+}
+
+void magneto() {
+    printf("- magneto\n");
+    const char *names[] = {"SP", "LP2", "LP4", "HQ", "XLP"};
+    auto latencyOf = [](Effect &fx) { return dynamic_cast<effect::Magneto &>(fx).latency(); };
+    const size_t n = 240000;
+    // Wide: the right is the left 37 ms later, with hats of its own.
+    const auto l = music(n, 3), other = music(n, 7);
+    std::vector<float> r(n, 0.0f);
+    for (size_t i = 1776; i < n; ++i) r[i] = 0.5f * (l[i - 1776] + other[i]);
+    {
+        auto fx = make("Magneto", {{"mix", 0.0f}, {"dubs", 3.0f}});
+        const auto out = runStereo(*fx, l, r);
+        const int32_t d = latencyOf(*fx);
+        std::vector<float> held(n, 0.0f);
+        for (size_t i = d; i < n; ++i) held[i] = l[i - d];
+        ok("mix 0 is the track, held back as far as the wet runs", worst(std::vector<float>(out.l.begin() + 4800, out.l.end()), std::vector<float>(held.begin() + 4800, held.end())) < 1e-6,
+           "latency " + std::to_string(d));
+        ok("...four dubs run four frames behind", d == 4 * 1024, std::to_string(d));
+    }
+    double hurt[5];
+    for (int m = 0; m < 5; ++m) {
+        auto fx = make("Magneto", {{"mode", float(m)}});
+        const auto wet = runStereo(*fx, l, r);
+        hurt[m] = damage(wet, l, r, latencyOf(*fx));
+        // A bass note and a high one: the bass comes through whole, the top is cut.
+        auto bass = tone(100.0f, 0.3f, 96000), top = tone(18500.0f, 0.1f, 96000);
+        std::vector<float> both(96000);
+        for (size_t i = 0; i < both.size(); ++i) both[i] = bass[i] + top[i];
+        auto fx2 = make("Magneto", {{"mode", float(m)}});
+        const auto out = runStereo(*fx2, both, both).l;
+        const double low = dB(goertzel(out, 100.0, 48000, 96000) / 0.3), high = dB(goertzel(out, 18500.0, 48000, 96000) / 0.1);
+        ok(std::string(names[m]) + ": the bass comes through whole and 18.5 kHz is cut", std::fabs(low) < 0.5 && high < -30.0,
+           num(low) + " / " + num(high) + " dB");
+    }
+    ok("the damage goes HQ and SP least, then LP2, then LP4", hurt[3] < hurt[1] - 2.0 && hurt[0] < hurt[1] - 2.0 && hurt[2] > hurt[1] + 1.0,
+       "SP " + num(hurt[0]) + " LP2 " + num(hurt[1]) + " LP4 " + num(hurt[2]) + " HQ " + num(hurt[3]) + " XLP " + num(hurt[4]));
+    {
+        auto one = make("Magneto", {{"mode", 2.0f}}), four = make("Magneto", {{"mode", 2.0f}, {"dubs", 3.0f}});
+        const auto wetOne = runStereo(*one, l, r), wetFour = runStereo(*four, l, r);
+        const double a = damage(wetOne, l, r, latencyOf(*one)), b = damage(wetFour, l, r, latencyOf(*four));
+        ok("each dub loses a little more", b > a + 3.0, num(a) + " to " + num(b) + " dB");
+    }
+    {
+        // LP4 narrows the top of the wide music, LP2 keeps it.
+        auto lp2 = make("Magneto", {{"mode", 1.0f}}), lp4 = make("Magneto", {{"mode", 2.0f}});
+        const double wide = topWidth(runStereo(*lp2, l, r), 48000), narrow = topWidth(runStereo(*lp4, l, r), 48000);
+        ok("LP4 narrows the top, LP2 doesn't", narrow < wide - 4.0, num(wide) + " / " + num(narrow) + " dB");
+    }
+    {
+        auto fx = make("Magneto", {{"mode", 2.0f}, {"dubs", 3.0f}});
+        const std::vector<float> zero(96000, 0.0f);
+        const auto out = runStereo(*fx, zero, zero);
+        ok("silence stays silent", peak(out.l) == 0.0 && peak(out.r) == 0.0);
+    }
+    staysBounded("Magneto");
+}
+
 int main() {
     printf("character effects\n");
     smash();
@@ -365,6 +510,7 @@ int main() {
     mouth();
     tape();
     slicer();
+    magneto();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
