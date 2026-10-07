@@ -59,6 +59,7 @@
     <string name="formula_title">Formule</string>
     <!-- The letters are the formula\'s own variables and stay as they are. -->
     <string name="formula_expression">expression en t, f, n, v, x, a, b, c, s, r</string>
+    <string name="formula_fx_expression">expression en x (la piste), t, a, b, c, r</string>
     <string name="formula_examples">exemples</string>
     <string name="formula_tables">tables de pas : valeurs, et | là où ça reboucle</string>
     <string name="formula_arp">arpège, demi-tons</string>

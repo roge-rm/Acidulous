@@ -117,6 +117,7 @@ internal expect object EngineNative {
     suspend fun nativeLoadReel(rack: Int, spec: String): String
     fun nativeSetCacheRoot(path: String)
     suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
+    suspend fun nativeLoadEffectFormula(rack: Int, unit: String, formula: String): String
     suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     suspend fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
     suspend fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String

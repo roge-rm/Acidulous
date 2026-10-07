@@ -59,6 +59,7 @@
     <string name="formula_title">Formula</string>
     <!-- The letters are the formula\'s own variables and stay as they are. -->
     <string name="formula_expression">expression in t, f, n, v, x, a, b, c, s, r</string>
+    <string name="formula_fx_expression">expression in x (the track), t, a, b, c, r</string>
     <string name="formula_examples">examples</string>
     <string name="formula_tables">step tables - values, and | where it loops back</string>
     <string name="formula_arp">arp, semitones</string>

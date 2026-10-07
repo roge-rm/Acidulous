@@ -24,6 +24,12 @@ class Effect {
     virtual void onBlock(int64_t /*tickStart*/, int64_t /*tickEnd*/, float /*bpm*/) {}
     // In place. Return true if the output is stereo.
     virtual bool process(float *L, float *R, int32_t frames, bool stereoIn) = 0;
+    /**
+     * Takes an object compiled on a worker (a formula, say) in place of the
+     * one held in [slot], and returns the old one to be retired. Audio
+     * thread. Effects that hold none refuse by handing the new one back.
+     */
+    virtual void *swapObject(int32_t /*slot*/, void *object) { return object; }
     ParamSet &params() { return params_; }
 
     // What the rack calls: bypass short-circuits, params are ticked here.

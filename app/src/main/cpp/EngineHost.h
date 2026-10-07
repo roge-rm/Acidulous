@@ -329,6 +329,13 @@ class EngineHost {
     std::string loadFormula(int rack, const std::string &formula, const std::string &arp,
                             const std::string &duty, const std::string &vol);
 
+    /**
+     * Compiles a Formula effect's expression and hands it to the effect in
+     * [unit]'s slot ("effect1", "send2", "master1", "group3fx2", "input1"...;
+     * [rack] for a track insert). Returns "" or the parse error.
+     */
+    std::string loadEffectFormula(int rack, const std::string &unit, const std::string &formula);
+
     // --- Freeze ---------------------------------------------------------
   private:
     bool renderTargets(const std::vector<RenderTarget> &targets, float tailSeconds, AudioFormat format,

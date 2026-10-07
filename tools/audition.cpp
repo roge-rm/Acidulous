@@ -1239,6 +1239,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         fx->prepare(static_cast<int32_t>(kSr));
         fx->reset();
         applyTo(fx->params(), r.norm);
+        applyEffectSettings(fx.get(), r.settings);
         take = renderEffect(fx.get(), opt.bpm, 4.0f);
     } else {
         std::unique_ptr<Machine> m(MachineRegistry::create(bank.unit.c_str()));

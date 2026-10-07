@@ -93,6 +93,7 @@
     <string name="pw_blend">blend</string>
     <string name="pw_bloom">bloom</string>
     <string name="pw_blow">blow</string>
+    <string name="pw_blur">blur</string>
     <string name="pw_board">board</string>
     <string name="pw_body">body</string>
     <string name="pw_bolt">bolt</string>
@@ -137,6 +138,7 @@
     <string name="pw_chip">chip</string>
     <string name="pw_choir">choir</string>
     <string name="pw_choke">choke</string>
+    <string name="pw_chop_on_the_clock">chop on the clock</string>
     <string name="pw_chord">Chord</string>
     <string name="pw_chord_4b3a0b">chord</string>
     <string name="pw_chorus">Chorus</string>
@@ -145,6 +147,7 @@
     <string name="pw_circuit">circuit</string>
     <string name="pw_clap">Clap</string>
     <string name="pw_clap_c19ab8">clap</string>
+    <string name="pw_clarinet">clarinet</string>
     <string name="pw_classic">classic</string>
     <string name="pw_clave">Clave</string>
     <string name="pw_clave_8927bd">clave</string>
@@ -257,6 +260,7 @@
     <string name="pw_eg1">eg1</string>
     <string name="pw_eg2">eg2</string>
     <string name="pw_eg3">eg3</string>
+    <string name="pw_eight_bits">eight bits</string>
     <string name="pw_eighths">eighths</string>
     <string name="pw_electric">electric</string>
     <string name="pw_electric_grand">electric grand</string>
@@ -304,6 +308,7 @@
     <string name="pw_feg">feg</string>
     <string name="pw_felt">felt</string>
     <string name="pw_fenv">fenv</string>
+    <string name="pw_fewer_bits_with_a">fewer bits with a</string>
     <string name="pw_fifths">fifths</string>
     <string name="pw_file">file</string>
     <string name="pw_file_mod">file mod</string>
@@ -330,7 +335,8 @@
     <string name="pw_follow">follow</string>
     <string name="pw_forked">forked</string>
     <string name="pw_formant">formant</string>
-    <string name="pw_formula">formula</string>
+    <string name="pw_formula">Formula</string>
+    <string name="pw_formula_be121f">formula</string>
     <string name="pw_fortepiano">fortepiano</string>
     <string name="pw_forward">forward</string>
     <string name="pw_frame">frame</string>
@@ -358,7 +364,9 @@
     <string name="pw_generative">generative</string>
     <string name="pw_generator">generator</string>
     <string name="pw_genggong">genggong</string>
+    <string name="pw_ghost">ghost</string>
     <string name="pw_glass">Glass</string>
+    <string name="pw_glass_170fd7">glass</string>
     <string name="pw_glide">glide</string>
     <string name="pw_glide_on">glide on</string>
     <string name="pw_glides">glides</string>
@@ -372,6 +380,7 @@
     <string name="pw_grid">grid</string>
     <string name="pw_grit">Grit</string>
     <string name="pw_grit_69794c">grit</string>
+    <string name="pw_grit_with_b">grit with b</string>
     <string name="pw_groupings">groupings</string>
     <string name="pw_growl">growl</string>
     <string name="pw_guitar">guitar</string>
@@ -411,7 +420,8 @@
     <string name="pw_hollow">hollow</string>
     <string name="pw_honky_tonk">honky-tonk</string>
     <string name="pw_honour">honour</string>
-    <string name="pw_horn">horn</string>
+    <string name="pw_horn">Horn</string>
+    <string name="pw_horn_bd6ad7">horn</string>
     <string name="pw_house">house</string>
     <string name="pw_how">how</string>
     <string name="pw_how_many">how many</string>
@@ -514,6 +524,7 @@
     <string name="pw_loss">loss</string>
     <string name="pw_loud">loud</string>
     <string name="pw_low">low</string>
+    <string name="pw_low_bits_from_the_clock">low bits from the clock</string>
     <string name="pw_low_cut">low cut</string>
     <string name="pw_low_pass">low pass</string>
     <string name="pw_low_tom">Low Tom</string>
@@ -544,6 +555,7 @@
     <string name="pw_magneto">Magneto</string>
     <string name="pw_major">major</string>
     <string name="pw_makeup">makeup</string>
+    <string name="pw_mangle">mangle</string>
     <string name="pw_manuals">manuals</string>
     <string name="pw_map">map</string>
     <string name="pw_master">master</string>
@@ -612,6 +624,7 @@
     <string name="pw_number">number</string>
     <string name="pw_object">object</string>
     <string name="pw_object_n">Object %d</string>
+    <string name="pw_oboe">oboe</string>
     <string name="pw_oct">oct</string>
     <string name="pw_octave">octave</string>
     <string name="pw_octaves">octaves</string>
@@ -655,6 +668,7 @@
     <string name="pw_patch">patch</string>
     <string name="pw_pattern">pattern</string>
     <string name="pw_peak">peak</string>
+    <string name="pw_peaks">peaks</string>
     <string name="pw_ped_sus">ped sus</string>
     <string name="pw_pedal">pedal</string>
     <string name="pw_pedal_at">pedal at</string>
@@ -777,6 +791,7 @@
     <string name="pw_rim_5f1d1f">rim</string>
     <string name="pw_ring">ring</string>
     <string name="pw_ring_it_against_a_sine">ring it against a sine</string>
+    <string name="pw_ring_it_with_a">ring it with a</string>
     <string name="pw_ring_loop">ring loop</string>
     <string name="pw_ring12">ring12</string>
     <string name="pw_ring23">ring23</string>
@@ -834,6 +849,7 @@
     <string name="pw_scanner">scanner</string>
     <string name="pw_scatter">scatter</string>
     <string name="pw_scoop">scoop</string>
+    <string name="pw_scrambled_in_time">scrambled in time</string>
     <string name="pw_screw">screw</string>
     <string name="pw_section">section</string>
     <string name="pw_seed">seed</string>
@@ -887,6 +903,7 @@
     <string name="pw_southern">southern</string>
     <string name="pw_sp">SP</string>
     <string name="pw_span">span</string>
+    <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">speed</string>
     <string name="pw_split">split</string>
     <string name="pw_spray">spray</string>
@@ -1050,6 +1067,7 @@
     <string name="pw_walk">walk</string>
     <string name="pw_warm">warm</string>
     <string name="pw_warp">warp</string>
+    <string name="pw_wash">wash</string>
     <string name="pw_wave">wave</string>
     <string name="pw_wave_a">wave a</string>
     <string name="pw_wave_b">wave b</string>
@@ -1076,6 +1094,7 @@
     <string name="pw_words">words</string>
     <string name="pw_worn">worn</string>
     <string name="pw_wow">wow</string>
+    <string name="pw_wrap_it_with_a">wrap it with a</string>
     <string name="pw_wreck">wreck</string>
     <string name="pw_xlp">XLP</string>
     <string name="pw_xor">xor</string>

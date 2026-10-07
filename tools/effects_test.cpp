@@ -12,6 +12,8 @@
 #include <engine/effect/Effect.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/effect/Magneto.h>
+#include <engine/effect/Spectral.h>
+#include <engine/machine/formulate/Expr.h>
 
 using namespace acidulous;
 
@@ -503,6 +505,240 @@ void magneto() {
     staysBounded("Magneto");
 }
 
+// --- Horn -----------------------------------------------------------------------
+
+/** The pitch of [x] over [from, to), Hz, by where it best matches itself one period on. */
+double pitchHz(const std::vector<float> &x, size_t from, size_t to) {
+    double best = 0.0;
+    int bestLag = 0;
+    for (int lag = static_cast<int>(kRate / 1200.0f); lag < static_cast<int>(kRate / 50.0f); ++lag) {
+        double c = 0.0, e1 = 0.0, e2 = 0.0;
+        for (size_t i = from; i + lag < to; ++i) {
+            c += double(x[i]) * x[i + lag];
+            e1 += double(x[i]) * x[i];
+            e2 += double(x[i + lag]) * x[i + lag];
+        }
+        const double r = c / std::sqrt(e1 * e2 + 1e-30);
+        // The first strong match, so a period isn't mistaken for two.
+        if (r > best + 0.02) { best = r; bestLag = lag; }
+        if (best > 0.9 && r < best - 0.2) break;
+    }
+    return bestLag > 0 ? kRate / bestLag : 0.0;
+}
+
+void horn() {
+    printf("- horn\n");
+    const char *kinds[] = {"brass", "clarinet", "oboe", "flute"};
+    const auto a220 = tone(220.0f, 0.3f, 144000);
+    for (int k = 0; k < 4; ++k) {
+        auto fx = make("Horn", {{"kind", float(k)}, {"air", 0.0f}});
+        const auto out = run(*fx, a220).l;
+        const double hz = pitchHz(out, 96000, 104000);
+        const double level = dB(rms(out, 96000, 144000) / rms(a220, 96000, 144000));
+        ok(std::string(kinds[k]) + " plays the note the track plays, about as loud", std::fabs(hz - 220.0) < 220.0 * 0.015 && std::fabs(level) < 4.0,
+           num(hz) + " Hz, " + num(level) + " dB");
+    }
+    {
+        auto fx = make("Horn", {{"octave", 1.0f}, {"air", 0.0f}});
+        const auto out = run(*fx, a220).l;
+        const double hz = pitchHz(out, 96000, 104000);
+        ok("an octave up, it plays an octave up", std::fabs(hz - 440.0) < 440.0 * 0.015, num(hz) + " Hz");
+    }
+    {
+        // The track moves up a fifth: the horn follows.
+        auto fx = make("Horn", {{"air", 0.0f}, {"glide", 10.0f}});
+        std::vector<float> line = a220;
+        const auto e330 = tone(330.0f, 0.3f, 96000);
+        line.insert(line.end(), e330.begin(), e330.end());
+        const auto out = run(*fx, line).l;
+        const double hz = pitchHz(out, 144000 + 48000, 144000 + 56000);
+        ok("it follows the track to a new note", std::fabs(hz - 330.0) < 330.0 * 0.015, num(hz) + " Hz");
+    }
+    {
+        auto fx = make("Horn");
+        std::vector<float> line = a220;
+        line.resize(line.size() + 96000, 0.0f);
+        const auto out = run(*fx, line).l;
+        ok("when the track stops, so does the horn", rms(out, 144000 + 48000, 144000 + 96000) < 1e-3, num(rms(out, 144000 + 48000, 144000 + 96000)));
+    }
+    {
+        auto fx = make("Horn", {{"mix", 0.0f}});
+        ok("mix 0 is the track untouched", worst(run(*fx, a220).l, a220) < 1e-6);
+    }
+    {
+        // The generic check feeds it noise, which it ignores; a note with every knob up.
+        auto fx = make("Horn");
+        for (int32_t i = 0; i < fx->params().size(); ++i) {
+            if (std::strcmp(fx->params().def(i).name, "gain") != 0) fx->params().set(i, 1.0f);
+        }
+        fx->params().jumpAll();
+        const auto out = run(*fx, tone(220.0f, 0.9f, 144000));
+        ok("every knob up on a loud note, it stays finite and bounded", finite(out) && peak(out.l) < 8.0, "peak " + num(peak(out.l)));
+    }
+    staysBounded("Horn");
+}
+
+// --- Spectral -------------------------------------------------------------------
+
+void spectral() {
+    printf("- spectral\n");
+    auto latencyOf = [](Effect &fx) { return dynamic_cast<effect::Spectral &>(fx).latency(); };
+    const size_t n = 144000;
+    const auto l = music(n, 5);
+    {
+        // With nothing turned, it takes the track apart and puts it back as it was.
+        auto fx = make("Spectral");
+        const auto out = run(*fx, l).l;
+        const int32_t d = latencyOf(*fx);
+        double e = 0.0, s = 0.0;
+        for (size_t i = 48000; i + d < n; ++i) {
+            const double v = out[i + d] - l[i];
+            e += v * v;
+            s += double(l[i]) * l[i];
+        }
+        ok("with nothing turned, the track comes back as it went in", 10.0 * std::log10(e / s) < -60.0, num(10.0 * std::log10(e / s)) + " dB, latency " + std::to_string(d));
+    }
+    {
+        auto fx = make("Spectral", {{"mix", 0.0f}, {"blur", 0.7f}});
+        const auto out = run(*fx, l).l;
+        const int32_t d = latencyOf(*fx);
+        std::vector<float> held(n, 0.0f);
+        for (size_t i = d; i < n; ++i) held[i] = l[i - d];
+        ok("mix 0 is the track, held back as far as the wet runs", worst(std::vector<float>(out.begin() + 4800, out.end()), std::vector<float>(held.begin() + 4800, held.end())) < 1e-6);
+    }
+    const auto a440 = tone(440.0f, 0.3f, 48000);
+    std::vector<float> burst = a440;
+    burst.resize(144000, 0.0f);
+    {
+        // Frozen while the note plays, it goes on after the note stops.
+        auto fx = make("Spectral");
+        std::vector<float> first(burst.begin(), burst.begin() + 40000), rest(burst.begin() + 40000, burst.end());
+        const auto before = run(*fx, first).l;
+        set(*fx, "freeze", 1.0f);
+        const auto after = run(*fx, rest).l;
+        const double held = rms(after, 48000, 96000);
+        ok("freeze holds the sound after the track stops", held > 0.1 && std::fabs(pitchHz(after, 48000, 52000) - 440.0) < 10.0,
+           "rms " + num(held) + ", " + num(pitchHz(after, 48000, 52000)) + " Hz");
+        set(*fx, "freeze", 0.0f);
+        const auto thawed = run(*fx, std::vector<float>(48000, 0.0f)).l;
+        ok("...and lets go when it's off", rms(thawed, 12000, 48000) < 1e-3, num(rms(thawed, 12000, 48000)));
+        (void)before;
+    }
+    {
+        auto dry = make("Spectral"), blurred = make("Spectral", {{"blur", 0.9f}});
+        const auto a = run(*dry, burst).l, b = run(*blurred, burst).l;
+        const double ta = rms(a, 48000 + 12000, 48000 + 24000), tb = rms(b, 48000 + 12000, 48000 + 24000);
+        ok("blur lets a note fade instead of stop", tb > 0.02 && tb > ta * 10.0, num(ta) + " to " + num(tb));
+    }
+    {
+        // A tone in noise: peaks keeps the tone and drops the noise.
+        auto mixed = tone(1000.0f, 0.2f, 96000);
+        const auto hiss = noise(0.1f, 96000, 9);
+        for (size_t i = 0; i < mixed.size(); ++i) mixed[i] += hiss[i];
+        auto fx = make("Spectral", {{"peaks", 0.7f}});
+        const auto out = run(*fx, mixed).l;
+        const double toneIn = goertzel(mixed, 1000.0, 24000, 96000), toneOut = goertzel(out, 1000.0, 24000, 96000);
+        const double share = toneOut * toneOut / 2.0 / std::pow(rms(out, 24000, 96000), 2.0);
+        const double shareIn = toneIn * toneIn / 2.0 / std::pow(rms(mixed, 24000, 96000), 2.0);
+        ok("peaks keeps the strongest frequencies", 1.0 - share < (1.0 - shareIn) * 0.1, num(1.0 - shareIn) + " to " + num(1.0 - share) + " of the energy not the tone");
+    }
+    {
+        auto dark = make("Spectral", {{"tilt", -12.0f}}), bright = make("Spectral", {{"tilt", 12.0f}});
+        const auto w = noise(0.2f, 96000, 4);
+        const auto a = run(*dark, w).l, b = run(*bright, w).l;
+        const double ra = goertzel(a, 8000.0, 24000, 96000) / goertzel(a, 250.0, 24000, 96000);
+        const double rb = goertzel(b, 8000.0, 24000, 96000) / goertzel(b, 250.0, 24000, 96000);
+        ok("tilt leans it brighter or darker", dB(rb) > dB(ra) + 30.0, num(dB(ra)) + " / " + num(dB(rb)) + " dB");
+    }
+    {
+        auto fx = make("Spectral", {{"robot", 1.0f}});
+        const auto out = run(*fx, music(n, 2)).l;
+        ok("robot makes a sound of its own", rms(out, 48000, n) > 0.01 && finite(Stereo{out, out}), num(rms(out, 48000, n)));
+    }
+    staysBounded("Spectral");
+}
+
+// --- Formula --------------------------------------------------------------------
+
+/** Hands a Formula effect its formula, as the app does; false if it won't parse. */
+bool giveFormula(Effect &fx, const char *text, std::string *error = nullptr) {
+    auto *expr = new machine::formulate::Expr();
+    std::string why;
+    if (*text != '\0' && !machine::formulate::Expr::parse(text, *expr, why)) {
+        delete expr;
+        if (error) *error = why;
+        return false;
+    }
+    delete static_cast<machine::formulate::Expr *>(fx.swapObject(0, expr));
+    return true;
+}
+
+void formula() {
+    printf("- formula\n");
+    const auto l = music(96000, 8);
+    {
+        auto fx = make("Formula");
+        ok("with no formula the track passes untouched", worst(run(*fx, l).l, l) < 1e-7);
+    }
+    {
+        auto fx = make("Formula");
+        giveFormula(*fx, "x");
+        const auto out = run(*fx, l).l;
+        double w = 0.0;
+        for (size_t i = 0; i < l.size(); ++i) w = std::max(w, double(std::fabs(out[i] - l[i])));
+        ok("x alone is the track in eight bits", w < 0.5 / 128.0 + 1e-4 && w > 1e-4, "worst " + num(w));
+    }
+    {
+        // Fewer bits with a: the error grows as a goes up.
+        auto lo = make("Formula", {{"a", 32.0f}}), hi = make("Formula", {{"a", 200.0f}});
+        giveFormula(*lo, "x & (255 << (a >> 5))");
+        giveFormula(*hi, "x & (255 << (a >> 5))");
+        const auto ol = run(*lo, l).l, oh = run(*hi, l).l;
+        double dl = 0.0, dh = 0.0;
+        for (size_t i = 0; i < l.size(); ++i) {
+            dl += std::pow(ol[i] - l[i], 2.0);
+            dh += std::pow(oh[i] - l[i], 2.0);
+        }
+        ok("a knob read by the formula changes the sound", dh > dl * 10.0, num(dB(std::sqrt(dl))) + " to " + num(dB(std::sqrt(dh))) + " dB");
+    }
+    {
+        // A gate on the counter: on and off at rate / 2048 / 2.
+        auto fx = make("Formula", {{"rate", 8000.0f}});
+        giveFormula(*fx, "t >> 11 & 1 ? x : 128");
+        const auto out = run(*fx, tone(440.0f, 0.5f, 96000)).l;
+        const size_t half = static_cast<size_t>(kRate * 2048.0 / 8000.0);
+        ok("t counts at rate: a gate on it opens and shuts in time", rms(out, 100, half - 100) < 0.01 && rms(out, half + 100, 2 * half - 100) > 0.3,
+           num(rms(out, 100, half - 100)) + " / " + num(rms(out, half + 100, 2 * half - 100)));
+    }
+    {
+        std::string why;
+        auto fx = make("Formula");
+        ok("a formula that won't parse says why", !giveFormula(*fx, "x + (", &why) && !why.empty(), why);
+    }
+    {
+        auto fx = make("Formula", {{"mix", 0.0f}});
+        giveFormula(*fx, "x ^ r");
+        ok("mix 0 is the track untouched", worst(run(*fx, l).l, l) < 1e-7);
+    }
+    {
+        // Each example the editor offers parses, and none runs away.
+        const char *examples[] = {"x", "x & (255 << (a >> 5))", "128 + ((x - 128) * (a + 16) >> 4)",
+                                  "128 + ((x - 128) * sin(t * (a + 1) >> 3) >> 7)", "t >> 6 & 1 ? x : 128",
+                                  "x ^ r >> (8 - (b >> 5))", "(x & 240) | (t >> 2 & 15)", "x ^ t >> 4"};
+        bool all = true;
+        double most = 0.0;
+        for (const char *e : examples) {
+            auto fx = make("Formula", {{"a", 200.0f}, {"b", 200.0f}});
+            all = all && giveFormula(*fx, e);
+            const auto out = run(*fx, l);
+            all = all && finite(out);
+            most = std::max(most, peak(out.l));
+        }
+        ok("every example parses and stays bounded", all && most <= 1.0 + 1e-6, "peak " + num(most));
+    }
+    staysBounded("Formula");
+}
+
 int main() {
     printf("character effects\n");
     smash();
@@ -511,6 +747,9 @@ int main() {
     tape();
     slicer();
     magneto();
+    horn();
+    spectral();
+    formula();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

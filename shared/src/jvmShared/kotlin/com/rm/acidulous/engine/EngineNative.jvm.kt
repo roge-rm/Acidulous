@@ -152,6 +152,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadFormula")
     private external fun blocking_nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
     actual suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String = blocking_nativeLoadFormula(rack, formula, arp, duty, vol)
+    @JvmName("nativeLoadEffectFormula")
+    private external fun blocking_nativeLoadEffectFormula(rack: Int, unit: String, formula: String): String
+    actual suspend fun nativeLoadEffectFormula(rack: Int, unit: String, formula: String): String = blocking_nativeLoadEffectFormula(rack, unit, formula)
     @JvmName("nativeBuildCloud")
     private external fun blocking_nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     actual suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String = blocking_nativeBuildCloud(rack, spectrum01)

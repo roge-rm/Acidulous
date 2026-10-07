@@ -4,6 +4,8 @@ import com.rm.acidulous.util.format
 
 import androidx.compose.foundation.background
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
@@ -36,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
 import com.rm.acidulous.model.EFFECT_SLOTS
@@ -44,6 +47,8 @@ import com.rm.acidulous.model.SIDECHAIN_STEPS
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.PatchStore
 import com.rm.acidulous.model.withEffectPatch
+import com.rm.acidulous.model.slotOf
+import com.rm.acidulous.model.withSlotSetting
 import com.rm.acidulous.model.withModifierParam
 import com.rm.acidulous.model.withModifierBypass
 import com.rm.acidulous.model.withModifier
@@ -259,10 +264,17 @@ private fun SlotFace(
                 PatchPicker(
                     title = type,
                     patchNames = { PatchStore.list(key) },
-                    onSave = { name -> PatchStore.save(Patch(key, name, kind.at(editor.song.tracks[trackIndex], slot).params)) },
+                    onSave = { name ->
+                        val at = kind.at(editor.song.tracks[trackIndex], slot)
+                        PatchStore.save(Patch(key, name, at.params, settings = at.settings))
+                    },
                     onLoad = { name ->
                         PatchStore.load(key, name)?.let { patch ->
                             editor.edit(trackIndex) { t -> load(t, slot, patch.params) }
+                            // A Formula's formula comes with its preset.
+                            if (type == "Formula" && kind == SlotKind.Effects) {
+                                editor.editSong { song -> song.withSlotSetting(trackIndex, unit, "formula", patch.settings["formula"]) }
+                            }
                             b.applyAll(patch.params)
                         }
                     },
@@ -270,6 +282,15 @@ private fun SlotFace(
                     userNames = { PatchStore.userList(key) },
                     onDelete = { name -> PatchStore.delete(key, name) },
                 )
+            }
+        }
+        // A Formula effect's formula: words, so a field rather than a knob.
+        if (type == "Formula" && kind == SlotKind.Effects) {
+            var edits by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+            val text = edits.let { editor.song.slotOf(trackIndex, unit)?.settings?.get("formula").orEmpty() }
+            EffectFormula(text, EngineSync.effectFormulaErrors[EngineSync.effectFormulaKey(trackIndex, unit)].orEmpty()) { new ->
+                editor.editSong { song -> song.withSlotSetting(trackIndex, unit, "formula", new.ifEmpty { null }) }
+                edits++
             }
         }
         val control: @Composable (ParamInfo) -> Unit = { p ->
@@ -474,6 +495,9 @@ private val EXTRA = mapOf(
     "Tape" to setOf("stop", "stoptime"),
     "Slicer" to setOf("seed", "pitch"),
     "Magneto" to setOf("dubs"),
+    "Horn" to setOf("breath", "snap"),
+    "Spectral" to setOf("freeze", "peaks"),
+    "Formula" to setOf("rate", "smooth"),
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
     "Bitcrusher" to setOf("jitter", "tone"),
     "Phaser" to setOf("spread"),
@@ -526,6 +550,11 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "octaves" || name == "ratchet" -> listOf("1", "2", "3", "4")
     name == "cycles" -> (1..8).map { "$it" }
     name == "length" -> (1..16).map { "$it" }
+    // Two-step switches with words of their own, before the plain off/on.
+    name == "mode" && type == "Acid" -> listOf("LP", "BP")
+    name == "stop" && type == "Tape" -> listOf("run", "stop")
+    name == "snap" && type == "Horn" -> listOf("free", "semi")
+    name == "freeze" && type == "Spectral" -> listOf("run", "hold")
     steps == 2 -> listOf("off", "on")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
@@ -534,13 +563,13 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "freeze" && type == "Grain" -> listOf("off", "on")
     name == "strings" && type == "Resonator" -> (4..16).map { "$it" }
     name == "pattern" && type == "Acid" -> listOf("track", "8ths", "16ths", "offbeat", "push", "busy", "halves", "synco", "rolling")
-    name == "mode" && type == "Acid" -> listOf("LP", "BP")
     name == "move" && type == "Mouth" -> listOf("lfo", "level", "key")
-    name == "stop" && type == "Tape" -> listOf("run", "stop")
     name == "rate" && type == "Slicer" -> listOf("1/4", "1/8", "1/16", "1/32")
     name == "seed" && type == "Slicer" -> (1..16).map { "$it" }
     name == "mode" && type == "Magneto" -> listOf("SP", "LP2", "LP4", "HQ", "XLP")
     name == "dubs" && type == "Magneto" -> (1..4).map { "$it" }
+    name == "kind" && type == "Horn" -> listOf("brass", "clarinet", "oboe", "flute")
+    name == "octave" && type == "Horn" -> listOf("-2", "-1", "0", "+1", "+2")
     // Scale degrees, not semitones, since that's how the Harmonizer works.
     (name == "interval" || name == "interval2") && type == "Harmonizer" ->
         (-7..7).map { if (it > 0) "+$it" else "$it" }
@@ -676,3 +705,66 @@ private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name
 
 /** The slots whose `key` is a musical key, not a filter's tracking. */
 private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer")
+
+/** Formulas to start a Formula effect from, all original. x is the track, 0 to 255. */
+internal val FORMULA_FX_EXAMPLES = listOf(
+    "x" to "eight bits",
+    "x & (255 << (a >> 5))" to "fewer bits with a",
+    "128 + ((x - 128) * (a + 16) >> 4)" to "wrap it with a",
+    "128 + ((x - 128) * sin(t * (a + 1) >> 3) >> 7)" to "ring it with a",
+    "t >> 6 & 1 ? x : 128" to "chop on the clock",
+    "x ^ r >> (8 - (b >> 5))" to "grit with b",
+    "(x & 240) | (t >> 2 & 15)" to "low bits from the clock",
+    "x ^ t >> 4" to "scrambled in time",
+)
+
+/**
+ * A Formula effect's formula: shown, with its error if it has one, and
+ * edited in a dialog that only applies on OK, so a half-typed formula is
+ * never compiled.
+ */
+@Composable
+internal fun EffectFormula(text: String, error: String, onSet: (String) -> Unit) {
+    val c = Acid.colors
+    var editing by remember { mutableStateOf(false) }
+    Column(Modifier.widthIn(min = 140.dp, max = 320.dp).padding(bottom = 6.dp)) {
+        Text(
+            text.ifEmpty { stringResource(Res.string.formula_none) },
+            color = if (text.isEmpty()) c.textDim else c.textHi,
+            fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
+        if (error.isNotEmpty()) Text(error, color = c.red, fontSize = 10.sp, maxLines = 2)
+        TextButton(onClick = { editing = true }) {
+            Text(stringResource(Res.string.formula_edit), color = c.accent, fontSize = 12.sp)
+        }
+    }
+    if (editing) {
+        var draft by remember { mutableStateOf(text) }
+        PlainDialog(
+            title = stringResource(Res.string.formula_title),
+            onDismiss = { editing = false },
+            confirmLabel = stringResource(Res.string.ok),
+            onConfirm = { editing = false; onSet(draft.trim()) },
+            spacing = 8.dp,
+        ) {
+            androidx.compose.material3.OutlinedTextField(
+                value = draft, onValueChange = { draft = it },
+                label = { Text(stringResource(Res.string.formula_fx_expression)) },
+                textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                modifier = Modifier.typing() then Modifier.fillMaxWidth(),
+            )
+            Text(stringResource(Res.string.formula_examples), color = c.teal, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            for ((example, what) in FORMULA_FX_EXAMPLES) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { draft = example }.padding(vertical = 3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(example, color = c.textHi, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.weight(1f), maxLines = 1)
+                    Text(panelWord(what), color = c.textDim, fontSize = 10.sp, maxLines = 1)
+                }
+            }
+        }
+    }
+}

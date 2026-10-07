@@ -57,6 +57,9 @@ internal object FactoryBanks {
         "fx.Tape" -> fx_tape
         "fx.Slicer" -> fx_slicer
         "fx.Magneto" -> fx_magneto
+        "fx.Horn" -> fx_horn
+        "fx.Spectral" -> fx_spectral
+        "fx.Formula" -> fx_formula
         else -> emptyList()
     }
 
@@ -4607,4 +4610,140 @@ internal object FactoryBanks {
         family = "blend")
 
     private val fx_magneto: List<Patch> by lazy { listOf(fx_magneto0(), fx_magneto1(), fx_magneto2(), fx_magneto3(), fx_magneto4(), fx_magneto5(), fx_magneto6(), fx_magneto7(), fx_magneto8(), fx_magneto9()) }
+
+    private fun fx_horn0() = Patch("fx.Horn", "Init", emptyMap(),
+        family = "brass")
+
+    private fun fx_horn1() = Patch("fx.Horn", "Bright Lead",
+        mapOf("tone" to 0.75f, "bell" to 0.8f, "glide" to 0.435755581f, "gain" to 0.5277778f),
+        family = "brass")
+
+    private fun fx_horn2() = Patch("fx.Horn", "Low Brass",
+        mapOf("octave" to 0.25f, "tone" to 0.3f, "bell" to 0.3f, "gain" to 0.5833333f),
+        family = "brass")
+
+    private fun fx_horn3() = Patch("fx.Horn", "Hunting Horn",
+        mapOf("bell" to 0.35f, "air" to 0.35f, "glide" to 0.770361f),
+        family = "brass")
+
+    private fun fx_horn4() = Patch("fx.Horn", "Clarinet",
+        mapOf("kind" to 0.333333343f, "gain" to 0.5138889f),
+        family = "reed")
+
+    private fun fx_horn5() = Patch("fx.Horn", "Low Clarinet",
+        mapOf("kind" to 0.333333343f, "octave" to 0.25f, "tone" to 0.35f, "gain" to 0.625f),
+        family = "reed")
+
+    private fun fx_horn6() = Patch("fx.Horn", "Oboe",
+        mapOf("kind" to 0.6666667f, "tone" to 0.6f, "gain" to 0.5694444f),
+        family = "reed")
+
+    private fun fx_horn7() = Patch("fx.Horn", "Flute",
+        mapOf("kind" to 1f, "octave" to 0.75f, "air" to 0.25f, "gain" to 0.4027778f),
+        family = "flute")
+
+    private fun fx_horn8() = Patch("fx.Horn", "Breathy Flute",
+        mapOf("kind" to 1f, "air" to 0.7f, "breath" to 0.3f, "gain" to 0.5416667f),
+        family = "flute")
+
+    private fun fx_horn9() = Patch("fx.Horn", "Sung Brass",
+        mapOf("snap" to 1f, "mix" to 0.5f, "gain" to 0.5694444f),
+        family = "blend")
+
+    private val fx_horn: List<Patch> by lazy { listOf(fx_horn0(), fx_horn1(), fx_horn2(), fx_horn3(), fx_horn4(), fx_horn5(), fx_horn6(), fx_horn7(), fx_horn8(), fx_horn9()) }
+
+    private fun fx_spectral0() = Patch("fx.Spectral", "Init", emptyMap(),
+        family = "wash")
+
+    private fun fx_spectral1() = Patch("fx.Spectral", "Smear",
+        mapOf("blur" to 0.6f, "smear" to 0.3f),
+        family = "wash")
+
+    private fun fx_spectral2() = Patch("fx.Spectral", "Long Blur",
+        mapOf("blur" to 0.92f),
+        family = "wash")
+
+    private fun fx_spectral3() = Patch("fx.Spectral", "Dark Haze",
+        mapOf("blur" to 0.75f, "smear" to 0.5f, "tilt" to 0.166666672f, "gain" to 0.333333343f),
+        family = "wash")
+
+    private fun fx_spectral4() = Patch("fx.Spectral", "Whisper",
+        mapOf("smear" to 1f, "tilt" to 0.625f),
+        family = "ghost")
+
+    private fun fx_spectral5() = Patch("fx.Spectral", "Far Away",
+        mapOf("blur" to 0.5f, "smear" to 0.8f, "mix" to 0.5f),
+        family = "ghost")
+
+    private fun fx_spectral6() = Patch("fx.Spectral", "Robot Voice",
+        mapOf("robot" to 1f),
+        family = "robot")
+
+    private fun fx_spectral7() = Patch("fx.Spectral", "Half Robot",
+        mapOf("blur" to 0.3f, "robot" to 0.5f, "gain" to 0.416666657f),
+        family = "robot")
+
+    private fun fx_spectral8() = Patch("fx.Spectral", "Glass",
+        mapOf("peaks" to 0.75f),
+        family = "glass")
+
+    private fun fx_spectral9() = Patch("fx.Spectral", "Ice",
+        mapOf("blur" to 0.7f, "peaks" to 0.85f, "tilt" to 0.6666667f, "gain" to 0.8055556f),
+        family = "glass")
+
+    private val fx_spectral: List<Patch> by lazy { listOf(fx_spectral0(), fx_spectral1(), fx_spectral2(), fx_spectral3(), fx_spectral4(), fx_spectral5(), fx_spectral6(), fx_spectral7(), fx_spectral8(), fx_spectral9()) }
+
+    private fun fx_formula0() = Patch("fx.Formula", "Init", emptyMap(),
+        family = "crush")
+
+    private fun fx_formula1() = Patch("fx.Formula", "Eight Bit", emptyMap(),
+        mapOf("formula" to "x"),
+        family = "crush")
+
+    private fun fx_formula2() = Patch("fx.Formula", "Fewer Bits",
+        mapOf("a" to 0.627451f, "gain" to 0.375f),
+        mapOf("formula" to "x & (255 << (a >> 5))"),
+        family = "crush")
+
+    private fun fx_formula3() = Patch("fx.Formula", "Soft Bits",
+        mapOf("smooth" to 0.485719174f, "gain" to 0.458333343f),
+        mapOf("formula" to "x & 224"),
+        family = "crush")
+
+    private fun fx_formula4() = Patch("fx.Formula", "Wrap",
+        mapOf("a" to 0.1882353f, "gain" to 0.180555552f),
+        mapOf("formula" to "128 + ((x - 128) * (a + 16) >> 4)"),
+        family = "mangle")
+
+    private fun fx_formula5() = Patch("fx.Formula", "Ring",
+        mapOf("a" to 0.0784313753f, "gain" to 0.5833333f),
+        mapOf("formula" to "128 + ((x - 128) * sin(t * (a + 1) >> 3) >> 7)"),
+        family = "mangle")
+
+    private fun fx_formula6() = Patch("fx.Formula", "Scramble",
+        mapOf("mix" to 0.5f, "gain" to 0.166666672f),
+        mapOf("formula" to "x ^ t >> 4"),
+        family = "mangle")
+
+    private fun fx_formula7() = Patch("fx.Formula", "Grit",
+        mapOf("b" to 0.470588237f),
+        mapOf("formula" to "x ^ r >> (8 - (b >> 5))"),
+        family = "mangle")
+
+    private fun fx_formula8() = Patch("fx.Formula", "Chop",
+        mapOf("gain" to 0.5555556f),
+        mapOf("formula" to "t >> 11 & 1 ? x : 128"),
+        family = "rhythm")
+
+    private fun fx_formula9() = Patch("fx.Formula", "Three in Four",
+        mapOf("gain" to 0.5416667f),
+        mapOf("formula" to "(t >> 10 & 3) ? x : 128"),
+        family = "rhythm")
+
+    private fun fx_formula10() = Patch("fx.Formula", "Clock Bits",
+        mapOf("smooth" to 0.673621f, "gain" to 0.4861111f),
+        mapOf("formula" to "(x & 240) | (t >> 2 & 15)"),
+        family = "rhythm")
+
+    private val fx_formula: List<Patch> by lazy { listOf(fx_formula0(), fx_formula1(), fx_formula2(), fx_formula3(), fx_formula4(), fx_formula5(), fx_formula6(), fx_formula7(), fx_formula8(), fx_formula9(), fx_formula10()) }
 }

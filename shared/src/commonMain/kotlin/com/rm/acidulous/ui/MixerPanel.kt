@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import com.rm.acidulous.util.format
 
 import androidx.compose.ui.layout.onSizeChanged
+import com.rm.acidulous.model.withSlotSetting
 import com.rm.acidulous.model.withGroupInsertBypass
 import com.rm.acidulous.model.withGroupInsertParam
 import com.rm.acidulous.model.withGroupInsert
@@ -681,6 +682,9 @@ private fun shortFx(type: String): String = when (type) {
     "Mouth" -> "mth"
     "Slicer" -> "slce"
     "Magneto" -> "mgnt"
+    "Horn" -> "horn"
+    "Spectral" -> "spec"
+    "Formula" -> "frml"
     else -> type.lowercase().take(4)
 }
 
@@ -875,6 +879,7 @@ fun SongSlotDialog(
         editor.editSong { s ->
             var out = if (now.type != opened.type) withType(s, slot, opened.type) else s
             for ((n, v) in opened.params) out = withParam(out, slot, n, v)
+            if (now.settings != opened.settings) out = out.withSlotSetting(-1, unitOf(slot), "formula", opened.settings["formula"])
             out
         }
         edits++
@@ -908,6 +913,16 @@ fun SongSlotDialog(
                             edits++
                         })
                     }
+                }
+            }
+            if (send.type == "Formula") {
+                val unit = unitOf(slot)
+                EffectFormula(
+                    send.settings["formula"].orEmpty(),
+                    com.rm.acidulous.engine.EngineSync.effectFormulaErrors[com.rm.acidulous.engine.EngineSync.effectFormulaKey(-1, unit)].orEmpty(),
+                ) { new ->
+                    editor.editSong { s -> s.withSlotSetting(-1, unit, "formula", new.ifEmpty { null }) }
+                    edits++
                 }
             }
             if (!send.isEmpty) {

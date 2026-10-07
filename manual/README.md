@@ -40,9 +40,11 @@
     - [Eq](05-effects-and-mixing/eq.md) - three bands and a tilt.
     - [Filter](05-effects-and-mixing/filter.md) - low, band or high pass, moved by an LFO, the signal's level or another track.
     - [Flanger](05-effects-and-mixing/flanger.md) - a short sweeping delay, with negative feedback for the hollow sound.
+    - [Formula](05-effects-and-mixing/formula.md) - type a formula and it shapes the track, a sample at a time.
     - [Gate](05-effects-and-mixing/gate.md) - a noise gate, with a filter on what it listens to and a sidechain.
     - [Grain](05-effects-and-mixing/grain.md) - a cloud of short slices of what the track just played.
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) - adds two voices at scale steps, so they stay in key.
+    - [Horn](05-effects-and-mixing/horn.md) - the track plays a wind instrument.
     - [Magneto](05-effects-and-mixing/magneto.md) - the sound of a small recordable disc, in each of its formats.
     - [Mouth](05-effects-and-mixing/mouth.md) - diction's throat on any track: it shapes whatever goes through into a vowel.
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
@@ -52,6 +54,7 @@
     - [Shifter](05-effects-and-mixing/shifter.md) - frequency shifting, for metallic and detuned sounds.
     - [Slicer](05-effects-and-mixing/slicer.md) - the track cut on the tempo, some slices repeated, reversed or dropped.
     - [Smash](05-effects-and-mixing/smash.md) - three bands, each squashed from above and lifted from below.
+    - [Spectral](05-effects-and-mixing/spectral.md) - the track taken apart into its frequencies and put back together.
     - [Swell](05-effects-and-mixing/swell.md) - upward compression: the quiet parts come up to meet the loud ones, in one band or three.
     - [Tape](05-effects-and-mixing/tape.md) - a worn tape machine, and a stop button.
     - [Tremolo](05-effects-and-mixing/tremolo.md) - volume on an LFO, or auto-pan.

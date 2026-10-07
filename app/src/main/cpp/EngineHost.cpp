@@ -1960,6 +1960,27 @@ std::string EngineHost::loadFormula(int rack, const std::string &formula, const 
     return "";
 }
 
+std::string EngineHost::loadEffectFormula(int rack, const std::string &unit, const std::string &formula) {
+    const Unit u = unitFromName(unit);
+    const bool track = u == Unit::Effect1 || u == Unit::Effect2;
+    if (track && (rack < 0 || rack >= kRackCount)) return "no such rack";
+    auto expr = std::make_unique<machine::formulate::Expr>();
+    std::string error;
+    // Empty is allowed: the track passes untouched.
+    if (!formula.empty() && !machine::formulate::Expr::parse(formula, *expr, error)) {
+        return error.empty() ? "the formula couldn't be read" : error;
+    }
+    Mount mount;
+    mount.kind = Mount::Kind::EffectObject;
+    mount.rack = track ? rack : 0;
+    mount.slot = static_cast<int32_t>(u);
+    mount.object = expr.get();
+    mount.deleter = deleteAs<machine::formulate::Expr>;
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    expr.release();
+    return "";
+}
+
 // --- Freeze -----------------------------------------------------------------------
 
 std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, float bpm,

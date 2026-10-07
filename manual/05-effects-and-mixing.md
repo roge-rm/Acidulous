@@ -4,7 +4,7 @@
 Each track has two insert effect slots. **fx** in the editor's bottom bar shows
 them in place of the machine panel.
 
-There are twenty-six effects. Each one has the usual controls plus one extra,
+There are twenty-nine effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, since turning up the wet/dry mix can change the level.
 
@@ -34,6 +34,8 @@ Each effect has its own page below.
   track, opened by each note or by a pattern on the beat.
 - [**Mouth**](05-effects-and-mixing/mouth.md) - vowels, moved by an LFO, the
   track's level or another track.
+- [**Spectral**](05-effects-and-mixing/spectral.md) - freeze, blur, smear
+  or robotise the track's frequencies.
 
 ## Drive
 
@@ -46,6 +48,8 @@ Each effect has its own page below.
 - [**Magneto**](05-effects-and-mixing/magneto.md) - the sound of a small
   recordable disc's formats, from the clean original to the long-play
   swirl, copied up to four times.
+- [**Formula**](05-effects-and-mixing/formula.md) - type a formula and it
+  shapes the track, a sample at a time.
 
 ## Level
 
@@ -78,6 +82,8 @@ Each effect has its own page below.
   scale steps, so they stay in key.
 - [**Resonator**](05-effects-and-mixing/resonator.md) - strings tuned to a key,
   ringing in sympathy with the track.
+- [**Horn**](05-effects-and-mixing/horn.md) - the track plays a horn, a
+  clarinet, an oboe or a flute, following its pitch and level.
 
 ## Input effects
 

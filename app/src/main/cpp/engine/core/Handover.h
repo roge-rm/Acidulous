@@ -17,7 +17,10 @@
 namespace acidulous {
 
 struct Mount {
-    enum class Kind : uint8_t { None, Machine, Song, Effect, InputMod, Object, Frozen, Send, Input, MasterInsert, GroupInsert };
+    // EffectObject: an object for an effect's swapObject. The slot carries the
+    // effect's Unit (Effect1, Send2, MasterFx1, Group3Fx2, Input1...) and the
+    // rack is the track's for a track insert.
+    enum class Kind : uint8_t { None, Machine, Song, Effect, InputMod, Object, Frozen, Send, Input, MasterInsert, GroupInsert, EffectObject };
     Kind kind = Kind::None;
     int32_t rack = 0;
     int32_t slot = 0;

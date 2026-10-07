@@ -1147,6 +1147,31 @@ void Engine::applyMounts() {
     }
 }
 
+Effect *Engine::effectAt(int32_t rack, Unit unit) {
+    const int u = static_cast<int>(unit);
+    switch (unit) {
+    case Unit::Effect1:
+    case Unit::Effect2:
+        return rack >= 0 && rack < kRackCount ? racks[rack].currentEffect(unit == Unit::Effect1 ? 0 : 1) : nullptr;
+    case Unit::Send1:
+    case Unit::Send2:
+        return master.send(unit == Unit::Send1 ? 0 : 1);
+    case Unit::MasterFx1:
+    case Unit::MasterFx2:
+        return master.insert(unit == Unit::MasterFx1 ? 0 : 1);
+    case Unit::Input1:
+    case Unit::Input2:
+        return inputFx[unit == Unit::Input1 ? 0 : 1];
+    default:
+        break;
+    }
+    if (u >= static_cast<int>(Unit::Group1Fx1) && u <= static_cast<int>(Unit::Group4Fx2)) {
+        const int k = u - static_cast<int>(Unit::Group1Fx1);
+        return master.groupInsert(k / kGroupInsertSlots, k % kGroupInsertSlots);
+    }
+    return nullptr;
+}
+
 void Engine::applyMount(const Mount &m) {
     switch (m.kind) {
     case Mount::Kind::Machine:
@@ -1196,6 +1221,12 @@ void Engine::applyMount(const Mount &m) {
         if (m.rack >= 0 && m.rack < kRackCount && racks[m.rack].currentMachine() != nullptr) {
             back = racks[m.rack].currentMachine()->swapObject(m.slot, m.object);
         }
+        if (m.deleter != nullptr) retirer.retire(back, m.deleter);
+        break;
+    }
+    case Mount::Kind::EffectObject: {
+        Effect *target = effectAt(m.rack, static_cast<Unit>(m.slot));
+        void *back = target != nullptr ? target->swapObject(0, m.object) : m.object;
         if (m.deleter != nullptr) retirer.retire(back, m.deleter);
         break;
     }

@@ -275,11 +275,13 @@ std::vector<float> effectSource() {
     return out;
 }
 
-std::vector<float> renderEffect(const std::string &type, const std::vector<float> &norm) {
+std::vector<float> renderEffect(const std::string &type, const std::vector<float> &norm,
+                                const std::vector<std::pair<std::string, std::string>> &settings = {}) {
     std::unique_ptr<Effect> fx(EffectRegistry::create(type.c_str()));
     if (!fx) return {};
     fx->prepare(static_cast<int32_t>(kSr));
     fx->reset();
+    acidulous::audition::applyEffectSettings(fx.get(), settings);
     for (size_t i = 0; i < norm.size(); ++i) fx->params().set(static_cast<int32_t>(i), norm[i]);
     fx->params().jumpAll();
 
@@ -370,7 +372,7 @@ void checkBank(const Bank &bank) {
         // Play the note the patch is meant for, since e.g. a piccolo trumpet
         // preset at C3 isn't representative.
         const int note = patch.note > 0 ? patch.note : 48;
-        out.audio = bank.isEffect() ? renderEffect(bank.typeName(), r.norm)
+        out.audio = bank.isEffect() ? renderEffect(bank.typeName(), r.norm, r.settings)
                                     : renderMachine(bank.unit, r.norm, note, r.settings);
         if (out.audio.empty()) {
             fail(who, "nothing rendered at all");
@@ -399,7 +401,7 @@ void checkBank(const Bank &bank) {
         // Reset and play again. Different output means some state survives a
         // reset. reset_test checks this at default settings, but a patch can
         // hide state behind a value.
-        const std::vector<float> again = bank.isEffect() ? renderEffect(bank.typeName(), r.norm)
+        const std::vector<float> again = bank.isEffect() ? renderEffect(bank.typeName(), r.norm, r.settings)
                                                          : renderMachine(bank.unit, r.norm, note, r.settings);
         if (again != out.audio) fail(who, "played differently the second time");
 

@@ -445,6 +445,8 @@ data class UnitSlot(
     val type: String = "",
     val params: Map<String, Float> = emptyMap(),
     val bypass: Boolean = false,
+    /** Words rather than numbers, like a Formula effect's "formula". Empty for most. */
+    val settings: Map<String, String> = emptyMap(),
 ) {
     val isEmpty: Boolean get() = type.isEmpty()
 }

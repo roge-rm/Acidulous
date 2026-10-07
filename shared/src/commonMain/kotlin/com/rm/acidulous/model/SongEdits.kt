@@ -386,6 +386,57 @@ fun Song.withSendBypass(slot: Int, bypass: Boolean): Song {
     list[slot] = list[slot].copy(bypass = bypass)
     return copy(master = master.copy(sends = list))
 }
+/**
+ * The effect slot a unit names: a track insert ("effect1", "effect2", on
+ * [rack]), a send, a master or group insert, or an input effect. Null if
+ * there is no such slot.
+ */
+fun Song.slotOf(rack: Int, unit: String): UnitSlot? {
+    effectSlotOf(unit)?.let { return tracks.getOrNull(rack)?.effectAt(it) }
+    Regex("""(send|master|input)([12])""").matchEntire(unit)?.let {
+        val slot = it.groupValues[2].toInt() - 1
+        return when (it.groupValues[1]) {
+            "send" -> master.sendAt(slot)
+            "master" -> master.insertAt(slot)
+            else -> inputAt(slot)
+        }
+    }
+    Regex("""group([1-4])fx([12])""").matchEntire(unit)?.let {
+        return master.groups.getOrNull(it.groupValues[1].toInt() - 1)?.insertAt(it.groupValues[2].toInt() - 1)
+    }
+    return null
+}
+
+/** Sets (or with null, removes) one word setting on the slot [unit] names. */
+fun Song.withSlotSetting(rack: Int, unit: String, name: String, value: String?): Song {
+    val f: (UnitSlot) -> UnitSlot = { s -> s.copy(settings = if (value == null) s.settings - name else s.settings + (name to value)) }
+    effectSlotOf(unit)?.let { slot ->
+        val track = tracks.getOrNull(rack) ?: return this
+        return copy(tracks = tracks.toMutableList().also { it[rack] = track.withEffectSlot(slot, f) })
+    }
+    Regex("""(send|master|input)([12])""").matchEntire(unit)?.let { m ->
+        val slot = m.groupValues[2].toInt() - 1
+        return when (m.groupValues[1]) {
+            "send" -> {
+                if (slot !in 0 until SEND_SLOTS) return this
+                copy(master = master.copy(sends = List(SEND_SLOTS) { if (it == slot) f(master.sendAt(it)) else master.sendAt(it) }))
+            }
+            "master" -> withMasterInsertSlot(slot, f)
+            else -> {
+                if (slot !in 0 until INPUT_SLOTS) return this
+                copy(input = List(INPUT_SLOTS) { if (it == slot) f(inputAt(it)) else inputAt(it) })
+            }
+        }
+    }
+    Regex("""group([1-4])fx([12])""").matchEntire(unit)?.let { m ->
+        val g = m.groupValues[1].toInt() - 1
+        val slot = m.groupValues[2].toInt() - 1
+        if (slot !in 0 until GROUP_INSERT_SLOTS) return this
+        return withGroup(g) { group -> group.copy(inserts = List(GROUP_INSERT_SLOTS) { if (it == slot) f(group.insertAt(it)) else group.insertAt(it) }) }
+    }
+    return this
+}
+
 fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }
 
 // --- The input chain ---------------------------------------------------------------

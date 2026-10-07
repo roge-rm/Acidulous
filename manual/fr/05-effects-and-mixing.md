@@ -4,7 +4,7 @@
 Chaque piste a deux emplacements d’effet en insertion. **fx** dans la barre du
 bas de l’éditeur les affiche à la place du panneau de la machine.
 
-Il y a vingt-six effets. Chacun a les réglages habituels plus un extra, affiché
+Il y a vingt-neuf effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
 de sortie, puisque monter le mélange peut changer le niveau.
 
@@ -35,6 +35,8 @@ Chaque effet a sa propre page ci-dessous.
   n’importe quelle piste, ouvert par chaque note ou par un motif sur le temps.
 - [**Mouth**](05-effects-and-mixing/mouth.md) : des voyelles, déplacées par un
   LFO, le niveau de la piste ou une autre piste.
+- [**Spectral**](05-effects-and-mixing/spectral.md) : fige, étire, brouille
+  ou robotise les fréquences de la piste.
 
 ## Saturation
 
@@ -48,6 +50,8 @@ Chaque effet a sa propre page ci-dessous.
 - [**Magneto**](05-effects-and-mixing/magneto.md) : le son des formats d’un
   petit disque enregistrable, de l’original propre au tourbillon de la longue
   durée, recopié jusqu’à quatre fois.
+- [**Formula**](05-effects-and-mixing/formula.md) : tapez une formule et elle
+  façonne la piste, échantillon par échantillon.
 
 ## Niveau
 
@@ -81,6 +85,9 @@ Chaque effet a sa propre page ci-dessous.
   des degrés de la gamme, pour qu’elles restent dans la tonalité.
 - [**Resonator**](05-effects-and-mixing/resonator.md) : des cordes accordées
   dans une tonalité, qui résonnent avec la piste.
+- [**Horn**](05-effects-and-mixing/horn.md) : la piste joue d’un cuivre,
+  d’une clarinette, d’un hautbois ou d’une flûte, en suivant sa hauteur et son
+  niveau.
 
 ## Effets d’entrée
 

@@ -324,6 +324,8 @@ class Engine : public Rack::ModifiedNoteSink {
   private:
     void applyMounts();
     void applyMount(const Mount &m);
+    /** The effect in a slot, by its unit (and rack, for a track insert), or null. */
+    Effect *effectAt(int32_t rack, Unit unit);
     static constexpr int32_t kMaxMountsPerBlock = 8;
     void drainMidi();
     /** A member channel's expression, recorded against the note it belongs to. */

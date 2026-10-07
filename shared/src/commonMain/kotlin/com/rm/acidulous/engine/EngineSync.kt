@@ -42,6 +42,7 @@ import com.rm.acidulous.model.masterInsertUnit
 import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.reelSpec
 import com.rm.acidulous.model.sendUnit
+import com.rm.acidulous.model.slotOf
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
 import com.rm.acidulous.model.isPedalLane
@@ -88,6 +89,15 @@ object EngineSync {
     val formulaErrors = androidx.compose.runtime.mutableStateMapOf<Int, String>()
 
     /**
+     * The same for Formula effects, by slot: "3:effect1" for a track insert
+     * (rack 3), "-1:master2" and the like for the song's own slots.
+     */
+    val effectFormulaErrors = androidx.compose.runtime.mutableStateMapOf<String, String>()
+
+    /** The key [effectFormulaErrors] uses for a slot. */
+    fun effectFormulaKey(rack: Int, unit: String): String = "${if (effectSlotOf(unit) != null) rack else -1}:$unit"
+
+    /**
      * What the engine said about the last Nexus patch it built, by rack:
      * empty if all was well, otherwise why, such as a formula module whose
      * expression doesn't parse. The patch editor shows it.
@@ -129,6 +139,7 @@ object EngineSync {
         loadedFreezes.fill(null)
         builtClouds.fill(null)
         loadedFormulas.fill(null)
+        loadedEffectFormulas.clear()
         loadedTakes.fill(null)
         loadedReels.fill(null)
         loadedVoices.fill(null)
@@ -454,6 +465,41 @@ object EngineSync {
         }
     }
 
+    /** The formula each Formula effect slot was last given, by [effectFormulaKey]; absent when it isn't a Formula. */
+    private val loadedEffectFormulas = mutableMapOf<String, String>()
+
+    /**
+     * Formula effects' expressions, in every slot an effect can go in. Like
+     * [ensureFormulas]: compiled on a worker and handed to the effect. A slot
+     * that stops being a Formula drops out of the cache, so a fresh one gets
+     * its formula again.
+     */
+    fun ensureEffectFormulas(song: Song) {
+        val slots = buildList {
+            for (rack in 0 until RACKS) for (slot in 0 until EFFECT_SLOTS) add(Triple(rack, effectUnit(slot), mountedEffects[rack][slot]))
+            for (slot in 0 until SEND_SLOTS) add(Triple(-1, sendUnit(slot), mountedSends[slot]))
+            for (slot in 0 until MASTER_INSERT_SLOTS) add(Triple(-1, masterInsertUnit(slot), mountedMasterInserts[slot]))
+            for (g in 0 until MAX_GROUPS) for (slot in 0 until GROUP_INSERT_SLOTS) add(Triple(-1, groupInsertUnit(g, slot), mountedGroupInserts[g][slot]))
+            for (slot in 0 until INPUT_SLOTS) add(Triple(-1, inputUnit(slot), mountedInput[slot]))
+        }
+        for ((rack, unit, mountedType) in slots) {
+            val key = effectFormulaKey(rack, unit)
+            val wanted = if (mountedType == "Formula") song.slotOf(rack, unit)?.settings?.get("formula").orEmpty() else null
+            if (wanted == null) {
+                loadedEffectFormulas.remove(key)
+                effectFormulaErrors.remove(key)
+                continue
+            }
+            if (loadedEffectFormulas[key] == wanted) continue
+            loadedEffectFormulas[key] = wanted
+            mapLoader.execute {
+                val error = NativeEngine.loadEffectFormula(maxOf(rack, 0), unit, wanted)
+                effectFormulaErrors[key] = error
+                if (error.isNotEmpty()) Log.w(TAG, "formula effect $key: $error")
+            }
+        }
+    }
+
     /**
      * Formulate's expression and step tables. Text, like Nexus patches and
      * Mosaic zones: parsed on a worker and handed over as one object.
@@ -650,6 +696,7 @@ object EngineSync {
         ensureNexusPatches(song)
         ensureClouds(song)
         ensureFormulas(song)
+        ensureEffectFormulas(song)
         ensureTakes(song)
         ensureVoices(song)
         ensureReels(song)

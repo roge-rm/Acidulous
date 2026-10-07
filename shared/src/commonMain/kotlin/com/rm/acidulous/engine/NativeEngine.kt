@@ -432,6 +432,14 @@ object NativeEngine {
         EngineNative.nativeLoadFormula(rack, formula, arp, duty, vol)
 
     /**
+     * Compile a Formula effect's expression and hand it to the effect in [unit]'s
+     * slot ("effect1", "send2", "master1", "group3fx2", "input1"...; [rack] for
+     * a track insert). Returns "" or the reason.
+     */
+    suspend fun loadEffectFormula(rack: Int, unit: String, formula: String): String =
+        EngineNative.nativeLoadEffectFormula(rack, unit, formula)
+
+    /**
      * Build and mount Cumulus's tables for a rack. Slow, so worker only.
      * [spectrum01] is the spectrum parameters in table order, NaN for any
      * the song never set. Passed in rather than read from the engine, which

@@ -1,5 +1,7 @@
 #pragma once
+#include <engine/effect/Effect.h>
 #include <engine/machine/Machine.h>
+#include <engine/machine/formulate/Expr.h>
 #include <engine/machine/nexus/Graph.h>
 #include <engine/machine/nexus/Modules.h>
 #include <cstdio>
@@ -20,6 +22,27 @@ namespace acidulous::audition {
  * default, since slot knobs default to zero and an oscillator at level zero
  * makes no sound.
  */
+/**
+ * An effect's word settings, as the app hands them over: a Formula effect's
+ * "formula" is compiled and swapped in. Returns false and prints why if it
+ * won't parse.
+ */
+inline bool applyEffectSettings(Effect *fx, const std::vector<std::pair<std::string, std::string>> &settings) {
+    for (const auto &kv : settings) {
+        if (kv.first != "formula") continue;
+        auto *expr = new machine::formulate::Expr();
+        std::string error;
+        if (!kv.second.empty() && !machine::formulate::Expr::parse(kv.second, *expr, error)) {
+            fprintf(stderr, "formula: %s\n", error.c_str());
+            delete expr;
+            return false;
+        }
+        void *back = fx->swapObject(0, expr);
+        delete static_cast<machine::formulate::Expr *>(back);
+    }
+    return true;
+}
+
 inline bool mountNexusGraph(Machine *m, const std::string &text, float sampleRate,
                             const std::set<std::string> &named,
                             std::unique_ptr<machine::nexus::Graph> &store) {
