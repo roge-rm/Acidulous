@@ -723,11 +723,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Percussion takes over the last drawbar when it's on, like the originals. It's usually best left that way."),
     ))
 
-    private fun en3_19() = ManualSection("Palm", "Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos and darbuka, played with open, slap, muted, bass and rim strokes.", listOf(
+    private fun en3_19() = ManualSection("Palm", "Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak and ashiko, played with open, slap, muted, bass and rim strokes.", listOf(
         ManualBlock(ManualKind.Para, "Palm doesn't play recordings. Each note is a drum head tuned to the note. A plain head rings at the uneven ratios of a stretched circle, which is why most drums have no clear pitch; a tabla's head is loaded with a paste in the middle that pulls its overtones into a harmonic series, so it sings a note."),
         ManualBlock(ManualKind.Para, "The hand decides the rest: where it lands (the middle sounds the low modes, the edge the high ones), how long it stays on the head, and whether it stays there to damp it."),
         ManualBlock(ManualKind.Heading, "Drum"),
-        ManualBlock(ManualKind.Bullet, "**model** - **tabla** (the small, tuned drum), **bayan** (its big bass partner), **djembe**, **cajon**, **frame drum**, **talking** drum, **conga**, **bongo** or **darbuka**."),
+        ManualBlock(ManualKind.Bullet, "**model** - **tabla** (the small, tuned drum), **bayan** (its big bass partner), **djembe**, **cajon**, **frame drum**, **talking** drum, **conga**, **bongo**, **darbuka**, **riq**, **tar**, **bendir**, **kanjira**, **bata**, **mridangam**, **dholak** or **ashiko**."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
         ManualBlock(ManualKind.Bullet, "**stroke** - **open** (the fingers flat near the edge, lifted at once), **slap** (the fingertips cracking, the hand left on the middle), **muted** (pressed down and held), **bass** (the palm in the middle), **rim** (the fingers on the edge), or **velocity**, which picks muted for soft notes, open for the middle and slap for the hardest."),
         ManualBlock(ManualKind.Bullet, "**position** - moves the stroke towards the middle or the edge."),
@@ -2683,11 +2683,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "La percussion prend la dernière tirette quand elle est active, comme sur les originaux. C’est d’habitude mieux de la laisser ainsi."),
     ))
 
-    private fun fr3_19() = ManualSection("Palm", "Percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre, tambour d’aisselle, congas, bongos et darbouka, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.", listOf(
+    private fun fr3_19() = ManualSection("Palm", "Percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre, tambour d’aisselle, congas, bongos, darbouka, riq, tar, bendir, kanjira, batá, mridangam, dholak et ashiko, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.", listOf(
         ManualBlock(ManualKind.Para, "Palm ne joue pas d’enregistrements. Chaque note est une peau accordée sur la note. Une peau ordinaire vibre selon les rapports inégaux d’un cercle tendu, d’où l’absence de hauteur nette de la plupart des tambours ; celle d’un tabla est chargée en son centre d’une pâte qui ramène ses harmoniques vers une série harmonique, et il chante une note."),
         ManualBlock(ManualKind.Para, "La main fait le reste : où elle tombe (le centre fait sonner les modes graves, le bord les aigus), combien de temps elle reste sur la peau, et si elle y reste pour l’étouffer."),
         ManualBlock(ManualKind.Heading, "Tambour"),
-        ManualBlock(ManualKind.Bullet, "**modèle** : **tabla** (le petit tambour accordé), **bayan** (son grand compagnon grave), **djembé**, **cajón**, tambour sur **cadre**, tambour d’**aisselle**, **conga**, **bongo** ou **darbouka**."),
+        ManualBlock(ManualKind.Bullet, "**modèle** : **tabla** (le petit tambour accordé), **bayan** (son grand compagnon grave), **djembé**, **cajón**, tambour sur **cadre**, tambour d’**aisselle**, **conga**, **bongo**, **darbouka**, **riq**, **tar**, **bendir**, **kanjira**, **batá**, **mridangam**, **dholak** ou **ashiko**."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**attaque** : **ouvert** (les doigts à plat près du bord, aussitôt relevés), **slap** (le bout des doigts qui claque, la main restée au centre), **étouffé** (appuyé et tenu), **basse** (la paume au centre), **cercle** (les doigts sur le bord), ou **vélocité**, qui choisit étouffé pour les notes douces, ouvert au milieu et slap pour les plus fortes."),
         ManualBlock(ManualKind.Bullet, "**position** : déplace la frappe vers le centre ou le bord."),

@@ -14,7 +14,8 @@
 # semitones. Slide (with MPE) lays a finger on the head. `roll` strikes held
 # notes again and again.
 #
-# Families: tabla, bayan, djembe, cajon, frame, talking, conga, bongo, darbuka.
+# Families: tabla, bayan, djembe, cajon, frame, talking, conga, bongo, darbuka,
+# riq, tar, bendir, kanjira, bata, mridangam, dholak, ashiko.
 
 machine Palm
 role tune
@@ -257,3 +258,85 @@ patch "Darbuka Ka" family=darbuka note=59 range=52..66
   model          #8
   stroke         #0
   position       0.7
+
+patch "Riq" family=riq note=64 range=57..71
+  # The riq's open stroke, its jingles ringing on.
+  model          #9
+  stroke         #0
+  rattle         0.8
+
+patch "Riq Shake" family=riq note=64 range=57..71
+  # Held notes shake the jingles.
+  model          #9
+  stroke         #2
+  rattle         1
+  roll           12
+
+patch "Tar" family=tar note=45 range=38..52
+  # The wide frame drum's deep stroke in the middle.
+  model          #10
+  stroke         #3
+
+patch "Tar Edge" family=tar note=52 range=45..59
+  # The tar's bright edge stroke.
+  model          #10
+  stroke         #4
+
+patch "Bendir" family=bendir note=47 range=40..54
+  # The snares buzzing under the deep stroke.
+  model          #11
+  stroke         #3
+  rattle         0.7
+
+patch "Kanjira" family=kanjira note=62 range=55..69
+  # Its one pair of jingles; press, or the mod wheel, to bend it up.
+  model          #12
+  stroke         #0
+  rattle         0.5
+  squeeze        3
+
+patch "Bata Iya" family=bata note=50 range=43..57
+  # The biggest batá, open.
+  model          #13
+  stroke         #0
+  body           0.6
+
+patch "Bata Okonkolo" family=bata note=62 range=55..69
+  # The smallest batá, slapped.
+  model          #13
+  stroke         #1
+  volume         0.95
+
+patch "Mridangam" family=mridangam note=60 range=53..67
+  # The tuned head's long, clear ring.
+  model          #14
+  stroke         #0
+  decay          0.7
+
+patch "Mridangam Thom" family=mridangam note=48 range=41..55
+  # The bass side's deep stroke.
+  model          #14
+  stroke         #3
+  volume         1
+
+patch "Dholak" family=dholak note=55 range=48..62
+  # The treble side, open.
+  model          #15
+  stroke         #0
+
+patch "Dholak Bass" family=dholak note=43 range=36..50
+  # The pasted bass side; press to bend it.
+  model          #15
+  stroke         #3
+  squeeze        4
+
+patch "Ashiko" family=ashiko note=50 range=43..57
+  # The cone drum's open tone.
+  model          #16
+  stroke         #0
+
+patch "Ashiko Bass" family=ashiko note=43 range=36..50
+  # Its air ringing low under the palm.
+  model          #16
+  stroke         #3
+  body           0.7

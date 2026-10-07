@@ -58,6 +58,7 @@
     <string name="pw_arp">Arp</string>
     <string name="pw_as_sung">tel quel</string>
     <string name="pw_asavari">asavari</string>
+    <string name="pw_ashiko">ashiko</string>
     <string name="pw_at">selon</string>
     <string name="pw_att">att.</string>
     <string name="pw_attack">attaque</string>
@@ -80,6 +81,7 @@
     <string name="pw_bars_organ">tirettes</string>
     <string name="pw_basic">simple</string>
     <string name="pw_bass">basse</string>
+    <string name="pw_bata">batá</string>
     <string name="pw_bayan">bayan</string>
     <string name="pw_beak">bec</string>
     <string name="pw_bell">Cloche</string>
@@ -89,6 +91,7 @@
     <string name="pw_bells">cloches</string>
     <string name="pw_below">dessous</string>
     <string name="pw_bend">bend</string>
+    <string name="pw_bendir">bendir</string>
     <string name="pw_beyond">au-delà</string>
     <string name="pw_bhairav">bhairav</string>
     <string name="pw_bhairavi">bhairavi</string>
@@ -242,6 +245,7 @@
     <string name="pw_detail">détail</string>
     <string name="pw_detect">détecter</string>
     <string name="pw_detune">désaccord</string>
+    <string name="pw_dholak">dholak</string>
     <string name="pw_diatonic">diatonique</string>
     <string name="pw_dice">dés</string>
     <string name="pw_digital">numérique</string>
@@ -508,6 +512,7 @@
     <string name="pw_k">k</string>
     <string name="pw_kafi">kafi</string>
     <string name="pw_kalyan">kalyan</string>
+    <string name="pw_kanjira">kanjira</string>
     <string name="pw_keep">garder</string>
     <string name="pw_key">clavier</string>
     <string name="pw_key_music">tonalité</string>
@@ -652,6 +657,7 @@
     <string name="pw_mouth">Mouth</string>
     <string name="pw_mouth_87d178">bouche</string>
     <string name="pw_move">bouger</string>
+    <string name="pw_mridangam">mridangam</string>
     <string name="pw_mukkuri">mukkuri</string>
     <string name="pw_munnharpe">munnharpe</string>
     <string name="pw_music_box">boîte à musique</string>
@@ -853,6 +859,7 @@
     <string name="pw_ring">anneau</string>
     <string name="pw_ring_it_with_a">modulation en anneau avec a</string>
     <string name="pw_ring_level">vibr.</string>
+    <string name="pw_riq">riq</string>
     <string name="pw_ring_it_against_a_sine">en anneau contre un sinus</string>
     <string name="pw_ring_loop">boucle anneau</string>
     <string name="pw_ring12">ann12</string>
@@ -1052,6 +1059,7 @@
     <string name="pw_tanpura">tanpura</string>
     <string name="pw_tape">Tape</string>
     <string name="pw_tape_e9b6c7">bande</string>
+    <string name="pw_tar">tar</string>
     <string name="pw_tarbs">tarabs</string>
     <string name="pw_temir_komuz">temir komuz</string>
     <string name="pw_tempo">tempo</string>

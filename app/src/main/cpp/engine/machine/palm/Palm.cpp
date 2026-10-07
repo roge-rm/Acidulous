@@ -87,6 +87,40 @@ constexpr Make kMakes[Palm::KindCount] = {
     {8, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.7f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.6f},
          {2.918f, 1, 2, 0.45f}, {3.156f, 4, 1, 0.5f}, {3.501f, 2, 2, 0.35f}},
      0.4f, 0.3f, 0.25f, 0.3f, 0.25f, 0.0f, 0.0f, 0.3f, 5000.0f, 1.3f},
+    // Riq: a small, tight frame drum with five pairs of heavy jingles that
+    // ring on after the head.
+    {10, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.6f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.5f},
+          {2.918f, 1, 2, 0.35f}, {3.156f, 4, 1, 0.4f}, {3.501f, 2, 2, 0.25f}, {3.6f, 0, 3, 0.2f}, {3.652f, 5, 1, 0.3f}},
+     0.3f, 0.4f, 0.5f, 0.0f, 0.0f, 7500.0f, 0.9f, 0.4f, 4000.0f, 1.2f},
+    // Tar: a wide, thin frame drum with nothing on it, deep and long.
+    {10, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.6f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.5f},
+          {2.918f, 1, 2, 0.35f}, {3.156f, 4, 1, 0.4f}, {3.501f, 2, 2, 0.25f}, {3.6f, 0, 3, 0.2f}, {3.652f, 5, 1, 0.3f}},
+     0.8f, 0.4f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 2500.0f, 0.9f},
+    // Bendir: a frame drum with gut snares across the back of the head, a buzz under every stroke.
+    {10, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.6f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.5f},
+          {2.918f, 1, 2, 0.35f}, {3.156f, 4, 1, 0.4f}, {3.501f, 2, 2, 0.25f}, {3.6f, 0, 3, 0.2f}, {3.652f, 5, 1, 0.3f}},
+     0.6f, 0.4f, 0.5f, 0.0f, 0.0f, 2500.0f, 0.8f, 0.6f, 2500.0f, 0.9f},
+    // Kanjira: a small lizard-skin frame drum with one pair of jingles, bent up by the fingers.
+    {8, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.6f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.5f},
+         {2.918f, 1, 2, 0.35f}, {3.156f, 4, 1, 0.4f}, {3.501f, 2, 2, 0.25f}},
+     0.45f, 0.35f, 0.5f, 0.0f, 0.0f, 6500.0f, 0.5f, 1.0f, 3500.0f, 1.2f},
+    // Batá: an hourglass with a head at each end, its body ringing between them.
+    {8, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.7f}, {2.136f, 2, 1, 0.5f}, {2.296f, 0, 2, 0.4f}, {2.653f, 3, 1, 0.35f},
+         {2.918f, 1, 2, 0.3f}, {3.156f, 4, 1, 0.25f}, {3.501f, 2, 2, 0.2f}},
+     0.4f, 0.3f, 0.5f, 0.3f, 0.2f, 0.0f, 0.0f, 0.4f, 3000.0f, 1.0f},
+    // Mridangam: a loaded head tuned to a harmonic series like the tabla's,
+    // but on a long barrel, with a long, clear ring.
+    {8, {{0.6f, 0, 1, 0.5f}, {1.0f, 1, 1, 1.0f}, {2.0f, 2, 1, 0.7f}, {2.0f, 0, 2, 0.5f}, {3.0f, 3, 1, 0.5f},
+         {3.0f, 1, 2, 0.4f}, {4.0f, 4, 1, 0.3f}, {5.0f, 5, 1, 0.2f}},
+     1.8f, 0.3f, 0.2f, 0.2f, 0.3f, 0.0f, 0.0f, 0.3f, 2800.0f, 0.5f},
+    // Dholak: two heads on a barrel, the bass side pasted inside so it booms and bends.
+    {6, {{1.0f, 0, 1, 1.0f}, {1.9f, 1, 1, 0.6f}, {2.8f, 2, 1, 0.4f}, {3.0f, 0, 2, 0.3f}, {3.7f, 3, 1, 0.25f},
+         {4.6f, 1, 2, 0.15f}},
+     0.7f, 0.3f, 0.5f, 0.4f, 0.3f, 0.0f, 0.0f, 0.9f, 2500.0f, 1.0f},
+    // Ashiko: a tall cone with a goatskin head, like a djembe without its rattles, its air lower.
+    {10, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.6f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.5f},
+          {2.918f, 1, 2, 0.35f}, {3.156f, 4, 1, 0.4f}, {3.501f, 2, 2, 0.25f}, {3.6f, 0, 3, 0.2f}, {3.652f, 5, 1, 0.3f}},
+     0.35f, 0.3f, 0.3f, 0.4f, 0.35f, 0.0f, 0.0f, 0.5f, 3200.0f, 1.0f},
 };
 
 /**
@@ -129,7 +163,7 @@ Palm::Palm() { initParams(); }
 
 const ParamDef *Palm::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""}, // tabla, bayan, djembe, cajon, frame, talking, conga, bongo, darbuka
+        {"model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""}, // tabla, bayan, djembe, cajon, frame, talking, conga, bongo, darbuka, riq, tar, bendir, kanjira, bata, mridangam, dholak, ashiko
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""}, // open, slap, muted, bass, rim, by velocity
         // Moves the stroke towards the middle or the edge.

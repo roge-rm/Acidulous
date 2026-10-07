@@ -38,7 +38,8 @@ class Palm final : public Machine {
     static constexpr uint8_t kBaseNote = 36;
     static_assert(Count <= kMaxParams, "too many parameters");
 
-    enum Kind : int32_t { Tabla = 0, Bayan, Djembe, Cajon, Frame, Talking, Conga, Bongo, Darbuka, KindCount };
+    enum Kind : int32_t { Tabla = 0, Bayan, Djembe, Cajon, Frame, Talking, Conga, Bongo, Darbuka,
+                         Riq, Tar, Bendir, Kanjira, Bata, Mridangam, Dholak, Ashiko, KindCount };
     enum StrokeKind : int32_t { Open = 0, Slap, Muted, Bass, Rim, ByVelocity, StrokeCount };
     static constexpr int kVoices = 8;
     static constexpr int kModes = 10;

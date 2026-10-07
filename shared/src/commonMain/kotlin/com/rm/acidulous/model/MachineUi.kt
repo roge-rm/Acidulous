@@ -70,7 +70,7 @@ object MachineUi {
     private val FATHOM_SOUNDS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire")
     /** Fathom's default kit, as in the engine. */
     private val FATHOM_KIT = listOf(6, 6, 5, 5, 2, 2, 2, 1, 1, 1, 0, 0, 3, 3, 4, 4)
-    private val PALM_DRUMS = listOf("tabla", "bayan", "djembe", "cajon", "frame", "talking", "conga", "bongo", "darbuka")
+    private val PALM_DRUMS = listOf("tabla", "bayan", "djembe", "cajon", "frame", "talking", "conga", "bongo", "darbuka", "riq", "tar", "bendir", "kanjira", "bata", "mridangam", "dholak", "ashiko")
     private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "by velocity")
     /** Palm's default kit, as in the engine: drum and stroke per pad. */
     private val PALM_KIT = listOf(2 to 3, 2 to 0, 2 to 1, 2 to 2, 3 to 3, 3 to 1, 3 to 4, 0 to 0, 0 to 4, 0 to 2, 1 to 0, 1 to 1, 4 to 0, 4 to 4, 5 to 0, 5 to 2)

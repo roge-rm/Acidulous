@@ -3935,7 +3935,7 @@ private fun SympathPanel(b: ParamBinding) {
     }
 }
 
-private val PALM_MODELS = listOf("tabla", "bayan", "djembe", "cajon", "frame drum", "talking", "conga", "bongo", "darbuka")
+private val PALM_MODELS = listOf("tabla", "bayan", "djembe", "cajon", "frame drum", "talking", "conga", "bongo", "darbuka", "riq", "tar", "bendir", "kanjira", "bata", "mridangam", "dholak", "ashiko")
 private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "velocity")
 
 /** Palm: the drum and the hand, its body, and the player. */
