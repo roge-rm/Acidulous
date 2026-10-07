@@ -28,6 +28,7 @@ Ils reproduisent le fonctionnement du vrai instrument, alors ils se jouent comme
 - [**Tine**](04-the-machines/tine.md) - marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique et tambours d’acier, frappés de mailloches plus ou moins dures.
 - [**Sympath**](04-the-machines/sympath.md) - sitar, tanpura, veena et shamisen : des cordes sur un chevalet qui grésille, des cordes sympathiques accordées sur une gamme, et un tanpura qui joue tout seul en mesure.
 - [**Palm**](04-the-machines/palm.md) - percussions à main : tabla et bayan, djembé, cajón, tambour sur cadre et tambour d’aisselle, en frappes ouverte, claquée, étouffée, basse et sur le bord.
+- [**Chanter**](04-the-machines/chanter.md) - cornemuses et vielle à roue : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chien grésille en rythme.
 
 ## Batterie
 

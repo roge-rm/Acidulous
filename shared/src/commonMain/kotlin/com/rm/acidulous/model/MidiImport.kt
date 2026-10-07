@@ -32,6 +32,8 @@ object MidiImport {
         if (program != null && (program in 8..13 || program == 108 || program == 114)) return "Tine"
         // Sitar and shamisen to the buzzing bridge.
         if (program == 104 || program == 106) return "Sympath"
+        // Bagpipe to the drones.
+        if (program == 109) return "Chanter"
         return when (program?.let { it / 8 }) {
             2 -> "Manual"                  // organ
             3, 5 -> "Filament"             // acoustic guitar, strings

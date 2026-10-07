@@ -17,6 +17,7 @@
 #include "tine/Tine.h"
 #include "sympath/Sympath.h"
 #include "palm/Palm.h"
+#include "chanter/Chanter.h"
 #include "nexus/Nexus.h"
 #include "pollen/Pollen.h"
 #include "dice/Dice.h"
@@ -31,7 +32,7 @@
 namespace acidulous {
 
 namespace {
-const char *const kNames[] = {"Reflux", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Diction", "Bias", "Hammer", "Tongue", "Draw", "Fret", "Tine", "Sympath", "Palm"};
+const char *const kNames[] = {"Reflux", "Trinity", "Ratio", "Manual", "Cumulus", "Formulate", "Pollen", "Brazen", "Timber", "Cipher", "Filament", "Nexus", "Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Mosaic", "Molt", "Diction", "Bias", "Hammer", "Tongue", "Draw", "Fret", "Tine", "Sympath", "Palm", "Chanter"};
 constexpr int32_t kCount = sizeof(kNames) / sizeof(kNames[0]);
 } // namespace
 
@@ -64,6 +65,7 @@ Machine *MachineRegistry::create(const char *typeName) {
     if (std::strcmp(typeName, "Tine") == 0) return new machine::Tine();
     if (std::strcmp(typeName, "Sympath") == 0) return new machine::Sympath();
     if (std::strcmp(typeName, "Palm") == 0) return new machine::Palm();
+    if (std::strcmp(typeName, "Chanter") == 0) return new machine::Chanter();
     return nullptr;
 }
 
@@ -138,6 +140,10 @@ const ParamDef *MachineRegistry::paramDefs(const char *typeName, int32_t &count)
     }
     if (std::strcmp(typeName, "Palm") == 0) {
         static const machine::Palm probe;
+        return probe.paramDefs(count);
+    }
+    if (std::strcmp(typeName, "Chanter") == 0) {
+        static const machine::Chanter probe;
         return probe.paramDefs(count);
     }
     if (std::strcmp(typeName, "Nexus") == 0) {

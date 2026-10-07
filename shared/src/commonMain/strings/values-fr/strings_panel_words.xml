@@ -66,6 +66,7 @@
     <string name="pw_aux">aux</string>
     <string name="pw_a_b">A→B</string>
     <string name="pw_b">b</string>
+    <string name="pw_bag">poche</string>
     <string name="pw_balance">balance</string>
     <string name="pw_bamboo">bambou</string>
     <string name="pw_band">bande</string>
@@ -142,6 +143,7 @@
     <string name="pw_chamber">chambre</string>
     <string name="pw_chance">proba</string>
     <string name="pw_channel">canal</string>
+    <string name="pw_chanter">chalumeau</string>
     <string name="pw_character">caractère</string>
     <string name="pw_chiff">chiff</string>
     <string name="pw_chikari">chikari</string>
@@ -183,11 +185,13 @@
     <string name="pw_converge">converge</string>
     <string name="pw_copies">copies</string>
     <string name="pw_count">nombre</string>
+    <string name="pw_coup">coup</string>
     <string name="pw_couple">couplage</string>
     <string name="pw_coupling">couplage</string>
     <string name="pw_course">chœur</string>
     <string name="pw_cowbell">Cloche</string>
     <string name="pw_cowbell_8d2602">cloche</string>
+    <string name="pw_crank">manivelle</string>
     <string name="pw_crash">Crash</string>
     <string name="pw_crash_2fc7f1">crash</string>
     <string name="pw_cross">croisé</string>
@@ -242,6 +246,7 @@
     <string name="pw_diverge">diverge</string>
     <string name="pw_division">division</string>
     <string name="pw_djembe">djembé</string>
+    <string name="pw_dog">chien</string>
     <string name="pw_double">double</string>
     <string name="pw_down">bas</string>
     <string name="pw_down_up">bas-haut</string>
@@ -374,6 +379,7 @@
     <string name="pw_g_size">g.taille</string>
     <string name="pw_g_spray">g.disp</string>
     <string name="pw_gain">gain</string>
+    <string name="pw_gaita">gaita</string>
     <string name="pw_gallop">galop</string>
     <string name="pw_gamak">gamak</string>
     <string name="pw_gate">Gate</string>
@@ -390,6 +396,7 @@
     <string name="pw_glock">glock</string>
     <string name="pw_glue">colle</string>
     <string name="pw_gong">gong</string>
+    <string name="pw_grace">agrément</string>
     <string name="pw_grain">Grain</string>
     <string name="pw_grain_ee4ddd">grain</string>
     <string name="pw_grains">grains</string>
@@ -433,6 +440,7 @@
     <string name="pw_high_pass">passe-haut</string>
     <string name="pw_highfreq">fréq. aigu</string>
     <string name="pw_highgain">gain aigu</string>
+    <string name="pw_highland">highland</string>
     <string name="pw_hiss">sifflement</string>
     <string name="pw_hisses">sifflantes</string>
     <string name="pw_hold">tenir</string>
@@ -457,6 +465,7 @@
     <string name="pw_humbucker">double bobinage</string>
     <string name="pw_hums">nasales</string>
     <string name="pw_hums_glides">nasales et glissées</string>
+    <string name="pw_hurdy_gurdy">vielle à roue</string>
     <string name="pw_hybrid">hybride</string>
     <string name="pw_hyst">hyst.</string>
     <string name="pw_hz">Hz</string>
@@ -840,6 +849,7 @@
     <string name="pw_rolls">roulés</string>
     <string name="pw_room">salle</string>
     <string name="pw_root">fondam.</string>
+    <string name="pw_rosin">colophane</string>
     <string name="pw_rotary">Rotary</string>
     <string name="pw_rotary_bb7b80">rotatif</string>
     <string name="pw_rotate">rotation</string>
@@ -927,6 +937,7 @@
     <string name="pw_slope">pente</string>
     <string name="pw_slot">emplac.</string>
     <string name="pw_slow">lent</string>
+    <string name="pw_smallpipes">smallpipes</string>
     <string name="pw_smash">Smash</string>
     <string name="pw_smear">flou</string>
     <string name="pw_smooth">lisse</string>
@@ -1051,6 +1062,7 @@
     <string name="pw_tonewheel">roue phon.</string>
     <string name="pw_tongue">langue</string>
     <string name="pw_tongue_drum">tambour à lang.</string>
+    <string name="pw_tonic">tonique</string>
     <string name="pw_touch">toucher</string>
     <string name="pw_toy">jouet</string>
     <string name="pw_track">piste</string>

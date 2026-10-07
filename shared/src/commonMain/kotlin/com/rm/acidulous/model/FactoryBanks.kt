@@ -35,6 +35,7 @@ internal object FactoryBanks {
         "Tine" -> tine
         "Sympath" -> sympath
         "Palm" -> palm
+        "Chanter" -> chanter
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -4202,6 +4203,132 @@ internal object FactoryBanks {
         low = 45, high = 67)
 
     private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30()) }
+
+    private fun chanter0() = Patch("Chanter", "Init", emptyMap(),
+        family = "highland",
+        low = 67, high = 81)
+
+    private fun chanter1() = Patch("Chanter", "Highland Pipes",
+        mapOf("drones" to 0.8f, "grace" to 0.416666657f),
+        family = "highland",
+        low = 67, high = 81)
+
+    private fun chanter2() = Patch("Chanter", "Pipes Ungraced",
+        mapOf("drift" to 0.35f),
+        family = "highland",
+        low = 67, high = 81)
+
+    private fun chanter3() = Patch("Chanter", "Pipe Band",
+        mapOf("drones" to 0.9f, "grace" to 0.333333343f, "drift" to 0.5f, "air" to 0.3f),
+        family = "highland",
+        low = 67, high = 81)
+
+    private fun chanter4() = Patch("Chanter", "Practice Chanter",
+        mapOf("drones" to 0f, "reed" to 0.3f, "grace" to 0.333333343f),
+        family = "highland",
+        low = 67, high = 81)
+
+    private fun chanter5() = Patch("Chanter", "Bright Chanter",
+        mapOf("reed" to 0.9f, "grace" to 0.25f),
+        family = "highland",
+        low = 67, high = 81)
+
+    private fun chanter6() = Patch("Chanter", "Smallpipes",
+        mapOf("model" to 0.333333343f, "key" to 0.6363636f),
+        family = "smallpipes",
+        low = 65, high = 79)
+
+    private fun chanter7() = Patch("Chanter", "Smallpipes Graced",
+        mapOf("model" to 0.333333343f, "key" to 0.6363636f, "grace" to 0.333333343f, "air" to 0.25f),
+        family = "smallpipes",
+        low = 65, high = 79)
+
+    private fun chanter8() = Patch("Chanter", "Soft Smallpipes",
+        mapOf("model" to 0.333333343f, "key" to 0.6363636f, "drones" to 0.4f, "reed" to 0.25f),
+        family = "smallpipes",
+        low = 65, high = 79)
+
+    private fun chanter9() = Patch("Chanter", "Smallpipes in D",
+        mapOf("model" to 0.333333343f, "key" to 0.181818187f),
+        family = "smallpipes",
+        low = 60, high = 74)
+
+    private fun chanter10() = Patch("Chanter", "Gaita",
+        mapOf("model" to 0.6666667f, "key" to 0f),
+        family = "gaita",
+        low = 70, high = 86)
+
+    private fun chanter11() = Patch("Chanter", "Gaita Bright",
+        mapOf("model" to 0.6666667f, "key" to 0f, "reed" to 0.85f),
+        family = "gaita",
+        low = 70, high = 86)
+
+    private fun chanter12() = Patch("Chanter", "Gaita Breath",
+        mapOf("model" to 0.6666667f, "key" to 0f, "drift" to 0.5f, "air" to 0.45f),
+        family = "gaita",
+        low = 70, high = 86)
+
+    private fun chanter13() = Patch("Chanter", "Gaita Graced",
+        mapOf("model" to 0.6666667f, "key" to 0f, "drones" to 0.75f, "grace" to 0.3f),
+        family = "gaita",
+        low = 70, high = 86)
+
+    private fun chanter14() = Patch("Chanter", "Hurdy-Gurdy",
+        mapOf("model" to 1f, "key" to 0.6363636f),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter15() = Patch("Chanter", "Gurdy Coups",
+        mapOf("model" to 1f, "key" to 0.6363636f, "coup" to 0.333333343f),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter16() = Patch("Chanter", "Gurdy Eighths",
+        mapOf("model" to 1f, "key" to 0.6363636f, "coup" to 0.6666667f),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter17() = Patch("Chanter", "Gurdy Sixteenths",
+        mapOf("model" to 1f, "key" to 0.6363636f, "wheel" to 0.45f, "coup" to 1f),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter18() = Patch("Chanter", "Gurdy Buzzing",
+        mapOf("model" to 1f, "key" to 0.6363636f, "wheel" to 0.85f, "threshold" to 0.5f),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter19() = Patch("Chanter", "Gurdy Gentle",
+        mapOf("model" to 1f, "key" to 0.6363636f, "wheel" to 0.25f, "dog" to 0f),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter20() = Patch("Chanter", "Gurdy in D",
+        mapOf("model" to 1f, "key" to 0.181818187f, "coup" to 0.333333343f),
+        family = "gurdy",
+        low = 55, high = 79)
+
+    private fun chanter21() = Patch("Chanter", "Pipe Drones",
+        mapOf("drones" to 1f, "bag" to 1f),
+        family = "drones",
+        low = 67, high = 81)
+
+    private fun chanter22() = Patch("Chanter", "Gurdy Drones",
+        mapOf("model" to 1f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f, "dog" to 0f),
+        family = "drones",
+        low = 60, high = 84)
+
+    private fun chanter23() = Patch("Chanter", "Smallpipe Drones",
+        mapOf("model" to 0.333333343f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f),
+        family = "drones",
+        low = 65, high = 79)
+
+    private fun chanter24() = Patch("Chanter", "Gaita Drone",
+        mapOf("model" to 0.6666667f, "key" to 0f, "drones" to 1f, "bag" to 1f),
+        family = "drones",
+        low = 70, high = 86)
+
+    private val chanter: List<Patch> by lazy { listOf(chanter0(), chanter1(), chanter2(), chanter3(), chanter4(), chanter5(), chanter6(), chanter7(), chanter8(), chanter9(), chanter10(), chanter11(), chanter12(), chanter13(), chanter14(), chanter15(), chanter16(), chanter17(), chanter18(), chanter19(), chanter20(), chanter21(), chanter22(), chanter23(), chanter24()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

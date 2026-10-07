@@ -44,7 +44,7 @@ All six are the demo song, Squelch.
 
 ## What's in it
 
-### Twenty-eight machines
+### Twenty-nine machines
 
 | | |
 |---|---|
@@ -65,6 +65,7 @@ All six are the demo song, Squelch.
 | **Tine** | Modelled bars, tines and pans: marimba, vibraphone with its turning discs and damper, xylophone, glockenspiel, thumb piano with rattles, music box, steel pan with its blooming octave, handpan and tongue drum. Rolls, and pressure bows a held bar. |
 | **Sympath** | Modelled sitar, tanpura, veena and shamisen: strings ringing a buzzing bridge on every swing, sympathetic strings tuned to a tonic and scale, drone strings, a tanpura that plucks its four strings in time, slides, and pressure pulling the string up. |
 | **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |
+| **Chanter** | Modelled bagpipes (highland, smallpipes, gaita) and hurdy-gurdy: drones blown from a bag that carry on between notes, grace notes, a closed chanter, and a rosined wheel whose trompette buzzes once it turns fast enough, or on the beat. |
 | **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
 | **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
 | **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |

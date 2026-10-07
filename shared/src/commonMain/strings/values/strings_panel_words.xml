@@ -66,6 +66,7 @@
     <string name="pw_aux">aux</string>
     <string name="pw_a_b">A→B</string>
     <string name="pw_b">b</string>
+    <string name="pw_bag">bag</string>
     <string name="pw_balance">balance</string>
     <string name="pw_bamboo">bamboo</string>
     <string name="pw_band">band</string>
@@ -142,6 +143,7 @@
     <string name="pw_chamber">chamber</string>
     <string name="pw_chance">chance</string>
     <string name="pw_channel">channel</string>
+    <string name="pw_chanter">chanter</string>
     <string name="pw_character">character</string>
     <string name="pw_chiff">chiff</string>
     <string name="pw_chikari">chikari</string>
@@ -183,11 +185,13 @@
     <string name="pw_converge">converge</string>
     <string name="pw_copies">copies</string>
     <string name="pw_count">count</string>
+    <string name="pw_coup">coup</string>
     <string name="pw_couple">couple</string>
     <string name="pw_coupling">coupling</string>
     <string name="pw_course">course</string>
     <string name="pw_cowbell">Cowbell</string>
     <string name="pw_cowbell_8d2602">cowbell</string>
+    <string name="pw_crank">crank</string>
     <string name="pw_crash">Crash</string>
     <string name="pw_crash_2fc7f1">crash</string>
     <string name="pw_cross">cross</string>
@@ -242,6 +246,7 @@
     <string name="pw_diverge">diverge</string>
     <string name="pw_division">division</string>
     <string name="pw_djembe">djembe</string>
+    <string name="pw_dog">dog</string>
     <string name="pw_double">double</string>
     <string name="pw_down">down</string>
     <string name="pw_down_up">down-up</string>
@@ -375,6 +380,7 @@
     <string name="pw_g_size">g.size</string>
     <string name="pw_g_spray">g.spray</string>
     <string name="pw_gain">gain</string>
+    <string name="pw_gaita">gaita</string>
     <string name="pw_gallop">gallop</string>
     <string name="pw_gamak">gamak</string>
     <string name="pw_gate">Gate</string>
@@ -392,6 +398,7 @@
     <string name="pw_glock">glock</string>
     <string name="pw_glue">glue</string>
     <string name="pw_gong">gong</string>
+    <string name="pw_grace">grace</string>
     <string name="pw_grain">Grain</string>
     <string name="pw_grain_ee4ddd">grain</string>
     <string name="pw_grains">grains</string>
@@ -435,6 +442,7 @@
     <string name="pw_high_pass">high pass</string>
     <string name="pw_highfreq">highfreq</string>
     <string name="pw_highgain">highgain</string>
+    <string name="pw_highland">highland</string>
     <string name="pw_hiss">hiss</string>
     <string name="pw_hisses">hisses</string>
     <string name="pw_hold">hold</string>
@@ -460,6 +468,7 @@
     <string name="pw_humbucker">humbucker</string>
     <string name="pw_hums">hums</string>
     <string name="pw_hums_glides">hums &amp; glides</string>
+    <string name="pw_hurdy_gurdy">hurdy-gurdy</string>
     <string name="pw_hybrid">hybrid</string>
     <string name="pw_hyst">hyst</string>
     <string name="pw_hz">Hz</string>
@@ -843,6 +852,7 @@
     <string name="pw_rolls">rolls</string>
     <string name="pw_room">room</string>
     <string name="pw_root">root</string>
+    <string name="pw_rosin">rosin</string>
     <string name="pw_rotary">Rotary</string>
     <string name="pw_rotary_bb7b80">rotary</string>
     <string name="pw_rotate">rotate</string>
@@ -930,6 +940,7 @@
     <string name="pw_slope">slope</string>
     <string name="pw_slot">slot</string>
     <string name="pw_slow">slow</string>
+    <string name="pw_smallpipes">smallpipes</string>
     <string name="pw_smash">Smash</string>
     <string name="pw_smear">smear</string>
     <string name="pw_smooth">smooth</string>
@@ -1054,6 +1065,7 @@
     <string name="pw_tonewheel">tonewheel</string>
     <string name="pw_tongue">tongue</string>
     <string name="pw_tongue_drum">tongue drum</string>
+    <string name="pw_tonic">tonic</string>
     <string name="pw_touch">touch</string>
     <string name="pw_toy">toy</string>
     <string name="pw_track">track</string>

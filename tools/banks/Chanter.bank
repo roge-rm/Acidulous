@@ -1,0 +1,170 @@
+# Chanter - bagpipes and the hurdy-gurdy.
+#
+# A bagpipe is a chanter (a conical pipe with a double reed) and drones
+# (narrow pipes with single reeds) blown from a bag, which keeps them going
+# for `bag` seconds after the last note. `key` tunes the drones, `drones`
+# sets how loud, `reed` how bright the chanter, `grace` puts a quick high
+# note before each one, `drift` lets the bag's pressure wander, and `air` is
+# the breath in the reeds. The smallpipes' chanter is closed: it stops for a
+# moment between notes.
+#
+# A hurdy-gurdy is a rosined wheel bowing melody strings (stopped by the
+# keys), drone strings and the trompette, whose loose bridge (the dog)
+# buzzes once the `wheel` turns faster than `threshold`. `coup` pushes the
+# wheel on the beat to set the dog buzzing in time; pressure or the mod
+# wheel pushes it too.
+#
+# Families: highland, smallpipes, gaita, gurdy, drones.
+
+machine Chanter
+role lead
+
+patch Init family=highland note=69 range=67..81
+
+patch "Highland Pipes" family=highland note=69 range=67..81
+  # The great pipes: three drones and a loud chanter, every note graced.
+  grace          25 ms
+  drones         0.8
+
+patch "Pipes Ungraced" family=highland note=69 range=67..81
+  # The same, with the notes running together and the bag less steady.
+  grace          0 ms
+  drift          0.35
+
+patch "Pipe Band" family=highland note=69 range=67..81
+  # Drones up, the bag squeezed unevenly, more air.
+  grace          20 ms
+  drones         0.9
+  drift          0.5
+  air            0.3
+
+patch "Practice Chanter" family=highland note=69 range=67..81
+  # The chanter on its own, softer reed, no drones.
+  drones         0
+  reed           0.3
+  grace          20 ms
+
+patch "Bright Chanter" family=highland note=69 range=67..81
+  # A hard reed, loud and piercing.
+  reed           0.9
+  grace          15 ms
+
+patch Smallpipes family=smallpipes note=67 range=65..79
+  # A quiet, closed chanter that stops between notes, soft drones.
+  model          #1
+  key            #7
+
+patch "Smallpipes Graced" family=smallpipes note=67 range=65..79
+  # Closed and graced, a little breathier.
+  model          #1
+  key            #7
+  grace          20 ms
+  air            0.25
+
+patch "Soft Smallpipes" family=smallpipes note=67 range=65..79
+  # A soft reed and the drones low.
+  model          #1
+  key            #7
+  reed           0.25
+  drones         0.4
+
+patch "Smallpipes in D" family=smallpipes note=62 range=60..74
+  # Drones on D.
+  model          #1
+  key            #2
+
+patch Gaita family=gaita note=72 range=70..86
+  # One bass drone under a sweet, conical chanter.
+  model          #2
+  key            #0
+
+patch "Gaita Bright" family=gaita note=72 range=70..86
+  # A harder reed.
+  model          #2
+  key            #0
+  reed           0.85
+
+patch "Gaita Breath" family=gaita note=72 range=70..86
+  # Breathy, the bag wandering.
+  model          #2
+  key            #0
+  air            0.45
+  drift          0.5
+
+patch "Gaita Graced" family=gaita note=72 range=70..86
+  # Grace notes before each, the drone up.
+  model          #2
+  key            #0
+  grace          18 ms
+  drones         0.75
+
+patch Hurdy-Gurdy family=gurdy note=67 range=60..84
+  # The wheel turning steadily, the dog quiet.
+  model          #3
+  key            #7
+
+patch "Gurdy Coups" family=gurdy note=67 range=60..84
+  # The wheel pushed on every beat: the dog buzzes in time.
+  model          #3
+  key            #7
+  coup           #1
+
+patch "Gurdy Eighths" family=gurdy note=67 range=60..84
+  # Two coups a beat.
+  model          #3
+  key            #7
+  coup           #2
+
+patch "Gurdy Sixteenths" family=gurdy note=67 range=60..84
+  # Four coups a beat, a dance.
+  model          #3
+  key            #7
+  coup           #3
+  wheel          0.45
+
+patch "Gurdy Buzzing" family=gurdy note=67 range=60..84
+  # The wheel fast enough that the dog never stops.
+  model          #3
+  key            #7
+  wheel          0.85
+  threshold      0.5
+
+patch "Gurdy Gentle" family=gurdy note=67 range=60..84
+  # A slow wheel and the dog lifted off: soft and reedy.
+  model          #3
+  key            #7
+  wheel          0.25
+  dog            0
+
+patch "Gurdy in D" family=gurdy note=62 range=55..79
+  # Drones on D, coups on the beat.
+  model          #3
+  key            #2
+  coup           #1
+
+patch "Pipe Drones" family=drones note=69 range=67..81 role=drone
+  # Hold a note for the drones; they go on for eight seconds after.
+  bag            8 s
+  drones         1
+
+patch "Gurdy Drones" family=drones note=67 range=60..84 role=drone
+  # The wheel keeps the drones turning long after the note.
+  model          #3
+  key            #7
+  bag            8 s
+  drones         1
+  dog            0
+
+patch "Smallpipe Drones" family=drones note=67 range=65..79 role=drone
+  # The smallpipes' soft drones, long.
+  model          #1
+  key            #7
+  bag            8 s
+  drones         1
+
+patch "Gaita Drone" family=drones note=72 range=70..86 role=drone
+  # One deep drone, long.
+  model          #2
+  key            #0
+  bag            8 s
+  drones         1

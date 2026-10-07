@@ -230,6 +230,7 @@ fun MachinePanel(
             "Tine" -> TinePanel(binding)
             "Sympath" -> SympathPanel(binding)
             "Palm" -> PalmPanel(binding)
+            "Chanter" -> ChanterPanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3823,6 +3824,57 @@ private fun PalmPanel(b: ParamBinding) {
                 }
                 Group("play") {
                     PanelStepKnob(b, "voices", (1..8).map { "$it" }, "voices")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
+
+private val CHANTER_MODELS = listOf("highland", "smallpipes", "gaita", "hurdy-gurdy")
+private val CHANTER_COUPS = listOf("off", "1", "2", "4")
+
+/** Chanter: the pipes and the bag, the hurdy-gurdy's wheel, and the player. */
+@Composable
+private fun ChanterPanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("pipes", "hurdy-gurdy", "play"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("instrument") {
+                    PanelStepKnob(b, "model", CHANTER_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("drones") {
+                    PanelStepKnob(b, "key", KEY_NAMES, "tonic", PanelAmber)
+                    PanelKnob(b, "drones", "drones")
+                    PanelKnob(b, "bag", "bag")
+                }
+                Group("chanter") {
+                    PanelKnob(b, "reed", "reed")
+                    PanelKnob(b, "grace", "grace", PanelPink)
+                    PanelKnob(b, "drift", "drift")
+                    PanelKnob(b, "air", "air")
+                }
+            }
+            1 -> {
+                Group("crank") {
+                    PanelKnob(b, "wheel", "crank", PanelAmber)
+                    PanelKnob(b, "rosin", "rosin")
+                }
+                Group("dog") {
+                    PanelKnob(b, "dog", "dog", PanelPink)
+                    PanelKnob(b, "threshold", "threshold")
+                    PanelStepKnob(b, "coup", CHANTER_COUPS, "coup")
+                }
+            }
+            else -> {
+                Group("play") {
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")

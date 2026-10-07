@@ -7,6 +7,7 @@
 4. [The machines](04-the-machines.md)
     - [Bias](04-the-machines/bias.md) - a four-track: recordings arranged along the song, four lanes at a time.
     - [Brazen](04-the-machines/brazen.md) - modelled brass, from trumpet to tuba, or a whole section.
+    - [Chanter](04-the-machines/chanter.md) - modelled bagpipes and hurdy-gurdy: drones that go on between notes, grace notes, and a wheel whose loose bridge buzzes in time.
     - [Cipher](04-the-machines/cipher.md) - a vocoder, where you can rearrange which bands drive which.
     - [Cumulus](04-the-machines/cumulus.md) - pads built from a spectrum of partials.
     - [Dice](04-the-machines/dice.md) - a loop slicer with chance on every slice.

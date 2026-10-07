@@ -7,6 +7,7 @@
 4. [Les machines](04-the-machines.md)
     - [Bias](04-the-machines/bias.md) : un quatre-pistes : des enregistrements placés le long du morceau, quatre couloirs à la fois.
     - [Brazen](04-the-machines/brazen.md) : des cuivres modélisés, de la trompette au tuba, ou tout un pupitre.
+    - [Chanter](04-the-machines/chanter.md) : cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.
     - [Cipher](04-the-machines/cipher.md) : un vocodeur où vous pouvez réarranger quelle bande commande quelle autre.
     - [Cumulus](04-the-machines/cumulus.md) : des nappes bâties à partir d’un spectre de partiels.
     - [Dice](04-the-machines/dice.md) : un découpeur de boucles avec du hasard sur chaque tranche.
