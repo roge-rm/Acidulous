@@ -885,9 +885,10 @@ internal fun SwitchGrid(
         // IntrinsicSize.Max, then a weight on every cell: the grid takes the
         // width of its widest row and the weights divide it evenly, so every
         // cell is the size of the longest label and the selected one doesn't
-        // move.
+        // move. Every column is at least as wide as a knob's dial, so a short
+        // word doesn't make a thin button.
         Column(
-            Modifier.width(IntrinsicSize.Max).weight(1f)
+            Modifier.widthIn(min = 52.dp * cols + 1.dp * (cols - 1)).width(IntrinsicSize.Max).weight(1f)
                 .clip(RoundedCornerShape(4.dp)).background(Acid.colors.card),
             verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
