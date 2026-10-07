@@ -57,7 +57,7 @@ data class NexusPatch(
         }
         // Everything after the slot is the text, `|` and all, since a formula
         // can use it. Older builds skip the line.
-        texts.toSortedMap().forEach { (slot, text) ->
+        texts.entries.sortedBy { it.key }.forEach { (slot, text) ->
             if (text.isNotBlank() && modules.any { it.slot == slot }) append("e|%02d|%s\n".format(slot, text.lines().joinToString(" ")))
         }
         modules.sortedBy { it.slot }.forEach { append("p|%02d|%.0f|%.0f\n".format(it.slot, it.x, it.y)) }
