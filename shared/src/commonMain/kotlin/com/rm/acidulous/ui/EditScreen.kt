@@ -167,11 +167,11 @@ fun EditScreen(
             LockEdit.clear()
         }
     }
-    val kind = MachineUi.kindOf(track.machine.type)
+    val kind = MachineUi.kindOf(track.machine)
     // The machine's alternate editor over the same clip. Drum machines open on
     // the grid, keyboard machines on the roll.
     var steps by remember(trackIndex, kind) { mutableStateOf(kind == MachineKind.Drums) }
-    val voices = MachineUi.voicesOf(track.machine.type, track.machine.settings)
+    val voices = MachineUi.voicesOf(track.machine)
     var selectedPad by remember(trackIndex) { mutableStateOf(0) }
     // Only Reflux can switch views, between a roll and a step row. Drum
     // machines start on the grid (steps is true) and stay there.

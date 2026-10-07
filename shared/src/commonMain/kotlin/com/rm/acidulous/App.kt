@@ -281,8 +281,8 @@ fun App(modifier: Modifier = Modifier) {
         }
         com.rm.acidulous.ui.KeyHub.drumVoices = { rack ->
             song.tracks.getOrNull(rack)?.machine?.let { m ->
-                if (com.rm.acidulous.model.MachineUi.kindOf(m.type) == com.rm.acidulous.model.MachineKind.Drums) {
-                    com.rm.acidulous.model.MachineUi.voicesOf(m.type, m.settings).map { it.note }
+                if (com.rm.acidulous.model.MachineUi.kindOf(m) == com.rm.acidulous.model.MachineKind.Drums) {
+                    com.rm.acidulous.model.MachineUi.voicesOf(m).map { it.note }
                 } else null
             }
         }
@@ -1375,11 +1375,11 @@ fun App(modifier: Modifier = Modifier) {
                     colour = com.rm.acidulous.midi.launchpad.Rgb.fromArgb(com.rm.acidulous.ui.trackColour(i, t.colour).toArgb()),
                     // Lowest first for the sequencer, like the drum grid, and in
                     // the on-screen pad order for the note page.
-                    drums = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine.type) == com.rm.acidulous.model.MachineKind.Drums) {
-                        com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings).map { it.note }.sorted()
+                    drums = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine) == com.rm.acidulous.model.MachineKind.Drums) {
+                        com.rm.acidulous.model.MachineUi.voicesOf(t.machine).map { it.note }.sorted()
                     } else null,
-                    pads = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine.type) == com.rm.acidulous.model.MachineKind.Drums) {
-                        val voices = com.rm.acidulous.model.MachineUi.voicesOf(t.machine.type, t.machine.settings)
+                    pads = if (com.rm.acidulous.model.MachineUi.kindOf(t.machine) == com.rm.acidulous.model.MachineKind.Drums) {
+                        val voices = com.rm.acidulous.model.MachineUi.voicesOf(t.machine)
                         com.rm.acidulous.model.MachineUi.padOrder(t.machine.type, voices).map { it.note }
                     } else null,
                     clips = song.scenes.indices.filter { song.scenes[it].id in t.clips }.toSet(),

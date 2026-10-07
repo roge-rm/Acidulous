@@ -196,3 +196,7 @@ patch "Talking Roll" family=talking note=55 range=45..67 role=pad
   squeeze        5
   roll           10
   volume         0.45
+
+patch "Hand Drum Kit" family=kit note=36 range=36..51
+  # Sixteen pads: djembe, cajon, tabla, bayan, frame and talking drum, each with its own stroke.
+  kit            1

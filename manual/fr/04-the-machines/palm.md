@@ -53,6 +53,15 @@ elle y reste pour l’étouffer.
 Avec le MPE, glisser un doigt vers le haut le pose sur la peau et l’étouffe
 pendant qu’elle sonne.
 
+## Kit
+
+Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre tambour : une seule piste joue tout un kit de percussions à main. Le séquenceur affiche la grille de batterie, une ligne par pad, nommée d’après son tambour et sa frappe.
+
+- Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **frappe**, **hauteur** et **niveau**.
+- Les autres boutons (position, main, déclin, etc.) agissent sur tous les pads.
+- **Hand Drum Kit** commence avec djembé, cajón, tabla, bayan, tambour sur cadre et tambour parlant.
+- Désactivez kit pour rejouer un seul tambour sur tout le clavier.
+
 ## Astuces
 
 - Les présélections **By Touch** jouent toutes les frappes depuis une seule

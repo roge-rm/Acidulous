@@ -4224,7 +4224,12 @@ internal object FactoryBanks {
         family = "talking",
         low = 45, high = 67)
 
-    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30()) }
+    private fun palm31() = Patch("Palm", "Hand Drum Kit",
+        mapOf("kit" to 1f),
+        family = "kit",
+        low = 36, high = 51)
+
+    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30(), palm31()) }
 
     private fun chanter0() = Patch("Chanter", "Init", emptyMap(),
         family = "highland",

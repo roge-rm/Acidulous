@@ -27,8 +27,15 @@ class Palm final : public Machine {
         Model = 0, Tune, Stroke, Position, Hand, Decay, Damp,
         Drop, Squeeze, Rattle, Body, Roll, Spread,
         Voices, VelocityAmount, BendRange, Octave, Volume,
-        Count
+        // Kit mode: each key from kBaseNote is a pad with its own drum, stroke,
+        // pitch (a MIDI note) and level, kPadParams values each from PadFirst.
+        Kit, PadFirst,
+        Count = PadFirst + 16 * 4
     };
+    static constexpr int kPads = 16, kPadParams = 4;
+    enum PadParam : int32_t { PadModel = 0, PadStroke, PadNote, PadLevel };
+    static constexpr int32_t padParam(int pad, int which) { return PadFirst + pad * kPadParams + which; }
+    static constexpr uint8_t kBaseNote = 36;
     static_assert(Count <= kMaxParams, "too many parameters");
 
     enum Kind : int32_t { Tabla = 0, Bayan, Djembe, Cajon, Frame, Talking, KindCount };
@@ -67,6 +74,8 @@ class Palm final : public Machine {
         int modeCount = 0;
         bool used = false, held = false;
         uint8_t note = 0;
+        /** The drum it is, and in kit mode the pad it came from, or -1. */
+        int kind = 0, pad = -1;
         float velocity = 0.8f;
         float pitch = 60.0f, builtPitch = -1000.0f;
         float gain = 0.0f, pan = 0.0f;
@@ -90,7 +99,7 @@ class Palm final : public Machine {
 
     float paramOf(int32_t i) const { return params_.get(i); }
     Voice *voiceFor(uint8_t note);
-    int strokeFor(float velocity) const;
+    int strokeFor(const Voice &v, float velocity) const;
     /** Sets up the modes for the voice's drum and stroke. */
     void build(Voice &v);
     /** Tunes the modes to the voice's pitch now. */

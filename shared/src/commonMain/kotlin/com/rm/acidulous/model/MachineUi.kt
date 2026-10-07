@@ -37,6 +37,25 @@ object MachineUi {
             type == "Genesis" -> MachineKind.Drums
         else -> MachineKind.Keyboard
     }
+    /** Machines with a kit mode: their `kit` switch turns the keys from 36 into 16 pads. */
+    val kitMachines = setOf("Palm")
+    fun isKit(machine: Machine): Boolean = machine.type in kitMachines && (machine.params["kit"] ?: 0f) >= 0.5f
+    /** [kindOf] for this machine as it's set: a machine in kit mode is drums. */
+    fun kindOf(machine: Machine): MachineKind = if (isKit(machine)) MachineKind.Drums else kindOf(machine.type)
+    fun voicesOf(machine: Machine): List<DrumVoice> = when {
+        machine.type == "Palm" && isKit(machine) -> (0 until 16).map { pad ->
+            fun step(name: String, count: Int, default: Int) =
+                machine.params["p%02d_%s".format(pad + 1, name)]?.let { kotlin.math.round(it * (count - 1)).toInt() } ?: default
+            val drum = PALM_DRUMS[step("model", PALM_DRUMS.size, PALM_KIT[pad].first)]
+            val stroke = PALM_STROKES[step("stroke", PALM_STROKES.size, PALM_KIT[pad].second)]
+            DrumVoice(36 + pad, "$drum $stroke", drum.take(2) + stroke.take(1))
+        }
+        else -> voicesOf(machine.type, machine.settings)
+    }
+    private val PALM_DRUMS = listOf("tabla", "bayan", "djembe", "cajon", "frame", "talking")
+    private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "by velocity")
+    /** Palm's default kit, as in the engine: drum and stroke per pad. */
+    private val PALM_KIT = listOf(2 to 3, 2 to 0, 2 to 1, 2 to 2, 3 to 3, 3 to 1, 3 to 4, 0 to 0, 0 to 4, 0 to 2, 1 to 0, 1 to 1, 4 to 0, 4 to 4, 5 to 0, 5 to 2)
     fun acceptsSamples(type: String): Boolean = type == "Forage"
 
     /** Machines whose notes are pitches and can be transposed: not drums or tape. */

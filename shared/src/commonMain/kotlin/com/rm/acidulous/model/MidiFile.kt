@@ -34,7 +34,7 @@ object MidiFile {
         // rest fill the other channels in order.
         var next = 0
         song.tracks.forEach { track ->
-            val channel = if (MachineUi.kindOf(track.machine.type) == MachineKind.Drums) {
+            val channel = if (MachineUi.kindOf(track.machine) == MachineKind.Drums) {
                 DRUM_CHANNEL
             } else {
                 if (next == DRUM_CHANNEL) next++

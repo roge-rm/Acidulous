@@ -44,6 +44,15 @@ there to damp it.
 
 With MPE, sliding a finger up lays it on the head and damps it as it rings.
 
+## Kit
+
+Turn on **kit** and the keys from C2 up are sixteen pads, each its own drum, so one track can play a whole hand-drum kit. The sequencer shows the drum grid, one lane per pad, named after its drum and stroke.
+
+- Tap a pad on the drum grid, then set it in the pad card: **drum**, **stroke**, **pitch** and **level**.
+- The other knobs (position, hand, decay and so on) work on every pad.
+- **Hand Drum Kit** starts with djembe, cajón, tabla, bayan, frame drum and talking drum.
+- Turn kit off to play one drum across the keys again.
+
 ## Tips
 
 - The **By Touch** presets play every stroke from one key: play softly for

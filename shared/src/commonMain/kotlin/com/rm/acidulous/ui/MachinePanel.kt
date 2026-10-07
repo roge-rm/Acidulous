@@ -229,7 +229,7 @@ fun MachinePanel(
             "Fret" -> FretPanel(binding)
             "Tine" -> TinePanel(binding)
             "Sympath" -> SympathPanel(binding)
-            "Palm" -> PalmPanel(binding)
+            "Palm" -> PalmPanel(binding, selectedPad)
             "Chanter" -> ChanterPanel(binding)
             "Aviary" -> AviaryPanel(binding)
             "Fathom" -> FathomPanel(binding)
@@ -3846,10 +3846,26 @@ private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "veloc
 
 /** Palm: the drum and the hand, its body, and the player. */
 @Composable
-private fun PalmPanel(b: ParamBinding) {
+private fun PalmPanel(b: ParamBinding, pad: Int) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("drum", "body", "play"), section, { section = it }) { sec ->
+    PanelSections(listOf("drum", "body", "play", "kit"), section, { section = it }) { sec ->
         when (sec) {
+            3 -> {
+                // In kit mode the keys from C2 are sixteen pads; the pad picked on
+                // the drum grid is the one these knobs set.
+                val p = pad.coerceIn(0, 15)
+                fun n(name: String) = "p%02d_%s".format(p + 1, name)
+                val hot = Acid.colors.accent
+                Group("kit") {
+                    PanelStepKnob(b, "kit", listOf("off", "on"), "kit", PanelAmber)
+                }
+                Group("pad") {
+                    PanelStepKnob(b, n("model"), PALM_MODELS, "drum", hot)
+                    PanelStepKnob(b, n("stroke"), PALM_STROKES, "stroke", hot)
+                    PanelStepKnob(b, n("note"), (24..96).map { noteName(it) }, "pitch", hot)
+                    PanelKnob(b, n("level"), "level", hot)
+                }
+            }
             0 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", PALM_MODELS, "model", PanelAmber)

@@ -138,6 +138,72 @@ const ParamDef *Palm::paramDefs(int32_t &count) const {
         {"bend", 0.0f, 12.0f, 2.0f, Curve::Linear, 0, "st"},
         {"octave", -2.0f, 2.0f, 0.0f, Curve::Stepped, 5, ""},
         {"volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        // Kit mode, and the default kit: djembe, cajon, tabla, bayan, frame and talking drum.
+        {"kit", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        {"p01_model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""},
+        {"p01_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 3.0f, Curve::Stepped, StrokeCount, ""},
+        {"p01_note", 24.0f, 96.0f, 43.0f, Curve::Stepped, 73, ""},
+        {"p01_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p02_model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""},
+        {"p02_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""},
+        {"p02_note", 24.0f, 96.0f, 52.0f, Curve::Stepped, 73, ""},
+        {"p02_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p03_model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""},
+        {"p03_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 1.0f, Curve::Stepped, StrokeCount, ""},
+        {"p03_note", 24.0f, 96.0f, 57.0f, Curve::Stepped, 73, ""},
+        {"p03_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p04_model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""},
+        {"p04_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 2.0f, Curve::Stepped, StrokeCount, ""},
+        {"p04_note", 24.0f, 96.0f, 50.0f, Curve::Stepped, 73, ""},
+        {"p04_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p05_model", 0.0f, static_cast<float>(KindCount - 1), 3.0f, Curve::Stepped, KindCount, ""},
+        {"p05_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 3.0f, Curve::Stepped, StrokeCount, ""},
+        {"p05_note", 24.0f, 96.0f, 40.0f, Curve::Stepped, 73, ""},
+        {"p05_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p06_model", 0.0f, static_cast<float>(KindCount - 1), 3.0f, Curve::Stepped, KindCount, ""},
+        {"p06_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 1.0f, Curve::Stepped, StrokeCount, ""},
+        {"p06_note", 24.0f, 96.0f, 52.0f, Curve::Stepped, 73, ""},
+        {"p06_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p07_model", 0.0f, static_cast<float>(KindCount - 1), 3.0f, Curve::Stepped, KindCount, ""},
+        {"p07_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 4.0f, Curve::Stepped, StrokeCount, ""},
+        {"p07_note", 24.0f, 96.0f, 57.0f, Curve::Stepped, 73, ""},
+        {"p07_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p08_model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""},
+        {"p08_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""},
+        {"p08_note", 24.0f, 96.0f, 62.0f, Curve::Stepped, 73, ""},
+        {"p08_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p09_model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""},
+        {"p09_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 4.0f, Curve::Stepped, StrokeCount, ""},
+        {"p09_note", 24.0f, 96.0f, 69.0f, Curve::Stepped, 73, ""},
+        {"p09_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p10_model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""},
+        {"p10_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 2.0f, Curve::Stepped, StrokeCount, ""},
+        {"p10_note", 24.0f, 96.0f, 64.0f, Curve::Stepped, 73, ""},
+        {"p10_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p11_model", 0.0f, static_cast<float>(KindCount - 1), 1.0f, Curve::Stepped, KindCount, ""},
+        {"p11_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""},
+        {"p11_note", 24.0f, 96.0f, 43.0f, Curve::Stepped, 73, ""},
+        {"p11_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p12_model", 0.0f, static_cast<float>(KindCount - 1), 1.0f, Curve::Stepped, KindCount, ""},
+        {"p12_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 1.0f, Curve::Stepped, StrokeCount, ""},
+        {"p12_note", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""},
+        {"p12_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p13_model", 0.0f, static_cast<float>(KindCount - 1), 4.0f, Curve::Stepped, KindCount, ""},
+        {"p13_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""},
+        {"p13_note", 24.0f, 96.0f, 45.0f, Curve::Stepped, 73, ""},
+        {"p13_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p14_model", 0.0f, static_cast<float>(KindCount - 1), 4.0f, Curve::Stepped, KindCount, ""},
+        {"p14_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 4.0f, Curve::Stepped, StrokeCount, ""},
+        {"p14_note", 24.0f, 96.0f, 52.0f, Curve::Stepped, 73, ""},
+        {"p14_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p15_model", 0.0f, static_cast<float>(KindCount - 1), 5.0f, Curve::Stepped, KindCount, ""},
+        {"p15_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""},
+        {"p15_note", 24.0f, 96.0f, 55.0f, Curve::Stepped, 73, ""},
+        {"p15_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p16_model", 0.0f, static_cast<float>(KindCount - 1), 5.0f, Curve::Stepped, KindCount, ""},
+        {"p16_stroke", 0.0f, static_cast<float>(StrokeCount - 1), 2.0f, Curve::Stepped, StrokeCount, ""},
+        {"p16_note", 24.0f, 96.0f, 57.0f, Curve::Stepped, 73, ""},
+        {"p16_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -200,8 +266,9 @@ Palm::Voice *Palm::voiceFor(uint8_t note) {
     return pick;
 }
 
-int Palm::strokeFor(float velocity) const {
-    const int stroke = std::clamp(steppedTargetOf(Stroke), 0, StrokeCount - 1);
+int Palm::strokeFor(const Voice &v, float velocity) const {
+    const int which = v.pad >= 0 ? padParam(v.pad, PadStroke) : static_cast<int32_t>(Stroke);
+    const int stroke = std::clamp(steppedTargetOf(which), 0, StrokeCount - 1);
     if (stroke != ByVelocity) return stroke;
     // Soft notes are muted, the middle open, and the hardest slapped.
     if (velocity < 0.35f) return Muted;
@@ -210,7 +277,7 @@ int Palm::strokeFor(float velocity) const {
 }
 
 void Palm::build(Voice &v) {
-    const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
+    const int kind = v.kind;
     const Make &k = kMakes[kind];
     const StrokeDef &s = kStrokes[v.stroke];
     const float f = noteHz(v.pitch);
@@ -266,12 +333,12 @@ void Palm::retune(Voice &v) {
 }
 
 void Palm::strike(Voice &v, float velocity) {
-    const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
+    const Make &k = kMakes[v.kind];
     for (int m = 0; m < v.modeCount; ++m) {
         v.modes[m].y1 *= kRestrikeKeeps;
         v.modes[m].y2 *= kRestrikeKeeps;
     }
-    v.stroke = strokeFor(velocity);
+    v.stroke = strokeFor(v, velocity);
     v.velocity = velocity;
     build(v);
     const StrokeDef &s = kStrokes[v.stroke];
@@ -292,11 +359,18 @@ void Palm::strike(Voice &v, float velocity) {
 }
 
 void Palm::noteOn(uint8_t note, uint8_t velocity) {
-    const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
+    const bool kit = steppedTargetOf(Kit) != 0;
+    const int pad = static_cast<int>(note) - kBaseNote;
+    if (kit && (pad < 0 || pad >= kPads)) return;
+    const int kind = std::clamp(steppedTargetOf(kit ? padParam(pad, PadModel) : static_cast<int32_t>(Model)), 0, KindCount - 1);
+    const Make &k = kMakes[kind];
     Voice *v = voiceFor(note);
-    const bool fresh = !v->used || v->note != note;
+    const bool fresh = !v->used || v->note != note || v->kind != kind;
     v->note = note;
-    v->pitch = static_cast<float>(note) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
+    v->kind = kind;
+    v->pad = kit ? pad : -1;
+    const float played = kit ? static_cast<float>(steppedTargetOf(padParam(pad, PadNote))) : static_cast<float>(note);
+    v->pitch = played + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
     v->held = true;
     v->noteBend = 0.0f;
     v->pressure = -1.0f;
@@ -304,6 +378,8 @@ void Palm::noteOn(uint8_t note, uint8_t velocity) {
     v->builtPress = -1.0f;
     const float vel = static_cast<float>(velocity) / 127.0f;
     v->gain = kHouse * k.level * velocityGain(vel, targetOf(VelocityAmount));
+    // A pad's level is 0.75 for as loud as the drum played on its own.
+    if (kit) v->gain *= clampf(targetOf(padParam(pad, PadLevel)), 0.0f, 1.0f) / 0.75f;
     if (fresh) {
         for (Mode &m : v->modes) m.y1 = m.y2 = 0.0f;
         v->crackTone.reset();
@@ -366,9 +442,8 @@ bool Palm::render(float *L, float *R, int32_t frames) {
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (asleep) return true;
 
-    const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
     const float squeeze = paramOf(Squeeze);
-    const float rattle = clampf(paramOf(Rattle), 0.0f, 1.0f) * k.rattle;
+    const float rattleAmount = clampf(paramOf(Rattle), 0.0f, 1.0f);
     const float roll = paramOf(Roll);
     const float volume = paramOf(Volume);
     const float crackFall = std::exp(-1.0f / (0.004f * sampleRate));
@@ -378,6 +453,7 @@ bool Palm::render(float *L, float *R, int32_t frames) {
 
     for (Voice &v : voices) {
         if (!v.used) continue;
+        const float rattle = rattleAmount * kMakes[v.kind].rattle;
         float peak = 0.0f;
         const float pl = std::sqrt(0.5f * (1.0f - v.pan)), pr = std::sqrt(0.5f * (1.0f + v.pan));
         int countdown = retuneCountdown;
