@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -778,37 +779,43 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
     ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
 }
 
-/**
- * A two-way parameter as one square the size of a knob's dial, split into a
- * top and a bottom half, the chosen one lit; its name above, in line with the
- * knobs beside it.
- */
+/** A two-way parameter as one knob-sized square split in two; see [PairSquare]. */
 @Composable
 private fun PanelPair(b: ParamBinding, name: String, labels: List<String>, label: String, idx: Int) {
+    PairSquare(panelWord(label), panelWords(labels), idx, Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name))) {
+        b.set(name, it.toFloat())
+    }
+}
+
+/** An off-or-on parameter as one knob-sized button; see [ToggleSquare]. */
+@Composable
+internal fun PanelOnOff(b: ParamBinding, name: String, label: String = name) {
+    val on = b.value(name) >= 0.5f
+    ToggleSquare(panelWord(label), on, Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name))) {
+        b.set(name, if (it) 1f else 0f)
+    }
+}
+
+/**
+ * Off or on as one button, lit when on: a square the size of a knob's dial,
+ * its name above and on or off inside, in line with the knobs beside it.
+ */
+@Composable
+internal fun ToggleSquare(label: String, on: Boolean, modifier: Modifier = Modifier, onChange: (Boolean) -> Unit) {
     val col = Acid.colors
-    val words = panelWords(labels)
-    Column(
-        panelKnobWidth().widthIn(min = 52.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(panelWord(label), color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
-        Column(
-            Modifier.size(52.dp).mappable(MapTargets.param(b.trackIndex, b.unit, name)),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
+    val state = stringArrayResource(Res.array.off_on)[if (on) 1 else 0]
+    Column(panelKnobWidth().widthIn(min = 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
+        Box(
+            modifier.size(52.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .background(if (on) col.accent else col.control)
+                .border(1.dp, if (on) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
+                .toggleable(value = on, role = Role.Switch) { onChange(it) }
+                .semantics { contentDescription = label },
+            contentAlignment = Alignment.Center,
         ) {
-            words.forEachIndexed { i, word ->
-                val lit = i == idx
-                Box(
-                    Modifier.fillMaxWidth().weight(1f)
-                        .clip(RoundedCornerShape(5.dp))
-                        .background(if (lit) col.accent else col.control)
-                        .border(1.dp, if (lit) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
-                        .selectable(selected = lit, role = Role.RadioButton) { b.set(name, i.toFloat()) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(word, color = if (lit) col.onAccent else col.text, fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
-                }
-            }
+            Text(state, color = if (on) col.onAccent else col.text, fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
         }
         // Where a knob shows its value, so the squares line up with the dials.
         Text(" ", fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
@@ -816,31 +823,31 @@ private fun PanelPair(b: ParamBinding, name: String, labels: List<String>, label
 }
 
 /**
- * An off-or-on parameter as one button, lit when on: a square the size of a
- * knob's dial, its name above and on or off inside, in line with the
+ * A choice of two as one square the size of a knob's dial, split into a top
+ * and a bottom half, the chosen one lit; its name above, in line with the
  * knobs beside it.
  */
 @Composable
-internal fun PanelOnOff(b: ParamBinding, name: String, label: String = name) {
-    val on = b.value(name) >= 0.5f
+internal fun PairSquare(label: String, words: List<String>, idx: Int, modifier: Modifier = Modifier, onPick: (Int) -> Unit) {
     val col = Acid.colors
-    val word = panelWord(label)
-    val state = panelWord(if (on) "on" else "off")
-    Column(
-        panelKnobWidth().widthIn(min = 52.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(word, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
-        Box(
-            Modifier.size(52.dp)
-                .mappable(MapTargets.param(b.trackIndex, b.unit, name))
-                .clip(RoundedCornerShape(5.dp))
-                .background(if (on) col.accent else col.control)
-                .border(1.dp, if (on) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
-                .toggleable(value = on, role = Role.Switch) { b.set(name, if (it) 1f else 0f) },
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(state, color = if (on) col.onAccent else col.text, fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+    Column(panelKnobWidth().widthIn(min = 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
+        Column(modifier.size(52.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            words.forEachIndexed { i, word ->
+                val lit = i == idx
+                val name = if (label.isEmpty()) word else stringResource(Res.string.a11y_named, label, word)
+                Box(
+                    Modifier.fillMaxWidth().weight(1f)
+                        .clip(RoundedCornerShape(5.dp))
+                        .background(if (lit) col.accent else col.control)
+                        .border(1.dp, if (lit) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
+                        .clickable { onPick(i) }
+                        .choice(name, lit),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(word, color = if (lit) col.onAccent else col.text, fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+                }
+            }
         }
         // Where a knob shows its value, so the squares line up with the dials.
         Text(" ", fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
@@ -866,6 +873,15 @@ internal fun SwitchGrid(
     onPick: (Int) -> Unit,
 ) {
     val idx = selected
+    // A choice of two is a knob-sized square, and off or on one button.
+    if (labels.size == 2 && idx in 0..1 && columns <= 1 && enabled == null) {
+        if (labels == stringArrayResource(Res.array.off_on).toList()) {
+            ToggleSquare(label, idx == 1, modifier) { onPick(if (it) 1 else 0) }
+        } else {
+            PairSquare(label, labels, idx, modifier, onPick)
+        }
+        return
+    }
     // At most two rows, one column when there are only two options. A switch
     // sits next to knobs that are taller than it, so a second row is free and
     // halves the width.
