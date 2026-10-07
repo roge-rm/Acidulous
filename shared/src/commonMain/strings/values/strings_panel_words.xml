@@ -378,6 +378,7 @@
     <string name="pw_glide_on">glide on</string>
     <string name="pw_glides">glides</string>
     <string name="pw_glitch">glitch</string>
+    <string name="pw_glock">glock</string>
     <string name="pw_glue">glue</string>
     <string name="pw_gong">gong</string>
     <string name="pw_grain">Grain</string>
@@ -396,6 +397,7 @@
     <string name="pw_half">half</string>
     <string name="pw_halves">halves</string>
     <string name="pw_hammer">hammer</string>
+    <string name="pw_handpan">handpan</string>
     <string name="pw_hands">hands</string>
     <string name="pw_hann">hann</string>
     <string name="pw_hard">hard</string>
@@ -563,9 +565,11 @@
     <string name="pw_magneto">Magneto</string>
     <string name="pw_major">major</string>
     <string name="pw_makeup">makeup</string>
+    <string name="pw_mallet">mallet</string>
     <string name="pw_mangle">mangle</string>
     <string name="pw_manuals">manuals</string>
     <string name="pw_map">map</string>
+    <string name="pw_marimba">marimba</string>
     <string name="pw_master">master</string>
     <string name="pw_medium">medium</string>
     <string name="pw_mega">mega</string>
@@ -603,11 +607,13 @@
     <string name="pw_morph_to">morph to</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">motion</string>
+    <string name="pw_motor">motor</string>
     <string name="pw_mouth">Mouth</string>
     <string name="pw_mouth_87d178">mouth</string>
     <string name="pw_move">move</string>
     <string name="pw_mukkuri">mukkuri</string>
     <string name="pw_munnharpe">munnharpe</string>
+    <string name="pw_music_box">music box</string>
     <string name="pw_mutate">mutate</string>
     <string name="pw_mute">mute</string>
     <string name="pw_muted">muted</string>
@@ -669,6 +675,7 @@
     <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pan">pan</string>
     <string name="pw_panel">panel</string>
+    <string name="pw_pans">pans</string>
     <string name="pw_paper">paper</string>
     <string name="pw_para">para</string>
     <string name="pw_partials">partials</string>
@@ -810,6 +817,7 @@
     <string name="pw_roles">roles</string>
     <string name="pw_roll">roll</string>
     <string name="pw_rolling">rolling</string>
+    <string name="pw_rolls">rolls</string>
     <string name="pw_room">room</string>
     <string name="pw_root">root</string>
     <string name="pw_rotary">Rotary</string>
@@ -927,6 +935,7 @@
     <string name="pw_started_by">started by</string>
     <string name="pw_steal">steal</string>
     <string name="pw_steel">steel</string>
+    <string name="pw_steel_pan">steel pan</string>
     <string name="pw_step">step</string>
     <string name="pw_step16">step16</string>
     <string name="pw_step8">step8</string>
@@ -1012,6 +1021,7 @@
     <string name="pw_tonebar">tonebar</string>
     <string name="pw_tonewheel">tonewheel</string>
     <string name="pw_tongue">tongue</string>
+    <string name="pw_tongue_drum">tongue drum</string>
     <string name="pw_touch">touch</string>
     <string name="pw_toy">toy</string>
     <string name="pw_track">track</string>
@@ -1064,6 +1074,7 @@
     <string name="pw_velspread">velspread</string>
     <string name="pw_vent">vent</string>
     <string name="pw_vib">vib</string>
+    <string name="pw_vibes">vibes</string>
     <string name="pw_vibrato">vibrato</string>
     <string name="pw_voice">voice</string>
     <string name="pw_voices">voices</string>
@@ -1108,6 +1119,7 @@
     <string name="pw_wreck">wreck</string>
     <string name="pw_xlp">XLP</string>
     <string name="pw_xor">xor</string>
+    <string name="pw_xylophone">xylophone</string>
     <string name="pw_y">y</string>
     <string name="pw_z">z</string>
     <string name="pw_zh">zh</string>

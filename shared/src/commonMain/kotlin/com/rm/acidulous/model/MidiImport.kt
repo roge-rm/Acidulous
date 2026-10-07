@@ -28,6 +28,8 @@ object MidiImport {
         // Electric guitars and basses (not the synth basses) to the electric ones.
         val program = part.program
         if (program != null && (program in 26..31 || program in 32..37)) return "Fret"
+        // Mallets, music box, thumb piano and steel drums to the bars.
+        if (program != null && (program in 8..13 || program == 108 || program == 114)) return "Tine"
         return when (program?.let { it / 8 }) {
             2 -> "Manual"                  // organ
             3, 5 -> "Filament"             // acoustic guitar, strings

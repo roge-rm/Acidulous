@@ -28,6 +28,7 @@
     - [Reflux](04-the-machines/reflux.md) - acid bass: one oscillator, one filter that screams, and lines you play in.
     - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
+    - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan and tongue drum.
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.
     - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the all-rounder.
 5. [Effects and mixing](05-effects-and-mixing.md)

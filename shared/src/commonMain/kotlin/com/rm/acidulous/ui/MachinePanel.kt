@@ -227,6 +227,7 @@ fun MachinePanel(
             "Tongue" -> TonguePanel(binding, editor)
             "Draw" -> DrawPanel(binding)
             "Fret" -> FretPanel(binding)
+            "Tine" -> TinePanel(binding)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3654,6 +3655,59 @@ private fun FretPanel(b: ParamBinding) {
                 }
                 Group("play") {
                     PanelStepKnob(b, "voices", (1..6).map { "$it" }, "voices")
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+}
+
+private val TINE_MODELS = listOf("marimba", "vibes", "xylophone", "glock", "thumb", "music box", "steel pan", "handpan", "tongue drum")
+
+/** Tine: the bar and what strikes it, the instrument around it, and the player. */
+@Composable
+private fun TinePanel(b: ParamBinding) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("bar", "body", "play"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> {
+                Group("instrument") {
+                    PanelStepKnob(b, "model", TINE_MODELS, "model", PanelAmber)
+                    PanelKnob(b, "tune", "tune")
+                }
+                Group("mallet") {
+                    PanelKnob(b, "mallet", "mallet", PanelAmber)
+                    PanelKnob(b, "position", "position")
+                }
+                Group("decay") {
+                    PanelKnob(b, "decay", "decay")
+                    PanelKnob(b, "bright", "bright")
+                    PanelKnob(b, "damp", "damp", PanelPink)
+                }
+            }
+            1 -> {
+                Group("tube") {
+                    PanelKnob(b, "tube", "tube", PanelAmber)
+                    PanelKnob(b, "motor", "motor")
+                    PanelKnob(b, "depth", "depth")
+                }
+                Group("metal") {
+                    PanelKnob(b, "bloom", "bloom")
+                    PanelKnob(b, "buzz", "buzz")
+                }
+            }
+            else -> {
+                Group("hands") {
+                    PanelKnob(b, "roll", "rolls", PanelAmber)
+                    PanelKnob(b, "spread", "spread")
+                }
+                Group("play") {
+                    PanelStepKnob(b, "voices", (1..16).map { "$it" }, "voices")
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")

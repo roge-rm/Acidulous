@@ -25,6 +25,7 @@ These copy how the real instrument works, so they play like one.
 - [**Tongue**](04-the-machines/tongue.md) - jaw harps, ten kinds, with the mouth on the mod wheel.
 - [**Draw**](04-the-machines/draw.md) - free reeds: harmonicas, accordions, melodica and more.
 - [**Fret**](04-the-machines/fret.md) - electric guitars and basses, their pickups, a player's hands and an amp that feeds back.
+- [**Tine**](04-the-machines/tine.md) - marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box and the steel pans, struck with mallets you can soften or harden.
 
 ## Drums
 

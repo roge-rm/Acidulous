@@ -376,6 +376,7 @@
     <string name="pw_glide_on">porta quand</string>
     <string name="pw_glides">glissées</string>
     <string name="pw_glitch">glitch</string>
+    <string name="pw_glock">glock</string>
     <string name="pw_glue">colle</string>
     <string name="pw_gong">gong</string>
     <string name="pw_grain">Grain</string>
@@ -394,6 +395,7 @@
     <string name="pw_half">demi</string>
     <string name="pw_halves">blanches</string>
     <string name="pw_hammer">marteau</string>
+    <string name="pw_handpan">handpan</string>
     <string name="pw_hands">mains</string>
     <string name="pw_hann">hann</string>
     <string name="pw_hard">dur</string>
@@ -558,11 +560,13 @@
     <string name="pw_macro">macro</string>
     <string name="pw_macros">macros</string>
     <string name="pw_magneto">Magneto</string>
+    <string name="pw_mallet">mailloche</string>
     <string name="pw_mangle">broyé</string>
     <string name="pw_major">majeur</string>
     <string name="pw_makeup">compens.</string>
     <string name="pw_manuals">claviers</string>
     <string name="pw_map">carte</string>
+    <string name="pw_marimba">marimba</string>
     <string name="pw_master">général</string>
     <string name="pw_medium">support</string>
     <string name="pw_mega">mega</string>
@@ -600,11 +604,13 @@
     <string name="pw_morph_to">fondu vers</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">mouvement</string>
+    <string name="pw_motor">moteur</string>
     <string name="pw_mouth">Mouth</string>
     <string name="pw_mouth_87d178">bouche</string>
     <string name="pw_move">bouger</string>
     <string name="pw_mukkuri">mukkuri</string>
     <string name="pw_munnharpe">munnharpe</string>
+    <string name="pw_music_box">boîte à musique</string>
     <string name="pw_mutate">muter</string>
     <string name="pw_mute">sourdine</string>
     <string name="pw_mute_lane">muet</string>
@@ -666,6 +672,7 @@
     <string name="pw_pad_n">Pad %d</string>
     <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pan">pano</string>
+    <string name="pw_pans">tambours d’acier</string>
     <string name="pw_panel">panneau</string>
     <string name="pw_paper">papier</string>
     <string name="pw_para">para.</string>
@@ -807,6 +814,7 @@
     <string name="pw_roles">rôles</string>
     <string name="pw_roll">défile</string>
     <string name="pw_rolling">roulé</string>
+    <string name="pw_rolls">roulés</string>
     <string name="pw_room">salle</string>
     <string name="pw_root">fondam.</string>
     <string name="pw_rotary">Rotary</string>
@@ -924,6 +932,7 @@
     <string name="pw_started_by">excité par</string>
     <string name="pw_steal">voler</string>
     <string name="pw_steel">acier</string>
+    <string name="pw_steel_pan">steelpan</string>
     <string name="pw_step">pas</string>
     <string name="pw_step16">pas16</string>
     <string name="pw_step8">pas8</string>
@@ -1009,6 +1018,7 @@
     <string name="pw_tonebar">barre ton.</string>
     <string name="pw_tonewheel">roue phon.</string>
     <string name="pw_tongue">langue</string>
+    <string name="pw_tongue_drum">tambour à lang.</string>
     <string name="pw_touch">toucher</string>
     <string name="pw_toy">jouet</string>
     <string name="pw_track">piste</string>
@@ -1061,6 +1071,7 @@
     <string name="pw_velspread">écart vél.</string>
     <string name="pw_vent">évent</string>
     <string name="pw_vib">vib</string>
+    <string name="pw_vibes">vibra</string>
     <string name="pw_vibrato">vibrato</string>
     <string name="pw_voice">voix</string>
     <string name="pw_voices">voix</string>
@@ -1105,6 +1116,7 @@
     <string name="pw_wreck">épave</string>
     <string name="pw_xlp">XLP</string>
     <string name="pw_xor">xor</string>
+    <string name="pw_xylophone">xylophone</string>
     <string name="pw_y">y</string>
     <string name="pw_z">z</string>
     <string name="pw_zh">zh</string>

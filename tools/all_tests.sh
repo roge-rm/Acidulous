@@ -73,6 +73,7 @@ echo "--- hammer"; "$ROOT/tools/hammer_test.sh" | tail -2 || fail=1
 echo "--- tongue"; "$ROOT/tools/tongue_test.sh" | tail -2 || fail=1
 echo "--- draw"; "$ROOT/tools/draw_test.sh" | tail -2 || fail=1
 echo "--- fret"; "$ROOT/tools/fret_test.sh" | tail -2 || fail=1
+echo "--- tine"; "$ROOT/tools/tine_test.sh" | tail -2 || fail=1
 echo "--- overwrite"; "$ROOT/tools/overwrite_test.sh" | tail -2 || fail=1
 # Link takes about half a minute, mostly two sessions finding each other over
 # the local network.

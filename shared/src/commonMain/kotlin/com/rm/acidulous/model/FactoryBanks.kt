@@ -32,6 +32,7 @@ internal object FactoryBanks {
         "Tongue" -> tongue
         "Draw" -> draw
         "Fret" -> fret
+        "Tine" -> tine
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -3726,6 +3727,172 @@ internal object FactoryBanks {
         low = 35, high = 84)
 
     private val fret: List<Patch> by lazy { listOf(fret0(), fret1(), fret2(), fret3(), fret4(), fret5(), fret6(), fret7(), fret8(), fret9(), fret10(), fret11(), fret12(), fret13(), fret14(), fret15(), fret16(), fret17(), fret18(), fret19(), fret20(), fret21(), fret22(), fret23(), fret24(), fret25(), fret26(), fret27(), fret28(), fret29(), fret30(), fret31()) }
+
+    private fun tine0() = Patch("Tine", "Init", emptyMap(),
+        family = "wood",
+        low = 36, high = 96)
+
+    private fun tine1() = Patch("Tine", "Marimba",
+        mapOf("mallet" to 0.45f, "tube" to 0.7f),
+        family = "wood",
+        low = 36, high = 96)
+
+    private fun tine2() = Patch("Tine", "Soft Marimba",
+        mapOf("mallet" to 0.1f, "position" to 0.15f, "tube" to 0.8f),
+        family = "wood",
+        low = 36, high = 90)
+
+    private fun tine3() = Patch("Tine", "Bright Marimba",
+        mapOf("mallet" to 0.85f, "position" to 0.6f, "bright" to 0.65f, "tube" to 0.6f),
+        family = "wood",
+        low = 36, high = 96)
+
+    private fun tine4() = Patch("Tine", "Bass Marimba",
+        mapOf("mallet" to 0.2f, "decay" to 0.6f, "tube" to 0.9f),
+        family = "wood",
+        low = 28, high = 60)
+
+    private fun tine5() = Patch("Tine", "Marimba Roll",
+        mapOf("mallet" to 0.2f, "tube" to 0.8f, "roll" to 0.5416667f, "volume" to 0.5f),
+        family = "wood",
+        low = 36, high = 90)
+
+    private fun tine6() = Patch("Tine", "Xylophone",
+        mapOf("model" to 0.25f, "mallet" to 0.8f, "tube" to 0.6f),
+        family = "wood",
+        low = 53, high = 100)
+
+    private fun tine7() = Patch("Tine", "Soft Xylophone",
+        mapOf("model" to 0.25f, "mallet" to 0.35f, "tube" to 0.7f),
+        family = "wood",
+        low = 53, high = 100)
+
+    private fun tine8() = Patch("Tine", "Dry Wood",
+        mapOf("mallet" to 0.7f, "decay" to 0.15f, "damp" to 0.6f, "tube" to 0f, "volume" to 1f),
+        family = "wood",
+        low = 40, high = 90)
+
+    private fun tine9() = Patch("Tine", "Vibraphone",
+        mapOf("model" to 0.125f, "damp" to 0.85f, "tube" to 0.7f),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine10() = Patch("Tine", "Vibes Motor",
+        mapOf("model" to 0.125f, "damp" to 0.85f, "tube" to 0.9f, "motor" to 0.55f, "depth" to 0.6f),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine11() = Patch("Tine", "Slow Motor",
+        mapOf("model" to 0.125f, "tube" to 0.9f, "motor" to 0.2f, "depth" to 0.7f),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine12() = Patch("Tine", "Soft Vibes",
+        mapOf("model" to 0.125f, "mallet" to 0.1f, "damp" to 0.7f, "tube" to 0.8f),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine13() = Patch("Tine", "Hard Vibes",
+        mapOf("model" to 0.125f, "mallet" to 0.85f, "position" to 0.6f, "damp" to 0.8f, "tube" to 0.6f),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine14() = Patch("Tine", "Vibes Roll",
+        mapOf("model" to 0.125f, "mallet" to 0.2f, "tube" to 0.9f, "motor" to 0.4f, "depth" to 0.4f, "roll" to 0.458333343f, "volume" to 0.45f),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine15() = Patch("Tine", "Long Vibes",
+        mapOf("model" to 0.125f, "mallet" to 0.15f, "decay" to 0.8f, "tube" to 0.9f),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine16() = Patch("Tine", "Glockenspiel",
+        mapOf("model" to 0.375f, "mallet" to 0.85f, "tube" to 0f),
+        family = "bells",
+        low = 72, high = 108)
+
+    private fun tine17() = Patch("Tine", "Soft Glockenspiel",
+        mapOf("model" to 0.375f, "mallet" to 0.45f, "tube" to 0f),
+        family = "bells",
+        low = 72, high = 108)
+
+    private fun tine18() = Patch("Tine", "Bell Bars",
+        mapOf("model" to 0.375f, "mallet" to 0.25f, "decay" to 0.4f, "damp" to 0.7f, "tube" to 0.6f),
+        family = "bells",
+        low = 60, high = 100)
+
+    private fun tine19() = Patch("Tine", "Music Box",
+        mapOf("model" to 0.625f, "tube" to 0.2f),
+        family = "bells",
+        low = 60, high = 100)
+
+    private fun tine20() = Patch("Tine", "Slow Music Box",
+        mapOf("model" to 0.625f, "decay" to 0.75f, "bright" to 0.35f, "tube" to 0.3f),
+        family = "bells",
+        low = 55, high = 96)
+
+    private fun tine21() = Patch("Tine", "Tin Bells",
+        mapOf("model" to 0.375f, "mallet" to 1f, "position" to 0.8f, "decay" to 0.3f, "bright" to 0.75f, "tube" to 0f),
+        family = "bells",
+        low = 67, high = 108)
+
+    private fun tine22() = Patch("Tine", "Thumb Piano",
+        mapOf("model" to 0.5f, "tube" to 0.4f),
+        family = "thumb",
+        low = 48, high = 88)
+
+    private fun tine23() = Patch("Tine", "Buzzing Thumb",
+        mapOf("model" to 0.5f, "tube" to 0.4f, "buzz" to 0.6f),
+        family = "thumb",
+        low = 48, high = 88)
+
+    private fun tine24() = Patch("Tine", "Gourd Thumb",
+        mapOf("model" to 0.5f, "mallet" to 0.3f, "bright" to 0.35f, "tube" to 0.9f, "buzz" to 0.1f),
+        family = "thumb",
+        low = 43, high = 84)
+
+    private fun tine25() = Patch("Tine", "Bright Thumb",
+        mapOf("model" to 0.5f, "mallet" to 0.9f, "position" to 0.7f, "bright" to 0.65f, "tube" to 0.2f, "volume" to 0.95f),
+        family = "thumb",
+        low = 52, high = 92)
+
+    private fun tine26() = Patch("Tine", "Steel Pan",
+        mapOf("model" to 0.75f, "tube" to 0f, "bloom" to 0.6f),
+        family = "pans",
+        low = 55, high = 88)
+
+    private fun tine27() = Patch("Tine", "Pan Roll",
+        mapOf("model" to 0.75f, "mallet" to 0.35f, "tube" to 0f, "roll" to 0.6666667f, "volume" to 0.55f),
+        family = "pans",
+        low = 55, high = 88)
+
+    private fun tine28() = Patch("Tine", "Bass Pan",
+        mapOf("model" to 0.75f, "mallet" to 0.25f, "decay" to 0.6f, "tube" to 0f, "bloom" to 0.8f),
+        family = "pans",
+        low = 31, high = 60)
+
+    private fun tine29() = Patch("Tine", "Handpan",
+        mapOf("model" to 0.875f, "tube" to 0.3f),
+        family = "pans",
+        low = 45, high = 77)
+
+    private fun tine30() = Patch("Tine", "Soft Handpan",
+        mapOf("model" to 0.875f, "mallet" to 0.1f, "decay" to 0.7f, "tube" to 0.3f, "bloom" to 0.4f, "spread" to 0.5f),
+        family = "pans",
+        low = 45, high = 77)
+
+    private fun tine31() = Patch("Tine", "Tongue Drum",
+        mapOf("model" to 1f),
+        family = "pans",
+        low = 48, high = 79)
+
+    private fun tine32() = Patch("Tine", "Deep Tongue",
+        mapOf("model" to 1f, "mallet" to 0.2f, "decay" to 0.7f, "tube" to 0.7f),
+        family = "pans",
+        low = 40, high = 67)
+
+    private val tine: List<Patch> by lazy { listOf(tine0(), tine1(), tine2(), tine3(), tine4(), tine5(), tine6(), tine7(), tine8(), tine9(), tine10(), tine11(), tine12(), tine13(), tine14(), tine15(), tine16(), tine17(), tine18(), tine19(), tine20(), tine21(), tine22(), tine23(), tine24(), tine25(), tine26(), tine27(), tine28(), tine29(), tine30(), tine31(), tine32()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

@@ -25,6 +25,7 @@ Ils reproduisent le fonctionnement du vrai instrument, alors ils se jouent comme
 - [**Tongue**](04-the-machines/tongue.md) - des guimbardes, dix sortes, avec la bouche sur la molette de modulation.
 - [**Draw**](04-the-machines/draw.md) - les anches libres : harmonicas, accordéons, melodica et plus encore.
 - [**Fret**](04-the-machines/fret.md) - guitares et basses électriques, leurs micros, les mains du musicien et un ampli qui larsène.
+- [**Tine**](04-the-machines/tine.md) - marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique et tambours d’acier, frappés de mailloches plus ou moins dures.
 
 ## Batterie
 

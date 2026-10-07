@@ -28,6 +28,7 @@
     - [Reflux](04-the-machines/reflux.md) : la basse acid : un oscillateur, un filtre qui hurle, et des lignes que vous jouez.
     - [Resonance](04-the-machines/resonance.md) : huit objets frappés qui résonnent les uns dans les autres.
     - [Timber](04-the-machines/timber.md) : des bois modélisés : anches et flûtes.
+    - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan et tambour à languettes.
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.
     - [Trinity](04-the-machines/trinity.md) : trois oscillateurs, des tables d’ondes, deux filtres et une matrice de modulation : le polyvalent.
 5. [Effets et mixage](05-effects-and-mixing.md)
