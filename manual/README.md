@@ -30,6 +30,7 @@
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.
     - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the all-rounder.
 5. [Effects and mixing](05-effects-and-mixing.md)
+    - [Acid](05-effects-and-mixing/acid.md) - reflux's filter on any track, swept by the track's hits or a pattern.
     - [Amp](05-effects-and-mixing/amp.md) - a guitar amp with a cabinet you can resize.
     - [Bitcrusher](05-effects-and-mixing/bitcrusher.md) - fewer bits and a lower sample rate, with an unsteady clock if you want it.
     - [Chorus](05-effects-and-mixing/chorus.md) - two to four detuned voices that drift.
@@ -42,12 +43,16 @@
     - [Gate](05-effects-and-mixing/gate.md) - a noise gate, with a filter on what it listens to and a sidechain.
     - [Grain](05-effects-and-mixing/grain.md) - a cloud of short slices of what the track just played.
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) - adds two voices at scale steps, so they stay in key.
+    - [Mouth](05-effects-and-mixing/mouth.md) - diction's throat on any track: it shapes whatever goes through into a vowel.
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
     - [Resonator](05-effects-and-mixing/resonator.md) - strings tuned to a key, ringing in sympathy with the track.
     - [Reverb](05-effects-and-mixing/reverb.md) - a room that can also freeze, gate, shimmer or crush itself.
     - [Rotary](05-effects-and-mixing/rotary.md) - the organ's rotating speaker cabinet, for any track.
     - [Shifter](05-effects-and-mixing/shifter.md) - frequency shifting, for metallic and detuned sounds.
+    - [Slicer](05-effects-and-mixing/slicer.md) - the track cut on the tempo, some slices repeated, reversed or dropped.
+    - [Smash](05-effects-and-mixing/smash.md) - three bands, each squashed from above and lifted from below.
     - [Swell](05-effects-and-mixing/swell.md) - upward compression: the quiet parts come up to meet the loud ones, in one band or three.
+    - [Tape](05-effects-and-mixing/tape.md) - a worn tape machine, and a stop button.
     - [Tremolo](05-effects-and-mixing/tremolo.md) - volume on an LFO, or auto-pan.
     - [Width](05-effects-and-mixing/width.md) - wider, narrower, mono below a frequency or rotated.
 6. [Modifiers](06-modifiers.md)

@@ -4,7 +4,7 @@
 Each track has two insert effect slots. **fx** in the editor's bottom bar shows
 them in place of the machine panel.
 
-There are twenty effects. Each one has the usual controls plus one extra,
+There are twenty-five effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, since turning up the wet/dry mix can change the level.
 
@@ -18,6 +18,10 @@ Each effect has its own page below.
   gate, shimmer or crush itself down to 8 bits.
 - [**Grain**](05-effects-and-mixing/grain.md) - a cloud of short slices of what
   the track just played, which can freeze.
+- [**Tape**](05-effects-and-mixing/tape.md) - a worn tape machine: wow,
+  flutter, saturation and hiss, and a switch that slows it to a stop.
+- [**Slicer**](05-effects-and-mixing/slicer.md) - cuts the track into slices on
+  the beat and repeats, reverses or drops some of them.
 
 ## Tone
 
@@ -26,6 +30,10 @@ Each effect has its own page below.
   by an LFO, the signal's level or another track.
 - [**Width**](05-effects-and-mixing/width.md) - wider, narrower, mono below a
   frequency or rotated.
+- [**Acid**](05-effects-and-mixing/acid.md) - the acid bass filter on any
+  track, opened by each note or by a pattern on the beat.
+- [**Mouth**](05-effects-and-mixing/mouth.md) - vowels, moved by an LFO, the
+  track's level or another track.
 
 ## Drive
 
@@ -44,6 +52,8 @@ Each effect has its own page below.
   can open.
 - [**Swell**](05-effects-and-mixing/swell.md) - upward compression, in one band
   or three: the quiet parts come up to meet the loud ones.
+- [**Smash**](05-effects-and-mixing/smash.md) - three bands squashed from both
+  sides: loud parts down, quiet parts up.
 
 ## Movement
 

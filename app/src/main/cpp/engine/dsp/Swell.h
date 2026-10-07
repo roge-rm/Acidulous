@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <engine/dsp/Bands.h>
 #include <engine/dsp/Math.h>
 
 namespace acidulous::dsp {
@@ -15,8 +16,7 @@ namespace acidulous::dsp {
  *
  * Shared by the Swell effect and Nexus's swell module, one sample at a time.
  *
- * The bands are split with gentle one-pole filters at 300 Hz and 5 kHz, and
- * each band is what's left after the one below is taken out, so with no gain
+ * The bands are split at 300 Hz and 5 kHz by dsp/Bands.h, so with no gain
  * on them they add back to exactly the input: no phase shift, no dip at the
  * crossovers. `split` blends from one gain for the whole signal (0) to a gain
  * per band (1). A band's gain is kept within [kSpread] dB of the whole
@@ -42,8 +42,7 @@ class Swell {
 
     void prepare(float sampleRate) {
         sr = sampleRate;
-        lowCoef = 1.0f - std::exp(-2.0f * 3.14159265f * 300.0f / sr);
-        highCoef = 1.0f - std::exp(-2.0f * 3.14159265f * 5000.0f / sr);
+        for (auto &c : ch) c.split.prepare(sr);
         holdSamples = static_cast<int32_t>(0.005f * sr);
         // A cut slides in over about the look-ahead window, so it has
         // arrived before the peak it was set for. A boost comes up over a
@@ -55,7 +54,12 @@ class Swell {
     }
 
     void reset() {
-        for (auto &c : ch) c = Channel{};
+        // Cleared field by field, since the split keeps its coefficients.
+        for (auto &c : ch) {
+            c.split.reset();
+            for (float &v : c.dry) v = 0.0f;
+            for (auto &b : c.band) for (float &v : b) v = 0.0f;
+        }
         for (auto &d : det) d = Detector{};
         for (float &g : gain) g = 0.0f;
         at = 0;
@@ -83,8 +87,8 @@ class Swell {
     /** One stereo sample, in place. */
     void process(float &l, float &r) {
         float band[2][kBands];
-        split3(ch[0], l, band[0]);
-        split3(ch[1], r, band[1]);
+        ch[0].split.split(l, band[0]);
+        ch[1].split.split(r, band[1]);
 
         // Detectors: the whole signal, then each band, on the louder side.
         float level[kDetectors];
@@ -144,7 +148,7 @@ class Swell {
     static constexpr float kKnee = 12.0f;
 
     struct Channel {
-        float low = 0.0f, mid = 0.0f;
+        ThreeBands split;
         float dry[kLine]{};
         float band[kBands][kLine]{};
     };
@@ -154,17 +158,6 @@ class Swell {
         float env = 0.0f;
         int32_t hold = 0;
     };
-
-    void split3(Channel &c, float x, float *band) {
-        c.low += (x - c.low) * lowCoef;
-        c.low = guardDenormal(c.low);
-        const float rest = x - c.low;
-        c.mid += (rest - c.mid) * highCoef;
-        c.mid = guardDenormal(c.mid);
-        band[0] = c.low;
-        band[1] = c.mid;
-        band[2] = rest - c.mid;
-    }
 
     /**
      * The loudest level over the look-ahead window, held for a few
@@ -205,7 +198,7 @@ class Swell {
     }
 
     float sr = 48000.0f;
-    float lowCoef = 0.0f, highCoef = 0.0f, glideUp = 0.01f, glideDown = 0.3f, release = 0.001f;
+    float glideUp = 0.01f, glideDown = 0.3f, release = 0.001f;
     int32_t holdSamples = 240;
     float floorDb = -40.0f, ceilingDb = -3.0f, amount = 0.5f, split = 1.0f, mix = 1.0f, midTrimDb = 0.0f;
     Channel ch[2];

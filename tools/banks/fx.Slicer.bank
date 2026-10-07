@@ -1,0 +1,89 @@
+# Slicer - the track cut on the tempo, some slices replaced as they play.
+#
+# Every `rate` (a quarter, eighth, sixteenth or thirty-second) is a slice.
+# By `chance`, a slice repeats the one before it, plays it backwards, or
+# drops out, in the proportions `repeat`, `reverse` and `drop` set. `gate`
+# shortens every slice, `pitch` shifts the repeats, and `seed` chooses which
+# slices change, the same ones every time the song plays, so a part can be
+# written around them.
+#
+# Families: stutter, glitch, gate.
+
+machine fx.Slicer
+
+patch Init family=stutter
+
+patch Stutter family=stutter
+  # Sixteenths that now and then repeat: a drum loop that stammers.
+  rate           #2
+  chance         0.25
+  repeat         1
+  reverse        0
+  drop           0
+
+patch Rolls family=stutter
+  # Thirty-seconds repeated more often: rolls and fills out of a loop.
+  rate           #3
+  chance         0.35
+  repeat         1
+  reverse        0
+  drop           0.1
+
+patch Climb family=stutter
+  # Repeats pitched up a fifth: each one climbs.
+  rate           #2
+  chance         0.3
+  repeat         1
+  reverse        0
+  drop           0
+  pitch          7 st
+
+patch Glitch family=glitch
+  # A bit of everything, often: the loop torn up and rebuilt.
+  rate           #2
+  chance         0.5
+  repeat         0.5
+  reverse        0.4
+  drop           0.3
+  seed           #5
+
+patch Backwards family=glitch
+  # Eighths played backwards now and then: swells where the hits were.
+  rate           #1
+  chance         0.35
+  repeat         0
+  reverse        1
+  drop           0
+
+patch Tape family=glitch
+  # Repeats pitched down an octave: a tape jamming.
+  rate           #2
+  chance         0.3
+  repeat         1
+  reverse        0.3
+  drop           0
+  pitch          -12 st
+
+patch Chop family=gate
+  # Nothing replaced, every sixteenth cut to half: a chopped pad.
+  rate           #2
+  chance         0
+  gate           0.5
+
+patch Holes family=gate
+  # Eighths dropping out at random: gaps that let the rest breathe.
+  rate           #1
+  chance         0.3
+  repeat         0
+  reverse        0
+  drop           1
+  seed           #9
+
+patch Trance family=gate
+  # Short sixteenth gates with a few repeats: a pulsing pad.
+  rate           #2
+  chance         0.15
+  repeat         1
+  reverse        0
+  drop           0
+  gate           0.35

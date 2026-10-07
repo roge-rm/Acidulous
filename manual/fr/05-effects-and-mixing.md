@@ -4,7 +4,7 @@
 Chaque piste a deux emplacements d’effet en insertion. **fx** dans la barre du
 bas de l’éditeur les affiche à la place du panneau de la machine.
 
-Il y a vingt effets. Chacun a les réglages habituels plus un extra, affiché
+Il y a vingt-cinq effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
 de sortie, puisque monter le mélange peut changer le niveau.
 
@@ -18,6 +18,11 @@ Chaque effet a sa propre page ci-dessous.
   figer, se couper, miroiter ou s’écraser jusqu’à 8 bits.
 - [**Grain**](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de
   ce que la piste vient de jouer, qui peut se figer.
+- [**Tape**](05-effects-and-mixing/tape.md) : un magnétophone usé, avec
+  pleurage, scintillement, saturation et souffle, et un interrupteur qui le
+  ralentit jusqu’à l’arrêt.
+- [**Slicer**](05-effects-and-mixing/slicer.md) : découpe la piste en tranches
+  sur le temps et en répète, inverse ou omet certaines.
 
 ## Timbre
 
@@ -26,6 +31,10 @@ Chaque effet a sa propre page ci-dessous.
   passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste.
 - [**Width**](05-effects-and-mixing/width.md) : plus large, plus étroit, mono
   sous une fréquence ou tourné.
+- [**Acid**](05-effects-and-mixing/acid.md) : le filtre de la basse acid sur
+  n’importe quelle piste, ouvert par chaque note ou par un motif sur le temps.
+- [**Mouth**](05-effects-and-mixing/mouth.md) : des voyelles, déplacées par un
+  LFO, le niveau de la piste ou une autre piste.
 
 ## Saturation
 
@@ -46,6 +55,8 @@ Chaque effet a sa propre page ci-dessous.
   piste peut ouvrir.
 - [**Swell**](05-effects-and-mixing/swell.md) : une compression vers le haut,
   sur une bande ou trois. Les passages doux montent rejoindre les forts.
+- [**Smash**](05-effects-and-mixing/smash.md) : trois bandes écrasées des deux
+  côtés. Les passages forts descendent, les doux montent.
 
 ## Mouvement
 

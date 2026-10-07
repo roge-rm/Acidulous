@@ -73,7 +73,7 @@ All six are the demo song, Squelch.
 | **Nexus** | A modular synth whose modules are the other machines. |
 | **Bias** | A four-track for audio recordings that runs along the song. |
 
-### Twenty effects
+### Twenty-five effects
 
 Each has the usual controls plus one extra, and its own page in the manual.
 
@@ -99,6 +99,11 @@ Each has the usual controls plus one extra, and its own page in the manual.
 | **Rotary** | The organ's rotating speaker cabinet for any track, slow, fast or on the beat. |
 | **Grain** | A cloud of short slices of what the track just played, which can freeze. |
 | **Resonator** | Strings tuned to a key, ringing in sympathy with the track. |
+| **Smash** | Three bands squashed from both sides: the loud parts come down and the quiet parts come up. |
+| **Acid** | The acid bass filter on any track, opened by each note or by a pattern on the beat. |
+| **Mouth** | Vowels, moved by an LFO, the track's level or another track. |
+| **Tape** | A worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop. |
+| **Slicer** | Cuts the track into slices on the beat and repeats, reverses or drops some of them. |
 
 ### Mixing
 

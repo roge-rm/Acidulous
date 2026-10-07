@@ -30,6 +30,7 @@
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.
     - [Trinity](04-the-machines/trinity.md) : trois oscillateurs, des tables d’ondes, deux filtres et une matrice de modulation : le polyvalent.
 5. [Effets et mixage](05-effects-and-mixing.md)
+    - [Acid](05-effects-and-mixing/acid.md) : le filtre de Reflux sur n’importe quelle piste, balayé par ses coups ou par un motif.
     - [Amp](05-effects-and-mixing/amp.md) : un ampli de guitare avec un baffle dont on peut changer la taille.
     - [Bitcrusher](05-effects-and-mixing/bitcrusher.md) : moins de bits et une fréquence d’échantillonnage plus basse, avec une horloge instable si vous voulez.
     - [Chorus](05-effects-and-mixing/chorus.md) : deux à quatre voix désaccordées qui dérivent.
@@ -42,12 +43,16 @@
     - [Gate](05-effects-and-mixing/gate.md) : une porte de bruit, avec un filtre sur ce qu’elle écoute et une entrée latérale.
     - [Grain](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de ce que la piste vient de jouer.
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) : ajoute deux voix à des degrés de la gamme, pour qu’elles restent dans la tonalité.
+    - [Mouth](05-effects-and-mixing/mouth.md) : la gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.
     - [Phaser](05-effects-and-mixing/phaser.md) : deux à huit étages.
     - [Resonator](05-effects-and-mixing/resonator.md) : des cordes accordées dans une tonalité, qui résonnent avec la piste.
     - [Reverb](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se figer, se couper, miroiter ou s’écraser.
     - [Rotary](05-effects-and-mixing/rotary.md) : la cabine à haut-parleur tournant de l’orgue, pour n’importe quelle piste.
     - [Shifter](05-effects-and-mixing/shifter.md) : un décalage de fréquence, pour des sons métalliques et désaccordés.
+    - [Slicer](05-effects-and-mixing/slicer.md) : la piste coupée sur le tempo, certaines tranches répétées, inversées ou omises.
+    - [Smash](05-effects-and-mixing/smash.md) : trois bandes, chacune écrasée par le haut et relevée par le bas.
     - [Swell](05-effects-and-mixing/swell.md) : une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.
+    - [Tape](05-effects-and-mixing/tape.md) : un magnétophone usé, et un bouton d’arrêt.
     - [Tremolo](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un panoramique automatique.
     - [Width](05-effects-and-mixing/width.md) : plus large, plus étroit, mono sous une fréquence ou tourné.
 6. [Les modificateurs](06-modifiers.md)

@@ -468,6 +468,11 @@ private val EXTRA = mapOf(
     "Rotary" to setOf("tempo"), // the horn turning on the beat
     "Grain" to setOf("freeze", "feedback"),
     "Resonator" to setOf("metal"), // stiff strings, toward a bell
+    "Smash" to setOf("up"), // the lift, which a compressor doesn't have
+    "Acid" to setOf("pattern", "accent"),
+    "Mouth" to setOf("move"),
+    "Tape" to setOf("stop", "stoptime"),
+    "Slicer" to setOf("seed", "pitch"),
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
     "Bitcrusher" to setOf("jitter", "tone"),
     "Phaser" to setOf("spread"),
@@ -527,6 +532,12 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "tempo" && type == "Rotary" -> listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
     name == "freeze" && type == "Grain" -> listOf("off", "on")
     name == "strings" && type == "Resonator" -> (4..16).map { "$it" }
+    name == "pattern" && type == "Acid" -> listOf("track", "8ths", "16ths", "offbeat", "push", "busy", "halves", "synco", "rolling")
+    name == "mode" && type == "Acid" -> listOf("LP", "BP")
+    name == "move" && type == "Mouth" -> listOf("lfo", "level", "key")
+    name == "stop" && type == "Tape" -> listOf("run", "stop")
+    name == "rate" && type == "Slicer" -> listOf("1/4", "1/8", "1/16", "1/32")
+    name == "seed" && type == "Slicer" -> (1..16).map { "$it" }
     // Scale degrees, not semitones, since that's how the Harmonizer works.
     (name == "interval" || name == "interval2") && type == "Harmonizer" ->
         (-7..7).map { if (it > 0) "+$it" else "$it" }
