@@ -130,8 +130,12 @@ object UiPrefs {
     /** Auto follows the phone; the other two ignore it. */
     var theme by mutableStateOf(ThemeMode.Dark)
 
-    /** The app's language: the system's, or one chosen in settings. [tag] is BCP 47. */
-    enum class Language(val tag: String?) { System(null), English("en"), French("fr-CA") }
+    /**
+     * The app's language: the system's, or one chosen in settings. [tag] is
+     * BCP 47. Stored by name, so French stays Canada's for whoever chose it
+     * before France's was added; new ones go on the end.
+     */
+    enum class Language(val tag: String?) { System(null), English("en"), French("fr-CA"), FrenchFrance("fr-FR") }
     var language by mutableStateOf(Language.System)
         private set
 

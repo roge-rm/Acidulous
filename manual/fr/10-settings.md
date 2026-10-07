@@ -5,8 +5,10 @@
 - **thème** - sombre, clair, contraste élevé ou comme le téléphone. Le contraste
   élevé, c’est du blanc sur noir, avec des couleurs plus vives et un contour
   autour de chaque commande.
-- **langue** - la langue de l’appli : celle du téléphone, l’anglais ou le
-  français. Pas dans un navigateur, qui utilise la sienne.
+- **langue** - la langue de l’appli, choisie dans une liste : celle du
+  téléphone, l’anglais, ou le français du Canada ou de France (les mêmes mots;
+  la France met une espace fine avant ; ! et ?). Pas dans un navigateur, qui
+  utilise la sienne.
 - **taille** - agrandit tout, en quatre crans.
 <!-- desktop: - **échelle d’écran** - la taille à laquelle toute la fenêtre est dessinée. **système** prend le réglage de l’ordinateur. -->
 - **pendant la lecture** - si l’écran peut s’éteindre pendant la lecture.

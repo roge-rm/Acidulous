@@ -10,11 +10,12 @@
     <string name="settings_screen">écran</string>
     <string name="settings_theme">thème</string>
     <string name="settings_language">langue</string>
-    <!-- The system's language, then each language named in itself: those two stay as they are in every translation. -->
+    <!-- The system's language, then each language named in itself, as a menu item starts: these stay as they are in every translation. In the order of UiPrefs.Language. -->
     <string-array name="settings_language_choices">
         <item>système</item>
         <item>English</item>
-        <item>français</item>
+        <item>Français (Canada)</item>
+        <item>Français (France)</item>
     </string-array>
     <string-array name="settings_theme_choices">
         <item>auto</item>

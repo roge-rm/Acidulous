@@ -854,6 +854,62 @@ internal fun SwitchGrid(
 }
 
 /**
+ * A choice among more options than fit as a [SwitchGrid]: one cell showing
+ * the choice, which opens the whole list in a small menu, like the patch
+ * name does. For lists that grow, such as the app's languages.
+ */
+@Composable
+internal fun SwitchMenu(
+    label: String,
+    labels: List<String>,
+    selected: Int,
+    modifier: Modifier = Modifier,
+    onPick: (Int) -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    val current = labels.getOrNull(selected).orEmpty()
+    val name = if (label.isEmpty()) current else stringResource(Res.string.a11y_named, label, current)
+    Column(
+        modifier.heightIn(max = PanelControlH).fillMaxHeight().together(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.silent())
+        Box {
+            Box(
+                Modifier.fillMaxHeight()
+                    .clip(RoundedCornerShape(4.dp)).background(Acid.colors.control)
+                    .clickable { open = true }
+                    .button(name),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "$current \u25BE", color = Acid.colors.textMid, fontSize = 10.sp, maxLines = 1, softWrap = false,
+                    modifier = Modifier.padding(horizontal = 10.dp),
+                )
+            }
+            val scroll = rememberScrollState()
+            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                ScaledMenu(scroll) {
+                    labels.forEachIndexed { i, l ->
+                        val on = i == selected
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    l, fontSize = 12.sp,
+                                    color = if (on) Acid.colors.accent else Color.Unspecified,
+                                    modifier = Modifier.choice(l, on),
+                                )
+                            },
+                            onClick = { open = false; onPick(i) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * Whether the cards stack instead of standing in a row.
  *
  * A composition local instead of a parameter because GroupRow and Group are

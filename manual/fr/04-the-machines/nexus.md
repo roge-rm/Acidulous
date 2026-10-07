@@ -38,7 +38,7 @@ pour effacer l’assignation.
 ## Les effets en modules
 
 Les effets d’insertion sont aussi des modules, et un effet peut aller
-n’importe où dans un patch et être bougé par un câble : **reverb**, **chorus**,
+n’importe où dans un patch et être bougé par un câble : **reverb**, **chorus**,
 **phaser**, **crush**, **shift**, **drive** et **swell**. Chacun sonne
 exactement comme sur une piste. Leur deuxième entrée bouge le bouton dont elle
 porte le nom, comme **size** sur la réverbération ou **amount** sur swell. Chacun
@@ -46,26 +46,26 @@ a une fraction de milliseconde de retard, qu’on n’entend pas.
 
 ## Les instruments des autres machines
 
-D’autres machines sont des modules, chacun avec la partie qui fait son son :
+D’autres machines sont des modules, chacun avec la partie qui fait son son :
 
-- **bore** : le cuivre de Brazen, des lèvres sur un tube avec un pavillon.
-- **pipe** : le tuyau de Timber, avec une anche, une anche double ou le jet
+- **bore** : le cuivre de Brazen, des lèvres sur un tube avec un pavillon.
+- **pipe** : le tuyau de Timber, avec une anche, une anche double ou le jet
   d’air d’une flûte.
-- **reed** : l’anche libre de Draw : harmonica, accordéon, mélodica, harmonium
+- **reed** : l’anche libre de Draw : harmonica, accordéon, mélodica, harmonium
   ou concertina.
-- **jaw** : l’anche de la guimbarde de Tongue, pincée par son entrée **trig**.
+- **jaw** : l’anche de la guimbarde de Tongue, pincée par son entrée **trig**.
   Passez-la dans un **throat** et bougez la voyelle pour le son de guimbarde.
-- **piano** : tout Hammer, joué par une **pitch** et un **gate**.
+- **piano** : tout Hammer, joué par une **pitch** et un **gate**.
 - **guitar**, **mallets**, **sitar**, **drum**, **pipes**, **bird** et
-  **water** : tout Fret, Tine, Sympath, Palm, Chanter, Aviary et Fathom, joués
+  **water** : tout Fret, Tine, Sympath, Palm, Chanter, Aviary et Fathom, joués
   de la même façon, chacun avec huit de ses propres boutons. L’oiseau, les
   cornemuses, le tanpura et l’eau continuent tant que le gate est tenu.
-- **throat** : le conduit vocal de Diction en filtre : tout ce qui le traverse
+- **throat** : le conduit vocal de Diction en filtre : tout ce qui le traverse
   devient une voyelle, de ou à i.
-- **formula** : les expressions de Formulate, en oscillateur ou pour façonner
+- **formula** : les expressions de Formulate, en oscillateur ou pour façonner
   ce qui arrive dans **x**. Sélectionnez-le et touchez **modifier…** pour taper
   la formule.
-- **follow** : l’oreille de Molt : la hauteur de ce qui entre, un gate tant
+- **follow** : l’oreille de Molt : la hauteur de ce qui entre, un gate tant
   qu’il en est sûr, et son niveau. Chantez dedans pour jouer le patch.
 
 Les instruments à vent (**bore**, **pipe** et **reed**) prennent leur air à

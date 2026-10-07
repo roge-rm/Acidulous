@@ -4,18 +4,18 @@
 
 ## Les réglages
 
-- **vitesse** : la tranche : une noire, une croche, une double ou une triple
+- **vitesse** : la tranche : une noire, une croche, une double ou une triple
   croche.
-- **proba** : la probabilité qu’une tranche change.
-- **répéter**, **inverser**, **omettre** : les proportions de ce que fait une
-  tranche changée : répéter la précédente, la jouer à l’envers, ou se taire.
-- **Gate** : raccourcit chaque tranche.
-- **hauteur** *(extra)* : décale les répétitions, d’une octave dans chaque
+- **proba** : la probabilité qu’une tranche change.
+- **répéter**, **inverser**, **omettre** : les proportions de ce que fait une
+  tranche changée : répéter la précédente, la jouer à l’envers, ou se taire.
+- **Gate** : raccourcit chaque tranche.
+- **hauteur** *(extra)* : décale les répétitions, d’une octave dans chaque
   sens.
-- **graine** *(extra)* : quelles tranches changent. Les mêmes changent à
+- **graine** *(extra)* : quelles tranches changent. Les mêmes changent à
   chaque lecture du morceau, et on peut écrire une partie autour.
-- **mélange** : le son sec face au son tranché.
-- **gain** : le niveau de sortie.
+- **mélange** : le son sec face au son tranché.
+- **gain** : le niveau de sortie.
 
 ## Astuces
 

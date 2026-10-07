@@ -5,20 +5,20 @@
 2. [La grille du morceau](02-the-song-grid.md)
 3. [L’éditeur](03-the-editor.md)
 4. [Les machines](04-the-machines.md)
-    - [Aviary](04-the-machines/aviary.md) : chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils et appels en mesure.
+    - [Aviary](04-the-machines/aviary.md) : chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils et appels en mesure.
     - [Bias](04-the-machines/bias.md) : un quatre-pistes : des enregistrements placés le long du morceau, quatre couloirs à la fois.
     - [Brazen](04-the-machines/brazen.md) : des cuivres modélisés, de la trompette au tuba, ou tout un pupitre.
-    - [Chanter](04-the-machines/chanter.md) : cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.
+    - [Chanter](04-the-machines/chanter.md) : cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.
     - [Cipher](04-the-machines/cipher.md) : un vocodeur où vous pouvez réarranger quelle bande commande quelle autre.
     - [Cumulus](04-the-machines/cumulus.md) : des nappes bâties à partir d’un spectre de partiels.
     - [Dice](04-the-machines/dice.md) : un découpeur de boucles avec du hasard sur chaque tranche.
     - [Diction](04-the-machines/diction.md) : un synthé vocal entraîné sur votre voix et poussé plus loin.
     - [Draw](04-the-machines/draw.md) : des anches libres modélisées : harmonicas, accordéons, melodica, harmonium et les anches qui sonnent dans des tuyaux.
-    - [Fathom](04-the-machines/fathom.md) : l’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent et feu, joués au clavier.
+    - [Fathom](04-the-machines/fathom.md) : l’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent et feu, joués au clavier.
     - [Filament](04-the-machines/filament.md) : des cordes modélisées : pincées, au médiator, frappées, frottées ou soufflées.
     - [Forage](04-the-machines/forage.md) : une boîte à rythmes à échantillons : treize pads pour vos propres sons.
     - [Formulate](04-the-machines/formulate.md) : un synthé 8 bits, et une forme d’onde que vous tapez comme une formule.
-    - [Fret](04-the-machines/fret.md) : guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.
+    - [Fret](04-the-machines/fret.md) : guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.
     - [Genesis](04-the-machines/genesis.md) : la grosse boîte à rythmes, avec un compresseur de bus que la grosse caisse fait plier.
     - [Hammer](04-the-machines/hammer.md) : des pianos modélisés et leurs cousins : des marteaux qui frappent des cordes et des barres, entendus par une table d’harmonie ou des capteurs.
     - [Hexbeat](04-the-machines/hexbeat.md) : des percussions synthétisées dans le style des petites boîtes classiques, avec un plus grand kit.
@@ -26,14 +26,14 @@
     - [Molt](04-the-machines/molt.md) : chantez une prise, et la grille de notes l’accorde.
     - [Mosaic](04-the-machines/mosaic.md) : un lecteur multi-échantillons : des zones sur le clavier et la vélocité, plus des nuages de grains.
     - [Nexus](04-the-machines/nexus.md) : un synthé modulaire dont les modules sont les autres machines.
-    - [Palm](04-the-machines/palm.md) : percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre et tambour d’aisselle, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.
+    - [Palm](04-the-machines/palm.md) : percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre et tambour d’aisselle, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.
     - [Pollen](04-the-machines/pollen.md) : des nuages granulaires tirés d’un fichier ou de l’entrée en direct, dont les grains peuvent en faire naître d’autres.
     - [Ratio](04-the-machines/ratio.md) : la FM à six opérateurs, avec un bouton qui passe d’un algorithme à un autre.
     - [Reflux](04-the-machines/reflux.md) : la basse acid : un oscillateur, un filtre qui hurle, et des lignes que vous jouez.
     - [Resonance](04-the-machines/resonance.md) : huit objets frappés qui résonnent les uns dans les autres.
-    - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena et shamisen modélisés : des cordes pincées sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.
+    - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena et shamisen modélisés : des cordes pincées sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.
     - [Timber](04-the-machines/timber.md) : des bois modélisés : anches et flûtes.
-    - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan et tambour à languettes.
+    - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan et tambour à languettes.
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.
     - [Trinity](04-the-machines/trinity.md) : trois oscillateurs, des tables d’ondes, deux filtres et une matrice de modulation : le polyvalent.
 5. [Effets et mixage](05-effects-and-mixing.md)
@@ -53,7 +53,7 @@
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) : ajoute deux voix à des degrés de la gamme, pour qu’elles restent dans la tonalité.
     - [Horn](05-effects-and-mixing/horn.md) : la piste joue d’un instrument à vent.
     - [Magneto](05-effects-and-mixing/magneto.md) : le son d’un petit disque enregistrable, dans chacun de ses formats.
-    - [Mouth](05-effects-and-mixing/mouth.md) : la gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.
+    - [Mouth](05-effects-and-mixing/mouth.md) : la gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.
     - [Phaser](05-effects-and-mixing/phaser.md) : deux à huit étages.
     - [Resonator](05-effects-and-mixing/resonator.md) : des cordes accordées dans une tonalité, qui résonnent avec la piste.
     - [Reverb](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se figer, se couper, miroiter ou s’écraser.
@@ -62,7 +62,7 @@
     - [Slicer](05-effects-and-mixing/slicer.md) : la piste coupée sur le tempo, certaines tranches répétées, inversées ou omises.
     - [Smash](05-effects-and-mixing/smash.md) : trois bandes, chacune écrasée par le haut et relevée par le bas.
     - [Spectral](05-effects-and-mixing/spectral.md) : la piste décomposée en fréquences et remise ensemble.
-    - [Swell](05-effects-and-mixing/swell.md) : une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.
+    - [Swell](05-effects-and-mixing/swell.md) : une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.
     - [Tape](05-effects-and-mixing/tape.md) : un magnétophone usé, et un bouton d’arrêt.
     - [Tremolo](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un panoramique automatique.
     - [Width](05-effects-and-mixing/width.md) : plus large, plus étroit, mono sous une fréquence ou tourné.

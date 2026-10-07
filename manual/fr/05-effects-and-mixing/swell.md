@@ -1,27 +1,27 @@
 # Swell
-> Une compression vers le haut : les passages doux montent rejoindre les
+> Une compression vers le haut : les passages doux montent rejoindre les
 > forts, sur une bande ou trois.
 
 ## Les réglages
 
-- **plancher** : tout ce qui est plus fort que ce niveau est remonté, de -80 à
+- **plancher** : tout ce qui est plus fort que ce niveau est remonté, de -80 à
   0 dB. Ce qui est plus de 12 dB en dessous reste exactement comme avant, donc
   le souffle et le ronflement au fond d’un enregistrement ne bougent pas.
-- **plafond** : le niveau vers lequel tout ce qui dépasse le plancher est tiré,
+- **plafond** : le niveau vers lequel tout ce qui dépasse le plancher est tiré,
   de -30 à 0 dB. Un son déjà au-dessus du plafond est ramené à lui.
-- **intensité** : de combien. À 0 rien ne bouge, à 1 chaque son au-dessus du
+- **intensité** : de combien. À 0 rien ne bouge, à 1 chaque son au-dessus du
   plancher arrive au plafond, et à mi-course il fait la moitié du chemin.
-- **partage** *(extra)* : d’une bande (0) à trois (1), coupées à 300 Hz et
+- **partage** *(extra)* : d’une bande (0) à trois (1), coupées à 300 Hz et
   5 kHz. Partagé, un aigu discret ou un grave maigre remonte tout seul, et
   c’est de là que viennent l’air et le souffle. Les bandes se recombinent
   exactement en l’entrée, donc le partage ne change jamais un son qui n’est
   pas remonté.
-- **relâche** : la vitesse à laquelle il relâche après un moment fort, de 5 ms
+- **relâche** : la vitesse à laquelle il relâche après un moment fort, de 5 ms
   à 2 s. Lent, c’est proche d’une normalisation et la forme d’une phrase est
   gardée. Rapide, il suit chaque coup, et très rapide, il suit la forme d’onde
   elle-même et devient une distorsion.
-- **mélange** : le son sec face au son remonté.
-- **gain** : le niveau de sortie, pour compenser ce qu’il ajoute.
+- **mélange** : le son sec face au son remonté.
+- **gain** : le niveau de sortie, pour compenser ce qu’il ajoute.
 
 Il regarde quelques échantillons en avance, pour qu’un son fort soudain soit
 déjà baissé quand il arrive. C’est 8 échantillons, moins de 0,2 ms.

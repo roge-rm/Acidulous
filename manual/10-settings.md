@@ -4,8 +4,9 @@
 
 - **theme** - dark, light, high contrast or follow the phone. High contrast is
   white on black, with brighter colours and outlines round every control.
-- **language** - the app's language: the phone's own, English or French. Not
-  in a browser, which uses its own.
+- **language** - the app's language, chosen from a list: the phone's own,
+  English, or French as written in Canada or in France (the same words; France
+  puts a narrow space before ; ! and ?). Not in a browser, which uses its own.
 - **size** - makes everything bigger, in four steps.
 <!-- desktop: - **screen scale** - how big the whole window is drawn. **system** takes the computer's own setting. -->
 - **while playing** - whether the screen can turn off while playing.

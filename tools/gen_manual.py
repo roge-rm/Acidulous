@@ -338,7 +338,10 @@ def kotlin(languages, used):
         "        get() = when (androidx.compose.ui.text.intl.Locale.current.language) {",
     ]
     for code, _, _ in languages:
-        if code:
+        if code == "fr":
+            # France's French is Canada's with France's spacing: see FrenchTypography.
+            out.append('            "fr" -> if (com.rm.acidulous.res.FrenchTypography.inFrance) frFrance else fr')
+        elif code:
             out.append(f'            "{code}" -> {code}')
     out += [
         "            else -> en",
@@ -378,6 +381,21 @@ def kotlin(languages, used):
         for (title, summary, blocks), kids in sections:
             emit(title, summary, blocks, kids, "        ")
         out.append("    )")
+    if any(code == "fr" for code, _, _ in languages):
+        out += [
+            "",
+            "    /** The French manual with France's spacing, made the first time it's asked for. */",
+            "    private val frFrance: List<ManualSection> by lazy { fr.map(::forFrance) }",
+            "",
+            "    private fun forFrance(s: ManualSection): ManualSection {",
+            "        val f = com.rm.acidulous.res.FrenchTypography::forFrance",
+            "        return ManualSection(",
+            "            f(s.title), f(s.summary),",
+            "            s.blocks.map { ManualBlock(it.kind, f(it.text), it.desktop?.let(f)) },",
+            "            s.children.map(::forFrance), s.desktopSummary?.let(f),",
+            "        )",
+            "    }",
+        ]
     out += ["}", ""]
     return "\n".join(out)
 

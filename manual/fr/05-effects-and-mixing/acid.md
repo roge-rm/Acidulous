@@ -4,19 +4,19 @@
 
 ## Les réglages
 
-- **coupure** : où le filtre se pose, de 40 Hz à 12 kHz.
-- **résonance** : combien il sonne. Vers le haut, il hurle.
-- **env** : jusqu’où chaque balayage l’ouvre, jusqu’à quatre octaves.
-- **déclin** : la vitesse à laquelle il retombe, de 30 ms à 3 s.
-- **accent** *(extra)* : de combien un balayage accentué va plus loin, et
+- **coupure** : où le filtre se pose, de 40 Hz à 12 kHz.
+- **résonance** : combien il sonne. Vers le haut, il hurle.
+- **env** : jusqu’où chaque balayage l’ouvre, jusqu’à quatre octaves.
+- **déclin** : la vitesse à laquelle il retombe, de 30 ms à 3 s.
+- **accent** *(extra)* : de combien un balayage accentué va plus loin, et
   combien il est plus fort.
-- **motif** *(extra)* : ce qui lance le balayage. **piste**, c’est la piste
-  elle-même : chaque coup l’ouvre, et un coup fort est un accent. Les huit
+- **motif** *(extra)* : ce qui lance le balayage. **piste**, c’est la piste
+  elle-même : chaque coup l’ouvre, et un coup fort est un accent. Les huit
   autres sont des motifs de seize pas sur le tempo, avec des accents.
-- **satur.** : de la saturation après le filtre.
-- **mode** : passe-bas ou passe-bande.
-- **mélange** : le son sec face au son filtré.
-- **gain** : le niveau de sortie.
+- **satur.** : de la saturation après le filtre.
+- **mode** : passe-bas ou passe-bande.
+- **mélange** : le son sec face au son filtré.
+- **gain** : le niveau de sortie.
 
 ## Astuces
 

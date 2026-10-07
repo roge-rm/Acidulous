@@ -3,20 +3,20 @@
 
 ## Les réglages
 
-- **prof.** : la part mélangée à la piste telle qu’elle était. Un peu, c’est
+- **prof.** : la part mélangée à la piste telle qu’elle était. Un peu, c’est
   de la densité et de la présence ; tout, c’est chaque queue et chaque
   souffle remontés au niveau des coups.
-- **temps** : règle ensemble l’attaque et la relâche de chaque bande. Lent,
+- **temps** : règle ensemble l’attaque et la relâche de chaque bande. Lent,
   c’est doux ; rapide, ça pompe et ça grince.
-- **seuil** : le niveau vers lequel chaque bande est poussée, de -48 à 0 dB.
-- **bas** : la force avec laquelle ce qui dépasse le seuil est poussé vers le
+- **seuil** : le niveau vers lequel chaque bande est poussée, de -48 à 0 dB.
+- **bas** : la force avec laquelle ce qui dépasse le seuil est poussé vers le
   bas.
-- **haut** *(extra)* : la force avec laquelle ce qui est en dessous est
+- **haut** *(extra)* : la force avec laquelle ce qui est en dessous est
   remonté. Le souffle et le ronflement très bas restent en bas.
-- **grave**, **médium**, **aigu** : le niveau de chaque bande après, ±12 dB.
+- **grave**, **médium**, **aigu** : le niveau de chaque bande après, ±12 dB.
   Les bandes sont coupées à 300 Hz et 5 kHz.
-- **entrée** : le pousse plus fort, jusqu’à +24 dB.
-- **gain** : le niveau de sortie.
+- **entrée** : le pousse plus fort, jusqu’à +24 dB.
+- **gain** : le niveau de sortie.
 
 À une profondeur de 0, ou avec **haut** et **bas** à 0, la piste passe
 intacte.

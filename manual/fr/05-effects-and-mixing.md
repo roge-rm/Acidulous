@@ -16,12 +16,12 @@ Chaque effet a sa propre page ci-dessous.
   note, qui peuvent s’atténuer pendant que vous jouez.
 - [**Reverb**](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se
   figer, se couper, miroiter ou s’écraser jusqu’à 8 bits.
-- [**Grain**](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de
+- [**Grain**](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de
   ce que la piste vient de jouer, qui peut se figer.
-- [**Tape**](05-effects-and-mixing/tape.md) : un magnétophone usé, avec
+- [**Tape**](05-effects-and-mixing/tape.md) : un magnétophone usé, avec
   pleurage, scintillement, saturation et souffle, et un interrupteur qui le
   ralentit jusqu’à l’arrêt.
-- [**Slicer**](05-effects-and-mixing/slicer.md) : découpe la piste en tranches
+- [**Slicer**](05-effects-and-mixing/slicer.md) : découpe la piste en tranches
   sur le temps et en répète, inverse ou omet certaines.
 
 ## Timbre
@@ -31,11 +31,11 @@ Chaque effet a sa propre page ci-dessous.
   passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste.
 - [**Width**](05-effects-and-mixing/width.md) : plus large, plus étroit, mono
   sous une fréquence ou tourné.
-- [**Acid**](05-effects-and-mixing/acid.md) : le filtre de la basse acid sur
+- [**Acid**](05-effects-and-mixing/acid.md) : le filtre de la basse acid sur
   n’importe quelle piste, ouvert par chaque note ou par un motif sur le temps.
-- [**Mouth**](05-effects-and-mixing/mouth.md) : des voyelles, déplacées par un
+- [**Mouth**](05-effects-and-mixing/mouth.md) : des voyelles, déplacées par un
   LFO, le niveau de la piste ou une autre piste.
-- [**Spectral**](05-effects-and-mixing/spectral.md) : fige, étire, brouille
+- [**Spectral**](05-effects-and-mixing/spectral.md) : fige, étire, brouille
   ou robotise les fréquences de la piste.
 
 ## Saturation
@@ -47,10 +47,10 @@ Chaque effet a sa propre page ci-dessous.
 - [**Bitcrusher**](05-effects-and-mixing/bitcrusher.md) : moins de bits et une
   fréquence d’échantillonnage plus basse, avec une horloge instable si vous
   voulez.
-- [**Magneto**](05-effects-and-mixing/magneto.md) : le son des formats d’un
+- [**Magneto**](05-effects-and-mixing/magneto.md) : le son des formats d’un
   petit disque enregistrable, de l’original propre au tourbillon de la longue
   durée, recopié jusqu’à quatre fois.
-- [**Formula**](05-effects-and-mixing/formula.md) : tapez une formule et elle
+- [**Formula**](05-effects-and-mixing/formula.md) : tapez une formule et elle
   façonne la piste, échantillon par échantillon.
 
 ## Niveau
@@ -60,9 +60,9 @@ Chaque effet a sa propre page ci-dessous.
   sur le tempo.
 - [**Gate**](05-effects-and-mixing/gate.md) : une porte de bruit qu’une autre
   piste peut ouvrir.
-- [**Swell**](05-effects-and-mixing/swell.md) : une compression vers le haut,
+- [**Swell**](05-effects-and-mixing/swell.md) : une compression vers le haut,
   sur une bande ou trois. Les passages doux montent rejoindre les forts.
-- [**Smash**](05-effects-and-mixing/smash.md) : trois bandes écrasées des deux
+- [**Smash**](05-effects-and-mixing/smash.md) : trois bandes écrasées des deux
   côtés. Les passages forts descendent, les doux montent.
 
 ## Mouvement
@@ -74,7 +74,7 @@ Chaque effet a sa propre page ci-dessous.
 - [**Phaser**](05-effects-and-mixing/phaser.md) : deux à huit étages.
 - [**Tremolo**](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un
   panoramique automatique.
-- [**Rotary**](05-effects-and-mixing/rotary.md) : la cabine à haut-parleur
+- [**Rotary**](05-effects-and-mixing/rotary.md) : la cabine à haut-parleur
   tournant de l’orgue, lente, rapide ou sur le temps.
 
 ## Hauteur
@@ -83,9 +83,9 @@ Chaque effet a sa propre page ci-dessous.
   pour des sons métalliques et désaccordés.
 - [**Harmonizer**](05-effects-and-mixing/harmonizer.md) : ajoute deux voix à
   des degrés de la gamme, pour qu’elles restent dans la tonalité.
-- [**Resonator**](05-effects-and-mixing/resonator.md) : des cordes accordées
+- [**Resonator**](05-effects-and-mixing/resonator.md) : des cordes accordées
   dans une tonalité, qui résonnent avec la piste.
-- [**Horn**](05-effects-and-mixing/horn.md) : la piste joue d’un cuivre,
+- [**Horn**](05-effects-and-mixing/horn.md) : la piste joue d’un cuivre,
   d’une clarinette, d’un hautbois ou d’une flûte, en suivant sa hauteur et son
   niveau.
 

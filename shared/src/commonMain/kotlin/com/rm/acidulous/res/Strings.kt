@@ -49,15 +49,15 @@ fun deviceStringResource(phone: StringResource, desktop: StringResource): String
 
 @Composable
 fun pluralStringResource(res: PluralStringResource, count: Int): String =
-    org.jetbrains.compose.resources.pluralStringResource(res, count)
+    FrenchTypography.ofLocale(org.jetbrains.compose.resources.pluralStringResource(res, count))
 
 @Composable
 fun pluralStringResource(res: PluralStringResource, count: Int, vararg args: Any?): String =
-    org.jetbrains.compose.resources.pluralStringResource(res, count).format(*args)
+    FrenchTypography.ofLocale(org.jetbrains.compose.resources.pluralStringResource(res, count)).format(*args)
 
 @Composable
 fun stringArrayResource(res: StringArrayResource): Array<String> =
-    org.jetbrains.compose.resources.stringArrayResource(res).toTypedArray()
+    org.jetbrains.compose.resources.stringArrayResource(res).map(FrenchTypography::ofLocale).toTypedArray()
 
 /**
  * Strings outside a composition, replacing Android's `Resources`.
@@ -77,19 +77,20 @@ object AppStrings {
 
     fun getString(res: StringResource): String {
         val key = androidx.compose.ui.text.intl.Locale.current.toLanguageTag() + '/' + res.key
-        return strings[key] ?: loadString(res).also { strings[key] = it }
+        // France's French is Canada's with France's spacing; see FrenchTypography.
+        return strings[key] ?: FrenchTypography.ofLocale(loadString(res)).also { strings[key] = it }
     }
 
     fun getString(res: StringResource, vararg args: Any?): String =
         getString(res).format(*args)
 
     fun getQuantityString(res: PluralStringResource, count: Int, vararg args: Any?): String {
-        val raw = loadPlural(res, count)
+        val raw = FrenchTypography.ofLocale(loadPlural(res, count))
         return if (args.isEmpty()) raw else raw.format(*args)
     }
 
     fun getStringArray(res: StringArrayResource): Array<String> =
-        loadStringArray(res).toTypedArray()
+        loadStringArray(res).map(FrenchTypography::ofLocale).toTypedArray()
 }
 
 // The lookups. Where a thread can wait, they wait for the resource read. The
