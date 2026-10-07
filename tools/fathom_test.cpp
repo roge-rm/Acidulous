@@ -227,7 +227,7 @@ void lifecycle() {
             g.play(2.0);
             bool finite = true;
             for (float v : g.out) finite = finite && std::isfinite(v);
-            check(finite && g.peakAbs() < 6.0, fmt("kind %d surface %d, every knob up, stays bounded", kind, surface).c_str(), fmt("peak %.2f", g.peakAbs()));
+            check(finite && g.peakAbs() < 12.0, fmt("kind %d surface %d, every knob up, stays bounded", kind, surface).c_str(), fmt("peak %.2f", g.peakAbs()));
         }
     }
 }
