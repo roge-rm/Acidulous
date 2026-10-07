@@ -56,6 +56,10 @@ D’autres machines sont des modules, chacun avec la partie qui fait son son :
 - **jaw** : l’anche de la guimbarde de Tongue, pincée par son entrée **trig**.
   Passez-la dans un **throat** et bougez la voyelle pour le son de guimbarde.
 - **piano** : tout Hammer, joué par une **pitch** et un **gate**.
+- **guitar**, **mallets**, **sitar**, **drum**, **pipes**, **bird** et
+  **water** : tout Fret, Tine, Sympath, Palm, Chanter, Aviary et Fathom, joués
+  de la même façon, chacun avec huit de ses propres boutons. L’oiseau, les
+  cornemuses, le tanpura et l’eau continuent tant que le gate est tenu.
 - **throat** : le conduit vocal de Diction en filtre : tout ce qui le traverse
   devient une voyelle, de ou à i.
 - **formula** : les expressions de Formulate, en oscillateur ou pour façonner

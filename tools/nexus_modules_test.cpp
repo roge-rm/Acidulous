@@ -355,6 +355,37 @@ void thePianoPlaysFromAGate() {
     ok("it's stereo", rms(right, 4800) > 0.001);
 }
 
+void wholeMachinesPlayFromAGate() {
+    printf("- whole machines\n");
+    struct Case { int32_t type; const char *what; float note; double want; bool pitched; };
+    const Case cases[] = {
+        {TGuitar, "guitar", 52.0f, 164.81, true}, {TMallets, "mallets", 60.0f, 261.63, true},
+        {TSitar, "sitar", 57.0f, 220.0, true}, {TDrum, "drum", 55.0f, 196.0, false},
+        {TPipes, "pipes", 69.0f, 440.0, false}, {TBird, "bird", 48.0f, 523.25, false},
+        {TWater, "water", 72.0f, 523.25, false},
+    };
+    for (const Case &k : cases) {
+        auto m = make(k.type);
+        const auto l = drive(*m, 96000, [&](size_t i, float *in) { in[0] = k.note / 127.0f; in[1] = i < 48000 ? 1.0f : 0.0f; in[2] = 0.8f; });
+        const double held = rms(std::vector<float>(l.begin() + 4800, l.begin() + 48000), 0);
+        ok(std::string(k.what) + ": a gate plays it", held > 0.001, std::to_string(held));
+        if (k.pitched) {
+            const double got = pitchOf(l, 9600, k.want * 0.6, k.want * 1.6);
+            ok(std::string(k.what) + ": at the note", std::fabs(cents(got, k.want)) < 60.0, hz(got));
+        }
+        bool finite = true;
+        for (float v : l) finite = finite && std::isfinite(v);
+        ok(std::string(k.what) + ": and stays bounded", finite && peak(l) < 8.0, std::to_string(peak(l)));
+    }
+    // The bird sings two octaves up while the gate's held, and stops after.
+    auto bird = make(TBird);
+    knob(*bird, TBird, 0, 0.0f); // a plain whistle
+    knob(*bird, TBird, 3, 0.5f); // no sweep
+    const auto b = drive(*bird, 72000, [&](size_t i, float *in) { in[0] = 48.0f / 127.0f; in[1] = i < 36000 ? 1.0f : 0.0f; in[2] = 0.8f; });
+    ok("bird: a whistle two octaves up", std::fabs(cents(pitchOf(b, 14400, 400.0, 700.0), 523.25)) < 30.0, hz(pitchOf(b, 14400, 400.0, 700.0)));
+    ok("bird: quiet once the gate's let go", rms(b, 60000) < rms(std::vector<float>(b.begin() + 9600, b.begin() + 33600), 0) * 0.01, std::to_string(rms(b, 60000)));
+}
+
 void theThroatMakesVowels() {
     printf("- throat\n");
     // A saw at 110 Hz, the voice's own kind of source.
@@ -436,6 +467,7 @@ int main() {
     blownInstrumentsSpeakAtTheirNote();
     theJawHarpRingsWhenPlucked();
     thePianoPlaysFromAGate();
+    wholeMachinesPlayFromAGate();
     theThroatMakesVowels();
     formulasRunFromTheirText();
     theFollowerHearsThePitch();

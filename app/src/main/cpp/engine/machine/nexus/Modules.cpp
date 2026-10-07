@@ -70,6 +70,15 @@ const ModuleInfo kInfo[TypeCount] = {
     {"throat",  {"vowel", "size", "nasal", "ring", "level", kNone, kNone, kNone},      {0.5f, 0.5f, 0, 0.5f, 0.5f, 0, 0, 0},         {"in", "vowel", "size"}, {"out"}, CapBoth},
     {"formula", {"semis", "speed", "a", "b", "c", "keyed", "level", kNone},            {0.5f, 0.5f, 0, 0, 0, 1.0f, 0.5f, 0},          {"x", "pitch"}, {"out"}, CapBoth},
     {"follow",  {"sure", "glide", "snap", kNone, kNone, kNone, kNone, kNone},          {0.46f, 0.35f, 0, 0, 0, 0, 0, 0},             {"in"}, {"pitch", "gate", "level"}, CapMono},
+    // Whole machines, played by a pitch and a gate like the piano. Knobs are
+    // the machine's own parameters, by name; defaults are the machine's.
+    {"guitar",  {"model", "pickup", "coil", "tone", "mute", "buzz", "drive", "feedback"}, {0, 1.0f, 0, 0.8f, 0, 0, 0, 0}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
+    {"mallets", {"model", "mallet", "position", "decay", "bright", "tube", "motor", "bloom"}, {0, 0.5f, 0.3f, 0.5f, 0.5f, 0.5f, 0, 0.5f}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
+    {"sitar",   {"model", "sa", "scale", "bridge", "curve", "pluck", "sustain", "tarbs"}, {0, 0.0909f, 0, 0.6f, 0.3f, 0.5f, 0.5f, 0.5f}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
+    {"drum",    {"model", "stroke", "position", "hand", "decay", "damp", "rattle", "body"}, {0.4f, 0, 0.5f, 0.5f, 0.5f, 0, 0, 0.5f}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
+    {"pipes",   {"model", "key", "drones", "bag", "reed", "grace", "wheel", "dog"}, {0, 0.818f, 0.7f, 0.188f, 0.5f, 0, 0.5f, 0.5f}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
+    {"bird",    {"pattern", "rate", "length", "sweep", "rasp", "two", "flock", "space"}, {0.2f, 0.5f, 0.474f, 0.646f, 0.1f, 0, 0, 0.2f}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
+    {"water",   {"model", "density", "size", "rise", "decay", "gust", "whistle", "tone"}, {0, 0.5f, 0.208f, 0.4f, 0.5f, 0.5f, 0, 0.5f}, {"pitch", "gate", "vel"}, {"L", "R"}, CapMono},
 };
 } // namespace
 
@@ -143,6 +152,13 @@ Module *makeModule(int32_t type) {
     case TThroat: return new ThroatMod();
     case TFormula: return new FormulaMod();
     case TFollow: return new FollowMod();
+    case TGuitar: return new MachineMod(type, "Fret");
+    case TMallets: return new MachineMod(type, "Tine");
+    case TSitar: return new MachineMod(type, "Sympath");
+    case TDrum: return new MachineMod(type, "Palm");
+    case TPipes: return new MachineMod(type, "Chanter");
+    case TBird: return new MachineMod(type, "Aviary");
+    case TWater: return new MachineMod(type, "Fathom");
     default: return new BlankMod();
     }
 }

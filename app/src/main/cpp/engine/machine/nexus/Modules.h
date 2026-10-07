@@ -41,6 +41,7 @@ enum Type : int32_t {
     TTouch, TSwell,
     TReverb, TChorus, TPhaser, TCrush, TShift, TDrive,
     TBore, TPipe, TReed, TJaw, TPiano, TThroat, TFormula, TFollow,
+    TGuitar, TMallets, TSitar, TDrum, TPipes, TBird, TWater,
     TypeCount
 };
 

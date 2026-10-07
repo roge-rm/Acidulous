@@ -207,8 +207,9 @@ fun nexusFamilyOf(type: String): NexusFamily = when (type) {
     // The app's own instruments: a string, a tonewheel generator, a grain
     // cloud, a Leslie and a vocoder.
     "string", "wheels", "grain", "rotary", "bands",
-    // ...and their horn, pipe, reeds and piano.
-    "bore", "pipe", "reed", "jaw", "piano" -> NexusFamily.Voice
+    // ...and their horn, pipe, reeds and piano, and whole machines.
+    "bore", "pipe", "reed", "jaw", "piano",
+    "guitar", "mallets", "sitar", "drum", "pipes", "bird", "water" -> NexusFamily.Voice
     "filter", "vca", "mix", "math", "delay", "slew", "swell", "throat",
     // The insert effects, as modules.
     "reverb", "chorus", "phaser", "crush", "shift", "drive" -> NexusFamily.Shape

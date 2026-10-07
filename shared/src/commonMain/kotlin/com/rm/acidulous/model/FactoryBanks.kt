@@ -1937,7 +1937,27 @@ internal object FactoryBanks {
         mapOf("nexus" to "v|1\nm|0|voice\nm|1|env\nm|2|reed\nm|3|pipe\nm|4|mix\nm|5|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|1.0|3.0|0.9\nc|0.0|2.1|1.0\nc|0.0|3.1|1.0\nc|2.0|4.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
         family = "house")
 
-    private val nexus: List<Patch> by lazy { listOf(nexus0(), nexus1(), nexus2(), nexus3(), nexus4(), nexus5(), nexus6(), nexus7(), nexus8(), nexus9(), nexus10(), nexus11(), nexus12(), nexus13(), nexus14(), nexus15(), nexus16(), nexus17(), nexus18(), nexus19(), nexus20()) }
+    private fun nexus21() = Patch("Nexus", "Talk Box Guitar",
+        mapOf("s01_p7" to 0.8f, "s02_p2" to 0.2f, "s03_p5" to 1f, "s04_p1" to 1f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|guitar|mono\nm|2|lfo|mono\nm|3|throat\nm|4|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|3.0|1.0\nc|2.1|3.1|0.8\nc|3.0|4.0|1.0"),
+        family = "house")
+
+    private fun nexus22() = Patch("Nexus", "Birds by the Brook",
+        mapOf("s01_p1" to 0.6f, "s01_p7" to 0.5f, "s02_p1" to 0.5f, "s02_p2" to 0.4f, "volume" to 0.9f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|bird|mono\nm|2|water|mono\nm|3|mix\nm|4|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|0.0|2.0|1.0\nc|0.1|2.1|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0"),
+        family = "texture")
+
+    private fun nexus23() = Patch("Nexus", "Drum Echoes",
+        mapOf("s02_p2" to 0.55f, "volume" to 1f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|drum|mono\nm|2|delay|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0"),
+        family = "generative")
+
+    private fun nexus24() = Patch("Nexus", "Sitar Hall",
+        mapOf("s01_p8" to 0.9f, "s02_p1" to 0.8f, "s02_p5" to 0.45f, "volume" to 0.9f),
+        mapOf("nexus" to "v|1\nm|0|voice\nm|1|sitar|mono\nm|2|reverb|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"),
+        family = "texture")
+
+    private val nexus: List<Patch> by lazy { listOf(nexus0(), nexus1(), nexus2(), nexus3(), nexus4(), nexus5(), nexus6(), nexus7(), nexus8(), nexus9(), nexus10(), nexus11(), nexus12(), nexus13(), nexus14(), nexus15(), nexus16(), nexus17(), nexus18(), nexus19(), nexus20(), nexus21(), nexus22(), nexus23(), nexus24()) }
 
     private fun hexbeat0() = Patch("Hexbeat", "Init", emptyMap(),
         family = "classic")

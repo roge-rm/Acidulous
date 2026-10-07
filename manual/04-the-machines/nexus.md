@@ -54,6 +54,11 @@ More of the machines are modules, each with the part that makes its sound:
 - **jaw** - Tongue's jaw harp reed, plucked by its **trig** input. Put it
   through a **throat** and move the vowel for the twang.
 - **piano** - the whole of Hammer, played by a **pitch** and a **gate**.
+- **guitar**, **mallets**, **sitar**, **drum**, **pipes**, **bird** and
+  **water** - the whole of Fret, Tine, Sympath, Palm, Chanter, Aviary and
+  Fathom, played the same way, each with eight of its own knobs. The bird,
+  the pipes, the tanpura and the water keep going for as long as the gate's
+  held.
 - **throat** - Diction's vocal tract as a filter: anything through it becomes
   a vowel, from oo to ee.
 - **formula** - Formulate's expressions, as an oscillator or as a shaper of
