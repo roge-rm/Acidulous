@@ -220,3 +220,7 @@ patch Hearth family=fire note=36 range=24..48
   gust           0.4
   tone           0.5
   volume         1
+
+patch "Weather Kit" family=kit note=36 range=36..51
+  # Sixteen pads: fire, wind, rain, drips, bubbles, a stream and surf, to play a scene on one track.
+  kit            1

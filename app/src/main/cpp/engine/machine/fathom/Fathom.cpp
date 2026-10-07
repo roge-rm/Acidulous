@@ -52,6 +52,72 @@ const ParamDef *Fathom::paramDefs(int32_t &count) const {
         {"bend", 0.0f, 12.0f, 2.0f, Curve::Linear, 0, "st"},
         {"octave", -2.0f, 2.0f, 0.0f, Curve::Stepped, 5, ""},
         {"volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        // Kit mode, and the default kit: fire, wind, rain, drips, bubbles, a stream and surf.
+        {"kit", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        {"p01_model", 0.0f, static_cast<float>(KindCount - 1), 6.0f, Curve::Stepped, KindCount, ""},
+        {"p01_note", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""},
+        {"p01_density", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"p01_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p02_model", 0.0f, static_cast<float>(KindCount - 1), 6.0f, Curve::Stepped, KindCount, ""},
+        {"p02_note", 24.0f, 96.0f, 36.0f, Curve::Stepped, 73, ""},
+        {"p02_density", 0.0f, 1.0f, 0.8f, Curve::Linear, 0, ""},
+        {"p02_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p03_model", 0.0f, static_cast<float>(KindCount - 1), 5.0f, Curve::Stepped, KindCount, ""},
+        {"p03_note", 24.0f, 96.0f, 40.0f, Curve::Stepped, 73, ""},
+        {"p03_density", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
+        {"p03_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p04_model", 0.0f, static_cast<float>(KindCount - 1), 5.0f, Curve::Stepped, KindCount, ""},
+        {"p04_note", 24.0f, 96.0f, 52.0f, Curve::Stepped, 73, ""},
+        {"p04_density", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        {"p04_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p05_model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""},
+        {"p05_note", 24.0f, 96.0f, 36.0f, Curve::Stepped, 73, ""},
+        {"p05_density", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
+        {"p05_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p06_model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""},
+        {"p06_note", 24.0f, 96.0f, 36.0f, Curve::Stepped, 73, ""},
+        {"p06_density", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        {"p06_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p07_model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""},
+        {"p07_note", 24.0f, 96.0f, 43.0f, Curve::Stepped, 73, ""},
+        {"p07_density", 0.0f, 1.0f, 0.9f, Curve::Linear, 0, ""},
+        {"p07_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p08_model", 0.0f, static_cast<float>(KindCount - 1), 1.0f, Curve::Stepped, KindCount, ""},
+        {"p08_note", 24.0f, 96.0f, 40.0f, Curve::Stepped, 73, ""},
+        {"p08_density", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
+        {"p08_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p09_model", 0.0f, static_cast<float>(KindCount - 1), 1.0f, Curve::Stepped, KindCount, ""},
+        {"p09_note", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""},
+        {"p09_density", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
+        {"p09_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p10_model", 0.0f, static_cast<float>(KindCount - 1), 1.0f, Curve::Stepped, KindCount, ""},
+        {"p10_note", 24.0f, 96.0f, 55.0f, Curve::Stepped, 73, ""},
+        {"p10_density", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
+        {"p10_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p11_model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""},
+        {"p11_note", 24.0f, 96.0f, 36.0f, Curve::Stepped, 73, ""},
+        {"p11_density", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
+        {"p11_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p12_model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""},
+        {"p12_note", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""},
+        {"p12_density", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
+        {"p12_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p13_model", 0.0f, static_cast<float>(KindCount - 1), 3.0f, Curve::Stepped, KindCount, ""},
+        {"p13_note", 24.0f, 96.0f, 40.0f, Curve::Stepped, 73, ""},
+        {"p13_density", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"p13_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p14_model", 0.0f, static_cast<float>(KindCount - 1), 3.0f, Curve::Stepped, KindCount, ""},
+        {"p14_note", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""},
+        {"p14_density", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        {"p14_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p15_model", 0.0f, static_cast<float>(KindCount - 1), 4.0f, Curve::Stepped, KindCount, ""},
+        {"p15_note", 24.0f, 96.0f, 31.0f, Curve::Stepped, 73, ""},
+        {"p15_density", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"p15_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
+        {"p16_model", 0.0f, static_cast<float>(KindCount - 1), 4.0f, Curve::Stepped, KindCount, ""},
+        {"p16_note", 24.0f, 96.0f, 36.0f, Curve::Stepped, 73, ""},
+        {"p16_density", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
+        {"p16_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -147,7 +213,7 @@ void Fathom::spawn(Voice &, int kind, float hz, float amp, float decaySeconds, f
 }
 
 void Fathom::event(Voice &v, float hz) {
-    const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
+    const int kind = v.kind;
     const float size = paramOf(Size);
     const float rise = clampf(paramOf(Rise), 0.0f, 1.0f);
     const float decay = clampf(paramOf(Decay), 0.0f, 1.0f);
@@ -213,9 +279,15 @@ void Fathom::event(Voice &v, float hz) {
 }
 
 void Fathom::noteOn(uint8_t note, uint8_t velocity) {
+    const bool kit = steppedTargetOf(Kit) != 0;
+    const int pad = static_cast<int>(note) - kBaseNote;
+    if (kit && (pad < 0 || pad >= kPads)) return;
+    const int kind = std::clamp(steppedTargetOf(kit ? padParam(pad, PadModel) : static_cast<int32_t>(Model)), 0, KindCount - 1);
     Voice *v = voiceFor(note);
-    const bool fresh = !v->used || v->note != note;
+    const bool fresh = !v->used || v->note != note || v->kind != kind;
     v->note = note;
+    v->kind = kind;
+    v->pad = kit ? pad : -1;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->held = true;
     v->noteBend = 0.0f;
@@ -274,9 +346,9 @@ bool Fathom::render(float *L, float *R, int32_t frames) {
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (asleep) return true;
 
-    const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
     const float density = clampf(paramOf(Density), 0.0f, 1.0f);
     const float densityScale = 0.05f * std::pow(80.0f, density); // 0.05 to 4
+    bool rainHeard = false;
     const float tone = clampf(paramOf(Tone), 0.0f, 1.0f);
     const float gustDepth = clampf(paramOf(Gust), 0.0f, 1.0f);
     const float whistleAmount = clampf(paramOf(Whistle), 0.0f, 1.0f);
@@ -302,11 +374,18 @@ bool Fathom::render(float *L, float *R, int32_t frames) {
     bool any = false;
     for (Voice &v : voices) {
         if (!v.used) continue;
+        const int kind = v.kind;
+        rainHeard = rainHeard || kind == Rain;
+        // A pad has its own density and level.
+        const float padDensity = v.pad >= 0 ? clampf(paramOf(padParam(v.pad, PadDensity)), 0.0f, 1.0f) : density;
+        const float voiceScale = v.pad >= 0 ? 0.05f * std::pow(80.0f, padDensity) : densityScale;
+        const float padLevel = v.pad >= 0 ? clampf(paramOf(padParam(v.pad, PadLevel)), 0.0f, 1.0f) / 0.75f : 1.0f;
         const float press = std::fmax(v.held ? (v.pressure >= 0.0f ? v.pressure : channelPressure_) : 0.0f, wheel);
-        const float hz = noteHz(static_cast<float>(v.note) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) +
+        const float played = v.pad >= 0 ? static_cast<float>(steppedTargetOf(padParam(v.pad, PadNote))) : static_cast<float>(v.note);
+        const float hz = noteHz(played + 12.0f * static_cast<float>(steppedTargetOf(Octave)) +
                                 paramOf(Tune) / 100.0f + bend * paramOf(BendRange) + v.noteBend);
-        const float aim = v.held ? velocityGain(v.velocity, paramOf(VelocityAmount)) * (1.0f + 0.5f * press) : 0.0f;
-        const float rate = kRates[kind] * densityScale * (1.0f + press);
+        const float aim = v.held ? padLevel * velocityGain(v.velocity, paramOf(VelocityAmount)) * (1.0f + 0.5f * press) : 0.0f;
+        const float rate = kRates[kind] * voiceScale * (1.0f + press);
         // The beds: what each texture is besides its grains.
         if (kind == Wind) {
             const float centre = std::fmin(hz * (0.5f + 2.0f * tone) * std::exp2(2.0f * (v.gustNow - 0.5f) * gustDepth), sampleRate * 0.4f);
@@ -413,7 +492,7 @@ bool Fathom::render(float *L, float *R, int32_t frames) {
         grainsLeft = grainsLeft || g.used;
     }
     // The roof or window under the rain.
-    if (kind == Rain && (surf == Tin || surf == Glass)) {
+    if (rainHeard && (surf == Tin || surf == Glass)) {
         for (int32_t i = 0; i < frames; ++i) {
             const float x = i == 0 ? surfaceIn : 0.0f;
             float y = 0.0f;

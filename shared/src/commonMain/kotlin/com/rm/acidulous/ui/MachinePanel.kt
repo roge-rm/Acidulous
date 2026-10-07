@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -232,7 +235,7 @@ fun MachinePanel(
             "Palm" -> PalmPanel(binding, selectedPad)
             "Chanter" -> ChanterPanel(binding)
             "Aviary" -> AviaryPanel(binding)
-            "Fathom" -> FathomPanel(binding)
+            "Fathom" -> FathomPanel(binding, selectedPad)
             "Timber" -> TimberPanel(binding)
             "Nexus" -> NexusPanel(binding, track, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -768,6 +771,38 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
         panelWord(label), panelWords(labels), idx,
         Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
     ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
+}
+
+/**
+ * An off-or-on parameter as one button, lit when on: a square the size of a
+ * knob's dial, its name above and on or off inside, in line with the
+ * knobs beside it.
+ */
+@Composable
+internal fun PanelOnOff(b: ParamBinding, name: String, label: String = name) {
+    val on = b.value(name) >= 0.5f
+    val col = Acid.colors
+    val word = panelWord(label)
+    val state = panelWord(if (on) "on" else "off")
+    Column(
+        panelKnobWidth().widthIn(min = 52.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(word, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        Box(
+            Modifier.size(52.dp)
+                .mappable(MapTargets.param(b.trackIndex, b.unit, name))
+                .clip(RoundedCornerShape(5.dp))
+                .background(if (on) col.accent else col.control)
+                .border(1.dp, if (on) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
+                .toggleable(value = on, role = Role.Switch) { b.set(name, if (it) 1f else 0f) },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(state, color = if (on) col.onAccent else col.text, fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        }
+        // Where a knob shows its value, so the squares line up with the dials.
+        Text(" ", fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+    }
 }
 
 /**
@@ -3857,7 +3892,7 @@ private fun PalmPanel(b: ParamBinding, pad: Int) {
                 fun n(name: String) = "p%02d_%s".format(p + 1, name)
                 val hot = Acid.colors.accent
                 Group("kit") {
-                    PanelStepKnob(b, "kit", listOf("off", "on"), "kit", PanelAmber)
+                    PanelOnOff(b, "kit")
                 }
                 Group("pad") {
                     PanelStepKnob(b, n("model"), PALM_MODELS, "drum", hot)
@@ -4017,10 +4052,26 @@ private val FATHOM_SURFACES = listOf("water", "leaves", "tin", "window")
 
 /** Fathom: the water, the weather, and the player. */
 @Composable
-private fun FathomPanel(b: ParamBinding) {
+private fun FathomPanel(b: ParamBinding, pad: Int) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("water", "weather", "play"), section, { section = it }) { sec ->
+    PanelSections(listOf("water", "weather", "play", "kit"), section, { section = it }) { sec ->
         when (sec) {
+            3 -> {
+                // In kit mode the keys from C2 are sixteen pads; the pad picked on
+                // the drum grid is the one these knobs set.
+                val p = pad.coerceIn(0, 15)
+                fun n(name: String) = "p%02d_%s".format(p + 1, name)
+                val hot = Acid.colors.accent
+                Group("kit") {
+                    PanelOnOff(b, "kit")
+                }
+                Group("pad") {
+                    PanelStepKnob(b, n("model"), FATHOM_MODELS, "sound", hot)
+                    PanelStepKnob(b, n("note"), (24..96).map { noteName(it) }, "pitch", hot)
+                    PanelKnob(b, n("density"), "density", hot)
+                    PanelKnob(b, n("level"), "level", hot)
+                }
+            }
             0 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", FATHOM_MODELS, "model", PanelAmber)

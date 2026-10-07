@@ -465,6 +465,7 @@ val PANEL_LABELS: Map<String, String> = mapOf(
     "Fathom:density" to "bubbles|density",
     "Fathom:fade" to "play|fade",
     "Fathom:gust" to "weather|gust",
+    "Fathom:kit" to "kit",
     "Fathom:model" to "instrument|model",
     "Fathom:octave" to "play|octave",
     "Fathom:rise" to "bubbles|rise",

@@ -25,8 +25,15 @@ class Fathom final : public Machine {
         Model = 0, Tune, Density, Size, Rise, Decay, Surface,
         Gust, Whistle, Tone, Swell, Spread, Fade,
         VelocityAmount, BendRange, Octave, Volume,
-        Count
+        // Kit mode: each key from kBaseNote is a pad with its own sound, pitch
+        // (a MIDI note), density and level, kPadParams values each from PadFirst.
+        Kit, PadFirst,
+        Count = PadFirst + 16 * 4
     };
+    static constexpr int kPads = 16, kPadParams = 4;
+    enum PadParam : int32_t { PadModel = 0, PadNote, PadDensity, PadLevel };
+    static constexpr int32_t padParam(int pad, int which) { return PadFirst + pad * kPadParams + which; }
+    static constexpr uint8_t kBaseNote = 36;
     static_assert(Count <= kMaxParams, "too many parameters");
 
     enum Kind : int32_t { Bubbles = 0, Drips, Rain, Stream, Surf, Wind, Fire, KindCount };
@@ -72,6 +79,8 @@ class Fathom final : public Machine {
     struct Voice {
         bool used = false, held = false;
         uint8_t note = 0;
+        /** The sound it is, and in kit mode the pad it came from, or -1. */
+        int kind = 0, pad = -1;
         float velocity = 0.8f;
         /** How strongly the texture's going, rising and falling with the note. */
         float level = 0.0f;

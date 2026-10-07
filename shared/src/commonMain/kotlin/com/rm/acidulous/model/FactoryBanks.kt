@@ -4632,7 +4632,12 @@ internal object FactoryBanks {
         family = "fire",
         low = 24, high = 48)
 
-    private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29()) }
+    private fun fathom30() = Patch("Fathom", "Weather Kit",
+        mapOf("kit" to 1f),
+        family = "kit",
+        low = 36, high = 51)
+
+    private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29(), fathom30()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

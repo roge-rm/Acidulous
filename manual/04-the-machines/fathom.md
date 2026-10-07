@@ -43,6 +43,14 @@ note the wind whistles; the velocity sets how much.
 
 Pressure, or the mod wheel, thickens it.
 
+## Kit
+
+Turn on **kit** and the keys from C2 up are sixteen pads, each its own sound, so one track can play a whole scene: rain on one pad, wind on another, a fire on a third. The sequencer shows the drum grid, one lane per pad. Up to four pads sound at once.
+
+- Tap a pad on the drum grid, then set it in the pad card: **sound**, **pitch**, **density** and **level**.
+- The other knobs (size, rise, tone and so on) work on every pad.
+- **Weather Kit** starts with fire, wind, rain, drips, bubbles, a stream and surf.
+
 ## Tips
 
 - **Bubble Notes** and **Drip Notes** have no density: each note is one

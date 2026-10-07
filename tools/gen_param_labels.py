@@ -67,7 +67,7 @@ def split_args(text, start):
 
 
 def calls(text):
-    for m in re.finditer(r'Panel(Knob|Switch|StepKnob|VowelKnob)\(', text):
+    for m in re.finditer(r'Panel(Knob|Switch|StepKnob|VowelKnob|OnOff)\(', text):
         args, _ = split_args(text, m.end() - 1)
         if len(args) >= 2:
             yield args

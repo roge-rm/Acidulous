@@ -106,7 +106,7 @@ def from_panels():
             args = split_args(text, m.end() - 1)
             if args and re.fullmatch(r'"[^"]*"', args[0]):
                 words.add(template(args[0][1:-1]))
-        for m in re.finditer(r"\bPanel(Knob|Switch|StepKnob|VowelKnob)\(", text):
+        for m in re.finditer(r"\bPanel(Knob|Switch|StepKnob|VowelKnob|OnOff)\(", text):
             args = split_args(text, m.end() - 1)
             if len(args) < 2:
                 continue

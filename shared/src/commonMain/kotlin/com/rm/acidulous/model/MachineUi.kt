@@ -38,7 +38,7 @@ object MachineUi {
         else -> MachineKind.Keyboard
     }
     /** Machines with a kit mode: their `kit` switch turns the keys from 36 into 16 pads. */
-    val kitMachines = setOf("Palm")
+    val kitMachines = setOf("Palm", "Fathom")
     fun isKit(machine: Machine): Boolean = machine.type in kitMachines && (machine.params["kit"] ?: 0f) >= 0.5f
     /** [kindOf] for this machine as it's set: a machine in kit mode is drums. */
     fun kindOf(machine: Machine): MachineKind = if (isKit(machine)) MachineKind.Drums else kindOf(machine.type)
@@ -50,8 +50,17 @@ object MachineUi {
             val stroke = PALM_STROKES[step("stroke", PALM_STROKES.size, PALM_KIT[pad].second)]
             DrumVoice(36 + pad, "$drum $stroke", drum.take(2) + stroke.take(1))
         }
+        machine.type == "Fathom" && isKit(machine) -> (0 until 16).map { pad ->
+            val sound = machine.params["p%02d_model".format(pad + 1)]?.let { kotlin.math.round(it * (FATHOM_SOUNDS.size - 1)).toInt() }
+                ?: FATHOM_KIT[pad]
+            val name = FATHOM_SOUNDS[sound]
+            DrumVoice(36 + pad, name, name.take(3))
+        }
         else -> voicesOf(machine.type, machine.settings)
     }
+    private val FATHOM_SOUNDS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire")
+    /** Fathom's default kit, as in the engine. */
+    private val FATHOM_KIT = listOf(6, 6, 5, 5, 2, 2, 2, 1, 1, 1, 0, 0, 3, 3, 4, 4)
     private val PALM_DRUMS = listOf("tabla", "bayan", "djembe", "cajon", "frame", "talking")
     private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "by velocity")
     /** Palm's default kit, as in the engine: drum and stroke per pad. */
