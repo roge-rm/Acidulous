@@ -46,39 +46,61 @@ All six are the demo song, Squelch.
 
 ### Thirty-one machines
 
+**Synths**
+
 | | |
 |---|---|
-| **Reflux** | Acid bass. One oscillator and a filter that screams. Play harder for accent and overlap notes to slide. |
-| **Trinity** | A three-oscillator poly synth with wavetables, stacked voices, FM between the oscillators and some drift. |
-| **Ratio** | Six-operator FM. Morph between two algorithms, and snap or skew the operator ratios. |
-| **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
 | **Cumulus** | Big, smooth pads built from a spectrum of partials. |
 | **Formulate** | An 8-bit chip synth with tracker-style tables, and you can type in your own waveform as a formula. |
-| **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |
-| **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
-| **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
-| **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
-| **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
-| **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
-| **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
-| **Fret** | Modelled electric guitars and basses: pickups at the neck or bridge, single coil or humbucker, palm muting, harmonics, slides, strummed chords, and an amp loud enough that held notes feed back. |
-| **Tine** | Modelled bars, tines and pans: marimba, vibraphone with its turning discs and damper, xylophone, glockenspiel, thumb piano with rattles, music box, steel pan with its blooming octave, handpan and tongue drum. Rolls, and pressure bows a held bar. |
-| **Sympath** | Modelled sitar, tanpura, veena and shamisen: strings ringing a buzzing bridge on every swing, sympathetic strings tuned to a tonic and scale, drone strings, a tanpura that plucks its four strings in time, slides, and pressure pulling the string up. |
-| **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |
-| **Chanter** | Modelled bagpipes (highland, smallpipes, gaita) and hurdy-gurdy: drones blown from a bag that carry on between notes, grace notes, a closed chanter, and a rosined wheel whose trompette buzzes once it turns fast enough, or on the beat. |
-| **Aviary** | Modelled birdsong: a syrinx with two voices, a throat tuned to the note and a beak, singing whistles, chirps, trills, warbles and calls in time with the tempo, from one bird or a flock. |
-| **Fathom** | Modelled water and weather: bubbles that ring at their size and rise, drips, rain on water, leaves, tin or glass, streams, surf on the tempo, gusting and whistling wind, and fire. |
-| **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
-| **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
-| **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |
-| **Pollen** | Granular clouds from a file or from the live input. |
+| **Ratio** | Six-operator FM. Morph between two algorithms, and snap or skew the operator ratios. |
+| **Reflux** | Acid bass. One oscillator and a filter that screams. Play harder for accent and overlap notes to slide. |
+| **Trinity** | A three-oscillator poly synth with wavetables, stacked voices, FM between the oscillators and some drift. |
+
+**Drums**
+
+| | |
+|---|---|
 | **Dice** | A loop slicer that keeps a loop at the song's tempo, and can shuffle, stutter, reverse and drop slices by chance. |
 | **Forage** | A sample drum machine with thirteen pads for your own sounds. |
-| **Cipher** | A vocoder where you can rearrange which bands drive which. |
+| **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
+| **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
+| **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
+
+**Realish**
+
+| | |
+|---|---|
+| **Aviary** | Modelled birdsong: a syrinx with two voices, a throat tuned to the note and a beak, singing whistles, chirps, trills, warbles and calls in time with the tempo, from one bird or a flock. |
+| **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
+| **Chanter** | Modelled bagpipes (highland, smallpipes, gaita) and hurdy-gurdy: drones blown from a bag that carry on between notes, grace notes, a closed chanter, and a rosined wheel whose trompette buzzes once it turns fast enough, or on the beat. |
+| **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
+| **Fathom** | Modelled water and weather: bubbles that ring at their size and rise, drips, rain on water, leaves, tin or glass, streams, surf on the tempo, gusting and whistling wind, and fire. |
+| **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |
+| **Fret** | Modelled electric guitars and basses: pickups at the neck or bridge, single coil or humbucker, palm muting, harmonics, slides, strummed chords, and an amp loud enough that held notes feed back. |
+| **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
+| **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
+| **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |
+| **Sympath** | Modelled sitar, tanpura, veena and shamisen: strings ringing a buzzing bridge on every swing, sympathetic strings tuned to a tonic and scale, drone strings, a tanpura that plucks its four strings in time, slides, and pressure pulling the string up. |
+| **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
+| **Tine** | Modelled bars, tines and pans: marimba, vibraphone with its turning discs and damper, xylophone, glockenspiel, thumb piano with rattles, music box, steel pan with its blooming octave, handpan and tongue drum. Rolls, and pressure bows a held bar. |
+| **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
+
+**Samples**
+
+| | |
+|---|---|
 | **Molt** | Sing a take and play it back tuned to the notes you draw. |
+| **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |
+| **Pollen** | Granular clouds from a file or from the live input. |
+
+**Beyond**
+
+| | |
+|---|---|
+| **Bias** | A four-track for audio recordings that runs along the song. |
+| **Cipher** | A vocoder where you can rearrange which bands drive which. |
 | **Diction** | A vocal synthesizer trained on your voice and taken to the next level. |
 | **Nexus** | A modular synth whose modules are the other machines. |
-| **Bias** | A four-track for audio recordings that runs along the song. |
 
 ### Twenty-nine effects
 
@@ -86,35 +108,35 @@ Each has the usual controls plus one extra, and its own page in the manual.
 
 | | |
 |---|---|
-| **Delay** | Echoes on a note value, and it can duck while you play. |
-| **Reverb** | A room that can also freeze, gate, shimmer up an octave or crush itself down to 8 bits. |
-| **Eq** | Three bands and a tilt. |
-| **Filter** | Low, band or high pass, moved by an LFO, the signal's level or another track. |
-| **Width** | Wider, narrower, mono below a frequency or rotated. |
-| **Distortion** | Four kinds of clipping and a bias control. |
+| **Acid** | The acid bass filter on any track, opened by each note or by a pattern on the beat. |
 | **Amp** | A guitar amp with a cabinet you can resize from a small combo to a full stack. |
 | **Bitcrusher** | Fewer bits, a lower sample rate and an unsteady clock if you want one. |
-| **Compressor** | The usual controls, a sidechain from any track and a pump that follows the tempo. |
-| **Gate** | A noise gate that another track can open. |
-| **Swell** | Upward compression in one band or three: the quiet parts come up to meet the loud ones. |
 | **Chorus** | Two to four detuned voices that drift. |
+| **Compressor** | The usual controls, a sidechain from any track and a pump that follows the tempo. |
+| **Delay** | Echoes on a note value, and it can duck while you play. |
+| **Distortion** | Four kinds of clipping and a bias control. |
+| **Eq** | Three bands and a tilt. |
+| **Filter** | Low, band or high pass, moved by an LFO, the signal's level or another track. |
 | **Flanger** | A short sweeping delay, with negative feedback for the hollow sound. |
-| **Phaser** | Two to eight stages. |
-| **Tremolo** | Volume on an LFO, or auto-pan. |
-| **Shifter** | Frequency shifting, for metallic and detuned sounds. |
-| **Harmonizer** | Adds two voices at scale steps, so they stay in key. |
-| **Rotary** | The organ's rotating speaker cabinet for any track, slow, fast or on the beat. |
-| **Grain** | A cloud of short slices of what the track just played, which can freeze. |
-| **Resonator** | Strings tuned to a key, ringing in sympathy with the track. |
-| **Smash** | Three bands squashed from both sides: the loud parts come down and the quiet parts come up. |
-| **Acid** | The acid bass filter on any track, opened by each note or by a pattern on the beat. |
-| **Mouth** | Vowels, moved by an LFO, the track's level or another track. |
-| **Tape** | A worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop. |
-| **Slicer** | Cuts the track into slices on the beat and repeats, reverses or drops some of them. |
-| **Magneto** | The sound of a small recordable disc's formats, from the clean original to the long-play swirl, copied up to four times. |
-| **Horn** | The track plays a horn, a clarinet, an oboe or a flute, following its pitch and level. |
-| **Spectral** | Freeze, blur, smear or robotise the track's frequencies. |
 | **Formula** | Type a formula and it shapes the track, a sample at a time. |
+| **Gate** | A noise gate that another track can open. |
+| **Grain** | A cloud of short slices of what the track just played, which can freeze. |
+| **Harmonizer** | Adds two voices at scale steps, so they stay in key. |
+| **Horn** | The track plays a horn, a clarinet, an oboe or a flute, following its pitch and level. |
+| **Magneto** | The sound of a small recordable disc's formats, from the clean original to the long-play swirl, copied up to four times. |
+| **Mouth** | Vowels, moved by an LFO, the track's level or another track. |
+| **Phaser** | Two to eight stages. |
+| **Resonator** | Strings tuned to a key, ringing in sympathy with the track. |
+| **Reverb** | A room that can also freeze, gate, shimmer up an octave or crush itself down to 8 bits. |
+| **Rotary** | The organ's rotating speaker cabinet for any track, slow, fast or on the beat. |
+| **Shifter** | Frequency shifting, for metallic and detuned sounds. |
+| **Slicer** | Cuts the track into slices on the beat and repeats, reverses or drops some of them. |
+| **Smash** | Three bands squashed from both sides: the loud parts come down and the quiet parts come up. |
+| **Spectral** | Freeze, blur, smear or robotise the track's frequencies. |
+| **Swell** | Upward compression in one band or three: the quiet parts come up to meet the loud ones. |
+| **Tape** | A worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop. |
+| **Tremolo** | Volume on an LFO, or auto-pan. |
+| **Width** | Wider, narrower, mono below a frequency or rotated. |
 
 ### Mixing
 

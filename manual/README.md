@@ -5,37 +5,37 @@
 2. [The song grid](02-the-song-grid.md)
 3. [The editor](03-the-editor.md)
 4. [The machines](04-the-machines.md)
+    - [Cumulus](04-the-machines/cumulus.md) - pads built from a spectrum of partials.
+    - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.
+    - [Ratio](04-the-machines/ratio.md) - six-operator FM, with a knob that morphs between two algorithms.
+    - [Reflux](04-the-machines/reflux.md) - acid bass: one oscillator, one filter that screams, and lines you play in.
+    - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the all-rounder.
+    - [Dice](04-the-machines/dice.md) - a loop slicer with chance on every slice.
+    - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
+    - [Genesis](04-the-machines/genesis.md) - the big drum box, with a bus compressor the kick ducks.
+    - [Hexbeat](04-the-machines/hexbeat.md) - synthesized drums in the style of the classic small boxes, with a bigger kit.
+    - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
     - [Aviary](04-the-machines/aviary.md) - modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles and calls in time with the song.
-    - [Bias](04-the-machines/bias.md) - a four-track: recordings arranged along the song, four lanes at a time.
     - [Brazen](04-the-machines/brazen.md) - modelled brass, from trumpet to tuba, or a whole section.
     - [Chanter](04-the-machines/chanter.md) - modelled bagpipes and hurdy-gurdy: drones that go on between notes, grace notes, and a wheel whose loose bridge buzzes in time.
-    - [Cipher](04-the-machines/cipher.md) - a vocoder, where you can rearrange which bands drive which.
-    - [Cumulus](04-the-machines/cumulus.md) - pads built from a spectrum of partials.
-    - [Dice](04-the-machines/dice.md) - a loop slicer with chance on every slice.
-    - [Diction](04-the-machines/diction.md) - a vocal synthesizer trained on your voice and taken to the next level.
     - [Draw](04-the-machines/draw.md) - modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.
     - [Fathom](04-the-machines/fathom.md) - modelled water and weather: bubbles, drips, rain, streams, surf, wind and fire, played from the keys.
     - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
-    - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
-    - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.
     - [Fret](04-the-machines/fret.md) - modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.
-    - [Genesis](04-the-machines/genesis.md) - the big drum box, with a bus compressor the kick ducks.
     - [Hammer](04-the-machines/hammer.md) - modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.
-    - [Hexbeat](04-the-machines/hexbeat.md) - synthesized drums in the style of the classic small boxes, with a bigger kit.
     - [Manual](04-the-machines/manual.md) - the organ: two manuals and pedals, four models and a rotary cabinet.
-    - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
-    - [Mosaic](04-the-machines/mosaic.md) - a multisample player: zones across the keyboard and velocity, plus grain clouds.
-    - [Nexus](04-the-machines/nexus.md) - a modular synth whose modules are the other machines.
     - [Palm](04-the-machines/palm.md) - modelled hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, played with open, slap, muted, bass and rim strokes.
-    - [Pollen](04-the-machines/pollen.md) - granular clouds from a file or the live input, whose grains can spawn more grains.
-    - [Ratio](04-the-machines/ratio.md) - six-operator FM, with a knob that morphs between two algorithms.
-    - [Reflux](04-the-machines/reflux.md) - acid bass: one oscillator, one filter that screams, and lines you play in.
-    - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
     - [Sympath](04-the-machines/sympath.md) - modelled sitar, tanpura, veena and shamisen: plucked strings over a buzzing bridge, with strings ringing in sympathy.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
     - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan and tongue drum.
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.
-    - [Trinity](04-the-machines/trinity.md) - three oscillators, wavetables, two filters and a mod matrix: the all-rounder.
+    - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
+    - [Mosaic](04-the-machines/mosaic.md) - a multisample player: zones across the keyboard and velocity, plus grain clouds.
+    - [Pollen](04-the-machines/pollen.md) - granular clouds from a file or the live input, whose grains can spawn more grains.
+    - [Bias](04-the-machines/bias.md) - a four-track: recordings arranged along the song, four lanes at a time.
+    - [Cipher](04-the-machines/cipher.md) - a vocoder, where you can rearrange which bands drive which.
+    - [Diction](04-the-machines/diction.md) - a vocal synthesizer trained on your voice and taken to the next level.
+    - [Nexus](04-the-machines/nexus.md) - a modular synth whose modules are the other machines.
 5. [Effects and mixing](05-effects-and-mixing.md)
     - [Acid](05-effects-and-mixing/acid.md) - reflux's filter on any track, swept by the track's hits or a pattern.
     - [Amp](05-effects-and-mixing/amp.md) - a guitar amp with a cabinet you can resize.

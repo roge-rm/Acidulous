@@ -295,7 +295,17 @@ def children_of(path):
     folder = path.with_suffix("")
     if not folder.is_dir():
         return []
-    return [(p, parse(p)) for p in sorted(folder.glob("*.md"))]
+    return [(p, parse(p)) for p in sorted(folder.glob("*.md"), key=machine_order)]
+
+
+def machine_order(path):
+    """Machines in the picker's groups, alphabetical in each; other pages by name."""
+    kt = pathlib.Path("shared/src/commonMain/kotlin/com/rm/acidulous/model/MachineUi.kt")
+    groups = re.findall(r'machines_\w+, listOf\(([^)]*)\)', kt.read_text())
+    for i, names in enumerate(groups):
+        if path.stem.lower() in [n.lower() for n in re.findall(r'"(\w+)"', names)]:
+            return (0, i, path.stem)
+    return (1, 0, path.stem)
 
 
 def kotlin(languages, used):
