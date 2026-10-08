@@ -171,6 +171,16 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
         )
         goFullScreen()
+        // The window's frame around the content would pad itself below the
+        // camera hole when a new language rebuilds the activity on Android 15,
+        // edge to edge or not. The app lays itself out around the hole, so the
+        // frame passes the insets on and keeps no padding.
+        (findViewById<android.view.View>(android.R.id.content).parent as? android.view.View)?.let { frame ->
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(frame) { v, insets ->
+                v.setPadding(0, 0, 0, 0)
+                insets
+            }
+        }
         setContent {
             AppRoot(onLightTheme = { light ->
                 // The bars are hidden but come back on a swipe, so their icons
