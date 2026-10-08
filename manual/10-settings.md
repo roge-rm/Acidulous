@@ -4,6 +4,7 @@
 
 - **theme** - dark, light, high contrast or follow the phone. High contrast is
   white on black, with brighter colours and outlines round every control.
+- **keyboard octaves** - how many octaves the keyboard under the editor shows. **auto** shows two on a phone and up to five on a wider screen.
 - **language** - the app's language, chosen from a list: the phone's own,
   English, or French as written in Canada or in France (the same words; France
   puts a narrow space before ; ! and ?). Not in a browser, which uses its own.

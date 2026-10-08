@@ -89,6 +89,11 @@ private fun DisplayTab() {
                     UiPrefs.language.ordinal,
                 ) { UiPrefs.chooseLanguage(UiPrefs.Language.entries[it]) }
             }
+            // Auto shows more on a wider screen.
+            SwitchGrid(
+                stringResource(Res.string.settings_octaves), stringArrayResource(Res.array.settings_octaves_choices).toList(),
+                UiPrefs.keyboardOctaves, columns = 3,
+            ) { UiPrefs.chooseKeyboardOctaves(it) }
             // Changes the size of this window too, as you tap it.
             SwitchGrid(stringResource(Res.string.settings_size), stringArrayResource(Res.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
                 UiPrefs.chooseUiScale(UiScaleSteps[it])

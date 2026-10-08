@@ -1925,6 +1925,7 @@ object Manual {
     private fun en9() = ManualSection("Settings", "", listOf(
         ManualBlock(ManualKind.Heading, "display"),
         ManualBlock(ManualKind.Bullet, "**theme** - dark, light, high contrast or follow the phone. High contrast is white on black, with brighter colours and outlines round every control.", "**theme** - dark, light, high contrast or follow the system. High contrast is white on black, with brighter colours and outlines round every control."),
+        ManualBlock(ManualKind.Bullet, "**keyboard octaves** - how many octaves the keyboard under the editor shows. **auto** shows two on a phone and up to five on a wider screen.", "**keyboard octaves** - how many octaves the keyboard under the editor shows. **auto** shows two on a computer and up to five on a wider screen."),
         ManualBlock(ManualKind.Bullet, "**language** - the app's language, chosen from a list: the phone's own, English, or French as written in Canada or in France (the same words; France puts a narrow space before ; ! and ?). Not in a browser, which uses its own.", "**language** - the app's language, chosen from a list: the computer's own, English, or French as written in Canada or in France (the same words; France puts a narrow space before ; ! and ?). Not in a browser, which uses its own."),
         ManualBlock(ManualKind.Bullet, "**size** - makes everything bigger, in four steps."),
         ManualBlock(ManualKind.Bullet, "", "**screen scale** - how big the whole window is drawn. **system** takes the computer's own setting."),
@@ -3885,6 +3886,7 @@ object Manual {
     private fun fr9() = ManualSection("Réglages", "", listOf(
         ManualBlock(ManualKind.Heading, "affichage"),
         ManualBlock(ManualKind.Bullet, "**thème** - sombre, clair, contraste élevé ou comme le téléphone. Le contraste élevé, c’est du blanc sur noir, avec des couleurs plus vives et un contour autour de chaque commande.", "**thème** - sombre, clair, contraste élevé ou comme le système. Le contraste élevé, c’est du blanc sur noir, avec des couleurs plus vives et un contour autour de chaque commande."),
+        ManualBlock(ManualKind.Bullet, "**octaves du clavier** - combien d’octaves montre le clavier sous l’éditeur. **auto** en montre deux sur un téléphone et jusqu’à cinq sur un écran plus large."),
         ManualBlock(ManualKind.Bullet, "**langue** - la langue de l’appli, choisie dans une liste : celle du téléphone, l’anglais, ou le français du Canada ou de France (les mêmes mots; la France met une espace fine avant ; ! et ?). Pas dans un navigateur, qui utilise la sienne."),
         ManualBlock(ManualKind.Bullet, "**taille** - agrandit tout, en quatre crans."),
         ManualBlock(ManualKind.Bullet, "", "**échelle d’écran** - la taille à laquelle toute la fenêtre est dessinée. **système** prend le réglage de l’ordinateur."),

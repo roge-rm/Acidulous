@@ -71,12 +71,13 @@ fun PianoKeys(
     // draws it.
     var strikes by remember { mutableStateOf(mapOf<Int, Float>()) }
     val base = 12 * (octave + 1)
+    val octaves = UiPrefs.keyboardOctaves
     val scale = scalePitchClasses?.takeIf { it.isNotEmpty() }?.sorted()
 
     // The pointer area is the whole box and the keys are drawn inset, so a
     // touch in the small gap next to the wheels still hits the outermost key.
     Box(
-        modifier.pointerInput(base, scale) {
+        modifier.pointerInput(base, scale, octaves) {
             val grab = EdgeGrab.toPx()
                 // The loop owns which keys are down, not composition. Touches arrive
                 // faster than recomposition, so reading from drawn state brought back
@@ -91,7 +92,7 @@ fun PianoKeys(
                             // moved into their space.
                             val layout = Layout(
                                 size.width.toFloat() - grab * 2f, size.height.toFloat(),
-                                base, MinKey.toPx(), scale,
+                                base, MinKey.toPx(), scale, octaves, RoomyKey.toPx(),
                             )
                             var changed = false
                             for (change in event.changes) {
@@ -146,7 +147,7 @@ fun PianoKeys(
             },
     ) {
         Canvas(Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))) {
-            val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale)
+            val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale, octaves, RoomyKey.toPx())
             val down = held.values.toSet()
             // How far up a sounding key to light it. A soft note lights from the
             // front edge to where the finger landed, full strength lights the whole
@@ -310,6 +311,8 @@ fun SlotChip(
 
 /** A key narrower than this is too hard to hit. */
 private val MinKey = 23.dp
+/** On a wide screen, more octaves are added only while the white keys stay this wide. */
+private val RoomyKey = 40.dp
 
 /**
  * How far past the drawn keys a touch still counts. Same as the gap between
@@ -321,11 +324,15 @@ private val EdgeGrab = 3.dp
 private val WhiteSteps = intArrayOf(0, 2, 4, 5, 7, 9, 11)
 
 /**
- * Key layout for both modes. Piano mode shows two octaves, one and a half, or
- * one, whichever keeps the keys wide enough to hit. Scale mode fits as many
- * in-scale notes as it can.
+ * Key layout for both modes. Piano mode shows as many octaves as [octaves]
+ * asks for, or with 0 the most that keep the keys wide enough: up to two
+ * where they can be [minKey], and up to five where there's room for
+ * [roomyKey]. Scale mode fits as many in-scale notes as it can.
  */
-private class Layout(val width: Float, val height: Float, val base: Int, minKey: Float, scale: List<Int>?) {
+private class Layout(
+    val width: Float, val height: Float, val base: Int, minKey: Float, scale: List<Int>?,
+    octaves: Int = 0, roomyKey: Float = minKey,
+) {
     val scaleKeys: List<Int>? = scale?.let { pcs ->
         val count = ((width / minKey).toInt()).coerceIn(5, 28)
         val out = ArrayList<Int>(count)
@@ -339,6 +346,10 @@ private class Layout(val width: Float, val height: Float, val base: Int, minKey:
 
     val whiteCount: Int = when {
         scaleKeys != null -> scaleKeys.size.coerceAtLeast(1)
+        octaves > 0 -> 7 * octaves
+        width / 35f >= roomyKey -> 35 // five octaves, on a wide screen
+        width / 28f >= roomyKey -> 28
+        width / 21f >= roomyKey -> 21
         width / 14f >= minKey -> 14 // two octaves
         width / 11f >= minKey -> 11 // an octave and a half
         else -> 7
@@ -565,7 +576,7 @@ private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: M
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = EdgeGrab)) {
         val w = with(density) { maxWidth.toPx() }
         val h = with(density) { maxHeight.toPx() }
-        val layout = Layout(w, h, base, with(density) { MinKey.toPx() }, scale)
+        val layout = Layout(w, h, base, with(density) { MinKey.toPx() }, scale, UiPrefs.keyboardOctaves, with(density) { RoomyKey.toPx() })
         // In pitch order, which is the order TalkBack walks them. Black keys are
         // raised over the whites so a touch on a black key's right half doesn't
         // hit the next white key.

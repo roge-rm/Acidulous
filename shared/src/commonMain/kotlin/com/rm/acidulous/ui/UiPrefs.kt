@@ -20,15 +20,15 @@ import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.StringResource
 
 /** How little and how much of a turned editor the keyboard may take. */
-const val KeysFractionMin = 0.18f
+const val KeysFractionMin = 0.1f
 const val KeysFractionMax = 0.62f
 
 /**
  * How far the instrument may be stretched from its normal height, upright.
- * Below about two thirds the black keys get too small to hit. The upper
+ * Down to a third, for a thin strip of keys that leaves the roll more room. The upper
  * limit is rarely reached, since the roll's own minimum height stops it first.
  */
-const val KeysStretchMin = 0.65f
+const val KeysStretchMin = 0.35f
 const val KeysStretchMax = 3f
 
 /**
@@ -145,6 +145,10 @@ object UiPrefs {
      * `dp` and `sp` goes through. See ui/UiScale.kt for the maths and why it
      * only ever goes up.
      */
+    /** How many octaves the on-screen keyboard shows, 1 to 5, or 0 for as many as fit. */
+    var keyboardOctaves by mutableStateOf(0)
+        private set
+
     var uiScale by mutableStateOf(1f)
 
     /**
@@ -341,6 +345,7 @@ object UiPrefs {
             .getOrDefault(ThemeMode.Dark)
         language = runCatching { Language.valueOf(p.getString(KEY_LANGUAGE, null) ?: "System") }
             .getOrDefault(Language.System)
+        keyboardOctaves = p.getInt(KEY_KEYBOARD_OCTAVES, 0).coerceIn(0, 5)
         uiScale = p.getFloat(KEY_UI_SCALE, 1f)
             .coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         screenScale = p.getFloat(KEY_SCREEN_SCALE, 0f).takeIf { it in ScreenScaleSteps } ?: 0f
@@ -589,6 +594,11 @@ object UiPrefs {
      * Stored as the multiplier, not an index into the steps, so adding a step
      * later can't change someone's saved choice.
      */
+    fun chooseKeyboardOctaves(n: Int) {
+        keyboardOctaves = n.coerceIn(0, 5)
+        store?.edit()?.putInt(KEY_KEYBOARD_OCTAVES, keyboardOctaves)?.apply()
+    }
+
     fun chooseUiScale(scale: Float) {
         uiScale = scale.coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         store?.edit()?.putFloat(KEY_UI_SCALE, uiScale)?.apply()
@@ -885,6 +895,7 @@ object UiPrefs {
     private const val KEY_PAD_JOBS = "pad_jobs"
     private const val KEY_NOTE_LAYOUT = "note_layout"
     private const val KEY_UI_SCALE = "ui_scale"
+    private const val KEY_KEYBOARD_OCTAVES = "keyboard_octaves"
     private const val KEY_SCREEN_SCALE = "screen_scale"
     private const val KEY_OUTPUT_DEVICE = "output_device"
     private const val KEY_BUFFER = "buffer"

@@ -5,6 +5,7 @@
 - **thème** - sombre, clair, contraste élevé ou comme le téléphone. Le contraste
   élevé, c’est du blanc sur noir, avec des couleurs plus vives et un contour
   autour de chaque commande.
+- **octaves du clavier** - combien d’octaves montre le clavier sous l’éditeur. **auto** en montre deux sur un téléphone et jusqu’à cinq sur un écran plus large.
 - **langue** - la langue de l’appli, choisie dans une liste : celle du
   téléphone, l’anglais, ou le français du Canada ou de France (les mêmes mots;
   la France met une espace fine avant ; ! et ?). Pas dans un navigateur, qui
