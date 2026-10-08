@@ -66,6 +66,8 @@ button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .syl { font: 600 15px var(--mono); padding: 5px 9px; border-radius: 5px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; }
 .syl.cur { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--vowel); }
 .syl.cmd { color: var(--cmd); }
+.syl .pn { display: block; font: 400 10px var(--mono); color: var(--muted); text-align: left; }
+.syl.open { color: var(--muted); border-style: dashed; }
 .empty { color: var(--muted); }
 .copy { font: 400 13px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
 
@@ -120,9 +122,11 @@ td:last-child { color: var(--muted); }
         <h2>The line</h2>
         <div class="row">
           <button id="play">Sing the line</button>
-          <button id="clear">Clear</button>
+          <button id="clear">Clear words</button>
+          <button id="clear-tune">Clear tune</button>
         </div>
       </div>
+      <p class="note" id="tune-note"></p>
       <div class="line" id="line"></div>
       <p class="note">The line keys: — (E5) holds the last vowel over another note, _ (F5) leaves a note without words, × (F#5) deletes, ▶ (G5) sings the line. Click a syllable to hear it again.</p>
       <div style="display:grid;gap:4px">
@@ -136,7 +140,8 @@ td:last-child { color: var(--muted); }
       <div class="row">
         <label for="mode" class="note">Keys</label>
         <select id="mode">
-          <option value="write">Write: chords make syllables</option>
+          <option value="melody">Melody: keys play the tune</option>
+          <option value="write" selected>Write: chords make syllables</option>
           <option value="sing">Sing: notes sing the line</option>
         </select>
       </div>
@@ -158,7 +163,7 @@ td:last-child { color: var(--muted); }
         <label for="vibrato">Vibrato: <span id="vibrato-v">30 ct</span><input id="vibrato" type="range" min="0" max="100" value="30"></label>
         <label for="length">A note in the line: <span id="length-v">380 ms</span><input id="length" type="range" min="150" max="900" step="10" value="380"></label>
       </div>
-      <p class="note">In Sing mode each key or MIDI note sings the next syllable of the line at its own pitch, as a clip's notes do in Acidulous.</p>
+      <p class="note">Melody records a tune from the keys or MIDI, note by note with its timing. Write then puts each chord on the tune's next note and sings it there, as the FM-1 would with a pattern. Sing plays the line live: each note sings the next syllable at its own pitch.</p>
     </section>
   </div>
 
@@ -357,14 +362,27 @@ const noteMs = () => +document.getElementById("length").value;
 
 // ---- the line --------------------------------------------------------------
 // Each entry is a note: {s: "HH AE", k: "HA"}, or {cmd: "hold"} / {cmd: "rest"}.
-let line = [];
+// The tune is the notes the line is sung on: note i sings line[i]. A note is
+// {p: MIDI pitch, at: ms from the tune's start, len: ms}.
+let line = null, tune = null;
 let cursor = 0;
-try { line = JSON.parse(localStorage.getItem("fm1-line") || "[]"); } catch (_) { line = []; }
-if (!line.length) line = [
+const load = (key) => { try { const v = localStorage.getItem(key); return v === null ? null : JSON.parse(v); } catch (_) { return null; } };
+line = load("fm1-line");
+tune = load("fm1-tune");
+// The first visit opens on an example: Happy Birthday's first line, words and tune.
+if (!Array.isArray(line)) line = [
   { s: "HH AE", k: "HA" }, { s: "P IY", k: "PAOE" }, { s: "B ER TH", k: "PW@*RT" }, { s: "D EY", k: "TKAEU" },
   { s: "T UW", k: "TAOU" }, { s: "Y UW", k: "@AOU" },
 ];
-function save() { try { localStorage.setItem("fm1-line", JSON.stringify(line)); } catch (_) {} }
+if (!Array.isArray(tune)) tune = [[55, 0, 380], [55, 412, 125], [57, 550, 500], [55, 1100, 500], [60, 1650, 500], [59, 2200, 1050]]
+  .map(([p, at, len]) => ({ p, at, len }));
+function save() {
+  try { localStorage.setItem("fm1-line", JSON.stringify(line)); localStorage.setItem("fm1-tune", JSON.stringify(tune)); } catch (_) {}
+}
+// Where a syllable is sung: on its note of the tune, or at the chosen pitch past the tune's end.
+const pitchOf = i => tune[i] ? tune[i].p : pitch();
+const lengthOf = i => tune[i] ? Math.max(tune[i].len, 250) : noteMs();
+const mode = () => document.getElementById("mode").value;
 
 // The sounds a hold sings: the vowel of the last syllable before it.
 const VOWELS = new Set(["IY","IH","EH","AE","AA","AO","AH","UH","UW","ER","AX","EY","AY","AW","OY","OW"]);
@@ -380,43 +398,60 @@ function vowelBefore(i) {
 function renderLine() {
   const el = document.getElementById("line");
   el.textContent = "";
-  if (!line.length) {
+  const count = Math.max(line.length, tune.length);
+  document.getElementById("tune-note").textContent = tune.length
+    ? `A tune of ${tune.length} note${tune.length > 1 ? "s" : ""}, ${line.length >= tune.length ? "all with words" : (tune.length - line.length) + " still without words"}.`
+    : "No tune: chords sing at the pitch set under Playing. Choose Melody to play one in.";
+  if (!count) {
     const e = document.createElement("span");
     e.className = "empty";
     e.textContent = "Sing a chord and it lands here.";
     el.append(e);
   }
-  line.forEach((x, i) => {
-    const b = document.createElement("button");
-    b.className = "syl" + (x.cmd ? " cmd" : "") + (document.getElementById("mode").value === "sing" && i === cursor ? " cur" : "");
-    b.textContent = x.cmd === "hold" ? "—" : x.cmd === "rest" ? "_" : x.s.toLowerCase();
-    b.title = x.cmd ? (x.cmd === "hold" ? "holds the last vowel" : "a note without words") : x.k;
+  // The note the next chord goes to, or in Sing mode the next one sung.
+  const next = mode() === "sing" ? cursor : mode() === "write" ? line.length : -1;
+  for (let i = 0; i < count; i++) {
+    const x = line[i], b = document.createElement("button");
+    b.className = "syl" + (!x ? " open" : x.cmd ? " cmd" : "") + (i === next ? " cur" : "");
+    const word = !x ? "·" : x.cmd === "hold" ? "—" : x.cmd === "rest" ? "_" : x.s.toLowerCase();
+    b.innerHTML = (tune[i] ? `<span class="pn">${NOTE_NAME(tune[i].p)}</span>` : "") + word;
+    b.title = !x ? "a note still without words" : x.cmd ? (x.cmd === "hold" ? "holds the last vowel" : "a note without words") : x.k;
     b.addEventListener("click", () => {
-      if (x.cmd === "hold") singAt(vowelBefore(i), pitch(), noteMs());
-      else if (x.s) singAt(x.s, pitch(), noteMs());
+      if (!x) singAt("", pitchOf(i), lengthOf(i));
+      else if (x.cmd === "hold") singAt(vowelBefore(i), pitchOf(i), lengthOf(i));
+      else if (x.s) singAt(x.s, pitchOf(i), lengthOf(i));
     });
     el.append(b);
-  });
+  }
   document.getElementById("as-text").textContent =
     line.map(x => x.cmd === "hold" ? "-" : x.cmd === "rest" ? "_" : "[" + x.s.toLowerCase() + "]").join(" ") || "–";
   save();
 }
 
-let playTimer = 0;
+// The line sung through: on the tune's notes and timing, then any syllables
+// past its end at the chosen pitch, a note's length apart.
+let timers = [];
 function playLine() {
-  clearTimeout(playTimer);
-  let i = 0;
-  const step = () => {
-    if (i >= line.length) { if (sounding !== null) send({ t: "off", note: sounding }); sounding = null; return; }
-    const x = line[i];
-    if (x.cmd === "rest") { if (sounding !== null) send({ t: "off", note: sounding }); sounding = null; }
-    // A hold carries the note on; after a rest it starts on the vowel.
-    else if (x.cmd === "hold") { if (sounding === null) singAt(vowelBefore(i), pitch(), 0); }
-    else singAt(x.s, pitch(), 0);
-    i++;
-    playTimer = setTimeout(step, noteMs());
-  };
-  step();
+  timers.forEach(clearTimeout);
+  timers = [];
+  clearTimeout(offTimer);
+  send({ t: "alloff" });
+  sounding = null;
+  const notes = [];
+  const end = tune.length ? tune[tune.length - 1].at + tune[tune.length - 1].len + 150 : 0;
+  for (let i = 0; i < Math.max(line.length, tune.length); i++) {
+    const n = tune[i] || { p: pitch(), at: end + (i - tune.length) * noteMs(), len: noteMs() * 0.9 };
+    notes.push({ ...n, x: line[i] });
+  }
+  notes.forEach((n, i) => {
+    if (n.x && n.x.cmd === "rest") return;
+    const text = !n.x ? "" : n.x.cmd === "hold" ? vowelBefore(i) : n.x.s;
+    timers.push(setTimeout(() => {
+      if (text) send({ t: "lyric", text });
+      send({ t: "on", note: n.p, vel: 100 });
+    }, n.at));
+    timers.push(setTimeout(() => send({ t: "off", note: n.p }), n.at + n.len));
+  });
 }
 
 function command(c) {
@@ -424,7 +459,7 @@ function command(c) {
   else if (c === "play") playLine();
   else if (c === "hold" || c === "rest") {
     line.push({ cmd: c });
-    if (c === "hold") singAt(vowelBefore(line.length - 1), pitch(), noteMs());
+    if (c === "hold") singAt(vowelBefore(line.length - 1), pitchOf(line.length - 1), lengthOf(line.length - 1));
   }
   document.getElementById("r-last").textContent = c;
   renderLine();
@@ -459,7 +494,7 @@ function commit() {
   if (!s) return;
   line.push({ s, k: steno(c) });
   document.getElementById("r-last").textContent = s.toLowerCase();
-  singAt(s, pitch(), noteMs());
+  singAt(s, pitchOf(line.length - 1), lengthOf(line.length - 1));
   renderLine();
 }
 
@@ -485,8 +520,40 @@ function noteUp(note) {
   if (sounding === note) sounding = null;
 }
 
-const writing = () => document.getElementById("mode").value === "write";
+// In Melody mode a key adds a note to the tune, with its timing, and sings it
+// with its words if the line has them already. One note at a time: a new one
+// ends the last.
+let recBase = null, recording = null;
+function recordDown(note) {
+  const now = performance.now();
+  if (recBase === null) {
+    const last = tune[tune.length - 1];
+    recBase = now - (last ? last.at + last.len + 300 : 0);
+  }
+  if (recording) recordUp(recording.p);
+  recording = { p: note, at: Math.round(now - recBase), len: 0 };
+  tune.push(recording);
+  const i = tune.length - 1, x = line[i];
+  const text = !x || x.cmd === "rest" ? "" : x.cmd === "hold" ? vowelBefore(i) : x.s;
+  clearTimeout(offTimer);
+  if (sounding !== null) send({ t: "off", note: sounding });
+  if (text) send({ t: "lyric", text });
+  send({ t: "on", note, vel: 100 });
+  sounding = note;
+  renderLine();
+}
+function recordUp(note) {
+  if (!recording || recording.p !== note) return;
+  recording.len = Math.max(60, Math.round(performance.now() - recBase - recording.at));
+  recording = null;
+  send({ t: "off", note });
+  if (sounding === note) sounding = null;
+  save();
+}
+
+const writing = () => mode() === "write";
 function press(i) {
+  if (mode() === "melody") { held.add(i); show(); recordDown(53 + i); return; }
   if (!writing()) { held.add(i); show(); noteDown(53 + i); return; }
   if (latch) { chord ^= 1 << i; show(); return; }
   held.add(i);
@@ -495,6 +562,7 @@ function press(i) {
 }
 function release(i) {
   if (!held.delete(i)) return;
+  if (mode() === "melody") { show(); recordUp(53 + i); return; }
   if (!writing()) { show(); noteUp(53 + i); return; }
   show();
   if (!latch && held.size === 0) commit();
@@ -584,7 +652,9 @@ const onMidi = id => ev => {
   const [st, n, v] = ev.data, type = st & 0xf0;
   const on = type === 0x90 && v > 0, off = type === 0x80 || (type === 0x90 && v === 0);
   if (!on && !off) return;
-  if (writing()) {
+  if (mode() === "melody") {
+    on ? recordDown(n) : recordUp(n);
+  } else if (writing()) {
     const i = n - +document.getElementById("midi-f3").value;
     if (i < 0 || i > 26) return;
     on ? press(i) : release(i);
@@ -594,10 +664,12 @@ const onMidi = id => ev => {
 };
 
 document.getElementById("mode").addEventListener("change", () => {
-  held.clear(); chord = 0; cursor = 0; send({ t: "alloff" }); show(); renderLine();
+  held.clear(); chord = 0; cursor = 0; recBase = null; recording = null;
+  send({ t: "alloff" }); show(); renderLine();
 });
 document.getElementById("play").addEventListener("click", () => { if (!ctx) start().then(playLine); else playLine(); });
 document.getElementById("clear").addEventListener("click", () => { line = []; cursor = 0; renderLine(); });
+document.getElementById("clear-tune").addEventListener("click", () => { tune = []; recBase = null; recording = null; renderLine(); });
 document.getElementById("copy").addEventListener("click", ev => {
   const text = document.getElementById("as-text").textContent, b = ev.currentTarget;
   navigator.clipboard.writeText(text).then(() => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1500); },

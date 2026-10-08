@@ -174,9 +174,14 @@ on screen (several fingers at once on a touch screen), on a computer keyboard
 (the bottom two rows from Z, then Q to Y and 3, 4, 6), or from a MIDI
 keyboard through Web MIDI, with F3 on any octave. Each chord is read by
 `fm1/chords.h`, the decoder the firmware would use, and sung by Diction built
-as WebAssembly. Chords land in a line that sings back on one pitch, or, in
-Sing mode, a syllable a note as you play the tune; the line copies out as
-Acidulous lyrics (`[hh ax] [l ow] -`).
+as WebAssembly.
+
+It works the way the FM-1 would with a pattern. In Melody mode the keys play
+a tune in, with its timing. In Write mode each chord goes to the tune's next
+note and is sung at that note's pitch, and the line sings back on the tune.
+Sing mode does it the other way round: the words first, then each note played
+sings the next syllable. The line copies out as Acidulous lyrics
+(`[hh ax] [l ow] -`). It opens on the first line of Happy Birthday.
 
 It's one file and runs opened straight from disk; from a web server it has
 less latency. `fm1/sim/build.sh` builds it again (it needs Emscripten).
