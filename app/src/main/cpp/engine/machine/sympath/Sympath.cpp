@@ -27,6 +27,11 @@ constexpr float kCurveSpan = 0.25f;
 /** How round the bridge is where the string first meets it. */
 constexpr float kContactRound = 0.01f;
 /** How loud the bridge rings when struck, at full, and the most it can ring. */
+/**
+ * How hard a bow drives a string, as the hurdy-gurdy's wheel, and how much
+ * louder a bowed string is heard: it swings far less than a plucked one.
+ */
+constexpr float kBowGain = 0.12f, kBowedHeard = 28.0f;
 constexpr float kZing = 50.0f, kZingMost = 0.35f;
 
 /**
@@ -50,6 +55,8 @@ struct Make {
     float skin;
     float stiffness;
     float level;
+    /** Bowed rather than plucked: how hard the bow drives the string while the key is held, 0 for a plucked one. */
+    float bowed = 0.0f;
 };
 constexpr Make kMakes[Sympath::KindCount] = {
     // Sitar: a wire plectrum, eleven sympathetic strings, two drone strings at Sa and the octave above.
@@ -60,6 +67,30 @@ constexpr Make kMakes[Sympath::KindCount] = {
     {36.0f, 7.0f, 0.92f, 2.0f, 0.6f, 0.0008f, 0, 3, {12.0f, 19.0f, 24.0f}, 180.0f, 0.45f, 2800.0f, 0.0f, 0.04f, 1.4f},
     // Shamisen: a big plectrum that hits the skin too, and the low string buzzing on the neck.
     {45.0f, 2.5f, 0.88f, 0.3f, 0.35f, 0.0003f, 1, 0, {0.0f, 0.0f, 0.0f}, 400.0f, 0.3f, 1800.0f, 1.0f, 0.02f, 1.7f},
+    // Sarod: no frets, a steel plate under the strings and a goatskin belly, a coconut-shell plectrum, sympathetic strings.
+    {48.0f, 4.0f, 0.9f, 1.5f, 0.3f, 0.0004f, 11, 2, {12.0f, 24.0f, 0.0f}, 300.0f, 0.4f, 2400.0f, 0.5f, 0.04f, 1.2f},
+    // Rudra veena: deep and slow, two big gourds, the jawari full.
+    {36.0f, 9.0f, 0.88f, 4.0f, 1.0f, 0.0012f, 0, 3, {12.0f, 19.0f, 24.0f}, 120.0f, 0.6f, 2000.0f, 0.0f, 0.04f, 1.2f},
+    // Swarmandal: a zither, its strings plucked open, bright and ringing, no buzzing bridge.
+    {60.0f, 5.0f, 0.95f, 4.0f, 0.0f, 0.0004f, 0, 0, {0.0f, 0.0f, 0.0f}, 500.0f, 0.2f, 4000.0f, 0.0f, 0.02f, 0.9f},
+    // Biwa: a Japanese lute, its high frets and sawari buzzing, the big plectrum striking the body.
+    {45.0f, 2.0f, 0.86f, 0.5f, 0.8f, 0.0004f, 0, 0, {0.0f, 0.0f, 0.0f}, 350.0f, 0.4f, 1600.0f, 0.6f, 0.02f, 1.4f},
+    // Sanxian: three strings over snakeskin, bright and dry.
+    {45.0f, 2.0f, 0.88f, 0.4f, 0.1f, 0.0003f, 0, 0, {0.0f, 0.0f, 0.0f}, 450.0f, 0.35f, 2000.0f, 1.0f, 0.02f, 1.5f},
+    // Ektara: one string over a gourd, a buzzing drone with a bend.
+    {48.0f, 3.0f, 0.88f, 1.0f, 0.7f, 0.0005f, 0, 0, {0.0f, 0.0f, 0.0f}, 250.0f, 0.5f, 2200.0f, 0.4f, 0.02f, 1.4f},
+    // Electric sitar: a guitar with a buzzing bridge and sympathetic strings, heard through a pickup.
+    {40.0f, 5.0f, 0.93f, 1.0f, 1.0f, 0.0004f, 11, 0, {0.0f, 0.0f, 0.0f}, 200.0f, 0.1f, 3600.0f, 0.0f, 0.0f, 1.0f},
+    // Sarangi: gut strings bowed over a skin belly, a forest of sympathetic strings, played by the nail's side.
+    {43.0f, 3.0f, 0.88f, 0.4f, 0.2f, 0.0004f, 11, 0, {0.0f, 0.0f, 0.0f}, 350.0f, 0.5f, 2000.0f, 0.6f, 0.02f, 1.0f, 1.0f},
+    // Esraj: a bowed, fretted neck on a small skin belly, softer, sympathetic strings.
+    {43.0f, 3.0f, 0.9f, 0.4f, 0.15f, 0.0004f, 11, 0, {0.0f, 0.0f, 0.0f}, 300.0f, 0.4f, 2200.0f, 0.4f, 0.02f, 1.0f, 0.8f},
+    // Dilruba: the esraj's larger cousin, deeper and fuller.
+    {38.0f, 3.5f, 0.9f, 0.5f, 0.15f, 0.0004f, 11, 0, {0.0f, 0.0f, 0.0f}, 220.0f, 0.5f, 1900.0f, 0.4f, 0.02f, 1.0f, 0.9f},
+    // Hardanger fiddle: a violin with four sympathetic strings under the fingerboard, bright and ringing.
+    {55.0f, 3.0f, 0.93f, 0.4f, 0.0f, 0.0004f, 4, 0, {0.0f, 0.0f, 0.0f}, 450.0f, 0.4f, 3000.0f, 0.0f, 0.02f, 1.0f, 1.0f},
+    // Nyckelharpa: a keyed fiddle, its sympathetic strings shimmering under every note.
+    {48.0f, 3.5f, 0.92f, 0.5f, 0.0f, 0.0004f, 11, 0, {0.0f, 0.0f, 0.0f}, 280.0f, 0.45f, 2600.0f, 0.0f, 0.02f, 1.0f, 1.0f},
 };
 
 /** The ten parent scales, from the tonic. */
@@ -87,7 +118,7 @@ Sympath::Sympath() { initParams(); }
 
 const ParamDef *Sympath::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // sitar, tanpura, veena, shamisen
+        {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // sitar, tanpura, veena, shamisen, sarod, rudra veena, swarmandal, biwa, sanxian, ektara, electric sitar, sarangi, esraj, dilruba, hardanger, nyckelharpa
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         // The tonic the drone and sympathetic strings are tuned to, C to B.
         {"sa", 0.0f, 11.0f, 1.0f, Curve::Stepped, 12, ""},
@@ -147,6 +178,8 @@ void Sympath::reset() {
             s.wave.clear();
             s.strokeLength = s.strokeAt = 0;
             s.sounding = false;
+            s.bowDc = 0.0f;
+            s.bowAt = 0;
         }
         v.used = v.held = false;
         v.noteBend = 0.0f;
@@ -156,6 +189,12 @@ void Sympath::reset() {
         v.nextString = 0;
         v.level = 0.0f;
         v.quietBlocks = 0;
+        v.age = 0;
+        v.sincePluck = 0;
+        v.note = 0;
+        v.velocity = 0.8f;
+        v.pitch = v.aim = 60.0f;
+        v.gain = 0.0f;
     }
     for (Free &f : tarbs) f.wave.clear();
     for (Free &f : drones) {
@@ -349,7 +388,9 @@ void Sympath::start(uint8_t note, uint8_t velocity) {
     }
     v->cycleAt = 0.0;
     v->nextString = 0;
-    if (kind != Tanpura) pluck(*v, 0);
+    // A bowed string isn't plucked: the bow starts it, below.
+    if (kind != Tanpura && kMakes[kind].bowed <= 0.0f) pluck(*v, 0);
+    v->strings[0].bowAt = 0;
     // The drone strings, struck with the note.
     tuneFree();
     const float chikari = clampf(targetOf(Chikari), 0.0f, 1.0f);
@@ -409,6 +450,8 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
 
     const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
     const Make &k = kMakes[kind];
+    // The pluck knob, bowed: how hard the bow presses, from airy to gripping.
+    const float pluckKnob = clampf(paramOf(Pluck), 0.0f, 1.0f);
     tuneFree();
     const float bridge = clampf(paramOf(Bridge) * k.bridge, 0.0f, 1.0f);
     const float curve = clampf(paramOf(Curve), 0.0f, 1.0f) * kCurveSpan;
@@ -469,8 +512,21 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
                 String &st = v.strings[s];
                 float in = 0.0f;
                 if (st.strokeAt < st.strokeLength) in = st.stroke[static_cast<size_t>(st.strokeAt++)];
+                // Bowed: rosin's friction, as Filament's and the hurdy-gurdy's, on the
+                // played string while the key is held. Harder playing, a faster bow.
+                if (k.bowed > 0.0f && s == 0 && v.held) {
+                    const float speed = 0.4f + 0.6f * v.velocity;
+                    const float width = 0.05f + 0.2f * (1.0f - pluckKnob);
+                    const float relative = width * speed - st.wave.velocity();
+                    const float force = relative / (width + relative * relative / width);
+                    // Set down gently, the push coming in over the bow's first 40 ms.
+                    const float onset = std::fmin(1.0f, static_cast<float>(st.bowAt++) / (0.04f * sampleRate));
+                    float excite = (force * 0.65f + white() * 0.02f) * kBowGain * k.bowed * onset;
+                    st.bowDc += (excite - st.bowDc) * 0.002f;
+                    in += excite - st.bowDc;
+                }
                 const float y = st.wave.step(in);
-                out += y;
+                out += k.bowed > 0.0f && s == 0 ? y * kBowedHeard : y;
                 // The bridge: once the string swings past its height it
                 // strikes it, harder the further past.
                 const float past = y - curve;

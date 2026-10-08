@@ -35,7 +35,9 @@ class Sympath final : public Machine {
     };
     static_assert(Count <= kMaxParams, "too many parameters");
 
-    enum Kind : int32_t { Sitar = 0, Tanpura, Veena, Shamisen, KindCount };
+    enum Kind : int32_t { Sitar = 0, Tanpura, Veena, Shamisen,
+                         Sarod, RudraVeena, Swarmandal, Biwa, Sanxian, Ektara, ElectricSitar,
+                         Sarangi, Esraj, Dilruba, Hardanger, Nyckelharpa, KindCount };
     static constexpr int kVoices = 4;
     /** Strings in one voice: one, or a tanpura's four. */
     static constexpr int kStrings = 4;
@@ -72,6 +74,10 @@ class Sympath final : public Machine {
         /** Semitones from the voice's note: a tanpura's strings sit below and an octave down. */
         float offset = 0.0f;
         bool sounding = false;
+        /** The bow's steady push, taken out so only its waves reach the string. */
+        float bowDc = 0.0f;
+        /** Samples since the bow touched the string, for its gentle start. */
+        int32_t bowAt = 0;
     };
     struct Voice {
         String strings[kStrings];

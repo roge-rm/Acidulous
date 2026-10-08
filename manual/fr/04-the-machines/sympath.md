@@ -1,7 +1,8 @@
 # Sympath
 
-> Sitar, tanpura, veena et shamisen modélisés : des cordes pincées sur un
-> chevalet qui grésille, et des cordes qui vibrent par sympathie.
+> Sitar, tanpura, veena, shamisen et leurs parents modélisés, pincés ou
+> frottés : des cordes sur un chevalet qui grésille, et des cordes qui vibrent
+> par sympathie.
 
 Sympath ne joue pas d’enregistrements. Chaque note est une corde posée sur
 un chevalet large et bombé. Quand la corde oscille assez loin vers le
@@ -20,7 +21,12 @@ sur l’une d’elles la fait sonner, et elle sonne encore après la note.
   bourdon), **tanpura** (quatre cordes qu’il pince tout seul), **veena** (un
   chevalet plus plat et trois cordes de bourdon sur le côté) ou
   **shamisen** (un grand plectre qui frappe aussi la peau, et sa corde grave
-  qui grésille contre le manche).
+  qui grésille contre le manche). Pincés aussi : **sarod** (sans frettes, une
+  plaque d’acier sous les cordes), **rudra veena** (grave et lente),
+  **swarmandal** (une cithare), **biwa**, **sanxian**, **ektara** (une corde)
+  et **e-sitar** (un sitar électrique). Frottés à l’archet tant que la touche
+  est tenue : **sarangi**, **esraj**, **dilruba**, violon **hardanger** et
+  **nyckelharpa**.
 - **accordage** : en cents.
 - **sa** : la tonique sur laquelle sont accordées les cordes sympathiques et
   de bourdon.
@@ -31,7 +37,7 @@ sur l’une d’elles la fait sonner, et elle sonne encore après la note.
 - **courbe** : jusqu’où la corde doit osciller avant de se coucher sur le
   chevalet. Basse, même les notes douces grésillent ; haute, seules les
   fortes.
-- **pincer** : un pincement doux ou dur.
+- **pincer** : un pincement doux ou dur. Sur un instrument frotté, la pression de l’archet.
 - **position** : où la corde est pincée.
 - **maintien** : combien de temps les cordes résonnent.
 - **brillant** : combien de temps elles gardent leurs aigus.

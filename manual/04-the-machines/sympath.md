@@ -1,7 +1,7 @@
 # Sympath
 
-> Modelled sitar, tanpura, veena and shamisen: plucked strings over a
-> buzzing bridge, with strings ringing in sympathy.
+> Modelled sitar, tanpura, veena, shamisen and their relatives, plucked or
+> bowed: strings over a buzzing bridge, with strings ringing in sympathy.
 
 Sympath doesn't play recordings. Each note is a string lying over a wide,
 curved bridge. Once the string swings far enough towards the bridge it
@@ -19,6 +19,11 @@ theirs sets it ringing, and it rings on after the note has gone.
   **tanpura** (four strings it plucks by itself), **veena** (a flatter
   bridge and three drone strings at the side) or **shamisen** (a big
   plectrum that hits the skin too, and its low string buzzing on the neck).
+  Plucked too: **sarod** (no frets, a steel plate under the strings),
+  **rudra veena** (deep and slow), **swarmandal** (a zither), **biwa**,
+  **sanxian**, **ektara** (one string) and **e-sitar** (an electric sitar).
+  Bowed, for as long as the key is held: **sarangi**, **esraj**, **dilruba**,
+  **hardanger** fiddle and **nyckelharpa**.
 - **tune** - in cents.
 - **sa** - the tonic the sympathetic and drone strings are tuned to.
 - **scale** - the scale the sympathetic strings are tuned to: **bilawal**
@@ -27,7 +32,7 @@ theirs sets it ringing, and it rings on after the note has gone.
 - **bridge** - how much the bridge buzzes. At 0 it's a plain, sharp edge.
 - **curve** - how wide the string must swing before it lies on the bridge.
   Low, and even soft notes buzz; high, and only hard ones do.
-- **pluck** - a soft or hard pluck.
+- **pluck** - a soft or hard pluck. On a bowed one, how hard the bow presses.
 - **position** - where along the string it's plucked.
 - **sustain** - how long the strings ring.
 - **bright** - how long they keep their top end.
