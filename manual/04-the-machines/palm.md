@@ -2,7 +2,7 @@
 
 > Modelled hand drums: tabla and bayan, djembe, cajón, frame drum,
 > talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá,
-> mridangam, dholak and ashiko, played with open, slap, muted, bass and rim strokes.
+> mridangam, dholak, ashiko, udu and cuíca, played with open, slap, muted, bass and rim strokes.
 
 Palm doesn't play recordings. Each note is a drum head tuned to the note. A
 plain head rings at the uneven ratios of a stretched circle, which is why
@@ -18,7 +18,8 @@ there to damp it.
 - **model** - **tabla** (the small, tuned drum), **bayan** (its big bass
   partner), **djembe**, **cajon**, **frame drum**, **talking** drum, **conga**,
   **bongo**, **darbuka**, **riq**, **tar**, **bendir**, **kanjira**, **bata**,
-  **mridangam**, **dholak** or **ashiko**.
+  **mridangam**, **dholak**, **ashiko**, **udu** (a clay pot,
+  its air the note) or **cuica** (rubbed inside while the note is held).
 - **tune** - in cents.
 - **stroke** - **open** (the fingers flat near the edge, lifted at once),
   **slap** (the fingertips cracking, the hand left on the middle), **muted**

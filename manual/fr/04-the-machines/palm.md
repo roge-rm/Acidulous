@@ -2,7 +2,7 @@
 
 > Percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur
 > cadre, tambour d’aisselle, congas, bongos, darbouka, riq, tar,
-> bendir, kanjira, batá, mridangam, dholak et ashiko, joués en frappes ouverte, claquée, étouffée,
+> bendir, kanjira, batá, mridangam, dholak, ashiko, udu et cuíca, joués en frappes ouverte, claquée, étouffée,
 > basse et sur le bord.
 
 Palm ne joue pas d’enregistrements. Chaque note est une peau accordée sur la
@@ -20,7 +20,8 @@ elle y reste pour l’étouffer.
 - **modèle** : **tabla** (le petit tambour accordé), **bayan** (son grand
   compagnon grave), **djembé**, **cajón**, tambour sur **cadre**, tambour
   d’**aisselle**, **conga**, **bongo**, **darbouka**, **riq**, **tar**, **bendir**,
-  **kanjira**, **batá**, **mridangam**, **dholak** ou **ashiko**.
+  **kanjira**, **batá**, **mridangam**, **dholak**, **ashiko**, **udu** (un pot en
+  terre, son air fait la note) ou **cuíca** (frottée à l’intérieur tant que la note est tenue).
 - **accordage** : en cents.
 - **attaque** : **ouvert** (les doigts à plat près du bord, aussitôt
   relevés), **slap** (le bout des doigts qui claque, la main restée au

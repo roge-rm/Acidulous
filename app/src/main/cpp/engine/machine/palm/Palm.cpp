@@ -121,6 +121,15 @@ constexpr Make kMakes[Palm::KindCount] = {
     {10, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.8f}, {2.136f, 2, 1, 0.6f}, {2.296f, 0, 2, 0.5f}, {2.653f, 3, 1, 0.5f},
           {2.918f, 1, 2, 0.35f}, {3.156f, 4, 1, 0.4f}, {3.501f, 2, 2, 0.25f}, {3.6f, 0, 3, 0.2f}, {3.652f, 5, 1, 0.3f}},
      0.35f, 0.3f, 0.3f, 0.4f, 0.35f, 0.0f, 0.0f, 0.5f, 3200.0f, 1.0f},
+    // Udu: a clay pot with a hole in its side. The air inside is the note, a
+    // deep bloop that drops as it settles; the clay only knocks.
+    {3, {{2.71f, 0, 1, 0.3f}, {4.15f, 1, 1, 0.2f}, {5.9f, 2, 1, 0.15f}},
+     0.15f, 0.3f, 0.5f, 1.0f, 0.45f, 0.0f, 0.0f, 1.5f, 1800.0f, 1.0f},
+    // Cuíca: a small head with a stick fixed inside, rubbed with a damp
+    // cloth while the note is held, so the head squeaks at its own pitch.
+    {6, {{1.0f, 0, 1, 1.0f}, {1.594f, 1, 1, 0.6f}, {2.136f, 2, 1, 0.4f}, {2.296f, 0, 2, 0.3f}, {2.653f, 3, 1, 0.25f},
+         {2.918f, 1, 2, 0.2f}},
+     0.08f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 3000.0f, 0.6f},
 };
 
 /**
@@ -141,6 +150,9 @@ constexpr StrokeDef kStrokes[Palm::ByVelocity] = {
     {0.05f, 0.004f, 1.0f, 1.0f, 0.0f},    // bass: the palm in the middle
     {0.97f, 0.0003f, 0.3f, 1.0f, 0.5f},   // rim: the fingers on the edge and the shell
 };
+
+/** How hard a cuíca's stick drives the head, against a stroke's impulse. */
+constexpr float kRub = 0.02f;
 
 float poleFor(float t60, float sampleRate) { return std::pow(10.0f, -3.0f / (std::fmax(t60, 0.003f) * sampleRate)); }
 
@@ -163,7 +175,7 @@ Palm::Palm() { initParams(); }
 
 const ParamDef *Palm::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""}, // tabla, bayan, djembe, cajon, frame, talking, conga, bongo, darbuka, riq, tar, bendir, kanjira, bata, mridangam, dholak, ashiko
+        {"model", 0.0f, static_cast<float>(KindCount - 1), 2.0f, Curve::Stepped, KindCount, ""}, // tabla, bayan, djembe, cajon, frame, talking, conga, bongo, darbuka, riq, tar, bendir, kanjira, bata, mridangam, dholak, ashiko, udu, cuica
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"stroke", 0.0f, static_cast<float>(StrokeCount - 1), 0.0f, Curve::Stepped, StrokeCount, ""}, // open, slap, muted, bass, rim, by velocity
         // Moves the stroke towards the middle or the edge.
@@ -284,6 +296,7 @@ void Palm::reset() {
         v.builtPress = -1.0f;
         v.builtPitch = -1000.0f;
         v.level = 0.0f;
+        v.rubPhase = v.rubStep = 0.0f;
         v.quietBlocks = 0;
     }
     bend = wheel = channelPressure_ = 0.0f;
@@ -352,7 +365,10 @@ void Palm::build(Voice &v) {
     if (k.body > 0.0f && f * k.body > 20.0f) {
         Mode &m = v.modes[v.modeCount++];
         m.ratio = k.body;
-        m.amp = 1.5f * clampf(targetOf(Body), 0.0f, 1.0f) * (1.0f - where) * (1.0f - where);
+        // The udu's air rings however the pot is struck; anything else's body
+        // answers a stroke near the middle.
+        const float reach = v.kind == Udu ? 1.0f : (1.0f - where) * (1.0f - where);
+        m.amp = 1.5f * clampf(targetOf(Body), 0.0f, 1.0f) * reach;
         m.t60 = k.bodyT60 * std::pow(4.0f, targetOf(Decay) - 0.5f) * damp * s.allDamp;
     }
     for (int i = 0; i < v.modeCount; ++i) v.modes[i].r = poleFor(v.modes[i].t60, sampleRate);
@@ -435,6 +451,7 @@ void Palm::noteOn(uint8_t note, uint8_t velocity) {
         v->rattleTone.reset();
         v->shake = 0.0f;
         v->squeezed = 0.0f;
+        v->rubPhase = 0.0f;
     }
     strike(*v, vel);
     const float spread = clampf(targetOf(Spread), 0.0f, 1.0f);
@@ -514,6 +531,7 @@ bool Palm::render(float *L, float *R, int32_t frames) {
                 const float aim = squeeze * std::fmax(press, wheel);
                 v.squeezed += (aim - v.squeezed) * 0.08f;
                 retune(v);
+                if (v.kind == Cuica) v.rubStep = noteHz(v.pitch + bend * paramOf(BendRange) + v.noteBend + v.squeezed) / sampleRate;
             }
             if (v.held && roll > 0.0f && --v.rollLeft <= 0) {
                 strike(v, clampf(v.velocity * (0.8f + 0.15f * white()), 0.05f, 1.0f));
@@ -521,6 +539,13 @@ bool Palm::render(float *L, float *R, int32_t frames) {
             }
             float x = 0.0f;
             if (v.strikeAt < v.strikeLength) x = v.strike[static_cast<size_t>(v.strikeAt++)] * v.gain;
+            // The cuíca's stick sticks and slips once a cycle, so the head is
+            // driven at its own note for as long as it's held.
+            if (v.kind == Cuica && v.held) {
+                v.rubPhase += v.rubStep;
+                if (v.rubPhase >= 1.0f) v.rubPhase -= 1.0f;
+                x += v.gain * kRub * ((v.rubPhase < 0.15f ? 1.0f : -0.18f) + 0.15f * white());
+            }
             float y = 0.0f;
             for (int m = 0; m < v.modeCount; ++m) {
                 Mode &md = v.modes[m];

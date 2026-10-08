@@ -94,6 +94,25 @@ patch "Ashiko Slap" family=africa note=55 range=48..62
   model          #16
   stroke         #1
 
+patch "Udu" family=africa note=48 range=41..55
+  # The hole slapped with the palm: the pot's air, a deep bloop.
+  model          #17
+  stroke         #3
+  body           0.8
+
+patch "Udu Bloop" family=africa note=45 range=38..52
+  # Slapped hard, so the bloop drops a long way.
+  model          #17
+  stroke         #3
+  body           1
+  drop           1
+
+patch "Udu Tap" family=africa note=55 range=48..62
+  # The fingers on the clay, the air answering softly.
+  model          #17
+  stroke         #4
+  body           0.5
+
 patch "Cajon Bass" family=latin note=47 range=40..60 role=bass
   # The palm in the middle of the plate; the box booms.
   model          #3
@@ -181,6 +200,25 @@ patch "Bata Itotele" family=latin note=55 range=48..62
   # The middle batá, open.
   model          #13
   stroke         #0
+
+patch "Cuica" family=latin note=64 range=57..71 role=lead
+  # Hold a note and the stick squeaks the head; press, or the mod wheel, to slide it up.
+  model          #18
+  stroke         #0
+  volume         0.3
+
+patch "Cuica Laugh" family=latin note=60 range=53..67 role=lead
+  # Pressed up and let go, the cuíca's laugh.
+  model          #18
+  stroke         #0
+  squeeze        9
+  volume         0.3
+
+patch "Cuica Low" family=latin note=52 range=45..59 role=lead
+  # Lower and closed, the thumb on the head.
+  model          #18
+  stroke         #2
+  squeeze        5
 
 patch "Frame Doum" family=arabic note=43 range=33..57 role=bass
   # The deep stroke in the middle of a wide head.

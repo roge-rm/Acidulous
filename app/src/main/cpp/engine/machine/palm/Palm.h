@@ -39,7 +39,8 @@ class Palm final : public Machine {
     static_assert(Count <= kMaxParams, "too many parameters");
 
     enum Kind : int32_t { Tabla = 0, Bayan, Djembe, Cajon, Frame, Talking, Conga, Bongo, Darbuka,
-                         Riq, Tar, Bendir, Kanjira, Bata, Mridangam, Dholak, Ashiko, KindCount };
+                         Riq, Tar, Bendir, Kanjira, Bata, Mridangam, Dholak, Ashiko,
+                         Udu, Cuica, KindCount };
     enum StrokeKind : int32_t { Open = 0, Slap, Muted, Bass, Rim, ByVelocity, StrokeCount };
     static constexpr int kVoices = 8;
     static constexpr int kModes = 10;
@@ -75,6 +76,8 @@ class Palm final : public Machine {
         int modeCount = 0;
         bool used = false, held = false;
         uint8_t note = 0;
+        /** A cuíca's stick, rubbed while the note is held: where in its cycle, and how far a sample. */
+        float rubPhase = 0.0f, rubStep = 0.0f;
         /** The drum it is, and in kit mode the pad it came from, or -1. */
         int kind = 0, pad = -1;
         float velocity = 0.8f;
