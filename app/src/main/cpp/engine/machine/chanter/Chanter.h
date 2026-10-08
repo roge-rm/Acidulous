@@ -32,7 +32,9 @@ class Chanter final : public Machine {
     };
     static_assert(Count <= kMaxParams, "too many parameters");
 
-    enum Kind : int32_t { Highland = 0, Smallpipes, Gaita, Gurdy, KindCount };
+    enum Kind : int32_t { Highland = 0, Smallpipes, Gaita, Gurdy,
+                         Uilleann, Gaida, Cornemuse, Musette, Sackpipa, Dudy,
+                         Zampogna, Tulum, Launeddas, KindCount };
     static constexpr int kDrones = 3;
     static constexpr int kHeld = 16;
 
@@ -79,6 +81,9 @@ class Chanter final : public Machine {
     }
 
     timber::Pipe chanter;
+    /** The second chanter, for the other hand: the key held before the last. */
+    timber::Pipe second;
+    bool secondLifted = false;
     timber::Pipe drones[kDrones];
     Bowed melody[2];
     Bowed gurdyDrones[2];

@@ -72,7 +72,7 @@ All six are the demo song, Squelch.
 |---|---|
 | **Aviary** | Modelled birdsong: a syrinx with two voices, a throat tuned to the note and a beak, singing whistles, chirps, trills, warbles and calls in time with the tempo, from one bird or a flock. |
 | **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
-| **Chanter** | Modelled bagpipes (highland, smallpipes, gaita) and hurdy-gurdy: drones blown from a bag that carry on between notes, grace notes, a closed chanter, and a rosined wheel whose trompette buzzes once it turns fast enough, or on the beat. |
+| **Chanter** | Modelled bagpipes (highland, smallpipes, gaita, uilleann, gaida, cornemuse, musette, säckpipa, dudy, and the two-chanter zampogna, tulum and launeddas) and hurdy-gurdy: drones blown from a bag that carry on between notes, grace notes, a closed chanter, and a rosined wheel whose trompette buzzes once it turns fast enough, or on the beat. |
 | **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
 | **Fathom** | Modelled water and weather: bubbles that ring at their size and rise, drips, rain on water, leaves, tin or glass, streams, surf on the tempo, gusting and whistling wind, and fire. |
 | **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |

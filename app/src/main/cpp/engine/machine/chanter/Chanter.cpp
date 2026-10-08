@@ -49,6 +49,8 @@ struct Make {
     float reed;
     bool closed;
     float level;
+    /** How loud a second chanter plays the key held before the last, against the first; 0 for none. */
+    float second = 0.0f;
 };
 constexpr Make kMakes[Chanter::KindCount] = {
     // Highland pipes: two tenor drones on the key and a bass an octave down, a loud, bright chanter.
@@ -59,6 +61,33 @@ constexpr Make kMakes[Chanter::KindCount] = {
     {1, {-12.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.55f, false, 2200.0f, 0.55f, false, 1.0f},
     // Hurdy-gurdy: bourdon an octave down and mouche a fourth below the key.
     {2, {-12.0f, -5.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.5f, false, 0.0f, 0.0f, false, 1.0f},
+    // Uilleann pipes: blown from bellows, a sweet, quiet conical chanter
+    // played closed, drones on the key and one and two octaves below. A key
+    // held under the melody sounds on the regulators, quieter.
+    {3, {0.0f, -12.0f, -24.0f}, {0.0f, 2.0f, -2.0f}, 0.35f, false, 2600.0f, 0.45f, true, 0.8f, 0.45f},
+    // Gaida: a goatskin bag, one deep drone two octaves down, a bright,
+    // reedy chanter, open between notes for the fast ornaments.
+    {1, {-24.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.5f, true, 3500.0f, 0.75f, false, 0.9f},
+    // Cornemuse: the French bagpipe, a big and a small drone, a conical
+    // chanter played half closed.
+    {2, {0.0f, -12.0f, 0.0f}, {0.0f, 3.0f, 0.0f}, 0.45f, false, 2400.0f, 0.6f, true, 0.9f},
+    // Musette de cour: small and courtly, a soft, narrow chanter, its
+    // drones quiet in a short barrel.
+    {2, {0.0f, -12.0f, 0.0f}, {0.0f, 2.0f, 0.0f}, 0.3f, true, 1800.0f, 0.4f, true, 0.7f},
+    // Säckpipa: the Swedish pipe, one drone an octave down, a narrow
+    // cylinder played closed.
+    {1, {-12.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.45f, true, 2000.0f, 0.5f, true, 0.8f},
+    // Dudy: the Czech pipe, one long drone two octaves down, loud, and a
+    // cylindrical chanter.
+    {1, {-24.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.6f, true, 1800.0f, 0.6f, false, 0.9f},
+    // Zampogna: two conical chanters, one for each hand, and drones on the key
+    // and the octave below.
+    {2, {0.0f, -12.0f, 0.0f}, {0.0f, 2.0f, 0.0f}, 0.4f, false, 2600.0f, 0.65f, false, 0.8f, 0.8f},
+    // Tulum: no drone, two cylindrical chanters side by side.
+    {0, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.0f, true, 3000.0f, 0.7f, false, 0.9f, 0.9f},
+    // Launeddas: three cane pipes with single reeds, blown without a bag by
+    // breathing in through the nose: a drone, and two melody pipes.
+    {1, {-12.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.5f, true, 2800.0f, 0.6f, false, 0.9f, 0.8f},
 };
 
 constexpr float kCoupsPerBeat[4] = {0.0f, 1.0f, 2.0f, 4.0f};
@@ -69,7 +98,7 @@ Chanter::Chanter() { initParams(); }
 
 const ParamDef *Chanter::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // highland, smallpipes, gaita, hurdy-gurdy
+        {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // highland, smallpipes, gaita, hurdy-gurdy, uilleann, gaida, cornemuse, musette, säckpipa, dudy, zampogna, tulum, launeddas
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         // The key the drones are tuned to, C to B.
         {"key", 0.0f, 11.0f, 9.0f, Curve::Stepped, 12, ""},
@@ -100,6 +129,7 @@ const ParamDef *Chanter::paramDefs(int32_t &count) const {
 void Chanter::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
     chanter.prepare(sampleRate);
+    second.prepare(sampleRate);
     for (timber::Pipe &d : drones) d.prepare(sampleRate);
     for (Bowed &b : melody) b.wave.prepare(sampleRate);
     for (Bowed &b : gurdyDrones) b.wave.prepare(sampleRate);
@@ -113,6 +143,8 @@ void Chanter::prepare(int32_t rate) {
 
 void Chanter::reset() {
     chanter.clear();
+    second.clear();
+    secondLifted = false;
     for (timber::Pipe &d : drones) d.clear();
     for (Bowed *b : {&melody[0], &melody[1], &gurdyDrones[0], &gurdyDrones[1], &trompette}) {
         b->wave.clear();
@@ -326,6 +358,33 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
             lifted = true;
         }
         if (!chanterOn) lifted = false;
+        // The other hand: the key held before the last, on the second chanter.
+        const bool secondOn = chanterOn && k.second > 0.0f && heldCount >= 2;
+        if (k.second > 0.0f) {
+            const float other = static_cast<float>(held[std::max(heldCount - 2, 0)]) +
+                                12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
+            second.setTongue(0.0f);
+            second.setNote(noteHz(other + bend * paramOf(BendRange) + (cents + kPipeTrim) * 0.01f));
+            second.setShape(k.cylinder, 1);
+            second.setTube(noteHz(keyNote + 10.0f));
+            second.setLattice(k.lattice, 0.0f, 0.4f);
+            second.setBelow(1.0f);
+            second.setFork(0.2f);
+            second.setReed(k.cylinder ? 0 : 1, clampf(k.reed + (paramOf(Reed) - 0.5f) * 0.6f, 0.05f, 1.0f), 0.45f);
+            second.setBell(0.9f, 0.4f);
+            second.setLoss(0.999f);
+            second.setPressure(secondOn ? kChanterPush * push : 0.0f);
+            second.setDrive(1.0f);
+            second.tune();
+            if (secondOn && !secondLifted) {
+                second.tune();
+                second.lift();
+                secondLifted = true;
+            }
+            if (!secondOn) secondLifted = false;
+        }
+        const float secondPush = secondOn ? kChanterPush * push : 0.0f;
+        const float secondGain = k.level * k.second * level;
         for (int d = 0; d < k.drones; ++d) {
             timber::Pipe &p = drones[d];
             const float hz = noteHz(keyNote + k.droneAt[d] + (k.droneCents[d] + cents + kPipeTrim) * 0.01f);
@@ -351,6 +410,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         const float chanterPush = chanterOn ? kChanterPush * push : 0.0f;
         for (int32_t i = 0; i < frames; ++i) {
             float y = chanter.step(chanterPush, white() * air * 0.35f * chanterPush) * k.level * level;
+            if (k.second > 0.0f) y += second.step(secondPush, white() * air * 0.35f * secondPush) * secondGain;
             float drone = 0.0f;
             for (int d = 0; d < k.drones; ++d) {
                 const float dp = kDronePush * push;

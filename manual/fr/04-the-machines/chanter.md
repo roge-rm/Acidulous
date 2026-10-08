@@ -25,7 +25,12 @@ grésiller en rythme.
   tonalité et un bourdon basse une octave plus bas), **smallpipes** (un
   chalumeau doux et fermé qui s’arrête un instant entre les notes, des
   bourdons sur la tonalité, la quinte et l’octave), **gaita** (un bourdon
-  basse et un chalumeau doux) ou **vielle à roue**.
+  basse et un chalumeau doux), **uilleann** (doux et fermé ; une touche
+  tenue sous la mélodie sonne sur les régulateurs), **gaida** (un bourdon
+  grave, un chalumeau clair), **cornemuse**, **musette** (petite et
+  douce), **säckpipa**, **dudy** (un long bourdon deux octaves plus bas),
+  **zampogna**, **tulum** ou **launeddas** (deux chalumeaux : tenez une
+  deuxième touche et l’autre main la joue), ou **vielle à roue**.
 - **accordage** : en cents.
 - **tonique** : la tonalité sur laquelle sont accordés les bourdons.
 - **bourdons** : le volume des bourdons.

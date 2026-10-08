@@ -21,7 +21,13 @@ the wheel on the beat to make it buzz in rhythm.
 - **model** - **highland** pipes (two tenor drones on the key and a bass
   an octave down), **smallpipes** (a quiet, closed chanter that stops for a
   moment between notes, drones on the key, the fifth and the octave),
-  **gaita** (one bass drone and a sweet chanter) or **hurdy-gurdy**.
+  **gaita** (one bass drone and a sweet chanter), **uilleann** pipes
+  (sweet and closed; a key held under the melody sounds on the
+  regulators), **gaida** (one deep drone, a bright chanter),
+  **cornemuse**, **musette** (small and soft), **säckpipa**, **dudy**
+  (one long drone two octaves down), **zampogna**, **tulum** or
+  **launeddas** (two chanters: hold a second key and the other hand plays
+  it), or **hurdy-gurdy**.
 - **tune** - in cents.
 - **tonic** - the key the drones are tuned to.
 - **drones** - how loud the drones are.

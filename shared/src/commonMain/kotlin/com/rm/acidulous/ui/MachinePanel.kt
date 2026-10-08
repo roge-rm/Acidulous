@@ -4004,7 +4004,7 @@ private fun PalmPanel(b: ParamBinding, pad: Int) {
     }
 }
 
-private val CHANTER_MODELS = listOf("highland", "smallpipes", "gaita", "hurdy-gurdy")
+private val CHANTER_MODELS = listOf("highland", "smallpipes", "gaita", "hurdy-gurdy", "uilleann", "gaida", "cornemuse", "musette", "säckpipa", "dudy", "zampogna", "tulum", "launeddas")
 private val CHANTER_COUPS = listOf("off", "1", "2", "4")
 
 /** Chanter: the pipes and the bag, the hurdy-gurdy's wheel, and the player. */

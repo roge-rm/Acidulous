@@ -197,6 +197,7 @@
     <string name="pw_consonants">consonnes</string>
     <string name="pw_converge">converge</string>
     <string name="pw_copies">copies</string>
+    <string name="pw_cornemuse">cornemuse</string>
     <string name="pw_count">nombre</string>
     <string name="pw_coup">coup</string>
     <string name="pw_couple">couplage</string>
@@ -280,6 +281,7 @@
     <string name="pw_dubbed">copié</string>
     <string name="pw_dubs">copies</string>
     <string name="pw_duck">atténuer</string>
+    <string name="pw_dudy">dudy</string>
     <string name="pw_dulcimer">tympanon</string>
     <string name="pw_duty">rapport</string>
     <string name="pw_e3">e3</string>
@@ -398,6 +400,7 @@
     <string name="pw_g_rate">g.vit</string>
     <string name="pw_g_size">g.taille</string>
     <string name="pw_g_spray">g.disp</string>
+    <string name="pw_gaida">gaida</string>
     <string name="pw_gain">gain</string>
     <string name="pw_gaita">gaita</string>
     <string name="pw_gallop">galop</string>
@@ -546,6 +549,7 @@
     <string name="pw_latch">verrou</string>
     <string name="pw_latin">latin</string>
     <string name="pw_lattice">treillis</string>
+    <string name="pw_launeddas">launeddas</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">fuite</string>
     <string name="pw_leaves">feuilles</string>
@@ -665,6 +669,7 @@
     <string name="pw_mridangam">mridangam</string>
     <string name="pw_mukkuri">mukkuri</string>
     <string name="pw_munnharpe">munnharpe</string>
+    <string name="pw_musette">musette</string>
     <string name="pw_music_box">boîte à musique</string>
     <string name="pw_mutate">muter</string>
     <string name="pw_mute">sourdine</string>
@@ -908,6 +913,7 @@
     <string name="pw_s15">p15</string>
     <string name="pw_s16">p16</string>
     <string name="pw_sa">sa</string>
+    <string name="pw_sackpipa">sackpipa</string>
     <string name="pw_sag">affaiss.</string>
     <string name="pw_sample">échantillon</string>
     <string name="pw_sample_rate">fréq. éch.</string>
@@ -1051,6 +1057,7 @@
     <string name="pw_synced">synchro</string>
     <string name="pw_synco">synco.</string>
     <string name="pw_syrinx">syrinx</string>
+    <string name="pw_s_ckpipa">säckpipa</string>
     <string name="pw_t_follows">t suit</string>
     <string name="pw_tabla">tabla</string>
     <string name="pw_table">table</string>
@@ -1121,6 +1128,7 @@
     <string name="pw_tuba_trpt">tuba→trp.</string>
     <string name="pw_tube">tube</string>
     <string name="pw_tukey">tukey</string>
+    <string name="pw_tulum">tulum</string>
     <string name="pw_tune">accordage</string>
     <string name="pw_tuned">accordé</string>
     <string name="pw_tuning">accordage</string>
@@ -1128,6 +1136,7 @@
     <string name="pw_two">deux</string>
     <string name="pw_type">type</string>
     <string name="pw_udu">udu</string>
+    <string name="pw_uilleann">uilleann</string>
     <string name="pw_uk">R.-U.</string>
     <string name="pw_una_corda">una corda</string>
     <string name="pw_uni">uni</string>
@@ -1209,6 +1218,7 @@
     <string name="pw_xylophone">xylophone</string>
     <string name="pw_y">y</string>
     <string name="pw_z">z</string>
+    <string name="pw_zampogna">zampogna</string>
     <string name="pw_zh">zh</string>
     <string name="pw_zones">zones</string>
     <string name="pw_zoom">zoom</string>
