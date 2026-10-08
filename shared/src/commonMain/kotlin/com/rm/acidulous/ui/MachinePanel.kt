@@ -36,7 +36,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
@@ -2735,6 +2734,7 @@ private fun FormulaDialog(
         // A window, see DialogShell.
         KeyScope(window = true)
         WindowKeys()
+        HideSystemBars()
         ScaledWindow {
             androidx.compose.material3.Surface(
                 Modifier.padding(horizontal = 10.dp).widthIn(max = 720.dp).fillMaxWidth(),

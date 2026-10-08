@@ -39,7 +39,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -831,6 +830,7 @@ fun MainScreen(
                                 },
                                 onOpen = { onOpenClip(trackIndex, scene.id) },
                                 onSettings = { dialog = Dialog.ClipSettings(trackIndex, scene.id) },
+                                focusKey = "cell $trackIndex ${scene.id}",
                                 frozen = clip?.frozen != null,
                                 stale = clip != null && Freeze.stale(song, scene.id, clip),
                                 audioLanes = clip?.audioLaneCount() ?: 0,
@@ -1236,6 +1236,8 @@ private fun ClipCell(
      */
     progress: (() -> Float)?,
     onOpen: () -> Unit, onSettings: () -> Unit,
+    /** Unique on the screen, so focus comes back here from the editor. */
+    focusKey: String = "",
     frozen: Boolean = false,
     /** Frozen, but at another tempo, so the machine is playing after all. */
     stale: Boolean = false,
@@ -1298,6 +1300,7 @@ private fun ClipCell(
             .clip(RoundedCornerShape(6.dp))
             .background(Acid.colors.card)
             .border(if (queued || stopping || recording) 2.dp else 1.dp, edge, RoundedCornerShape(6.dp))
+            .keepsFocus(focusKey)
             .then(
                 if (clipMode) {
                     // A tap launches and a double tap edits. A double-tap

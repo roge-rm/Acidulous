@@ -117,16 +117,16 @@ fun SampleDialog(
                 color = c.textHi, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
                 modifier = Modifier.weight(1f), maxLines = 1,
             )
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = { NativeEngine.noteOn(trackIndex, 36 + pad, 110) },
             ) { Text(stringResource(Res.string.pad_play), color = c.accent, fontSize = 12.sp) }
-            androidx.compose.material3.TextButton(onClick = {
+            TextButton(onClick = {
                 if (startDef != null) b.set(startDef.name, startDef.unmap(0f))
                 if (endDef != null) b.set(endDef.name, endDef.unmap(1f))
             }) { Text(stringResource(Res.string.pad_all), color = c.accent, fontSize = 12.sp) }
             // Only shown when zoomed, so there's always a way back out.
             if (zoomed) {
-                androidx.compose.material3.TextButton(onClick = { viewFrom = 0.0; viewSpan = 1.0 }) {
+                TextButton(onClick = { viewFrom = 0.0; viewSpan = 1.0 }) {
                     Text(stringResource(Res.string.pad_fit), color = c.teal, fontSize = 12.sp)
                 }
             }

@@ -24,13 +24,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -1155,6 +1152,7 @@ private fun DialogShell(
         // KeyScope's `window`).
         KeyScope(*keys.toTypedArray(), window = true)
         WindowKeys()
+        HideSystemBars()
         // Opened from the keyboard, the window moves focus to its first
         // control so the next key goes there.
         val bodyFocus = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
@@ -1501,3 +1499,10 @@ internal fun Readout(text: String, good: Boolean = false) {
  */
 @Composable
 internal expect fun WindowKeys()
+
+/**
+ * Hides the status and navigation bars on the window this is in. A dialog or
+ * menu is its own window, and without this the bars come back while it's open.
+ */
+@Composable
+internal expect fun HideSystemBars()

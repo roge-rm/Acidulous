@@ -4,7 +4,6 @@ import com.rm.acidulous.util.format
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -162,26 +161,25 @@ val OctaveW = 80.dp
  * Octave down and up arrows with the octave between them.
  *
  * Tapping the octave also toggles the hardware keyboard's play mode, where
- * the letter keys play notes starting at this octave. It's lit while on.
+ * the letter keys play notes starting at this octave. It's filled in while on.
  */
 @Composable
 fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Modifier) {
     val c = Acid.colors
     val playMode = KeyHub.playMode
     Row(
-        modifier.clip(RoundedCornerShape(4.dp)).background(if (playMode) c.accentDim else c.card)
-            .then(if (playMode) Modifier.border(1.dp, c.accent, RoundedCornerShape(4.dp)) else Modifier),
+        modifier.clip(RoundedCornerShape(4.dp)).background(if (playMode) c.accent else c.card),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         // The arrows share the stepper's width instead of each taking a fixed
         // width, so both are always there and the same size. With fixed widths
         // the row could squeeze the up arrow to a few pixels.
-        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_down)) {
+        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_down), playMode) {
             onOctave(octave - 1)
         }
         Text(
-            "C${octave + 1}", color = Acid.colors.accent, fontSize = 10.sp,
+            "C${octave + 1}", color = if (playMode) c.onAccent else c.accent, fontSize = 10.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1,
             modifier = Modifier.clickable { KeyHub.togglePlayMode() }.button(
                 stringResource(Res.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), AppStrings)),
@@ -190,7 +188,7 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
                 keyFocus = false,
             ),
         )
-        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_up)) {
+        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_up), playMode) {
             onOctave(octave + 1)
         }
     }
@@ -202,6 +200,8 @@ private fun StepArrow(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     said: String = glyph,
+    /** On the play mode's accent fill. */
+    onAccent: Boolean = false,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
@@ -209,6 +209,10 @@ private fun StepArrow(
         modifier.fillMaxHeight().clickable(enabled = enabled, onClick = onClick).button(said),
         contentAlignment = Alignment.Center,
     ) {
-        Text(glyph, color = if (enabled) c.text else c.textFaint, fontSize = 12.sp)
+        Text(glyph, color = when {
+            onAccent -> c.onAccent.copy(alpha = if (enabled) 1f else 0.4f)
+            enabled -> c.text
+            else -> c.textFaint
+        }, fontSize = 12.sp)
     }
 }

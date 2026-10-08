@@ -33,3 +33,23 @@ internal actual fun WindowKeys() {
         onDispose { if (window != null && own != null) window.callback = own }
     }
 }
+
+@Composable
+@Suppress("DEPRECATION")
+internal actual fun HideSystemBars() {
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.DisposableEffect(view) {
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            view.windowInsetsController?.let {
+                it.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                it.hide(android.view.WindowInsets.Type.systemBars())
+            }
+        } else {
+            view.rootView.systemUiVisibility = view.rootView.systemUiVisibility or
+                android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                android.view.View.SYSTEM_UI_FLAG_FULLSCREEN or
+                android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        }
+        onDispose {}
+    }
+}

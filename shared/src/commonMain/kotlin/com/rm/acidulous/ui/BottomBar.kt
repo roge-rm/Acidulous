@@ -1,6 +1,8 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -424,6 +426,10 @@ fun BarButton(
         onLongPress()
     }
     val named = actions + listOfNotNull(if (holdName != null && onLongPress != null) action(holdName, onLongPress) else null)
+    // Material's buttons draw their own ripple and skip the app's focus ring,
+    // so focus shows here as a thick accent outline round the pill.
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
     OutlinedButton(
         modifier = if (description != null || state != null || named.isNotEmpty()) {
             gestures.button(description ?: label, state, named)
@@ -435,7 +441,9 @@ fun BarButton(
         contentPadding = PaddingValues(horizontal = 4.dp),
         // Fall back to Material's outline, not null. Null means no border
         // at all and would strip the outline from every pill.
-        border = border?.let { BorderStroke(1.dp, it) } ?: ButtonDefaults.outlinedButtonBorder,
+        border = if (focused) BorderStroke(2.dp, Acid.colors.accent)
+            else border?.let { BorderStroke(1.dp, it) } ?: ButtonDefaults.outlinedButtonBorder,
+        interactionSource = interactions,
     ) {
         Text(label, color = colour, fontSize = 12.sp, fontFamily = fontFamily, maxLines = 1)
     }

@@ -334,7 +334,7 @@ fun CompButton(
     val song = editor.song
     val clip = song.tracks.getOrNull(trackIndex)?.clips?.get(sceneId)
     val lanes = clip?.audioLaneCount() ?: 0
-    androidx.compose.material3.TextButton(
+    TextButton(
         enabled = lanes > 0,
         onClick = {
             val theClip = clip ?: return@TextButton

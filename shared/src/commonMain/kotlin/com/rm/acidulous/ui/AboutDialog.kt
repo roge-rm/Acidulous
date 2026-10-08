@@ -82,14 +82,14 @@ private fun AppTab() {
         Body("Copyright © 2026 Dan Hunke")
         // A named button for panic. Holding play does the same and is
         // quicker, but this is where you can find it by name.
-        androidx.compose.material3.OutlinedButton(
+        OutlinedButton(
             onClick = { panicEverything() },
             border = androidx.compose.foundation.BorderStroke(1.dp, c.red),
         ) { Text(stringResource(Res.string.about_panic), color = c.red) }
         // The last crash report, if there is one, to share.
         val report = remember { AppHost.current.latestCrashReport() }
         if (report != null) {
-            androidx.compose.material3.TextButton(
+            TextButton(
                 onClick = { AppHost.current.shareCrashReport(report) },
             ) { Text(stringResource(Res.string.about_share_crash)) }
         }

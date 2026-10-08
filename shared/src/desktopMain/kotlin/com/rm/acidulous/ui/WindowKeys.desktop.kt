@@ -49,3 +49,6 @@ fun watchPointer() {
         java.awt.AWTEvent.MOUSE_EVENT_MASK,
     )
 }
+
+@androidx.compose.runtime.Composable
+internal actual fun HideSystemBars() {}

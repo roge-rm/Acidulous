@@ -115,3 +115,6 @@ fun fallbackKey(event: KeyEvent): Boolean {
     if (openWindows > 0 && press.esc) return false
     return KeyHub.fallback(press)
 }
+
+@androidx.compose.runtime.Composable
+internal actual fun HideSystemBars() {}

@@ -8,7 +8,8 @@ screen you're on.
 
 Letters either run shortcuts or play notes. **`** (or **Sym**) switches between
 the two, and so does tapping the octave number in the editor's keyboard strip.
-The number is lit while letters are notes.
+While letters are notes the number is filled in, the keyboard is outlined
+and the notes you play light up on it.
 
 With play mode on:
 

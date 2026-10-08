@@ -142,6 +142,7 @@ fun ScaledMenu(scroll: androidx.compose.foundation.ScrollState, content: @Compos
     val scale = LocalUiScale.current
     // The window height in scaled dp.
     val screenDp = windowHeightDp() / scale
+    HideSystemBars()
     CompositionLocalProvider(LocalDensity provides Density(base.density * scale, base.fontScale)) {
         androidx.compose.foundation.layout.Column(
             androidx.compose.ui.Modifier

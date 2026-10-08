@@ -8,7 +8,8 @@ fonctionnent sur l’écran où vous êtes.
 
 Les lettres lancent soit des raccourcis, soit des notes. **`** (ou **Sym**)
 passe de l’un à l’autre, tout comme toucher le numéro d’octave dans la bande du
-clavier de l’éditeur. Le numéro est allumé quand les lettres jouent des notes.
+clavier de l’éditeur. Quand les lettres jouent des notes, le numéro est plein,
+le clavier est encadré et les notes jouées s’y allument.
 
 En mode jeu :
 

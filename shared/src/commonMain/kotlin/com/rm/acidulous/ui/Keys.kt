@@ -335,6 +335,7 @@ object KeyHub {
     fun padNote(code: Int, degree: Int, down: Boolean, velocityNow: Int = velocity) {
         if (!down) {
             sounding.remove(-code)?.let { (rack, note) -> NativeEngine.noteOff(rack, note) }
+            showLit()
             return
         }
         if (-code in sounding) return
@@ -349,6 +350,7 @@ object KeyHub {
         NativeEngine.noteOn(rack, note, velocityNow)
         // Negative, so a controller's button never meets a keyboard key's code.
         sounding[-code] = rack to note
+        showLit()
     }
 
     /** One octave up or down, for a controller's shoulder buttons. */
@@ -356,6 +358,12 @@ object KeyHub {
 
     /** Keys sounding now and what each sent, so key up releases what key down played. */
     private val sounding = HashMap<Int, Pair<Int, Int>>()
+
+    /** The rack and note of everything [sounding], for the on-screen keys to light. */
+    var lit by mutableStateOf(emptySet<Pair<Int, Int>>())
+        private set
+
+    private fun showLit() { lit = sounding.values.toSet() }
     /** Key downs this consumed, so their key ups are consumed too and don't reach a control. */
     private val taken = HashSet<Int>()
 
@@ -393,6 +401,7 @@ object KeyHub {
     fun releaseAll() {
         for ((_, sent) in sounding) NativeEngine.noteOff(sent.first, sent.second)
         sounding.clear()
+        showLit()
     }
 
     /**
@@ -413,7 +422,7 @@ object KeyHub {
         if (typing) return false
         val code = e.keyCode
         if (e.action == KeyCodes.ACTION_UP) {
-            sounding.remove(code)?.let { (rack, note) -> NativeEngine.noteOff(rack, note); return true }
+            sounding.remove(code)?.let { (rack, note) -> NativeEngine.noteOff(rack, note); showLit(); return true }
             return taken.remove(code)
         }
         if (e.action != KeyCodes.ACTION_DOWN) return false
@@ -437,6 +446,7 @@ object KeyHub {
                     val note = noteFor(semitone + (if (chord.shift) 12 else 0), octave, drumVoices(rack))
                     NativeEngine.noteOn(rack, note, velocity)
                     sounding[code] = rack to note
+                    showLit()
                 }
                 return true
             }

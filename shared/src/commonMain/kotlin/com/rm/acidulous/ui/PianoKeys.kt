@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import kotlinx.coroutines.launch
 import androidx.compose.ui.zIndex
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.dp
@@ -146,9 +147,14 @@ fun PianoKeys(
                 }
             },
     ) {
-        Canvas(Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))) {
+        Canvas(
+            Modifier.fillMaxSize().padding(horizontal = EdgeGrab).clip(RoundedCornerShape(3.dp))
+                // Framed while a computer keyboard or controller plays it.
+                .then(if (KeyHub.playMode) Modifier.border(2.dp, c.accent, RoundedCornerShape(3.dp)) else Modifier),
+        ) {
             val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale, octaves, RoomyKey.toPx())
-            val down = held.values.toSet()
+            // Fingers, and notes from a computer keyboard or a controller.
+            val down = held.values.toSet() + KeyHub.lit.mapNotNull { (r, note) -> note.takeIf { r == rack } }
             // How far up a sounding key to light it. A soft note lights from the
             // front edge to where the finger landed, full strength lights the whole
             // key, so you can see which mode you're in.
