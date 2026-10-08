@@ -48,7 +48,7 @@ class Rotary final : public Effect {
 class Grain final : public Effect {
   public:
     enum P { Size, Density, Spray, Pitch, Scatter, Reverse, Freeze, Feedback, Width, Mix, Gain, Count };
-    Grain() { initParams(); }
+    Grain() { initParams(5.0f); }
     ACIDULOUS_EFFECT_COMMON(Grain)
   private:
     static constexpr int kGrains = 32;
@@ -85,7 +85,7 @@ class Resonator final : public Effect {
   public:
     enum P { Key, Scale, Low, Strings, Decay, Tone, Metal, Width, Mix, Gain, Count };
     static constexpr int kMaxStrings = 16;
-    Resonator() { initParams(); }
+    Resonator() { initParams(3.5f); }
     ACIDULOUS_EFFECT_COMMON(Resonator)
   private:
     machine::Waveguide strings[kMaxStrings];

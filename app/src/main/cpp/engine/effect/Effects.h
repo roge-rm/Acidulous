@@ -86,7 +86,7 @@ class Eq final : public Effect {
 class Distortion final : public Effect {
   public:
     enum P { Drive, Tone, Mix, Mode, Bias, Gain, Count };
-    Distortion() { initParams(); }
+    Distortion() { initParams(-10.5f); }
     ACIDULOUS_EFFECT_COMMON(Distortion)
   private:
     dsp::Biquad tone[2];
@@ -134,7 +134,7 @@ class Bitcrusher final : public Effect {
 class Phaser final : public Effect {
   public:
     enum P { Rate, Depth, Feedback, Stages, Spread, Mix, Gain, Count };
-    Phaser() { initParams(); }
+    Phaser() { initParams(2.5f); }
     ACIDULOUS_EFFECT_COMMON(Phaser)
     void onBlock(int64_t tickStart, int64_t, float) override { tick = tickStart; }
   private:
@@ -154,7 +154,7 @@ class Phaser final : public Effect {
 class Chorus final : public Effect {
   public:
     enum P { Rate, Depth, Voices, Spread, Drift, Mix, Gain, Count };
-    Chorus() { initParams(); }
+    Chorus() { initParams(5.0f); }
     ACIDULOUS_EFFECT_COMMON(Chorus)
     void onBlock(int64_t tickStart, int64_t, float) override { tick = tickStart; }
   private:
@@ -253,7 +253,7 @@ class Shifter final : public Effect {
 class Harmonizer final : public Effect {
   public:
     enum P { Interval, Interval2, Scale, Key, Window, Feedback, Mix, Gain, Count };
-    Harmonizer() { initParams(); }
+    Harmonizer() { initParams(3.0f); }
     ACIDULOUS_EFFECT_COMMON(Harmonizer)
   private:
     /** One shifted voice: a read point sliding through the line. */

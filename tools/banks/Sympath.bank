@@ -373,7 +373,7 @@ patch "Grazing Bridge" family=bridge note=55 range=40..84 role=tune
   curve          0
 
 patch "Heavy Buzz" family=bridge note=50 range=36..79 role=tune
-  # As much bridge as there is.
+  # The bridge buzzing as hard as it goes.
   bridge         1
   curve          0.1
   volume         0.6

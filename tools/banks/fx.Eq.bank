@@ -17,6 +17,7 @@ patch "Low Cut" family=cut
   # tracks of rumble adding up to one muddy record.
   lowgain        -15 dB
   lowfreq        100 Hz
+  gain           2 dB
 
 patch "Mud Cut" family=cut
   # The three hundred hertz dip. Nothing lives there that is not also
@@ -63,12 +64,27 @@ patch Air family=shape
   highgain       7 dB
   highfreq       12000 Hz
 
+patch Warmth family=shape
+  # A little low end and a softer top.
+  lowgain        3 dB
+  lowfreq        150 Hz
+  highgain       -3 dB
+  highfreq       8000 Hz
+
+patch Forward family=shape
+  # Mids forward for a voice or a lead.
+  midgain        4 dB
+  midfreq        3000 Hz
+  midq           0.8
+
 patch Warmer family=tilt
   # The whole spectrum tipped down. One control instead of two shelves, and it
   # keeps the middle where it was, which is what the shelves do not.
   tilt           -0.45
+  gain           -2.5 dB
 
 patch Brighter family=tilt
   # The same lever the other way. Past about a half it stops being a tone
   # control and starts being a different mix.
   tilt           0.45
+  gain           2 dB

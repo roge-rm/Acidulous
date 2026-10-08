@@ -56,7 +56,7 @@ patch Chime family=clean
   mic            0.15
   edge           0.1
   room           0.2
-  gain           -0.9 dB
+  gain           1 dB
 
 patch Jazz family=clean
   # Dark, round and completely clean: the neck pickup patch. Off-axis on a big
@@ -76,6 +76,15 @@ patch Jazz family=clean
   room           0.3
   gain           1.0 dB
 
+patch "Twin Clean" family=clean
+  # Big, clean and bright, the cab open.
+  drive          0.12
+  bass           0.6
+  mid            0.4
+  treble         0.75
+  stack          #0
+  gain           2 dB
+
 patch Plexi family=crunch
   # The British stack on the edge: clean when you play softly and cracking up
   # when you do not. The sag is what makes it breathe.
@@ -92,7 +101,7 @@ patch Plexi family=crunch
   mic            0.2
   edge           0.3
   room           0.15
-  gain           1.5 dB
+  gain           -1.5 dB
 
 patch Tweed family=crunch
   # Small, old and asymmetric: `bias` is what makes it a tweed rather than a
@@ -130,6 +139,14 @@ patch Combo family=crunch
   room           0.1
   gain           0.1 dB
 
+patch "British Crunch" family=crunch
+  # Mids forward, crunching when you dig in.
+  drive          0.45
+  bass           0.5
+  mid            0.75
+  treble         0.6
+  stack          #1
+
 patch Hotrod family=lead
   # Two stages hard into a four-by-twelve. Mid up, because a lead that is
   # scooped disappears the moment anything else plays.
@@ -146,7 +163,7 @@ patch Hotrod family=lead
   mic            0.2
   edge           0.25
   room           0.12
-  gain           0.2 dB
+  gain           -2.5 dB
 
 patch Modern family=lead
   # The high-gain voicing: everything below two hundred taken out before the
@@ -165,7 +182,7 @@ patch Modern family=lead
   mic            0.18
   edge           0.2
   room           0.08
-  gain           -1.1 dB
+  gain           -3.5 dB
 
 patch Solo family=lead
   # Sustained and singing rather than aggressive: more master and less preamp,
@@ -183,7 +200,16 @@ patch Solo family=lead
   mic            0.28
   edge           0.15
   room           0.22
-  gain           0.9 dB
+  gain           -1.5 dB
+
+patch "High Gain" family=lead
+  # Saturated and tight, for a solo.
+  drive          0.85
+  bass           0.6
+  mid            0.4
+  treble         0.6
+  stack          #2
+  gain           -3 dB
 
 patch Fridge family=bass
   # An eight-by-ten: the low corner is as far down as this cabinet goes, and
@@ -238,7 +264,15 @@ patch Grind family=bass
   mic            0.1
   edge           0.3
   room           0.05
-  gain           -1.0 dB
+  gain           -3.5 dB
+
+patch "Bass Stack" family=bass
+  # A big cabinet under a bass, warm.
+  drive          0.25
+  bass           0.8
+  mid            0.5
+  treble         0.4
+  size           0.9
 
 patch Radio family=character
   # A tiny speaker in a box a long way off: everything below two hundred and
@@ -275,7 +309,7 @@ patch Blown family=character
   mic            0.4
   edge           0.95
   room           0.3
-  gain           1.7 dB
+  gain           -0.5 dB
 
 patch Cranked family=character
   # Everything at ten, which is a legitimate setting and its own sound: the

@@ -39,22 +39,40 @@ patch Minor family=strings
   tone           0.35
   decay          5 s
   mix            0.3
+  gain           -2 dB
 
-patch Drone family=drone
-  # Low strings that ring for a long time: a pad grown out of the part.
-  low            28 st
-  strings        #4
-  decay          10 s
-  tone           0.3
+patch "Major Strings" family=strings
+  # Twelve strings in G major, ringing a little longer.
+  key            #7
+  scale          #0
+  decay          4 s
+  mix            0.35
+
+patch "Dorian Glow" family=strings
+  # D dorian, warm and long.
+  key            #2
+  scale          #1
+  decay          5 s
+  tone           0.4
+  mix            0.35
+
+patch "Short Pluck" family=strings
+  # A short ring: a halo on each hit.
+  decay          0.6 s
   mix            0.4
 
-patch Raga family=drone
-  # Phrygian dominant, long and bright: sympathetic strings for a lead.
-  scale          #21
-  decay          8 s
-  tone           0.65
-  metal          0.1
+patch "Sixteen Strings" family=strings
+  # All sixteen, wide.
+  strings        16
+  width          1
   mix            0.35
+
+patch "Bright Harp" family=strings
+  # Higher and brighter, a harp behind the part.
+  low            48
+  tone           0.8
+  decay          2 s
+  mix            0.3
 
 patch Bell family=metal
   # Stiff strings: their overtones go sharp, and it rings like a bell.
@@ -80,3 +98,60 @@ patch Glass family=metal
   tone           0.85
   decay          3 s
   mix            0.3
+
+patch Tin family=metal
+  # A little stiffness: thin metal ringing.
+  metal          0.4
+  decay          2 s
+  mix            0.3
+
+patch Chimes family=metal
+  # Very stiff and long, wind chimes in key.
+  metal          0.8
+  decay          8 s
+  low            60
+  mix            0.3
+  gain           -2.5 dB
+
+patch "Steel Plate" family=metal
+  # Fully stiff and dark.
+  metal          1
+  tone           0.3
+  decay          4 s
+  mix            0.3
+
+patch Drone family=drone
+  # Low strings that ring for a long time: a pad grown out of the part.
+  low            28 st
+  strings        #4
+  decay          10 s
+  tone           0.3
+  mix            0.4
+
+patch Raga family=drone
+  # Phrygian dominant, long and bright: sympathetic strings for a lead.
+  scale          #21
+  decay          8 s
+  tone           0.65
+  metal          0.1
+  mix            0.35
+
+patch "Low Drone" family=drone
+  # Low strings, long: a drone under everything.
+  low            24
+  strings        6
+  decay          12 s
+  tone           0.3
+  mix            0.3
+
+patch "Fifth Drone" family=drone
+  # Few strings, long, the key and its fifth.
+  strings        4
+  decay          10 s
+  mix            0.3
+
+patch "Dark Hum" family=drone
+  # Long and dark, humming in key.
+  tone           0.1
+  decay          8 s
+  mix            0.35

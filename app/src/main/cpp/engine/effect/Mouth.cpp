@@ -30,7 +30,7 @@ const ParamDef *Mouth::paramDefs(int32_t &count) const {
         {"rate", 0.0f, 16.0f, 8.0f, Curve::Stepped, dsp::Lfo::kRates, ""},
         {"depth", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
         {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };
     count = Count;

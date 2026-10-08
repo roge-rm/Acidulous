@@ -44,7 +44,7 @@ const ParamDef *Delay::paramDefs(int32_t &count) const {
         {"mix", 0.0f, 1.0f, 0.35f, Curve::Linear, 0, ""},
         {"duck", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"wobble", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -152,7 +152,7 @@ const ParamDef *Reverb::paramDefs(int32_t &count) const {
         {"bits", 1.0f, 16.0f, 16.0f, Curve::Stepped, 16, ""},
         {"crush", 1.0f, 32.0f, 1.0f, Curve::Exponential, 0, ""},
         {"wobble", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -351,7 +351,7 @@ const ParamDef *Eq::paramDefs(int32_t &count) const {
         {"highgain", -15.0f, 15.0f, 0.0f, Curve::Linear, 0, "dB"},
         {"highfreq", 1500.0f, 16000.0f, 6000.0f, Curve::Exponential, 0, "Hz"},
         {"tilt", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -396,7 +396,7 @@ const ParamDef *Distortion::paramDefs(int32_t &count) const {
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"mode", 0.0f, 3.0f, 0.0f, Curve::Stepped, 4, ""}, // soft, hard, fold, tube
         {"bias", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -473,7 +473,7 @@ const ParamDef *Compressor::paramDefs(int32_t &count) const {
         {"makeup", 0.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
         {"pump", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"pumprate", 0.0f, 3.0f, 2.0f, Curve::Stepped, 4, ""}, // 1/16 1/8 1/4 1/2
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
         // Appended: 0 is the effect's own input, 1..16 a track it listens to.
         {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };
@@ -531,7 +531,7 @@ const ParamDef *Swell::paramDefs(int32_t &count) const {
         {"split", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"release", 5.0f, 2000.0f, 150.0f, Curve::Exponential, 0, "ms"},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -568,7 +568,7 @@ const ParamDef *Filter::paramDefs(int32_t &count) const {
         {"lforate", 0.0f, Lfo::kRates - 1.0f, 13.0f, Curve::Stepped, Lfo::kRates, ""},
         {"lfodepth", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"envdepth", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
         // Appended: 0 is the effect's own input, 1..16 a track it listens to.
         {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };
@@ -632,7 +632,7 @@ const ParamDef *Bitcrusher::paramDefs(int32_t &count) const {
         {"jitter", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"tone", 300.0f, 20000.0f, 20000.0f, Curve::Exponential, 0, "Hz"},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -686,7 +686,7 @@ const ParamDef *Phaser::paramDefs(int32_t &count) const {
         {"stages", 0.0f, 3.0f, 1.0f, Curve::Stepped, 4, ""}, // 2 4 6 8
         {"spread", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -730,7 +730,7 @@ const ParamDef *Flanger::paramDefs(int32_t &count) const {
         {"negative", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         {"spread", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -781,7 +781,7 @@ const ParamDef *Chorus::paramDefs(int32_t &count) const {
         {"spread", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
         {"drift", 0.0f, 1.0f, 0.15f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -854,7 +854,7 @@ const ParamDef *Tremolo::paramDefs(int32_t &count) const {
         {"pan", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"skew", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -918,7 +918,7 @@ const ParamDef *Width::paramDefs(int32_t &count) const {
         {"below", 20.0f, 500.0f, 20.0f, Curve::Exponential, 0, "Hz"},
         {"haas", 0.0f, 20.0f, 0.0f, Curve::Linear, 0, "ms"},
         {"rotate", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -993,7 +993,7 @@ const ParamDef *Shifter::paramDefs(int32_t &count) const {
         {"spread", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"feedback", 0.0f, 0.9f, 0.0f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -1064,7 +1064,7 @@ const ParamDef *Harmonizer::paramDefs(int32_t &count) const {
         {"window", 10.0f, 120.0f, 45.0f, Curve::Exponential, 0, "ms"},
         {"feedback", 0.0f, 0.85f, 0.0f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -1193,7 +1193,7 @@ const ParamDef *Gate::paramDefs(int32_t &count) const {
         {"release", 5.0f, 2000.0f, 150.0f, Curve::Exponential, 0, "ms"},
         {"duck", -90.0f, 0.0f, -90.0f, Curve::Linear, 0, "dB"},
         {"key", 20.0f, 2000.0f, 20.0f, Curve::Exponential, 0, "Hz"},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
         // Appended: 0 is the effect's own input, 1..16 a track it listens to.
         {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""},
     };

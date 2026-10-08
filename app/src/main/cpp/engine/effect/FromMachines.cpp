@@ -28,7 +28,7 @@ const ParamDef *Rotary::paramDefs(int32_t &count) const {
         {"width", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
         {"tempo", 0.0f, 5.0f, 0.0f, Curve::Stepped, 6, ""},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -78,7 +78,7 @@ const ParamDef *Grain::paramDefs(int32_t &count) const {
         {"feedback", 0.0f, 0.9f, 0.0f, Curve::Linear, 0, ""},
         {"width", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;
@@ -202,7 +202,7 @@ const ParamDef *Resonator::paramDefs(int32_t &count) const {
         {"metal", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"width", 0.0f, 1.0f, 0.6f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 0.35f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;

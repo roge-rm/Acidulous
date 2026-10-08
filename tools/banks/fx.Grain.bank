@@ -40,6 +40,28 @@ patch Stutter family=cloud
   width          0.5
   mix            0.5
 
+patch Fog family=cloud
+  # Long, overlapping grains: the sound blurred to a cloud.
+  size           300
+  density        40
+  spray          0.6
+  mix            0.5
+
+patch "Rain of Grains" family=cloud
+  # Short grains, dense and scattered.
+  size           20
+  density        80
+  spray          0.8
+  mix            0.45
+
+patch Frozen family=cloud
+  # Freeze on: the last moment held as a cloud.
+  freeze         #1
+  size           200
+  density        40
+  mix            0.6
+  gain           3 dB
+
 patch "Octave Up" family=pitch
   # A cloud an octave above the part.
   pitch          12 st
@@ -70,6 +92,33 @@ patch Sparkle family=pitch
   density        45
   width          1
   mix            0.35
+  gain           -1.5 dB
+
+patch "Fifth Up" family=pitch
+  # Grains a fifth above, a shimmer.
+  pitch          7
+  density        30
+  mix            0.4
+
+patch "Scattered Pitch" family=pitch
+  # Each grain a different pitch.
+  scatter        1
+  density        40
+  mix            0.45
+
+patch "Reverse Cloud" family=pitch
+  # Reversed grains, a swelling smear.
+  reverse        1
+  size           250
+  density        30
+  mix            0.5
+
+patch "Deep Down" family=pitch
+  # Two octaves down, short grains: a rumble from the part.
+  pitch          -24
+  size           80
+  density        15
+  mix            0.35
 
 patch Bloom family=feedback
   # The cloud fed back into itself: it thickens the longer the part plays.
@@ -78,7 +127,7 @@ patch Bloom family=feedback
   density        30
   spray          0.4
   mix            0.5
-  gain           -3 dB
+  gain           0 dB
 
 patch Rising family=feedback
   # Fed back a fifth up each time round: the cloud climbs.
@@ -87,4 +136,26 @@ patch Rising family=feedback
   size           200 ms
   density        25
   mix            0.45
-  gain           -3 dB
+  gain           -1 dB
+
+patch Endless family=feedback
+  # Fed back on itself: a cloud that keeps going.
+  feedback       0.8
+  size           150
+  density        30
+  mix            0.45
+  gain           -0.5 dB
+
+patch "Shimmer Loop" family=feedback
+  # An octave up and fed back, rising.
+  pitch          12
+  feedback       0.6
+  mix            0.4
+  gain           -1.5 dB
+
+patch "Granular Echo" family=feedback
+  # Sparse grains fed back like an echo.
+  size           60
+  density        5
+  feedback       0.5
+  mix            0.4

@@ -802,6 +802,8 @@ struct Take {
  * harmonic readings aren't taken mid note change.
  */
 Take gMeasureTake;
+/** The last listen render, for `levels`. */
+Take gLastTake;
 
 /**
  * Plays a phrase on a machine and collects the output.
@@ -889,34 +891,184 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
     return out;
 }
 
-/** An effect gets a source rather than notes: a tone, a transient and noise. */
-std::vector<float> effectSource(float seconds) {
-    const auto n = static_cast<size_t>(kSr * seconds);
-    std::vector<float> out(n * 2, 0.0f);
-    Rng rng(0xeffec7u);
-    // The source stops at two thirds and the rest is silence, so delay and
-    // reverb tails can be heard.
-    const size_t stop = n * 2 / 3;
-    for (size_t i = 0; i < stop; ++i) {
-        const float t = static_cast<float>(i) / kSr;
-        // A note every half second gives delays, gates and compressors an
-        // edge to work on, over some noise for the filters.
-        const float phase = std::fmod(t, 0.5f);
-        const float env = std::exp(-phase / 0.12f);
-        const float tone = (std::sin(2.0f * static_cast<float>(M_PI) * 220.0f * t) +
-                            0.5f * std::sin(2.0f * static_cast<float>(M_PI) * 331.0f * t)) * 0.35f;
-        const float v = tone * env + rng.next() * 0.04f;
-        out[i * 2] = v;
-        out[i * 2 + 1] = v * 0.97f + rng.next() * 0.01f;
+bool loadBank(const std::string &unit, Bank &bank);
+
+/**
+ * Loudness of frames [from, to) in dB, K-weighted the way LUFS is (a high
+ * shelf and a low cut at 48 kHz) but without the gating. Good for comparing
+ * an effect's output with its input.
+ */
+float kLoudness(const std::vector<float> &stereo, int64_t from, int64_t to) {
+    double sum = 0.0;
+    for (int ch = 0; ch < 2; ++ch) {
+        double x1 = 0, x2 = 0, y1 = 0, y2 = 0, z1 = 0, z2 = 0;
+        for (int64_t i = from; i < to; ++i) {
+            const double x = stereo[static_cast<size_t>(i) * 2 + ch];
+            const double y = 1.53512485958697 * x - 2.69169618940638 * x1 + 1.19839281085285 * x2
+                             + 1.69065929318241 * y1 - 0.73248077421585 * y2;
+            x2 = x1; x1 = x; 
+            const double z = y - 2.0 * y1 + y2 + 1.99004745483398 * z1 - 0.99007225036621 * z2;
+            y2 = y1; y1 = y;
+            z2 = z1; z1 = z;
+            sum += z * z;
+        }
+    }
+    const double n = static_cast<double>(std::max<int64_t>(1, to - from));
+    return sum > 0.0 ? static_cast<float>(-0.691 + 10.0 * std::log10(sum / n)) : -200.0f;
+}
+
+/**
+ * One part of an effect's source: a patch from a machine's own bank playing
+ * notes given as (beat, beats long, note, velocity), in A minor. Rendered for
+ * exactly `frames`, so the parts line up when they're added together.
+ */
+struct Hit { float beat, beats; int note, velocity; };
+
+/** How loud every effect source is, in the units of kLoudness. */
+constexpr float kSourceLoudness = -20.0f;
+
+std::vector<float> renderPart(const std::string &unit, const std::string &patchName,
+                              const std::vector<Hit> &hits, float bpm, int64_t frames,
+                              const std::vector<std::pair<std::string, float>> &overrides = {}) {
+    std::vector<float> silent(static_cast<size_t>(frames) * 2, 0.0f);
+    Bank bank;
+    if (!loadBank(unit, bank)) return silent;
+    const BankPatch *patch = nullptr;
+    for (const BankPatch &b : bank.patches) if (b.name == patchName) patch = &b;
+    int32_t count = 0;
+    const ParamDef *defs = MachineRegistry::paramDefs(unit.c_str(), count);
+    std::unique_ptr<Machine> m(MachineRegistry::create(unit.c_str()));
+    if (patch == nullptr || defs == nullptr || !m) {
+        std::fprintf(stderr, "effect source: no %s patch '%s'\n", unit.c_str(), patchName.c_str());
+        return silent;
+    }
+    m->prepare(static_cast<int32_t>(kSr));
+    m->allNotesOff();
+    m->reset();
+    Resolved r = resolve(*patch, defs, count);
+    // Values in the parameter's own units, a stepped one by its index.
+    for (const auto &o : overrides) {
+        for (int32_t i = 0; i < count; ++i) {
+            if (o.first == defs[i].name) r.norm[static_cast<size_t>(i)] = defs[i].unmap(o.second);
+        }
+    }
+    applyTo(m->params(), r.norm);
+    Material mat;
+    std::set<std::string> named;
+    for (const BankValue &v : patch->values) named.insert(v.name);
+    mountMaterial(m.get(), unit, defaultMaterial(unit), mat);
+    applySettings(m.get(), unit, r.settings, mat, named);
+
+    Phrase phrase;
+    const float beat = 60.0f / bpm;
+    for (const Hit &h : hits) {
+        phrase.events.push_back({secondsToFrames(h.beat * beat), static_cast<uint8_t>(h.note), static_cast<uint8_t>(h.velocity)});
+        phrase.events.push_back({secondsToFrames((h.beat + h.beats) * beat), static_cast<uint8_t>(h.note), 0});
+    }
+    // Offs before ons on the same frame, so a repeated note sounds again.
+    std::stable_sort(phrase.events.begin(), phrase.events.end(), [](const NoteEvent &a, const NoteEvent &b) {
+        return a.frame != b.frame ? a.frame < b.frame : (a.velocity == 0) > (b.velocity == 0);
+    });
+    phrase.frames = frames;
+    phrase.lastOff = frames;
+    phrase.ringOut = false;
+    Take t = render(m.get(), phrase, bpm, mat);
+    t.stereo.resize(silent.size(), 0.0f);
+    return t.stereo;
+}
+
+/**
+ * What an effect is fed: two bars of music made by the app's own machines,
+ * then silence for the tails. Most effects get a band (drums, bass and
+ * electric piano). Amp and Distortion get a clean guitar, Horn and Harmonizer
+ * a single line they can follow, Rotary an organ, and Gate the band over a
+ * little hiss to take out. Returns the stereo source; it stops at `stop`.
+ */
+std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
+    const float bars = 2.0f;
+    stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
+    const int64_t frames = stop + secondsToFrames(3.0f);
+    std::vector<float> out(static_cast<size_t>(frames) * 2, 0.0f);
+    const auto add = [&](const std::vector<float> &part, float gain) {
+        for (size_t i = 0; i < out.size(); ++i) out[i] += part[i] * gain;
+    };
+
+    if (effect == "Amp" || effect == "Distortion") {
+        // A riff on the low strings, then a chord left to ring.
+        add(renderPart("Fret", "Clean Neck", {
+            {0.0f, 0.5f, 45, 100}, {0.5f, 0.5f, 48, 80}, {1.0f, 0.5f, 50, 90}, {1.5f, 0.5f, 52, 80},
+            {2.0f, 0.5f, 55, 100}, {2.5f, 0.5f, 52, 80}, {3.0f, 0.5f, 50, 90}, {3.5f, 0.5f, 48, 80},
+            {4.0f, 4.0f, 45, 110}, {4.0f, 4.0f, 52, 105}, {4.0f, 4.0f, 57, 100}, {4.0f, 4.0f, 60, 95}, {4.0f, 4.0f, 64, 95},
+        }, bpm, frames), 1.0f);
+    } else if (effect == "Horn" || effect == "Harmonizer") {
+        add(renderPart("Trinity", "Sync Lead", {
+            {0.0f, 1.0f, 69, 100}, {1.0f, 0.5f, 72, 90}, {1.5f, 0.5f, 76, 90}, {2.0f, 1.0f, 74, 100},
+            {3.0f, 1.0f, 72, 90}, {4.0f, 1.5f, 71, 100}, {5.5f, 0.5f, 67, 85}, {6.0f, 2.0f, 69, 100},
+        }, bpm, frames), 1.0f);
+    } else if (effect == "Rotary") {
+        // All the drawbars out and the organ's own cabinet off, so the effect
+        // is the only rotary speaker and has a full top to swirl.
+        add(renderPart("Manual", "Full Draw", {
+            {0.0f, 1.5f, 57, 100}, {0.0f, 1.5f, 60, 100}, {0.0f, 1.5f, 64, 100}, {0.0f, 1.5f, 67, 100},
+            {2.5f, 1.5f, 57, 100}, {2.5f, 1.5f, 60, 100}, {2.5f, 1.5f, 64, 100}, {2.5f, 1.5f, 67, 100},
+            {4.0f, 2.0f, 53, 100}, {4.0f, 2.0f, 57, 100}, {4.0f, 2.0f, 60, 100}, {4.0f, 2.0f, 64, 100},
+            {6.0f, 2.0f, 55, 100}, {6.0f, 2.0f, 59, 100}, {6.0f, 2.0f, 62, 100}, {6.0f, 2.0f, 67, 100},
+        }, bpm, frames, {{"rotary", 0.0f}, {"drive", 0.2f}, {"vibtype", 0.0f}, {"vibup", 0.0f}}), 1.0f);
+    } else {
+        // Hexbeat's kit: kick 36, snare 38, closed hat 43, open hat 44.
+        std::vector<Hit> drums;
+        for (int b = 0; b < 8; ++b) {
+            drums.push_back({static_cast<float>(b), 0.25f, 36, 110});
+            if (b % 2 == 1) drums.push_back({static_cast<float>(b), 0.25f, 38, 105});
+            drums.push_back({b + 0.5f, 0.25f, b == 7 ? 44 : 43, b % 2 == 0 ? 70 : 85});
+            drums.push_back({static_cast<float>(b), 0.25f, 43, 60});
+        }
+        std::vector<Hit> bass;
+        const int line[16] = {33, 33, 45, 33, 36, 33, 43, 33, 29, 29, 41, 29, 31, 31, 43, 38};
+        for (int i = 0; i < 16; ++i) bass.push_back({i * 0.5f, 0.4f, line[i], i % 2 == 0 ? 110 : 80});
+        add(renderPart("Hexbeat", "Straight", drums, bpm, frames), 0.8f);
+        add(renderPart("Reflux", "Classic", bass, bpm, frames), 0.8f);
+        add(renderPart("Trinity", "Electric Piano", {
+            {0.0f, 1.5f, 57, 90}, {0.0f, 1.5f, 60, 90}, {0.0f, 1.5f, 64, 90}, {0.0f, 1.5f, 67, 90},
+            {2.5f, 0.5f, 57, 80}, {2.5f, 0.5f, 60, 80}, {2.5f, 0.5f, 64, 80}, {2.5f, 0.5f, 67, 80},
+            {4.0f, 1.5f, 53, 90}, {4.0f, 1.5f, 57, 90}, {4.0f, 1.5f, 60, 90}, {4.0f, 1.5f, 64, 90},
+            {6.5f, 1.5f, 55, 85}, {6.5f, 1.5f, 59, 85}, {6.5f, 1.5f, 62, 85}, {6.5f, 1.5f, 67, 85},
+        }, bpm, frames), 0.7f);
+    }
+
+    // Every source is equally loud, so presets on different effects can be
+    // compared. A held lead is denser than a band with drums, so this goes by
+    // loudness rather than by peak.
+    // Except Horn's. Horn blows harder the louder the track is, and a brass
+    // only speaks properly from a lead at a normal track level.
+    const float target = effect == "Horn" ? kSourceLoudness + 6.0f : kSourceLoudness;
+    const float level = kLoudness(out, 0, stop);
+    if (level > -190.0f) {
+        const float gain = std::pow(10.0f, (target - level) / 20.0f);
+        for (float &v : out) v *= gain;
+    }
+
+    if (effect == "Gate") {
+        // Hiss at about -50 dB, for the gate to close on.
+        Rng rng(0xeffec7u);
+        for (int64_t i = 0; i < stop; ++i) {
+            out[static_cast<size_t>(i) * 2] += rng.next() * 0.005f;
+            out[static_cast<size_t>(i) * 2 + 1] += rng.next() * 0.005f;
+        }
     }
     return out;
 }
 
-Take renderEffect(Effect *fx, float bpm, float seconds) {
+/** The last effect source's loudness, for `levels`. */
+float gDryLoudness = -200.0f;
+
+Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
     Take out;
-    std::vector<float> src = effectSource(seconds);
+    int64_t stop = 0;
+    std::vector<float> src = effectSource(effect, bpm, stop);
+    gDryLoudness = kLoudness(src, 0, stop);
     const auto frames = static_cast<int64_t>(src.size() / 2);
-    out.offAt = frames * 2 / 3; // where effectSource falls silent
+    out.offAt = stop;
     out.stereo.reserve(src.size());
     float L[kBlock], R[kBlock];
     const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
@@ -1240,7 +1392,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         fx->reset();
         applyTo(fx->params(), r.norm);
         applyEffectSettings(fx.get(), r.settings);
-        take = renderEffect(fx.get(), opt.bpm, 4.0f);
+        take = renderEffect(fx.get(), bank.typeName(), opt.bpm);
     } else {
         std::unique_ptr<Machine> m(MachineRegistry::create(bank.unit.c_str()));
         if (!m) {
@@ -1340,6 +1492,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
                        ? measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f))
                        : measure(take.stereo, take.offAt, 0);
     }
+    gLastTake = take;
     if (opt.quiet) return true;
     // Named "<family>-<patch>.wav" so a folder sorts by family, with all the
     // bells together and so on.
@@ -1388,6 +1541,34 @@ int cmdBank(const std::string &unit, const Options &opt) {
                     hi - lo > 12.0f ? "   <- wide; level these against each other" : "");
     }
     return 0;
+}
+
+/**
+ * An effect bank's presets against the dry source: how much louder or quieter
+ * each makes the track while it plays, and its peak. A preset far from 0 dB
+ * is a jump in level when it's put on a track.
+ */
+int cmdLevels(const std::string &unit, const Options &opt) {
+    Bank bank;
+    if (!loadBank(unit, bank) || !bank.isEffect()) return 1;
+    Options quiet = opt;
+    quiet.quiet = true;
+    std::printf("%s against dry\n", bank.unit.c_str());
+    int far = 0;
+    for (const BankPatch &p : bank.patches) {
+        Measured m;
+        if (!auditionOne(bank, p, quiet, m)) continue;
+        const Take &t = gLastTake;
+        const float vs = kLoudness(t.stereo, 0, t.offAt) - gDryLoudness;
+        float peak = 0.0f;
+        for (float v : t.stereo) peak = std::max(peak, std::fabs(v));
+        const float peakDb = peak > 0.0f ? 20.0f * std::log10(peak) : -200.0f;
+        const bool off = std::fabs(vs) > 3.0f;
+        far += off ? 1 : 0;
+        std::printf("  %-22s %+6.1f dB   peak %+6.1f%s\n", p.name.c_str(), static_cast<double>(vs),
+                    static_cast<double>(peakDb), off ? "   <-" : "");
+    }
+    return far > 0 ? 2 : 0;
 }
 
 /**
@@ -1809,6 +1990,7 @@ int main(int argc, char **argv) {
     if (cmd == "list" && positional.size() >= 2) return cmdList(positional[1]);
     if (cmd == "play" && positional.size() >= 3) return cmdPlay(positional[1], positional[2], opt);
     if (cmd == "bank" && positional.size() >= 2) return cmdBank(positional[1], opt);
+    if (cmd == "levels" && positional.size() >= 2) return cmdLevels(positional[1], opt);
     if (cmd == "sweep" && positional.size() >= 2)
         return cmdSweep(positional[1], positional.size() >= 3 ? positional[2] : std::string(), opt);
     if (cmd == "selftest") {

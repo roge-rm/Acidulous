@@ -20,88 +20,86 @@ machine fx.Swell
 patch Init family=lift
 
 patch Loud family=lift
-  # Louder without sounding squashed: a ceiling just under full scale and
-  # half the amount, so a quiet passage comes up and a loud one barely moves.
+  # Louder without sounding squashed: quiet passages come up, loud ones barely move.
   floor          -45 dB
   ceiling        -2 dB
   amount         0.45
   split          0.6
   release        400 ms
+  gain           -4 dB
 
 patch Even family=lift
-  # For a vocal or a lead that comes and goes: slow enough that a phrase
-  # keeps its shape, strong enough that the quiet words are heard.
+  # A vocal or lead that comes and goes, evened out, its phrases kept.
   floor          -50 dB
   ceiling        -8 dB
   amount         0.6
   split          0.3
   release        900 ms
+  gain           -0.5 dB
 
 patch Upfront family=lift
-  # Brings a part to the front of a mix. The top band comes up the most, so
-  # it's the consonants and the pick that get closer.
+  # Brings a part to the front, the consonants and the pick most of all.
   floor          -48 dB
   ceiling        -6 dB
   amount         0.55
   split          1
   release        200 ms
-  gain           -2 dB
+  gain           -3.5 dB
 
 patch Bus family=glue
-  # On a drum or synth bus: a little of everything, so the parts sit closer
-  # in level without anything being pushed down.
+  # On a drum or synth bus: the parts sit closer in level, nothing pushed down.
   floor          -40 dB
   ceiling        -6 dB
   amount         0.3
   split          0.5
   release        250 ms
+  gain           -1.5 dB
 
 patch Master family=glue
-  # The gentlest: on the master, before the limiter. You should only hear it
-  # when you turn it off.
+  # The gentlest, on the master before the limiter.
   floor          -36 dB
   ceiling        -3 dB
   amount         0.2
   split          0.7
   release        600 ms
+  gain           -1.5 dB
 
 patch Parallel family=glue
-  # Fully squashed but only a third of it mixed in, so the dynamics are all
-  # still there and the quiet detail sits on top of them.
+  # Fully squashed, a third mixed in: the dynamics stay, the quiet detail on top.
   floor          -60 dB
   ceiling        -6 dB
   amount         1
   split          1
   release        60 ms
   mix            0.35
+  gain           -4.5 dB
 
 patch Thick family=thick
-  # Pads and chords: three bands at a medium release, so the low end fills
-  # out and the top shimmers.
+  # Pads and chords: the low end fills out and the top shimmers.
   floor          -55 dB
   ceiling        -6 dB
   amount         0.75
   split          1
   release        120 ms
-  gain           -3 dB
+  gain           -6.5 dB
 
 patch Tails family=thick
-  # Reverb and delay tails brought right up, for drums and plucks that hang
-  # in the air. A long release holds the lift through the tail.
+  # Reverb and delay tails brought right up, for drums and plucks that hang in the air.
   floor          -65 dB
   ceiling        -10 dB
   amount         0.8
   split          0.8
   release        1200 ms
+  gain           0 dB
 
 patch Room family=thick
-  # The room on a drum loop: hits stay where they were and everything between
-  # them comes up.
+  # The room on a drum loop: everything between the hits comes up.
   floor          -55 dB
   ceiling        -12 dB
   amount         0.7
   split          0.6
   release        90 ms
+  gain           -1 dB
 
 patch Crush family=crush
   # All the way, fast: every sound flattened to the ceiling in three bands.
@@ -110,24 +108,22 @@ patch Crush family=crush
   amount         1
   split          1
   release        30 ms
-  gain           -4 dB
+  gain           -10.5 dB
 
 patch Wreck family=crush
-  # Faster than a cycle of a bass note, so it follows the waveform itself
-  # and turns into distortion. For when it should break.
+  # Faster than a bass note's cycle, so it turns into distortion.
   floor          -70 dB
   ceiling        -8 dB
   amount         1
   split          1
   release        6 ms
-  gain           -4 dB
+  gain           -9.5 dB
 
 patch Breath family=crush
-  # Every breath, string squeak and key click brought up to the note's
-  # level, on one band so they come up together.
+  # Every breath, string squeak and key click brought up to the note's level.
   floor          -75 dB
   ceiling        -10 dB
   amount         1
   split          0
   release        40 ms
-  gain           -2 dB
+  gain           -4.5 dB

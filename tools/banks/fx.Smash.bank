@@ -3,8 +3,8 @@
 # In each of low, mid and high, whatever is over `threshold` is pushed down
 # by `down` and whatever is under it is pulled up by `up`, so every band
 # crowds the threshold. `depth` mixes that with the track as it was: a
-# little is density and presence, all of it is every tail, breath and room
-# brought up to the level of the hits. `time` scales every band's attack and
+# little adds density, all of it brings every tail, breath and room up to
+# the level of the hits. `time` scales every band's attack and
 # release: slow is smooth, fast pumps and grinds. `low`, `mid` and `high`
 # set the balance after it, and `in` drives it harder.
 #
@@ -21,6 +21,7 @@ patch Touch family=glue
   depth          0.25
   time           1.5
   threshold      -20 dB
+  gain           0 dB
 
 patch Bus family=glue
   # Drums or synths as one: the tails come up between the hits.
@@ -28,6 +29,7 @@ patch Bus family=glue
   threshold      -22 dB
   down           0.7
   up             0.6
+  gain           0.5 dB
 
 patch Vocal family=glue
   # Every word and breath at one level, the mids a touch forward.
@@ -36,14 +38,14 @@ patch Vocal family=glue
   threshold      -26 dB
   mid            1.5 dB
   high           -1 dB
+  gain           2 dB
 
 patch Loud family=loud
-  # The classic: all of it, fast, for basses and leads that need to jump
-  # out of a phone speaker.
+  # All of it, fast: basses and leads that jump out of a phone speaker.
   depth          1
   time           0.6
   threshold      -24 dB
-  gain           3 dB
+  gain           2.5 dB
 
 patch Bright family=loud
   # The top band pushed: hats and air come right up front.
@@ -61,6 +63,15 @@ patch Fat family=loud
   high           -2 dB
   gain           -2 dB
 
+patch Squeeze family=loud
+  # Fast and deep: the whole track pumping.
+  depth          1
+  time           0.3
+  threshold      -30 dB
+  down           1
+  up             0.6
+  gain           8 dB
+
 patch Air family=wide
   # Only the lift, no squash: reverb tails and room come up, hits untouched.
   depth          0.7
@@ -68,21 +79,22 @@ patch Air family=wide
   up             1
   threshold      -18 dB
   time           2
+  gain           0 dB
 
 patch Pads family=wide
   # Slow and deep on a pad: it breathes instead of fading.
   depth          0.9
   time           4
   threshold      -28 dB
+  gain           4 dB
 
 patch Grind family=wreck
-  # Driven and fast: the waveform itself gets squashed. For basses that
-  # should snarl.
+  # Driven and fast, squashing the waveform itself: a bass that snarls.
   depth          1
   time           0.15
   in             4 dB
   threshold      -30 dB
-  gain           2 dB
+  gain           7 dB
 
 patch Pump family=wreck
   # Slow release, hard threshold: the whole track breathes with every kick.
@@ -91,4 +103,4 @@ patch Pump family=wreck
   threshold      -30 dB
   down           1
   up             0.4
-  gain           1 dB
+  gain           5.5 dB

@@ -29,7 +29,7 @@ const ParamDef *Spectral::paramDefs(int32_t &count) const {
         {"peaks", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"tilt", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "dB"},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;

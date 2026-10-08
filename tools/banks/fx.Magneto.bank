@@ -45,6 +45,35 @@ patch "Mixtape" family=dubbed
   # SP dubbed three times, the way a compilation was made.
   dubs           #2
 
+patch "High Rate Dub" family=dubbed
+  # The high rate, copied once.
+  mode           #3
+  dubs           #1
+
+patch "Extra Long Dub" family=dubbed
+  # The longest play, copied twice.
+  mode           #4
+  dubs           #2
+
+patch "Long Play Third" family=dubbed
+  # Long play, three copies down.
+  mode           #1
+  dubs           #3
+
+patch "Original Dub" family=dubbed
+  # The standard mode, copied three times.
+  dubs           #3
+
+patch "Four Times Copied" family=dubbed
+  # The longest four-times mode, copied once.
+  mode           #2
+  dubs           #1
+
+patch "Worn Out" family=dubbed
+  # Extra long, copied three times: the most it can take.
+  mode           #4
+  dubs           #3
+
 patch "Under the Mix" family=blend
   # LP4 half under the dry track: the grit without losing the top.
   mode           #2
@@ -55,3 +84,24 @@ patch "Shimmer" family=blend
   mode           #4
   dubs           #3
   mix            0.35
+
+patch "Faint Long Play" family=blend
+  # A little long play under the track.
+  mode           #1
+  mix            0.3
+
+patch "Half Extra Long" family=blend
+  # The longest play, half in.
+  mode           #4
+  mix            0.5
+
+patch "Ghost Copy" family=blend
+  # A worn copy of a copy, a third in.
+  mode           #2
+  dubs           #2
+  mix            0.35
+
+patch "High Rate Blend" family=blend
+  # The high rate's sheen, half in.
+  mode           #3
+  mix            0.5

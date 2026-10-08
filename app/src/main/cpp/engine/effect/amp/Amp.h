@@ -25,7 +25,7 @@ class Amp final : public Effect {
         Drive, Bias, Bass, Mid, Treble, Stack, Presence, Master, Sag,
         Cab, Size, Cone, Mic, Edge, Room, Mix, Gain, Count
     };
-    Amp() { initParams(); }
+    Amp() { initParams(-3.0f); }
 
     // Written out instead of using `ACIDULOUS_EFFECT_COMMON` to avoid
     // including Effects.h, which declares every other effect.

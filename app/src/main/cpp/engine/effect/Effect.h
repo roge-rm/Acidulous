@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <engine/core/Params.h>
@@ -65,7 +66,17 @@ class Effect {
     void setKey(const float *key) { key_ = key; }
 
   protected:
-    void initParams() {
+    /**
+     * `trimDb` is added to the output gain, so that the effect at its default
+     * settings comes out about as loud as it went in. A drive comes out
+     * louder and a chorus quieter; without the trim, putting one on a track
+     * would jump the level. Measured with tools/audition.sh levels.
+     *
+     * The trim follows `mix` up to its default, so at mix 0 the track still
+     * comes through untouched. An effect with a trim needs a mix.
+     */
+    void initParams(float trimDb = 0.0f) {
+        trimDb_ = trimDb;
         int32_t n = 0;
         const ParamDef *defs = paramDefs(n);
         params_.init(defs, n);
@@ -76,6 +87,10 @@ class Effect {
         for (int32_t i = 0; i < n; ++i) {
             if (std::strcmp(defs[i].name, "gain") == 0) gainIndex_ = i;
             if (std::strcmp(defs[i].name, "sidechain") == 0) sidechainIndex_ = i;
+            if (std::strcmp(defs[i].name, "mix") == 0) {
+                mixIndex_ = i;
+                mixDefault_ = defs[i].def;
+            }
         }
     }
 
@@ -90,14 +105,21 @@ class Effect {
      */
     void applyGain(float *L, float *R, int32_t frames, bool stereo) {
         if (gainIndex_ < 0) return;
-        const float db = params_.get(gainIndex_);
-        if (db > -0.01f && db < 0.01f) return; // the default costs nothing
+        float trim = trimDb_;
+        if (trim != 0.0f && mixIndex_ >= 0 && mixDefault_ > 0.0f) {
+            trim *= std::min(1.0f, params_.get(mixIndex_) / mixDefault_);
+        }
+        const float db = params_.get(gainIndex_) + trim;
+        if (db > -0.01f && db < 0.01f) return; // no trim costs nothing
         const float g = std::pow(10.0f, db * 0.05f);
         for (int32_t i = 0; i < frames; ++i) L[i] *= g;
         if (stereo) for (int32_t i = 0; i < frames; ++i) R[i] *= g;
     }
     int32_t gainIndex_ = -1;
     int32_t sidechainIndex_ = -1;
+    float trimDb_ = 0.0f;
+    int32_t mixIndex_ = -1;
+    float mixDefault_ = 0.0f;
 
   protected:
     ParamSet params_;

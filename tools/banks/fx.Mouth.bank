@@ -29,6 +29,7 @@ patch Yowl family=talk
   depth          1
   size           0.35
   nasal          0.2
+  gain           2 dB
 
 patch Choir family=talk
   # Held on "ah", a bigger throat: a pad that sings.
@@ -36,6 +37,22 @@ patch Choir family=talk
   depth          0
   size           0.7
   mix            0.8
+  gain           -2 dB
+
+patch Ah family=talk
+  # An open ah, held.
+  move           #0
+  vowel          0.1
+  size           0.5
+  gain           -0.5 dB
+
+patch "Small Mouth" family=talk
+  # A smaller mouth, higher and nasal.
+  move           #0
+  vowel          0.4
+  size           0.2
+  nasal          0.5
+  gain           5 dB
 
 patch Wow family=sweep
   # A slow sweep on the beat: oo to ah and back every bar.
@@ -51,6 +68,7 @@ patch Chatter family=sweep
   vowel          0.25
   depth          0.6
   nasal          0.4
+  gain           4 dB
 
 patch Robot family=sweep
   # Small and bright, sixteenth steps of vowel: a robot reading aloud.
@@ -59,6 +77,15 @@ patch Robot family=sweep
   vowel          0.4
   depth          0.6
   size           0.25
+  gain           2 dB
+
+patch "Wah Sweep" family=sweep
+  # A slow sweep from oo to ee, on the beat.
+  move           #1
+  rate           #13
+  depth          0.9
+  vowel          0.5
+  gain           1 dB
 
 patch Vocode family=key
   # The vowel follows another track: point the sidechain at a drum loop and
@@ -74,3 +101,4 @@ patch Mumble family=key
   depth          0.4
   size           0.75
   nasal          0.5
+  gain           3.5 dB

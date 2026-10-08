@@ -16,7 +16,7 @@ namespace acidulous::effect {
 class Mouth final : public Effect {
   public:
     enum P { Vowel, Size, Nasal, Move, Rate, Depth, Mix, Gain, Sidechain, Count };
-    Mouth() { initParams(); }
+    Mouth() { initParams(-5.5f); }
     const char *typeName() const override { return "Mouth"; }
     const ParamDef *paramDefs(int32_t &count) const override;
     void prepare(int32_t sampleRate) override;

@@ -24,11 +24,17 @@ patch Chorale family=slow
   width          0.8
 
 patch Distant family=slow
-  # The microphones well back, so the cabinet is felt more than heard.
+  # The microphones well back: a gentle swing.
   slow           0.9 Hz
   distance       0.85
   width          0.6
   mix            0.8
+
+patch Brake family=slow
+  # Stopped: the horn pointed one way.
+  speed          #0
+  distance       0.3
+  gain           -2 dB
 
 patch Fast family=fast
   # Full speed, the sound everyone knows from the organ.
@@ -49,6 +55,19 @@ patch Guitar family=fast
   fast           5.8 Hz
   ramp           1.4 s
   mix            0.6
+  gain           2.5 dB
+
+patch "Ramping Up" family=fast
+  # Slow to fast with a long ramp, for a swell.
+  speed          #2
+  ramp           3 s
+  distance       0.35
+
+patch "Close Mic" family=fast
+  # Mics close in: deeper whirl, more doppler.
+  speed          #2
+  distance       0.1
+  angle          0.9
 
 patch Quarter family=tempo
   # A turn a beat.

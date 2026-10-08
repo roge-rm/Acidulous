@@ -43,7 +43,19 @@ patch "One Bit" family=bits
   # No make-up here: one bit is a square wave, so it is quiet by loudness and
   # enormous by peak, and a trim measured on the first sends it over full
   # scale on the second.
-  gain           -3 dB
+  gain           14 dB
+
+patch Coarse family=bits
+  # Four bits: a loud, coarse grain.
+  bits           4
+  rate           24000
+  gain           -1 dB
+
+patch "Twelve Bit" family=bits
+  # The old samplers' twelve bits, gently dirty.
+  bits           12
+  rate           26000
+  tone           12000 Hz
 
 patch Downsample family=rate
   # Depth untouched, rate cut hard: the aliases fold back down the spectrum and
@@ -60,6 +72,12 @@ patch Phone family=rate
   rate           8000
   tone           3500 Hz
 
+patch Telephone family=rate
+  # A low rate and the top cut, small and far.
+  bits           8
+  rate           6000
+  tone           3000 Hz
+
 patch Unstable family=jitter
   # The sample clock wandering gently. Nothing is obviously wrong and nothing
   # is quite in tune with itself - the effect a worn-out sampler has before it
@@ -75,3 +93,10 @@ patch Broken family=jitter
   rate           9000
   jitter         0.9
   tone           8000 Hz
+
+patch Unsteady family=jitter
+  # The clock wandering, the grain shifting.
+  bits           10
+  rate           16000
+  jitter         0.6
+  mix            0.7

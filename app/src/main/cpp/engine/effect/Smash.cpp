@@ -34,7 +34,7 @@ const ParamDef *Smash::paramDefs(int32_t &count) const {
         {"mid", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "dB"},
         {"high", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "dB"},
         {"in", -12.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;

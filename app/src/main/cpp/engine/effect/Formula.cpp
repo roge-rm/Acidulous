@@ -18,7 +18,7 @@ const ParamDef *Formula::paramDefs(int32_t &count) const {
         {"drive", 0.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
         {"smooth", 500.0f, 20000.0f, 20000.0f, Curve::Exponential, 0, "Hz"},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;

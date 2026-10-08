@@ -5596,31 +5596,79 @@ internal object FactoryBanks {
         mapOf("time" to 0f, "feedback" to 0.126315787f, "tone" to 0.6614124f, "pingpong" to 0f, "mix" to 0.28f),
         family = "short")
 
-    private fun fx_delay2() = Patch("fx.Delay", "Eighth Sync",
+    private fun fx_delay2() = Patch("fx.Delay", "Doubler",
+        mapOf("time" to 0f, "feedback" to 0f, "pingpong" to 0f, "mix" to 0.3f),
+        family = "short")
+
+    private fun fx_delay3() = Patch("fx.Delay", "Rockabilly",
+        mapOf("time" to 0.142857149f, "feedback" to 0.210526317f, "tone" to 0.7693253f, "pingpong" to 0f),
+        family = "short")
+
+    private fun fx_delay4() = Patch("fx.Delay", "Eighth Sync",
         mapOf("time" to 0.2857143f, "feedback" to 0.4f, "tone" to 0.7693253f, "pingpong" to 0f, "mix" to 0.32f),
         family = "synced")
 
-    private fun fx_delay3() = Patch("fx.Delay", "Ping Pong",
+    private fun fx_delay5() = Patch("fx.Delay", "Ping Pong",
         mapOf("feedback" to 0.5263158f, "tone" to 0.801938951f, "mix" to 0.38f),
         family = "synced")
 
-    private fun fx_delay4() = Patch("fx.Delay", "Dub",
+    private fun fx_delay6() = Patch("fx.Delay", "Dotted Eighth",
+        mapOf("mix" to 0.3f),
+        family = "synced")
+
+    private fun fx_delay7() = Patch("fx.Delay", "Quarter",
+        mapOf("time" to 0.5714286f, "feedback" to 0.368421048f, "mix" to 0.3f),
+        family = "synced")
+
+    private fun fx_delay8() = Patch("fx.Delay", "Half Bar",
+        mapOf("time" to 0.857142866f, "feedback" to 0.4736842f, "tone" to 0.63264513f, "mix" to 0.3f),
+        family = "synced")
+
+    private fun fx_delay9() = Patch("fx.Delay", "Dub",
         mapOf("time" to 0.714285731f, "feedback" to 0.863157868f, "tone" to 0.4866298f, "mix" to 0.45f),
         family = "dub")
 
-    private fun fx_delay5() = Patch("fx.Delay", "Ducked",
+    private fun fx_delay10() = Patch("fx.Delay", "Ducked",
         mapOf("time" to 0.5714286f, "feedback" to 0.578947365f, "tone" to 0.696724832f, "mix" to 0.5f, "duck" to 0.8f),
         family = "dub")
 
-    private fun fx_delay6() = Patch("fx.Delay", "Tape",
-        mapOf("time" to 0.5714286f, "feedback" to 0.578947365f, "tone" to 0.57814467f, "pingpong" to 0f, "mix" to 0.36f, "wobble" to 0.35f),
+    private fun fx_delay11() = Patch("fx.Delay", "Long Dub",
+        mapOf("time" to 1f, "feedback" to 0.7368421f, "tone" to 0.4633513f, "mix" to 0.4f),
+        family = "dub")
+
+    private fun fx_delay12() = Patch("fx.Delay", "Wobbly Dub",
+        mapOf("time" to 0.714285731f, "feedback" to 0.7894737f, "tone" to 0.51785177f, "mix" to 0.4f, "wobble" to 0.4f),
+        family = "dub")
+
+    private fun fx_delay13() = Patch("fx.Delay", "Tape",
+        mapOf("time" to 0.5714286f, "feedback" to 0.578947365f, "tone" to 0.57814467f, "pingpong" to 0f, "mix" to 0.36f, "wobble" to 0.35f, "gain" to 0.447916657f),
         family = "tape")
 
-    private fun fx_delay7() = Patch("fx.Delay", "Seasick",
+    private fun fx_delay14() = Patch("fx.Delay", "Seasick",
         mapOf("time" to 0.857142866f, "feedback" to 0.7368421f, "tone" to 0.5455311f, "mix" to 0.5f, "duck" to 0.3f, "wobble" to 0.85f),
         family = "tape")
 
-    private val fx_delay: List<Patch> by lazy { listOf(fx_delay0(), fx_delay1(), fx_delay2(), fx_delay3(), fx_delay4(), fx_delay5(), fx_delay6(), fx_delay7()) }
+    private fun fx_delay15() = Patch("fx.Delay", "Melting Tape",
+        mapOf("time" to 0.2857143f, "feedback" to 0.5263158f, "tone" to 0.562381864f, "wobble" to 0.8f),
+        family = "tape")
+
+    private fun fx_delay16() = Patch("fx.Delay", "Vocal Echo",
+        mapOf("time" to 0.5714286f, "feedback" to 0.368421048f, "duck" to 0.8f),
+        family = "ambient")
+
+    private fun fx_delay17() = Patch("fx.Delay", "Wash",
+        mapOf("time" to 0.857142866f, "feedback" to 0.842105269f, "tone" to 0.393088043f, "gain" to 0.479166657f),
+        family = "ambient")
+
+    private fun fx_delay18() = Patch("fx.Delay", "Dark Ping Pong",
+        mapOf("time" to 0.2857143f, "feedback" to 0.5263158f, "tone" to 0.51785177f, "mix" to 0.3f),
+        family = "ambient")
+
+    private fun fx_delay19() = Patch("fx.Delay", "Ghost Notes",
+        mapOf("time" to 0.142857149f, "feedback" to 0.3157895f, "mix" to 0.15f),
+        family = "ambient")
+
+    private val fx_delay: List<Patch> by lazy { listOf(fx_delay0(), fx_delay1(), fx_delay2(), fx_delay3(), fx_delay4(), fx_delay5(), fx_delay6(), fx_delay7(), fx_delay8(), fx_delay9(), fx_delay10(), fx_delay11(), fx_delay12(), fx_delay13(), fx_delay14(), fx_delay15(), fx_delay16(), fx_delay17(), fx_delay18(), fx_delay19()) }
 
     private fun fx_reverb0() = Patch("fx.Reverb", "Init", emptyMap(),
         family = "room")
@@ -5641,69 +5689,77 @@ internal object FactoryBanks {
         mapOf("size" to 0.95f, "damp" to 0.3f, "tone" to 0.6425486f, "predelay" to 0.3f, "mix" to 0.42f),
         family = "room")
 
-    private fun fx_reverb5() = Patch("fx.Reverb", "Dark",
+    private fun fx_reverb5() = Patch("fx.Reverb", "Plate",
+        mapOf("size" to 0.45f, "damp" to 0.15f, "tone" to 0.8868528f, "predelay" to 0.075f, "mix" to 0.25f),
+        family = "room")
+
+    private fun fx_reverb6() = Patch("fx.Reverb", "Dark",
         mapOf("size" to 0.6f, "damp" to 0.8f, "tone" to 0.413449615f, "predelay" to 0.125f, "mix" to 0.32f),
         family = "tone")
 
-    private fun fx_reverb6() = Patch("fx.Reverb", "Bright",
+    private fun fx_reverb7() = Patch("fx.Reverb", "Bright",
         mapOf("size" to 0.55f, "damp" to 0.05f, "tone" to 0.967132032f, "predelay" to 0.06f),
         family = "tone")
 
-    private fun fx_reverb7() = Patch("fx.Reverb", "Gated",
+    private fun fx_reverb8() = Patch("fx.Reverb", "Gated",
         mapOf("size" to 0.85f, "damp" to 0.25f, "predelay" to 0.04f, "mix" to 0.55f, "gate" to 0.18f),
         family = "gate")
 
-    private fun fx_reverb8() = Patch("fx.Reverb", "Snare Gate",
+    private fun fx_reverb9() = Patch("fx.Reverb", "Snare Gate",
         mapOf("size" to 0.6f, "damp" to 0.15f, "tone" to 0.862571836f, "predelay" to 0.025f, "mix" to 0.6f, "gate" to 0.08f),
         family = "gate")
 
-    private fun fx_reverb9() = Patch("fx.Reverb", "Freeze",
+    private fun fx_reverb10() = Patch("fx.Reverb", "Freeze",
         mapOf("size" to 0.8f, "damp" to 0.1f, "predelay" to 0.1f, "mix" to 0.6f, "freeze" to 1f),
         family = "hold")
 
-    private fun fx_reverb10() = Patch("fx.Reverb", "Shimmer",
+    private fun fx_reverb11() = Patch("fx.Reverb", "Shimmer",
         mapOf("size" to 0.8f, "damp" to 0.35f, "predelay" to 0.15f, "mix" to 0.45f, "shimmer" to 0.55f),
         family = "shimmer")
 
-    private fun fx_reverb11() = Patch("fx.Reverb", "Ascend",
+    private fun fx_reverb12() = Patch("fx.Reverb", "Ascend",
         mapOf("size" to 0.45f, "damp" to 0.1f, "tone" to 0.929869354f, "predelay" to 0.075f, "mix" to 0.55f, "shimmer" to 1f),
         family = "shimmer")
 
-    private fun fx_reverb12() = Patch("fx.Reverb", "Held Sky",
+    private fun fx_reverb13() = Patch("fx.Reverb", "Held Sky",
         mapOf("size" to 0.95f, "damp" to 0.6f, "tone" to 0.6131472f, "predelay" to 0.25f, "mix" to 0.5f, "shimmer" to 0.4f, "wobble" to 0.3f),
         family = "shimmer")
 
-    private fun fx_reverb13() = Patch("fx.Reverb", "Eight Bit",
+    private fun fx_reverb14() = Patch("fx.Reverb", "Eight Bit",
         mapOf("size" to 0.55f, "damp" to 0.3f, "predelay" to 0.06f, "mix" to 0.4f, "bits" to 0.466666669f),
         family = "lofi")
 
-    private fun fx_reverb14() = Patch("fx.Reverb", "Four Bit",
+    private fun fx_reverb15() = Patch("fx.Reverb", "Four Bit",
         mapOf("size" to 0.7f, "damp" to 0.2f, "tone" to 0.736443f, "predelay" to 0.1f, "mix" to 0.45f, "bits" to 0.2f),
         family = "lofi")
 
-    private fun fx_reverb15() = Patch("fx.Reverb", "Downsampled",
+    private fun fx_reverb16() = Patch("fx.Reverb", "Downsampled",
         mapOf("size" to 0.6f, "damp" to 0.25f, "mix" to 0.42f, "crush" to 0.761471f),
         family = "lofi")
 
-    private fun fx_reverb16() = Patch("fx.Reverb", "Ruined",
+    private fun fx_reverb17() = Patch("fx.Reverb", "Ruined",
         mapOf("size" to 0.85f, "tone" to 0.543016553f, "predelay" to 0.2f, "mix" to 0.5f, "bits" to 0.266666681f, "crush" to 0.633985f, "wobble" to 0.8f),
         family = "lofi")
 
-    private fun fx_reverb17() = Patch("fx.Reverb", "Seasick",
+    private fun fx_reverb18() = Patch("fx.Reverb", "Seasick",
         mapOf("size" to 0.9f, "damp" to 0.45f, "predelay" to 0.125f, "mix" to 0.4f, "wobble" to 1f),
         family = "lofi")
 
-    private val fx_reverb: List<Patch> by lazy { listOf(fx_reverb0(), fx_reverb1(), fx_reverb2(), fx_reverb3(), fx_reverb4(), fx_reverb5(), fx_reverb6(), fx_reverb7(), fx_reverb8(), fx_reverb9(), fx_reverb10(), fx_reverb11(), fx_reverb12(), fx_reverb13(), fx_reverb14(), fx_reverb15(), fx_reverb16(), fx_reverb17()) }
+    private fun fx_reverb19() = Patch("fx.Reverb", "Spring",
+        mapOf("size" to 0.3f, "damp" to 0.5f, "tone" to 0.6425486f, "mix" to 0.25f, "wobble" to 0.5f),
+        family = "lofi")
+
+    private val fx_reverb: List<Patch> by lazy { listOf(fx_reverb0(), fx_reverb1(), fx_reverb2(), fx_reverb3(), fx_reverb4(), fx_reverb5(), fx_reverb6(), fx_reverb7(), fx_reverb8(), fx_reverb9(), fx_reverb10(), fx_reverb11(), fx_reverb12(), fx_reverb13(), fx_reverb14(), fx_reverb15(), fx_reverb16(), fx_reverb17(), fx_reverb18(), fx_reverb19()) }
 
     private fun fx_eq0() = Patch("fx.Eq", "Init", emptyMap(),
         family = "shape")
 
     private fun fx_eq1() = Patch("fx.Eq", "Low Cut",
-        mapOf("lowgain" to 0f, "lowfreq" to 0.362782747f),
+        mapOf("lowgain" to 0f, "lowfreq" to 0.362782747f, "gain" to 0.5416667f),
         family = "cut")
 
     private fun fx_eq2() = Patch("fx.Eq", "Mud Cut",
-        mapOf("midgain" to 0.3f, "midfreq" to 0.127410948f, "midq" to 0.462756425f, "gain" to 0.5861111f),
+        mapOf("midgain" to 0.3f, "midfreq" to 0.127410948f, "midq" to 0.462756425f, "gain" to 0.564583361f),
         family = "cut")
 
     private fun fx_eq3() = Patch("fx.Eq", "Hiss Cut",
@@ -5715,7 +5771,7 @@ internal object FactoryBanks {
         family = "shape")
 
     private fun fx_eq5() = Patch("fx.Eq", "Scoop",
-        mapOf("midgain" to 0.1f, "midfreq" to 0.407732874f, "midq" to 0.231378213f, "gain" to 0.563888848f),
+        mapOf("midgain" to 0.1f, "midfreq" to 0.407732874f, "midq" to 0.231378213f, "gain" to 0.547916651f),
         family = "shape")
 
     private fun fx_eq6() = Patch("fx.Eq", "Presence",
@@ -5726,142 +5782,266 @@ internal object FactoryBanks {
         mapOf("highgain" to 0.733333349f, "highfreq" to 0.8784677f),
         family = "shape")
 
-    private fun fx_eq8() = Patch("fx.Eq", "Warmer",
-        mapOf("tilt" to 0.275f),
+    private fun fx_eq8() = Patch("fx.Eq", "Warmth",
+        mapOf("lowgain" to 0.6f, "lowfreq" to 0.5233166f, "highgain" to 0.4f, "highfreq" to 0.70717746f),
+        family = "shape")
+
+    private fun fx_eq9() = Patch("fx.Eq", "Forward",
+        mapOf("midgain" to 0.6333333f, "midfreq" to 0.7341119f),
+        family = "shape")
+
+    private fun fx_eq10() = Patch("fx.Eq", "Warmer",
+        mapOf("tilt" to 0.275f, "gain" to 0.447916657f),
         family = "tilt")
 
-    private fun fx_eq9() = Patch("fx.Eq", "Brighter",
-        mapOf("tilt" to 0.725f),
+    private fun fx_eq11() = Patch("fx.Eq", "Brighter",
+        mapOf("tilt" to 0.725f, "gain" to 0.5416667f),
         family = "tilt")
 
-    private val fx_eq: List<Patch> by lazy { listOf(fx_eq0(), fx_eq1(), fx_eq2(), fx_eq3(), fx_eq4(), fx_eq5(), fx_eq6(), fx_eq7(), fx_eq8(), fx_eq9()) }
+    private val fx_eq: List<Patch> by lazy { listOf(fx_eq0(), fx_eq1(), fx_eq2(), fx_eq3(), fx_eq4(), fx_eq5(), fx_eq6(), fx_eq7(), fx_eq8(), fx_eq9(), fx_eq10(), fx_eq11()) }
 
     private fun fx_distortion0() = Patch("fx.Distortion", "Init", emptyMap(),
         family = "soft")
 
     private fun fx_distortion1() = Patch("fx.Distortion", "Warm",
-        mapOf("drive" to 0.2483927f, "tone" to 0.7958837f, "mix" to 0.55f),
+        mapOf("drive" to 0.2483927f, "tone" to 0.7958837f, "mix" to 0.55f, "gain" to 0.489583343f),
         family = "soft")
 
     private fun fx_distortion2() = Patch("fx.Distortion", "Crunch",
         mapOf("drive" to 0.5956347f, "tone" to 0.6456324f),
         family = "soft")
 
-    private fun fx_distortion3() = Patch("fx.Distortion", "Fuzz",
+    private fun fx_distortion3() = Patch("fx.Distortion", "Overdrive",
+        mapOf("drive" to 0.485719174f, "tone" to 0.6922378f),
+        family = "soft")
+
+    private fun fx_distortion4() = Patch("fx.Distortion", "Saturate",
+        mapOf("drive" to 0.297817349f, "mix" to 0.4f, "gain" to 0.479166657f),
+        family = "soft")
+
+    private fun fx_distortion5() = Patch("fx.Distortion", "Warm Bass",
+        mapOf("tone" to 0.515054f, "mix" to 0.6f, "gain" to 0.479166657f),
+        family = "soft")
+
+    private fun fx_distortion6() = Patch("fx.Distortion", "Fuzz",
         mapOf("drive" to 0.8379353f, "tone" to 0.71269846f, "mode" to 0.333333343f),
         family = "hard")
 
-    private fun fx_distortion4() = Patch("fx.Distortion", "Wall",
+    private fun fx_distortion7() = Patch("fx.Distortion", "Wall",
         mapOf("drive" to 1f, "tone" to 0.942959547f, "mode" to 0.333333343f),
         family = "hard")
 
-    private fun fx_distortion5() = Patch("fx.Distortion", "Fold",
+    private fun fx_distortion8() = Patch("fx.Distortion", "Razor",
+        mapOf("drive" to 0.7341119f, "tone" to 0.8694216f, "mode" to 0.333333343f, "gain" to 0.46875f),
+        family = "hard")
+
+    private fun fx_distortion9() = Patch("fx.Distortion", "Square Up",
+        mapOf("drive" to 1f, "tone" to 0.6456324f, "mode" to 0.333333343f, "gain" to 0.5208333f),
+        family = "hard")
+
+    private fun fx_distortion10() = Patch("fx.Distortion", "Thin Fuzz",
+        mapOf("drive" to 0.8120982f, "tone" to 0.7958837f, "mode" to 0.333333343f, "bias" to 0.3f, "gain" to 0.489583343f),
+        family = "hard")
+
+    private fun fx_distortion11() = Patch("fx.Distortion", "Fold",
         mapOf("drive" to 0.527507067f, "mode" to 0.6666667f),
         family = "fold")
 
-    private fun fx_distortion6() = Patch("fx.Distortion", "Shatter",
+    private fun fx_distortion12() = Patch("fx.Distortion", "Shatter",
         mapOf("drive" to 0.883221149f, "tone" to 0.8694216f, "mode" to 0.6666667f),
         family = "fold")
 
-    private fun fx_distortion7() = Patch("fx.Distortion", "Tube",
+    private fun fx_distortion13() = Patch("fx.Distortion", "Wavefolder",
+        mapOf("drive" to 0.563705444f, "mode" to 0.6666667f, "gain" to 0.479166657f),
+        family = "fold")
+
+    private fun fx_distortion14() = Patch("fx.Distortion", "Deep Fold",
+        mapOf("drive" to 0.872589052f, "mode" to 0.6666667f, "gain" to 0.53125f),
+        family = "fold")
+
+    private fun fx_distortion15() = Patch("fx.Distortion", "Tube",
         mapOf("drive" to 0.650033534f, "tone" to 0.7316421f, "mode" to 1f, "bias" to 0.25f),
         family = "tube")
 
-    private fun fx_distortion8() = Patch("fx.Distortion", "Asymmetric",
+    private fun fx_distortion16() = Patch("fx.Distortion", "Asymmetric",
         mapOf("drive" to 0.7154089f, "tone" to 0.6922378f, "mix" to 0.8f, "mode" to 1f, "bias" to 0.85f),
         family = "tube")
 
-    private val fx_distortion: List<Patch> by lazy { listOf(fx_distortion0(), fx_distortion1(), fx_distortion2(), fx_distortion3(), fx_distortion4(), fx_distortion5(), fx_distortion6(), fx_distortion7(), fx_distortion8()) }
+    private fun fx_distortion17() = Patch("fx.Distortion", "Valve Warmth",
+        mapOf("drive" to 0.297817349f, "mode" to 1f, "bias" to 0.4f),
+        family = "tube")
+
+    private fun fx_distortion18() = Patch("fx.Distortion", "Hot Tube",
+        mapOf("drive" to 0.7154089f, "tone" to 0.6922378f, "mode" to 1f, "gain" to 0.489583343f),
+        family = "tube")
+
+    private fun fx_distortion19() = Patch("fx.Distortion", "Broken Valve",
+        mapOf("drive" to 0.624196351f, "mode" to 1f, "bias" to 0.9f),
+        family = "tube")
+
+    private val fx_distortion: List<Patch> by lazy { listOf(fx_distortion0(), fx_distortion1(), fx_distortion2(), fx_distortion3(), fx_distortion4(), fx_distortion5(), fx_distortion6(), fx_distortion7(), fx_distortion8(), fx_distortion9(), fx_distortion10(), fx_distortion11(), fx_distortion12(), fx_distortion13(), fx_distortion14(), fx_distortion15(), fx_distortion16(), fx_distortion17(), fx_distortion18(), fx_distortion19()) }
 
     private fun fx_compressor0() = Patch("fx.Compressor", "Init", emptyMap(),
         family = "glue")
 
     private fun fx_compressor1() = Patch("fx.Compressor", "Glue",
-        mapOf("threshold" to 0.766666651f, "ratio" to 0.231378213f, "attack" to 0.76701f, "release" to 0.69897f, "makeup" to 0.125f),
+        mapOf("threshold" to 0.766666651f, "ratio" to 0.231378213f, "attack" to 0.76701f, "release" to 0.69897f, "makeup" to 0.125f, "gain" to 0.4375f),
         family = "glue")
 
     private fun fx_compressor2() = Patch("fx.Compressor", "Bus",
-        mapOf("threshold" to 0.6666667f, "makeup" to 0.25f),
+        mapOf("threshold" to 0.6666667f, "makeup" to 0.25f, "gain" to 0.4375f),
         family = "glue")
 
     private fun fx_compressor3() = Patch("fx.Compressor", "Gentle",
-        mapOf("threshold" to 0.8333333f, "ratio" to 0.196207985f, "attack" to 0.8257071f, "release" to 0.80103f, "makeup" to 0.0833333358f),
+        mapOf("threshold" to 0.8333333f, "ratio" to 0.196207985f, "attack" to 0.8257071f, "release" to 0.80103f, "makeup" to 0.0833333358f, "gain" to 0.458333343f),
         family = "glue")
 
-    private fun fx_compressor4() = Patch("fx.Compressor", "Limit",
-        mapOf("threshold" to 0.9f, "ratio" to 1f, "attack" to 0.23299f, "release" to 0.389075637f, "makeup" to 0.166666672f),
+    private fun fx_compressor4() = Patch("fx.Compressor", "Drum Bus",
+        mapOf("attack" to 0.8257071f, "release" to 0.5f, "makeup" to 0.166666672f, "gain" to 0.416666657f),
+        family = "glue")
+
+    private fun fx_compressor5() = Patch("fx.Compressor", "Mix Glue",
+        mapOf("threshold" to 0.8f, "ratio" to 0.135347575f, "attack" to 0.8257071f, "release" to 0.7385606f, "makeup" to 0.0625f, "gain" to 0.46875f),
+        family = "glue")
+
+    private fun fx_compressor6() = Patch("fx.Compressor", "Vocal",
+        mapOf("threshold" to 0.6666667f, "ratio" to 0.3667258f, "makeup" to 0.208333328f, "gain" to 0.458333343f),
+        family = "glue")
+
+    private fun fx_compressor7() = Patch("fx.Compressor", "Bass Even",
+        mapOf("threshold" to 0.6333333f, "ratio" to 0.5372436f, "attack" to 0.6666667f, "release" to 0.588045657f, "makeup" to 0.125f),
+        family = "glue")
+
+    private fun fx_compressor8() = Patch("fx.Compressor", "Limiter Soft",
+        mapOf("threshold" to 0.9f, "ratio" to 0.7686218f, "attack" to 0.333333343f, "release" to 0.451545f),
+        family = "glue")
+
+    private fun fx_compressor9() = Patch("fx.Compressor", "Limit",
+        mapOf("threshold" to 0.9f, "ratio" to 1f, "attack" to 0.23299f, "release" to 0.389075637f, "makeup" to 0.166666672f, "gain" to 0.416666657f),
         family = "squash")
 
-    private fun fx_compressor5() = Patch("fx.Compressor", "Squash",
-        mapOf("threshold" to 0.433333337f, "ratio" to 0.880939f, "attack" to 0.492373765f, "release" to 0.30102998f, "makeup" to 0.5f, "gain" to 0.591666639f),
+    private fun fx_compressor10() = Patch("fx.Compressor", "Squash",
+        mapOf("threshold" to 0.433333337f, "ratio" to 0.880939f, "attack" to 0.492373765f, "release" to 0.30102998f, "makeup" to 0.5f, "gain" to 0.5520833f),
         family = "squash")
 
-    private fun fx_compressor6() = Patch("fx.Compressor", "Pump",
-        mapOf("ratio" to 0.598104f, "attack" to 0.492373765f, "release" to 0.60205996f, "makeup" to 0.25f, "pump" to 0.7f),
+    private fun fx_compressor11() = Patch("fx.Compressor", "Slam",
+        mapOf("threshold" to 0.416666657f, "ratio" to 1f, "attack" to 0.23299f, "release" to 0.389075637f, "makeup" to 0.5833333f, "gain" to 0.5833333f),
+        family = "squash")
+
+    private fun fx_compressor12() = Patch("fx.Compressor", "Room Crush",
+        mapOf("threshold" to 0.333333343f, "ratio" to 0.8294822f, "attack" to 0.333333343f, "release" to 0.650515f, "makeup" to 0.6666667f, "gain" to 0.6666667f),
+        family = "squash")
+
+    private fun fx_compressor13() = Patch("fx.Compressor", "Snap",
+        mapOf("threshold" to 0.5833333f, "ratio" to 0.694134653f, "attack" to 0.492373765f, "release" to 0.238560632f, "makeup" to 0.208333328f),
+        family = "squash")
+
+    private fun fx_compressor14() = Patch("fx.Compressor", "Pump",
+        mapOf("ratio" to 0.598104f, "attack" to 0.492373765f, "release" to 0.60205996f, "makeup" to 0.25f, "pump" to 0.7f, "gain" to 0.479166657f),
         family = "pump")
 
-    private fun fx_compressor7() = Patch("fx.Compressor", "Four Floor",
-        mapOf("threshold" to 0.6333333f, "ratio" to 0.694134653f, "attack" to 0.333333343f, "release" to 0.477121264f, "makeup" to 0.333333343f, "pump" to 1f),
+    private fun fx_compressor15() = Patch("fx.Compressor", "Four Floor",
+        mapOf("threshold" to 0.6333333f, "ratio" to 0.694134653f, "attack" to 0.333333343f, "release" to 0.477121264f, "makeup" to 0.333333343f, "pump" to 1f, "gain" to 0.5104167f),
         family = "pump")
 
-    private val fx_compressor: List<Patch> by lazy { listOf(fx_compressor0(), fx_compressor1(), fx_compressor2(), fx_compressor3(), fx_compressor4(), fx_compressor5(), fx_compressor6(), fx_compressor7()) }
+    private fun fx_compressor16() = Patch("fx.Compressor", "Half Time Pump",
+        mapOf("pump" to 0.8f, "pumprate" to 0.333333343f, "gain" to 0.59375f),
+        family = "pump")
+
+    private fun fx_compressor17() = Patch("fx.Compressor", "Eighths Pump",
+        mapOf("pump" to 0.7f, "pumprate" to 1f, "gain" to 0.5729167f),
+        family = "pump")
+
+    private fun fx_compressor18() = Patch("fx.Compressor", "Gentle Pump",
+        mapOf("pump" to 0.4f, "gain" to 0.5729167f),
+        family = "pump")
+
+    private fun fx_compressor19() = Patch("fx.Compressor", "Sidechain Duck",
+        mapOf("threshold" to 0.5f, "ratio" to 0.694134653f, "attack" to 0.333333343f, "release" to 0.588045657f, "makeup" to 0.416666657f, "gain" to 0.5833333f),
+        family = "pump")
+
+    private val fx_compressor: List<Patch> by lazy { listOf(fx_compressor0(), fx_compressor1(), fx_compressor2(), fx_compressor3(), fx_compressor4(), fx_compressor5(), fx_compressor6(), fx_compressor7(), fx_compressor8(), fx_compressor9(), fx_compressor10(), fx_compressor11(), fx_compressor12(), fx_compressor13(), fx_compressor14(), fx_compressor15(), fx_compressor16(), fx_compressor17(), fx_compressor18(), fx_compressor19()) }
 
     private fun fx_filter0() = Patch("fx.Filter", "Init", emptyMap(),
         family = "fixed")
 
     private fun fx_filter1() = Patch("fx.Filter", "Low Cut",
-        mapOf("cutoff" to 0.333333343f, "reso" to 0.1f, "mode" to 0.5f, "gain" to 0.6638889f),
+        mapOf("cutoff" to 0.333333343f, "reso" to 0.1f, "mode" to 0.5f, "gain" to 0.622916639f),
         family = "fixed")
 
     private fun fx_filter2() = Patch("fx.Filter", "Band",
-        mapOf("cutoff" to 0.551070869f, "reso" to 0.35f, "mode" to 1f, "gain" to 0.7638889f),
+        mapOf("cutoff" to 0.551070869f, "reso" to 0.35f, "mode" to 1f, "gain" to 0.75f),
         family = "fixed")
 
     private fun fx_filter3() = Patch("fx.Filter", "Telephone",
-        mapOf("cutoff" to 0.6150327f, "reso" to 0.7f, "mode" to 1f, "gain" to 0.7583333f),
+        mapOf("cutoff" to 0.6150327f, "reso" to 0.7f, "mode" to 1f, "gain" to 0.75f),
         family = "fixed")
 
-    private fun fx_filter4() = Patch("fx.Filter", "Auto Wah",
+    private fun fx_filter4() = Patch("fx.Filter", "High Cut",
+        mapOf("cutoff" to 0.725363731f, "reso" to 0.1f),
+        family = "fixed")
+
+    private fun fx_filter5() = Patch("fx.Filter", "Radio",
+        mapOf("reso" to 0.5f, "mode" to 1f, "gain" to 0.78125f),
+        family = "fixed")
+
+    private fun fx_filter6() = Patch("fx.Filter", "Auto Wah",
         mapOf("cutoff" to 0.440739781f, "reso" to 0.6f, "envdepth" to 0.875f),
         family = "sweep")
 
-    private fun fx_filter5() = Patch("fx.Filter", "Reverse Wah",
+    private fun fx_filter7() = Patch("fx.Filter", "Reverse Wah",
         mapOf("cutoff" to 0.725363731f, "reso" to 0.55f, "envdepth" to 0.15f),
         family = "sweep")
 
-    private fun fx_filter6() = Patch("fx.Filter", "Slow Sweep",
+    private fun fx_filter8() = Patch("fx.Filter", "Slow Sweep",
         mapOf("cutoff" to 0.53402f, "reso" to 0.25f, "lforate" to 0.9375f, "lfodepth" to 0.925f),
         family = "sweep")
 
-    private fun fx_filter7() = Patch("fx.Filter", "Scream",
-        mapOf("cutoff" to 0.492373765f, "reso" to 0.88f, "lforate" to 0.5f, "lfodepth" to 0.8f),
+    private fun fx_filter9() = Patch("fx.Filter", "Bar Sweep",
+        mapOf("cutoff" to 0.43367666f, "reso" to 0.5f, "lfodepth" to 0.9f),
+        family = "sweep")
+
+    private fun fx_filter10() = Patch("fx.Filter", "Envelope Up",
+        mapOf("cutoff" to 0.392030418f, "reso" to 0.6f, "envdepth" to 0.9f),
+        family = "sweep")
+
+    private fun fx_filter11() = Patch("fx.Filter", "Scream",
+        mapOf("cutoff" to 0.492373765f, "reso" to 0.88f, "lforate" to 0.5f, "lfodepth" to 0.8f, "gain" to 0.395833343f),
         family = "extreme")
 
-    private fun fx_filter8() = Patch("fx.Filter", "Rhythmic",
+    private fun fx_filter12() = Patch("fx.Filter", "Rhythmic",
         mapOf("cutoff" to 0.46598f, "reso" to 0.72f, "lforate" to 0.125f, "lfodepth" to 0.95f, "envdepth" to 0.65f),
         family = "extreme")
 
-    private fun fx_filter9() = Patch("fx.Filter", "Half Wub",
-        mapOf("cutoff" to 0.318080842f, "reso" to 0.55f, "lforate" to 0.6875f, "lfodepth" to 1f, "gain" to 0.5833333f),
+    private fun fx_filter13() = Patch("fx.Filter", "Resonant Peak",
+        mapOf("cutoff" to 0.5927171f, "reso" to 0.95f, "gain" to 0.479166657f),
+        family = "extreme")
+
+    private fun fx_filter14() = Patch("fx.Filter", "Chopper",
+        mapOf("cutoff" to 0.392030418f, "reso" to 0.7f, "lforate" to 0.125f, "lfodepth" to 1f),
+        family = "extreme")
+
+    private fun fx_filter15() = Patch("fx.Filter", "Half Wub",
+        mapOf("cutoff" to 0.318080842f, "reso" to 0.55f, "lforate" to 0.6875f, "lfodepth" to 1f, "gain" to 0.5625f),
         family = "wobble")
 
-    private fun fx_filter10() = Patch("fx.Filter", "Wub",
-        mapOf("cutoff" to 0.3471309f, "reso" to 0.55f, "lforate" to 0.5f, "lfodepth" to 0.95f, "gain" to 0.6111111f),
+    private fun fx_filter16() = Patch("fx.Filter", "Wub",
+        mapOf("cutoff" to 0.3471309f, "reso" to 0.55f, "lforate" to 0.5f, "lfodepth" to 0.95f, "gain" to 0.5833333f),
         family = "wobble")
 
-    private fun fx_filter11() = Patch("fx.Filter", "Wobble",
-        mapOf("cutoff" to 0.3471309f, "reso" to 0.6f, "lforate" to 0.3125f, "lfodepth" to 0.95f, "gain" to 0.6111111f),
+    private fun fx_filter17() = Patch("fx.Filter", "Wobble",
+        mapOf("cutoff" to 0.3471309f, "reso" to 0.6f, "lforate" to 0.3125f, "lfodepth" to 0.95f, "gain" to 0.5833333f),
         family = "wobble")
 
-    private fun fx_filter12() = Patch("fx.Filter", "Triplet Wobble",
-        mapOf("cutoff" to 0.359727085f, "reso" to 0.6f, "lforate" to 0.1875f, "lfodepth" to 0.925f, "gain" to 0.6111111f),
+    private fun fx_filter18() = Patch("fx.Filter", "Triplet Wobble",
+        mapOf("cutoff" to 0.359727085f, "reso" to 0.6f, "lforate" to 0.1875f, "lfodepth" to 0.925f, "gain" to 0.5416667f),
         family = "wobble")
 
-    private fun fx_filter13() = Patch("fx.Filter", "Flutter",
-        mapOf("cutoff" to 0.392030418f, "reso" to 0.5f, "lforate" to 0.125f, "lfodepth" to 0.85f, "gain" to 0.6111111f),
+    private fun fx_filter19() = Patch("fx.Filter", "Flutter",
+        mapOf("cutoff" to 0.392030418f, "reso" to 0.5f, "lforate" to 0.125f, "lfodepth" to 0.85f, "gain" to 0.5416667f),
         family = "wobble")
 
-    private val fx_filter: List<Patch> by lazy { listOf(fx_filter0(), fx_filter1(), fx_filter2(), fx_filter3(), fx_filter4(), fx_filter5(), fx_filter6(), fx_filter7(), fx_filter8(), fx_filter9(), fx_filter10(), fx_filter11(), fx_filter12(), fx_filter13()) }
+    private val fx_filter: List<Patch> by lazy { listOf(fx_filter0(), fx_filter1(), fx_filter2(), fx_filter3(), fx_filter4(), fx_filter5(), fx_filter6(), fx_filter7(), fx_filter8(), fx_filter9(), fx_filter10(), fx_filter11(), fx_filter12(), fx_filter13(), fx_filter14(), fx_filter15(), fx_filter16(), fx_filter17(), fx_filter18(), fx_filter19()) }
 
     private fun fx_bitcrusher0() = Patch("fx.Bitcrusher", "Init", emptyMap(),
         family = "bits")
@@ -5875,51 +6055,91 @@ internal object FactoryBanks {
         family = "bits")
 
     private fun fx_bitcrusher3() = Patch("fx.Bitcrusher", "One Bit",
-        mapOf("bits" to 0f, "rate" to 0.80819416f, "tone" to 0.7500248f, "mix" to 0.8f, "gain" to 0.416666657f),
+        mapOf("bits" to 0f, "rate" to 0.80819416f, "tone" to 0.7500248f, "mix" to 0.8f, "gain" to 0.7916667f),
         family = "bits")
 
-    private fun fx_bitcrusher4() = Patch("fx.Bitcrusher", "Downsample",
+    private fun fx_bitcrusher4() = Patch("fx.Bitcrusher", "Coarse",
+        mapOf("bits" to 0.2f, "rate" to 0.848138869f, "gain" to 0.479166657f),
+        family = "bits")
+
+    private fun fx_bitcrusher5() = Patch("fx.Bitcrusher", "Twelve Bit",
+        mapOf("bits" to 0.733333349f, "rate" to 0.86567533f, "tone" to 0.8783663f),
+        family = "bits")
+
+    private fun fx_bitcrusher6() = Patch("fx.Bitcrusher", "Downsample",
         mapOf("bits" to 1f, "rate" to 0.544416547f, "tone" to 0.8783663f),
         family = "rate")
 
-    private fun fx_bitcrusher5() = Patch("fx.Bitcrusher", "Phone",
+    private fun fx_bitcrusher7() = Patch("fx.Bitcrusher", "Phone",
         mapOf("bits" to 0.733333349f, "rate" to 0.6074446f, "tone" to 0.584978163f),
         family = "rate")
 
-    private fun fx_bitcrusher6() = Patch("fx.Bitcrusher", "Unstable",
+    private fun fx_bitcrusher8() = Patch("fx.Bitcrusher", "Telephone",
+        mapOf("rate" to 0.544416547f, "tone" to 0.548273f),
+        family = "rate")
+
+    private fun fx_bitcrusher9() = Patch("fx.Bitcrusher", "Unstable",
         mapOf("bits" to 0.6f, "rate" to 0.7593058f, "jitter" to 0.35f),
         family = "jitter")
 
-    private fun fx_bitcrusher7() = Patch("fx.Bitcrusher", "Broken",
+    private fun fx_bitcrusher10() = Patch("fx.Bitcrusher", "Broken",
         mapOf("bits" to 0.333333343f, "rate" to 0.63324964f, "jitter" to 0.9f, "tone" to 0.781820238f),
         family = "jitter")
 
-    private val fx_bitcrusher: List<Patch> by lazy { listOf(fx_bitcrusher0(), fx_bitcrusher1(), fx_bitcrusher2(), fx_bitcrusher3(), fx_bitcrusher4(), fx_bitcrusher5(), fx_bitcrusher6(), fx_bitcrusher7()) }
+    private fun fx_bitcrusher11() = Patch("fx.Bitcrusher", "Unsteady",
+        mapOf("bits" to 0.6f, "rate" to 0.7593058f, "jitter" to 0.6f, "mix" to 0.7f),
+        family = "jitter")
+
+    private val fx_bitcrusher: List<Patch> by lazy { listOf(fx_bitcrusher0(), fx_bitcrusher1(), fx_bitcrusher2(), fx_bitcrusher3(), fx_bitcrusher4(), fx_bitcrusher5(), fx_bitcrusher6(), fx_bitcrusher7(), fx_bitcrusher8(), fx_bitcrusher9(), fx_bitcrusher10(), fx_bitcrusher11()) }
 
     private fun fx_phaser0() = Patch("fx.Phaser", "Init", emptyMap(),
         family = "classic")
 
     private fun fx_phaser1() = Patch("fx.Phaser", "Four Stage",
-        mapOf("feedback" to 0.3888889f, "gain" to 0.6f),
+        mapOf("feedback" to 0.3888889f),
         family = "classic")
 
     private fun fx_phaser2() = Patch("fx.Phaser", "Six Stage",
-        mapOf("rate" to 0.8125f, "depth" to 0.75f, "feedback" to 0.5f, "stages" to 0.6666667f, "spread" to 0.6f, "gain" to 0.5972222f),
+        mapOf("rate" to 0.8125f, "depth" to 0.75f, "feedback" to 0.5f, "stages" to 0.6666667f, "spread" to 0.6f),
         family = "classic")
 
-    private fun fx_phaser3() = Patch("fx.Phaser", "Deep",
+    private fun fx_phaser3() = Patch("fx.Phaser", "Two Stage",
+        mapOf("rate" to 0.8125f, "depth" to 0.6f, "feedback" to 0.222222239f, "stages" to 0f),
+        family = "classic")
+
+    private fun fx_phaser4() = Patch("fx.Phaser", "Eight Stage",
+        mapOf("rate" to 0.8125f, "depth" to 0.75f, "feedback" to 0.5f, "stages" to 1f),
+        family = "classic")
+
+    private fun fx_phaser5() = Patch("fx.Phaser", "Deep",
         mapOf("depth" to 0.95f, "feedback" to 0.888888955f, "stages" to 1f, "spread" to 0.7f),
         family = "deep")
 
-    private fun fx_phaser4() = Patch("fx.Phaser", "Jet",
-        mapOf("rate" to 0.6875f, "depth" to 1f, "feedback" to 1f, "stages" to 1f, "spread" to 1f, "mix" to 0.65f),
+    private fun fx_phaser6() = Patch("fx.Phaser", "Jet",
+        mapOf("rate" to 0.6875f, "depth" to 1f, "feedback" to 1f, "stages" to 1f, "spread" to 1f, "mix" to 0.65f, "gain" to 0.416666657f),
         family = "deep")
 
-    private fun fx_phaser5() = Patch("fx.Phaser", "Drift",
-        mapOf("rate" to 1f, "depth" to 0.6f, "feedback" to 0.2777778f, "stages" to 0.6666667f, "mix" to 0.4f, "gain" to 0.6361111f),
+    private fun fx_phaser7() = Patch("fx.Phaser", "Resonant",
+        mapOf("depth" to 0.8f, "feedback" to 0.888888955f, "stages" to 0.6666667f),
+        family = "deep")
+
+    private fun fx_phaser8() = Patch("fx.Phaser", "Underwater",
+        mapOf("rate" to 0.9375f, "depth" to 0.9f, "feedback" to 0.6666667f, "stages" to 1f, "mix" to 0.6f),
+        family = "deep")
+
+    private fun fx_phaser9() = Patch("fx.Phaser", "Drift",
+        mapOf("rate" to 1f, "depth" to 0.6f, "feedback" to 0.2777778f, "stages" to 0.6666667f, "mix" to 0.4f, "gain" to 0.5104167f),
         family = "slow")
 
-    private val fx_phaser: List<Patch> by lazy { listOf(fx_phaser0(), fx_phaser1(), fx_phaser2(), fx_phaser3(), fx_phaser4(), fx_phaser5()) }
+    private fun fx_phaser10() = Patch("fx.Phaser", "Glacial",
+        mapOf("rate" to 1f, "depth" to 0.6f),
+        family = "slow")
+
+    private fun fx_phaser11() = Patch("fx.Phaser", "Stereo Swirl",
+        mapOf("rate" to 0.9375f, "feedback" to 0.3888889f, "stages" to 0.6666667f, "spread" to 1f),
+        family = "slow")
+
+    private val fx_phaser: List<Patch> by lazy { listOf(fx_phaser0(), fx_phaser1(), fx_phaser2(), fx_phaser3(), fx_phaser4(), fx_phaser5(), fx_phaser6(), fx_phaser7(), fx_phaser8(), fx_phaser9(), fx_phaser10(), fx_phaser11()) }
 
     private fun fx_flanger0() = Patch("fx.Flanger", "Init", emptyMap(),
         family = "classic")
@@ -5932,81 +6152,173 @@ internal object FactoryBanks {
         mapOf("rate" to 1f, "depth" to 0.15f, "feedback" to 1f, "spread" to 0.3f, "mix" to 0.55f),
         family = "classic")
 
-    private fun fx_flanger3() = Patch("fx.Flanger", "Through Zero",
-        mapOf("rate" to 0.9375f, "depth" to 0.9f, "feedback" to 0.631579f, "negative" to 1f),
+    private fun fx_flanger3() = Patch("fx.Flanger", "Fast Flutter",
+        mapOf("rate" to 0.5f, "depth" to 0.3f, "feedback" to 0.421052635f),
+        family = "classic")
+
+    private fun fx_flanger4() = Patch("fx.Flanger", "Slow Sweep",
+        mapOf("rate" to 0.9375f, "depth" to 0.8f, "feedback" to 0.631579f),
+        family = "classic")
+
+    private fun fx_flanger5() = Patch("fx.Flanger", "Through Zero",
+        mapOf("rate" to 0.9375f, "depth" to 0.9f, "feedback" to 0.631579f, "negative" to 1f, "gain" to 0.458333343f),
         family = "through")
 
-    private fun fx_flanger4() = Patch("fx.Flanger", "Doubler",
+    private fun fx_flanger6() = Patch("fx.Flanger", "Negative Jet",
+        mapOf("depth" to 0.8f, "feedback" to 0.7368421f, "negative" to 1f, "gain" to 0.4375f),
+        family = "through")
+
+    private fun fx_flanger7() = Patch("fx.Flanger", "Zero Crossing",
+        mapOf("rate" to 0.9375f, "depth" to 1f, "feedback" to 0.3157895f),
+        family = "through")
+
+    private fun fx_flanger8() = Patch("fx.Flanger", "Doubler",
         mapOf("rate" to 0.8125f, "depth" to 0.2f, "feedback" to 0f, "spread" to 0.8f, "mix" to 0.35f),
         family = "subtle")
 
-    private fun fx_flanger5() = Patch("fx.Flanger", "Chorused",
+    private fun fx_flanger9() = Patch("fx.Flanger", "Chorused",
         mapOf("rate" to 0.9375f, "depth" to 0.45f, "feedback" to 0.105263159f, "spread" to 1f, "mix" to 0.45f),
         family = "subtle")
 
-    private val fx_flanger: List<Patch> by lazy { listOf(fx_flanger0(), fx_flanger1(), fx_flanger2(), fx_flanger3(), fx_flanger4(), fx_flanger5()) }
+    private fun fx_flanger10() = Patch("fx.Flanger", "Stereo Flange",
+        mapOf("depth" to 0.5f, "feedback" to 0.3157895f, "spread" to 1f),
+        family = "subtle")
+
+    private fun fx_flanger11() = Patch("fx.Flanger", "Ghost",
+        mapOf("rate" to 0.9375f, "depth" to 0.3f, "feedback" to 0.210526317f, "mix" to 0.3f),
+        family = "subtle")
+
+    private val fx_flanger: List<Patch> by lazy { listOf(fx_flanger0(), fx_flanger1(), fx_flanger2(), fx_flanger3(), fx_flanger4(), fx_flanger5(), fx_flanger6(), fx_flanger7(), fx_flanger8(), fx_flanger9(), fx_flanger10(), fx_flanger11()) }
 
     private fun fx_chorus0() = Patch("fx.Chorus", "Init", emptyMap(),
         family = "classic")
 
     private fun fx_chorus1() = Patch("fx.Chorus", "Ensemble",
-        mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.55f, "gain" to 0.608333349f),
+        mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.55f),
         family = "classic")
 
     private fun fx_chorus2() = Patch("fx.Chorus", "Lush",
-        mapOf("rate" to 0.9375f, "depth" to 0.6f, "voices" to 1f, "spread" to 0.8f, "drift" to 0.2f, "mix" to 0.6f, "gain" to 0.608333349f),
+        mapOf("rate" to 0.9375f, "depth" to 0.6f, "voices" to 1f, "spread" to 0.8f, "drift" to 0.2f, "mix" to 0.6f),
         family = "classic")
 
-    private fun fx_chorus3() = Patch("fx.Chorus", "Duo",
-        mapOf("rate" to 1f, "depth" to 0.15f, "voices" to 0f, "spread" to 1f, "drift" to 0.05f, "gain" to 0.6333333f),
+    private fun fx_chorus3() = Patch("fx.Chorus", "Classic Two",
+        mapOf("rate" to 0.6875f, "voices" to 0f),
+        family = "classic")
+
+    private fun fx_chorus4() = Patch("fx.Chorus", "Slow Wash",
+        mapOf("rate" to 1f, "depth" to 0.75f, "spread" to 0.9f, "mix" to 0.6f),
+        family = "classic")
+
+    private fun fx_chorus5() = Patch("fx.Chorus", "Bright Shimmer",
+        mapOf("rate" to 0.5f, "depth" to 0.2f, "spread" to 0.8f, "mix" to 0.45f),
+        family = "classic")
+
+    private fun fx_chorus6() = Patch("fx.Chorus", "Duo",
+        mapOf("rate" to 1f, "depth" to 0.15f, "voices" to 0f, "spread" to 1f, "drift" to 0.05f, "gain" to 0.489583343f),
         family = "voices")
 
-    private fun fx_chorus4() = Patch("fx.Chorus", "Quartet",
-        mapOf("rate" to 0.6875f, "depth" to 0.5f, "voices" to 1f, "spread" to 0.7f, "gain" to 0.6472222f),
+    private fun fx_chorus7() = Patch("fx.Chorus", "Quartet",
+        mapOf("rate" to 0.6875f, "depth" to 0.5f, "voices" to 1f, "spread" to 0.7f, "gain" to 0.489583343f),
         family = "voices")
 
-    private fun fx_chorus5() = Patch("fx.Chorus", "Tape",
-        mapOf("rate" to 0.9375f, "depth" to 0.2f, "drift" to 0.6f, "gain" to 0.6222222f),
+    private fun fx_chorus8() = Patch("fx.Chorus", "Trio",
+        mapOf("depth" to 0.4f, "spread" to 0.75f, "drift" to 0.25f, "mix" to 0.55f),
+        family = "voices")
+
+    private fun fx_chorus9() = Patch("fx.Chorus", "Wide Quartet",
+        mapOf("rate" to 0.875f, "voices" to 1f, "spread" to 1f, "mix" to 0.6f),
+        family = "voices")
+
+    private fun fx_chorus10() = Patch("fx.Chorus", "Narrow Pair",
+        mapOf("rate" to 0.75f, "depth" to 0.4f, "voices" to 0f, "spread" to 0.15f),
+        family = "voices")
+
+    private fun fx_chorus11() = Patch("fx.Chorus", "Tape",
+        mapOf("rate" to 0.9375f, "depth" to 0.2f, "drift" to 0.6f, "gain" to 0.489583343f),
         family = "drift")
 
-    private fun fx_chorus6() = Patch("fx.Chorus", "Seasick",
-        mapOf("rate" to 1f, "depth" to 0.3f, "voices" to 1f, "spread" to 0.9f, "drift" to 1f, "mix" to 0.6f, "gain" to 0.6638889f),
+    private fun fx_chorus12() = Patch("fx.Chorus", "Seasick",
+        mapOf("rate" to 1f, "depth" to 0.3f, "voices" to 1f, "spread" to 0.9f, "drift" to 1f, "mix" to 0.6f),
         family = "drift")
 
-    private val fx_chorus: List<Patch> by lazy { listOf(fx_chorus0(), fx_chorus1(), fx_chorus2(), fx_chorus3(), fx_chorus4(), fx_chorus5(), fx_chorus6()) }
+    private fun fx_chorus13() = Patch("fx.Chorus", "Worn Tape",
+        mapOf("rate" to 0.875f, "depth" to 0.3f, "voices" to 0f, "drift" to 0.7f, "mix" to 0.55f),
+        family = "drift")
+
+    private fun fx_chorus14() = Patch("fx.Chorus", "Lo-Fi Warble",
+        mapOf("rate" to 0.5625f, "depth" to 0.6f, "voices" to 0f, "spread" to 0.2f, "drift" to 0.8f, "mix" to 0.7f, "gain" to 0.53125f),
+        family = "drift")
+
+    private fun fx_chorus15() = Patch("fx.Chorus", "Keys Chorus",
+        mapOf("rate" to 0.875f, "depth" to 0.5f, "voices" to 0f, "spread" to 0.8f),
+        family = "parts")
+
+    private fun fx_chorus16() = Patch("fx.Chorus", "Clean Guitar",
+        mapOf("rate" to 0.75f, "depth" to 0.55f, "voices" to 0f, "spread" to 0.7f, "mix" to 0.55f),
+        family = "parts")
+
+    private fun fx_chorus17() = Patch("fx.Chorus", "Bass Chorus",
+        mapOf("depth" to 0.3f, "voices" to 0f, "spread" to 0.3f, "mix" to 0.35f),
+        family = "parts")
+
+    private fun fx_chorus18() = Patch("fx.Chorus", "Vocal Double",
+        mapOf("rate" to 0.9375f, "depth" to 0.1f, "voices" to 0f, "spread" to 1f, "drift" to 0.3f, "mix" to 0.45f),
+        family = "parts")
+
+    private fun fx_chorus19() = Patch("fx.Chorus", "Pad Width",
+        mapOf("rate" to 0.9375f, "depth" to 0.4f, "voices" to 1f, "spread" to 1f, "mix" to 0.6f),
+        family = "parts")
+
+    private val fx_chorus: List<Patch> by lazy { listOf(fx_chorus0(), fx_chorus1(), fx_chorus2(), fx_chorus3(), fx_chorus4(), fx_chorus5(), fx_chorus6(), fx_chorus7(), fx_chorus8(), fx_chorus9(), fx_chorus10(), fx_chorus11(), fx_chorus12(), fx_chorus13(), fx_chorus14(), fx_chorus15(), fx_chorus16(), fx_chorus17(), fx_chorus18(), fx_chorus19()) }
 
     private fun fx_tremolo0() = Patch("fx.Tremolo", "Init", emptyMap(),
         family = "tremolo")
 
     private fun fx_tremolo1() = Patch("fx.Tremolo", "Vintage",
-        mapOf("depth" to 0.65f),
+        mapOf("depth" to 0.65f, "gain" to 0.5520833f),
         family = "tremolo")
 
     private fun fx_tremolo2() = Patch("fx.Tremolo", "Choppy",
-        mapOf("rate" to 0.3125f, "depth" to 0.9f, "shape" to 0.5f, "gain" to 0.658333361f),
+        mapOf("rate" to 0.3125f, "depth" to 0.9f, "shape" to 0.5f, "gain" to 0.625f),
         family = "tremolo")
 
     private fun fx_tremolo3() = Patch("fx.Tremolo", "Square",
         mapOf("rate" to 0.125f, "depth" to 1f, "shape" to 1f),
         family = "tremolo")
 
-    private fun fx_tremolo4() = Patch("fx.Tremolo", "Auto Pan",
-        mapOf("depth" to 0.8f, "pan" to 1f, "gain" to 0.6222222f),
+    private fun fx_tremolo4() = Patch("fx.Tremolo", "Fast Pulse",
+        mapOf("rate" to 0.125f, "depth" to 0.8f, "shape" to 0.5f, "gain" to 0.59375f),
+        family = "tremolo")
+
+    private fun fx_tremolo5() = Patch("fx.Tremolo", "Slow Swell",
+        mapOf("rate" to 0.8125f, "depth" to 0.5f, "gain" to 0.5416667f),
+        family = "tremolo")
+
+    private fun fx_tremolo6() = Patch("fx.Tremolo", "Auto Pan",
+        mapOf("depth" to 0.8f, "pan" to 1f, "gain" to 0.5833333f),
         family = "pan")
 
-    private fun fx_tremolo5() = Patch("fx.Tremolo", "Wide",
-        mapOf("rate" to 0.8125f, "depth" to 0.7f, "pan" to 0.5f),
+    private fun fx_tremolo7() = Patch("fx.Tremolo", "Wide",
+        mapOf("rate" to 0.8125f, "depth" to 0.7f, "pan" to 0.5f, "gain" to 0.5625f),
         family = "pan")
 
-    private fun fx_tremolo6() = Patch("fx.Tremolo", "Stab",
-        mapOf("rate" to 0.3125f, "depth" to 0.95f, "shape" to 0.5f, "skew" to 0.12f, "gain" to 0.5861111f),
+    private fun fx_tremolo8() = Patch("fx.Tremolo", "Ping Pong",
+        mapOf("rate" to 0.3125f, "depth" to 0.9f, "pan" to 1f, "gain" to 0.5833333f),
+        family = "pan")
+
+    private fun fx_tremolo9() = Patch("fx.Tremolo", "Stab",
+        mapOf("rate" to 0.3125f, "depth" to 0.95f, "shape" to 0.5f, "skew" to 0.12f, "gain" to 0.564583361f),
         family = "skew")
 
-    private fun fx_tremolo7() = Patch("fx.Tremolo", "Swell",
-        mapOf("rate" to 0.6875f, "depth" to 0.9f, "shape" to 0.5f, "skew" to 0.88f, "gain" to 0.591666639f),
+    private fun fx_tremolo10() = Patch("fx.Tremolo", "Swell",
+        mapOf("rate" to 0.6875f, "depth" to 0.9f, "shape" to 0.5f, "skew" to 0.88f, "gain" to 0.6145833f),
         family = "skew")
 
-    private val fx_tremolo: List<Patch> by lazy { listOf(fx_tremolo0(), fx_tremolo1(), fx_tremolo2(), fx_tremolo3(), fx_tremolo4(), fx_tremolo5(), fx_tremolo6(), fx_tremolo7()) }
+    private fun fx_tremolo11() = Patch("fx.Tremolo", "Lurch",
+        mapOf("depth" to 0.7f, "skew" to 0.85f, "gain" to 0.5416667f),
+        family = "skew")
+
+    private val fx_tremolo: List<Patch> by lazy { listOf(fx_tremolo0(), fx_tremolo1(), fx_tremolo2(), fx_tremolo3(), fx_tremolo4(), fx_tremolo5(), fx_tremolo6(), fx_tremolo7(), fx_tremolo8(), fx_tremolo9(), fx_tremolo10(), fx_tremolo11()) }
 
     private fun fx_width0() = Patch("fx.Width", "Init", emptyMap(),
         family = "width")
@@ -6027,150 +6339,214 @@ internal object FactoryBanks {
         mapOf("width" to 1f, "below" to 0.604530931f),
         family = "width")
 
-    private fun fx_width5() = Patch("fx.Width", "Tight Bass",
+    private fun fx_width5() = Patch("fx.Width", "Extra Wide",
+        mapOf("width" to 0.8f),
+        family = "width")
+
+    private fun fx_width6() = Patch("fx.Width", "Turned",
+        mapOf("rotate" to 0.65f),
+        family = "width")
+
+    private fun fx_width7() = Patch("fx.Width", "Tight Bass",
         mapOf("below" to 0.7153383f),
         family = "bass")
 
-    private fun fx_width6() = Patch("fx.Width", "Haas",
-        mapOf("haas" to 0.6f, "gain" to 0.6222222f),
+    private fun fx_width8() = Patch("fx.Width", "Mono Below",
+        mapOf("width" to 0.65f, "below" to 0.6259648f),
+        family = "bass")
+
+    private fun fx_width9() = Patch("fx.Width", "Haas",
+        mapOf("haas" to 0.6f),
         family = "haas")
 
-    private fun fx_width7() = Patch("fx.Width", "Off Centre",
-        mapOf("width" to 0.6f, "haas" to 0.3f, "rotate" to 0.325f, "gain" to 0.5861111f),
+    private fun fx_width10() = Patch("fx.Width", "Off Centre",
+        mapOf("width" to 0.6f, "haas" to 0.3f, "rotate" to 0.325f, "gain" to 0.479166657f),
         family = "haas")
 
-    private val fx_width: List<Patch> by lazy { listOf(fx_width0(), fx_width1(), fx_width2(), fx_width3(), fx_width4(), fx_width5(), fx_width6(), fx_width7()) }
+    private fun fx_width11() = Patch("fx.Width", "Small Room",
+        mapOf("haas" to 0.4f),
+        family = "haas")
+
+    private val fx_width: List<Patch> by lazy { listOf(fx_width0(), fx_width1(), fx_width2(), fx_width3(), fx_width4(), fx_width5(), fx_width6(), fx_width7(), fx_width8(), fx_width9(), fx_width10(), fx_width11()) }
 
     private fun fx_shifter0() = Patch("fx.Shifter", "Init", emptyMap(),
         family = "subtle")
 
     private fun fx_shifter1() = Patch("fx.Shifter", "Phasing",
-        mapOf("fine" to 0.517500043f),
+        mapOf("fine" to 0.517500043f, "gain" to 0.5625f),
         family = "subtle")
 
     private fun fx_shifter2() = Patch("fx.Shifter", "Detune",
-        mapOf("shift" to 0.504f, "mix" to 0.45f, "gain" to 0.5694444f),
+        mapOf("shift" to 0.504f, "mix" to 0.45f, "gain" to 0.5520833f),
         family = "subtle")
 
-    private fun fx_shifter3() = Patch("fx.Shifter", "Metallic",
-        mapOf("shift" to 0.64f, "mix" to 0.6f, "gain" to 0.5972222f),
+    private fun fx_shifter3() = Patch("fx.Shifter", "Wobble",
+        mapOf("shift" to 0.5005f, "gain" to 0.5520833f),
+        family = "subtle")
+
+    private fun fx_shifter4() = Patch("fx.Shifter", "Chorus Shift",
+        mapOf("shift" to 0.502f, "spread" to 0.8f, "gain" to 0.5416667f),
+        family = "subtle")
+
+    private fun fx_shifter5() = Patch("fx.Shifter", "Metallic",
+        mapOf("shift" to 0.64f, "mix" to 0.6f, "gain" to 0.5729167f),
         family = "extreme")
 
-    private fun fx_shifter4() = Patch("fx.Shifter", "Bell",
-        mapOf("shift" to 0.82f, "feedback" to 0.5f, "mix" to 0.65f, "gain" to 0.5694444f),
+    private fun fx_shifter6() = Patch("fx.Shifter", "Bell",
+        mapOf("shift" to 0.82f, "feedback" to 0.5f, "mix" to 0.65f, "gain" to 0.5104167f),
         family = "extreme")
 
-    private fun fx_shifter5() = Patch("fx.Shifter", "Inharmonic",
-        mapOf("shift" to 0.32f, "fine" to 0.425f, "mix" to 0.6f, "gain" to 0.577777743f),
+    private fun fx_shifter7() = Patch("fx.Shifter", "Inharmonic",
+        mapOf("shift" to 0.32f, "fine" to 0.425f, "mix" to 0.6f, "gain" to 0.558333337f),
         family = "extreme")
 
-    private fun fx_shifter6() = Patch("fx.Shifter", "Opposing",
-        mapOf("shift" to 0.512f, "spread" to 1f, "mix" to 0.55f, "gain" to 0.6222222f),
+    private fun fx_shifter8() = Patch("fx.Shifter", "Robot",
+        mapOf("shift" to 0.32f, "mix" to 0.8f),
+        family = "extreme")
+
+    private fun fx_shifter9() = Patch("fx.Shifter", "Spiral",
+        mapOf("shift" to 0.54f, "feedback" to 0.7777778f, "mix" to 0.6f, "gain" to 0.5416667f),
+        family = "extreme")
+
+    private fun fx_shifter10() = Patch("fx.Shifter", "Opposing",
+        mapOf("shift" to 0.512f, "spread" to 1f, "mix" to 0.55f, "gain" to 0.5520833f),
         family = "stereo")
 
-    private val fx_shifter: List<Patch> by lazy { listOf(fx_shifter0(), fx_shifter1(), fx_shifter2(), fx_shifter3(), fx_shifter4(), fx_shifter5(), fx_shifter6()) }
+    private fun fx_shifter11() = Patch("fx.Shifter", "Wide Detune",
+        mapOf("shift" to 0.504f, "spread" to 1f, "gain" to 0.5416667f),
+        family = "stereo")
+
+    private val fx_shifter: List<Patch> by lazy { listOf(fx_shifter0(), fx_shifter1(), fx_shifter2(), fx_shifter3(), fx_shifter4(), fx_shifter5(), fx_shifter6(), fx_shifter7(), fx_shifter8(), fx_shifter9(), fx_shifter10(), fx_shifter11()) }
 
     private fun fx_harmonizer0() = Patch("fx.Harmonizer", "Init", emptyMap(),
         family = "thirds")
 
     private fun fx_harmonizer1() = Patch("fx.Harmonizer", "Third",
-        mapOf("mix" to 0.45f, "gain" to 0.566666663f),
+        mapOf("mix" to 0.45f),
         family = "thirds")
 
     private fun fx_harmonizer2() = Patch("fx.Harmonizer", "Sixth",
-        mapOf("interval" to 0.857142866f, "window" to 0.647685468f, "mix" to 0.4f, "gain" to 0.591666639f),
+        mapOf("interval" to 0.857142866f, "window" to 0.647685468f, "mix" to 0.4f, "gain" to 0.489583343f),
         family = "thirds")
 
-    private fun fx_harmonizer3() = Patch("fx.Harmonizer", "Triad",
+    private fun fx_harmonizer3() = Patch("fx.Harmonizer", "Fifth Below",
+        mapOf("interval" to 0.214285716f, "mix" to 0.45f),
+        family = "thirds")
+
+    private fun fx_harmonizer4() = Patch("fx.Harmonizer", "Triad",
         mapOf("interval2" to 0.785714269f, "window" to 0.686041057f),
         family = "stack")
 
-    private fun fx_harmonizer4() = Patch("fx.Harmonizer", "Octave",
-        mapOf("interval" to 1f, "interval2" to 0f, "window" to 0.721057057f, "mix" to 0.45f, "gain" to 0.594444454f),
+    private fun fx_harmonizer5() = Patch("fx.Harmonizer", "Octave",
+        mapOf("interval" to 1f, "interval2" to 0f, "window" to 0.721057057f, "mix" to 0.45f),
         family = "stack")
 
-    private fun fx_harmonizer5() = Patch("fx.Harmonizer", "Minor",
-        mapOf("scale" to 0.15625f, "mix" to 0.45f, "gain" to 0.566666663f),
+    private fun fx_harmonizer6() = Patch("fx.Harmonizer", "Sixth Above",
+        mapOf("interval" to 0.857142866f, "mix" to 0.45f),
+        family = "stack")
+
+    private fun fx_harmonizer7() = Patch("fx.Harmonizer", "Minor",
+        mapOf("scale" to 0.15625f, "mix" to 0.45f),
         family = "scale")
 
-    private fun fx_harmonizer6() = Patch("fx.Harmonizer", "Dorian",
-        mapOf("interval2" to 0.785714269f, "scale" to 0.03125f, "window" to 0.647685468f, "mix" to 0.45f, "gain" to 0.6027778f),
+    private fun fx_harmonizer8() = Patch("fx.Harmonizer", "Dorian",
+        mapOf("interval2" to 0.785714269f, "scale" to 0.03125f, "window" to 0.647685468f, "mix" to 0.45f, "gain" to 0.489583343f),
         family = "scale")
 
-    private fun fx_harmonizer7() = Patch("fx.Harmonizer", "Shimmer",
+    private fun fx_harmonizer9() = Patch("fx.Harmonizer", "Minor Thirds",
+        mapOf("scale" to 0.15625f, "key" to 0.8181818f, "mix" to 0.45f),
+        family = "scale")
+
+    private fun fx_harmonizer10() = Patch("fx.Harmonizer", "Shimmer",
         mapOf("interval" to 1f, "window" to 0.783091843f, "feedback" to 0.7058824f, "mix" to 0.55f),
         family = "fx")
 
-    private fun fx_harmonizer8() = Patch("fx.Harmonizer", "Burble",
-        mapOf("interval" to 0.785714269f, "window" to 0f, "gain" to 0.561111152f),
+    private fun fx_harmonizer11() = Patch("fx.Harmonizer", "Burble",
+        mapOf("interval" to 0.785714269f, "window" to 0f),
         family = "fx")
 
-    private val fx_harmonizer: List<Patch> by lazy { listOf(fx_harmonizer0(), fx_harmonizer1(), fx_harmonizer2(), fx_harmonizer3(), fx_harmonizer4(), fx_harmonizer5(), fx_harmonizer6(), fx_harmonizer7(), fx_harmonizer8()) }
+    private val fx_harmonizer: List<Patch> by lazy { listOf(fx_harmonizer0(), fx_harmonizer1(), fx_harmonizer2(), fx_harmonizer3(), fx_harmonizer4(), fx_harmonizer5(), fx_harmonizer6(), fx_harmonizer7(), fx_harmonizer8(), fx_harmonizer9(), fx_harmonizer10(), fx_harmonizer11()) }
 
     private fun fx_amp0() = Patch("fx.Amp", "Init", emptyMap(),
         family = "clean")
 
     private fun fx_amp1() = Patch("fx.Amp", "Blackface",
-        mapOf("drive" to 0.18f, "bass" to 0.7f, "mid" to 0.25f, "treble" to 0.75f, "stack" to 0f, "presence" to 0.45f, "master" to 0.3f, "sag" to 0.45f, "size" to 0.38f, "cone" to 0.35f, "mic" to 0.3f, "edge" to 0.25f, "room" to 0.25f, "gain" to 0.5555556f),
+        mapOf("drive" to 0.18f, "bass" to 0.7f, "mid" to 0.25f, "treble" to 0.75f, "stack" to 0f, "presence" to 0.45f, "master" to 0.3f, "sag" to 0.45f, "size" to 0.38f, "cone" to 0.35f, "mic" to 0.3f, "edge" to 0.25f, "room" to 0.25f, "gain" to 0.5416667f),
         family = "clean")
 
     private fun fx_amp2() = Patch("fx.Amp", "Chime",
-        mapOf("drive" to 0.24f, "bass" to 0.35f, "treble" to 0.85f, "stack" to 0f, "presence" to 0.6f, "master" to 0.28f, "sag" to 0.5f, "size" to 0.12f, "cone" to 0.62f, "mic" to 0.15f, "edge" to 0.1f, "room" to 0.2f, "gain" to 0.475000024f),
+        mapOf("drive" to 0.24f, "bass" to 0.35f, "treble" to 0.85f, "stack" to 0f, "presence" to 0.6f, "master" to 0.28f, "sag" to 0.5f, "size" to 0.12f, "cone" to 0.62f, "mic" to 0.15f, "edge" to 0.1f, "room" to 0.2f, "gain" to 0.5208333f),
         family = "clean")
 
     private fun fx_amp3() = Patch("fx.Amp", "Jazz",
-        mapOf("drive" to 0.1f, "bass" to 0.65f, "mid" to 0.6f, "treble" to 0.25f, "stack" to 0f, "presence" to 0.1f, "master" to 0.25f, "sag" to 0.35f, "size" to 0.55f, "cone" to 0.2f, "mic" to 0.7f, "edge" to 0.05f, "room" to 0.3f, "gain" to 0.5277778f),
+        mapOf("drive" to 0.1f, "bass" to 0.65f, "mid" to 0.6f, "treble" to 0.25f, "stack" to 0f, "presence" to 0.1f, "master" to 0.25f, "sag" to 0.35f, "size" to 0.55f, "cone" to 0.2f, "mic" to 0.7f, "edge" to 0.05f, "room" to 0.3f, "gain" to 0.5208333f),
         family = "clean")
 
-    private fun fx_amp4() = Patch("fx.Amp", "Plexi",
-        mapOf("drive" to 0.55f, "bass" to 0.55f, "mid" to 0.6f, "treble" to 0.7f, "presence" to 0.55f, "master" to 0.6f, "sag" to 0.55f, "size" to 0.72f, "cone" to 0.6f, "mic" to 0.2f, "edge" to 0.3f, "gain" to 0.5416667f),
+    private fun fx_amp4() = Patch("fx.Amp", "Twin Clean",
+        mapOf("drive" to 0.12f, "bass" to 0.6f, "mid" to 0.4f, "treble" to 0.75f, "stack" to 0f, "gain" to 0.5416667f),
+        family = "clean")
+
+    private fun fx_amp5() = Patch("fx.Amp", "Plexi",
+        mapOf("drive" to 0.55f, "bass" to 0.55f, "mid" to 0.6f, "treble" to 0.7f, "presence" to 0.55f, "master" to 0.6f, "sag" to 0.55f, "size" to 0.72f, "cone" to 0.6f, "mic" to 0.2f, "edge" to 0.3f, "gain" to 0.46875f),
         family = "crunch")
 
-    private fun fx_amp5() = Patch("fx.Amp", "Tweed",
-        mapOf("drive" to 0.62f, "bias" to 0.55f, "bass" to 0.45f, "mid" to 0.65f, "treble" to 0.45f, "stack" to 0f, "presence" to 0.25f, "master" to 0.7f, "sag" to 0.8f, "size" to 0.2f, "cone" to 0.3f, "mic" to 0.35f, "edge" to 0.2f, "room" to 0.2f, "gain" to 0.466666639f),
+    private fun fx_amp6() = Patch("fx.Amp", "Tweed",
+        mapOf("drive" to 0.62f, "bias" to 0.55f, "bass" to 0.45f, "mid" to 0.65f, "treble" to 0.45f, "stack" to 0f, "presence" to 0.25f, "master" to 0.7f, "sag" to 0.8f, "size" to 0.2f, "cone" to 0.3f, "mic" to 0.35f, "edge" to 0.2f, "room" to 0.2f, "gain" to 0.475f),
         family = "crunch")
 
-    private fun fx_amp6() = Patch("fx.Amp", "Combo",
-        mapOf("drive" to 0.48f, "mid" to 0.55f, "treble" to 0.6f, "presence" to 0.4f, "master" to 0.45f, "sag" to 0.4f, "cone" to 0.55f, "mic" to 0.12f, "edge" to 0.35f, "room" to 0.1f, "gain" to 0.5027778f),
+    private fun fx_amp7() = Patch("fx.Amp", "Combo",
+        mapOf("drive" to 0.48f, "mid" to 0.55f, "treble" to 0.6f, "presence" to 0.4f, "master" to 0.45f, "sag" to 0.4f, "cone" to 0.55f, "mic" to 0.12f, "edge" to 0.35f, "room" to 0.1f, "gain" to 0.502083361f),
         family = "crunch")
 
-    private fun fx_amp7() = Patch("fx.Amp", "Hotrod",
-        mapOf("drive" to 0.8f, "mid" to 0.75f, "treble" to 0.6f, "presence" to 0.6f, "master" to 0.55f, "sag" to 0.35f, "size" to 0.75f, "cone" to 0.7f, "mic" to 0.2f, "edge" to 0.25f, "room" to 0.12f, "gain" to 0.50555557f),
+    private fun fx_amp8() = Patch("fx.Amp", "British Crunch",
+        mapOf("drive" to 0.45f, "mid" to 0.75f, "treble" to 0.6f),
+        family = "crunch")
+
+    private fun fx_amp9() = Patch("fx.Amp", "Hotrod",
+        mapOf("drive" to 0.8f, "mid" to 0.75f, "treble" to 0.6f, "presence" to 0.6f, "master" to 0.55f, "sag" to 0.35f, "size" to 0.75f, "cone" to 0.7f, "mic" to 0.2f, "edge" to 0.25f, "room" to 0.12f, "gain" to 0.447916657f),
         family = "lead")
 
-    private fun fx_amp8() = Patch("fx.Amp", "Modern",
-        mapOf("drive" to 0.92f, "bass" to 0.55f, "mid" to 0.4f, "treble" to 0.7f, "stack" to 1f, "presence" to 0.7f, "master" to 0.5f, "sag" to 0.12f, "size" to 0.78f, "cone" to 0.75f, "mic" to 0.18f, "edge" to 0.2f, "room" to 0.08f, "gain" to 0.469444424f),
+    private fun fx_amp10() = Patch("fx.Amp", "Modern",
+        mapOf("drive" to 0.92f, "bass" to 0.55f, "mid" to 0.4f, "treble" to 0.7f, "stack" to 1f, "presence" to 0.7f, "master" to 0.5f, "sag" to 0.12f, "size" to 0.78f, "cone" to 0.75f, "mic" to 0.18f, "edge" to 0.2f, "room" to 0.08f, "gain" to 0.427083343f),
         family = "lead")
 
-    private fun fx_amp9() = Patch("fx.Amp", "Solo",
-        mapOf("drive" to 0.6f, "bass" to 0.45f, "mid" to 0.8f, "treble" to 0.55f, "presence" to 0.5f, "master" to 0.85f, "sag" to 0.6f, "size" to 0.68f, "cone" to 0.6f, "mic" to 0.28f, "room" to 0.22f, "gain" to 0.525f),
+    private fun fx_amp11() = Patch("fx.Amp", "Solo",
+        mapOf("drive" to 0.6f, "bass" to 0.45f, "mid" to 0.8f, "treble" to 0.55f, "presence" to 0.5f, "master" to 0.85f, "sag" to 0.6f, "size" to 0.68f, "cone" to 0.6f, "mic" to 0.28f, "room" to 0.22f, "gain" to 0.46875f),
         family = "lead")
 
-    private fun fx_amp10() = Patch("fx.Amp", "Fridge",
-        mapOf("drive" to 0.3f, "bass" to 0.7f, "treble" to 0.4f, "stack" to 1f, "presence" to 0.2f, "master" to 0.4f, "sag" to 0.4f, "size" to 1f, "cone" to 0.25f, "mic" to 0.2f, "edge" to 0.1f, "room" to 0.1f, "gain" to 0.491666675f),
+    private fun fx_amp12() = Patch("fx.Amp", "High Gain",
+        mapOf("drive" to 0.85f, "bass" to 0.6f, "mid" to 0.4f, "treble" to 0.6f, "stack" to 1f, "gain" to 0.4375f),
+        family = "lead")
+
+    private fun fx_amp13() = Patch("fx.Amp", "Fridge",
+        mapOf("drive" to 0.3f, "bass" to 0.7f, "treble" to 0.4f, "stack" to 1f, "presence" to 0.2f, "master" to 0.4f, "sag" to 0.4f, "size" to 1f, "cone" to 0.25f, "mic" to 0.2f, "edge" to 0.1f, "room" to 0.1f, "gain" to 0.49375f),
         family = "bass")
 
-    private fun fx_amp11() = Patch("fx.Amp", "Fliptop",
-        mapOf("drive" to 0.5f, "bias" to 0.35f, "bass" to 0.65f, "mid" to 0.6f, "treble" to 0.35f, "stack" to 0f, "presence" to 0.2f, "master" to 0.7f, "sag" to 0.75f, "size" to 0.88f, "cone" to 0.3f, "mic" to 0.3f, "room" to 0.18f, "gain" to 0.50555557f),
+    private fun fx_amp14() = Patch("fx.Amp", "Fliptop",
+        mapOf("drive" to 0.5f, "bias" to 0.35f, "bass" to 0.65f, "mid" to 0.6f, "treble" to 0.35f, "stack" to 0f, "presence" to 0.2f, "master" to 0.7f, "sag" to 0.75f, "size" to 0.88f, "cone" to 0.3f, "mic" to 0.3f, "room" to 0.18f, "gain" to 0.504166663f),
         family = "bass")
 
-    private fun fx_amp12() = Patch("fx.Amp", "Grind",
-        mapOf("drive" to 0.78f, "bass" to 0.6f, "mid" to 0.7f, "treble" to 0.55f, "stack" to 1f, "presence" to 0.5f, "master" to 0.5f, "sag" to 0.2f, "size" to 0.92f, "cone" to 0.8f, "mic" to 0.1f, "edge" to 0.3f, "room" to 0.05f, "gain" to 0.4722222f),
+    private fun fx_amp15() = Patch("fx.Amp", "Grind",
+        mapOf("drive" to 0.78f, "bass" to 0.6f, "mid" to 0.7f, "treble" to 0.55f, "stack" to 1f, "presence" to 0.5f, "master" to 0.5f, "sag" to 0.2f, "size" to 0.92f, "cone" to 0.8f, "mic" to 0.1f, "edge" to 0.3f, "room" to 0.05f, "gain" to 0.427083343f),
         family = "bass")
 
-    private fun fx_amp13() = Patch("fx.Amp", "Radio",
-        mapOf("drive" to 0.55f, "bass" to 0.2f, "mid" to 0.8f, "treble" to 0.3f, "stack" to 0f, "presence" to 0.15f, "master" to 0.45f, "sag" to 0.5f, "size" to 0f, "cone" to 0.45f, "mic" to 0.85f, "edge" to 0.6f, "room" to 0.75f, "gain" to 0.422222227f),
+    private fun fx_amp16() = Patch("fx.Amp", "Bass Stack",
+        mapOf("drive" to 0.25f, "bass" to 0.8f, "treble" to 0.4f, "size" to 0.9f),
+        family = "bass")
+
+    private fun fx_amp17() = Patch("fx.Amp", "Radio",
+        mapOf("drive" to 0.55f, "bass" to 0.2f, "mid" to 0.8f, "treble" to 0.3f, "stack" to 0f, "presence" to 0.15f, "master" to 0.45f, "sag" to 0.5f, "size" to 0f, "cone" to 0.45f, "mic" to 0.85f, "edge" to 0.6f, "room" to 0.75f, "gain" to 0.4416667f),
         family = "character")
 
-    private fun fx_amp14() = Patch("fx.Amp", "Blown",
-        mapOf("drive" to 0.85f, "bias" to 0.9f, "bass" to 0.6f, "mid" to 0.45f, "stack" to 0f, "master" to 0.9f, "sag" to 0.95f, "size" to 0.15f, "cone" to 0.95f, "mic" to 0.4f, "edge" to 0.95f, "room" to 0.3f, "gain" to 0.547222257f),
+    private fun fx_amp18() = Patch("fx.Amp", "Blown",
+        mapOf("drive" to 0.85f, "bias" to 0.9f, "bass" to 0.6f, "mid" to 0.45f, "stack" to 0f, "master" to 0.9f, "sag" to 0.95f, "size" to 0.15f, "cone" to 0.95f, "mic" to 0.4f, "edge" to 0.95f, "room" to 0.3f, "gain" to 0.489583343f),
         family = "character")
 
-    private fun fx_amp15() = Patch("fx.Amp", "Cranked",
-        mapOf("drive" to 1f, "bass" to 1f, "mid" to 1f, "treble" to 1f, "presence" to 1f, "master" to 1f, "sag" to 1f, "cab" to 0f, "gain" to 0.366666675f),
+    private fun fx_amp19() = Patch("fx.Amp", "Cranked",
+        mapOf("drive" to 1f, "bass" to 1f, "mid" to 1f, "treble" to 1f, "presence" to 1f, "master" to 1f, "sag" to 1f, "cab" to 0f, "gain" to 0.4f),
         family = "character")
 
-    private val fx_amp: List<Patch> by lazy { listOf(fx_amp0(), fx_amp1(), fx_amp2(), fx_amp3(), fx_amp4(), fx_amp5(), fx_amp6(), fx_amp7(), fx_amp8(), fx_amp9(), fx_amp10(), fx_amp11(), fx_amp12(), fx_amp13(), fx_amp14(), fx_amp15()) }
+    private val fx_amp: List<Patch> by lazy { listOf(fx_amp0(), fx_amp1(), fx_amp2(), fx_amp3(), fx_amp4(), fx_amp5(), fx_amp6(), fx_amp7(), fx_amp8(), fx_amp9(), fx_amp10(), fx_amp11(), fx_amp12(), fx_amp13(), fx_amp14(), fx_amp15(), fx_amp16(), fx_amp17(), fx_amp18(), fx_amp19()) }
 
     private fun fx_gate0() = Patch("fx.Gate", "Init", emptyMap(),
         family = "clean")
@@ -6216,7 +6592,7 @@ internal object FactoryBanks {
         family = "tight")
 
     private fun fx_gate11() = Patch("fx.Gate", "Chop",
-        mapOf("threshold" to 0.825f, "hyst" to 0.0416666679f, "attack" to 0f, "hold" to 0.01f, "release" to 0.07844553f),
+        mapOf("threshold" to 0.825f, "hyst" to 0.0416666679f, "attack" to 0f, "hold" to 0.01f, "release" to 0.07844553f, "gain" to 0.5416667f),
         family = "tight")
 
     private fun fx_gate12() = Patch("fx.Gate", "Pluck",
@@ -6229,31 +6605,31 @@ internal object FactoryBanks {
         family = "lift")
 
     private fun fx_swell1() = Patch("fx.Swell", "Loud",
-        mapOf("floor" to 0.4375f, "ceiling" to 0.933333337f, "amount" to 0.45f, "split" to 0.6f, "release" to 0.7313782f),
+        mapOf("floor" to 0.4375f, "ceiling" to 0.933333337f, "amount" to 0.45f, "split" to 0.6f, "release" to 0.7313782f, "gain" to 0.416666657f),
         family = "lift")
 
     private fun fx_swell2() = Patch("fx.Swell", "Even",
-        mapOf("floor" to 0.375f, "ceiling" to 0.733333349f, "amount" to 0.6f, "split" to 0.3f, "release" to 0.8667258f),
+        mapOf("floor" to 0.375f, "ceiling" to 0.733333349f, "amount" to 0.6f, "split" to 0.3f, "release" to 0.8667258f, "gain" to 0.489583343f),
         family = "lift")
 
     private fun fx_swell3() = Patch("fx.Swell", "Upfront",
-        mapOf("floor" to 0.4f, "ceiling" to 0.8f, "amount" to 0.55f, "release" to 0.6156891f, "gain" to 0.444444448f),
+        mapOf("floor" to 0.4f, "ceiling" to 0.8f, "amount" to 0.55f, "release" to 0.6156891f, "gain" to 0.427083343f),
         family = "lift")
 
     private fun fx_swell4() = Patch("fx.Swell", "Bus",
-        mapOf("ceiling" to 0.8f, "amount" to 0.3f, "split" to 0.5f, "release" to 0.6529327f),
+        mapOf("ceiling" to 0.8f, "amount" to 0.3f, "split" to 0.5f, "release" to 0.6529327f, "gain" to 0.46875f),
         family = "glue")
 
     private fun fx_swell5() = Patch("fx.Swell", "Master",
-        mapOf("floor" to 0.55f, "amount" to 0.2f, "split" to 0.7f, "release" to 0.799052f),
+        mapOf("floor" to 0.55f, "amount" to 0.2f, "split" to 0.7f, "release" to 0.799052f, "gain" to 0.46875f),
         family = "glue")
 
     private fun fx_swell6() = Patch("fx.Swell", "Parallel",
-        mapOf("floor" to 0.25f, "ceiling" to 0.8f, "amount" to 1f, "release" to 0.4147411f, "mix" to 0.35f),
+        mapOf("floor" to 0.25f, "ceiling" to 0.8f, "amount" to 1f, "release" to 0.4147411f, "mix" to 0.35f, "gain" to 0.40625f),
         family = "glue")
 
     private fun fx_swell7() = Patch("fx.Swell", "Thick",
-        mapOf("floor" to 0.3125f, "ceiling" to 0.8f, "amount" to 0.75f, "release" to 0.5304302f, "gain" to 0.416666657f),
+        mapOf("floor" to 0.3125f, "ceiling" to 0.8f, "amount" to 0.75f, "release" to 0.5304302f, "gain" to 0.364583343f),
         family = "thick")
 
     private fun fx_swell8() = Patch("fx.Swell", "Tails",
@@ -6261,19 +6637,19 @@ internal object FactoryBanks {
         family = "thick")
 
     private fun fx_swell9() = Patch("fx.Swell", "Room",
-        mapOf("floor" to 0.3125f, "ceiling" to 0.6f, "amount" to 0.7f, "split" to 0.6f, "release" to 0.4824149f),
+        mapOf("floor" to 0.3125f, "ceiling" to 0.6f, "amount" to 0.7f, "split" to 0.6f, "release" to 0.4824149f, "gain" to 0.479166657f),
         family = "thick")
 
     private fun fx_swell10() = Patch("fx.Swell", "Crush",
-        mapOf("floor" to 0.25f, "ceiling" to 0.8f, "amount" to 1f, "release" to 0.299052f, "gain" to 0.3888889f),
+        mapOf("floor" to 0.25f, "ceiling" to 0.8f, "amount" to 1f, "release" to 0.299052f, "gain" to 0.28125f),
         family = "crush")
 
     private fun fx_swell11() = Patch("fx.Swell", "Wreck",
-        mapOf("floor" to 0.125f, "ceiling" to 0.733333349f, "amount" to 1f, "release" to 0.0304302219f, "gain" to 0.3888889f),
+        mapOf("floor" to 0.125f, "ceiling" to 0.733333349f, "amount" to 1f, "release" to 0.0304302219f, "gain" to 0.302083343f),
         family = "crush")
 
     private fun fx_swell12() = Patch("fx.Swell", "Breath",
-        mapOf("floor" to 0.0625f, "ceiling" to 0.6666667f, "amount" to 1f, "split" to 0f, "release" to 0.347067326f, "gain" to 0.444444448f),
+        mapOf("floor" to 0.0625f, "ceiling" to 0.6666667f, "amount" to 1f, "split" to 0f, "release" to 0.347067326f, "gain" to 0.40625f),
         family = "crush")
 
     private val fx_swell: List<Patch> by lazy { listOf(fx_swell0(), fx_swell1(), fx_swell2(), fx_swell3(), fx_swell4(), fx_swell5(), fx_swell6(), fx_swell7(), fx_swell8(), fx_swell9(), fx_swell10(), fx_swell11(), fx_swell12()) }
@@ -6289,31 +6665,43 @@ internal object FactoryBanks {
         mapOf("slow" to 0.7334516f, "distance" to 0.85f, "width" to 0.6f, "mix" to 0.8f),
         family = "slow")
 
-    private fun fx_rotary3() = Patch("fx.Rotary", "Fast",
+    private fun fx_rotary3() = Patch("fx.Rotary", "Brake",
+        mapOf("speed" to 0f, "distance" to 0.3f, "gain" to 0.458333343f),
+        family = "slow")
+
+    private fun fx_rotary4() = Patch("fx.Rotary", "Fast",
         mapOf("speed" to 1f),
         family = "fast")
 
-    private fun fx_rotary4() = Patch("fx.Rotary", "Tremolo",
+    private fun fx_rotary5() = Patch("fx.Rotary", "Tremolo",
         mapOf("speed" to 1f, "fast" to 0.899021268f, "distance" to 0.1f, "width" to 0.4f),
         family = "fast")
 
-    private fun fx_rotary5() = Patch("fx.Rotary", "Guitar",
-        mapOf("speed" to 1f, "fast" to 0.661541939f, "ramp" to 0.760425448f, "mix" to 0.6f),
+    private fun fx_rotary6() = Patch("fx.Rotary", "Guitar",
+        mapOf("speed" to 1f, "fast" to 0.661541939f, "ramp" to 0.760425448f, "mix" to 0.6f, "gain" to 0.5520833f),
         family = "fast")
 
-    private fun fx_rotary6() = Patch("fx.Rotary", "Quarter",
+    private fun fx_rotary7() = Patch("fx.Rotary", "Ramping Up",
+        mapOf("speed" to 1f, "ramp" to 0.934349537f),
+        family = "fast")
+
+    private fun fx_rotary8() = Patch("fx.Rotary", "Close Mic",
+        mapOf("speed" to 1f, "distance" to 0.1f, "angle" to 0.9f),
+        family = "fast")
+
+    private fun fx_rotary9() = Patch("fx.Rotary", "Quarter",
         mapOf("tempo" to 0.6f),
         family = "tempo")
 
-    private fun fx_rotary7() = Patch("fx.Rotary", "Eighth",
+    private fun fx_rotary10() = Patch("fx.Rotary", "Eighth",
         mapOf("speed" to 1f, "distance" to 0.2f, "width" to 1f, "tempo" to 0.8f),
         family = "tempo")
 
-    private fun fx_rotary8() = Patch("fx.Rotary", "Bar",
+    private fun fx_rotary11() = Patch("fx.Rotary", "Bar",
         mapOf("distance" to 0.15f, "tempo" to 0.2f),
         family = "tempo")
 
-    private val fx_rotary: List<Patch> by lazy { listOf(fx_rotary0(), fx_rotary1(), fx_rotary2(), fx_rotary3(), fx_rotary4(), fx_rotary5(), fx_rotary6(), fx_rotary7(), fx_rotary8()) }
+    private val fx_rotary: List<Patch> by lazy { listOf(fx_rotary0(), fx_rotary1(), fx_rotary2(), fx_rotary3(), fx_rotary4(), fx_rotary5(), fx_rotary6(), fx_rotary7(), fx_rotary8(), fx_rotary9(), fx_rotary10(), fx_rotary11()) }
 
     private fun fx_grain0() = Patch("fx.Grain", "Init", emptyMap(),
         family = "cloud")
@@ -6330,31 +6718,71 @@ internal object FactoryBanks {
         mapOf("size" to 0.451545f, "density" to 0.451545f, "spray" to 0.05f, "width" to 0.5f),
         family = "cloud")
 
-    private fun fx_grain4() = Patch("fx.Grain", "Octave Up",
+    private fun fx_grain4() = Patch("fx.Grain", "Fog",
+        mapOf("size" to 0.889075637f, "density" to 0.80103f, "spray" to 0.6f),
+        family = "cloud")
+
+    private fun fx_grain5() = Patch("fx.Grain", "Rain of Grains",
+        mapOf("size" to 0.30102998f, "density" to 0.951545f, "spray" to 0.8f, "mix" to 0.45f),
+        family = "cloud")
+
+    private fun fx_grain6() = Patch("fx.Grain", "Frozen",
+        mapOf("size" to 0.80103f, "density" to 0.80103f, "freeze" to 1f, "mix" to 0.6f, "gain" to 0.5625f),
+        family = "cloud")
+
+    private fun fx_grain7() = Patch("fx.Grain", "Octave Up",
         mapOf("size" to 0.6901056f, "density" to 0.772034049f, "pitch" to 0.75f, "mix" to 0.4f),
         family = "pitch")
 
-    private fun fx_grain5() = Patch("fx.Grain", "Octave Down",
+    private fun fx_grain8() = Patch("fx.Grain", "Octave Down",
         mapOf("size" to 0.7781513f, "density" to 0.69897f, "pitch" to 0.25f, "mix" to 0.45f),
         family = "pitch")
 
-    private fun fx_grain6() = Patch("fx.Grain", "Backwards",
+    private fun fx_grain9() = Patch("fx.Grain", "Backwards",
         mapOf("size" to 0.858001649f, "reverse" to 1f),
         family = "pitch")
 
-    private fun fx_grain7() = Patch("fx.Grain", "Sparkle",
-        mapOf("size" to 0.60205996f, "density" to 0.8266063f, "pitch" to 0.6458333f, "scatter" to 0.6f, "width" to 1f, "mix" to 0.35f),
+    private fun fx_grain10() = Patch("fx.Grain", "Sparkle",
+        mapOf("size" to 0.60205996f, "density" to 0.8266063f, "pitch" to 0.6458333f, "scatter" to 0.6f, "width" to 1f, "mix" to 0.35f, "gain" to 0.46875f),
         family = "pitch")
 
-    private fun fx_grain8() = Patch("fx.Grain", "Bloom",
-        mapOf("size" to 0.840620637f, "density" to 0.7385606f, "spray" to 0.4f, "feedback" to 0.6666667f, "gain" to 0.416666657f),
+    private fun fx_grain11() = Patch("fx.Grain", "Fifth Up",
+        mapOf("density" to 0.7385606f, "pitch" to 0.6458333f, "mix" to 0.4f),
+        family = "pitch")
+
+    private fun fx_grain12() = Patch("fx.Grain", "Scattered Pitch",
+        mapOf("density" to 0.80103f, "scatter" to 1f, "mix" to 0.45f),
+        family = "pitch")
+
+    private fun fx_grain13() = Patch("fx.Grain", "Reverse Cloud",
+        mapOf("size" to 0.849485f, "density" to 0.7385606f, "reverse" to 1f),
+        family = "pitch")
+
+    private fun fx_grain14() = Patch("fx.Grain", "Deep Down",
+        mapOf("size" to 0.60205996f, "density" to 0.588045657f, "pitch" to 0f, "mix" to 0.35f),
+        family = "pitch")
+
+    private fun fx_grain15() = Patch("fx.Grain", "Bloom",
+        mapOf("size" to 0.840620637f, "density" to 0.7385606f, "spray" to 0.4f, "feedback" to 0.6666667f),
         family = "feedback")
 
-    private fun fx_grain9() = Patch("fx.Grain", "Rising",
-        mapOf("size" to 0.80103f, "density" to 0.69897f, "pitch" to 0.6458333f, "feedback" to 0.611111164f, "mix" to 0.45f, "gain" to 0.416666657f),
+    private fun fx_grain16() = Patch("fx.Grain", "Rising",
+        mapOf("size" to 0.80103f, "density" to 0.69897f, "pitch" to 0.6458333f, "feedback" to 0.611111164f, "mix" to 0.45f, "gain" to 0.479166657f),
         family = "feedback")
 
-    private val fx_grain: List<Patch> by lazy { listOf(fx_grain0(), fx_grain1(), fx_grain2(), fx_grain3(), fx_grain4(), fx_grain5(), fx_grain6(), fx_grain7(), fx_grain8(), fx_grain9()) }
+    private fun fx_grain17() = Patch("fx.Grain", "Endless",
+        mapOf("size" to 0.7385606f, "density" to 0.7385606f, "feedback" to 0.888888955f, "mix" to 0.45f, "gain" to 0.489583343f),
+        family = "feedback")
+
+    private fun fx_grain18() = Patch("fx.Grain", "Shimmer Loop",
+        mapOf("pitch" to 0.75f, "feedback" to 0.6666667f, "mix" to 0.4f, "gain" to 0.46875f),
+        family = "feedback")
+
+    private fun fx_grain19() = Patch("fx.Grain", "Granular Echo",
+        mapOf("size" to 0.5395906f, "density" to 0.349485f, "feedback" to 0.5555556f, "mix" to 0.4f),
+        family = "feedback")
+
+    private val fx_grain: List<Patch> by lazy { listOf(fx_grain0(), fx_grain1(), fx_grain2(), fx_grain3(), fx_grain4(), fx_grain5(), fx_grain6(), fx_grain7(), fx_grain8(), fx_grain9(), fx_grain10(), fx_grain11(), fx_grain12(), fx_grain13(), fx_grain14(), fx_grain15(), fx_grain16(), fx_grain17(), fx_grain18(), fx_grain19()) }
 
     private fun fx_resonator0() = Patch("fx.Resonator", "Init", emptyMap(),
         family = "strings")
@@ -6368,30 +6796,74 @@ internal object FactoryBanks {
         family = "strings")
 
     private fun fx_resonator3() = Patch("fx.Resonator", "Minor",
-        mapOf("key" to 0.8181818f, "scale" to 0.15625f, "decay" to 0.7861761f, "tone" to 0.35f, "mix" to 0.3f),
+        mapOf("key" to 0.8181818f, "scale" to 0.15625f, "decay" to 0.7861761f, "tone" to 0.35f, "mix" to 0.3f, "gain" to 0.458333343f),
         family = "strings")
 
-    private fun fx_resonator4() = Patch("fx.Resonator", "Drone",
-        mapOf("low" to 0.0833333358f, "strings" to 0.333333343f, "decay" to 0.9554699f, "tone" to 0.3f, "mix" to 0.4f),
-        family = "drone")
+    private fun fx_resonator4() = Patch("fx.Resonator", "Major Strings",
+        mapOf("key" to 0.6363636f, "decay" to 0.7316757f),
+        family = "strings")
 
-    private fun fx_resonator5() = Patch("fx.Resonator", "Raga",
-        mapOf("scale" to 0.65625f, "decay" to 0.900969446f, "tone" to 0.65f, "metal" to 0.1f),
-        family = "drone")
+    private fun fx_resonator5() = Patch("fx.Resonator", "Dorian Glow",
+        mapOf("key" to 0.181818187f, "scale" to 0.03125f, "decay" to 0.7861761f, "tone" to 0.4f),
+        family = "strings")
 
-    private fun fx_resonator6() = Patch("fx.Resonator", "Bell",
+    private fun fx_resonator6() = Patch("fx.Resonator", "Short Pluck",
+        mapOf("decay" to 0.268324345f, "mix" to 0.4f),
+        family = "strings")
+
+    private fun fx_resonator7() = Patch("fx.Resonator", "Sixteen Strings",
+        mapOf("strings" to 1f, "width" to 1f),
+        family = "strings")
+
+    private fun fx_resonator8() = Patch("fx.Resonator", "Bright Harp",
+        mapOf("low" to 0.5f, "decay" to 0.562381864f, "tone" to 0.8f, "mix" to 0.3f),
+        family = "strings")
+
+    private fun fx_resonator9() = Patch("fx.Resonator", "Bell",
         mapOf("decay" to 0.8307062f, "tone" to 0.7f, "metal" to 0.6f),
         family = "metal")
 
-    private fun fx_resonator7() = Patch("fx.Resonator", "Gong",
+    private fun fx_resonator10() = Patch("fx.Resonator", "Gong",
         mapOf("scale" to 0.9375f, "low" to 0.125f, "decay" to 0.929736733f, "metal" to 0.9f, "mix" to 0.4f),
         family = "metal")
 
-    private fun fx_resonator8() = Patch("fx.Resonator", "Glass",
+    private fun fx_resonator11() = Patch("fx.Resonator", "Glass",
         mapOf("scale" to 0.28125f, "low" to 0.75f, "tone" to 0.85f, "metal" to 0.35f, "mix" to 0.3f),
         family = "metal")
 
-    private val fx_resonator: List<Patch> by lazy { listOf(fx_resonator0(), fx_resonator1(), fx_resonator2(), fx_resonator3(), fx_resonator4(), fx_resonator5(), fx_resonator6(), fx_resonator7(), fx_resonator8()) }
+    private fun fx_resonator12() = Patch("fx.Resonator", "Tin",
+        mapOf("decay" to 0.562381864f, "metal" to 0.4f, "mix" to 0.3f),
+        family = "metal")
+
+    private fun fx_resonator13() = Patch("fx.Resonator", "Chimes",
+        mapOf("low" to 0.75f, "decay" to 0.900969446f, "metal" to 0.8f, "mix" to 0.3f, "gain" to 0.447916657f),
+        family = "metal")
+
+    private fun fx_resonator14() = Patch("fx.Resonator", "Steel Plate",
+        mapOf("decay" to 0.7316757f, "tone" to 0.3f, "metal" to 1f, "mix" to 0.3f),
+        family = "metal")
+
+    private fun fx_resonator15() = Patch("fx.Resonator", "Drone",
+        mapOf("low" to 0.0833333358f, "strings" to 0.333333343f, "decay" to 0.9554699f, "tone" to 0.3f, "mix" to 0.4f),
+        family = "drone")
+
+    private fun fx_resonator16() = Patch("fx.Resonator", "Raga",
+        mapOf("scale" to 0.65625f, "decay" to 0.900969446f, "tone" to 0.65f, "metal" to 0.1f),
+        family = "drone")
+
+    private fun fx_resonator17() = Patch("fx.Resonator", "Low Drone",
+        mapOf("low" to 0f, "strings" to 0.166666672f, "decay" to 1f, "tone" to 0.3f, "mix" to 0.3f),
+        family = "drone")
+
+    private fun fx_resonator18() = Patch("fx.Resonator", "Fifth Drone",
+        mapOf("strings" to 0f, "decay" to 0.9554699f, "mix" to 0.3f),
+        family = "drone")
+
+    private fun fx_resonator19() = Patch("fx.Resonator", "Dark Hum",
+        mapOf("decay" to 0.900969446f, "tone" to 0.1f),
+        family = "drone")
+
+    private val fx_resonator: List<Patch> by lazy { listOf(fx_resonator0(), fx_resonator1(), fx_resonator2(), fx_resonator3(), fx_resonator4(), fx_resonator5(), fx_resonator6(), fx_resonator7(), fx_resonator8(), fx_resonator9(), fx_resonator10(), fx_resonator11(), fx_resonator12(), fx_resonator13(), fx_resonator14(), fx_resonator15(), fx_resonator16(), fx_resonator17(), fx_resonator18(), fx_resonator19()) }
 
     private fun fx_smash0() = Patch("fx.Smash", "Init", emptyMap(),
         family = "loud")
@@ -6401,83 +6873,95 @@ internal object FactoryBanks {
         family = "glue")
 
     private fun fx_smash2() = Patch("fx.Smash", "Bus",
-        mapOf("depth" to 0.45f, "threshold" to 0.5416667f, "down" to 0.7f, "up" to 0.6f),
+        mapOf("depth" to 0.45f, "threshold" to 0.5416667f, "down" to 0.7f, "up" to 0.6f, "gain" to 0.5104167f),
         family = "glue")
 
     private fun fx_smash3() = Patch("fx.Smash", "Vocal",
-        mapOf("depth" to 0.6f, "time" to 0.451545f, "threshold" to 0.458333343f, "mid" to 0.5625f, "high" to 0.458333343f),
+        mapOf("depth" to 0.6f, "time" to 0.451545f, "threshold" to 0.458333343f, "mid" to 0.5625f, "high" to 0.458333343f, "gain" to 0.5416667f),
         family = "glue")
 
     private fun fx_smash4() = Patch("fx.Smash", "Loud",
-        mapOf("time" to 0.389075637f, "gain" to 0.5833333f),
+        mapOf("time" to 0.389075637f, "gain" to 0.5520833f),
         family = "loud")
 
     private fun fx_smash5() = Patch("fx.Smash", "Bright",
-        mapOf("depth" to 0.8f, "low" to 0.416666657f, "high" to 0.6666667f, "gain" to 0.5277778f),
+        mapOf("depth" to 0.8f, "low" to 0.416666657f, "high" to 0.6666667f, "gain" to 0.5208333f),
         family = "loud")
 
     private fun fx_smash6() = Patch("fx.Smash", "Fat",
-        mapOf("depth" to 0.8f, "threshold" to 0.5416667f, "low" to 0.6666667f, "high" to 0.416666657f, "gain" to 0.444444448f),
+        mapOf("depth" to 0.8f, "threshold" to 0.5416667f, "low" to 0.6666667f, "high" to 0.416666657f, "gain" to 0.458333343f),
         family = "loud")
 
-    private fun fx_smash7() = Patch("fx.Smash", "Air",
+    private fun fx_smash7() = Patch("fx.Smash", "Squeeze",
+        mapOf("time" to 0.238560632f, "threshold" to 0.375f, "down" to 1f, "up" to 0.6f, "gain" to 0.6666667f),
+        family = "loud")
+
+    private fun fx_smash8() = Patch("fx.Smash", "Air",
         mapOf("depth" to 0.7f, "time" to 0.650515f, "threshold" to 0.625f, "down" to 0f, "up" to 1f),
         family = "wide")
 
-    private fun fx_smash8() = Patch("fx.Smash", "Pads",
-        mapOf("depth" to 0.9f, "time" to 0.80103f, "threshold" to 0.416666657f),
+    private fun fx_smash9() = Patch("fx.Smash", "Pads",
+        mapOf("depth" to 0.9f, "time" to 0.80103f, "threshold" to 0.416666657f, "gain" to 0.5833333f),
         family = "wide")
 
-    private fun fx_smash9() = Patch("fx.Smash", "Grind",
-        mapOf("time" to 0.08804563f, "threshold" to 0.375f, "in" to 0.444444448f, "gain" to 0.5555556f),
+    private fun fx_smash10() = Patch("fx.Smash", "Grind",
+        mapOf("time" to 0.08804563f, "threshold" to 0.375f, "in" to 0.444444448f, "gain" to 0.6458333f),
         family = "wreck")
 
-    private fun fx_smash10() = Patch("fx.Smash", "Pump",
-        mapOf("time" to 0.889075637f, "threshold" to 0.375f, "down" to 1f, "up" to 0.4f, "gain" to 0.5277778f),
+    private fun fx_smash11() = Patch("fx.Smash", "Pump",
+        mapOf("time" to 0.889075637f, "threshold" to 0.375f, "down" to 1f, "up" to 0.4f, "gain" to 0.6145833f),
         family = "wreck")
 
-    private val fx_smash: List<Patch> by lazy { listOf(fx_smash0(), fx_smash1(), fx_smash2(), fx_smash3(), fx_smash4(), fx_smash5(), fx_smash6(), fx_smash7(), fx_smash8(), fx_smash9(), fx_smash10()) }
+    private val fx_smash: List<Patch> by lazy { listOf(fx_smash0(), fx_smash1(), fx_smash2(), fx_smash3(), fx_smash4(), fx_smash5(), fx_smash6(), fx_smash7(), fx_smash8(), fx_smash9(), fx_smash10(), fx_smash11()) }
 
     private fun fx_acid0() = Patch("fx.Acid", "Init", emptyMap(),
         family = "follow")
 
     private fun fx_acid1() = Patch("fx.Acid", "Squelch",
-        mapOf("cutoff" to 0.353257328f, "resonance" to 0.8f, "env" to 0.7f, "decay" to 0.389075637f, "accent" to 0.7f, "drive" to 0.4f),
+        mapOf("cutoff" to 0.353257328f, "resonance" to 0.8f, "env" to 0.7f, "decay" to 0.389075637f, "accent" to 0.7f, "drive" to 0.4f, "gain" to 0.458333343f),
         family = "follow")
 
     private fun fx_acid2() = Patch("fx.Acid", "Wah",
-        mapOf("resonance" to 0.6f, "drive" to 0.2f, "mode" to 1f, "gain" to 0.8611111f),
+        mapOf("resonance" to 0.6f, "drive" to 0.2f, "mode" to 1f, "gain" to 0.8229167f),
         family = "follow")
 
     private fun fx_acid3() = Patch("fx.Acid", "Duck",
         mapOf("cutoff" to 0.231733218f, "resonance" to 0.5f, "env" to 1f, "decay" to 0.30102998f, "accent" to 0.4f),
         family = "follow")
 
-    private fun fx_acid4() = Patch("fx.Acid", "Eighths",
+    private fun fx_acid4() = Patch("fx.Acid", "Bouncy",
+        mapOf("cutoff" to 0.2821703f, "resonance" to 0.5f, "decay" to 0.650515f),
+        family = "follow")
+
+    private fun fx_acid5() = Patch("fx.Acid", "Eighths",
         mapOf("cutoff" to 0.3212923f, "resonance" to 0.8f, "env" to 0.8f, "decay" to 0.411954373f, "pattern" to 0.125f),
         family = "pattern")
 
-    private fun fx_acid5() = Patch("fx.Acid", "Sixteenths",
-        mapOf("cutoff" to 0.353257328f, "resonance" to 0.85f, "decay" to 0.334503382f, "pattern" to 0.25f, "drive" to 0.5f),
+    private fun fx_acid6() = Patch("fx.Acid", "Sixteenths",
+        mapOf("cutoff" to 0.353257328f, "resonance" to 0.85f, "decay" to 0.334503382f, "pattern" to 0.25f, "drive" to 0.5f, "gain" to 0.46875f),
         family = "pattern")
 
-    private fun fx_acid6() = Patch("fx.Acid", "Offbeat",
+    private fun fx_acid7() = Patch("fx.Acid", "Offbeat",
         mapOf("cutoff" to 0.403694421f, "env" to 0.7f, "decay" to 0.363499343f, "pattern" to 0.375f),
         family = "pattern")
 
-    private fun fx_acid7() = Patch("fx.Acid", "Rolling",
-        mapOf("cutoff" to 0.298880249f, "resonance" to 0.9f, "env" to 0.75f, "decay" to 0.376663834f, "accent" to 0.8f, "pattern" to 1f, "drive" to 0.4f),
+    private fun fx_acid8() = Patch("fx.Acid", "Rolling",
+        mapOf("cutoff" to 0.298880249f, "resonance" to 0.9f, "env" to 0.75f, "decay" to 0.376663834f, "accent" to 0.8f, "pattern" to 1f, "drive" to 0.4f, "gain" to 0.458333343f),
         family = "pattern")
 
-    private fun fx_acid8() = Patch("fx.Acid", "Scream",
-        mapOf("cutoff" to 0.3802834f, "resonance" to 0.97f, "env" to 0.8f, "decay" to 0.468926072f, "accent" to 1f, "pattern" to 0.625f, "drive" to 0.8f, "gain" to 0.3888889f),
+    private fun fx_acid9() = Patch("fx.Acid", "Scream",
+        mapOf("cutoff" to 0.3802834f, "resonance" to 0.97f, "env" to 0.8f, "decay" to 0.468926072f, "accent" to 1f, "pattern" to 0.625f, "drive" to 0.8f, "gain" to 0.416666657f),
         family = "wild")
 
-    private fun fx_acid9() = Patch("fx.Acid", "Rubber",
+    private fun fx_acid10() = Patch("fx.Acid", "Rubber",
         mapOf("cutoff" to 0.192611188f, "resonance" to 0.88f, "env" to 1f, "decay" to 0.7385606f, "pattern" to 0.75f),
         family = "wild")
 
-    private val fx_acid: List<Patch> by lazy { listOf(fx_acid0(), fx_acid1(), fx_acid2(), fx_acid3(), fx_acid4(), fx_acid5(), fx_acid6(), fx_acid7(), fx_acid8(), fx_acid9()) }
+    private fun fx_acid11() = Patch("fx.Acid", "Screamer",
+        mapOf("cutoff" to 0.403694421f, "resonance" to 0.95f, "env" to 0.8f, "decay" to 0.411954373f, "drive" to 0.9f, "gain" to 0.385416657f),
+        family = "wild")
+
+    private val fx_acid: List<Patch> by lazy { listOf(fx_acid0(), fx_acid1(), fx_acid2(), fx_acid3(), fx_acid4(), fx_acid5(), fx_acid6(), fx_acid7(), fx_acid8(), fx_acid9(), fx_acid10(), fx_acid11()) }
 
     private fun fx_mouth0() = Patch("fx.Mouth", "Init", emptyMap(),
         family = "sweep")
@@ -6487,34 +6971,46 @@ internal object FactoryBanks {
         family = "talk")
 
     private fun fx_mouth2() = Patch("fx.Mouth", "Yowl",
-        mapOf("vowel" to 0.1f, "size" to 0.35f, "nasal" to 0.2f, "move" to 0.5f, "depth" to 1f),
+        mapOf("vowel" to 0.1f, "size" to 0.35f, "nasal" to 0.2f, "move" to 0.5f, "depth" to 1f, "gain" to 0.5416667f),
         family = "talk")
 
     private fun fx_mouth3() = Patch("fx.Mouth", "Choir",
-        mapOf("vowel" to 0.5f, "size" to 0.7f, "depth" to 0f, "mix" to 0.8f),
+        mapOf("vowel" to 0.5f, "size" to 0.7f, "depth" to 0f, "mix" to 0.8f, "gain" to 0.458333343f),
         family = "talk")
 
-    private fun fx_mouth4() = Patch("fx.Mouth", "Wow",
+    private fun fx_mouth4() = Patch("fx.Mouth", "Ah",
+        mapOf("vowel" to 0.1f, "gain" to 0.489583343f),
+        family = "talk")
+
+    private fun fx_mouth5() = Patch("fx.Mouth", "Small Mouth",
+        mapOf("vowel" to 0.4f, "size" to 0.2f, "nasal" to 0.5f, "gain" to 0.6041667f),
+        family = "talk")
+
+    private fun fx_mouth6() = Patch("fx.Mouth", "Wow",
         mapOf("vowel" to 0.05f, "rate" to 0.8125f, "depth" to 0.55f),
         family = "sweep")
 
-    private fun fx_mouth5() = Patch("fx.Mouth", "Chatter",
-        mapOf("vowel" to 0.25f, "nasal" to 0.4f, "rate" to 0.3125f, "depth" to 0.6f),
+    private fun fx_mouth7() = Patch("fx.Mouth", "Chatter",
+        mapOf("vowel" to 0.25f, "nasal" to 0.4f, "rate" to 0.3125f, "depth" to 0.6f, "gain" to 0.5833333f),
         family = "sweep")
 
-    private fun fx_mouth6() = Patch("fx.Mouth", "Robot",
-        mapOf("vowel" to 0.4f, "size" to 0.25f, "rate" to 0.125f, "depth" to 0.6f),
+    private fun fx_mouth8() = Patch("fx.Mouth", "Robot",
+        mapOf("vowel" to 0.4f, "size" to 0.25f, "rate" to 0.125f, "depth" to 0.6f, "gain" to 0.5416667f),
         family = "sweep")
 
-    private fun fx_mouth7() = Patch("fx.Mouth", "Vocode",
+    private fun fx_mouth9() = Patch("fx.Mouth", "Wah Sweep",
+        mapOf("vowel" to 0.5f, "move" to 0.5f, "rate" to 0.8125f, "depth" to 0.9f, "gain" to 0.5208333f),
+        family = "sweep")
+
+    private fun fx_mouth10() = Patch("fx.Mouth", "Vocode",
         mapOf("vowel" to 0.05f, "move" to 1f, "depth" to 0.9f),
         family = "key")
 
-    private fun fx_mouth8() = Patch("fx.Mouth", "Mumble",
-        mapOf("vowel" to 0.15f, "size" to 0.75f, "nasal" to 0.5f, "move" to 1f, "depth" to 0.4f),
+    private fun fx_mouth11() = Patch("fx.Mouth", "Mumble",
+        mapOf("vowel" to 0.15f, "size" to 0.75f, "nasal" to 0.5f, "move" to 1f, "depth" to 0.4f, "gain" to 0.5729167f),
         family = "key")
 
-    private val fx_mouth: List<Patch> by lazy { listOf(fx_mouth0(), fx_mouth1(), fx_mouth2(), fx_mouth3(), fx_mouth4(), fx_mouth5(), fx_mouth6(), fx_mouth7(), fx_mouth8()) }
+    private val fx_mouth: List<Patch> by lazy { listOf(fx_mouth0(), fx_mouth1(), fx_mouth2(), fx_mouth3(), fx_mouth4(), fx_mouth5(), fx_mouth6(), fx_mouth7(), fx_mouth8(), fx_mouth9(), fx_mouth10(), fx_mouth11()) }
 
     private fun fx_tape0() = Patch("fx.Tape", "Init", emptyMap(),
         family = "warm")
@@ -6524,34 +7020,78 @@ internal object FactoryBanks {
         family = "warm")
 
     private fun fx_tape2() = Patch("fx.Tape", "Saturate",
-        mapOf("wow" to 0f, "flutter" to 0f, "drive" to 0.85f, "tone" to 0.740362644f, "hiss" to 0.02f, "gain" to 0.444444448f),
+        mapOf("wow" to 0f, "flutter" to 0f, "drive" to 0.85f, "tone" to 0.740362644f, "hiss" to 0.02f, "gain" to 0.458333343f),
         family = "warm")
 
-    private fun fx_tape3() = Patch("fx.Tape", "Cassette",
+    private fun fx_tape3() = Patch("fx.Tape", "Clean Reel",
+        mapOf("wow" to 0.05f, "flutter" to 0.05f, "drive" to 0.2f, "hiss" to 0.03f),
+        family = "warm")
+
+    private fun fx_tape4() = Patch("fx.Tape", "Hot Reel",
+        mapOf("wow" to 0.1f, "drive" to 0.8f, "hiss" to 0.05f, "gain" to 0.4375f),
+        family = "warm")
+
+    private fun fx_tape5() = Patch("fx.Tape", "Soft Top",
+        mapOf("drive" to 0.4f, "tone" to 0.477121264f),
+        family = "warm")
+
+    private fun fx_tape6() = Patch("fx.Tape", "Cassette",
         mapOf("wow" to 0.35f, "flutter" to 0.3f, "drive" to 0.35f, "tone" to 0.544068038f, "hiss" to 0.35f, "age" to 0.4f),
         family = "worn")
 
-    private fun fx_tape4() = Patch("fx.Tape", "Dictaphone",
-        mapOf("wow" to 0.3f, "flutter" to 0.6f, "drive" to 0.5f, "tone" to 0.243038043f, "hiss" to 0.6f, "age" to 0.6f),
+    private fun fx_tape7() = Patch("fx.Tape", "Dictaphone",
+        mapOf("wow" to 0.3f, "flutter" to 0.6f, "drive" to 0.5f, "tone" to 0.243038043f, "hiss" to 0.6f, "age" to 0.6f, "gain" to 0.46875f),
         family = "worn")
 
-    private fun fx_tape5() = Patch("fx.Tape", "Seasick",
+    private fun fx_tape8() = Patch("fx.Tape", "Seasick",
         mapOf("wow" to 0.9f, "tone" to 0.69897f, "age" to 0.7f),
         family = "worn")
 
-    private fun fx_tape6() = Patch("fx.Tape", "Stretched",
-        mapOf("wow" to 0.7f, "flutter" to 0.9f, "drive" to 0.4f, "tone" to 0.60205996f, "hiss" to 0.25f, "age" to 1f),
+    private fun fx_tape9() = Patch("fx.Tape", "Old Reel",
+        mapOf("wow" to 0.5f, "flutter" to 0.3f, "hiss" to 0.3f, "age" to 0.6f),
+        family = "worn")
+
+    private fun fx_tape10() = Patch("fx.Tape", "Answering Machine",
+        mapOf("wow" to 0.4f, "tone" to 0.243038043f, "hiss" to 0.4f, "age" to 0.8f),
+        family = "worn")
+
+    private fun fx_tape11() = Patch("fx.Tape", "Lo-Fi Loop",
+        mapOf("wow" to 0.3f, "tone" to 0.60205996f, "hiss" to 0.2f, "age" to 0.5f),
+        family = "worn")
+
+    private fun fx_tape12() = Patch("fx.Tape", "VHS",
+        mapOf("wow" to 0.35f, "flutter" to 0.5f, "tone" to 0.39794f, "hiss" to 0.25f),
+        family = "worn")
+
+    private fun fx_tape13() = Patch("fx.Tape", "Stretched",
+        mapOf("wow" to 0.7f, "flutter" to 0.9f, "drive" to 0.4f, "tone" to 0.60205996f, "hiss" to 0.25f, "age" to 1f, "gain" to 0.46875f),
         family = "broken")
 
-    private fun fx_tape7() = Patch("fx.Tape", "Quick Stop",
+    private fun fx_tape14() = Patch("fx.Tape", "Quick Stop",
         mapOf("wow" to 0.15f, "flutter" to 0.1f, "drive" to 0.4f, "hiss" to 0.1f, "stoptime" to 0.297817349f),
         family = "broken")
 
-    private fun fx_tape8() = Patch("fx.Tape", "Slow Stop",
+    private fun fx_tape15() = Patch("fx.Tape", "Slow Stop",
         mapOf("wow" to 0.3f, "flutter" to 0.15f, "tone" to 0.60205996f, "age" to 0.6f, "stoptime" to 0.872589052f),
         family = "broken")
 
-    private val fx_tape: List<Patch> by lazy { listOf(fx_tape0(), fx_tape1(), fx_tape2(), fx_tape3(), fx_tape4(), fx_tape5(), fx_tape6(), fx_tape7(), fx_tape8()) }
+    private fun fx_tape16() = Patch("fx.Tape", "Chewed",
+        mapOf("wow" to 0.9f, "flutter" to 0.8f, "age" to 1f),
+        family = "broken")
+
+    private fun fx_tape17() = Patch("fx.Tape", "Dying Battery",
+        mapOf("wow" to 1f, "flutter" to 0.4f, "tone" to 0.477121264f, "age" to 0.7f),
+        family = "broken")
+
+    private fun fx_tape18() = Patch("fx.Tape", "Brake Stop",
+        mapOf("stop" to 1f, "stoptime" to 0.872589052f, "gain" to 0.5520833f),
+        family = "broken")
+
+    private fun fx_tape19() = Patch("fx.Tape", "Snap Stop",
+        mapOf("stop" to 1f, "stoptime" to 0.187901825f, "gain" to 0.6770833f),
+        family = "broken")
+
+    private val fx_tape: List<Patch> by lazy { listOf(fx_tape0(), fx_tape1(), fx_tape2(), fx_tape3(), fx_tape4(), fx_tape5(), fx_tape6(), fx_tape7(), fx_tape8(), fx_tape9(), fx_tape10(), fx_tape11(), fx_tape12(), fx_tape13(), fx_tape14(), fx_tape15(), fx_tape16(), fx_tape17(), fx_tape18(), fx_tape19()) }
 
     private fun fx_slicer0() = Patch("fx.Slicer", "Init", emptyMap(),
         family = "stutter")
@@ -6568,31 +7108,71 @@ internal object FactoryBanks {
         mapOf("repeat" to 1f, "reverse" to 0f, "drop" to 0f, "pitch" to 0.7916667f),
         family = "stutter")
 
-    private fun fx_slicer4() = Patch("fx.Slicer", "Glitch",
+    private fun fx_slicer4() = Patch("fx.Slicer", "Light Stutter",
+        mapOf("chance" to 0.15f, "repeat" to 0.8f, "reverse" to 0f, "drop" to 0f),
+        family = "stutter")
+
+    private fun fx_slicer5() = Patch("fx.Slicer", "Machine Gun",
+        mapOf("rate" to 1f, "chance" to 0.6f, "repeat" to 1f, "drop" to 0f),
+        family = "stutter")
+
+    private fun fx_slicer6() = Patch("fx.Slicer", "Glitch",
         mapOf("chance" to 0.5f, "repeat" to 0.5f, "reverse" to 0.4f, "drop" to 0.3f, "seed" to 0.333333343f),
         family = "glitch")
 
-    private fun fx_slicer5() = Patch("fx.Slicer", "Backwards",
+    private fun fx_slicer7() = Patch("fx.Slicer", "Backwards",
         mapOf("rate" to 0.333333343f, "chance" to 0.35f, "repeat" to 0f, "reverse" to 1f, "drop" to 0f),
         family = "glitch")
 
-    private fun fx_slicer6() = Patch("fx.Slicer", "Tape",
+    private fun fx_slicer8() = Patch("fx.Slicer", "Tape",
         mapOf("repeat" to 1f, "drop" to 0f, "pitch" to 0f),
         family = "glitch")
 
-    private fun fx_slicer7() = Patch("fx.Slicer", "Chop",
+    private fun fx_slicer9() = Patch("fx.Slicer", "Reverse Only",
+        mapOf("chance" to 0.4f, "repeat" to 0f, "reverse" to 1f, "drop" to 0f),
+        family = "glitch")
+
+    private fun fx_slicer10() = Patch("fx.Slicer", "Pitch Glitch",
+        mapOf("chance" to 0.4f, "repeat" to 0.8f, "pitch" to 0.208333328f),
+        family = "glitch")
+
+    private fun fx_slicer11() = Patch("fx.Slicer", "Up Glitch",
+        mapOf("repeat" to 0.8f, "pitch" to 1f),
+        family = "glitch")
+
+    private fun fx_slicer12() = Patch("fx.Slicer", "Broken Beat",
+        mapOf("chance" to 0.6f, "repeat" to 0.5f, "reverse" to 0.5f, "drop" to 0.3f, "seed" to 0.466666669f),
+        family = "glitch")
+
+    private fun fx_slicer13() = Patch("fx.Slicer", "Chop",
         mapOf("chance" to 0f, "gate" to 0.444444478f),
         family = "gate")
 
-    private fun fx_slicer8() = Patch("fx.Slicer", "Holes",
-        mapOf("rate" to 0.333333343f, "repeat" to 0f, "reverse" to 0f, "drop" to 1f, "seed" to 0.6f),
+    private fun fx_slicer14() = Patch("fx.Slicer", "Holes",
+        mapOf("rate" to 0.333333343f, "repeat" to 0f, "reverse" to 0f, "drop" to 1f, "seed" to 0.6f, "gain" to 0.5416667f),
         family = "gate")
 
-    private fun fx_slicer9() = Patch("fx.Slicer", "Trance",
-        mapOf("chance" to 0.15f, "repeat" to 1f, "reverse" to 0f, "drop" to 0f, "gate" to 0.2777778f),
+    private fun fx_slicer15() = Patch("fx.Slicer", "Trance",
+        mapOf("chance" to 0.15f, "repeat" to 1f, "reverse" to 0f, "drop" to 0f, "gate" to 0.2777778f, "gain" to 0.53125f),
         family = "gate")
 
-    private val fx_slicer: List<Patch> by lazy { listOf(fx_slicer0(), fx_slicer1(), fx_slicer2(), fx_slicer3(), fx_slicer4(), fx_slicer5(), fx_slicer6(), fx_slicer7(), fx_slicer8(), fx_slicer9()) }
+    private fun fx_slicer16() = Patch("fx.Slicer", "Trance Gate Eighths",
+        mapOf("rate" to 0.333333343f, "chance" to 0f, "gate" to 0.333333343f),
+        family = "gate")
+
+    private fun fx_slicer17() = Patch("fx.Slicer", "Soft Gate",
+        mapOf("chance" to 0f, "gate" to 0.7222222f),
+        family = "gate")
+
+    private fun fx_slicer18() = Patch("fx.Slicer", "Sparse",
+        mapOf("chance" to 0.6f, "repeat" to 0f, "reverse" to 0f, "drop" to 1f, "gain" to 0.5833333f),
+        family = "gate")
+
+    private fun fx_slicer19() = Patch("fx.Slicer", "Chance Gate",
+        mapOf("chance" to 0.4f, "repeat" to 0f, "drop" to 0.6f, "gate" to 0.444444478f, "gain" to 0.5520833f),
+        family = "gate")
+
+    private val fx_slicer: List<Patch> by lazy { listOf(fx_slicer0(), fx_slicer1(), fx_slicer2(), fx_slicer3(), fx_slicer4(), fx_slicer5(), fx_slicer6(), fx_slicer7(), fx_slicer8(), fx_slicer9(), fx_slicer10(), fx_slicer11(), fx_slicer12(), fx_slicer13(), fx_slicer14(), fx_slicer15(), fx_slicer16(), fx_slicer17(), fx_slicer18(), fx_slicer19()) }
 
     private fun fx_magneto0() = Patch("fx.Magneto", "Init", emptyMap(),
         family = "clean")
@@ -6625,56 +7205,104 @@ internal object FactoryBanks {
         mapOf("dubs" to 0.6666667f),
         family = "dubbed")
 
-    private fun fx_magneto8() = Patch("fx.Magneto", "Under the Mix",
+    private fun fx_magneto8() = Patch("fx.Magneto", "High Rate Dub",
+        mapOf("mode" to 0.75f, "dubs" to 0.333333343f),
+        family = "dubbed")
+
+    private fun fx_magneto9() = Patch("fx.Magneto", "Extra Long Dub",
+        mapOf("mode" to 1f, "dubs" to 0.6666667f),
+        family = "dubbed")
+
+    private fun fx_magneto10() = Patch("fx.Magneto", "Long Play Third",
+        mapOf("mode" to 0.25f, "dubs" to 1f),
+        family = "dubbed")
+
+    private fun fx_magneto11() = Patch("fx.Magneto", "Original Dub",
+        mapOf("dubs" to 1f),
+        family = "dubbed")
+
+    private fun fx_magneto12() = Patch("fx.Magneto", "Four Times Copied",
+        mapOf("mode" to 0.5f, "dubs" to 0.333333343f),
+        family = "dubbed")
+
+    private fun fx_magneto13() = Patch("fx.Magneto", "Worn Out",
+        mapOf("mode" to 1f, "dubs" to 1f),
+        family = "dubbed")
+
+    private fun fx_magneto14() = Patch("fx.Magneto", "Under the Mix",
         mapOf("mode" to 0.5f, "mix" to 0.5f),
         family = "blend")
 
-    private fun fx_magneto9() = Patch("fx.Magneto", "Shimmer",
+    private fun fx_magneto15() = Patch("fx.Magneto", "Shimmer",
         mapOf("mode" to 1f, "dubs" to 1f, "mix" to 0.35f),
         family = "blend")
 
-    private val fx_magneto: List<Patch> by lazy { listOf(fx_magneto0(), fx_magneto1(), fx_magneto2(), fx_magneto3(), fx_magneto4(), fx_magneto5(), fx_magneto6(), fx_magneto7(), fx_magneto8(), fx_magneto9()) }
+    private fun fx_magneto16() = Patch("fx.Magneto", "Faint Long Play",
+        mapOf("mode" to 0.25f, "mix" to 0.3f),
+        family = "blend")
+
+    private fun fx_magneto17() = Patch("fx.Magneto", "Half Extra Long",
+        mapOf("mode" to 1f, "mix" to 0.5f),
+        family = "blend")
+
+    private fun fx_magneto18() = Patch("fx.Magneto", "Ghost Copy",
+        mapOf("mode" to 0.5f, "dubs" to 0.6666667f, "mix" to 0.35f),
+        family = "blend")
+
+    private fun fx_magneto19() = Patch("fx.Magneto", "High Rate Blend",
+        mapOf("mode" to 0.75f, "mix" to 0.5f),
+        family = "blend")
+
+    private val fx_magneto: List<Patch> by lazy { listOf(fx_magneto0(), fx_magneto1(), fx_magneto2(), fx_magneto3(), fx_magneto4(), fx_magneto5(), fx_magneto6(), fx_magneto7(), fx_magneto8(), fx_magneto9(), fx_magneto10(), fx_magneto11(), fx_magneto12(), fx_magneto13(), fx_magneto14(), fx_magneto15(), fx_magneto16(), fx_magneto17(), fx_magneto18(), fx_magneto19()) }
 
     private fun fx_horn0() = Patch("fx.Horn", "Init", emptyMap(),
         family = "brass")
 
     private fun fx_horn1() = Patch("fx.Horn", "Bright Lead",
-        mapOf("tone" to 0.75f, "bell" to 0.8f, "glide" to 0.435755581f, "gain" to 0.5277778f),
+        mapOf("tone" to 0.75f, "bell" to 0.8f, "glide" to 0.435755581f, "gain" to 0.489583343f),
         family = "brass")
 
     private fun fx_horn2() = Patch("fx.Horn", "Low Brass",
-        mapOf("octave" to 0.25f, "tone" to 0.3f, "bell" to 0.3f, "gain" to 0.5833333f),
+        mapOf("octave" to 0.25f, "tone" to 0.3f, "bell" to 0.3f, "gain" to 0.489583343f),
         family = "brass")
 
     private fun fx_horn3() = Patch("fx.Horn", "Hunting Horn",
-        mapOf("bell" to 0.35f, "air" to 0.35f, "glide" to 0.770361f),
+        mapOf("bell" to 0.35f, "air" to 0.35f, "glide" to 0.770361f, "gain" to 0.4375f),
         family = "brass")
 
-    private fun fx_horn4() = Patch("fx.Horn", "Clarinet",
-        mapOf("kind" to 0.333333343f, "gain" to 0.5138889f),
+    private fun fx_horn4() = Patch("fx.Horn", "Muted Trumpet",
+        mapOf("tone" to 0.25f, "bell" to 0.3f, "gain" to 0.427083343f),
+        family = "brass")
+
+    private fun fx_horn5() = Patch("fx.Horn", "Clarinet",
+        mapOf("kind" to 0.333333343f, "gain" to 0.385416657f),
         family = "reed")
 
-    private fun fx_horn5() = Patch("fx.Horn", "Low Clarinet",
-        mapOf("kind" to 0.333333343f, "octave" to 0.25f, "tone" to 0.35f, "gain" to 0.625f),
+    private fun fx_horn6() = Patch("fx.Horn", "Low Clarinet",
+        mapOf("kind" to 0.333333343f, "octave" to 0.25f, "tone" to 0.35f, "gain" to 0.479166657f),
         family = "reed")
 
-    private fun fx_horn6() = Patch("fx.Horn", "Oboe",
-        mapOf("kind" to 0.6666667f, "tone" to 0.6f, "gain" to 0.5694444f),
+    private fun fx_horn7() = Patch("fx.Horn", "Oboe",
+        mapOf("kind" to 0.6666667f, "tone" to 0.6f, "gain" to 0.375f),
         family = "reed")
 
-    private fun fx_horn7() = Patch("fx.Horn", "Flute",
-        mapOf("kind" to 1f, "octave" to 0.75f, "air" to 0.25f, "gain" to 0.4027778f),
+    private fun fx_horn8() = Patch("fx.Horn", "Flute",
+        mapOf("kind" to 1f, "octave" to 0.75f, "air" to 0.25f, "gain" to 0.239583328f),
         family = "flute")
 
-    private fun fx_horn8() = Patch("fx.Horn", "Breathy Flute",
-        mapOf("kind" to 1f, "air" to 0.7f, "breath" to 0.3f, "gain" to 0.5416667f),
+    private fun fx_horn9() = Patch("fx.Horn", "Breathy Flute",
+        mapOf("kind" to 1f, "air" to 0.7f, "breath" to 0.3f, "gain" to 0.40625f),
         family = "flute")
 
-    private fun fx_horn9() = Patch("fx.Horn", "Sung Brass",
-        mapOf("snap" to 1f, "mix" to 0.5f, "gain" to 0.5694444f),
+    private fun fx_horn10() = Patch("fx.Horn", "Airy Flute",
+        mapOf("kind" to 1f, "air" to 0.6f, "gain" to 0.354166657f),
+        family = "flute")
+
+    private fun fx_horn11() = Patch("fx.Horn", "Sung Brass",
+        mapOf("snap" to 1f, "mix" to 0.5f, "gain" to 0.53125f),
         family = "blend")
 
-    private val fx_horn: List<Patch> by lazy { listOf(fx_horn0(), fx_horn1(), fx_horn2(), fx_horn3(), fx_horn4(), fx_horn5(), fx_horn6(), fx_horn7(), fx_horn8(), fx_horn9()) }
+    private val fx_horn: List<Patch> by lazy { listOf(fx_horn0(), fx_horn1(), fx_horn2(), fx_horn3(), fx_horn4(), fx_horn5(), fx_horn6(), fx_horn7(), fx_horn8(), fx_horn9(), fx_horn10(), fx_horn11()) }
 
     private fun fx_spectral0() = Patch("fx.Spectral", "Init", emptyMap(),
         family = "wash")
@@ -6684,38 +7312,78 @@ internal object FactoryBanks {
         family = "wash")
 
     private fun fx_spectral2() = Patch("fx.Spectral", "Long Blur",
-        mapOf("blur" to 0.92f),
+        mapOf("blur" to 0.92f, "gain" to 0.458333343f),
         family = "wash")
 
     private fun fx_spectral3() = Patch("fx.Spectral", "Dark Haze",
-        mapOf("blur" to 0.75f, "smear" to 0.5f, "tilt" to 0.166666672f, "gain" to 0.333333343f),
+        mapOf("blur" to 0.75f, "smear" to 0.5f, "tilt" to 0.166666672f, "gain" to 0.322916657f),
         family = "wash")
 
-    private fun fx_spectral4() = Patch("fx.Spectral", "Whisper",
-        mapOf("smear" to 1f, "tilt" to 0.625f),
+    private fun fx_spectral4() = Patch("fx.Spectral", "Light Blur",
+        mapOf("blur" to 0.3f),
+        family = "wash")
+
+    private fun fx_spectral5() = Patch("fx.Spectral", "Soft Smear",
+        mapOf("smear" to 0.4f, "gain" to 0.458333343f),
+        family = "wash")
+
+    private fun fx_spectral6() = Patch("fx.Spectral", "Smear Wash",
+        mapOf("blur" to 0.7f, "smear" to 0.7f, "gain" to 0.447916657f),
+        family = "wash")
+
+    private fun fx_spectral7() = Patch("fx.Spectral", "Whisper",
+        mapOf("smear" to 1f, "tilt" to 0.625f, "gain" to 0.53125f),
         family = "ghost")
 
-    private fun fx_spectral5() = Patch("fx.Spectral", "Far Away",
+    private fun fx_spectral8() = Patch("fx.Spectral", "Far Away",
         mapOf("blur" to 0.5f, "smear" to 0.8f, "mix" to 0.5f),
         family = "ghost")
 
-    private fun fx_spectral6() = Patch("fx.Spectral", "Robot Voice",
+    private fun fx_spectral9() = Patch("fx.Spectral", "Breath",
+        mapOf("blur" to 0.5f, "tilt" to 0.75f, "mix" to 0.6f, "gain" to 0.6041667f),
+        family = "ghost")
+
+    private fun fx_spectral10() = Patch("fx.Spectral", "Distant",
+        mapOf("blur" to 0.6f, "tilt" to 0.125f, "mix" to 0.6f, "gain" to 0.447916657f),
+        family = "ghost")
+
+    private fun fx_spectral11() = Patch("fx.Spectral", "Robot Voice",
         mapOf("robot" to 1f),
         family = "robot")
 
-    private fun fx_spectral7() = Patch("fx.Spectral", "Half Robot",
-        mapOf("blur" to 0.3f, "robot" to 0.5f, "gain" to 0.416666657f),
+    private fun fx_spectral12() = Patch("fx.Spectral", "Half Robot",
+        mapOf("blur" to 0.3f, "robot" to 0.5f, "gain" to 0.4375f),
         family = "robot")
 
-    private fun fx_spectral8() = Patch("fx.Spectral", "Glass",
+    private fun fx_spectral13() = Patch("fx.Spectral", "Monotone",
+        mapOf("robot" to 0.7f, "tilt" to 0.625f, "gain" to 0.53125f),
+        family = "robot")
+
+    private fun fx_spectral14() = Patch("fx.Spectral", "Robot Blend",
+        mapOf("robot" to 1f, "mix" to 0.4f, "gain" to 0.5729167f),
+        family = "robot")
+
+    private fun fx_spectral15() = Patch("fx.Spectral", "Glass",
         mapOf("peaks" to 0.75f),
         family = "glass")
 
-    private fun fx_spectral9() = Patch("fx.Spectral", "Ice",
-        mapOf("blur" to 0.7f, "peaks" to 0.85f, "tilt" to 0.6666667f, "gain" to 0.8055556f),
+    private fun fx_spectral16() = Patch("fx.Spectral", "Ice",
+        mapOf("blur" to 0.7f, "peaks" to 0.85f, "tilt" to 0.6666667f, "gain" to 0.7291667f),
         family = "glass")
 
-    private val fx_spectral: List<Patch> by lazy { listOf(fx_spectral0(), fx_spectral1(), fx_spectral2(), fx_spectral3(), fx_spectral4(), fx_spectral5(), fx_spectral6(), fx_spectral7(), fx_spectral8(), fx_spectral9()) }
+    private fun fx_spectral17() = Patch("fx.Spectral", "Crystal",
+        mapOf("peaks" to 1f, "tilt" to 0.75f, "gain" to 1f),
+        family = "glass")
+
+    private fun fx_spectral18() = Patch("fx.Spectral", "Dark Glass",
+        mapOf("peaks" to 0.8f, "tilt" to 0.25f, "gain" to 0.375f),
+        family = "glass")
+
+    private fun fx_spectral19() = Patch("fx.Spectral", "Bright Breath",
+        mapOf("peaks" to 0.3f, "tilt" to 0.875f, "gain" to 0.6666667f),
+        family = "glass")
+
+    private val fx_spectral: List<Patch> by lazy { listOf(fx_spectral0(), fx_spectral1(), fx_spectral2(), fx_spectral3(), fx_spectral4(), fx_spectral5(), fx_spectral6(), fx_spectral7(), fx_spectral8(), fx_spectral9(), fx_spectral10(), fx_spectral11(), fx_spectral12(), fx_spectral13(), fx_spectral14(), fx_spectral15(), fx_spectral16(), fx_spectral17(), fx_spectral18(), fx_spectral19()) }
 
     private fun fx_formula0() = Patch("fx.Formula", "Init", emptyMap(),
         family = "crush")
@@ -6725,49 +7393,94 @@ internal object FactoryBanks {
         family = "crush")
 
     private fun fx_formula2() = Patch("fx.Formula", "Fewer Bits",
-        mapOf("a" to 0.627451f, "gain" to 0.375f),
+        mapOf("a" to 0.627451f, "gain" to 0.40625f),
         mapOf("formula" to "x & (255 << (a >> 5))"),
         family = "crush")
 
     private fun fx_formula3() = Patch("fx.Formula", "Soft Bits",
-        mapOf("smooth" to 0.485719174f, "gain" to 0.458333343f),
+        mapOf("smooth" to 0.485719174f, "gain" to 0.416666657f),
         mapOf("formula" to "x & 224"),
         family = "crush")
 
-    private fun fx_formula4() = Patch("fx.Formula", "Wrap",
-        mapOf("a" to 0.1882353f, "gain" to 0.180555552f),
+    private fun fx_formula4() = Patch("fx.Formula", "Two Bit",
+        mapOf("gain" to 0.291666657f),
+        mapOf("formula" to "x & 192"),
+        family = "crush")
+
+    private fun fx_formula5() = Patch("fx.Formula", "Smooth Bits",
+        mapOf("smooth" to 0.485719174f),
+        mapOf("formula" to "x & 248"),
+        family = "crush")
+
+    private fun fx_formula6() = Patch("fx.Formula", "Wrap",
+        mapOf("a" to 0.1882353f, "gain" to 0.260416657f),
         mapOf("formula" to "128 + ((x - 128) * (a + 16) >> 4)"),
         family = "mangle")
 
-    private fun fx_formula5() = Patch("fx.Formula", "Ring",
-        mapOf("a" to 0.0784313753f, "gain" to 0.5833333f),
+    private fun fx_formula7() = Patch("fx.Formula", "Ring",
+        mapOf("a" to 0.0784313753f, "gain" to 0.5625f),
         mapOf("formula" to "128 + ((x - 128) * sin(t * (a + 1) >> 3) >> 7)"),
         family = "mangle")
 
-    private fun fx_formula6() = Patch("fx.Formula", "Scramble",
-        mapOf("mix" to 0.5f, "gain" to 0.166666672f),
+    private fun fx_formula8() = Patch("fx.Formula", "Scramble",
+        mapOf("mix" to 0.5f, "gain" to 0.25f),
         mapOf("formula" to "x ^ t >> 4"),
         family = "mangle")
 
-    private fun fx_formula7() = Patch("fx.Formula", "Grit",
+    private fun fx_formula9() = Patch("fx.Formula", "Grit",
         mapOf("b" to 0.470588237f),
         mapOf("formula" to "x ^ r >> (8 - (b >> 5))"),
         family = "mangle")
 
-    private fun fx_formula8() = Patch("fx.Formula", "Chop",
-        mapOf("gain" to 0.5555556f),
+    private fun fx_formula10() = Patch("fx.Formula", "Fold Back",
+        mapOf("gain" to 0.46875f),
+        mapOf("formula" to "x < 128 ? 255 - x * 2 : x * 2 - 256"),
+        family = "mangle")
+
+    private fun fx_formula11() = Patch("fx.Formula", "Square It",
+        mapOf("smooth" to 0.563705444f, "gain" to 0.15625f),
+        mapOf("formula" to "x > 128 ? 200 : 56"),
+        family = "mangle")
+
+    private fun fx_formula12() = Patch("fx.Formula", "Noise Gate",
+        mapOf("gain" to 0.479166657f),
+        mapOf("formula" to "(x > 140 || x < 116) ? x : 128 + (r & 15) - 8"),
+        family = "mangle")
+
+    private fun fx_formula13() = Patch("fx.Formula", "Bit Flip",
+        mapOf("a" to 0.5019608f, "gain" to 0.0520833321f),
+        mapOf("formula" to "x ^ (a & 128)"),
+        family = "mangle")
+
+    private fun fx_formula14() = Patch("fx.Formula", "Chop",
+        mapOf("gain" to 0.5416667f),
         mapOf("formula" to "t >> 11 & 1 ? x : 128"),
         family = "rhythm")
 
-    private fun fx_formula9() = Patch("fx.Formula", "Three in Four",
-        mapOf("gain" to 0.5416667f),
+    private fun fx_formula15() = Patch("fx.Formula", "Three in Four",
+        mapOf("gain" to 0.53125f),
         mapOf("formula" to "(t >> 10 & 3) ? x : 128"),
         family = "rhythm")
 
-    private fun fx_formula10() = Patch("fx.Formula", "Clock Bits",
-        mapOf("smooth" to 0.673621f, "gain" to 0.4861111f),
+    private fun fx_formula16() = Patch("fx.Formula", "Clock Bits",
+        mapOf("smooth" to 0.673621f, "gain" to 0.489583343f),
         mapOf("formula" to "(x & 240) | (t >> 2 & 15)"),
         family = "rhythm")
 
-    private val fx_formula: List<Patch> by lazy { listOf(fx_formula0(), fx_formula1(), fx_formula2(), fx_formula3(), fx_formula4(), fx_formula5(), fx_formula6(), fx_formula7(), fx_formula8(), fx_formula9(), fx_formula10()) }
+    private fun fx_formula17() = Patch("fx.Formula", "Stepper",
+        mapOf("b" to 0.6666667f, "gain" to 0.5416667f),
+        mapOf("formula" to "((t >> 11) & (b >> 4)) ? x : 128"),
+        family = "rhythm")
+
+    private fun fx_formula18() = Patch("fx.Formula", "Gated Noise",
+        mapOf("gain" to 0.177083328f),
+        mapOf("formula" to "((t >> 10) & 3) ? x : (x + r) & 255"),
+        family = "rhythm")
+
+    private fun fx_formula19() = Patch("fx.Formula", "Swing Chop",
+        mapOf("gain" to 0.5416667f),
+        mapOf("formula" to "((t >> 10) % 3) ? x : 128"),
+        family = "rhythm")
+
+    private val fx_formula: List<Patch> by lazy { listOf(fx_formula0(), fx_formula1(), fx_formula2(), fx_formula3(), fx_formula4(), fx_formula5(), fx_formula6(), fx_formula7(), fx_formula8(), fx_formula9(), fx_formula10(), fx_formula11(), fx_formula12(), fx_formula13(), fx_formula14(), fx_formula15(), fx_formula16(), fx_formula17(), fx_formula18(), fx_formula19()) }
 }

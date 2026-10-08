@@ -48,6 +48,7 @@
     <string name="pw_alt">alt</string>
     <string name="pw_altissimo">altissimo</string>
     <string name="pw_always">always</string>
+    <string name="pw_ambient">ambient</string>
     <string name="pw_american">american</string>
     <string name="pw_amount">amount</string>
     <string name="pw_amp">Amp</string>
@@ -769,6 +770,7 @@
     <string name="pw_paper">paper</string>
     <string name="pw_para">para</string>
     <string name="pw_partials">partials</string>
+    <string name="pw_parts">parts</string>
     <string name="pw_pass">pass</string>
     <string name="pw_patch">patch</string>
     <string name="pw_pattern">pattern</string>

@@ -976,6 +976,8 @@ struct PedalRig {
     float scratch[kBlockFrames * 2];
     explicit PedalRig(const char *type) : rack(f.engine.racks[0]) {
         delete rack.swapMachine(MachineRegistry::create(type));
+        // The fixture's distortion would change the level these checks read.
+        delete rack.swapEffect(0, nullptr);
         Machine *m = rack.currentMachine();
         m->prepare(kSampleRate);
         m->reset();
@@ -1114,14 +1116,21 @@ void thePedalsHoldWhatTheyShould() {
             r.rack.playSequenced(0x90, 48, 100);
             std::vector<float> out;
             for (int32_t b = 0; b < 300; ++b) {
+                // Let go part way, where the dampers would stop the string.
+                if (b == 100) r.rack.playSequenced(0x80, 48, 0);
                 r.f.engine.renderBlock(nullptr, r.scratch);
                 out.insert(out.end(), r.scratch, r.scratch + kBlockFrames * 2);
             }
             return out;
         };
         const auto damped = string(false), lifted = string(true);
-        ok("Filament's strings answer with the dampers up", largestDifference(damped, lifted) > 1e-3f,
-           std::to_string(largestDifference(damped, lifted)));
+        float peak = 0.0f;
+        for (float v : damped) peak = std::max(peak, std::fabs(v));
+        // Against the string's own level, so the check doesn't depend on
+        // how loud the rack is.
+        const float diff = largestDifference(damped, lifted);
+        ok("Filament's strings answer with the dampers up", diff > peak * 0.01f,
+           std::to_string(diff) + " against a peak of " + std::to_string(peak));
     }
 }
 

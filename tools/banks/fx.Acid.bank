@@ -24,6 +24,7 @@ patch Squelch family=follow
   decay          180 ms
   accent         0.7
   drive          0.4
+  gain           -2 dB
 
 patch Wah family=follow
   # Softer and band pass: a guitar or keys that quack as they're played.
@@ -33,7 +34,7 @@ patch Wah family=follow
   decay          250 ms
   mode           #1
   drive          0.2
-  gain           13 dB
+  gain           15.5 dB
 
 patch Duck family=follow
   # Dark until a hit, then wide open and back: drums that bark.
@@ -43,6 +44,13 @@ patch Duck family=follow
   decay          120 ms
   accent         0.4
   drive          0.3
+
+patch Bouncy family=follow
+  # Low resonance, long decay: a rubbery bounce.
+  cutoff         200 Hz
+  resonance      0.5
+  env            0.6
+  decay          600 ms
 
 patch Eighths family=pattern
   # Eighth notes with the accents on the beat, on a held pad or chord.
@@ -60,6 +68,7 @@ patch Sixteenths family=pattern
   env            0.6
   decay          140 ms
   drive          0.5
+  gain           -1.5 dB
 
 patch Offbeat family=pattern
   # Only between the beats, for a house stab that answers the kick.
@@ -78,6 +87,7 @@ patch Rolling family=pattern
   decay          170 ms
   accent         0.8
   drive          0.4
+  gain           -2 dB
 
 patch Scream family=wild
   # Resonance almost at its edge and the drive up: it screams.
@@ -98,3 +108,12 @@ patch Rubber family=wild
   env            1
   decay          900 ms
   drive          0.3
+
+patch Screamer family=wild
+  # Resonance high and driven hard.
+  cutoff         400 Hz
+  resonance      0.95
+  env            0.8
+  decay          200 ms
+  drive          0.9
+  gain           -5.5 dB

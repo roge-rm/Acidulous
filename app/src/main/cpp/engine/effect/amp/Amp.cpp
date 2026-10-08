@@ -29,7 +29,7 @@ const ParamDef *Amp::paramDefs(int32_t &count) const {
         {"edge", 0.0f, 1.0f, 0.15f, Curve::Linear, 0, ""},
         {"room", 0.0f, 1.0f, 0.15f, Curve::Linear, 0, ""},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;

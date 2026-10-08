@@ -24,10 +24,20 @@ patch "Fewer Bits" family=crush
   gain           -4.5 dB
 
 patch "Soft Bits" family=crush
-  # Three bits with the steps rounded off: dusty rather than harsh.
+  # Three bits with the steps rounded off: dusty.
   set formula "x & 224"
   smooth         3000 Hz
-  gain           -1.5 dB
+  gain           -4 dB
+
+patch "Two Bit" family=crush
+  # Two bits: a buzz from anything.
+  set formula "x & 192"
+  gain           -10 dB
+
+patch "Smooth Bits" family=crush
+  # Five bits, the steps rounded off: a soft, grainy warmth.
+  set formula "x & 248"
+  smooth         3000
 
 patch Wrap family=mangle
   # Turned up until it wraps around: loud parts fold into noise.
@@ -52,6 +62,28 @@ patch Grit family=mangle
   set formula "x ^ r >> (8 - (b >> 5))"
   b              120
 
+patch "Fold Back" family=mangle
+  # Folded back when it passes the top.
+  set formula "x < 128 ? 255 - x * 2 : x * 2 - 256"
+  gain           -1.5 dB
+
+patch "Square It" family=mangle
+  # Every sample to one side or the other.
+  set formula "x > 128 ? 200 : 56"
+  smooth         4000
+  gain           -16.5 dB
+
+patch "Noise Gate" family=mangle
+  # Quiet parts become noise, loud ones pass.
+  set formula "(x > 140 || x < 116) ? x : 128 + (r & 15) - 8"
+  gain           -1 dB
+
+patch "Bit Flip" family=mangle
+  # The top bit flipped with a.
+  set formula "x ^ (a & 128)"
+  a              128
+  gain           -21.5 dB
+
 patch Chop family=rhythm
   # Cut on and off by the counter, four times a second.
   set formula "t >> 11 & 1 ? x : 128"
@@ -67,3 +99,22 @@ patch "Clock Bits" family=rhythm
   set formula "(x & 240) | (t >> 2 & 15)"
   smooth         6000 Hz
   gain           -0.5 dB
+
+patch Stepper family=rhythm
+  # Muted on the eighths that b says.
+  set formula "((t >> 11) & (b >> 4)) ? x : 128"
+  b              170
+  rate           8000
+  gain           2 dB
+
+patch "Gated Noise" family=rhythm
+  # Noise let in on a rhythm.
+  set formula "((t >> 10) & 3) ? x : (x + r) & 255"
+  rate           8000
+  gain           -15.5 dB
+
+patch "Swing Chop" family=rhythm
+  # Chopped in threes.
+  set formula "((t >> 10) % 3) ? x : 128"
+  rate           8000
+  gain           2 dB

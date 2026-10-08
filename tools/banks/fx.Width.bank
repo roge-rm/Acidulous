@@ -39,6 +39,14 @@ patch Huge family=width
   width          2.0
   below          140 Hz
 
+patch "Extra Wide" family=width
+  # Wider than it was recorded.
+  width          1.6
+
+patch Turned family=width
+  # The image turned a little to one side, the centre kept.
+  rotate         0.3
+
 patch "Tight Bass" family=bass
   # The width left alone and everything under two hundred hertz returned to the
   # middle. The most boring patch here and the one a mix engineer would reach
@@ -46,13 +54,18 @@ patch "Tight Bass" family=bass
   width          1.0
   below          200 Hz
 
+patch "Mono Below" family=bass
+  # Mono below 150 Hz, wide above.
+  width          1.3
+  below          150 Hz
+
 patch Haas family=haas
   # Twelve milliseconds on one side. The ear takes arrival time as direction,
   # so this reads as wide even though both channels carry the same thing - and
   # unlike a level trick, it leaves something behind when folded to mono.
   width          1.0
   haas           12 ms
-  gain           4.4 dB
+  gain           0 dB
 
 patch "Off Centre" family=haas
   # A short delay and the whole image turned, so the source sits to one side
@@ -61,4 +74,8 @@ patch "Off Centre" family=haas
   width          1.2
   haas           6 ms
   rotate         -0.35
-  gain           3.1 dB
+  gain           -1 dB
+
+patch "Small Room" family=haas
+  # A short delay on one side: width from a single sound.
+  haas           8 ms

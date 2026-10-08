@@ -29,7 +29,7 @@ patch Third family=thirds
   key            #0
   window         45 ms
   mix            0.45
-  gain           2.4 dB
+  gain           0 dB
 
 patch Sixth family=thirds
   # Five degrees up, which is the other interval a second singer uses. Wider,
@@ -38,7 +38,14 @@ patch Sixth family=thirds
   scale          #0
   window         50 ms
   mix            0.4
-  gain           3.3 dB
+  gain           -0.5 dB
+
+patch "Fifth Below" family=thirds
+  # A fifth under the line, in key.
+  interval       #3
+  scale          #0
+  key            #0
+  mix            0.45
 
 patch Triad family=stack
   # Both voices: a third and a fifth, so one note becomes the chord that note
@@ -58,7 +65,14 @@ patch Octave family=stack
   scale          #0
   window         60 ms
   mix            0.45
-  gain           3.4 dB
+  gain           0 dB
+
+patch "Sixth Above" family=stack
+  # A sixth over the line, sweet.
+  interval       #12
+  scale          #0
+  key            #0
+  mix            0.45
 
 patch Minor family=scale
   # The same third, in Aeolian. Over the same notes it lands minor where the
@@ -68,7 +82,7 @@ patch Minor family=scale
   key            #0
   window         45 ms
   mix            0.45
-  gain           2.4 dB
+  gain           0 dB
 
 patch Dorian family=scale
   # Dorian, which is the scale the rest of this project keeps coming back to:
@@ -80,7 +94,14 @@ patch Dorian family=scale
   key            #0
   window         50 ms
   mix            0.45
-  gain           3.7 dB
+  gain           -0.5 dB
+
+patch "Minor Thirds" family=scale
+  # Thirds in A minor.
+  interval       #9
+  scale          #5
+  key            #9
+  mix            0.45
 
 patch Shimmer family=fx
   # An octave up, fed back, so each pass climbs again. Not a harmony any more -
@@ -100,4 +121,4 @@ patch Burble family=fx
   scale          #0
   window         10 ms
   mix            0.5
-  gain           2.2 dB
+  gain           0 dB

@@ -46,6 +46,14 @@ patch Cathedral family=room
   predelay       60 ms
   mix            0.42
 
+patch Plate family=room
+  # A bright plate, dense and smooth.
+  size           0.45
+  damp           0.15
+  tone           12000 Hz
+  predelay       15 ms
+  mix            0.25
+
 patch Dark family=tone
   # The top taken off the tail but not off the source: the room is made of
   # curtains rather than tile, and nothing sibilant comes back.
@@ -178,3 +186,11 @@ patch Seasick family=lofi
   wobble         1.0
   predelay       25 ms
   mix            0.4
+
+patch Spring family=lofi
+  # A small, boingy spring tank.
+  size           0.3
+  damp           0.5
+  tone           5000 Hz
+  wobble         0.5
+  mix            0.25

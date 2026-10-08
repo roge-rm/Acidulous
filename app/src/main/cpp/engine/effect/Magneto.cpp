@@ -74,7 +74,7 @@ const ParamDef *Magneto::paramDefs(int32_t &count) const {
         {"mode", 0.0f, 4.0f, 0.0f, Curve::Stepped, kModes, ""}, // SP LP2 LP4 HQ XLP
         {"dubs", 0.0f, 3.0f, 0.0f, Curve::Stepped, kMaxDubs, ""}, // one to four generations
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;

@@ -220,7 +220,7 @@ patch "Crotales Bright" family=metal note=84 range=72..96
   tube           0
 
 patch "Saron" family=gamelan note=67 range=60..79
-  # A gamelan's bronze bar, bright and loose of the series.
+  # A gamelan's bronze bar, bright and clangy.
   model          #11
 
 patch "Saron Damped" family=gamelan note=67 range=60..79

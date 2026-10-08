@@ -38,6 +38,20 @@ patch Climb family=stutter
   drop           0
   pitch          7 st
 
+patch "Light Stutter" family=stutter
+  # Now and then a slice repeats.
+  chance         0.15
+  repeat         0.8
+  reverse        0
+  drop           0
+
+patch "Machine Gun" family=stutter
+  # Fast repeats, often.
+  rate           #3
+  chance         0.6
+  repeat         1
+  drop           0
+
 patch Glitch family=glitch
   # A bit of everything, often: the loop torn up and rebuilt.
   rate           #2
@@ -64,6 +78,33 @@ patch Tape family=glitch
   drop           0
   pitch          -12 st
 
+patch "Reverse Only" family=glitch
+  # Slices flipped, never repeated.
+  chance         0.4
+  repeat         0
+  reverse        1
+  drop           0
+
+patch "Pitch Glitch" family=glitch
+  # Repeats pitched down.
+  chance         0.4
+  repeat         0.8
+  pitch          -7
+
+patch "Up Glitch" family=glitch
+  # Repeats an octave up.
+  chance         0.3
+  repeat         0.8
+  pitch          12
+
+patch "Broken Beat" family=glitch
+  # Everything at once, a different seed.
+  chance         0.6
+  repeat         0.5
+  reverse        0.5
+  drop           0.3
+  seed           #7
+
 patch Chop family=gate
   # Nothing replaced, every sixteenth cut to half: a chopped pad.
   rate           #2
@@ -78,6 +119,7 @@ patch Holes family=gate
   reverse        0
   drop           1
   seed           #9
+  gain           2 dB
 
 patch Trance family=gate
   # Short sixteenth gates with a few repeats: a pulsing pad.
@@ -87,3 +129,31 @@ patch Trance family=gate
   reverse        0
   drop           0
   gate           0.35
+  gain           1.5 dB
+
+patch "Trance Gate Eighths" family=gate
+  # Gated on the eighths, short.
+  rate           #1
+  chance         0
+  gate           0.4
+
+patch "Soft Gate" family=gate
+  # Gated gently, the slices long.
+  chance         0
+  gate           0.75
+
+patch Sparse family=gate
+  # Many slices dropped: holes in the part.
+  chance         0.6
+  repeat         0
+  reverse        0
+  drop           1
+  gain           4 dB
+
+patch "Chance Gate" family=gate
+  # Gated, some slices skipped.
+  chance         0.4
+  drop           0.6
+  gate           0.5
+  repeat         0
+  gain           2.5 dB

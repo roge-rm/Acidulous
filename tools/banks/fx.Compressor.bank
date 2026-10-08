@@ -21,6 +21,7 @@ patch Glue family=glue
   attack         20 ms
   release        250 ms
   makeup         3 dB
+  gain           -3 dB
 
 patch Bus family=glue
   # Firmer, for a drum bus: fast enough to catch a snare, slow enough to let
@@ -31,6 +32,7 @@ patch Bus family=glue
   attack         5 ms
   release        120 ms
   makeup         6 dB
+  gain           -3 dB
 
 patch Gentle family=glue
   # The lightest useful setting. Two decibels of movement at most, which is
@@ -40,6 +42,50 @@ patch Gentle family=glue
   attack         30 ms
   release        400 ms
   makeup         2 dB
+  gain           -2 dB
+
+patch "Drum Bus" family=glue
+  # Slow attack so the hits come through, then held together.
+  threshold      -18 dB
+  ratio          4
+  attack         30 ms
+  release        100 ms
+  makeup         4 dB
+  gain           -4 dB
+
+patch "Mix Glue" family=glue
+  # Barely moving, the parts sitting together.
+  threshold      -12 dB
+  ratio          1.5
+  attack         30 ms
+  release        300 ms
+  makeup         1.5 dB
+  gain           -1.5 dB
+
+patch Vocal family=glue
+  # Even and present, for a singer.
+  threshold      -20 dB
+  ratio          3
+  attack         5 ms
+  release        120 ms
+  makeup         5 dB
+  gain           -2 dB
+
+patch "Bass Even" family=glue
+  # Every note the same weight.
+  threshold      -22 dB
+  ratio          5
+  attack         10 ms
+  release        150 ms
+  makeup         3 dB
+
+patch "Limiter Soft" family=glue
+  # Catches the peaks and nothing else.
+  threshold      -6 dB
+  ratio          10
+  attack         1 ms
+  release        80 ms
+  gain           0 dB
 
 patch Limit family=squash
   # A brick wall in all but name: the highest ratio and the fastest attack, set
@@ -49,6 +95,7 @@ patch Limit family=squash
   attack         0.5 ms
   release        60 ms
   makeup         4 dB
+  gain           -4 dB
 
 patch Squash family=squash
   # The opposite of transparent. Everything is pinned to the same level and the
@@ -62,7 +109,33 @@ patch Squash family=squash
   attack         3 ms
   release        40 ms
   makeup         12 dB
-  gain           3.3 dB
+  gain           2.5 dB
+
+patch Slam family=squash
+  # Fast and hard: everything flattened.
+  threshold      -35 dB
+  ratio          20
+  attack         0.5 ms
+  release        60 ms
+  makeup         14 dB
+  gain           4 dB
+
+patch "Room Crush" family=squash
+  # The room sound pulled up between the hits.
+  threshold      -40 dB
+  ratio          12
+  attack         1 ms
+  release        200 ms
+  makeup         16 dB
+  gain           8 dB
+
+patch Snap family=squash
+  # A fast release so the attack snaps back.
+  threshold      -25 dB
+  ratio          8
+  attack         3 ms
+  release        30 ms
+  makeup         5 dB
 
 patch Pump family=pump
   # Ducked in time with the transport, on the quarter note. No sidechain, no
@@ -75,6 +148,7 @@ patch Pump family=pump
   makeup         6 dB
   pump           0.7
   pumprate       #2
+  gain           -1 dB
 
 patch "Four Floor" family=pump
   # Deeper and faster, the way a house record ducks - the pad disappears under
@@ -87,3 +161,31 @@ patch "Four Floor" family=pump
   makeup         8 dB
   pump           1.0
   pumprate       #2
+  gain           0.5 dB
+
+patch "Half Time Pump" family=pump
+  # Pumping on the half notes.
+  pump           0.8
+  pumprate       #1
+  gain           4.5 dB
+
+patch "Eighths Pump" family=pump
+  # Pumping on every eighth, busy.
+  pump           0.7
+  pumprate       #3
+  gain           3.5 dB
+
+patch "Gentle Pump" family=pump
+  # A soft breathing on the beat.
+  pump           0.4
+  pumprate       #2
+  gain           3.5 dB
+
+patch "Sidechain Duck" family=pump
+  # Ducks when another track plays: set it under sidechain.
+  threshold      -30 dB
+  ratio          8
+  attack         1 ms
+  release        150 ms
+  makeup         10 dB
+  gain           4 dB

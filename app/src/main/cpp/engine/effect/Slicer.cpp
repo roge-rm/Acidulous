@@ -33,7 +33,7 @@ const ParamDef *Slicer::paramDefs(int32_t &count) const {
         {"pitch", -12.0f, 12.0f, 0.0f, Curve::Linear, 0, "st"},
         {"seed", 0.0f, 15.0f, 0.0f, Curve::Stepped, 16, ""},
         {"mix", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
-        {"gain", -18.0f, 18.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
     };
     count = Count;
     return defs;

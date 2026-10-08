@@ -20,7 +20,7 @@ class Acid final : public Effect {
   public:
     enum P { Cutoff, Resonance, Env, Decay, Accent, Pattern, Drive, Mode, Mix, Gain, Count };
     static constexpr int kPatterns = 8;
-    Acid() { initParams(); }
+    Acid() { initParams(-3.5f); }
     const char *typeName() const override { return "Acid"; }
     const ParamDef *paramDefs(int32_t &count) const override;
     void prepare(int32_t sampleRate) override;

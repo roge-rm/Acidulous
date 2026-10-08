@@ -140,6 +140,7 @@ patch Chop family=tight
   attack         0.05 ms
   hold           5 ms
   release        8 ms
+  gain           2 dB
 
 patch Pluck family=tight
   # Only the attacks. The key filter is up where a pick or a stick is, so

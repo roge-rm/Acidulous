@@ -20,6 +20,7 @@ patch Vintage family=tremolo
   rate           #8
   depth          0.65
   shape          #0
+  gain           2.5 dB
 
 patch Choppy family=tremolo
   # Triangle, eighths, deep. The linear ramp makes each dip arrive with an edge
@@ -27,7 +28,7 @@ patch Choppy family=tremolo
   rate           #5
   depth          0.9
   shape          #1
-  gain           5.7 dB
+  gain           6 dB
 
 patch Square family=tremolo
   # On or off, sixteenths. Not a tremolo so much as a gate in time - and with
@@ -35,6 +36,20 @@ patch Square family=tremolo
   rate           #2
   depth          1.0
   shape          #2
+
+patch "Fast Pulse" family=tremolo
+  # Sixteenths, deep: a chopping pulse.
+  rate           #2
+  depth          0.8
+  shape          #1
+  gain           4.5 dB
+
+patch "Slow Swell" family=tremolo
+  # A bar a swell, gentle.
+  rate           #13
+  depth          0.5
+  shape          #0
+  gain           2 dB
 
 patch "Auto Pan" family=pan
   # The same LFO arriving at the two channels exactly out of step, so the level
@@ -44,7 +59,7 @@ patch "Auto Pan" family=pan
   depth          0.8
   shape          #0
   pan            1.0
-  gain           4.4 dB
+  gain           4 dB
 
 patch Wide family=pan
   # Half way between tremolo and pan, slowly: the image rocks and the level
@@ -53,6 +68,14 @@ patch Wide family=pan
   depth          0.7
   shape          #0
   pan            0.5
+  gain           3 dB
+
+patch "Ping Pong" family=pan
+  # Eighths, left to right.
+  rate           #5
+  depth          0.9
+  pan            1
+  gain           4 dB
 
 patch Stab family=skew
   # Skew low, so the rise is short and the fall is long: each cycle arrives as
@@ -70,4 +93,11 @@ patch Swell family=skew
   depth          0.9
   shape          #1
   skew           0.88
-  gain           3.3 dB
+  gain           5.5 dB
+
+patch Lurch family=skew
+  # A skewed wave on quarters: the push of a sidechain.
+  rate           #8
+  depth          0.7
+  skew           0.85
+  gain           2 dB
