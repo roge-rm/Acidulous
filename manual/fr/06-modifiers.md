@@ -31,6 +31,13 @@ avec les cordes à vide quand c’est possible et un barré plus haut sur le man
 sinon, pour qu’un grattage sonne comme une vraie guitare. Renversement,
 écart et basse ne s’appliquent pas alors.
 
+**rythme** gratte l’accord en mesure tant que vous tenez sa touche, comme un
+guitariste rythmique : vers le bas sur le temps, croches bas-haut, folk, rock,
+galop, skank reggae, doubles croches funk avec des coups étouffés, ballade ou
+bossa. **swing** retarde les contretemps, **accent** adoucit les coups faibles,
+**sourdine** règle la durée d’un coup étouffé et **humaniser** assouplit le jeu.
+Chaque coup suit le temps de grattage et l’écart de vélocité plus haut.
+
 Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier,
 comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au départ) choisissent
 l’accord et ne sonnent pas ; à partir de la séparation, les touches jouent ses

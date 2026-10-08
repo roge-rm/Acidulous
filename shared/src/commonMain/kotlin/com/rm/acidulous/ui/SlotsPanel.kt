@@ -400,6 +400,8 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "strum" to listOf("strum", "strumdir", "velspread"),
         // Keys above the split play the chord's notes, keys below pick the chord.
         "strum keys" to listOf("play", "split", "keys", "latch", "ring"),
+        // The chord strummed in time while its key is held.
+        "rhythm" to listOf("rhythm", "swing", "accent", "mute", "humanise"),
     ),
     "Scale" to listOf(
         "scale" to listOf("mode", "key", "scale"),
@@ -505,7 +507,7 @@ private val EXTRA = mapOf(
     "Phaser" to setOf("spread"),
     "Flanger" to setOf("negative", "spread"),
     "Scale" to setOf("mode", "snap"),
-    "Chord" to setOf("mode", "voicing", "shape", "spread", "strum", "strumdir", "velspread", "play", "ring"),
+    "Chord" to setOf("mode", "voicing", "shape", "spread", "strum", "strumdir", "velspread", "play", "ring", "rhythm"),
     "Arp" to setOf("ratchet", "ratchetchance", "chance", "shift", "cycles", "humanise", "latch"),
 )
 
@@ -545,6 +547,9 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "strumdir" -> listOf("up", "down")
     name == "play" && type == "Chord" -> listOf("chord", "strum keys", "split")
     name == "shape" && type == "Chord" -> listOf("close", "guitar")
+    name == "rhythm" && type == "Chord" -> listOf(
+        "off", "4ths", "8ths", "down-up", "folk", "rock", "gallop", "reggae", "funk", "ballad", "bossa",
+    )
     name == "keys" && type == "Chord" -> listOf("all", "white")
     name == "split" && type == "Chord" -> (24..96).map { noteName(it) }
     name == "octmode" -> listOf("up", "down", "alt")

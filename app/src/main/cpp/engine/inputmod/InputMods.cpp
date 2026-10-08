@@ -1,4 +1,5 @@
 #include "InputMods.h"
+#include <algorithm>
 #include <cstring>
 #include <initializer_list>
 
@@ -86,6 +87,25 @@ void Scale::allNotesOff(MidiSink &out) { outs.allOff(out); for (auto &o : outOf)
 
 // --- Chord --------------------------------------------------------------------------
 
+/**
+ * Strum patterns, a sixteenth a letter: D a down stroke and U an up, capitals
+ * on the beat and accented, d and u softer, x a muted stroke, . a rest.
+ */
+constexpr const char *kPatterns[] = {
+    "D...D...D...D...", // down on the beat
+    "D.d.D.d.D.d.D.d.", // down eighths
+    "D.u.D.u.D.u.D.u.", // down and up eighths
+    "D...D.u...u.D.u.", // folk: down, down-up, up, down-up
+    "D.d.D.duD.d.D.du", // rock
+    "D.duD.duD.duD.du", // gallop
+    "..x...x...x...x.", // reggae skank, short on the off-beats
+    "DxuxDxuxdxuxDxux", // funk sixteenths, muted between
+    "D.....u.D.u.D...", // ballad
+    "D..u..D...u.D...", // bossa
+};
+constexpr int kPatternCount = static_cast<int>(sizeof(kPatterns) / sizeof(kPatterns[0]));
+constexpr int64_t kStepTicks = 60; // a sixteenth at 240 a quarter
+
 const ParamDef *Chord::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
         {"mode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},    // fixed, diatonic
@@ -105,6 +125,11 @@ const ParamDef *Chord::paramDefs(int32_t &count) const {
         {"keys", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},     // all, white
         {"ring", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},     // strummed notes ring until the last key is up
         {"shape", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},    // close, guitar
+        {"rhythm", 0.0f, static_cast<float>(kPatternCount), 0.0f, Curve::Stepped, kPatternCount + 1, ""}, // off, then kPatterns
+        {"swing", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"accent", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},    // how much softer the weak strokes are
+        {"mute", 10.0f, 200.0f, 60.0f, Curve::Linear, 0, "ms"}, // how long a muted stroke sounds
+        {"humanise", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -118,6 +143,10 @@ void Chord::reset() {
 }
 
 void Chord::clearStrum() {
+    for (auto &e : events) e.live = false;
+    patternSrc = -1;
+    nextStep = -1;
+    soundingCount = 0;
     chordRoot = -1;
     chordHeld = strumHeld = 0;
     for (auto &d : chordDown) d = false;
@@ -280,11 +309,72 @@ int Chord::guitar(int note, const int *tones, int n, int *out) {
     return 0;
 }
 
+void Chord::schedule(int64_t tick, uint8_t pitch, uint8_t vel, bool on) {
+    for (auto &e : events) {
+        if (!e.live) { e = {tick, pitch, vel, on, true}; return; }
+    }
+}
+
+void Chord::stroke(int64_t tick, char kind) {
+    const auto &p = params_;
+    // The last stroke ends where this one starts.
+    for (int i = 0; i < soundingCount; ++i) schedule(tick, static_cast<uint8_t>(sounding[i]), 0, false);
+    soundingCount = 0;
+    if (kind == '.' || patternSrc < 0) return;
+    int tones[kMaxTones];
+    const int n = build(patternSrc, tones);
+    const bool up = kind == 'U' || kind == 'u';
+    const bool muted = kind == 'x';
+    const bool strong = kind == 'D' || kind == 'U';
+    const float human = p.get(Humanise);
+    const float weak = 1.0f - 0.6f * p.get(Accent);
+    float vel = static_cast<float>(patternVel) * (strong ? 1.0f : weak) * (muted ? 0.55f : 1.0f);
+    vel *= 1.0f - 0.25f * human * random01();
+    const int64_t start = tick + static_cast<int64_t>(human * 12.0f * (random01() - 0.5f));
+    // A muted stroke is quicker, the hand dragged across.
+    const float strumTicks = p.get(Strum) * (muted ? 0.5f : 1.0f) * 0.001f * bpm / 60.0f * kTicksPerQuarter;
+    const int64_t muteTicks = static_cast<int64_t>(p.get(Mute) * 0.001f * bpm / 60.0f * kTicksPerQuarter);
+    for (int i = 0; i < n; ++i) {
+        const int order = up ? n - 1 - i : i;
+        const int pitch = clampNote(tones[i]);
+        const uint8_t v = clampVel(vel * (1.0f - p.get(VelSpread) * (n > 1 ? static_cast<float>(order) / static_cast<float>(n - 1) : 0.0f)));
+        const int64_t at = std::max(tick, start + static_cast<int64_t>(strumTicks * static_cast<float>(order) / static_cast<float>(n > 1 ? n - 1 : 1)));
+        schedule(at, static_cast<uint8_t>(pitch), v, true);
+        if (muted) schedule(at + std::max<int64_t>(1, muteTicks), static_cast<uint8_t>(pitch), 0, false);
+        else if (soundingCount < kMaxTones) sounding[soundingCount++] = static_cast<int16_t>(pitch);
+    }
+}
+
+void Chord::stopPattern(MidiSink &out) {
+    for (auto &e : events) {
+        if (e.live && !e.on) { e.live = false; outs.off(e.pitch, out); }
+    }
+    for (auto &e : events) e.live = false;
+    for (int i = 0; i < soundingCount; ++i) outs.off(static_cast<uint8_t>(sounding[i]), out);
+    soundingCount = 0;
+    patternSrc = -1;
+    nextStep = -1;
+}
+
 void Chord::handleMidi(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) {
     const uint8_t kind = status & 0xf0;
     const auto &p = params_;
     if (stepOf(p, Play) == 1 && (kind == 0x80 || kind == 0x90)) {
         strumKey(status, d1, d2, out);
+        return;
+    }
+    // A strum pattern: the held chord key strums on the pattern's steps.
+    if (stepOf(p, Rhythm) > 0 && stepOf(p, Play) == 0 && (kind == 0x80 || kind == 0x90)) {
+        if (kind == 0x90 && d2 != 0) {
+            stopPattern(out);
+            patternSrc = d1;
+            patternVel = d2;
+            // Struck at once, then on the grid from the next sixteenth on.
+            stroke(nowTick, 'D');
+            nextStep = (nowTick / kStepTicks + 1) * kStepTicks;
+        } else if (d1 == patternSrc) {
+            stopPattern(out);
+        }
         return;
     }
     // Split: chords below the split, the melody's own notes from it up.
@@ -329,6 +419,26 @@ void Chord::handleMidi(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) {
 void Chord::onBlock(int64_t tickStart, int64_t tickEnd, float bpmNow, MidiSink &out) {
     bpm = bpmNow;
     nowTick = tickStart;
+    const int rhythm = stepOf(params_, Rhythm);
+    if (patternSrc >= 0 && rhythm > 0 && nextStep >= 0) {
+        const char *pattern = kPatterns[std::min(rhythm, kPatternCount) - 1];
+        const int len = static_cast<int>(std::strlen(pattern));
+        while (nextStep < tickEnd) {
+            const int step = static_cast<int>((nextStep / kStepTicks) % len);
+            // Swing: the off sixteenths come late, up to a third of a step.
+            const int64_t late = (step % 2 == 1) ? static_cast<int64_t>(params_.get(Swing) * kStepTicks / 3) : 0;
+            stroke(nextStep + late, pattern[step]);
+            nextStep += kStepTicks;
+        }
+    }
+    // Offs before ons, so a stroke ending and the next starting on one tick don't cut it.
+    for (int pass = 0; pass < 2; ++pass) {
+        for (auto &e : events) {
+            if (!e.live || e.tick >= tickEnd || e.on != (pass == 1)) continue;
+            e.live = false;
+            if (e.on) outs.on(e.pitch, e.vel, out); else outs.off(e.pitch, out);
+        }
+    }
     for (auto &q : pending) {
         if (q.live && q.tick < tickEnd) { q.live = false; outs.on(q.pitch, q.vel, out); }
     }
@@ -336,6 +446,7 @@ void Chord::onBlock(int64_t tickStart, int64_t tickEnd, float bpmNow, MidiSink &
 
 void Chord::allNotesOff(MidiSink &out) {
     for (auto &q : pending) q.live = false;
+    for (auto &e : events) e.live = false;
     for (auto &v : voices) v.count = 0;
     clearStrum();
     outs.allOff(out);

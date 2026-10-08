@@ -12,6 +12,7 @@
     <string name="pw_2nd">2nd</string>
     <string name="pw_3rd">3rd</string>
     <string name="pw_4_pole">4 pole</string>
+    <string name="pw_4ths">4ths</string>
     <string name="pw_5_carriers">5 carriers</string>
     <string name="pw_5_string">5-string</string>
     <string name="pw_5th">5th</string>
@@ -71,6 +72,7 @@
     <string name="pw_b">b</string>
     <string name="pw_bag">bag</string>
     <string name="pw_balance">balance</string>
+    <string name="pw_ballad">ballad</string>
     <string name="pw_bamboo">bamboo</string>
     <string name="pw_band">band</string>
     <string name="pw_band_pass">band pass</string>
@@ -114,6 +116,7 @@
     <string name="pw_body">body</string>
     <string name="pw_bolt">bolt</string>
     <string name="pw_bongo">bongo</string>
+    <string name="pw_bossa">bossa</string>
     <string name="pw_both">both</string>
     <string name="pw_bow">bow</string>
     <string name="pw_bowl">bowl</string>
@@ -374,6 +377,7 @@
     <string name="pw_focus">focus</string>
     <string name="pw_fold">Fold</string>
     <string name="pw_fold_c5b2b0">fold</string>
+    <string name="pw_folk">folk</string>
     <string name="pw_follow">follow</string>
     <string name="pw_forked">forked</string>
     <string name="pw_formant">formant</string>
@@ -391,6 +395,7 @@
     <string name="pw_from">from</string>
     <string name="pw_from_track">from track</string>
     <string name="pw_full">full</string>
+    <string name="pw_funk">funk</string>
     <string name="pw_fwd">fwd</string>
     <string name="pw_fx">fx</string>
     <string name="pw_fxn">fx%d</string>
@@ -846,6 +851,7 @@
     <string name="pw_reed">reed</string>
     <string name="pw_reeds">reeds</string>
     <string name="pw_reedy">reedy</string>
+    <string name="pw_reggae">reggae</string>
     <string name="pw_register">register</string>
     <string name="pw_rel">rel</string>
     <string name="pw_release">release</string>
@@ -881,6 +887,7 @@
     <string name="pw_rise">rise</string>
     <string name="pw_rnd">rnd</string>
     <string name="pw_robot">robot</string>
+    <string name="pw_rock">rock</string>
     <string name="pw_roles">roles</string>
     <string name="pw_roll">roll</string>
     <string name="pw_rolling">rolling</string>

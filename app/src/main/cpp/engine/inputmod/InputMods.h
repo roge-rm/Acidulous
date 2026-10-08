@@ -47,7 +47,7 @@ class Scale final : public InputMod {
 class Chord final : public InputMod {
   public:
     enum P { Mode, Type, Key, ScaleType, Voicing, Inversion, Spread, Bass, Strum, StrumDir, VelSpread,
-             Play, Latch, Split, Keys, Ring, Shape, Count };
+             Play, Latch, Split, Keys, Ring, Shape, Rhythm, Swing, Accent, Mute, Humanise, Count };
     Chord() { initParams(); clearStrum(); }
     ACIDULOUS_INPUTMOD_COMMON(Chord)
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm, MidiSink &out) override;
@@ -77,6 +77,23 @@ class Chord final : public InputMod {
     /** Strummed notes left ringing until the last strum key is let go. */
     uint8_t ringing[128]{};
     void clearStrum();
+
+    // Strum patterns: while a chord key is held, its chord is strummed on the
+    // pattern's sixteenths, in time with the song.
+    struct Event { int64_t tick; uint8_t pitch, vel; bool on, live; };
+    static constexpr int kEvents = 128;
+    Event events[kEvents]{};
+    void schedule(int64_t tick, uint8_t pitch, uint8_t vel, bool on);
+    /** One stroke of the held chord at [tick]: down or up, accented or not, muted or not. */
+    void stroke(int64_t tick, char kind);
+    int patternSrc = -1;
+    uint8_t patternVel = 100;
+    int64_t nextStep = -1;
+    int16_t sounding[kMaxTones]{};
+    int soundingCount = 0;
+    uint32_t seed = 0x2545F491u;
+    float random01() { seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5; return static_cast<float>(seed & 0xffffff) / 16777216.0f; }
+    void stopPattern(MidiSink &out);
 };
 
 class Arp final : public InputMod {

@@ -374,6 +374,33 @@ void fretTrackGoesQuiet() {
     delete scale;
 }
 
+/** Strum patterns: a held chord key strums on the pattern's sixteenths, and stops when let go. */
+void strumPatternsPlayInTime() {
+    printf("- strum patterns\n");
+    Fixture f("Chord");
+    f.set("type", 0.0f);
+    f.set("rhythm", 2.0f / 10.0f); // down eighths
+    f.set("humanise", 0.0f);
+    f.set("strum", 0.0f);
+    int64_t tick = 0;
+    f.rack.onBlock(0, 5, 120.0f);
+    f.rack.handleMidi(0x90, 60, 100);
+    for (tick = 5; tick < 960; tick += 5) f.rack.onBlock(tick, tick + 5, 120.0f);
+    ok("a bar of down eighths is eight strokes of three notes", f.heard.onsLive() == 24, std::to_string(f.heard.onsLive()) + " ons");
+    f.rack.handleMidi(0x80, 60, 0);
+    for (int i = 0; i < 40; ++i, tick += 5) f.rack.onBlock(tick, tick + 5, 120.0f);
+    int balance[128] = {};
+    for (const auto &x : f.heard.live) {
+        const uint8_t k = x.status & 0xf0;
+        if (k == 0x90 && x.velocity > 0) ++balance[x.pitch];
+        else if (k == 0x80 || k == 0x90) --balance[x.pitch];
+    }
+    int stuck = 0;
+    for (int b : balance) if (b != 0) ++stuck;
+    const size_t before = f.heard.onsLive();
+    ok("let go, every note ends and no more strokes come", stuck == 0 && before == 24, std::to_string(stuck) + " stuck");
+}
+
 int main() {
     printf("input modifiers\n");
     aPlainNotePassesThrough();
@@ -388,6 +415,7 @@ int main() {
     aSharedNoteThroughTwoModifiersEnds();
     highStrumKeysStillPlay();
     fretTrackGoesQuiet();
+    strumPatternsPlayInTime();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

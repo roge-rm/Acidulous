@@ -27,6 +27,13 @@ and recordings keep the strum.
 strings where it can and a barre further up the neck where it can't, so a strum
 sounds like a real guitar. Inversion, spread and bass are left out then.
 
+**rhythm** strums the chord in time with the song for as long as you hold its
+key, like a rhythm guitarist: down on the beat, down and up eighths, folk, rock,
+a gallop, a reggae skank, funk sixteenths with muted strokes, a ballad or bossa.
+**swing** pushes the off-beats late, **accent** makes the weak strokes softer,
+**mute** sets how short a muted stroke is and **humanise** loosens the timing.
+Each stroke uses the strum time and velocity spread above.
+
 Set **play** to **strum keys** to play the chord's notes from the keys, like
 strings under your fingers. Keys below the **split** (C4 to start with) pick the chord and make no
 sound; keys from the split up play its notes, one after another up three

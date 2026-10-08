@@ -12,6 +12,7 @@
     <string name="pw_2nd">2e</string>
     <string name="pw_3rd">3e</string>
     <string name="pw_4_pole">4 pôles</string>
+    <string name="pw_4ths">noires</string>
     <string name="pw_5_carriers">5 porteuses</string>
     <string name="pw_5_string">5 cordes</string>
     <string name="pw_5th">quinte</string>
@@ -71,6 +72,7 @@
     <string name="pw_b">b</string>
     <string name="pw_bag">poche</string>
     <string name="pw_balance">balance</string>
+    <string name="pw_ballad">ballade</string>
     <string name="pw_bamboo">bambou</string>
     <string name="pw_band">bande</string>
     <string name="pw_band_pass">passe-bande</string>
@@ -114,6 +116,7 @@
     <string name="pw_body">corps</string>
     <string name="pw_bolt">boulon</string>
     <string name="pw_bongo">bongo</string>
+    <string name="pw_bossa">bossa</string>
     <string name="pw_both">les deux</string>
     <string name="pw_bow">archet</string>
     <string name="pw_bowl">bol</string>
@@ -374,6 +377,7 @@
     <string name="pw_focus">focus</string>
     <string name="pw_fold">Repli</string>
     <string name="pw_fold_c5b2b0">repli</string>
+    <string name="pw_folk">folk</string>
     <string name="pw_follow">suivre</string>
     <string name="pw_forked">fourche</string>
     <string name="pw_formant">formant</string>
@@ -390,6 +394,7 @@
     <string name="pw_from">de</string>
     <string name="pw_from_track">de la piste</string>
     <string name="pw_full">complet</string>
+    <string name="pw_funk">funk</string>
     <string name="pw_fwd">avant</string>
     <string name="pw_fx">fx</string>
     <string name="pw_fxn">fx%d</string>
@@ -843,6 +848,7 @@
     <string name="pw_reed">anche</string>
     <string name="pw_reeds">anches</string>
     <string name="pw_reedy">anché</string>
+    <string name="pw_reggae">reggae</string>
     <string name="pw_register">registre</string>
     <string name="pw_rel">rel.</string>
     <string name="pw_release">relâche</string>
@@ -878,6 +884,7 @@
     <string name="pw_rise">montée</string>
     <string name="pw_rnd">aléa</string>
     <string name="pw_robot">robot</string>
+    <string name="pw_rock">rock</string>
     <string name="pw_roles">rôles</string>
     <string name="pw_roll">défile</string>
     <string name="pw_rolling">roulé</string>
