@@ -105,6 +105,15 @@ class Compressor final : public Effect {
   private:
     float env = 0.0f, gain = 1.0f, sr = 48000.0f, bpm = 120.0f;
     int64_t tick = 0;
+    /**
+     * The audio runs this many frames behind the detector (1 ms), so the gain
+     * is already coming down when a hit arrives. Without it a fast attack
+     * still lets the front of each hit through at full make-up. Only on
+     * its own input, not with a sidechain.
+     */
+    static constexpr int32_t kAheadMax = 256;
+    int32_t ahead = 48, at = 0;
+    float aheadL[kAheadMax]{}, aheadR[kAheadMax]{};
 };
 
 class Filter final : public Effect {

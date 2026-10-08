@@ -481,8 +481,18 @@ const ParamDef *Compressor::paramDefs(int32_t &count) const {
     return defs;
 }
 
-void Compressor::prepare(int32_t sampleRate) { sr = static_cast<float>(sampleRate); reset(); }
-void Compressor::reset() { env = 0.0f; gain = 1.0f; }
+void Compressor::prepare(int32_t sampleRate) {
+    sr = static_cast<float>(sampleRate);
+    ahead = std::clamp(static_cast<int32_t>(sr * 0.001f + 0.5f), 1, kAheadMax);
+    reset();
+}
+void Compressor::reset() {
+    env = 0.0f;
+    gain = 1.0f;
+    at = 0;
+    std::fill(aheadL, aheadL + kAheadMax, 0.0f);
+    std::fill(aheadR, aheadR + kAheadMax, 0.0f);
+}
 
 bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
@@ -515,8 +525,18 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
             if (phase >= 1.0f) phase -= 1.0f;
         }
         gain = g;
-        L[i] = inL * g * makeup;
-        if (stereoIn) R[i] = inR * g * makeup;
+        // Keyed by another track, the audio isn't held back: the ducking
+        // must land with the key's hit, and it's the key that's loud.
+        float outL = inL, outR = inR;
+        if (key_ == nullptr) {
+            outL = aheadL[at];
+            outR = aheadR[at];
+            aheadL[at] = inL;
+            aheadR[at] = inR;
+            if (++at >= ahead) at = 0;
+        }
+        L[i] = outL * g * makeup;
+        if (stereoIn) R[i] = outR * g * makeup;
     }
     return stereoIn;
 }
