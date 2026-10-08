@@ -38,6 +38,12 @@ bossa. **swing** retarde les contretemps, **accent** adoucit les coups faibles,
 **sourdine** règle la durée d’un coup étouffé et **humaniser** assouplit le jeu.
 Chaque coup suit le temps de grattage et l’écart de vélocité plus haut.
 
+**mémoire** joue un accord à vous depuis n’importe quelle touche. Touchez
+**apprendre**, jouez l’accord et lâchez : sa forme est gardée dans la case
+choisie (la case 1 si mémoire est sur off), et cette case est choisie. Pendant
+l’écoute l’accord est coupé, pour entendre les touches telles que vous les
+jouez. Huit cases sont gardées avec le morceau.
+
 Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier,
 comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au départ) choisissent
 l’accord et ne sonnent pas ; à partir de la séparation, les touches jouent ses

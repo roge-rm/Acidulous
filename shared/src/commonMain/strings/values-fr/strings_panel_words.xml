@@ -557,6 +557,7 @@
     <string name="pw_launeddas">launeddas</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">fuite</string>
+    <string name="pw_learn">apprendre</string>
     <string name="pw_leaves">feuilles</string>
     <string name="pw_leg">leg</string>
     <string name="pw_legato">legato</string>
@@ -635,6 +636,7 @@
     <string name="pw_mega">mega</string>
     <string name="pw_melodica">melodica</string>
     <string name="pw_membrane">membrane</string>
+    <string name="pw_memory">mémoire</string>
     <string name="pw_metal">métal</string>
     <string name="pw_mic">mic</string>
     <string name="pw_mics">mics</string>
@@ -783,6 +785,7 @@
     <string name="pw_players">joueurs</string>
     <string name="pw_playing">jeu</string>
     <string name="pw_plays_at">joue au</string>
+    <string name="pw_play_now">jouez</string>
     <string name="pw_pluck">pincer</string>
     <string name="pw_plucked">pincé</string>
     <string name="pw_pollen">pollen</string>

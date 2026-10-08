@@ -130,6 +130,56 @@ const ParamDef *Chord::paramDefs(int32_t &count) const {
         {"accent", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},    // how much softer the weak strokes are
         {"mute", 10.0f, 200.0f, 60.0f, Curve::Linear, 0, "ms"}, // how long a muted stroke sounds
         {"humanise", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
+        {"memory", 0.0f, 8.0f, 0.0f, Curve::Stepped, 9, ""},   // off, or a stored chord 1 to 8
+        // The stored chords: each note in semitones above the lowest, -1 for none.
+        {"m1_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m1_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m1_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m1_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m1_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m1_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m2_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m2_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m2_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m2_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m2_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m2_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m3_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m3_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m3_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m3_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m3_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m3_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m4_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m4_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m4_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m4_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m4_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m4_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m5_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m5_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m5_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m5_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m5_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m5_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m6_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m6_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m6_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m6_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m6_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m6_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m7_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m7_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m7_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m7_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m7_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m7_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m8_1", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m8_2", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m8_3", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m8_4", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m8_5", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
+        {"m8_6", -1.0f, 36.0f, -1.0f, Curve::Stepped, 38, ""},
     };
     count = Count;
     return defs;
@@ -236,7 +286,17 @@ void Chord::strumKey(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) {
 int Chord::build(int note, int *tones) const {
     const auto &p = params_;
     int n = 0;
-    if (stepOf(p, Mode) == 1) {
+    // A stored chord, played from any key, takes the place of mode and type.
+    const int memory = stepOf(p, Memory);
+    if (memory > 0) {
+        for (int k = 0; k < kMemoryNotes; ++k) {
+            const int iv = stepOfSigned(p, MemoryFirst + (memory - 1) * kMemoryNotes + k);
+            if (iv >= 0) tones[n++] = note + iv;
+        }
+    }
+    if (n > 0) {
+        // Sorted by the inversion and spread below.
+    } else if (stepOf(p, Mode) == 1) {
         // Diatonic: the chord the scale gives at the played degree, thirds stacked in scale steps.
         const int key = stepOf(p, Key);
         const ScaleDef &s = kScales[stepOf(p, ScaleType)];

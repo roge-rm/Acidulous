@@ -133,10 +133,11 @@ fun SlotDialog(
             SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
         }
     }
-    // On a square phone a unit with too much for one page gets split into
-    // pages, see [PAGES].
+    // Upright or on a square phone, a unit with too much for one page gets
+    // split into pages so nothing scrolls, see [PAGES]. Turned, its cards
+    // sit side by side on one.
     val pageTitles = PAGES[fixedType ?: kind.at(track, slot).type]?.let { pageNames(it) }
-    if (pageTitles != null && compactWindow()) {
+    if (pageTitles != null && (compactWindow() || screenShape() == ScreenShape.Tall)) {
         var page by rememberSaveable(kind.label, slot) { mutableStateOf(0) }
         TabbedDialog(
             title = title,
@@ -167,14 +168,17 @@ fun SlotDialog(
 
 /**
  * Which card titles each page shows, for a unit split into pages on a
- * square phone. The arp's steps go with its pattern.
+ * phone held upright or a square one, so none of them scrolls. The arp's
+ * steps go with its pattern.
  *
- * Three pages of two cards, since a square phone's window holds two cards
- * and a strip. Paired by topic: timing and feel, which notes, and chance
- * and release.
+ * Pages of two cards, since a square phone's window holds two cards and a
+ * strip, paired by topic. The arp: timing and feel, which notes, chance and
+ * release. The chord: which chord and how it's stacked, how it's strummed,
+ * and playing it from the keys or from memory.
  */
 private val PAGES: Map<String, List<Set<String>>> = mapOf(
     "Arp" to listOf(setOf("time", "feel"), setOf("pattern"), setOf("chance", "run")),
+    "Chord" to listOf(setOf("chord", "voicing"), setOf("strum", "rhythm"), setOf("strum keys", "memory")),
 )
 
 /** A page's tab: its cards' titles, in the phone's language. */
@@ -329,7 +333,9 @@ private fun SlotFace(
         // The arp's sixteen step toggles get their own row below, so they're
         // left out of the cards.
         val shown = info.filterNot {
-            type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit()
+            type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
+                // The chord's memory slots are learned, not turned.
+                type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name)
         }
         if (wrap) {
             // A card per group, stacked down the window, each wrapping its own
@@ -341,6 +347,7 @@ private fun SlotFace(
                     if (page >= 0 && pages != null && title !in pages[page]) continue
                     Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
                         for (p in group) control(p)
+                        if (type == "Chord" && title == "memory") LearnChord(b, trackIndex, unit, editor, slot, kind)
                     }
                 }
                 // Turned, the steps are a card like the others, two lines of eight,
@@ -402,6 +409,8 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "strum keys" to listOf("play", "split", "keys", "latch", "ring"),
         // The chord strummed in time while its key is held.
         "rhythm" to listOf("rhythm", "swing", "accent", "mute", "humanise"),
+        // A chord of your own, learned from the keys.
+        "memory" to listOf("memory"),
     ),
     "Scale" to listOf(
         "scale" to listOf("mode", "key", "scale"),
@@ -547,6 +556,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "strumdir" -> listOf("up", "down")
     name == "play" && type == "Chord" -> listOf("chord", "strum keys", "split")
     name == "shape" && type == "Chord" -> listOf("close", "guitar")
+    name == "memory" && type == "Chord" -> listOf("off") + (1..8).map { "$it" }
     name == "rhythm" && type == "Chord" -> listOf(
         "off", "4ths", "8ths", "down-up", "folk", "rock", "gallop", "reggae", "funk", "ballad", "bossa",
     )
@@ -781,3 +791,62 @@ internal fun EffectFormula(text: String, error: String, onSet: (String) -> Unit)
         }
     }
 }
+
+/** The chord modifier's memory slot notes, m1_1 to m8_6. */
+private val CHORD_MEMORY_NOTE = Regex("m[1-8]_[1-6]")
+
+/**
+ * Learns a chord into the memory slot chosen (or slot 1): press learn, play
+ * the chord, let go. While it listens the chord modifier is bypassed, so the
+ * keys sound as played.
+ */
+@Composable
+private fun LearnChord(b: ParamBinding, trackIndex: Int, unit: String, editor: SongEditor, slot: Int, kind: SlotKind) {
+    var learning by remember { mutableStateOf(false) }
+    var learned by remember { mutableStateOf<List<Int>?>(null) }
+    ButtonSquare(panelWord("learn"), panelWord(if (learning) "play~now" else "learn"), learning) {
+        if (learning) {
+            learning = false
+        } else {
+            learned = null
+            learning = true
+        }
+    }
+    androidx.compose.runtime.DisposableEffect(learning) {
+        if (learning) {
+            NativeEngine.setParam(trackIndex, unit, "bypass", 1f, record = false)
+            val held = HashSet<Int>()
+            val seen = HashSet<Int>()
+            NativeEngine.noteWatch = { rack, note, on ->
+                // The screen's keys and a MIDI port's arrive one at a time in
+                // practice, so no lock: a shape is a few notes, let go together.
+                if (rack == trackIndex) run {
+                    if (on) { held += note; seen += note } else held -= note
+                    if (held.isEmpty() && seen.isNotEmpty()) {
+                        learned = seen.sorted().let { s -> s.map { it - s.first() } }.distinct().take(6)
+                        learning = false
+                    }
+                }
+            }
+        }
+        onDispose {
+            if (learning || NativeEngine.noteWatch != null) {
+                NativeEngine.noteWatch = null
+                val bypassed = kind.at(editor.song.tracks[trackIndex], slot).bypass
+                NativeEngine.setParam(trackIndex, unit, "bypass", if (bypassed) 1f else 0f, record = false)
+            }
+        }
+    }
+    // Written on the UI thread once the keys are up: the slot's notes, and the slot chosen.
+    androidx.compose.runtime.LaunchedEffect(learned) {
+        val shape = learned ?: return@LaunchedEffect
+        val chosen = (b.value("memory") * 8f).roundToInt().coerceIn(0, 8).let { if (it == 0) 1 else it }
+        for (k in 1..6) {
+            val iv = shape.getOrNull(k - 1) ?: -1
+            b.set("m${chosen}_$k", (iv + 1) / 37f)
+        }
+        b.set("memory", chosen / 8f)
+        learned = null
+    }
+}
+

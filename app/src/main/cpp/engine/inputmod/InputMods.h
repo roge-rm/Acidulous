@@ -47,7 +47,10 @@ class Scale final : public InputMod {
 class Chord final : public InputMod {
   public:
     enum P { Mode, Type, Key, ScaleType, Voicing, Inversion, Spread, Bass, Strum, StrumDir, VelSpread,
-             Play, Latch, Split, Keys, Ring, Shape, Rhythm, Swing, Accent, Mute, Humanise, Count };
+             Play, Latch, Split, Keys, Ring, Shape, Rhythm, Swing, Accent, Mute, Humanise,
+             Memory, MemoryFirst, Count = MemoryFirst + 8 * 6 };
+    /** The memory slots: six notes each, as semitones above the lowest, -1 for none. */
+    static constexpr int kMemories = 8, kMemoryNotes = 6;
     Chord() { initParams(); clearStrum(); }
     ACIDULOUS_INPUTMOD_COMMON(Chord)
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm, MidiSink &out) override;

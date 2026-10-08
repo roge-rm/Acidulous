@@ -560,6 +560,7 @@
     <string name="pw_launeddas">launeddas</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">leakage</string>
+    <string name="pw_learn">learn</string>
     <string name="pw_leaves">leaves</string>
     <string name="pw_leg">leg</string>
     <string name="pw_legato">legato</string>
@@ -638,6 +639,7 @@
     <string name="pw_mega">mega</string>
     <string name="pw_melodica">melodica</string>
     <string name="pw_membrane">membrane</string>
+    <string name="pw_memory">memory</string>
     <string name="pw_metal">metal</string>
     <string name="pw_mic">mic</string>
     <string name="pw_mics">mics</string>
@@ -786,6 +788,7 @@
     <string name="pw_players">players</string>
     <string name="pw_playing">playing</string>
     <string name="pw_plays_at">plays at</string>
+    <string name="pw_play_now">play</string>
     <string name="pw_pluck">pluck</string>
     <string name="pw_plucked">plucked</string>
     <string name="pw_pollen">pollen</string>

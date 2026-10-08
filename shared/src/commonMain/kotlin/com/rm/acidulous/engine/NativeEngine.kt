@@ -187,9 +187,21 @@ object NativeEngine {
     /** Normalised 0..1 value of a mounted unit's parameter, or -1. */
     fun paramNormalized(rackId: Int, unit: String, name: String): Float = EngineNative.nativeParamNormalized(rackId, unit, name)
 
-    fun noteOn(rackId: Int, note: Int, velocity: Int = 100) = EngineNative.nativeNoteOn(rackId, note, velocity)
+    /**
+     * Told of every key played into a rack, from the screen or a MIDI port,
+     * while something is listening: the chord window learning a shape.
+     */
+    @kotlin.concurrent.Volatile var noteWatch: ((rack: Int, note: Int, on: Boolean) -> Unit)? = null
 
-    fun noteOff(rackId: Int, note: Int) = EngineNative.nativeNoteOff(rackId, note)
+    fun noteOn(rackId: Int, note: Int, velocity: Int = 100) {
+        noteWatch?.invoke(rackId, note, true)
+        EngineNative.nativeNoteOn(rackId, note, velocity)
+    }
+
+    fun noteOff(rackId: Int, note: Int) {
+        noteWatch?.invoke(rackId, note, false)
+        EngineNative.nativeNoteOff(rackId, note)
+    }
 
     /**
      * A channel message from a MIDI port, addressed to a rack. Everything a
@@ -197,8 +209,14 @@ object NativeEngine {
      * playing hardware takes the same path as playing on screen, recording
      * included.
      */
-    fun midiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int = NO_CHANNEL) =
+    fun midiEvent(rackId: Int, status: Int, data1: Int, data2: Int, channel: Int = NO_CHANNEL) {
+        noteWatch?.let { watch ->
+            val kind = status and 0xf0
+            if (kind == 0x90 && data2 > 0) watch(rackId, data1, true)
+            else if (kind == 0x80 || kind == 0x90) watch(rackId, data1, false)
+        }
         EngineNative.nativeMidiEvent(rackId, status, data1, data2, channel)
+    }
 
     /**
      * An MPE zone on one rack. [kind] is 0 off, 1 lower, 2 upper.

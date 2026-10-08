@@ -34,6 +34,11 @@ a gallop, a reggae skank, funk sixteenths with muted strokes, a ballad or bossa.
 **mute** sets how short a muted stroke is and **humanise** loosens the timing.
 Each stroke uses the strum time and velocity spread above.
 
+**memory** plays a chord of your own from any key. Press **learn**, play the
+chord, and let go: its shape is stored in the slot chosen (slot 1 if memory is
+off), and that slot is picked. While it listens the chord is switched off, so
+you hear the keys as you play them. Eight slots are kept with the song.
+
 Set **play** to **strum keys** to play the chord's notes from the keys, like
 strings under your fingers. Keys below the **split** (C4 to start with) pick the chord and make no
 sound; keys from the split up play its notes, one after another up three

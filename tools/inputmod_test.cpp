@@ -401,6 +401,21 @@ void strumPatternsPlayInTime() {
     ok("let go, every note ends and no more strokes come", stuck == 0 && before == 24, std::to_string(stuck) + " stuck");
 }
 
+/** Chord memory: a stored shape plays from any key. */
+void storedChordsPlay() {
+    printf("- chord memory\n");
+    Fixture f("Chord");
+    auto stepped = [](float v) { return (v + 1.0f) / 37.0f; }; // -1..36
+    f.set("m2_1", stepped(0)); f.set("m2_2", stepped(5)); f.set("m2_3", stepped(10)); f.set("m2_4", stepped(15));
+    for (int k = 5; k <= 6; ++k) f.set(("m2_" + std::to_string(k)).c_str(), stepped(-1));
+    f.set("memory", 2.0f / 8.0f);
+    f.rack.handleMidi(0x90, 50, 100);
+    auto p = f.heard.pitchesLive();
+    std::sort(p.begin(), p.end());
+    ok("slot 2's stacked fourths play from D", p == std::vector<uint8_t>{50, 55, 60, 65},
+       p.size() == 4 ? std::to_string(p[0]) + " " + std::to_string(p[3]) : std::to_string(p.size()) + " notes");
+}
+
 int main() {
     printf("input modifiers\n");
     aPlainNotePassesThrough();
@@ -416,6 +431,7 @@ int main() {
     highStrumKeysStillPlay();
     fretTrackGoesQuiet();
     strumPatternsPlayInTime();
+    storedChordsPlay();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
