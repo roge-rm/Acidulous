@@ -1434,7 +1434,9 @@ internal fun Group(
             return@Column
         }
         Row(
-            Modifier.height(IntrinsicSize.Max),
+            // A window's card, stretched to share a line, keeps its controls
+            // in the middle, as it does upright.
+            (if (centred) Modifier.align(Alignment.CenterHorizontally) else Modifier).height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.Bottom,
         ) { content() }

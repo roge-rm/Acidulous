@@ -689,7 +689,12 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
     androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
         val width = constraints.maxWidth
         val space = gap.roundToPx()
-        val loose = androidx.compose.ui.unit.Constraints(maxWidth = maxOf(width, fit?.probe ?: 0))
+        // The window sizes itself to the lines reported here, so they're
+        // packed at the widest a window may be, not at its width now.
+        // Otherwise each frame's narrower window wraps the cards tighter, and
+        // the window shrinks to one card a line and has to scroll.
+        val reference = if (fit != null) maxOf(width, fit.probe, (FitMaxW - FitChromeW).roundToPx()) else width
+        val loose = androidx.compose.ui.unit.Constraints(maxWidth = reference)
         val parts = subcompose("widths", content)
         // The narrowest each card can be without cutting anything off (a
         // switch, a knob, a word). Only asked when a page is being tried next
@@ -727,9 +732,22 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
         val tall = subcompose("heights", content).mapIndexed { i, m ->
             m.measure(androidx.compose.ui.unit.Constraints.fixedWidth(widths[i])).height
         }
+        // The same greedy lines at the reference width, for the window.
+        var widest = 0
+        run {
+            var lineW = -1
+            for (w in said.map { minOf(it, reference) }) {
+                if (lineW < 0 || lineW + space + w > reference) {
+                    widest = maxOf(widest, lineW); lineW = w
+                } else {
+                    lineW += space + w
+                }
+            }
+            widest = maxOf(widest, lineW)
+        }
         fit?.tell(
             me,
-            lines.maxOfOrNull { line -> line.sumOf { natural[it] } + space * (line.size - 1) } ?: 0,
+            widest,
             least?.indices?.any { i -> least[i] > widths[i] } ?: false,
         )
         val lineH = IntArray(natural.size)
@@ -1183,10 +1201,10 @@ private fun DialogShell(
                 androidx.compose.runtime.withFrameNanos { }
                 settled = true
             }
-            val maxW = if (!wide) 720.dp else if (!roomy || fit.natural <= 0) 1100.dp else with(
+            val maxW = if (!wide) 720.dp else if (!roomy || fit.natural <= 0) FitMaxW else with(
                 androidx.compose.ui.platform.LocalDensity.current,
             ) {
-                (fit.natural.toDp() + FitChromeW).coerceIn(if (chips != null) FitMinTabsW else FitMinW, 1100.dp)
+                (fit.natural.toDp() + FitChromeW).coerceIn(if (chips != null) FitMinTabsW else FitMinW, FitMaxW)
             }
             androidx.compose.material3.Surface(
                 // The width cap goes before fillMaxWidth. After it, the fill
@@ -1305,6 +1323,9 @@ private val FitChromeW = 42.dp
 
 /** The narrowest a fitted window may be: a title and two buttons. */
 private val FitMinW = 480.dp
+
+/** The widest a turned window grows to fit its cards. */
+private val FitMaxW = 1100.dp
 
 /** The same with tabs beside the title. */
 private val FitMinTabsW = 640.dp
