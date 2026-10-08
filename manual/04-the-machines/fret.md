@@ -14,7 +14,9 @@ hear the 4th harmonic at all.
 
 - **model** - **guitar**, **12-string** (the low four courses with an
   octave string, the top two doubled), **baritone** (a longer neck, tuned
-  down), **bass** and **5-string** bass.
+  down), **hollowbody** (a jazz archtop, warm and shorter), **steel** (a lap
+  or pedal steel, long and pure: use the slide), **bass**, **5-string** and
+  **fretless** bass.
 - **tune** - in cents.
 - **pickup** - **neck**, **both** or **bridge**.
 - **coil** - **single** (bright and clear) or **humbucker** (two coils side

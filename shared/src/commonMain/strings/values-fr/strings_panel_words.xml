@@ -394,6 +394,7 @@
     <string name="pw_freeze">figer</string>
     <string name="pw_freq">fréq.</string>
     <string name="pw_frequency">fréquence</string>
+    <string name="pw_fretless">fretless</string>
     <string name="pw_fretting">main gauche</string>
     <string name="pw_from">de</string>
     <string name="pw_from_track">de la piste</string>
@@ -482,6 +483,7 @@
     <string name="pw_hold">tenir</string>
     <string name="pw_holes">trous</string>
     <string name="pw_hollow">creux</string>
+    <string name="pw_hollowbody">demi-caisse</string>
     <string name="pw_honky_tonk">honky-tonk</string>
     <string name="pw_honour">respecter</string>
     <string name="pw_horn">Horn</string>
@@ -525,6 +527,7 @@
     <string name="pw_its_clock">son horloge</string>
     <string name="pw_iv">IV</string>
     <string name="pw_j">j</string>
+    <string name="pw_jazz">jazz</string>
     <string name="pw_jet">jet</string>
     <string name="pw_jitter">gigue</string>
     <string name="pw_jump">saut</string>
@@ -1028,6 +1031,7 @@
     <string name="pw_steal">voler</string>
     <string name="pw_steel">acier</string>
     <string name="pw_steel_pan">steelpan</string>
+    <string name="pw_steel_guitar">steel</string>
     <string name="pw_step">pas</string>
     <string name="pw_step16">pas16</string>
     <string name="pw_step8">pas8</string>

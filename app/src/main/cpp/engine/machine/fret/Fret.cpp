@@ -48,6 +48,9 @@ constexpr Make kMakes[Fret::KindCount] = {
     {35.0f, false, 7.0f, 0.9f, 0.08f, 0.22f, 0.065f, 1.0f},  // baritone
     {28.0f, false, 9.0f, 0.8f, 0.12f, 0.2f, 0.09f, 1.15f},   // bass
     {23.0f, false, 9.0f, 0.8f, 0.14f, 0.2f, 0.09f, 1.15f},   // five-string bass
+    {40.0f, false, 3.5f, 0.86f, 0.0f, 0.3f, 0.08f, 1.1f},    // hollowbody: an archtop, warm and shorter, flatwounds
+    {40.0f, false, 10.0f, 0.96f, 0.0f, 0.2f, 0.07f, 0.9f},   // steel: a lap or pedal steel, long and pure
+    {28.0f, false, 7.0f, 0.72f, 0.1f, 0.22f, 0.1f, 0.75f},   // fretless bass: no frets, a vocal swell
 };
 
 /**
@@ -65,7 +68,7 @@ Fret::Fret() { initParams(); }
 
 const ParamDef *Fret::paramDefs(int32_t &count) const {
     static const ParamDef defs[Count] = {
-        {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // guitar, 12-string, baritone, bass, 5-string
+        {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // guitar, 12-string, baritone, bass, 5-string, hollowbody, steel, fretless
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"pickup", 0.0f, 2.0f, 2.0f, Curve::Stepped, 3, ""}, // neck, both, bridge
         {"coil", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},   // single, humbucker

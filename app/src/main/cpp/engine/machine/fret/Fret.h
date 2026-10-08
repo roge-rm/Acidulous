@@ -36,7 +36,7 @@ class Fret final : public Machine {
     };
     static_assert(Count <= kMaxParams, "too many parameters");
 
-    enum Kind : int32_t { Guitar = 0, Twelve, Baritone, Bass, Bass5, KindCount };
+    enum Kind : int32_t { Guitar = 0, Twelve, Baritone, Bass, Bass5, Hollow, Steel, Fretless, KindCount };
     enum Stroke_ : int32_t { Pick = 0, Finger, Slap, StrokeCount };
     static constexpr int kVoices = 6;
 

@@ -3612,7 +3612,7 @@ internal object FactoryBanks {
         low = 40, high = 88)
 
     private fun fret4() = Patch("Fret", "Jangle",
-        mapOf("model" to 0.25f, "pickup" to 0.5f, "bright" to 0.6f, "strum" to 0.15f),
+        mapOf("model" to 0.142857149f, "pickup" to 0.5f, "bright" to 0.6f, "strum" to 0.15f),
         family = "clean",
         low = 40, high = 88)
 
@@ -3631,127 +3631,212 @@ internal object FactoryBanks {
         family = "clean",
         low = 40, high = 84)
 
-    private fun fret8() = Patch("Fret", "Crunch",
+    private fun fret8() = Patch("Fret", "Baritone",
+        mapOf("model" to 0.2857143f, "pickup" to 0f, "volume" to 0.85f),
+        family = "clean",
+        low = 35, high = 80)
+
+    private fun fret9() = Patch("Fret", "Twang",
+        mapOf("model" to 0.2857143f, "bright" to 0.6f, "drive" to 0.2f, "volume" to 0.85f),
+        family = "clean",
+        low = 35, high = 80)
+
+    private fun fret10() = Patch("Fret", "Surf",
+        mapOf("model" to 0.2857143f, "sustain" to 0.4f, "bright" to 0.65f, "vibrato" to 0.45f),
+        family = "clean",
+        low = 35, high = 84)
+
+    private fun fret11() = Patch("Fret", "Crunch",
         mapOf("coil" to 1f, "bright" to 0.55f, "drive" to 0.4f, "volume" to 0.85f),
         family = "crunch",
         low = 40, high = 84)
 
-    private fun fret9() = Patch("Fret", "Chug",
+    private fun fret12() = Patch("Fret", "Chug",
         mapOf("coil" to 1f, "hardness" to 0.8f, "mute" to 0.65f, "drive" to 0.6f, "volume" to 1f),
         family = "crunch",
         low = 36, high = 64)
 
-    private fun fret10() = Patch("Fret", "Blues",
+    private fun fret13() = Patch("Fret", "Blues",
         mapOf("pickup" to 0f, "vibrato" to 0.3f, "drive" to 0.3f, "volume" to 0.9f),
         family = "crunch",
         low = 40, high = 84)
 
-    private fun fret11() = Patch("Fret", "Garage",
+    private fun fret14() = Patch("Fret", "Garage",
         mapOf("hardness" to 0.8f, "buzz" to 0.4f, "drive" to 0.5f, "volume" to 0.95f),
         family = "crunch",
         low = 40, high = 80)
 
-    private fun fret12() = Patch("Fret", "Funk",
+    private fun fret15() = Patch("Fret", "Funk",
         mapOf("mute" to 0.35f, "bright" to 0.65f, "strum" to 0.075f, "direction" to 1f, "volume" to 0.85f),
         family = "crunch",
         low = 45, high = 84)
 
-    private fun fret13() = Patch("Fret", "Lead",
+    private fun fret16() = Patch("Fret", "Lead",
         mapOf("coil" to 1f, "sustain" to 0.8f, "vibrato" to 0.25f, "drive" to 0.8f),
         family = "lead",
         low = 48, high = 96)
 
-    private fun fret14() = Patch("Fret", "Singing Lead",
+    private fun fret17() = Patch("Fret", "Singing Lead",
         mapOf("coil" to 1f, "sustain" to 0.85f, "drive" to 0.75f, "feedback" to 0.7f, "volume" to 0.5f),
         family = "lead",
         low = 48, high = 96)
 
-    private fun fret15() = Patch("Fret", "Feedback Swell",
+    private fun fret18() = Patch("Fret", "Feedback Swell",
         mapOf("pickup" to 0f, "coil" to 1f, "hardness" to 0.2f, "drive" to 0.85f, "feedback" to 1f, "volume" to 0.55f),
         family = "lead",
         low = 45, high = 88)
 
-    private fun fret16() = Patch("Fret", "Slide Lead",
+    private fun fret19() = Patch("Fret", "Slide Lead",
         mapOf("slide" to 0.35f, "vibrato" to 0.2f, "drive" to 0.5f, "voices" to 0f),
         family = "lead",
         low = 45, high = 90)
 
-    private fun fret17() = Patch("Fret", "Screamer",
+    private fun fret20() = Patch("Fret", "Screamer",
         mapOf("hardness" to 0.9f, "bright" to 0.6f, "buzz" to 0.3f, "drive" to 1f),
         family = "lead",
         low = 52, high = 96)
 
-    private fun fret18() = Patch("Fret", "Strummed",
+    private fun fret21() = Patch("Fret", "Whammy Dive",
+        mapOf("vibrato" to 0.3f, "drive" to 0.7f, "bend" to 1f),
+        family = "lead",
+        low = 52, high = 88)
+
+    private fun fret22() = Patch("Fret", "Strummed",
         mapOf("pickup" to 0.5f, "strum" to 0.3125f, "direction" to 1f),
         family = "strum",
         low = 40, high = 76)
 
-    private fun fret19() = Patch("Fret", "Up Strokes",
+    private fun fret23() = Patch("Fret", "Up Strokes",
         mapOf("mute" to 0.3f, "bright" to 0.6f, "strum" to 0.125f, "direction" to 0.5f, "volume" to 0.85f),
         family = "strum",
         low = 40, high = 76)
 
-    private fun fret20() = Patch("Fret", "Slow Strum",
+    private fun fret24() = Patch("Fret", "Slow Strum",
         mapOf("pickup" to 0f, "sustain" to 0.7f, "strum" to 0.75f),
         family = "strum",
         low = 40, high = 76)
 
-    private fun fret21() = Patch("Fret", "Twelve Strum",
-        mapOf("model" to 0.25f, "pickup" to 0.5f, "strum" to 0.375f),
+    private fun fret25() = Patch("Fret", "Twelve Strum",
+        mapOf("model" to 0.142857149f, "pickup" to 0.5f, "strum" to 0.375f),
         family = "strum",
         low = 40, high = 76)
 
-    private fun fret22() = Patch("Fret", "Bass Finger",
-        mapOf("model" to 0.75f, "pickup" to 0f, "stroke" to 0.5f),
+    private fun fret26() = Patch("Fret", "Funk Muted",
+        mapOf("hardness" to 0.8f, "mute" to 0.6f, "bright" to 0.7f, "volume" to 0.55f),
+        family = "strum",
+        low = 52, high = 76)
+
+    private fun fret27() = Patch("Fret", "Twelve Ballad",
+        mapOf("model" to 0.142857149f, "sustain" to 0.7f, "strum" to 0.5f),
+        family = "strum",
+        low = 40, high = 76)
+
+    private fun fret28() = Patch("Fret", "Jazz Box",
+        mapOf("model" to 0.714285731f, "pickup" to 0f, "tone" to 0.4f),
+        family = "jazz",
+        low = 40, high = 76)
+
+    private fun fret29() = Patch("Fret", "Jazz Comping",
+        mapOf("model" to 0.714285731f, "pickup" to 0f, "tone" to 0.45f, "stroke" to 0.5f, "strum" to 0.1875f),
+        family = "jazz",
+        low = 40, high = 76)
+
+    private fun fret30() = Patch("Fret", "Jazz Octaves",
+        mapOf("model" to 0.714285731f, "pickup" to 0f, "tone" to 0.5f, "stroke" to 0.5f),
+        family = "jazz",
+        low = 48, high = 79)
+
+    private fun fret31() = Patch("Fret", "Archtop Bright",
+        mapOf("model" to 0.714285731f, "pickup" to 0.5f, "tone" to 0.7f),
+        family = "jazz",
+        low = 40, high = 79)
+
+    private fun fret32() = Patch("Fret", "Lap Steel",
+        mapOf("model" to 0.857142866f, "sustain" to 0.8f, "slide" to 0.375f),
+        family = "steel",
+        low = 48, high = 84)
+
+    private fun fret33() = Patch("Fret", "Pedal Steel",
+        mapOf("model" to 0.857142866f, "sustain" to 0.9f, "strum" to 0.25f, "slide" to 0.625f, "vibrato" to 0.25f),
+        family = "steel",
+        low = 48, high = 84)
+
+    private fun fret34() = Patch("Fret", "Steel Swell",
+        mapOf("model" to 0.857142866f, "tone" to 0.6f, "hardness" to 0.2f, "slide" to 0.2f),
+        family = "steel",
+        low = 48, high = 84)
+
+    private fun fret35() = Patch("Fret", "Hawaiian Steel",
+        mapOf("model" to 0.857142866f, "slide" to 0.3f, "vibrato" to 0.4f),
+        family = "steel",
+        low = 55, high = 84)
+
+    private fun fret36() = Patch("Fret", "Bass Finger",
+        mapOf("model" to 0.428571433f, "pickup" to 0f, "stroke" to 0.5f),
         family = "bass",
         low = 23, high = 60)
 
-    private fun fret23() = Patch("Fret", "Bass Pick",
-        mapOf("model" to 0.75f, "hardness" to 0.7f),
+    private fun fret37() = Patch("Fret", "Bass Pick",
+        mapOf("model" to 0.428571433f, "hardness" to 0.7f),
         family = "bass",
         low = 23, high = 60)
 
-    private fun fret24() = Patch("Fret", "Slap Bass",
-        mapOf("model" to 0.75f, "pickup" to 0.5f, "stroke" to 1f, "bright" to 0.65f),
+    private fun fret38() = Patch("Fret", "Slap Bass",
+        mapOf("model" to 0.428571433f, "pickup" to 0.5f, "stroke" to 1f, "bright" to 0.65f),
         family = "bass",
         low = 23, high = 60)
 
-    private fun fret25() = Patch("Fret", "Muted Bass",
-        mapOf("model" to 0.75f, "pickup" to 0f, "stroke" to 0.5f, "mute" to 0.6f),
+    private fun fret39() = Patch("Fret", "Muted Bass",
+        mapOf("model" to 0.428571433f, "pickup" to 0f, "stroke" to 0.5f, "mute" to 0.6f),
         family = "bass",
         low = 23, high = 60)
 
-    private fun fret26() = Patch("Fret", "Five String",
-        mapOf("model" to 1f, "pickup" to 0.5f, "stroke" to 0.5f),
+    private fun fret40() = Patch("Fret", "Five String",
+        mapOf("model" to 0.5714286f, "pickup" to 0.5f, "stroke" to 0.5f),
         family = "bass",
         low = 23, high = 55)
 
-    private fun fret27() = Patch("Fret", "Driven Bass",
-        mapOf("model" to 0.75f, "coil" to 1f, "drive" to 0.45f, "volume" to 0.95f),
+    private fun fret41() = Patch("Fret", "Driven Bass",
+        mapOf("model" to 0.428571433f, "coil" to 1f, "drive" to 0.45f, "volume" to 0.95f),
         family = "bass",
         low = 23, high = 60)
 
-    private fun fret28() = Patch("Fret", "Slide Bass",
-        mapOf("model" to 0.75f, "pickup" to 0f, "tone" to 0.55f, "stroke" to 0.5f, "sustain" to 0.75f, "bright" to 0.3f, "slide" to 0.225f, "voices" to 0f),
+    private fun fret42() = Patch("Fret", "Slide Bass",
+        mapOf("model" to 0.428571433f, "pickup" to 0f, "tone" to 0.55f, "stroke" to 0.5f, "sustain" to 0.75f, "bright" to 0.3f, "slide" to 0.225f, "voices" to 0f),
         family = "bass",
         low = 23, high = 60)
 
-    private fun fret29() = Patch("Fret", "Baritone",
-        mapOf("model" to 0.5f, "pickup" to 0f, "volume" to 0.85f),
-        family = "baritone",
-        low = 35, high = 80)
+    private fun fret43() = Patch("Fret", "Fretless",
+        mapOf("model" to 1f, "stroke" to 0.5f, "slide" to 0.3f),
+        family = "bass",
+        low = 28, high = 60)
 
-    private fun fret30() = Patch("Fret", "Twang",
-        mapOf("model" to 0.5f, "bright" to 0.6f, "drive" to 0.2f, "volume" to 0.85f),
-        family = "baritone",
-        low = 35, high = 80)
+    private fun fret44() = Patch("Fret", "Fretless Mwah",
+        mapOf("model" to 1f, "stroke" to 0.5f, "bright" to 0.75f),
+        family = "bass",
+        low = 28, high = 60)
 
-    private fun fret31() = Patch("Fret", "Surf",
-        mapOf("model" to 0.5f, "sustain" to 0.4f, "bright" to 0.65f, "vibrato" to 0.45f),
-        family = "baritone",
-        low = 35, high = 84)
+    private fun fret45() = Patch("Fret", "Fretless Low",
+        mapOf("model" to 1f, "pickup" to 0f, "tone" to 0.4f, "stroke" to 0.5f),
+        family = "bass",
+        low = 23, high = 52)
 
-    private val fret: List<Patch> by lazy { listOf(fret0(), fret1(), fret2(), fret3(), fret4(), fret5(), fret6(), fret7(), fret8(), fret9(), fret10(), fret11(), fret12(), fret13(), fret14(), fret15(), fret16(), fret17(), fret18(), fret19(), fret20(), fret21(), fret22(), fret23(), fret24(), fret25(), fret26(), fret27(), fret28(), fret29(), fret30(), fret31()) }
+    private fun fret46() = Patch("Fret", "Slap Thumb",
+        mapOf("model" to 0.428571433f, "stroke" to 1f, "bright" to 0.7f),
+        family = "bass",
+        low = 28, high = 60)
+
+    private fun fret47() = Patch("Fret", "Slap Pop",
+        mapOf("model" to 0.428571433f, "stroke" to 1f, "bright" to 0.8f),
+        family = "bass",
+        low = 28, high = 64)
+
+    private fun fret48() = Patch("Fret", "Five String Deep",
+        mapOf("model" to 0.5714286f, "tone" to 0.6f, "stroke" to 0.5f),
+        family = "bass",
+        low = 23, high = 48)
+
+    private val fret: List<Patch> by lazy { listOf(fret0(), fret1(), fret2(), fret3(), fret4(), fret5(), fret6(), fret7(), fret8(), fret9(), fret10(), fret11(), fret12(), fret13(), fret14(), fret15(), fret16(), fret17(), fret18(), fret19(), fret20(), fret21(), fret22(), fret23(), fret24(), fret25(), fret26(), fret27(), fret28(), fret29(), fret30(), fret31(), fret32(), fret33(), fret34(), fret35(), fret36(), fret37(), fret38(), fret39(), fret40(), fret41(), fret42(), fret43(), fret44(), fret45(), fret46(), fret47(), fret48()) }
 
     private fun tine0() = Patch("Tine", "Init", emptyMap(),
         family = "wood",

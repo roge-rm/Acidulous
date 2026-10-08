@@ -600,7 +600,7 @@ object Manual {
     private fun en3_16() = ManualSection("Fret", "Modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.", listOf(
         ManualBlock(ManualKind.Para, "Fret doesn't play recordings. Each note is a string, plucked by a pick, a finger or a slapping thumb, and heard the way an electric guitar hears it: not in the air, but through a magnet sitting under the string. A pickup hears the string where it sits. Near the neck it hears a round, full note; by the bridge, a thin bright one; and a quarter of the way along it can't hear the 4th harmonic at all."),
         ManualBlock(ManualKind.Heading, "Guitar"),
-        ManualBlock(ManualKind.Bullet, "**model** - **guitar**, **12-string** (the low four courses with an octave string, the top two doubled), **baritone** (a longer neck, tuned down), **bass** and **5-string** bass."),
+        ManualBlock(ManualKind.Bullet, "**model** - **guitar**, **12-string** (the low four courses with an octave string, the top two doubled), **baritone** (a longer neck, tuned down), **hollowbody** (a jazz archtop, warm and shorter), **steel** (a lap or pedal steel, long and pure: use the slide), **bass**, **5-string** and **fretless** bass."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
         ManualBlock(ManualKind.Bullet, "**pickup** - **neck**, **both** or **bridge**."),
         ManualBlock(ManualKind.Bullet, "**coil** - **single** (bright and clear) or **humbucker** (two coils side by side: thicker and darker)."),
@@ -2569,7 +2569,7 @@ object Manual {
     private fun fr3_16() = ManualSection("Fret", "Guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.", listOf(
         ManualBlock(ManualKind.Para, "Fret ne joue pas d’enregistrements. Chaque note est une corde, pincée au médiator, au doigt ou claquée du pouce, et entendue comme une guitare électrique l’entend : pas dans l’air, mais par un aimant posé sous la corde. Un micro entend la corde là où il se trouve. Près du manche, il entend une note ronde et pleine ; près du chevalet, une note fine et brillante ; et au quart de la longueur, il n’entend plus du tout le 4e harmonique."),
         ManualBlock(ManualKind.Heading, "Guitare"),
-        ManualBlock(ManualKind.Bullet, "**modèle** : **guitare**, **12 cordes** (les quatre chœurs graves avec une corde à l’octave, les deux aigus doublés), **baryton** (un manche plus long, accordé plus bas), **basse** et basse **5 cordes**."),
+        ManualBlock(ManualKind.Bullet, "**modèle** : **guitare**, **12 cordes** (les quatre chœurs graves avec une corde à l’octave, les deux aigus doublés), **baryton** (un manche plus long, accordé plus bas), **demi-caisse** (une archtop de jazz, chaude et plus courte), **steel** (une lap ou pedal steel, longue et pure : servez-vous du glissé), **basse**, basse **5 cordes** et basse **fretless**."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**capteur** : **manche**, **les deux** ou **chevalet**."),
         ManualBlock(ManualKind.Bullet, "**bobine** : **simple** (brillante et claire) ou **double bobinage** (deux bobines côte à côte : plus épais et plus sombre)."),

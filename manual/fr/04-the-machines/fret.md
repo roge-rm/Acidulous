@@ -14,7 +14,9 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
 
 - **modèle** : **guitare**, **12 cordes** (les quatre chœurs graves avec une
   corde à l’octave, les deux aigus doublés), **baryton** (un manche plus
-  long, accordé plus bas), **basse** et basse **5 cordes**.
+  long, accordé plus bas), **demi-caisse** (une archtop de jazz, chaude et
+  plus courte), **steel** (une lap ou pedal steel, longue et pure : servez-vous
+  du glissé), **basse**, basse **5 cordes** et basse **fretless**.
 - **accordage** : en cents.
 - **capteur** : **manche**, **les deux** ou **chevalet**.
 - **bobine** : **simple** (brillante et claire) ou **double bobinage** (deux

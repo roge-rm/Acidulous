@@ -395,6 +395,7 @@
     <string name="pw_freeze">freeze</string>
     <string name="pw_freq">freq</string>
     <string name="pw_frequency">frequency</string>
+    <string name="pw_fretless">fretless</string>
     <string name="pw_fretting">fretting</string>
     <string name="pw_from">from</string>
     <string name="pw_from_track">from track</string>
@@ -484,6 +485,7 @@
     <string name="pw_hold">hold</string>
     <string name="pw_holes">holes</string>
     <string name="pw_hollow">hollow</string>
+    <string name="pw_hollowbody">hollowbody</string>
     <string name="pw_honky_tonk">honky-tonk</string>
     <string name="pw_honour">honour</string>
     <string name="pw_horn">Horn</string>
@@ -528,6 +530,7 @@
     <string name="pw_its_clock">its clock</string>
     <string name="pw_iv">IV</string>
     <string name="pw_j">j</string>
+    <string name="pw_jazz">jazz</string>
     <string name="pw_jet">jet</string>
     <string name="pw_jitter">jitter</string>
     <string name="pw_jump">jump</string>
@@ -1030,6 +1033,7 @@
     <string name="pw_steal">steal</string>
     <string name="pw_steel">steel</string>
     <string name="pw_steel_pan">steel pan</string>
+    <string name="pw_steel_guitar">steel</string>
     <string name="pw_step">step</string>
     <string name="pw_step16">step16</string>
     <string name="pw_step8">step8</string>

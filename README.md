@@ -76,7 +76,7 @@ All six are the demo song, Squelch.
 | **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
 | **Fathom** | Modelled water and weather: bubbles that ring at their size and rise, drips, rain on water, leaves, tin or glass, streams, surf on the tempo, gusting and whistling wind, and fire. |
 | **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |
-| **Fret** | Modelled electric guitars and basses: pickups at the neck or bridge, single coil or humbucker, palm muting, harmonics, slides, strummed chords, and an amp loud enough that held notes feed back. |
+| **Fret** | Modelled electric guitars and basses, with a jazz hollowbody, lap and pedal steel and a fretless bass: pickups at the neck or bridge, single coil or humbucker, palm muting, harmonics, slides, strummed chords, and an amp loud enough that held notes feed back. |
 | **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
 | **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
 | **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |

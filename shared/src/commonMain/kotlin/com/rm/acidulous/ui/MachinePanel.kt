@@ -3802,7 +3802,7 @@ private fun DrawPanel(b: ParamBinding) {
     }
 }
 
-private val FRET_MODELS = listOf("guitar", "12-string", "baritone", "bass", "5-string")
+private val FRET_MODELS = listOf("guitar", "12-string", "baritone", "bass", "5-string", "hollowbody", "steel~guitar", "fretless")
 private val FRET_PICKUPS = listOf("neck", "both", "bridge")
 private val FRET_COILS = listOf("single", "humbucker")
 private val FRET_STROKES = listOf("pick", "finger", "slap")
