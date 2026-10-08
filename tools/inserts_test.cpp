@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include <engine/effect/Effects.h>
 #include <engine/effect/FromMachines.h>
 
 using namespace acidulous;
@@ -217,11 +218,78 @@ void resonatorRingsInKey() {
 
 } // namespace
 
+/** The harmonizer's feedback at full, fed a loud low note: once the note stops, it must die away. */
+void harmonizerFeedbackDiesAway() {
+    printf("- harmonizer feedback\n");
+    for (int second = 0; second < 2; ++second) {
+        Harmonizer fx;
+        fx.prepare(static_cast<int32_t>(kRate));
+        fx.reset();
+        setUnit(fx, "feedback", 0.85f);
+        setUnit(fx, "mix", 1.0f);
+        setUnit(fx, "interval", 2.0f);
+        setUnit(fx, "interval2", second ? -3.0f : 0.0f);
+        fx.params().jumpAll();
+        std::vector<float> in = tone(82.0f, 0.7f, static_cast<size_t>(kRate * 2));
+        in.resize(static_cast<size_t>(kRate * 8), 0.0f);
+        Stereo out = run(fx, in);
+        const double tail = rms(out.l, static_cast<size_t>(kRate * 7), static_cast<size_t>(kRate * 8));
+        char d[64];
+        std::snprintf(d, sizeof d, "last second rms %.5f", tail);
+        ok(second ? "two voices: the note stopped, it dies away" : "one voice: the note stopped, it dies away", tail < 1e-3, d);
+    }
+}
+
+/** The shifter's feedback at full: once the note stops, it must die away. */
+void shifterFeedbackDiesAway() {
+    printf("- shifter feedback\n");
+    Shifter fx;
+    fx.prepare(static_cast<int32_t>(kRate));
+    fx.reset();
+    const int32_t fb = fx.params().indexOf("feedback");
+    fx.params().set(fb, 1.0f); // the knob at its top, whatever its range
+    setUnit(fx, "mix", 1.0f);
+    fx.params().jumpAll();
+    std::vector<float> in = tone(82.0f, 0.7f, static_cast<size_t>(kRate * 2));
+    in.resize(static_cast<size_t>(kRate * 8), 0.0f);
+    Stereo out = run(fx, in);
+    const double tail = rms(out.l, static_cast<size_t>(kRate * 7), static_cast<size_t>(kRate * 8));
+    char d[64];
+    std::snprintf(d, sizeof d, "last second rms %.5f", tail);
+    ok("the note stopped, it dies away", tail < 1e-3, d);
+}
+
+/** The send delay and reverb on their defaults, and with every knob at the top: a note stopped, they must die away. */
+template <typename Fx>
+void diesAway(const char *what, bool allUp) {
+    Fx fx;
+    fx.prepare(static_cast<int32_t>(kRate));
+    fx.reset();
+    if (allUp) for (int32_t i = 0; i < fx.params().size(); ++i) fx.params().set(i, 1.0f);
+    fx.params().jumpAll();
+    std::vector<float> in = tone(185.0f, 0.7f, static_cast<size_t>(kRate * 2));
+    in.resize(static_cast<size_t>(kRate * 30), 0.0f);
+    Stereo out = run(fx, in);
+    const double tail = rms(out.l, static_cast<size_t>(kRate * 29), static_cast<size_t>(kRate * 30));
+    char d[64];
+    std::snprintf(d, sizeof d, "rms after 27 s %.5f", tail);
+    ok(what, tail < 1e-2, d);
+}
+void sendsDieAway() {
+    printf("- the sends\n");
+    diesAway<Delay>("delay on its defaults dies away", false);
+    diesAway<Delay>("delay with every knob up", true);
+    diesAway<Reverb>("reverb on its defaults dies away", false);
+}
+
 int main() {
     printf("inserts from the machines\n");
     rotaryTurns();
     grainClouds();
     resonatorRingsInKey();
+    harmonizerFeedbackDiesAway();
+    shifterFeedbackDiesAway();
+    sendsDieAway();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

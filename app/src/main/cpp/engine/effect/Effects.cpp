@@ -1148,6 +1148,10 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
             line[c].write(in[c] + fb[c] * feedback);
         }
         float wet[2] = {0.0f, 0.0f};
+        // What goes back into the line: each voice's taps at the level they
+        // read (divided by their gains' sum), shared between the voices, so
+        // the loop never gives back more than it was given.
+        float back[2] = {0.0f, 0.0f};
         for (int c = 0; c < 2; ++c) {
             for (int v = 0; v < (second ? 2 : 1); ++v) {
                 Voice &vo = voice[c][v];
@@ -1166,13 +1170,12 @@ bool Harmonizer::process(float *L, float *R, int32_t frames, bool stereoIn) {
                 const float t1 = line[c].read(vo.phase * win + 2.0f);
                 const float t2 = line[c].read(ph2 * win + 2.0f);
                 wet[c] += t1 * g1 + t2 * g2;
+                back[c] += (t1 * g1 + t2 * g2) / std::fmax(g1 + g2, 1.0f);
             }
         }
         const float norm = second ? 0.7071f : 1.0f;
         for (int c = 0; c < 2; ++c) {
-            // The two taps can add to more than 1 on a low or held note, so
-            // with feedback up the loop's gain can pass 1 (see feedbackCeiling).
-            fb[c] = dsp::feedbackCeiling(wet[c] * norm);
+            fb[c] = dsp::feedbackCeiling(back[c] * (second ? 0.5f : 1.0f));
             (c == 0 ? L : R)[i] = in[c] + (wet[c] * norm - in[c]) * mix;
         }
     }

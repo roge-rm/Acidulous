@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <engine/inputmod/InputModRegistry.h>
+#include <engine/machine/MachineRegistry.h>
 #include <engine/rack/Rack.h>
 
 using namespace acidulous;
@@ -324,6 +325,55 @@ void highStrumKeysStillPlay() {
     ok("and none above three octaves over the split", !p.empty() && *std::max_element(p.begin(), p.end()) < 60 + 3 * 12 + 12);
 }
 
+/** Dan's Fret track: strum keys and the scale, a finger run up and down the keys, then let go. It must go quiet. */
+void fretTrackGoesQuiet() {
+    printf("- Dan's Fret track\n");
+    Fixture f("Chord");
+    f.set("play", 0.5f);
+    f.set("strum", 0.33374512f);
+    f.set("velspread", 0.31030273f);
+    InputMod *scale = InputModRegistry::create("Scale");
+    f.rack.swapInputMod(1, scale);
+    Machine *fret = MachineRegistry::create("Fret");
+    fret->prepare(48000);
+    fret->reset();
+    // Dan's: both pickups, bright up a little.
+    fret->params().set(fret->params().indexOf("pickup"), 0.5f);
+    fret->params().set(fret->params().indexOf("bright"), 0.55f);
+    fret->params().jumpAll();
+    Machine *old = f.rack.swapMachine(fret);
+    int64_t tick = 0;
+    auto blocks = [&](int n, double *sumSq) {
+        for (int b = 0; b < n; ++b) {
+            f.rack.onBlock(tick, tick + 5, 120.0f);
+            tick += 5;
+            f.rack.render(kBlockFrames);
+            if (sumSq) for (int i = 0; i < kBlockFrames; ++i) *sumSq += double(f.rack.bufL[i]) * f.rack.bufL[i];
+        }
+    };
+    int prev = -1;
+    const int path[] = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 79, 77, 76, 74, 72, 71, 69, 67, 65, 64, 62};
+    for (int round = 0; round < 12; ++round) {
+        for (int n : path) {
+            if (prev >= 0) f.rack.handleMidi(0x80, static_cast<uint8_t>(prev), 0);
+            f.rack.handleMidi(0x90, static_cast<uint8_t>(n), static_cast<uint8_t>(60 + (n * 7) % 67));
+            prev = n;
+            blocks(10, nullptr);
+        }
+    }
+    f.rack.handleMidi(0x80, static_cast<uint8_t>(prev), 0);
+    blocks(48000 * 6 / kBlockFrames, nullptr);
+    double sum = 0.0;
+    const int last = 48000 / kBlockFrames;
+    blocks(last, &sum);
+    const double rmsDb = 10.0 * std::log10(sum / (last * kBlockFrames) + 1e-20);
+    ok("six seconds after letting go it's quiet", rmsDb < -70.0, std::to_string(rmsDb) + " dB");
+    f.rack.swapMachine(old);
+    delete fret;
+    f.rack.swapInputMod(1, nullptr);
+    delete scale;
+}
+
 int main() {
     printf("input modifiers\n");
     aPlainNotePassesThrough();
@@ -337,6 +387,7 @@ int main() {
     splitPlaysChordsAndMelody();
     aSharedNoteThroughTwoModifiersEnds();
     highStrumKeysStillPlay();
+    fretTrackGoesQuiet();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
