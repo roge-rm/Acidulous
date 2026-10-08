@@ -227,7 +227,14 @@ float Sympath::stringTone(float velocity) const {
     return clampf(1.0f - loss, 0.03f, 1.0f);
 }
 
+/** The highest a string is tuned, about note 100; see tuneString. */
+constexpr float kHighestHz = 2637.0f;
+
 void Sympath::tuneString(Waveguide &w, float hz, float t60, float tone) {
+    // Nothing above a string's reach: higher fold down an octave at a time.
+    // Past about note 105 the loop is too short to lose its energy, and with
+    // the bridge buzzing it rings for ever.
+    while (hz > kHighestHz) hz *= 0.5f;
     const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
     w.setFrequency(hz);
     w.setDcCorner(0.01f);

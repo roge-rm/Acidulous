@@ -52,6 +52,7 @@ echo "--- amp";  "$ROOT/tools/amp_test.sh" | tail -2 || fail=1
 echo "--- inputfx"; "$ROOT/tools/inputfx_test.sh" | tail -2 || fail=1
 echo "--- gate";  "$ROOT/tools/gate_test.sh" | tail -2 || fail=1
 echo "--- swell"; "$ROOT/tools/swell_test.sh" | tail -2 || fail=1
+echo "--- high notes"; "$ROOT/tools/high_notes_test.sh" | tail -2 || fail=1
 echo "--- inserts"; "$ROOT/tools/inserts_test.sh" | tail -2 || fail=1
 echo "--- effects"; "$ROOT/tools/effects_test.sh" | tail -2 || fail=1
 echo "--- nexus modules"; "$ROOT/tools/nexus_modules_test.sh" | tail -2 || fail=1
