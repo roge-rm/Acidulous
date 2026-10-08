@@ -167,6 +167,20 @@ word list is needed at all.
 - **Live.** With the melody coming in on MIDI, the whole keyboard is free to
   chord syllables as they're sung.
 
+## Trying it
+
+`fm1/sim/lyric-chords.html` is the layout to play, in a browser: the 27 keys
+on screen (several fingers at once on a touch screen), on a computer keyboard
+(the bottom two rows from Z, then Q to Y and 3, 4, 6), or from a MIDI
+keyboard through Web MIDI, with F3 on any octave. Each chord is read by
+`fm1/chords.h`, the decoder the firmware would use, and sung by Diction built
+as WebAssembly. Chords land in a line that sings back on one pitch, or, in
+Sing mode, a syllable a note as you play the tune; the line copies out as
+Acidulous lyrics (`[hh ax] [l ow] -`).
+
+It's one file and runs opened straight from disk; from a web server it has
+less latency. `fm1/sim/build.sh` builds it again (it needs Emscripten).
+
 ## The tables
 
 Every chord in use at least 0.02% of the time, commonest first. Steno

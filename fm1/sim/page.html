@@ -1,0 +1,623 @@
+<title>FM-1 Lyric Chords</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Instrument+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: an instrument panel. The FM-1's 27 keys across the top, coloured by bank as
+   SLOOP colours its tracks; what the chord sings beside it; the lyric line below. */
+:root {
+  --bg: #e9edf1; --panel: #f8fafb; --ink: #18212b; --muted: #586474; --line: #cfd6de;
+  --start: #2563c9; --vowel: #a87b00; --end: #23854b; --cmd: #c95f1a;
+  --key-white: #fdfdfc; --key-black: #222932; --key-down: #c9d3de;
+  --display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151a; --panel: #1a2027; --ink: #e5eaef; --muted: #96a2b0; --line: #2d3540;
+  --start: #6b9cf2; --vowel: #e2b631; --end: #4fc283; --cmd: #f08b4b;
+  --key-white: #d7dde3; --key-black: #07090c; --key-down: #8d9aa8; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151a; --panel: #1a2027; --ink: #e5eaef; --muted: #96a2b0; --line: #2d3540;
+  --start: #6b9cf2; --vowel: #e2b631; --end: #4fc283; --cmd: #f08b4b;
+  --key-white: #d7dde3; --key-black: #07090c; --key-down: #8d9aa8; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 20px; }
+h1 { font: 800 clamp(2rem, 6vw, 3rem)/1 var(--display); letter-spacing: .01em; margin: 0; text-transform: uppercase; text-wrap: balance; }
+h2 { font: 600 1.25rem/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; margin: 0; color: var(--muted); }
+p { margin: 0; max-width: 65ch; }
+.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+.top p { color: var(--muted); }
+button, select { font: 600 14px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button:focus-visible, select:focus-visible, input:focus-visible, .key:focus-visible { outline: 2px solid var(--start); outline-offset: 2px; }
+button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.status { font: 400 13px var(--mono); color: var(--muted); }
+
+/* The keyboard: 16 white keys, the 11 black ones over their gaps. */
+.board { position: relative; height: clamp(130px, 22vw, 190px); user-select: none; -webkit-user-select: none; touch-action: none; }
+.whites { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; height: 100%; }
+.key { position: relative; border-radius: 0 0 5px 5px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 6px; cursor: pointer; touch-action: none; }
+.key.white { background: var(--key-white); border: 1px solid var(--line); border-top: 5px solid var(--bank); }
+.key.black { position: absolute; top: 0; height: 60%; width: calc(100% / 16 * .62); transform: translateX(-50%); background: var(--key-black); border-top: 5px solid var(--bank); z-index: 1; }
+.key.down.white { background: var(--key-down); }
+.key.down.black { background: var(--bank); }
+.key .lab { font: 600 clamp(11px, 1.6vw, 15px) var(--mono); color: var(--bank); }
+.key.black .lab { color: var(--bank); }
+.key.down.black .lab { color: var(--key-black); }
+.key .kbd { font: 400 9px var(--mono); color: var(--muted); text-transform: uppercase; }
+.key.black .kbd { color: #8a96a3; }
+.banks { display: grid; grid-template-columns: 4fr 3fr 6fr 3fr; gap: 3px; font: 600 12px var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.banks span { border-top: 2px solid var(--bank); padding-top: 3px; color: var(--bank); }
+.b-start { --bank: var(--start); } .b-vowel { --bank: var(--vowel); } .b-end { --bank: var(--end); } .b-cmd { --bank: var(--cmd); }
+
+/* What the held chord says. */
+.read { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.read > div { display: grid; gap: 2px; min-width: 0; }
+.read .k { font: 600 12px var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.read .v { font: 600 clamp(20px, 3vw, 28px)/1.2 var(--mono); overflow-wrap: anywhere; min-height: 1.2em; }
+.read .v.miss { color: var(--cmd); }
+
+/* The lyric line. */
+.line { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; align-items: center; }
+.syl { font: 600 15px var(--mono); padding: 5px 9px; border-radius: 5px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; }
+.syl.cur { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--vowel); }
+.syl.cmd { color: var(--cmd); }
+.empty { color: var(--muted); }
+.copy { font: 400 13px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 18px; }
+.controls label { display: grid; gap: 2px; font-size: 13px; color: var(--muted); }
+.controls input { width: 100%; accent-color: var(--start); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+
+/* The reference tables. */
+.tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.tables h3 { font: 600 14px var(--display); letter-spacing: .08em; text-transform: uppercase; margin: 0 0 4px; color: var(--bank); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+td { padding: 2px 6px 2px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td:first-child { font: 600 13px var(--mono); white-space: nowrap; }
+td:nth-child(2) { font: 400 13px var(--mono); color: var(--bank); white-space: nowrap; }
+td:last-child { color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .key { transition: background .06s; } }
+@media (max-width: 640px) { .key .kbd { display: none; } .key .lab { font-size: 11px; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div style="display:grid;gap:6px">
+      <h1>FM-1 Lyric Chords</h1>
+      <p>A syllable is one chord on the FM-1's 27 keys: starting sounds under the left hand, the vowel under the thumbs, ending sounds under the right. Let go and Diction sings it.</p>
+    </div>
+    <div class="row">
+      <button id="start" class="primary">Start sound</button>
+      <span class="status" id="status">Sound is off</span>
+    </div>
+  </header>
+
+  <section class="panel" aria-label="Keyboard">
+    <div class="banks"><span class="b-start">Start</span><span class="b-vowel">Vowel</span><span class="b-end">End</span><span class="b-cmd">Line</span></div>
+    <div class="board" id="board"><div class="whites" id="whites"></div></div>
+    <div class="row">
+      <button id="latch" aria-pressed="false">Build a chord by clicking</button>
+      <button id="sing-chord" hidden>Sing the chord</button>
+      <span class="note" id="hint">Press the keys of a chord together, or one after another while one stays down; it sings when the last one is let go. On a computer keyboard the letters on the keys play them.</span>
+    </div>
+    <div class="read" aria-live="polite">
+      <div><span class="k">Keys</span><span class="v" id="r-steno">&nbsp;</span></div>
+      <div><span class="k">Sings</span><span class="v" id="r-sounds">&nbsp;</span></div>
+      <div><span class="k">Last</span><span class="v" id="r-last">&nbsp;</span></div>
+    </div>
+  </section>
+
+  <div class="two">
+    <section class="panel" aria-label="Lyric line">
+      <div class="row" style="justify-content:space-between">
+        <h2>The line</h2>
+        <div class="row">
+          <button id="play">Sing the line</button>
+          <button id="clear">Clear</button>
+        </div>
+      </div>
+      <div class="line" id="line"></div>
+      <p class="note">The line keys: — (E5) holds the last vowel over another note, _ (F5) leaves a note without words, × (F#5) deletes, ▶ (G5) sings the line. Click a syllable to hear it again.</p>
+      <div style="display:grid;gap:4px">
+        <span class="note">As Acidulous lyrics, a note each:</span>
+        <div class="row"><span class="copy" id="as-text"></span><button id="copy">Copy</button></div>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Playing">
+      <h2>Playing</h2>
+      <div class="row">
+        <label for="mode" class="note">Keys</label>
+        <select id="mode">
+          <option value="write">Write: chords make syllables</option>
+          <option value="sing">Sing: notes sing the line</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="midi-in" class="note">MIDI in</label>
+        <select id="midi-in"><option value="">Start sound to look for MIDI</option></select>
+        <label for="midi-f3" class="note">F3 is</label>
+        <select id="midi-f3">
+          <option value="41">F2 (41)</option>
+          <option value="53" selected>F3 (53)</option>
+          <option value="65">F4 (65)</option>
+        </select>
+      </div>
+      <div class="controls">
+        <label for="pitch">Pitch the chords sing at: <span id="pitch-v">A3</span><input id="pitch" type="range" min="45" max="72" value="57"></label>
+        <label for="formant">Voice (formant): <span id="formant-v">0 st</span><input id="formant" type="range" min="-12" max="12" step="0.5" value="0"></label>
+        <label for="breath">Breath: <span id="breath-v">0.12</span><input id="breath" type="range" min="0" max="1" step="0.01" value="0.12"></label>
+        <label for="consonants">Consonants: <span id="consonants-v">0.5</span><input id="consonants" type="range" min="0" max="1" step="0.01" value="0.5"></label>
+        <label for="vibrato">Vibrato: <span id="vibrato-v">30 ct</span><input id="vibrato" type="range" min="0" max="100" value="30"></label>
+        <label for="length">A note in the line: <span id="length-v">380 ms</span><input id="length" type="range" min="150" max="900" step="10" value="380"></label>
+      </div>
+      <p class="note">In Sing mode each key or MIDI note sings the next syllable of the line at its own pitch, as a clip's notes do in Acidulous.</p>
+    </section>
+  </div>
+
+  <section class="panel" aria-label="Chord reference">
+    <h2>The chords</h2>
+    <div class="tables" id="tables"></div>
+    <p class="note">A cluster is its sounds' keys together: STR is S T R, PL is P HR, ND is PB D. A last S after P, T, K, F or TH goes on -Z (gets, six); a Z before D goes on -S (used). A Y after a consonant goes with the vowel: @AOU is "yoo", so "you" is just @AOU. The full table is in fm1/CHORDS.md.</p>
+  </section>
+</div>
+
+<script>
+"use strict";
+const WASM = "__WASM_BASE64__";
+
+// ---- the keys ---------------------------------------------------------------
+const NOTES = ["F3","F#3","G3","G#3","A3","A#3","B3","C4","C#4","D4","D#4","E4","F4","F#4","G4","G#4","A4","A#4","B4","C5","C#5","D5","D#5","E5","F5","F#5","G5"];
+const LABEL = ["S","T","K","P","W","H","R","A","O","@","E","U","*","F","R","P","B","L","G","S","T","Z","D","\u2014","_","\u00d7","\u25b6"];
+const NAME = ["hold", "rest", "delete", "play"];
+const bankOf = i => i < 7 ? "start" : i < 12 ? "vowel" : i < 23 ? "end" : "cmd";
+const COMMAND = { 23: "hold", 24: "rest", 25: "delete", 26: "play" };
+// The computer keyboard, by position: the bottom row and the one above it from F3, then the top two.
+const CODES = ["KeyZ","KeyS","KeyX","KeyD","KeyC","KeyF","KeyV","KeyB","KeyH","KeyN","KeyJ","KeyM","Comma","KeyL","Period","Semicolon","Slash","Quote","KeyQ","KeyW","Digit3","KeyE","Digit4","KeyR","KeyT","Digit6","KeyY"];
+const CAP = ["z","s","x","d","c","f","v","b","h","n","j","m",",","l",".",";","/","'","q","w","3","e","4","r","t","6","y"];
+const NOTE_NAME = n => ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][n % 12] + (Math.floor(n / 12) - 1);
+
+// ---- the decoder, on this thread -------------------------------------------
+const bytes = Uint8Array.from(atob(WASM), c => c.charCodeAt(0));
+const stubs = m => {
+  const o = {};
+  for (const i of WebAssembly.Module.imports(m)) (o[i.module] ??= {})[i.name] = () => 0;
+  return o;
+};
+let dec = null;
+WebAssembly.compile(bytes).then(m => WebAssembly.instantiate(m, stubs(m))).then(inst => {
+  dec = inst.exports;
+  if (dec._initialize) dec._initialize();
+  dec.sim_init(48000);
+  render();
+});
+function sounds(mask) {
+  if (!dec || !mask) return null;
+  if (!dec.sim_chord(mask >>> 0)) return null;
+  const mem = new Uint8Array(dec.memory.buffer);
+  let s = "";
+  for (let p = dec.sim_text(); mem[p]; p++) s += String.fromCharCode(mem[p]);
+  return s;
+}
+function steno(mask) {
+  const on = i => mask & (1 << i);
+  let s = "";
+  for (let i = 0; i < 7; i++) if (on(i)) s += LABEL[i];
+  let v = "";
+  for (let i = 7; i < 12; i++) if (on(i)) v += LABEL[i];
+  let e = "";
+  for (let i = 12; i < 23; i++) if (on(i)) e += LABEL[i];
+  return s + v + (e && !v ? "-" : "") + e;
+}
+
+// ---- the voice ---------------------------------------------------------------
+// One instance of the module sings. Its messages are handled the same wherever it
+// runs: in an audio worklet, or, where a worklet can't load (a page opened as a
+// file), on this thread through a ScriptProcessorNode.
+function makeVoice(e, rate) {
+  if (e._initialize) e._initialize();
+  e.sim_init(rate);
+  return {
+    take(d) {
+      if (d.t === "lyric") {
+        const mem = new Uint8Array(e.memory.buffer), p = e.sim_text();
+        const n = Math.min(d.text.length, 255);
+        for (let i = 0; i < n; i++) mem[p + i] = d.text.charCodeAt(i);
+        e.sim_lyric(n);
+      } else if (d.t === "on") e.sim_note_on(d.note, d.vel);
+      else if (d.t === "off") e.sim_note_off(d.note);
+      else if (d.t === "alloff") e.sim_all_off();
+      else if (d.t === "param") e.sim_param(d.i, d.v);
+    },
+    // Fills L and R (Float32Arrays of up to 128 frames each).
+    render(L, R) {
+      e.sim_render(L.length);
+      L.set(new Float32Array(e.memory.buffer, e.sim_left(), L.length));
+      R.set(new Float32Array(e.memory.buffer, e.sim_right(), R.length));
+    },
+  };
+}
+function instantiate(buffer) {
+  return WebAssembly.compile(buffer).then(m => {
+    const s = {};
+    for (const i of WebAssembly.Module.imports(m)) (s[i.module] ??= {})[i.name] = () => 0;
+    return WebAssembly.instantiate(m, s);
+  }).then(inst => inst.exports);
+}
+const WORKLET = `${makeVoice}
+${instantiate}
+class Diction extends AudioWorkletProcessor {
+  constructor(o) {
+    super();
+    this.q = [];
+    this.v = null;
+    this.port.onmessage = m => this.v ? this.v.take(m.data) : this.q.push(m.data);
+    instantiate(o.processorOptions.wasm).then(e => {
+      this.v = makeVoice(e, sampleRate);
+      for (const d of this.q) this.v.take(d);
+      this.q = [];
+      this.port.postMessage("ready");
+    });
+  }
+  process(_, outputs) {
+    const out = outputs[0];
+    if (this.v) this.v.render(out[0], out[1] || new Float32Array(out[0].length));
+    return true;
+  }
+}
+registerProcessor("diction", Diction);`;
+
+let ctx = null, node = null;
+const send = d => node && node.port.postMessage(d);
+const status = document.getElementById("status");
+
+// The same voice on this thread, for a browser or page that can't load the worklet.
+async function scriptNode() {
+  const v = makeVoice(await instantiate(bytes.buffer.slice(0)), ctx.sampleRate);
+  const sp = ctx.createScriptProcessor(512, 0, 2);
+  const L = new Float32Array(128), R = new Float32Array(128);
+  sp.onaudioprocess = ev => {
+    const outL = ev.outputBuffer.getChannelData(0), outR = ev.outputBuffer.getChannelData(1);
+    for (let i = 0; i < outL.length; i += 128) {
+      v.render(L, R);
+      outL.set(L, i);
+      outR.set(R, i);
+    }
+  };
+  // The node's port, as the worklet's would be.
+  return { connect: d => sp.connect(d), port: { postMessage: d => v.take(d) }, ready: true };
+}
+
+async function start() {
+  if (ctx) { ctx.resume(); return; }
+  ctx = new AudioContext({ latencyHint: "interactive" });
+  let how = "";
+  try {
+    const url = URL.createObjectURL(new Blob([WORKLET], { type: "text/javascript" }));
+    await ctx.audioWorklet.addModule(url);
+    node = new AudioWorkletNode(ctx, "diction", { outputChannelCount: [2], processorOptions: { wasm: bytes.buffer.slice(0) } });
+    node.port.onmessage = () => { status.textContent = "Sound is on"; sendParams(); };
+  } catch (_) {
+    try {
+      node = await scriptNode();
+      how = " (a little more latency: open the page from a web server for less)";
+      status.textContent = "Sound is on" + how;
+      sendParams();
+    } catch (err) {
+      status.textContent = "This browser couldn't start the sound: " + err.message;
+      ctx = null;
+      node = null;
+      return;
+    }
+  }
+  node.connect(ctx.destination);
+  document.getElementById("start").textContent = "Sound on";
+  document.getElementById("start").classList.remove("primary");
+  startMidi();
+}
+document.getElementById("start").addEventListener("click", start);
+
+// Diction's parameters (Diction::P), in their own units.
+const PARAMS = { formant: 1, breath: 2, consonants: 3, vibrato: 5 };
+function sendParams() {
+  for (const [id, i] of Object.entries(PARAMS)) send({ t: "param", i, v: +document.getElementById(id).value });
+}
+const shown = {
+  pitch: v => NOTE_NAME(+v), formant: v => (+v > 0 ? "+" : "") + v + " st", breath: v => v,
+  consonants: v => v, vibrato: v => v + " ct", length: v => v + " ms",
+};
+for (const id of Object.keys(shown)) {
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => {
+    document.getElementById(id + "-v").textContent = shown[id](el.value);
+    if (id in PARAMS) send({ t: "param", i: PARAMS[id], v: +el.value });
+  });
+}
+
+// ---- singing ---------------------------------------------------------------
+let sounding = null, offTimer = 0;
+function singAt(text, note, ms) {
+  if (!node) return;
+  clearTimeout(offTimer);
+  if (sounding !== null) send({ t: "off", note: sounding });
+  if (text) send({ t: "lyric", text });
+  send({ t: "on", note, vel: 100 });
+  sounding = note;
+  if (ms) offTimer = setTimeout(() => { send({ t: "off", note }); if (sounding === note) sounding = null; }, ms);
+}
+const pitch = () => +document.getElementById("pitch").value;
+const noteMs = () => +document.getElementById("length").value;
+
+// ---- the line --------------------------------------------------------------
+// Each entry is a note: {s: "HH AE", k: "HA"}, or {cmd: "hold"} / {cmd: "rest"}.
+let line = [];
+let cursor = 0;
+try { line = JSON.parse(localStorage.getItem("fm1-line") || "[]"); } catch (_) { line = []; }
+if (!line.length) line = [
+  { s: "HH AE", k: "HA" }, { s: "P IY", k: "PAOE" }, { s: "B ER TH", k: "PW@*RT" }, { s: "D EY", k: "TKAEU" },
+  { s: "T UW", k: "TAOU" }, { s: "Y UW", k: "@AOU" },
+];
+function save() { try { localStorage.setItem("fm1-line", JSON.stringify(line)); } catch (_) {} }
+
+// The sounds a hold sings: the vowel of the last syllable before it.
+const VOWELS = new Set(["IY","IH","EH","AE","AA","AO","AH","UH","UW","ER","AX","EY","AY","AW","OY","OW"]);
+function vowelBefore(i) {
+  for (let j = i - 1; j >= 0; j--) {
+    if (!line[j].s) continue;
+    const v = line[j].s.split(" ").filter(p => VOWELS.has(p)).pop();
+    if (v) return v;
+  }
+  return "AX";
+}
+
+function renderLine() {
+  const el = document.getElementById("line");
+  el.textContent = "";
+  if (!line.length) {
+    const e = document.createElement("span");
+    e.className = "empty";
+    e.textContent = "Sing a chord and it lands here.";
+    el.append(e);
+  }
+  line.forEach((x, i) => {
+    const b = document.createElement("button");
+    b.className = "syl" + (x.cmd ? " cmd" : "") + (document.getElementById("mode").value === "sing" && i === cursor ? " cur" : "");
+    b.textContent = x.cmd === "hold" ? "—" : x.cmd === "rest" ? "_" : x.s.toLowerCase();
+    b.title = x.cmd ? (x.cmd === "hold" ? "holds the last vowel" : "a note without words") : x.k;
+    b.addEventListener("click", () => {
+      if (x.cmd === "hold") singAt(vowelBefore(i), pitch(), noteMs());
+      else if (x.s) singAt(x.s, pitch(), noteMs());
+    });
+    el.append(b);
+  });
+  document.getElementById("as-text").textContent =
+    line.map(x => x.cmd === "hold" ? "-" : x.cmd === "rest" ? "_" : "[" + x.s.toLowerCase() + "]").join(" ") || "–";
+  save();
+}
+
+let playTimer = 0;
+function playLine() {
+  clearTimeout(playTimer);
+  let i = 0;
+  const step = () => {
+    if (i >= line.length) { if (sounding !== null) send({ t: "off", note: sounding }); sounding = null; return; }
+    const x = line[i];
+    if (x.cmd === "rest") { if (sounding !== null) send({ t: "off", note: sounding }); sounding = null; }
+    // A hold carries the note on; after a rest it starts on the vowel.
+    else if (x.cmd === "hold") { if (sounding === null) singAt(vowelBefore(i), pitch(), 0); }
+    else singAt(x.s, pitch(), 0);
+    i++;
+    playTimer = setTimeout(step, noteMs());
+  };
+  step();
+}
+
+function command(c) {
+  if (c === "delete") { line.pop(); cursor = Math.min(cursor, line.length); }
+  else if (c === "play") playLine();
+  else if (c === "hold" || c === "rest") {
+    line.push({ cmd: c });
+    if (c === "hold") singAt(vowelBefore(line.length - 1), pitch(), noteMs());
+  }
+  document.getElementById("r-last").textContent = c;
+  renderLine();
+}
+
+// ---- chords ----------------------------------------------------------------
+const held = new Set();     // keys down now
+let chord = 0;              // every key pressed since the chord began
+let latch = false;
+const keyEls = [];
+
+function show() {
+  keyEls.forEach((el, i) => el.classList.toggle("down", held.has(i) || (latch && (chord & (1 << i)) !== 0)));
+  const st = document.getElementById("r-steno"), so = document.getElementById("r-sounds");
+  if (!chord) return;
+  st.textContent = steno(chord) || " ";
+  const only = Object.keys(COMMAND).find(k => chord === 1 << k);
+  if (only) { so.textContent = COMMAND[only]; so.classList.remove("miss"); return; }
+  const s = sounds(chord);
+  so.textContent = s ? s.toLowerCase() : "no such chord";
+  so.classList.toggle("miss", !s);
+}
+
+function commit() {
+  const c = chord;
+  chord = 0;
+  show();
+  if (!c) return;
+  const only = Object.keys(COMMAND).find(k => c === 1 << k);
+  if (only) return command(COMMAND[only]);
+  const s = sounds(c);
+  if (!s) return;
+  line.push({ s, k: steno(c) });
+  document.getElementById("r-last").textContent = s.toLowerCase();
+  singAt(s, pitch(), noteMs());
+  renderLine();
+}
+
+// In Sing mode a key is a note: it sings the next syllable of the line at its pitch.
+const singing = new Map();  // note -> true while held
+function noteDown(note) {
+  if (!line.length) return;
+  if (cursor >= line.length) cursor = 0;
+  let x = line[cursor], i = cursor;
+  cursor++;
+  if (x.cmd === "rest") { renderLine(); return; }
+  singing.set(note, true);
+  const text = x.cmd === "hold" ? vowelBefore(i) : x.s;
+  clearTimeout(offTimer);
+  send({ t: "lyric", text });
+  send({ t: "on", note, vel: 100 });
+  sounding = note;
+  renderLine();
+}
+function noteUp(note) {
+  if (!singing.delete(note)) return;
+  send({ t: "off", note });
+  if (sounding === note) sounding = null;
+}
+
+const writing = () => document.getElementById("mode").value === "write";
+function press(i) {
+  if (!writing()) { held.add(i); show(); noteDown(53 + i); return; }
+  if (latch) { chord ^= 1 << i; show(); return; }
+  held.add(i);
+  chord |= 1 << i;
+  show();
+}
+function release(i) {
+  if (!held.delete(i)) return;
+  if (!writing()) { show(); noteUp(53 + i); return; }
+  show();
+  if (!latch && held.size === 0) commit();
+}
+
+// ---- the keyboard on screen ------------------------------------------------
+const board = document.getElementById("board"), whites = document.getElementById("whites");
+let white = 0;
+NOTES.forEach((n, i) => {
+  const black = n.includes("#");
+  const el = document.createElement("div");
+  el.className = "key " + (black ? "black" : "white") + " b-" + bankOf(i);
+  el.setAttribute("role", "button");
+  el.setAttribute("aria-label", n + ", " + (i > 22 ? NAME[i - 23] : LABEL[i]));
+  if (i > 22) el.title = NAME[i - 23];
+  el.innerHTML = `<span class="lab">${LABEL[i]}</span><span class="kbd">${CAP[i]}</span>`;
+  if (black) { el.style.left = (white / 16 * 100) + "%"; board.append(el); }
+  else { whites.append(el); white++; }
+  keyEls[i] = el;
+});
+// Pointers: each finger is its own key, so a chord can be held with several.
+const byPointer = new Map();
+board.addEventListener("pointerdown", ev => {
+  const el = ev.target.closest(".key");
+  if (!el) return;
+  ev.preventDefault();
+  board.setPointerCapture?.(ev.pointerId);
+  const i = keyEls.indexOf(el);
+  byPointer.set(ev.pointerId, i);
+  press(i);
+});
+const lift = ev => {
+  if (!byPointer.has(ev.pointerId)) return;
+  const i = byPointer.get(ev.pointerId);
+  byPointer.delete(ev.pointerId);
+  if (!latch || !writing()) release(i);
+};
+board.addEventListener("pointerup", lift);
+board.addEventListener("pointercancel", lift);
+
+document.getElementById("latch").addEventListener("click", ev => {
+  latch = !latch;
+  ev.currentTarget.setAttribute("aria-pressed", latch);
+  document.getElementById("sing-chord").hidden = !latch;
+  document.getElementById("hint").textContent = latch
+    ? "Click keys to add or take them out of the chord, then Sing the chord (or Enter)."
+    : "Press the keys of a chord together, or one after another while one stays down; it sings when the last one is let go. On a computer keyboard the letters on the keys play them.";
+  held.clear(); chord = 0; show();
+});
+document.getElementById("sing-chord").addEventListener("click", commit);
+
+// The computer keyboard.
+window.addEventListener("keydown", ev => {
+  if (ev.target.closest("input, select, textarea") || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (latch && ev.key === "Enter") { commit(); ev.preventDefault(); return; }
+  const i = CODES.indexOf(ev.code);
+  if (i < 0 || ev.repeat) return;
+  ev.preventDefault();
+  if (!ctx) start();
+  press(i);
+});
+window.addEventListener("keyup", ev => {
+  const i = CODES.indexOf(ev.code);
+  if (i >= 0 && !(latch && writing())) release(i);
+});
+window.addEventListener("blur", () => { for (const i of [...held]) release(i); });
+
+// ---- MIDI ------------------------------------------------------------------
+let midi = null;
+async function startMidi() {
+  const sel = document.getElementById("midi-in");
+  if (!navigator.requestMIDIAccess) { sel.innerHTML = "<option>This browser has no Web MIDI</option>"; return; }
+  try { midi = await navigator.requestMIDIAccess(); }
+  catch (_) { sel.innerHTML = "<option>MIDI wasn't allowed here</option>"; return; }
+  const list = () => {
+    const ins = [...midi.inputs.values()];
+    sel.innerHTML = ins.length ? '<option value="*">Every input</option>' + ins.map(p => `<option value="${p.id}">${p.name}</option>`).join("")
+      : "<option value=\"\">No MIDI inputs found</option>";
+    for (const p of ins) p.onmidimessage = onMidi(p.id);
+  };
+  midi.onstatechange = list;
+  list();
+}
+const onMidi = id => ev => {
+  const want = document.getElementById("midi-in").value;
+  if (want !== "*" && want !== id) return;
+  const [st, n, v] = ev.data, type = st & 0xf0;
+  const on = type === 0x90 && v > 0, off = type === 0x80 || (type === 0x90 && v === 0);
+  if (!on && !off) return;
+  if (writing()) {
+    const i = n - +document.getElementById("midi-f3").value;
+    if (i < 0 || i > 26) return;
+    on ? press(i) : release(i);
+  } else {
+    on ? noteDown(n) : noteUp(n);
+  }
+};
+
+document.getElementById("mode").addEventListener("change", () => {
+  held.clear(); chord = 0; cursor = 0; send({ t: "alloff" }); show(); renderLine();
+});
+document.getElementById("play").addEventListener("click", () => { if (!ctx) start().then(playLine); else playLine(); });
+document.getElementById("clear").addEventListener("click", () => { line = []; cursor = 0; renderLine(); });
+document.getElementById("copy").addEventListener("click", ev => {
+  const text = document.getElementById("as-text").textContent, b = ev.currentTarget;
+  navigator.clipboard.writeText(text).then(() => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1500); },
+    () => { const r = document.createRange(); r.selectNodeContents(document.getElementById("as-text")); getSelection().removeAllRanges(); getSelection().addRange(r); });
+});
+
+// ---- the reference ---------------------------------------------------------
+const REF = [
+  ["start", "Starting sounds", [["S T K P W R", "same", "one key each"], ["HH", "H", "he"], ["B", "PW", "be"], ["D", "TK", "do"], ["F", "TP", "for"], ["G", "TKPW", "go"], ["L", "HR", "like"], ["M", "PH", "me"], ["N", "TPH", "no"], ["V", "SR", "very"], ["Y", "KWR", "yes"], ["Z", "STKPW", "zoo"], ["CH", "KH", "check"], ["SH", "SH", "she"], ["TH", "TH", "think"], ["DH", "THR", "the"], ["JH", "SKWR", "just"], ["ZH", "SKWHR", "genre"]]],
+  ["vowel", "Vowels", [["AE", "A", "cat"], ["AA", "O", "hot"], ["EH", "E", "bed"], ["AH", "U", "but"], ["AX", "@", "about"], ["IH", "EU", "sit"], ["IY", "AOE", "see"], ["EY", "AEU", "day"], ["AY", "AOEU", "my"], ["OW", "OE", "go"], ["UW", "AOU", "blue"], ["UH", "AO", "good"], ["AW", "OU", "now"], ["OY", "OEU", "boy"], ["AO", "AU", "saw"], ["ER", "@ -R", "her"], ["Y UW", "@AOU", "you, cute"]]],
+  ["end", "Ending sounds", [["F R P B L G", "same", "one key each"], ["S T Z D", "same", "one key each"], ["M", "PL", "him"], ["N", "PB", "in"], ["K", "BG", "back"], ["NG", "PBG", "sing"], ["SH", "RB", "wish"], ["CH", "FP", "much"], ["JH", "PBLG", "age"], ["V", "*F", "love"], ["TH", "*T", "both"], ["DH", "*D", "with"], ["NG K", "*PBG", "think"], ["M P", "*PL", "jump"], ["L P", "*LG", "help"], ["N JH", "*PBLG", "change"]]],
+];
+const tables = document.getElementById("tables");
+for (const [bank, title, rows] of REF) {
+  const d = document.createElement("div");
+  d.className = "b-" + bank;
+  d.innerHTML = `<h3>${title}</h3><table><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table>`;
+  tables.append(d);
+}
+
+function render() { show(); renderLine(); }
+render();
+</script>
