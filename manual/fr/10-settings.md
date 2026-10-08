@@ -12,7 +12,7 @@
   utilise la sienne.
 - **taille** - agrandit tout, en quatre crans.
 <!-- desktop: - **échelle d’écran** - la taille à laquelle toute la fenêtre est dessinée. **système** prend le réglage de l’ordinateur. -->
-- **pendant la lecture** - si l’écran peut s’éteindre pendant la lecture.
+- **rester allumé** - activé, l’écran reste allumé pendant la lecture.
 - **clavier** - **touches…** ouvre la liste des raccourcis, où vous pouvez les
   changer et choisir comment les lettres jouent des notes. Voir [Un clavier](11-keyboard.md).
 

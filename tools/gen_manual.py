@@ -133,7 +133,7 @@ DESKTOP_SENTENCES = {
         "",
     "dark, light, high contrast or follow the phone.":
         "dark, light, high contrast or follow the system.",
-    "**while playing** - whether the screen can turn off while playing.":
+    "**stay awake** - on keeps the screen on while the song plays.":
         "",
     "Acidulous works with built in, USB, or Bluetooth keyboards.":
         "Acidulous works with the computer's keyboard.",
@@ -210,7 +210,7 @@ FRENCH = {
             "",
         "sombre, clair, contraste élevé ou comme le téléphone.":
             "sombre, clair, contraste élevé ou comme le système.",
-        "**pendant la lecture** - si l’écran peut s’éteindre pendant la lecture.":
+        "**rester allumé** - activé, l’écran reste allumé pendant la lecture.":
             "",
         "Acidulous fonctionne avec un clavier intégré, USB ou Bluetooth.":
             "Acidulous fonctionne avec le clavier de l’ordinateur.",

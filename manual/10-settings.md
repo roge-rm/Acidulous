@@ -10,7 +10,7 @@
   puts a narrow space before ; ! and ?). Not in a browser, which uses its own.
 - **size** - makes everything bigger, in four steps.
 <!-- desktop: - **screen scale** - how big the whole window is drawn. **system** takes the computer's own setting. -->
-- **while playing** - whether the screen can turn off while playing.
+- **stay awake** - on keeps the screen on while the song plays.
 - **keyboard** - **keys…** opens the list of shortcuts, where you can change
   them and choose how letters play notes. See [A keyboard](11-keyboard.md).
 

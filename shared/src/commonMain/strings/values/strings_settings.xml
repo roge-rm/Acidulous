@@ -18,6 +18,7 @@
         <item>4</item>
         <item>5</item>
     </string-array>
+    <string name="settings_stay_awake">stay awake</string>
     <string name="settings_language">language</string>
     <!-- The system's language, then each language named in itself, as a menu item starts: these stay as they are in every translation. In the order of UiPrefs.Language. -->
     <string-array name="settings_language_choices">
@@ -54,11 +55,6 @@
         <item>large</item>
         <item>larger</item>
         <item>largest</item>
-    </string-array>
-    <string name="settings_while_playing">while playing</string>
-    <string-array name="settings_while_playing_choices">
-        <item>stay awake</item>
-        <item>let it sleep</item>
     </string-array>
     <string name="settings_diagnostics">diagnostics</string>
     <string-array name="settings_diagnostics_choices">

@@ -107,9 +107,7 @@ private fun DisplayTab() {
             }
             // Only where the app can keep the screen on; not on desktop.
             if (com.rm.acidulous.AppHost.current.canKeepScreenOn) {
-                SwitchGrid(stringResource(Res.string.settings_while_playing), stringArrayResource(Res.array.settings_while_playing_choices).toList(), if (UiPrefs.keepAwake) 0 else 1) {
-                    UiPrefs.chooseKeepAwake(it == 0)
-                }
+                ToggleSquare(stringResource(Res.string.settings_stay_awake), UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(it) }
             }
             // Show the diagnostics numbers everywhere they appear. Debug
             // builds only: a release has none.

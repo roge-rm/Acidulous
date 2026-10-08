@@ -804,18 +804,48 @@ internal fun PanelOnOff(b: ParamBinding, name: String, label: String = name) {
 internal fun ToggleSquare(label: String, on: Boolean, modifier: Modifier = Modifier, onChange: (Boolean) -> Unit) {
     val col = Acid.colors
     val state = stringArrayResource(Res.array.off_on)[if (on) 1 else 0]
-    Column(panelKnobWidth().widthIn(min = 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) StackedKnobW else 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
         Box(
             modifier.size(52.dp)
                 .clip(RoundedCornerShape(5.dp))
-                .background(if (on) col.accent else col.control)
-                .border(1.dp, if (on) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
+                .background(if (on) col.green else col.control)
+                .border(1.dp, if (on) col.green else col.lineStrong, RoundedCornerShape(5.dp))
                 .toggleable(value = on, role = Role.Switch) { onChange(it) }
                 .semantics { contentDescription = label },
             contentAlignment = Alignment.Center,
         ) {
             Text(state, color = if (on) col.onAccent else col.text, fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        }
+        // Where a knob shows its value, so the squares line up with the dials.
+        Text(" ", fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+    }
+}
+
+/**
+ * One button the size of a knob's dial, or as wide as its word needs, its
+ * name above and a free line below, in line with the knobs beside it. [lit]
+ * for a button that shows something is running.
+ */
+@Composable
+internal fun ButtonSquare(label: String, word: String, lit: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val col = Acid.colors
+    val name = if (label.isEmpty()) word else stringResource(Res.string.a11y_named, label, word)
+    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) StackedKnobW else 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
+        Box(
+            modifier.widthIn(min = 52.dp).height(52.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .background(if (lit) col.green else col.control)
+                .border(1.dp, if (lit) col.green else col.lineStrong, RoundedCornerShape(5.dp))
+                .clickable { onClick() }
+                .button(name),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                word, color = if (lit) col.onAccent else col.text, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                maxLines = 1, softWrap = false, modifier = Modifier.padding(horizontal = 6.dp),
+            )
         }
         // Where a knob shows its value, so the squares line up with the dials.
         Text(" ", fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
@@ -830,22 +860,29 @@ internal fun ToggleSquare(label: String, on: Boolean, modifier: Modifier = Modif
 @Composable
 internal fun PairSquare(label: String, words: List<String>, idx: Int, modifier: Modifier = Modifier, onPick: (Int) -> Unit) {
     val col = Acid.colors
-    Column(panelKnobWidth().widthIn(min = 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) StackedKnobW else 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
-        Column(modifier.size(52.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        // As wide as a knob's dial, or as its longest word needs.
+        Column(
+            modifier.widthIn(min = 52.dp).width(IntrinsicSize.Max).height(52.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
             words.forEachIndexed { i, word ->
                 val lit = i == idx
                 val name = if (label.isEmpty()) word else stringResource(Res.string.a11y_named, label, word)
                 Box(
                     Modifier.fillMaxWidth().weight(1f)
                         .clip(RoundedCornerShape(5.dp))
-                        .background(if (lit) col.accent else col.control)
-                        .border(1.dp, if (lit) col.accent else col.lineStrong, RoundedCornerShape(5.dp))
+                        .background(if (lit) col.green else col.control)
+                        .border(1.dp, if (lit) col.green else col.lineStrong, RoundedCornerShape(5.dp))
                         .clickable { onPick(i) }
                         .choice(name, lit),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(word, color = if (lit) col.onAccent else col.text, fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+                    Text(
+                        word, color = if (lit) col.onAccent else col.text, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                        maxLines = 1, softWrap = false, modifier = Modifier.padding(horizontal = 6.dp),
+                    )
                 }
             }
         }
@@ -873,6 +910,11 @@ internal fun SwitchGrid(
     onPick: (Int) -> Unit,
 ) {
     val idx = selected
+    // One button is a knob-sized square too.
+    if (labels.size == 1 && columns <= 1 && enabled == null) {
+        ButtonSquare(label, labels[0], idx == 0, modifier) { onPick(0) }
+        return
+    }
     // A choice of two is a knob-sized square, and off or on one button.
     if (labels.size == 2 && idx in 0..1 && columns <= 1 && enabled == null) {
         if (labels == stringArrayResource(Res.array.off_on).toList()) {
@@ -963,22 +1005,21 @@ internal fun SwitchMenu(
     var open by remember { mutableStateOf(false) }
     val current = labels.getOrNull(selected).orEmpty()
     val name = if (label.isEmpty()) current else stringResource(Res.string.a11y_named, label, current)
-    Column(
-        modifier.heightIn(max = PanelControlH).fillMaxHeight().together(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.silent())
+    // A knob-sized square like the other buttons, as wide as its word needs.
+    Column(modifier.widthIn(min = 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
         Box {
             Box(
-                Modifier.fillMaxHeight()
-                    .clip(RoundedCornerShape(4.dp)).background(Acid.colors.control)
+                Modifier.widthIn(min = 52.dp).height(52.dp)
+                    .clip(RoundedCornerShape(5.dp)).background(Acid.colors.control)
+                    .border(1.dp, Acid.colors.lineStrong, RoundedCornerShape(5.dp))
                     .clickable { open = true }
                     .button(name),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "$current \u25BE", color = Acid.colors.textMid, fontSize = 10.sp, maxLines = 1, softWrap = false,
-                    modifier = Modifier.padding(horizontal = 10.dp),
+                    "$current \u25BE", color = Acid.colors.text, fontSize = 11.sp, maxLines = 1, softWrap = false,
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
             val scroll = rememberScrollState()
@@ -1000,6 +1041,8 @@ internal fun SwitchMenu(
                 }
             }
         }
+        // Where a knob shows its value, so the squares line up with the dials.
+        Text(" ", fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
     }
 }
 
