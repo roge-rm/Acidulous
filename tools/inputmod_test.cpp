@@ -280,6 +280,50 @@ void splitPlaysChordsAndMelody() {
     ok("a key above it is one note, itself", f.heard.onsLive() == 4 && f.heard.pitchesLive().back() == 67);
 }
 
+/** Two chords sharing a note, through the scale after them: every note must still end. */
+void aSharedNoteThroughTwoModifiersEnds() {
+    printf("- a shared note through two modifiers\n");
+    Fixture f("Chord");
+    f.set("type", 0.0f);
+    InputMod *scale = InputModRegistry::create("Scale");
+    f.rack.swapInputMod(1, scale);
+    f.rack.handleMidi(0x90, 60, 100); // C: 60 64 67
+    f.rack.handleMidi(0x90, 64, 100); // E: 64 68 71, sharing the E
+    f.rack.handleMidi(0x80, 60, 0);
+    f.rack.handleMidi(0x80, 64, 0);
+    int balance[128] = {};
+    for (const auto &x : f.heard.live) {
+        const uint8_t k = x.status & 0xf0;
+        if (k == 0x90 && x.velocity > 0) ++balance[x.pitch];
+        else if (k == 0x80 || k == 0x90) --balance[x.pitch];
+    }
+    int stuck = 0;
+    for (int b : balance) if (b != 0) ++stuck;
+    ok("no note is left sounding", stuck == 0, std::to_string(stuck) + " stuck");
+    f.rack.swapInputMod(1, nullptr);
+    delete scale;
+}
+
+/** Strum keys high up still play: the ladder climbs three octaves and starts again. */
+void highStrumKeysStillPlay() {
+    printf("- high strum keys\n");
+    Fixture f("Chord");
+    f.set("type", 0.0f);
+    f.set("play", 0.5f);
+    f.set("split", (60.0f - 24.0f) / 72.0f);
+    f.rack.handleMidi(0x90, 59, 100); // B, below the split
+    int sounded = 0;
+    for (int k = 60; k < 96; ++k) {
+        const size_t before = f.heard.onsLive();
+        f.rack.handleMidi(0x90, static_cast<uint8_t>(k), 100);
+        if (f.heard.onsLive() > before) ++sounded;
+        f.rack.handleMidi(0x80, static_cast<uint8_t>(k), 0);
+    }
+    ok("every key from C4 to B6 plays a note", sounded == 36, std::to_string(sounded) + " of 36");
+    const auto p = f.heard.pitchesLive();
+    ok("and none above three octaves over the split", !p.empty() && *std::max_element(p.begin(), p.end()) < 60 + 3 * 12 + 12);
+}
+
 int main() {
     printf("input modifiers\n");
     aPlainNotePassesThrough();
@@ -291,6 +335,8 @@ int main() {
     guitarShapesAreRealShapes();
     aDraggedStrumEnds();
     splitPlaysChordsAndMelody();
+    aSharedNoteThroughTwoModifiersEnds();
+    highStrumKeysStillPlay();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

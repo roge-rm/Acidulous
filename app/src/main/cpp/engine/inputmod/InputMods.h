@@ -18,6 +18,9 @@ namespace acidulous::modifier {
 struct OutputNotes {
     uint8_t held[128]{};
     void on(uint8_t pitch, uint8_t vel, MidiSink &out) {
+        // Struck again while sounding: ended first, so what comes after always
+        // sees one off for every on, and the last key up still ends it.
+        if (held[pitch] > 0) out.send(0x80, pitch, 0);
         if (held[pitch] < 255) ++held[pitch];
         out.send(0x90, pitch, vel);
     }
@@ -65,6 +68,7 @@ class Chord final : public InputMod {
     void strumKey(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out);
     /** The note a strum key plays: the chord's tones counted up from the split, or -1. */
     int ladder(int key) const;
+    static constexpr int kStrumOctaves = 3;
     int chordRoot = -1, chordHeld = 0;
     bool chordDown[128]{};
     /** What each strum key is sounding, or -1, and how many are held. */

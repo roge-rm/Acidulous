@@ -34,7 +34,7 @@ sinon, pour qu’un grattage sonne comme une vraie guitare. Renversement,
 Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier,
 comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au départ) choisissent
 l’accord et ne sonnent pas ; à partir de la séparation, les touches jouent ses
-notes l’une après l’autre en montant les octaves. Glissez un doigt dessus pour
+notes l’une après l’autre sur trois octaves, puis recommencent. Glissez un doigt dessus pour
 gratter : plus vous allez vite, plus le grattage est rapide.
 
 Réglez **jeu** sur **partage** pour jouer des accords de la main gauche et une

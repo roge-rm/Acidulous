@@ -29,7 +29,8 @@ sounds like a real guitar. Inversion, spread and bass are left out then.
 
 Set **play** to **strum keys** to play the chord's notes from the keys, like
 strings under your fingers. Keys below the **split** (C4 to start with) pick the chord and make no
-sound; keys from the split up play its notes, one after another up the octaves.
+sound; keys from the split up play its notes, one after another up three
+octaves, then round again.
 Drag a finger across them to strum: the faster you go, the faster the strum.
 
 Set **play** to **split** to play chords with the left hand and a melody with

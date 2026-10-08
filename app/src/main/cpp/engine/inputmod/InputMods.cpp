@@ -153,9 +153,10 @@ int Chord::ladder(int key) const {
     }
     if (m == 0) return -1;
     for (int i = 1; i < m; ++i) { int t = iv[i], j = i - 1; while (j >= 0 && iv[j] > t) { iv[j + 1] = iv[j]; --j; } iv[j + 1] = t; }
-    // The ladder starts on the chord's root at or above the split.
+    // The ladder starts on the chord's root at or above the split and climbs
+    // three octaves, then starts again, so every key plays something.
     const int base = chordRoot + 12 * floorDiv(split - chordRoot + 11, 12);
-    return base + iv[k % m] + 12 * (k / m);
+    return base + iv[k % m] + 12 * ((k / m) % kStrumOctaves);
 }
 
 void Chord::strumKey(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) {
