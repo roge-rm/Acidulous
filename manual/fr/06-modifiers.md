@@ -26,11 +26,20 @@ Change chaque note en accord, soit une forme fixe, soit l’accord que la gamme
 bâtit sur cette note pour rester dans la tonalité. **gratter** étale les notes
 dans le temps, et les enregistrements gardent l’effet.
 
+**forme** **guitare** dispose l’accord comme le ferait la main d’un guitariste,
+avec les cordes à vide quand c’est possible et un barré plus haut sur le manche
+sinon, pour qu’un grattage sonne comme une vraie guitare. Renversement,
+écart et basse ne s’appliquent pas alors.
+
 Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier,
-comme des cordes sous les doigts. Les touches sous la **séparation** choisissent
+comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au départ) choisissent
 l’accord et ne sonnent pas ; à partir de la séparation, les touches jouent ses
 notes l’une après l’autre en montant les octaves. Glissez un doigt dessus pour
 gratter : plus vous allez vite, plus le grattage est rapide.
+
+Réglez **jeu** sur **partage** pour jouer des accords de la main gauche et une
+mélodie de la droite : les touches sous la **séparation** jouent des accords,
+celles au-dessus jouent leurs propres notes.
 
 - **touches** : toutes, ou seulement les blanches.
 - **verrou** : l’accord reste après que vous lâchez sa touche.

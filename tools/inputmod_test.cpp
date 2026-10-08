@@ -3,6 +3,7 @@
 // Modifiers act once, as a note comes in, and the clip stores what they
 // produce. So a live note should come out modified, and a note played from a
 // clip shouldn't go through them at all.
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -151,7 +152,7 @@ void strumKeysPlayTheChordsNotes() {
     {
         Fixture f("Chord");
         f.set("type", 0.0f);
-        f.set("play", 1.0f);
+        f.set("play", 0.5f);
         f.set("split", (48.0f - 24.0f) / 72.0f);
         f.set("ring", 0.0f);
         f.rack.handleMidi(0x90, 36, 100); // C below the split: the chord
@@ -169,7 +170,7 @@ void strumKeysPlayTheChordsNotes() {
     {
         Fixture f("Chord");
         f.set("type", 0.0f);
-        f.set("play", 1.0f);
+        f.set("play", 0.5f);
         f.set("split", (48.0f - 24.0f) / 72.0f);
         f.set("keys", 1.0f);
         f.rack.handleMidi(0x90, 36, 100);
@@ -181,7 +182,7 @@ void strumKeysPlayTheChordsNotes() {
     {
         Fixture f("Chord");
         f.set("type", 0.0f);
-        f.set("play", 1.0f);
+        f.set("play", 0.5f);
         f.set("split", (48.0f - 24.0f) / 72.0f);
         f.set("ring", 1.0f);
         f.rack.handleMidi(0x90, 36, 100);
@@ -197,7 +198,7 @@ void strumKeysPlayTheChordsNotes() {
     {
         Fixture f("Chord");
         f.set("type", 0.0f);
-        f.set("play", 1.0f);
+        f.set("play", 0.5f);
         f.set("split", (48.0f - 24.0f) / 72.0f);
         f.rack.handleMidi(0x90, 36, 100);
         f.rack.handleMidi(0x80, 36, 0);
@@ -216,6 +217,69 @@ void strumKeysPlayTheChordsNotes() {
     }
 }
 
+/** Guitar shapes: the chord laid out on six strings in standard tuning. */
+void guitarShapesAreRealShapes() {
+    printf("- guitar shapes\n");
+    auto shape = [](int type, int note) {
+        Fixture f("Chord");
+        f.set("type", static_cast<float>(type) / 24.0f);
+        f.set("shape", 1.0f);
+        f.rack.handleMidi(0x90, static_cast<uint8_t>(note), 100);
+        auto p = f.heard.pitchesLive();
+        std::sort(p.begin(), p.end());
+        return p;
+    };
+    auto str = [](const std::vector<uint8_t> &p) { std::string s; for (auto x : p) s += std::to_string(x) + " "; return s; };
+    auto c = shape(0, 60), g = shape(0, 67), am = shape(1, 69), e7 = shape(9, 64);
+    ok("C is x32010", c == std::vector<uint8_t>{48, 52, 55, 60, 64}, str(c));
+    ok("G is 320003", g == std::vector<uint8_t>{43, 47, 50, 55, 59, 67}, str(g));
+    ok("Am is x02210", am == std::vector<uint8_t>{45, 52, 57, 60, 64}, str(am));
+    ok("E7 is 020100", e7 == std::vector<uint8_t>{40, 47, 50, 56, 59, 64}, str(e7));
+    auto f = shape(0, 65);
+    ok("F has its root in the bass and four strings or more", f.size() >= 4 && f[0] % 12 == 5, str(f));
+    auto c5 = shape(0, 72);
+    ok("an octave up, the same shape an octave up", c5.size() == 5 && c5[0] == 60, str(c5));
+}
+
+/** What the on-screen keys send for a held chord key and a finger dragged across: every note must end. */
+void aDraggedStrumEnds() {
+    printf("- a dragged strum\n");
+    Fixture f("Chord");
+    f.set("type", 0.0f);
+    f.set("play", 0.5f);
+    f.set("split", (48.0f - 24.0f) / 72.0f);
+    f.rack.handleMidi(0x90, 36, 100);
+    f.rack.handleMidi(0x90, 48, 100);
+    for (int k = 49; k < 60; ++k) {
+        f.rack.handleMidi(0x80, static_cast<uint8_t>(k - 1), 0);
+        f.rack.handleMidi(0x90, static_cast<uint8_t>(k), 100);
+    }
+    f.rack.handleMidi(0x80, 59, 0);
+    f.rack.handleMidi(0x80, 36, 0);
+    int balance[128] = {};
+    for (const auto &x : f.heard.live) {
+        const uint8_t k = x.status & 0xf0;
+        if (k == 0x90 && x.velocity > 0) ++balance[x.pitch];
+        else if (k == 0x80 || k == 0x90) --balance[x.pitch];
+    }
+    int stuck = 0, events = static_cast<int>(f.heard.live.size());
+    for (int b : balance) if (b != 0) ++stuck;
+    ok("every strummed note ends", stuck == 0, std::to_string(stuck) + " stuck, " + std::to_string(events) + " events");
+}
+
+/** Split: chords below the split, single notes from it up. */
+void splitPlaysChordsAndMelody() {
+    printf("- split\n");
+    Fixture f("Chord");
+    f.set("type", 0.0f);
+    f.set("play", 1.0f); // the third choice of three
+    f.set("split", (60.0f - 24.0f) / 72.0f);
+    f.rack.handleMidi(0x90, 48, 100);
+    ok("a key below the split is a chord", f.heard.onsLive() == 3);
+    f.rack.handleMidi(0x90, 67, 100);
+    ok("a key above it is one note, itself", f.heard.onsLive() == 4 && f.heard.pitchesLive().back() == 67);
+}
+
 int main() {
     printf("input modifiers\n");
     aPlainNotePassesThrough();
@@ -224,6 +288,9 @@ int main() {
     theScaleModifierCorrectsOnTheWayIn();
     aBypassedModifierDoesNothing();
     strumKeysPlayTheChordsNotes();
+    guitarShapesAreRealShapes();
+    aDraggedStrumEnds();
+    splitPlaysChordsAndMelody();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

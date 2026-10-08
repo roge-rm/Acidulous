@@ -44,13 +44,15 @@ class Scale final : public InputMod {
 class Chord final : public InputMod {
   public:
     enum P { Mode, Type, Key, ScaleType, Voicing, Inversion, Spread, Bass, Strum, StrumDir, VelSpread,
-             Play, Latch, Split, Keys, Ring, Count };
+             Play, Latch, Split, Keys, Ring, Shape, Count };
     Chord() { initParams(); clearStrum(); }
     ACIDULOUS_INPUTMOD_COMMON(Chord)
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm, MidiSink &out) override;
   private:
     static constexpr int kMaxTones = 8, kPending = 32;
     int build(int note, int *tones) const; // returns count
+    /** The chord laid out on a guitar's six strings, around the played octave. */
+    static int guitar(int note, const int *tones, int n, int *out);
     struct Voice { int16_t tones[kMaxTones]; int8_t count; };
     Voice voices[128]{};
     struct Pending { int64_t tick; uint8_t src, pitch, vel; bool live; };

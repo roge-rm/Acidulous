@@ -23,10 +23,18 @@ Turns every note into a chord, either a fixed shape or the chord the scale
 builds on that note so it stays in key. **strum** spreads the notes out in time,
 and recordings keep the strum.
 
+**shape** **guitar** lays the chord out as a guitarist's hand would, open
+strings where it can and a barre further up the neck where it can't, so a strum
+sounds like a real guitar. Inversion, spread and bass are left out then.
+
 Set **play** to **strum keys** to play the chord's notes from the keys, like
-strings under your fingers. Keys below the **split** pick the chord and make no
+strings under your fingers. Keys below the **split** (C4 to start with) pick the chord and make no
 sound; keys from the split up play its notes, one after another up the octaves.
 Drag a finger across them to strum: the faster you go, the faster the strum.
+
+Set **play** to **split** to play chords with the left hand and a melody with
+the right: keys below the **split** play chords, keys from it up play their own
+notes.
 
 - **keys** - all keys, or the white keys only.
 - **latch** - the chord stays after you let go of its key.

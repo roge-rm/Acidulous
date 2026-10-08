@@ -99,11 +99,12 @@ const ParamDef *Chord::paramDefs(int32_t &count) const {
         {"strum", 0.0f, 200.0f, 0.0f, Curve::Linear, 0, "ms"},
         {"strumdir", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""}, // up, down
         {"velspread", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"play", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},     // chord, strum keys
+        {"play", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""},     // chord, strum keys, split
         {"latch", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},    // the chord stays after its key is let go
-        {"split", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""}, // the lowest strum key; below it, chord keys
+        {"split", 24.0f, 96.0f, 60.0f, Curve::Stepped, 73, ""}, // the lowest strum key; below it, chord keys
         {"keys", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},     // all, white
         {"ring", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},     // strummed notes ring until the last key is up
+        {"shape", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},    // close, guitar
     };
     count = Count;
     return defs;
@@ -218,6 +219,14 @@ int Chord::build(int note, int *tones) const {
         const ChordDef &c = kChords[stepOf(p, Type)];
         for (int i = 0; i < c.count; ++i) tones[n++] = note + c.intervals[i];
     }
+    if (stepOf(p, Shape) == 1) {
+        int laid[kMaxTones];
+        const int m = guitar(note, tones, n, laid);
+        if (m > 0) {
+            for (int i = 0; i < m; ++i) tones[i] = laid[i];
+            return m; // low string to high, already in strum order
+        }
+    }
     // Inversion: the lowest notes go up an octave, one per step.
     const int inv = stepOf(p, Inversion);
     for (int i = 0; i < inv && i < n - 1; ++i) tones[i] += 12;
@@ -233,11 +242,58 @@ int Chord::build(int note, int *tones) const {
     return n;
 }
 
+int Chord::guitar(int note, const int *tones, int n, int *out) {
+    // Standard tuning, low E to high E, and how far a hand reaches: four frets.
+    static constexpr int kOpen[6] = {40, 45, 50, 55, 59, 64};
+    const int rootPc = floorMod(note, 12);
+    bool inChord[12] = {};
+    for (int i = 0; i < n; ++i) inChord[floorMod(tones[i], 12)] = true;
+    // The shape sits where a guitar plays it, moved by whole octaves with the
+    // key played: C4 gives the guitar's own register.
+    const int shift = 12 * (floorDiv(note, 12) - 5);
+    // Open strings first; failing that, up the neck as a barre.
+    for (int pos = 0; pos <= 9; ++pos) {
+        const int lo = pos, hi = pos + 3;
+        int got[6], m = 0;
+        bool covered[12] = {};
+        bool rooted = false;
+        for (int s = 0; s < 6; ++s) {
+            int pick = -1;
+            for (int f = lo; f <= hi && pick < 0; ++f) {
+                const int pc = (kOpen[s] + f) % 12;
+                // Below the bass, a string is left out unless it can play the root.
+                if (!rooted ? pc == rootPc : inChord[pc]) pick = kOpen[s] + f;
+            }
+            if (pick < 0) continue;
+            rooted = true;
+            got[m++] = pick;
+            covered[pick % 12] = true;
+        }
+        bool all = true;
+        for (int pc = 0; pc < 12; ++pc) if (inChord[pc] && !covered[pc]) all = false;
+        if (m >= 4 && all) {
+            for (int i = 0; i < m; ++i) out[i] = clampNote(got[i] + shift);
+            return m;
+        }
+    }
+    return 0;
+}
+
 void Chord::handleMidi(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) {
     const uint8_t kind = status & 0xf0;
     const auto &p = params_;
     if (stepOf(p, Play) == 1 && (kind == 0x80 || kind == 0x90)) {
         strumKey(status, d1, d2, out);
+        return;
+    }
+    // Split: chords below the split, the melody's own notes from it up.
+    if (stepOf(p, Play) == 2 && (kind == 0x80 || kind == 0x90) && d1 >= stepOf(p, Split)) {
+        if (kind == 0x90 && d2 != 0) {
+            if (strumOut[d1] < 0) { strumOut[d1] = static_cast<int16_t>(d1); outs.on(d1, d2, out); }
+        } else if (strumOut[d1] >= 0) {
+            strumOut[d1] = -1;
+            outs.off(d1, out);
+        }
         return;
     }
     if (kind == 0x90 && d2 != 0) {
