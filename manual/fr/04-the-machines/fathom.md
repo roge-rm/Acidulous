@@ -1,7 +1,8 @@
 # Fathom
 
 > L’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie,
-> ruisseaux, ressac, vent et feu, joués au clavier.
+> ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements,
+> glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.
 
 Fathom ne joue pas d’enregistrements. L’essentiel du son de l’eau, ce sont
 des bulles : une poche d’air prise sous la surface vibre comme un ressort, à
@@ -20,7 +21,11 @@ la note que siffle le vent ; la vélocité, la quantité.
 ## Eau
 
 - **modèle** : **bulles**, **gouttes**, **pluie**, **ruisseau**,
-  **ressac**, **vent** ou **feu**.
+  **ressac**, **vent**, **feu**, **tonnerre** (un claquement et un grondement
+  qui roule), **grêle**, **cascade**, **grésillement** (vapeur et friture),
+  **glace** (une plaque gelée qui craque), **neige** (des pas), **éclabousse**,
+  **sous l’eau** ou **bâton de pluie** (des cailloux qui tombent et
+  s’éclaircissent au fil du déclin).
 - **accordage** : en cents.
 - **densité** : combien de bulles, de gouttes ou de crépitements. À 0, il
   en vient une à chaque note : on peut jouer un air avec.
@@ -51,7 +56,7 @@ Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun so
 
 - Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**.
 - Les autres boutons (taille, montée, timbre, etc.) agissent sur tous les pads.
-- **Weather Kit** commence avec feu, vent, pluie, gouttes, bulles, ruisseau et ressac.
+- **Weather Kit** commence avec feu, vent, pluie, gouttes, bulles, ruisseau et ressac, **Storm Kit** avec pluie, grêle, vent, rafales et tonnerre proche et lointain, et **Water Kit** avec bulles, gouttes, ruisseau, éclaboussures, cascade et profondeurs.
 
 ## Astuces
 

@@ -67,7 +67,8 @@ object MachineUi {
     private val AVIARY_SONGS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus")
     /** Aviary's default kit, as in the engine. */
     private val AVIARY_KIT = listOf(0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 1, 2, 0)
-    private val FATHOM_SOUNDS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire")
+    private val FATHOM_SOUNDS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire",
+        "thunder", "hail", "waterfall", "sizzle", "ice", "snow", "splash", "underwater", "rainstick")
     /** Fathom's default kit, as in the engine. */
     private val FATHOM_KIT = listOf(6, 6, 5, 5, 2, 2, 2, 1, 1, 1, 0, 0, 3, 3, 4, 4)
     private val PALM_DRUMS = listOf("tabla", "bayan", "djembe", "cajon", "frame", "talking", "conga", "bongo", "darbuka", "riq", "tar", "bendir", "kanjira", "bata", "mridangam", "dholak", "ashiko", "udu", "cuica")

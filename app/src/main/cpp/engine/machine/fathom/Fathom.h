@@ -36,7 +36,8 @@ class Fathom final : public Machine {
     static constexpr uint8_t kBaseNote = 36;
     static_assert(Count <= kMaxParams, "too many parameters");
 
-    enum Kind : int32_t { Bubbles = 0, Drips, Rain, Stream, Surf, Wind, Fire, KindCount };
+    enum Kind : int32_t { Bubbles = 0, Drips, Rain, Stream, Surf, Wind, Fire,
+                         Thunder, Hail, Waterfall, Sizzle, Ice, Snow, Splash, Underwater, Rainstick, KindCount };
     enum SurfaceKind : int32_t { Water = 0, Leaves, Tin, Glass, SurfaceCount };
     static constexpr int kVoices = 4;
     static constexpr int kGrains = 64;

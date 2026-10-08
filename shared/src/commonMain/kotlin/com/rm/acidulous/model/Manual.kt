@@ -545,11 +545,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**volume**."),
     ))
 
-    private fun en3_14() = ManualSection("Fathom", "Modelled water and weather: bubbles, drips, rain, streams, surf, wind and fire, played from the keys.", listOf(
+    private fun en3_14() = ManualSection("Fathom", "Modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail, waterfalls, sizzling, ice, snow, splashes, the deep and a rainstick, played from the keys.", listOf(
         ManualBlock(ManualKind.Para, "Fathom doesn't play recordings. Most of the sound of water is bubbles: a pocket of air caught under the surface rings like a spring, at a pitch set by its size (the smaller, the higher), and rises in pitch as it nears the top. A drip is a bubble and the tap of the drop; rain is many drips, and the sound of what they land on; a stream is a dense cloud of small bubbles and a few big ones. Surf is the rush of a wave rising and falling back. Wind is air rushing past things in gusts, whistling where it's caught in a gap; fire is crackles, hiss and roar.", "Fathom doesn't play recordings. Most of the sound of water is bubbles: a pocket of air caught under the surface rings like a spring, at a pitch set by its size (the smaller, the higher), and rises in pitch as it nears the top. A drip is a bubble and the click of the drop; rain is many drips, and the sound of what they land on; a stream is a dense cloud of small bubbles and a few big ones. Surf is the rush of a wave rising and falling back. Wind is air rushing past things in gusts, whistling where it's caught in a gap; fire is crackles, hiss and roar."),
         ManualBlock(ManualKind.Para, "Hold a note to keep it going. The note sets the size of the bubbles, or the note the wind whistles; the velocity sets how much."),
         ManualBlock(ManualKind.Heading, "Water"),
-        ManualBlock(ManualKind.Bullet, "**model** - **bubbles**, **drips**, **rain**, **stream**, **surf**, **wind** or **fire**."),
+        ManualBlock(ManualKind.Bullet, "**model** - **bubbles**, **drips**, **rain**, **stream**, **surf**, **wind**, **fire**, **thunder** (a crack and a rolling rumble), **hail**, **waterfall**, **sizzle** (steam and frying), **ice** (cracks in a frozen sheet), **snow** (footsteps), **splash**, **underwater** or **rainstick** (pebbles falling, thinning out over the decay)."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
         ManualBlock(ManualKind.Bullet, "**density** - how many bubbles, drops or crackles. At 0, one comes with each note, so you can play a tune with them."),
         ManualBlock(ManualKind.Bullet, "**size** - how far the bubbles' sizes, and so their pitches, spread from the note, in semitones."),
@@ -569,7 +569,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "Turn on **kit** and the keys from C2 up are sixteen pads, each its own sound, so one track can play a whole scene: rain on one pad, wind on another, a fire on a third. The sequencer shows the drum grid, one lane per pad. Up to four pads sound at once."),
         ManualBlock(ManualKind.Bullet, "Tap a pad on the drum grid, then set it in the pad card: **sound**, **pitch**, **density** and **level**.", "Click a pad on the drum grid, then set it in the pad card: **sound**, **pitch**, **density** and **level**."),
         ManualBlock(ManualKind.Bullet, "The other knobs (size, rise, tone and so on) work on every pad."),
-        ManualBlock(ManualKind.Bullet, "**Weather Kit** starts with fire, wind, rain, drips, bubbles, a stream and surf."),
+        ManualBlock(ManualKind.Bullet, "**Weather Kit** starts with fire, wind, rain, drips, bubbles, a stream and surf, **Storm Kit** with rain, hail, wind, gusts and thunder near and far, and **Water Kit** with bubbles, drips, a stream, splashes, a waterfall and the deep."),
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "**Bubble Notes** and **Drip Notes** have no density: each note is one bubble or drip, tuned, for melodies."),
         ManualBlock(ManualKind.Bullet, "**Whistling Wind** plays the note you hold: try slow chords."),
@@ -755,17 +755,17 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Bayan Swoop** and **Talking Squeeze** are for pressing: play a note, then lean on the key or push the mod wheel."),
     ))
 
-    private fun en3_20() = ManualSection("Sympath", "Modelled sitar, tanpura, veena and shamisen: plucked strings over a buzzing bridge, with strings ringing in sympathy.", listOf(
+    private fun en3_20() = ManualSection("Sympath", "Modelled sitar, tanpura, veena, shamisen and their relatives, plucked or bowed: strings over a buzzing bridge, with strings ringing in sympathy.", listOf(
         ManualBlock(ManualKind.Para, "Sympath doesn't play recordings. Each note is a string lying over a wide, curved bridge. Once the string swings far enough towards the bridge it strikes it, harder the further it swings, and every strike sets the bridge ringing: the bright buzz on every cycle that goes on as long as the string swings wide enough to reach, and fades as the note dies down."),
         ManualBlock(ManualKind.Para, "Under the played strings lie sympathetic strings that are never touched. They're tuned to the scale of the piece, so any note that lands on one of theirs sets it ringing, and it rings on after the note has gone."),
         ManualBlock(ManualKind.Heading, "Strings"),
-        ManualBlock(ManualKind.Bullet, "**model** - **sitar** (eleven sympathetic strings and two drone strings), **tanpura** (four strings it plucks by itself), **veena** (a flatter bridge and three drone strings at the side) or **shamisen** (a big plectrum that hits the skin too, and its low string buzzing on the neck)."),
+        ManualBlock(ManualKind.Bullet, "**model** - **sitar** (eleven sympathetic strings and two drone strings), **tanpura** (four strings it plucks by itself), **veena** (a flatter bridge and three drone strings at the side) or **shamisen** (a big plectrum that hits the skin too, and its low string buzzing on the neck). Plucked too: **sarod** (no frets, a steel plate under the strings), **rudra veena** (deep and slow), **swarmandal** (a zither), **biwa**, **sanxian**, **ektara** (one string) and **e-sitar** (an electric sitar). Bowed, for as long as the key is held: **sarangi**, **esraj**, **dilruba**, **hardanger** fiddle and **nyckelharpa**."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
         ManualBlock(ManualKind.Bullet, "**sa** - the tonic the sympathetic and drone strings are tuned to."),
         ManualBlock(ManualKind.Bullet, "**scale** - the scale the sympathetic strings are tuned to: **bilawal** (major), **khamaj**, **kafi**, **asavari**, **bhairavi**, **bhairav**, **kalyan**, **marwa**, **purvi** or **todi**."),
         ManualBlock(ManualKind.Bullet, "**bridge** - how much the bridge buzzes. At 0 it's a plain, sharp edge."),
         ManualBlock(ManualKind.Bullet, "**curve** - how wide the string must swing before it lies on the bridge. Low, and even soft notes buzz; high, and only hard ones do."),
-        ManualBlock(ManualKind.Bullet, "**pluck** - a soft or hard pluck."),
+        ManualBlock(ManualKind.Bullet, "**pluck** - a soft or hard pluck. On a bowed one, how hard the bow presses."),
         ManualBlock(ManualKind.Bullet, "**position** - where along the string it's plucked."),
         ManualBlock(ManualKind.Bullet, "**sustain** - how long the strings ring."),
         ManualBlock(ManualKind.Bullet, "**bright** - how long they keep their top end."),
@@ -2514,11 +2514,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**volume**."),
     ))
 
-    private fun fr3_14() = ManualSection("Fathom", "L’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent et feu, joués au clavier.", listOf(
+    private fun fr3_14() = ManualSection("Fathom", "L’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements, glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.", listOf(
         ManualBlock(ManualKind.Para, "Fathom ne joue pas d’enregistrements. L’essentiel du son de l’eau, ce sont des bulles : une poche d’air prise sous la surface vibre comme un ressort, à une hauteur fixée par sa taille (plus elle est petite, plus elle est aiguë), et monte quand elle approche de la surface. Une goutte, c’est une bulle et le choc de la goutte ; la pluie, beaucoup de gouttes, et le son de ce sur quoi elles tombent ; un ruisseau, un nuage dense de petites bulles et quelques grosses. Le ressac, c’est le grondement d’une vague qui monte et retombe. Le vent, c’est de l’air qui file en rafales et siffle là où il se prend dans une fente ; le feu, des crépitements, un sifflement et un grondement."),
         ManualBlock(ManualKind.Para, "Tenez une note pour que ça continue. La note fixe la taille des bulles, ou la note que siffle le vent ; la vélocité, la quantité."),
         ManualBlock(ManualKind.Heading, "Eau"),
-        ManualBlock(ManualKind.Bullet, "**modèle** : **bulles**, **gouttes**, **pluie**, **ruisseau**, **ressac**, **vent** ou **feu**."),
+        ManualBlock(ManualKind.Bullet, "**modèle** : **bulles**, **gouttes**, **pluie**, **ruisseau**, **ressac**, **vent**, **feu**, **tonnerre** (un claquement et un grondement qui roule), **grêle**, **cascade**, **grésillement** (vapeur et friture), **glace** (une plaque gelée qui craque), **neige** (des pas), **éclabousse**, **sous l’eau** ou **bâton de pluie** (des cailloux qui tombent et s’éclaircissent au fil du déclin)."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**densité** : combien de bulles, de gouttes ou de crépitements. À 0, il en vient une à chaque note : on peut jouer un air avec."),
         ManualBlock(ManualKind.Bullet, "**taille** : de combien la taille des bulles, et donc leur hauteur, s’écarte de la note, en demi-tons."),
@@ -2538,7 +2538,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre son : une seule piste joue toute une scène, la pluie sur un pad, le vent sur un autre, un feu sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad. Jusqu’à quatre pads sonnent à la fois."),
         ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**."),
         ManualBlock(ManualKind.Bullet, "Les autres boutons (taille, montée, timbre, etc.) agissent sur tous les pads."),
-        ManualBlock(ManualKind.Bullet, "**Weather Kit** commence avec feu, vent, pluie, gouttes, bulles, ruisseau et ressac."),
+        ManualBlock(ManualKind.Bullet, "**Weather Kit** commence avec feu, vent, pluie, gouttes, bulles, ruisseau et ressac, **Storm Kit** avec pluie, grêle, vent, rafales et tonnerre proche et lointain, et **Water Kit** avec bulles, gouttes, ruisseau, éclaboussures, cascade et profondeurs."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "**Bubble Notes** et **Drip Notes** n’ont pas de densité : chaque note est une bulle ou une goutte accordée, pour jouer des mélodies."),
         ManualBlock(ManualKind.Bullet, "**Whistling Wind** joue la note tenue : essayez des accords lents."),
@@ -2724,17 +2724,17 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Bayan Swoop** et **Talking Squeeze** se jouent en appuyant : jouez une note, puis pesez sur la touche ou poussez la molette."),
     ))
 
-    private fun fr3_20() = ManualSection("Sympath", "Sitar, tanpura, veena et shamisen modélisés : des cordes pincées sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.", listOf(
+    private fun fr3_20() = ManualSection("Sympath", "Sitar, tanpura, veena, shamisen et leurs parents modélisés, pincés ou frottés : des cordes sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.", listOf(
         ManualBlock(ManualKind.Para, "Sympath ne joue pas d’enregistrements. Chaque note est une corde posée sur un chevalet large et bombé. Quand la corde oscille assez loin vers le chevalet, elle le frappe, d’autant plus fort qu’elle va loin, et chaque choc fait sonner le chevalet : ce grésillement brillant, à chaque oscillation, qui dure tant que la corde va assez loin pour l’atteindre et s’éteint avec la note."),
         ManualBlock(ManualKind.Para, "Sous les cordes jouées se trouvent des cordes sympathiques qu’on ne touche jamais. Elles sont accordées sur la gamme du morceau : toute note qui tombe sur l’une d’elles la fait sonner, et elle sonne encore après la note."),
         ManualBlock(ManualKind.Heading, "Cordes"),
-        ManualBlock(ManualKind.Bullet, "**modèle** : **sitar** (onze cordes sympathiques et deux cordes de bourdon), **tanpura** (quatre cordes qu’il pince tout seul), **veena** (un chevalet plus plat et trois cordes de bourdon sur le côté) ou **shamisen** (un grand plectre qui frappe aussi la peau, et sa corde grave qui grésille contre le manche)."),
+        ManualBlock(ManualKind.Bullet, "**modèle** : **sitar** (onze cordes sympathiques et deux cordes de bourdon), **tanpura** (quatre cordes qu’il pince tout seul), **veena** (un chevalet plus plat et trois cordes de bourdon sur le côté) ou **shamisen** (un grand plectre qui frappe aussi la peau, et sa corde grave qui grésille contre le manche). Pincés aussi : **sarod** (sans frettes, une plaque d’acier sous les cordes), **rudra veena** (grave et lente), **swarmandal** (une cithare), **biwa**, **sanxian**, **ektara** (une corde) et **e-sitar** (un sitar électrique). Frottés à l’archet tant que la touche est tenue : **sarangi**, **esraj**, **dilruba**, violon **hardanger** et **nyckelharpa**."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**sa** : la tonique sur laquelle sont accordées les cordes sympathiques et de bourdon."),
         ManualBlock(ManualKind.Bullet, "**gamme** : la gamme des cordes sympathiques : **bilawal** (majeur), **khamaj**, **kafi**, **asavari**, **bhairavi**, **bhairav**, **kalyan**, **marwa**, **purvi** ou **todi**."),
         ManualBlock(ManualKind.Bullet, "**chevalet** : combien le chevalet grésille. À 0, c’est une arête nette."),
         ManualBlock(ManualKind.Bullet, "**courbe** : jusqu’où la corde doit osciller avant de se coucher sur le chevalet. Basse, même les notes douces grésillent ; haute, seules les fortes."),
-        ManualBlock(ManualKind.Bullet, "**pincer** : un pincement doux ou dur."),
+        ManualBlock(ManualKind.Bullet, "**pincer** : un pincement doux ou dur. Sur un instrument frotté, la pression de l’archet."),
         ManualBlock(ManualKind.Bullet, "**position** : où la corde est pincée."),
         ManualBlock(ManualKind.Bullet, "**maintien** : combien de temps les cordes résonnent."),
         ManualBlock(ManualKind.Bullet, "**brillant** : combien de temps elles gardent leurs aigus."),

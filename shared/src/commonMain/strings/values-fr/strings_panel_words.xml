@@ -106,6 +106,7 @@
     <string name="pw_bitcrusher">Bitcrusher</string>
     <string name="pw_bite">mordant</string>
     <string name="pw_bits">bits</string>
+    <string name="pw_biwa">biwa</string>
     <string name="pw_black">noires</string>
     <string name="pw_bleed">fuite</string>
     <string name="pw_blend">fondu</string>
@@ -120,6 +121,7 @@
     <string name="pw_bossa">bossa</string>
     <string name="pw_both">les deux</string>
     <string name="pw_bow">archet</string>
+    <string name="pw_bowed">frottés</string>
     <string name="pw_bowl">bol</string>
     <string name="pw_bp">BP</string>
     <string name="pw_bp_0691a6">bp</string>
@@ -259,6 +261,7 @@
     <string name="pw_diatonic">diatonique</string>
     <string name="pw_dice">dés</string>
     <string name="pw_digital">numérique</string>
+    <string name="pw_dilruba">dilruba</string>
     <string name="pw_diode">diode</string>
     <string name="pw_dir">sens</string>
     <string name="pw_direct">direct</string>
@@ -290,10 +293,12 @@
     <string name="pw_dudy">dudy</string>
     <string name="pw_dulcimer">tympanon</string>
     <string name="pw_duty">rapport</string>
+    <string name="pw_e_sitar">e-sitar</string>
     <string name="pw_e3">e3</string>
     <string name="pw_e4">e4</string>
     <string name="pw_e5">e5</string>
     <string name="pw_e6">e6</string>
+    <string name="pw_east">orient</string>
     <string name="pw_edge">biseau</string>
     <string name="pw_edge_cone">bord</string>
     <string name="pw_ee">ee</string>
@@ -306,6 +311,7 @@
     <string name="pw_eg3">env3</string>
     <string name="pw_eight_bits">huit bits</string>
     <string name="pw_eighths">croches</string>
+    <string name="pw_ektara">ektara</string>
     <string name="pw_electric">électrique</string>
     <string name="pw_electric_grand">à queue élec.</string>
     <string name="pw_electro">electro</string>
@@ -330,6 +336,7 @@
     <string name="pw_envf">envF</string>
     <string name="pw_envmod">mod env</string>
     <string name="pw_eq">Eq</string>
+    <string name="pw_esraj">esraj</string>
     <string name="pw_europe">europe</string>
     <string name="pw_every">chaque</string>
     <string name="pw_excite">exciter</string>
@@ -446,6 +453,7 @@
     <string name="pw_gust">rafale</string>
     <string name="pw_h">h</string>
     <string name="pw_haas">haas</string>
+    <string name="pw_hail">grêle</string>
     <string name="pw_half">demi</string>
     <string name="pw_halves">blanches</string>
     <string name="pw_hammer">marteau</string>
@@ -454,6 +462,7 @@
     <string name="pw_hands">mains</string>
     <string name="pw_hann">hann</string>
     <string name="pw_hard">dur</string>
+    <string name="pw_hardanger">hardanger</string>
     <string name="pw_hardness">dureté</string>
     <string name="pw_hardware">matériel</string>
     <string name="pw_harm">harm.</string>
@@ -507,6 +516,7 @@
     <string name="pw_hybrid">hybride</string>
     <string name="pw_hyst">hyst.</string>
     <string name="pw_hz">Hz</string>
+    <string name="pw_ice">glace</string>
     <string name="pw_ignore">ignorer</string>
     <string name="pw_ii">II</string>
     <string name="pw_in">entrée</string>
@@ -711,6 +721,7 @@
     <string name="pw_note">note</string>
     <string name="pw_notes">notes</string>
     <string name="pw_number">nombre</string>
+    <string name="pw_nyckelharpa">nyckelharpa</string>
     <string name="pw_object">objet</string>
     <string name="pw_object_n">Objet %d</string>
     <string name="pw_oboe">hautbois</string>
@@ -836,6 +847,7 @@
     <string name="pw_r">R</string>
     <string name="pw_r_4dc7c9">r</string>
     <string name="pw_rain">pluie</string>
+    <string name="pw_rainstick">bâton de pluie</string>
     <string name="pw_ramp">rampe</string>
     <string name="pw_ramp_9f2b78">rampe↑</string>
     <string name="pw_ramp_181f09">rampe↓</string>
@@ -912,6 +924,7 @@
     <string name="pw_route">routage</string>
     <string name="pw_routing">routage</string>
     <string name="pw_rubber">caoutchouc</string>
+    <string name="pw_rudra_veena">rudra veena</string>
     <string name="pw_run">marche</string>
     <string name="pw_runs">traits</string>
     <string name="pw_s">S</string>
@@ -938,6 +951,9 @@
     <string name="pw_sag">affaiss.</string>
     <string name="pw_sample">échantillon</string>
     <string name="pw_sample_rate">fréq. éch.</string>
+    <string name="pw_sanxian">sanxian</string>
+    <string name="pw_sarangi">sarangi</string>
+    <string name="pw_sarod">sarod</string>
     <string name="pw_saron">saron</string>
     <string name="pw_saturate">saturer</string>
     <string name="pw_saturation">saturation</string>
@@ -983,6 +999,7 @@
     <string name="pw_sitar">sitar</string>
     <string name="pw_sixteenths">doubles croches</string>
     <string name="pw_size">taille</string>
+    <string name="pw_sizzle">grésillement</string>
     <string name="pw_skew">biais</string>
     <string name="pw_skip">sauter</string>
     <string name="pw_slap">slap</string>
@@ -1004,6 +1021,7 @@
     <string name="pw_snappy">timbre</string>
     <string name="pw_snare">C. claire</string>
     <string name="pw_snare_c1104d">c. claire</string>
+    <string name="pw_snow">neige</string>
     <string name="pw_soft">doux</string>
     <string name="pw_soft_pedal">pédale douce</string>
     <string name="pw_song">morceau</string>
@@ -1015,6 +1033,7 @@
     <string name="pw_span">étendue</string>
     <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">vitesse</string>
+    <string name="pw_splash">éclabousse</string>
     <string name="pw_split">partage</string>
     <string name="pw_split_keys">séparation</string>
     <string name="pw_spray">dispers.</string>
@@ -1069,6 +1088,7 @@
     <string name="pw_sustain_pedal">pédale maintien</string>
     <string name="pw_sustained">entretenu</string>
     <string name="pw_swap">échanger</string>
+    <string name="pw_swarmandal">swarmandal</string>
     <string name="pw_sweep">Balayage</string>
     <string name="pw_sweep_ef4d07">balayage</string>
     <string name="pw_swell">Swell</string>
@@ -1118,6 +1138,7 @@
     <string name="pw_through">traverse</string>
     <string name="pw_thru">passant</string>
     <string name="pw_thumb">pouce</string>
+    <string name="pw_thunder">tonnerre</string>
     <string name="pw_tight">serré</string>
     <string name="pw_tilt">pente</string>
     <string name="pw_timbre">timbre</string>
@@ -1167,6 +1188,7 @@
     <string name="pw_uilleann">uilleann</string>
     <string name="pw_uk">R.-U.</string>
     <string name="pw_una_corda">una corda</string>
+    <string name="pw_underwater">sous l’eau</string>
     <string name="pw_uni">uni</string>
     <string name="pw_unison">unisson</string>
     <string name="pw_unvoiced">sourdes</string>
@@ -1210,6 +1232,7 @@
     <string name="pw_warp">distors.</string>
     <string name="pw_wash">lavis</string>
     <string name="pw_water">eau</string>
+    <string name="pw_waterfall">cascade</string>
     <string name="pw_wave">onde</string>
     <string name="pw_wave_a">onde a</string>
     <string name="pw_wave_b">onde b</string>
@@ -1232,6 +1255,7 @@
     <string name="pw_wild">sauvage</string>
     <string name="pw_wind">vent</string>
     <string name="pw_window">fenêtre</string>
+    <string name="pw_winter">hiver</string>
     <string name="pw_wire">fil</string>
     <string name="pw_wobble">oscillation</string>
     <string name="pw_wood">bois</string>

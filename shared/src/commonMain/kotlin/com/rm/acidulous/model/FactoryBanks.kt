@@ -4218,117 +4218,297 @@ internal object FactoryBanks {
         family = "sitar",
         low = 48, high = 84)
 
-    private fun sympath8() = Patch("Sympath", "Tanpura",
-        mapOf("model" to 0.333333343f),
-        family = "tanpura",
-        low = 36, high = 60)
+    private fun sympath8() = Patch("Sympath", "Sarod",
+        mapOf("model" to 0.266666681f, "meend" to 0.166666672f, "voices" to 0f),
+        family = "sitar",
+        low = 48, high = 84)
 
-    private fun sympath9() = Patch("Sympath", "Tanpura Ma",
-        mapOf("model" to 0.333333343f, "first" to 0.333333343f),
-        family = "tanpura",
-        low = 36, high = 60)
+    private fun sympath9() = Patch("Sympath", "Sarod Jhala",
+        mapOf("model" to 0.266666681f, "chikari" to 0.7f),
+        family = "sitar",
+        low = 48, high = 84)
 
-    private fun sympath10() = Patch("Sympath", "Tanpura Ni",
-        mapOf("model" to 0.333333343f, "first" to 0.6666667f),
-        family = "tanpura",
-        low = 36, high = 60)
+    private fun sympath10() = Patch("Sympath", "Sarod Alap",
+        mapOf("model" to 0.266666681f, "sustain" to 0.7f, "meend" to 0.416666657f, "voices" to 0f),
+        family = "sitar",
+        low = 43, high = 79)
 
-    private fun sympath11() = Patch("Sympath", "Slow Tanpura",
-        mapOf("model" to 0.333333343f, "sustain" to 0.75f, "cycle" to 1f),
-        family = "tanpura",
-        low = 36, high = 60)
+    private fun sympath11() = Patch("Sympath", "Electric Sitar",
+        mapOf("model" to 0.6666667f),
+        family = "sitar",
+        low = 52, high = 88)
 
-    private fun sympath12() = Patch("Sympath", "Quick Tanpura",
-        mapOf("model" to 0.333333343f, "sustain" to 0.4f, "cycle" to 0f),
-        family = "tanpura",
-        low = 36, high = 60)
+    private fun sympath12() = Patch("Sympath", "Electric Sitar Bright",
+        mapOf("model" to 0.6666667f, "bright" to 0.7f, "tarbs" to 0.7f),
+        family = "sitar",
+        low = 52, high = 88)
 
-    private fun sympath13() = Patch("Sympath", "High Tanpura",
-        mapOf("model" to 0.333333343f, "bright" to 0.6f),
-        family = "tanpura",
-        low = 48, high = 72)
+    private fun sympath13() = Patch("Sympath", "Electric Sitar Lead",
+        mapOf("model" to 0.6666667f, "meend" to 0.1f, "voices" to 0f),
+        family = "sitar",
+        low = 52, high = 88)
 
-    private fun sympath14() = Patch("Sympath", "Soft Tanpura",
-        mapOf("model" to 0.333333343f, "bridge" to 0.3f, "bright" to 0.35f),
-        family = "tanpura",
-        low = 36, high = 60)
-
-    private fun sympath15() = Patch("Sympath", "Veena",
-        mapOf("model" to 0.6666667f, "meend" to 0.25f, "voices" to 0f),
+    private fun sympath14() = Patch("Sympath", "Veena",
+        mapOf("model" to 0.13333334f, "meend" to 0.25f, "voices" to 0f),
         family = "veena",
         low = 36, high = 79)
 
-    private fun sympath16() = Patch("Sympath", "Veena Tala",
-        mapOf("model" to 0.6666667f, "chikari" to 0.6f, "meend" to 0.25f, "voices" to 0f),
+    private fun sympath15() = Patch("Sympath", "Veena Tala",
+        mapOf("model" to 0.13333334f, "chikari" to 0.6f, "meend" to 0.25f, "voices" to 0f),
         family = "veena",
         low = 36, high = 79)
 
-    private fun sympath17() = Patch("Sympath", "Veena Gamak",
-        mapOf("model" to 0.6666667f, "meend" to 0.333333343f, "gamak" to 0.6f, "voices" to 0f),
+    private fun sympath16() = Patch("Sympath", "Veena Gamak",
+        mapOf("model" to 0.13333334f, "meend" to 0.333333343f, "gamak" to 0.6f, "voices" to 0f),
         family = "veena",
         low = 36, high = 79)
 
-    private fun sympath18() = Patch("Sympath", "Low Veena",
-        mapOf("model" to 0.6666667f, "sustain" to 0.7f, "bright" to 0.35f),
+    private fun sympath17() = Patch("Sympath", "Low Veena",
+        mapOf("model" to 0.13333334f, "sustain" to 0.7f, "bright" to 0.35f),
         family = "veena",
         low = 31, high = 67)
 
-    private fun sympath19() = Patch("Sympath", "Veena Chords",
-        mapOf("model" to 0.6666667f, "pluck" to 0.35f),
+    private fun sympath18() = Patch("Sympath", "Veena Chords",
+        mapOf("model" to 0.13333334f, "pluck" to 0.35f),
         family = "veena",
         low = 36, high = 79)
 
-    private fun sympath20() = Patch("Sympath", "Shamisen",
-        mapOf("model" to 1f),
-        family = "shamisen",
+    private fun sympath19() = Patch("Sympath", "Rudra Veena",
+        mapOf("model" to 0.333333343f, "meend" to 0.333333343f, "voices" to 0f),
+        family = "veena",
+        low = 36, high = 72)
+
+    private fun sympath20() = Patch("Sympath", "Rudra Veena Dhrupad",
+        mapOf("model" to 0.333333343f, "meend" to 0.5833333f, "gamak" to 0.4f, "voices" to 0f),
+        family = "veena",
+        low = 31, high = 67)
+
+    private fun sympath21() = Patch("Sympath", "Rudra Veena Soft",
+        mapOf("model" to 0.333333343f, "pluck" to 0.2f, "sustain" to 0.7f),
+        family = "veena",
+        low = 36, high = 72)
+
+    private fun sympath22() = Patch("Sympath", "Tanpura",
+        mapOf("model" to 0.06666667f),
+        family = "drone",
+        low = 36, high = 60)
+
+    private fun sympath23() = Patch("Sympath", "Tanpura Ma",
+        mapOf("model" to 0.06666667f, "first" to 0.333333343f),
+        family = "drone",
+        low = 36, high = 60)
+
+    private fun sympath24() = Patch("Sympath", "Tanpura Ni",
+        mapOf("model" to 0.06666667f, "first" to 0.6666667f),
+        family = "drone",
+        low = 36, high = 60)
+
+    private fun sympath25() = Patch("Sympath", "Slow Tanpura",
+        mapOf("model" to 0.06666667f, "sustain" to 0.75f, "cycle" to 1f),
+        family = "drone",
+        low = 36, high = 60)
+
+    private fun sympath26() = Patch("Sympath", "Quick Tanpura",
+        mapOf("model" to 0.06666667f, "sustain" to 0.4f, "cycle" to 0f),
+        family = "drone",
+        low = 36, high = 60)
+
+    private fun sympath27() = Patch("Sympath", "High Tanpura",
+        mapOf("model" to 0.06666667f, "bright" to 0.6f),
+        family = "drone",
+        low = 48, high = 72)
+
+    private fun sympath28() = Patch("Sympath", "Soft Tanpura",
+        mapOf("model" to 0.06666667f, "bridge" to 0.3f, "bright" to 0.35f),
+        family = "drone",
+        low = 36, high = 60)
+
+    private fun sympath29() = Patch("Sympath", "Swarmandal",
+        mapOf("model" to 0.4f),
+        family = "drone",
+        low = 60, high = 96)
+
+    private fun sympath30() = Patch("Sympath", "Swarmandal Shimmer",
+        mapOf("model" to 0.4f, "sustain" to 0.8f, "tarbs" to 0.7f),
+        family = "drone",
+        low = 60, high = 96)
+
+    private fun sympath31() = Patch("Sympath", "Swarmandal Soft",
+        mapOf("model" to 0.4f, "pluck" to 0.2f),
+        family = "drone",
+        low = 55, high = 91)
+
+    private fun sympath32() = Patch("Sympath", "Ektara",
+        mapOf("model" to 0.6f, "meend" to 0.25f, "voices" to 0f),
+        family = "drone",
+        low = 40, high = 64)
+
+    private fun sympath33() = Patch("Sympath", "Ektara Drone",
+        mapOf("model" to 0.6f, "bridge" to 0.8f),
+        family = "drone",
+        low = 40, high = 60)
+
+    private fun sympath34() = Patch("Sympath", "Ektara Bright",
+        mapOf("model" to 0.6f, "pluck" to 0.8f),
+        family = "drone",
+        low = 43, high = 67)
+
+    private fun sympath35() = Patch("Sympath", "Shamisen",
+        mapOf("model" to 0.2f),
+        family = "east",
         low = 45, high = 81)
 
-    private fun sympath21() = Patch("Sympath", "Shamisen Sawari",
-        mapOf("model" to 1f, "sa" to 0.8181818f, "tarbs" to 1f),
-        family = "shamisen",
+    private fun sympath36() = Patch("Sympath", "Shamisen Sawari",
+        mapOf("model" to 0.2f, "sa" to 0.8181818f, "tarbs" to 1f),
+        family = "east",
         low = 45, high = 81)
 
-    private fun sympath22() = Patch("Sympath", "Soft Shamisen",
-        mapOf("model" to 1f, "pluck" to 0.1f, "tarbs" to 0.4f),
-        family = "shamisen",
+    private fun sympath37() = Patch("Sympath", "Soft Shamisen",
+        mapOf("model" to 0.2f, "pluck" to 0.1f, "tarbs" to 0.4f),
+        family = "east",
         low = 45, high = 81)
 
-    private fun sympath23() = Patch("Sympath", "Shamisen Slide",
-        mapOf("model" to 1f, "sustain" to 0.7f, "meend" to 0.15f, "voices" to 0f),
-        family = "shamisen",
+    private fun sympath38() = Patch("Sympath", "Shamisen Slide",
+        mapOf("model" to 0.2f, "sustain" to 0.7f, "meend" to 0.15f, "voices" to 0f),
+        family = "east",
         low = 45, high = 81)
 
-    private fun sympath24() = Patch("Sympath", "Low Shamisen",
-        mapOf("model" to 1f, "sustain" to 0.75f, "bright" to 0.4f),
-        family = "shamisen",
+    private fun sympath39() = Patch("Sympath", "Low Shamisen",
+        mapOf("model" to 0.2f, "sustain" to 0.75f, "bright" to 0.4f),
+        family = "east",
         low = 40, high = 72)
 
-    private fun sympath25() = Patch("Sympath", "Plain Bridge",
+    private fun sympath40() = Patch("Sympath", "Biwa",
+        mapOf("model" to 0.466666669f),
+        family = "east",
+        low = 45, high = 72)
+
+    private fun sympath41() = Patch("Sympath", "Biwa Narrative",
+        mapOf("model" to 0.466666669f, "bridge" to 0.9f, "pluck" to 0.9f),
+        family = "east",
+        low = 45, high = 69)
+
+    private fun sympath42() = Patch("Sympath", "Biwa Soft",
+        mapOf("model" to 0.466666669f, "pluck" to 0.3f, "sustain" to 0.6f),
+        family = "east",
+        low = 45, high = 72)
+
+    private fun sympath43() = Patch("Sympath", "Sanxian",
+        mapOf("model" to 0.533333361f),
+        family = "east",
+        low = 45, high = 76)
+
+    private fun sympath44() = Patch("Sympath", "Sanxian Slide",
+        mapOf("model" to 0.533333361f, "pluck" to 0.7f, "meend" to 0.13333334f, "voices" to 0f),
+        family = "east",
+        low = 45, high = 76)
+
+    private fun sympath45() = Patch("Sympath", "Sanxian Low",
+        mapOf("model" to 0.533333361f, "pluck" to 0.4f),
+        family = "east",
+        low = 40, high = 67)
+
+    private fun sympath46() = Patch("Sympath", "Sarangi",
+        mapOf("model" to 0.733333349f, "meend" to 0.2f, "voices" to 0f),
+        family = "bowed",
+        low = 48, high = 84)
+
+    private fun sympath47() = Patch("Sympath", "Sarangi Vocal",
+        mapOf("model" to 0.733333349f, "meend" to 0.366666675f, "gamak" to 0.3f, "voices" to 0f),
+        family = "bowed",
+        low = 48, high = 84)
+
+    private fun sympath48() = Patch("Sympath", "Sarangi Soft",
+        mapOf("model" to 0.733333349f, "pluck" to 0.3f, "tarbs" to 0.7f),
+        family = "bowed",
+        low = 48, high = 79)
+
+    private fun sympath49() = Patch("Sympath", "Esraj",
+        mapOf("model" to 0.8f, "meend" to 0.166666672f, "voices" to 0f),
+        family = "bowed",
+        low = 48, high = 84)
+
+    private fun sympath50() = Patch("Sympath", "Esraj Gentle",
+        mapOf("model" to 0.8f, "pluck" to 0.25f),
+        family = "bowed",
+        low = 48, high = 84)
+
+    private fun sympath51() = Patch("Sympath", "Esraj Song",
+        mapOf("model" to 0.8f, "gamak" to 0.25f, "voices" to 0f),
+        family = "bowed",
+        low = 52, high = 84)
+
+    private fun sympath52() = Patch("Sympath", "Dilruba",
+        mapOf("model" to 0.8666667f, "meend" to 0.2f, "voices" to 0f),
+        family = "bowed",
+        low = 43, high = 79)
+
+    private fun sympath53() = Patch("Sympath", "Dilruba Kirtan",
+        mapOf("model" to 0.8666667f, "sustain" to 0.7f, "meend" to 0.3f, "voices" to 0f),
+        family = "bowed",
+        low = 43, high = 79)
+
+    private fun sympath54() = Patch("Sympath", "Dilruba Bright",
+        mapOf("model" to 0.8666667f, "bright" to 0.7f),
+        family = "bowed",
+        low = 48, high = 84)
+
+    private fun sympath55() = Patch("Sympath", "Hardanger Fiddle",
+        mapOf("model" to 0.933333337f, "voices" to 0f),
+        family = "bowed",
+        low = 55, high = 91)
+
+    private fun sympath56() = Patch("Sympath", "Hardanger Dance",
+        mapOf("model" to 0.933333337f, "pluck" to 0.8f),
+        family = "bowed",
+        low = 55, high = 91)
+
+    private fun sympath57() = Patch("Sympath", "Hardanger Drone",
+        mapOf("model" to 0.933333337f, "tarbs" to 0.8f),
+        family = "bowed",
+        low = 55, high = 86)
+
+    private fun sympath58() = Patch("Sympath", "Nyckelharpa",
+        mapOf("model" to 1f, "voices" to 0f),
+        family = "bowed",
+        low = 48, high = 84)
+
+    private fun sympath59() = Patch("Sympath", "Nyckelharpa Polska",
+        mapOf("model" to 1f, "pluck" to 0.7f, "tarbs" to 0.7f),
+        family = "bowed",
+        low = 48, high = 84)
+
+    private fun sympath60() = Patch("Sympath", "Nyckelharpa Soft",
+        mapOf("model" to 1f, "pluck" to 0.25f),
+        family = "bowed",
+        low = 48, high = 79)
+
+    private fun sympath61() = Patch("Sympath", "Plain Bridge",
         mapOf("bridge" to 0f, "tarbs" to 0.4f),
         family = "bridge",
         low = 40, high = 84)
 
-    private fun sympath26() = Patch("Sympath", "Grazing Bridge",
+    private fun sympath62() = Patch("Sympath", "Grazing Bridge",
         mapOf("bridge" to 0.8f, "curve" to 0f),
         family = "bridge",
         low = 40, high = 84)
 
-    private fun sympath27() = Patch("Sympath", "Heavy Buzz",
+    private fun sympath63() = Patch("Sympath", "Heavy Buzz",
         mapOf("bridge" to 1f, "curve" to 0.1f, "volume" to 0.6f),
         family = "bridge",
         low = 36, high = 79)
 
-    private fun sympath28() = Patch("Sympath", "Sympathy Only",
+    private fun sympath64() = Patch("Sympath", "Sympathy Only",
         mapOf("scale" to 0.6666667f, "sustain" to 0.15f, "tarbs" to 1f),
         family = "bridge",
         low = 48, high = 84)
 
-    private fun sympath29() = Patch("Sympath", "Buzz Bass",
-        mapOf("model" to 0.6666667f, "bridge" to 0.9f),
+    private fun sympath65() = Patch("Sympath", "Buzz Bass",
+        mapOf("model" to 0.13333334f, "bridge" to 0.9f),
         family = "bridge",
         low = 28, high = 55)
 
-    private val sympath: List<Patch> by lazy { listOf(sympath0(), sympath1(), sympath2(), sympath3(), sympath4(), sympath5(), sympath6(), sympath7(), sympath8(), sympath9(), sympath10(), sympath11(), sympath12(), sympath13(), sympath14(), sympath15(), sympath16(), sympath17(), sympath18(), sympath19(), sympath20(), sympath21(), sympath22(), sympath23(), sympath24(), sympath25(), sympath26(), sympath27(), sympath28(), sympath29()) }
+    private val sympath: List<Patch> by lazy { listOf(sympath0(), sympath1(), sympath2(), sympath3(), sympath4(), sympath5(), sympath6(), sympath7(), sympath8(), sympath9(), sympath10(), sympath11(), sympath12(), sympath13(), sympath14(), sympath15(), sympath16(), sympath17(), sympath18(), sympath19(), sympath20(), sympath21(), sympath22(), sympath23(), sympath24(), sympath25(), sympath26(), sympath27(), sympath28(), sympath29(), sympath30(), sympath31(), sympath32(), sympath33(), sympath34(), sympath35(), sympath36(), sympath37(), sympath38(), sympath39(), sympath40(), sympath41(), sympath42(), sympath43(), sympath44(), sympath45(), sympath46(), sympath47(), sympath48(), sympath49(), sympath50(), sympath51(), sympath52(), sympath53(), sympath54(), sympath55(), sympath56(), sympath57(), sympath58(), sympath59(), sympath60(), sympath61(), sympath62(), sympath63(), sympath64(), sympath65()) }
 
     private fun palm0() = Patch("Palm", "Init", emptyMap(),
         family = "africa",
@@ -5109,160 +5289,305 @@ internal object FactoryBanks {
     private val aviary: List<Patch> by lazy { listOf(aviary0(), aviary1(), aviary2(), aviary3(), aviary4(), aviary5(), aviary6(), aviary7(), aviary8(), aviary9(), aviary10(), aviary11(), aviary12(), aviary13(), aviary14(), aviary15(), aviary16(), aviary17(), aviary18(), aviary19(), aviary20(), aviary21(), aviary22(), aviary23(), aviary24(), aviary25()) }
 
     private fun fathom0() = Patch("Fathom", "Init", emptyMap(),
-        family = "bubbles",
+        family = "water",
         low = 36, high = 60)
 
     private fun fathom1() = Patch("Fathom", "Fish Tank",
         mapOf("density" to 0.55f, "size" to 0.125f, "rise" to 0.5f),
-        family = "bubbles",
+        family = "water",
         low = 43, high = 67)
 
     private fun fathom2() = Patch("Fathom", "Big Bubbles",
         mapOf("density" to 0.35f, "size" to 0.291666657f, "rise" to 0.3f, "decay" to 0.8f),
-        family = "bubbles",
+        family = "water",
         low = 24, high = 48)
 
     private fun fathom3() = Patch("Fathom", "Boiling Pot",
         mapOf("density" to 0.85f, "size" to 0.375f, "rise" to 0.6f, "volume" to 0.6f),
-        family = "bubbles",
+        family = "water",
         low = 36, high = 60)
 
     private fun fathom4() = Patch("Fathom", "Bubble Notes",
         mapOf("density" to 0f, "size" to 0f, "rise" to 0.2f, "decay" to 0.7f, "volume" to 1f),
-        family = "bubbles",
+        family = "water",
         low = 24, high = 72)
 
     private fun fathom5() = Patch("Fathom", "Cave Drips",
-        mapOf("model" to 0.166666672f, "density" to 0.45f, "size" to 0.166666672f, "decay" to 0.7f),
-        family = "drips",
+        mapOf("model" to 0.06666667f, "density" to 0.45f, "size" to 0.166666672f, "decay" to 0.7f),
+        family = "water",
         low = 31, high = 55)
 
     private fun fathom6() = Patch("Fathom", "Tap Drip",
-        mapOf("model" to 0.166666672f, "density" to 0.55f, "size" to 0.0416666679f),
-        family = "drips",
+        mapOf("model" to 0.06666667f, "density" to 0.55f, "size" to 0.0416666679f),
+        family = "water",
         low = 36, high = 60)
 
     private fun fathom7() = Patch("Fathom", "Drip Notes",
-        mapOf("model" to 0.166666672f, "density" to 0f, "size" to 0f, "volume" to 1f),
-        family = "drips",
+        mapOf("model" to 0.06666667f, "density" to 0f, "size" to 0f, "volume" to 1f),
+        family = "water",
         low = 24, high = 60)
 
     private fun fathom8() = Patch("Fathom", "Gutter",
-        mapOf("model" to 0.166666672f, "density" to 0.75f, "size" to 0.333333343f),
-        family = "drips",
+        mapOf("model" to 0.06666667f, "density" to 0.75f, "size" to 0.333333343f),
+        family = "water",
         low = 28, high = 52)
 
-    private fun fathom9() = Patch("Fathom", "Light Rain",
-        mapOf("model" to 0.333333343f, "density" to 0.35f, "tone" to 0.4f, "volume" to 1f),
-        family = "rain",
+    private fun fathom9() = Patch("Fathom", "Brook",
+        mapOf("model" to 0.2f, "density" to 0.4f, "size" to 0.333333343f),
+        family = "water",
         low = 36, high = 60)
 
-    private fun fathom10() = Patch("Fathom", "Downpour",
-        mapOf("model" to 0.333333343f, "density" to 0.85f, "tone" to 0.6f, "volume" to 0.6f),
-        family = "rain",
-        low = 36, high = 60)
-
-    private fun fathom11() = Patch("Fathom", "Rain on Leaves",
-        mapOf("model" to 0.333333343f, "density" to 0.6f, "surface" to 0.333333343f),
-        family = "rain",
-        low = 36, high = 60)
-
-    private fun fathom12() = Patch("Fathom", "Tin Roof",
-        mapOf("model" to 0.333333343f, "density" to 0.55f, "surface" to 0.6666667f),
-        family = "rain",
-        low = 36, high = 60)
-
-    private fun fathom13() = Patch("Fathom", "Window",
-        mapOf("model" to 0.333333343f, "surface" to 1f, "tone" to 0.3f, "volume" to 1f),
-        family = "rain",
-        low = 36, high = 60)
-
-    private fun fathom14() = Patch("Fathom", "Brook",
-        mapOf("model" to 0.5f, "density" to 0.4f, "size" to 0.333333343f),
-        family = "stream",
-        low = 36, high = 60)
-
-    private fun fathom15() = Patch("Fathom", "River",
-        mapOf("model" to 0.5f, "density" to 0.6f, "size" to 0.5f, "volume" to 0.4f),
-        family = "stream",
+    private fun fathom10() = Patch("Fathom", "River",
+        mapOf("model" to 0.2f, "density" to 0.6f, "size" to 0.5f, "volume" to 0.4f),
+        family = "water",
         low = 24, high = 48)
 
-    private fun fathom16() = Patch("Fathom", "Fountain",
-        mapOf("model" to 0.5f, "density" to 0.75f, "volume" to 0.4f),
-        family = "stream",
+    private fun fathom11() = Patch("Fathom", "Fountain",
+        mapOf("model" to 0.2f, "density" to 0.75f, "volume" to 0.4f),
+        family = "water",
         low = 43, high = 67)
 
-    private fun fathom17() = Patch("Fathom", "Trickle",
-        mapOf("model" to 0.5f, "density" to 0.2f, "size" to 0.25f),
-        family = "stream",
+    private fun fathom12() = Patch("Fathom", "Trickle",
+        mapOf("model" to 0.2f, "density" to 0.2f, "size" to 0.25f),
+        family = "water",
         low = 40, high = 64)
 
-    private fun fathom18() = Patch("Fathom", "Surf",
-        mapOf("model" to 0.6666667f, "gust" to 0.8f),
-        family = "surf",
+    private fun fathom13() = Patch("Fathom", "Surf",
+        mapOf("model" to 0.266666681f, "gust" to 0.8f),
+        family = "water",
         low = 36, high = 60)
 
-    private fun fathom19() = Patch("Fathom", "Slow Swell",
-        mapOf("model" to 0.6666667f, "gust" to 0.9f, "tone" to 0.3f, "swell" to 0.466666669f),
-        family = "surf",
+    private fun fathom14() = Patch("Fathom", "Slow Swell",
+        mapOf("model" to 0.266666681f, "gust" to 0.9f, "tone" to 0.3f, "swell" to 0.466666669f),
+        family = "water",
         low = 36, high = 60)
 
-    private fun fathom20() = Patch("Fathom", "Shore",
-        mapOf("model" to 0.6666667f, "density" to 0.7f, "gust" to 0.6f, "tone" to 0.7f, "swell" to 0.06666667f),
-        family = "surf",
+    private fun fathom15() = Patch("Fathom", "Shore",
+        mapOf("model" to 0.266666681f, "density" to 0.7f, "gust" to 0.6f, "tone" to 0.7f, "swell" to 0.06666667f),
+        family = "water",
         low = 36, high = 60)
 
-    private fun fathom21() = Patch("Fathom", "Calm Sea",
-        mapOf("model" to 0.6666667f, "gust" to 0.3f, "tone" to 0.25f, "swell" to 1f),
-        family = "surf",
+    private fun fathom16() = Patch("Fathom", "Calm Sea",
+        mapOf("model" to 0.266666681f, "gust" to 0.3f, "tone" to 0.25f, "swell" to 1f),
+        family = "water",
         low = 36, high = 60)
 
-    private fun fathom22() = Patch("Fathom", "Breeze",
-        mapOf("model" to 0.8333333f, "gust" to 0.6f, "tone" to 0.4f),
-        family = "wind",
-        low = 24, high = 48)
-
-    private fun fathom23() = Patch("Fathom", "Gale",
-        mapOf("model" to 0.8333333f, "gust" to 1f, "tone" to 0.8f, "volume" to 0.85f),
-        family = "wind",
+    private fun fathom17() = Patch("Fathom", "Waterfall",
+        mapOf("model" to 0.6f),
+        family = "water",
         low = 31, high = 55)
 
-    private fun fathom24() = Patch("Fathom", "Whistling Wind",
-        mapOf("model" to 0.8333333f, "gust" to 0.7f, "whistle" to 0.8f, "volume" to 0.4f),
-        family = "wind",
+    private fun fathom18() = Patch("Fathom", "Waterfall Far",
+        mapOf("model" to 0.6f, "density" to 0.4f, "tone" to 0.2f),
+        family = "water",
+        low = 28, high = 48)
+
+    private fun fathom19() = Patch("Fathom", "Cascade",
+        mapOf("model" to 0.6f, "density" to 0.8f, "tone" to 0.7f, "volume" to 0.4f),
+        family = "water",
+        low = 36, high = 60)
+
+    private fun fathom20() = Patch("Fathom", "Splash",
+        mapOf("model" to 0.8666667f),
+        family = "water",
+        low = 36, high = 60)
+
+    private fun fathom21() = Patch("Fathom", "Paddling",
+        mapOf("model" to 0.8666667f, "density" to 0.6f),
+        family = "water",
+        low = 36, high = 60)
+
+    private fun fathom22() = Patch("Fathom", "Big Splash",
+        mapOf("model" to 0.8666667f, "size" to 0.5f),
+        family = "water",
+        low = 31, high = 52)
+
+    private fun fathom23() = Patch("Fathom", "Underwater",
+        mapOf("model" to 0.933333337f),
+        family = "water",
+        low = 24, high = 48)
+
+    private fun fathom24() = Patch("Fathom", "Deep Underwater",
+        mapOf("model" to 0.933333337f, "density" to 0.3f, "tone" to 0.2f),
+        family = "water",
+        low = 24, high = 43)
+
+    private fun fathom25() = Patch("Fathom", "Diver",
+        mapOf("model" to 0.933333337f, "density" to 0.7f, "rise" to 0.8f, "volume" to 0.5f),
+        family = "water",
+        low = 28, high = 52)
+
+    private fun fathom26() = Patch("Fathom", "Light Rain",
+        mapOf("model" to 0.13333334f, "density" to 0.35f, "tone" to 0.4f, "volume" to 1f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom27() = Patch("Fathom", "Downpour",
+        mapOf("model" to 0.13333334f, "density" to 0.85f, "tone" to 0.6f, "volume" to 0.6f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom28() = Patch("Fathom", "Rain on Leaves",
+        mapOf("model" to 0.13333334f, "density" to 0.6f, "surface" to 0.333333343f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom29() = Patch("Fathom", "Tin Roof",
+        mapOf("model" to 0.13333334f, "density" to 0.55f, "surface" to 0.6666667f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom30() = Patch("Fathom", "Window",
+        mapOf("model" to 0.13333334f, "surface" to 1f, "tone" to 0.3f, "volume" to 1f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom31() = Patch("Fathom", "Hail",
+        mapOf("model" to 0.533333361f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom32() = Patch("Fathom", "Hail on Tin",
+        mapOf("model" to 0.533333361f, "density" to 0.7f, "tone" to 0.8f),
+        family = "rain",
+        low = 40, high = 64)
+
+    private fun fathom33() = Patch("Fathom", "Light Hail",
+        mapOf("model" to 0.533333361f, "density" to 0.3f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom34() = Patch("Fathom", "Rainstick",
+        mapOf("model" to 1f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom35() = Patch("Fathom", "Long Rainstick",
+        mapOf("model" to 1f, "decay" to 0.9f),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom36() = Patch("Fathom", "Short Rainstick",
+        mapOf("model" to 1f, "density" to 0.8f, "decay" to 0.2f),
+        family = "rain",
+        low = 40, high = 64)
+
+    private fun fathom37() = Patch("Fathom", "Breeze",
+        mapOf("model" to 0.333333343f, "gust" to 0.6f, "tone" to 0.4f),
+        family = "weather",
+        low = 24, high = 48)
+
+    private fun fathom38() = Patch("Fathom", "Gale",
+        mapOf("model" to 0.333333343f, "gust" to 1f, "tone" to 0.8f, "volume" to 0.85f),
+        family = "weather",
+        low = 31, high = 55)
+
+    private fun fathom39() = Patch("Fathom", "Whistling Wind",
+        mapOf("model" to 0.333333343f, "gust" to 0.7f, "whistle" to 0.8f, "volume" to 0.4f),
+        family = "weather",
         low = 31, high = 60)
 
-    private fun fathom25() = Patch("Fathom", "Moaning Wind",
-        mapOf("model" to 0.8333333f, "gust" to 0.8f, "whistle" to 0.6f, "tone" to 0.25f, "volume" to 1f),
-        family = "wind",
+    private fun fathom40() = Patch("Fathom", "Moaning Wind",
+        mapOf("model" to 0.333333343f, "gust" to 0.8f, "whistle" to 0.6f, "tone" to 0.25f, "volume" to 1f),
+        family = "weather",
         low = 19, high = 43)
 
-    private fun fathom26() = Patch("Fathom", "Campfire",
-        mapOf("model" to 1f, "density" to 0.55f, "volume" to 1f),
+    private fun fathom41() = Patch("Fathom", "Thunder",
+        mapOf("model" to 0.466666669f),
+        family = "weather",
+        low = 24, high = 48)
+
+    private fun fathom42() = Patch("Fathom", "Distant Thunder",
+        mapOf("model" to 0.466666669f, "tone" to 0.2f, "fade" to 0.8362956f),
+        family = "weather",
+        low = 24, high = 43)
+
+    private fun fathom43() = Patch("Fathom", "Thunder Clap",
+        mapOf("model" to 0.466666669f, "decay" to 0.3f, "tone" to 0.8f),
+        family = "weather",
+        low = 28, high = 52)
+
+    private fun fathom44() = Patch("Fathom", "Campfire",
+        mapOf("model" to 0.4f, "density" to 0.55f, "volume" to 1f),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom27() = Patch("Fathom", "Bonfire",
-        mapOf("model" to 1f, "density" to 0.8f, "gust" to 0.8f, "volume" to 1f),
+    private fun fathom45() = Patch("Fathom", "Bonfire",
+        mapOf("model" to 0.4f, "density" to 0.8f, "gust" to 0.8f, "volume" to 1f),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom28() = Patch("Fathom", "Embers",
-        mapOf("model" to 1f, "density" to 0.3f, "gust" to 0.2f, "tone" to 0.2f, "volume" to 1f),
+    private fun fathom46() = Patch("Fathom", "Embers",
+        mapOf("model" to 0.4f, "density" to 0.3f, "gust" to 0.2f, "tone" to 0.2f, "volume" to 1f),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom29() = Patch("Fathom", "Hearth",
-        mapOf("model" to 1f, "gust" to 0.4f, "volume" to 1f),
+    private fun fathom47() = Patch("Fathom", "Hearth",
+        mapOf("model" to 0.4f, "gust" to 0.4f, "volume" to 1f),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom30() = Patch("Fathom", "Weather Kit",
+    private fun fathom48() = Patch("Fathom", "Sizzle",
+        mapOf("model" to 0.6666667f),
+        family = "fire",
+        low = 48, high = 72)
+
+    private fun fathom49() = Patch("Fathom", "Steam",
+        mapOf("model" to 0.6666667f, "density" to 0.3f, "tone" to 0.8f),
+        family = "fire",
+        low = 52, high = 76)
+
+    private fun fathom50() = Patch("Fathom", "Frying",
+        mapOf("model" to 0.6666667f, "density" to 0.8f),
+        family = "fire",
+        low = 48, high = 72)
+
+    private fun fathom51() = Patch("Fathom", "Ice",
+        mapOf("model" to 0.733333349f),
+        family = "winter",
+        low = 36, high = 60)
+
+    private fun fathom52() = Patch("Fathom", "Ice Groans",
+        mapOf("model" to 0.733333349f, "density" to 0.3f, "decay" to 0.8f),
+        family = "winter",
+        low = 31, high = 52)
+
+    private fun fathom53() = Patch("Fathom", "Ice Shards",
+        mapOf("model" to 0.733333349f, "density" to 0.7f, "decay" to 0.3f),
+        family = "winter",
+        low = 48, high = 72)
+
+    private fun fathom54() = Patch("Fathom", "Snow Steps",
+        mapOf("model" to 0.8f),
+        family = "winter",
+        low = 36, high = 60)
+
+    private fun fathom55() = Patch("Fathom", "Snow Run",
+        mapOf("model" to 0.8f, "density" to 0.8f),
+        family = "winter",
+        low = 36, high = 60)
+
+    private fun fathom56() = Patch("Fathom", "Packed Snow",
+        mapOf("model" to 0.8f, "tone" to 0.8f),
+        family = "winter",
+        low = 40, high = 64)
+
+    private fun fathom57() = Patch("Fathom", "Weather Kit",
         mapOf("kit" to 1f),
         family = "kit",
         low = 36, high = 51)
 
-    private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29(), fathom30()) }
+    private fun fathom58() = Patch("Fathom", "Storm Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.13333334f, "p01_density" to 0.4f, "p02_model" to 0.13333334f, "p02_note" to 0.333333343f, "p03_model" to 0.13333334f, "p03_note" to 0.430555552f, "p03_density" to 0.6f, "p04_model" to 0.533333361f, "p04_note" to 0.333333343f, "p04_density" to 0.5f, "p05_model" to 0.533333361f, "p05_note" to 0.3888889f, "p05_density" to 0.8f, "p06_model" to 0.333333343f, "p06_note" to 0.222222224f, "p06_density" to 0.4f, "p07_model" to 0.333333343f, "p07_note" to 0.333333343f, "p07_density" to 0.7f, "p08_model" to 0.333333343f, "p08_note" to 0.166666672f, "p08_density" to 0.9f, "p09_model" to 0.466666669f, "p09_note" to 0.166666672f, "p09_density" to 0.5f, "p10_model" to 0.466666669f, "p10_note" to 0.0972222239f, "p10_density" to 0.5f, "p11_model" to 0.466666669f, "p11_note" to 0.222222224f, "p11_density" to 0.5f, "p12_model" to 0.06666667f, "p12_density" to 0.3f, "p13_model" to 0.266666681f, "p13_note" to 0.0972222239f, "p13_density" to 0.6f, "p14_note" to 0.222222224f, "p14_density" to 0.5f, "p15_model" to 1f, "p15_note" to 0.333333343f, "p16_model" to 0.6f, "p16_note" to 0.222222224f, "p16_density" to 0.6f),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun fathom59() = Patch("Fathom", "Water Kit",
+        mapOf("kit" to 1f, "p01_model" to 0f, "p01_note" to 0.166666672f, "p01_density" to 0.4f, "p02_model" to 0f, "p02_note" to 0.333333343f, "p02_density" to 0.6f, "p03_model" to 0.06666667f, "p03_density" to 0.3f, "p04_model" to 0.06666667f, "p04_note" to 0.333333343f, "p04_density" to 0.5f, "p05_model" to 0.06666667f, "p05_note" to 0.430555552f, "p06_model" to 0.2f, "p06_note" to 0.222222224f, "p06_density" to 0.5f, "p07_model" to 0.2f, "p07_note" to 0.333333343f, "p07_density" to 0.7f, "p08_model" to 0.8666667f, "p08_note" to 0.333333343f, "p08_density" to 0.4f, "p09_model" to 0.8666667f, "p09_note" to 0.222222224f, "p09_density" to 0.6f, "p10_model" to 0.6f, "p10_note" to 0.222222224f, "p10_density" to 0.6f, "p11_model" to 0.6f, "p11_note" to 0.333333343f, "p11_density" to 0.8f, "p12_model" to 0.933333337f, "p12_note" to 0.166666672f, "p12_density" to 0.5f, "p13_model" to 0.933333337f, "p13_note" to 0.0972222239f, "p13_density" to 0.3f, "p14_model" to 0.266666681f, "p14_note" to 0.0972222239f, "p14_density" to 0.6f, "p15_note" to 0.166666672f, "p15_density" to 0.8f, "p16_model" to 0.13333334f, "p16_note" to 0.333333343f, "p16_density" to 0.4f),
+        family = "kit",
+        low = 36, high = 51)
+
+    private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29(), fathom30(), fathom31(), fathom32(), fathom33(), fathom34(), fathom35(), fathom36(), fathom37(), fathom38(), fathom39(), fathom40(), fathom41(), fathom42(), fathom43(), fathom44(), fathom45(), fathom46(), fathom47(), fathom48(), fathom49(), fathom50(), fathom51(), fathom52(), fathom53(), fathom54(), fathom55(), fathom56(), fathom57(), fathom58(), fathom59()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

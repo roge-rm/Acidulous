@@ -17,7 +17,8 @@ constexpr float kTwoPi = 6.28318530718f;
 /** How sharply a bubble rings: about this many cycles before it's faded. */
 constexpr float kBubbleQ = 25.0f;
 /** Events a second at full density, by kind; wind has none. */
-constexpr float kRates[Fathom::KindCount] = {12.0f, 2.0f, 120.0f, 300.0f, 200.0f, 0.0f, 15.0f};
+constexpr float kRates[Fathom::KindCount] = {12.0f, 2.0f, 120.0f, 300.0f, 200.0f, 0.0f, 15.0f,
+                                             0.0f, 40.0f, 600.0f, 500.0f, 1.5f, 6.0f, 1.0f, 3.0f, 150.0f};
 /** Where a struck roof or window rings, Hz, and for how long, seconds. */
 constexpr float kTinModes[4] = {910.0f, 1370.0f, 2120.0f, 2890.0f};
 constexpr float kGlassModes[4] = {2800.0f, 4100.0f, 5900.0f, 7300.0f};
@@ -274,6 +275,60 @@ void Fathom::event(Voice &v, float hz) {
         spawn(v, Crackle, 2500.0f + 5000.0f * uniform(), 0.1f + 1.2f * u * u * u * u, 0.0008f + 0.002f * uniform(), 0.0f);
         break;
     }
+    case Hail: {
+        // Ice on a hard surface: a sharp tap and a short, high ring as it bounces.
+        const float amp = 0.6f + 1.2f * uniform();
+        spawn(v, Tap, 3000.0f + 5000.0f * uniform(), amp, 0.003f, 0.0f);
+        if (uniform() < 0.4f) spawn(v, Ring, sized(hz * 4.0f, size), amp * 0.4f, 0.01f, 0.0f);
+        break;
+    }
+    case Waterfall: {
+        // Countless small bubbles in the roar.
+        const float f = sized(hz * 2.0f, size * 1.5f);
+        spawn(v, Ring, f, 0.1f + 0.15f * uniform(), ring(f) * 0.5f, rise);
+        break;
+    }
+    case Sizzle: {
+        // Steam and fat: tiny crackles, dense and high.
+        spawn(v, Crackle, 4000.0f + 6000.0f * uniform(), 0.15f + 0.75f * uniform() * uniform(), 0.0004f + 0.0008f * uniform(), 0.0f);
+        break;
+    }
+    case Ice: {
+        // A crack and the glassy ring it sets going in the sheet.
+        const float f = sized(hz * 3.0f, size);
+        spawn(v, Crackle, 1500.0f + 3000.0f * uniform(), 1.0f + 0.8f * uniform(), 0.002f, 0.0f);
+        spawn(v, Ring, f, 0.8f, ring(f) * 2.0f, 0.0f);
+        break;
+    }
+    case Snow: {
+        // A step: a cluster of soft crunches.
+        // Brighter with the tone knob: fresh powder is soft, packed snow squeaks.
+        const float bright = 0.5f + clampf(paramOf(Tone), 0.0f, 1.0f);
+        const int n = 5 + static_cast<int>(6.0f * uniform());
+        for (int i = 0; i < n; ++i) spawn(v, Crackle, (800.0f + 2500.0f * uniform()) * bright, 0.3f + 0.4f * uniform(), 0.002f + 0.006f * uniform(), 0.0f);
+        break;
+    }
+    case Splash: {
+        // A hand in the water: a slap, then a burst of bubbles.
+        spawn(v, Tap, 2500.0f, 0.5f, 0.004f, 0.0f);
+        for (int i = 0; i < 7; ++i) {
+            const float f = sized(hz, size * 1.5f);
+            spawn(v, Ring, f, 0.12f + 0.2f * uniform(), ring(f), rise);
+        }
+        break;
+    }
+    case Underwater: {
+        // Big, slow bubbles heard from below the surface.
+        const float f = sized(hz * 0.5f, size);
+        spawn(v, Ring, f, 0.6f + 0.4f * uniform(), ring(f) * 2.0f, rise * 0.5f);
+        break;
+    }
+    case Rainstick: {
+        // Pebbles falling past the pins: thinning out as the stick empties.
+        const float left = std::exp(-static_cast<float>(v.waveAt) / (0.8f + 2.5f * decay));
+        if (uniform() < left) spawn(v, Tap, 2000.0f + 4000.0f * uniform(), 0.6f + 1.2f * uniform(), 0.004f, 0.0f);
+        break;
+    }
     default: break;
     }
 }
@@ -436,9 +491,49 @@ bool Fathom::render(float *L, float *R, int32_t frames) {
             }
             case Wind: {
                 const float rush = v.bed.step(white()).bp * gust;
-                bed = rush * 3.0f * (1.0f - 0.5f * whistleAmount) + whistleAmount * v.whistle.step(rush).bp * 2.5f;
+                bed = rush * 6.5f * (1.0f - 0.5f * whistleAmount) + whistleAmount * v.whistle.step(rush).bp * 5.5f;
                 break;
             }
+            case Thunder: {
+                // A crack, then the rumble rolling away, swelling as it goes.
+                const float t = static_cast<float>(v.waveAt);
+                v.waveAt += static_cast<double>(dt);
+                const float n = white();
+                const float crack = t < 0.08f ? (1.0f - t / 0.08f) : 0.0f;
+                const float low = 1.0f - std::exp(-kTwoPi * (60.0f + 300.0f * tone) / sampleRate);
+                v.roarLp += (n - v.roarLp) * low;
+                v.roarLp2 += (v.roarLp - v.roarLp2) * low;
+                const float rumble = std::exp(-t / (1.5f + 4.0f * clampf(paramOf(Decay), 0.0f, 1.0f))) * (0.5f + gust);
+                bed = (n - v.bedLp) * crack * 0.8f + v.roarLp2 * rumble * 6.0f;
+                v.bedLp = n;
+                break;
+            }
+            case Waterfall: {
+                // The roar: broad noise, brighter with the tone knob.
+                const float c = 1.0f - std::exp(-kTwoPi * (800.0f + 6000.0f * tone) / sampleRate);
+                v.bedLp += (white() - v.bedLp) * c;
+                // Less its own slow drift, which would be an offset.
+                v.roarLp += (v.bedLp - v.roarLp) * 0.002f;
+                bed = (v.bedLp - v.roarLp) * 0.5f * (0.8f + 0.2f * gust);
+                break;
+            }
+            case Sizzle: {
+                // A high hiss under the crackles.
+                const float n = white();
+                bed = (n - v.bedLp) * 0.12f * (0.5f + tone);
+                v.bedLp = n;
+                break;
+            }
+            case Underwater: {
+                // Everything muffled: a dark, slow wash.
+                v.roarLp += (white() - v.roarLp) * 0.01f;
+                v.roarLp2 += (v.roarLp - v.roarLp2) * 0.01f;
+                bed = v.roarLp2 * 2.5f * gust;
+                break;
+            }
+            case Rainstick:
+                v.waveAt += static_cast<double>(dt);
+                break;
             case Fire: {
                 // Hiss on top, and the roar low down.
                 const float n = white();

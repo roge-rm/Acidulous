@@ -3921,7 +3921,8 @@ private fun TinePanel(b: ParamBinding) {
     }
 }
 
-private val SYMPATH_MODELS = listOf("sitar", "tanpura", "veena", "shamisen")
+private val SYMPATH_MODELS = listOf("sitar", "tanpura", "veena", "shamisen", "sarod", "rudra veena", "swarmandal", "biwa", "sanxian", "ektara", "e-sitar",
+    "sarangi", "esraj", "dilruba", "hardanger", "nyckelharpa")
 private val SYMPATH_SCALES = listOf("bilawal", "khamaj", "kafi", "asavari", "bhairavi", "bhairav", "kalyan", "marwa", "purvi", "todi")
 private val SYMPATH_FIRSTS = listOf("pa", "ma", "ni", "sa")
 private val SYMPATH_CYCLES = listOf("2", "4", "6", "8")
@@ -4168,7 +4169,8 @@ private fun AviaryPanel(b: ParamBinding, pad: Int) {
     }
 }
 
-private val FATHOM_MODELS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire")
+private val FATHOM_MODELS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire",
+        "thunder", "hail", "waterfall", "sizzle", "ice", "snow", "splash", "underwater", "rainstick")
 private val FATHOM_SURFACES = listOf("water", "leaves", "tin", "window")
 
 /** Fathom: the water, the weather, and the player. */

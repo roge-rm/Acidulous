@@ -19,13 +19,13 @@
     - [Brazen](04-the-machines/brazen.md) : des cuivres modélisés, de la trompette au tuba, ou tout un pupitre.
     - [Chanter](04-the-machines/chanter.md) : cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.
     - [Draw](04-the-machines/draw.md) : des anches libres modélisées : harmonicas, accordéons, melodica, harmonium et les anches qui sonnent dans des tuyaux.
-    - [Fathom](04-the-machines/fathom.md) : l’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent et feu, joués au clavier.
+    - [Fathom](04-the-machines/fathom.md) : l’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements, glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.
     - [Filament](04-the-machines/filament.md) : des cordes modélisées : pincées, au médiator, frappées, frottées ou soufflées.
     - [Fret](04-the-machines/fret.md) : guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.
     - [Hammer](04-the-machines/hammer.md) : des pianos modélisés et leurs cousins : des marteaux qui frappent des cordes et des barres, entendus par une table d’harmonie ou des capteurs.
     - [Manual](04-the-machines/manual.md) : l’orgue : deux claviers et un pédalier, quatre modèles et un baffle rotatif.
     - [Palm](04-the-machines/palm.md) : percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre, tambour d’aisselle, congas, bongos, darbouka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu et cuíca, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.
-    - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena et shamisen modélisés : des cordes pincées sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.
+    - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena, shamisen et leurs parents modélisés, pincés ou frottés : des cordes sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.
     - [Timber](04-the-machines/timber.md) : des bois modélisés : anches et flûtes.
     - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle.
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.
