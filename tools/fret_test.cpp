@@ -262,6 +262,50 @@ void endings() {
 
 } // namespace
 
+/** A finger swept up and down the strum keys: fast notes over ringing strings. Once let go, it must die away. */
+void aFastStrumDiesAway() {
+    std::printf("- a fast strum\n");
+    const int ladder[] = {71, 75, 78, 83, 87, 90, 95, 99, 102, 95, 90, 87, 83, 78, 75};
+    for (int trial = 0; trial < 3; ++trial) {
+        Guitar g;
+        if (trial == 1) g.set("buzz", 1.0f);
+        if (trial == 2) { g.set("buzz", 1.0f); g.set("drive", 1.0f); }
+        double t = 0.0;
+        int prev = -1;
+        for (int i = 0; i < 240; ++i) {
+            const int n = ladder[(i + trial) % 15];
+            if (prev >= 0) g.f->noteOff(static_cast<uint8_t>(prev));
+            g.f->noteOn(static_cast<uint8_t>(n), 127);
+            prev = n;
+            g.play(0.025 + 0.01 * trial);
+            t += 0.025 + 0.01 * trial;
+        }
+        g.f->noteOff(static_cast<uint8_t>(prev));
+        g.play(6.0);
+        const double end = t + 6.0;
+        const double tail = g.rms(end - 1.0, end);
+        char d[96];
+        std::snprintf(d, sizeof d, "last second %.1f dB, peak %.2f", tail, g.peakAbs());
+        check(tail < -70.0, "let go, it dies away", d);
+    }
+}
+
+/** Notes far above a guitar's range, as strum keys can send: each must come back quickly. */
+void veryHighNotesReturn() {
+    std::printf("- very high notes\n");
+    for (int n = 84; n <= 127; n += 3) {
+        Guitar g;
+        g.f->noteOn(static_cast<uint8_t>(n), 127);
+        g.play(0.3);
+        g.f->noteOff(static_cast<uint8_t>(n));
+        g.play(6.0);
+        const double tail = g.rms(5.3, 6.3);
+        char d[64];
+        std::snprintf(d, sizeof d, "note %d: %.1f dB six seconds after letting go", n, tail);
+        check(tail < -70.0, "a very high note dies away", d);
+    }
+}
+
 int main() {
     std::printf("Fret\n");
     tuning();
@@ -269,6 +313,8 @@ int main() {
     hands();
     amp();
     endings();
+    aFastStrumDiesAway();
+    veryHighNotesReturn();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

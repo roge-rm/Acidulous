@@ -58,6 +58,9 @@ constexpr float kHarmonicSemis[4] = {0.0f, 12.0f, 19.0195f, 24.0f};
 
 } // namespace
 
+/** The highest pitch a string plays; see Fret::hz. A guitar's top fret is about E6, 88. */
+constexpr float kHighestPitch = 100.0f;
+
 Fret::Fret() { initParams(); }
 
 const ParamDef *Fret::paramDefs(int32_t &count) const {
@@ -165,7 +168,12 @@ Fret::Voice *Fret::voiceFor(uint8_t note) {
 }
 
 float Fret::hz(const Voice &v, float vibrato) const {
-    return noteHz(v.pitch + bend * paramOf(BendRange) + v.noteBend + vibrato);
+    // Nothing above a string's reach: higher notes fold down an octave at a
+    // time. Past about note 105 the string's loop is too short to lose its
+    // energy, and it rings for ever.
+    float p = v.pitch + bend * paramOf(BendRange) + v.noteBend + vibrato;
+    while (p > kHighestPitch) p -= 12.0f;
+    return noteHz(p);
 }
 
 void Fret::retune(Voice &v, float vibrato) {
