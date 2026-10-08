@@ -5,9 +5,9 @@
 
 Fret ne joue pas d’enregistrements. Chaque note est une corde, pincée au
 médiator, au doigt ou claquée du pouce, et entendue comme une guitare
-électrique l’entend : pas dans l’air, mais par un aimant posé sous la corde.
+électrique l’entend, par un aimant posé sous la corde.
 Un micro entend la corde là où il se trouve. Près du manche, il entend une
-note ronde et pleine ; près du chevalet, une note fine et brillante ; et au
+note ronde et pleine; près du chevalet, une note fine et brillante; et au
 quart de la longueur, il n’entend plus du tout le 4e harmonique.
 
 ## Guitare
@@ -15,7 +15,7 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
 - **modèle** : **guitare**, **12 cordes** (les quatre chœurs graves avec une
   corde à l’octave, les deux aigus doublés), **baryton** (un manche plus
   long, accordé plus bas), **demi-caisse** (une archtop de jazz, chaude et
-  plus courte), **steel** (une lap ou pedal steel, longue et pure : servez-vous
+  plus courte), **steel** (une lap ou pedal steel, longue et pure : servez-vous
   du glissé), **basse**, basse **5 cordes** et basse **fretless**.
 - **accordage** : en cents.
 - **capteur** : **manche**, **les deux** ou **chevalet**.
@@ -45,7 +45,7 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
 - **gratter** : joue un accord à travers les cordes, avec ce nombre de
   millisecondes entre chaque corde, au lieu de tout à la fois.
 - **sens** : gratter vers le **bas** (corde grave d’abord), vers le
-  **haut**, ou **les deux** à tour de rôle.
+  **haut** ou **les deux** à tour de rôle.
 
 ## Ampli
 
@@ -58,7 +58,7 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
 
 ## Astuces
 
-- **Chug** et **Funk** utilisent la **sourdine** ; bougez la molette de
+- **Chug** et **Funk** utilisent la **sourdine**; bougez la molette de
   modulation en jouant pour ouvrir les notes.
 - **Singing Lead** et **Feedback Swell** demandent des notes tenues :
   laissez-les sonner et l’ampli prend le relais.

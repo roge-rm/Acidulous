@@ -13,7 +13,7 @@ is, its overtones far from any chord. A thumb piano's tine is held at one
 end, which puts its overtones higher still, and a pan's note is hammered
 until it rings its octave and twelfth.
 
-What strikes it matters as much. A soft mallet stays on the bar for a few
+A soft mallet stays on the bar for a few
 milliseconds and can only set the note going; a hard one is gone before the
 overtones start, so they ring out.
 

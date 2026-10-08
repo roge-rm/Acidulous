@@ -4,8 +4,8 @@
 > and an amp loud enough to feed back.
 
 Fret doesn't play recordings. Each note is a string, plucked by a pick, a
-finger or a slapping thumb, and heard the way an electric guitar hears it:
-not in the air, but through a magnet sitting under the string. A pickup
+finger or a slapping thumb, and heard the way an electric guitar hears it,
+through a magnet sitting under the string. A pickup
 hears the string where it sits. Near the neck it hears a round, full note;
 by the bridge, a thin bright one; and a quarter of the way along it can't
 hear the 4th harmonic at all.
@@ -43,7 +43,7 @@ hear the 4th harmonic at all.
 - **vibrato** - a finger rocking on the string. Pressure adds to it.
 - **strum** - plays a chord across the strings, this many milliseconds
   between strings, instead of all at once.
-- **direction** - strum **down** (low string first), **up**, or **both**
+- **direction** - strum **down** (low string first), **up** or **both**
   ways in turn.
 
 ## Amp

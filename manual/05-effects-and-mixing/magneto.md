@@ -2,10 +2,9 @@
 > The sound of a small recordable disc, in each of its formats.
 
 Those discs held more than they had room for by throwing away what the ear
-was least likely to miss. Each format threw away more than the last, and
-what it threw away is the sound. Magneto works the same way: the track is
-cut into short frames, each split into bands, and each frame has only so
-many bits to spend.
+was least likely to miss, and each format threw away more than the last.
+Magneto does the same: the track is cut into short frames, each split into
+bands, and each frame has only so many bits to spend.
 
 ## The controls
 

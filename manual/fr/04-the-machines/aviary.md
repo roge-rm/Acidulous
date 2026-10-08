@@ -52,11 +52,11 @@ modulation élargit les glissements.
 
 ## Kit
 
-Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre oiseau : une seule piste joue toute une haie, un sifflement sur un pad, un trille sur un autre, un couple qui se répond sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad.
+Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre oiseau : une seule piste joue toute une haie, un sifflement sur un pad, un trille sur un autre, un couple qui se répond sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad.
 
-- Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**.
-- Les autres boutons (cadence, glissement, râpe, etc.) agissent sur tous les pads.
-- **Bird Kit** commence avec sifflements, pépiements, trilles, gazouillis, cris et chœurs.
+- Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**.
+- Les autres boutons (vitesse, balayage, râpeux, etc.) agissent sur tous les pads.
+- **Bird Kit** commence avec sifflements, gazouillis, trilles, babils, appels et chœurs.
 
 ## Astuces
 

@@ -8,15 +8,15 @@
 Tine ne joue pas d’enregistrements. Chaque note est une poignée de
 résonances accordées comme l’objet frappé. Une lame de marimba est creusée
 en dessous pour que sa première harmonique sonne deux octaves plus haut et
-la suivante deux octaves et une tierce ; celle d’un xylophone est creusée à
-la douzième ; la lame d’acier d’un glockenspiel est laissée telle quelle,
+la suivante deux octaves et une tierce; celle d’un xylophone est creusée à
+la douzième; la lame d’acier d’un glockenspiel est laissée telle quelle,
 ses harmoniques loin de tout accord. La languette d’un piano à pouces est
 tenue par un bout, ce qui place ses harmoniques plus haut encore, et la note
 d’un steelpan est martelée jusqu’à sonner son octave et sa douzième.
 
-Ce qui frappe compte tout autant. Une mailloche douce reste quelques
-millisecondes sur la lame et ne peut que lancer la note ; une dure est
-repartie avant que les harmoniques démarrent, et elles sonnent.
+Une mailloche douce reste quelques millisecondes sur la lame et ne peut que
+lancer la note; une dure est repartie avant que les harmoniques démarrent, et
+elles sonnent.
 
 ## Barre
 
@@ -30,7 +30,7 @@ repartie avant que les harmoniques démarrent, et elles sonnent.
 - **mailloche** : la dureté de la mailloche, du doigt ou de la goupille :
   de la laine douce au métal nu. Jouer plus fort la durcit un peu aussi.
 - **position** : où elle est frappée. Au milieu, la deuxième harmonique
-  d’une lame reste discrète ; vers le bout, la note s’amincit et les
+  d’une lame reste discrète; vers le bout, la note s’amincit et les
   harmoniques ressortent.
 - **déclin** : combien de temps les notes sonnent. Les graves sonnent
   toujours plus longtemps.
@@ -64,9 +64,9 @@ une lame tenue : la note enfle et tient tant que vous appuyez.
 
 ## Astuces
 
-- **Vibraphone** arrête chaque note quand vous la lâchez ; tenez la pédale
+- **Vibraphone** arrête chaque note quand vous la lâchez; tenez la pédale
   de sustain pour les laisser sonner, comme un vibraphoniste.
-- **Vibes Motor** et **Slow Motor** font tourner les disques ; la molette
+- **Vibes Motor** et **Slow Motor** font tourner les disques; la molette
   creuse la pulsation.
 - **Marimba Roll**, **Vibes Roll** et **Pan Roll** demandent des notes
   tenues.

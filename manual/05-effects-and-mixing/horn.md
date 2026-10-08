@@ -4,7 +4,7 @@
 Horn listens for the pitch of the track and how loud it is, and plays the
 same line on a horn, a clarinet, an oboe or a flute: the level becomes the
 breath. It follows one note at a time, so give it a lead, a bass line or a
-voice rather than chords. Sing into an input track and you play a trumpet.
+voice. Sing into an input track and you play a trumpet.
 
 ## The controls
 

@@ -4,7 +4,7 @@
 Horn écoute la hauteur de la piste et son volume, et joue la même ligne sur
 un cuivre, une clarinette, un hautbois ou une flûte : le niveau devient le
 souffle. Il suit une note à la fois : donnez-lui une mélodie, une ligne de
-basse ou une voix plutôt que des accords. Chantez dans une piste d’entrée et
+basse ou une voix. Chantez dans une piste d’entrée et
 vous jouez de la trompette.
 
 ## Les réglages
@@ -13,13 +13,13 @@ vous jouez de la trompette.
   **hautbois** (une anche double) ou **flûte** (un biseau).
 - **octave** : joue jusqu’à deux octaves de la piste.
 - **ton** : le mordant des lèvres sur le cuivre, ou la raideur de l’anche.
-- **Cloche** : à quel point le pavillon laisse sortir un son brillant.
+- **cloche** : à quel point le pavillon laisse sortir un son brillant.
 - **air** : le bruit du souffle.
 - **porta.** : à quelle vitesse il passe à une nouvelle note, de 1 à 500 ms.
 - **souffle** *(extra)* : à quel point un niveau donné le fait sonner fort.
   Montez-le pour une piste discrète.
 - **aimant** *(extra)* : **libre** suit la hauteur telle quelle, glissés
-  compris ; **demi-ton** pose chaque note sur un demi-ton.
+  compris; **demi-ton** pose chaque note sur un demi-ton.
 - **mélange** : la piste sèche face à l’instrument.
 - **gain** : le niveau de sortie.
 

@@ -4,8 +4,8 @@
 ## The controls
 
 - **depth** - how much of it is mixed in with the track as it was. A little
-  is density and presence; all of it is every tail and breath brought up to
-  the level of the hits.
+  adds density; all of it brings every tail and breath up to the level of
+  the hits.
 - **time** - scales every band's attack and release together. Slow is
   smooth, fast pumps and grinds.
 - **threshold** - the level each band is pushed toward, -48 to 0 dB.

@@ -32,31 +32,32 @@ sinon, pour qu’un grattage sonne comme une vraie guitare. Renversement,
 écart et basse ne s’appliquent pas alors.
 
 **rythme** gratte l’accord en mesure tant que vous tenez sa touche, comme un
-guitariste rythmique : vers le bas sur le temps, croches bas-haut, folk, rock,
+guitariste rythmique : vers le bas sur le temps, croches bas-haut, folk, rock,
 galop, skank reggae, doubles croches funk avec des coups étouffés, ballade ou
 bossa. **swing** retarde les contretemps, **accent** adoucit les coups faibles,
 **sourdine** règle la durée d’un coup étouffé et **humaniser** assouplit le jeu.
 Chaque coup suit le temps de grattage et l’écart de vélocité plus haut.
 
 **mémoire** joue un accord à vous depuis n’importe quelle touche. Touchez
-**apprendre**, jouez l’accord et lâchez : sa forme est gardée dans la case
-choisie (la case 1 si mémoire est sur off), et cette case est choisie. Pendant
+**apprendre**, jouez l’accord et lâchez : sa forme est gardée dans la case
+choisie (la case 1 si mémoire est coupée), et cette case est choisie. Pendant
 l’écoute l’accord est coupé, pour entendre les touches telles que vous les
 jouez. Huit cases sont gardées avec le morceau.
 
 Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier,
-comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au départ) choisissent
-l’accord et ne sonnent pas ; à partir de la séparation, les touches jouent ses
-notes l’une après l’autre sur trois octaves, puis recommencent. Glissez un doigt dessus pour
-gratter : plus vous allez vite, plus le grattage est rapide.
+comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au
+départ) choisissent l’accord et ne sonnent pas; à partir de la séparation, les
+touches jouent ses notes l’une après l’autre sur trois octaves, puis
+recommencent. Glissez un doigt dessus pour gratter : plus vous allez vite,
+plus le grattage est rapide.
 
 Réglez **jeu** sur **partage** pour jouer des accords de la main gauche et une
-mélodie de la droite : les touches sous la **séparation** jouent des accords,
+mélodie de la droite : les touches sous la **séparation** jouent des accords,
 celles au-dessus jouent leurs propres notes.
 
-- **touches** : toutes, ou seulement les blanches.
-- **verrou** : l’accord reste après que vous lâchez sa touche.
-- **résonance** : les notes grattées sonnent jusqu’à ce que vous leviez le
+- **touches** : toutes, ou seulement les blanches.
+- **verrou** : l’accord reste après que vous lâchez sa touche.
+- **résonance** : les notes grattées sonnent jusqu’à ce que vous leviez le
   dernier doigt, comme des cordes qu’on laisse vibrer.
 
 ## Arpège

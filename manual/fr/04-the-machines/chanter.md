@@ -25,11 +25,11 @@ grésiller en rythme.
   tonalité et un bourdon basse une octave plus bas), **smallpipes** (un
   chalumeau doux et fermé qui s’arrête un instant entre les notes, des
   bourdons sur la tonalité, la quinte et l’octave), **gaita** (un bourdon
-  basse et un chalumeau doux), **uilleann** (doux et fermé ; une touche
+  basse et un chalumeau doux), **uilleann** (doux et fermé; une touche
   tenue sous la mélodie sonne sur les régulateurs), **gaida** (un bourdon
   grave, un chalumeau clair), **cornemuse**, **musette** (petite et
   douce), **säckpipa**, **dudy** (un long bourdon deux octaves plus bas),
-  **zampogna**, **tulum** ou **launeddas** (deux chalumeaux : tenez une
+  **zampogna**, **tulum** ou **launeddas** (deux chalumeaux : tenez une
   deuxième touche et l’autre main la joue), ou **vielle à roue**.
 - **accordage** : en cents.
 - **tonique** : la tonalité sur laquelle sont accordés les bourdons.
@@ -54,7 +54,7 @@ grésiller en rythme.
 - **seuil** : à quelle vitesse la roue doit tourner pour que le chien
   grésille.
 - **coup** : pousse la roue **1**, **2** ou **4** fois par temps, en
-  mesure, pour que le chien grésille en rythme. **off** pour aucun.
+  mesure, pour que le chien grésille en rythme. **non** pour aucun.
 - **vélocité**, **octave**, **bend** et **volume**.
 
 La pression, ou la molette de modulation, serre la poche (un peu plus fort
@@ -63,7 +63,7 @@ et plus haut) ou pousse la roue de la vielle : le chien grésille à la main.
 ## Astuces
 
 - Les deux jouent une note à la fois : la dernière touche tenue sonne.
-- Tenez une note sur une présélection **drones** puis lâchez : les
+- Tenez une note sur une présélection **bourdons** puis lâchez : les
   bourdons continuent.
 - Sur **Hurdy-Gurdy**, appuyez sur une touche ou poussez la molette pour
   faire grésiller le chien.

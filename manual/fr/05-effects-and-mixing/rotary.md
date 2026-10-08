@@ -10,7 +10,7 @@
 - **rampe** : le temps que mettent les rotors pour atteindre une nouvelle
   vitesse. Ralentir prend presque deux fois plus longtemps, comme avec les
   vrais moteurs.
-- **distance** : l’éloignement des micros. Près, l’effet balance fort ; loin,
+- **distance** : l’éloignement des micros. Près, l’effet balance fort; loin,
   doucement.
 - **angle** : l’écart entre les deux micros.
 - **largeur** : la part de stéréo que donnent les micros.
@@ -26,7 +26,7 @@ pour un orgue.
 ## Astuces
 
 - Automatisez **vitesse** entre lent et rapide et laissez **rampe** faire le
-  reste. L’accélération et le ralentissement font le son.
+  reste.
 - Sur une guitare ou un piano électrique, **mélange** vers 0,6 garde l’attaque
   nette.
 - Avec **tempo**, une nappe pulse en rythme sans LFO à régler.

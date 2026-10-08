@@ -598,7 +598,7 @@ object Manual {
     ))
 
     private fun en3_16() = ManualSection("Fret", "Modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.", listOf(
-        ManualBlock(ManualKind.Para, "Fret doesn't play recordings. Each note is a string, plucked by a pick, a finger or a slapping thumb, and heard the way an electric guitar hears it: not in the air, but through a magnet sitting under the string. A pickup hears the string where it sits. Near the neck it hears a round, full note; by the bridge, a thin bright one; and a quarter of the way along it can't hear the 4th harmonic at all."),
+        ManualBlock(ManualKind.Para, "Fret doesn't play recordings. Each note is a string, plucked by a pick, a finger or a slapping thumb, and heard the way an electric guitar hears it, through a magnet sitting under the string. A pickup hears the string where it sits. Near the neck it hears a round, full note; by the bridge, a thin bright one; and a quarter of the way along it can't hear the 4th harmonic at all."),
         ManualBlock(ManualKind.Heading, "Guitar"),
         ManualBlock(ManualKind.Bullet, "**model** - **guitar**, **12-string** (the low four courses with an octave string, the top two doubled), **baritone** (a longer neck, tuned down), **hollowbody** (a jazz archtop, warm and shorter), **steel** (a lap or pedal steel, long and pure: use the slide), **bass**, **5-string** and **fretless** bass."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
@@ -617,7 +617,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**slide** - with one voice, a new note slides from the last instead of being picked again."),
         ManualBlock(ManualKind.Bullet, "**vibrato** - a finger rocking on the string. Pressure adds to it."),
         ManualBlock(ManualKind.Bullet, "**strum** - plays a chord across the strings, this many milliseconds between strings, instead of all at once."),
-        ManualBlock(ManualKind.Bullet, "**direction** - strum **down** (low string first), **up**, or **both** ways in turn."),
+        ManualBlock(ManualKind.Bullet, "**direction** - strum **down** (low string first), **up** or **both** ways in turn."),
         ManualBlock(ManualKind.Heading, "Amp"),
         ManualBlock(ManualKind.Bullet, "**drive** - the amp, from clean to flat out, with a speaker coming in as it does."),
         ManualBlock(ManualKind.Bullet, "**feedback** - how much the amp's sound shakes the strings back. With drive up, a held note sustains and can jump up to a harmonic."),
@@ -808,7 +808,7 @@ object Manual {
 
     private fun en3_22() = ManualSection("Tine", "Modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle.", listOf(
         ManualBlock(ManualKind.Para, "Tine doesn't play recordings. Each note is a handful of resonances tuned the way the thing struck is tuned. A marimba bar is carved away underneath so its first overtone sits two octaves up and the next two octaves and a third; a xylophone's is carved to a twelfth; a glockenspiel's steel bar is left as it is, its overtones far from any chord. A thumb piano's tine is held at one end, which puts its overtones higher still, and a pan's note is hammered until it rings its octave and twelfth."),
-        ManualBlock(ManualKind.Para, "What strikes it matters as much. A soft mallet stays on the bar for a few milliseconds and can only set the note going; a hard one is gone before the overtones start, so they ring out."),
+        ManualBlock(ManualKind.Para, "A soft mallet stays on the bar for a few milliseconds and can only set the note going; a hard one is gone before the overtones start, so they ring out."),
         ManualBlock(ManualKind.Heading, "Bar"),
         ManualBlock(ManualKind.Bullet, "**model** - **marimba**, **vibes**, **xylophone**, **glock**, **thumb** (piano), **music box**, **steel pan**, **handpan**, **tongue drum**, **chimes** (tubular bells), **crotales**, **saron** and **bonang** (gamelan), **gong**, **bowl** (singing bowl), **slit drum**, **temple block**, **cowbell** or **triangle**. A balafon is the marimba with **buzz** up."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
@@ -1397,7 +1397,7 @@ object Manual {
     ))
 
     private fun en4_14() = ManualSection("Horn", "The track plays a wind instrument.", listOf(
-        ManualBlock(ManualKind.Para, "Horn listens for the pitch of the track and how loud it is, and plays the same line on a horn, a clarinet, an oboe or a flute: the level becomes the breath. It follows one note at a time, so give it a lead, a bass line or a voice rather than chords. Sing into an input track and you play a trumpet."),
+        ManualBlock(ManualKind.Para, "Horn listens for the pitch of the track and how loud it is, and plays the same line on a horn, a clarinet, an oboe or a flute: the level becomes the breath. It follows one note at a time, so give it a lead, a bass line or a voice. Sing into an input track and you play a trumpet."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**kind** - **brass**, **clarinet** (a single reed), **oboe** (a double reed) or **flute** (an air jet)."),
         ManualBlock(ManualKind.Bullet, "**octave** - plays up to two octaves away from the track."),
@@ -1416,7 +1416,7 @@ object Manual {
     ))
 
     private fun en4_15() = ManualSection("Magneto", "The sound of a small recordable disc, in each of its formats.", listOf(
-        ManualBlock(ManualKind.Para, "Those discs held more than they had room for by throwing away what the ear was least likely to miss. Each format threw away more than the last, and what it threw away is the sound. Magneto works the same way: the track is cut into short frames, each split into bands, and each frame has only so many bits to spend."),
+        ManualBlock(ManualKind.Para, "Those discs held more than they had room for by throwing away what the ear was least likely to miss, and each format threw away more than the last. Magneto does the same: the track is cut into short frames, each split into bands, and each frame has only so many bits to spend."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**mode** - the format: - **SP** - the original. The top stays nearly all the way up, with a fine grain through the mids and highs. - **LP2** - half the bits. The top is cut a little below 16 kHz, it turns grainy and hits smear a little. - **LP4** - half again, with left and right sharing their bits. The highs flicker in and out above the cut at 14 kHz, quiet high detail disappears, and the upper mids narrow almost to mono. - **HQ** - the later high-rate format. The cleanest, nearly clear. - **XLP** - the later format at its lowest rate, between LP2 and LP4."),
         ManualBlock(ManualKind.Bullet, "**dubs** *(extra)* - copies it again, one to four generations, each losing a little more, as when one disc was recorded from another."),
@@ -1512,7 +1512,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**gain** - the level out."),
         ManualBlock(ManualKind.Para, "The cabinet has one input, so a stereo track is summed before it, as an organ's would be."),
         ManualBlock(ManualKind.Heading, "Tips"),
-        ManualBlock(ManualKind.Bullet, "Automate **speed** between slow and fast and let **ramp** do the rest. The speed-up and slow-down are the sound."),
+        ManualBlock(ManualKind.Bullet, "Automate **speed** between slow and fast and let **ramp** do the rest."),
         ManualBlock(ManualKind.Bullet, "On a guitar or electric piano, **mix** at about 0.6 keeps the attack clear."),
         ManualBlock(ManualKind.Bullet, "With **tempo** on, a pad pulses in time with no LFO to set up."),
     ))
@@ -1549,7 +1549,7 @@ object Manual {
 
     private fun en4_23() = ManualSection("Smash", "Three bands, each squashed from above and lifted from below.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
-        ManualBlock(ManualKind.Bullet, "**depth** - how much of it is mixed in with the track as it was. A little is density and presence; all of it is every tail and breath brought up to the level of the hits."),
+        ManualBlock(ManualKind.Bullet, "**depth** - how much of it is mixed in with the track as it was. A little adds density; all of it brings every tail and breath up to the level of the hits."),
         ManualBlock(ManualKind.Bullet, "**time** - scales every band's attack and release together. Slow is smooth, fast pumps and grinds."),
         ManualBlock(ManualKind.Bullet, "**threshold** - the level each band is pushed toward, -48 to 0 dB."),
         ManualBlock(ManualKind.Bullet, "**down** - how hard anything over the threshold is pushed down."),
@@ -2413,10 +2413,10 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**vélocité**, **octave**, **bend** et **volume**."),
         ManualBlock(ManualKind.Para, "La pression souffle plus fort : plus fort et plus plein. La molette de modulation élargit les glissements."),
         ManualBlock(ManualKind.Heading, "Kit"),
-        ManualBlock(ManualKind.Para, "Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre oiseau : une seule piste joue toute une haie, un sifflement sur un pad, un trille sur un autre, un couple qui se répond sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad."),
-        ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**."),
-        ManualBlock(ManualKind.Bullet, "Les autres boutons (cadence, glissement, râpe, etc.) agissent sur tous les pads."),
-        ManualBlock(ManualKind.Bullet, "**Bird Kit** commence avec sifflements, pépiements, trilles, gazouillis, cris et chœurs."),
+        ManualBlock(ManualKind.Para, "Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre oiseau : une seule piste joue toute une haie, un sifflement sur un pad, un trille sur un autre, un couple qui se répond sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad."),
+        ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**."),
+        ManualBlock(ManualKind.Bullet, "Les autres boutons (vitesse, balayage, râpeux, etc.) agissent sur tous les pads."),
+        ManualBlock(ManualKind.Bullet, "**Bird Kit** commence avec sifflements, gazouillis, trilles, babils, appels et chœurs."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Les motifs suivent le tempo : un gazouillis à **4** par temps tombe sur les doubles croches."),
         ManualBlock(ManualKind.Bullet, "**Call and Answer** demande au moins deux oiseaux : l’un appelle, l’autre répond."),
@@ -2446,7 +2446,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "Chanter ne joue pas d’enregistrements. Une cornemuse, ici, c’est un chalumeau, un tuyau conique à anche double (le même modèle que celui de Timber), et des bourdons, des tuyaux étroits à anche simple, tous soufflés depuis une poche. La poche garde la pression : les bourdons continuent entre les notes, et encore un moment après la dernière. On ne peut pas détacher les notes au chalumeau : les sonneurs les séparent par des notes d’agrément, une note aiguë et brève avant chacune."),
         ManualBlock(ManualKind.Para, "Une vielle à roue, c’est une roue enduite de colophane qui frotte ses cordes tant qu’elle tourne : les chanterelles, arrêtées par les touches, les bourdons accordés sur la tonalité, et la trompette, dont le chevalet (le chien) est libre : quand la roue tourne assez vite, il saute et grésille contre la table. Les vielleux poussent la roue sur le temps pour le faire grésiller en rythme."),
         ManualBlock(ManualKind.Heading, "Tuyaux"),
-        ManualBlock(ManualKind.Bullet, "**modèle** : cornemuse **highland** (deux bourdons ténors sur la tonalité et un bourdon basse une octave plus bas), **smallpipes** (un chalumeau doux et fermé qui s’arrête un instant entre les notes, des bourdons sur la tonalité, la quinte et l’octave), **gaita** (un bourdon basse et un chalumeau doux), **uilleann** (doux et fermé ; une touche tenue sous la mélodie sonne sur les régulateurs), **gaida** (un bourdon grave, un chalumeau clair), **cornemuse**, **musette** (petite et douce), **säckpipa**, **dudy** (un long bourdon deux octaves plus bas), **zampogna**, **tulum** ou **launeddas** (deux chalumeaux : tenez une deuxième touche et l’autre main la joue), ou **vielle à roue**."),
+        ManualBlock(ManualKind.Bullet, "**modèle** : cornemuse **highland** (deux bourdons ténors sur la tonalité et un bourdon basse une octave plus bas), **smallpipes** (un chalumeau doux et fermé qui s’arrête un instant entre les notes, des bourdons sur la tonalité, la quinte et l’octave), **gaita** (un bourdon basse et un chalumeau doux), **uilleann** (doux et fermé; une touche tenue sous la mélodie sonne sur les régulateurs), **gaida** (un bourdon grave, un chalumeau clair), **cornemuse**, **musette** (petite et douce), **säckpipa**, **dudy** (un long bourdon deux octaves plus bas), **zampogna**, **tulum** ou **launeddas** (deux chalumeaux : tenez une deuxième touche et l’autre main la joue), ou **vielle à roue**."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**tonique** : la tonalité sur laquelle sont accordés les bourdons."),
         ManualBlock(ManualKind.Bullet, "**bourdons** : le volume des bourdons."),
@@ -2460,12 +2460,12 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**colophane** : la prise de la colophane sur les cordes : lisse ou granuleuse."),
         ManualBlock(ManualKind.Bullet, "**chien** : le volume du grésillement de la trompette."),
         ManualBlock(ManualKind.Bullet, "**seuil** : à quelle vitesse la roue doit tourner pour que le chien grésille."),
-        ManualBlock(ManualKind.Bullet, "**coup** : pousse la roue **1**, **2** ou **4** fois par temps, en mesure, pour que le chien grésille en rythme. **off** pour aucun."),
+        ManualBlock(ManualKind.Bullet, "**coup** : pousse la roue **1**, **2** ou **4** fois par temps, en mesure, pour que le chien grésille en rythme. **non** pour aucun."),
         ManualBlock(ManualKind.Bullet, "**vélocité**, **octave**, **bend** et **volume**."),
         ManualBlock(ManualKind.Para, "La pression, ou la molette de modulation, serre la poche (un peu plus fort et plus haut) ou pousse la roue de la vielle : le chien grésille à la main."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Les deux jouent une note à la fois : la dernière touche tenue sonne."),
-        ManualBlock(ManualKind.Bullet, "Tenez une note sur une présélection **drones** puis lâchez : les bourdons continuent."),
+        ManualBlock(ManualKind.Bullet, "Tenez une note sur une présélection **bourdons** puis lâchez : les bourdons continuent."),
         ManualBlock(ManualKind.Bullet, "Sur **Hurdy-Gurdy**, appuyez sur une touche ou poussez la molette pour faire grésiller le chien."),
     ))
 
@@ -2515,8 +2515,8 @@ object Manual {
     ))
 
     private fun fr3_14() = ManualSection("Fathom", "L’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements, glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.", listOf(
-        ManualBlock(ManualKind.Para, "Fathom ne joue pas d’enregistrements. L’essentiel du son de l’eau, ce sont des bulles : une poche d’air prise sous la surface vibre comme un ressort, à une hauteur fixée par sa taille (plus elle est petite, plus elle est aiguë), et monte quand elle approche de la surface. Une goutte, c’est une bulle et le choc de la goutte ; la pluie, beaucoup de gouttes, et le son de ce sur quoi elles tombent ; un ruisseau, un nuage dense de petites bulles et quelques grosses. Le ressac, c’est le grondement d’une vague qui monte et retombe. Le vent, c’est de l’air qui file en rafales et siffle là où il se prend dans une fente ; le feu, des crépitements, un sifflement et un grondement."),
-        ManualBlock(ManualKind.Para, "Tenez une note pour que ça continue. La note fixe la taille des bulles, ou la note que siffle le vent ; la vélocité, la quantité."),
+        ManualBlock(ManualKind.Para, "Fathom ne joue pas d’enregistrements. L’essentiel du son de l’eau, ce sont des bulles : une poche d’air prise sous la surface vibre comme un ressort, à une hauteur fixée par sa taille (plus elle est petite, plus elle est aiguë), et monte quand elle approche de la surface. Une goutte, c’est une bulle et le choc de la goutte; la pluie, beaucoup de gouttes, et le son de ce sur quoi elles tombent; un ruisseau, un nuage dense de petites bulles et quelques grosses. Le ressac, c’est le grondement d’une vague qui monte et retombe. Le vent, c’est de l’air qui file en rafales et siffle là où il se prend dans une fente; le feu, des crépitements, un sifflement et un grondement."),
+        ManualBlock(ManualKind.Para, "Tenez une note pour que ça continue. La note fixe la taille des bulles, ou la note que siffle le vent; la vélocité, la quantité."),
         ManualBlock(ManualKind.Heading, "Eau"),
         ManualBlock(ManualKind.Bullet, "**modèle** : **bulles**, **gouttes**, **pluie**, **ruisseau**, **ressac**, **vent**, **feu**, **tonnerre** (un claquement et un grondement qui roule), **grêle**, **cascade**, **grésillement** (vapeur et friture), **glace** (une plaque gelée qui craque), **neige** (des pas), **éclabousse**, **sous l’eau** ou **bâton de pluie** (des cailloux qui tombent et s’éclaircissent au fil du déclin)."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
@@ -2524,7 +2524,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**taille** : de combien la taille des bulles, et donc leur hauteur, s’écarte de la note, en demi-tons."),
         ManualBlock(ManualKind.Bullet, "**montée** : de combien monte une bulle en approchant de la surface."),
         ManualBlock(ManualKind.Bullet, "**déclin** : combien de temps sonne chaque bulle."),
-        ManualBlock(ManualKind.Bullet, "**surface** : ce sur quoi tombe la pluie : **eau**, **feuilles**, **tôle** ou **vitre**."),
+        ManualBlock(ManualKind.Bullet, "**surface** : ce sur quoi tombe la pluie : **eau**, **feuilles**, **tôle** ou **fenêtre**."),
         ManualBlock(ManualKind.Heading, "Temps"),
         ManualBlock(ManualKind.Bullet, "**rafale** : combien le vent, le feu et les vagues vont et viennent."),
         ManualBlock(ManualKind.Bullet, "**sifflement** : le vent pris dans une fente, qui siffle sur la note."),
@@ -2535,9 +2535,9 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**vélocité**, **octave**, **bend** et **volume**."),
         ManualBlock(ManualKind.Para, "La pression, ou la molette de modulation, épaissit le tout."),
         ManualBlock(ManualKind.Heading, "Kit"),
-        ManualBlock(ManualKind.Para, "Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre son : une seule piste joue toute une scène, la pluie sur un pad, le vent sur un autre, un feu sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad. Jusqu’à quatre pads sonnent à la fois."),
-        ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**."),
-        ManualBlock(ManualKind.Bullet, "Les autres boutons (taille, montée, timbre, etc.) agissent sur tous les pads."),
+        ManualBlock(ManualKind.Para, "Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre son : une seule piste joue toute une scène, la pluie sur un pad, le vent sur un autre, un feu sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad. Jusqu’à quatre pads sonnent à la fois."),
+        ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**."),
+        ManualBlock(ManualKind.Bullet, "Les autres boutons (taille, montée, ton, etc.) agissent sur tous les pads."),
         ManualBlock(ManualKind.Bullet, "**Weather Kit** commence avec feu, vent, pluie, gouttes, bulles, ruisseau et ressac, **Storm Kit** avec pluie, grêle, vent, rafales et tonnerre proche et lointain, et **Water Kit** avec bulles, gouttes, ruisseau, éclaboussures, cascade et profondeurs."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "**Bubble Notes** et **Drip Notes** n’ont pas de densité : chaque note est une bulle ou une goutte accordée, pour jouer des mélodies."),
@@ -2567,9 +2567,9 @@ object Manual {
     ))
 
     private fun fr3_16() = ManualSection("Fret", "Guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.", listOf(
-        ManualBlock(ManualKind.Para, "Fret ne joue pas d’enregistrements. Chaque note est une corde, pincée au médiator, au doigt ou claquée du pouce, et entendue comme une guitare électrique l’entend : pas dans l’air, mais par un aimant posé sous la corde. Un micro entend la corde là où il se trouve. Près du manche, il entend une note ronde et pleine ; près du chevalet, une note fine et brillante ; et au quart de la longueur, il n’entend plus du tout le 4e harmonique."),
+        ManualBlock(ManualKind.Para, "Fret ne joue pas d’enregistrements. Chaque note est une corde, pincée au médiator, au doigt ou claquée du pouce, et entendue comme une guitare électrique l’entend, par un aimant posé sous la corde. Un micro entend la corde là où il se trouve. Près du manche, il entend une note ronde et pleine; près du chevalet, une note fine et brillante; et au quart de la longueur, il n’entend plus du tout le 4e harmonique."),
         ManualBlock(ManualKind.Heading, "Guitare"),
-        ManualBlock(ManualKind.Bullet, "**modèle** : **guitare**, **12 cordes** (les quatre chœurs graves avec une corde à l’octave, les deux aigus doublés), **baryton** (un manche plus long, accordé plus bas), **demi-caisse** (une archtop de jazz, chaude et plus courte), **steel** (une lap ou pedal steel, longue et pure : servez-vous du glissé), **basse**, basse **5 cordes** et basse **fretless**."),
+        ManualBlock(ManualKind.Bullet, "**modèle** : **guitare**, **12 cordes** (les quatre chœurs graves avec une corde à l’octave, les deux aigus doublés), **baryton** (un manche plus long, accordé plus bas), **demi-caisse** (une archtop de jazz, chaude et plus courte), **steel** (une lap ou pedal steel, longue et pure : servez-vous du glissé), **basse**, basse **5 cordes** et basse **fretless**."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**capteur** : **manche**, **les deux** ou **chevalet**."),
         ManualBlock(ManualKind.Bullet, "**bobine** : **simple** (brillante et claire) ou **double bobinage** (deux bobines côte à côte : plus épais et plus sombre)."),
@@ -2586,13 +2586,13 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**glissé** : avec une seule voix, une nouvelle note glisse depuis la précédente au lieu d’être attaquée de nouveau."),
         ManualBlock(ManualKind.Bullet, "**vibrato** : un doigt qui balance sur la corde. La pression en ajoute."),
         ManualBlock(ManualKind.Bullet, "**gratter** : joue un accord à travers les cordes, avec ce nombre de millisecondes entre chaque corde, au lieu de tout à la fois."),
-        ManualBlock(ManualKind.Bullet, "**sens** : gratter vers le **bas** (corde grave d’abord), vers le **haut**, ou **les deux** à tour de rôle."),
+        ManualBlock(ManualKind.Bullet, "**sens** : gratter vers le **bas** (corde grave d’abord), vers le **haut** ou **les deux** à tour de rôle."),
         ManualBlock(ManualKind.Heading, "Ampli"),
         ManualBlock(ManualKind.Bullet, "**satur.** : l’ampli, du son clair au son poussé à fond, avec un haut-parleur qui entre en jeu à mesure."),
         ManualBlock(ManualKind.Bullet, "**réinjection** : combien le son de l’ampli fait vibrer les cordes en retour. Avec de la saturation, une note tenue se maintient et peut sauter à une harmonique."),
         ManualBlock(ManualKind.Bullet, "**voix**, **vélocité**, **octave**, **bend** et **volume**."),
         ManualBlock(ManualKind.Heading, "Astuces"),
-        ManualBlock(ManualKind.Bullet, "**Chug** et **Funk** utilisent la **sourdine** ; bougez la molette de modulation en jouant pour ouvrir les notes."),
+        ManualBlock(ManualKind.Bullet, "**Chug** et **Funk** utilisent la **sourdine**; bougez la molette de modulation en jouant pour ouvrir les notes."),
         ManualBlock(ManualKind.Bullet, "**Singing Lead** et **Feedback Swell** demandent des notes tenues : laissez-les sonner et l’ampli prend le relais."),
         ManualBlock(ManualKind.Bullet, "Pour des accords grattés, jouez toutes les notes ensemble et laissez **gratter** les étaler."),
         ManualBlock(ManualKind.Bullet, "Passez Fret dans l’effet **Amp** pour un ampli et un baffle plus gros que le sien."),
@@ -2693,7 +2693,7 @@ object Manual {
     ))
 
     private fun fr3_19() = ManualSection("Palm", "Percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre, tambour d’aisselle, congas, bongos, darbouka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu et cuíca, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.", listOf(
-        ManualBlock(ManualKind.Para, "Palm ne joue pas d’enregistrements. Chaque note est une peau accordée sur la note. Une peau ordinaire vibre selon les rapports inégaux d’un cercle tendu, d’où l’absence de hauteur nette de la plupart des tambours ; celle d’un tabla est chargée en son centre d’une pâte qui ramène ses harmoniques vers une série harmonique, et il chante une note."),
+        ManualBlock(ManualKind.Para, "Palm ne joue pas d’enregistrements. Chaque note est une peau accordée sur la note. Une peau ordinaire vibre selon les rapports inégaux d’un cercle tendu, d’où l’absence de hauteur nette de la plupart des tambours; celle d’un tabla est chargée en son centre d’une pâte qui ramène ses harmoniques vers une série harmonique, et il chante une note."),
         ManualBlock(ManualKind.Para, "La main fait le reste : où elle tombe (le centre fait sonner les modes graves, le bord les aigus), combien de temps elle reste sur la peau, et si elle y reste pour l’étouffer."),
         ManualBlock(ManualKind.Heading, "Tambour"),
         ManualBlock(ManualKind.Bullet, "**modèle** : **tabla** (le petit tambour accordé), **bayan** (son grand compagnon grave), **djembé**, **cajón**, tambour sur **cadre**, tambour d’**aisselle**, **conga**, **bongo**, **darbouka**, **riq**, **tar**, **bendir**, **kanjira**, **batá**, **mridangam**, **dholak**, **ashiko**, **udu** (un pot en terre, son air fait la note) ou **cuíca** (frottée à l’intérieur tant que la note est tenue)."),
@@ -2714,8 +2714,8 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**voix**, **vélocité**, **octave**, **bend** et **volume**."),
         ManualBlock(ManualKind.Para, "Avec le MPE, glisser un doigt vers le haut le pose sur la peau et l’étouffe pendant qu’elle sonne."),
         ManualBlock(ManualKind.Heading, "Kit"),
-        ManualBlock(ManualKind.Para, "Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre tambour : une seule piste joue tout un kit de percussions à main. Le séquenceur affiche la grille de batterie, une ligne par pad, nommée d’après son tambour et sa frappe."),
-        ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **frappe**, **hauteur** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **frappe**, **hauteur** et **niveau**."),
+        ManualBlock(ManualKind.Para, "Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre tambour : une seule piste joue tout un kit de percussions à main. Le séquenceur affiche la grille de batterie, une ligne par pad, nommée d’après son tambour et sa frappe."),
+        ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **attaque**, **hauteur** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **attaque**, **hauteur** et **niveau**."),
         ManualBlock(ManualKind.Bullet, "Les autres boutons (position, main, déclin, etc.) agissent sur tous les pads."),
         ManualBlock(ManualKind.Bullet, "**Hand Drum Kit** commence avec djembé, cajón, tabla, bayan, tambour sur cadre et tambour d’aisselle, **African Kit** avec djembés, ashiko, tambour d’aisselle et batá, **Latin Kit** avec congas, bongos, cajón et batá, **Arabic Kit** avec darbouka, riq, tar, bendir et tambour sur cadre, et **Tabla Kit** avec tabla, bayan, mridangam, dholak et kanjira."),
         ManualBlock(ManualKind.Bullet, "Désactivez kit pour rejouer un seul tambour sur tout le clavier."),
@@ -2733,7 +2733,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**sa** : la tonique sur laquelle sont accordées les cordes sympathiques et de bourdon."),
         ManualBlock(ManualKind.Bullet, "**gamme** : la gamme des cordes sympathiques : **bilawal** (majeur), **khamaj**, **kafi**, **asavari**, **bhairavi**, **bhairav**, **kalyan**, **marwa**, **purvi** ou **todi**."),
         ManualBlock(ManualKind.Bullet, "**chevalet** : combien le chevalet grésille. À 0, c’est une arête nette."),
-        ManualBlock(ManualKind.Bullet, "**courbe** : jusqu’où la corde doit osciller avant de se coucher sur le chevalet. Basse, même les notes douces grésillent ; haute, seules les fortes."),
+        ManualBlock(ManualKind.Bullet, "**courbe** : jusqu’où la corde doit osciller avant de se coucher sur le chevalet. Basse, même les notes douces grésillent; haute, seules les fortes."),
         ManualBlock(ManualKind.Bullet, "**pincer** : un pincement doux ou dur. Sur un instrument frotté, la pression de l’archet."),
         ManualBlock(ManualKind.Bullet, "**position** : où la corde est pincée."),
         ManualBlock(ManualKind.Bullet, "**maintien** : combien de temps les cordes résonnent."),
@@ -2776,13 +2776,13 @@ object Manual {
     ))
 
     private fun fr3_22() = ManualSection("Tine", "Lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle.", listOf(
-        ManualBlock(ManualKind.Para, "Tine ne joue pas d’enregistrements. Chaque note est une poignée de résonances accordées comme l’objet frappé. Une lame de marimba est creusée en dessous pour que sa première harmonique sonne deux octaves plus haut et la suivante deux octaves et une tierce ; celle d’un xylophone est creusée à la douzième ; la lame d’acier d’un glockenspiel est laissée telle quelle, ses harmoniques loin de tout accord. La languette d’un piano à pouces est tenue par un bout, ce qui place ses harmoniques plus haut encore, et la note d’un steelpan est martelée jusqu’à sonner son octave et sa douzième."),
-        ManualBlock(ManualKind.Para, "Ce qui frappe compte tout autant. Une mailloche douce reste quelques millisecondes sur la lame et ne peut que lancer la note ; une dure est repartie avant que les harmoniques démarrent, et elles sonnent."),
+        ManualBlock(ManualKind.Para, "Tine ne joue pas d’enregistrements. Chaque note est une poignée de résonances accordées comme l’objet frappé. Une lame de marimba est creusée en dessous pour que sa première harmonique sonne deux octaves plus haut et la suivante deux octaves et une tierce; celle d’un xylophone est creusée à la douzième; la lame d’acier d’un glockenspiel est laissée telle quelle, ses harmoniques loin de tout accord. La languette d’un piano à pouces est tenue par un bout, ce qui place ses harmoniques plus haut encore, et la note d’un steelpan est martelée jusqu’à sonner son octave et sa douzième."),
+        ManualBlock(ManualKind.Para, "Une mailloche douce reste quelques millisecondes sur la lame et ne peut que lancer la note; une dure est repartie avant que les harmoniques démarrent, et elles sonnent."),
         ManualBlock(ManualKind.Heading, "Barre"),
         ManualBlock(ManualKind.Bullet, "**modèle** : **marimba**, **vibra**, **xylophone**, **glock**, **pouce** (piano à pouces), **boîte à musique**, **steelpan**, **handpan** ou **tambour à lang.** (tambour à languettes), **cloches** (tubulaires), **crotales**, **saron** et **bonang** (gamelan), **gong**, **bol** (bol chantant), **tambour à fente**, **temple block**, **cloche** (à vache) ou **triangle**. Un balafon, c’est le marimba avec **buzz** monté."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**mailloche** : la dureté de la mailloche, du doigt ou de la goupille : de la laine douce au métal nu. Jouer plus fort la durcit un peu aussi."),
-        ManualBlock(ManualKind.Bullet, "**position** : où elle est frappée. Au milieu, la deuxième harmonique d’une lame reste discrète ; vers le bout, la note s’amincit et les harmoniques ressortent."),
+        ManualBlock(ManualKind.Bullet, "**position** : où elle est frappée. Au milieu, la deuxième harmonique d’une lame reste discrète; vers le bout, la note s’amincit et les harmoniques ressortent."),
         ManualBlock(ManualKind.Bullet, "**déclin** : combien de temps les notes sonnent. Les graves sonnent toujours plus longtemps."),
         ManualBlock(ManualKind.Bullet, "**brillant** : la part des harmoniques, et leur durée."),
         ManualBlock(ManualKind.Bullet, "**amortir** : la barre d’étouffoirs : combien une note s’arrête quand vous la lâchez. La pédale de sustain la lève."),
@@ -2798,8 +2798,8 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**voix**, **vélocité**, **octave**, **bend** et **volume**."),
         ManualBlock(ManualKind.Para, "La pression (du clavier, ou de chaque note avec le MPE) passe un archet sur une lame tenue : la note enfle et tient tant que vous appuyez."),
         ManualBlock(ManualKind.Heading, "Astuces"),
-        ManualBlock(ManualKind.Bullet, "**Vibraphone** arrête chaque note quand vous la lâchez ; tenez la pédale de sustain pour les laisser sonner, comme un vibraphoniste."),
-        ManualBlock(ManualKind.Bullet, "**Vibes Motor** et **Slow Motor** font tourner les disques ; la molette creuse la pulsation."),
+        ManualBlock(ManualKind.Bullet, "**Vibraphone** arrête chaque note quand vous la lâchez; tenez la pédale de sustain pour les laisser sonner, comme un vibraphoniste."),
+        ManualBlock(ManualKind.Bullet, "**Vibes Motor** et **Slow Motor** font tourner les disques; la molette creuse la pulsation."),
         ManualBlock(ManualKind.Bullet, "**Marimba Roll**, **Vibes Roll** et **Pan Roll** demandent des notes tenues."),
     ))
 
@@ -3145,7 +3145,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**mélange** : le son sec face au son filtré."),
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
         ManualBlock(ManualKind.Heading, "Astuces"),
-        ManualBlock(ManualKind.Bullet, "Sur un accord tenu avec **motif** à **16ths**, une nappe devient une ligne acide."),
+        ManualBlock(ManualKind.Bullet, "Sur un accord tenu avec **motif** à **1/16**, une nappe devient une ligne acide."),
         ManualBlock(ManualKind.Bullet, "Sur une boucle de batterie avec **motif** à **piste**, chaque coup aboie."),
         ManualBlock(ManualKind.Bullet, "En passe-bande avec la piste comme motif, c’est une wah qui suit le jeu."),
     ))
@@ -3366,16 +3366,16 @@ object Manual {
     ))
 
     private fun fr4_14() = ManualSection("Horn", "La piste joue d’un instrument à vent.", listOf(
-        ManualBlock(ManualKind.Para, "Horn écoute la hauteur de la piste et son volume, et joue la même ligne sur un cuivre, une clarinette, un hautbois ou une flûte : le niveau devient le souffle. Il suit une note à la fois : donnez-lui une mélodie, une ligne de basse ou une voix plutôt que des accords. Chantez dans une piste d’entrée et vous jouez de la trompette."),
+        ManualBlock(ManualKind.Para, "Horn écoute la hauteur de la piste et son volume, et joue la même ligne sur un cuivre, une clarinette, un hautbois ou une flûte : le niveau devient le souffle. Il suit une note à la fois : donnez-lui une mélodie, une ligne de basse ou une voix. Chantez dans une piste d’entrée et vous jouez de la trompette."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**type** : **laiton** (un cuivre), **clarinette** (une anche simple), **hautbois** (une anche double) ou **flûte** (un biseau)."),
         ManualBlock(ManualKind.Bullet, "**octave** : joue jusqu’à deux octaves de la piste."),
         ManualBlock(ManualKind.Bullet, "**ton** : le mordant des lèvres sur le cuivre, ou la raideur de l’anche."),
-        ManualBlock(ManualKind.Bullet, "**Cloche** : à quel point le pavillon laisse sortir un son brillant."),
+        ManualBlock(ManualKind.Bullet, "**cloche** : à quel point le pavillon laisse sortir un son brillant."),
         ManualBlock(ManualKind.Bullet, "**air** : le bruit du souffle."),
         ManualBlock(ManualKind.Bullet, "**porta.** : à quelle vitesse il passe à une nouvelle note, de 1 à 500 ms."),
         ManualBlock(ManualKind.Bullet, "**souffle** *(extra)* : à quel point un niveau donné le fait sonner fort. Montez-le pour une piste discrète."),
-        ManualBlock(ManualKind.Bullet, "**aimant** *(extra)* : **libre** suit la hauteur telle quelle, glissés compris ; **demi-ton** pose chaque note sur un demi-ton."),
+        ManualBlock(ManualKind.Bullet, "**aimant** *(extra)* : **libre** suit la hauteur telle quelle, glissés compris; **demi-ton** pose chaque note sur un demi-ton."),
         ManualBlock(ManualKind.Bullet, "**mélange** : la piste sèche face à l’instrument."),
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
         ManualBlock(ManualKind.Heading, "Astuces"),
@@ -3385,7 +3385,7 @@ object Manual {
     ))
 
     private fun fr4_15() = ManualSection("Magneto", "Le son d’un petit disque enregistrable, dans chacun de ses formats.", listOf(
-        ManualBlock(ManualKind.Para, "Ces disques contenaient plus qu’ils n’avaient de place en jetant ce que l’oreille risquait le moins de regretter. Chaque format en jetait plus que le précédent, et ce qu’il jetait, c’est le son. Magneto fait de même : la piste est coupée en trames courtes, chacune divisée en bandes, et chaque trame n’a que tant de bits à dépenser."),
+        ManualBlock(ManualKind.Para, "Ces disques contenaient plus qu’ils n’avaient de place en jetant ce que l’oreille risquait le moins de regretter, et chaque format en jetait plus que le précédent. Magneto fait de même : la piste est coupée en trames courtes, chacune divisée en bandes, et chaque trame n’a que tant de bits à dépenser."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**mode** : le format : - **SP** : l’original. Le haut reste presque entier, avec un grain fin dans les médiums et les aigus. - **LP2** : moitié moins de bits. Le haut est coupé un peu sous 16 kHz, il devient granuleux et les coups bavent un peu. - **LP4** : encore moitié moins, la gauche et la droite partageant leurs bits. Les aigus vont et viennent sous la coupure à 14 kHz, les détails aigus discrets disparaissent et le haut-médium se resserre presque en mono. - **HQ** : le format plus récent à haut débit. Le plus propre, presque transparent. - **XLP** : le format plus récent à son débit le plus bas, entre LP2 et LP4."),
         ManualBlock(ManualKind.Bullet, "**copies** *(extra)* : recopie encore, de une à quatre générations, chacune perdant un peu plus, comme quand un disque était enregistré depuis un autre."),
@@ -3410,7 +3410,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
         ManualBlock(ManualKind.Bullet, "**entrée lat.** : la piste qui la fait bouger quand **bouger** est sur **key**."),
         ManualBlock(ManualKind.Heading, "Astuces"),
-        ManualBlock(ManualKind.Bullet, "Sur un lead avec **bouger** sur le niveau, les notes plus fortes disent « a »."),
+        ManualBlock(ManualKind.Bullet, "Sur un lead avec **bouger** sur le niveau, les notes plus fortes disent « a »."),
         ManualBlock(ManualKind.Bullet, "Pointez l’entrée latérale sur une boucle de batterie et une nappe parle à son rythme."),
         ManualBlock(ManualKind.Bullet, "Un balayage lent de ou à a sonne comme une wah jouée par une voix."),
     ))
@@ -3473,7 +3473,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**lent** : la vitesse du pavillon en lent, de 0,1 à 2 Hz."),
         ManualBlock(ManualKind.Bullet, "**rapide** : sa vitesse en rapide, de 2 à 10 Hz. Le tambour tourne un peu moins vite que le pavillon dans les deux cas."),
         ManualBlock(ManualKind.Bullet, "**rampe** : le temps que mettent les rotors pour atteindre une nouvelle vitesse. Ralentir prend presque deux fois plus longtemps, comme avec les vrais moteurs."),
-        ManualBlock(ManualKind.Bullet, "**distance** : l’éloignement des micros. Près, l’effet balance fort ; loin, doucement."),
+        ManualBlock(ManualKind.Bullet, "**distance** : l’éloignement des micros. Près, l’effet balance fort; loin, doucement."),
         ManualBlock(ManualKind.Bullet, "**angle** : l’écart entre les deux micros."),
         ManualBlock(ManualKind.Bullet, "**largeur** : la part de stéréo que donnent les micros."),
         ManualBlock(ManualKind.Bullet, "**tempo** *(extra)* : le pavillon fait un tour par valeur de note (de 1/1 à 1/8 de triolet) au lieu de sa propre vitesse, et le tourbillon tombe sur le temps."),
@@ -3481,7 +3481,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
         ManualBlock(ManualKind.Para, "La cabine n’a qu’une entrée : une piste stéréo est additionnée avant, comme pour un orgue."),
         ManualBlock(ManualKind.Heading, "Astuces"),
-        ManualBlock(ManualKind.Bullet, "Automatisez **vitesse** entre lent et rapide et laissez **rampe** faire le reste. L’accélération et le ralentissement font le son."),
+        ManualBlock(ManualKind.Bullet, "Automatisez **vitesse** entre lent et rapide et laissez **rampe** faire le reste."),
         ManualBlock(ManualKind.Bullet, "Sur une guitare ou un piano électrique, **mélange** vers 0,6 garde l’attaque nette."),
         ManualBlock(ManualKind.Bullet, "Avec **tempo**, une nappe pulse en rythme sans LFO à régler."),
     ))
@@ -3505,21 +3505,21 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**vitesse** : la tranche : une noire, une croche, une double ou une triple croche."),
         ManualBlock(ManualKind.Bullet, "**proba** : la probabilité qu’une tranche change."),
         ManualBlock(ManualKind.Bullet, "**répéter**, **inverser**, **omettre** : les proportions de ce que fait une tranche changée : répéter la précédente, la jouer à l’envers, ou se taire."),
-        ManualBlock(ManualKind.Bullet, "**Gate** : raccourcit chaque tranche."),
+        ManualBlock(ManualKind.Bullet, "**gate** : raccourcit chaque tranche."),
         ManualBlock(ManualKind.Bullet, "**hauteur** *(extra)* : décale les répétitions, d’une octave dans chaque sens."),
         ManualBlock(ManualKind.Bullet, "**graine** *(extra)* : quelles tranches changent. Les mêmes changent à chaque lecture du morceau, et on peut écrire une partie autour."),
         ManualBlock(ManualKind.Bullet, "**mélange** : le son sec face au son tranché."),
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Sur une boucle de batterie, **Stutter** ajoute des breaks que vous n’avez pas programmés."),
-        ManualBlock(ManualKind.Bullet, "Essayez des graines jusqu’à ce qu’une mesure sonne juste ; elle restera ainsi."),
-        ManualBlock(ManualKind.Bullet, "Avec **proba** à 0, **Gate** seul hache une nappe en rythme."),
+        ManualBlock(ManualKind.Bullet, "Essayez des graines jusqu’à ce qu’une mesure sonne juste; elle restera ainsi."),
+        ManualBlock(ManualKind.Bullet, "Avec **proba** à 0, **gate** seul hache une nappe en rythme."),
     ))
 
     private fun fr4_23() = ManualSection("Smash", "Trois bandes, chacune écrasée par le haut et relevée par le bas.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
-        ManualBlock(ManualKind.Bullet, "**prof.** : la part mélangée à la piste telle qu’elle était. Un peu, c’est de la densité et de la présence ; tout, c’est chaque queue et chaque souffle remontés au niveau des coups."),
-        ManualBlock(ManualKind.Bullet, "**temps** : règle ensemble l’attaque et la relâche de chaque bande. Lent, c’est doux ; rapide, ça pompe et ça grince."),
+        ManualBlock(ManualKind.Bullet, "**prof.** : la part mélangée à la piste telle qu’elle était. Un peu ajoute de la densité; tout remonte chaque queue et chaque souffle au niveau des coups."),
+        ManualBlock(ManualKind.Bullet, "**temps** : règle ensemble l’attaque et la relâche de chaque bande. Lent, c’est doux; rapide, ça pompe et ça grince."),
         ManualBlock(ManualKind.Bullet, "**seuil** : le niveau vers lequel chaque bande est poussée, de -48 à 0 dB."),
         ManualBlock(ManualKind.Bullet, "**bas** : la force avec laquelle ce qui dépasse le seuil est poussé vers le bas."),
         ManualBlock(ManualKind.Bullet, "**haut** *(extra)* : la force avec laquelle ce qui est en dessous est remonté. Le souffle et le ronflement très bas restent en bas."),
@@ -3768,13 +3768,13 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Accord"),
         ManualBlock(ManualKind.Para, "Change chaque note en accord, soit une forme fixe, soit l’accord que la gamme bâtit sur cette note pour rester dans la tonalité. **gratter** étale les notes dans le temps, et les enregistrements gardent l’effet."),
         ManualBlock(ManualKind.Para, "**forme** **guitare** dispose l’accord comme le ferait la main d’un guitariste, avec les cordes à vide quand c’est possible et un barré plus haut sur le manche sinon, pour qu’un grattage sonne comme une vraie guitare. Renversement, écart et basse ne s’appliquent pas alors."),
-        ManualBlock(ManualKind.Para, "**rythme** gratte l’accord en mesure tant que vous tenez sa touche, comme un guitariste rythmique : vers le bas sur le temps, croches bas-haut, folk, rock, galop, skank reggae, doubles croches funk avec des coups étouffés, ballade ou bossa. **swing** retarde les contretemps, **accent** adoucit les coups faibles, **sourdine** règle la durée d’un coup étouffé et **humaniser** assouplit le jeu. Chaque coup suit le temps de grattage et l’écart de vélocité plus haut."),
-        ManualBlock(ManualKind.Para, "**mémoire** joue un accord à vous depuis n’importe quelle touche. Touchez **apprendre**, jouez l’accord et lâchez : sa forme est gardée dans la case choisie (la case 1 si mémoire est sur off), et cette case est choisie. Pendant l’écoute l’accord est coupé, pour entendre les touches telles que vous les jouez. Huit cases sont gardées avec le morceau.", "**mémoire** joue un accord à vous depuis n’importe quelle touche. Cliquez **apprendre**, jouez l’accord et lâchez : sa forme est gardée dans la case choisie (la case 1 si mémoire est sur off), et cette case est choisie. Pendant l’écoute l’accord est coupé, pour entendre les touches telles que vous les jouez. Huit cases sont gardées avec le morceau."),
-        ManualBlock(ManualKind.Para, "Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier, comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au départ) choisissent l’accord et ne sonnent pas ; à partir de la séparation, les touches jouent ses notes l’une après l’autre sur trois octaves, puis recommencent. Glissez un doigt dessus pour gratter : plus vous allez vite, plus le grattage est rapide."),
-        ManualBlock(ManualKind.Para, "Réglez **jeu** sur **partage** pour jouer des accords de la main gauche et une mélodie de la droite : les touches sous la **séparation** jouent des accords, celles au-dessus jouent leurs propres notes."),
-        ManualBlock(ManualKind.Bullet, "**touches** : toutes, ou seulement les blanches."),
-        ManualBlock(ManualKind.Bullet, "**verrou** : l’accord reste après que vous lâchez sa touche."),
-        ManualBlock(ManualKind.Bullet, "**résonance** : les notes grattées sonnent jusqu’à ce que vous leviez le dernier doigt, comme des cordes qu’on laisse vibrer."),
+        ManualBlock(ManualKind.Para, "**rythme** gratte l’accord en mesure tant que vous tenez sa touche, comme un guitariste rythmique : vers le bas sur le temps, croches bas-haut, folk, rock, galop, skank reggae, doubles croches funk avec des coups étouffés, ballade ou bossa. **swing** retarde les contretemps, **accent** adoucit les coups faibles, **sourdine** règle la durée d’un coup étouffé et **humaniser** assouplit le jeu. Chaque coup suit le temps de grattage et l’écart de vélocité plus haut."),
+        ManualBlock(ManualKind.Para, "**mémoire** joue un accord à vous depuis n’importe quelle touche. Touchez **apprendre**, jouez l’accord et lâchez : sa forme est gardée dans la case choisie (la case 1 si mémoire est coupée), et cette case est choisie. Pendant l’écoute l’accord est coupé, pour entendre les touches telles que vous les jouez. Huit cases sont gardées avec le morceau.", "**mémoire** joue un accord à vous depuis n’importe quelle touche. Cliquez **apprendre**, jouez l’accord et lâchez : sa forme est gardée dans la case choisie (la case 1 si mémoire est coupée), et cette case est choisie. Pendant l’écoute l’accord est coupé, pour entendre les touches telles que vous les jouez. Huit cases sont gardées avec le morceau."),
+        ManualBlock(ManualKind.Para, "Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier, comme des cordes sous les doigts. Les touches sous la **séparation** (do4 au départ) choisissent l’accord et ne sonnent pas; à partir de la séparation, les touches jouent ses notes l’une après l’autre sur trois octaves, puis recommencent. Glissez un doigt dessus pour gratter : plus vous allez vite, plus le grattage est rapide."),
+        ManualBlock(ManualKind.Para, "Réglez **jeu** sur **partage** pour jouer des accords de la main gauche et une mélodie de la droite : les touches sous la **séparation** jouent des accords, celles au-dessus jouent leurs propres notes."),
+        ManualBlock(ManualKind.Bullet, "**touches** : toutes, ou seulement les blanches."),
+        ManualBlock(ManualKind.Bullet, "**verrou** : l’accord reste après que vous lâchez sa touche."),
+        ManualBlock(ManualKind.Bullet, "**résonance** : les notes grattées sonnent jusqu’à ce que vous leviez le dernier doigt, comme des cordes qu’on laisse vibrer."),
         ManualBlock(ManualKind.Heading, "Arpège"),
         ManualBlock(ManualKind.Para, "Joue une à la fois les notes que vous tenez. Vous choisissez l’ordre, la vitesse, l’étendue en octaves, la longueur des notes et une probabilité que chaque pas soit sauté."),
         ManualBlock(ManualKind.Para, "Enregistrer avec l’arpège actif écrit chaque note qu’il joue, donc un accord tenu devient une ligne que vous pouvez modifier ensuite."),

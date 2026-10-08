@@ -35,7 +35,7 @@ sur l’une d’elles la fait sonner, et elle sonne encore après la note.
   **marwa**, **purvi** ou **todi**.
 - **chevalet** : combien le chevalet grésille. À 0, c’est une arête nette.
 - **courbe** : jusqu’où la corde doit osciller avant de se coucher sur le
-  chevalet. Basse, même les notes douces grésillent ; haute, seules les
+  chevalet. Basse, même les notes douces grésillent; haute, seules les
   fortes.
 - **pincer** : un pincement doux ou dur. Sur un instrument frotté, la pression de l’archet.
 - **position** : où la corde est pincée.

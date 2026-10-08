@@ -40,10 +40,10 @@ off), and that slot is picked. While it listens the chord is switched off, so
 you hear the keys as you play them. Eight slots are kept with the song.
 
 Set **play** to **strum keys** to play the chord's notes from the keys, like
-strings under your fingers. Keys below the **split** (C4 to start with) pick the chord and make no
-sound; keys from the split up play its notes, one after another up three
-octaves, then round again.
-Drag a finger across them to strum: the faster you go, the faster the strum.
+strings under your fingers. Keys below the **split** (C4 to start with) pick
+the chord and make no sound; keys from the split up play its notes, one after
+another up three octaves, then round again. Drag a finger across them to
+strum: the faster you go, the faster the strum.
 
 Set **play** to **split** to play chords with the left hand and a melody with
 the right: keys below the **split** play chords, keys from it up play their own

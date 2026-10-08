@@ -9,7 +9,7 @@
 - **proba** : la probabilité qu’une tranche change.
 - **répéter**, **inverser**, **omettre** : les proportions de ce que fait une
   tranche changée : répéter la précédente, la jouer à l’envers, ou se taire.
-- **Gate** : raccourcit chaque tranche.
+- **gate** : raccourcit chaque tranche.
 - **hauteur** *(extra)* : décale les répétitions, d’une octave dans chaque
   sens.
 - **graine** *(extra)* : quelles tranches changent. Les mêmes changent à
@@ -21,6 +21,6 @@
 
 - Sur une boucle de batterie, **Stutter** ajoute des breaks que vous n’avez
   pas programmés.
-- Essayez des graines jusqu’à ce qu’une mesure sonne juste ; elle restera
+- Essayez des graines jusqu’à ce qu’une mesure sonne juste; elle restera
   ainsi.
-- Avec **proba** à 0, **Gate** seul hache une nappe en rythme.
+- Avec **proba** à 0, **gate** seul hache une nappe en rythme.

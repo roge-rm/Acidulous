@@ -3,11 +3,11 @@
 
 ## Les réglages
 
-- **prof.** : la part mélangée à la piste telle qu’elle était. Un peu, c’est
-  de la densité et de la présence ; tout, c’est chaque queue et chaque
-  souffle remontés au niveau des coups.
+- **prof.** : la part mélangée à la piste telle qu’elle était. Un peu ajoute
+  de la densité; tout remonte chaque queue et chaque souffle au niveau des
+  coups.
 - **temps** : règle ensemble l’attaque et la relâche de chaque bande. Lent,
-  c’est doux ; rapide, ça pompe et ça grince.
+  c’est doux; rapide, ça pompe et ça grince.
 - **seuil** : le niveau vers lequel chaque bande est poussée, de -48 à 0 dB.
 - **bas** : la force avec laquelle ce qui dépasse le seuil est poussé vers le
   bas.

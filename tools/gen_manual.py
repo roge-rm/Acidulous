@@ -420,20 +420,26 @@ def kotlin(languages, used):
     return "\n".join(out)
 
 
-def lowered(summary, code=""):
-    """Returns " - " (French " : ") and the summary starting in lower case, or nothing if the page has none."""
+def lowered(summary, code="", names=()):
+    """Returns " - " (French " : ") and the summary starting in lower case, or
+    nothing if the page has none. One that starts with a machine's name and
+    's ("Reflux's filter") keeps its capital."""
+    if not summary:
+        return ""
     sep = "\u00a0: " if code == "fr" else " - "
-    return f"{sep}{summary[0].lower() + summary[1:]}" if summary else ""
+    m = re.match(r"(\w+)['’]s\b", summary)
+    return sep + (summary if m and m.group(1) in names else summary[0].lower() + summary[1:])
 
 
 def contents(files, sections, code=""):
     """Builds the numbered list that goes between the markers in manual/README.md."""
+    names = {kt for _, kids in sections for _, (kt, _, _) in kids}
     rows = []
     for i, (path, ((title, summary, _), kids)) in enumerate(zip(files, sections), 1):
-        rows.append(f"{i}. [{title}]({path.name})" + lowered(summary, code))
+        rows.append(f"{i}. [{title}]({path.name})" + lowered(summary, code, names))
         for kp, (kt, ks, _) in kids:
             here = f"{path.stem}/{kp.name}"
-            rows.append(f"    - [{kt}]({here})" + lowered(ks, code))
+            rows.append(f"    - [{kt}]({here})" + lowered(ks, code, names))
     return "\n".join([OPEN, ""] + rows + ["", CLOSE])
 
 

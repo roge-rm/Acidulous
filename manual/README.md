@@ -37,7 +37,7 @@
     - [Diction](04-the-machines/diction.md) - a vocal synthesizer trained on your voice and taken to the next level.
     - [Nexus](04-the-machines/nexus.md) - a modular synth whose modules are the other machines.
 5. [Effects and mixing](05-effects-and-mixing.md)
-    - [Acid](05-effects-and-mixing/acid.md) - reflux's filter on any track, swept by the track's hits or a pattern.
+    - [Acid](05-effects-and-mixing/acid.md) - Reflux's filter on any track, swept by the track's hits or a pattern.
     - [Amp](05-effects-and-mixing/amp.md) - a guitar amp with a cabinet you can resize.
     - [Bitcrusher](05-effects-and-mixing/bitcrusher.md) - fewer bits and a lower sample rate, with an unsteady clock if you want it.
     - [Chorus](05-effects-and-mixing/chorus.md) - two to four detuned voices that drift.
@@ -53,7 +53,7 @@
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) - adds two voices at scale steps, so they stay in key.
     - [Horn](05-effects-and-mixing/horn.md) - the track plays a wind instrument.
     - [Magneto](05-effects-and-mixing/magneto.md) - the sound of a small recordable disc, in each of its formats.
-    - [Mouth](05-effects-and-mixing/mouth.md) - diction's throat on any track: it shapes whatever goes through into a vowel.
+    - [Mouth](05-effects-and-mixing/mouth.md) - Diction's throat on any track: it shapes whatever goes through into a vowel.
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
     - [Resonator](05-effects-and-mixing/resonator.md) - strings tuned to a key, ringing in sympathy with the track.
     - [Reverb](05-effects-and-mixing/reverb.md) - a room that can also freeze, gate, shimmer or crush itself.

@@ -23,7 +23,6 @@ organ's would be.
 
 ## Tips
 
-- Automate **speed** between slow and fast and let **ramp** do the rest. The
-  speed-up and slow-down are the sound.
+- Automate **speed** between slow and fast and let **ramp** do the rest.
 - On a guitar or electric piano, **mix** at about 0.6 keeps the attack clear.
 - With **tempo** on, a pad pulses in time with no LFO to set up.

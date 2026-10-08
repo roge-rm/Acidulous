@@ -2,8 +2,8 @@
 > Le son d’un petit disque enregistrable, dans chacun de ses formats.
 
 Ces disques contenaient plus qu’ils n’avaient de place en jetant ce que
-l’oreille risquait le moins de regretter. Chaque format en jetait plus que le
-précédent, et ce qu’il jetait, c’est le son. Magneto fait de même : la piste
+l’oreille risquait le moins de regretter, et chaque format en jetait plus que
+le précédent. Magneto fait de même : la piste
 est coupée en trames courtes, chacune divisée en bandes, et chaque trame n’a
 que tant de bits à dépenser.
 

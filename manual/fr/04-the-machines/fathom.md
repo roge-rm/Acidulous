@@ -8,15 +8,15 @@ Fathom ne joue pas d’enregistrements. L’essentiel du son de l’eau, ce sont
 des bulles : une poche d’air prise sous la surface vibre comme un ressort, à
 une hauteur fixée par sa taille (plus elle est petite, plus elle est aiguë),
 et monte quand elle approche de la surface. Une goutte, c’est une bulle et
-le choc de la goutte ; la pluie, beaucoup de gouttes, et le son de ce sur
-quoi elles tombent ; un ruisseau, un nuage dense de petites bulles et
+le choc de la goutte; la pluie, beaucoup de gouttes, et le son de ce sur
+quoi elles tombent; un ruisseau, un nuage dense de petites bulles et
 quelques grosses. Le ressac, c’est le grondement d’une vague qui monte et
 retombe. Le vent, c’est de l’air qui file en rafales et siffle là où il se
-prend dans une fente ; le feu, des crépitements, un sifflement et un
+prend dans une fente; le feu, des crépitements, un sifflement et un
 grondement.
 
 Tenez une note pour que ça continue. La note fixe la taille des bulles, ou
-la note que siffle le vent ; la vélocité, la quantité.
+la note que siffle le vent; la vélocité, la quantité.
 
 ## Eau
 
@@ -34,7 +34,7 @@ la note que siffle le vent ; la vélocité, la quantité.
 - **montée** : de combien monte une bulle en approchant de la surface.
 - **déclin** : combien de temps sonne chaque bulle.
 - **surface** : ce sur quoi tombe la pluie : **eau**, **feuilles**,
-  **tôle** ou **vitre**.
+  **tôle** ou **fenêtre**.
 
 ## Temps
 
@@ -52,10 +52,10 @@ La pression, ou la molette de modulation, épaissit le tout.
 
 ## Kit
 
-Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre son : une seule piste joue toute une scène, la pluie sur un pad, le vent sur un autre, un feu sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad. Jusqu’à quatre pads sonnent à la fois.
+Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre son : une seule piste joue toute une scène, la pluie sur un pad, le vent sur un autre, un feu sur un troisième. Le séquenceur affiche la grille de batterie, une ligne par pad. Jusqu’à quatre pads sonnent à la fois.
 
-- Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**.
-- Les autres boutons (taille, montée, timbre, etc.) agissent sur tous les pads.
+- Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**.
+- Les autres boutons (taille, montée, ton, etc.) agissent sur tous les pads.
 - **Weather Kit** commence avec feu, vent, pluie, gouttes, bulles, ruisseau et ressac, **Storm Kit** avec pluie, grêle, vent, rafales et tonnerre proche et lointain, et **Water Kit** avec bulles, gouttes, ruisseau, éclaboussures, cascade et profondeurs.
 
 ## Astuces

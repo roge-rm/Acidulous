@@ -7,7 +7,7 @@
 
 Palm ne joue pas d’enregistrements. Chaque note est une peau accordée sur la
 note. Une peau ordinaire vibre selon les rapports inégaux d’un cercle tendu,
-d’où l’absence de hauteur nette de la plupart des tambours ; celle d’un
+d’où l’absence de hauteur nette de la plupart des tambours; celle d’un
 tabla est chargée en son centre d’une pâte qui ramène ses harmoniques vers
 une série harmonique, et il chante une note.
 
@@ -58,9 +58,9 @@ pendant qu’elle sonne.
 
 ## Kit
 
-Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre tambour : une seule piste joue tout un kit de percussions à main. Le séquenceur affiche la grille de batterie, une ligne par pad, nommée d’après son tambour et sa frappe.
+Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre tambour : une seule piste joue tout un kit de percussions à main. Le séquenceur affiche la grille de batterie, une ligne par pad, nommée d’après son tambour et sa frappe.
 
-- Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **frappe**, **hauteur** et **niveau**.
+- Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **tambour**, **attaque**, **hauteur** et **niveau**.
 - Les autres boutons (position, main, déclin, etc.) agissent sur tous les pads.
 - **Hand Drum Kit** commence avec djembé, cajón, tabla, bayan, tambour sur cadre et tambour d’aisselle, **African Kit** avec djembés, ashiko, tambour d’aisselle et batá, **Latin Kit** avec congas, bongos, cajón et batá, **Arabic Kit** avec darbouka, riq, tar, bendir et tambour sur cadre, et **Tabla Kit** avec tabla, bayan, mridangam, dholak et kanjira.
 - Désactivez kit pour rejouer un seul tambour sur tout le clavier.

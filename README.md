@@ -70,19 +70,19 @@ All six are the demo song, Squelch.
 
 | | |
 |---|---|
-| **Aviary** | Modelled birdsong: a syrinx with two voices, a throat tuned to the note and a beak, singing whistles, chirps, trills, warbles and calls in time with the tempo, from one bird or a flock. |
+| **Aviary** | Modelled birdsong: whistles, chirps, trills and calls in time with the tempo, from one bird or a flock. |
 | **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
-| **Chanter** | Modelled bagpipes (highland, smallpipes, gaita, uilleann, gaida, cornemuse, musette, säckpipa, dudy, and the two-chanter zampogna, tulum and launeddas) and hurdy-gurdy: drones blown from a bag that carry on between notes, grace notes, a closed chanter, and a rosined wheel whose trompette buzzes once it turns fast enough, or on the beat. |
+| **Chanter** | Modelled bagpipes from a dozen traditions and the hurdy-gurdy: drones that carry on between notes, grace notes, and a trompette that buzzes on the beat. |
 | **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
-| **Fathom** | Modelled water and weather, with thunder, hail, waterfalls, sizzling, ice, snow, splashes, underwater and a rainstick: bubbles that ring at their size and rise, drips, rain on water, leaves, tin or glass, streams, surf on the tempo, gusting and whistling wind, and fire. |
+| **Fathom** | Modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail and snow. |
 | **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |
-| **Fret** | Modelled electric guitars and basses, with a jazz hollowbody, lap and pedal steel and a fretless bass: pickups at the neck or bridge, single coil or humbucker, palm muting, harmonics, slides, strummed chords, and an amp loud enough that held notes feed back. |
+| **Fret** | Modelled electric guitars and basses, hollowbody, steel and fretless too, with pickups, palm muting, harmonics, slides and an amp loud enough to feed back. |
 | **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
 | **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
-| **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |
-| **Sympath** | Modelled sitar, tanpura, veena and shamisen, with sarod, rudra veena, swarmandal, biwa, sanxian, ektara and electric sitar, and bowed sarangi, esraj, dilruba, hardanger fiddle and nyckelharpa: strings ringing a buzzing bridge on every swing, sympathetic strings tuned to a tonic and scale, drone strings, a tanpura that plucks its four strings in time, slides, and pressure pulling the string up. |
+| **Palm** | Modelled hand drums from tabla to cuíca, with open, slap, muted and rim strokes, and pressure squeezing a talking drum. |
+| **Sympath** | Modelled sitar, tanpura, shamisen and others, plucked or bowed: a buzzing bridge, sympathetic strings tuned to a scale, and a tanpura that plays in time. |
 | **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
-| **Tine** | Modelled bars, tines and pans: marimba, vibraphone with its turning discs and damper, xylophone, glockenspiel, thumb piano with rattles, music box, steel pan with its blooming octave, handpan, tongue drum, chimes, crotales, gamelan saron and bonang, gong, singing bowl, slit drum, temple blocks, cowbell and triangle. Rolls, and pressure bows a held bar. |
+| **Tine** | Modelled bars, tines and pans: marimba, vibraphone, thumb piano, steel pan, gamelan, bells and blocks. Rolls, and pressure bows a held bar. |
 | **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
 
 **Samples**

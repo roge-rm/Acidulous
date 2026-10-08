@@ -20,7 +20,7 @@
 
 ## Astuces
 
-- Sur un accord tenu avec **motif** à **16ths**, une nappe devient une ligne
+- Sur un accord tenu avec **motif** à **1/16**, une nappe devient une ligne
   acide.
 - Sur une boucle de batterie avec **motif** à **piste**, chaque coup aboie.
 - En passe-bande avec la piste comme motif, c’est une wah qui suit le jeu.
