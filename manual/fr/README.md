@@ -27,7 +27,7 @@
     - [Palm](04-the-machines/palm.md) : percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre, tambour d’aisselle, congas, bongos, darbouka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu et cuíca, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.
     - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena et shamisen modélisés : des cordes pincées sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.
     - [Timber](04-the-machines/timber.md) : des bois modélisés : anches et flûtes.
-    - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan et tambour à languettes.
+    - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle.
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.
     - [Molt](04-the-machines/molt.md) : chantez une prise, et la grille de notes l’accorde.
     - [Mosaic](04-the-machines/mosaic.md) : un lecteur multi-échantillons : des zones sur le clavier et la vélocité, plus des nuages de grains.

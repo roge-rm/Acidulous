@@ -316,6 +316,31 @@ void lifecycle() {
 
 } // namespace
 
+/** A ringing note struck again quickly must not click: no sharper edge at the re-hit than at the first hit. */
+void restrikeDoesNotClick() {
+    std::printf("- a quick re-hit\n");
+    for (int model = 0; model < 19; ++model) {
+        Bars b({{"model", static_cast<float>(model)}});
+        b.f->noteOn(67, 110);
+        b.play(0.05);
+        const size_t again = b.out.size();
+        for (int hit = 0; hit < 8; ++hit) {
+            b.f->noteOn(67, 110);
+            b.play(0.05);
+        }
+        auto edge = [&](size_t from, size_t to) {
+            double best = 0.0;
+            for (size_t i = from + 2; i < to && i < b.out.size(); ++i)
+                best = std::max(best, std::fabs(double(b.out[i]) - 2.0 * b.out[i - 1] + b.out[i - 2]));
+            return best;
+        };
+        const double first = edge(0, 480), second = edge(again - 64, b.out.size());
+        char d[96];
+        std::snprintf(d, sizeof d, "model %d: re-hit edge %.4f, first hit %.4f", model, second, first);
+        check(second <= first * 1.5 + 1e-4, "a re-hit is no sharper than the first", d);
+    }
+}
+
 int main() {
     tuning();
     partials();
@@ -325,6 +350,7 @@ int main() {
     bloom();
     hands();
     lifecycle();
+    restrikeDoesNotClick();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

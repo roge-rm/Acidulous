@@ -27,7 +27,7 @@
     - [Palm](04-the-machines/palm.md) - modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, played with open, slap, muted, bass and rim strokes.
     - [Sympath](04-the-machines/sympath.md) - modelled sitar, tanpura, veena and shamisen: plucked strings over a buzzing bridge, with strings ringing in sympathy.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
-    - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan and tongue drum.
+    - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle.
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.
     - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
     - [Mosaic](04-the-machines/mosaic.md) - a multisample player: zones across the keyboard and velocity, plus grain clouds.

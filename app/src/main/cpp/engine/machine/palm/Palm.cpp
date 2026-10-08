@@ -20,6 +20,8 @@ constexpr float kRefHz = 200.0f;
 /** How quickly a head that went sharp settles, seconds. */
 constexpr float kDropSettles = 0.08f;
 /** How much of a ringing head is left when it's struck again. */
+/** How long a re-strike takes to damp what's still ringing, seconds. */
+constexpr float kSettleSeconds = 0.003f;
 constexpr float kRestrikeKeeps = 0.7f;
 
 /** One mode of a head: its ratio to the note, its shape (m nodal diameters, n nodal circles), its share. */
@@ -282,6 +284,7 @@ void Palm::prepare(int32_t rate) {
 
 void Palm::reset() {
     for (Voice &v : voices) {
+        v.settleLeft = 0;
         for (Mode &m : v.modes) m.y1 = m.y2 = 0.0f;
         v.used = v.held = false;
         v.strikeLength = v.strikeAt = 0;
@@ -399,10 +402,12 @@ void Palm::retune(Voice &v) {
 
 void Palm::strike(Voice &v, float velocity) {
     const Make &k = kMakes[v.kind];
-    for (int m = 0; m < v.modeCount; ++m) {
-        v.modes[m].y1 *= kRestrikeKeeps;
-        v.modes[m].y2 *= kRestrikeKeeps;
-    }
+    // Over about 3 ms, not at once: a step in a ringing mode is a click. Only
+    // when something's ringing, so a fresh note isn't kept waiting.
+    bool ringing = false;
+    for (int m = 0; m < v.modeCount; ++m) ringing = ringing || std::fabs(v.modes[m].y1) > 1e-6f;
+    v.settleLeft = ringing ? std::max(1, static_cast<int32_t>(kSettleSeconds * sampleRate)) : 0;
+    v.settle = ringing ? std::pow(kRestrikeKeeps, 1.0f / static_cast<float>(v.settleLeft)) : 1.0f;
     v.stroke = strokeFor(v, velocity);
     v.velocity = velocity;
     build(v);
@@ -538,7 +543,8 @@ bool Palm::render(float *L, float *R, int32_t frames) {
                 v.rollLeft = static_cast<int32_t>(sampleRate / roll * (1.0f + 0.08f * white()));
             }
             float x = 0.0f;
-            if (v.strikeAt < v.strikeLength) x = v.strike[static_cast<size_t>(v.strikeAt++)] * v.gain;
+            // A re-struck note waits for what was ringing to be damped, then lands whole.
+            if (v.settleLeft == 0 && v.strikeAt < v.strikeLength) x = v.strike[static_cast<size_t>(v.strikeAt++)] * v.gain;
             // The cuíca's stick sticks and slips once a cycle, so the head is
             // driven at its own note for as long as it's held.
             if (v.kind == Cuica && v.held) {
@@ -547,6 +553,13 @@ bool Palm::render(float *L, float *R, int32_t frames) {
                 x += v.gain * kRub * ((v.rubPhase < 0.15f ? 1.0f : -0.18f) + 0.15f * white());
             }
             float y = 0.0f;
+            if (v.settleLeft > 0) {
+                --v.settleLeft;
+                for (int m = 0; m < v.modeCount; ++m) {
+                    v.modes[m].y1 *= v.settle;
+                    v.modes[m].y2 *= v.settle;
+                }
+            }
             for (int m = 0; m < v.modeCount; ++m) {
                 Mode &md = v.modes[m];
                 const float out = md.b0 * x + md.a1 * md.y1 + md.a2 * md.y2;

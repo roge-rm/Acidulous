@@ -115,6 +115,7 @@
     <string name="pw_board">table</string>
     <string name="pw_body">corps</string>
     <string name="pw_bolt">boulon</string>
+    <string name="pw_bonang">bonang</string>
     <string name="pw_bongo">bongo</string>
     <string name="pw_bossa">bossa</string>
     <string name="pw_both">les deux</string>
@@ -160,6 +161,7 @@
     <string name="pw_character">caractère</string>
     <string name="pw_chiff">chiff</string>
     <string name="pw_chikari">chikari</string>
+    <string name="pw_chimes">cloches</string>
     <string name="pw_chip">puce</string>
     <string name="pw_chirp">gazouillis</string>
     <string name="pw_choir">chœur</string>
@@ -214,6 +216,7 @@
     <string name="pw_cross">croisé</string>
     <string name="pw_crossfade">fondu</string>
     <string name="pw_crossing">traversée</string>
+    <string name="pw_crotales">crotales</string>
     <string name="pw_crunch">crunch</string>
     <string name="pw_crush">écraser</string>
     <string name="pw_crush_it_with_knob_a">écrasé par le bouton a</string>
@@ -411,6 +414,7 @@
     <string name="pw_gaita">gaita</string>
     <string name="pw_gallop">galop</string>
     <string name="pw_gamak">gamak</string>
+    <string name="pw_gamelan">gamelan</string>
     <string name="pw_gate">Gate</string>
     <string name="pw_gate_3c5b49">gate</string>
     <string name="pw_generative">génératif</string>
@@ -474,6 +478,7 @@
     <string name="pw_highland">highland</string>
     <string name="pw_hiss">sifflement</string>
     <string name="pw_hisses">sifflantes</string>
+    <string name="pw_hits">frappes</string>
     <string name="pw_hold">tenir</string>
     <string name="pw_holes">trous</string>
     <string name="pw_hollow">creux</string>
@@ -930,6 +935,7 @@
     <string name="pw_sag">affaiss.</string>
     <string name="pw_sample">échantillon</string>
     <string name="pw_sample_rate">fréq. éch.</string>
+    <string name="pw_saron">saron</string>
     <string name="pw_saturate">saturer</string>
     <string name="pw_saturation">saturation</string>
     <string name="pw_saw">scie</string>
@@ -982,6 +988,7 @@
     <string name="pw_slice_n">Tranche %d</string>
     <string name="pw_slicer">Slicer</string>
     <string name="pw_slide">glissé</string>
+    <string name="pw_slit_drum">tambour à fente</string>
     <string name="pw_slope">pente</string>
     <string name="pw_slot">emplac.</string>
     <string name="pw_slow">lent</string>
@@ -1089,6 +1096,7 @@
     <string name="pw_tar">tar</string>
     <string name="pw_tarbs">tarabs</string>
     <string name="pw_temir_komuz">temir komuz</string>
+    <string name="pw_temple_block">temple block</string>
     <string name="pw_tempo">tempo</string>
     <string name="pw_tension">tension</string>
     <string name="pw_texture">texture</string>
@@ -1136,6 +1144,7 @@
     <string name="pw_tremulant">trémolo</string>
     <string name="pw_tri">tri</string>
     <string name="pw_triad">triade</string>
+    <string name="pw_triangle">triangle</string>
     <string name="pw_trig">déclen.</string>
     <string name="pw_trigger">déclench.</string>
     <string name="pw_trill">trille</string>

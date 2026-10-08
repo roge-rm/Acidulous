@@ -33,7 +33,8 @@ class Tine final : public Machine {
 
     enum Kind : int32_t {
         Marimba = 0, Vibraphone, Xylophone, Glockenspiel, Kalimba, MusicBox,
-        SteelPan, Handpan, TongueDrum, KindCount
+        SteelPan, Handpan, TongueDrum,
+        TubularBell, Crotale, Saron, Bonang, Gong, SingingBowl, SlitDrum, TempleBlock, Cowbell, Triangle, KindCount
     };
     static constexpr int kVoices = 16;
     static constexpr int kModes = 6;
@@ -71,6 +72,9 @@ class Tine final : public Machine {
     struct Voice {
         Mode modes[kModes];
         int modeCount = 0;
+        /** A re-strike's damping of what's still ringing, spread over a few milliseconds so it doesn't click. */
+        float settle = 1.0f;
+        int32_t settleLeft = 0;
         bool used = false, held = false, damped = false;
         uint8_t note = 0;
         float velocity = 0.8f;

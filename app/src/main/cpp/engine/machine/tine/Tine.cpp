@@ -23,6 +23,8 @@ constexpr float kDampedT60 = 0.08f;
 /** The tube's feedback: how sharply it picks out its note. */
 constexpr float kTubeFeedback = 0.9f;
 /** How much of a ringing bar is left when it's struck again. */
+/** How long a re-strike takes to damp what's still ringing, seconds. */
+constexpr float kSettleSeconds = 0.003f;
 constexpr float kRestrikeKeeps = 0.6f;
 /** The lowest note a tube is long enough for, Hz. */
 constexpr float kTubeLowest = 20.0f;
@@ -62,6 +64,27 @@ constexpr Make kMakes[Tine::KindCount] = {
     {4, {1.0f, 2.0f, 3.0f, 4.0f}, {1.0f, 0.45f, 0.25f, 0.06f}, 4.5f, 0.3f, 0.5f, 0.03f, 1.8f, 0.9f},
     // Tongue drum: tongues cut into a steel shell.
     {3, {1.0f, 2.92f, 5.72f}, {1.0f, 0.2f, 0.06f}, 3.0f, 0.3f, 0.7f, 0.03f, 1.6f, 1.0f},
+    // Tubular bell: a hanging brass tube. The note heard is an octave below its
+    // fourth mode, so the modes are placed around that: the fourth at 2.
+    {5, {0.618f, 1.209f, 2.0f, 2.987f, 4.17f}, {0.3f, 0.9f, 1.0f, 0.6f, 0.3f}, 9.0f, 0.2f, 0.5f, 0.06f, 0.5f, 1.0f},
+    // Crotale: a small, thick bronze disc, high and long.
+    {4, {1.0f, 2.31f, 4.04f, 6.18f}, {1.0f, 0.35f, 0.15f, 0.06f}, 6.0f, 0.2f, 0.6f, 0.08f, 0.3f, 1.1f},
+    // Saron: a gamelan's bronze bar over a trough, bright and loose of the series.
+    {4, {1.0f, 2.68f, 5.15f, 8.4f}, {1.0f, 0.45f, 0.2f, 0.08f}, 3.5f, 0.3f, 0.6f, 0.05f, 0.7f, 1.1f},
+    // Bonang: a gamelan's bronze kettle gong, round, with a boss struck in the middle.
+    {5, {1.0f, 1.52f, 2.0f, 2.84f, 3.98f}, {1.0f, 0.3f, 0.45f, 0.15f, 0.08f}, 4.0f, 0.3f, 0.6f, 0.04f, 1.2f, 1.0f},
+    // Gong: a big bronze disc, its modes crowded close, ringing for many seconds.
+    {6, {1.0f, 1.47f, 1.98f, 2.52f, 3.15f, 3.72f}, {1.0f, 0.6f, 0.45f, 0.3f, 0.2f, 0.12f}, 12.0f, 0.1f, 0.4f, 0.02f, 2.5f, 0.9f},
+    // Singing bowl: a thick bowl struck with a padded stick, its partials beating as they ring.
+    {4, {1.0f, 2.71f, 5.15f, 8.27f}, {1.0f, 0.5f, 0.2f, 0.08f}, 15.0f, 0.1f, 0.5f, 0.01f, 2.0f, 0.9f},
+    // Slit drum: a hollowed log with tongues cut in its slot, warm and short.
+    {3, {1.0f, 1.95f, 3.2f}, {1.0f, 0.25f, 0.08f}, 0.6f, 0.4f, 0.9f, 0.1f, 1.4f, 1.3f},
+    // Temple block: a hollow wooden block, a dry knock with a pitch.
+    {3, {1.0f, 2.3f, 4.1f}, {1.0f, 0.3f, 0.1f}, 0.15f, 0.3f, 1.0f, 0.2f, 0.4f, 3.6f},
+    // Cowbell and agogô: a clanking metal bell, two strong modes a fifth or so apart.
+    {4, {1.0f, 1.5f, 2.48f, 3.32f}, {1.0f, 0.8f, 0.3f, 0.15f}, 0.6f, 0.2f, 0.7f, 0.15f, 0.3f, 2.2f},
+    // Triangle: a bent steel rod, its modes dense and high, ringing.
+    {6, {1.0f, 2.03f, 3.05f, 4.09f, 5.15f, 6.24f}, {1.0f, 0.7f, 0.5f, 0.35f, 0.25f, 0.15f}, 4.0f, 0.1f, 0.4f, 0.1f, 0.2f, 0.8f},
 };
 
 /** Decay per sample for a ring time. */
@@ -115,6 +138,7 @@ void Tine::prepare(int32_t rate) {
 
 void Tine::reset() {
     for (Voice &v : voices) {
+        v.settleLeft = 0;
         for (Mode &m : v.modes) m.y1 = m.y2 = 0.0f;
         std::fill(v.tube.begin(), v.tube.end(), 0.0f);
         v.tubeAt = 0;
@@ -229,10 +253,12 @@ void Tine::retune(Voice &v) {
 void Tine::strike(Voice &v, float velocity) {
     // A mallet landing on a bar that's still swinging stops some of it first,
     // so a roll builds to a level rather than without end.
-    for (int m = 0; m < v.modeCount; ++m) {
-        v.modes[m].y1 *= kRestrikeKeeps;
-        v.modes[m].y2 *= kRestrikeKeeps;
-    }
+    // Over about 3 ms, not at once: a step in a ringing mode is a click. Only
+    // when something's ringing, so a fresh note isn't kept waiting.
+    bool ringing = false;
+    for (int m = 0; m < v.modeCount; ++m) ringing = ringing || std::fabs(v.modes[m].y1) > 1e-6f;
+    v.settleLeft = ringing ? std::max(1, static_cast<int32_t>(kSettleSeconds * sampleRate)) : 0;
+    v.settle = ringing ? std::pow(kRestrikeKeeps, 1.0f / static_cast<float>(v.settleLeft)) : 1.0f;
     const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
     const Make &k = kMakes[kind];
     const float f = noteHz(pitchOf(v));
@@ -383,9 +409,17 @@ bool Tine::render(float *L, float *R, int32_t frames) {
                 v.rollLeft = static_cast<int32_t>(sampleRate / roll * (1.0f + 0.08f * white()));
             }
             float x = 0.0f;
-            if (v.strikeAt < v.strikeLength) x = v.strike[static_cast<size_t>(v.strikeAt++)] * v.gain;
+            // A re-struck note waits for what was ringing to be damped, then lands whole.
+            if (v.settleLeft == 0 && v.strikeAt < v.strikeLength) x = v.strike[static_cast<size_t>(v.strikeAt++)] * v.gain;
             const float bow = v.bowing > 0.0f ? v.bowing * v.gain * white() : 0.0f;
             float y = 0.0f, first = 0.0f;
+            if (v.settleLeft > 0) {
+                --v.settleLeft;
+                for (int m = 0; m < v.modeCount; ++m) {
+                    v.modes[m].y1 *= v.settle;
+                    v.modes[m].y2 *= v.settle;
+                }
+            }
             for (int m = 0; m < v.modeCount; ++m) {
                 Mode &md = v.modes[m];
                 float in = md.b0 * x + md.bow * bow;

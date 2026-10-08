@@ -3783,12 +3783,12 @@ internal object FactoryBanks {
         low = 36, high = 90)
 
     private fun tine6() = Patch("Tine", "Xylophone",
-        mapOf("model" to 0.25f, "mallet" to 0.8f, "tube" to 0.6f),
+        mapOf("model" to 0.111111112f, "mallet" to 0.8f, "tube" to 0.6f),
         family = "wood",
         low = 53, high = 100)
 
     private fun tine7() = Patch("Tine", "Soft Xylophone",
-        mapOf("model" to 0.25f, "mallet" to 0.35f, "tube" to 0.7f),
+        mapOf("model" to 0.111111112f, "mallet" to 0.35f, "tube" to 0.7f),
         family = "wood",
         low = 53, high = 100)
 
@@ -3797,127 +3797,302 @@ internal object FactoryBanks {
         family = "wood",
         low = 40, high = 90)
 
-    private fun tine9() = Patch("Tine", "Vibraphone",
-        mapOf("model" to 0.125f, "damp" to 0.85f, "tube" to 0.7f),
-        family = "vibes",
+    private fun tine9() = Patch("Tine", "Balafon",
+        mapOf("mallet" to 0.6f, "buzz" to 0.7f),
+        family = "wood",
+        low = 48, high = 84)
+
+    private fun tine10() = Patch("Tine", "Xylophone Hard",
+        mapOf("model" to 0.111111112f, "mallet" to 0.9f, "bright" to 0.7f),
+        family = "wood",
+        low = 60, high = 96)
+
+    private fun tine11() = Patch("Tine", "Slit Drum",
+        mapOf("model" to 0.8333333f),
+        family = "wood",
+        low = 40, high = 60)
+
+    private fun tine12() = Patch("Tine", "Slit Drum Soft",
+        mapOf("model" to 0.8333333f, "mallet" to 0.2f, "decay" to 0.7f),
+        family = "wood",
+        low = 36, high = 57)
+
+    private fun tine13() = Patch("Tine", "Log Drum Low",
+        mapOf("model" to 0.8333333f, "mallet" to 0.4f, "bright" to 0.3f),
+        family = "wood",
+        low = 31, high = 52)
+
+    private fun tine14() = Patch("Tine", "Vibraphone",
+        mapOf("model" to 0.055555556f, "damp" to 0.85f, "tube" to 0.7f),
+        family = "metal",
         low = 53, high = 89)
 
-    private fun tine10() = Patch("Tine", "Vibes Motor",
-        mapOf("model" to 0.125f, "damp" to 0.85f, "tube" to 0.9f, "motor" to 0.55f, "depth" to 0.6f),
-        family = "vibes",
+    private fun tine15() = Patch("Tine", "Vibes Motor",
+        mapOf("model" to 0.055555556f, "damp" to 0.85f, "tube" to 0.9f, "motor" to 0.55f, "depth" to 0.6f),
+        family = "metal",
         low = 53, high = 89)
 
-    private fun tine11() = Patch("Tine", "Slow Motor",
-        mapOf("model" to 0.125f, "tube" to 0.9f, "motor" to 0.2f, "depth" to 0.7f),
-        family = "vibes",
+    private fun tine16() = Patch("Tine", "Slow Motor",
+        mapOf("model" to 0.055555556f, "tube" to 0.9f, "motor" to 0.2f, "depth" to 0.7f),
+        family = "metal",
         low = 53, high = 89)
 
-    private fun tine12() = Patch("Tine", "Soft Vibes",
-        mapOf("model" to 0.125f, "mallet" to 0.1f, "damp" to 0.7f, "tube" to 0.8f),
-        family = "vibes",
+    private fun tine17() = Patch("Tine", "Soft Vibes",
+        mapOf("model" to 0.055555556f, "mallet" to 0.1f, "damp" to 0.7f, "tube" to 0.8f),
+        family = "metal",
         low = 53, high = 89)
 
-    private fun tine13() = Patch("Tine", "Hard Vibes",
-        mapOf("model" to 0.125f, "mallet" to 0.85f, "position" to 0.6f, "damp" to 0.8f, "tube" to 0.6f),
-        family = "vibes",
+    private fun tine18() = Patch("Tine", "Hard Vibes",
+        mapOf("model" to 0.055555556f, "mallet" to 0.85f, "position" to 0.6f, "damp" to 0.8f, "tube" to 0.6f),
+        family = "metal",
         low = 53, high = 89)
 
-    private fun tine14() = Patch("Tine", "Vibes Roll",
-        mapOf("model" to 0.125f, "mallet" to 0.2f, "tube" to 0.9f, "motor" to 0.4f, "depth" to 0.4f, "roll" to 0.458333343f, "volume" to 0.45f),
-        family = "vibes",
+    private fun tine19() = Patch("Tine", "Vibes Roll",
+        mapOf("model" to 0.055555556f, "mallet" to 0.2f, "tube" to 0.9f, "motor" to 0.4f, "depth" to 0.4f, "roll" to 0.458333343f, "volume" to 0.45f),
+        family = "metal",
         low = 53, high = 89)
 
-    private fun tine15() = Patch("Tine", "Long Vibes",
-        mapOf("model" to 0.125f, "mallet" to 0.15f, "decay" to 0.8f, "tube" to 0.9f),
-        family = "vibes",
+    private fun tine20() = Patch("Tine", "Long Vibes",
+        mapOf("model" to 0.055555556f, "mallet" to 0.15f, "decay" to 0.8f, "tube" to 0.9f),
+        family = "metal",
         low = 53, high = 89)
 
-    private fun tine16() = Patch("Tine", "Glockenspiel",
-        mapOf("model" to 0.375f, "mallet" to 0.85f, "tube" to 0f),
-        family = "bells",
+    private fun tine21() = Patch("Tine", "Glockenspiel",
+        mapOf("model" to 0.166666672f, "mallet" to 0.85f, "tube" to 0f),
+        family = "metal",
         low = 72, high = 108)
 
-    private fun tine17() = Patch("Tine", "Soft Glockenspiel",
-        mapOf("model" to 0.375f, "mallet" to 0.45f, "tube" to 0f),
-        family = "bells",
+    private fun tine22() = Patch("Tine", "Soft Glockenspiel",
+        mapOf("model" to 0.166666672f, "mallet" to 0.45f, "tube" to 0f),
+        family = "metal",
         low = 72, high = 108)
 
-    private fun tine18() = Patch("Tine", "Bell Bars",
-        mapOf("model" to 0.375f, "mallet" to 0.25f, "decay" to 0.4f, "damp" to 0.7f, "tube" to 0.6f),
-        family = "bells",
+    private fun tine23() = Patch("Tine", "Bell Bars",
+        mapOf("model" to 0.166666672f, "mallet" to 0.25f, "decay" to 0.4f, "damp" to 0.7f, "tube" to 0.6f),
+        family = "metal",
         low = 60, high = 100)
 
-    private fun tine19() = Patch("Tine", "Music Box",
-        mapOf("model" to 0.625f, "tube" to 0.2f),
-        family = "bells",
-        low = 60, high = 100)
-
-    private fun tine20() = Patch("Tine", "Slow Music Box",
-        mapOf("model" to 0.625f, "decay" to 0.75f, "bright" to 0.35f, "tube" to 0.3f),
-        family = "bells",
-        low = 55, high = 96)
-
-    private fun tine21() = Patch("Tine", "Tin Bells",
-        mapOf("model" to 0.375f, "mallet" to 1f, "position" to 0.8f, "decay" to 0.3f, "bright" to 0.75f, "tube" to 0f),
-        family = "bells",
+    private fun tine24() = Patch("Tine", "Tin Bells",
+        mapOf("model" to 0.166666672f, "mallet" to 1f, "position" to 0.8f, "decay" to 0.3f, "bright" to 0.75f, "tube" to 0f),
+        family = "metal",
         low = 67, high = 108)
 
-    private fun tine22() = Patch("Tine", "Thumb Piano",
-        mapOf("model" to 0.5f, "tube" to 0.4f),
+    private fun tine25() = Patch("Tine", "Chimes",
+        mapOf("model" to 0.5f, "tube" to 0f),
+        family = "metal",
+        low = 60, high = 77)
+
+    private fun tine26() = Patch("Tine", "Chimes Soft",
+        mapOf("model" to 0.5f, "mallet" to 0.25f, "decay" to 0.7f, "tube" to 0f),
+        family = "metal",
+        low = 60, high = 77)
+
+    private fun tine27() = Patch("Tine", "Chimes Damped",
+        mapOf("model" to 0.5f, "decay" to 0.25f, "tube" to 0f),
+        family = "metal",
+        low = 60, high = 77)
+
+    private fun tine28() = Patch("Tine", "Crotales",
+        mapOf("model" to 0.5555556f, "tube" to 0f),
+        family = "metal",
+        low = 72, high = 96)
+
+    private fun tine29() = Patch("Tine", "Crotales Bowed",
+        mapOf("model" to 0.5555556f, "mallet" to 0.05f, "decay" to 0.9f, "tube" to 0f, "roll" to 0.75f, "volume" to 0.35f),
+        family = "metal",
+        low = 72, high = 96)
+
+    private fun tine30() = Patch("Tine", "Crotales Bright",
+        mapOf("model" to 0.5555556f, "mallet" to 0.9f, "bright" to 0.8f, "tube" to 0f),
+        family = "metal",
+        low = 72, high = 96)
+
+    private fun tine31() = Patch("Tine", "Saron",
+        mapOf("model" to 0.6111111f),
+        family = "gamelan",
+        low = 60, high = 79)
+
+    private fun tine32() = Patch("Tine", "Saron Damped",
+        mapOf("model" to 0.6111111f, "decay" to 0.2f),
+        family = "gamelan",
+        low = 60, high = 79)
+
+    private fun tine33() = Patch("Tine", "Gender",
+        mapOf("model" to 0.6111111f, "mallet" to 0.2f, "decay" to 0.8f),
+        family = "gamelan",
+        low = 48, high = 79)
+
+    private fun tine34() = Patch("Tine", "Bonang",
+        mapOf("model" to 0.6666667f),
+        family = "gamelan",
+        low = 55, high = 74)
+
+    private fun tine35() = Patch("Tine", "Bonang Barung",
+        mapOf("model" to 0.6666667f, "mallet" to 0.4f, "decay" to 0.7f),
+        family = "gamelan",
+        low = 48, high = 67)
+
+    private fun tine36() = Patch("Tine", "Bonang Interlock",
+        mapOf("model" to 0.6666667f, "decay" to 0.4f, "roll" to 0.333333343f, "volume" to 0.4f),
+        family = "gamelan",
+        low = 55, high = 74)
+
+    private fun tine37() = Patch("Tine", "Gong Ageng",
+        mapOf("model" to 0.7222222f, "tube" to 0f),
+        family = "gamelan",
+        low = 28, high = 48)
+
+    private fun tine38() = Patch("Tine", "Gong Soft",
+        mapOf("model" to 0.7222222f, "mallet" to 0.15f, "tube" to 0f, "bloom" to 0.8f),
+        family = "gamelan",
+        low = 28, high = 48)
+
+    private fun tine39() = Patch("Tine", "Kempul",
+        mapOf("model" to 0.7222222f, "decay" to 0.4f, "tube" to 0f),
+        family = "gamelan",
+        low = 40, high = 60)
+
+    private fun tine40() = Patch("Tine", "Music Box",
+        mapOf("model" to 0.2777778f, "tube" to 0.2f),
+        family = "thumb",
+        low = 60, high = 100)
+
+    private fun tine41() = Patch("Tine", "Slow Music Box",
+        mapOf("model" to 0.2777778f, "decay" to 0.75f, "bright" to 0.35f, "tube" to 0.3f),
+        family = "thumb",
+        low = 55, high = 96)
+
+    private fun tine42() = Patch("Tine", "Thumb Piano",
+        mapOf("model" to 0.222222224f, "tube" to 0.4f),
         family = "thumb",
         low = 48, high = 88)
 
-    private fun tine23() = Patch("Tine", "Buzzing Thumb",
-        mapOf("model" to 0.5f, "tube" to 0.4f, "buzz" to 0.6f),
+    private fun tine43() = Patch("Tine", "Buzzing Thumb",
+        mapOf("model" to 0.222222224f, "tube" to 0.4f, "buzz" to 0.6f),
         family = "thumb",
         low = 48, high = 88)
 
-    private fun tine24() = Patch("Tine", "Gourd Thumb",
-        mapOf("model" to 0.5f, "mallet" to 0.3f, "bright" to 0.35f, "tube" to 0.9f, "buzz" to 0.1f),
+    private fun tine44() = Patch("Tine", "Gourd Thumb",
+        mapOf("model" to 0.222222224f, "mallet" to 0.3f, "bright" to 0.35f, "tube" to 0.9f, "buzz" to 0.1f),
         family = "thumb",
         low = 43, high = 84)
 
-    private fun tine25() = Patch("Tine", "Bright Thumb",
-        mapOf("model" to 0.5f, "mallet" to 0.9f, "position" to 0.7f, "bright" to 0.65f, "tube" to 0.2f, "volume" to 0.95f),
+    private fun tine45() = Patch("Tine", "Bright Thumb",
+        mapOf("model" to 0.222222224f, "mallet" to 0.9f, "position" to 0.7f, "bright" to 0.65f, "tube" to 0.2f, "volume" to 0.95f),
         family = "thumb",
         low = 52, high = 92)
 
-    private fun tine26() = Patch("Tine", "Steel Pan",
-        mapOf("model" to 0.75f, "tube" to 0f, "bloom" to 0.6f),
+    private fun tine46() = Patch("Tine", "Music Box Slow",
+        mapOf("model" to 0.2777778f, "decay" to 0.7f, "tube" to 0.7f),
+        family = "thumb",
+        low = 60, high = 96)
+
+    private fun tine47() = Patch("Tine", "Steel Pan",
+        mapOf("model" to 0.333333343f, "tube" to 0f, "bloom" to 0.6f),
         family = "pans",
         low = 55, high = 88)
 
-    private fun tine27() = Patch("Tine", "Pan Roll",
-        mapOf("model" to 0.75f, "mallet" to 0.35f, "tube" to 0f, "roll" to 0.6666667f, "volume" to 0.55f),
+    private fun tine48() = Patch("Tine", "Pan Roll",
+        mapOf("model" to 0.333333343f, "mallet" to 0.35f, "tube" to 0f, "roll" to 0.6666667f, "volume" to 0.55f),
         family = "pans",
         low = 55, high = 88)
 
-    private fun tine28() = Patch("Tine", "Bass Pan",
-        mapOf("model" to 0.75f, "mallet" to 0.25f, "decay" to 0.6f, "tube" to 0f, "bloom" to 0.8f),
+    private fun tine49() = Patch("Tine", "Bass Pan",
+        mapOf("model" to 0.333333343f, "mallet" to 0.25f, "decay" to 0.6f, "tube" to 0f, "bloom" to 0.8f),
         family = "pans",
         low = 31, high = 60)
 
-    private fun tine29() = Patch("Tine", "Handpan",
-        mapOf("model" to 0.875f, "tube" to 0.3f),
+    private fun tine50() = Patch("Tine", "Handpan",
+        mapOf("model" to 0.3888889f, "tube" to 0.3f),
         family = "pans",
         low = 45, high = 77)
 
-    private fun tine30() = Patch("Tine", "Soft Handpan",
-        mapOf("model" to 0.875f, "mallet" to 0.1f, "decay" to 0.7f, "tube" to 0.3f, "bloom" to 0.4f, "spread" to 0.5f),
+    private fun tine51() = Patch("Tine", "Soft Handpan",
+        mapOf("model" to 0.3888889f, "mallet" to 0.1f, "decay" to 0.7f, "tube" to 0.3f, "bloom" to 0.4f, "spread" to 0.5f),
         family = "pans",
         low = 45, high = 77)
 
-    private fun tine31() = Patch("Tine", "Tongue Drum",
-        mapOf("model" to 1f),
+    private fun tine52() = Patch("Tine", "Tongue Drum",
+        mapOf("model" to 0.444444448f),
         family = "pans",
         low = 48, high = 79)
 
-    private fun tine32() = Patch("Tine", "Deep Tongue",
-        mapOf("model" to 1f, "mallet" to 0.2f, "decay" to 0.7f, "tube" to 0.7f),
+    private fun tine53() = Patch("Tine", "Deep Tongue",
+        mapOf("model" to 0.444444448f, "mallet" to 0.2f, "decay" to 0.7f, "tube" to 0.7f),
         family = "pans",
         low = 40, high = 67)
 
-    private val tine: List<Patch> by lazy { listOf(tine0(), tine1(), tine2(), tine3(), tine4(), tine5(), tine6(), tine7(), tine8(), tine9(), tine10(), tine11(), tine12(), tine13(), tine14(), tine15(), tine16(), tine17(), tine18(), tine19(), tine20(), tine21(), tine22(), tine23(), tine24(), tine25(), tine26(), tine27(), tine28(), tine29(), tine30(), tine31(), tine32()) }
+    private fun tine54() = Patch("Tine", "Singing Bowl",
+        mapOf("model" to 0.7777778f, "tube" to 0f),
+        family = "pans",
+        low = 48, high = 72)
+
+    private fun tine55() = Patch("Tine", "Bowl Rubbed",
+        mapOf("model" to 0.7777778f, "mallet" to 0.05f, "decay" to 0.9f, "tube" to 0f, "roll" to 0.8333333f),
+        family = "pans",
+        low = 48, high = 72)
+
+    private fun tine56() = Patch("Tine", "Bowl Low",
+        mapOf("model" to 0.7777778f, "mallet" to 0.2f, "tube" to 0f),
+        family = "pans",
+        low = 36, high = 60)
+
+    private fun tine57() = Patch("Tine", "Handpan Soft",
+        mapOf("model" to 0.3888889f, "mallet" to 0.2f),
+        family = "pans",
+        low = 50, high = 74)
+
+    private fun tine58() = Patch("Tine", "Tongue Drum Bright",
+        mapOf("model" to 0.444444448f, "mallet" to 0.8f),
+        family = "pans",
+        low = 55, high = 79)
+
+    private fun tine59() = Patch("Tine", "Temple Blocks",
+        mapOf("model" to 0.8888889f),
+        family = "hits",
+        low = 60, high = 76)
+
+    private fun tine60() = Patch("Tine", "Temple Blocks Hard",
+        mapOf("model" to 0.8888889f, "mallet" to 0.9f),
+        family = "hits",
+        low = 64, high = 84)
+
+    private fun tine61() = Patch("Tine", "Wood Blocks",
+        mapOf("model" to 0.8888889f, "decay" to 0.3f, "bright" to 0.6f),
+        family = "hits",
+        low = 72, high = 88)
+
+    private fun tine62() = Patch("Tine", "Cowbell",
+        mapOf("model" to 0.9444444f, "tube" to 0f),
+        family = "hits",
+        low = 60, high = 76)
+
+    private fun tine63() = Patch("Tine", "Agogo",
+        mapOf("model" to 0.9444444f, "mallet" to 0.7f, "decay" to 0.6f, "tube" to 0f),
+        family = "hits",
+        low = 64, high = 84)
+
+    private fun tine64() = Patch("Tine", "Cowbell Muted",
+        mapOf("model" to 0.9444444f, "decay" to 0.15f, "tube" to 0f),
+        family = "hits",
+        low = 60, high = 76)
+
+    private fun tine65() = Patch("Tine", "Triangle",
+        mapOf("model" to 1f, "tube" to 0f),
+        family = "hits",
+        low = 76, high = 96)
+
+    private fun tine66() = Patch("Tine", "Triangle Roll",
+        mapOf("model" to 1f, "tube" to 0f, "roll" to 0.6666667f),
+        family = "hits",
+        low = 76, high = 96)
+
+    private fun tine67() = Patch("Tine", "Triangle Muted",
+        mapOf("model" to 1f, "decay" to 0.15f, "tube" to 0f),
+        family = "hits",
+        low = 76, high = 96)
+
+    private val tine: List<Patch> by lazy { listOf(tine0(), tine1(), tine2(), tine3(), tine4(), tine5(), tine6(), tine7(), tine8(), tine9(), tine10(), tine11(), tine12(), tine13(), tine14(), tine15(), tine16(), tine17(), tine18(), tine19(), tine20(), tine21(), tine22(), tine23(), tine24(), tine25(), tine26(), tine27(), tine28(), tine29(), tine30(), tine31(), tine32(), tine33(), tine34(), tine35(), tine36(), tine37(), tine38(), tine39(), tine40(), tine41(), tine42(), tine43(), tine44(), tine45(), tine46(), tine47(), tine48(), tine49(), tine50(), tine51(), tine52(), tine53(), tine54(), tine55(), tine56(), tine57(), tine58(), tine59(), tine60(), tine61(), tine62(), tine63(), tine64(), tine65(), tine66(), tine67()) }
 
     private fun sympath0() = Patch("Sympath", "Init", emptyMap(),
         family = "sitar",

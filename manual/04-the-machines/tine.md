@@ -1,7 +1,9 @@
 # Tine
 
 > Modelled bars, tines and pans: marimba, vibraphone, xylophone,
-> glockenspiel, thumb piano, music box, steel pan, handpan and tongue drum.
+> glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum,
+> chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks,
+> cowbell and triangle.
 
 Tine doesn't play recordings. Each note is a handful of resonances tuned the
 way the thing struck is tuned. A marimba bar is carved away underneath so its
@@ -18,7 +20,10 @@ overtones start, so they ring out.
 ## Bar
 
 - **model** - **marimba**, **vibes**, **xylophone**, **glock**, **thumb**
-  (piano), **music box**, **steel pan**, **handpan** or **tongue drum**.
+  (piano), **music box**, **steel pan**, **handpan**, **tongue drum**,
+  **chimes** (tubular bells), **crotales**, **saron** and **bonang** (gamelan),
+  **gong**, **bowl** (singing bowl), **slit drum**, **temple block**,
+  **cowbell** or **triangle**. A balafon is the marimba with **buzz** up.
 - **tune** - in cents.
 - **mallet** - how hard the mallet, finger or pin: soft yarn to bare metal.
   Playing harder makes it a little harder too.

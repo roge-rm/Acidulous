@@ -2,7 +2,8 @@
 
 > Lames, languettes et tambours d’acier modélisés : marimba, vibraphone,
 > xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan,
-> handpan et tambour à languettes.
+> handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong,
+> bol chantant, tambour à fente, temple blocks, cloche à vache et triangle.
 
 Tine ne joue pas d’enregistrements. Chaque note est une poignée de
 résonances accordées comme l’objet frappé. Une lame de marimba est creusée
@@ -21,7 +22,10 @@ repartie avant que les harmoniques démarrent, et elles sonnent.
 
 - **modèle** : **marimba**, **vibra**, **xylophone**, **glock**, **pouce**
   (piano à pouces), **boîte à musique**, **steelpan**, **handpan** ou
-  **tambour à lang.** (tambour à languettes).
+  **tambour à lang.** (tambour à languettes), **cloches** (tubulaires),
+  **crotales**, **saron** et **bonang** (gamelan), **gong**, **bol** (bol
+  chantant), **tambour à fente**, **temple block**, **cloche** (à vache) ou
+  **triangle**. Un balafon, c’est le marimba avec **buzz** monté.
 - **accordage** : en cents.
 - **mailloche** : la dureté de la mailloche, du doigt ou de la goupille :
   de la laine douce au métal nu. Jouer plus fort la durcit un peu aussi.

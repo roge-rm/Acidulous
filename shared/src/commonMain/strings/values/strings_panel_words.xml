@@ -115,6 +115,7 @@
     <string name="pw_board">board</string>
     <string name="pw_body">body</string>
     <string name="pw_bolt">bolt</string>
+    <string name="pw_bonang">bonang</string>
     <string name="pw_bongo">bongo</string>
     <string name="pw_bossa">bossa</string>
     <string name="pw_both">both</string>
@@ -160,6 +161,7 @@
     <string name="pw_character">character</string>
     <string name="pw_chiff">chiff</string>
     <string name="pw_chikari">chikari</string>
+    <string name="pw_chimes">chimes</string>
     <string name="pw_chip">chip</string>
     <string name="pw_chirp">chirp</string>
     <string name="pw_choir">choir</string>
@@ -214,6 +216,7 @@
     <string name="pw_cross">cross</string>
     <string name="pw_crossfade">crossfade</string>
     <string name="pw_crossing">crossing</string>
+    <string name="pw_crotales">crotales</string>
     <string name="pw_crunch">crunch</string>
     <string name="pw_crush">crush</string>
     <string name="pw_crush_it_with_knob_a">crush it with knob a</string>
@@ -412,6 +415,7 @@
     <string name="pw_gaita">gaita</string>
     <string name="pw_gallop">gallop</string>
     <string name="pw_gamak">gamak</string>
+    <string name="pw_gamelan">gamelan</string>
     <string name="pw_gate">Gate</string>
     <string name="pw_gate_3c5b49">gate</string>
     <string name="pw_generative">generative</string>
@@ -476,6 +480,7 @@
     <string name="pw_highland">highland</string>
     <string name="pw_hiss">hiss</string>
     <string name="pw_hisses">hisses</string>
+    <string name="pw_hits">hits</string>
     <string name="pw_hold">hold</string>
     <string name="pw_holes">holes</string>
     <string name="pw_hollow">hollow</string>
@@ -932,6 +937,7 @@
     <string name="pw_sag">sag</string>
     <string name="pw_sample">sample</string>
     <string name="pw_sample_rate">sample rate</string>
+    <string name="pw_saron">saron</string>
     <string name="pw_saturate">saturate</string>
     <string name="pw_saturation">saturation</string>
     <string name="pw_saw">saw</string>
@@ -984,6 +990,7 @@
     <string name="pw_slice_n">Slice %d</string>
     <string name="pw_slicer">Slicer</string>
     <string name="pw_slide">slide</string>
+    <string name="pw_slit_drum">slit drum</string>
     <string name="pw_slope">slope</string>
     <string name="pw_slot">slot</string>
     <string name="pw_slow">slow</string>
@@ -1091,6 +1098,7 @@
     <string name="pw_tar">tar</string>
     <string name="pw_tarbs">tarbs</string>
     <string name="pw_temir_komuz">temir komuz</string>
+    <string name="pw_temple_block">temple block</string>
     <string name="pw_tempo">tempo</string>
     <string name="pw_tension">tension</string>
     <string name="pw_texture">texture</string>
@@ -1138,6 +1146,7 @@
     <string name="pw_tremulant">tremulant</string>
     <string name="pw_tri">tri</string>
     <string name="pw_triad">triad</string>
+    <string name="pw_triangle">triangle</string>
     <string name="pw_trig">trig</string>
     <string name="pw_trigger">trigger</string>
     <string name="pw_trill">trill</string>

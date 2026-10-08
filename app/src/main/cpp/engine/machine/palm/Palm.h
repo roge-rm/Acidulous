@@ -74,6 +74,9 @@ class Palm final : public Machine {
     struct Voice {
         Mode modes[kModes + 1]; // the head's, then the body's
         int modeCount = 0;
+        /** A re-strike's damping of what's still ringing, spread over a few milliseconds so it doesn't click. */
+        float settle = 1.0f;
+        int32_t settleLeft = 0;
         bool used = false, held = false;
         uint8_t note = 0;
         /** A cuíca's stick, rubbed while the note is held: where in its cycle, and how far a sample. */

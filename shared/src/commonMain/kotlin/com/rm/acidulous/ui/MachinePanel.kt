@@ -3867,7 +3867,8 @@ private fun FretPanel(b: ParamBinding) {
     }
 }
 
-private val TINE_MODELS = listOf("marimba", "vibes", "xylophone", "glock", "thumb", "music box", "steel pan", "handpan", "tongue drum")
+private val TINE_MODELS = listOf("marimba", "vibes", "xylophone", "glock", "thumb", "music box", "steel pan", "handpan", "tongue drum",
+    "chimes", "crotales", "saron", "bonang", "gong", "bowl", "slit drum", "temple block", "cowbell", "triangle")
 
 /** Tine: the bar and what strikes it, the instrument around it, and the player. */
 @Composable

@@ -806,11 +806,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Use **tongue** between notes so a phrase doesn't sound like one long note."),
     ))
 
-    private fun en3_22() = ManualSection("Tine", "Modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan and tongue drum.", listOf(
+    private fun en3_22() = ManualSection("Tine", "Modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle.", listOf(
         ManualBlock(ManualKind.Para, "Tine doesn't play recordings. Each note is a handful of resonances tuned the way the thing struck is tuned. A marimba bar is carved away underneath so its first overtone sits two octaves up and the next two octaves and a third; a xylophone's is carved to a twelfth; a glockenspiel's steel bar is left as it is, its overtones far from any chord. A thumb piano's tine is held at one end, which puts its overtones higher still, and a pan's note is hammered until it rings its octave and twelfth."),
         ManualBlock(ManualKind.Para, "What strikes it matters as much. A soft mallet stays on the bar for a few milliseconds and can only set the note going; a hard one is gone before the overtones start, so they ring out."),
         ManualBlock(ManualKind.Heading, "Bar"),
-        ManualBlock(ManualKind.Bullet, "**model** - **marimba**, **vibes**, **xylophone**, **glock**, **thumb** (piano), **music box**, **steel pan**, **handpan** or **tongue drum**."),
+        ManualBlock(ManualKind.Bullet, "**model** - **marimba**, **vibes**, **xylophone**, **glock**, **thumb** (piano), **music box**, **steel pan**, **handpan**, **tongue drum**, **chimes** (tubular bells), **crotales**, **saron** and **bonang** (gamelan), **gong**, **bowl** (singing bowl), **slit drum**, **temple block**, **cowbell** or **triangle**. A balafon is the marimba with **buzz** up."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
         ManualBlock(ManualKind.Bullet, "**mallet** - how hard the mallet, finger or pin: soft yarn to bare metal. Playing harder makes it a little harder too."),
         ManualBlock(ManualKind.Bullet, "**position** - where it's struck. In the middle a bar's second overtone stays quiet; towards the end the note thins and the overtones come up."),
@@ -2775,11 +2775,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Utilisez **langue** entre les notes pour qu’une phrase ne sonne pas comme une seule longue note."),
     ))
 
-    private fun fr3_22() = ManualSection("Tine", "Lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan et tambour à languettes.", listOf(
+    private fun fr3_22() = ManualSection("Tine", "Lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle.", listOf(
         ManualBlock(ManualKind.Para, "Tine ne joue pas d’enregistrements. Chaque note est une poignée de résonances accordées comme l’objet frappé. Une lame de marimba est creusée en dessous pour que sa première harmonique sonne deux octaves plus haut et la suivante deux octaves et une tierce ; celle d’un xylophone est creusée à la douzième ; la lame d’acier d’un glockenspiel est laissée telle quelle, ses harmoniques loin de tout accord. La languette d’un piano à pouces est tenue par un bout, ce qui place ses harmoniques plus haut encore, et la note d’un steelpan est martelée jusqu’à sonner son octave et sa douzième."),
         ManualBlock(ManualKind.Para, "Ce qui frappe compte tout autant. Une mailloche douce reste quelques millisecondes sur la lame et ne peut que lancer la note ; une dure est repartie avant que les harmoniques démarrent, et elles sonnent."),
         ManualBlock(ManualKind.Heading, "Barre"),
-        ManualBlock(ManualKind.Bullet, "**modèle** : **marimba**, **vibra**, **xylophone**, **glock**, **pouce** (piano à pouces), **boîte à musique**, **steelpan**, **handpan** ou **tambour à lang.** (tambour à languettes)."),
+        ManualBlock(ManualKind.Bullet, "**modèle** : **marimba**, **vibra**, **xylophone**, **glock**, **pouce** (piano à pouces), **boîte à musique**, **steelpan**, **handpan** ou **tambour à lang.** (tambour à languettes), **cloches** (tubulaires), **crotales**, **saron** et **bonang** (gamelan), **gong**, **bol** (bol chantant), **tambour à fente**, **temple block**, **cloche** (à vache) ou **triangle**. Un balafon, c’est le marimba avec **buzz** monté."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**mailloche** : la dureté de la mailloche, du doigt ou de la goupille : de la laine douce au métal nu. Jouer plus fort la durcit un peu aussi."),
         ManualBlock(ManualKind.Bullet, "**position** : où elle est frappée. Au milieu, la deuxième harmonique d’une lame reste discrète ; vers le bout, la note s’amincit et les harmoniques ressortent."),

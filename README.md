@@ -82,7 +82,7 @@ All six are the demo song, Squelch.
 | **Palm** | Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, with open, slap, muted, bass and rim strokes (or the velocity choosing), bodies, snares and jingles, heads that go sharp when struck hard, and pressure squeezing a talking drum. |
 | **Sympath** | Modelled sitar, tanpura, veena and shamisen: strings ringing a buzzing bridge on every swing, sympathetic strings tuned to a tonic and scale, drone strings, a tanpura that plucks its four strings in time, slides, and pressure pulling the string up. |
 | **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
-| **Tine** | Modelled bars, tines and pans: marimba, vibraphone with its turning discs and damper, xylophone, glockenspiel, thumb piano with rattles, music box, steel pan with its blooming octave, handpan and tongue drum. Rolls, and pressure bows a held bar. |
+| **Tine** | Modelled bars, tines and pans: marimba, vibraphone with its turning discs and damper, xylophone, glockenspiel, thumb piano with rattles, music box, steel pan with its blooming octave, handpan, tongue drum, chimes, crotales, gamelan saron and bonang, gong, singing bowl, slit drum, temple blocks, cowbell and triangle. Rolls, and pressure bows a held bar. |
 | **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
 
 **Samples**
