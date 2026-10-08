@@ -14,205 +14,259 @@
 # wheel on the beat to set the dog buzzing in time; pressure or the mod
 # wheel pushes it too.
 #
-# Families: highland, smallpipes, gaita, uilleann, gaida, cornemuse, musette,
-# sackpipa, dudy, zampogna, tulum, launeddas, gurdy, drones.
+# Families: isles, europe, double, gurdy, drones.
 
 machine Chanter
 role lead
 
-patch Init family=highland note=69 range=67..81
+patch Init family=isles note=69 range=67..81
 
-patch "Highland Pipes" family=highland note=69 range=67..81
+patch "Highland Pipes" family=isles note=69 range=67..81
   # The great pipes: three drones and a loud chanter, every note graced.
   grace          25 ms
   drones         0.8
 
-patch "Pipes Ungraced" family=highland note=69 range=67..81
+patch "Pipes Ungraced" family=isles note=69 range=67..81
   # The same, with the notes running together and the bag less steady.
   grace          0 ms
   drift          0.35
 
-patch "Pipe Band" family=highland note=69 range=67..81
+patch "Pipe Band" family=isles note=69 range=67..81
   # Drones up, the bag squeezed unevenly, more air.
   grace          20 ms
   drones         0.9
   drift          0.5
   air            0.3
 
-patch "Practice Chanter" family=highland note=69 range=67..81
+patch "Practice Chanter" family=isles note=69 range=67..81
   # The chanter on its own, softer reed, no drones.
   drones         0
   reed           0.3
   grace          20 ms
 
-patch "Bright Chanter" family=highland note=69 range=67..81
+patch "Bright Chanter" family=isles note=69 range=67..81
   # A hard reed, loud and piercing.
   reed           0.9
   grace          15 ms
 
-patch Smallpipes family=smallpipes note=67 range=65..79
+patch Smallpipes family=isles note=67 range=65..79
   # A quiet, closed chanter that stops between notes, soft drones.
   model          #1
   key            #7
 
-patch "Smallpipes Graced" family=smallpipes note=67 range=65..79
+patch "Smallpipes Graced" family=isles note=67 range=65..79
   # Closed and graced, a little breathier.
   model          #1
   key            #7
   grace          20 ms
   air            0.25
 
-patch "Soft Smallpipes" family=smallpipes note=67 range=65..79
+patch "Soft Smallpipes" family=isles note=67 range=65..79
   # A soft reed and the drones low.
   model          #1
   key            #7
   reed           0.25
   drones         0.4
 
-patch "Smallpipes in D" family=smallpipes note=62 range=60..74
+patch "Smallpipes in D" family=isles note=62 range=60..74
   # Drones on D.
   model          #1
   key            #2
 
-patch Gaita family=gaita note=72 range=70..86
-  # One bass drone under a sweet, conical chanter.
-  model          #2
-  key            #0
-
-patch "Gaita Bright" family=gaita note=72 range=70..86
-  # A harder reed.
-  model          #2
-  key            #0
-  reed           0.85
-
-patch "Gaita Breath" family=gaita note=72 range=70..86
-  # Breathy, the bag wandering.
-  model          #2
-  key            #0
-  air            0.45
-  drift          0.5
-
-patch "Gaita Graced" family=gaita note=72 range=70..86
-  # Grace notes before each, the drone up.
-  model          #2
-  key            #0
-  grace          18 ms
-  drones         0.75
-
-patch "Uilleann Pipes" family=uilleann note=62 range=62..86
+patch "Uilleann Pipes" family=isles note=62 range=62..86
   # Sweet and quiet, played closed, drones on D an octave and two below.
   model          #4
   key            #2
 
-patch "Uilleann Slow Air" family=uilleann note=62 range=62..86
+patch "Uilleann Slow Air" family=isles note=62 range=62..86
   # Low drones under a slow air.
   model          #4
   key            #2
   drones         0.5
   drift          0.3
 
-patch "Uilleann Regulators" family=uilleann note=62 range=50..86
+patch "Uilleann Regulators" family=isles note=62 range=50..86
   # Hold a key under the melody and the regulators play it, quieter.
   model          #4
   key            #2
   drones         0.5
 
-patch "Gaida" family=gaida note=67 range=67..79
+patch Gaita family=europe note=72 range=70..86
+  # One bass drone under a sweet, conical chanter.
+  model          #2
+  key            #0
+
+patch "Gaita Bright" family=europe note=72 range=70..86
+  # A harder reed.
+  model          #2
+  key            #0
+  reed           0.85
+
+patch "Gaita Breath" family=europe note=72 range=70..86
+  # Breathy, the bag wandering.
+  model          #2
+  key            #0
+  air            0.45
+  drift          0.5
+
+patch "Gaita Graced" family=europe note=72 range=70..86
+  # Grace notes before each, the drone up.
+  model          #2
+  key            #0
+  grace          18 ms
+  drones         0.75
+
+patch "Gaida" family=europe note=67 range=67..79
   # Bright and reedy over one deep drone, quick ornaments.
   model          #5
   key            #7
   grace          15 ms
 
-patch "Gaida Trill" family=gaida note=67 range=67..79
+patch "Gaida Trill" family=europe note=67 range=67..79
   # Heavier ornaments, more breath.
   model          #5
   key            #7
   grace          30 ms
   air            0.25
 
-patch "Cornemuse" family=cornemuse note=67 range=67..81
+patch "Cornemuse" family=europe note=67 range=67..81
   # The French bagpipe in G, half closed, two drones.
   model          #6
   key            #7
 
-patch "Cornemuse Bourrée" family=cornemuse note=67 range=67..81
+patch "Cornemuse Bourrée" family=europe note=67 range=67..81
   # A harder reed for dancing.
   model          #6
   key            #7
   grace          12 ms
   reed           0.7
 
-patch "Musette de Cour" family=musette note=67 range=67..81
+patch "Musette de Cour" family=europe note=67 range=67..81
   # Small, soft and courtly.
   model          #7
   key            #7
 
-patch "Musette Pastorale" family=musette note=67 range=67..81
+patch "Musette Pastorale" family=europe note=67 range=67..81
   # Softer still, the drones far back.
   model          #7
   key            #7
   drones         0.5
   reed           0.3
 
-patch "Sackpipa" family=sackpipa note=69 range=69..81
+patch "Sackpipa" family=europe note=69 range=69..81
   # The Swedish pipe: one drone, a narrow, closed chanter.
   model          #8
   key            #9
 
-patch "Sackpipa Polska" family=sackpipa note=69 range=69..81
+patch "Sackpipa Polska" family=europe note=69 range=69..81
   # Graced, for the dance.
   model          #8
   key            #9
   grace          18 ms
 
-patch "Dudy" family=dudy note=63 range=63..75
+patch "Dudy" family=europe note=63 range=63..75
   # The Czech pipe: a loud, long drone two octaves down.
   model          #9
   key            #3
 
-patch "Dudy Village" family=dudy note=63 range=63..75
+patch "Dudy Village" family=europe note=63 range=63..75
   # Rougher, the bag wandering.
   model          #9
   key            #3
   drift          0.4
   air            0.25
 
-patch "Zampogna" family=zampogna note=67 range=55..79
+patch "Gaida Kaba" family=europe note=67 range=67..79
+  # The deep Rhodope gaida, loud and wild.
+  model          #5
+  key            #7
+  reed           0.85
+  drift          0.35
+
+patch "Cornemuse Douce" family=europe note=67 range=67..81
+  # Soft reed, the drones held back.
+  model          #6
+  key            #7
+  reed           0.35
+  drones         0.5
+
+patch "Musette Bal" family=europe note=67 range=67..81
+  # Graced and a little brighter, for a court dance.
+  model          #7
+  key            #7
+  grace          10 ms
+  reed           0.6
+
+patch "Sackpipa Drone" family=europe note=69 range=69..81
+  # The drone up front, ringing on after the tune.
+  model          #8
+  key            #9
+  bag            4 s
+  drones         1
+
+patch "Dudy Polka" family=europe note=63 range=63..75
+  # Bright and quick, for dancing.
+  model          #9
+  key            #3
+  grace          14 ms
+  reed           0.75
+
+patch "Zampogna" family=double note=67 range=55..79
   # Two chanters: hold a second key and the other hand plays it.
   model          #10
   key            #7
 
-patch "Zampogna Natale" family=zampogna note=67 range=55..79
+patch "Zampogna Natale" family=double note=67 range=55..79
   # Graced, as at Christmas in the hills.
   model          #10
   key            #7
   grace          10 ms
   drift          0.3
 
-patch "Tulum" family=tulum note=62 range=57..74
+patch "Tulum" family=double note=62 range=57..74
   # No drone, two chanters side by side: hold two keys.
   model          #11
   key            #2
   grace          12 ms
 
-patch "Tulum Horon" family=tulum note=62 range=57..74
+patch "Tulum Horon" family=double note=62 range=57..74
   # A hard reed and quick ornaments for dancing.
   model          #11
   key            #2
   grace          25 ms
   reed           0.8
 
-patch "Launeddas" family=launeddas note=60 range=55..76
+patch "Launeddas" family=double note=60 range=55..76
   # Three cane pipes: the drone, and two melody pipes for two keys.
   model          #12
   key            #0
 
-patch "Launeddas Ballo" family=launeddas note=60 range=55..76
+patch "Launeddas Ballo" family=double note=60 range=55..76
   # Breathier, for the dance.
   model          #12
   key            #0
   grace          8 ms
   air            0.25
+
+patch "Zampogna Pastorale" family=double note=67 range=55..79
+  # Soft and slow: hold two keys for both hands.
+  model          #10
+  key            #7
+  reed           0.45
+  drones         0.6
+
+patch "Tulum Soft" family=double note=62 range=57..74
+  # Gentler reeds, two chanters side by side.
+  model          #11
+  key            #2
+  reed           0.45
+
+patch "Launeddas Drone" family=double note=60 range=55..76
+  # The cane drone loud under two melody pipes.
+  model          #12
+  key            #0
+  drones         1
+  bag            3 s
 
 patch Hurdy-Gurdy family=gurdy note=67 range=60..84
   # The wheel turning steadily, the dog quiet.
@@ -282,5 +336,12 @@ patch "Gaita Drone" family=drones note=72 range=70..86 role=drone
   # One deep drone, long.
   model          #2
   key            #0
+  bag            8 s
+  drones         1
+
+patch "Uilleann Drones" family=drones note=62 range=62..86 role=drone
+  # Hold a note for the three drones; they go on after.
+  model          #4
+  key            #2
   bag            8 s
   drones         1

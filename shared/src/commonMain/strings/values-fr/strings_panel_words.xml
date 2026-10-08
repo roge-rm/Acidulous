@@ -327,6 +327,7 @@
     <string name="pw_envf">envF</string>
     <string name="pw_envmod">mod env</string>
     <string name="pw_eq">Eq</string>
+    <string name="pw_europe">europe</string>
     <string name="pw_every">chaque</string>
     <string name="pw_excite">exciter</string>
     <string name="pw_exciter">excitateur</string>
@@ -515,6 +516,7 @@
     <string name="pw_interval2">intervalle2</string>
     <string name="pw_inversion">renversement</string>
     <string name="pw_invert">renv.</string>
+    <string name="pw_isles">îles</string>
     <string name="pw_its_clock">son horloge</string>
     <string name="pw_iv">IV</string>
     <string name="pw_j">j</string>

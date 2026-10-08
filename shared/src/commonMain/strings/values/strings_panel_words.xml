@@ -327,6 +327,7 @@
     <string name="pw_envf">envF</string>
     <string name="pw_envmod">envmod</string>
     <string name="pw_eq">Eq</string>
+    <string name="pw_europe">europe</string>
     <string name="pw_every">every</string>
     <string name="pw_excite">excite</string>
     <string name="pw_exciter">exciter</string>
@@ -518,6 +519,7 @@
     <string name="pw_interval2">interval2</string>
     <string name="pw_inversion">inversion</string>
     <string name="pw_invert">invert</string>
+    <string name="pw_isles">isles</string>
     <string name="pw_its_clock">its clock</string>
     <string name="pw_iv">IV</string>
     <string name="pw_j">j</string>
@@ -927,7 +929,6 @@
     <string name="pw_s15">s15</string>
     <string name="pw_s16">s16</string>
     <string name="pw_sa">sa</string>
-    <string name="pw_sackpipa">sackpipa</string>
     <string name="pw_sag">sag</string>
     <string name="pw_sample">sample</string>
     <string name="pw_sample_rate">sample rate</string>
