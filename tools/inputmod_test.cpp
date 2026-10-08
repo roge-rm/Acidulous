@@ -140,6 +140,82 @@ void aBypassedModifierDoesNothing() {
 
 } // namespace
 
+/** Strum keys: keys below the split pick a chord, keys above play its notes up the octaves. */
+void strumKeysPlayTheChordsNotes() {
+    printf("- strum keys\n");
+    auto offs = [](const Heard &h) {
+        size_t n = 0;
+        for (const auto &x : h.live) if ((x.status & 0xf0) == 0x80 || ((x.status & 0xf0) == 0x90 && x.velocity == 0)) ++n;
+        return n;
+    };
+    {
+        Fixture f("Chord");
+        f.set("type", 0.0f);
+        f.set("play", 1.0f);
+        f.set("split", (48.0f - 24.0f) / 72.0f);
+        f.set("ring", 0.0f);
+        f.rack.handleMidi(0x90, 36, 100); // C below the split: the chord
+        ok("a chord key makes no sound", f.heard.onsLive() == 0);
+        for (int k = 48; k < 52; ++k) f.rack.handleMidi(0x90, static_cast<uint8_t>(k), 100);
+        const auto p = f.heard.pitchesLive();
+        ok("four strum keys play C E G C", p == std::vector<uint8_t>{48, 52, 55, 60},
+           p.size() == 4 ? std::to_string(p[0]) + " " + std::to_string(p[1]) + " " + std::to_string(p[2]) + " " + std::to_string(p[3]) : "wrong count");
+        f.rack.handleMidi(0x80, 48, 0);
+        ok("without ring, letting a strum key go stops its note", offs(f.heard) == 1);
+        f.rack.handleMidi(0x90, 38, 100); // D: a new chord
+        f.rack.handleMidi(0x90, 48, 100);
+        ok("a new chord moves the ladder (D major from D3)", f.heard.pitchesLive().back() == 50);
+    }
+    {
+        Fixture f("Chord");
+        f.set("type", 0.0f);
+        f.set("play", 1.0f);
+        f.set("split", (48.0f - 24.0f) / 72.0f);
+        f.set("keys", 1.0f);
+        f.rack.handleMidi(0x90, 36, 100);
+        f.rack.handleMidi(0x90, 49, 100);
+        ok("white keys only: a black key plays nothing", f.heard.onsLive() == 0);
+        for (int k : {48, 50, 52, 53}) f.rack.handleMidi(0x90, static_cast<uint8_t>(k), 100);
+        ok("and the white keys play C E G C", f.heard.pitchesLive() == std::vector<uint8_t>{48, 52, 55, 60});
+    }
+    {
+        Fixture f("Chord");
+        f.set("type", 0.0f);
+        f.set("play", 1.0f);
+        f.set("split", (48.0f - 24.0f) / 72.0f);
+        f.set("ring", 1.0f);
+        f.rack.handleMidi(0x90, 36, 100);
+        // A finger sliding across: the next key down, then the last one up.
+        f.rack.handleMidi(0x90, 48, 100);
+        f.rack.handleMidi(0x90, 49, 100);
+        f.rack.handleMidi(0x80, 48, 0);
+        ok("with ring, a swept note keeps sounding while a strum key is down", offs(f.heard) == 0);
+        f.rack.handleMidi(0x80, 49, 0);
+        ok("and they stop together when the last one's let go", offs(f.heard) == 2,
+           std::to_string(offs(f.heard)) + " offs");
+    }
+    {
+        Fixture f("Chord");
+        f.set("type", 0.0f);
+        f.set("play", 1.0f);
+        f.set("split", (48.0f - 24.0f) / 72.0f);
+        f.rack.handleMidi(0x90, 36, 100);
+        f.rack.handleMidi(0x80, 36, 0);
+        f.rack.handleMidi(0x90, 49, 100);
+        ok("without latch, once the chord key's up a strum key plays itself", f.heard.pitchesLive().back() == 49);
+        f.rack.handleMidi(0x80, 49, 0);
+        f.set("latch", 1.0f);
+        f.rack.handleMidi(0x90, 36, 100);
+        f.rack.handleMidi(0x80, 36, 0);
+        f.rack.handleMidi(0x90, 49, 100);
+        ok("with latch, the chord stays after its key is let go", f.heard.pitchesLive().back() == 52);
+        f.rack.allNotesOff();
+        f.heard.live.clear();
+        f.rack.handleMidi(0x90, 49, 100);
+        ok("panic forgets the latched chord", f.heard.pitchesLive().back() == 49);
+    }
+}
+
 int main() {
     printf("input modifiers\n");
     aPlainNotePassesThrough();
@@ -147,6 +223,7 @@ int main() {
     aClipGoesStraightToTheMachine();
     theScaleModifierCorrectsOnTheWayIn();
     aBypassedModifierDoesNothing();
+    strumKeysPlayTheChordsNotes();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

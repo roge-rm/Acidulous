@@ -26,6 +26,17 @@ Change chaque note en accord, soit une forme fixe, soit l’accord que la gamme
 bâtit sur cette note pour rester dans la tonalité. **gratter** étale les notes
 dans le temps, et les enregistrements gardent l’effet.
 
+Réglez **jeu** sur **grattage** pour jouer les notes de l’accord au clavier,
+comme des cordes sous les doigts. Les touches sous la **séparation** choisissent
+l’accord et ne sonnent pas ; à partir de la séparation, les touches jouent ses
+notes l’une après l’autre en montant les octaves. Glissez un doigt dessus pour
+gratter : plus vous allez vite, plus le grattage est rapide.
+
+- **touches** : toutes, ou seulement les blanches.
+- **verrou** : l’accord reste après que vous lâchez sa touche.
+- **résonance** : les notes grattées sonnent jusqu’à ce que vous leviez le
+  dernier doigt, comme des cordes qu’on laisse vibrer.
+
 ## Arpège
 
 Joue une à la fois les notes que vous tenez. Vous choisissez l’ordre, la

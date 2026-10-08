@@ -99,6 +99,11 @@ const ParamDef *Chord::paramDefs(int32_t &count) const {
         {"strum", 0.0f, 200.0f, 0.0f, Curve::Linear, 0, "ms"},
         {"strumdir", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""}, // up, down
         {"velspread", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"play", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},     // chord, strum keys
+        {"latch", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},    // the chord stays after its key is let go
+        {"split", 24.0f, 96.0f, 48.0f, Curve::Stepped, 73, ""}, // the lowest strum key; below it, chord keys
+        {"keys", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},     // all, white
+        {"ring", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},     // strummed notes ring until the last key is up
     };
     count = Count;
     return defs;
@@ -108,6 +113,93 @@ void Chord::reset() {
     for (auto &v : voices) v.count = 0;
     for (auto &q : pending) q.live = false;
     outs = OutputNotes();
+    clearStrum();
+}
+
+void Chord::clearStrum() {
+    chordRoot = -1;
+    chordHeld = strumHeld = 0;
+    for (auto &d : chordDown) d = false;
+    for (auto &s : strumOut) s = -1;
+    for (auto &r : ringing) r = 0;
+}
+
+int Chord::ladder(int key) const {
+    const auto &p = params_;
+    const int split = stepOf(p, Split);
+    int k;
+    if (stepOf(p, Keys) == 1) {
+        // White keys only: count white keys up from the split; a black key plays nothing.
+        static constexpr int kWhite[12] = {0, -1, 1, -1, 2, 3, -1, 4, -1, 5, -1, 6};
+        auto whiteIndex = [](int n) { return floorDiv(n, 12) * 7 + kWhite[floorMod(n, 12)]; };
+        if (kWhite[floorMod(key, 12)] < 0) return -1;
+        int s = split;
+        while (kWhite[floorMod(s, 12)] < 0) ++s;
+        k = whiteIndex(key) - whiteIndex(s);
+    } else {
+        k = key - split;
+    }
+    if (k < 0 || chordRoot < 0) return -1;
+    // The chord's tones as intervals from its root, each once, low to high.
+    int tones[kMaxTones];
+    const int n = build(chordRoot, tones);
+    int iv[12], m = 0;
+    for (int i = 0; i < n; ++i) {
+        const int pc = floorMod(tones[i] - chordRoot, 12);
+        bool seen = false;
+        for (int j = 0; j < m; ++j) seen = seen || iv[j] == pc;
+        if (!seen) iv[m++] = pc;
+    }
+    if (m == 0) return -1;
+    for (int i = 1; i < m; ++i) { int t = iv[i], j = i - 1; while (j >= 0 && iv[j] > t) { iv[j + 1] = iv[j]; --j; } iv[j + 1] = t; }
+    // The ladder starts on the chord's root at or above the split.
+    const int base = chordRoot + 12 * floorDiv(split - chordRoot + 11, 12);
+    return base + iv[k % m] + 12 * (k / m);
+}
+
+void Chord::strumKey(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) {
+    const auto &p = params_;
+    const uint8_t kind = status & 0xf0;
+    const bool on = kind == 0x90 && d2 != 0;
+    if (d1 < stepOf(p, Split)) {
+        // A chord key: silent, it picks the chord the strum keys play.
+        if (on) {
+            if (!chordDown[d1]) ++chordHeld;
+            chordDown[d1] = true;
+            chordRoot = d1;
+        } else if (chordDown[d1]) {
+            chordDown[d1] = false;
+            if (--chordHeld <= 0) {
+                chordHeld = 0;
+                if (stepOf(p, Latch) == 0) chordRoot = -1;
+            }
+        }
+        return;
+    }
+    if (on) {
+        if (strumOut[d1] >= 0) return;
+        // With no chord, a strum key plays its own note.
+        const int pitch = chordRoot < 0 ? d1 : ladder(d1);
+        if (pitch < 0 || pitch > 127) return;
+        strumOut[d1] = static_cast<int16_t>(pitch);
+        ++strumHeld;
+        outs.on(static_cast<uint8_t>(pitch), d2, out);
+    } else if (strumOut[d1] >= 0) {
+        const int pitch = strumOut[d1];
+        strumOut[d1] = -1;
+        if (strumHeld > 0) --strumHeld;
+        if (stepOf(p, Ring) == 1) {
+            // Left ringing, like a string, until the last strum key is up.
+            if (ringing[pitch] < 255) ++ringing[pitch];
+            if (strumHeld == 0) {
+                for (int n = 0; n < 128; ++n) {
+                    for (; ringing[n] > 0; --ringing[n]) outs.off(static_cast<uint8_t>(n), out);
+                }
+            }
+        } else {
+            outs.off(static_cast<uint8_t>(pitch), out);
+        }
+    }
 }
 
 int Chord::build(int note, int *tones) const {
@@ -144,6 +236,10 @@ int Chord::build(int note, int *tones) const {
 void Chord::handleMidi(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out) {
     const uint8_t kind = status & 0xf0;
     const auto &p = params_;
+    if (stepOf(p, Play) == 1 && (kind == 0x80 || kind == 0x90)) {
+        strumKey(status, d1, d2, out);
+        return;
+    }
     if (kind == 0x90 && d2 != 0) {
         Voice &v = voices[d1];
         for (int i = 0; i < v.count; ++i) outs.off(static_cast<uint8_t>(v.tones[i]), out);
@@ -184,6 +280,7 @@ void Chord::onBlock(int64_t tickStart, int64_t tickEnd, float bpmNow, MidiSink &
 void Chord::allNotesOff(MidiSink &out) {
     for (auto &q : pending) q.live = false;
     for (auto &v : voices) v.count = 0;
+    clearStrum();
     outs.allOff(out);
 }
 

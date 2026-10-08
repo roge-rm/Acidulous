@@ -23,6 +23,16 @@ Turns every note into a chord, either a fixed shape or the chord the scale
 builds on that note so it stays in key. **strum** spreads the notes out in time,
 and recordings keep the strum.
 
+Set **play** to **strum keys** to play the chord's notes from the keys, like
+strings under your fingers. Keys below the **split** pick the chord and make no
+sound; keys from the split up play its notes, one after another up the octaves.
+Drag a finger across them to strum: the faster you go, the faster the strum.
+
+- **keys** - all keys, or the white keys only.
+- **latch** - the chord stays after you let go of its key.
+- **ring** - strummed notes keep sounding until you lift the last finger, like
+  strings left to ring.
+
 ## Arpeggio
 
 Plays the notes you're holding one at a time. You choose the order, speed,

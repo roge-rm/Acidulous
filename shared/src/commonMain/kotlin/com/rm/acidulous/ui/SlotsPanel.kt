@@ -398,6 +398,8 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "voicing" to listOf("voicing", "inversion", "spread", "bass"),
         // How it's played, not which notes.
         "strum" to listOf("strum", "strumdir", "velspread"),
+        // Keys above the split play the chord's notes, keys below pick the chord.
+        "strum keys" to listOf("play", "split", "keys", "latch", "ring"),
     ),
     "Scale" to listOf(
         "scale" to listOf("mode", "key", "scale"),
@@ -503,7 +505,7 @@ private val EXTRA = mapOf(
     "Phaser" to setOf("spread"),
     "Flanger" to setOf("negative", "spread"),
     "Scale" to setOf("mode", "snap"),
-    "Chord" to setOf("mode", "voicing", "spread", "strum", "strumdir", "velspread"),
+    "Chord" to setOf("mode", "voicing", "spread", "strum", "strumdir", "velspread", "play", "ring"),
     "Arp" to setOf("ratchet", "ratchetchance", "chance", "shift", "cycles", "humanise", "latch"),
 )
 
@@ -541,6 +543,9 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "voicing" -> listOf("triad", "7th", "9th")
     name == "inversion" -> listOf("root", "1st", "2nd", "3rd")
     name == "strumdir" -> listOf("up", "down")
+    name == "play" && type == "Chord" -> listOf("chord", "strum keys")
+    name == "keys" && type == "Chord" -> listOf("all", "white")
+    name == "split" && type == "Chord" -> (24..96).map { noteName(it) }
     name == "octmode" -> listOf("up", "down", "alt")
     name == "velmode" -> listOf("played", "fixed", "accent", "ramp↑", "ramp↓")
     name == "sync" -> listOf("restart", "free")
@@ -700,6 +705,8 @@ private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name
     name == "key" && type.lowercase() in MUSICAL_KEYS -> "key~music"
     name == "key" && type.lowercase() == "gate" -> "key~detector"
     name == "edge" && type.lowercase() == "amp" -> "edge~cone"
+    name == "ring" && type.lowercase() == "chord" -> "ring~strings"
+    name == "split" && type.lowercase() == "chord" -> "split~keys"
     else -> name
 }
 

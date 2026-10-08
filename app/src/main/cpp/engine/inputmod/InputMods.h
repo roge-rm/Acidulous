@@ -43,8 +43,9 @@ class Scale final : public InputMod {
 
 class Chord final : public InputMod {
   public:
-    enum P { Mode, Type, Key, ScaleType, Voicing, Inversion, Spread, Bass, Strum, StrumDir, VelSpread, Count };
-    Chord() { initParams(); }
+    enum P { Mode, Type, Key, ScaleType, Voicing, Inversion, Spread, Bass, Strum, StrumDir, VelSpread,
+             Play, Latch, Split, Keys, Ring, Count };
+    Chord() { initParams(); clearStrum(); }
     ACIDULOUS_INPUTMOD_COMMON(Chord)
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm, MidiSink &out) override;
   private:
@@ -57,6 +58,19 @@ class Chord final : public InputMod {
     OutputNotes outs;
     int64_t nowTick = 0;
     float bpm = 120.0f;
+
+    // Strum keys: keys below the split pick the chord, keys above play its notes.
+    void strumKey(uint8_t status, uint8_t d1, uint8_t d2, MidiSink &out);
+    /** The note a strum key plays: the chord's tones counted up from the split, or -1. */
+    int ladder(int key) const;
+    int chordRoot = -1, chordHeld = 0;
+    bool chordDown[128]{};
+    /** What each strum key is sounding, or -1, and how many are held. */
+    int16_t strumOut[128];
+    int strumHeld = 0;
+    /** Strummed notes left ringing until the last strum key is let go. */
+    uint8_t ringing[128]{};
+    void clearStrum();
 };
 
 class Arp final : public InputMod {

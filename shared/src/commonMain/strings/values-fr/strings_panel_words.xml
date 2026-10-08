@@ -869,6 +869,7 @@
     <string name="pw_ring">anneau</string>
     <string name="pw_ring_it_with_a">modulation en anneau avec a</string>
     <string name="pw_ring_level">vibr.</string>
+    <string name="pw_ring_strings">résonance</string>
     <string name="pw_riq">riq</string>
     <string name="pw_ring_it_against_a_sine">en anneau contre un sinus</string>
     <string name="pw_ring_loop">boucle anneau</string>
@@ -993,6 +994,7 @@
     <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">vitesse</string>
     <string name="pw_split">partage</string>
+    <string name="pw_split_keys">séparation</string>
     <string name="pw_spray">dispers.</string>
     <string name="pw_spread">écart</string>
     <string name="pw_sqr">car.</string>
@@ -1028,6 +1030,7 @@
     <string name="pw_stroke">attaque</string>
     <string name="pw_struck">frappé</string>
     <string name="pw_strum">gratter</string>
+    <string name="pw_strum_keys">grattage</string>
     <string name="pw_strumdir">sens grat.</string>
     <string name="pw_stutter">bégaie</string>
     <string name="pw_style">style</string>

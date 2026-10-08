@@ -876,6 +876,7 @@
     <string name="pw_ring12">ring12</string>
     <string name="pw_ring23">ring23</string>
     <string name="pw_ring_level">ring</string>
+    <string name="pw_ring_strings">ring</string>
     <string name="pw_riq">riq</string>
     <string name="pw_rise">rise</string>
     <string name="pw_rnd">rnd</string>
@@ -996,6 +997,7 @@
     <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">speed</string>
     <string name="pw_split">split</string>
+    <string name="pw_split_keys">split</string>
     <string name="pw_spray">spray</string>
     <string name="pw_spread">spread</string>
     <string name="pw_sqr">sqr</string>
@@ -1031,6 +1033,7 @@
     <string name="pw_stroke">stroke</string>
     <string name="pw_struck">struck</string>
     <string name="pw_strum">strum</string>
+    <string name="pw_strum_keys">strum keys</string>
     <string name="pw_strumdir">strumdir</string>
     <string name="pw_stutter">stutter</string>
     <string name="pw_style">style</string>
