@@ -107,19 +107,26 @@ object MachineUi {
     fun acceptsOneSample(type: String): Boolean =
         type == "Pollen" || type == "Dice" || type == "Molt"
 
+    /** What a group's tab shows. Drawn in ui/GroupIcons.kt. */
+    enum class GroupIcon { Synths, Drums, Keys, Strings, Winds, Nature, Samples, Beyond }
+
+    /** [label] is what TalkBack and the manual call the group; the tab shows [icon]. */
+    data class MachineGroup(val label: StringResource, val machines: List<String>, val icon: GroupIcon)
+
     /**
      * The machines in groups, each with a line saying what it is, since a
      * name like "Cipher" doesn't tell you it's a vocoder. Within a group
      * they're in alphabetical order.
      */
-    data class MachineGroup(val label: StringResource, val machines: List<String>)
-
     val machineGroups: List<MachineGroup> = listOf(
-        MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate").sorted()),
-        MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice").sorted()),
-        MachineGroup(Res.string.machines_realish, listOf("Manual", "Filament", "Brazen", "Timber", "Hammer", "Tongue", "Draw", "Fret", "Tine", "Sympath", "Palm", "Chanter", "Aviary", "Fathom").sorted()),
-        MachineGroup(Res.string.machines_samples, listOf("Mosaic", "Pollen", "Molt").sorted()),
-        MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Diction", "Bias").sorted()),
+        MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate").sorted(), GroupIcon.Synths),
+        MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Palm").sorted(), GroupIcon.Drums),
+        MachineGroup(Res.string.machines_keys, listOf("Hammer", "Manual", "Tine").sorted(), GroupIcon.Keys),
+        MachineGroup(Res.string.machines_strings, listOf("Filament", "Fret", "Sympath").sorted(), GroupIcon.Strings),
+        MachineGroup(Res.string.machines_winds, listOf("Brazen", "Timber", "Chanter", "Draw", "Tongue").sorted(), GroupIcon.Winds),
+        MachineGroup(Res.string.machines_nature, listOf("Aviary", "Fathom").sorted(), GroupIcon.Nature),
+        MachineGroup(Res.string.machines_samples, listOf("Mosaic", "Pollen", "Molt").sorted(), GroupIcon.Samples),
+        MachineGroup(Res.string.machines_beyond, listOf("Cipher", "Nexus", "Diction", "Bias").sorted(), GroupIcon.Beyond),
     )
 
     /** One line per machine saying what it is. */

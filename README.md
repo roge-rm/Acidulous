@@ -64,26 +64,41 @@ All six are the demo song, Squelch.
 | **Forage** | A sample drum machine with thirteen pads for your own sounds. |
 | **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
 | **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
+| **Palm** | Modelled hand drums from tabla to cuíca, with open, slap, muted and rim strokes, and pressure squeezing a talking drum. |
 | **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
 
-**Realish**
+**Keys**
+
+| | |
+|---|---|
+| **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
+| **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
+| **Tine** | Modelled bars, tines and pans: marimba, vibraphone, thumb piano, steel pan, gamelan, bells and blocks. Rolls, and pressure bows a held bar. |
+
+**Strings**
+
+| | |
+|---|---|
+| **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |
+| **Fret** | Modelled electric guitars and basses, hollowbody, steel and fretless too, with pickups, palm muting, harmonics, slides and an amp loud enough to feed back. |
+| **Sympath** | Modelled sitar, tanpura, shamisen and others, plucked or bowed: a buzzing bridge, sympathetic strings tuned to a scale, and a tanpura that plays in time. |
+
+**Winds**
+
+| | |
+|---|---|
+| **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
+| **Chanter** | Modelled bagpipes from a dozen traditions and the hurdy-gurdy: drones that carry on between notes, grace notes, and a trompette that buzzes on the beat. |
+| **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
+| **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
+| **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
+
+**Nature**
 
 | | |
 |---|---|
 | **Aviary** | Modelled birdsong: whistles, chirps, trills and calls in time with the tempo, from one bird or a flock. |
-| **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
-| **Chanter** | Modelled bagpipes from a dozen traditions and the hurdy-gurdy: drones that carry on between notes, grace notes, and a trompette that buzzes on the beat. |
-| **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
 | **Fathom** | Modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail and snow. |
-| **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |
-| **Fret** | Modelled electric guitars and basses, hollowbody, steel and fretless too, with pickups, palm muting, harmonics, slides and an amp loud enough to feed back. |
-| **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
-| **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
-| **Palm** | Modelled hand drums from tabla to cuíca, with open, slap, muted and rim strokes, and pressure squeezing a talking drum. |
-| **Sympath** | Modelled sitar, tanpura, shamisen and others, plucked or bowed: a buzzing bridge, sympathetic strings tuned to a scale, and a tanpura that plays in time. |
-| **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
-| **Tine** | Modelled bars, tines and pans: marimba, vibraphone, thumb piano, steel pan, gamelan, bells and blocks. Rolls, and pressure bows a held bar. |
-| **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
 
 **Samples**
 

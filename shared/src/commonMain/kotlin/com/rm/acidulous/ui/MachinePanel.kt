@@ -1256,6 +1256,45 @@ internal fun SectionChipsStyled(
 }
 
 /**
+ * The same equal-share chips with an icon each instead of a word, for the
+ * machine picker's eight groups, which don't fit as words on a phone.
+ * [names] are what TalkBack reads.
+ */
+@Composable
+internal fun SectionChipsIcons(
+    icons: List<com.rm.acidulous.model.MachineUi.GroupIcon>,
+    names: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
+    val stacked = LocalPanelStacked.current
+    @Composable
+    fun chip(i: Int, modifier: Modifier) {
+        val on = i == selected
+        Box(
+            modifier.clip(RoundedCornerShape(4.dp))
+                .background(if (on) Acid.colors.green else Acid.colors.control)
+                .clickable { onSelect(i) }.choice(names[i], on, tab = true),
+            contentAlignment = Alignment.Center,
+        ) {
+            GroupIconView(icons[i], if (on) Color.White else Acid.colors.textMid, 20.dp)
+        }
+    }
+    if (stacked) {
+        Column(Modifier.width(IconChipW).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            for (i in icons.indices) chip(i, Modifier.fillMaxWidth().weight(1f))
+        }
+    } else {
+        Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            for (i in icons.indices) chip(i, Modifier.weight(1f).height(IconChipW))
+        }
+    }
+}
+
+/** An icon chip's short side: the 20 dp icon and room to hit it. */
+private val IconChipW = 32.dp
+
+/**
  * The same chips, sized to their text and scrolling when there are too many.
  *
  * [SectionChipsStyled] gives every chip an equal share, which works for the

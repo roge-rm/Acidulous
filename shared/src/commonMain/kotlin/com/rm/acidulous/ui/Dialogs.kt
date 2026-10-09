@@ -303,22 +303,7 @@ internal fun WindowCard(title: String, content: @Composable () -> Unit) =
 private val MACHINE_ROW_H = 68.dp
 
 /**
- * A group's name with the "ish" in italics, since in "realish" it's a
- * qualifier and should look like one.
- */
-private fun chipLabel(label: String): androidx.compose.ui.text.AnnotatedString =
-    androidx.compose.ui.text.buildAnnotatedString {
-        val cut = if (label.endsWith("ish") && label.length > 3) label.length - 3 else label.length
-        append(label.substring(0, cut))
-        if (cut < label.length) {
-            withStyle(androidx.compose.ui.text.SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)) {
-                append(label.substring(cut))
-            }
-        }
-    }
-
-/**
- * The machine picker: four groups behind chips, each machine with a line
+ * The machine picker: eight groups behind icon chips, each machine with a line
  * saying what it is.
  */
 @Composable
@@ -350,7 +335,7 @@ fun MachinePickerDialog(
         selected = tab,
         dismissLabel = stringResource(Res.string.cancel),
         onDismiss = onDismiss,
-        chips = { SectionChipsStyled(groups.map { chipLabel(stringResource(it.label)) }, tab) { tab = it } },
+        chips = { SectionChipsIcons(groups.map { it.icon }, groups.map { stringResource(it.label) }, tab) { tab = it } },
         pageNames = groups.map { stringResource(it.label) },
         onSelectPage = { tab = it },
         pages = contents.map { types ->
@@ -1255,17 +1240,20 @@ private fun DialogShell(
                             Box(Modifier.padding(top = 10.dp))
                         }
                     }
+                    val bodyScroll = rememberScrollState()
                     Box(
                         // The scroll bar is drawn on the outer edge of this
-                        // box, so the content is inset to leave it room.
-                        // `fill = false` so it can only be smaller than its
-                        // content, never stretched, or a short page would push
-                        // the button to the bottom of the screen.
+                        // box, so a page that scrolls is inset to leave it
+                        // room. One that doesn't keeps the full width, the
+                        // same as the tabs above it. `fill = false` so it can
+                        // only be smaller than its content, never stretched,
+                        // or a short page would push the button to the bottom
+                        // of the screen.
                         Modifier.weight(1f, fill = false)
                             .heightIn(max = maxBodyHeight)
                             .onSizeChanged { bodyViewport = it.height }
-                            .verticalScrollWithBar(rememberScrollState())
-                            .padding(end = 10.dp)
+                            .verticalScrollWithBar(bodyScroll)
+                            .padding(end = if (bodyScroll.maxValue > 0) 10.dp else 0.dp)
                             // Where the keyboard's first focus goes: the
                             // body's first control, not the footer's button.
                             .focusRequester(bodyFocus)

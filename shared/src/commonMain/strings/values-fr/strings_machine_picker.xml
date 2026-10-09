@@ -2,8 +2,10 @@
     <!-- model/MachineUi.kt: the machine picker. Machine names are names and aren't translated. -->
     <string name="machines_synths">synthés</string>
     <string name="machines_drums">batteries</string>
-    <!-- Instruments modelled on real ones. The picker sets a trailing "ish" in italic, where there is one. -->
-    <string name="machines_realish">réalistes</string>
+    <string name="machines_keys">claviers</string>
+    <string name="machines_strings">cordes</string>
+    <string name="machines_winds">vents</string>
+    <string name="machines_nature">nature</string>
     <!-- Machines that play recorded sound: samples, a granular cloud, a sung take. -->
     <string name="machines_samples">échantillons</string>
     <string name="machines_beyond">au-delà</string>

@@ -14,21 +14,21 @@
     - [Forage](04-the-machines/forage.md) - a sample drum machine: thirteen pads for your own sounds.
     - [Genesis](04-the-machines/genesis.md) - the big drum box, with a bus compressor the kick ducks.
     - [Hexbeat](04-the-machines/hexbeat.md) - synthesized drums in the style of the classic small boxes, with a bigger kit.
+    - [Palm](04-the-machines/palm.md) - modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, played with open, slap, muted, bass and rim strokes.
     - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
-    - [Aviary](04-the-machines/aviary.md) - modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles and calls in time with the song.
+    - [Hammer](04-the-machines/hammer.md) - modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.
+    - [Manual](04-the-machines/manual.md) - the organ: two manuals and pedals, four models and a rotary cabinet.
+    - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle.
+    - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
+    - [Fret](04-the-machines/fret.md) - modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.
+    - [Sympath](04-the-machines/sympath.md) - modelled sitar, tanpura, veena, shamisen and their relatives, plucked or bowed: strings over a buzzing bridge, with strings ringing in sympathy.
     - [Brazen](04-the-machines/brazen.md) - modelled brass, from trumpet to tuba, or a whole section.
     - [Chanter](04-the-machines/chanter.md) - modelled bagpipes and hurdy-gurdy: drones that go on between notes, grace notes, and a wheel whose loose bridge buzzes in time.
     - [Draw](04-the-machines/draw.md) - modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.
-    - [Fathom](04-the-machines/fathom.md) - modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail, waterfalls, sizzling, ice, snow, splashes, the deep and a rainstick, played from the keys.
-    - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
-    - [Fret](04-the-machines/fret.md) - modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.
-    - [Hammer](04-the-machines/hammer.md) - modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.
-    - [Manual](04-the-machines/manual.md) - the organ: two manuals and pedals, four models and a rotary cabinet.
-    - [Palm](04-the-machines/palm.md) - modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, played with open, slap, muted, bass and rim strokes.
-    - [Sympath](04-the-machines/sympath.md) - modelled sitar, tanpura, veena, shamisen and their relatives, plucked or bowed: strings over a buzzing bridge, with strings ringing in sympathy.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
-    - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle.
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.
+    - [Aviary](04-the-machines/aviary.md) - modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles and calls in time with the song.
+    - [Fathom](04-the-machines/fathom.md) - modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail, waterfalls, sizzling, ice, snow, splashes, the deep and a rainstick, played from the keys.
     - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
     - [Mosaic](04-the-machines/mosaic.md) - a multisample player: zones across the keyboard and velocity, plus grain clouds.
     - [Pollen](04-the-machines/pollen.md) - granular clouds from a file or the live input, whose grains can spawn more grains.
