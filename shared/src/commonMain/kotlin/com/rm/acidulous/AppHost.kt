@@ -17,6 +17,14 @@ interface AppHost {
     val versionName: String?
     /** The version with its build number, like "0.9.7 (18)", or null. */
     val versionLong: String?
+    /**
+     * Whether this install looks for new versions. Not in the browser, which
+     * is always the newest, and not when F-Droid installed it, since F-Droid
+     * tells people itself.
+     */
+    val checksForUpdates: Boolean get() = false
+    /** The newest released version, like "0.11.3", or null. Slow: call it off the main thread. */
+    fun latestRelease(): String? = null
     /** One of the bundled licence texts by path ("licences/gpl-3.0.txt"), or null. */
     fun licenceText(path: String): String?
     /** The last crash report, or null if there are none. */

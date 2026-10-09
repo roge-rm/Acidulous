@@ -108,6 +108,11 @@ private fun DisplayTab() {
             if (com.rm.acidulous.AppHost.current.canKeepScreenOn) {
                 ToggleSquare(stringResource(Res.string.settings_stay_awake), UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(it) }
             }
+            // Only where the app looks for new versions: not in the browser,
+            // and not when F-Droid installed it.
+            if (com.rm.acidulous.AppHost.current.checksForUpdates) {
+                ToggleSquare(stringResource(Res.string.settings_updates), UiPrefs.updateChecks) { UiPrefs.chooseUpdateChecks(it) }
+            }
             // Show the diagnostics numbers everywhere they appear. Debug
             // builds only: a release has none.
             if (com.rm.acidulous.AppHost.current.debugBuild) SwitchGrid(stringResource(Res.string.settings_diagnostics), stringArrayResource(Res.array.settings_diagnostics_choices).toList(), if (UiPrefs.showDiagnostics) 0 else 1) {

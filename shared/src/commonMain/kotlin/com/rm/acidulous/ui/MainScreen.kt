@@ -511,6 +511,7 @@ fun MainScreen(
             // goes after the things you press.
             LoadMeter()
         }
+        UpdateReminder()
 
         // --- Song section -----------------------------------------------------------------
         // Saveable, so a rotation keeps the scroll position and zoom.

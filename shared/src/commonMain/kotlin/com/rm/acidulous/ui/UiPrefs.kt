@@ -415,6 +415,35 @@ object UiPrefs {
         MidiHub.chooseExquisButtons(p.getBoolean(KEY_EXQUIS_BUTTONS, true))
         launchpadNotesOnly = p.getBoolean(KEY_LAUNCHPAD_NOTES_ONLY, false)
         exquisNotesOnly = p.getBoolean(KEY_EXQUIS_NOTES_ONLY, false)
+        updateChecks = p.getBoolean(KEY_UPDATE_CHECKS, true)
+        updateLatest = p.getString(KEY_UPDATE_LATEST, null)
+        updateCheckedAt = p.getString(KEY_UPDATE_CHECKED, null)?.toLongOrNull() ?: 0L
+        updateDismissed = p.getString(KEY_UPDATE_DISMISSED, null)
+    }
+
+    /** Look for a new version once a day, where the platform does (AppHost.checksForUpdates). */
+    var updateChecks by mutableStateOf(true)
+        private set
+    fun chooseUpdateChecks(on: Boolean) {
+        updateChecks = on
+        store?.edit()?.putBoolean(KEY_UPDATE_CHECKS, on)?.apply()
+    }
+    /** The newest version last seen, and when it was looked for (ms since 1970). */
+    var updateLatest: String? = null
+        private set
+    var updateCheckedAt = 0L
+        private set
+    fun noteUpdate(latest: String, at: Long) {
+        updateLatest = latest
+        updateCheckedAt = at
+        store?.edit()?.putString(KEY_UPDATE_LATEST, latest)?.putString(KEY_UPDATE_CHECKED, at.toString())?.apply()
+    }
+    /** The version whose reminder was closed, so it stays closed until the next one. */
+    var updateDismissed: String? = null
+        private set
+    fun dismissUpdate(version: String) {
+        updateDismissed = version
+        store?.edit()?.putString(KEY_UPDATE_DISMISSED, version)?.apply()
     }
 
     /**
@@ -958,6 +987,10 @@ object UiPrefs {
     private const val KEY_EXQUIS_BUTTONS = "exquis_buttons"
     private const val KEY_LAUNCHPAD_NOTES_ONLY = "launchpad_notes_only"
     private const val KEY_EXQUIS_NOTES_ONLY = "exquis_notes_only"
+    private const val KEY_UPDATE_CHECKS = "update_checks"
+    private const val KEY_UPDATE_LATEST = "update_latest"
+    private const val KEY_UPDATE_CHECKED = "update_checked"
+    private const val KEY_UPDATE_DISMISSED = "update_dismissed"
     private const val KEY_LAUNCHPAD = "launchpad_app"
     private const val KEY_MIDI_RACK = "midi_rack"
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"

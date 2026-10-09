@@ -18,6 +18,8 @@
         <item>4</item>
         <item>5</item>
     </string-array>
+    <!-- Look for a new version once a day. -->
+    <string name="settings_updates">mises à jour</string>
     <string name="settings_stay_awake">rester allumé</string>
     <string name="settings_language">langue</string>
     <!-- The system's language, then each language named in itself, as a menu item starts: these stay as they are in every translation. In the order of UiPrefs.Language. -->

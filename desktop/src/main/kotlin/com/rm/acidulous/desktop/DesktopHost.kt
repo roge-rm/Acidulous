@@ -24,6 +24,9 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
 
     override val versionName: String? = VERSION_NAME
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
+    override val checksForUpdates: Boolean get() = !debugBuild
+    override fun latestRelease(): String? =
+        com.rm.acidulous.latestReleaseOnGitHub("Acidulous/$VERSION_NAME (${if (onWindows) "Windows" else "Linux"})")
 
     override fun licenceText(path: String): String? =
         javaClass.classLoader.getResourceAsStream(path)?.bufferedReader()?.use { it.readText() }

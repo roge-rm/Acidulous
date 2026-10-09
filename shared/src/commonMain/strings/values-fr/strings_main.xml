@@ -99,4 +99,10 @@
         <item>pad</item>
         <item>direct</item>
     </string-array>
+    <!-- A line at the top of the song screen when a newer version has been released. -->
+    <string name="update_out">Acidulous %1$s est sorti</string>
+    <!-- Opens the release page. -->
+    <string name="update_get">l’obtenir</string>
+    <!-- What TalkBack calls the line's close button. -->
+    <string name="update_close">Fermer</string>
 </resources>

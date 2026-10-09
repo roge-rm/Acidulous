@@ -1479,6 +1479,9 @@ fun App(modifier: Modifier = Modifier) {
 
     // The Exquis as a controller (midi/exquis), drawn from the same view as
     // the Launchpad and sending the same actions.
+    // A new version, looked for once a day (see UpdateCheck), and again when
+    // the switch in Settings is turned back on.
+    LaunchedEffect(com.rm.acidulous.ui.UiPrefs.updateChecks) { com.rm.acidulous.ui.UpdateCheck.run() }
     val exquis = remember { com.rm.acidulous.ui.exquis.ExquisController { lpAct(it) } }
     exquis.notesOnly = com.rm.acidulous.ui.UiPrefs.exquisNotesOnly
     LaunchedEffect(exquis) {

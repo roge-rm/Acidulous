@@ -11,6 +11,11 @@
 - **size** - makes everything bigger, in four steps.
 <!-- desktop: - **screen scale** - how big the whole window is drawn. **system** takes the computer's own setting. -->
 - **stay awake** - on keeps the screen on while the song plays.
+- **updates** - on looks for a new version once a day, by asking GitHub for the
+  latest release, and shows a line at the top of the song screen when there is
+  one. GitHub sees the app's version and your internet address, as with any web
+  page. Not there when F-Droid installed the app, since F-Droid tells you
+  itself, or in the browser.
 - **keyboard** - **keys…** opens the list of shortcuts, where you can change
   them and choose how letters play notes. See [A keyboard](11-keyboard.md).
 

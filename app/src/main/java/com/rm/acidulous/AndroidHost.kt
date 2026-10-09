@@ -40,6 +40,22 @@ class AndroidHost(private val context: Context) : AppHost {
     }
 
     override val versionName: String? get() = info?.versionName
+
+    /** The app that installed this one, like F-Droid, or null for a file opened by hand. */
+    private val installer: String? = runCatching {
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
+        } else {
+            @Suppress("DEPRECATION") context.packageManager.getInstallerPackageName(context.packageName)
+        }
+    }.getOrNull()
+
+    // F-Droid and the clients that use its repos tell people about updates
+    // themselves. A debug build is a test build.
+    override val checksForUpdates: Boolean
+        get() = !debugBuild && installer?.let { "fdroid" in it || it == "com.looker.droidify" } != true
+
+    override fun latestRelease(): String? = latestReleaseOnGitHub("Acidulous/${versionName ?: "?"} (Android)")
     override val versionLong: String?
         get() = info?.let { "%s (%d)".format(it.versionName, androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it)) }
 

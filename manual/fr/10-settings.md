@@ -13,6 +13,12 @@
 - **taille** - agrandit tout, en quatre crans.
 <!-- desktop: - **échelle d’écran** - la taille à laquelle toute la fenêtre est dessinée. **système** prend le réglage de l’ordinateur. -->
 - **rester allumé** - activé, l’écran reste allumé pendant la lecture.
+- **mises à jour** - activé, l’appli cherche une nouvelle version une fois par
+  jour, en demandant à GitHub la dernière sortie, et affiche une ligne en haut de
+  l’écran du morceau quand il y en a une. GitHub voit la version de l’appli et
+  votre adresse internet, comme pour n’importe quelle page web. Absent quand
+  F-Droid a installé l’appli, puisque F-Droid vous
+  prévient lui-même, et dans le navigateur.
 - **clavier** - **touches…** ouvre la liste des raccourcis, où vous pouvez les
   changer et choisir comment les lettres jouent des notes. Voir [Un clavier](11-keyboard.md).
 
