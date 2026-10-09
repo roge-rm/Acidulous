@@ -238,22 +238,25 @@ object MidiHub {
 
     var padMode by mutableStateOf(PadMode.Own)
         private set
-    /** Whether the app has the Exquis's transport and undo buttons. */
+    /** Whether the app plays the Exquis as a controller (ui/exquis), or leaves it as it is. */
     var exquisButtons by mutableStateOf(true)
         private set
-    /** A press of one of those buttons, by id (PadLights.BUTTON_*), on the main thread. */
-    var exquisButtonPressed: ((Int) -> Unit)? = null
-    /** Whether the app currently holds the buttons zone in developer mode on this Exquis. */
-    @Volatile private var buttonsHeld = false
-    private var wantedLeds: Map<Int, Triple<Int, Int, Int>> = emptyMap()
-    private val shownLeds = HashMap<Int, Triple<Int, Int, Int>>()
+    /** A developer-mode control of the Exquis (a pad, knob, the slider or a button), on the main thread. */
+    var exquisInput: ((status: Int, d1: Int, d2: Int) -> Unit)? = null
+    /** The developer-mode zones the controller wants, and the ones held on the Exquis now. */
+    @Volatile private var wantedZones = PadLights.ZONE_BUTTONS
+    @Volatile private var heldZones = 0
+    private val buttonsHeld get() = heldZones != 0
+    private var wantedLeds: Map<Int, Int> = emptyMap()
+    private val shownLeds = HashMap<Int, Int>()
     fun chooseExquisButtons(on: Boolean) {
         exquisButtons = on
         handler?.post { syncPads() }
     }
 
-    /** What the buttons should show, by id, as colours of 0..127 per part. */
-    fun showExquisButtons(leds: Map<Int, Triple<Int, Int, Int>>) {
+    /** The zones to hold and what their lights should show, by id, as Rgb. */
+    fun showExquis(zones: Int, leds: Map<Int, Int>) {
+        wantedZones = zones
         wantedLeds = leds
         handler?.post { syncPads() }
     }
@@ -271,6 +274,16 @@ object MidiHub {
     private var wantedLit: Set<Int> = emptySet()
     private var wantedRoot: Int? = null
     private var wantedClasses: Set<Int>? = null
+    /** A drum machine's notes in its pad order when the Exquis plays one, or null. */
+    @Volatile private var wantedDrums: List<Int>? = null
+    /**
+     * The app keeps the Exquis's octave (it holds the arrows), so the Exquis
+     * itself stays at its own, where the bottom-left pad is D#2 (39) and C4
+     * (60) is in the middle. Its notes are moved by this many semitones.
+     */
+    @Volatile private var exquisShift = 0
+    /** The note each held Exquis note became, by channel and note, so it's let go as the same one. */
+    private val exquisSounding = HashMap<Int, Int>()
     /** The tonic and scale last set on the Exquis itself, or null to set them again. */
     private var sentScale: Pair<Int, Int>? = null
     /** Note-offs for every note have been sent to this Exquis, clearing anything a previous run left lit. */
@@ -295,6 +308,38 @@ object MidiHub {
         handler?.post { syncPads() }
     }
 
+    /**
+     * The notes a drum machine plays, when the Exquis plays one: those pads
+     * are highlighted instead of a scale, wherever its octave puts them.
+     */
+    fun showDrums(notes: List<Int>?) {
+        wantedDrums = notes
+        handler?.post { syncPads() }
+    }
+
+    /** The app's octave for the Exquis, in octaves from its own. */
+    fun setExquisOctave(octaves: Int) {
+        exquisShift = 12 * octaves
+    }
+
+    /**
+     * An Exquis note as the app plays it: on a drum machine, the notes from
+     * F3 up (the middle of its pads) are the drums in their pad order, and
+     * any other note plays nothing (null). Otherwise it's moved by the app's
+     * octave. Expression and the note-off follow what the note-on became.
+     */
+    private fun exquisNote(status: Int, d1: Int, d2: Int): Int? {
+        val kind = status and 0xf0
+        if (kind != 0x80 && kind != 0x90 && kind != 0xA0) return d1
+        val key = (status and 0x0f) * 128 + d1
+        val off = kind == 0x80 || (kind == 0x90 && d2 == 0)
+        if (off) exquisSounding.remove(key)?.let { return it }
+        if (kind == 0xA0) exquisSounding[key]?.let { return it }
+        val out = PadLights.exquisNote(d1, wantedDrums, exquisShift)
+        if (out != null && kind == 0x90 && !off) exquisSounding[key] = out
+        return out
+    }
+
     /** Turn the pads off and hand the buttons back before the app closes. Runs on the caller's thread so it's done in time. */
     fun clearPads() {
         val port = padPortNow() ?: return
@@ -302,7 +347,7 @@ object MidiHub {
         lit.clear()
         if (buttonsHeld) {
             sendBytes(port, PadLights.exquisSetup(0))
-            buttonsHeld = false
+            heldZones = 0
         }
     }
 
@@ -332,7 +377,7 @@ object MidiHub {
             lit.clear()
             sentScale = null
             cleaned = false
-            buttonsHeld = false
+            heldZones = 0
             shownLeds.clear()
         }
         if (info == null) return
@@ -355,33 +400,55 @@ object MidiHub {
             lit.clear()
             cleaned = true
         }
-        // Its buttons: taken or given back, and lit to match the app.
-        if (exquisButtons && !buttonsHeld) {
-            sendBytes(port, PadLights.exquisSetup(PadLights.ZONE_BUTTONS))
-            buttonsHeld = true
+        // The zones the controller's page needs, taken or given back, and
+        // lit to match the app. What it gives back the Exquis draws itself.
+        val zones = if (exquisButtons) wantedZones else 0
+        if (zones != heldZones) {
+            if (heldZones == 0) sentScale = null
+            sendBytes(port, PadLights.exquisSetup(zones))
+            heldZones = zones
             shownLeds.clear()
-        } else if (!exquisButtons && buttonsHeld) {
-            sendBytes(port, PadLights.exquisSetup(0))
-            buttonsHeld = false
+            if (zones == 0) sentScale = null
         }
         if (buttonsHeld) {
-            for ((id, c) in wantedLeds) {
-                if (shownLeds[id] == c) continue
-                sendBytes(port, PadLights.exquisLed(id, c.first, c.second, c.third))
-                shownLeds[id] = c
-            }
+            val changed = wantedLeds.filter { (id, c) -> shownLeds[id] != c }
+            for (m in PadLights.exquisLeds(changed)) sendBytes(port, m)
+            shownLeds.putAll(changed)
         }
-        val target = if (padMode == PadMode.Highlight) wantedLit else emptySet()
-        for ((status, note, vel) in PadLights.changes(lit, target, wantedRoot)) sendPad(port, status, note, vel)
+        val drums = wantedDrums
+        val target = when {
+            padMode == PadMode.Off -> emptySet()
+            drums != null -> PadLights.exquisDrumNotes(drums.size).toSet()
+            padMode == PadMode.Highlight -> wantedLit
+            else -> emptySet()
+        }
+        for ((status, note, vel) in PadLights.changes(lit, target, if (drums != null) null else wantedRoot)) sendPad(port, status, note, vel)
         lit.clear(); lit += target
         // Its own tonic and scale, in the player's own colours.
         val root = wantedRoot
         val classes = wantedClasses
-        if (padMode == PadMode.Own && root != null && classes != null) {
-            val scale = PadLights.exquisScale(root, classes)
-            if (scale != sentScale) {
-                for (m in PadLights.exquisScaleMessages(scale.first, scale.second, inDeveloperMode = buttonsHeld)) sendBytes(port, m)
-                sentScale = scale
+        if (drums != null && padMode != PadMode.Off && buttonsHeld) {
+            // On a drum machine an empty scale, so only its drums are lit.
+            val empty = (root ?: 0) to -1
+            if (empty != sentScale) {
+                for (m in PadLights.exquisExactScale(root ?: 0, emptySet())) sendBytes(port, m)
+                sentScale = empty
+            }
+        }
+        if (padMode == PadMode.Own && drums == null && root != null && classes != null) {
+            if (buttonsHeld) {
+                // In developer mode it takes the exact scale.
+                val exact = root to classes.fold(0) { bits, p -> bits or (1 shl Math.floorMod(p, 12)) }
+                if (exact != sentScale) {
+                    for (m in PadLights.exquisExactScale(root, classes)) sendBytes(port, m)
+                    sentScale = exact
+                }
+            } else {
+                val scale = PadLights.exquisScale(root, classes)
+                if (scale != sentScale) {
+                    for (m in PadLights.exquisScaleMessages(scale.first, scale.second)) sendBytes(port, m)
+                    sentScale = scale
+                }
             }
         }
     }
@@ -796,12 +863,12 @@ object MidiHub {
                     if (surface && launchpadOn && to != null) {
                         lastMessage = "launchpad · %02x %d %d".format(status, d1, d2)
                         to(status, d1, d2)
-                    } else if (exquis && buttonsHeld && status == 0xBF && d1 in PadLights.BUTTONS) {
-                        // One of the Exquis buttons the app holds: an action, not a controller.
-                        lastMessage = "exquis · button $d1 ${if (d2 > 0) "on" else "off"}"
-                        PadLights.exquisButton(status, d1, d2)?.let { id ->
-                            exquisButtonPressed?.let { f -> postToMain { f(id) } }
-                        }
+                    } else if (exquis && PadLights.isExquisControl(status, d1, heldZones)) {
+                        // A control the app holds: for the controller, not played.
+                        lastMessage = "exquis · %02x %d %d".format(status, d1, d2)
+                        exquisInput?.let { f -> postToMain { f(status, d1, d2) } }
+                    } else if (exquis) {
+                        exquisNote(status, d1, d2)?.let { dispatch(status, it, d2, portId) }
                     } else {
                         dispatch(status, d1, d2, portId)
                     }

@@ -132,6 +132,11 @@ private fun DevicesTab() {
                 SwitchGrid(stringResource(Res.string.midi_launchpad), stringArrayResource(Res.array.midi_launchpad_choices).toList(), if (MidiHub.launchpadOn) 0 else 1) {
                     UiPrefs.chooseLaunchpad(it == 0)
                 }
+                if (MidiHub.launchpadOn) {
+                    SwitchGrid(stringResource(Res.string.midi_launchpad_pages), stringArrayResource(Res.array.midi_pages_choices).toList(), if (UiPrefs.launchpadNotesOnly) 1 else 0) {
+                        UiPrefs.chooseLaunchpadNotesOnly(it == 1)
+                    }
+                }
             }
             // Only with an Exquis plugged in: the played track's scale on its
             // pads.
@@ -139,10 +144,14 @@ private fun DevicesTab() {
                 SwitchGrid(stringResource(Res.string.midi_exquis_pads), stringArrayResource(Res.array.midi_exquis_pads_choices).toList(), MidiHub.padMode.ordinal, columns = 1) {
                     UiPrefs.choosePadMode(MidiHub.PadMode.entries[it])
                 }
-                // Play, record, loop, clips, undo and redo: handled by the app, or
-                // by the Exquis itself.
+                // Played by the app as a controller, or left as the Exquis's own.
                 SwitchGrid(stringResource(Res.string.midi_exquis_buttons), stringArrayResource(Res.array.midi_launchpad_choices).toList(), if (MidiHub.exquisButtons) 0 else 1) {
                     UiPrefs.chooseExquisButtons(it == 0)
+                }
+                if (MidiHub.exquisButtons) {
+                    SwitchGrid(stringResource(Res.string.midi_exquis_pages), stringArrayResource(Res.array.midi_pages_choices).toList(), if (UiPrefs.exquisNotesOnly) 1 else 0) {
+                        UiPrefs.chooseExquisNotesOnly(it == 1)
+                    }
                 }
             }
             // Only where the app finds Bluetooth instruments itself (on a

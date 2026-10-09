@@ -47,6 +47,9 @@ def is_word(s):
         return False
     if re.fullmatch(r"[A-G][#b♯♭]?-?\d*", s):
         return False
+    # The chord memory's stored notes (m1_1 to m8_6): settings the window never shows.
+    if re.fullmatch(r"m\d_\d", s):
+        return False
     # Formulate's example expressions: code, which means the same in any language.
     if re.search(r">>|<<|sin\(", s):
         return False

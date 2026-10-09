@@ -68,6 +68,8 @@
     - [Width](05-effects-and-mixing/width.md) - wider, narrower, mono below a frequency or rotated.
 6. [Modifiers](06-modifiers.md)
 7. [MIDI and playing with others](07-midi-and-sync.md)
+    - [Exquis](07-midi-and-sync/exquis.md) - the Exquis by Intuitive Instruments as a controller: its own playing, and the song, the mixer and steps on its pads.
+    - [Launchpad Pro](07-midi-and-sync/launchpad.md) - the Novation Launchpad Pro [MK3] as a controller: notes, the song grid, steps, the mixer, chords and the perform effects.
 8. [Recording and samples](08-recording-and-samples.md)
 9. [Importing and exporting](09-exporting.md)
 10. [Settings](10-settings.md)

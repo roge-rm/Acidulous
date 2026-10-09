@@ -185,7 +185,19 @@ Each has the usual controls plus one extra, and its own page in the manual.
 - MPE.
 - Ableton Link, and MIDI clock in and out.
 - Map any MIDI CC or note to any control.
+- Game controllers, so the app can be used with no touchscreen.
 - Built in, USB or Bluetooth keyboards: letters play notes, every control can be used from the keys, and every screen has shortcuts you can change in Settings.
+
+### Controllers
+
+Two controllers have special support, as I have these myself. Each has its own page in the manual.
+
+| | |
+|---|---|
+| <a href="manual/07-midi-and-sync/exquis.md"><img src="manual/images/exquis-session.png" width="250" alt="The Exquis on its Session page"></a> | <a href="manual/07-midi-and-sync/launchpad.md"><img src="manual/images/launchpad-note.png" width="330" alt="The Launchpad Pro on its Note page"></a> |
+| **[Exquis](manual/07-midi-and-sync/exquis.md)** by Intuitive Instruments: its own playing with MPE, and the song grid, the mixer and steps on its pads. | **[Launchpad Pro MK3](manual/07-midi-and-sync/launchpad.md)** by Novation: notes, the song grid, steps, the mixer, chords and the perform effects. |
+
+Either can be kept on its notes page, to play live while you change scenes and clips on the screen.
 
 ### Import and export
 

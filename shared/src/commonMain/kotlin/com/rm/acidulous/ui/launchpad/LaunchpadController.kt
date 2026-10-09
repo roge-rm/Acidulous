@@ -24,6 +24,8 @@ class LaunchpadController(private val act: (LpAction) -> Unit) {
     @Volatile var view = LpView()
     var state = LpState()
         private set
+    /** Stay on the Note page, so the grid is only ever played; its page buttons do nothing. */
+    var notesOnly = false
     /** What the surface shows now, or null when it has to be redrawn whole. */
     private var shown: IntArray? = null
 
@@ -55,12 +57,15 @@ class LaunchpadController(private val act: (LpAction) -> Unit) {
     }
 
     private fun apply(r: Pair<LpState, List<LpAction>>) {
-        state = r.first
+        state = if (notesOnly) r.first.copy(page = com.rm.acidulous.midi.launchpad.LpPage.Note) else r.first
         r.second.forEach(act)
     }
 
     /** Draws the surface as it should be now, sending only what changed. */
     fun frame() {
+        if (notesOnly && state.page != com.rm.acidulous.midi.launchpad.LpPage.Note) {
+            state = state.copy(page = com.rm.acidulous.midi.launchpad.LpPage.Note)
+        }
         val leds = Surface.render(view, state)
         val before = shown
         val changes = LEDS.filter { before == null || before[it] != leds[it] }.map { it to leds[it] }

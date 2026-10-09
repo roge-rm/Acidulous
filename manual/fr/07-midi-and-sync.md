@@ -48,92 +48,10 @@ comme d’habitude.
 
 Le bend, la pression et le glissé de chaque note sont enregistrés avec les notes.
 
-### Exquis
+### Exquis et Launchpad Pro
 
-Branchez un Exquis en USB et ses pads montrent la gamme de la piste qu’il joue :
-le modificateur Scale de la piste s’il en a un, sinon la tonalité du morceau,
-comme la grille de notes. Elle change quand vous ouvrez une autre piste ou
-changez la gamme. Avec **fixe**, c’est la piste fixée, et avec **par canal**,
-c’est la piste du canal sur lequel joue l’Exquis. Les doigts MPE ne sont pas
-dirigés par canal, donc en MPE c’est la piste ouverte ou la piste fixée.
-
-**pads exquis** dans l’onglet appareils de la fenêtre MIDI choisit comment :
-
-- **ses couleurs** règle la tonique et la gamme de l’Exquis lui-même, donc les
-  pads les montrent dans les couleurs que vous leur avez données. Une gamme que
-  l’Exquis n’a pas s’affiche comme la plus proche qui contient toutes ses notes,
-  ou chromatique.
-- **surbrillance** allume plutôt les notes dans le vert de surbrillance de
-  l’Exquis, un pad par note, par-dessus la gamme réglée sur l’Exquis.
-- **non** laisse les pads tranquilles.
-
-Ses boutons commandent aussi l’appli : **play/stop** lance et arrête le morceau,
-**record** arme l’enregistrement, **loop** met la scène en boucle, **clips**
-passe en mode clip, et **undo** et **redo** font ce qu’ils disent. Leurs
-lumières suivent l’appli : play est vert pendant la lecture, record est rouge
-quand il est armé, et loop et clips sont allumés quand ils sont actifs. Les
-pads, les boutons rotatifs, le curseur et les boutons d’octave restent à
-l’Exquis. **boutons exquis** dans l’onglet appareils rend les boutons à
-l’Exquis, et fermer l’appli aussi.
-
-### Launchpad Pro
-
-Branchez un Launchpad Pro [MK3] en USB et Acidulous prend en charge tous les
-pads et boutons, allumés aux couleurs de vos pistes. **launchpad** dans l’onglet
-appareils de la fenêtre MIDI le rend, et fermer l’appli aussi. Les boutons du
-haut choisissent ce qu’est la grille :
-
-- **Note** - un clavier de piano comme celui à l’écran, avec les touches
-  blanches sur une rangée et les noires sur la rangée du dessus, quatre octaves
-  vers le haut de la grille. Les notes de la gamme (celle de la piste, ou la
-  tonalité du morceau) sont allumées de la couleur de la piste, la tonique plus
-  brillante, et les autres sont pâles mais jouent quand même. Quand la piste a
-  son propre modificateur **Scale** actif, seules les notes de la gamme sont
-  là, une octave par rangée à partir de la tonique, ce qui donne huit octaves.
-  Sur une boîte à rythmes, ce sont les pads de la machine, placés comme à
-  l’écran. Haut et bas changent l’octave.
-- **Session** - la grille du morceau, placée comme à l’écran avec les pistes
-  vers le bas et les scènes de gauche à droite. Un clip pulse pendant qu’il
-  joue et clignote pendant qu’il attend. Touchez un clip pour le lancer en mode
-  clip, ou pour jouer à partir de cette scène en mode morceau.
-- **Sequencer** - le clip de la piste ouverte dans la scène courante, huit pas
-  à la fois. Touchez un pad pour ajouter ou enlever une note. Gauche et droite
-  avancent d’un pas à la fois, et haut et bas parcourent les notes. Les rangées
-  d’une boîte à rythmes descendent à partir de la grosse caisse, comme sa
-  grille à l’écran.
-- **Custom** - le mixage, placé comme la grille du morceau, avec une rangée par
-  piste et son volume de gauche à droite. **Volume**, **Pan** et **Sends** sur
-  la rangée du bas choisissent ce que sont les curseurs, et **Device** fait des
-  rangées les huit premiers boutons de la machine jouée.
-- **Chord** - des accords dans la tonalité, une colonne par note de la gamme et
-  une rangée par sorte d’accord.
-- **Projects** - les effets de performance : répétition et gate en haut,
-  inversion, arrêt de bande, la montée, les trois coupures et un pad XY.
-  Maintenez pour jouer.
-
-Les boutons du pourtour fonctionnent sur toutes les pages :
-
-- **Play** et **Record** font ce qu’ils disent. **Shift** et **Play** arrête
-  tout.
-- **Shift** et **Clear** annule, et **Shift** et **Duplicate** rétablit.
-- Maintenez **Clear** et touchez un clip pour le vider. Maintenez **Duplicate**
-  et touchez un clip pour le copier dans la scène suivante si elle est vide, ou
-  touchez un bouton de scène pour dupliquer la scène.
-- Les boutons à droite sont les pistes, de haut en bas comme les rangées de la
-  grille. Touchez-en un pour choisir la piste que joue le Launchpad. Maintenez
-  **Mute** ou **Solo** et touchez-en un pour la rendre muette ou la mettre en
-  solo.
-- La rangée sous la grille, ce sont les scènes, de gauche à droite. Touchez-en
-  une pour la jouer, comme quand vous touchez l’en-tête d’une scène.
-- Sur **Session** et **Custom**, haut et bas parcourent les pistes et gauche et
-  droite les scènes, une à la fois. Sur les autres pages, maintenez **Shift**
-  pour faire de même. Une flèche est allumée quand il y a plus de ce côté.
-- **Quantise** quantifie le clip ouvert selon le dernier réglage de la fenêtre
-  de quantification.
-- **Stop Clip** arrête les clips, ou le morceau.
-
-Ses pads envoient la vélocité et la pression, et les deux sont enregistrées
-comme pour n’importe quel clavier.
+L’Exquis et le Launchpad Pro ont leurs propres pages :
+[Exquis](07-midi-and-sync/exquis.md) et [Launchpad Pro](07-midi-and-sync/launchpad.md).
 
 ### Pédales
 

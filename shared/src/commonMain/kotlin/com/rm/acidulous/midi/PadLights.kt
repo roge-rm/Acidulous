@@ -107,6 +107,41 @@ object PadLights {
     // the app sets their lights. The pads, knobs, slider and octave buttons
     // stay the Exquis's own, so it plays as normal.
 
+    /** The note of an Exquis pad at its factory octave: rows of 6 and 5 from the bottom left (D#1), a third up each row. */
+    fun exquisPadNote(row: Int, col: Int): Int = 27 + (row / 2) * 7 + (if (row % 2 == 1) 4 else 0) + col
+
+    /**
+     * The pads, as row and column, that play a drum machine of [count] drums:
+     * three on the rows of 6 and two on the rows of 5 (columns 2-4 and 2-3,
+     * all centred on one line), stacked upwards and centred, kick at the
+     * bottom left. A note in columns 0-1 is also on a lower pad to the
+     * right, and the Exquis lights the lower one, so those columns are left out.
+     */
+    fun exquisDrumPads(count: Int): List<Pair<Int, Int>> {
+        fun width(row: Int) = if (row % 2 == 0) 3 else 2
+        fun from(first: Int) = buildList {
+            var r = first
+            while (size < count && r < 11) {
+                for (c in 2 until 2 + width(r)) if (size < count) add(r to c)
+                r++
+            }
+        }
+        // Whichever start puts the block's middle nearest row 5, the Exquis's middle.
+        return (0..10).map { from(it) }.filter { it.size == minOf(count, from(0).size) }
+            .minByOrNull { kotlin.math.abs(it.first().first + it.last().first - 10) } ?: emptyList()
+    }
+
+    /** The notes of [exquisDrumPads]. */
+    fun exquisDrumNotes(count: Int): List<Int> = exquisDrumPads(count).map { (r, c) -> exquisPadNote(r, c) }
+
+    /**
+     * An Exquis note as the app plays it: on a drum machine ([drums] in pad
+     * order) the notes of [exquisDrumNotes] are its drums and the rest play
+     * nothing (null); otherwise it's moved by [shift] semitones.
+     */
+    fun exquisNote(note: Int, drums: List<Int>?, shift: Int): Int? =
+        if (drums != null) drums.getOrNull(exquisDrumNotes(drums.size).indexOf(note)) else (note + shift).takeIf { it in 0..127 }
+
     const val ZONE_SLIDER = 0x04
     const val ZONE_BUTTONS = 0x20
     const val BUTTON_RECORD = 102
@@ -132,6 +167,57 @@ object PadLights {
     fun isExquisRefresh(body: ByteArray): Boolean =
         body.size >= 5 && body[0].toInt() == 0x00 && body[1].toInt() == 0x21 && body[2].toInt() == 0x7E &&
             body[3].toInt() == 0x7F && body[4].toInt() == 0x03
+
+    /**
+     * Lights by id, as [com.rm.acidulous.midi.launchpad.Rgb], in as few
+     * messages as can carry them: one per run of neighbouring ids.
+     */
+    fun exquisLeds(leds: Map<Int, Int>): List<ByteArray> {
+        val ids = leds.keys.sorted()
+        val out = ArrayList<ByteArray>()
+        var i = 0
+        while (i < ids.size) {
+            val start = ids[i]
+            val body = arrayListOf(0x04, start)
+            var id = start
+            while (i < ids.size && ids[i] == id) {
+                val c = leds.getValue(id)
+                body += listOf((c shr 16) and 0x7f, (c shr 8) and 0x7f, c and 0x7f, 0)
+                id++
+                i++
+            }
+            out += sysex(*body.toIntArray())
+        }
+        return out
+    }
+
+    /**
+     * The tonic and the exact scale, for while the app holds the Exquis in
+     * developer mode, where it takes any set of notes rather than only its
+     * own list. It goes back to its own scale when developer mode ends.
+     */
+    fun exquisExactScale(root: Int, pitchClasses: Set<Int>): List<ByteArray> {
+        val r = Math.floorMod(root, 12)
+        val degrees = (0..11).map { if (Math.floorMod(it + r, 12) in pitchClasses.map { p -> Math.floorMod(p, 12) }) 1 else 0 }
+        return listOf(sysex(0x06, r), sysex(0x08, *degrees.toIntArray()))
+    }
+
+    /**
+     * Whether a message from the Exquis is one of its developer-mode
+     * controls in a zone the app holds ([mask]), rather than playing.
+     */
+    fun isExquisControl(status: Int, d1: Int, mask: Int): Boolean = when (status) {
+        0x9F, 0x8F -> mask and 0x01 != 0 && d1 in 0..60
+        0xBF -> when (d1) {
+            90 -> mask and ZONE_SLIDER != 0
+            106, 107 -> mask and 0x08 != 0
+            100, 101 -> mask and 0x10 != 0
+            in 102..109 -> mask and ZONE_BUTTONS != 0
+            in 110..117 -> mask and 0x02 != 0
+            else -> false
+        }
+        else -> false
+    }
 
     /** A press of one of the app's Exquis buttons: its id, or null. */
     fun exquisButton(status: Int, d1: Int, d2: Int): Int? =

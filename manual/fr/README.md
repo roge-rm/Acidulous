@@ -68,6 +68,8 @@
     - [Width](05-effects-and-mixing/width.md) : plus large, plus étroit, mono sous une fréquence ou tourné.
 6. [Les modificateurs](06-modifiers.md)
 7. [MIDI et jeu avec d’autres](07-midi-and-sync.md)
+    - [Exquis](07-midi-and-sync/exquis.md) : l’Exquis d’Intuitive Instruments comme contrôleur : son propre jeu, et le morceau, le mixage et les pas sur ses pads.
+    - [Launchpad Pro](07-midi-and-sync/launchpad.md) : le Novation Launchpad Pro [MK3] comme contrôleur : les notes, la grille du morceau, les pas, le mixage, les accords et les effets de jeu.
 8. [Enregistrement et échantillons](08-recording-and-samples.md)
 9. [Importer et exporter](09-exporting.md)
 10. [Réglages](10-settings.md)

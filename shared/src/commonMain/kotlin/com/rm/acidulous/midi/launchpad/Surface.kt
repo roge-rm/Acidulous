@@ -88,6 +88,8 @@ data class LpView(
     val scaleLocked: Boolean = false,
     val playing: Boolean = false,
     val armed: Boolean = false,
+    /** The scene loops instead of moving on. */
+    val loop: Boolean = false,
     /** Where in the beat the song is, 0..1. */
     val beat: Float = 0f,
     val scenes: Int = 0,
@@ -134,6 +136,8 @@ sealed class LpAction {
     object Panic : LpAction()
     object Undo : LpAction()
     object Redo : LpAction()
+    /** The scene loops, or stops looping. */
+    object LoopScene : LpAction()
     data class SelectTrack(val index: Int) : LpAction()
     data class PlayScene(val index: Int) : LpAction()
     data class LaunchClip(val track: Int, val scene: Int) : LpAction()

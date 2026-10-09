@@ -86,8 +86,15 @@
         <item>highlight</item>
         <item>off</item>
     </string-array>
-    <!-- An Exquis's play, record, loop, clips, undo and redo buttons: worked by the app, or left as the Exquis's own. Shares the launchpad switch's choices. -->
-    <string name="midi_exquis_buttons">exquis buttons</string>
+    <!-- An Exquis: played by this app as a controller, or left to work as itself. Shares the launchpad switch's choices. -->
+    <string name="midi_exquis_buttons">exquis</string>
+    <!-- A controller's pages: all of them, or only the one that plays notes, so scenes and clips are changed on the screen. -->
+    <string name="midi_launchpad_pages">launchpad pages</string>
+    <string name="midi_exquis_pages">exquis pages</string>
+    <string-array name="midi_pages_choices">
+        <item>all</item>
+        <item>notes only</item>
+    </string-array>
     <string name="midi_mpe">mpe</string>
     <string name="midi_mpe_zone">zone</string>
     <!-- In the order shown: auto, off, lower, upper. -->

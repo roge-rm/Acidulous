@@ -246,6 +246,10 @@ def parse(path):
         if not line.strip():
             flush()
             continue
+        # Pictures are for the manual on GitHub. The app's Help shows text only.
+        if line.strip().startswith(("![", "<img")):
+            flush()
+            continue
         only = DESKTOP_LINE.match(line.strip())
         if only:
             flush()

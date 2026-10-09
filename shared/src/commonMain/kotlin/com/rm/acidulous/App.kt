@@ -268,6 +268,14 @@ fun App(modifier: Modifier = Modifier) {
     LaunchedEffect(exquisScale) {
         com.rm.acidulous.midi.MidiHub.showScale(exquisScale?.first, exquisScale?.second)
     }
+    // On a drum machine it shows the drums instead: the pads that play one.
+    val exquisDrums = exquisTrack?.machine?.takeIf {
+        com.rm.acidulous.model.MachineUi.kindOf(it) == com.rm.acidulous.model.MachineKind.Drums
+    }?.let { m ->
+        // In the order the app lays out its pads, kick first.
+        com.rm.acidulous.model.MachineUi.padOrder(m.type, com.rm.acidulous.model.MachineUi.voicesOf(m)).map { it.note }
+    }
+    LaunchedEffect(exquisDrums) { com.rm.acidulous.midi.MidiHub.showDrums(exquisDrums) }
     // Typed notes go where hardware notes do. On a drum machine they're its
     // pads in order rather than a scale.
     androidx.compose.runtime.SideEffect {
@@ -1291,6 +1299,7 @@ fun App(modifier: Modifier = Modifier) {
             com.rm.acidulous.midi.launchpad.LpAction.Panic -> com.rm.acidulous.ui.panicEverything()
             com.rm.acidulous.midi.launchpad.LpAction.Undo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Undo)
             com.rm.acidulous.midi.launchpad.LpAction.Redo -> com.rm.acidulous.ui.KeyHub.run(com.rm.acidulous.ui.KeyAction.Redo)
+            com.rm.acidulous.midi.launchpad.LpAction.LoopScene -> onLoopScene(!loopScene)
             is com.rm.acidulous.midi.launchpad.LpAction.SelectTrack -> if (a.index in song.tracks.indices) midiTrack = a.index
             // Like tapping the scene in the grid.
             is com.rm.acidulous.midi.launchpad.LpAction.PlayScene -> song.scenes.getOrNull(a.index)?.let { scene ->
@@ -1400,6 +1409,7 @@ fun App(modifier: Modifier = Modifier) {
             scaleLocked = song.tracks.getOrNull(midiTrack)?.let { com.rm.acidulous.model.Scales.activeFor(it) != null } == true,
             playing = playing,
             armed = armed,
+            loop = loopScene,
             beat = (position.tickInIteration % com.rm.acidulous.model.PPQN).toFloat() / com.rm.acidulous.model.PPQN,
             scenes = song.scenes.size,
             clipMode = com.rm.acidulous.ui.UiPrefs.clipMode,
@@ -1429,6 +1439,7 @@ fun App(modifier: Modifier = Modifier) {
         )
     }
     val launchpad = remember { com.rm.acidulous.ui.launchpad.LaunchpadController { lpAct(it) } }
+    launchpad.notesOnly = com.rm.acidulous.ui.UiPrefs.launchpadNotesOnly
     LaunchedEffect(launchpad) {
         launchpad.attach()
         try {
@@ -1466,38 +1477,25 @@ fun App(modifier: Modifier = Modifier) {
         NativeEngine.setLaunchQuantise(com.rm.acidulous.ui.UiPrefs.launchQuantise * song.signature.ticksPerBar)
     }
 
-    // An Exquis's play, record, loop, clips, undo and redo buttons, when the
-    // app has them: the same actions as the Launchpad's and the screen's, and
-    // lit to match. Play is green while playing and amber when stopped, like
-    // the Exquis itself, record is red while armed, and loop and clips are
-    // lit while on.
-    val exquisPress by rememberUpdatedState<(Int) -> Unit> { id ->
-        val pl = com.rm.acidulous.midi.PadLights
-        when (id) {
-            pl.BUTTON_PLAY -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Play)
-            pl.BUTTON_RECORD -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Record)
-            pl.BUTTON_UNDO -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Undo)
-            pl.BUTTON_REDO -> lpAct(com.rm.acidulous.midi.launchpad.LpAction.Redo)
-            pl.BUTTON_LOOP -> onLoopScene(!loopScene)
-            pl.BUTTON_CLIPS -> onClipMode(!com.rm.acidulous.ui.UiPrefs.clipMode)
+    // The Exquis as a controller (midi/exquis), drawn from the same view as
+    // the Launchpad and sending the same actions.
+    val exquis = remember { com.rm.acidulous.ui.exquis.ExquisController { lpAct(it) } }
+    exquis.notesOnly = com.rm.acidulous.ui.UiPrefs.exquisNotesOnly
+    LaunchedEffect(exquis) {
+        exquis.attach()
+        try {
+            while (true) {
+                if (com.rm.acidulous.midi.MidiHub.exquisHere && com.rm.acidulous.midi.MidiHub.exquisButtons) {
+                    exquis.view = lpSample()
+                    exquis.frame()
+                    delay(33)
+                } else {
+                    delay(300)
+                }
+            }
+        } finally {
+            exquis.detach()
         }
-    }
-    androidx.compose.runtime.DisposableEffect(Unit) {
-        com.rm.acidulous.midi.MidiHub.exquisButtonPressed = { exquisPress(it) }
-        onDispose { com.rm.acidulous.midi.MidiHub.exquisButtonPressed = null }
-    }
-    val clipModeNow = com.rm.acidulous.ui.UiPrefs.clipMode
-    LaunchedEffect(playing, armed, loopScene, clipModeNow) {
-        val pl = com.rm.acidulous.midi.PadLights
-        val off = Triple(16, 16, 16)
-        com.rm.acidulous.midi.MidiHub.showExquisButtons(mapOf(
-            pl.BUTTON_PLAY to if (playing) Triple(0, 127, 0) else Triple(80, 36, 0),
-            pl.BUTTON_RECORD to if (armed) Triple(127, 0, 0) else Triple(24, 0, 0),
-            pl.BUTTON_LOOP to if (loopScene) Triple(110, 80, 0) else off,
-            pl.BUTTON_CLIPS to if (clipModeNow) Triple(0, 90, 120) else off,
-            pl.BUTTON_UNDO to Triple(40, 40, 40),
-            pl.BUTTON_REDO to Triple(40, 40, 40),
-        ))
     }
 
     // Controller mappings. The hub offers every CC and note-on here before it

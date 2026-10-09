@@ -413,6 +413,25 @@ object UiPrefs {
         MidiHub.choosePadMode(MidiHub.PadMode.entries.getOrElse(padMode) { MidiHub.PadMode.Own })
         MidiHub.chooseLaunchpad(p.getBoolean(KEY_LAUNCHPAD, true))
         MidiHub.chooseExquisButtons(p.getBoolean(KEY_EXQUIS_BUTTONS, true))
+        launchpadNotesOnly = p.getBoolean(KEY_LAUNCHPAD_NOTES_ONLY, false)
+        exquisNotesOnly = p.getBoolean(KEY_EXQUIS_NOTES_ONLY, false)
+    }
+
+    /**
+     * A controller stays on its note page, so it's only ever played, and
+     * scenes and clips are changed on the screen.
+     */
+    var launchpadNotesOnly by mutableStateOf(false)
+        private set
+    var exquisNotesOnly by mutableStateOf(false)
+        private set
+    fun chooseLaunchpadNotesOnly(on: Boolean) {
+        launchpadNotesOnly = on
+        store?.edit()?.putBoolean(KEY_LAUNCHPAD_NOTES_ONLY, on)?.apply()
+    }
+    fun chooseExquisNotesOnly(on: Boolean) {
+        exquisNotesOnly = on
+        store?.edit()?.putBoolean(KEY_EXQUIS_NOTES_ONLY, on)?.apply()
     }
 
     /** Whether an attached Launchpad Pro is played by the app, or left as itself. */
@@ -421,7 +440,7 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_LAUNCHPAD, on)?.apply()
     }
 
-    /** Whether the app has an attached Exquis's transport and undo buttons. */
+    /** Whether the app plays an attached Exquis as a controller, or leaves it as itself. */
     fun chooseExquisButtons(on: Boolean) {
         MidiHub.chooseExquisButtons(on)
         store?.edit()?.putBoolean(KEY_EXQUIS_BUTTONS, on)?.apply()
@@ -937,6 +956,8 @@ object UiPrefs {
     private const val KEY_PAD_LIGHTS = "exquis_pad_lights"
     private const val KEY_PAD_MODE = "exquis_pad_mode"
     private const val KEY_EXQUIS_BUTTONS = "exquis_buttons"
+    private const val KEY_LAUNCHPAD_NOTES_ONLY = "launchpad_notes_only"
+    private const val KEY_EXQUIS_NOTES_ONLY = "exquis_notes_only"
     private const val KEY_LAUNCHPAD = "launchpad_app"
     private const val KEY_MIDI_RACK = "midi_rack"
     private const val KEY_MIDI_CLOCK_OUT = "midi_clock_out"
