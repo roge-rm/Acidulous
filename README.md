@@ -114,7 +114,7 @@ All six are the demo song, Squelch.
 |---|---|
 | **Bias** | A four-track for audio recordings that runs along the song. |
 | **Cipher** | A vocoder where you can rearrange which bands drive which. |
-| **Diction** | A vocal synthesizer trained on your voice and taken to the next level. |
+| **Diction** | A vocal synthesizer trained on your voice. |
 | **Nexus** | A modular synth whose modules are the other machines. |
 
 ### Twenty-nine effects
@@ -318,4 +318,4 @@ Everything else, including the engine, the machines and effects, the
 sequencer and the file writers, was written for this project. No DSP code,
 presets or samples come from anywhere else.
 
-Disclaimer: I am not a great programmer and this was made using Claude Opus 5.0/5.5
+This was made using Claude Opus 5.0/5.5
