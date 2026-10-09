@@ -197,15 +197,19 @@ android {
         // 0.11.1: Fret, Tine, Sympath, Palm, Chanter, Aviary and Fathom, with
         // Nexus modules; a language menu with French as written in France; a
         // new song can start with no machine.
+        // 0.11.2: kits on Palm, Fathom and Aviary, more instruments in the
+        // new machines, strum keys and strum patterns on the chord modifier,
+        // every effect's presets filled out and levelled, a picker with
+        // eight groups, and fixes.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 34
+        val release = 35
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.11.1"
+        versionName = "0.11.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
