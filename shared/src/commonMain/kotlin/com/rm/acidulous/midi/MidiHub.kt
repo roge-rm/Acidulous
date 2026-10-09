@@ -195,8 +195,14 @@ object MidiHub {
                 refresh()
             },
         )
-        // Already plugged in when the app started: light its pads and take the Launchpad.
-        handler?.post { syncPads(); syncLaunchpad() }
+        // Already plugged in when the app started: open its inputs as if it
+        // had just been plugged in, then light its pads and take the
+        // Launchpad. Hardware only; another app's virtual port is a choice.
+        handler?.post {
+            for (info in midi.devices) if (info.outputPortCount > 0 && (info.usb || info.bluetooth)) open(info.id)
+            syncPads()
+            syncLaunchpad()
+        }
         // Preferences are restored just before this runs, so a saved clock
         // out setting asked for a sender before its thread existed. Ask again
         // now there is one.
