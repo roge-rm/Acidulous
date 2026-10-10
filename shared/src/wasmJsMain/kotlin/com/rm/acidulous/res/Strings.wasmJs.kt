@@ -23,11 +23,24 @@ internal actual fun loadPlural(res: PluralStringResource, count: Int): String {
 
 internal actual fun loadStringArray(res: StringArrayResource): List<String> = arrays[res.key] ?: emptyList()
 
-/** Loads every string before the app draws anything. */
+/**
+ * Loads every string before the app draws anything. One that won't load (only
+ * in another language, say) is skipped and left blank, rather than stopping
+ * the app from starting.
+ */
 @OptIn(ExperimentalResourceApi::class)
 suspend fun preloadStrings() {
-    for (res in Res.allStringResources.values) strings[res.key] = org.jetbrains.compose.resources.getString(res)
-    for (res in Res.allStringArrayResources.values) arrays[res.key] = org.jetbrains.compose.resources.getStringArray(res)
-    for (res in Res.allPluralStringResources.values) plurals[res.key] =
-        org.jetbrains.compose.resources.getPluralString(res, 1) to org.jetbrains.compose.resources.getPluralString(res, 2)
+    for (res in Res.allStringResources.values) {
+        runCatching { strings[res.key] = org.jetbrains.compose.resources.getString(res) }
+            .onFailure { com.rm.acidulous.util.Log.w("Acidulous.UI", "no string ${res.key}", it) }
+    }
+    for (res in Res.allStringArrayResources.values) {
+        runCatching { arrays[res.key] = org.jetbrains.compose.resources.getStringArray(res) }
+            .onFailure { com.rm.acidulous.util.Log.w("Acidulous.UI", "no string array ${res.key}", it) }
+    }
+    for (res in Res.allPluralStringResources.values) {
+        runCatching {
+            plurals[res.key] = org.jetbrains.compose.resources.getPluralString(res, 1) to org.jetbrains.compose.resources.getPluralString(res, 2)
+        }.onFailure { com.rm.acidulous.util.Log.w("Acidulous.UI", "no plural ${res.key}", it) }
+    }
 }
