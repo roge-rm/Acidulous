@@ -59,11 +59,12 @@ def pad_centre(r, c):
     return x, y
 
 
-def hexagon(x, y, fill, label="", ink=INK, size=11):
+def hexagon(x, y, fill, label="", ink=INK, size=11, turn=30):
+    """turn: 30 for a pad with a point at the top (upright), 0 for one held sideways."""
     pts = []
     for i in range(6):
         import math
-        a = math.radians(60 * i + 30)
+        a = math.radians(60 * i + turn)
         pts.append(f"{x + HEX * math.cos(a):.1f},{y + HEX * math.sin(a):.1f}")
     out = f'<polygon points="{" ".join(pts)}" fill="{fill}" stroke="{EDGE}" stroke-width="1.5"/>'
     if label:
@@ -107,6 +108,34 @@ def exquis(name, title, knobs, knob_note, pads, arrows, slider, buttons, side=No
         for j, line in enumerate(label.split("\n")):
             b += text(x, 888 + j * 16, line, size=11)
     render(name, W, H, b)
+
+
+def exquis_sideways(name, title, cells, rows, note):
+    """The Exquis held with its knobs on the right, as ExquisSurface.sidePad
+    lays it out: five rows of 11 across, the top one first, and the row of 6
+    at the bottom. cells: {(row, x): (fill, label)}; rows: {row: label}
+    beside the rows."""
+    w, h = 900, 520
+    b = f'<rect x="10" y="10" width="{w - 20}" height="{h - 20}" rx="22" fill="{PANEL}" stroke="{EDGE}"/>'
+    b += text(w / 2, 38, title, size=16, weight="bold")
+    step = HEX * 1.732 * 1.06
+    line = HEX * 1.5 * 1.06
+    left, mid = 200, 260
+    # Turned clockwise: upright row r is x = r across, column c is c down.
+    for r in range(11):
+        for c in range(row_len(r)):
+            x = left + r * line
+            y = mid + (c - (row_len(r) - 1) / 2) * step
+            fill, label = cells.get((c, r), (PAD, ""))
+            b += hexagon(x, y, fill, label, turn=0)
+    for row, label in rows.items():
+        b += text(left - 40, mid + (row - 2.25) * step, label, size=10, fill=MUTED, anchor="end")
+    for i in range(4):
+        y = 140 + i * 80
+        b += f'<circle cx="{w - 110}" cy="{y}" r="22" fill="{KNOB}" stroke="{EDGE}"/>'
+        b += text(w - 60, y, f"knob {i + 1}", size=10, fill=MUTED)
+    b += text(w / 2, h - 40, note, size=11, fill=MUTED)
+    render(name, w, h, b)
 
 
 BOTTOM = ["its own", "its own", "record", "loop", "pages", "play,\nstop"]
@@ -170,6 +199,19 @@ def exquis_pages():
     side = {10: "track 1", 9: "track 2", 1: "track 10", 0: "scenes"}
     exquis("exquis-session.png", "Session", ["scenes", "tracks", "", ""],
            "turn to scroll; click for the next five scenes or ten tracks", pads, "tracks, by five", "the track's level", BOTTOM, side)
+    # Held sideways: a track a row of 11, scenes across, its pad at the end.
+    # Holding loop turns the top row into the scenes.
+    cells = {}
+    for row in range(5):
+        for x in range(10):
+            if random.random() < 0.6:
+                cells[(row, x)] = (TRACKS[row], "")
+        cells[(row, 10)] = (TRACKS[row], "●")
+    cells[(0, 1)] = (TRACKS[0], "▶")
+    cells[(2, 1)] = (TRACKS[2], "▶")
+    exquis_sideways("exquis-session-sideways.png", "Session, held sideways", cells,
+                    {0: "track 1", 1: "track 2", 2: "track 3", 3: "track 4", 4: "track 5"},
+                    "hold loop and the top row is the scenes, with stop at its end")
 
     # Mixer: select, mute, solo and a level bar on each track's row.
     pads = {}

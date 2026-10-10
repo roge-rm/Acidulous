@@ -88,7 +88,7 @@ class ExquisSurfaceTest {
         var s = ExquisSurface.button(view, XqState(), ExquisSurface.CLIPS, true).first
         // On Play the pads are taken over while clips is held, to choose with.
         assertTrue(ExquisSurface.zones(s) and ExquisSurface.ZONE_PADS != 0)
-        val mixer = ExquisSurface.PAGE_CHOICE.entries.first { it.value == XqPage.Mixer }.key
+        val mixer = ExquisSurface.pageChoice(XqHold.Upright).entries.first { it.value == XqPage.Mixer }.key
         s = ExquisSurface.pad(view, s, mixer, true).first
         s = ExquisSurface.button(view, s, ExquisSurface.CLIPS, false).first
         // Letting go after choosing doesn't switch again.
@@ -195,5 +195,61 @@ class ExquisSurfaceTest {
         assertEquals(Rgb.OFF, few[padOf(10, 5)])
         assertEquals(Rgb.of(14, 14, 14), many[padOf(10, 5)])
         assertEquals(Rgb.OFF, ExquisSurface.render(view.copy(scenes = 12), XqState(page = XqPage.Session, sceneOffset = 7))[padOf(10, 5)])
+    }
+
+    @Test fun `sideways, every row of 11 reads back as itself`() {
+        for (hold in listOf(XqHold.KnobsLeft, XqHold.KnobsRight)) for (row in 0..4) for (x in 0..10) {
+            assertEquals(row to x, ExquisSurface.sideCell(hold, ExquisSurface.sidePad(hold, row, x)))
+        }
+    }
+
+    @Test fun `sideways, five tracks run down and scenes across like the song screen`() {
+        // Knobs right: the rows of 11 are upright columns 0 to 4, from row 0 at the left.
+        val right = XqState(page = XqPage.Session, hold = XqHold.KnobsRight)
+        assertEquals(5, ExquisSurface.tracksShown(right))
+        assertEquals(10, ExquisSurface.scenesShown(right))
+        assertEquals(listOf(LpAction.SelectTrack(0), LpAction.PlayScene(1)), ExquisSurface.pad(view, right, padOf(1, 0), true).second)
+        assertEquals(listOf(LpAction.SelectTrack(1), LpAction.PlayScene(0)), ExquisSurface.pad(view, right, padOf(0, 1), true).second)
+        // A track row ends in its track's pad.
+        assertEquals(listOf(LpAction.SelectTrack(0)), ExquisSurface.pad(view, right, padOf(10, 0), true).second)
+        assertEquals(Rgb.scale(red, 0.3f), ExquisSurface.render(view, right)[padOf(0, 0)])
+        // Knobs left: row 10 is the left column, and the rows of 11 are columns 4 down to 0.
+        val left = XqState(page = XqPage.Session, hold = XqHold.KnobsLeft)
+        assertEquals(listOf(LpAction.SelectTrack(0), LpAction.PlayScene(1)), ExquisSurface.pad(view, left, padOf(9, 4), true).second)
+        // The row of 6 at the top does nothing.
+        assertEquals(emptyList<LpAction>(), ExquisSurface.pad(view, left, padOf(10, 5), true).second)
+    }
+
+    @Test fun `holding loop shows the scenes on the top row, tapping it loops`() {
+        val right = XqState(page = XqPage.Session, hold = XqHold.KnobsRight)
+        val held = ExquisSurface.button(view, right, ExquisSurface.LOOP, true).first
+        assertEquals(Rgb.scale(Rgb.GREEN, 0.25f), ExquisSurface.render(view, held)[padOf(2, 0)])
+        val (after, acts) = ExquisSurface.pad(view, held, padOf(2, 0), true)
+        assertEquals(listOf(LpAction.PlayScene(2)), acts)
+        assertEquals(listOf(LpAction.StopClips), ExquisSurface.pad(view, held, padOf(10, 0), true).second)
+        // Used as a shift, letting go doesn't loop; a tap does.
+        assertEquals(emptyList<LpAction>(), ExquisSurface.button(view, after, ExquisSurface.LOOP, false).second)
+        assertEquals(listOf(LpAction.LoopScene), ExquisSurface.button(view, held, ExquisSurface.LOOP, false).second)
+        // Upright, a tap still loops.
+        val upright = ExquisSurface.button(view, XqState(), ExquisSurface.LOOP, true).first
+        assertEquals(listOf(LpAction.LoopScene), ExquisSurface.button(view, upright, ExquisSurface.LOOP, false).second)
+    }
+
+    @Test fun `sideways, a mixer row is select, mute, solo and a level of 8`() {
+        val s = XqState(page = XqPage.Mixer, hold = XqHold.KnobsRight)
+        assertEquals(5, ExquisSurface.tracksShown(s))
+        assertEquals(listOf(LpAction.SelectTrack(1)), ExquisSurface.pad(view, s, padOf(0, 1), true).second)
+        assertEquals(listOf(LpAction.ToggleMute(0)), ExquisSurface.pad(view, s, padOf(1, 0), true).second)
+        assertEquals(listOf(LpAction.SetMix(0, LpFader.Level, 1f)), ExquisSurface.pad(view, s, padOf(10, 0), true).second)
+    }
+
+    @Test fun `sideways, the steps read across in rows of 8`() {
+        val s = XqState(page = XqPage.Steps, hold = XqHold.KnobsRight)
+        // The third step is the third pad of the top row: row 2, column 0.
+        assertEquals(listOf(LpAction.ToggleStep(0, 0, 48, 48, 24)), ExquisSurface.pad(view, s, ExquisSurface.sidewaysPad(XqHold.KnobsRight, 0, 2)!!, true).second)
+        assertEquals(padOf(2, 0), ExquisSurface.sidewaysPad(XqHold.KnobsRight, 0, 2))
+        // With the knobs on the left the row of 6 is at the top, as the step pages.
+        assertEquals(padOf(10, 5), ExquisSurface.sidewaysPad(XqHold.KnobsLeft, 0, 0))
+        assertEquals(null, ExquisSurface.sidewaysPad(XqHold.KnobsLeft, 0, 1))
     }
 }

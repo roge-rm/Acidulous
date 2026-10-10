@@ -95,6 +95,12 @@
         <item>all</item>
         <item>notes only</item>
     </string-array>
+    <string name="midi_exquis_held">exquis held</string>
+    <string-array name="midi_exquis_held_choices">
+        <item>upright</item>
+        <item>knobs left</item>
+        <item>knobs right</item>
+    </string-array>
     <string name="midi_mpe">mpe</string>
     <string name="midi_mpe_zone">zone</string>
     <!-- In the order shown: auto, off, lower, upper. -->

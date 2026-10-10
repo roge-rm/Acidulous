@@ -2,7 +2,7 @@
 > L’Exquis d’Intuitive Instruments comme contrôleur : son propre jeu, et le morceau, le mixage et les pas sur ses pads.
 
 Branchez un Exquis en USB et Acidulous le joue comme contrôleur, tenu debout,
-les boutons rotatifs en haut. Il faut le micrologiciel 2.1 de l’Exquis ou plus
+les boutons rotatifs en haut, ou de côté (voir plus bas). Il faut le micrologiciel 2.1 de l’Exquis ou plus
 récent. **exquis** dans l’onglet appareils de la fenêtre MIDI le rend, et fermer
 l’appli aussi.
 
@@ -108,3 +108,23 @@ flèches changent l’octave des notes, sauf sur une boîte à rythmes.
 
 Hors de la page Play, les pads disent seulement s’ils sont enfoncés ou non,
 donc les pas sont écrits à une seule vélocité.
+
+## Tenu de côté
+
+![L’Exquis sur Session, tenu de côté](../../images/exquis-session-sideways.png)
+
+Réglez **exquis tenu** dans la fenêtre MIDI sur **rotatifs à gauche** ou
+**rotatifs à droite** et les pages tournent avec lui, pour correspondre à
+l’écran du morceau : les pads s’alignent en cinq rangées de 11 en travers, et
+une rangée de 6 sur le bord opposé aux rotatifs.
+
+- Session : une piste par rangée, cinq à la fois, avec dix scènes en travers et
+  le pad de la piste au bout de sa rangée pour la choisir. Tenez **loop** et la
+  rangée du haut devient les scènes, avec l’arrêt au bout. Toucher **loop**
+  active ou coupe toujours la boucle.
+- Mixer : une piste par rangée, cinq à la fois : sélection, sourdine et solo,
+  puis son niveau sur huit pads.
+- Steps : les pas sont deux rangées de 8, les notes les trois autres rangées de
+  11, et les mesures du clip la rangée de 6.
+
+Play ne change pas, puisque les pads y sont ceux de l’Exquis.

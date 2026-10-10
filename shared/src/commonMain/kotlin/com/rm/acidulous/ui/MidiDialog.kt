@@ -152,6 +152,9 @@ private fun DevicesTab() {
                     SwitchGrid(stringResource(Res.string.midi_exquis_pages), stringArrayResource(Res.array.midi_pages_choices).toList(), if (UiPrefs.exquisNotesOnly) 1 else 0) {
                         UiPrefs.chooseExquisNotesOnly(it == 1)
                     }
+                    SwitchGrid(stringResource(Res.string.midi_exquis_held), stringArrayResource(Res.array.midi_exquis_held_choices).toList(), UiPrefs.exquisHold.ordinal, columns = 1) {
+                        UiPrefs.chooseExquisHold(com.rm.acidulous.midi.exquis.XqHold.entries[it])
+                    }
                 }
             }
             // Only where the app finds Bluetooth instruments itself (on a

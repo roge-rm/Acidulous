@@ -1484,6 +1484,7 @@ fun App(modifier: Modifier = Modifier) {
     LaunchedEffect(com.rm.acidulous.ui.UiPrefs.updateChecks) { com.rm.acidulous.ui.UpdateCheck.run() }
     val exquis = remember { com.rm.acidulous.ui.exquis.ExquisController { lpAct(it) } }
     exquis.notesOnly = com.rm.acidulous.ui.UiPrefs.exquisNotesOnly
+    exquis.hold = com.rm.acidulous.ui.UiPrefs.exquisHold
     LaunchedEffect(exquis) {
         exquis.attach()
         try {

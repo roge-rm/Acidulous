@@ -415,6 +415,7 @@ object UiPrefs {
         MidiHub.chooseExquisButtons(p.getBoolean(KEY_EXQUIS_BUTTONS, true))
         launchpadNotesOnly = p.getBoolean(KEY_LAUNCHPAD_NOTES_ONLY, false)
         exquisNotesOnly = p.getBoolean(KEY_EXQUIS_NOTES_ONLY, false)
+        exquisHold = com.rm.acidulous.midi.exquis.XqHold.entries.getOrElse(p.getInt(KEY_EXQUIS_HOLD, 0)) { com.rm.acidulous.midi.exquis.XqHold.Upright }
         updateChecks = p.getBoolean(KEY_UPDATE_CHECKS, true)
         updateLatest = p.getString(KEY_UPDATE_LATEST, null)
         updateCheckedAt = p.getString(KEY_UPDATE_CHECKED, null)?.toLongOrNull() ?: 0L
@@ -461,6 +462,14 @@ object UiPrefs {
     fun chooseExquisNotesOnly(on: Boolean) {
         exquisNotesOnly = on
         store?.edit()?.putBoolean(KEY_EXQUIS_NOTES_ONLY, on)?.apply()
+    }
+
+    /** How the Exquis is held, so its pages turn to match. */
+    var exquisHold by mutableStateOf(com.rm.acidulous.midi.exquis.XqHold.Upright)
+        private set
+    fun chooseExquisHold(hold: com.rm.acidulous.midi.exquis.XqHold) {
+        exquisHold = hold
+        store?.edit()?.putInt(KEY_EXQUIS_HOLD, hold.ordinal)?.apply()
     }
 
     /** Whether an attached Launchpad Pro is played by the app, or left as itself. */
@@ -987,6 +996,7 @@ object UiPrefs {
     private const val KEY_EXQUIS_BUTTONS = "exquis_buttons"
     private const val KEY_LAUNCHPAD_NOTES_ONLY = "launchpad_notes_only"
     private const val KEY_EXQUIS_NOTES_ONLY = "exquis_notes_only"
+    private const val KEY_EXQUIS_HOLD = "exquis_hold"
     private const val KEY_UPDATE_CHECKS = "update_checks"
     private const val KEY_UPDATE_LATEST = "update_latest"
     private const val KEY_UPDATE_CHECKED = "update_checked"

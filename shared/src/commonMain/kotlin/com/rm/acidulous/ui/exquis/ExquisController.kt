@@ -21,6 +21,8 @@ class ExquisController(private val act: (LpAction) -> Unit) {
         private set
     /** Stay on the Play page, so the pads only ever play. */
     var notesOnly = false
+    /** How it's held, so the pages turn to match. */
+    var hold = com.rm.acidulous.midi.exquis.XqHold.Upright
 
     fun attach() {
         MidiHub.exquisInput = { status, d1, d2 -> input(status, d1, d2) }
@@ -47,6 +49,7 @@ class ExquisController(private val act: (LpAction) -> Unit) {
     /** Hands the hub the zones this page holds and what their lights show. */
     fun frame() {
         if (notesOnly && state.page != XqPage.Play) state = state.copy(page = XqPage.Play)
+        if (state.hold != hold) state = state.copy(hold = hold)
         MidiHub.setExquisOctave(state.playOctave)
         MidiHub.showExquis(ExquisSurface.zones(state), ExquisSurface.render(view, state))
     }

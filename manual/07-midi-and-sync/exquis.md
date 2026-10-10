@@ -2,7 +2,7 @@
 > The Exquis by Intuitive Instruments as a controller: its own playing, and the song, the mixer and steps on its pads.
 
 Plug in an Exquis over USB and Acidulous plays it as a controller, held upright
-with its knobs at the top. It needs the Exquis firmware 2.1 or newer. **exquis**
+with its knobs at the top, or sideways (see below). It needs the Exquis firmware 2.1 or newer. **exquis**
 in the MIDI window's devices tab gives it back, and closing the app does too.
 
 Its **settings** and **sound** buttons stay its own, so its menus are there as
@@ -99,3 +99,22 @@ except on a drum machine.
 
 Off the Play page the pads say only pressed or not, so steps are written at one
 velocity.
+
+## Held sideways
+
+![The Exquis on Session, held sideways](../images/exquis-session-sideways.png)
+
+Set **exquis held** in the MIDI window to **knobs left** or **knobs right** and
+the pages turn with it, to match the song screen: the pads line up in five rows
+of 11 across, and a row of 6 along the edge away from the knobs.
+
+- Session: a track a row, five at a time, with ten scenes across and the
+  track's own pad at the end of its row to choose it. Hold **loop** and the top
+  row is the scenes instead, with stop at its end. Tapping **loop** still turns
+  looping on and off.
+- Mixer: a track a row, five at a time: select, mute and solo, then its level
+  across eight pads.
+- Steps: the steps are two rows of 8, the notes are the other three rows of 11,
+  and the bars of the clip are the row of 6.
+
+Play doesn't change, since the pads are the Exquis's own there.

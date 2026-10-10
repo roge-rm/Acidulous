@@ -95,6 +95,12 @@
         <item>toutes</item>
         <item>notes seules</item>
     </string-array>
+    <string name="midi_exquis_held">exquis tenu</string>
+    <string-array name="midi_exquis_held_choices">
+        <item>debout</item>
+        <item>rotatifs à gauche</item>
+        <item>rotatifs à droite</item>
+    </string-array>
     <string name="midi_mpe">mpe</string>
     <string name="midi_mpe_zone">zone</string>
     <!-- In the order shown: auto, off, lower, upper. -->
