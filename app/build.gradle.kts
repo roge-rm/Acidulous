@@ -206,15 +206,16 @@ android {
         // Launchpad, and a reminder when a new version is out. Released
         // again as 37 with controllers plugged in before launch opened.
         // 0.11.4: the Exquis held sideways, knobs left or right.
+        // 0.11.5: the web build starts again.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 38
+        val release = 39
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.11.4"
+        versionName = "0.11.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
