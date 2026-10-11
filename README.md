@@ -227,11 +227,22 @@ for tablets that run 32-bit Android like the Fire HD 8.
 
 ### Linux
 
-From the [Releases](https://github.com/roge-rm/Acidulous/releases) page:
+On Debian 13 (Trixie), Ubuntu 24.04 and newer, and Raspberry Pi OS (64-bit),
+the easiest way is my apt repo, so it updates with the rest of the system. Add
+it once:
 
-- **Debian 13 (Trixie) and Raspberry Pi OS:** the `.deb` for your machine,
-  amd64 or arm64. Install it with `sudo apt install ./acidulous_*.deb` and
-  it brings Java 21 with it.
+```
+sudo curl -fsSLo /etc/apt/keyrings/hunke.asc https://hunke.ws/apt/hunke.asc
+echo "deb [signed-by=/etc/apt/keyrings/hunke.asc] https://hunke.ws/apt stable main" | sudo tee /etc/apt/sources.list.d/hunke.list
+sudo apt update
+```
+
+Then `sudo apt install acidulous`. It brings Java 21 with it.
+
+Or from the [Releases](https://github.com/roge-rm/Acidulous/releases) page:
+
+- **Debian and Raspberry Pi OS:** the `.deb` for your machine, amd64 or
+  arm64. Install it with `sudo apt install ./acidulous_*.deb`.
 - **Anything else** (Ubuntu 22.04 and newer, Fedora, Arch, the Steam Deck):
   the AppImage, x86_64 or aarch64. It has its own Java, so just make it
   executable and run it.
