@@ -79,6 +79,11 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override val onDesktop: Boolean = true
     /** Set only by `gradle :desktop:run` (desktop/build.gradle.kts), never by the packages. */
     override val debugBuild: Boolean = System.getProperty("acidulous.debug") == "true"
+
+    /** Closes the window as its close button does; set once the window is up. */
+    var onQuit: (() -> Unit)? = null
+    override val canQuit: Boolean get() = onQuit != null
+    override fun quit() { onQuit?.invoke() }
     /** The app doesn't hold off the screen saver on desktop. */
     override val canKeepScreenOn: Boolean = false
     override val canEncodeAac: Boolean = false

@@ -115,6 +115,10 @@ interface AppHost {
      */
     val debugBuild: Boolean get() = false
 
+    /** Whether the app can close itself (not in a browser tab), and doing it. */
+    val canQuit: Boolean get() = false
+    fun quit() {}
+
     /** Whether the screen can be kept on while playing (Android's window flag). */
     val canKeepScreenOn: Boolean get() = true
     /**

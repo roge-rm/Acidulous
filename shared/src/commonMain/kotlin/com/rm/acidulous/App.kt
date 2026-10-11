@@ -147,20 +147,29 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
         //
         // The app is composed underneath the whole time, so the engine
         // starts during the splash rather than after it.
-        var splashing by androidx.compose.runtime.remember {
-            androidx.compose.runtime.mutableStateOf(true)
+        //
+        // It fades in from the system's flat ink, and out into the app.
+        val splash = androidx.compose.runtime.remember {
+            androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true }
         }
         LaunchedEffect(Unit) {
             kotlinx.coroutines.delay(com.rm.acidulous.ui.SplashMillis)
-            splashing = false
+            splash.targetState = false
         }
-        if (splashing) com.rm.acidulous.ui.SplashScreen()
+        androidx.compose.animation.AnimatedVisibility(
+            visibleState = splash,
+            enter = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(com.rm.acidulous.ui.SplashFadeIn)),
+            exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(com.rm.acidulous.ui.SplashFadeOut)),
+        ) { com.rm.acidulous.ui.SplashScreen() }
     }
     }
     }
 }
 
 private const val TAG = "Acidulous.UI"
+
+/** How long B is held on the song screen before the app asks whether to quit. */
+private const val QUIT_HOLD_MS = 2000L
 
 /** Remembers that the demo has been opened once: see the start of [App]. */
 private const val FIRST_RUN = "first_run"
@@ -298,9 +307,35 @@ fun App(modifier: Modifier = Modifier) {
     // With nothing focused, an arrow focuses the screen's first control (see
     // KeyHub.fallback). Moving to the next with nothing focused does that.
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val inputMode = androidx.compose.ui.platform.LocalInputModeManager.current
     androidx.compose.runtime.SideEffect {
+        // A touch puts Compose in touch mode, where focus moves but no ring
+        // shows. On the desktop a key doesn't put it back, so a move does.
+        fun keyboardMode() {
+            if (inputMode.inputMode != androidx.compose.ui.input.InputMode.Keyboard) {
+                inputMode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
+            }
+        }
         com.rm.acidulous.ui.KeyHub.focusFirst = {
+            keyboardMode()
             focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
+        }
+        com.rm.acidulous.ui.KeyHub.moveFocus = { arrow ->
+            val d = androidx.compose.ui.focus.FocusDirection
+            val (way, back) = when (arrow) {
+                com.rm.acidulous.ui.KeyCodes.KEYCODE_DPAD_UP -> d.Up to d.Down
+                com.rm.acidulous.ui.KeyCodes.KEYCODE_DPAD_DOWN -> d.Down to d.Up
+                com.rm.acidulous.ui.KeyCodes.KEYCODE_DPAD_LEFT -> d.Left to d.Right
+                else -> d.Right to d.Left
+            }
+            keyboardMode()
+            // At the edge it wraps round: as far the other way as it goes,
+            // so the far side of a row or column is one press away.
+            focusManager.moveFocus(way) || run {
+                var steps = 0
+                while (steps < 64 && focusManager.moveFocus(back)) steps++
+                steps > 0
+            }
         }
     }
     // A controller's sticks, each frame while one is off centre (see Pad).
@@ -363,6 +398,23 @@ fun App(modifier: Modifier = Modifier) {
             com.rm.acidulous.util.postToMain { problem = AppStrings.getString(message, *args) }
         }
         onDispose { EngineSync.onProblem = null }
+    }
+    // Holding B on the song screen for two seconds asks whether to quit, as
+    // a controller has no other way out of the app. Not in a browser tab,
+    // which the app can't close.
+    var askQuit by remember { mutableStateOf(false) }
+    LaunchedEffect(com.rm.acidulous.ui.Pad.backHeld) {
+        if (!com.rm.acidulous.ui.Pad.backHeld || !AppHost.current.canQuit || screen !is Screen.Main) return@LaunchedEffect
+        kotlinx.coroutines.delay(QUIT_HOLD_MS)
+        if (screen is Screen.Main) askQuit = true
+    }
+    if (askQuit) {
+        com.rm.acidulous.ui.PlainDialog(
+            title = stringResource(Res.string.quit_ask),
+            onDismiss = { askQuit = false },
+            confirmLabel = stringResource(Res.string.quit),
+            onConfirm = { askQuit = false; AppHost.current.quit() },
+        ) {}
     }
     problem?.let { message ->
         com.rm.acidulous.ui.PlainDialog(

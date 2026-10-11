@@ -12,6 +12,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -593,6 +595,8 @@ fun MainScreen(
         Row(
             Modifier.fillMaxWidth().weight(1f)
                 .onSizeChanged { gridW = it.width; gridH = it.height }
+                // Not on to the time readout either.
+                .rowEnd()
                 // Mouse wheel on desktop (see onWheel). Up/down is the column's
                 // own scroll, sideways moves a scene per notch, and Ctrl zooms
                 // the cells like a pinch.
@@ -800,7 +804,7 @@ fun MainScreen(
                     ) { Text(stringResource(Res.string.main_add_scene), fontSize = 11.sp, maxLines = 1) }
                 }
                 song.tracks.forEachIndexed { trackIndex, track ->
-                    Row {
+                    Row(Modifier.rowEnd()) {
                         for (sceneIndex in shownScenes) {
                             val scene = song.scenes[sceneIndex]
                             val clip = track.clips[scene.id]
@@ -1062,6 +1066,14 @@ private sealed class Dialog {
     object About : Dialog()
     object Quantise : Dialog()
 }
+
+/**
+ * Right off the end of a row of the grid wraps back to its start (see
+ * KeyHub.moveFocus), rather than on to whatever is further right on another row.
+ */
+private fun Modifier.rowEnd(): Modifier = focusProperties {
+    onExit = { if (requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Right) cancelFocusChange() }
+}.focusGroup()
 
 @Composable
 private fun SceneHeader(
@@ -1331,8 +1343,10 @@ private fun ClipCell(
                 },
             )
             // A tap launches in the launcher, which the gesture detector
-            // doesn't tell TalkBack, so the click is declared here.
-            .button(said, doing, a11yActions, onClick = if (clipMode) ({ launchNow() }) else null, keyFocus = false),
+            // doesn't tell TalkBack or the keys, so the click is declared
+            // here, and it's the keys' focus stop. In song mode the
+            // clickable above is.
+            .button(said, doing, a11yActions, onClick = if (clipMode) ({ launchNow() }) else null, keyFocus = clipMode),
     ) {
         if (clip == null) {
             Text("+", color = Acid.colors.textFaint, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))

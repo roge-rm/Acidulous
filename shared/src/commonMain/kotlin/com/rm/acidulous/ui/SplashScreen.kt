@@ -1,7 +1,5 @@
 package com.rm.acidulous.ui
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,11 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import com.rm.acidulous.res.*
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -38,9 +34,6 @@ import com.rm.acidulous.ui.theme.Acid
 @Composable
 fun SplashScreen(modifier: Modifier = Modifier) {
     val version = remember { com.rm.acidulous.AppHost.current.versionName.orEmpty() }
-    // Fades in, since a hard cut from the system's flat ink looks like a
-    // flicker.
-    val shown by animateFloatAsState(1f, tween(durationMillis = 180), label = "splash")
     BoxWithConstraints(
         modifier.fillMaxSize().background(Acid.colors.bg),
         contentAlignment = Alignment.Center,
@@ -52,7 +45,6 @@ fun SplashScreen(modifier: Modifier = Modifier) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.alpha(shown),
         ) {
             // The foreground alone, not the adaptive icon, since an
             // `AdaptiveIconDrawable` applies the launcher's mask wherever it's
@@ -77,5 +69,12 @@ fun SplashScreen(modifier: Modifier = Modifier) {
     }
 }
 
-/** How long the splash is held before the app appears. */
+/** How long the splash is held before it fades into the app. */
 const val SplashMillis = 750L
+
+/**
+ * Its fade in from the system's flat ink, since a hard cut looks like a
+ * flicker, and its fade out into the app, in ms.
+ */
+const val SplashFadeIn = 180
+const val SplashFadeOut = 400

@@ -162,6 +162,12 @@ val stageLicences = tasks.register<Sync>("stageLicences") {
 }
 sourceSets.main { resources.srcDir(stageLicences.map { it.destinationDir.parentFile }) }
 
+// Tests that call the engine's desktop-only code (EvdevTest) need it built.
+tasks.test {
+    dependsOn(buildEngine)
+    jvmArgs("-Djava.library.path=${nativeBuild.asFile.absolutePath}", "--enable-native-access=ALL-UNNAMED")
+}
+
 compose.desktop {
     application {
         mainClass = "com.rm.acidulous.desktop.MainKt"
@@ -191,6 +197,7 @@ fun registerDeb(arch: String, runtime: Configuration, engine: TaskProvider<Exec>
         dirPermissions { unix("rwxr-xr-x") }
         from(tasks.named("jar")) { into("usr/lib/acidulous/lib") }
         from(listOf(engineDir.file("libacidulous.so"), engineDir.file("libmp3lame.so"))) { into("usr/lib/acidulous/native") }
+        from(file("src/main/resources/acidulous.png")) { into("usr/lib/acidulous"); rename { "splash.png" } }
         from(file("deb/acidulous")) {
             into("usr/bin")
             filePermissions { unix("rwxr-xr-x") }
@@ -317,6 +324,7 @@ fun registerAppImage(
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         from(tasks.named("jar")) { into("usr/lib/acidulous/lib") }
         from(listOf(engineDir.file("libacidulous.so"), engineDir.file("libmp3lame.so"))) { into("usr/lib/acidulous/native") }
+        from(file("src/main/resources/acidulous.png")) { into("usr/lib/acidulous"); rename { "splash.png" } }
         from(file("appimage/AppRun")) { filePermissions { unix("rwxr-xr-x") } }
         from(file("deb/acidulous.desktop"))
         from(rootProject.file("branding/acidulous-icon-1024.svg")) { rename { "acidulous.svg" } }

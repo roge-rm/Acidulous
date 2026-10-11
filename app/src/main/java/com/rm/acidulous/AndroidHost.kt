@@ -21,6 +21,9 @@ class AndroidHost(private val context: Context) : AppHost {
 
     override val debugBuild: Boolean = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
+    override val canQuit: Boolean get() = context is android.app.Activity
+    override fun quit() { (context as? android.app.Activity)?.finishAndRemoveTask() }
+
     override val cleansInput: Boolean get() = true
     /** On the clean input's session while it's open. Not every phone has both. */
     private var inputEffects: List<android.media.audiofx.AudioEffect> = emptyList()

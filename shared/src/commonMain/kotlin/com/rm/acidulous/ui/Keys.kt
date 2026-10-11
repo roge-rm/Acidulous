@@ -313,6 +313,11 @@ object KeyHub {
      * Set by the app, where the focus manager is. True if it moved.
      */
     var focusFirst: () -> Boolean = { false }
+    /**
+     * Moves focus the way an arrow key points, for where the platform doesn't
+     * (the desktop; Android does it itself). Set by the app. True if it moved.
+     */
+    var moveFocus: (arrow: Int) -> Boolean = { false }
     /** Whether anything in the main window has focus. Set by the app's root. */
     var anyFocused = false
 

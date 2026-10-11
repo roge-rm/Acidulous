@@ -114,3 +114,12 @@ private val AWT_TO_ANDROID = mapOf(
     Awt.VK_DECIMAL to KeyCodes.KEYCODE_NUMPAD_DOT,
     Awt.VK_CAPS_LOCK to KeyCodes.KEYCODE_CAPS_LOCK,
 )
+
+/** AWT's key for an Android key code, for a controller's button sent on as a key; null if there's none. */
+internal fun awtKeyFor(code: Int): Int? = when (code) {
+    in KeyCodes.KEYCODE_A..KeyCodes.KEYCODE_Z -> Awt.VK_A + (code - KeyCodes.KEYCODE_A)
+    in KeyCodes.KEYCODE_0..KeyCodes.KEYCODE_9 -> Awt.VK_0 + (code - KeyCodes.KEYCODE_0)
+    in KeyCodes.KEYCODE_F1..KeyCodes.KEYCODE_F12 -> Awt.VK_F1 + (code - KeyCodes.KEYCODE_F1)
+    KeyCodes.KEYCODE_ENTER -> Awt.VK_ENTER
+    else -> AWT_TO_ANDROID.entries.firstOrNull { it.value == code }?.key
+}

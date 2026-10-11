@@ -117,7 +117,8 @@ touching the screen, on a handheld like the Retroid Pocket.
 - **d-pad** - moves between controls, and moves the cursor in the editor.
 - **A** - presses, like Enter. On a knob it grabs it, the d-pad turns it, and
   **A** again lets go.
-- **B** - back: closes a window, or leaves the editor.
+- **B** - back: closes a window, or leaves the editor. Held for two seconds
+  on the song screen, it asks whether to quit.
 - **X** - what a long press does: a control's list of actions.
 - **Y** - play / stop.
 - **L1** and **R1** - previous and next page in the editor, and a window's
@@ -125,13 +126,16 @@ touching the screen, on a handheld like the Retroid Pocket.
 - **L2** and **R2** - previous and next track in the editor.
 - **Start** - play mode.
 - **Select** - the file menu.
+- extra buttons, like a Steam Deck's four on the back - undo, redo, record, and
+  play / stop.
 
 - **left stick** - turns the highlighted knob or fader, faster the further
   it's pushed. One push is one step of undo.
 - **right stick** - a fast d-pad: the further it's pushed, the faster it moves.
 
 If nothing is highlighted, the first press of the d-pad or **A** highlights
-something to start from.
+something to start from. On a computer the d-pad wraps round: past the last
+control in a row or column it goes to the first.
 
 **Start** switches play mode on and off. In play mode the controller is an
 instrument for the track MIDI plays:
@@ -145,6 +149,22 @@ instrument for the track MIDI plays:
   **left stick** pushed up is pressure.
 - pull **R2** or **L2** partway while you play to set how hard notes play.
 - **Select** is play / stop, since **Y** is a note.
+
+### On a Steam Deck
+
+Add the AppImage to Steam with **Add a Non-Steam Game**, and in its
+**Properties > Controller** set Steam Input to **Disable**. Then Steam leaves
+the controls to the app. Started from Game Mode it fills the screen.
+
+The Deck works like any controller, with its touchpads too:
+
+- **left touchpad** - slide up or down to turn the highlighted knob, finer than
+  the stick.
+- **right touchpad** - in play mode, sideways bends the pitch from the middle
+  and up adds mod, while a finger is on it.
+
+In Desktop Mode Steam's own layout also turns the d-pad into keys and the right
+touchpad into a mouse; the app ignores the doubled keys.
 
 ## Changing the keys
 

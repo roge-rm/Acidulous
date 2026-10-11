@@ -6,7 +6,8 @@ project(acidulous_desktop LANGUAGES C CXX)
 # platform/desktop comes first on the include path, so EngineHost's
 # <drivers/AudioDriver.h> and <android/log.h> resolve to the desktop versions.
 # The JNI bridge is the same as Android's. Desktop-only calls (the list of
-# inputs) are in desktop_jni.cpp, and ALSA sequencer MIDI is in alsa_seq.cpp.
+# inputs) are in desktop_jni.cpp, ALSA sequencer MIDI is in alsa_seq.cpp, and
+# game controllers on Linux are in evdev.cpp.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -45,7 +46,8 @@ if(WIN32)
         ${ASIOSDK}/host/asiodrivers.cpp
         ${ASIOSDK}/host/pc/asiolist.cpp)
 else()
-    set(PLATFORM_SOURCES ${CPP}/platform/link/LinkTimebase.cpp ${CPP}/platform/desktop/alsa_seq.cpp)
+    set(PLATFORM_SOURCES ${CPP}/platform/link/LinkTimebase.cpp ${CPP}/platform/desktop/alsa_seq.cpp
+        ${CPP}/platform/desktop/evdev.cpp)
 endif()
 
 add_library(acidulous SHARED

@@ -8,6 +8,8 @@
     <string name="cancel">Annuler</string>
     <string name="done">Terminé</string>
     <string name="close">Fermer</string>
+    <string name="quit_ask">Quitter Acidulous ?</string>
+    <string name="quit">Quitter</string>
     <string name="none">aucun</string>
     <string-array name="off_on">
         <item>non</item>

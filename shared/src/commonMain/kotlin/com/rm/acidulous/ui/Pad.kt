@@ -68,6 +68,11 @@ object Pad {
         KeyCodes.KEYCODE_BUTTON_R1 to Job.Action(KeyAction.PageNext),
         KeyCodes.KEYCODE_BUTTON_L2 to Job.Action(KeyAction.TrackPrev),
         KeyCodes.KEYCODE_BUTTON_R2 to Job.Action(KeyAction.TrackNext),
+        // Extra buttons, like the Steam Deck's four on the back: L4, R4, L5, R5.
+        KeyCodes.KEYCODE_BUTTON_1 to Job.Action(KeyAction.Undo),
+        KeyCodes.KEYCODE_BUTTON_1 + 1 to Job.Action(KeyAction.Redo),
+        KeyCodes.KEYCODE_BUTTON_1 + 2 to Job.Action(KeyAction.Record),
+        KeyCodes.KEYCODE_BUTTON_1 + 3 to Job.Action(KeyAction.PlayStop),
     )
 
     /**
@@ -134,8 +139,13 @@ object Pad {
     var seen by mutableStateOf(emptyList<String>())
         private set
 
+    /** Whether B is held, for holding it on the song screen to quit. */
+    var backHeld by mutableStateOf(false)
+        private set
+
     fun button(device: String, keyCode: Int, down: Boolean) {
         this.device = device
+        if (keyCode == KeyCodes.KEYCODE_BUTTON_B) backHeld = down
         val name = "${keyName(keyCode)} $keyCode"
         lastButton = "$name ${if (down) "down" else "up"}"
         if (name !in seen) seen = seen + name
@@ -152,8 +162,50 @@ object Pad {
         rightX = deadZoned(if (axes.any { it.name == "Z" }) at("Z") else at("RX"))
         rightY = deadZoned(if (axes.any { it.name == "RZ" }) at("RZ") else at("RY"))
         trigger = maxOf(at("GAS", "RTRIGGER"), at("BRAKE", "LTRIGGER")).coerceIn(0f, 1f)
-        val moving = leftX != 0f || leftY != 0f || rightX != 0f || rightY != 0f
+        // A touchpad, like the Steam Deck's two: where the finger is, and whether one is on it.
+        rightPad = if (at("RPAD_TOUCH") > 0f) at("RPAD_X") to at("RPAD_Y") else null
+        leftPadSlide(if (at("LPAD_TOUCH") > 0f) at("LPAD_Y") else null)
+        val moving = leftX != 0f || leftY != 0f || rightX != 0f || rightY != 0f || rightPad != null
         if (moving != active) active = moving
+    }
+
+    /** The right touchpad's finger, -1..1 each way with down positive, or null when it's off. */
+    private var rightPad: Pair<Float, Float>? = null
+
+    /** The left touchpad's finger height while one is on it, for sliding the focused knob. */
+    private var leftPadY: Float? = null
+    private var padTurning: Turnable? = null
+    private var padValue = 0f
+
+    /** A full slide from the bottom of the left pad to the top turns a knob this much of its range. */
+    private const val PAD_SLIDE_RANGE = 0.5f
+
+    /**
+     * Sliding a finger up the left touchpad turns the focused knob up, a
+     * fine version of the left stick. One gesture from touch to lift, so
+     * one step of undo.
+     */
+    private fun leftPadSlide(y: Float?) {
+        val last = leftPadY
+        leftPadY = y
+        val target = turnable
+        if (y == null || target == null || (padTurning != null && padTurning != target)) {
+            padTurning?.end?.invoke()
+            padTurning = null
+            return
+        }
+        if (last == null) return
+        if (padTurning == null) {
+            padTurning = target
+            padValue = target.value()
+            target.begin()
+        }
+        // Up is negative, and the pad is 2 high.
+        val moved = (last - y) / 2f * PAD_SLIDE_RANGE
+        if (moved != 0f) {
+            padValue = (padValue + moved).coerceIn(0f, 1f)
+            target.change(padValue)
+        }
     }
 
     // --- the sticks -----------------------------------------------------------------
@@ -235,8 +287,14 @@ object Pad {
      */
     private fun express() {
         val playing = KeyHub.playMode
-        val bend = if (playing) (BEND_CENTRE + rightX * 8191f).toInt().coerceIn(0, 16383) else BEND_CENTRE
-        val mod = if (playing) (maxOf(0f, -rightY) * 127f).toInt() else 0
+        // The right touchpad, while a finger's on it, is the same by position:
+        // sideways bends from the middle, and mod goes from none at the
+        // bottom to full at the top.
+        val pad = rightPad
+        val bendBy = pad?.first ?: rightX
+        val modBy = if (pad != null) (1f - pad.second) / 2f else maxOf(0f, -rightY)
+        val bend = if (playing) (BEND_CENTRE + bendBy * 8191f).toInt().coerceIn(0, 16383) else BEND_CENTRE
+        val mod = if (playing) (modBy.coerceIn(0f, 1f) * 127f).toInt() else 0
         val pressure = if (playing) (maxOf(0f, -leftY) * 127f).toInt() else 0
         val rack = KeyHub.target()
         if (rack != expressRack) {

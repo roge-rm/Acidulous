@@ -1,5 +1,6 @@
 package com.rm.acidulous.desktop
 
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +43,22 @@ private fun smallScreen(): Boolean = runCatching {
     bounds.width < 1300 || bounds.height < 840
 }.getOrDefault(false)
 
+/** A Steam Deck, LCD or OLED, by the names its firmware gives it. */
+internal val steamDeck: Boolean = runCatching {
+    java.io.File("/sys/class/dmi/id/sys_vendor").readText().trim() == "Valve" &&
+        java.io.File("/sys/class/dmi/id/product_name").readText().trim() in setOf("Jupiter", "Galileo")
+}.getOrDefault(false)
+
+/** Running in SteamOS's Game Mode, where there's no desktop and the app should fill the screen. */
+private val gameMode: Boolean =
+    System.getenv("XDG_CURRENT_DESKTOP") == "gamescope" || System.getenv("SteamGamepadUI") != null
+
+/**
+ * The Deck's own scale when none is chosen: its 7 inch screen at the desktop's
+ * usual density would make a control about 5 mm across.
+ */
+private const val DECK_SCALE = 1.5f
+
 private fun windowIcon(): BitmapPainter? = runCatching {
     val bytes = Thread.currentThread().contextClassLoader.getResourceAsStream("acidulous.png")!!.use { it.readBytes() }
     BitmapPainter(org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap())
@@ -62,9 +79,16 @@ fun main() {
     // Windows looks for a DLL's dependencies next to java.exe, not next to
     // the DLL, so load LAME first and the engine finds it already loaded.
     if (onWindows) System.loadLibrary("mp3lame")
+    // On the Deck, drawing with OpenGL crashes on the first frame (in Skia's
+    // flush, on its Mesa driver), so it draws in software unless told otherwise.
+    if (steamDeck && System.getenv("SKIKO_RENDER_API") == null && System.getProperty("skiko.renderApi") == null) {
+        System.setProperty("skiko.renderApi", "SOFTWARE_FAST")
+    }
     val config = (if (onWindows) windowsDir("APPDATA", "config") else xdg("XDG_CONFIG_HOME", ".config")).apply { mkdirs() }
     val data = (if (onWindows) windowsDir("APPDATA", "data") else xdg("XDG_DATA_HOME", ".local/share")).apply { mkdirs() }
     val cache = (if (onWindows) windowsDir("LOCALAPPDATA", "cache") else xdg("XDG_CACHE_HOME", ".cache")).apply { mkdirs() }
+    // A second launch brings the running copy forward instead.
+    if (!SingleInstance.claim(data)) return
     // Before anything else can throw, like on Android. Also collects native
     // crashes from earlier runs, which the JVM wrote where the launcher said.
     val crashes = CrashReports(data).apply { install(); collect() }
@@ -82,6 +106,15 @@ fun main() {
     // ALSA's sequencer, which sees every device and program. Java Sound's raw
     // MIDI if there's no sequencer, and on Windows. See AlsaSeqMidi.
     MidiHub.start((if (onWindows) null else AlsaSeqMidi.open()) ?: JavaSoundMidi())
+    // Game controllers, read from /dev/input. Linux only for now.
+    if (!onWindows) {
+        LinuxControllers.start(object : PadSink {
+            override fun button(device: String, keyCode: Int, down: Boolean) =
+                com.rm.acidulous.ui.PadEvents.button(device, keyCode, down)
+            override fun moved(device: String, axes: List<com.rm.acidulous.ui.Pad.Axis>) =
+                com.rm.acidulous.ui.PadEvents.moved(device, axes)
+        })
+    }
     // Desktops don't filter multicast, so Link needs no lock.
     LinkHub.multicastLock = null
     EngineAssets.install(data, cache)
@@ -90,20 +123,27 @@ fun main() {
     RightClickHold.install()
 
     application {
+        // The window's close button, and holding B on the song screen.
+        fun quit() {
+            MidiHub.clearPads()
+            MidiHub.releaseLaunchpad()
+            exitApplication()
+        }
+        (AppHost.current as? DesktopHost)?.onQuit = ::quit
         // Open maximised if the screen is smaller than the window (like a
         // Pi's 720 pixel screen) instead of running off the edges.
         val window = rememberWindowState(
             size = DpSize(1280.dp, 800.dp),
-            placement = if (smallScreen()) WindowPlacement.Maximized else WindowPlacement.Floating,
+            placement = when {
+                gameMode -> WindowPlacement.Fullscreen
+                smallScreen() -> WindowPlacement.Maximized
+                else -> WindowPlacement.Floating
+            },
         )
         // What F11 goes back to: the window as it was, maximised or not.
         var before by remember { mutableStateOf(WindowPlacement.Floating) }
         Window(
-            onCloseRequest = {
-                MidiHub.clearPads()
-                MidiHub.releaseLaunchpad()
-                exitApplication()
-            },
+            onCloseRequest = ::quit,
             title = "Acidulous",
             // The app's icon in the title bar and taskbar instead of Java's.
             // Linux also gets it from the menu entry, Windows only from this.
@@ -133,8 +173,20 @@ fun main() {
             // The screen scale if one is chosen (Settings > display) sets the
             // density, and the app's own size setting applies on top. See
             // UiPrefs.screenScale.
+            // Another launch while running brings this window forward.
+            val frame = this.window
+            DisposableEffect(Unit) {
+                SingleInstance.onRaise = {
+                    java.awt.EventQueue.invokeLater {
+                        window.isMinimized = false
+                        frame.toFront()
+                        frame.requestFocus()
+                    }
+                }
+                onDispose { SingleInstance.onRaise = null }
+            }
             val system = LocalDensity.current
-            val chosen = UiPrefs.screenScale
+            val chosen = UiPrefs.screenScale.takeIf { it > 0f } ?: if (steamDeck) DECK_SCALE else 0f
             CompositionLocalProvider(LocalDensity provides if (chosen > 0f) Density(chosen, system.fontScale) else system) {
                 AppRoot()
             }

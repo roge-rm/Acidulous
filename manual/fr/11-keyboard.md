@@ -129,7 +129,8 @@ Pocket.
   curseur dans l’éditeur.
 - **A** - appuie, comme Entrée. Sur un bouton rotatif, il le saisit, la croix
   le tourne, et **A** de nouveau le relâche.
-- **B** - retour : ferme une fenêtre, ou quitte l’éditeur.
+- **B** - retour : ferme une fenêtre, ou quitte l’éditeur. Tenu deux
+  secondes sur l’écran du morceau, il demande s’il faut quitter.
 - **X** - ce que fait un appui long : la liste d’actions d’une commande.
 - **Y** - jouer / arrêter.
 - **L1** et **R1** - page précédente et suivante dans l’éditeur, et les onglets
@@ -137,6 +138,8 @@ Pocket.
 - **L2** et **R2** - piste précédente et suivante dans l’éditeur.
 - **Start** - mode jeu.
 - **Select** - le menu fichier.
+- les boutons en plus, comme les quatre au dos d’un Steam Deck - annuler,
+  rétablir, enregistrer, et jouer / arrêter.
 
 - **stick gauche** - tourne le bouton ou le curseur en surbrillance, d’autant
   plus vite qu’il est poussé loin. Une poussée est une étape d’annulation.
@@ -144,7 +147,9 @@ Pocket.
   vite.
 
 Si rien n’est en surbrillance, le premier appui sur la croix ou sur **A** met
-quelque chose en surbrillance pour commencer.
+quelque chose en surbrillance pour commencer. Sur un ordinateur, la croix fait
+le tour : après la dernière commande d’une rangée ou d’une colonne, elle revient
+à la première.
 
 **Start** active et désactive le mode jeu. En mode jeu, la manette est un
 instrument pour la piste que joue le MIDI :
@@ -160,6 +165,23 @@ instrument pour la piste que joue le MIDI :
 - tirez **R2** ou **L2** en partie pendant que vous jouez pour régler la force
   des notes.
 - **Select** joue et arrête, car **Y** est une note.
+
+### Sur un Steam Deck
+
+Ajoutez l’AppImage à Steam avec **Ajouter un jeu non-Steam**, et dans ses
+**Propriétés > Manette**, réglez Steam Input sur **Désactiver**. Steam laisse
+alors les commandes à l’appli. Lancée depuis le mode Jeu, elle remplit l’écran.
+
+Le Deck fonctionne comme n’importe quelle manette, avec ses pavés tactiles en
+plus :
+
+- **pavé gauche** - glissez vers le haut ou le bas pour tourner le bouton en
+  surbrillance, plus finement qu’avec le stick.
+- **pavé droit** - en mode jeu, de côté il plie la hauteur à partir du milieu
+  et vers le haut il ajoute de la modulation, tant qu’un doigt est dessus.
+
+En mode Bureau, la configuration de Steam transforme aussi la croix en touches
+et le pavé droit en souris ; l’appli ignore les touches en double.
 
 ## Changer les touches
 
