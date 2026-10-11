@@ -125,6 +125,11 @@ milieu, et le limiteur (**lim**) et le clic (**♩**) en bas. Touchez-en un pour
 l’activer ou le désactiver, et maintenez un envoi ou une insertion pour choisir
 son effet et le régler.
 
+Dans le panneau latéral de l’éditeur, sur un téléphone tenu à l’horizontale ou
+sur un Steam Deck, le mixage est une rangée par piste : son nom, muet et solo,
+et son fader en travers. Touchez un nom pour afficher la tranche entière de la
+piste à côté du mixage, et touchez-le encore pour la ranger.
+
 ## Jeu
 
 Les onglets le long du bord gauche du mixage sont **mix**, **tenir**, **pad**

@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -105,6 +106,12 @@ fun MixerPanel(
      * rows would push the grid off the screen.
      */
     rows: Boolean = true,
+    /**
+     * When the mixer is rows, the strip whose name was tapped and where it's
+     * shown (see [MixerStripPanel]). Without this it opens in a window.
+     */
+    openStrip: OpenStrip? = null,
+    onOpenStrip: ((OpenStrip?) -> Unit)? = null,
 ) {
     val c = Acid.colors
     // The fader height comes from the room available, floored at a height you
@@ -149,17 +156,7 @@ fun MixerPanel(
             song.master.sendAt(slot).type.lowercase().ifEmpty { stringResource(Res.string.mixer_send, slot + 1) }
         }
         song.tracks.forEachIndexed { index, track ->
-            // Which of this channel's controls a clip is automating. A lane
-            // overrides the fader on every pass, so the fader would seem not to
-            // work without this.
-            val automated = remember(track) {
-                track.clips.values
-                    .flatMap { it.automation.keys }
-                    .filter { laneUnit(it) == "channel" }
-                    .map { laneParam(it) }
-                    .distinct()
-                    .sorted()
-            }
+            val automated = remember(track) { automatedOf(track) }
             // The first strip is measured and the groups and master are given
             // its height, so the whole row ends level.
             Box(if (index == 0) Modifier.onSizeChanged { stripH = with(density) { it.height.toDp() } } else Modifier) {
@@ -172,6 +169,13 @@ fun MixerPanel(
         song.master.groups.forEachIndexed { g, group -> GroupStrip(g, group, song, editor, faderH, room, tight, fullH) }
         if (song.master.groups.size < MAX_GROUPS) AddGroupStrip(editor, room, fullH)
         MasterStrip(song, editor, masterPeak, clickOn, onClick, faderH, room, tight, fullH)
+    }
+    // A side column taller than it's wide with room for fewer than three
+    // strips, like the editor's panel sideways on a phone or a Steam Deck: a
+    // row per track instead, scrolling down.
+    if (rows && room != Dp.Infinity && maxHeight > maxWidth && maxWidth < (STRIP_W + 6.dp) * 3) {
+        MixerRows(song, editor, rackPeaks, masterPeak, clickOn, onClick, openStrip, onOpenStrip)
+        return@BoxWithConstraints
     }
     if (wrap) {
         FlowRow(
@@ -186,6 +190,193 @@ fun MixerPanel(
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
         ) { strips() }
     }
+    }
+}
+
+/**
+ * Which of a track's channel controls a clip is automating. A lane overrides
+ * the fader on every pass, so the fader would seem not to work without this.
+ */
+private fun automatedOf(track: Track): List<String> =
+    track.clips.values
+        .flatMap { it.automation.keys }
+        .filter { laneUnit(it) == "channel" }
+        .map { laneParam(it) }
+        .distinct()
+        .sorted()
+
+/** Which strip a row of [MixerRows] has open. */
+sealed interface OpenStrip {
+    data class Track(val index: Int) : OpenStrip
+    data class Group(val index: Int) : OpenStrip
+    data object Master : OpenStrip
+}
+
+/**
+ * The mixer as rows, for a narrow column: a track a row with mute and solo,
+ * and its level across, then the groups and the master. A row's name opens
+ * its whole strip in a window, for pan, the sends, MIDI, routing and inserts.
+ */
+@Composable
+private fun MixerRows(
+    song: Song, editor: SongEditor, rackPeaks: () -> FloatArray, masterPeak: () -> Float,
+    clickOn: Boolean, onClick: (Boolean) -> Unit,
+    shown: OpenStrip?, onShow: ((OpenStrip?) -> Unit)?,
+) {
+    val c = Acid.colors
+    // In a window, unless the screen shows it beside the mixer.
+    var inWindow by remember { mutableStateOf<OpenStrip?>(null) }
+    val open = if (onShow != null) shown else inWindow
+    // A name opens its strip, and again closes it.
+    fun toggle(which: OpenStrip) {
+        val next = if (open == which) null else which
+        if (onShow != null) onShow(next) else inWindow = next
+    }
+    if (onShow == null) inWindow?.let { which ->
+        val title = when (which) {
+            is OpenStrip.Track -> song.tracks.getOrNull(which.index)?.name
+            is OpenStrip.Group -> song.master.groups.getOrNull(which.index)?.name
+            OpenStrip.Master -> stringResource(Res.string.mixer_master)
+        }
+        if (title == null) {
+            inWindow = null
+        } else {
+            PlainDialog(title = title, onDismiss = { inWindow = null }, dismissLabel = stringResource(Res.string.close)) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    OneStrip(song, editor, which, rackPeaks, masterPeak, clickOn, onClick)
+                }
+            }
+        }
+    }
+    Column(
+        Modifier.fillMaxWidth().background(c.panelAlt).verticalScrollWithBar(rememberScrollState()).padding(6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        song.tracks.forEachIndexed { index, track ->
+            val m = track.mixer
+            fun gesture(name: String, v01: Float, update: (Mixer) -> Mixer) {
+                NativeEngine.setParam(index, "channel", name, v01)
+                editor.updateGesture { t -> t.copy(mixer = update(t.mixer)) }
+            }
+            fun tap(update: (Mixer) -> Mixer) = editor.edit(index) { t -> t.copy(mixer = update(t.mixer)) }
+            fun map(name: String) = MapTargets.param(index, "channel", name)
+            MixerRow(
+                track.name, trackColour(index, track.colour), open == OpenStrip.Track(index), { toggle(OpenStrip.Track(index)) },
+                chips = {
+                    ToggleChip(stringResource(Res.string.mixer_mute_short), m.mute, c.red, Modifier.width(ROW_CHIP_W).mappable(map("mute")), height = ROW_CHIP_H, said = stringResource(Res.string.a11y_mute, track.name)) { tap { it.copy(mute = !it.mute) } }
+                    ToggleChip(stringResource(Res.string.mixer_solo_short), m.solo, c.accent, Modifier.width(ROW_CHIP_W).mappable(map("solo")), height = ROW_CHIP_H, said = stringResource(Res.string.a11y_solo, track.name)) { tap { it.copy(solo = !it.solo) } }
+                },
+            ) {
+                MiniSlider(
+                    value = EngineParams.volume01(m.volume), accent = trackColour(index, track.colour),
+                    modifier = Modifier.fillMaxWidth().height(ROW_SLIDER_H).mappable(map("gain")),
+                    onStart = { editor.beginGesture(index) },
+                    onChange = { v -> gesture("gain", v) { it.copy(volume = EngineParams.volumeFrom01(v)) } },
+                    onEnd = { editor.endGesture() },
+                    name = stringResource(Res.string.a11y_volume, track.name),
+                )
+            }
+        }
+        song.master.groups.forEachIndexed { g, group ->
+            val n = g + 1
+            MixerRow(group.name, c.accent, open == OpenStrip.Group(g), { toggle(OpenStrip.Group(g)) }) {
+                MiniSlider(
+                    value = EngineParams.volume01(group.volume), accent = c.accent,
+                    modifier = Modifier.fillMaxWidth().height(ROW_SLIDER_H).mappable(MapTargets.param(0, "master", "g${n}gain")),
+                    onStart = { editor.beginSongGesture() },
+                    onChange = { v ->
+                        NativeEngine.setParam(0, "master", "g${n}gain", v)
+                        editor.updateSongGesture { s -> s.withGroupVolume(g, EngineParams.volumeFrom01(v)) }
+                    },
+                    onEnd = { editor.endSongGesture() },
+                    name = stringResource(Res.string.a11y_volume, group.name),
+                )
+            }
+        }
+        MixerRow(stringResource(Res.string.mixer_master), c.knobPointer, open == OpenStrip.Master, { toggle(OpenStrip.Master) }) {
+            MiniSlider(
+                value = EngineParams.volume01(song.master.volume), accent = c.knobPointer,
+                modifier = Modifier.fillMaxWidth().height(ROW_SLIDER_H).mappable(MapTargets.param(0, "master", "volume")),
+                onStart = { editor.beginSongGesture() },
+                onChange = { v ->
+                    NativeEngine.setParam(0, "master", "volume", v)
+                    editor.updateSongGesture { s -> s.copy(master = s.master.copy(volume = EngineParams.volumeFrom01(v))) }
+                },
+                onEnd = { editor.endSongGesture() },
+                name = stringResource(Res.string.a11y_volume, stringResource(Res.string.a11y_master)),
+            )
+        }
+    }
+}
+
+/** The whole strip for one row of [MixerRows]: sends, MIDI, routing and inserts. */
+@Composable
+private fun OneStrip(
+    song: Song, editor: SongEditor, which: OpenStrip, rackPeaks: () -> FloatArray, masterPeak: () -> Float,
+    clickOn: Boolean, onClick: (Boolean) -> Unit,
+) {
+    when (which) {
+        is OpenStrip.Track -> {
+            val track = song.tracks[which.index]
+            val sendNames = List(SEND_SLOTS) { slot ->
+                song.master.sendAt(slot).type.lowercase().ifEmpty { stringResource(Res.string.mixer_send, slot + 1) }
+            }
+            ChannelStrip(track, which.index, { rackPeaks().getOrElse(which.index) { 0f } }, editor,
+                trackColour(which.index, track.colour), automatedOf(track), sendNames = sendNames, groups = song.master.groups.map { it.name })
+        }
+        is OpenStrip.Group -> GroupStrip(which.index, song.master.groups[which.index], song, editor, FADER_H, Dp.Infinity, false, Dp.Unspecified)
+        OpenStrip.Master -> MasterStrip(song, editor, masterPeak, clickOn, onClick)
+    }
+}
+
+/**
+ * A row's whole strip beside the mixer, over the editor's roll. Gone when the
+ * strip is (a track or group deleted), so [onGone] is called then.
+ */
+@Composable
+fun MixerStripPanel(
+    song: Song, editor: SongEditor, which: OpenStrip, rackPeaks: () -> FloatArray, masterPeak: () -> Float,
+    clickOn: Boolean, onClick: (Boolean) -> Unit, onGone: () -> Unit, modifier: Modifier = Modifier,
+) {
+    val exists = when (which) {
+        is OpenStrip.Track -> which.index in song.tracks.indices
+        is OpenStrip.Group -> which.index in song.master.groups.indices
+        OpenStrip.Master -> true
+    }
+    if (!exists) {
+        LaunchedEffect(which) { onGone() }
+        return
+    }
+    Box(
+        modifier.fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(Acid.colors.panelAlt)
+            .verticalScrollWithBar(rememberScrollState()).padding(6.dp),
+    ) { OneStrip(song, editor, which, rackPeaks, masterPeak, clickOn, onClick) }
+}
+
+/**
+ * One row of [MixerRows]: a colour edge, the name that opens the whole strip
+ * and [chips] on a line, and its level under them across the whole row.
+ */
+@Composable
+private fun MixerRow(
+    name: String, colour: Color, open: Boolean, onOpen: () -> Unit,
+    chips: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {},
+    level: @Composable () -> Unit,
+) {
+    val c = Acid.colors
+    Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min).clip(RoundedCornerShape(6.dp)).background(c.cardAlt).together()) {
+        Box(Modifier.width(3.dp).fillMaxHeight().background(colour))
+        Column(Modifier.weight(1f).padding(horizontal = 6.dp, vertical = 4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    name, color = if (open) c.accent else c.text, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).heightIn(min = ROW_CHIP_H).wrapContentHeight(Alignment.CenterVertically)
+                        .clickable(onClick = onOpen).button(name, stringResource(if (open) Res.string.a11y_open else Res.string.a11y_closed), onClick = onOpen, keyFocus = false),
+                )
+                chips()
+            }
+            level()
+        }
     }
 }
 
@@ -726,6 +917,7 @@ private fun ToggleChip(
     colour: Color,
     modifier: Modifier = Modifier,
     padding: Dp = 8.dp,
+    height: Dp = 22.dp,
     /** What TalkBack says, and the state, where [label] is a letter. */
     said: String? = null,
     state: String? = null,
@@ -734,7 +926,7 @@ private fun ToggleChip(
     val c = Acid.colors
     Box(
         modifier
-            .height(22.dp)
+            .height(height)
             .clip(RoundedCornerShape(4.dp))
             .background(if (on) colour.copy(alpha = 0.25f) else c.raised)
             .clickable(onClick = onClick)
@@ -761,6 +953,10 @@ private val PALETTE = listOf(
 )
 
 private val STRIP_W = 76.dp
+/** Mute and solo, and the level under them, when the mixer is rows: big enough for a thumb. */
+private val ROW_CHIP_W = 32.dp
+private val ROW_CHIP_H = 30.dp
+private val ROW_SLIDER_H = 32.dp
 /**
  * The master strip is the same width as a channel strip, with everything
  * stacked the way a channel stacks its controls.

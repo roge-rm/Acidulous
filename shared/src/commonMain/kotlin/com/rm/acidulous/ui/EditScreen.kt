@@ -180,6 +180,10 @@ fun EditScreen(
     val slotTypes = track.effects.map { it.type } + track.modifiers.map { it.type }
     val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }
     var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 mixer, all in the same space
+    // Sideways, a mixer row's whole strip, shown over the roll beside the
+    // mixer. It goes with the mixer.
+    var mixerStrip by remember { mutableStateOf<OpenStrip?>(null) }
+    LaunchedEffect(panel) { if (panel != 2) mixerStrip = null }
     // Which modifier the chips have opened, if any.
     var modifierSlot by remember { mutableStateOf(-1) }
     var selection by remember { mutableStateOf(emptySet<Int>()) }
@@ -907,7 +911,12 @@ fun EditScreen(
         // The machine panel (knobs go to the engine as gestures and into the document as undo
         // steps), or behind the fx toggle the track's two insert slots.
         if (panel == 1) { if (body) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp)) }
-        else if (panel == 2) { if (body) MixerPanel(song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth().padding(top = 4.dp)) }
+        else if (panel == 2) {
+            if (body) MixerPanel(
+                song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth().padding(top = 4.dp),
+                openStrip = mixerStrip, onOpenStrip = if (landscape) ({ mixerStrip = it }) else null,
+            )
+        }
         else MachinePanel(
             track, trackIndex, editor, patchNames,
             // A patch knows the notes it's for. Loading one moves the
@@ -1160,12 +1169,20 @@ fun EditScreen(
                         if (panel == 0) Column(
                             Modifier.width(PATCH_W).fillMaxHeight(),
                         ) { panelSlot(true, false) }
-                        Column(Modifier.weight(1f).fillMaxHeight()) {
-                            gridSlot()
-                            // A tape has no notes, so no note lane. Its mute
-                            // automation is in the strip below, which stays.
-                            if (kind != MachineKind.Audio) noteLaneSlot(laneH)
-                            automationSlot(laneH)
+                        Box(Modifier.weight(1f).fillMaxHeight()) {
+                            Column(Modifier.fillMaxSize()) {
+                                gridSlot()
+                                // A tape has no notes, so no note lane. Its mute
+                                // automation is in the strip below, which stays.
+                                if (kind != MachineKind.Audio) noteLaneSlot(laneH)
+                                automationSlot(laneH)
+                            }
+                            val strip = mixerStrip
+                            if (panel == 2 && strip != null) MixerStripPanel(
+                                song, editor, strip, rackPeaks, masterPeak, clickOn, onClick,
+                                onGone = { mixerStrip = null },
+                                modifier = Modifier.align(Alignment.CenterEnd),
+                            )
                         }
                         // The cards do their own scrolling (see GroupRow), so
                         // there's no scroller here. Folded, they're gone and

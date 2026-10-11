@@ -117,6 +117,11 @@ two sends on top, the two master inserts (**fx1**, **fx2**) in the middle, and
 the limiter (**lim**) and the click (**♩**) at the bottom. Tap one to turn it on
 or off, and hold a send or insert to choose its effect and set it up.
 
+In the editor's side panel on a phone held sideways, or on a Steam Deck, the
+mixer is a row per track instead: its name, mute and solo, and its fader
+across. Tap a name to show that track's whole strip beside the mixer, and tap
+it again to put it away.
+
 ## Perform
 
 The tabs down the mixer's left edge are **mix**, **hold**, **pad** and
