@@ -236,6 +236,14 @@ From the [Releases](https://github.com/roge-rm/Acidulous/releases) page:
   the AppImage, x86_64 or aarch64. It has its own Java, so just make it
   executable and run it.
 
+### Steam Deck
+
+Use the x86_64 AppImage. In Desktop Mode, download it, right-click it and turn
+on **Is executable** under **Properties › Permissions**. Then add it to Steam
+with **Add a Non-Steam Game** so it's in your library in Game Mode. It runs
+full screen there, with the Deck's own controls, back buttons and touchpads.
+The manual's [keyboard page](manual/11-keyboard.md) has what each one does.
+
 ### Windows
 
 Windows 10 or 11, 64-bit. From the [Releases](https://github.com/roge-rm/Acidulous/releases)
