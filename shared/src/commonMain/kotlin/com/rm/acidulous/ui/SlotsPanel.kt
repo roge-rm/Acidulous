@@ -284,6 +284,7 @@ private fun SlotFace(
                     factoryPatches = { PatchStore.factory(key) },
                     userNames = { PatchStore.userList(key) },
                     onDelete = { name -> PatchStore.delete(key, name) },
+                    key = key,
                 )
             }
         }

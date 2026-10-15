@@ -72,4 +72,17 @@
     <string name="patches_user_none">Nothing saved yet. Use \"save as…\" on the panel.</string>
     <!-- Where a browser saves exports: the only folder a web page can write to. -->
     <string name="files_downloads_web">Downloads</string>
+
+    <!-- Sharing patches (.acpreset files) -->
+    <string name="patches_share">share</string>
+    <string name="patches_share_all">share all</string>
+    <string name="patches_import">import…</string>
+    <string name="preset_share_failed_title">That couldn\'t be shared</string>
+    <string name="preset_share_failed">The preset file couldn\'t be written.</string>
+    <string name="preset_missing_title">Some files are missing</string>
+    <string name="preset_missing">Shared without these: %s</string>
+    <string name="preset_imported_title">Patches imported</string>
+    <string name="preset_imported">Added to the %1$s patches: %2$s.</string>
+    <string name="preset_not_a_preset">%s is not a preset from Acidulous.</string>
+    <string name="preset_imported_missing">Not in the file: %s</string>
 </resources>

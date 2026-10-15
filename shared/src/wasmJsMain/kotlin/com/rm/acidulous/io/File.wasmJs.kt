@@ -217,3 +217,8 @@ actual class ZipWriter actual constructor(private val out: File) {
 
 actual suspend fun readZip(zip: File, each: suspend (name: String, isDirectory: Boolean, bytes: suspend () -> ByteArray) -> Unit) =
     Zip.read(fsReadBytes(zip.p), each)
+
+actual suspend fun readZipFiles(zip: File, each: suspend (name: String, isDirectory: Boolean, extractTo: suspend (File) -> Unit) -> Unit) =
+    readZip(zip) { name, isDirectory, bytes -> each(name, isDirectory) { target -> target.writeBytes(bytes()) } }
+
+actual fun File.sameContent(other: File): Boolean = length() == other.length() && readBytes().contentEquals(other.readBytes())

@@ -44,3 +44,9 @@ expect inline fun <T> locked(lock: Any, block: () -> T): T
 
 /** A file's date as a list shows it, in the device's language: "3 Mar 14:05". */
 expect fun dayAndTime(millis: Long): String
+
+/** Whether engine calls can be written as lines here (EngineLines): the JVM, not the browser. */
+expect val canRecordEngineLines: Boolean
+
+/** Runs [task] to the end on this thread, where there are threads (the JVM). Not available in a browser. */
+expect fun runNow(task: suspend () -> Unit)

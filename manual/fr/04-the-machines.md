@@ -70,3 +70,15 @@ Si un contrôleur joue trop fort ou trop doucement, corrigez-le avec
 
 Chaque machine vient avec des sons, classés par famille. Le nom du son en haut
 du panneau ouvre le navigateur. Ajoutez vos propres sons dans le dernier onglet.
+
+### Partager des sons
+
+Dans le navigateur, **partager** à côté d’un son l’écrit dans un fichier
+`.acpreset` et ouvre le partage. **tout partager**, dans le dernier onglet,
+partage tous vos sons de cette machine. Les effets fonctionnent de la même façon.
+
+Le fichier contient le son et vos propres échantillons, SoundFonts et voix qu’il
+utilise. **importer…**, dans le même onglet, ajoute les sons d’un fichier. Un nom
+déjà pris devient « Nom 2 », et un fichier que vous avez déjà avec un autre
+contenu est gardé sous un nouveau nom. Sur Android, vous pouvez aussi ouvrir un
+fichier `.acpreset` avec l’appli.

@@ -147,13 +147,22 @@ def jvm(decls):
             returns = ret not in (None, "Unit")
             short = name[len("native"):]
             write = "; ".join(k for k, _ in line_args(name, params))
+            neutral = {"Boolean": "true", "String": '""', "Int": "0", "Long": "0L"}.get(ret, "") if returns else ""
+            ret_dry = f"return {neutral}" if returns else "return"
             if "makes-handle" in LINES[name]:
-                body = ["val writer_ = EngineLines.writer",
+                body = ["val dry_ = DryLines.writer.get()",
+                        f"if (dry_ != null) {{ dry_.handleMade(dry_.callMakingHandle(\"{short}\"), 1L); return 1L }}",
+                        "EngineLines.sent++",
+                        "val writer_ = EngineLines.writer",
                         f"val slot_ = writer_?.callMakingHandle(\"{short}\") ?: 0",
                         f"val result_ = jni_{name}({args})",
                         "writer_?.handleMade(slot_, result_)"]
             else:
-                body = [f"EngineLines.writer?.call(\"{short}\") {{ {write} }}".replace("{  }", "{}"),
+                dry_call = f"dry_.call(\"{short}\") {{ {write} }}".replace("{  }", "{}")
+                body = ["val dry_ = DryLines.writer.get()",
+                        f"if (dry_ != null) {{ {dry_call}; {ret_dry} }}",
+                        "EngineLines.sent++",
+                        f"EngineLines.writer?.call(\"{short}\") {{ {write} }}".replace("{  }", "{}"),
                         f"val result_ = jni_{name}({args})" if returns else f"jni_{name}({args})"]
             if returns:
                 body.append("return result_")
@@ -174,6 +183,7 @@ def jvm(decls):
         "/**\n"
         " * The engine through JNI: Java_com_rm_acidulous_engine_EngineNative_* in jni_bridge.cpp.\n"
         " * The calls marked `// line` in the list are also written to EngineLines.writer when it's set.\n"
+        " * While a thread is recording dry (recordDry) its line calls are only written, and answer as if they worked.\n"
         " */\n"
         "internal actual object EngineNative {\n"
         "    init {\n"
@@ -294,7 +304,16 @@ def lines_dispatch(decls):
         short = name[len("native"):]
         body = []
         for (pname, ptype), (_, read) in zip(params, line_args(name, params)):
-            body.append(f"    const {C_TYPE[ptype]} {pname} = in.{read};")
+            value = f"in.{read}"
+            # Retargeting (Replay::targetRack, targetSlot): a preset's lines are
+            # recorded for rack 0 and effect slot 0 and can be replayed onto others.
+            if ptype == "Int" and pname in ("rack", "rackId"):
+                value = f"r.rack({value})"
+            elif short == "MountEffect" and pname == "slot":
+                value = f"r.slot({value})"
+            elif ptype == "String" and pname == "unit" and short in ("SetParam", "LoadEffectFormula"):
+                value = f"r.unit({value})"
+            body.append(f"    const {C_TYPE[ptype]} {pname} = {value};")
         body.append("    if (!in.finish()) return false;")
         call = f"{SYMBOL}{name}({', '.join(['r.env', 'nullptr'] + [n for n, _ in params])})"
         if C_TYPE[ret] == "void":

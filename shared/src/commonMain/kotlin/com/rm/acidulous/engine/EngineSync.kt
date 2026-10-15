@@ -61,25 +61,65 @@ import org.jetbrains.compose.resources.StringResource
 object EngineSync {
 
 
+    /**
+     * What the engine has been sent, so only changes are sent again. The live
+     * one is [live]; a recording that mustn't touch the engine runs the
+     * ensure functions against a [Memory] of its own, which the loads running
+     * on the worker can't see.
+     */
+    class Memory(val live: Boolean = false) {
+        val mounted = arrayOfNulls<String>(RACKS)
+        val mountedEffects = Array(RACKS) { arrayOfNulls<String>(EFFECT_SLOTS) }
+        val mountedModifiers = Array(RACKS) { arrayOfNulls<String>(MODIFIER_SLOTS) }
+        val mountedInput = arrayOfNulls<String>(INPUT_SLOTS)
+        val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
+        val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
+        val loadedFreezes = arrayOfNulls<String>(RACKS) // which frozen clips a rack has, as one identity string
+        val builtClouds = arrayOfNulls<String>(RACKS)   // the spectrum a rack's Cumulus tables were built from
+        val loadedFormulas = arrayOfNulls<String>(RACKS) // the text a rack's Formulate was compiled from
+        val loadedTakes = arrayOfNulls<String>(RACKS)    // the file a rack's Pollen is granulating
+        val loadedReels = arrayOfNulls<String>(RACKS)    // the spec a rack's Bias was built from
+        val loadedVoices = arrayOfNulls<String>(RACKS * 2) // the specs a rack's Diction sings and morphs from
+        /** Voice specs by setting, and the save they were read at, so an index isn't read on every sync. */
+        val voiceSpecs = mutableMapOf<String, Pair<Int, String>>()
+        val loadedPatches = arrayOfNulls<String>(RACKS)
+        val mountedSends = arrayOfNulls<String>(SEND_SLOTS)
+        val mountedMasterInserts = arrayOfNulls<String>(MASTER_INSERT_SLOTS)
+        val mountedGroupInserts = Array(MAX_GROUPS) { arrayOfNulls<String>(GROUP_INSERT_SLOTS) }
+        /** What each rack was last told about its tuning, so only changes are pushed. */
+        val pushedTuning = arrayOfNulls<String>(RACKS)
+        /** The formula each Formula effect slot was last given, by [effectFormulaKey]; absent when it isn't a Formula. */
+        val loadedEffectFormulas = mutableMapOf<String, String>()
+
+        fun clear() {
+        mounted.fill(null)
+        mountedEffects.forEach { it.fill(null) }
+        mountedModifiers.forEach { it.fill(null) }
+        mountedInput.fill(null)
+        loadedSamples.clear()
+        loadedMaps.fill(null)
+        loadedFreezes.fill(null)
+        builtClouds.fill(null)
+        loadedFormulas.fill(null)
+        loadedEffectFormulas.clear()
+        loadedTakes.fill(null)
+        loadedReels.fill(null)
+        loadedVoices.fill(null)
+        loadedPatches.fill(null)
+        mountedSends.fill(null)
+        mountedMasterInserts.fill(null)
+        mountedGroupInserts.forEach { it.fill(null) }
+        pushedTuning.fill(null)
+        voiceSpecs.clear()
+    }
+    }
+    private val live = Memory(true)
+
     private const val TAG = "Acidulous.Sync"
     private const val RACKS = 16
     /** Most clips have no per-note expression, so they can all share this. */
     private val EMPTY_FLOATS = FloatArray(0)
 
-    private val mounted = arrayOfNulls<String>(RACKS)
-    private val mountedEffects = Array(RACKS) { arrayOfNulls<String>(EFFECT_SLOTS) }
-    private val mountedModifiers = Array(RACKS) { arrayOfNulls<String>(MODIFIER_SLOTS) }
-    private val mountedInput = arrayOfNulls<String>(INPUT_SLOTS)
-    private val loadedSamples = HashMap<String, String>() // "rack:slot" -> relative path
-    private val loadedMaps = arrayOfNulls<String>(RACKS)   // the source string a rack's map was built from
-    private val loadedFreezes = arrayOfNulls<String>(RACKS) // which frozen clips a rack has, as one identity string
-    private val builtClouds = arrayOfNulls<String>(RACKS)   // the spectrum a rack's Cumulus tables were built from
-    private val loadedFormulas = arrayOfNulls<String>(RACKS) // the text a rack's Formulate was compiled from
-    private val loadedTakes = arrayOfNulls<String>(RACKS)    // the file a rack's Pollen is granulating
-    private val loadedReels = arrayOfNulls<String>(RACKS)    // the spec a rack's Bias was built from
-    private val loadedVoices = arrayOfNulls<String>(RACKS * 2) // the specs a rack's Diction sings and morphs from
-    /** Voice specs by setting, and the save they were read at, so an index isn't read on every sync. */
-    private val voiceSpecs = mutableMapOf<String, Pair<Int, String>>()
 
     /**
      * The result of the last formula compile, by rack: empty if it worked,
@@ -106,6 +146,32 @@ object EngineSync {
     // Building a multisample means parsing and decoding, sometimes tens of
     // megabytes, so it never runs on the caller's thread.
     private val mapLoader = com.rm.acidulous.util.SerialWorker("Acidulous.MapLoader")
+    /** Hands a load to the worker, or for a recording's memory runs it here at once. */
+    private fun load(m: Memory, task: suspend () -> Unit) {
+        if (m.live) mapLoader.execute(task) else com.rm.acidulous.util.runNow(task)
+    }
+
+    /** Runs [block] with a memory of its own, for recording what a fresh engine would be sent. Nothing live is touched. */
+    fun <T> scratch(block: (Memory) -> T): T = block(Memory())
+
+    /** What the live memory holds as one text, for a test to compare. */
+    fun memoryText(): String = buildString {
+        fun add(name: String, a: Array<String?>) { append(name).append(a.joinToString(",", "[", "]")).append('\n') }
+        val m = live
+        add("mounted", m.mounted); add("input", m.mountedInput); add("maps", m.loadedMaps); add("freezes", m.loadedFreezes)
+        add("clouds", m.builtClouds); add("formulas", m.loadedFormulas); add("takes", m.loadedTakes); add("reels", m.loadedReels)
+        add("voices", m.loadedVoices); add("patches", m.loadedPatches); add("sends", m.mountedSends)
+        add("masterInserts", m.mountedMasterInserts); add("tuning", m.pushedTuning)
+        m.mountedEffects.forEachIndexed { i, a -> add("fx$i", a) }
+        m.mountedModifiers.forEachIndexed { i, a -> add("mod$i", a) }
+        m.mountedGroupInserts.forEachIndexed { i, a -> add("group$i", a) }
+        append("samples").append(m.loadedSamples.entries.sortedBy { it.key }.joinToString()).append('\n')
+        append("effectFormulas").append(m.loadedEffectFormulas.entries.sortedBy { it.key }.joinToString()).append('\n')
+        append("voiceSpecs").append(m.voiceSpecs.entries.sortedBy { it.key }.joinToString()).append('\n')
+        append("synced").append(synced?.name).append('\n')
+        append("status").append(mapStatus).append(patchStatus).append('\n')
+    }
+
     /** Returns once the loads handed to the worker so far have run, for tools that need the engine settled. */
     suspend fun loadsDone() {
         val done = kotlinx.coroutines.CompletableDeferred<Unit>()
@@ -122,7 +188,6 @@ object EngineSync {
 
     /** Where frozen clips are written and read. Set once, at startup. */
     var freezeRoot: com.rm.acidulous.io.File? = null
-    private val loadedPatches = arrayOfNulls<String>(RACKS)
     var patchStatus: String = ""
         private set
 
@@ -137,26 +202,10 @@ object EngineSync {
      * start.
      */
     fun forgetEngine() {
-        mounted.fill(null)
-        mountedEffects.forEach { it.fill(null) }
-        mountedModifiers.forEach { it.fill(null) }
-        mountedInput.fill(null)
-        loadedSamples.clear()
-        loadedMaps.fill(null)
-        loadedFreezes.fill(null)
-        builtClouds.fill(null)
-        loadedFormulas.fill(null)
-        loadedEffectFormulas.clear()
-        loadedTakes.fill(null)
-        loadedReels.fill(null)
-        loadedVoices.fill(null)
-        loadedPatches.fill(null)
-        mountedSends.fill(null)
-        mountedMasterInserts.fill(null)
-        mountedGroupInserts.forEach { it.fill(null) }
-        pushedTuning.fill(null)
+        live.clear()
         synced = null
     }
+
 
     /**
      * Reports something the user did that didn't work, in words they can act
@@ -178,21 +227,21 @@ object EngineSync {
      * `Machine.settings` ("p03_sample"). Loads what changed and clears what
      * was removed.
      */
-    fun ensureSamples(song: Song) {
+    fun ensureSamples(song: Song, m: Memory = live) {
         val root = sampleRoot ?: return
         song.tracks.forEachIndexed { rack, track ->
             if (rack >= RACKS || !MachineUi.acceptsSamples(track.machine.type)) return@forEachIndexed
             for (pad in 0 until 13) {
                 val key = "$rack:$pad"
                 val rel = track.machine.settings["p%02d_sample".format(pad)] ?: ""
-                if (loadedSamples[key] == rel) continue
-                if (mounted[rack] != track.machine.type) continue // machine not mounted yet
-                if (rel.isEmpty() && loadedSamples[key] == null) { loadedSamples[key] = ""; continue } // never loaded: nothing to clear
+                if (m.loadedSamples[key] == rel) continue
+                if (m.mounted[rack] != track.machine.type) continue // machine not m.mounted yet
+                if (rel.isEmpty() && m.loadedSamples[key] == null) { m.loadedSamples[key] = ""; continue } // never loaded: nothing to clear
                 val err = NativeEngine.loadSample(rack, pad, if (rel.isEmpty()) "" else com.rm.acidulous.io.File(root, rel).absolutePath)
                 // The key is set either way, so a file that won't load is
                 // reported once, not on every sync. Changing the setting
                 // tries again.
-                loadedSamples[key] = rel
+                m.loadedSamples[key] = rel
                 if (err.isNotEmpty()) problem(Res.string.sync_pad_failed, pad + 1, shortName(rel), err)
             }
             // The shared file the pads slice, in the slot above them. One copy
@@ -200,15 +249,15 @@ object EngineSync {
             // times. It can also be much longer than a pad sample.
             val sliceKey = "$rack:shared"
             val sliceRel = track.machine.settings["slice_sample"] ?: ""
-            if (loadedSamples[sliceKey] != sliceRel && mounted[rack] == track.machine.type &&
-                !(sliceRel.isEmpty() && loadedSamples[sliceKey] == null)) {
+            if (m.loadedSamples[sliceKey] != sliceRel && m.mounted[rack] == track.machine.type &&
+                !(sliceRel.isEmpty() && m.loadedSamples[sliceKey] == null)) {
                 val err = NativeEngine.loadSample(
                     rack, 13, if (sliceRel.isEmpty()) "" else com.rm.acidulous.io.File(root, sliceRel).absolutePath,
                     // The longer limit: one file for the whole machine, so it
                     // can be a whole track rather than a break.
                     maxSeconds = NativeEngine.SLICE_SECONDS,
                 )
-                loadedSamples[sliceKey] = sliceRel
+                m.loadedSamples[sliceKey] = sliceRel
                 if (err.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(sliceRel), err)
             }
         }
@@ -220,25 +269,25 @@ object EngineSync {
      * deleting a track shifts the ones after it and their machines remount on
      * their new racks.
      */
-    fun ensureMachines(song: Song) {
+    fun ensureMachines(song: Song, m: Memory = live) {
         song.tracks.forEachIndexed { rack, track ->
-            if (rack < RACKS && mounted[rack] != track.machine.type) {
+            if (rack < RACKS && m.mounted[rack] != track.machine.type) {
                 if (NativeEngine.mountMachine(rack, track.machine.type)) {
-                    mounted[rack] = track.machine.type
-                    for (pad in 0 until 13) loadedSamples.remove("$rack:$pad") // a new machine starts empty
-                    loadedMaps[rack] = null
-                    loadedTakes[rack] = null
-                    loadedVoices[rack * 2] = null
-                    loadedVoices[rack * 2 + 1] = null
+                    m.mounted[rack] = track.machine.type
+                    for (pad in 0 until 13) m.loadedSamples.remove("$rack:$pad") // a new machine starts empty
+                    m.loadedMaps[rack] = null
+                    m.loadedTakes[rack] = null
+                    m.loadedVoices[rack * 2] = null
+                    m.loadedVoices[rack * 2 + 1] = null
                 } else {
                     Log.w(TAG, "could not mount ${track.machine.type} on rack $rack")
                 }
             }
         }
         for (rack in song.tracks.size until RACKS) {
-            if (mounted[rack] != null) {
+            if (m.mounted[rack] != null) {
                 NativeEngine.unmountMachine(rack)
-                mounted[rack] = null
+                m.mounted[rack] = null
             }
         }
     }
@@ -248,13 +297,13 @@ object EngineSync {
      * (or none), so its state starts clean. A slot with the same type keeps
      * its effect and only has its parameters pushed.
      */
-    fun ensureEffects(song: Song) {
+    fun ensureEffects(song: Song, m: Memory = live) {
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             for (slot in 0 until EFFECT_SLOTS) {
                 val want = track?.effectAt(slot)?.type?.ifEmpty { null }
-                if (mountedEffects[rack][slot] == want) continue
-                if (NativeEngine.mountEffect(rack, slot, want ?: "")) mountedEffects[rack][slot] = want
+                if (m.mountedEffects[rack][slot] == want) continue
+                if (NativeEngine.mountEffect(rack, slot, want ?: "")) m.mountedEffects[rack][slot] = want
                 else Log.w(TAG, "could not mount effect ${want ?: "(none)"} on rack $rack slot $slot")
             }
         }
@@ -266,32 +315,29 @@ object EngineSync {
      * One array rather than sixteen, because sends belong to the song, not a
      * rack.
      */
-    private val mountedSends = arrayOfNulls<String>(SEND_SLOTS)
 
-    fun ensureSends(song: Song) {
+    fun ensureSends(song: Song, m: Memory = live) {
         for (slot in 0 until SEND_SLOTS) {
             val want = song.master.sendAt(slot).type.ifEmpty { null }
-            if (mountedSends[slot] == want) continue
-            if (NativeEngine.mountSend(slot, want ?: "")) mountedSends[slot] = want
+            if (m.mountedSends[slot] == want) continue
+            if (NativeEngine.mountSend(slot, want ?: "")) m.mountedSends[slot] = want
             else Log.w(TAG, "could not mount send ${want ?: "(none)"} on slot $slot")
         }
         // The master inserts, the same way.
         for (slot in 0 until MASTER_INSERT_SLOTS) {
             val want = song.master.insertAt(slot).type.ifEmpty { null }
-            if (mountedMasterInserts[slot] == want) continue
-            if (NativeEngine.mountMasterInsert(slot, want ?: "")) mountedMasterInserts[slot] = want
+            if (m.mountedMasterInserts[slot] == want) continue
+            if (NativeEngine.mountMasterInsert(slot, want ?: "")) m.mountedMasterInserts[slot] = want
             else Log.w(TAG, "could not mount master insert ${want ?: "(none)"} on slot $slot")
         }
     }
-    private val mountedMasterInserts = arrayOfNulls<String>(MASTER_INSERT_SLOTS)
-    private val mountedGroupInserts = Array(MAX_GROUPS) { arrayOfNulls<String>(GROUP_INSERT_SLOTS) }
 
     /** The mixer groups' inserts. A group that doesn't exist has empty slots. */
-    fun ensureGroups(song: Song) {
+    fun ensureGroups(song: Song, m: Memory = live) {
         for (g in 0 until MAX_GROUPS) for (slot in 0 until GROUP_INSERT_SLOTS) {
             val want = song.master.groups.getOrNull(g)?.insertAt(slot)?.type?.ifEmpty { null }
-            if (mountedGroupInserts[g][slot] == want) continue
-            if (NativeEngine.mountGroupInsert(g, slot, want ?: "")) mountedGroupInserts[g][slot] = want
+            if (m.mountedGroupInserts[g][slot] == want) continue
+            if (NativeEngine.mountGroupInsert(g, slot, want ?: "")) m.mountedGroupInserts[g][slot] = want
             else Log.w(TAG, "could not mount group ${g + 1} insert ${want ?: "(none)"} on slot $slot")
         }
     }
@@ -299,15 +345,15 @@ object EngineSync {
     /**
      * Effects on the incoming audio.
      *
-     * Same shape as [ensureSends] and mounted the same way. The difference is
+     * Same shape as [ensureSends] and m.mounted the same way. The difference is
      * that the engine runs them before the input is published, so they're
      * recorded into the take rather than applied on playback.
      */
-    fun ensureInputFx(song: Song) {
+    fun ensureInputFx(song: Song, m: Memory = live) {
         for (slot in 0 until INPUT_SLOTS) {
             val want = song.inputAt(slot).type.ifEmpty { null }
-            if (mountedInput[slot] == want) continue
-            if (NativeEngine.mountInputEffect(slot, want ?: "")) mountedInput[slot] = want
+            if (m.mountedInput[slot] == want) continue
+            if (NativeEngine.mountInputEffect(slot, want ?: "")) m.mountedInput[slot] = want
             else Log.w(TAG, "could not mount input effect ${want ?: "(none)"} on slot $slot")
         }
     }
@@ -316,25 +362,25 @@ object EngineSync {
      * Mosaic's instrument: a SoundFont preset or a list of WAV zones. The
      * source string is the identity, so nothing reloads unless it changes.
      */
-    fun ensureSampleMaps(song: Song) {
+    fun ensureSampleMaps(song: Song, m: Memory = live) {
         val root = sampleRoot ?: return
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val wanted = when {
                 track == null || !MachineUi.acceptsSampleMap(track.machine.type) -> null
-                mounted[rack] != track.machine.type -> null // wait for the machine
+                m.mounted[rack] != track.machine.type -> null // wait for the machine
                 else -> {
                     val sf2 = track.machine.settings["sf2"].orEmpty()
                     if (sf2.isNotEmpty()) "sf2:${track.machine.settings["sf2preset"] ?: "0"}:$sf2"
                     else track.machine.settings["zones"].orEmpty().ifEmpty { null }?.let { "zones:$it" }
                 }
             }
-            if (loadedMaps[rack] == wanted) continue
-            loadedMaps[rack] = wanted
+            if (m.loadedMaps[rack] == wanted) continue
+            m.loadedMaps[rack] = wanted
             if (wanted == null) continue
             val settings = track!!.machine.settings
-            mapLoader.execute {
-                mapStatus = "loading…"
+            load(m) {
+                if (m.live) mapStatus = "loading…"
                 val error = if (wanted.startsWith("sf2:")) {
                     val preset = settings["sf2preset"]?.toIntOrNull() ?: 0
                     NativeEngine.loadSoundFont(rack, com.rm.acidulous.io.File(root, settings["sf2"]!!).absolutePath, preset)
@@ -342,23 +388,23 @@ object EngineSync {
                     val zones = com.rm.acidulous.model.Zones.decode(settings["zones"])
                     NativeEngine.loadZoneMap(rack, com.rm.acidulous.model.Zones.spec(zones, root), track.name)
                 }
-                mapStatus = if (error.isEmpty()) "" else error
+                if (m.live) mapStatus = if (error.isEmpty()) "" else error
                 if (error.isNotEmpty()) {
                     Log.w(TAG, "rack $rack map: $error")
-                    loadedMaps[rack] = null // let a retry happen
+                    m.loadedMaps[rack] = null // let a retry happen
                 }
             }
         }
     }
 
     /** Modifiers follow the same rule as effects: remount on type change only. */
-    fun ensureModifiers(song: Song) {
+    fun ensureModifiers(song: Song, m: Memory = live) {
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             for (slot in 0 until MODIFIER_SLOTS) {
                 val want = track?.modifierAt(slot)?.type?.ifEmpty { null }
-                if (mountedModifiers[rack][slot] == want) continue
-                if (NativeEngine.mountInputMod(rack, slot, want ?: "")) mountedModifiers[rack][slot] = want
+                if (m.mountedModifiers[rack][slot] == want) continue
+                if (NativeEngine.mountInputMod(rack, slot, want ?: "")) m.mountedModifiers[rack][slot] = want
                 else Log.w(TAG, "could not mount modifier ${want ?: "(none)"} on rack $rack slot $slot")
             }
         }
@@ -369,7 +415,7 @@ object EngineSync {
      * freezing or thawing one clip reloads that rack's set and leaves the
      * other racks alone, and nothing reloads while editing around a freeze.
      */
-    fun ensureFrozen(song: Song) {
+    fun ensureFrozen(song: Song, m: Memory = live) {
         val root = freezeRoot ?: return
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
@@ -380,9 +426,9 @@ object EngineSync {
             val identity = frozen.joinToString(";") {
                 "${it.first}:${it.second.file}:${it.second.bpm}:${it.second.ticks}:${it.second.tail}"
             }
-            if (loadedFreezes[rack] == identity) continue
-            loadedFreezes[rack] = identity
-            mapLoader.execute {
+            if (m.loadedFreezes[rack] == identity) continue
+            m.loadedFreezes[rack] = identity
+            load(m) {
                 val error = NativeEngine.loadFrozen(
                     rack,
                     frozen.map { it.first }.toLongArray(),
@@ -393,7 +439,7 @@ object EngineSync {
                 )
                 if (error.isNotEmpty()) {
                     Log.w(TAG, "frozen clips for rack $rack: $error")
-                    loadedFreezes[rack] = null // let a retry happen
+                    m.loadedFreezes[rack] = null // let a retry happen
                 } else if (frozen.isNotEmpty()) {
                     Log.i(TAG, "rack $rack holds ${frozen.size} frozen clip(s)")
                 }
@@ -413,27 +459,27 @@ object EngineSync {
      * Runs off-thread like sample maps: five minutes of audio is the biggest
      * decode in the app.
      */
-    fun ensureReels(song: Song) {
+    fun ensureReels(song: Song, m: Memory = live) {
         val root = sampleRoot ?: return
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val wanted = when {
                 track == null || track.machine.type != BIAS_MACHINE -> ""
-                mounted[rack] != BIAS_MACHINE -> continue // wait for the machine
+                m.mounted[rack] != BIAS_MACHINE -> continue // wait for the machine
                 else -> reelSpec(song, track, root)
             }
             // Never loaded and nothing to load: don't send an empty spec to
             // every non-tape rack on the first sync.
-            if (loadedReels[rack] == null && wanted.isEmpty()) { loadedReels[rack] = ""; continue }
-            if (loadedReels[rack] == wanted) continue
-            loadedReels[rack] = wanted
-            mapLoader.execute {
-                mapStatus = if (wanted.isEmpty()) "" else "Reading audio..."
+            if (m.loadedReels[rack] == null && wanted.isEmpty()) { m.loadedReels[rack] = ""; continue }
+            if (m.loadedReels[rack] == wanted) continue
+            m.loadedReels[rack] = wanted
+            load(m) {
+                if (m.live) mapStatus = if (wanted.isEmpty()) "" else "Reading audio..."
                 val error = NativeEngine.loadReel(rack, wanted)
-                mapStatus = ""
+                if (m.live) mapStatus = ""
                 if (error.isNotEmpty()) {
                     problem(Res.string.sync_tape_failed, error)
-                    loadedReels[rack] = null // let a retry happen
+                    m.loadedReels[rack] = null // let a retry happen
                 } else if (wanted.isNotEmpty()) {
                     Log.i(TAG, "rack $rack holds ${wanted.count { it == '\n' }} audio region(s)")
                 }
@@ -448,32 +494,30 @@ object EngineSync {
      * the audio thread. Everything from `morph` on is live and goes through
      * the normal parameter path.
      */
-    fun ensureClouds(song: Song) {
+    fun ensureClouds(song: Song, m: Memory = live) {
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
-            val wanted = if (track?.machine?.type != "Cumulus" || mounted[rack] != "Cumulus") {
+            val wanted = if (track?.machine?.type != "Cumulus" || m.mounted[rack] != "Cumulus") {
                 null
             } else {
                 CLOUD_PARAMS.joinToString(",") { "%s=%.5f".format(it, track.machine.params[it] ?: -1f) }
             }
-            if (builtClouds[rack] == wanted) continue
-            builtClouds[rack] = wanted
+            if (m.builtClouds[rack] == wanted) continue
+            m.builtClouds[rack] = wanted
             if (wanted == null) continue
-            mapLoader.execute {
+            load(m) {
                 val values = FloatArray(CLOUD_PARAMS.size) { i ->
                     track!!.machine.params[CLOUD_PARAMS[i]] ?: Float.NaN
                 }
                 val error = NativeEngine.buildCloud(rack, values)
                 if (error.isNotEmpty()) {
                     Log.w(TAG, "cumulus rack $rack: $error")
-                    builtClouds[rack] = null // let a retry happen
+                    m.builtClouds[rack] = null // let a retry happen
                 }
             }
         }
     }
 
-    /** The formula each Formula effect slot was last given, by [effectFormulaKey]; absent when it isn't a Formula. */
-    private val loadedEffectFormulas = mutableMapOf<String, String>()
 
     /**
      * Formula effects' expressions, in every slot an effect can go in. Like
@@ -481,27 +525,27 @@ object EngineSync {
      * that stops being a Formula drops out of the cache, so a fresh one gets
      * its formula again.
      */
-    fun ensureEffectFormulas(song: Song) {
+    fun ensureEffectFormulas(song: Song, m: Memory = live) {
         val slots = buildList {
-            for (rack in 0 until RACKS) for (slot in 0 until EFFECT_SLOTS) add(Triple(rack, effectUnit(slot), mountedEffects[rack][slot]))
-            for (slot in 0 until SEND_SLOTS) add(Triple(-1, sendUnit(slot), mountedSends[slot]))
-            for (slot in 0 until MASTER_INSERT_SLOTS) add(Triple(-1, masterInsertUnit(slot), mountedMasterInserts[slot]))
-            for (g in 0 until MAX_GROUPS) for (slot in 0 until GROUP_INSERT_SLOTS) add(Triple(-1, groupInsertUnit(g, slot), mountedGroupInserts[g][slot]))
-            for (slot in 0 until INPUT_SLOTS) add(Triple(-1, inputUnit(slot), mountedInput[slot]))
+            for (rack in 0 until RACKS) for (slot in 0 until EFFECT_SLOTS) add(Triple(rack, effectUnit(slot), m.mountedEffects[rack][slot]))
+            for (slot in 0 until SEND_SLOTS) add(Triple(-1, sendUnit(slot), m.mountedSends[slot]))
+            for (slot in 0 until MASTER_INSERT_SLOTS) add(Triple(-1, masterInsertUnit(slot), m.mountedMasterInserts[slot]))
+            for (g in 0 until MAX_GROUPS) for (slot in 0 until GROUP_INSERT_SLOTS) add(Triple(-1, groupInsertUnit(g, slot), m.mountedGroupInserts[g][slot]))
+            for (slot in 0 until INPUT_SLOTS) add(Triple(-1, inputUnit(slot), m.mountedInput[slot]))
         }
         for ((rack, unit, mountedType) in slots) {
             val key = effectFormulaKey(rack, unit)
             val wanted = if (mountedType == "Formula") song.slotOf(rack, unit)?.settings?.get("formula").orEmpty() else null
             if (wanted == null) {
-                loadedEffectFormulas.remove(key)
-                effectFormulaErrors.remove(key)
+                m.loadedEffectFormulas.remove(key)
+                if (m.live) effectFormulaErrors.remove(key)
                 continue
             }
-            if (loadedEffectFormulas[key] == wanted) continue
-            loadedEffectFormulas[key] = wanted
-            mapLoader.execute {
+            if (m.loadedEffectFormulas[key] == wanted) continue
+            m.loadedEffectFormulas[key] = wanted
+            load(m) {
                 val error = NativeEngine.loadEffectFormula(maxOf(rack, 0), unit, wanted)
-                effectFormulaErrors[key] = error
+                if (m.live) effectFormulaErrors[key] = error
                 if (error.isNotEmpty()) Log.w(TAG, "formula effect $key: $error")
             }
         }
@@ -511,22 +555,22 @@ object EngineSync {
      * Formulate's expression and step tables. Text, like Nexus patches and
      * Mosaic zones: parsed on a worker and handed over as one object.
      */
-    fun ensureFormulas(song: Song) {
+    fun ensureFormulas(song: Song, m: Memory = live) {
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val settings = track?.machine?.settings
-            val wanted = if (track?.machine?.type != "Formulate" || mounted[rack] != "Formulate") {
+            val wanted = if (track?.machine?.type != "Formulate" || m.mounted[rack] != "Formulate") {
                 null
             } else {
                 listOf("formula", "arp", "duty", "vol").joinToString("\u0001") { settings?.get(it).orEmpty() }
             }
-            if (loadedFormulas[rack] == wanted) continue
-            loadedFormulas[rack] = wanted
-            if (wanted == null) { formulaErrors.remove(rack); continue }
+            if (m.loadedFormulas[rack] == wanted) continue
+            m.loadedFormulas[rack] = wanted
+            if (wanted == null) { if (m.live) formulaErrors.remove(rack); continue }
             val parts = wanted.split("\u0001")
-            mapLoader.execute {
+            load(m) {
                 val error = NativeEngine.loadFormula(rack, parts[0], parts[1], parts[2], parts[3])
-                formulaErrors[rack] = error
+                if (m.live) formulaErrors[rack] = error
                 if (error.isNotEmpty()) Log.w(TAG, "formulate rack $rack: $error")
             }
         }
@@ -534,31 +578,31 @@ object EngineSync {
 
     /**
      * A machine's single take: a WAV decoded with its transients found and
-     * mounted as one object. Pollen granulates it and Dice cuts it up.
+     * m.mounted as one object. Pollen granulates it and Dice cuts it up.
      * Pollen's live buffer is the machine's own and needs nothing from here.
      */
-    fun ensureTakes(song: Song) {
+    fun ensureTakes(song: Song, m: Memory = live) {
         val root = sampleRoot ?: return
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val wanted = when {
                 track == null || !MachineUi.acceptsOneSample(track.machine.type) -> null
-                mounted[rack] != track.machine.type -> null // wait for the machine
+                m.mounted[rack] != track.machine.type -> null // wait for the machine
                 else -> track.machine.settings["sample"].orEmpty()
             }
-            if (loadedTakes[rack] == wanted) continue
-            loadedTakes[rack] = wanted
+            if (m.loadedTakes[rack] == wanted) continue
+            m.loadedTakes[rack] = wanted
             if (wanted == null) continue
             // Molt needs something different from the same file (glottal
             // pulses rather than transients), so it gets its own decode. Both
             // run on a worker.
             val sung = track?.machine?.type == "Molt"
-            mapLoader.execute {
+            load(m) {
                 val path = if (wanted.isEmpty()) "" else com.rm.acidulous.io.File(root, wanted).absolutePath
                 val error = if (sung) NativeEngine.loadUtterance(rack, path)
                             else NativeEngine.loadTake(rack, path)
                 // Reported and not retried: a file that won't decode won't
-                // decode the second time either. `loadedTakes` is already set,
+                // decode the second time either. `m.loadedTakes` is already set,
                 // so changing the setting is what tries again.
                 if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(wanted), error)
             }
@@ -566,11 +610,11 @@ object EngineSync {
     }
 
     /**
-     * A Diction's recorded voice: its vowels analysed on a worker and mounted,
+     * A Diction's recorded voice: its vowels analysed on a worker and m.mounted,
      * or the built-in voice when none is chosen. Keyed by what's sent, so a
      * vowel sung again is sent again.
      */
-    fun ensureVoices(song: Song) {
+    fun ensureVoices(song: Song, m: Memory = live) {
         val root = sampleRoot ?: return
         val saves = com.rm.acidulous.model.voice.VoiceBank.saves
         for (at in 0 until RACKS * 2) {
@@ -585,16 +629,16 @@ object EngineSync {
             val morphing = track?.machine?.settings?.get(com.rm.acidulous.model.voice.VoiceBank.SETTING_MORPH).orEmpty().isNotEmpty()
             val wanted = when {
                 track == null || track.machine.type != "Diction" -> null
-                mounted[rack] != "Diction" -> null // wait for the machine
+                m.mounted[rack] != "Diction" -> null // wait for the machine
                 setting.isEmpty() -> ""
-                else -> (voiceSpecs[setting]?.takeIf { it.first == saves }?.second
+                else -> (m.voiceSpecs[setting]?.takeIf { it.first == saves }?.second
                     ?: com.rm.acidulous.model.voice.VoiceBank.engineSpec(root, setting)
-                        .also { voiceSpecs[setting] = saves to it }) + if (slot == 1 || morphing) "\nLSF" else ""
+                        .also { m.voiceSpecs[setting] = saves to it }) + if (slot == 1 || morphing) "\nLSF" else ""
             }
-            if (loadedVoices[at] == wanted) continue
-            loadedVoices[at] = wanted
+            if (m.loadedVoices[at] == wanted) continue
+            m.loadedVoices[at] = wanted
             if (wanted == null) continue
-            mapLoader.execute {
+            load(m) {
                 val error = NativeEngine.loadVoice(rack, slot, wanted)
                 if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(setting.substringBeforeLast('/')), error)
             }
@@ -712,23 +756,21 @@ object EngineSync {
         return push(song)
     }
 
-    /** What each rack was last told about its tuning, so only changes are pushed. */
-    private val pushedTuning = arrayOfNulls<String>(RACKS)
 
     /**
      * Every melodic track's tuning (its own or the song's), from the song's
      * key. Drums and tape stay in equal temperament: a drum note picks a
      * sound, and a tape's pitch is the recording's.
      */
-    private fun ensureTunings(song: Song) {
+    private fun ensureTunings(song: Song, m: Memory = live) {
         val root = song.key?.root ?: 0
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val tuning = if (track == null || !MachineUi.takesTuning(track.machine.type)) null
             else (track.tuning ?: song.tuning)?.takeIf { !it.isEqual }
             val key = tuning?.let { "${it.name}|${it.cents.hashCode()}|$root" } ?: "equal"
-            if (pushedTuning[rack] == key) continue
-            pushedTuning[rack] = key
+            if (m.pushedTuning[rack] == key) continue
+            m.pushedTuning[rack] = key
             NativeEngine.setTuning(rack, tuning?.let { com.rm.acidulous.model.Tunings.ratios(it, root) })
         }
     }
@@ -1023,7 +1065,7 @@ object EngineSync {
     /**
      * The parameters of whatever is on each send and master insert.
      *
-     * [ensureSends] has already mounted them by now, as for every other slot,
+     * [ensureSends] has already m.mounted them by now, as for every other slot,
      * since an effect's parameter names can't be resolved until it's there.
      */
     fun pushSends(m: Master) {
@@ -1063,12 +1105,12 @@ object EngineSync {
      * around the canvas changes the saved patch several times a second, and
      * rebuilding the graph for that would cut off every delay tail in it.
      */
-    fun ensureNexusPatches(song: Song) {
+    fun ensureNexusPatches(song: Song, m: Memory = live) {
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val wanted = when {
                 track == null || track.machine.type != "Nexus" -> null
-                mounted[rack] != "Nexus" -> null // wait for the machine
+                m.mounted[rack] != "Nexus" -> null // wait for the machine
                 else -> {
                     // An empty Nexus has nothing to build, and asking the
                     // engine to parse it would only log a useless warning.
@@ -1076,18 +1118,18 @@ object EngineSync {
                     if (p.modules.isEmpty()) null else p.topology()
                 }
             }
-            if (loadedPatches[rack] == wanted) continue
-            loadedPatches[rack] = wanted
+            if (m.loadedPatches[rack] == wanted) continue
+            m.loadedPatches[rack] = wanted
             if (wanted == null) continue
             val spec = com.rm.acidulous.model.NexusPatch
                 .decode(track!!.machine.settings["nexus"]).encode()
-            mapLoader.execute {
+            load(m) {
                 val error = NativeEngine.loadNexusPatch(rack, spec)
-                patchStatus = error
-                nexusWarnings[rack] = error
+                if (m.live) patchStatus = error
+                if (m.live) nexusWarnings[rack] = error
                 if (error.isNotEmpty()) Log.w(TAG, "rack $rack patch: $error")
                 // The machine hadn't arrived: try again on the next sync.
-                if (error == "that rack is not a Nexus") loadedPatches[rack] = null
+                if (error == "that rack is not a Nexus") m.loadedPatches[rack] = null
             }
         }
     }

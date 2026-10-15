@@ -1,7 +1,11 @@
 // Replays engine lines and renders the song to a WAV, the way the app's
 // export does: engine_replay.sh unpacks a song zip and runs this on it.
 //
-//   engine_replay <folder with engine.txt> <out.wav> [seconds] [tail seconds] [bits]
+//   engine_replay [--lines FILE] [--rack N] [--slot N] <folder> <out.wav> [seconds] [tail seconds] [bits]
+//
+// The lines are <folder>/engine.txt, or --lines FILE in the folder (a preset's
+// engine/1.txt). --rack and --slot replay a preset onto another rack, and an
+// effect preset onto another slot, instead of the one it was recorded for.
 //
 // seconds 0 renders to the end of the song. bits 32 is float. The calls go
 // through jni_bridge.cpp exactly as the app's do (see platform/lines).
@@ -17,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <vector>
 
 extern "C" {
 jboolean Java_com_rm_acidulous_engine_EngineNative_nativeStart(JNIEnv *, jobject);
@@ -35,8 +40,22 @@ void waitBlocks(int n) {
 } // namespace
 
 int main(int argc, char **argv) {
+    std::string linesFile = "engine.txt";
+    int targetRack = -1, targetSlot = -1;
+    {
+        std::vector<char *> rest{argv[0]};
+        for (int k = 1; k < argc; ++k) {
+            const std::string a = argv[k];
+            if (a == "--lines" && k + 1 < argc) linesFile = argv[++k];
+            else if (a == "--rack" && k + 1 < argc) targetRack = std::atoi(argv[++k]);
+            else if (a == "--slot" && k + 1 < argc) targetSlot = std::atoi(argv[++k]);
+            else rest.push_back(argv[k]);
+        }
+        for (size_t k = 0; k < rest.size(); ++k) argv[k] = rest[k];
+        argc = static_cast<int>(rest.size());
+    }
     if (argc < 3) {
-        std::fprintf(stderr, "usage: engine_replay <folder with engine.txt> <out.wav> [seconds] [tail] [bits]\n");
+        std::fprintf(stderr, "usage: engine_replay [--lines FILE] [--rack N] [--slot N] <folder with engine.txt> <out.wav> [seconds] [tail] [bits]\n");
         return 2;
     }
     const std::string dir = argv[1];
@@ -45,9 +64,9 @@ int main(int argc, char **argv) {
     const float tail = argc > 4 ? std::strtof(argv[4], nullptr) : 2.0f;
     const int bits = argc > 5 ? std::atoi(argv[5]) : 32;
 
-    std::ifstream file(dir + "/engine.txt", std::ios::binary);
+    std::ifstream file(dir + "/" + linesFile, std::ios::binary);
     if (!file) {
-        std::fprintf(stderr, "engine_replay: no engine.txt in %s\n", dir.c_str());
+        std::fprintf(stderr, "engine_replay: no %s in %s\n", linesFile.c_str(), dir.c_str());
         return 1;
     }
     std::stringstream text;
@@ -63,6 +82,8 @@ int main(int argc, char **argv) {
     acidulous::lines::Replay replay;
     replay.env = &env;
     replay.root = dir;
+    replay.targetRack = targetRack;
+    replay.targetSlot = targetSlot;
     // The parameter queue holds 512 and the audio thread empties it every
     // block, so let it catch up now and then.
     replay.afterLine = [](int line) {

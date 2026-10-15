@@ -66,3 +66,12 @@ expect class ZipWriter(out: File) {
 
 /** Every entry of a zip in order: its name, whether it's a folder, and its bytes on request. */
 expect suspend fun readZip(zip: File, each: suspend (name: String, isDirectory: Boolean, bytes: suspend () -> ByteArray) -> Unit)
+
+/**
+ * Every entry of a zip in order, like [readZip], but an entry's contents are
+ * written straight to a file on request instead of being held whole.
+ */
+expect suspend fun readZipFiles(zip: File, each: suspend (name: String, isDirectory: Boolean, extractTo: suspend (File) -> Unit) -> Unit)
+
+/** Whether two files hold the same bytes: sizes first, then a streamed hash. */
+expect fun File.sameContent(other: File): Boolean

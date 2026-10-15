@@ -70,3 +70,14 @@ MIDI window instead of on every machine.
 
 Every machine comes with patches, sorted by family. The patch name at the top
 of the panel opens the browser. Add your own patches in the tab at the end.
+
+### Sharing patches
+
+In the browser, **share** next to a patch writes it to a `.acpreset` file and
+opens the share sheet. **share all** in the last tab shares all your patches
+for that machine. Effects work the same way.
+
+The file holds the patch and your own samples, SoundFonts and voices it uses.
+**import…** in the same tab adds the patches in a file. A name that's taken
+becomes "Name 2", and a file you already have with other contents is kept
+under a new name. On Android you can also open a `.acpreset` file with the app.

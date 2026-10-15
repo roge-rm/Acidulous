@@ -30,6 +30,17 @@ struct Replay {
     std::function<void(int)> afterLine;
     /** Where problems go: a line that doesn't parse, a load that failed. Stderr if unset. */
     std::function<void(const std::string &)> log;
+    /**
+     * Where to put what the lines mount and set, or -1 to leave them as
+     * written. A preset's lines are for rack 0 and effect slot 0 (see the
+     * `# target` line); these replay them onto another rack and slot.
+     */
+    int targetRack = -1;
+    int targetSlot = -1;
+    jint rack(jint written) const { return targetRack >= 0 ? targetRack : written; }
+    jint slot(jint written) const { return targetSlot >= 0 ? targetSlot : written; }
+    /** A unit name, "effect1" and so on, moved to the target slot. */
+    jstring unit(jstring written) const;
     int calls = 0;
     int skipped = 0;
     /** Calls that returned false, which is normal for some (SnapshotSetClipCached). */

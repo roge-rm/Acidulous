@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,6 +76,10 @@ fun SongBrowserDialog(
 fun PatchBrowserDialog(
     machine: String, factory: List<Patch>, user: List<String>,
     onLoad: (String) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit,
+    /** Shares one patch by name, or all the user's when null; see [PresetHost]. Null hides the buttons. */
+    onShare: ((name: String?, factory: Boolean) -> Unit)? = null,
+    /** Picks a preset file to add to this bank. */
+    onImport: (() -> Unit)? = null,
 ) {
     // First-appearance order, and "other" only if something needs it.
     val families = remember(factory) {
@@ -94,6 +99,16 @@ fun PatchBrowserDialog(
     val pages: List<@Composable () -> Unit> = labels.mapIndexed { i, label ->
         {
             if (i == labels.lastIndex) {
+                if (onShare != null || onImport != null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (onImport != null) TextButton(onClick = onImport) {
+                            Text(stringResource(Res.string.patches_import), color = Acid.colors.accent, fontSize = 12.sp)
+                        }
+                        if (onShare != null && user.isNotEmpty()) TextButton(onClick = { onShare(null, false) }) {
+                            Text(stringResource(Res.string.patches_share_all), color = Acid.colors.accent, fontSize = 12.sp)
+                        }
+                    }
+                }
                 if (user.isEmpty()) {
                     Text(
                         stringResource(Res.string.patches_user_none),
@@ -101,14 +116,20 @@ fun PatchBrowserDialog(
                     )
                 }
                 for (n in user) {
-                    DialogRow(mark = "◇", name = n, onRemove = { onDelete(n) }) { onLoad(n) }
+                    DialogRow(
+                        mark = "◇", name = n, onRemove = { onDelete(n) },
+                        shareLabel = stringResource(Res.string.patches_share), onShare = onShare?.let { share -> { share(n, false) } },
+                    ) { onLoad(n) }
                 }
             } else {
                 val shown = if (families.isEmpty()) factory else {
                     val want = families[i]
                     factory.filter { if (want == OTHER) it.family.isEmpty() else it.family == want }
                 }
-                for (p in shown) DialogRow(mark = "◆", name = p.name) { onLoad(p.name) }
+                for (p in shown) DialogRow(
+                    mark = "◆", name = p.name,
+                    shareLabel = stringResource(Res.string.patches_share), onShare = onShare?.let { share -> { share(p.name, true) } },
+                ) { onLoad(p.name) }
             }
         }
     }

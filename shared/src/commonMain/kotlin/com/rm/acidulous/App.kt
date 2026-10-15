@@ -72,6 +72,7 @@ import com.rm.acidulous.res.*
 import com.rm.acidulous.ui.BiasArm
 import com.rm.acidulous.ui.EditScreen
 import com.rm.acidulous.ui.MainScreen
+import com.rm.acidulous.ui.PresetHost
 import com.rm.acidulous.ui.TakePeaks
 import com.rm.acidulous.ui.theme.AcidulousTheme
 import com.rm.acidulous.util.Log
@@ -1033,6 +1034,30 @@ fun App(modifier: Modifier = Modifier) {
         return "$wanted ($n)"
     }
 
+    /** A preset file into the user's patches, and a notice of where they went. */
+    suspend fun importPreset(uri: Doc, name: String, done: () -> Unit = {}) {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                val tmp = File(EngineAssets.cacheRoot(), "import.acpreset")
+                AppHost.current.copyFromDoc(uri, tmp)
+                try {
+                    com.rm.acidulous.model.PresetFile.read(tmp, EngineAssets.userRoot())
+                } finally {
+                    tmp.delete()
+                }
+            }.getOrNull()
+        }
+        if (result == null) {
+            notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.preset_not_a_preset, name)
+        } else {
+            if (result.media > 0) com.rm.acidulous.engine.EngineSync.voicesChanged()
+            notice = AppStrings.getString(Res.string.preset_imported_title) to
+                AppStrings.getString(Res.string.preset_imported, result.unit, result.names.joinToString(", ")) +
+                    (if (result.missing.isEmpty()) "" else "\n" + AppStrings.getString(Res.string.preset_imported_missing, result.missing.joinToString(", ")))
+        }
+        done()
+    }
+
     /**
      * One entry point for everything from outside, sorted by file name: the
      * system picker offers every file, and MIDI files, bundles and WAVs go to
@@ -1053,15 +1078,20 @@ fun App(modifier: Modifier = Modifier) {
                     else midiImport = stem to p
                 }.onFailure { notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_open_failed, name, it.message) }
             }
+            "acpreset" -> scope.launch { importPreset(uri, name) }
             "zip" -> scope.launch {
-                // A song bundle, or a voice someone shared from the voice page.
+                // A song bundle, a voice someone shared from the voice page, or a preset file.
                 var voice: String? = null
+                var preset = false
                 val song = withContext(Dispatchers.IO) {
                     runCatching {
                         val tmp = File(EngineAssets.cacheRoot(), "import.zip")
                         AppHost.current.copyFromDoc(uri, tmp)
                         try {
-                            if (com.rm.acidulous.model.voice.VoiceImport.kindOf(tmp) == com.rm.acidulous.model.voice.VoiceImport.Kind.Voice) {
+                            if (com.rm.acidulous.model.PresetFile.isPreset(tmp)) {
+                                preset = true
+                                null
+                            } else if (com.rm.acidulous.model.voice.VoiceImport.kindOf(tmp) == com.rm.acidulous.model.voice.VoiceImport.Kind.Voice) {
                                 voice = com.rm.acidulous.model.voice.VoiceImport.read(tmp, EngineAssets.userRoot())
                                 null
                             } else {
@@ -1072,7 +1102,9 @@ fun App(modifier: Modifier = Modifier) {
                         }
                     }.getOrNull()
                 }
-                if (voice != null) {
+                if (preset) {
+                    importPreset(uri, name)
+                } else if (voice != null) {
                     com.rm.acidulous.engine.EngineSync.voicesChanged()
                     notice = AppStrings.getString(Res.string.app_voice_imported_title) to AppStrings.getString(Res.string.app_voice_imported, voice)
                 } else if (song == null) {
@@ -1133,6 +1165,40 @@ fun App(modifier: Modifier = Modifier) {
             bundle.mapCatching { AppHost.current.shareFile(it, "application/zip", song.name) }
                 .onFailure { notice = AppStrings.getString(Res.string.app_share_failed_title) to (it.message ?: AppStrings.getString(Res.string.app_share_failed)) }
         }
+    }
+    /** A patch, or all the user's patches of [key], as a preset file through the share sheet. */
+    fun sharePreset(key: String, name: String?, factory: Boolean) {
+        scope.launch {
+            val root = EngineAssets.userRoot()
+            val unit = key.removePrefix(PatchStore.FX)
+            val written = withContext(Dispatchers.IO) {
+                runCatching {
+                    val patches = when {
+                        name == null -> PatchStore.userList(key).mapNotNull { PatchStore.loadUser(key, it) }
+                        factory -> PatchStore.factory(key).filter { it.name == name }
+                        else -> listOfNotNull(PatchStore.loadUser(key, name))
+                    }
+                    if (patches.isEmpty()) throw IllegalStateException(AppStrings.getString(Res.string.preset_share_failed))
+                    val dir = File(EngineAssets.cacheRoot(), "shared").apply { deleteRecursively(); mkdirs() }
+                    val file = File(dir, safeName(name ?: "$unit patches") + "." + com.rm.acidulous.model.PresetFile.EXTENSION)
+                    // The engine lines are recorded dry on the main thread, where EngineSync's memory is used; nothing reaches the engine.
+                    val engine: (suspend (Patch) -> com.rm.acidulous.model.PresetEngine.Recording?)? =
+                        if (!com.rm.acidulous.util.canRecordEngineLines) null else { p ->
+                            runCatching { withContext(Dispatchers.Main) { com.rm.acidulous.model.PresetEngine.record(p, root) } }.getOrNull()
+                        }
+                    com.rm.acidulous.model.PresetFile.write(key, patches, root, file, engine)
+                }
+            }
+            written.mapCatching { w ->
+                if (w.missing.isNotEmpty()) notice = AppStrings.getString(Res.string.preset_missing_title) to
+                    AppStrings.getString(Res.string.preset_missing, w.missing.joinToString(", "))
+                AppHost.current.shareFile(w.file, "application/zip", name ?: unit)
+            }.onFailure { notice = AppStrings.getString(Res.string.preset_share_failed_title) to (it.message?.takeIf { m -> m.isNotBlank() } ?: AppStrings.getString(Res.string.preset_share_failed)) }
+        }
+    }
+    PresetHost.share = ::sharePreset
+    PresetHost.import = { doc, done ->
+        scope.launch { importPreset(doc, AppHost.current.docName(doc, "file"), done) }
     }
     midiImport?.let { (name, parsed) ->
         com.rm.acidulous.ui.MidiImportDialog(

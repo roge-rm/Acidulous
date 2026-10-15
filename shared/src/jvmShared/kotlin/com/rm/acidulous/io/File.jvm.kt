@@ -90,3 +90,33 @@ actual suspend fun readZip(zip: File, each: suspend (name: String, isDirectory: 
         }
     }
 }
+
+actual suspend fun readZipFiles(zip: File, each: suspend (name: String, isDirectory: Boolean, extractTo: suspend (File) -> Unit) -> Unit) {
+    java.util.zip.ZipInputStream(zip.inputStream().buffered()).use { input ->
+        while (true) {
+            val entry = input.nextEntry ?: break
+            each(entry.name, entry.isDirectory) { target ->
+                target.parentFile?.mkdirs()
+                target.outputStream().buffered().use { out -> input.kCopyTo(out) }
+            }
+            input.closeEntry()
+        }
+    }
+}
+
+actual fun File.sameContent(other: File): Boolean {
+    if (length() != other.length()) return false
+    fun hash(f: File): Long {
+        var h = -0x340d631b7bdddcdbL // FNV-1a, 64 bit
+        val buffer = ByteArray(64 * 1024)
+        f.inputStream().use { input ->
+            while (true) {
+                val n = input.read(buffer)
+                if (n < 0) break
+                for (i in 0 until n) h = (h xor (buffer[i].toLong() and 0xff)) * 0x100000001b3L
+            }
+        }
+        return h
+    }
+    return hash(this) == hash(other)
+}

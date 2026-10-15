@@ -618,12 +618,17 @@ internal fun PatchPicker(
     vertical: Boolean = false,
     /** Only the vertical form uses this, the row sizes itself. */
     modifier: Modifier = Modifier,
+    /** The patch store's key: [title] for a machine, PatchStore.effectKey for an effect. */
+    key: String = title,
 ) {
     var menu by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var browsing by remember { mutableStateOf(false) }
     var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
     val label = patchLabel(current, edited)
+    val importPicker = com.rm.acidulous.rememberOpenDocument { doc ->
+        if (doc != null) PresetHost.import?.invoke(doc) { listRev++ }
+    }
     if (vertical) {
         // Browse, save, then the name: the upright row's order read from the
         // bottom. See [PatchBar].
@@ -672,6 +677,8 @@ internal fun PatchPicker(
             onLoad = { n -> onLoad(n); browsing = false },
             onDelete = { n -> onDelete(n); listRev++ },
             onDismiss = { browsing = false },
+            onShare = PresetHost.share?.let { share -> { n, factory -> share(key, n, factory) } },
+            onImport = PresetHost.import?.let { _ -> { importPicker(arrayOf("*/*")) } },
         )
     }
 }

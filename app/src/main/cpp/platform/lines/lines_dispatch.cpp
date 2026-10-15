@@ -43,7 +43,7 @@ namespace acidulous::lines {
 namespace {
 
 bool callLoadNexusPatch(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jstring spec = in.str();
     if (!in.finish()) return false;
     r.said("LoadNexusPatch", Java_com_rm_acidulous_engine_EngineNative_nativeLoadNexusPatch(r.env, nullptr, rack, spec));
@@ -58,7 +58,7 @@ bool callSetSwingUnit(Reader &in, Replay &r) {
 }
 
 bool callLoadUtterance(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jstring path = in.path();
     if (!in.finish()) return false;
     r.said("LoadUtterance", Java_com_rm_acidulous_engine_EngineNative_nativeLoadUtterance(r.env, nullptr, rack, path));
@@ -66,7 +66,7 @@ bool callLoadUtterance(Reader &in, Replay &r) {
 }
 
 bool callLoadVoice(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jint slot = in.i32();
     const jstring spec = in.spec({2, 3});
     if (!in.finish()) return false;
@@ -75,7 +75,7 @@ bool callLoadVoice(Reader &in, Replay &r) {
 }
 
 bool callMountMachine(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
+    const jint rackId = r.rack(in.i32());
     const jstring typeName = in.str();
     if (!in.finish()) return false;
     r.answered("MountMachine", Java_com_rm_acidulous_engine_EngineNative_nativeMountMachine(r.env, nullptr, rackId, typeName) != JNI_FALSE);
@@ -83,14 +83,14 @@ bool callMountMachine(Reader &in, Replay &r) {
 }
 
 bool callUnmountMachine(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
+    const jint rackId = r.rack(in.i32());
     if (!in.finish()) return false;
     Java_com_rm_acidulous_engine_EngineNative_nativeUnmountMachine(r.env, nullptr, rackId);
     return true;
 }
 
 bool callMountInputMod(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
+    const jint rackId = r.rack(in.i32());
     const jint slot = in.i32();
     const jstring typeName = in.str();
     if (!in.finish()) return false;
@@ -99,8 +99,8 @@ bool callMountInputMod(Reader &in, Replay &r) {
 }
 
 bool callMountEffect(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
-    const jint slot = in.i32();
+    const jint rackId = r.rack(in.i32());
+    const jint slot = r.slot(in.i32());
     const jstring typeName = in.str();
     if (!in.finish()) return false;
     r.answered("MountEffect", Java_com_rm_acidulous_engine_EngineNative_nativeMountEffect(r.env, nullptr, rackId, slot, typeName) != JNI_FALSE);
@@ -141,7 +141,7 @@ bool callMountInputEffect(Reader &in, Replay &r) {
 }
 
 bool callLoadSample(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
+    const jint rackId = r.rack(in.i32());
     const jint slot = in.i32();
     const jstring path = in.path();
     const jint maxSeconds = in.i32();
@@ -151,7 +151,7 @@ bool callLoadSample(Reader &in, Replay &r) {
 }
 
 bool callLoadSoundFont(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
+    const jint rackId = r.rack(in.i32());
     const jstring path = in.path();
     const jint presetIndex = in.i32();
     if (!in.finish()) return false;
@@ -160,7 +160,7 @@ bool callLoadSoundFont(Reader &in, Replay &r) {
 }
 
 bool callLoadZoneMap(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
+    const jint rackId = r.rack(in.i32());
     const jstring spec = in.spec({0});
     const jstring name = in.str();
     if (!in.finish()) return false;
@@ -169,8 +169,8 @@ bool callLoadZoneMap(Reader &in, Replay &r) {
 }
 
 bool callSetParam(Reader &in, Replay &r) {
-    const jint rackId = in.i32();
-    const jstring unit = in.str();
+    const jint rackId = r.rack(in.i32());
+    const jstring unit = r.unit(in.str());
     const jstring name = in.str();
     const jfloat value = in.f32();
     const jboolean record = in.flag();
@@ -181,7 +181,7 @@ bool callSetParam(Reader &in, Replay &r) {
 }
 
 bool callLoadTake(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jstring path = in.path();
     if (!in.finish()) return false;
     r.said("LoadTake", Java_com_rm_acidulous_engine_EngineNative_nativeLoadTake(r.env, nullptr, rack, path));
@@ -189,7 +189,7 @@ bool callLoadTake(Reader &in, Replay &r) {
 }
 
 bool callLoadReel(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jstring spec = in.spec({2});
     if (!in.finish()) return false;
     r.said("LoadReel", Java_com_rm_acidulous_engine_EngineNative_nativeLoadReel(r.env, nullptr, rack, spec));
@@ -197,7 +197,7 @@ bool callLoadReel(Reader &in, Replay &r) {
 }
 
 bool callLoadFormula(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jstring formula = in.str();
     const jstring arp = in.str();
     const jstring duty = in.str();
@@ -208,8 +208,8 @@ bool callLoadFormula(Reader &in, Replay &r) {
 }
 
 bool callLoadEffectFormula(Reader &in, Replay &r) {
-    const jint rack = in.i32();
-    const jstring unit = in.str();
+    const jint rack = r.rack(in.i32());
+    const jstring unit = r.unit(in.str());
     const jstring formula = in.str();
     if (!in.finish()) return false;
     r.said("LoadEffectFormula", Java_com_rm_acidulous_engine_EngineNative_nativeLoadEffectFormula(r.env, nullptr, rack, unit, formula));
@@ -217,7 +217,7 @@ bool callLoadEffectFormula(Reader &in, Replay &r) {
 }
 
 bool callBuildCloud(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jfloatArray spectrum01 = in.floats();
     if (!in.finish()) return false;
     r.said("BuildCloud", Java_com_rm_acidulous_engine_EngineNative_nativeBuildCloud(r.env, nullptr, rack, spectrum01));
@@ -225,7 +225,7 @@ bool callBuildCloud(Reader &in, Replay &r) {
 }
 
 bool callSetTuning(Reader &in, Replay &r) {
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jfloatArray ratios = in.floats();
     if (!in.finish()) return false;
     Java_com_rm_acidulous_engine_EngineNative_nativeSetTuning(r.env, nullptr, rack, ratios);
@@ -270,7 +270,7 @@ bool callSnapshotAddScene(Reader &in, Replay &r) {
 
 bool callSnapshotSetClipCached(Reader &in, Replay &r) {
     const jlong handle = in.handle();
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jint scene = in.i32();
     const jlong rev = in.i64();
     if (!in.finish()) return false;
@@ -280,7 +280,7 @@ bool callSnapshotSetClipCached(Reader &in, Replay &r) {
 
 bool callSnapshotSetClip(Reader &in, Replay &r) {
     const jlong handle = in.handle();
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jint scene = in.i32();
     const jlong rev = in.i64();
     const jint bars = in.i32();
@@ -297,7 +297,7 @@ bool callSnapshotSetClip(Reader &in, Replay &r) {
 
 bool callSnapshotSetLane(Reader &in, Replay &r) {
     const jlong handle = in.handle();
-    const jint rack = in.i32();
+    const jint rack = r.rack(in.i32());
     const jint scene = in.i32();
     const jstring machineType = in.str();
     const jstring unit = in.str();

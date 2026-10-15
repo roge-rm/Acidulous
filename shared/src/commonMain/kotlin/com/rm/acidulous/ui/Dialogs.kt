@@ -1435,6 +1435,9 @@ internal fun DialogRow(
     monoUnder: Boolean = false,
     /** A second action at the end of the row, usually delete. */
     onRemove: (() -> Unit)? = null,
+    /** Another action before it, "share" in the patch list. */
+    shareLabel: String = "",
+    onShare: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
@@ -1457,6 +1460,16 @@ internal fun DialogRow(
         }
         if (trailing.isNotEmpty()) {
             Text(trailing, color = if (on) c.teal else c.textDim, fontSize = 10.sp)
+        }
+        if (onShare != null) {
+            val said = stringResource(Res.string.a11y_share_patch, name)
+            Text(
+                shareLabel, color = c.accent, fontSize = 12.sp,
+                modifier = Modifier.clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onShare)
+                    .button(said, onClick = onShare, keyFocus = false)
+                    .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            )
         }
         if (onRemove != null) {
             val said = stringResource(Res.string.a11y_delete, name)

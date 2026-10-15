@@ -232,4 +232,6 @@
     <string name="a11y_pressure">Pression</string>
     <string name="a11y_bend_up">vers le haut, %1$d %%</string>
     <string name="a11y_bend_down">vers le bas, %1$d %%</string>
+
+    <string name="a11y_share_patch">Partager %1$s</string>
 </resources>

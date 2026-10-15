@@ -43,7 +43,18 @@ object EngineLines {
      * recorded call reads it once, which is all it costs when null.
      */
     @Volatile var writer: EngineLineWriter? = null
+
+    /** How many recorded calls have gone to the engine (not dry ones), for tests that check nothing was sent. */
+    @Volatile var sent: Long = 0L
 }
+
+/**
+ * Runs [block] with this thread's recorded calls written to [writer] and not
+ * sent to the engine: they answer as if they worked (mounts true, loads with
+ * no error). Other threads' calls are unaffected and don't land in [writer].
+ * JVM only (see canRecordEngineLines).
+ */
+expect fun <T> recordDry(writer: EngineLineWriter, block: () -> T): T
 
 /**
  * Collects engine lines. [zipPath] turns an absolute media path into its
@@ -62,6 +73,9 @@ class EngineLineWriter(private val zipPath: (String) -> String? = { null }) {
     private val handles = HashMap<Long, Int>()
     private var begun = 0
     private val absolute = LinkedHashSet<String>()
+
+    /** Adds a comment line, e.g. the target a preset's lines were recorded for. */
+    fun comment(text: String) = com.rm.acidulous.util.locked(lock) { this.text.append("# ").append(text).append('\n'); Unit }
 
     fun text(): String = com.rm.acidulous.util.locked(lock) { text.toString() }
 

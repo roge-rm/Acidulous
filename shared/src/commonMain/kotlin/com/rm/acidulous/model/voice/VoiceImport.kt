@@ -74,6 +74,71 @@ object VoiceImport {
         return name
     }
 
+    /**
+     * A voice stored unpacked in [zip] under [prefix] ("media/voices/Ana/",
+     * with its bank.json and takes), into [root]/voices. A voice you already
+     * have with the same name or a numbered copy and the same index and takes
+     * is reused; otherwise it goes in under a free name. Returns the name it
+     * is under, or null if the index can't be read.
+     */
+    suspend fun readFolder(zip: File, prefix: String, root: File): String? {
+        var bank: VoiceBank? = null
+        readZip(zip) { name, isDirectory, bytes ->
+            if (!isDirectory && name == prefix + VoiceBank.INDEX) {
+                bank = runCatching { json.decodeFromString(VoiceBank.serializer(), bytes().decodeToString()) }.getOrNull()
+            }
+        }
+        val read = bank ?: return null
+        // Only plain file names, in the index as well as on disk.
+        val kept = read.takes.filterValues { it.isNotBlank() && '/' !in it && '\\' !in it && it != ".." && it != "." }
+        val shared = read.copy(takes = kept, cuts = read.cuts.filterKeys { it in kept })
+        val takes = kept.values.toSet()
+        val wanted = shared.name.ifBlank { prefix.removeSuffix("/").substringAfterLast('/') }
+            .replace('/', ' ').replace('\\', ' ').trim().ifBlank { "voice" }
+        val scratch = File(root, ".voice-compare.tmp")
+
+        // Whether the voice in [dir] is this one: the same index and the same takes.
+        suspend fun same(dir: File): Boolean {
+            val have = VoiceBank.load(dir) ?: return false
+            if (have.copy(name = "") != shared.copy(name = "")) return false
+            var ok = true
+            var found = 0
+            readZipFiles(zip) { entry, isDirectory, extractTo ->
+                if (isDirectory || !entry.startsWith(prefix)) return@readZipFiles
+                val file = entry.removePrefix(prefix)
+                if (file !in takes) return@readZipFiles
+                found++
+                val there = File(dir, file)
+                if (!there.isFile) { ok = false; return@readZipFiles }
+                extractTo(scratch)
+                if (!scratch.sameContent(there)) ok = false
+            }
+            scratch.delete()
+            return ok && found == takes.size
+        }
+
+        var candidate = wanted
+        var n = 2
+        while (VoiceBank.folderOf(root, candidate).exists()) {
+            if (same(VoiceBank.folderOf(root, candidate))) return candidate
+            candidate = "$wanted ($n)"
+            n++
+        }
+        val dir = VoiceBank.folderOf(root, candidate)
+        dir.mkdirs()
+        val dirPath = dir.canonicalFile.path
+        readZipFiles(zip) { entry, isDirectory, extractTo ->
+            if (isDirectory || !entry.startsWith(prefix)) return@readZipFiles
+            val file = entry.removePrefix(prefix)
+            if (file !in takes) return@readZipFiles
+            val target = File(dir, file).canonicalFile
+            if (!target.path.startsWith(dirPath + FILE_SEPARATOR)) return@readZipFiles
+            extractTo(target)
+        }
+        VoiceBank.save(dir, shared.copy(name = candidate))
+        return candidate
+    }
+
     /** "Ana", or if a voice has that name, "Ana (2)", then (3). */
     private fun freeName(root: File, wanted: String): String {
         if (!VoiceBank.folderOf(root, wanted).exists()) return wanted

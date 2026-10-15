@@ -64,3 +64,7 @@ actual inline fun <T> locked(lock: Any, block: () -> T): T = block()
 actual fun dayAndTime(millis: Long): String = localDayAndTime(millis.toDouble())
 
 internal fun postLater(task: () -> Unit) = later(task)
+
+actual val canRecordEngineLines: Boolean = false
+
+actual fun runNow(task: suspend () -> Unit): Unit = throw UnsupportedOperationException("runNow")

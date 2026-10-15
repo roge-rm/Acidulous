@@ -1129,6 +1129,9 @@ object Manual {
         ManualBlock(ManualKind.Para, "If a controller plays too loud or too soft, fix it with **velocity** in the MIDI window instead of on every machine."),
         ManualBlock(ManualKind.Heading, "Patches"),
         ManualBlock(ManualKind.Para, "Every machine comes with patches, sorted by family. The patch name at the top of the panel opens the browser. Add your own patches in the tab at the end."),
+        ManualBlock(ManualKind.Subheading, "Sharing patches"),
+        ManualBlock(ManualKind.Para, "In the browser, **share** next to a patch writes it to a `.acpreset` file and opens the share sheet. **share all** in the last tab shares all your patches for that machine. Effects work the same way."),
+        ManualBlock(ManualKind.Para, "The file holds the patch and your own samples, SoundFonts and voices it uses. **import…** in the same tab adds the patches in a file. A name that's taken becomes \"Name 2\", and a file you already have with other contents is kept under a new name. On Android you can also open a `.acpreset` file with the app."),
     ), listOf(
         en3_0(),
         en3_1(),
@@ -3143,6 +3146,9 @@ object Manual {
         ManualBlock(ManualKind.Para, "Si un contrôleur joue trop fort ou trop doucement, corrigez-le avec **vélocité** dans la fenêtre MIDI plutôt que sur chaque machine."),
         ManualBlock(ManualKind.Heading, "Sons"),
         ManualBlock(ManualKind.Para, "Chaque machine vient avec des sons, classés par famille. Le nom du son en haut du panneau ouvre le navigateur. Ajoutez vos propres sons dans le dernier onglet."),
+        ManualBlock(ManualKind.Subheading, "Partager des sons"),
+        ManualBlock(ManualKind.Para, "Dans le navigateur, **partager** à côté d’un son l’écrit dans un fichier `.acpreset` et ouvre le partage. **tout partager**, dans le dernier onglet, partage tous vos sons de cette machine. Les effets fonctionnent de la même façon."),
+        ManualBlock(ManualKind.Para, "Le fichier contient le son et vos propres échantillons, SoundFonts et voix qu’il utilise. **importer…**, dans le même onglet, ajoute les sons d’un fichier. Un nom déjà pris devient « Nom 2 », et un fichier que vous avez déjà avec un autre contenu est gardé sous un nouveau nom. Sur Android, vous pouvez aussi ouvrir un fichier `.acpreset` avec l’appli."),
     ), listOf(
         fr3_0(),
         fr3_1(),

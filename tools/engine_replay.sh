@@ -3,7 +3,7 @@
 # engine, EngineHost and jni_bridge.cpp built for the host, the calls made
 # through platform/web/jni.h (see platform/lines).
 #
-#   tools/engine_replay.sh <song.zip or folder> <out.wav> [seconds] [tail] [bits]
+#   tools/engine_replay.sh [--lines FILE] [--rack N] [--slot N] <song.zip or folder> <out.wav> [seconds] [tail] [bits]
 #
 # seconds 0 (the default) renders to the end of the song; tail is 2 seconds
 # and bits 32 (float) unless given.
@@ -20,6 +20,9 @@ BIN="$OUT/engine_replay"
 FLAGS="-O3 -ffast-math -fno-finite-math-only -fPIC -std=c++17 -pthread"
 [ -d /usr/lib/ccache ] && export PATH="/usr/lib/ccache:$PATH"
 mkdir -p "$OUT"
+
+REPLAY_ARGS=()
+while [ $# -ge 2 ] && [ "${1#--}" != "$1" ]; do REPLAY_ARGS+=("$1" "$2"); shift 2; done
 
 if [ $# -lt 2 ]; then
     echo "usage: $0 <song.zip or folder> <out.wav> [seconds] [tail] [bits]" >&2
@@ -69,9 +72,9 @@ fi
 IN="$1"
 shift
 if [ -d "$IN" ]; then
-    exec "$BIN" "$IN" "$@"
+    exec "$BIN" "${REPLAY_ARGS[@]}" "$IN" "$@"
 fi
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
 unzip -q "$IN" -d "$DIR" || exit 1
-"$BIN" "$DIR" "$@"
+"$BIN" "${REPLAY_ARGS[@]}" "$DIR" "$@"

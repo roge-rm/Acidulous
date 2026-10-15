@@ -36,3 +36,7 @@ actual inline fun <T> locked(lock: Any, block: () -> T): T = synchronized(lock, 
 
 actual fun dayAndTime(millis: Long): String =
     java.text.SimpleDateFormat("d MMM HH:mm", java.util.Locale.getDefault()).format(java.util.Date(millis))
+
+actual val canRecordEngineLines: Boolean = true
+
+actual fun runNow(task: suspend () -> Unit) = kotlinx.coroutines.runBlocking { task() }

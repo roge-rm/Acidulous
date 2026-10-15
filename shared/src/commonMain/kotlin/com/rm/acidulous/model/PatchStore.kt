@@ -74,6 +74,15 @@ object PatchStore {
                 RateMigration.patch(json.decodeFromString(Patch.serializer(), it.readText()))
             }
 
+    /** A user patch by name, even when a factory patch has the same one. */
+    fun loadUser(machine: String, name: String): Patch? =
+        File(directory(machine), "${safe(name)}.json").takeIf { it.isFile }?.let {
+            RateMigration.patch(json.decodeFromString(Patch.serializer(), it.readText()))
+        }
+
+    /** The name a patch is stored under: two names with the same one are the same file. */
+    fun fileName(name: String): String = safe(name)
+
     fun list(machine: String): List<String> = factoryNames(machine) + userList(machine)
 
     fun factoryNames(machine: String): List<String> = factory(machine).map { it.name }

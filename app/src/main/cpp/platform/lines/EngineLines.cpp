@@ -52,6 +52,13 @@ void Replay::problem(const std::string &what) {
     else std::fprintf(stderr, "engine lines: %s\n", text.c_str());
 }
 
+jstring Replay::unit(jstring written) const {
+    if (targetSlot < 0 || targetSlot > 8 || written == nullptr) return written;
+    std::string &t = written->text;
+    if (t.size() == 7 && t.compare(0, 6, "effect") == 0 && t[6] >= '1' && t[6] <= '9') t[6] = static_cast<char>('1' + targetSlot);
+    return written;
+}
+
 void Replay::said(const char *call, jstring error) {
     if (error != nullptr && !error->text.empty()) problem(std::string(call) + ": " + error->text);
 }

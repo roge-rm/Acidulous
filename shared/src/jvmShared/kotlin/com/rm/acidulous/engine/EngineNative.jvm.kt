@@ -5,6 +5,7 @@ package com.rm.acidulous.engine
 /**
  * The engine through JNI: Java_com_rm_acidulous_engine_EngineNative_* in jni_bridge.cpp.
  * The calls marked `// line` in the list are also written to EngineLines.writer when it's set.
+ * While a thread is recording dry (recordDry) its line calls are only written, and answer as if they worked.
  */
 internal actual object EngineNative {
     init {
@@ -15,6 +16,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadNexusPatch")
     private external fun jni_nativeLoadNexusPatch(rack: Int, spec: String): String
     actual suspend fun nativeLoadNexusPatch(rack: Int, spec: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadNexusPatch") { int(rack); str(spec) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadNexusPatch") { int(rack); str(spec) }
         val result_ = jni_nativeLoadNexusPatch(rack, spec)
         return result_
@@ -36,6 +40,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSetSwingUnit(unit: Int)
     @JvmName("lines_nativeSetSwingUnit")
     actual fun nativeSetSwingUnit(unit: Int) {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SetSwingUnit") { int(unit) }; return }
+        EngineLines.sent++
         EngineLines.writer?.call("SetSwingUnit") { int(unit) }
         jni_nativeSetSwingUnit(unit)
     }
@@ -84,6 +91,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadUtterance")
     private external fun jni_nativeLoadUtterance(rack: Int, path: String): String
     actual suspend fun nativeLoadUtterance(rack: Int, path: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadUtterance") { int(rack); path(path) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadUtterance") { int(rack); path(path) }
         val result_ = jni_nativeLoadUtterance(rack, path)
         return result_
@@ -91,6 +101,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadVoice")
     private external fun jni_nativeLoadVoice(rack: Int, slot: Int, spec: String): String
     actual suspend fun nativeLoadVoice(rack: Int, slot: Int, spec: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadVoice") { int(rack); int(slot); spec(spec, intArrayOf(2, 3)) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadVoice") { int(rack); int(slot); spec(spec, intArrayOf(2, 3)) }
         val result_ = jni_nativeLoadVoice(rack, slot, spec)
         return result_
@@ -99,6 +112,9 @@ internal actual object EngineNative {
     private external fun jni_nativeMountMachine(rackId: Int, typeName: String): Boolean
     @JvmName("lines_nativeMountMachine")
     actual fun nativeMountMachine(rackId: Int, typeName: String): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountMachine") { int(rackId); str(typeName) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("MountMachine") { int(rackId); str(typeName) }
         val result_ = jni_nativeMountMachine(rackId, typeName)
         return result_
@@ -107,6 +123,9 @@ internal actual object EngineNative {
     private external fun jni_nativeUnmountMachine(rackId: Int)
     @JvmName("lines_nativeUnmountMachine")
     actual fun nativeUnmountMachine(rackId: Int) {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("UnmountMachine") { int(rackId) }; return }
+        EngineLines.sent++
         EngineLines.writer?.call("UnmountMachine") { int(rackId) }
         jni_nativeUnmountMachine(rackId)
     }
@@ -135,6 +154,9 @@ internal actual object EngineNative {
     private external fun jni_nativeMountInputMod(rackId: Int, slot: Int, typeName: String): Boolean
     @JvmName("lines_nativeMountInputMod")
     actual fun nativeMountInputMod(rackId: Int, slot: Int, typeName: String): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountInputMod") { int(rackId); int(slot); str(typeName) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("MountInputMod") { int(rackId); int(slot); str(typeName) }
         val result_ = jni_nativeMountInputMod(rackId, slot, typeName)
         return result_
@@ -145,6 +167,9 @@ internal actual object EngineNative {
     private external fun jni_nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean
     @JvmName("lines_nativeMountEffect")
     actual fun nativeMountEffect(rackId: Int, slot: Int, typeName: String): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountEffect") { int(rackId); int(slot); str(typeName) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("MountEffect") { int(rackId); int(slot); str(typeName) }
         val result_ = jni_nativeMountEffect(rackId, slot, typeName)
         return result_
@@ -153,6 +178,9 @@ internal actual object EngineNative {
     private external fun jni_nativeMountSend(slot: Int, typeName: String): Boolean
     @JvmName("lines_nativeMountSend")
     actual fun nativeMountSend(slot: Int, typeName: String): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountSend") { int(slot); str(typeName) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("MountSend") { int(slot); str(typeName) }
         val result_ = jni_nativeMountSend(slot, typeName)
         return result_
@@ -167,6 +195,9 @@ internal actual object EngineNative {
     private external fun jni_nativeMountMasterInsert(slot: Int, typeName: String): Boolean
     @JvmName("lines_nativeMountMasterInsert")
     actual fun nativeMountMasterInsert(slot: Int, typeName: String): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountMasterInsert") { int(slot); str(typeName) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("MountMasterInsert") { int(slot); str(typeName) }
         val result_ = jni_nativeMountMasterInsert(slot, typeName)
         return result_
@@ -175,6 +206,9 @@ internal actual object EngineNative {
     private external fun jni_nativeMountGroupInsert(group: Int, slot: Int, typeName: String): Boolean
     @JvmName("lines_nativeMountGroupInsert")
     actual fun nativeMountGroupInsert(group: Int, slot: Int, typeName: String): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountGroupInsert") { int(group); int(slot); str(typeName) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("MountGroupInsert") { int(group); int(slot); str(typeName) }
         val result_ = jni_nativeMountGroupInsert(group, slot, typeName)
         return result_
@@ -184,6 +218,9 @@ internal actual object EngineNative {
     private external fun jni_nativeMountInputEffect(slot: Int, typeName: String): Boolean
     @JvmName("lines_nativeMountInputEffect")
     actual fun nativeMountInputEffect(slot: Int, typeName: String): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountInputEffect") { int(slot); str(typeName) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("MountInputEffect") { int(slot); str(typeName) }
         val result_ = jni_nativeMountInputEffect(slot, typeName)
         return result_
@@ -194,6 +231,9 @@ internal actual object EngineNative {
     private external fun jni_nativeLoadSample(rackId: Int, slot: Int, path: String, maxSeconds: Int): String
     @JvmName("lines_nativeLoadSample")
     actual fun nativeLoadSample(rackId: Int, slot: Int, path: String, maxSeconds: Int): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadSample") { int(rackId); int(slot); path(path); int(maxSeconds) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadSample") { int(rackId); int(slot); path(path); int(maxSeconds) }
         val result_ = jni_nativeLoadSample(rackId, slot, path, maxSeconds)
         return result_
@@ -204,6 +244,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadSoundFont")
     private external fun jni_nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String
     actual suspend fun nativeLoadSoundFont(rackId: Int, path: String, presetIndex: Int): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadSoundFont") { int(rackId); path(path); int(presetIndex) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadSoundFont") { int(rackId); path(path); int(presetIndex) }
         val result_ = jni_nativeLoadSoundFont(rackId, path, presetIndex)
         return result_
@@ -211,6 +254,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadZoneMap")
     private external fun jni_nativeLoadZoneMap(rackId: Int, spec: String, name: String): String
     actual suspend fun nativeLoadZoneMap(rackId: Int, spec: String, name: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadZoneMap") { int(rackId); spec(spec, intArrayOf(0)); str(name) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadZoneMap") { int(rackId); spec(spec, intArrayOf(0)); str(name) }
         val result_ = jni_nativeLoadZoneMap(rackId, spec, name)
         return result_
@@ -236,6 +282,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean, quantise: Int): Boolean
     @JvmName("lines_nativeSetParam")
     actual fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean, quantise: Int): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SetParam") { int(rackId); str(unit); str(name); float(value); bool(record); int(quantise) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("SetParam") { int(rackId); str(unit); str(name); float(value); bool(record); int(quantise) }
         val result_ = jni_nativeSetParam(rackId, unit, name, value, record, quantise)
         return result_
@@ -243,6 +292,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadTake")
     private external fun jni_nativeLoadTake(rack: Int, path: String): String
     actual suspend fun nativeLoadTake(rack: Int, path: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadTake") { int(rack); path(path) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadTake") { int(rack); path(path) }
         val result_ = jni_nativeLoadTake(rack, path)
         return result_
@@ -250,6 +302,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadReel")
     private external fun jni_nativeLoadReel(rack: Int, spec: String): String
     actual suspend fun nativeLoadReel(rack: Int, spec: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadReel") { int(rack); spec(spec, intArrayOf(2)) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadReel") { int(rack); spec(spec, intArrayOf(2)) }
         val result_ = jni_nativeLoadReel(rack, spec)
         return result_
@@ -258,6 +313,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadFormula")
     private external fun jni_nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String
     actual suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadFormula") { int(rack); str(formula); str(arp); str(duty); str(vol) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadFormula") { int(rack); str(formula); str(arp); str(duty); str(vol) }
         val result_ = jni_nativeLoadFormula(rack, formula, arp, duty, vol)
         return result_
@@ -265,6 +323,9 @@ internal actual object EngineNative {
     @JvmName("nativeLoadEffectFormula")
     private external fun jni_nativeLoadEffectFormula(rack: Int, unit: String, formula: String): String
     actual suspend fun nativeLoadEffectFormula(rack: Int, unit: String, formula: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadEffectFormula") { int(rack); str(unit); str(formula) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("LoadEffectFormula") { int(rack); str(unit); str(formula) }
         val result_ = jni_nativeLoadEffectFormula(rack, unit, formula)
         return result_
@@ -272,6 +333,9 @@ internal actual object EngineNative {
     @JvmName("nativeBuildCloud")
     private external fun jni_nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     actual suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("BuildCloud") { int(rack); floats(spectrum01) }; return "" }
+        EngineLines.sent++
         EngineLines.writer?.call("BuildCloud") { int(rack); floats(spectrum01) }
         val result_ = jni_nativeBuildCloud(rack, spectrum01)
         return result_
@@ -335,6 +399,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSetTuning(rack: Int, ratios: FloatArray?)
     @JvmName("lines_nativeSetTuning")
     actual fun nativeSetTuning(rack: Int, ratios: FloatArray?) {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SetTuning") { int(rack); floats(ratios) }; return }
+        EngineLines.sent++
         EngineLines.writer?.call("SetTuning") { int(rack); floats(ratios) }
         jni_nativeSetTuning(rack, ratios)
     }
@@ -351,6 +418,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSetLoopSong(on: Boolean)
     @JvmName("lines_nativeSetLoopSong")
     actual fun nativeSetLoopSong(on: Boolean) {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SetLoopSong") { bool(on) }; return }
+        EngineLines.sent++
         EngineLines.writer?.call("SetLoopSong") { bool(on) }
         jni_nativeSetLoopSong(on)
     }
@@ -362,6 +432,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSetTempo(bpm: Float)
     @JvmName("lines_nativeSetTempo")
     actual fun nativeSetTempo(bpm: Float) {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SetTempo") { float(bpm) }; return }
+        EngineLines.sent++
         EngineLines.writer?.call("SetTempo") { float(bpm) }
         jni_nativeSetTempo(bpm)
     }
@@ -374,6 +447,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSnapshotBegin(): Long
     @JvmName("lines_nativeSnapshotBegin")
     actual fun nativeSnapshotBegin(): Long {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.handleMade(dry_.callMakingHandle("SnapshotBegin"), 1L); return 1L }
+        EngineLines.sent++
         val writer_ = EngineLines.writer
         val slot_ = writer_?.callMakingHandle("SnapshotBegin") ?: 0
         val result_ = jni_nativeSnapshotBegin()
@@ -384,6 +460,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSnapshotAddScene(handle: Long, sceneId: Long, ticksPerBar: Int, repeat: Int, bpmOverride: Float, rampToBpm: Float, rampBars: Int, smooth: Boolean, fadeIn: Boolean, fadeOut: Boolean): Boolean
     @JvmName("lines_nativeSnapshotAddScene")
     actual fun nativeSnapshotAddScene(handle: Long, sceneId: Long, ticksPerBar: Int, repeat: Int, bpmOverride: Float, rampToBpm: Float, rampBars: Int, smooth: Boolean, fadeIn: Boolean, fadeOut: Boolean): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SnapshotAddScene") { handle(handle); long(sceneId); int(ticksPerBar); int(repeat); float(bpmOverride); float(rampToBpm); int(rampBars); bool(smooth); bool(fadeIn); bool(fadeOut) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("SnapshotAddScene") { handle(handle); long(sceneId); int(ticksPerBar); int(repeat); float(bpmOverride); float(rampToBpm); int(rampBars); bool(smooth); bool(fadeIn); bool(fadeOut) }
         val result_ = jni_nativeSnapshotAddScene(handle, sceneId, ticksPerBar, repeat, bpmOverride, rampToBpm, rampBars, smooth, fadeIn, fadeOut)
         return result_
@@ -392,6 +471,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean
     @JvmName("lines_nativeSnapshotSetClipCached")
     actual fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SnapshotSetClipCached") { handle(handle); int(rack); int(scene); long(rev) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("SnapshotSetClipCached") { handle(handle); int(rack); int(scene); long(rev) }
         val result_ = jni_nativeSnapshotSetClipCached(handle, rack, scene, rev)
         return result_
@@ -400,6 +482,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray, lyrics: String?): Boolean
     @JvmName("lines_nativeSnapshotSetClip")
     actual fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray, lyrics: String?): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SnapshotSetClip") { handle(handle); int(rack); int(scene); long(rev); int(bars); int(playMode); bool(mute); int(seed); ints(notes); floats(expr); str(lyrics) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("SnapshotSetClip") { handle(handle); int(rack); int(scene); long(rev); int(bars); int(playMode); bool(mute); int(seed); ints(notes); floats(expr); str(lyrics) }
         val result_ = jni_nativeSnapshotSetClip(handle, rack, scene, rev, bars, playMode, mute, seed, notes, expr, lyrics)
         return result_
@@ -408,6 +493,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean
     @JvmName("lines_nativeSnapshotSetLane")
     actual fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SnapshotSetLane") { handle(handle); int(rack); int(scene); str(machineType); str(unit); str(name); bool(linear); floats(points) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("SnapshotSetLane") { handle(handle); int(rack); int(scene); str(machineType); str(unit); str(name); bool(linear); floats(points) }
         val result_ = jni_nativeSnapshotSetLane(handle, rack, scene, machineType, unit, name, linear, points)
         return result_
@@ -416,6 +504,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSnapshotCommit(handle: Long): Boolean
     @JvmName("lines_nativeSnapshotCommit")
     actual fun nativeSnapshotCommit(handle: Long): Boolean {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SnapshotCommit") { handle(handle) }; return true }
+        EngineLines.sent++
         EngineLines.writer?.call("SnapshotCommit") { handle(handle) }
         val result_ = jni_nativeSnapshotCommit(handle)
         return result_
@@ -427,6 +518,9 @@ internal actual object EngineNative {
     private external fun jni_nativeSnapshotAbandon(handle: Long)
     @JvmName("lines_nativeSnapshotAbandon")
     actual fun nativeSnapshotAbandon(handle: Long) {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SnapshotAbandon") { handle(handle) }; return }
+        EngineLines.sent++
         EngineLines.writer?.call("SnapshotAbandon") { handle(handle) }
         jni_nativeSnapshotAbandon(handle)
     }
