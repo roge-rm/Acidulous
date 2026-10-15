@@ -168,6 +168,20 @@ tasks.test {
     jvmArgs("-Djava.library.path=${nativeBuild.asFile.absolutePath}", "--enable-native-access=ALL-UNNAMED")
 }
 
+/**
+ * The demo song as a zip with engine.txt, and the app's own render of it, in
+ * build/engine-lines (EngineLinesTool.kt). Arguments go after --args:
+ * seconds, tail and bits.
+ */
+tasks.register<JavaExec>("engineLines") {
+    dependsOn(buildEngine)
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "com.rm.acidulous.desktop.EngineLinesToolKt"
+    jvmArgs("-Djava.library.path=${nativeBuild.asFile.absolutePath}", "--enable-native-access=ALL-UNNAMED")
+    val out = layout.buildDirectory.dir("engine-lines").get().asFile.absolutePath
+    systemProperty("engineLines.out", out)
+}
+
 compose.desktop {
     application {
         mainClass = "com.rm.acidulous.desktop.MainKt"

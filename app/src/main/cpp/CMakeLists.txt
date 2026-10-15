@@ -34,6 +34,8 @@ file(GLOB_RECURSE PLATFORM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR
 list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/desktop/.*")
 # platform/web belongs to the browser build (web/engine/CMakeLists.txt).
 list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/web/.*")
+# platform/lines replays engine lines for other hosts (tools/engine_replay.sh).
+list(FILTER PLATFORM_SOURCES EXCLUDE REGEX ".*/platform/lines/.*")
 
 add_library(acidulous SHARED
     ${ENGINE_SOURCES}

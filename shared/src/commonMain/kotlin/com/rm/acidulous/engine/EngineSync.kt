@@ -106,6 +106,13 @@ object EngineSync {
     // Building a multisample means parsing and decoding, sometimes tens of
     // megabytes, so it never runs on the caller's thread.
     private val mapLoader = com.rm.acidulous.util.SerialWorker("Acidulous.MapLoader")
+    /** Returns once the loads handed to the worker so far have run, for tools that need the engine settled. */
+    suspend fun loadsDone() {
+        val done = kotlinx.coroutines.CompletableDeferred<Unit>()
+        mapLoader.execute { done.complete(Unit) }
+        done.await()
+    }
+
     /** Set while a map is being built, so the panel can say so. */
     @Volatile var mapStatus: String = ""
         private set
