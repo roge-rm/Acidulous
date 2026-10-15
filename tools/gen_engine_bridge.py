@@ -105,7 +105,7 @@ def line_args(name, params):
     paths, specs = set(), {}
     for m in marks:
         key, _, arg = m.partition("=")
-        if m == "makes-handle":
+        if m == "makes-handle" or key == "dry":
             continue
         if key == "path" and arg in strings:
             paths.add(arg)
@@ -148,6 +148,7 @@ def jvm(decls):
             short = name[len("native"):]
             write = "; ".join(k for k, _ in line_args(name, params))
             neutral = {"Boolean": "true", "String": '""', "Int": "0", "Long": "0L"}.get(ret, "") if returns else ""
+            neutral = next((m.partition("=")[2] for m in LINES[name] if m.startswith("dry=")), neutral)
             ret_dry = f"return {neutral}" if returns else "return"
             if "makes-handle" in LINES[name]:
                 body = ["val dry_ = DryLines.writer.get()",

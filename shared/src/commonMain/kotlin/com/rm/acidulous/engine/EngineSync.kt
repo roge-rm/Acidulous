@@ -736,24 +736,38 @@ object EngineSync {
     /** Everything the engine needs after any edit: machines, effects, modifiers, then the snapshot. */
     fun sync(song: Song): Boolean {
         synced = song
-        ensureMachines(song)
-        ensureSamples(song)
-        ensureEffects(song)
-        ensureSends(song)
-        ensureGroups(song)
-        ensureInputFx(song)
-        ensureModifiers(song)
-        ensureSampleMaps(song)
-        ensureNexusPatches(song)
-        ensureClouds(song)
-        ensureFormulas(song)
-        ensureEffectFormulas(song)
-        ensureTakes(song)
-        ensureVoices(song)
-        ensureReels(song)
-        ensureFrozen(song)
-        ensureTunings(song)
+        ensureAll(song, live, frozen = true)
         return push(song)
+    }
+
+    /**
+     * What [sync] would send a fresh engine, against [m] (a [scratch]
+     * memory), for recording a song's engine lines dry. Frozen clips are left
+     * out: they aren't engine lines, and loading them would reach the engine.
+     */
+    fun syncFresh(song: Song, m: Memory): Boolean {
+        ensureAll(song, m, frozen = false)
+        return push(song)
+    }
+
+    private fun ensureAll(song: Song, m: Memory, frozen: Boolean) {
+        ensureMachines(song, m)
+        ensureSamples(song, m)
+        ensureEffects(song, m)
+        ensureSends(song, m)
+        ensureGroups(song, m)
+        ensureInputFx(song, m)
+        ensureModifiers(song, m)
+        ensureSampleMaps(song, m)
+        ensureNexusPatches(song, m)
+        ensureClouds(song, m)
+        ensureFormulas(song, m)
+        ensureEffectFormulas(song, m)
+        ensureTakes(song, m)
+        ensureVoices(song, m)
+        ensureReels(song, m)
+        if (frozen) ensureFrozen(song, m)
+        ensureTunings(song, m)
     }
 
 

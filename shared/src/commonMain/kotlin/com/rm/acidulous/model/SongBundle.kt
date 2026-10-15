@@ -16,18 +16,28 @@ import com.rm.acidulous.io.*
  * Sample paths show up in several forms (a plain setting, a field in a zone
  * line, numbered pad settings), and a key list would go wrong with the next
  * machine. So every token of every setting is checked against the user
- * folder, and anything that's a real file goes in.
+ * folder, and anything that's a real file goes in. Audio track takes are
+ * named by their clips instead, and go in too.
+ *
+ * A bundle can also hold engine.txt at its root: the engine lines that build
+ * the song (EngineLines.kt), with media paths inside the zip, for hosts that
+ * play songs without Kotlin. Reading a bundle ignores it.
  */
 object SongBundle {
 
     private const val SONG_ENTRY = "song.json"
+    const val ENGINE_ENTRY = "engine.txt"
 
-    /** Writes [song] and its media to [out]. Returns how many media files went in. */
-    fun write(song: Song, userRoot: File, out: File): Int {
+    /**
+     * Writes [song] and its media to [out], and [engineLines] as engine.txt
+     * if given (SongEngine.record). Returns how many media files went in.
+     */
+    fun write(song: Song, userRoot: File, out: File, engineLines: String? = null): Int {
         val media = referenced(song, userRoot)
         val zip = ZipWriter(out)
         try {
             zip.add(SONG_ENTRY, SongStore.encode(song).encodeToByteArray())
+            if (engineLines != null) zip.add(ENGINE_ENTRY, engineLines.encodeToByteArray())
             for (relative in media) {
                 val file = File(userRoot, relative)
                 if (!file.isFile) continue
@@ -66,6 +76,7 @@ object SongBundle {
                 song = runCatching { SongStore.decode(bytes().decodeToString()) }.getOrNull()
                 return@readZip
             }
+            if (name == ENGINE_ENTRY) return@readZip
             val target = File(userRoot, name).canonicalFile
             if (!target.path.startsWith(rootPath.path + FILE_SEPARATOR)) return@readZip
             target.parentFile?.mkdirs()
@@ -91,10 +102,15 @@ object SongBundle {
         }
     }
 
-    /** The song, with every setting that named a renamed file pointing at its new name. */
+    /** The song, with every setting and take that named a renamed file pointing at its new name. */
     fun repoint(song: Song, renamed: Map<String, String>): Song = song.copy(
         tracks = song.tracks.map { t ->
-            t.copy(machine = t.machine.copy(settings = t.machine.settings.mapValues { (_, value) ->
+            t.copy(clips = t.clips.mapValues { (_, clip) ->
+                val audio = clip.audio ?: return@mapValues clip
+                clip.copy(audio = audio.copy(lanes = audio.lanes.map { take ->
+                    take?.let { renamed[it.file.trim()]?.let { name -> it.copy(file = name) } ?: it }
+                }))
+            }, machine = t.machine.copy(settings = t.machine.settings.mapValues { (_, value) ->
                 // Token by token, on the same separators `referenced` uses, so
                 // "samples/a.wav" is never matched inside "samples/a.wav2".
                 Regex("[^\n|,]+").replace(value) { m ->
@@ -119,6 +135,12 @@ object SongBundle {
                     // A recorded voice is named by its index: its takes go too.
                     found += com.rm.acidulous.model.voice.VoiceBank.filesOf(userRoot, candidate)
                         .filter { File(userRoot, it).isFile }
+                }
+            }
+            for (clip in track.clips.values) {
+                for (take in clip.audio?.lanes.orEmpty()) {
+                    val file = take?.file?.trim() ?: continue
+                    if (file.isNotEmpty() && !file.startsWith("/") && File(userRoot, file).isFile) found += file
                 }
             }
         }

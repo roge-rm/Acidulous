@@ -15,7 +15,8 @@ package com.rm.acidulous.engine
 // `path=x` says argument x is a media path, `spec=x:2,3` that x is lines of
 // `|` fields where fields 2 and 3 (from 0) may be media paths, and
 // `makes-handle` that the call returns a handle that later calls pass as
-// their Long `handle`.
+// their Long `handle`, and `dry=x` what the call answers while recording dry
+// when that isn't "it worked" (a fresh engine has no cached clips).
 
 /**
  * The engine's native calls, matching platform/android/jni_bridge.cpp one
@@ -201,7 +202,7 @@ internal expect object EngineNative {
     fun nativeGetNotesOff(rackId: Int): Int
     fun nativeSnapshotBegin(): Long // line makes-handle
     fun nativeSnapshotAddScene(handle: Long, sceneId: Long, ticksPerBar: Int, repeat: Int, bpmOverride: Float, rampToBpm: Float, rampBars: Int, smooth: Boolean, fadeIn: Boolean, fadeOut: Boolean): Boolean // line
-    fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean // line
+    fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean // line dry=false
     fun nativeSnapshotSetClip(handle: Long, rack: Int, scene: Int, rev: Long, bars: Int, playMode: Int, mute: Boolean, seed: Int, notes: IntArray, expr: FloatArray, lyrics: String?): Boolean // line
     fun nativeSnapshotSetLane(handle: Long, rack: Int, scene: Int, machineType: String, unit: String, name: String, linear: Boolean, points: FloatArray): Boolean // line
     fun nativeSnapshotCommit(handle: Long): Boolean // line

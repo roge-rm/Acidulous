@@ -71,4 +71,43 @@ class SongBundleTest {
         val s = SongBundle.repoint(song("a" to "samples/a.wav,samples/a.wav2"), mapOf("samples/a.wav" to "samples/a (2).wav"))
         assertEquals("samples/a (2).wav,samples/a.wav2", s.tracks[0].machine.settings["a"])
     }
+
+    private fun tape(file: String) = Song(
+        name = "taped",
+        tracks = listOf(Track(
+            id = "t", name = "Tape", machine = Machine(BIAS_MACHINE),
+            clips = mapOf("s" to Clip(bars = 1, audio = ClipAudio(listOf(null, TakeRef(file, 0, 4, 120f, 4 * PPQN))))),
+        )),
+        scenes = listOf(Scene(id = "s", name = "s")),
+    )
+
+    @Test
+    fun audioTrackTakesTravelAndARenamedOneIsFollowed() = withRoot { root ->
+        File(root, "samples").mkdirs()
+        File(root, "samples/take 1.wav").writeBytes(byteArrayOf(9, 9))
+        val out = File(root, "tape.zip")
+        withRoot { theirs ->
+            File(theirs, "samples").mkdirs()
+            File(theirs, "samples/take 1.wav").writeBytes(byteArrayOf(1, 2))
+            assertEquals(1, SongBundle.write(tape("samples/take 1.wav"), theirs, out, "acidulous-engine 1\nSetTempo 120.0\n"))
+        }
+        val back = runBlocking { SongBundle.read(out, root) }!!
+        assertEquals("samples/take 1 (2).wav", back.tracks[0].clips["s"]!!.audio!!.lane(1)!!.file)
+        assertArrayEquals(byteArrayOf(1, 2), File(root, "samples/take 1 (2).wav").readBytes())
+        assertFalse("engine.txt is not unpacked", File(root, "engine.txt").exists())
+    }
+
+    @Test
+    fun aZipWithoutEngineLinesStillOpens() = withRoot { root ->
+        File(root, "samples").mkdirs()
+        File(root, "samples/take.wav").writeBytes(byteArrayOf(3))
+        val out = File(root, "old.zip")
+        SongBundle.write(tape("samples/take.wav"), root, out)
+        java.util.zip.ZipFile(out).use { z -> assertEquals(null, z.getEntry(SongBundle.ENGINE_ENTRY)) }
+        withRoot { other ->
+            val back = runBlocking { SongBundle.read(out, other) }!!
+            assertEquals("samples/take.wav", back.tracks[0].clips["s"]!!.audio!!.lane(1)!!.file)
+            assertArrayEquals(byteArrayOf(3), File(other, "samples/take.wav").readBytes())
+        }
+    }
 }

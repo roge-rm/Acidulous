@@ -668,6 +668,16 @@ fun App(modifier: Modifier = Modifier) {
         text.replace(Regex("[^A-Za-z0-9 _-]"), "_").trim().ifEmpty { "export" }
 
     /**
+     * A song zip's engine.txt, or null where engine lines can't be recorded
+     * (the browser) or the recording failed. Recorded dry on the main thread,
+     * where EngineSync's memory is used; nothing reaches the engine.
+     */
+    suspend fun songEngineLines(of: com.rm.acidulous.model.Song): String? =
+        if (!com.rm.acidulous.util.canRecordEngineLines) null
+        else runCatching { withContext(Dispatchers.Main) { com.rm.acidulous.model.SongEngine.record(of, EngineAssets.userRoot()).text } }
+            .onFailure { Log.w(TAG, "engine lines for ${of.name}: ${it.message}") }.getOrNull()
+
+    /**
      * One pass of a scene, in seconds, ignoring repeats. A scene export is
      * its first pass, which is also its last only if it plays once, and only
      * the last pass has the tempo ramp.
@@ -722,7 +732,7 @@ fun App(modifier: Modifier = Modifier) {
                 com.rm.acidulous.ui.ExportFormat.Bundle -> {
                     val file = File(cache, "$base.zip")
                     runCatching {
-                        com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(), file)
+                        com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(), file, songEngineLines(song))
                         listOf(file) to ""
                     }.getOrElse { emptyList<File>() to (it.message ?: AppStrings.getString(Res.string.app_export_bundle_failed)) }
                 }
@@ -1158,7 +1168,7 @@ fun App(modifier: Modifier = Modifier) {
                 runCatching {
                     val dir = File(EngineAssets.cacheRoot(), "shared").apply { deleteRecursively(); mkdirs() }
                     val file = File(dir, safeName(song.name) + ".zip")
-                    com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(), file)
+                    com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(), file, songEngineLines(song))
                     file
                 }
             }

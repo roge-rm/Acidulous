@@ -472,7 +472,7 @@ internal actual object EngineNative {
     @JvmName("lines_nativeSnapshotSetClipCached")
     actual fun nativeSnapshotSetClipCached(handle: Long, rack: Int, scene: Int, rev: Long): Boolean {
         val dry_ = DryLines.writer.get()
-        if (dry_ != null) { dry_.call("SnapshotSetClipCached") { handle(handle); int(rack); int(scene); long(rev) }; return true }
+        if (dry_ != null) { dry_.call("SnapshotSetClipCached") { handle(handle); int(rack); int(scene); long(rev) }; return false }
         EngineLines.sent++
         EngineLines.writer?.call("SnapshotSetClipCached") { handle(handle); int(rack); int(scene); long(rev) }
         val result_ = jni_nativeSnapshotSetClipCached(handle, rack, scene, rev)

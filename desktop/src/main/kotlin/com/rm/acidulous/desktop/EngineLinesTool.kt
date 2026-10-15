@@ -1,10 +1,10 @@
 package com.rm.acidulous.desktop
 
-import com.rm.acidulous.engine.EngineLineWriter
-import com.rm.acidulous.engine.EngineLines
 import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.engine.NativeEngine
+import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.Clip
+import com.rm.acidulous.model.ClipAudio
 import com.rm.acidulous.model.DemoSong
 import com.rm.acidulous.model.Machine
 import com.rm.acidulous.model.Note
@@ -12,11 +12,10 @@ import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.Scene
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongBundle
+import com.rm.acidulous.model.SongEngine
+import com.rm.acidulous.model.TakeRef
 import com.rm.acidulous.model.Track
 import java.io.File
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
 import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sin
@@ -28,11 +27,13 @@ import kotlin.system.exitProcess
  *
  *     ./gradlew :desktop:engineLines --args="squelch"   into desktop/build/engine-lines
  *
- * Arguments: the song (squelch, the demo, or sampled, a pad playing a user
- * sample), seconds to render (0 for all of it), tail seconds and bits (32 is
+ * Arguments: the song (squelch, the demo, sampled, a pad playing a user
+ * sample, or tape, that pad and an audio track playing a take), seconds to render (0 for all of it), tail seconds and bits (32 is
  * float). The folder is the engineLines.out property. It writes
- * <song>.zip, <song>.txt and <song>-app.wav. tools/engine_replay.sh renders
- * the zip without a JVM, to compare.
+ * <song>.zip, <song>.txt and <song>-app.wav. The zip is written as the app
+ * writes it (SongBundle with SongEngine's dry recording), and the render is
+ * of the song synced for real. tools/engine_replay.sh renders the zip without
+ * a JVM, to compare.
  */
 fun main(args: Array<String>) {
     val out = File(System.getProperty("engineLines.out") ?: "build/engine-lines").absoluteFile.apply { mkdirs() }
@@ -46,15 +47,19 @@ fun main(args: Array<String>) {
     val song = when (which) {
         "squelch" -> DemoSong.build()
         "sampled" -> EngineLinesTool.sampledSong(user)
+        "tape" -> EngineLinesTool.tapeSong(user)
         else -> { System.err.println("engine-lines: no song called $which"); exitProcess(2) }
     }
-    val writer = EngineLinesTool.record(song, user)
-    val lines = writer.text()
-    for (path in writer.unportable()) System.err.println("engine-lines: not in the zip, so only on this machine: $path")
+    val recording = EngineLinesTool.record(song, user)
+    val lines = recording.text
+    for (path in recording.unportable) System.err.println("engine-lines: not in the zip, so only on this machine: $path")
     File(out, "$which.txt").writeText(lines)
     val zip = File(out, "$which.zip")
-    EngineLinesTool.writeZip(song, user, lines, zip)
+    SongBundle.write(song, user, zip, lines)
 
+    // The song on the engine, as the app has it when you export.
+    EngineSync.sync(song)
+    kotlinx.coroutines.runBlocking { EngineSync.loadsDone() }
     // An export: every parameter back to what the song says, then the render.
     EngineSync.pushForRender(song)
     Thread.sleep(50)
@@ -81,44 +86,8 @@ object EngineLinesTool {
         check(NativeEngine.start()) { "the engine didn't start" }
     }
 
-    /**
-     * What a sync of [song] sends to the engine, with media under [user] as
-     * zip paths. EngineSync forgets what it sent first, or only what changed
-     * since the last sync would be written.
-     */
-    fun record(song: Song, user: File): EngineLineWriter {
-        EngineSync.forgetEngine()
-        val userPath = user.absolutePath + File.separator
-        val writer = EngineLineWriter { path -> if (path.startsWith(userPath)) path.removePrefix(userPath) else null }
-        EngineLines.writer = writer
-        try {
-            EngineSync.sync(song)
-            kotlinx.coroutines.runBlocking { EngineSync.loadsDone() }
-        } finally {
-            EngineLines.writer = null
-        }
-        return writer
-    }
-
-    /** The song zip as the app writes it, with engine.txt added. */
-    fun writeZip(song: Song, user: File, lines: String, zip: File) {
-        val plain = File(zip.parentFile, zip.name + ".plain")
-        SongBundle.write(song, user, plain)
-        ZipOutputStream(zip.outputStream()).use { z ->
-            ZipInputStream(plain.inputStream()).use { from ->
-                while (true) {
-                    val e = from.nextEntry ?: break
-                    z.putNextEntry(ZipEntry(e.name))
-                    from.copyTo(z)
-                    z.closeEntry()
-                }
-            }
-            z.putNextEntry(ZipEntry("engine.txt"))
-            z.write(lines.encodeToByteArray())
-            z.closeEntry()
-        }
-        plain.delete()
-    }
+    /** The engine lines a song zip of [song] carries, recorded dry as the app does (SongEngine). */
+    fun record(song: Song, user: File): SongEngine.Recording = SongEngine.record(song, user)
 
     /** One Forage pad playing samples/hit.wav, written into [user], four times a bar for two bars. */
     fun sampledSong(user: File): Song {
@@ -139,16 +108,29 @@ object EngineLinesTool {
         )
     }
 
-    /** A short decaying tone as a 16-bit mono WAV at 48 kHz. */
-    fun writeHit(file: File) {
+    /** [sampledSong] with an audio track playing samples/take.wav, a bar long, in lanes 1 and 3. */
+    fun tapeSong(user: File): Song {
+        val base = sampledSong(user)
+        writeHit(File(user, "samples/take.wav"), seconds = 2f, hz = 330.0)
+        val scene = base.scenes.single()
+        val take = TakeRef(file = "samples/take.wav", offset = 0, frames = 96000, bpm = 120f, ticks = 4 * PPQN)
+        val tape = Track(
+            id = "t-tape", name = "Tape", machine = Machine(BIAS_MACHINE),
+            clips = mapOf(scene.id to Clip(bars = 2, audio = ClipAudio(listOf(take, null, take.copy(offset = 12000, fadeIn = 480))))),
+        )
+        return base.copy(name = "Tape", tracks = base.tracks + tape)
+    }
+
+    /** A decaying tone, [seconds] long, as a 16-bit mono WAV at 48 kHz. */
+    fun writeHit(file: File, seconds: Float = 0.25f, hz: Double = 220.0) {
         val rate = 48000
-        val frames = rate / 4
+        val frames = (rate * seconds).toInt()
         val data = java.nio.ByteBuffer.allocate(44 + frames * 2).order(java.nio.ByteOrder.LITTLE_ENDIAN)
         data.put("RIFF".toByteArray()).putInt(36 + frames * 2).put("WAVE".toByteArray())
         data.put("fmt ".toByteArray()).putInt(16).putShort(1).putShort(1).putInt(rate).putInt(rate * 2).putShort(2).putShort(16)
         data.put("data".toByteArray()).putInt(frames * 2)
         for (i in 0 until frames) {
-            val v = sin(2 * PI * 220 * i / rate) * exp(-i / (rate * 0.05))
+            val v = sin(2 * PI * hz * i / rate) * exp(-i / (rate * seconds * 0.2))
             data.putShort((v * 20000).toInt().toShort())
         }
         file.parentFile.mkdirs()
