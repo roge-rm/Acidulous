@@ -676,9 +676,9 @@ fun App(modifier: Modifier = Modifier) {
      * (the browser) or the recording failed. Recorded dry on the main thread,
      * where EngineSync's memory is used; nothing reaches the engine.
      */
-    suspend fun songEngineLines(of: com.rm.acidulous.model.Song): String? =
+    suspend fun songEngineLines(of: com.rm.acidulous.model.Song, frozenAudio: Boolean = false): String? =
         if (!com.rm.acidulous.util.canRecordEngineLines) null
-        else runCatching { withContext(Dispatchers.Main) { com.rm.acidulous.model.SongEngine.record(of, EngineAssets.userRoot()).text } }
+        else runCatching { withContext(Dispatchers.Main) { com.rm.acidulous.model.SongEngine.record(of, EngineAssets.userRoot(), frozenAudio).text } }
             .onFailure { Log.w(TAG, "engine lines for ${of.name}: ${it.message}") }.getOrNull()
 
     /**
@@ -736,7 +736,12 @@ fun App(modifier: Modifier = Modifier) {
                 com.rm.acidulous.ui.ExportFormat.Bundle -> {
                     val file = File(cache, "$base.zip")
                     runCatching {
-                        com.rm.acidulous.model.SongBundle.write(song, EngineAssets.userRoot(), file, songEngineLines(song))
+                        // The WAVs are only any use with engine lines to mount them.
+                        val lines = songEngineLines(song, options.frozenAudio)
+                        com.rm.acidulous.model.SongBundle.write(
+                            song, EngineAssets.userRoot(), file, lines,
+                            freezeRoot = if (options.frozenAudio && lines != null) EngineAssets.freezeRoot() else null,
+                        )
                         listOf(file) to ""
                     }.getOrElse { emptyList<File>() to (it.message ?: AppStrings.getString(Res.string.app_export_bundle_failed)) }
                 }
@@ -2003,6 +2008,11 @@ fun App(modifier: Modifier = Modifier) {
     if (exportAsk) {
         com.rm.acidulous.ui.ExportOptionsDialog(
             sceneName = song.scenes.getOrNull(position.scene)?.name.orEmpty(),
+            // No switch where engine lines can't be recorded (the browser).
+            frozenBytes = remember(song) {
+                if (!com.rm.acidulous.util.canRecordEngineLines) 0L
+                else com.rm.acidulous.model.SongBundle.frozenBytes(song, EngineAssets.freezeRoot())
+            },
             onDismiss = { exportAsk = false },
         ) { options ->
             exportAsk = false

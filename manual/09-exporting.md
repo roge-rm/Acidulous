@@ -13,6 +13,8 @@ You can export the whole song, the current scene or stems.
   velocity applied, and its pedal, mod wheel and pressure lanes. Drum tracks go
   on channel 10 as General MIDI drums, so other programs hear the right sounds.
 - **Song bundle** - the song and the samples it uses, in one file you can share.
+  With **frozen audio** on, the frozen clips' audio goes in too, for players
+  that can't run the machines.
 
 ## Stems
 

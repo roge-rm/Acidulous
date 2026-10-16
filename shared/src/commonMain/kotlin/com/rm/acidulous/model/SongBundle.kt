@@ -22,17 +22,25 @@ import com.rm.acidulous.io.*
  * A bundle can also hold engine.txt at its root: the engine lines that build
  * the song (EngineLines.kt), with media paths inside the zip, for hosts that
  * play songs without Kotlin. Reading a bundle ignores it.
+ *
+ * With frozen audio, the frozen clips' WAVs go in under freeze/, as they
+ * are (32-bit float stereo at 48 kHz), for engine.txt's MountFrozen lines.
+ * Reading a bundle skips them too: the app freezes those clips again.
  */
 object SongBundle {
 
     private const val SONG_ENTRY = "song.json"
     const val ENGINE_ENTRY = "engine.txt"
+    /** Where frozen clips' WAVs go in a bundle. */
+    const val FREEZE_DIR = "freeze/"
 
     /**
      * Writes [song] and its media to [out], and [engineLines] as engine.txt
-     * if given (SongEngine.record). Returns how many media files went in.
+     * if given (SongEngine.record). With [freezeRoot], the WAVs of the
+     * frozen clips that play as audio go in too ([frozenFiles]). Returns how
+     * many media files went in, not counting those.
      */
-    fun write(song: Song, userRoot: File, out: File, engineLines: String? = null): Int {
+    fun write(song: Song, userRoot: File, out: File, engineLines: String? = null, freezeRoot: File? = null): Int {
         val media = referenced(song, userRoot)
         val zip = ZipWriter(out)
         try {
@@ -43,11 +51,25 @@ object SongBundle {
                 if (!file.isFile) continue
                 zip.addFile(relative, file)
             }
+            if (freezeRoot != null) {
+                for (name in frozenFiles(song, freezeRoot)) zip.addFile(FREEZE_DIR + name, File(freezeRoot, name))
+            }
         } finally {
             zip.close()
         }
         return media.size
     }
+
+    /**
+     * The files in [freezeRoot] of the frozen clips that play as audio
+     * (Freeze.current), the ones engine lines mount.
+     */
+    fun frozenFiles(song: Song, freezeRoot: File): List<String> =
+        Freeze.current(song).map { it.second.file }.distinct().filter { File(freezeRoot, it).isFile }
+
+    /** How many bytes [frozenFiles] adds to a bundle, before compression. */
+    fun frozenBytes(song: Song, freezeRoot: File): Long =
+        frozenFiles(song, freezeRoot).sumOf { File(freezeRoot, it).length() }
 
     /**
      * Unpacks a bundle. The media go back under [userRoot] at the same
@@ -76,7 +98,7 @@ object SongBundle {
                 song = runCatching { SongStore.decode(bytes().decodeToString()) }.getOrNull()
                 return@readZip
             }
-            if (name == ENGINE_ENTRY) return@readZip
+            if (name == ENGINE_ENTRY || name.startsWith(FREEZE_DIR)) return@readZip
             val target = File(userRoot, name).canonicalFile
             if (!target.path.startsWith(rootPath.path + FILE_SEPARATOR)) return@readZip
             target.parentFile?.mkdirs()

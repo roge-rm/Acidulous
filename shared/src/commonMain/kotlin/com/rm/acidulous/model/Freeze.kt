@@ -123,31 +123,117 @@ object Freeze {
     /**
      * A frozen clip at another tempo can't be used because audio doesn't
      * stretch. The engine plays the machine instead and the clip shows as
-     * stale.
+     * stale. So does an [outdated] one.
      */
     fun stale(song: Song, sceneId: String, clip: Clip): Boolean {
         val f = clip.frozen ?: return false
         val scene = song.scenes.firstOrNull { it.id == sceneId }
         val tempo = scene?.tempo?.bpm ?: song.tempo
         if (kotlin.math.abs(f.bpm - tempo) >= 0.01f) return true
+        val track = song.tracks.firstOrNull { it.clips[sceneId] === clip }
+        return outdated(song, track, clip, scene)
+    }
+
+    /**
+     * Whether a freeze no longer sounds like its clip, whatever the tempo:
+     * the sound, the clip or the bar length changed since, or it's from the
+     * old renderer.
+     * EngineSync only mounts freezes that aren't, and the engine checks the
+     * tempo itself, since it stretches a freeze through a tempo ramp.
+     */
+    fun outdated(song: Song, track: Track?, clip: Clip, scene: Scene?): Boolean {
+        val f = clip.frozen ?: return false
+        // Rendered at another time signature, so it's the wrong length.
+        if (scene != null && f.ticks > 0 && f.ticks != clip.bars * song.signatureOf(scene).ticksPerBar) return true
         // A freeze with no tail came from the old renderer, which doubled
         // the first two seconds of the clip, so it has to be rendered again.
         // Every new freeze has at least one block of tail, so 0 always means
         // old.
         if (f.tail == 0) return true
-        // Also stale if the sound it was rendered with has changed. A voice
-        // of 0 means the freeze is older than this field, so leave it.
+        if (track == null) return false
+        // Edited since it was rendered. 0 is a freeze older than this field.
+        if (f.content != 0 && f.content != contentOf(song, track, clip)) return true
+        // Also out of date if the sound it was rendered with has changed. A
+        // voice of 0 means the freeze is older than this field, so leave it.
         if (f.voice == 0) return false
-        val track = song.tracks.firstOrNull { it.clips[sceneId] === clip } ?: return false
         return f.voice != voiceOf(track)
+    }
+
+    /**
+     * Every frozen clip in [song] that plays as audio at its scene's tempo,
+     * by track index and scene, in track then scene order.
+     */
+    fun current(song: Song): List<Pair<Target, Frozen>> {
+        val out = ArrayList<Pair<Target, Frozen>>()
+        song.tracks.forEachIndexed { i, t ->
+            for (scene in song.scenes) {
+                val clip = t.clips[scene.id] ?: continue
+                val f = clip.frozen ?: continue
+                if (!stale(song, scene.id, clip)) out += Target(i, scene.id) to f
+            }
+        }
+        return out
+    }
+
+    /**
+     * A hash of what a freeze renders from the clip and how the track plays
+     * it: the notes with their expression and trigs, the length, play mode
+     * and dice, every lane but the mixer's (which stays live over a frozen
+     * track), and the track's transpose, velocity, tuning and swing as the
+     * engine gets them. Built by hand from stable parts (no enum hashes), so
+     * it's the same in every run and can be saved. Never 0, which means "not
+     * recorded".
+     */
+    fun contentOf(song: Song, track: Track, clip: Clip): Int {
+        var h = 17
+        // Resolved as EngineSync sends them: transpose and tuning only reach
+        // melodic machines, and a track without its own follows the song.
+        if (MachineUi.takesTranspose(track.machine.type)) h = h * 31 + track.transpose
+        h = h * 31 + (track.velocity ?: 0)
+        val tuning = if (MachineUi.takesTuning(track.machine.type)) (track.tuning ?: song.tuning)?.takeIf { !it.isEqual } else null
+        if (tuning != null) {
+            h = h * 31 + (song.key?.root ?: 0)
+            for (c in tuning.cents) h = h * 31 + c.toBits()
+        }
+        val swing = song.swingOf(track)
+        h = h * 31 + swing.toBits()
+        // The unit only matters once there's swing.
+        if (swing != SWING_STRAIGHT) h = h * 31 + song.swingUnit
+        h = h * 31 + clip.bars
+        h = h * 31 + clip.playMode.ordinal
+        h = h * 31 + clip.seed
+        h = h * 31 + if (clip.freeRoll) 1 else 0
+        fun lane(l: Lane?) {
+            if (l == null) { h = h * 31 + 7; return }
+            h = h * 31 + if (l.linear) 1 else 2
+            for (p in l.points) h = (h * 31 + p.tick) * 31 + p.value.toBits()
+        }
+        for (n in clip.notes) {
+            h = h * 31 + n.tick
+            h = h * 31 + n.length
+            h = h * 31 + n.pitch
+            h = h * 31 + n.velocity
+            h = h * 31 + n.chance
+            h = h * 31 + n.trig.ordinal
+            h = h * 31 + n.ratchet
+            h = h * 31 + n.nudge
+            h = h * 31 + n.lyric.hashCode()
+            lane(n.bend); lane(n.pressure); lane(n.timbre)
+        }
+        for ((key, l) in clip.automation.entries.sortedBy { it.key }) {
+            if (laneUnit(key) == "channel") continue
+            h = h * 31 + key.hashCode()
+            lane(l)
+        }
+        return if (h == 0) 1 else h
     }
 
     /**
      * A hash of everything the freeze baked in: the machine, its parameters
      * and settings, and both insert slots.
      *
-     * The clip isn't included because editing it thaws the freeze anyway. The
-     * mixer isn't included because it stays live over a frozen track.
+     * The clip has a hash of its own ([contentOf]). The mixer isn't included
+     * because it stays live over a frozen track.
      */
     fun voiceOf(track: Track): Int {
         var h = track.machine.type.hashCode()
@@ -174,6 +260,7 @@ object Freeze {
     suspend fun render(song: Song, target: Target): Frozen? {
         val track = song.tracks.getOrNull(target.track) ?: return null
         val scene = song.scenes.firstOrNull { it.id == target.sceneId } ?: return null
+        val clip = track.clips[scene.id] ?: return null
         // A file of its own for every render, since a thawed freeze's file is
         // kept for undo (until the sweep at the next song open) and a fresh
         // render mustn't write over it.
@@ -183,7 +270,7 @@ object Freeze {
             val r = NativeEngine.freezeClip(target.track, scene.engineId, file.absolutePath, TAIL_CAP_SECONDS)
         ) {
             is NativeEngine.FreezeResult.Ok ->
-                Frozen(file.name, r.bpm, r.ticks, r.frames, r.peak, voiceOf(track), r.tail).also {
+                Frozen(file.name, r.bpm, r.ticks, r.frames, r.peak, voiceOf(track), r.tail, contentOf(song, track, clip)).also {
                     Log.i(
                         TAG,
                         "${track.name} / ${scene.name}: ${r.frames} frames at ${r.bpm} bpm, " +

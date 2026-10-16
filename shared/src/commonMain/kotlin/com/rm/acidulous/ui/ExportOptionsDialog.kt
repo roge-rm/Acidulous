@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.rm.acidulous.res.*
+import com.rm.acidulous.util.format
 import org.jetbrains.compose.resources.StringResource
 
 /**
@@ -57,6 +58,8 @@ data class ExportOptions(
     val tailSeconds: Float = 2f,
     /** Measured first and brought to [NORMALISE_LUFS], never above -1 dBTP. */
     val normalise: Boolean = false,
+    /** A bundle carries the frozen clips' WAVs and mounts them in engine.txt. */
+    val frozenAudio: Boolean = false,
 ) {
     /** Several files, so the picker has to ask for a folder. */
     val manyFiles: Boolean get() = what == ExportWhat.Stems && format.audio
@@ -84,6 +87,8 @@ private fun describeWhat(w: ExportWhat, sceneName: String): String = when (w) {
 @Composable
 fun ExportOptionsDialog(
     sceneName: String,
+    /** What the frozen audio adds to a bundle, 0 for none (the switch is hidden). */
+    frozenBytes: Long,
     onDismiss: () -> Unit,
     onExport: (ExportOptions) -> Unit,
 ) {
@@ -93,10 +98,12 @@ fun ExportOptionsDialog(
     var rate by rememberSaveable { mutableStateOf(256) }
     var tail by rememberSaveable { mutableStateOf(2f) }
     var normalise by rememberSaveable { mutableStateOf(false) }
+    var frozenAudio by rememberSaveable { mutableStateOf(false) }
 
     // The data formats always hold the whole song, there's no per-track bundle.
     val audio = format.audio
-    val options = ExportOptions(if (audio) what else ExportWhat.Song, format, bits, rate, tail, audio && normalise)
+    val bundleFrozen = format == ExportFormat.Bundle && frozenBytes > 0
+    val options = ExportOptions(if (audio) what else ExportWhat.Song, format, bits, rate, tail, audio && normalise, bundleFrozen && frozenAudio)
 
     PlainDialog(
         title = stringResource(Res.string.export_title),
@@ -122,6 +129,11 @@ fun ExportOptionsDialog(
                 }
                 // The data formats always hold the whole song, there's no
                 // per-track bundle.
+                if (bundleFrozen) {
+                    SwitchGrid(stringResource(Res.string.export_frozen), stringArrayResource(Res.array.off_on).toList(), if (frozenAudio) 1 else 0) {
+                        frozenAudio = it == 1
+                    }
+                }
                 if (audio) {
                     SwitchGrid(stringResource(Res.string.export_what), ExportWhat.entries.map { stringResource(it.label) }, ExportWhat.entries.indexOf(what), columns = 1) {
                         what = ExportWhat.entries[it]
@@ -157,10 +169,17 @@ fun ExportOptionsDialog(
         // always stays, since LAME's licence asks that its use is acknowledged.
         val notes = listOfNotNull(
             describeFormat(format)?.let { stringResource(it) },
+            if (bundleFrozen) stringResource(Res.string.export_about_frozen, megabytes(frozenBytes)) else null,
             if (audio) describeWhat(what, sceneName) else null,
             if (audio && normalise) stringResource(Res.string.export_about_normalise) else null,
             if (audio && tail <= 0f) stringResource(Res.string.export_about_no_tail) else null,
         )
         Text(notes.joinToString(stringResource(Res.string.export_about_separator)), color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp)
     }
+}
+
+/** A size in MB for the frozen audio line: one decimal under 10. */
+private fun megabytes(bytes: Long): String {
+    val mb = bytes / 1_000_000.0
+    return if (mb < 10.0) "%.1f".format(mb) else mb.toLong().toString()
 }

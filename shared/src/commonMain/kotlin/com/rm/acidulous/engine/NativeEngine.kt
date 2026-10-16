@@ -499,6 +499,22 @@ object NativeEngine {
         tails: IntArray,
     ): String = EngineNative.nativeLoadFrozen(rack, sceneIds, paths, bpms, ticks, tails)
 
+    /**
+     * Takes every rack's frozen clips away. Song lines start with it, so a
+     * host replaying one song after another doesn't keep the last one's.
+     */
+    fun clearFrozen() = EngineNative.nativeClearFrozen()
+
+    /**
+     * Adds one frozen clip to a rack's set, replacing any for that scene.
+     * Engine lines mount freezes this way (MountFrozen); the app loads whole
+     * sets. [loopFrames] and [peak] are for other hosts: the engine takes
+     * the loop from the file's length less [tailFrames], as [loadFrozen] does.
+     */
+    suspend fun mountFrozen(
+        rack: Int, sceneId: Long, path: String, bpm: Float, ticks: Int, loopFrames: Int, tailFrames: Int, peak: Float,
+    ): String = EngineNative.nativeMountFrozen(rack, sceneId, path, bpm, ticks, loopFrames, tailFrames, peak)
+
     // --- Settings that belong to the device ----------------------------------
     /** Output buffer size in bursts: 1 tight, 2 default, 4 safe. */
     fun setBufferBursts(bursts: Int) = EngineNative.nativeSetBufferBursts(bursts)

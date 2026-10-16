@@ -8,6 +8,8 @@
     <string name="export_format">format</string>
     <!-- The format that is the song and its samples in one zip. The other formats go by their own names. -->
     <string name="export_format_bundle">paquet</string>
+    <!-- A bundle switch: the frozen clips' audio goes in the zip. -->
+    <string name="export_frozen">audio figé</string>
     <string name="export_what">quoi</string>
     <string name="export_what_song">morceau</string>
     <string name="export_what_scene">cette scène</string>
@@ -32,6 +34,8 @@
     <string name="export_about_aac">Avec perte.</string>
     <string name="export_about_midi">Les notes, sans le son.</string>
     <string name="export_about_bundle">Le morceau et tous ses échantillons, dans un seul fichier.</string>
+    <!-- What the switch above adds to the zip, in megabytes. -->
+    <string name="export_about_frozen">Audio figé : %1$s Mo.</string>
     <string name="export_about_song">Toutes les scènes dans l’ordre, avec leurs répétitions.</string>
     <!-- The same, naming the scene. -->
     <string name="export_about_scene_named">La scène ouverte, une fois. (%s)</string>

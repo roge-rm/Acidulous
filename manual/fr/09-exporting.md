@@ -14,7 +14,8 @@ Vous pouvez exporter tout le morceau, la scène courante ou des pistes séparée
   modulation et de pression. Les pistes de batterie vont sur le canal 10 comme
   batterie General MIDI, pour que les autres logiciels entendent les bons sons.
 - **paquet** - le morceau et les échantillons qu’il utilise, dans un seul
-  fichier que vous pouvez partager.
+  fichier que vous pouvez partager. Avec **audio figé**, l’audio des clips
+  figés y va aussi, pour les lecteurs qui ne font pas tourner les machines.
 
 ## Pistes séparées
 

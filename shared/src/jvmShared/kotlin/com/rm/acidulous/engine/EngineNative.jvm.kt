@@ -346,6 +346,26 @@ internal actual object EngineNative {
     @JvmName("nativeLoadFrozen")
     private external fun blocking_nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String
     actual suspend fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String = blocking_nativeLoadFrozen(rack, sceneIds, paths, bpms, ticks, tails)
+    @JvmName("nativeClearFrozen")
+    private external fun jni_nativeClearFrozen()
+    @JvmName("lines_nativeClearFrozen")
+    actual fun nativeClearFrozen() {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("ClearFrozen") {}; return }
+        EngineLines.sent++
+        EngineLines.writer?.call("ClearFrozen") {}
+        jni_nativeClearFrozen()
+    }
+    @JvmName("nativeMountFrozen")
+    private external fun jni_nativeMountFrozen(rack: Int, sceneId: Long, path: String, bpm: Float, ticks: Int, loopFrames: Int, tailFrames: Int, peak: Float): String
+    actual suspend fun nativeMountFrozen(rack: Int, sceneId: Long, path: String, bpm: Float, ticks: Int, loopFrames: Int, tailFrames: Int, peak: Float): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("MountFrozen") { int(rack); long(sceneId); path(path); float(bpm); int(ticks); int(loopFrames); int(tailFrames); float(peak) }; return "" }
+        EngineLines.sent++
+        EngineLines.writer?.call("MountFrozen") { int(rack); long(sceneId); path(path); float(bpm); int(ticks); int(loopFrames); int(tailFrames); float(peak) }
+        val result_ = jni_nativeMountFrozen(rack, sceneId, path, bpm, ticks, loopFrames, tailFrames, peak)
+        return result_
+    }
     actual external fun nativeSetBufferBursts(bursts: Int)
     actual external fun nativeBufferFrames(): Int
     actual external fun nativeSetVoiceLimit(notes: Int)

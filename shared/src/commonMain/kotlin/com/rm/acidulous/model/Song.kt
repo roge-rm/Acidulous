@@ -247,6 +247,14 @@ data class Frozen(
      * whole file is the loop. See `Freeze.stale`.
      */
     val tail: Int = 0,
+    /**
+     * A hash of the clip as rendered: its notes, length, dice and the lanes
+     * the render baked in, and the track's transpose, velocity, tuning and
+     * swing (`Freeze.contentOf`). Editing the notes keeps the
+     * freeze but leaves it out of date, and undoing back makes it current
+     * again. 0 means a freeze from before this field and counts as matching.
+     */
+    val content: Int = 0,
 )
 
 /**

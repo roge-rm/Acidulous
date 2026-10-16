@@ -414,13 +414,18 @@ object EngineSync {
      * The frozen clips a rack should have. The identity is the whole list, so
      * freezing or thawing one clip reloads that rack's set and leaves the
      * other racks alone, and nothing reloads while editing around a freeze.
+     *
+     * An outdated freeze (Freeze.outdated) is left out, so its clip plays the
+     * machine. The tempo is the engine's to check (Rack::updateFrozen).
      */
     fun ensureFrozen(song: Song, m: Memory = live) {
         val root = freezeRoot ?: return
         for (rack in 0 until RACKS) {
             val track = song.tracks.getOrNull(rack)
             val frozen = song.scenes.mapNotNull { scene ->
-                val f = track?.clips?.get(scene.id)?.frozen ?: return@mapNotNull null
+                val clip = track?.clips?.get(scene.id) ?: return@mapNotNull null
+                val f = clip.frozen ?: return@mapNotNull null
+                if (com.rm.acidulous.model.Freeze.outdated(song, track, clip, scene)) return@mapNotNull null
                 Triple(scene.engineId, f, com.rm.acidulous.io.File(root, f.file))
             }.filter { it.third.isFile }
             val identity = frozen.joinToString(";") {
@@ -742,12 +747,33 @@ object EngineSync {
 
     /**
      * What [sync] would send a fresh engine, against [m] (a [scratch]
-     * memory), for recording a song's engine lines dry. Frozen clips are left
-     * out: they aren't engine lines, and loading them would reach the engine.
+     * memory), for recording a song's engine lines dry. Frozen clips are
+     * mounted one by one ([mountFrozenLines]) if [frozenAudio], and their
+     * notes are sent either way, so a host can play the audio or the notes.
      */
-    fun syncFresh(song: Song, m: Memory): Boolean {
+    fun syncFresh(song: Song, m: Memory, frozenAudio: Boolean = false): Boolean {
         ensureAll(song, m, frozen = false)
+        if (frozenAudio) mountFrozenLines(song, m)
         return push(song)
+    }
+
+    /**
+     * One MountFrozen per frozen clip that plays as audio (Freeze.current),
+     * for engine lines. Only for recording dry: it adds to a rack's set
+     * instead of replacing it the way [ensureFrozen] does.
+     */
+    private fun mountFrozenLines(song: Song, m: Memory) {
+        val root = freezeRoot ?: return
+        for ((target, f) in com.rm.acidulous.model.Freeze.current(song)) {
+            if (target.track >= RACKS) continue
+            val file = com.rm.acidulous.io.File(root, f.file)
+            if (!file.isFile) continue
+            val scene = song.scenes.first { it.id == target.sceneId }
+            load(m) {
+                val error = NativeEngine.mountFrozen(target.track, scene.engineId, file.absolutePath, f.bpm, f.ticks, f.frames, f.tail, f.peak)
+                if (error.isNotEmpty()) Log.w(TAG, "frozen clip for rack ${target.track}: $error")
+            }
+        }
     }
 
     private fun ensureAll(song: Song, m: Memory, frozen: Boolean) {

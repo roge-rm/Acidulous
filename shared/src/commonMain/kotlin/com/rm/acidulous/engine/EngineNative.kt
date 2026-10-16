@@ -130,6 +130,8 @@ internal expect object EngineNative {
     suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String // line
     suspend fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
     suspend fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String
+    fun nativeClearFrozen() // line
+    suspend fun nativeMountFrozen(rack: Int, sceneId: Long, path: String, bpm: Float, ticks: Int, loopFrames: Int, tailFrames: Int, peak: Float): String // line path=path
     fun nativeSetBufferBursts(bursts: Int)
     fun nativeBufferFrames(): Int
     fun nativeSetVoiceLimit(notes: Int)

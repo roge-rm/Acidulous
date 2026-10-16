@@ -322,6 +322,12 @@ private fun async_nativeFreezeClip(arena: Int, rack: Int, sceneId: Long, path: I
 private fun async_nativeLoadFrozen(arena: Int, rack: Int, sceneIds: Int, paths: Int, bpms: Int, ticks: Int, tails: Int): Int =
     js("globalThis.acid._acid_async_nativeLoadFrozen(arena, rack, sceneIds, paths, bpms, ticks, tails)")
 
+private fun raw_nativeClearFrozen(env: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeClearFrozen(env, 0)")
+
+private fun async_nativeMountFrozen(arena: Int, rack: Int, sceneId: Long, path: Int, bpm: Float, ticks: Int, loopFrames: Int, tailFrames: Int, peak: Float): Int =
+    js("globalThis.acid._acid_async_nativeMountFrozen(arena, rack, sceneId, path, bpm, ticks, loopFrames, tailFrames, peak)")
+
 private fun raw_nativeSetBufferBursts(env: Int, bursts: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetBufferBursts(env, 0, bursts)")
 
@@ -1378,6 +1384,21 @@ internal actual object EngineNative {
         Jni.copyBack(jbpms, bpms)
         Jni.copyBack(jticks, ticks)
         Jni.copyBack(jtails, tails)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual fun nativeClearFrozen() {
+        raw_nativeClearFrozen(Jni.env)
+        Jni.release()
+    }
+
+    actual suspend fun nativeMountFrozen(rack: Int, sceneId: Long, path: String, bpm: Float, ticks: Int, loopFrames: Int, tailFrames: Int, peak: Float): String {
+        val arena_ = Jni.openArena()
+        val jpath = Jni.string(path)
+        val ticket_ = async_nativeMountFrozen(arena_, rack, sceneId, jpath, bpm, ticks, loopFrames, tailFrames, peak)
+        Jni.await(ticket_)
         val result_ = Jni.readString(Jni.resultInt(ticket_))
         Jni.releaseAsync(ticket_)
         return result_

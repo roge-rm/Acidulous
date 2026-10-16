@@ -6,6 +6,8 @@ import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.ClipAudio
 import com.rm.acidulous.model.DemoSong
+import com.rm.acidulous.model.Freeze
+import com.rm.acidulous.model.Frozen
 import com.rm.acidulous.model.Machine
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.PPQN
@@ -14,6 +16,8 @@ import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongBundle
 import com.rm.acidulous.model.SongEngine
 import com.rm.acidulous.model.TakeRef
+import com.rm.acidulous.model.withEffect
+import com.rm.acidulous.model.withEffectParam
 import com.rm.acidulous.model.Track
 import java.io.File
 import kotlin.math.PI
@@ -28,7 +32,8 @@ import kotlin.system.exitProcess
  *     ./gradlew :desktop:engineLines --args="squelch"   into desktop/build/engine-lines
  *
  * Arguments: the song (squelch, the demo, sampled, a pad playing a user
- * sample, or tape, that pad and an audio track playing a take), seconds to render (0 for all of it), tail seconds and bits (32 is
+ * sample, tape, that pad and an audio track playing a take, or frozen, that
+ * pad and a bass line frozen here and zipped with its frozen audio), seconds to render (0 for all of it), tail seconds and bits (32 is
  * float). The folder is the engineLines.out property. It writes
  * <song>.zip, <song>.txt and <song>-app.wav. The zip is written as the app
  * writes it (SongBundle with SongEngine's dry recording), and the render is
@@ -48,14 +53,27 @@ fun main(args: Array<String>) {
         "squelch" -> DemoSong.build()
         "sampled" -> EngineLinesTool.sampledSong(user)
         "tape" -> EngineLinesTool.tapeSong(user)
+        "frozen" -> kotlinx.coroutines.runBlocking { EngineLinesTool.frozenSong(user) }
+        "tailover" -> kotlinx.coroutines.runBlocking {
+            // The same scene change played live first, to compare with.
+            val live = EngineLinesTool.tailSong()
+            EngineSync.sync(live)
+            EngineSync.loadsDone()
+            EngineSync.pushForRender(live)
+            Thread.sleep(50)
+            val error = NativeEngine.renderSong(File(out, "tailover-live.wav").absolutePath, tail, 0, bits, 0, seconds)
+            check(error.isEmpty()) { error }
+            EngineLinesTool.freezeAll(live)
+        }
         else -> { System.err.println("engine-lines: no song called $which"); exitProcess(2) }
     }
-    val recording = EngineLinesTool.record(song, user)
+    val frozenAudio = which == "frozen" || which == "tailover"
+    val recording = EngineLinesTool.record(song, user, frozenAudio)
     val lines = recording.text
     for (path in recording.unportable) System.err.println("engine-lines: not in the zip, so only on this machine: $path")
     File(out, "$which.txt").writeText(lines)
     val zip = File(out, "$which.zip")
-    SongBundle.write(song, user, zip, lines)
+    SongBundle.write(song, user, zip, lines, freezeRoot = if (frozenAudio) EngineSync.freezeRoot else null)
 
     // The song on the engine, as the app has it when you export.
     EngineSync.sync(song)
@@ -87,7 +105,67 @@ object EngineLinesTool {
     }
 
     /** The engine lines a song zip of [song] carries, recorded dry as the app does (SongEngine). */
-    fun record(song: Song, user: File): SongEngine.Recording = SongEngine.record(song, user)
+    fun record(song: Song, user: File, frozenAudio: Boolean = false): SongEngine.Recording =
+        SongEngine.record(song, user, frozenAudio)
+
+    /**
+     * [sampledSong] with a Reflux bass line on rack 1, frozen on the engine
+     * as the app freezes (Freeze.render, less EngineAssets). Starts the
+     * engine's sync, so call it after [start].
+     */
+    suspend fun frozenSong(user: File): Song {
+        val base = sampledSong(user)
+        val scene = base.scenes.single()
+        val notes = listOf(Note(0, PPQN, 36, 100), Note(2 * PPQN, PPQN, 43, 120), Note(5 * PPQN, PPQN * 2, 31, 90))
+        val clip = Clip(bars = 2, notes = notes)
+        val bass = Track(id = "t-bass", name = "Bass", machine = Machine("Reflux"), clips = mapOf(scene.id to clip))
+        val song = base.copy(name = "Frozen", tracks = base.tracks + bass)
+        EngineSync.sync(song)
+        EngineSync.loadsDone()
+        val name = Freeze.nameFor(bass.id, scene.id)
+        val file = File(EngineSync.freezeRoot!!, name)
+        val r = NativeEngine.freezeClip(1, scene.engineId, file.absolutePath, 8f)
+        check(r is NativeEngine.FreezeResult.Ok) { "the freeze failed: $r" }
+        val frozen = Frozen(name, r.bpm, r.ticks, r.frames, r.peak, Freeze.voiceOf(bass), r.tail, Freeze.contentOf(song, bass, clip))
+        return song.copy(tracks = listOf(song.tracks[0], bass.copy(clips = mapOf(scene.id to clip.copy(frozen = frozen)))))
+    }
+
+    /**
+     * A bass through a long delay over two one-bar scenes. The first plays
+     * to the end of its bar, the second waits a beat, so the start of the
+     * second scene is only the first one's ring-out.
+     */
+    fun tailSong(): Song {
+        val a = Scene(id = "s-a", name = "A")
+        val b = Scene(id = "s-b", name = "B")
+        val first = listOf(Note(0, PPQN / 2, 36, 120), Note(2 * PPQN, PPQN / 2, 43, 120), Note(3 * PPQN + PPQN / 2, PPQN / 2, 48, 127))
+        val second = listOf(Note(PPQN, PPQN / 2, 31, 110), Note(3 * PPQN, PPQN / 2, 38, 110))
+        val bass = Track(id = "t-bass", name = "Bass", machine = Machine("Reflux"), clips = mapOf(
+            a.id to Clip(bars = 1, notes = first),
+            b.id to Clip(bars = 1, notes = second),
+        )).withEffect(0, "Delay").withEffectParam(0, "feedback", 0.8f).withEffectParam(0, "mix", 0.6f)
+        return Song(name = "Tail over", tempo = 120f, loopSong = false, scenes = listOf(a, b), tracks = listOf(bass))
+    }
+
+    /** [song] with every clip frozen on the engine, the way [frozenSong] freezes. */
+    suspend fun freezeAll(song: Song): Song {
+        EngineSync.sync(song)
+        EngineSync.loadsDone()
+        var out = song
+        song.tracks.forEachIndexed { i, t ->
+            for (scene in song.scenes) {
+                val clip = t.clips[scene.id] ?: continue
+                val name = Freeze.nameFor(t.id, scene.id)
+                val r = NativeEngine.freezeClip(i, scene.engineId, File(EngineSync.freezeRoot!!, name).absolutePath, 8f)
+                check(r is NativeEngine.FreezeResult.Ok) { "the freeze failed: $r" }
+                val f = Frozen(name, r.bpm, r.ticks, r.frames, r.peak, Freeze.voiceOf(t), r.tail, Freeze.contentOf(song, t, clip))
+                out = out.copy(tracks = out.tracks.mapIndexed { j, tt ->
+                    if (j != i) tt else tt.copy(clips = tt.clips + (scene.id to clip.copy(frozen = f)))
+                })
+            }
+        }
+        return out
+    }
 
     /** One Forage pad playing samples/hit.wav, written into [user], four times a bar for two bars. */
     fun sampledSong(user: File): Song {

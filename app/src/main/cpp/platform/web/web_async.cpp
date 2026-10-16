@@ -133,3 +133,8 @@ extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadFrozen(JN
 extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeLoadFrozen(jniweb::Arena *arena, jint rack, jlongArray sceneIds, jobjectArray paths, jfloatArray bpms, jintArray ticks, jintArray tails) {
     return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeLoadFrozen(acid_jni_env(), nullptr, rack, sceneIds, paths, bpms, ticks, tails))); });
 }
+
+extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeMountFrozen(JNIEnv *, jobject, jint, jlong, jstring, jfloat, jint, jint, jint, jfloat);
+extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeMountFrozen(jniweb::Arena *arena, jint rack, jlong sceneId, jstring path, jfloat bpm, jint ticks, jint loopFrames, jint tailFrames, jfloat peak) {
+    return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeMountFrozen(acid_jni_env(), nullptr, rack, sceneId, path, bpm, ticks, loopFrames, tailFrames, peak))); });
+}

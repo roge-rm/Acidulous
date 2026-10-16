@@ -137,8 +137,9 @@ would.
 If a scene ramps to a new tempo, frozen clips in it are time-stretched through
 the ramp without changing pitch.
 
-Changing the machine, either effect or the tempo makes a freeze out of date,
-and the clip gets a mark. Thaw it or freeze it again.
+Changing the machine, either effect, the tempo or the clip's notes and lanes
+makes a freeze out of date: the clip gets a mark and plays its machine. Thaw it
+or freeze it again, or undo the edit and the freeze plays again.
 
 ## When the phone can't keep up
 

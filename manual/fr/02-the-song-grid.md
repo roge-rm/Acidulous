@@ -145,8 +145,9 @@ comme le ferait la machine en direct.
 Si une scène fait une rampe vers un nouveau tempo, ses clips figés sont étirés
 dans le temps le long de la rampe sans changer de hauteur.
 
-Changer la machine, un des effets ou le tempo rend un figé périmé, et le clip
-reçoit une marque. Défigez-le ou figez-le de nouveau.
+Changer la machine, un des effets, le tempo ou les notes et couloirs du clip
+rend un figé périmé : le clip reçoit une marque et joue sa machine. Défigez-le
+ou figez-le de nouveau, ou annulez la modification et le figé rejoue.
 
 ## Quand le téléphone ne suit pas
 

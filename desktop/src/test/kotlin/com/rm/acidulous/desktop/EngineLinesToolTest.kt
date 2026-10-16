@@ -1,6 +1,7 @@
 package com.rm.acidulous.desktop
 
 import com.rm.acidulous.engine.EngineLines
+import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Frozen
@@ -76,6 +77,63 @@ class EngineLinesToolTest {
     }
 
     @Test
+    fun frozenAudioIsMountedOnlyWhenAskedAndTheNotesAreAlwaysThere() {
+        val song = runBlocking { EngineLinesTool.frozenSong(user) }
+        val scene = song.scenes.single()
+        val f = song.tracks[1].clips[scene.id]!!.frozen!!
+        val freezeRoot = EngineSync.freezeRoot!!
+        // Rack 1's notes, written either way so a host can pick.
+        val notes = " i[18: 0 $PPQN 36 100 0 100 ${2 * PPQN} $PPQN 43 120 0 100 ${5 * PPQN} ${2 * PPQN} 31 90 0 100] "
+
+        val plain = EngineLinesTool.record(song, user).text.lines()
+        assertFalse(plain.toString(), plain.any { it.startsWith("MountFrozen") })
+        assertTrue(notes in plain.single { it.startsWith("SnapshotSetClip @0 1 0 ") })
+
+        val recording = EngineLinesTool.record(song, user, frozenAudio = true)
+        assertEquals(emptyList<String>(), recording.unportable)
+        val lines = recording.text.lines()
+        val mount = "MountFrozen 1 ${scene.engineId} \"zip:freeze/${f.file}\" ${f.bpm} ${f.ticks} ${f.frames} ${f.tail} ${f.peak}"
+        assertEquals(listOf(mount), lines.filter { it.startsWith("MountFrozen") })
+        assertTrue(notes in lines.single { it.startsWith("SnapshotSetClip @0 1 0 ") })
+
+        val zip = File(out, "frozen.zip")
+        SongBundle.write(song, user, zip, recording.text, freezeRoot = freezeRoot)
+        ZipFile(zip).use { z ->
+            val wav = z.getEntry("freeze/${f.file}")
+            assertTrue(z.getInputStream(wav).readBytes().contentEquals(File(freezeRoot, f.file).readBytes()))
+        }
+        val plainZip = File(out, "frozen-plain.zip")
+        SongBundle.write(song, user, plainZip, plain.joinToString("\n"))
+        ZipFile(plainZip).use { z -> assertTrue(z.entries().toList().none { it.name.startsWith("freeze/") }) }
+
+        // Edited after the freeze: it plays the machine, so no mount.
+        val edited = song.copy(tracks = song.tracks.mapIndexed { i, t ->
+            if (i != 1) t else t.copy(clips = t.clips.mapValues { (_, c) -> c.copy(notes = c.notes.drop(1)) })
+        })
+        assertFalse(EngineLinesTool.record(edited, user, frozenAudio = true).text.lines().any { it.startsWith("MountFrozen") })
+    }
+
+    @Test
+    fun theEngineOnlyGetsFreezesThatAreUpToDate() {
+        val song = runBlocking { EngineLinesTool.frozenSong(user) }
+        val f = song.tracks[1].clips.values.single().frozen!!
+        EngineSync.sync(song)
+        runBlocking { EngineSync.loadsDone() }
+        val freezes = { EngineSync.memoryText().lines().single { it.startsWith("freezes[") } }
+        assertTrue(freezes(), f.file in freezes())
+        val edited = song.copy(tracks = song.tracks.mapIndexed { i, t ->
+            if (i != 1) t else t.copy(clips = t.clips.mapValues { (_, c) -> c.copy(notes = c.notes.drop(1)) })
+        })
+        EngineSync.sync(edited)
+        runBlocking { EngineSync.loadsDone() }
+        assertFalse(freezes(), f.file in freezes())
+        // Undone: the same notes again, so it's current and mounted again.
+        EngineSync.sync(song)
+        runBlocking { EngineSync.loadsDone() }
+        assertTrue(freezes(), f.file in freezes())
+    }
+
+    @Test
     fun aSongZipCarriesItsEngineLinesAndTakes() {
         val song = EngineLinesTool.tapeSong(user)
         val sent = EngineLines.sent
@@ -84,6 +142,8 @@ class EngineLinesToolTest {
         assertEquals(emptyList<String>(), recording.unportable)
         val lines = recording.text.lines()
         assertEquals(EngineLines.HEADER, lines.first())
+        // A song starts with no freezes, whatever a host played before it.
+        assertEquals("ClearFrozen", lines[1])
         assertTrue(lines.toString(), "MountMachine 1 \"Bias\"" in lines)
         val reel = lines.single { it.startsWith("LoadReel 1 ") }
         assertTrue(reel, "|zip:samples/take.wav|" in reel)

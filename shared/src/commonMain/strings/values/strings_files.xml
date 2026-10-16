@@ -8,6 +8,8 @@
     <string name="export_format">format</string>
     <!-- The format that is the song and its samples in one zip. The other formats go by their own names. -->
     <string name="export_format_bundle">bundle</string>
+    <!-- A bundle switch: the frozen clips' audio goes in the zip. -->
+    <string name="export_frozen">frozen audio</string>
     <string name="export_what">what</string>
     <string name="export_what_song">song</string>
     <string name="export_what_scene">this scene</string>
@@ -32,6 +34,8 @@
     <string name="export_about_aac">Lossy.</string>
     <string name="export_about_midi">The notes, not the sound.</string>
     <string name="export_about_bundle">The song and every sample it uses, in one file.</string>
+    <!-- What the switch above adds to the zip, in megabytes. -->
+    <string name="export_about_frozen">Frozen audio: %1$s MB.</string>
     <string name="export_about_song">Every scene in order, with its repeats.</string>
     <!-- The same, naming the scene. -->
     <string name="export_about_scene_named">The open scene, once through. (%s)</string>

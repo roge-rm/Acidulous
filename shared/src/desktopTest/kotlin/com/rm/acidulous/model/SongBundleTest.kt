@@ -254,4 +254,38 @@ class SongBundleTest {
         assertEquals("a frozen clip keeps its freeze", "t1__s2.wav", back.tracks[0].clips["s2"]!!.frozen!!.file)
         assertEquals(song.tracks[1], back.tracks[1])
     }
+
+    /** [frozenSong] with track 1's freeze current and track 2's out of date (its voice is 5). */
+    private fun currentlyFrozen(): Song {
+        val song = frozenSong().copy(tempo = 120f)
+        val t1 = song.tracks[0]
+        val clip = t1.clips["s2"]!!
+        val f = clip.frozen!!.copy(ticks = clip.bars * song.signature.ticksPerBar, voice = Freeze.voiceOf(t1), content = Freeze.contentOf(song, t1, clip))
+        return song.copy(tracks = listOf(t1.copy(clips = t1.clips + ("s2" to clip.copy(frozen = f))), song.tracks[1]))
+    }
+
+    @Test
+    fun frozenAudioGoesInOnlyWhenAskedAndOnlyIfCurrent() = withRoot { root ->
+        val freeze = File(root, "freeze").apply { mkdirs() }
+        File(freeze, "t1__s2.wav").writeBytes(byteArrayOf(7, 7))
+        File(freeze, "t2__s1.wav").writeBytes(byteArrayOf(8))
+        val song = currentlyFrozen()
+        assertEquals(listOf("t1__s2.wav"), SongBundle.frozenFiles(song, freeze))
+        assertEquals(2L, SongBundle.frozenBytes(song, freeze))
+        val without = File(root, "without.zip")
+        SongBundle.write(song, root, without)
+        java.util.zip.ZipFile(without).use { z -> assertTrue(z.entries().toList().none { it.name.startsWith("freeze/") }) }
+        val with = File(root, "with.zip")
+        SongBundle.write(song, root, with, freezeRoot = freeze)
+        java.util.zip.ZipFile(with).use { z ->
+            assertEquals(listOf("freeze/t1__s2.wav"), z.entries().toList().map { it.name }.filter { it.startsWith("freeze/") })
+            assertArrayEquals(byteArrayOf(7, 7), z.getInputStream(z.getEntry("freeze/t1__s2.wav")).readBytes())
+        }
+        // The app freezes again on import, so the WAVs aren't unpacked.
+        withRoot { other ->
+            val back = runBlocking { SongBundle.read(with, other) }!!
+            assertFalse(File(other, "freeze").exists())
+            assertEquals(2, SongBundle.arrive(back).refreeze.size)
+        }
+    }
 }
