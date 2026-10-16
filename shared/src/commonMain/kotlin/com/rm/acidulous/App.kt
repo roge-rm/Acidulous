@@ -1163,10 +1163,9 @@ fun App(modifier: Modifier = Modifier) {
 
     /** A song name nothing saved already has: "Squelch", then "Squelch (2)". */
     fun freeSongName(wanted: String): String {
-        val taken = SongStore.list().toSet()
-        if (wanted !in taken) return wanted
+        if (!SongStore.exists(wanted)) return wanted
         var n = 2
-        while ("$wanted ($n)" in taken) n++
+        while (SongStore.exists("$wanted ($n)")) n++
         return "$wanted ($n)"
     }
 

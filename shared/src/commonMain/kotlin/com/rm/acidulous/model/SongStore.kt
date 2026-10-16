@@ -111,7 +111,13 @@ object SongStore {
 
     fun directory(): File = File(EngineAssets.userRoot(), "songs").apply { mkdirs() }
 
-    fun fileFor(name: String): File = File(directory(), "${safeName(name)}.json")
+    /** A song's file. One saved before names kept brackets and accents stays where it is. */
+    fun fileFor(name: String): File {
+        val file = File(directory(), "${safeName(name)}.json")
+        if (file.isFile) return file
+        val old = File(directory(), "${oldSafeName(name)}.json")
+        return if (old.isFile) old else file
+    }
 
     fun save(song: Song): File =
         fileFor(song.name).also { it.writeTextSafely(encode(song)) }
@@ -166,6 +172,17 @@ object SongStore {
             ?.sorted()
             ?: emptyList()
 
-    private fun safeName(name: String): String =
+    /** The file name for a song name: only characters no file system takes are swapped out. */
+    internal fun safeName(name: String): String =
+        name.trim().replace(Regex("[\\\\/:*?\"<>|\\u0000-\\u001f\\u007f]"), "_").trimStart('.').trim().let(::shortened).ifEmpty { "untitled" }
+
+    /** File names stop at 255 bytes, so a long name is cut at 200, never inside a character. */
+    private fun shortened(name: String): String {
+        var s = name
+        while (s.encodeToByteArray().size > 200) s = s.dropLast(if (s.last().isLowSurrogate()) 2 else 1)
+        return s.trim()
+    }
+
+    private fun oldSafeName(name: String): String =
         name.trim().replace(Regex("[^A-Za-z0-9 _-]"), "_").ifEmpty { "untitled" }
 }

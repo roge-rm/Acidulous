@@ -942,6 +942,7 @@ fun MainScreen(
                 current,
                 onDismiss = { dialog = null },
                 tempo = song.scenes.firstOrNull { it.id == d.sceneId }?.tempo?.bpm ?: song.tempo,
+                outdated = Freeze.stale(song, d.sceneId, current),
                 onFreeze = { dialog = null; onFreeze(listOf(Freeze.Target(d.track, d.sceneId))) },
                 onThaw = { dialog = null; onThaw(listOf(Freeze.Target(d.track, d.sceneId))) },
                 onClear = {
@@ -1252,7 +1253,7 @@ private fun ClipCell(
     /** Unique on the screen, so focus comes back here from the editor. */
     focusKey: String = "",
     frozen: Boolean = false,
-    /** Frozen, but at another tempo, so the machine is playing after all. */
+    /** Frozen, but at another tempo or edited since, so the machine is playing after all. */
     stale: Boolean = false,
     /** How many tape lanes hold a recording here, and whether any is off-tempo. */
     audioLanes: Int = 0,

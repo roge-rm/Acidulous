@@ -171,6 +171,8 @@ fun ClipSettingsDialog(
     onDismiss: () -> Unit,
     /** The song's tempo here, to tell whether a freeze can still be used. */
     tempo: Float = 0f,
+    /** Frozen but edited since, so the machine plays instead. */
+    outdated: Boolean = false,
     /** Renders this clip to audio, or throws the render away. Both dismiss. */
     onFreeze: () -> Unit = {},
     onThaw: () -> Unit = {},
@@ -216,7 +218,8 @@ fun ClipSettingsDialog(
             if (clip.frozen != null) stringResource(Res.string.clip_frozen) else null,
         ).joinToString(stringResource(Res.string.list_separator)).ifEmpty { stringResource(Res.string.clip_empty) }
         val frozen = clip.frozen
-        val stale = frozen != null && tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
+        val offTempo = frozen != null && tempo > 0f && kotlin.math.abs(frozen.bpm - tempo) >= 0.01f
+        val stale = offTempo || (frozen != null && outdated)
         WindowCards {
             // The card's title says what's in the clip, which is what its
             // actions act on.
@@ -257,10 +260,11 @@ fun ClipSettingsDialog(
                 }
             }
         }
-        // Explains that a freeze at another tempo isn't what's playing.
+        // Explains why a stale freeze isn't what's playing.
         if (frozen != null && stale) {
             Text(
-                stringResource(Res.string.clip_stale_note, frozen.bpm, tempo),
+                if (offTempo) stringResource(Res.string.clip_stale_note, frozen.bpm, tempo)
+                else stringResource(Res.string.clip_outdated_note),
                 color = com.rm.acidulous.ui.theme.Acid.colors.textDim, fontSize = 11.sp, lineHeight = 14.sp,
             )
         }

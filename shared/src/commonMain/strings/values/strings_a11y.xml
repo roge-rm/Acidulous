@@ -67,7 +67,7 @@
     <string name="a11y_cell_once">plays once</string>
     <string name="a11y_cell_muted">muted</string>
     <string name="a11y_cell_frozen">frozen</string>
-    <string name="a11y_cell_stale">frozen at another tempo</string>
+    <string name="a11y_cell_stale">frozen, out of date</string>
     <plurals name="a11y_cell_takes">
         <item quantity="one">%d recording</item>
         <item quantity="other">%d recordings</item>

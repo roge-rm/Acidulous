@@ -71,6 +71,7 @@
     </string-array>
     <string name="clip_seed">graine</string>
     <string name="clip_stale_note">Figé à %1$.0f bpm, mais le morceau est à %2$.0f, donc la machine joue à sa place. Figez-le de nouveau.</string>
+    <string name="clip_outdated_note">Plus à jour, donc la machine joue à sa place. Figez-le de nouveau.</string>
     <string name="clip_paste_title">Coller sur ce clip?</string>
     <string name="clip_paste">Coller</string>
     <string name="clip_paste_note">Coller remplace tout le contenu de ce clip (notes, automatisation et longueur) par %s.</string>
