@@ -25,6 +25,8 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
   baisse quand vous le tournez vers le bas.
 - **maintien** : combien de temps les cordes résonnent.
 - **brillant** : combien de temps elles gardent leurs aigus.
+- **résonance** : combien de temps une corde sonne encore une fois lâchée :
+  à 0 les doigts l’arrêtent, tout en haut elle résonne comme une note tenue.
 
 ## Mains
 

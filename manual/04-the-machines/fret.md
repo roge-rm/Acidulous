@@ -25,6 +25,8 @@ hear the 4th harmonic at all.
   it down.
 - **sustain** - how long the strings ring.
 - **bright** - how long they keep their top end.
+- **ring** - how long a string keeps sounding after you let go: at 0 your
+  fingers stop it, all the way up it rings out like a held note.
 
 ## Hands
 

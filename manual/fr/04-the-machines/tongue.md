@@ -48,7 +48,7 @@ pas. La pression, c’est le souffle.
 - **ajust.** - à quel point la lame est ajustée à la fente. Serré donne des
   bouffées plus nettes et plus d’harmoniques aiguës. Lâche est plus doux et
   plus creux.
-- **anneau** - combien de temps résonne une guimbarde d’acier, en secondes. Les
+- **résonance** - combien de temps résonne une guimbarde d’acier, en secondes. Les
   autres genres résonnent plus ou moins longtemps.
 
 **assise**, **ajust.** et **pincer** partent du réglage propre à chaque genre :

@@ -243,6 +243,24 @@ void endings() {
     g.f->noteOff(40);
     g.play(1.5);
     check(g.rms(2.0, 2.5) < -90.0 && g.f->activeVoices() == 0, "let go, it stops and the string is freed", fmt("%.1f dB", g.rms(2.0, 2.5)));
+    // Ring: a released string keeps sounding, longer the further up the knob.
+    double after[3];
+    for (int r = 0; r < 3; ++r) {
+        Guitar rung({{"ring", 0.5f * static_cast<float>(r)}});
+        rung.f->noteOn(52, 100);
+        rung.play(0.5);
+        rung.f->noteOff(52);
+        rung.play(1.5);
+        after[r] = rung.rms(0.8, 1.0) - rung.rms(0.1, 0.4);
+    }
+    check(after[1] > after[0] + 20.0 && after[2] > after[1] + 10.0 && after[2] > -25.0, "ring lets a released string sound on",
+          fmt("0.3 s after letting go %.1f, %.1f, %.1f dB", after[0], after[1], after[2]));
+    Guitar ringing({{"ring", 1.0f}});
+    ringing.f->noteOn(40, 127);
+    ringing.play(0.5);
+    ringing.f->noteOff(40);
+    ringing.play(30.0);
+    check(ringing.f->activeVoices() == 0, "...and still dies away and frees the string", fmt("%.1f dB at the end", ringing.rms(29.0, 30.5)));
     Guitar twelve({{"model", 1}}), six;
     twelve.f->noteOn(45, 100);
     six.f->noteOn(45, 100);

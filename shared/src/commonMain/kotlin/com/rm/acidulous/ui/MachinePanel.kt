@@ -3874,6 +3874,7 @@ private fun FretPanel(b: ParamBinding) {
                 Group("strings") {
                     PanelKnob(b, "sustain", "sustain")
                     PanelKnob(b, "bright", "bright")
+                    PanelKnob(b, "ring", "ring~strings")
                 }
             }
             1 -> {
@@ -4294,7 +4295,7 @@ private fun TonguePanel(b: ParamBinding, editor: SongEditor) {
                 Group("reed") {
                     PanelKnob(b, "set", "set", PanelAmber)
                     PanelKnob(b, "edge", "fit", PanelAmber)
-                    PanelKnob(b, "ring", "ring")
+                    PanelKnob(b, "ring", "ring~strings")
                 }
                 Group("pluck") {
                     PanelKnob(b, "pluck", "pluck", PanelPink)
