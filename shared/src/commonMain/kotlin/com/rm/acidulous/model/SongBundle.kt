@@ -92,6 +92,31 @@ object SongBundle {
         return song?.let { if (renamed.isEmpty()) it else repoint(it, renamed) }
     }
 
+    /**
+     * A song from a bundle, ready to open, the clips to freeze again once it's
+     * open, and the bundle's track ids to the song's new ones.
+     */
+    data class Arrival(val song: Song, val refreeze: List<Freeze.Target>, val ids: Map<String, String>)
+
+    /**
+     * Gets a song read from a bundle ready for this device.
+     *
+     * Freezes don't travel, so every frozen clip loses its freeze and is
+     * listed to be rendered again here. The tracks get new ids
+     * ([Freeze.copyPlan]), so a bundle of a song you already have can't write
+     * over its renders or delete them when the copy is thawed.
+     */
+    fun arrive(song: Song): Arrival {
+        val plan = Freeze.copyPlan(song)
+        val fresh = Freeze.applied(song, plan)
+        val refreeze = ArrayList<Freeze.Target>()
+        val tracks = fresh.tracks.mapIndexed { i, t ->
+            for (scene in fresh.scenes) if (t.clips[scene.id]?.frozen != null) refreeze += Freeze.Target(i, scene.id)
+            t.copy(clips = t.clips.mapValues { (_, clip) -> if (clip.frozen == null) clip else clip.copy(frozen = null) })
+        }
+        return Arrival(fresh.copy(tracks = tracks), refreeze, plan.ids)
+    }
+
     /** If "take 1.wav" is taken, tries "take 1 (2).wav", then (3), and so on. */
     private fun freeName(taken: File): File {
         var n = 2

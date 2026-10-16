@@ -363,11 +363,9 @@ fun Clip.cleared(): Clip =
  * The clip ready to paste somewhere else: everything except the freeze, with
  * a new identity.
  *
- * The freeze can't come. A render is named after its track and scene
- * (`Freeze.fileFor` builds `"${'$'}{trackId}__${'$'}{sceneId}.wav"`) and
- * `Freeze.discard` deletes that file, so two clips sharing one render would
- * both go silent when either thawed. On another track it would also be the
- * wrong machine.
+ * The freeze can't come. A render is named after its track, and a copy that
+ * kept it would play the old track's machine. Renders no song uses are
+ * deleted by the sweep at song open (App.kt `sweepFreezes`).
  *
  * The audio does come. A `TakeRef` is a window into a shared take file that
  * never changes, so another clip pointing at it is fine.

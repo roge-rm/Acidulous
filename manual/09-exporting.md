@@ -59,7 +59,8 @@ happens depends on what it is:
 - It opens as a new song and is saved straight away.
 - **A song bundle** (a .zip made by Export) opens as a song, with its samples.
   If you already have a sample with the same name, yours is kept and the
-  bundle's comes in under a new name.
+  bundle's comes in under a new name. Frozen clips are frozen again after it
+  opens.
 - **A sound** (WAV, AIFF, FLAC or MP3) goes into the sound library, up to ten
   minutes of it.
 - **A tuning** (a Scala .scl file) joins the tuning list, under key in the tempo

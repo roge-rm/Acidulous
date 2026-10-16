@@ -736,6 +736,11 @@ object UiPrefs {
         )?.apply()
     }
 
+    /** Gives each new id in [ids] (old to new) the zoom its old id had. */
+    fun carryZooms(ids: Map<String, String>) {
+        for ((old, new) in ids) zooms[old]?.let { (ticks, rows) -> chooseZoom(new, ticks, rows) }
+    }
+
     private fun readZooms(text: String?) {
         zooms.clear()
         for (entry in text.orEmpty().split(';')) {

@@ -28,6 +28,11 @@ object QuantiseMemory {
     var ends: Boolean = false
     /** The clip whose timing is the groove, as (track id, scene id), or null for straight. */
     var groove: Pair<String, String>? = null
+
+    /** Follows the open song's tracks to new ids (old to new). */
+    fun carry(ids: Map<String, String>) {
+        groove = groove?.let { (track, scene) -> (ids[track] ?: track) to scene }
+    }
     /** Back to where the notes were played, instead of onto a grid. */
     var asPlayed: Boolean = false
     /** How much humanise wobbles, 0..1. */

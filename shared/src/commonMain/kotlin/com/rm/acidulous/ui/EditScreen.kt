@@ -561,8 +561,7 @@ fun EditScreen(
                     "\u2744\uFE0E",
                     color = if (stale) Acid.colors.accent else Acid.colors.teal,
                 ) {
-                    com.rm.acidulous.model.Freeze.discard(song, com.rm.acidulous.model.Freeze.Target(trackIndex, sceneId))
-                    editor.editClip(trackIndex, sceneId) { it.copy(frozen = null) }
+                    editor.editClipQuietly(trackIndex, sceneId) { it.copy(frozen = null) }
                 }
             }
             // The title goes back too, so the ◀ and everything up to the paging

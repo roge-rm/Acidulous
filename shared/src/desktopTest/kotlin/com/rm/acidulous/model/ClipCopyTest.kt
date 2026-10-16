@@ -12,9 +12,8 @@ import org.junit.Test
  *
  * A `TakeRef` points into a shared recording that never changes (one take
  * across four scenes is four clips and one file), so copies can share it. A
- * `Frozen` render is named for its track and scene, and `Freeze.discard`
- * deletes the file, so two clips sharing it means thawing one silences both.
- * A copy must drop the freeze.
+ * `Frozen` render is named for its track and baked from its machine, so a
+ * copy must drop the freeze.
  */
 class ClipCopyTest {
 

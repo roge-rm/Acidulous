@@ -62,6 +62,7 @@
 
     <!-- Freezing -->
     <string name="app_freezing">freezing %1$d of %2$d…</string>
+    <string name="app_saving">saving…</string>
 
     <!-- Recording onto a tape -->
     <string name="app_record_failed">Recording didn\'t start: %s.</string>

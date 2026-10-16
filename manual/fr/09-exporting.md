@@ -65,7 +65,8 @@ téléphone, et ce qui se passe dépend de ce que c’est :
 - Il s’ouvre comme un nouveau morceau et est enregistré tout de suite.
 - **Un paquet** (un .zip fait par Exporter) s’ouvre comme un morceau, avec ses
   échantillons. Si vous avez déjà un échantillon du même nom, le vôtre est gardé
-  et celui du paquet entre sous un nouveau nom.
+  et celui du paquet entre sous un nouveau nom. Les clips figés sont figés de
+  nouveau à l’ouverture.
 - **Un son** (WAV, AIFF, FLAC ou MP3) va dans la bibliothèque de sons, jusqu’à
   dix minutes.
 - **Un accordage** (un fichier Scala .scl) s’ajoute à la liste des accordages,

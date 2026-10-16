@@ -130,6 +130,20 @@ class SongEditor(
         if (next === current) track else track.copy(clips = track.clips + (sceneId to next))
     }
 
+    /** The open song and every song and track its undo and redo can bring back. */
+    fun withHistory(): List<Song> =
+        listOf(song, song.copy(tracks = histories.values.flatMap { it.undo + it.redo } + takes.values)) +
+            songUndo + songRedo
+
+    /** Changes a clip without an undo step, for work the app does by itself. */
+    fun editClipQuietly(trackIndex: Int, sceneId: String, f: (Clip) -> Clip) {
+        val before = song.tracks.getOrNull(trackIndex) ?: return
+        val current = before.clips[sceneId] ?: song.emptyClipFor(sceneId)
+        val next = f(current)
+        if (next === current) return
+        commit(trackIndex, before.copy(clips = before.clips + (sceneId to next)), pushNow = true)
+    }
+
     // Each reads historyChanges first, which is always true, so a caller in
     // composition is told when a history changes.
     fun canUndo(trackIndex: Int): Boolean = historyChanges >= 0 && song.tracks.getOrNull(trackIndex)?.let { histories[it.id]?.undo?.isNotEmpty() } == true
@@ -141,7 +155,7 @@ class SongEditor(
         val previous = h.undo.removeLastOrNull() ?: return
         h.redo.addLast(current)
         historyChanges++
-        commit(trackIndex, previous, pushNow = true)
+        commit(trackIndex, keepFreezes(previous, current), pushNow = true)
     }
 
     fun redo(trackIndex: Int) {
@@ -150,7 +164,7 @@ class SongEditor(
         val next = h.redo.removeLastOrNull() ?: return
         h.undo.addLast(current)
         historyChanges++
-        commit(trackIndex, next, pushNow = true)
+        commit(trackIndex, keepFreezes(next, current), pushNow = true)
     }
 
     // --- Gestures ---------------------------------------------------------------------
@@ -238,7 +252,7 @@ class SongEditor(
         val previous = songUndo.removeLastOrNull() ?: return
         songRedo.addLast(song)
         historyChanges++
-        song = previous
+        song = keepFreezes(previous, song)
         onChange(song, true)
     }
 
@@ -246,13 +260,34 @@ class SongEditor(
         val next = songRedo.removeLastOrNull() ?: return
         songUndo.addLast(song)
         historyChanges++
-        song = next
+        song = keepFreezes(next, song)
         onChange(song, true)
     }
 
     private fun commit(trackIndex: Int, track: Track, pushNow: Boolean) {
         song = song.copy(tracks = song.tracks.toMutableList().also { it[trackIndex] = track })
         onChange(song, pushNow)
+    }
+
+    /**
+     * Freezing and thawing aren't undo steps: a freeze is a cache of the
+     * clip. So a restored track keeps each clip's freeze as it is now, the
+     * same as editing a frozen clip's notes keeps its freeze. A clip that
+     * isn't there now comes back unfrozen.
+     */
+    private fun keepFreezes(restored: Track, current: Track): Track {
+        if (restored.clips.all { (id, c) -> c.frozen === current.clips[id]?.frozen }) return restored
+        return restored.copy(clips = restored.clips.mapValues { (id, c) ->
+            val now = current.clips[id]?.frozen
+            if (c.frozen === now) c else c.copy(frozen = now)
+        })
+    }
+
+    /** The same over a whole song, by track id. A track that isn't there now keeps its own freezes. */
+    private fun keepFreezes(restored: Song, current: Song): Song {
+        val byId = current.tracks.associateBy { it.id }
+        val tracks = restored.tracks.map { t -> byId[t.id]?.let { keepFreezes(t, it) } ?: t }
+        return if (tracks.indices.all { tracks[it] === restored.tracks[it] }) restored else restored.copy(tracks = tracks)
     }
 
     private fun historyFor(trackId: String) = histories.getOrPut(trackId) { History() }

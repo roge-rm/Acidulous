@@ -122,4 +122,54 @@ class SongEditorTest {
         e.undo(0)
         assertFalse(e.song.tracks[0].clips[verse]!!.mute)
     }
+
+    private val render = Frozen(file = "r.wav", bpm = 120f, ticks = 96, frames = 48000)
+    private fun frozenNow(s: Spy) = s.editor.song.tracks[0].clips[verse]!!.frozen
+
+    @Test
+    fun freezingAndThawingAreNotUndoSteps() {
+        val s = Spy()
+        s.editor.editClipQuietly(0, verse) { it.copy(frozen = render) }
+        assertFalse(s.editor.canUndo(0))
+        s.editor.editClipQuietly(0, verse) { it.copy(frozen = null) }
+        assertFalse(s.editor.canUndo(0))
+    }
+
+    @Test
+    fun undoingAnEarlierEditKeepsTheFreezeAsItIsNow() {
+        val s = Spy()
+        val notes = s.editor.song.tracks[0].clips[verse]!!.notes
+        s.editor.editClip(0, verse) { it.copy(notes = it.notes + Note(0, 10, 60, 100)) }
+        s.editor.editClipQuietly(0, verse) { it.copy(frozen = render) }
+        s.editor.undo(0)
+        assertEquals(notes, s.editor.song.tracks[0].clips[verse]!!.notes)
+        assertEquals(render, frozenNow(s))
+        s.editor.redo(0)
+        assertEquals(notes.size + 1, s.editor.song.tracks[0].clips[verse]!!.notes.size)
+        assertEquals(render, frozenNow(s))
+    }
+
+    @Test
+    fun undoNeverBringsBackAThawedFreeze() {
+        val s = Spy()
+        s.editor.editClipQuietly(0, verse) { it.copy(frozen = render) }
+        s.editor.editClip(0, verse) { it.copy(notes = it.notes + Note(0, 10, 60, 100)) }
+        s.editor.editClipQuietly(0, verse) { it.copy(frozen = null) }
+        s.editor.undo(0)
+        assertEquals(null, frozenNow(s))
+        s.editor.redo(0)
+        assertEquals(null, frozenNow(s))
+    }
+
+    @Test
+    fun songUndoKeepsTheFreezeAsItIsNow() {
+        val s = Spy()
+        s.editor.editSong { it.copy(tempo = it.tempo + 1f) }
+        s.editor.editClipQuietly(0, verse) { it.copy(frozen = render) }
+        s.editor.undoSong()
+        assertEquals(render, frozenNow(s))
+        s.editor.editClipQuietly(0, verse) { it.copy(frozen = null) }
+        s.editor.redoSong()
+        assertEquals(null, frozenNow(s))
+    }
 }

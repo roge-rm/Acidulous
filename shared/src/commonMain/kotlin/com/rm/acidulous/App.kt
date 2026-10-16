@@ -77,6 +77,10 @@ import com.rm.acidulous.ui.TakePeaks
 import com.rm.acidulous.ui.theme.AcidulousTheme
 import com.rm.acidulous.util.Log
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -968,6 +972,110 @@ fun App(modifier: Modifier = Modifier) {
         }
         if (result.push) EngineSync.sync(editor.song)
     }
+    // --- Freeze ---------------------------------------------------------
+    // The render stops the audio stream while it runs, so it happens on a
+    // worker with the transport stopped, one clip at a time, and the model is
+    // only changed back on the main thread.
+    var freezeStatus by remember { mutableStateOf<String?>(null) }
+    /** The freeze batch running, if any. Opening another song stops it first ([stopFreezing]). */
+    val freezeJob = remember { arrayOfNulls<Job>(1) }
+    /**
+     * A Save as in progress. While it runs no freeze starts and song swaps
+     * wait, since it copies renders and then rewrites the open song's ids.
+     */
+    val saveJob = remember { arrayOfNulls<Job>(1) }
+    /** Bumped each time another song is opened, so a batch can tell its song has gone. */
+    val songGeneration = remember { IntArray(1) }
+    /**
+     * Freezes [targets] one at a time. Freezes aren't undo steps, since a
+     * freeze is a cache of the clip. [done] gets the renders that finished,
+     * whenever the batch ends, even when a song swap stopped it.
+     */
+    fun freeze(
+        targets: List<com.rm.acidulous.model.Freeze.Target>,
+        done: (List<com.rm.acidulous.model.Freeze.Rendered>) -> Unit = {},
+    ) {
+        if (targets.isEmpty() || freezeStatus != null || freezeJob[0]?.isActive == true || saveJob[0]?.isActive == true) return
+        // Busy from the tap, so a second tap can't start a second batch.
+        freezeStatus = AppStrings.getString(Res.string.app_freezing, 1, targets.size)
+        freezeJob[0] = scope.launch {
+            val generation = songGeneration[0]
+            val rendered = ArrayList<com.rm.acidulous.model.Freeze.Rendered>()
+            try {
+                if (NativeEngine.isPlaying) {
+                    NativeEngine.transportStop()
+                    delay(120)
+                }
+                for ((i, t) in targets.withIndex()) {
+                    if (!isActive || songGeneration[0] != generation) return@launch
+                    freezeStatus = AppStrings.getString(Res.string.app_freezing, i + 1, targets.size)
+                    // A freeze is a render, so it starts from the song too.
+                    val song = editor.song
+                    EngineSync.pushForRender(song)
+                    // Not cancellable: the render can't be interrupted, and a
+                    // song swap waits for it to finish before touching the engine.
+                    val frozen = withContext(NonCancellable + Dispatchers.IO) {
+                        com.rm.acidulous.model.Freeze.render(song, t)
+                    } ?: continue
+                    if (!isActive || songGeneration[0] != generation) {
+                        File(EngineAssets.freezeRoot(), frozen.file).delete()
+                        return@launch
+                    }
+                    song.tracks.getOrNull(t.track)?.let { rendered += com.rm.acidulous.model.Freeze.Rendered(it.id, t.sceneId, frozen) }
+                    editor.editClipQuietly(t.track, t.sceneId) { it.copy(frozen = frozen) }
+                }
+                Log.i(TAG, "froze ${rendered.size} of ${targets.size} clip(s)")
+            } finally {
+                freezeStatus = null
+                done(rendered)
+            }
+        }
+    }
+    /** Stops a freeze batch and waits for the render in progress. */
+    suspend fun stopFreezing() {
+        while (true) freezeJob[0]?.takeIf { it.isActive }?.cancelAndJoin() ?: break
+    }
+    val onFreeze: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { freeze(it) }
+
+    /**
+     * Deletes renders nothing uses: not the open song or its undo history,
+     * the session or any saved song. A thawed or undone freeze keeps its file
+     * until then, and a song that was never saved leaves its renders behind.
+     * Runs when a song is opened. A file written after it
+     * starts is never touched, so a freeze or a Save as running alongside is
+     * safe, and if any saved song can't be read nothing is deleted.
+     */
+    fun sweepFreezes() {
+        val open = editor.withHistory()
+        val since = System.currentTimeMillis()
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val root = EngineAssets.freezeRoot()
+                val old = root.listFiles { it.isFile && it.lastModified() < since }?.map { it.name }.orEmpty()
+                if (old.isEmpty()) return@runCatching
+                val songs = SongStore.list().map { SongStore.load(it) } +
+                    open + listOfNotNull(SongStore.sessionFile().takeIf { it.isFile }?.let { SongStore.decode(it.readText()) })
+                val unused = com.rm.acidulous.model.Freeze.unused(old, songs)
+                for (name in unused) File(root, name).delete()
+                if (unused.isNotEmpty()) Log.i(TAG, "deleted ${unused.size} unused render(s)")
+            }.onFailure { Log.w(TAG, "freeze sweep skipped", it) }
+        }
+    }
+
+    /** The open song's tracks have new ids (old to new): settings kept by track id follow. */
+    fun carryTrackIds(ids: Map<String, String>) {
+        com.rm.acidulous.ui.UiPrefs.carryZooms(ids)
+        com.rm.acidulous.ui.QuantiseMemory.carry(ids)
+    }
+    val onThaw: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { targets ->
+        for (t in targets) {
+            if (editor.song.tracks.getOrNull(t.track)?.clips?.get(t.sceneId)?.frozen == null) continue
+            // The file stays until the sweep at the next song open, since a
+            // song undo that brings back a deleted track can still name it.
+            editor.editClipQuietly(t.track, t.sceneId) { it.copy(frozen = null) }
+        }
+    }
+
     /**
      * Give the engine a different song, from a standing start.
      *
@@ -981,7 +1089,18 @@ fun App(modifier: Modifier = Modifier) {
      * catch up from the engine within a frame, but the play button would
      * flicker.
      */
-    fun swapSong(next: com.rm.acidulous.model.Song) {
+    fun swapSong(next: com.rm.acidulous.model.Song, then: () -> Unit = {}) {
+        // A freeze batch has the engine mid-render, and a Save as is
+        // rewriting the open song, so wait for both first.
+        if (freezeJob[0]?.isActive == true || saveJob[0]?.isActive == true) {
+            scope.launch {
+                saveJob[0]?.join()
+                stopFreezing()
+                swapSong(next, then)
+            }
+            return
+        }
+        songGeneration[0]++
         NativeEngine.transportStop()
         NativeEngine.queuedScene = -1
         NativeEngine.stopAtEnd = false
@@ -1000,6 +1119,8 @@ fun App(modifier: Modifier = Modifier) {
         loopScene = false
         stopAtEnd = false
         queuedScene = -1
+        sweepFreezes()
+        then()
     }
 
     // --- Import: a MIDI file, a song bundle, or a sound ------------------------------
@@ -1120,9 +1241,20 @@ fun App(modifier: Modifier = Modifier) {
                 } else if (song == null) {
                     notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_not_a_bundle, name)
                 } else {
-                    val named = song.copy(name = freeSongName(song.name))
-                    swapSong(named)
+                    // Freezes don't come in a bundle, so its frozen clips are rendered again here.
+                    val arrival = com.rm.acidulous.model.SongBundle.arrive(song)
+                    val named = arrival.song.copy(name = freeSongName(song.name))
                     SongStore.save(named)
+                    swapSong(named) {
+                        carryTrackIds(arrival.ids)
+                        // The renders go into the saved song as they're done, even if
+                        // another song is opened before the batch gets through.
+                        freeze(arrival.refreeze) { rendered ->
+                            if (rendered.isNotEmpty()) runCatching {
+                                SongStore.save(com.rm.acidulous.model.Freeze.withRenders(SongStore.load(named.name), rendered))
+                            }.onFailure { Log.w(TAG, "couldn't save the renders of ${named.name}", it) }
+                        }
+                    }
                 }
             }
             // The longest any machine takes (the ten minutes a slicer can
@@ -1224,44 +1356,6 @@ fun App(modifier: Modifier = Modifier) {
         )
     }
 
-
-    // --- Freeze ---------------------------------------------------------
-    // The render stops the audio stream while it runs, so it happens on a
-    // worker with the transport stopped, one clip at a time, and the model is
-    // only changed back on the main thread.
-    var freezeStatus by remember { mutableStateOf<String?>(null) }
-    val onFreeze: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { targets ->
-        if (targets.isNotEmpty() && freezeStatus == null) {
-            scope.launch {
-                if (NativeEngine.isPlaying) {
-                    NativeEngine.transportStop()
-                    delay(120)
-                }
-                var done = 0
-                targets.forEachIndexed { i, t ->
-                    freezeStatus = AppStrings.getString(Res.string.app_freezing, i + 1, targets.size)
-                    // A freeze is a render, so it starts from the song too.
-                    EngineSync.pushForRender(editor.song)
-                    val frozen = withContext(Dispatchers.IO) {
-                        com.rm.acidulous.model.Freeze.render(editor.song, t)
-                    }
-                    if (frozen != null) {
-                        ++done
-                        editor.editClip(t.track, t.sceneId) { it.copy(frozen = frozen) }
-                    }
-                }
-                freezeStatus = null
-                Log.i(TAG, "froze $done of ${targets.size} clip(s)")
-            }
-        }
-    }
-    val onThaw: (List<com.rm.acidulous.model.Freeze.Target>) -> Unit = { targets ->
-        for (t in targets) {
-            if (editor.song.tracks.getOrNull(t.track)?.clips?.get(t.sceneId)?.frozen == null) continue
-            com.rm.acidulous.model.Freeze.discard(editor.song, t)
-            editor.editClip(t.track, t.sceneId) { it.copy(frozen = null) }
-        }
-    }
 
     /**
      * The record button, which also starts the microphone when a Bias lane is
@@ -1977,7 +2071,39 @@ fun App(modifier: Modifier = Modifier) {
             onArm = onArm, onLoopScene = onLoopScene,
             onOpenClip = { track, sceneId -> screen = Screen.Edit(track, sceneId) },
             onSave = { SongStore.save(currentSong); Log.i(TAG, "saved ${currentSong.name}") },
-            onSaveAs = { name -> val renamed = currentSong.copy(name = name); editor.replace(renamed); SongStore.save(renamed); Log.i(TAG, "saved as $name") },
+            onSaveAs = { name ->
+                // The copy gets its own renders, so thawing one song can't silence the other.
+                if (saveJob[0]?.isActive != true) saveJob[0] = scope.launch {
+                    // A freeze running is let finish, and none can start until this is done.
+                    freezeJob[0]?.join()
+                    freezeStatus = AppStrings.getString(Res.string.app_saving)
+                    try {
+                        val generation = songGeneration[0]
+                        val plan = com.rm.acidulous.model.Freeze.copyPlan(editor.song)
+                        val root = EngineAssets.freezeRoot()
+                        val failed = withContext(Dispatchers.IO) {
+                            plan.files.filter { (from, to) ->
+                                runCatching { File(root, from).copyTo(File(root, to), overwrite = true) }.isFailure
+                            }.values.toSet()
+                        }
+                        if (songGeneration[0] != generation) {
+                            // Can't happen while swaps wait for this, but never apply the copy to another song.
+                            withContext(Dispatchers.IO) { plan.files.values.forEach { File(root, it).delete() } }
+                            Log.w(TAG, "save as $name dropped: the song changed")
+                            return@launch
+                        }
+                        // Applied to the song as it is now, so edits made during the copy stay.
+                        val renamed = com.rm.acidulous.model.Freeze.applied(editor.song, plan, failed).copy(name = name)
+                        songGeneration[0]++
+                        editor.replace(renamed)
+                        carryTrackIds(plan.ids)
+                        SongStore.save(renamed)
+                        Log.i(TAG, "saved as $name")
+                    } finally {
+                        freezeStatus = null
+                    }
+                }
+            },
             onNew = { name ->
                 val fresh = com.rm.acidulous.ui.UiPrefs.newSong(name)
                 swapSong(fresh)
