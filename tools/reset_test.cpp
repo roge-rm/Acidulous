@@ -160,7 +160,7 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
     if (std::strcmp(name, "Cumulus") == 0) {
         auto *cumulus = static_cast<machine::Cumulus *>(m);
         d.cloud = machine::cumulus::buildCloud(cumulus->spec(), kRate);
-        m->swapObject(0, d.cloud.get());
+        m->swapObject(0, d.cloud.release());
     }
     // Formulate's formula and tables are text compiled into a program, like
     // EngineSync.ensureFormulas does in the app.
@@ -174,7 +174,7 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
         }
         if (!(formula.empty() && arp.empty() && duty.empty() && vol.empty())) {
             d.program = machine::formulate::compile(formula, arp, duty, vol, error);
-            if (d.program) m->swapObject(0, d.program.get());
+            if (d.program) m->swapObject(0, d.program.release());
         }
     }
     return d;

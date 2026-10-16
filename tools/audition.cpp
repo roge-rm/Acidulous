@@ -636,7 +636,7 @@ struct Material {
 void buildCumulusCloud(Machine *m, Material &mat) {
     auto *cum = static_cast<::acidulous::machine::Cumulus *>(m);
     mat.cloud = ::acidulous::machine::cumulus::buildCloud(cum->spec(), static_cast<int32_t>(kSr));
-    m->swapObject(0, mat.cloud.get());
+    m->swapObject(0, mat.cloud.release());
 }
 
 void mountMaterial(Machine *m, const std::string &machine, const std::string &kind, Material &mat) {
@@ -647,23 +647,23 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
     if (kind == "kit" || (kind.empty() && machine == "Forage")) {
         for (int i = 0; i < static_cast<int>(Piece::Count); ++i) {
             mat.samples.push_back(pieceSample(static_cast<Piece>(i)));
-            m->swapObject(i, mat.samples.back().get());
+            m->swapObject(i, mat.samples.back().release());
         }
     } else if (kind == "break") {
         mat.take = breakLoop();
-        m->swapObject(0, mat.take.get());
+        m->swapObject(0, mat.take.release());
     } else if (kind == "seed") {
         mat.take = musicSeed();
-        m->swapObject(0, mat.take.get());
+        m->swapObject(0, mat.take.release());
     } else if (kind == "voicetake") {
         mat.take = voiceTake();
-        m->swapObject(0, mat.take.get());
+        m->swapObject(0, mat.take.release());
     } else if (kind == "voice") {
         mat.utterance = voiceUtterance();
-        m->swapObject(0, mat.utterance.get());
+        m->swapObject(0, mat.utterance.release());
     } else if (kind == "map") {
         mat.map = zoneMap();
-        m->swapObject(0, mat.map.get());
+        m->swapObject(0, mat.map.release());
     }
 }
 
@@ -698,7 +698,7 @@ void applySettings(Machine *m, const std::string &machine,
         std::fprintf(stderr, "  the formula did not compile: %s\n", error.c_str());
         return;
     }
-    m->swapObject(0, mat.program.get());
+    m->swapObject(0, mat.program.release());
 }
 
 /**

@@ -202,7 +202,7 @@ Dressing dress(const char *name, Machine *m) {
     if (std::strcmp(name, "Cumulus") == 0) {
         auto *c = static_cast<machine::Cumulus *>(m);
         d.cloud = machine::cumulus::buildCloud(c->spec(), kRate);
-        m->swapObject(0, d.cloud.get());
+        m->swapObject(0, d.cloud.release());
     } else if (std::strcmp(name, "Forage") == 0) {
         for (int32_t pad = 0; pad <= machine::Forage::kSharedSlot; ++pad) {
             auto s = std::make_unique<SampleData>();
@@ -210,7 +210,7 @@ Dressing dress(const char *name, Machine *m) {
             s->frames = static_cast<int32_t>(s->left.size());
             if (pad % 2 == 1) { s->right = s->left; s->stereo = true; }
             s->measure();
-            m->swapObject(pad, s.get());
+            m->swapObject(pad, s.release());
             d.pads.push_back(std::move(s));
         }
     } else if (std::strcmp(name, "Dice") == 0 || std::strcmp(name, "Pollen") == 0) {
@@ -225,14 +225,14 @@ Dressing dress(const char *name, Machine *m) {
         t.frames = static_cast<int32_t>(t.left.size());
         t.detect(kRate);
         t.bars = 2.0f;
-        m->swapObject(0, d.take.get());
+        m->swapObject(0, d.take.release());
     } else if (std::strcmp(name, "Molt") == 0) {
         d.voice = std::make_unique<audio::Utterance>();
         auto v = tone(1.5f, 180.0f, 0.5f);
         for (size_t i = 0; i < v.size(); ++i) v[i] += 0.3f * std::sin(6.2831853f * 540.0f * static_cast<float>(i) / kRate);
         d.voice->mono = v;
         d.voice->analyse(kRate);
-        m->swapObject(0, d.voice.get());
+        m->swapObject(0, d.voice.release());
     } else if (std::strcmp(name, "Mosaic") == 0) {
         d.map = std::make_unique<SampleMap>();
         for (int k = 0; k < 2; ++k) {
@@ -249,7 +249,7 @@ Dressing dress(const char *name, Machine *m) {
             if (k == 0) { z.loopStart = 1000; z.loopEnd = d.map->samples[0].frames - 1; }
             d.map->zones.push_back(z);
         }
-        m->swapObject(0, d.map.get());
+        m->swapObject(0, d.map.release());
     }
     return d;
 }

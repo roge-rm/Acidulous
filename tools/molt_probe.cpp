@@ -192,7 +192,7 @@ std::vector<float> renderNote(Utterance &u) {
     setp(machine::Molt::Rate, 0.0f);
     setp(machine::Molt::VelocityAmount, 0.0f);
     m.params().jumpAll();
-    m.swapObject(0, &u);
+    m.swapObject(0, new audio::Utterance(u));
 
     constexpr int32_t kBlock = 64;
     const int32_t hold = static_cast<int32_t>(kSr * 2.0f);

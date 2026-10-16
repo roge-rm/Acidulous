@@ -163,13 +163,13 @@ void mountCloudIfNeeded(Machine *m, const std::string &machine) {
     if (holdsAudio(machine)) {
         Mounted &mat = mounted(machine);
         if (!mat.pieces.empty()) {
-            for (size_t i = 0; i < mat.pieces.size(); ++i) m->swapObject(static_cast<int32_t>(i), mat.pieces[i].get());
+            for (size_t i = 0; i < mat.pieces.size(); ++i) m->swapObject(static_cast<int32_t>(i), mat.pieces[i].release());
         } else if (mat.take) {
-            m->swapObject(0, mat.take.get());
+            m->swapObject(0, mat.take.release());
         } else if (mat.map) {
-            m->swapObject(0, mat.map.get());
+            m->swapObject(0, mat.map.release());
         } else {
-            m->swapObject(0, mat.utterance.get());
+            m->swapObject(0, mat.utterance.release());
         }
         return;
     }

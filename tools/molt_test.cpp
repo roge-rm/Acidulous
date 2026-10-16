@@ -116,7 +116,7 @@ std::vector<float> play(audio::Utterance &u, float seconds, const std::vector<in
     setp(machine::Molt::VelocityAmount, 0.0f);
     for (const auto &kv : overrides) setp(kv.first, kv.second);
     m.params().jumpAll();
-    m.swapObject(0, &u);
+    m.swapObject(0, new audio::Utterance(u));
     for (int note : notes) m.noteOn(static_cast<uint8_t>(note), 100);
 
     constexpr int32_t kBlock = 64;
@@ -332,7 +332,7 @@ int main() {
         setp(machine::Molt::Tune, 0.6f);
         setp(machine::Molt::Rate, 60.0f);
         m.params().jumpAll();
-        m.swapObject(0, &take);
+        m.swapObject(0, new audio::Utterance(take));
 
         constexpr int32_t kBlock = 64;
         auto once = [&]() {

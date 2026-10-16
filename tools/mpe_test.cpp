@@ -71,7 +71,7 @@ const SampleMap &toneMap() {
     return map;
 }
 
-void mountTone(Machine *m) { m->swapObject(0, const_cast<SampleMap *>(&toneMap())); }
+void mountTone(Machine *m) { m->swapObject(0, new SampleMap(toneMap())); } // the machine owns it
 
 /**
  * The tone, and a matrix row that makes pressure audible.

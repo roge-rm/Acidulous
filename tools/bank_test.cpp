@@ -117,21 +117,21 @@ void mountMaterial(Machine *m, const std::string &machine, Material &mat) {
     if (machine == "Cumulus") {
         auto *cum = static_cast<machine::Cumulus *>(m);
         mat.cloud = machine::cumulus::buildCloud(cum->spec(), static_cast<int32_t>(kSr));
-        m->swapObject(0, mat.cloud.get());
+        m->swapObject(0, mat.cloud.release());
     } else if (machine == "Forage") {
         for (int i = 0; i < static_cast<int>(Piece::Count); ++i) {
             mat.samples.push_back(pieceSample(static_cast<Piece>(i)));
-            m->swapObject(i, mat.samples.back().get());
+            m->swapObject(i, mat.samples.back().release());
         }
     } else if (machine == "Dice" || machine == "Pollen") {
         mat.take = breakLoop();
-        m->swapObject(0, mat.take.get());
+        m->swapObject(0, mat.take.release());
     } else if (machine == "Mosaic") {
         mat.map = zoneMap();
-        m->swapObject(0, mat.map.get());
+        m->swapObject(0, mat.map.release());
     } else if (machine == "Molt") {
         mat.utterance = voiceUtterance();
-        m->swapObject(0, mat.utterance.get());
+        m->swapObject(0, mat.utterance.release());
     }
     // Put something on the input bus for machines that read it, so a patch
     // that needs input isn't reported as silent.
@@ -171,7 +171,7 @@ void applySettings(Machine *m, const std::string &machine,
         std::fprintf(stderr, "  the formula did not compile: %s\n", error.c_str());
         return;
     }
-    m->swapObject(0, mat.program.get());
+    m->swapObject(0, mat.program.release());
 }
 
 std::vector<float> renderMachine(const std::string &machine, const std::vector<float> &norm, int note,

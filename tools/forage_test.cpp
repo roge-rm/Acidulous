@@ -55,7 +55,7 @@ std::unique_ptr<Machine> padSetTo(int mode, SampleData *sample) {
     // `play` is stepped over three values, so normalised is mode/2.
     m->params().set(machine::Forage::index(0, machine::Forage::Play), static_cast<float>(mode) / 2.0f);
     m->params().jumpAll();
-    m->swapObject(0, sample);
+    m->swapObject(0, new SampleData(*sample)); // the machine owns what it is given
     return m;
 }
 } // namespace

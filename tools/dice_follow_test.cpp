@@ -104,7 +104,7 @@ float frequency(const std::vector<float> &x, int32_t from, int32_t to) {
 Dice *fresh(const Take &t, int slices) {
     auto *d = new Dice();
     d->prepare(static_cast<int32_t>(kSr));
-    d->swapObject(0, const_cast<Take *>(&t));
+    d->swapObject(0, new Take(t)); // the machine owns what it is given
     set(*d, Dice::CutMode, 1.0f); // an even grid, so a slice is a known length
     set(*d, Dice::SliceCount, static_cast<float>(slices));
     set(*d, Dice::Volume, 1.0f);

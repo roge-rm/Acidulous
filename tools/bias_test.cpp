@@ -85,6 +85,8 @@ struct Rig {
 
     Rig() { bias->prepare(kRate); }
 
+    ~Rig() { bias->swapObject(0, nullptr); } // the reel is a member, not the machine's to free
+
     void mount() { bias->swapObject(0, &reel); }
 
     /** One block at a place in the cell, and what the left channel held. */
