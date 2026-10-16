@@ -71,6 +71,21 @@ Si un contrôleur joue trop fort ou trop doucement, corrigez-le avec
 Chaque machine vient avec des sons, classés par famille. Le nom du son en haut
 du panneau ouvre le navigateur. Ajoutez vos propres sons dans le dernier onglet.
 
+### Sons avec effets
+
+Certains sons apportent leurs propres effets : jusqu’à deux effets en insertion
+et leurs niveaux d’envoi vers la réverb et le délai. Charger un de ces sons met
+ses effets dans les emplacements libres de la piste. Le son suivant retire
+seulement les effets que le précédent avait apportés, donc ceux que vous avez
+ajoutés vous-même restent. Si vos effets prennent les deux emplacements, l’effet
+du son est laissé de côté et l’appli le dit. Les niveaux d’envoi d’un son
+restent jusqu’à ce que vous chargiez un son sans envois, qui remet vos propres
+niveaux, ou que vous bougiez un envoi vous-même.
+
+Quand vous enregistrez un son, **avec les effets** enregistre aussi les effets
+en insertion et les niveaux d’envoi de la piste. Désactivez-le pour enregistrer
+seulement la machine.
+
 ### Partager des sons
 
 Dans le navigateur, **partager** à côté d’un son l’écrit dans un fichier

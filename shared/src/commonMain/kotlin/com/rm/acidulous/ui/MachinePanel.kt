@@ -111,7 +111,8 @@ fun MachinePanel(
     trackIndex: Int,
     editor: SongEditor,
     patchNames: () -> List<String>,
-    onSavePatch: (String) -> Unit,
+    /** The name, and whether the track's inserts and sends go in the patch. */
+    onSavePatch: (String, Boolean) -> Unit,
     onLoadPatch: (String) -> Patch?,
     factoryPatchNames: () -> List<com.rm.acidulous.model.Patch> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
@@ -171,8 +172,20 @@ fun MachinePanel(
                 val keep = MachineUi.patchKeeps(type)
                 val params = if (keep.isEmpty()) patch.params
                              else patch.params + track.machine.params.filterKeys { it in keep }
+                // Inserts that found no free slot, to say so once the edit is made.
+                var skipped = emptyList<String>()
+                var unknown = emptyList<String>()
+                val effectTypes = NativeEngine.effectTypes
                 editor.edit(trackIndex) { t ->
-                    var next = t.withPatch(params)
+                    // The patch's inserts and sends, in the same edit so one undo takes them too.
+                    val chained = com.rm.acidulous.model.PatchChain.apply(t, patch, { it in effectTypes }) { fx ->
+                        NativeEngine.effectParamInfo(fx).associate { it.name to it.defaultNormalized }
+                    }
+                    skipped = chained.skipped
+                    unknown = chained.unknown
+                    // Fresh effects in the patch's slots, even of the same type, so no tail rings on.
+                    com.rm.acidulous.engine.EngineSync.remountEffects(trackIndex, chained.placed)
+                    var next = chained.track.withPatch(params)
                     for ((k, v) in patch.settings) next = next.withSetting(k, v)
                     // Set last, so a patch that happens to carry these keys
                     // can't rename itself. Stored in settings so the name
@@ -186,14 +199,21 @@ fun MachinePanel(
                     next.withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(next.machine.params))
                 }
                 binding.applyAll(params)
+                if (unknown.isNotEmpty()) com.rm.acidulous.engine.EngineSync.onProblem?.invoke(
+                    Res.string.machine_patch_unknown_effect, arrayOf(unknown.joinToString(", ")),
+                )
+                else if (skipped.isNotEmpty()) com.rm.acidulous.engine.EngineSync.onProblem?.invoke(
+                    Res.string.machine_patch_no_slot, arrayOf(skipped.joinToString(", ")),
+                )
             }
         }
         // Saving under a name makes the machine that patch: same name, same
         // knobs, no star until a knob is turned.
-        val savePatch: (String) -> Unit = { name ->
-            onSavePatch(name)
+        val savePatch: (String, Boolean) -> Unit = { name, effects ->
+            onSavePatch(name, effects)
             editor.edit(trackIndex) { t ->
-                t.withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(t.machine.params))
+                // Saved with them, the inserts are the patch's now.
+                (if (effects) com.rm.acidulous.model.PatchChain.ownedBySaved(t) else t).withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(t.machine.params))
             }
         }
         // Show when the patch has been edited. Only parameters count, loading
@@ -458,7 +478,7 @@ private fun BarIcon(glyph: String, tint: Color, vertical: Boolean = false, said:
 
 @Composable
 private fun PatchBar(
-    type: String, patchNames: () -> List<String>, onSave: (String) -> Unit, onLoad: (String) -> Unit,
+    type: String, patchNames: () -> List<String>, onSave: (String, Boolean) -> Unit, onLoad: (String) -> Unit,
     factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
     onDelete: (String) -> Unit, current: String?, edited: Boolean,
     minimized: Boolean, onToggleMinimized: () -> Unit,
@@ -540,8 +560,8 @@ private fun PatchBar(
                     // weights so the marks above don't move with the length of
                     // a patch name.
                     PatchPicker(
-                        type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete,
-                        current, edited, vertical = true, modifier = Modifier.height(patchH),
+                        type, patchNames, { onSave(it, true) }, onLoad, factoryPatches, userNames, onDelete,
+                        current, edited, vertical = true, modifier = Modifier.height(patchH), onSaveWithEffects = onSave,
                     )
                     Spacer(Modifier.height(3.dp))
                     // Half each, so neither name gets squeezed to a few
@@ -559,7 +579,7 @@ private fun PatchBar(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(type, color = Acid.colors.text, fontSize = 13.sp, maxLines = 1)
-            PatchPicker(type, patchNames, onSave, onLoad, factoryPatches, userNames, onDelete, current, edited)
+            PatchPicker(type, patchNames, { onSave(it, true) }, onLoad, factoryPatches, userNames, onDelete, current, edited, onSaveWithEffects = onSave)
         }
         BarIcon("\u2039", Acid.colors.accent, said = stringResource(Res.string.a11y_prev_patch)) { step(-1) }
         BarIcon("\u203A", Acid.colors.accent, said = stringResource(Res.string.a11y_next_patch)) { step(1) }
@@ -620,6 +640,8 @@ internal fun PatchPicker(
     modifier: Modifier = Modifier,
     /** The patch store's key: [title] for a machine, PatchStore.effectKey for an effect. */
     key: String = title,
+    /** A machine's save, which can take the track's effects along. Replaces [onSave] when set. */
+    onSaveWithEffects: ((String, Boolean) -> Unit)? = null,
 ) {
     var menu by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
@@ -668,7 +690,16 @@ internal fun PatchPicker(
             for (n in patchNames()) DropdownMenuItem(text = { Text(n, fontSize = 12.sp) }, onClick = { menu = false; onLoad(n) })
         }
     }
-    if (saving) TextInputDialog(stringResource(Res.string.machine_patch_name), "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
+    if (saving) {
+        if (onSaveWithEffects != null) {
+            TextInputDialog(
+                stringResource(Res.string.machine_patch_name), "", stringResource(Res.string.machine_patch_with_effects), true,
+                onDismiss = { saving = false },
+            ) { name, effects -> onSaveWithEffects(name, effects); saving = false }
+        } else {
+            TextInputDialog(stringResource(Res.string.machine_patch_name), "", onDismiss = { saving = false }) { name -> onSave(name); saving = false }
+        }
+    }
     if (browsing) {
         val factory = remember(title) { factoryPatches() }
         val user = remember(title, listRev) { userNames() }

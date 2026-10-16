@@ -362,6 +362,10 @@ void checkBank(const Bank &bank) {
 
         const Resolved r = resolve(patch, defs, count);
         for (const std::string &p : r.problems) fail(who, p);
+        // Its inserts name real effects and values, as the machine's do.
+        std::vector<std::string> chainProblems;
+        resolveChain(patch, chainProblems);
+        for (const std::string &p : chainProblems) fail(who, p);
         for (size_t i = 0; i < r.norm.size(); ++i) {
             if (!(r.norm[i] >= 0.0f && r.norm[i] <= 1.0f)) {
                 fail(who, std::string(defs[i].name) + " resolved outside 0..1");

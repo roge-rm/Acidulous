@@ -236,7 +236,9 @@ internal object FactoryBanks {
     private fun trinity3() = Patch("Trinity", "Glass Pad",
         mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.2f, "o1_level" to 1f, "o2_wave" to 0.363636374f, "o2_pos" to 0.6f, "o2_fine" to 0.56f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "f1_res" to 0.2f, "a_attack" to 0.7257725f, "a_decay" to 0.774181366f, "a_sustain" to 0.75f, "a_release" to 0.79919f, "l1_rate" to 0.3265052f, "l2_rate" to 0.2346152f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.7f, "m02_src" to 0.933333337f, "m02_dest" to 0.6969697f, "m02_depth" to 0.575f, "m03_src" to 0.13333334f, "m03_dest" to 0.151515156f, "m03_depth" to 0.75f, "m04_src" to 0.2f, "m04_dest" to 0.6969697f, "m04_depth" to 0.725f, "volume" to 0.96f),
         family = "pad",
-        low = 36, high = 79)
+        low = 36, high = 79,
+        inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "gain" to 0.46875f))),
+        sendReverb = 0.3f, sendDelay = 0f)
 
     private fun trinity4() = Patch("Trinity", "Drift Strings",
         mapOf("o1_level" to 0.95f, "o1_density" to 0.142857149f, "o1_detune" to 0.3f, "o1_drift" to 0.8f, "o2_fine" to 0.43f, "o2_level" to 0.87f, "o2_drift" to 0.9f, "o3_wave" to 0.181818187f, "o3_coarse" to 0.75f, "o3_level" to 0.55f, "o3_drift" to 0.7f, "f1_type" to 0.181818187f, "f1_freq" to 0.747679353f, "f1_res" to 0.05f, "a_attack" to 0.636016965f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.7342073f, "l1_rate" to 0.736582041f, "l1_delay" to 0.4f, "m01_src" to 0.8666667f, "m01_src2" to 0.13333334f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.51f, "volume" to 0.45f),
@@ -421,7 +423,8 @@ internal object FactoryBanks {
     private fun trinity40() = Patch("Trinity", "Saw Lead",
         mapOf("o1_level" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "o3_fine" to 0.45f, "o3_level" to 0.83f, "f1_freq" to 0.651414156f, "f1_res" to 0.25f, "f1_key" to 0.8f, "a_attack" to 0.2257725f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "volume" to 0.39f),
         family = "lead",
-        low = 48, high = 91)
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.485719174f, "tone" to 0.6456324f, "mix" to 0.6f, "gain" to 0.427083343f)), UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.368421048f, "mix" to 0.25f))))
 
     private fun trinity41() = Patch("Trinity", "Fifth Lead",
         mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.6458333f, "o2_level" to 0.91f, "o3_wave" to 0.09090909f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "volume" to 0.24f),

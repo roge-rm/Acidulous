@@ -237,7 +237,7 @@ fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(s
  * the effect's default, and the panel pushes those defaults itself.
  */
 fun Track.withEffectPatch(slot: Int, params: Map<String, Float>): Track =
-    withEffectSlot(slot) { it.copy(params = params) }
+    withEffectSlot(slot) { it.copy(params = params, fromPatch = false) }
 
 /** The unit name the engine uses for a slot: "effect1", "effect2". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"

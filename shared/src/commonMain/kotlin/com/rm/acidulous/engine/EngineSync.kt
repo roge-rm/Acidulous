@@ -310,6 +310,19 @@ object EngineSync {
     }
 
     /**
+     * Mounts new effects in [slots] of [rack] at the next sync, even where the
+     * type is the same, so a patch's inserts start with nothing ringing on.
+     */
+    fun remountEffects(rack: Int, slots: Collection<Int>, m: Memory = live) {
+        if (rack !in 0 until RACKS) return
+        for (slot in slots) {
+            if (slot !in 0 until EFFECT_SLOTS) continue
+            m.mountedEffects[rack][slot] = null
+            m.loadedEffectFormulas.remove(effectFormulaKey(rack, effectUnit(slot)))
+        }
+    }
+
+    /**
      * The two send buses, the same way.
      *
      * One array rather than sixteen, because sends belong to the song, not a

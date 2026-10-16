@@ -453,9 +453,28 @@ data class UnitSlot(
     val bypass: Boolean = false,
     /** Words rather than numbers, like a Formula effect's "formula". Empty for most. */
     val settings: Map<String, String> = emptyMap(),
+    /**
+     * An insert the track's patch put here, which the next patch takes away
+     * ([PatchChain]). Turning its knobs keeps it the patch's; choosing
+     * another effect or a preset for the slot makes it the player's.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val fromPatch: Boolean = false,
 ) {
     val isEmpty: Boolean get() = type.isEmpty()
 }
+
+/**
+ * A track's send levels from before its patch set them ([reverb], [delay]),
+ * and what the patch set ([patchReverb], [patchDelay]), so a send moved by
+ * hand since can be told. All 0..1.
+ */
+@Serializable
+data class PatchSends(
+    val reverb: Float,
+    val delay: Float,
+    val patchReverb: Float = 0f,
+    val patchDelay: Float = 0f,
+)
 
 typealias EffectSlot = UnitSlot
 
@@ -558,6 +577,8 @@ data class Track(
     val effects: List<UnitSlot> = emptyList(),
     /** Modifiers, in order before the machine: notes pass modifier 1, then 2, then 3. */
     val modifiers: List<UnitSlot> = emptyList(),
+    /** The player's send levels while the track's patch owns its sends, see [PatchChain]. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val patchSends: PatchSends? = null,
 ) {
     fun effectAt(slot: Int): UnitSlot = effects.getOrNull(slot) ?: UnitSlot()
     fun modifierAt(slot: Int): UnitSlot = modifiers.getOrNull(slot) ?: UnitSlot()

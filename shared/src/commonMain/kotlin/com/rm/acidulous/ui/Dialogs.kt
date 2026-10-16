@@ -410,6 +410,29 @@ fun TextInputDialog(title: String, initial: String, onDismiss: () -> Unit, onCon
     }
 }
 
+/** [TextInputDialog] with one on/off choice under the name, like a patch saved with its effects. */
+@Composable
+fun TextInputDialog(
+    title: String, initial: String, option: String, optionOn: Boolean,
+    onDismiss: () -> Unit, onConfirm: (String, Boolean) -> Unit,
+) {
+    var value by remember { mutableStateOf(initial) }
+    var on by remember { mutableStateOf(optionOn) }
+    PlainDialog(
+        title = title,
+        onDismiss = onDismiss,
+        confirmLabel = stringResource(Res.string.ok),
+        confirmEnabled = value.isNotBlank(),
+        onConfirm = { if (value.isNotBlank()) onConfirm(value.trim(), on) },
+    ) {
+        OutlinedTextField(
+            value = value, onValueChange = { value = it }, singleLine = true,
+            modifier = Modifier.typing() then Modifier.fillMaxWidth(),
+        )
+        ToggleSquare(option, on) { on = it }
+    }
+}
+
 /**
  * A number set by dragging: the name, its value on the right, a line saying
  * what it is, and the slider underneath.

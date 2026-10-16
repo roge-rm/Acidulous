@@ -111,7 +111,7 @@ fun EditScreen(
     onOpenPatch: () -> Unit = {},
     patchNames: () -> List<String>,
     /** The name, and the note range the keyboard was showing, which a saved patch remembers. */
-    onSavePatch: (name: String, low: Int, high: Int) -> Unit,
+    onSavePatch: (name: String, low: Int, high: Int, effects: Boolean) -> Unit,
     onLoadPatch: (String) -> com.rm.acidulous.model.Patch?,
     factoryPatchNames: () -> List<com.rm.acidulous.model.Patch> = { emptyList() },
     userPatchNames: () -> List<String> = { emptyList() },
@@ -922,7 +922,7 @@ fun EditScreen(
             // keyboard's bottom C to the bottom of its range so the first key
             // pressed is a note the instrument has. Saving one keeps where the
             // keyboard was.
-            onSavePatch = { name -> onSavePatch(name, 12 * (octave + 1), 12 * (octave + 3)) },
+            onSavePatch = { name, effects -> onSavePatch(name, 12 * (octave + 1), 12 * (octave + 3), effects) },
             onLoadPatch = { name ->
                 onLoadPatch(name)?.also { p ->
                     // The keyboard follows the patch, the roll doesn't. The

@@ -49,6 +49,8 @@ using namespace acidulous::audition;
 namespace {
 
 constexpr int32_t kBlock = kBlockFrames;
+/** The master's send buses, kSendSlots in rack/MasterBus.h. */
+constexpr int kSendBuses = 2;
 std::string gBankDir;
 // The repo root, for material kept in files rather than headers.
 std::string gRootDir = ".";
@@ -813,7 +815,85 @@ Take gLastTake;
  * right speed. A fixed ticks-per-block step like reset_test's would run them
  * about six times too fast.
  */
-Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
+/**
+ * The effects a machine patch brings, run the way the engine does: its
+ * inserts in the rack after the machine, then its sends as a mono sum into a
+ * fully wet Reverb and Delay at their defaults (a new song's send buses),
+ * added back. Empty for a patch without any, and with --dry.
+ */
+struct FxChain {
+    std::vector<std::unique_ptr<Effect>> inserts;
+    std::unique_ptr<Effect> sends[kSendBuses];
+    float level[kSendBuses] = {0.0f, 0.0f};
+
+    bool empty() const { return inserts.empty() && level[0] <= 0.0f && level[1] <= 0.0f; }
+
+    bool build(const PatchChain &chain) {
+        inserts.clear();
+        for (const PatchInsert &in : chain.inserts) {
+            std::unique_ptr<Effect> fx(EffectRegistry::create(in.type.c_str()));
+            if (!fx) return false;
+            fx->prepare(static_cast<int32_t>(kSr));
+            inserts.push_back(std::move(fx));
+        }
+        static const char *const kTypes[kSendBuses] = {"Reverb", "Delay"};
+        level[0] = chain.hasSends ? chain.sendReverb : 0.0f;
+        level[1] = chain.hasSends ? chain.sendDelay : 0.0f;
+        for (int s = 0; s < kSendBuses; ++s) {
+            sends[s].reset(level[s] > 0.0f ? EffectRegistry::create(kTypes[s]) : nullptr);
+            if (sends[s]) sends[s]->prepare(static_cast<int32_t>(kSr));
+        }
+        this->chain = chain;
+        reset();
+        return true;
+    }
+
+    /** Back to the patch's values with nothing ringing, as before each render. */
+    void reset() {
+        for (size_t i = 0; i < inserts.size(); ++i) {
+            Effect *fx = inserts[i].get();
+            fx->reset();
+            ParamSet &ps = fx->params();
+            for (const auto &kv : chain.inserts[i].params) {
+                const int32_t at = ps.indexOf(kv.first.c_str());
+                if (at >= 0) ps.set(at, kv.second);
+            }
+            ps.jumpAll();
+            applyEffectSettings(fx, chain.inserts[i].settings);
+        }
+        for (auto &fx : sends) {
+            if (!fx) continue;
+            fx->reset();
+            const int32_t mix = fx->params().indexOf("mix");
+            if (mix >= 0) fx->params().set(mix, 1.0f);
+            fx->params().jumpAll();
+        }
+    }
+
+    void process(float *L, float *R, int32_t n, int64_t t0, int64_t t1, float bpm) {
+        for (auto &fx : inserts) {
+            fx->onBlock(t0, t1, bpm);
+            fx->run(L, R, n, true);
+        }
+        float wetL[kBlock], wetR[kBlock];
+        for (int s = 0; s < kSendBuses; ++s) {
+            if (!sends[s]) continue;
+            for (int32_t i = 0; i < n; ++i) wetL[i] = wetR[i] = (L[i] + R[i]) * 0.5f * level[s];
+            sends[s]->onBlock(t0, t1, bpm);
+            sends[s]->run(wetL, wetR, n, false);
+            for (int32_t i = 0; i < n; ++i) {
+                L[i] += wetL[i];
+                R[i] += wetR[i];
+            }
+        }
+    }
+
+    PatchChain chain;
+};
+
+Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, FxChain *fx = nullptr) {
+    if (fx != nullptr && fx->empty()) fx = nullptr;
+    if (fx != nullptr) fx->reset();
     Take out;
     out.stereo.reserve(static_cast<size_t>(phrase.frames) * 2);
     out.offAt = phrase.lastOff;
@@ -852,7 +932,12 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
         m->onBlock(t0, t1, bpm);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
-        const bool stereo = m->render(L, R, kBlock);
+        bool stereo = m->render(L, R, kBlock);
+        if (fx != nullptr) {
+            if (!stereo) std::memcpy(R, L, sizeof(L));
+            stereo = true;
+            fx->process(L, R, kBlock, t0, t1, bpm);
+        }
         for (int32_t i = 0; i < kBlock; ++i) {
             out.stereo.push_back(L[i]);
             out.stereo.push_back(stereo ? R[i] : L[i]);
@@ -877,7 +962,12 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat) {
             m->onBlock(t0, t1, bpm);
             std::memset(L, 0, sizeof(L));
             std::memset(R, 0, sizeof(R));
-            const bool stereo = m->render(L, R, kBlock);
+            bool stereo = m->render(L, R, kBlock);
+            if (fx != nullptr) {
+                if (!stereo) std::memcpy(R, L, sizeof(L));
+                stereo = true;
+                fx->process(L, R, kBlock, t0, t1, bpm);
+            }
             float loudest = 0.0f;
             for (int32_t i = 0; i < kBlock; ++i) {
                 out.stereo.push_back(L[i]);
@@ -1359,6 +1449,7 @@ struct Options {
     bool ladder = false;
     bool track = false;
     bool quiet = false; // sweep: no row, no wav, just return the numbers
+    bool dry = false;   // without the patch's inserts and sends
     std::vector<std::pair<std::string, double>> sets;
 };
 
@@ -1404,6 +1495,15 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         m->reset();
         applyTo(m->params(), r.norm);
 
+        // The patch's inserts and sends, unless --dry.
+        FxChain chain;
+        if (!opt.dry) {
+            std::vector<std::string> problems;
+            const PatchChain pc = resolveChain(patch, problems);
+            for (const std::string &p : problems) std::fprintf(stderr, "  %s: %s\n", patch.name.c_str(), p.c_str());
+            if (!chain.build(pc)) std::fprintf(stderr, "  %s: an insert would not build\n", patch.name.c_str());
+        }
+
         Material mat;
         std::string material = !patch.material.empty() ? patch.material
                              : bank.material != "none" ? bank.material
@@ -1439,7 +1539,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         // time instead.
         const std::string measureKind = kit != nullptr ? "voices" : "note";
         const Phrase measurePhrase = buildPhrase(measureKind, note, opt.velocity, opt.bpm, kit);
-        const Take measureTake = render(m.get(), measurePhrase, opt.bpm, mat);
+        const Take measureTake = render(m.get(), measurePhrase, opt.bpm, mat, &chain);
         gMeasureTake = measureTake;
         measured = measure(measureTake.stereo, measureTake.offAt, kit != nullptr ? 0 : note);
         measuredNote = kit != nullptr ? 0 : note;
@@ -1479,7 +1579,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             // module's default. Without this those knobs go back to zero and
             // the render can be silent.
             dress();
-            take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range), opt.bpm, mat);
+            take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range), opt.bpm, mat, &chain);
         }
     }
 
@@ -1875,6 +1975,46 @@ int cmdEmit(const std::string &outPath) {
                 std::snprintf(range, sizeof(range), ",\n        low = %d, high = %d", patch.low, patch.high);
                 body += range;
             }
+            // The effects it brings: each insert's values that differ from
+            // the effect's defaults, which the app fills in, and its sends.
+            std::vector<std::string> chainProblems;
+            const PatchChain chain = resolveChain(patch, chainProblems);
+            for (const std::string &p : chainProblems) {
+                std::fprintf(stderr, "%s / %s: %s\n", unit.c_str(), patch.name.c_str(), p.c_str());
+                return 1;
+            }
+            if (!chain.inserts.empty()) {
+                std::string list;
+                for (size_t k = 0; k < chain.inserts.size(); ++k) {
+                    const PatchInsert &fx = chain.inserts[k];
+                    int32_t fxCount = 0;
+                    const ParamDef *fxDefs = EffectRegistry::paramDefs(fx.type.c_str(), fxCount);
+                    std::string params;
+                    int written = 0;
+                    for (int32_t i = 0; i < fxCount && i < static_cast<int32_t>(fx.params.size()); ++i) {
+                        const float v = fx.params[static_cast<size_t>(i)].second;
+                        if (std::fabs(v - fxDefs[i].unmap(fxDefs[i].def)) < 1e-7f) continue;
+                        params += (written++ == 0 ? "" : ", ") + std::string("\"") + fxDefs[i].name + "\" to " +
+                                  floatLiteral(v) + "f";
+                    }
+                    list += (k > 0 ? ", " : "") + std::string("UnitSlot(\"") + fx.type + "\", " +
+                            (written == 0 ? std::string("emptyMap()") : "mapOf(" + params + ")");
+                    if (!fx.settings.empty()) {
+                        std::string sets;
+                        for (size_t j = 0; j < fx.settings.size(); ++j) {
+                            sets += (j > 0 ? ", " : "") + std::string("\"") + fx.settings[j].first + "\" to \"" +
+                                    kotlinString(fx.settings[j].second) + "\"";
+                        }
+                        list += ", settings = mapOf(" + sets + ")";
+                    }
+                    list += ")";
+                }
+                body += ",\n        inserts = listOf(" + list + ")";
+            }
+            if (chain.hasSends) {
+                body += ",\n        sendReverb = " + floatLiteral(chain.sendReverb) + "f, sendDelay = " +
+                        floatLiteral(chain.sendDelay) + "f";
+            }
             body += ")\n";
             ++n;
             ++patches;
@@ -1943,6 +2083,7 @@ void usage() {
         "              purpose and so does a pluck; this is not the click column\n"
         "    low       energy under half the note, against all of it\n"
         "  --track   pitch and level against time over the front of the note\n"
+        "  --dry     without the patch's inserts and sends\n"
         "  --banks DIR  --out DIR\n");
 }
 
@@ -1968,6 +2109,7 @@ int main(int argc, char **argv) {
         else if (a == "--join") { /* ignored: `bank` always does this. Kept so old command lines work */ }
         else if (a == "--ladder") opt.ladder = true;
         else if (a == "--track") opt.track = true;
+        else if (a == "--dry") opt.dry = true;
         else if (a == "--banks") gBankDir = next();
         else if (a == "--out") gOutDir = next();
         else if (a == "--set") {

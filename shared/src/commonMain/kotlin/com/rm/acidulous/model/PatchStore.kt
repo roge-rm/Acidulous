@@ -37,6 +37,18 @@ data class Patch(
      * onto the seventeen ([RateMigration]).
      */
     val version: Int = 1,
+    /**
+     * Insert effects the patch puts on its track, at most [EFFECT_SLOTS], in
+     * order. A factory patch lists only the values that differ from the
+     * effect's defaults. See [PatchChain] for which slots they go in.
+     */
+    val inserts: List<UnitSlot> = emptyList(),
+    /**
+     * Send levels 0..1. Null for both leaves the track's sends alone; a patch
+     * with either has both.
+     */
+    val sendReverb: Float? = null,
+    val sendDelay: Float? = null,
 )
 
 /**

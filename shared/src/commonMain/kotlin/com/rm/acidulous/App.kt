@@ -2162,9 +2162,11 @@ fun App(modifier: Modifier = Modifier) {
             // Save the settings, not only the knobs: a Nexus patch without its
             // graph, a Mosaic without its zones or a Formulate without its
             // formula would come back wrong.
-            onSavePatch = { name, low, high ->
-                val m = song.tracks[s.track].machine
-                PatchStore.save(Patch(m.type, name, m.params, m.settings, low, high))
+            onSavePatch = { name, low, high, effects ->
+                val t = song.tracks[s.track]
+                val m = t.machine
+                val patch = Patch(m.type, name, m.params, m.settings, low, high)
+                PatchStore.save(if (effects) com.rm.acidulous.model.PatchChain.withEffectsOf(patch, t) else patch)
             },
             onLoadPatch = { name -> PatchStore.load(song.tracks[s.track].machine.type, name) },
             factoryPatchNames = { PatchStore.factory(song.tracks[s.track].machine.type) },

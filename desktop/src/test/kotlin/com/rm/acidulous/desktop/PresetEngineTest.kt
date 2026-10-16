@@ -74,6 +74,49 @@ class PresetEngineTest {
     }
 
     @Test
+    fun aMachinePatchWithEffectsMountsItsInsertsAndSetsItsSends() {
+        val memory = EngineSync.memoryText()
+        val rec = PresetEngine.record(
+            Patch(
+                "Reflux", "B", emptyMap(),
+                inserts = listOf(com.rm.acidulous.model.UnitSlot("Chorus", mapOf("mix" to 0.4f)), com.rm.acidulous.model.UnitSlot("Delay")),
+                sendReverb = 0.25f, sendDelay = 0f,
+            ),
+            root,
+        )
+        assertEquals(memory, EngineSync.memoryText())
+        val lines = rec.text.lines().filter { it.isNotEmpty() }
+        assertTrue(lines.toString(), "MountEffect 0 0 \"Chorus\"" in lines)
+        assertTrue(lines.toString(), "MountEffect 0 1 \"Delay\"" in lines)
+        assertTrue(lines.filter { !it.contains("\"machine\"") }.toString(), lines.any { it.startsWith("SetParam 0 \"effect1\" \"mix\" 0.4 ") })
+        assertTrue(lines.filter { !it.contains("\"machine\"") }.toString(), lines.any { it.startsWith("SetParam 0 \"effect2\" \"feedback\" ") })
+        assertTrue(lines.filter { !it.contains("\"machine\"") }.toString(), lines.any { it.startsWith("SetParam 0 \"channel\" \"sendreverb\" 0.25 ") })
+        assertTrue(lines.filter { !it.contains("\"machine\"") }.toString(), lines.any { it.startsWith("SetParam 0 \"channel\" \"senddelay\" 0.0 ") })
+    }
+
+    @Test
+    fun aPatchInsertThisBuildDoesNotHaveIsLeftOut() {
+        val inserts = listOf(com.rm.acidulous.model.UnitSlot("FutureVerb"), com.rm.acidulous.model.UnitSlot("Chorus"))
+        val song = PresetEngine.songFor(Patch("Reflux", "C", emptyMap(), inserts = inserts))
+        assertEquals(listOf("Chorus"), song.tracks[0].effects.map { it.type })
+    }
+
+    @Test
+    fun aRemountedSlotGetsAFreshEffectOfTheSameType() {
+        val song = PresetEngine.songFor(Patch("Reflux", "C", emptyMap(), inserts = listOf(com.rm.acidulous.model.UnitSlot("Chorus"))))
+        val w = EngineLineWriter()
+        recordDry(w) {
+            EngineSync.scratch { m ->
+                EngineSync.ensureEffects(song, m)
+                EngineSync.ensureEffects(song, m)
+                EngineSync.remountEffects(0, listOf(0), m)
+                EngineSync.ensureEffects(song, m)
+            }
+        }
+        assertEquals(2, w.text().lines().count { it == "MountEffect 0 0 \"Chorus\"" })
+    }
+
+    @Test
     fun anEffectPatchIsOnlyItsMountLoadsAndParams() {
         val sentBefore = EngineLines.sent
         val memory = EngineSync.memoryText()
