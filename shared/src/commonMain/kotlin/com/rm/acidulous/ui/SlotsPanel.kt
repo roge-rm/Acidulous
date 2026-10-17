@@ -285,6 +285,7 @@ private fun SlotFace(
                     userNames = { PatchStore.userList(key) },
                     onDelete = { name -> PatchStore.delete(key, name) },
                     key = key,
+                    owner = "$key:$slot",
                 )
             }
         }

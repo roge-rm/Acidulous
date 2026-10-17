@@ -399,6 +399,9 @@ fun EditScreen(
         KeyAction.FoldKeys to { UiPrefs.foldKeys(!UiPrefs.keysFolded) },
         KeyAction.Back to { onBack() },
     )
+    // The patch window open in the panel, kept here above the two layouts so
+    // turning the phone doesn't close it. See [LocalPatchWindow].
+    val patchWindow = remember(trackIndex) { mutableStateOf<String?>(null) }
     // modifier carries the Scaffold's system bar padding. Without it the footer
     // sits under the navigation bar and its taps become Back.
     Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
@@ -907,6 +910,7 @@ fun EditScreen(
         // separately. The fx slots and the mixer have their own headers and are
         // all body.
         val panelSlot: @Composable (bar: Boolean, body: Boolean) -> Unit = { bar, body ->
+        androidx.compose.runtime.CompositionLocalProvider(LocalPatchWindow provides patchWindow) {
         // The machine panel (knobs go to the engine as gestures and into the document as undo
         // steps), or behind the fx toggle the track's two insert slots.
         if (panel == 1) { if (body) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp)) }
@@ -961,6 +965,7 @@ fun EditScreen(
             modifier = Modifier.fillMaxWidth()
                 .then(if (landscape) Modifier.fillMaxHeight() else Modifier.padding(top = 4.dp)),
         )
+        }
         }
         // The performance controls are with the keys: a mod wheel, a bend
         // wheel, and pressure, scale and octave on a strip above them.

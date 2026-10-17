@@ -642,10 +642,17 @@ internal fun PatchPicker(
     key: String = title,
     /** A machine's save, which can take the track's effects along. Replaces [onSave] when set. */
     onSaveWithEffects: ((String, Boolean) -> Unit)? = null,
+    /** Which picker this is on the screen, so an open window finds its picker again. */
+    owner: String = key,
 ) {
     var menu by remember { mutableStateOf(false) }
-    var saving by remember { mutableStateOf(false) }
-    var browsing by remember { mutableStateOf(false) }
+    // Held by the screen when it gives a place to, so a window stays open
+    // when a rotation moves the picker to another spot in the layout.
+    val held = LocalPatchWindow.current
+    val own = remember { mutableStateOf<String?>(null) }
+    val window = held ?: own
+    var saving by WindowFlag(window, "save:$owner")
+    var browsing by WindowFlag(window, "browse:$owner")
     var listRev by remember { mutableStateOf(0) } // bumps after a delete so the browser re-reads
     val label = patchLabel(current, edited)
     val importPicker = com.rm.acidulous.rememberOpenDocument { doc ->
@@ -712,6 +719,20 @@ internal fun PatchPicker(
             onImport = PresetHost.import?.let { _ -> { importPicker(arrayOf("*/*")) } },
         )
     }
+}
+
+/**
+ * The patch window open on this screen, as "browse:owner" or "save:owner".
+ *
+ * The edit screen provides one above its portrait and landscape layouts. Null
+ * means each picker keeps its own.
+ */
+internal val LocalPatchWindow = androidx.compose.runtime.compositionLocalOf<androidx.compose.runtime.MutableState<String?>?> { null }
+
+/** True while [state] names [id]. Setting it false closes whatever is open. */
+private class WindowFlag(val state: androidx.compose.runtime.MutableState<String?>, val id: String) {
+    operator fun getValue(owner: Any?, p: kotlin.reflect.KProperty<*>): Boolean = state.value == id
+    operator fun setValue(owner: Any?, p: kotlin.reflect.KProperty<*>, v: Boolean) { state.value = if (v) id else null }
 }
 
 private const val kPatchName = com.rm.acidulous.model.PatchMark.NAME
