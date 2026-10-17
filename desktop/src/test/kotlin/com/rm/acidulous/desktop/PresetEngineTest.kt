@@ -64,7 +64,7 @@ class PresetEngineTest {
         assertEquals(sentBefore, EngineLines.sent)
         assertEquals(memory, EngineSync.memoryText())
         val lines = rec.text.lines().filter { it.isNotEmpty() }
-        assertEquals("acidulous-engine 2", lines[0])
+        assertEquals("acidulous-engine 3", lines[0])
         assertEquals("# target rack 0", lines[1])
         assertEquals("MountMachine 0 \"Reflux\"", lines[2])
         val rest = lines.drop(3)

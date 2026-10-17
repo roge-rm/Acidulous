@@ -107,7 +107,7 @@ const int kCallCount = sizeof kCalls / sizeof kCalls[0];
 } // namespace acidulous::lines
 
 int main() {
-    const std::string text = R"(acidulous-engine 2
+    const std::string text = R"(acidulous-engine 3
 # comment
 Str "a \"q\" \\ \n\t\x01\x00z"
 Str null
@@ -180,7 +180,11 @@ F 1 2 3 4 5
     Replay other;
     other.env = &env;
     other.log = [](const std::string &) {};
-    check(!acidulous::lines::replay("acidulous-engine 3\nStr \"x\"\n", other), "another version is refused");
+    check(!acidulous::lines::replay("acidulous-engine 4\nStr \"x\"\n", other), "another version is refused");
+    Replay two;
+    two.env = &env;
+    two.log = [](const std::string &) {};
+    check(acidulous::lines::replay("acidulous-engine 2\n", two) && two.version == 2, "version 2 is read");
 
     // Version 1 lines: Trinity's waves were over 12 steps and Nexus's wtosc
     // tables over 8. Each must land on the same wave or table.
@@ -208,6 +212,23 @@ F 1 2 3 4 5
     for (const auto &[in, want] : upgrades) {
         const std::string got = u.upgradeLine(in);
         check(got == want, "upgrade " + in + (got == want ? "" : "   got " + got));
+    }
+    // Versions 1 and 2: Trinity's destinations were over 34 steps.
+    {
+        const std::string in = "SetParam 2 \"machine\" \"mac3_d1\" " + f9(31.0 / 33.0) + " false 0";
+        const std::string want = "SetParam 2 \"machine\" \"mac3_d1\" " + f9(31.0 / 36.0) + " false 0";
+        check(u.upgradeLine(in) == want, "upgrade a version 1 destination");
+        Replay v2;
+        v2.version = 2;
+        v2.upgradeLine("MountMachine 2 \"Trinity\"");
+        check(v2.upgradeLine(in) == want, "upgrade a version 2 destination");
+        const std::string lane = "SnapshotSetLane @0 2 1 \"Trinity\" \"machine\" \"m04_dest\" false f[2: 0.0 1.0]";
+        check(v2.upgradeLine(lane) == "SnapshotSetLane @0 2 1 \"Trinity\" \"machine\" \"m04_dest\" false f[2: 0.0 " + f9(33.0 / 36.0) + "]",
+              "upgrade a version 2 destination lane");
+        const std::string wave = "SetParam 2 \"machine\" \"o1_wave\" 0.6363636 false 0";
+        check(v2.upgradeLine(wave) == wave, "a version 2 wave is left alone");
+        const std::string depth = "SetParam 2 \"machine\" \"mac3_a1\" 0.6 false 0";
+        check(v2.upgradeLine(depth) == depth, "a depth is left alone");
     }
     u.upgradeLine("UnmountMachine 2");
     check(u.upgradeLine("SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0") == "SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0",

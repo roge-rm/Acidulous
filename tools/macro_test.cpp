@@ -4,9 +4,17 @@
 // to amplitude with a known depth must scale the level by a known amount, for
 // every macro and every one of its four routes. Another route to pitch must
 // move the note by the semitones its depth says.
+//
+// The LFO step destinations: a square LFO on the level shows where its
+// cycles start. A synced one stepped by a macro must start each cycle on its
+// new note value's grid from the note-on, also when the knob moves mid-note,
+// and a free one must double or halve its rate.
 
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/trinity/Trinity.h>
+#include <engine/dsp/Lfo.h>
+#include <engine/dsp/LfoGen.h>
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -81,6 +89,200 @@ double hz(const std::vector<float> &v) {
     return n < 2 ? 0 : (n - 1) * double(kRate) / double(last - first);
 }
 
+// A square LFO 1 on the level, so each cycle starts with a rise.
+struct LfoCase {
+    int sync = 3;             // the LFO's sync step: 3 is 1/16
+    int dest = T::DstLfo1Step;
+    float depth = 0.25f;
+    float knob = 0.0f;        // from the note-on
+    int moveAt = -1;          // the block the knob moves at, or -1
+    float knobAfter = 0.0f;
+    float lfoDepth = 0.35f;
+    bool route = true;
+};
+
+constexpr int32_t kLfoBlocks = 1500; // two seconds
+
+std::vector<float> playLfo(const LfoCase &c) {
+    Machine *m = MachineRegistry::create("Trinity");
+    m->prepare(kRate);
+    ParamSet &p = m->params();
+    setNorm(p, "l1_wave", 4.0f / (dsp::LfoGen::WaveCount - 1.0f));
+    setNorm(p, "l1_sync", c.sync / (1.0f + dsp::Lfo::kRates - 1.0f));
+    setNorm(p, "m01_src", T::SrcLfo1 / (T::SourceCount - 1.0f));
+    setNorm(p, "m01_dest", T::DstAmp / (T::DestCount - 1.0f));
+    setNorm(p, "m01_depth", (c.lfoDepth + 1.0f) * 0.5f);
+    setNorm(p, "mac1", c.knob);
+    if (c.route) {
+        setNorm(p, "mac1_d1", c.dest / (T::DestCount - 1.0f));
+        setNorm(p, "mac1_a1", (c.depth + 1.0f) * 0.5f);
+    }
+    p.jumpAll();
+    m->allNotesOff();
+    m->reset();
+    m->noteOn(81, 100);
+    std::vector<float> out;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < kLfoBlocks; ++b) {
+        if (b == c.moveAt) setNorm(p, "mac1", c.knobAfter);
+        m->onBlock(b * 4, b * 4 + 4, 120.0f);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+    }
+    delete m;
+    return out;
+}
+
+/** Where the LFO's cycles start, in samples: the blocks where the level rises against [flat]. */
+std::vector<int> rises(const std::vector<float> &v, const std::vector<float> &flat) {
+    std::vector<int> at;
+    bool high = true;
+    for (int b = 0; b < kLfoBlocks; ++b) {
+        double a = 0, f = 0;
+        for (int i = b * kBlock; i < (b + 1) * kBlock; ++i) { a += double(v[i]) * v[i]; f += double(flat[i]) * flat[i]; }
+        if (f <= 0) continue;
+        const bool now = std::sqrt(a / f) > 1.0;
+        if (now && !high) at.push_back(b * kBlock);
+        high = now;
+    }
+    return at;
+}
+
+/** The furthest [at] is from the grid of [period] samples from the note-on. */
+int offGrid(const std::vector<int> &at, double period) {
+    int worst = 0;
+    for (int t : at) {
+        const double k = std::round(t / period);
+        worst = std::max(worst, int(std::fabs(t - k * period)));
+    }
+    return worst;
+}
+
+/** The shortest time between two cycle starts. */
+int shortest(const std::vector<int> &at) {
+    int s = 1 << 30;
+    for (size_t i = 1; i < at.size(); ++i) s = std::min(s, at[i] - at[i - 1]);
+    return s;
+}
+
+/** The mean time between cycle starts from [from] samples on. */
+double meanPeriod(const std::vector<int> &at, int from) {
+    std::vector<int> late;
+    for (int t : at) if (t >= from) late.push_back(t);
+    return late.size() < 2 ? 0 : double(late.back() - late.front()) / double(late.size() - 1);
+}
+
+std::vector<int> after(const std::vector<int> &at, int from) {
+    std::vector<int> out;
+    for (int t : at) if (t >= from) out.push_back(t);
+    return out;
+}
+
+std::vector<int> before(const std::vector<int> &at, int to) {
+    std::vector<int> out;
+    for (int t : at) if (t < to) out.push_back(t);
+    return out;
+}
+
+void stepChecks() {
+    // 120 bpm: a sixteenth is 6000 samples.
+    constexpr double k16 = 6000.0, k32 = 3000.0, k8 = 12000.0;
+    constexpr int kTol = 2 * kBlock;
+    LfoCase flatCase;
+    flatCase.lfoDepth = 0.0f;
+    flatCase.route = false;
+    const auto flat = playLfo(flatCase);
+    char buf[96];
+
+    LfoCase none;
+    none.route = false;
+    const auto plain = playLfo(none);
+    LfoCase zero;
+    ok(playLfo(zero) == plain, "a step route at zero leaves the sound alone", "");
+
+    auto grid = [&](const LfoCase &c, double period, const std::string &what) {
+        const auto at = rises(playLfo(c), flat);
+        const int off = offGrid(at, period);
+        const double mean = meanPeriod(at, 0);
+        std::snprintf(buf, sizeof(buf), "%zu cycles, every %.0f, %d off the grid", at.size(), mean, off);
+        ok(at.size() > 4 && off <= kTol && std::fabs(mean - period) < period * 0.005, what, buf);
+    };
+    grid(none, k16, "an unstepped 1/16 LFO starts every 6000 samples");
+    LfoCase below = zero;
+    below.knob = 0.4f;
+    grid(below, k16, "a step route under half a step stays at 1/16");
+    LfoCase up = zero;
+    up.knob = 0.6f;
+    grid(up, k32, "a step route past half a step runs at 1/32");
+    up.knob = 1.0f;
+    grid(up, k32, "a step route at full runs at 1/32");
+    LfoCase down = zero;
+    down.knob = 1.0f;
+    down.depth = -0.25f;
+    grid(down, k8, "a negative step route runs at 1/8");
+    LfoCase two = zero;
+    two.knob = 1.0f;
+    two.depth = 0.5f;
+    grid(two, 1500.0, "two steps up run at 1/64");
+
+    // The smooth rate destination leaves the grid between its ends: what the
+    // step one is for, and proof that the check can fail.
+    LfoCase smooth = zero;
+    smooth.dest = T::DstLfo1Rate;
+    smooth.knob = 0.6f;
+    {
+        const auto at = rises(playLfo(smooth), flat);
+        const int off = std::min(offGrid(at, k16), offGrid(at, k32));
+        std::snprintf(buf, sizeof(buf), "%d off the grid", off);
+        ok(off > kTol, "the smooth rate destination runs off the grid", buf);
+    }
+
+    // The knob moves mid-note, off the grid. Faster: the next 1/32 start is
+    // a 1/16 one, and every start after it is on the 1/32 grid.
+    const int moveBlock = 337; // 21568 samples, not on either grid
+    const int moveAt = moveBlock * kBlock;
+    LfoCase faster = zero;
+    faster.moveAt = moveBlock;
+    faster.knobAfter = 1.0f;
+    {
+        const auto at = rises(playLfo(faster), flat);
+        const auto late = after(at, moveAt);
+        std::snprintf(buf, sizeof(buf), "%d off before, %d off after, shortest %d, after every %.0f", offGrid(before(at, moveAt), k16),
+                      offGrid(late, k32), shortest(at), meanPeriod(late, moveAt + int(k16)));
+        ok(offGrid(before(at, moveAt), k16) <= kTol && offGrid(late, k32) <= kTol && shortest(at) >= k32 - kTol &&
+               std::fabs(meanPeriod(late, moveAt + int(k16)) - k32) < k32 * 0.005,
+           "a knob moved up mid-note steps to 1/32 on the grid", buf);
+    }
+    // Slower: it waits for a start both grids share, and no cycle is cut short.
+    LfoCase slower = zero;
+    slower.knob = 1.0f;
+    slower.moveAt = moveBlock;
+    slower.knobAfter = 0.0f;
+    {
+        const auto at = rises(playLfo(slower), flat);
+        const auto late = after(at, moveAt + int(k16));
+        std::snprintf(buf, sizeof(buf), "%d off after, shortest %d, after every %.0f", offGrid(late, k16), shortest(at),
+                      meanPeriod(late, 0));
+        ok(offGrid(late, k16) <= kTol && shortest(at) >= k32 - kTol && std::fabs(meanPeriod(late, 0) - k16) < k16 * 0.005,
+           "a knob moved down mid-note steps to 1/16 on the grid", buf);
+    }
+
+    // A free LFO doubles its rate in Hz.
+    LfoCase freeBase = none;
+    freeBase.sync = 0;
+    LfoCase freeUp = zero;
+    freeUp.sync = 0;
+    freeUp.knob = 1.0f;
+    {
+        const double p0 = meanPeriod(rises(playLfo(freeBase), flat), 0);
+        const double p1 = meanPeriod(rises(playLfo(freeUp), flat), 0);
+        std::snprintf(buf, sizeof(buf), "every %.0f -> every %.0f", p0, p1);
+        ok(p0 > 0 && std::fabs(p1 / p0 - 0.5) < 0.02, "a step route doubles a free LFO's rate", buf);
+    }
+}
+
 } // namespace
 
 int main() {
@@ -119,6 +321,8 @@ int main() {
     // A route to nothing does nothing.
     Route none{2, 3, T::DstOff, 1.0f, 1.0f};
     ok(play(&none) == base, "a route to off does nothing", "");
+
+    stepChecks();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

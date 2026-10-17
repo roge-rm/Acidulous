@@ -570,6 +570,9 @@
     <string name="pw_l1rate">l1vit</string>
     <string name="pw_l2rate">l2vit</string>
     <string name="pw_l3rate">l3vit</string>
+    <string name="pw_l1step">l1pas</string>
+    <string name="pw_l2step">l2pas</string>
+    <string name="pw_l3step">l3pas</string>
     <string name="pw_lane_n">couloir %d</string>
     <string name="pw_lanes">couloirs</string>
     <string name="pw_latch">verrou</string>
@@ -976,6 +979,7 @@
     <string name="pw_seed">graine</string>
     <string name="pw_semi">demi-ton</string>
     <string name="pw_semis">demi-tons</string>
+    <string name="pw_sequence">séquence</string>
     <string name="pw_serial">série</string>
     <string name="pw_set">assise</string>
     <string name="pw_sh">sh</string>

@@ -10,7 +10,7 @@ class EngineLinesTest {
 
     @Test
     fun startsWithTheHeader() {
-        assertEquals("acidulous-engine 2\n", EngineLineWriter().text())
+        assertEquals("acidulous-engine 3\n", EngineLineWriter().text())
     }
 
     @Test

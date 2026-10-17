@@ -42,6 +42,12 @@ A matrix row has a source, a second source, a destination and a depth. The
 second source scales the first, so an envelope with the mod wheel as its second
 source is an envelope you can fade in with the wheel.
 
+Two kinds of destination move an LFO's rate. **l1rate** (and l2, l3) moves it
+smoothly, up to four octaves either way. **l1step** moves it in whole octaves,
+one for each quarter of depth. A synced LFO goes from 1/16 to 1/32 and so on
+and stays on the beat, since it changes at the start of a cycle, and a free
+one doubles or halves its rate.
+
 The mod wheel also opens both filters, whatever the matrix says, and **wheel**
 in the voice section sets how much. At zero the wheel only does what the matrix
 tells it to.

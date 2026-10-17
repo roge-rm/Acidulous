@@ -442,6 +442,26 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             p.lastOff = std::max(p.lastOff, hit(p, v.at, v.len, note + v.step, v.vel));
         }
         p.frames = p.lastOff + secondsToFrames(6.0f);
+    } else if (kind == "sequence" || kind == "ostinato") {
+        // For patches that move by themselves in time with the song: chords
+        // (`sequence`) or single notes (`ostinato`, for patches that step the
+        // pitch) held two bars each and placed on the beat, so a synced LFO,
+        // gate or delay is heard against the bar it is locked to.
+        static const int kChord[4][4] = {
+            {0, 7, 12, 15},   // i
+            {-4, 5, 8, 12},   // VI
+            {-7, 4, 7, 12},   // III
+            {-5, 2, 7, 11},   // VII
+        };
+        const bool chords = kind == "sequence";
+        const float bars2 = beat * 8.0f;
+        for (int c = 0; c < 4; ++c) {
+            const float at = static_cast<float>(c) * bars2;
+            for (int n = 0; n < (chords ? 4 : 1); ++n) {
+                p.lastOff = std::max(p.lastOff, hit(p, at, bars2 - beat * 0.1f, note + kChord[c][n], velocity));
+            }
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "gospel" || kind == "chorale" || kind == "combo" || kind == "swell") {
         // The organ phrases, written in absolute notes. The organ's splits
         // decide which manual or the pedals a note goes to, so these are
@@ -2068,7 +2088,7 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|jaw|harmonics\n"
-        "          |chip|drone|mallets|gospel|chorale|combo|swell|chromatic\n"
+        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"

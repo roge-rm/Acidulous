@@ -1,5 +1,6 @@
 package com.rm.acidulous.model
 
+import com.rm.acidulous.ui.TRINITY_DESTS
 import com.rm.acidulous.ui.TRINITY_WAVES
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -125,5 +126,61 @@ class TableMigrationTest {
     @Test
     fun nexusWritesTheNewVersion() {
         assertTrue(NexusPatch.decode(nexusText).encode().startsWith("v|2\n"))
+    }
+
+    /** A song as 0.12.0 saved it, version 3: Trinity's destinations over 34. */
+    private fun destSong(): Song {
+        val lock = Lane(listOf(LanePoint(0, 31f / 33f), LanePoint(240, LANE_BASE)), linear = false)
+        val trinity = Track(
+            id = "t1", name = "seq",
+            machine = Machine("Trinity", mapOf("m01_dest" to 23f / 33f, "mac3_d1" to 31f / 33f, "mac8_d4" to 1f, "o1_wave" to 7f / 35f, "mac3_a1" to 0.625f)),
+            clips = mapOf("c1" to Clip(automation = mapOf(laneKey("machine", "m12_dest") to lock))),
+        )
+        val mosaic = Track(id = "t2", name = "other", machine = Machine("Mosaic", mapOf("m01_dest" to 0.5f)))
+        return Song(version = 3, name = "dests", tracks = listOf(trinity, mosaic))
+    }
+
+    @Test
+    fun thePanelListsEveryDestination() {
+        assertEquals(TableMigration.TRINITY_DESTS, TRINITY_DESTS.size)
+    }
+
+    @Test
+    fun everyOldTrinityDestinationKeepsItsDestination() {
+        for (step in 0 until 34) assertEquals(step, trinityStep(TableMigration.trinityDest(step / 33f), TableMigration.TRINITY_DESTS))
+    }
+
+    @Test
+    fun aVersion3SongKeepsItsDestinations() {
+        val song = SongStore.decode(SongStore.encode(destSong()))
+        assertEquals(RateMigration.SONG_VERSION, song.version)
+        val t = song.tracks[0].machine.params
+        assertEquals(23, trinityStep(t.getValue("m01_dest"), 37))
+        assertEquals(31, trinityStep(t.getValue("mac3_d1"), 37))
+        assertEquals(33, trinityStep(t.getValue("mac8_d4"), 37))
+        near(7f / 35f, t["o1_wave"]) // already on 36 waves
+        near(0.625f, t["mac3_a1"]) // a depth
+        val lane = song.tracks[0].clips.getValue("c1").automation.getValue(laneKey("machine", "m12_dest"))
+        assertEquals(31, trinityStep(lane.points[0].value, 37))
+        near(LANE_BASE, lane.points[1].value)
+        near(0.5f, song.tracks[1].machine.params["m01_dest"]) // not Trinity
+        // Saved today, it's left alone.
+        val again = SongStore.decode(SongStore.encode(song))
+        near(t.getValue("m01_dest"), again.tracks[0].machine.params["m01_dest"])
+    }
+
+    @Test
+    fun aVersion3PatchKeepsItsDestinations() {
+        val p = RateMigration.patch(Patch("Trinity", "mine", mapOf("mac6_d1" to 31f / 33f, "o2_wave" to 5f / 35f), version = 3))
+        assertEquals(RateMigration.PATCH_VERSION, p.version)
+        assertEquals(31, trinityStep(p.params.getValue("mac6_d1"), 37))
+        near(5f / 35f, p.params["o2_wave"])
+        // From before 0.9.12, every migration runs.
+        val older = RateMigration.patch(Patch("Trinity", "mine", mapOf("o2_wave" to 5f / 11f, "m02_dest" to 1f, "l1_sync" to 1f / 8f)))
+        assertEquals(5, trinityStep(older.params.getValue("o2_wave"), 36))
+        assertEquals(33, trinityStep(older.params.getValue("m02_dest"), 37))
+        near(3f / 17f, older.params["l1_sync"])
+        val current = RateMigration.patch(Patch("Trinity", "mine", mapOf("mac6_d1" to 34f / 36f), version = RateMigration.PATCH_VERSION))
+        near(34f / 36f, current.params["mac6_d1"])
     }
 }

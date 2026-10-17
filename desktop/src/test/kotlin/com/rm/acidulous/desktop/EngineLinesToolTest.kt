@@ -156,7 +156,7 @@ class EngineLinesToolTest {
         ZipFile(zip).use { z ->
             val names = z.entries().toList().map { it.name }.toSet()
             assertEquals(setOf("song.json", "engine.txt", "samples/hit.wav", "samples/take.wav"), names)
-            assertTrue(z.getInputStream(z.getEntry("engine.txt")).readBytes().decodeToString().startsWith("acidulous-engine 2\n"))
+            assertTrue(z.getInputStream(z.getEntry("engine.txt")).readBytes().decodeToString().startsWith("acidulous-engine 3\n"))
         }
         val other = File(out, "other").apply { deleteRecursively(); mkdirs() }
         val back = runBlocking { SongBundle.read(zip, other) }!!

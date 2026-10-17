@@ -585,8 +585,11 @@
     <string name="pw_l">L</string>
     <string name="pw_l_07c342">l</string>
     <string name="pw_l1rate">l1rate</string>
+    <string name="pw_l1step">l1step</string>
     <string name="pw_l2rate">l2rate</string>
+    <string name="pw_l2step">l2step</string>
     <string name="pw_l3rate">l3rate</string>
+    <string name="pw_l3step">l3step</string>
     <string name="pw_lane_n">lane %d</string>
     <string name="pw_lanes">lanes</string>
     <string name="pw_latch">latch</string>
@@ -1002,6 +1005,7 @@
     <string name="pw_seed">seed</string>
     <string name="pw_semi">semi</string>
     <string name="pw_semis">semis</string>
+    <string name="pw_sequence">sequence</string>
     <string name="pw_serial">serial</string>
     <string name="pw_set">set</string>
     <string name="pw_sh">sh</string>

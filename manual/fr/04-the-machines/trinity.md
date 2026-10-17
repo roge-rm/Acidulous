@@ -46,6 +46,12 @@ profondeur. La deuxième source multiplie la première : une enveloppe avec la
 molette de modulation comme deuxième source est une enveloppe que vous pouvez
 faire entrer avec la molette.
 
+Deux sortes de destination changent la vitesse d’un LFO. **l1vit** (et l2, l3)
+la change en douceur, jusqu’à quatre octaves dans chaque sens. **l1pas** la
+change par octaves entières, une par quart de profondeur. Un LFO synchronisé
+passe de 1/16 à 1/32 et ainsi de suite et reste sur le temps, puisqu’il change
+au début d’un cycle, et un LFO libre double ou divise par deux sa vitesse.
+
 La molette de modulation ouvre aussi les deux filtres, quoi que dise la
 matrice, et **molette** dans la section voix règle de combien. À zéro, la
 molette ne fait que ce que la matrice lui dit.

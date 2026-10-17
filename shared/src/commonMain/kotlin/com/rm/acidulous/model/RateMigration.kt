@@ -11,12 +11,12 @@ import kotlin.math.roundToInt
  */
 internal object RateMigration {
     /**
-     * The song and patch versions saved today: 2 has the seventeen rates and
-     * 3 the 32 wavetables ([TableMigration]). [song] and [patch] bring an
-     * older one up through both.
+     * The song and patch versions saved today: 2 has the seventeen rates, 3
+     * the 32 wavetables and 4 Trinity's 37 destinations ([TableMigration]).
+     * [song] and [patch] bring an older one up through all of them.
      */
-    const val SONG_VERSION = 3
-    const val PATCH_VERSION = 3
+    const val SONG_VERSION = 4
+    const val PATCH_VERSION = 4
     /** The first song and patch version with the seventeen. */
     private const val RATES_VERSION = 2
 
@@ -58,7 +58,7 @@ internal object RateMigration {
     private fun lane(convert: (Float) -> Float, lane: Lane): Lane =
         lane.copy(points = lane.points.map { if (it.value == LANE_BASE) it else it.copy(value = convert(it.value)) })
 
-    /** [song] on today's rates and wavetables, if it was saved before them. */
+    /** [song] on today's rates, wavetables and destinations, if it was saved before them. */
     fun song(song: Song): Song {
         if (song.version >= SONG_VERSION) return song
         val rated = if (song.version >= RATES_VERSION) song else rates(song)
@@ -97,7 +97,7 @@ internal object RateMigration {
         return song.copy(master = master, input = input, tracks = tracks)
     }
 
-    /** A patch saved before today's rates and wavetables, on them. */
+    /** A patch saved before today's rates, wavetables and destinations, on them. */
     fun patch(patch: Patch): Patch {
         if (patch.version >= PATCH_VERSION) return patch
         val rated = if (patch.version >= RATES_VERSION) patch
