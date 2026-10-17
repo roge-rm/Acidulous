@@ -229,7 +229,8 @@ internal object FactoryBanks {
         low = 36, high = 84)
 
     private fun trinity2() = Patch("Trinity", "Wide Saws",
-        mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o1_drift" to 0.3f, "o2_fine" to 0.41f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o2_detune" to 0.6f, "o2_drift" to 0.3f, "o3_coarse" to 0.25f, "o3_level" to 0.68f, "o3_drift" to 0.2f, "f1_freq" to 0.8257071f, "f1_res" to 0.1f, "f1_env" to 0.625f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.618813455f, "m01_src" to 0.13333334f, "m01_dest" to 0.6969697f, "m01_depth" to 0.7f, "m02_src" to 0.2f, "m02_dest" to 0.5151515f, "m02_depth" to 0.7f, "volume" to 0.4f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o1_drift" to 0.3f, "o2_fine" to 0.41f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o2_detune" to 0.6f, "o2_drift" to 0.3f, "o3_coarse" to 0.25f, "o3_level" to 0.68f, "o3_drift" to 0.2f, "f1_freq" to 0.8257071f, "f1_res" to 0.1f, "f1_env" to 0.625f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.618813455f, "m01_src" to 0.13333334f, "m01_dest" to 0.6969697f, "m01_depth" to 0.7f, "m02_src" to 0.2f, "m02_dest" to 0.5151515f, "m02_depth" to 0.7f, "volume" to 0.4f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.675f, "mac3_d1" to 0.5151515f, "mac3_a1" to 0.7f, "mac4_d1" to 0.424242437f, "mac4_d2" to 0.8787879f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4245f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.65f, "mac6_d1" to 0.09090909f, "mac6_a1" to 0.503f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Width", "macro4" to "Edge", "macro5" to "Low", "macro6" to "Beat", "macro7" to "FM", "macro8" to "Ring"),
         family = "lead",
         low = 36, high = 79)
 
@@ -246,12 +247,14 @@ internal object FactoryBanks {
         low = 36, high = 79)
 
     private fun trinity5() = Patch("Trinity", "Sync Lead",
-        mapOf("o1_level" to 1f, "o1_sync" to 0.25f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.55f, "o2_level" to 0.49f, "f1_freq" to 0.84802264f, "a_attack" to 0.24999997f, "a_decay" to 0.618813455f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "m01_src" to 0.13333334f, "m01_dest" to 0.424242437f, "m01_depth" to 0.85f, "m02_src" to 0.266666681f, "m02_dest" to 0.6969697f, "m02_depth" to 0.65f, "voicemode" to 0.6666667f, "glide" to 0.06f, "volume" to 0.45f),
+        mapOf("o1_level" to 1f, "o1_sync" to 0.25f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.55f, "o2_level" to 0.49f, "f1_freq" to 0.84802264f, "a_attack" to 0.24999997f, "a_decay" to 0.618813455f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "m01_src" to 0.13333334f, "m01_dest" to 0.424242437f, "m01_depth" to 0.85f, "m02_src" to 0.266666681f, "m02_dest" to 0.6969697f, "m02_depth" to 0.65f, "voicemode" to 0.6666667f, "glide" to 0.06f, "volume" to 0.45f, "mac1_d1" to 0.424242437f, "mac1_a1" to 0.75f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.3f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.7f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Sync", "macro2" to "Dark", "macro3" to "Bite", "macro4" to "Edge", "macro5" to "Square", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
         family = "lead",
         low = 48, high = 91)
 
     private fun trinity6() = Patch("Trinity", "FM Bass",
-        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_level" to 0f, "fm21" to 0.55f, "f1_freq" to 0.551070869f, "f1_res" to 0.25f, "f1_env" to 0.775f, "a_attack" to 0.075257495f, "a_decay" to 0.578839362f, "a_sustain" to 0.35f, "a_release" to 0.483879149f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.65f, "voicemode" to 0.333333343f, "glide" to 0.04f, "volume" to 1f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_level" to 0f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "fm21" to 0.55f, "f1_freq" to 0.551070869f, "f1_res" to 0.25f, "f1_env" to 0.775f, "a_attack" to 0.075257495f, "a_decay" to 0.578839362f, "a_sustain" to 0.35f, "a_release" to 0.483879149f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.65f, "voicemode" to 0.333333343f, "glide" to 0.04f, "octave" to 0.6666667f, "volume" to 1f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.6363636f, "mac3_a1" to 0.675f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.75f, "mac6_d1" to 0.3030303f, "mac6_a1" to 0.75f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.51f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "FM", "macro4" to "Edge", "macro5" to "Body", "macro6" to "Sub", "macro7" to "Metal", "macro8" to "Ring"),
         family = "bass",
         low = 24, high = 55)
 
@@ -374,125 +377,351 @@ internal object FactoryBanks {
         low = 36, high = 69)
 
     private fun trinity30() = Patch("Trinity", "Sub Bass",
-        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.75f, "o2_level" to 0.2f, "f1_type" to 0.09090909f, "f1_freq" to 0.5146893f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.6f, "a_release" to 0.483879149f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.75f, "o2_level" to 0.2f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_type" to 0.09090909f, "f1_freq" to 0.5146893f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.6f, "a_release" to 0.483879149f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.272727281f, "mac2_d2" to 0.8787879f, "mac2_a1" to 0.75f, "mac2_a2" to 0.3895f, "mac3_d1" to 0.363636374f, "mac3_a1" to 0.675f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3030303f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75757575f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Open", "macro2" to "Top", "macro3" to "PW", "macro4" to "Edge", "macro5" to "FM", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Bite"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity31() = Patch("Trinity", "Reese",
-        mapOf("o1_level" to 1f, "o2_fine" to 0.22f, "o2_level" to 1f, "f1_freq" to 0.440739781f, "f1_res" to 0.3f, "f1_env" to 0.625f, "a_attack" to 0.24999997f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.5411295f, "volume" to 0.48f),
+        mapOf("o1_level" to 1f, "o2_fine" to 0.22f, "o2_level" to 1f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.440739781f, "f1_res" to 0.3f, "f1_drivetype" to 0.4f, "f1_env" to 0.625f, "a_attack" to 0.24999997f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.5411295f, "volume" to 0.48f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.09090909f, "mac4_a1" to 0.495f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.454545468f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "Beat", "macro5" to "Sub", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Tear"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity32() = Patch("Trinity", "Wobble",
-        mapOf("o1_level" to 1f, "o1_drift" to 0.1f, "o2_fine" to 0.32f, "o2_level" to 1f, "f1_freq" to 0.333333343f, "f1_res" to 0.55f, "f1_drive" to 0.45f, "f1_env" to 0.55f, "a_decay" to 0.7419396f, "a_sustain" to 1f, "a_release" to 0.4588705f, "l1_sync" to 0.235294119f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.9f, "volume" to 0.45f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.725f, "mac2_d1" to 0.75757575f, "mac2_d2" to 0.8484849f, "mac2_a1" to 0.675f, "mac2_a2" to 0.6f, "mac3_d1" to 0.939393938f, "mac3_a1" to 0.75f, "mac4_d1" to 0.6363636f, "mac4_a1" to 0.75f),
-        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Speed", "macro4" to "Grit"),
+        mapOf("o1_level" to 1f, "o1_drift" to 0.1f, "o2_fine" to 0.32f, "o2_level" to 1f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.333333343f, "f1_res" to 0.55f, "f1_drive" to 0.45f, "f1_env" to 0.55f, "a_decay" to 0.7419396f, "a_sustain" to 1f, "a_release" to 0.4588705f, "l1_sync" to 0.235294119f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.9f, "volume" to 0.45f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.725f, "mac2_d1" to 0.75757575f, "mac2_d2" to 0.8484849f, "mac2_a1" to 0.675f, "mac2_a2" to 0.6f, "mac3_d1" to 0.939393938f, "mac3_a1" to 0.75f, "mac4_d1" to 0.6363636f, "mac4_a1" to 0.75f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.09090909f, "mac6_a1" to 0.495f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.575f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Speed", "macro4" to "Grit", "macro5" to "Sub", "macro6" to "Beat", "macro7" to "Ring", "macro8" to "Noise"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity33() = Patch("Trinity", "Wub",
-        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.8f, "f1_freq" to 0.30102998f, "f1_res" to 0.5f, "f1_drive" to 0.3f, "a_sustain" to 1f, "a_release" to 0.483879149f, "l1_sync" to 0.5294118f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.925f, "volume" to 0.5f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.8f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.30102998f, "f1_res" to 0.5f, "f1_drive" to 0.3f, "a_sustain" to 1f, "a_release" to 0.483879149f, "l1_sync" to 0.5294118f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.925f, "volume" to 0.5f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.725f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.675f, "mac3_d1" to 0.939393938f, "mac3_a1" to 0.75f, "mac4_d1" to 0.6363636f, "mac4_a1" to 0.7f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.504f, "mac6_d1" to 0.333333343f, "mac6_a1" to 0.675f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Speed", "macro4" to "FM", "macro5" to "Beat", "macro6" to "PW", "macro7" to "Ring", "macro8" to "Sub"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity34() = Patch("Trinity", "Pluck Bass",
-        mapOf("o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.75f, "o2_level" to 0.69f, "o2_pw" to 0.34374997f, "f1_freq" to 0.46598f, "f1_res" to 0.35f, "f1_env" to 0.85f, "a_attack" to 0.075257495f, "a_decay" to 0.618813455f, "a_sustain" to 0.15f, "a_release" to 0.5161209f, "f_decay" to 0.4588705f, "f_sustain" to 0f, "volume" to 0.99f),
+        mapOf("o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.75f, "o2_level" to 0.69f, "o2_pw" to 0.34374997f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.46598f, "f1_res" to 0.35f, "f1_env" to 0.85f, "a_attack" to 0.075257495f, "a_decay" to 0.618813455f, "a_sustain" to 0.15f, "a_release" to 0.5161209f, "f_decay" to 0.4588705f, "f_sustain" to 0f, "octave" to 0.6666667f, "volume" to 0.99f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.675f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.363636374f, "mac4_a1" to 0.7f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.3030303f, "mac6_a1" to 0.75f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.503f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "PW", "macro5" to "FM", "macro6" to "Sub", "macro7" to "Beat", "macro8" to "Ring"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity35() = Patch("Trinity", "Growl Bass",
-        mapOf("o1_wave" to 0.2857143f, "o1_pos" to 0.4f, "o1_warp" to 0.5f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.65f, "f1_freq" to 0.492373765f, "f1_res" to 0.3f, "f1_drivetype" to 0.4f, "f1_drive" to 0.3f, "f1_env" to 0.7f, "a_attack" to 0.15051499f, "a_decay" to 0.69649744f, "a_release" to 0.5161209f, "volume" to 1f),
+        mapOf("o1_wave" to 0.2857143f, "o1_pos" to 0.4f, "o1_warp" to 0.5f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.65f, "f1_freq" to 0.492373765f, "f1_res" to 0.3f, "f1_drivetype" to 0.4f, "f1_drive" to 0.3f, "f1_env" to 0.7f, "a_attack" to 0.15051499f, "a_decay" to 0.69649744f, "a_release" to 0.5161209f, "octave" to 0.6666667f, "volume" to 1f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.675f, "mac3_d1" to 0.8484849f, "mac3_a1" to 0.75f, "mac4_d1" to 0.151515156f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.675f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.7f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.504f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Drive", "macro4" to "Grit", "macro5" to "Low", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity36() = Patch("Trinity", "Wide Bass",
-        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.2f, "o2_wave" to 0.08571429f, "o2_level" to 0.74f, "f1_freq" to 0.426251173f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.194537818f, "a_decay" to 0.716931f, "a_sustain" to 0.75f, "a_release" to 0.5161209f, "volume" to 0.62f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.2f, "o2_wave" to 0.08571429f, "o2_level" to 0.74f, "f1_freq" to 0.426251173f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.194537818f, "a_decay" to 0.716931f, "a_sustain" to 0.75f, "a_release" to 0.5161209f, "volume" to 0.62f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.675f, "mac3_d1" to 0.5151515f, "mac3_a1" to 0.7f, "mac4_d1" to 0.424242437f, "mac4_d2" to 0.8787879f, "mac4_a1" to 0.7f, "mac4_a2" to 0.379f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.454545468f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Width", "macro4" to "Edge", "macro5" to "Body", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Tear"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity37() = Patch("Trinity", "Square Bass",
-        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o1_pw" to 0.37499997f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.25f, "o2_level" to 0.64f, "f1_type" to 0.181818187f, "f1_freq" to 0.551070869f, "f1_res" to 0.05f, "f1_env" to 0.6f, "a_attack" to 0.119280316f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "volume" to 0.46f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o1_pw" to 0.37499997f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.25f, "o2_level" to 0.64f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_type" to 0.181818187f, "f1_freq" to 0.551070869f, "f1_res" to 0.05f, "f1_env" to 0.6f, "a_attack" to 0.119280316f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "volume" to 0.46f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.333333343f, "mac3_d2" to 0.363636374f, "mac3_a1" to 0.9f, "mac3_a2" to 0.8f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.503f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "PW", "macro4" to "Edge", "macro5" to "Beat", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Sub"),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity38() = Patch("Trinity", "Ring Bass",
-        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.395833343f, "o2_level" to 1f, "ring12" to 0.65f, "f1_freq" to 0.53402f, "f1_res" to 0.25f, "f1_env" to 0.7f, "a_attack" to 0.119280316f, "a_decay" to 0.6846892f, "a_sustain" to 0.5f, "a_release" to 0.5161209f, "volume" to 0.58f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.395833343f, "o2_level" to 1f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "ring12" to 0.65f, "f1_freq" to 0.53402f, "f1_res" to 0.25f, "f1_env" to 0.7f, "a_attack" to 0.2697953f, "a_decay" to 0.6846892f, "a_sustain" to 0.5f, "a_release" to 0.5161209f, "f_attack" to 0.194537818f, "octave" to 0.6666667f, "volume" to 0.58f, "mac1_d1" to 0.575757563f, "mac1_a1" to 0.675f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.675f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.675f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.52f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.3030303f, "mac7_a1" to 0.75f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.575f),
+        mapOf("macro1" to "Ring", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Edge", "macro5" to "Metal", "macro6" to "FM", "macro7" to "Sub", "macro8" to "Noise"),
         family = "bass",
         low = 24, high = 55)
 
-    private fun trinity39() = Patch("Trinity", "Square Lead",
-        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.44f, "o2_level" to 0.64f, "o2_pw" to 0.447916627f, "f1_freq" to 0.7046478f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5411295f, "glide" to 0.015f, "volume" to 0.27f),
+    private fun trinity39() = Patch("Trinity", "Drop Sub",
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o1_drift" to 0.05f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0f, "o3_wave" to 0.4f, "o3_pos" to 0.5f, "o3_level" to 0.2f, "f1_type" to 0.09090909f, "f1_freq" to 0.625020444f, "f1_res" to 0f, "f1_env" to 0.5f, "a_attack" to 0.2257725f, "a_decay" to 0.762373149f, "a_sustain" to 0.45f, "a_release" to 0.4588705f, "e3_attack" to 0f, "e3_decay" to 0.4134283f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.75f, "voicemode" to 0.333333343f, "volume" to 0.68f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.424242437f, "mac2_a1" to 0.7f, "mac3_d1" to 0.3030303f, "mac3_a1" to 0.8f, "mac4_d1" to 0.212121218f, "mac4_a1" to 0.75f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.675f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.7f, "mac7_d1" to 0.272727281f, "mac7_a1" to 0.75f, "mac8_d1" to 0.121212125f, "mac8_a1" to 0.502f),
+        mapOf("macro1" to "Open", "macro2" to "Edge", "macro3" to "Body", "macro4" to "Tone", "macro5" to "FM", "macro6" to "Ring", "macro7" to "Octave", "macro8" to "Beat"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity40() = Patch("Trinity", "Round Sub",
+        mapOf("o1_wave" to 0.4f, "o1_pos" to 0.25f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0f, "f1_type" to 0.09090909f, "f1_freq" to 0.551070869f, "f1_res" to 0.1f, "a_attack" to 0.2697953f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.483879149f, "f_attack" to 0.194537818f, "f_decay" to 0.5615631f, "f_sustain" to 0.3f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.675f, "voicemode" to 0.6666667f, "glide" to 0.025f, "glidemode" to 1f, "volume" to 0.72f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.151515156f, "mac2_a1" to 0.75f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.75757575f, "mac4_a1" to 0.7f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.7f, "mac6_d1" to 0.272727281f, "mac6_a1" to 0.75f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.7f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Open", "macro2" to "Tone", "macro3" to "Edge", "macro4" to "Bite", "macro5" to "FM", "macro6" to "Octave", "macro7" to "Ring", "macro8" to "Air"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity41() = Patch("Trinity", "Twin Sweep",
+        mapOf("o1_wave" to 0.114285715f, "o1_level" to 1f, "o1_density" to 0.142857149f, "o1_detune" to 0.15f, "o1_drift" to 0.2f, "o2_wave" to 0.114285715f, "o2_pos" to 0.2f, "o2_fine" to 0.26f, "o2_level" to 1f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.46598f, "f1_res" to 0.25f, "f1_env" to 0.6f, "a_attack" to 0.24999997f, "a_decay" to 0.7419396f, "a_sustain" to 0.9f, "a_release" to 0.5411295f, "l1_rate" to 0.361190557f, "l2_rate" to 0.309251755f, "l2_phase" to 0.5f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.625f, "m02_src" to 0.933333337f, "m02_dest" to 0.181818187f, "m02_depth" to 0.65f, "voicemode" to 0.333333343f, "volume" to 0.72f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.5151515f, "mac4_a1" to 0.75f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.496f, "mac6_d1" to 0.939393938f, "mac6_d2" to 0.969697f, "mac6_a1" to 0.75f, "mac6_a2" to 0.75f, "mac7_d1" to 0.151515156f, "mac7_d2" to 0.181818187f, "mac7_a1" to 0.7f, "mac7_a2" to 0.7f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "Width", "macro5" to "Beat", "macro6" to "Speed", "macro7" to "Shape", "macro8" to "Sub"),
+        family = "bass",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Phaser", mapOf("depth" to 0.6f, "mix" to 0.4f))))
+
+    private fun trinity42() = Patch("Trinity", "Knock FM",
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_fine" to 0.5f, "o2_level" to 0f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "fm21" to 0.15f, "f1_type" to 0.09090909f, "f1_freq" to 0.625020444f, "f1_res" to 0f, "f1_env" to 0.6f, "f2_type" to 0.363636374f, "f2_freq" to 0f, "a_attack" to 0.2697953f, "a_sustain" to 0.3f, "a_release" to 0.4588705f, "e3_attack" to 0.194537818f, "e3_decay" to 0.4588705f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.8f, "voicemode" to 0.333333343f, "octave" to 0.6666667f, "volume" to 1f, "mac1_d1" to 0.6363636f, "mac1_a1" to 0.7f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.675f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.09090909f, "mac4_a1" to 0.515f, "mac5_d1" to 0.454545468f, "mac5_a1" to 0.7f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.7f, "mac7_d1" to 0.75757575f, "mac7_a1" to 0.7f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "FM", "macro2" to "Open", "macro3" to "Edge", "macro4" to "Metal", "macro5" to "Grit", "macro6" to "Ring", "macro7" to "Bite", "macro8" to "Sub"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity43() = Patch("Trinity", "Chain FM",
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.8958333f, "fm21" to 0.45f, "fm32" to 0.35f, "f1_freq" to 0.6150327f, "f1_res" to 0.2f, "f2_type" to 0.363636374f, "f2_freq" to 0f, "a_attack" to 0.2697953f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "f_attack" to 0.194537818f, "f_decay" to 0.5615631f, "e3_attack" to 0f, "e3_decay" to 0.593804836f, "e3_sustain" to 0.3f, "m01_src" to 0.6f, "m01_dest" to 0.6666667f, "m01_depth" to 0.65f, "voicemode" to 0.333333343f, "octave" to 0.6666667f, "volume" to 0.62f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.6363636f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6666667f, "mac4_a1" to 0.7f, "mac5_d1" to 0.4848485f, "mac5_a1" to 0.7f, "mac6_d1" to 0.272727281f, "mac6_a1" to 0.7f, "mac7_d1" to 0.121212125f, "mac7_a1" to 0.502f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "FM", "macro4" to "Upper FM", "macro5" to "Grit", "macro6" to "Body", "macro7" to "Beat", "macro8" to "Ring"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity44() = Patch("Trinity", "Talk Growl",
+        mapOf("o1_wave" to 0.171428576f, "o1_pos" to 0.3f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_fine" to 0.5f, "o2_level" to 0.6f, "f1_freq" to 0.625020444f, "f1_res" to 0.25f, "f1_env" to 0.6f, "a_decay" to 0.7419396f, "a_sustain" to 0.9f, "a_release" to 0.483879149f, "l1_wave" to 0.125f, "l1_sync" to 0.3529412f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.675f, "voicemode" to 0.333333343f, "octave" to 0.6666667f, "volume" to 1f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.939393938f, "mac3_a1" to 0.625f, "mac4_d1" to 0.151515156f, "mac4_a1" to 0.7f, "mac5_d1" to 0.424242437f, "mac5_a1" to 0.7f, "mac6_d1" to 0.272727281f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Speed", "macro4" to "Vowel", "macro5" to "Edge", "macro6" to "Sub", "macro7" to "FM", "macro8" to "Beat"),
+        family = "bass",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("tone" to 0.515054f, "mix" to 0.6f, "gain" to 0.479166657f))))
+
+    private fun trinity45() = Patch("Trinity", "Fold Bass",
+        mapOf("o1_wave" to 0.257142872f, "o1_pos" to 0.1f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "f1_type" to 0.09090909f, "f1_freq" to 0.69897f, "f1_res" to 0.1f, "f1_env" to 0.6f, "a_attack" to 0.2257725f, "a_decay" to 0.6846892f, "a_sustain" to 0.5f, "a_release" to 0.483879149f, "f_decay" to 0.5411295f, "f_sustain" to 0.1f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.75f, "voicemode" to 0.333333343f, "octave" to 0.6666667f, "volume" to 0.76f, "mac1_d1" to 0.151515156f, "mac1_a1" to 0.75f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.65f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.75757575f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_d2" to 0.8787879f, "mac5_a1" to 0.75f, "mac5_a2" to 0.386f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Fold", "macro2" to "Open", "macro3" to "Edge", "macro4" to "Bite", "macro5" to "Octave", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity46() = Patch("Trinity", "Wood Pluck",
+        mapOf("o1_wave" to 1f, "o1_pos" to 0.35f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0.4f, "f1_type" to 0.09090909f, "f1_freq" to 0.551070869f, "f1_res" to 0.1f, "f1_env" to 0.75f, "f1_key" to 0.5f, "a_attack" to 0f, "a_decay" to 0.656523347f, "a_sustain" to 0f, "a_release" to 0.483879149f, "f_decay" to 0.5043127f, "f_sustain" to 0f, "octave" to 0.6666667f, "volume" to 0.92f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.151515156f, "mac3_a1" to 0.75f, "mac4_d1" to 0.727272749f, "mac4_a1" to 0.25f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.575f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Pick", "macro4" to "Soft", "macro5" to "Octave", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Noise"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity47() = Patch("Trinity", "Rubber Bass",
+        mapOf("o1_wave" to 0.5714286f, "o1_pos" to 0.4f, "o1_level" to 1f, "o2_wave" to 0.0571428575f, "o2_coarse" to 0.25f, "o2_fine" to 0.5f, "f1_freq" to 0.414346f, "f1_res" to 0.4f, "f1_env" to 0.775f, "a_attack" to 0.2257725f, "a_decay" to 0.671488762f, "a_sustain" to 0.4f, "a_release" to 0.4588705f, "f_attack" to 0.194537818f, "f_decay" to 0.483879149f, "f_sustain" to 0.1f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.65f, "voicemode" to 0.6666667f, "glide" to 0.035f, "glidemode" to 1f, "octave" to 0.6666667f, "volume" to 0.9f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.151515156f, "mac3_a1" to 0.75f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.503f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Bend", "macro4" to "Edge", "macro5" to "Sub", "macro6" to "FM", "macro7" to "Beat", "macro8" to "Ring"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity48() = Patch("Trinity", "Sour",
+        mapOf("o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.5f, "o2_level" to 0f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.382042676f, "f1_res" to 0.68f, "f1_env" to 0.8f, "a_attack" to 0.075257495f, "a_decay" to 0.593804836f, "a_sustain" to 0.6f, "a_release" to 0.4134283f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "m01_src" to 0.266666681f, "m01_dest" to 0.6969697f, "m01_depth" to 0.6f, "m02_src" to 0.266666681f, "m02_dest" to 0.75757575f, "m02_depth" to 0.575f, "voicemode" to 0.6666667f, "glide" to 0.03f, "glidemode" to 1f, "octave" to 0.6666667f, "volume" to 0.89f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.65f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.24242425f, "mac4_d2" to 0.272727281f, "mac4_a1" to 0.099999994f, "mac4_a2" to 0.9f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.503f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "Square", "macro5" to "Sub", "macro6" to "FM", "macro7" to "Beat", "macro8" to "Ring"),
+        family = "bass",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.436294526f, "tone" to 0.6456324f, "mix" to 0.5f, "gain" to 0.458333343f))))
+
+    private fun trinity49() = Patch("Trinity", "Tart",
+        mapOf("o1_wave" to 0.4857143f, "o1_pos" to 0.15f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_type" to 0.09090909f, "f1_env" to 0.575f, "a_attack" to 0.075257495f, "a_decay" to 0.618813455f, "a_sustain" to 0.5f, "a_release" to 0.4134283f, "f_decay" to 0.5268027f, "f_sustain" to 0f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.775f, "m02_src" to 0.266666681f, "m02_dest" to 0.151515156f, "m02_depth" to 0.575f, "voicemode" to 0.6666667f, "glide" to 0.025f, "glidemode" to 1f, "octave" to 0.6666667f, "volume" to 0.84f, "mac1_d1" to 0.151515156f, "mac1_a1" to 0.7f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.7f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.7f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_d2" to 0.8787879f, "mac5_a1" to 0.75f, "mac5_a2" to 0.345f, "mac6_d1" to 0.3030303f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Peak", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Edge", "macro5" to "Square", "macro6" to "Sub", "macro7" to "FM", "macro8" to "Beat"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity50() = Patch("Trinity", "Old Mono",
+        mapOf("o1_level" to 1f, "o1_drift" to 0.75f, "o2_fine" to 0.41f, "o2_level" to 0.8f, "o2_drift" to 0.8f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.25f, "o3_level" to 0.6f, "o3_drift" to 0.7f, "f1_freq" to 0.5039611f, "f1_res" to 0.25f, "f1_env" to 0.675f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.5043127f, "f_decay" to 0.578839362f, "f_sustain" to 0.3f, "m01_src" to 0.4f, "m01_dest" to 0.6969697f, "m01_depth" to 0.54f, "voicemode" to 0.6666667f, "glide" to 0.02f, "volume" to 0.47f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.727272749f, "mac3_a1" to 0.25f, "mac4_d1" to 0.3030303f, "mac4_a1" to 0.7f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.505f, "mac6_d1" to 0.3939394f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.625f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Soft", "macro4" to "Sub", "macro5" to "Beat", "macro6" to "PW", "macro7" to "FM", "macro8" to "Noise"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity51() = Patch("Trinity", "Worn Bass",
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o1_pw" to 0.447916627f, "o1_drift" to 0.5f, "o2_wave" to 0.0571428575f, "o2_fine" to 0.55f, "o2_level" to 0.7f, "o2_drift" to 0.5f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_type" to 0.09090909f, "f1_freq" to 0.551070869f, "f1_res" to 0.1f, "f1_env" to 0.625f, "a_decay" to 0.7419396f, "a_sustain" to 0.75f, "a_release" to 0.5161209f, "voicemode" to 0.333333343f, "volume" to 0.35f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.333333343f, "mac4_a1" to 0.7f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.09090909f, "mac6_a1" to 0.505f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "PW", "macro5" to "Sub", "macro6" to "Beat", "macro7" to "FM", "macro8" to "Hiss"),
+        family = "bass",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Tape", mapOf("wow" to 0.12f, "flutter" to 0.08f, "drive" to 0.4f, "tone" to 0.544068038f, "hiss" to 0f, "gain" to 0.4375f))))
+
+    private fun trinity52() = Patch("Trinity", "Wobble Knob",
+        mapOf("o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.25f, "o2_fine" to 0.5f, "o2_level" to 0.7f, "f1_freq" to 0.46598f, "f1_res" to 0.2f, "f1_env" to 0.625f, "f2_type" to 0.272727281f, "f2_freq" to 0.392030418f, "f2_res" to 0.5f, "route" to 0.5f, "a_decay" to 0.7419396f, "a_sustain" to 1f, "a_release" to 0.4588705f, "l1_sync" to 0.3529412f, "m01_src" to 0.8666667f, "m01_dest" to 0.727272749f, "m01_depth" to 0.8f, "voicemode" to 0.333333343f, "volume" to 0.6f, "mac1_d1" to 0.8181818f, "mac1_a1" to 1f, "mac2_d1" to 0.939393938f, "mac2_a1" to 0.625f, "mac3_d1" to 0.6969697f, "mac3_d2" to 0.727272749f, "mac3_a1" to 0.675f, "mac3_a2" to 0.675f, "mac4_d1" to 0.75757575f, "mac4_d2" to 0.7878788f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.424242437f, "mac5_a1" to 0.7f, "mac6_d1" to 0.272727281f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Wobble", "macro2" to "Speed", "macro3" to "Open", "macro4" to "Bite", "macro5" to "Edge", "macro6" to "Sub", "macro7" to "FM", "macro8" to "Beat"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity53() = Patch("Trinity", "Chip Bass",
+        mapOf("o1_wave" to 0.857142866f, "o1_level" to 1f, "o1_drift" to 0f, "o2_wave" to 0.857142866f, "o2_pos" to 0.1429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0.3f, "o2_drift" to 0f, "f1_type" to 0.09090909f, "f1_freq" to 0.8673533f, "f1_res" to 0f, "f1_drivetype" to 1f, "f1_env" to 0.5f, "a_attack" to 0.075257495f, "a_decay" to 0.593804836f, "a_release" to 0.36075303f, "voicemode" to 0.333333343f, "octave" to 0.6666667f, "volume" to 0.86f, "mac1_d1" to 0.151515156f, "mac1_a1" to 0.715000033f, "mac2_d1" to 0.181818187f, "mac2_a1" to 0.65f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.8787879f, "mac3_a1" to 0.75f, "mac3_a2" to 0.351f, "mac4_d1" to 0.6969697f, "mac4_a1" to 0.25f, "mac5_d1" to 0.8484849f, "mac5_a1" to 0.95f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Shape", "macro2" to "Pulse", "macro3" to "Top", "macro4" to "Dark", "macro5" to "Crush", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity54() = Patch("Trinity", "Bloom",
+        mapOf("o1_wave" to 0.371428579f, "o1_pos" to 0.1f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0.4f, "f1_type" to 0.09090909f, "f1_freq" to 0.651414156f, "f1_res" to 0.1f, "f1_env" to 0.5f, "a_attack" to 0.32525748f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "e3_attack" to 0.6945378f, "e3_decay" to 0.69649744f, "e3_sustain" to 1f, "m01_src" to 0.6f, "m01_dest" to 0.151515156f, "m01_depth" to 0.75f, "voicemode" to 0.333333343f, "volume" to 0.52f, "mac1_d1" to 0.151515156f, "mac1_a1" to 0.7f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.675f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.75757575f, "mac4_a1" to 0.65f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.503f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bloom", "macro2" to "Open", "macro3" to "Edge", "macro4" to "Bite", "macro5" to "Octave", "macro6" to "FM", "macro7" to "Beat", "macro8" to "Ring"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity55() = Patch("Trinity", "Sync Bass",
+        mapOf("o1_level" to 0.4f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 1f, "o2_sync" to 1f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.634363353f, "a_attack" to 0.119280316f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "f_decay" to 0.5615631f, "e3_attack" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0.1f, "m01_src" to 0.6f, "m01_dest" to 0.09090909f, "m01_depth" to 0.7f, "voicemode" to 0.333333343f, "volume" to 0.77f, "mac1_d1" to 0.09090909f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.675f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.7f, "mac4_d1" to 0.727272749f, "mac4_a1" to 0.25f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.24242425f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tear", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Soft", "macro5" to "Sub", "macro6" to "Body", "macro7" to "FM", "macro8" to "Ring"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity56() = Patch("Trinity", "Fifth Bass",
+        mapOf("o1_level" to 1f, "o2_coarse" to 0.6458333f, "o2_fine" to 0.5f, "o2_level" to 0.7f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "o3_level" to 0.4f, "f1_freq" to 0.492373765f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.5043127f, "f_decay" to 0.593804836f, "f_sustain" to 0.25f, "voicemode" to 0.333333343f, "volume" to 0.64f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.272727281f, "mac4_a1" to 0.65f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.09090909f, "mac6_a1" to 0.503f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "Fifth", "macro5" to "Sub", "macro6" to "Beat", "macro7" to "FM", "macro8" to "Ring"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity57() = Patch("Trinity", "Felt Bass",
+        mapOf("o1_wave" to 0.0571428575f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.25f, "o2_level" to 0.8f, "o3_wave" to 0.0571428575f, "o3_coarse" to 0.75f, "o3_level" to 0.6f, "f1_type" to 0f, "f1_freq" to 0.625020444f, "f1_res" to 0f, "f1_env" to 0.575f, "a_attack" to 0.294022828f, "a_decay" to 0.7342073f, "a_sustain" to 0.5f, "a_release" to 0.5411295f, "volume" to 0.67f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.7f, "mac2_d1" to 0.424242437f, "mac2_d2" to 0.8787879f, "mac2_a1" to 0.625f, "mac2_a2" to 0.702f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.75f, "mac4_d1" to 0.09090909f, "mac4_a1" to 0.503f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.75f, "mac7_d1" to 0.545454562f, "mac7_a1" to 0.6f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Edge", "macro3" to "Sub", "macro4" to "Beat", "macro5" to "FM", "macro6" to "Ring", "macro7" to "Air", "macro8" to "Octave"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun trinity58() = Patch("Trinity", "Grind",
+        mapOf("o1_level" to 1f, "o2_wave" to 0.8f, "o2_pos" to 0.4f, "o2_fine" to 0.56f, "o2_level" to 0.7f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "f1_freq" to 0.551070869f, "f1_res" to 0.3f, "f1_drivetype" to 1f, "f1_drive" to 0.4f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "a_release" to 0.483879149f, "voicemode" to 0.333333343f, "octave" to 0.6666667f, "volume" to 0.6f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.8484849f, "mac3_a1" to 0.8f, "mac4_d1" to 0.181818187f, "mac4_a1" to 0.75f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.7f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.504f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Crush", "macro4" to "Dust", "macro5" to "Sub", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
+        family = "bass",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.7341119f, "tone" to 0.7316421f, "mix" to 0.5f, "mode" to 0.333333343f, "gain" to 0.391666651f))))
+
+    private fun trinity59() = Patch("Trinity", "Square Lead",
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.44f, "o2_level" to 0.64f, "o2_pw" to 0.447916627f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.75f, "f1_freq" to 0.7046478f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5411295f, "glide" to 0.015f, "volume" to 0.27f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.333333343f, "mac3_d2" to 0.363636374f, "mac3_a1" to 0.675f, "mac3_a2" to 0.35f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.504f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "PW", "macro4" to "Edge", "macro5" to "Beat", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Octave"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity40() = Patch("Trinity", "Saw Lead",
-        mapOf("o1_level" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "o3_fine" to 0.45f, "o3_level" to 0.83f, "f1_freq" to 0.651414156f, "f1_res" to 0.25f, "f1_key" to 0.8f, "a_attack" to 0.2257725f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "volume" to 0.39f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.75f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.75f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.3030303f, "mac3_a1" to 0.0500000119f, "mac3_a2" to 0.15f, "mac4_d1" to 0.575757563f, "mac4_a1" to 0.675f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f),
-        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Thin", "macro4" to "Ring", "macro5" to "Fizz"),
+    private fun trinity60() = Patch("Trinity", "Saw Lead",
+        mapOf("o1_level" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "o3_fine" to 0.45f, "o3_level" to 0.83f, "f1_freq" to 0.651414156f, "f1_res" to 0.25f, "f1_key" to 0.8f, "a_attack" to 0.2257725f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "volume" to 0.39f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.75f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.75f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.3030303f, "mac3_d3" to 0.8787879f, "mac3_a1" to 0.0500000119f, "mac3_a2" to 0.15f, "mac3_a3" to 0.6105f, "mac4_d1" to 0.575757563f, "mac4_a1" to 0.675f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.424242437f, "mac6_a1" to 0.7f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.504f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.575f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Thin", "macro4" to "Ring", "macro5" to "Fizz", "macro6" to "Edge", "macro7" to "Beat", "macro8" to "Noise"),
         family = "lead",
         low = 48, high = 91,
         inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.485719174f, "tone" to 0.6456324f, "mix" to 0.6f, "gain" to 0.427083343f)), UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.368421048f, "mix" to 0.25f))))
 
-    private fun trinity41() = Patch("Trinity", "Fifth Lead",
-        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.6458333f, "o2_level" to 0.91f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "volume" to 0.24f),
+    private fun trinity61() = Patch("Trinity", "Fifth Lead",
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.6458333f, "o2_level" to 0.91f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "volume" to 0.24f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.65f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.333333343f, "mac3_d2" to 0.363636374f, "mac3_d3" to 0.3939394f, "mac3_a1" to 0.85f, "mac3_a2" to 0.85f, "mac3_a3" to 0.85f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_d2" to 0.3030303f, "mac5_d3" to 0.8787879f, "mac5_a1" to 0.0500000119f, "mac5_a2" to 0.199999988f, "mac5_a3" to 0.5575f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "PW", "macro4" to "Edge", "macro5" to "Root", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity42() = Patch("Trinity", "Soft Lead",
-        mapOf("o1_wave" to 0.0571428575f, "o1_level" to 1f, "o1_drift" to 0.2f, "o2_wave" to 0.08571429f, "o2_level" to 0.81f, "f1_type" to 0.09090909f, "f1_freq" to 0.634363353f, "f1_env" to 0.6f, "a_attack" to 0.444537818f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.618813455f, "glide" to 0.045f, "volume" to 0.37f),
+    private fun trinity62() = Patch("Trinity", "Soft Lead",
+        mapOf("o1_wave" to 0.0571428575f, "o1_level" to 1f, "o1_drift" to 0.2f, "o2_wave" to 0.08571429f, "o2_level" to 0.81f, "f1_type" to 0.09090909f, "f1_freq" to 0.634363353f, "f1_env" to 0.6f, "a_attack" to 0.444537818f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.618813455f, "glide" to 0.045f, "volume" to 0.37f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.424242437f, "mac2_a1" to 0.7f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.65f, "mac4_d1" to 0.272727281f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.75f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.503f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Open", "macro2" to "Edge", "macro3" to "Bite", "macro4" to "Body", "macro5" to "FM", "macro6" to "Ring", "macro7" to "Beat", "macro8" to "Breath"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity43() = Patch("Trinity", "Hard Sync",
-        mapOf("o1_level" to 0.82f, "o2_coarse" to 0.8958333f, "o2_level" to 1f, "o2_sync" to 1f, "f1_type" to 0.181818187f, "f1_freq" to 0.76701f, "f1_env" to 0.7f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5161209f, "volume" to 0.52f),
+    private fun trinity63() = Patch("Trinity", "Hard Sync",
+        mapOf("o1_level" to 0.82f, "o2_coarse" to 0.8958333f, "o2_level" to 1f, "o2_sync" to 1f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.25f, "f1_type" to 0.181818187f, "f1_freq" to 0.76701f, "f1_env" to 0.7f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5161209f, "volume" to 0.52f, "mac1_d1" to 0.09090909f, "mac1_a1" to 0.625f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.65f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.675f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.24242425f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Tear", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Edge", "macro5" to "Body", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Sub"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity44() = Patch("Trinity", "PWM Lead",
-        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.46f, "o2_level" to 0.96f, "f1_freq" to 0.71537596f, "f1_res" to 0.12f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.4589631f, "m01_src" to 0.8666667f, "m01_dest" to 0.333333343f, "m01_depth" to 0.7f, "m02_src" to 0.8666667f, "m02_dest" to 0.363636374f, "m02_depth" to 0.325f, "volume" to 0.22f),
+    private fun trinity64() = Patch("Trinity", "PWM Lead",
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.46f, "o2_level" to 0.96f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.25f, "f1_freq" to 0.71537596f, "f1_res" to 0.12f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.4589631f, "m01_src" to 0.8666667f, "m01_dest" to 0.333333343f, "m01_depth" to 0.7f, "m02_src" to 0.8666667f, "m02_dest" to 0.363636374f, "m02_depth" to 0.325f, "volume" to 0.22f, "mac1_d1" to 0.939393938f, "mac1_a1" to 0.7f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.675f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.675f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.503f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Speed", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Edge", "macro5" to "Beat", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Sub"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity45() = Patch("Trinity", "Vowel Lead",
-        mapOf("o1_wave" to 0.171428576f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.2f, "o2_wave" to 0.171428576f, "o2_pos" to 0.5f, "o2_fine" to 0.56f, "o2_level" to 0.93f, "f1_type" to 0.181818187f, "f1_res" to 0.2f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.8f, "volume" to 1f),
+    private fun trinity65() = Patch("Trinity", "Vowel Lead",
+        mapOf("o1_wave" to 0.171428576f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.2f, "o2_wave" to 0.171428576f, "o2_pos" to 0.5f, "o2_fine" to 0.56f, "o2_level" to 0.93f, "f1_type" to 0.181818187f, "f1_res" to 0.2f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.8f, "volume" to 1f, "mac1_d1" to 0.151515156f, "mac1_d2" to 0.181818187f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.65f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.675f, "mac4_d1" to 0.5151515f, "mac4_a1" to 0.7f, "mac5_d1" to 0.424242437f, "mac5_d2" to 0.8787879f, "mac5_a1" to 0.7f, "mac5_a2" to 0.338f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.503f),
+        mapOf("macro1" to "Vowel", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Width", "macro5" to "Edge", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity46() = Patch("Trinity", "Whistle",
-        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o1_drift" to 0.35f, "o2_wave" to 0.08571429f, "o2_fine" to 0.53f, "o2_level" to 0.49f, "f1_type" to 0.09090909f, "f1_freq" to 0.799313366f, "a_attack" to 0.4247425f, "a_decay" to 0.69649744f, "a_sustain" to 0.9f, "a_release" to 0.593804836f, "glide" to 0.06f, "volume" to 0.36f),
+    private fun trinity66() = Patch("Trinity", "Whistle",
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o1_drift" to 0.35f, "o2_wave" to 0.08571429f, "o2_fine" to 0.53f, "o2_level" to 0.49f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.75f, "f1_type" to 0.09090909f, "f1_freq" to 0.799313366f, "a_attack" to 0.4247425f, "a_decay" to 0.69649744f, "a_sustain" to 0.9f, "a_release" to 0.593804836f, "glide" to 0.06f, "volume" to 0.36f, "mac1_d1" to 0.545454562f, "mac1_a1" to 0.625f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.3f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.7f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.75f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.504f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Breath", "macro2" to "Dark", "macro3" to "Body", "macro4" to "Edge", "macro5" to "FM", "macro6" to "Ring", "macro7" to "Beat", "macro8" to "Octave"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun trinity47() = Patch("Trinity", "Noise Sweep",
+    private fun trinity67() = Patch("Trinity", "Sync Sweep",
+        mapOf("o1_level" to 0.5f, "o2_coarse" to 0.6458333f, "o2_fine" to 0.5f, "o2_level" to 1f, "o2_sync" to 1f, "f1_freq" to 0.799313366f, "f1_res" to 0.1f, "f1_env" to 0.6f, "f1_key" to 0.4f, "a_attack" to 0.194537818f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5411295f, "l1_wave" to 0.125f, "l1_rate" to 0.428662539f, "m01_src" to 0.8666667f, "m01_dest" to 0.09090909f, "m01_depth" to 0.625f, "voicemode" to 0.6666667f, "glide" to 0.025f, "volume" to 0.5f, "mac1_d1" to 0.09090909f, "mac1_a1" to 0.65f, "mac2_d1" to 0.939393938f, "mac2_a1" to 0.7f, "mac3_d1" to 0.6969697f, "mac3_a1" to 0.65f, "mac4_d1" to 0.75757575f, "mac4_a1" to 0.7f, "mac5_d1" to 0.727272749f, "mac5_a1" to 0.25f, "mac6_d1" to 0.24242425f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tear", "macro2" to "Speed", "macro3" to "Open", "macro4" to "Bite", "macro5" to "Soft", "macro6" to "Body", "macro7" to "FM", "macro8" to "Ring"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("feedback" to 0.368421048f, "tone" to 0.6871456f, "mix" to 0.25f))))
+
+    private fun trinity68() = Patch("Trinity", "Bell Lead",
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.8958333f, "o2_fine" to 0.5f, "o2_level" to 0f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.75f, "fm21" to 0.15f, "f1_type" to 0.09090909f, "f1_freq" to 0.8844042f, "f1_res" to 0f, "f1_env" to 0.5f, "a_attack" to 0.075257495f, "a_decay" to 0.79919f, "a_sustain" to 0.6f, "a_release" to 0.639247f, "e3_attack" to 0f, "e3_decay" to 0.618813455f, "e3_sustain" to 0f, "l2_rate" to 0.749285161f, "l2_delay" to 0.120000005f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.75f, "m02_src" to 0.933333337f, "m02_dest" to 0.0303030312f, "m02_depth" to 0.502f, "voicemode" to 0.6666667f, "glide" to 0.015f, "volume" to 0.39f, "mac1_d1" to 0.6363636f, "mac1_a1" to 0.7f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.3f, "mac3_d1" to 0.575757563f, "mac3_a1" to 0.7f, "mac4_d1" to 0.272727281f, "mac4_a1" to 0.65f, "mac5_d1" to 0.424242437f, "mac5_a1" to 0.7f, "mac6_d1" to 0.545454562f, "mac6_a1" to 0.575f, "mac7_d1" to 0.3030303f, "mac7_a1" to 0.7f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.51f),
+        mapOf("macro1" to "Strike", "macro2" to "Dark", "macro3" to "Ring", "macro4" to "Glass", "macro5" to "Edge", "macro6" to "Air", "macro7" to "Octave", "macro8" to "Metal"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("mix" to 0.25f))),
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun trinity69() = Patch("Trinity", "Scan Lead",
+        mapOf("o1_wave" to 0.8857143f, "o1_pos" to 0.3f, "o1_level" to 1f, "o1_density" to 0.142857149f, "o1_detune" to 0.15f, "o2_wave" to 0.9714286f, "o2_pos" to 0.4f, "o2_fine" to 0.54f, "o2_level" to 0.6f, "f1_freq" to 0.784060836f, "f1_env" to 0.6f, "f1_key" to 0.4f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "a_release" to 0.578839362f, "f_decay" to 0.639247f, "f_sustain" to 0.3f, "l1_wave" to 0.125f, "l1_rate" to 0.3880946f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.625f, "m02_src" to 0.533333361f, "m02_dest" to 0.181818187f, "m02_depth" to 0.7f, "voicemode" to 0.6666667f, "glide" to 0.02f, "volume" to 0.5f, "mac1_d1" to 0.151515156f, "mac1_d2" to 0.181818187f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.939393938f, "mac2_a1" to 0.7f, "mac3_d1" to 0.6969697f, "mac3_a1" to 0.65f, "mac4_d1" to 0.75757575f, "mac4_a1" to 0.7f, "mac5_d1" to 0.424242437f, "mac5_a1" to 0.7f, "mac6_d1" to 0.5151515f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Scan", "macro2" to "Speed", "macro3" to "Open", "macro4" to "Bite", "macro5" to "Edge", "macro6" to "Width", "macro7" to "FM", "macro8" to "Ring"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.35f))))
+
+    private fun trinity70() = Patch("Trinity", "Glide Lead",
+        mapOf("o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.25f, "o2_fine" to 0.5f, "o2_level" to 0.6f, "f1_freq" to 0.6930604f, "f1_res" to 0.3f, "f1_key" to 0.5f, "a_attack" to 0.2257725f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5411295f, "l1_rate" to 0.7607766f, "l1_delay" to 0.1f, "m01_src" to 0.8666667f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.502f, "voicemode" to 0.6666667f, "glide" to 0.11f, "glidemode" to 1f, "volume" to 0.39f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.65f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.675f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.363636374f, "mac4_a1" to 0.7f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.65f, "mac6_d1" to 0.09090909f, "mac6_a1" to 0.503f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.575757563f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "PW", "macro5" to "Low", "macro6" to "Beat", "macro7" to "FM", "macro8" to "Ring"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "pingpong" to 0f, "mix" to 0.2f))))
+
+    private fun trinity71() = Patch("Trinity", "Soft Flute",
+        mapOf("o1_wave" to 0.4f, "o1_pos" to 0.15f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0.12f, "o3_wave" to 0.54285717f, "o3_pos" to 0.3f, "o3_fine" to 0.54f, "noisecol" to 0.6f, "f1_type" to 0.09090909f, "f1_freq" to 0.747679353f, "f1_res" to 0f, "f1_env" to 0.55f, "f1_key" to 0.4f, "a_attack" to 0.444537818f, "a_decay" to 0.7419396f, "a_sustain" to 0.9f, "e3_attack" to 0f, "e3_decay" to 0.483879149f, "e3_sustain" to 0.15f, "l1_rate" to 0.749285161f, "l1_delay" to 0.1f, "m01_src" to 0.6f, "m01_dest" to 0.545454562f, "m01_depth" to 0.625f, "m02_src" to 0.8666667f, "m02_dest" to 0.0303030312f, "m02_depth" to 0.502f, "voicemode" to 0.6666667f, "glide" to 0.02f, "volume" to 0.42f, "mac1_d1" to 0.545454562f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.65f, "mac3_d1" to 0.151515156f, "mac3_a1" to 0.7f, "mac4_d1" to 0.272727281f, "mac4_a1" to 0.7f, "mac5_d1" to 0.3030303f, "mac5_a1" to 0.75f, "mac6_d1" to 0.424242437f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.625f, "mac8_d1" to 0.75757575f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Breath", "macro2" to "Open", "macro3" to "Tone", "macro4" to "Octave", "macro5" to "Reed", "macro6" to "Edge", "macro7" to "FM", "macro8" to "Bite"),
+        family = "lead",
+        low = 48, high = 91,
+        sendReverb = 0.18f, sendDelay = 0f)
+
+    private fun trinity72() = Patch("Trinity", "Scream",
+        mapOf("o1_level" to 1f, "o1_density" to 0.142857149f, "o1_detune" to 0.12f, "o2_fine" to 0.58f, "o2_level" to 0.8f, "o3_coarse" to 0.6458333f, "f1_freq" to 0.71537596f, "f1_res" to 0.55f, "f1_key" to 0.4f, "a_decay" to 0.69649744f, "a_sustain" to 0.9f, "voicemode" to 0.6666667f, "glide" to 0.015f, "volume" to 0.44f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.65f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.65f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6363636f, "mac4_a1" to 0.65f, "mac5_d1" to 0.575757563f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5151515f, "mac6_a1" to 0.75f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.504f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "FM", "macro5" to "Ring", "macro6" to "Width", "macro7" to "Beat", "macro8" to "Fifth"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.7341119f, "tone" to 0.7958837f, "mix" to 0.6f, "mode" to 0.333333343f, "gain" to 0.366666675f)), UnitSlot("Delay", mapOf("feedback" to 0.368421048f, "tone" to 0.6871456f, "mix" to 0.22f))))
+
+    private fun trinity73() = Patch("Trinity", "Stab Lead",
+        mapOf("o1_level" to 1f, "o2_coarse" to 0.5625f, "o2_fine" to 0.5f, "o2_level" to 0.8f, "o3_coarse" to 0.6458333f, "o3_level" to 0.8f, "f1_freq" to 0.6150327f, "f1_res" to 0.2f, "f1_env" to 0.75f, "f1_key" to 0.5f, "a_attack" to 0.119280316f, "a_decay" to 0.618813455f, "a_sustain" to 0.3f, "a_release" to 0.5161209f, "f_decay" to 0.5411295f, "f_sustain" to 0.15f, "voicemode" to 0.333333343f, "volume" to 0.65f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.675f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.424242437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.09090909f, "mac4_a1" to 0.520835f, "mac5_d1" to 0.121212125f, "mac5_a1" to 0.5025f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.272727281f, "mac8_d2" to 0.3030303f, "mac8_d3" to 0.8787879f, "mac8_a1" to 0.099999994f, "mac8_a2" to 0.099999994f, "mac8_a3" to 0.7205f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "Major", "macro5" to "Beat", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Root"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.35f))),
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun trinity74() = Patch("Trinity", "Reed Lead",
+        mapOf("o1_wave" to 0.54285717f, "o1_pos" to 0.4f, "o1_level" to 1f, "o2_wave" to 0.342857152f, "o2_pos" to 0.3f, "o2_fine" to 0.53f, "o2_level" to 0.4f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.75f, "noise" to 0.04f, "noisecol" to 0.5f, "f1_type" to 0.09090909f, "f1_res" to 0.1f, "f1_env" to 0.575f, "f1_key" to 0.5f, "a_attack" to 0.3692803f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "l1_rate" to 0.7443633f, "l1_delay" to 0.08f, "m01_src" to 0.266666681f, "m01_dest" to 0.151515156f, "m01_depth" to 0.6f, "m02_src" to 0.8666667f, "m02_dest" to 0.0303030312f, "m02_depth" to 0.5015f, "voicemode" to 0.6666667f, "glide" to 0.025f, "volume" to 0.41f, "mac1_d1" to 0.151515156f, "mac1_a1" to 0.7f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.65f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.65f, "mac4_d1" to 0.545454562f, "mac4_a1" to 0.6f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.7f, "mac6_d1" to 0.424242437f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6363636f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Breath", "macro5" to "Hollow", "macro6" to "Edge", "macro7" to "FM", "macro8" to "Octave"),
+        family = "lead",
+        low = 48, high = 91,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun trinity75() = Patch("Trinity", "Chip Lead",
+        mapOf("o1_wave" to 0.857142866f, "o1_pos" to 0.1429f, "o1_level" to 1f, "o1_drift" to 0f, "o2_wave" to 0.857142866f, "o2_pos" to 0.2857f, "o2_coarse" to 0.75f, "o2_fine" to 0.5f, "o2_level" to 0f, "o2_drift" to 0f, "f1_type" to 0.09090909f, "f1_freq" to 0.899656653f, "f1_res" to 0f, "f1_drivetype" to 1f, "f1_env" to 0.5f, "a_attack" to 0.075257495f, "a_sustain" to 0.8f, "a_release" to 0.438436955f, "e3_attack" to 0f, "e3_decay" to 0.335744351f, "e3_sustain" to 0f, "l1_rate" to 0.789853036f, "l1_delay" to 0.05f, "m01_src" to 0.6f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.48f, "m02_src" to 0.8666667f, "m02_dest" to 0.0303030312f, "m02_depth" to 0.503f, "voicemode" to 0.6666667f, "volume" to 0.45f, "mac1_d1" to 0.151515156f, "mac1_d2" to 0.8787879f, "mac1_a1" to 0.715000033f, "mac1_a2" to 0.6355f, "mac2_d1" to 0.272727281f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6969697f, "mac3_a1" to 0.25f, "mac4_d1" to 0.8484849f, "mac4_a1" to 0.95f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.75f, "mac7_d1" to 0.09090909f, "mac7_a1" to 0.503f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Shape", "macro2" to "Octave", "macro3" to "Dark", "macro4" to "Crush", "macro5" to "FM", "macro6" to "Ring", "macro7" to "Beat", "macro8" to "Noise"),
+        family = "lead",
+        low = 48, high = 91)
+
+    private fun trinity76() = Patch("Trinity", "Drift Lead",
+        mapOf("o1_level" to 1f, "o1_drift" to 0.7f, "o2_wave" to 0.0571428575f, "o2_fine" to 0.44f, "o2_level" to 0.7f, "o2_drift" to 0.7f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.25f, "f1_freq" to 0.6804642f, "f1_res" to 0.2f, "f1_env" to 0.625f, "f1_key" to 0.5f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.736582041f, "l1_delay" to 0.120000005f, "m01_src" to 0.8666667f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.5015f, "voicemode" to 0.6666667f, "glide" to 0.03f, "volume" to 0.4f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.65f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.7f, "mac3_d1" to 0.727272749f, "mac3_a1" to 0.25f, "mac4_d1" to 0.09090909f, "mac4_a1" to 0.505f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.575757563f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3030303f, "mac7_a1" to 0.7f, "mac8_d1" to 0.545454562f, "mac8_a1" to 0.575f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Soft", "macro4" to "Beat", "macro5" to "FM", "macro6" to "Ring", "macro7" to "Sub", "macro8" to "Noise"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Tape", mapOf("wow" to 0.1f, "flutter" to 0.08f, "drive" to 0.4f, "tone" to 0.653212547f, "hiss" to 0f))))
+
+    private fun trinity77() = Patch("Trinity", "Bent Lead",
+        mapOf("o1_wave" to 0.5714286f, "o1_pos" to 0.1f, "o1_level" to 1f, "o2_wave" to 0.5714286f, "o2_pos" to 0.3f, "o2_fine" to 0.55f, "o2_level" to 0.6f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.75f, "f1_freq" to 0.799313366f, "f1_env" to 0.5f, "f1_key" to 0.4f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5411295f, "e3_attack" to 0.5440228f, "e3_decay" to 0.639247f, "e3_sustain" to 0.6f, "m01_src" to 0.6f, "m01_dest" to 0.151515156f, "m01_depth" to 0.75f, "m02_src" to 0.6f, "m02_dest" to 0.181818187f, "m02_depth" to 0.7f, "voicemode" to 0.6666667f, "glide" to 0.02f, "volume" to 0.37f, "mac1_d1" to 0.151515156f, "mac1_d2" to 0.181818187f, "mac1_a1" to 0.7f, "mac1_a2" to 0.7f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.65f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.7f, "mac4_d1" to 0.424242437f, "mac4_a1" to 0.7f, "mac5_d1" to 0.09090909f, "mac5_a1" to 0.504f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.3030303f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Lean", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Edge", "macro5" to "Beat", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Octave"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "mix" to 0.2f))))
+
+    private fun trinity78() = Patch("Trinity", "Big Lead",
+        mapOf("o1_level" to 1f, "o1_density" to 0.857142866f, "o1_drift" to 0.2f, "o2_coarse" to 0.25f, "o2_fine" to 0.5f, "o2_density" to 0.2857143f, "f1_freq" to 0.799313366f, "f1_res" to 0.1f, "f1_env" to 0.6f, "f1_key" to 0.3f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.9f, "a_release" to 0.578839362f, "voicemode" to 0.6666667f, "glide" to 0.015f, "volume" to 0.43f, "mac1_d1" to 0.5151515f, "mac1_a1" to 0.75f, "mac2_d1" to 0.6969697f, "mac2_a1" to 0.65f, "mac3_d1" to 0.75757575f, "mac3_a1" to 0.7f, "mac4_d1" to 0.424242437f, "mac4_d2" to 0.8787879f, "mac4_a1" to 0.625f, "mac4_a2" to 0.380999982f, "mac5_d1" to 0.272727281f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6363636f, "mac6_a1" to 0.65f, "mac7_d1" to 0.575757563f, "mac7_a1" to 0.75f, "mac8_d1" to 0.09090909f, "mac8_a1" to 0.504f),
+        mapOf("macro1" to "Width", "macro2" to "Open", "macro3" to "Bite", "macro4" to "Edge", "macro5" to "Low", "macro6" to "FM", "macro7" to "Ring", "macro8" to "Beat"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("mix" to 0.2f))),
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun trinity79() = Patch("Trinity", "Noise Sweep",
         mapOf("o1_level" to 0f, "o2_level" to 0f, "noise" to 1f, "noisecol" to 0.5f, "f1_type" to 0.09090909f, "f1_freq" to 0.440739781f, "f1_res" to 0.45f, "f1_env" to 0.95f, "a_attack" to 0.650515f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.774181366f, "f_attack" to 0.861789465f, "f_decay" to 0.81962353f, "f_sustain" to 0.9f, "volume" to 1f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.9f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.725f, "mac3_d1" to 0.6969697f, "mac3_a1" to 0.25f, "mac4_d1" to 0.8787879f, "mac4_a1" to 0.25f),
         mapOf("macro1" to "Open", "macro2" to "Ring", "macro3" to "Dark", "macro4" to "Hush"),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity48() = Patch("Trinity", "Ring Bells",
+    private fun trinity80() = Patch("Trinity", "Ring Bells",
         mapOf("o1_wave" to 0.08571429f, "o1_level" to 0.98f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.625f, "o2_level" to 0.98f, "o3_wave" to 0.2f, "o3_coarse" to 0.75f, "o3_level" to 0.41f, "ring12" to 0.9f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "a_attack" to 0.075257495f, "a_decay" to 0.79919f, "a_sustain" to 0f, "a_release" to 0.716931f, "volume" to 0.39f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity49() = Patch("Trinity", "Drone",
+    private fun trinity81() = Patch("Trinity", "Drone",
         mapOf("o1_wave" to 0.314285725f, "o1_level" to 1f, "o1_drift" to 0.55f, "o2_wave" to 0.314285725f, "o2_coarse" to 0.6458333f, "o2_level" to 0.75f, "o2_drift" to 0.5f, "o3_wave" to 0.314285725f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "o3_drift" to 0.6f, "f1_type" to 0.09090909f, "f1_freq" to 0.6930604f, "a_attack" to 0.8252575f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.81962353f, "volume" to 0.56f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity50() = Patch("Trinity", "Metallic",
+    private fun trinity82() = Patch("Trinity", "Metallic",
         mapOf("o1_wave" to 0.257142872f, "o1_pos" to 0.8f, "o1_warp" to 0.75f, "o1_level" to 1f, "o2_wave" to 0.257142872f, "o2_pos" to 0.3f, "o2_coarse" to 0.625f, "o2_level" to 0.81f, "f1_type" to 1f, "f1_freq" to 0.651414156f, "f1_res" to 0.6f, "a_attack" to 0.24999997f, "a_decay" to 0.81962353f, "a_sustain" to 0.3f, "a_release" to 0.7419396f, "volume" to 0.33f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity51() = Patch("Trinity", "Sweep Down",
+    private fun trinity83() = Patch("Trinity", "Sweep Down",
         mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o2_wave" to 0.2857143f, "o2_level" to 0.55f, "noise" to 0.35f, "f1_freq" to 0.8844042f, "f1_res" to 0.45f, "f1_env" to 0.025000006f, "a_attack" to 0.24999997f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.7419396f, "f_attack" to 0.24999997f, "f_decay" to 0.8518653f, "f_sustain" to 0f, "volume" to 0.42f),
         family = "texture",
         low = 36, high = 79)
 
-    private fun trinity52() = Patch("Trinity", "Air",
+    private fun trinity84() = Patch("Trinity", "Air",
         mapOf("o1_wave" to 0.142857149f, "o1_pos" to 0.9f, "o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.5f, "o1_drift" to 0.6f, "noise" to 0.3f, "noisecol" to 0.9f, "f1_type" to 0.454545468f, "f1_freq" to 0.492373765f, "f1_res" to 0.2f, "f1_key" to 0.8f, "a_attack" to 0.7940228f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "volume" to 0.95f),
         family = "texture",
         low = 36, high = 79)
 
-    private val trinity: List<Patch> by lazy { listOf(trinity0(), trinity1(), trinity2(), trinity3(), trinity4(), trinity5(), trinity6(), trinity7(), trinity8(), trinity9(), trinity10(), trinity11(), trinity12(), trinity13(), trinity14(), trinity15(), trinity16(), trinity17(), trinity18(), trinity19(), trinity20(), trinity21(), trinity22(), trinity23(), trinity24(), trinity25(), trinity26(), trinity27(), trinity28(), trinity29(), trinity30(), trinity31(), trinity32(), trinity33(), trinity34(), trinity35(), trinity36(), trinity37(), trinity38(), trinity39(), trinity40(), trinity41(), trinity42(), trinity43(), trinity44(), trinity45(), trinity46(), trinity47(), trinity48(), trinity49(), trinity50(), trinity51(), trinity52()) }
+    private val trinity: List<Patch> by lazy { listOf(trinity0(), trinity1(), trinity2(), trinity3(), trinity4(), trinity5(), trinity6(), trinity7(), trinity8(), trinity9(), trinity10(), trinity11(), trinity12(), trinity13(), trinity14(), trinity15(), trinity16(), trinity17(), trinity18(), trinity19(), trinity20(), trinity21(), trinity22(), trinity23(), trinity24(), trinity25(), trinity26(), trinity27(), trinity28(), trinity29(), trinity30(), trinity31(), trinity32(), trinity33(), trinity34(), trinity35(), trinity36(), trinity37(), trinity38(), trinity39(), trinity40(), trinity41(), trinity42(), trinity43(), trinity44(), trinity45(), trinity46(), trinity47(), trinity48(), trinity49(), trinity50(), trinity51(), trinity52(), trinity53(), trinity54(), trinity55(), trinity56(), trinity57(), trinity58(), trinity59(), trinity60(), trinity61(), trinity62(), trinity63(), trinity64(), trinity65(), trinity66(), trinity67(), trinity68(), trinity69(), trinity70(), trinity71(), trinity72(), trinity73(), trinity74(), trinity75(), trinity76(), trinity77(), trinity78(), trinity79(), trinity80(), trinity81(), trinity82(), trinity83(), trinity84()) }
 
     private fun ratio0() = Patch("Ratio", "Init", emptyMap(),
         family = "keys")

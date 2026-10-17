@@ -1541,8 +1541,18 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         const Phrase measurePhrase = buildPhrase(measureKind, note, opt.velocity, opt.bpm, kit);
         const Take measureTake = render(m.get(), measurePhrase, opt.bpm, mat, &chain);
         gMeasureTake = measureTake;
-        measured = measure(measureTake.stereo, measureTake.offAt, kit != nullptr ? 0 : note);
-        measuredNote = kit != nullptr ? 0 : note;
+        // A patch's own octave and transpose move the note it sounds, so the
+        // pitch columns are read against that rather than the key.
+        int shift = 0;
+        for (int32_t i = 0; i < count; ++i) {
+            const std::string name = defs[i].name;
+            const float v = defs[i].map(r.norm[static_cast<size_t>(i)]);
+            if (name == "octave") shift += 12 * static_cast<int>(std::lround(v));
+            else if (name == "transpose") shift += static_cast<int>(std::lround(v));
+        }
+        const int sounds = std::clamp(note + shift, 0, 127);
+        measured = measure(measureTake.stereo, measureTake.offAt, kit != nullptr ? 0 : sounds);
+        measuredNote = kit != nullptr ? 0 : sounds;
         measuredAlready = true;
         if (kit != nullptr) {
             voices = measureVoices(*kit, r.norm, bank.unit, material, opt.bpm, opt.velocity);
