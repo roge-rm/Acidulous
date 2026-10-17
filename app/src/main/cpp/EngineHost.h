@@ -646,7 +646,7 @@ class EngineHost {
     std::string mountedGroupInsertType[4][2];
     /** What is on each input slot, for resolving its parameters by name. */
     std::string mountedInputType[2];
-    std::string mountedModifierType[16][2];
+    std::string mountedModifierType[16][kInputModSlots];
     std::unordered_map<int64_t, std::shared_ptr<const seq::Clip>> clipCache;
 };
 
