@@ -76,6 +76,10 @@ def calls(text):
 def label_of(args):
     """Returns the first bare string after the name; a list or `accent =` doesn't count."""
     for a in args[2:]:
+        # `name.ifBlank { "macro $k" }`: the fallback is the label.
+        fb = re.fullmatch(r'.*\.ifBlank\s*\{\s*"([^"]*)"\s*\}', a)
+        if fb:
+            return fb.group(1)
         if re.fullmatch(r'"[^"]*"', a):
             return a[1:-1]
     return None

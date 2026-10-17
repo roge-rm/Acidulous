@@ -150,13 +150,13 @@ class DemoSongTest {
     @Test
     fun itNeedsNothingFromDisk() {
         // The demo has to play on a phone that has never recorded anything, so
-        // no machine may hold audio and no clip may carry a take. A Nexus graph
-        // and a patch name are settings stored as text, not files.
+        // no machine may hold audio and no clip may carry a take. A Nexus graph,
+        // a patch name and Trinity's macro names are settings stored as text, not files.
         val needsMedia = setOf("Forage", "Mosaic", "Pollen", "Dice", "Molt", "Bias")
         for ((demo, song) in demos) {
             for (track in song.tracks) {
                 assertFalse("${demo.name}: '${track.name}' needs a sample", track.machine.type in needsMedia)
-                assertTrue("${demo.name}: '${track.name}' names a file", (track.machine.settings.keys - setOf("nexus", PatchMark.NAME, PatchMark.STAMP)).isEmpty())
+                assertTrue("${demo.name}: '${track.name}' names a file", (track.machine.settings.keys - setOf("nexus", PatchMark.NAME, PatchMark.STAMP) - (1..8).map { "macro$it" }.toSet()).isEmpty())
             }
             for (clip in song.clips()) {
                 assertTrue("${demo.name}: a clip carries audio", clip.audio == null)

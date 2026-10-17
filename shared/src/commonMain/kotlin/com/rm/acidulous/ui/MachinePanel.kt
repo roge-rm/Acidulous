@@ -35,6 +35,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
+import com.rm.acidulous.model.Machine
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.SIDECHAIN_STEPS
@@ -186,6 +188,8 @@ fun MachinePanel(
                     // Fresh effects in the patch's slots, even of the same type, so no tail rings on.
                     com.rm.acidulous.engine.EngineSync.remountEffects(trackIndex, chained.placed)
                     var next = chained.track.withPatch(params)
+                    // Macro names belong to the patch, so the last one's go.
+                    if (type == "Trinity") for (i in 1..8) next = next.withSetting("macro$i", null)
                     for ((k, v) in patch.settings) next = next.withSetting(k, v)
                     // Set last, so a patch that happens to carry these keys
                     // can't rename itself. Stored in settings so the name
@@ -196,7 +200,7 @@ fun MachinePanel(
                     // The stamp comes from next, not patch.params, since
                     // withPatch replaces the whole map and what the machine now
                     // holds is what counts.
-                    next.withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(next.machine.params))
+                    next.withSetting(kPatchName, name).withSetting(kPatchStamp, machineStamp(next.machine))
                 }
                 binding.applyAll(params)
                 if (unknown.isNotEmpty()) com.rm.acidulous.engine.EngineSync.onProblem?.invoke(
@@ -213,7 +217,7 @@ fun MachinePanel(
             onSavePatch(name, effects)
             editor.edit(trackIndex) { t ->
                 // Saved with them, the inserts are the patch's now.
-                (if (effects) com.rm.acidulous.model.PatchChain.ownedBySaved(t) else t).withSetting(kPatchName, name).withSetting(kPatchStamp, stampOf(t.machine.params))
+                (if (effects) com.rm.acidulous.model.PatchChain.ownedBySaved(t) else t).withSetting(kPatchName, name).withSetting(kPatchStamp, machineStamp(t.machine))
             }
         }
         // Show when the patch has been edited. Only parameters count, loading
@@ -223,7 +227,7 @@ fun MachinePanel(
         // edit, since the panel recomposes on every frame of a knob drag and
         // this walks every parameter.
         val stamp = track.machine.settings[kPatchStamp]
-        val nowStamp = remember(track.machine.params) { stampOf(track.machine.params) }
+        val nowStamp = remember(track.machine.params, track.machine.settings) { machineStamp(track.machine) }
         if (bar) PatchBar(
             type, patchNames, savePatch, loadPatch, factoryPatchNames, userPatchNames, onDeletePatch,
             current = track.machine.settings[kPatchName],
@@ -239,7 +243,7 @@ fun MachinePanel(
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
             "Molt" -> MoltPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Diction" -> DictionPanel(binding, track, trackIndex, editor)
-            "Trinity" -> TrinityPanel(binding)
+            "Trinity" -> TrinityPanel(binding, track, trackIndex, editor)
             "Ratio" -> RatioPanel(binding)
             "Manual" -> ManualPanel(binding)
             "Cipher" -> CipherPanel(binding)
@@ -738,6 +742,12 @@ private class WindowFlag(val state: androidx.compose.runtime.MutableState<String
 private const val kPatchName = com.rm.acidulous.model.PatchMark.NAME
 private const val kPatchStamp = com.rm.acidulous.model.PatchMark.STAMP
 private fun stampOf(params: Map<String, Float>): String = com.rm.acidulous.model.PatchMark.stampOf(params)
+
+/** The params' stamp, plus a Trinity's macro names, so renaming a macro counts as an edit. */
+private fun machineStamp(m: Machine): String {
+    val names = (1..8).joinToString("\n") { m.settings["macro$it"].orEmpty() }
+    return stampOf(m.params) + if (names.isBlank()) "" else names
+}
 
 // The panel palette. Teal is the ordinary control, amber marks the knob that
 // gives a group its character, pink marks drive and output.
@@ -1922,13 +1932,18 @@ val TRINITY_DESTS = listOf(
 private val TRINITY_ENVS = listOf("amp env" to "a", "filter env" to "f", "env 3" to "e3", "env 4" to "e4", "env 5" to "e5", "env 6" to "e6")
 
 @Composable
-private fun TrinityPanel(b: ParamBinding) {
+private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     // Too many groups for one row, so sections pick which groups show. Inside a
     // section it's the usual Group row.
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("osc", "mix", "filter", "env", "lfo", "mod", "voice"), section, { section = it }) { sec ->
+    PanelSections(listOf("play", "osc", "mix", "filter", "env", "lfo", "mod", "macros", "voice"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> for (o in 1..3) key(o) { Group("osc $o") {
+            0 -> Group("play") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            1 -> for (o in 1..3) key(o) { Group("osc $o") {
                 val p = "o${o}_"
                 PanelStepKnob(b, p + "wave", TRINITY_WAVES, "wave", PanelAmber)
                 PanelKnob(b, p + "pos", "pos", PanelAmber)
@@ -1943,12 +1958,12 @@ private fun TrinityPanel(b: ParamBinding) {
                 PanelKnob(b, p + "drift", "drift")
                 PanelKnob(b, p + "level", "level")
             } }
-            1 -> {
+            2 -> {
                 Group("ring") { PanelKnob(b, "ring12", "1·2", PanelAmber); PanelKnob(b, "ring23", "2·3", PanelAmber) }
                 Group("fm") { PanelKnob(b, "fm21", "2→1", PanelAmber); PanelKnob(b, "fm32", "3→2", PanelAmber) }
                 Group("noise") { PanelKnob(b, "noise", "level"); PanelKnob(b, "noisecol", "colour") }
             }
-            2 -> {
+            3 -> {
                 Group("routing") { PanelSwitch(b, "route", listOf("serial", "para", "split")); PanelKnob(b, "balance", "balance") }
                 for (f in 1..2) key(f) { Group("filter $f") {
                     val p = "f${f}_"
@@ -1961,7 +1976,7 @@ private fun TrinityPanel(b: ParamBinding) {
                     PanelKnob(b, p + "key", "key")
                 } }
             }
-            3 -> for ((title, prefix) in TRINITY_ENVS) key(prefix) { Group(title) {
+            4 -> for ((title, prefix) in TRINITY_ENVS) key(prefix) { Group(title) {
                 PanelKnob(b, prefix + "_delay", "delay")
                 PanelKnob(b, prefix + "_attack", "attack", PanelAmber)
                 PanelKnob(b, prefix + "_decay", "decay", PanelAmber)
@@ -1969,7 +1984,7 @@ private fun TrinityPanel(b: ParamBinding) {
                 PanelKnob(b, prefix + "_release", "release", PanelAmber)
                 PanelSwitch(b, prefix + "_repeat", listOf("once", "loop"), "repeat")
             } }
-            4 -> for (l in 1..3) key(l) { Group("lfo $l") {
+            5 -> for (l in 1..3) key(l) { Group("lfo $l") {
                 val p = "l${l}_"
                 PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                 PanelKnob(b, p + "rate", "rate", PanelAmber)
@@ -1980,12 +1995,30 @@ private fun TrinityPanel(b: ParamBinding) {
                 PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
                 PanelSwitch(b, p + "oneshot", listOf("cycle", "once"), "run")
             } }
-            5 -> for (m in 1..12) key(m) { Group("mod $m") {
+            6 -> for (m in 1..12) key(m) { Group("mod $m") {
                 val p = "m%02d_".format(m)
                 PanelStepKnob(b, p + "src", TRINITY_SOURCES, "from", PanelAmber)
                 PanelStepKnob(b, p + "src2", TRINITY_SOURCES, "× from")
                 PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
                 PanelKnob(b, p + "depth", "depth", PanelAmber)
+            } }
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", TRINITY_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", TRINITY_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", TRINITY_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", TRINITY_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
             } }
             else -> {
                 Group("voice") {
@@ -2006,6 +2039,31 @@ private fun TrinityPanel(b: ParamBinding) {
                 Group("out") { PanelKnob(b, "volume", "volume"); PanelKnob(b, "pan", "pan"); PanelKnob(b, "velamt", "vel") }
             }
         }
+    }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
+}
+
+/** Names a Trinity macro. Blank puts it back to "macro n". */
+@Composable
+private fun MacroNameDialog(current: String, onDismiss: () -> Unit, onName: (String) -> Unit) {
+    var name by remember { mutableStateOf(current) }
+    PlainDialog(
+        title = stringResource(Res.string.macro_name_title),
+        onDismiss = onDismiss,
+        confirmLabel = stringResource(Res.string.ok),
+        onConfirm = { onName(name.trim().take(12)) },
+    ) {
+        OutlinedTextField(
+            value = name, onValueChange = { name = it.take(12) }, singleLine = true,
+            modifier = Modifier.typing() then Modifier.fillMaxWidth(),
+        )
     }
 }
 

@@ -478,6 +478,9 @@ private fun raw_nativeSetExternalSync(env: Int, on: Int): Unit =
 private fun raw_nativeSetTuning(env: Int, rack: Int, ratios: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetTuning(env, 0, rack, ratios)")
 
+private fun raw_nativeSetMacroNames(env: Int, rack: Int, names: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetMacroNames(env, 0, rack, names)")
+
 private fun raw_nativeSetLink(env: Int, on: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetLink(env, 0, on)")
 
@@ -1715,6 +1718,12 @@ internal actual object EngineNative {
         val jratios = Jni.floats(ratios)
         raw_nativeSetTuning(Jni.env, rack, jratios)
         Jni.copyBack(jratios, ratios)
+        Jni.release()
+    }
+
+    actual fun nativeSetMacroNames(rack: Int, names: String) {
+        val jnames = Jni.string(names)
+        raw_nativeSetMacroNames(Jni.env, rack, jnames)
         Jni.release()
     }
 

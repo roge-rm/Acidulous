@@ -354,6 +354,8 @@ object NativeEngine {
     fun setExternalSync(on: Boolean) = EngineNative.nativeSetExternalSync(on)
     /** A track's tuning: 128 ratios to equal temperament, or null for equal temperament. */
     fun setTuning(rack: Int, ratios: FloatArray?) = EngineNative.nativeSetTuning(rack, ratios)
+    /** A rack's eight macro knob names, joined by newlines. Only stored; the norns shows them. */
+    fun setMacroNames(rack: Int, names: String) = EngineNative.nativeSetMacroNames(rack, names)
 
     // --- Ableton Link -------------------------------------------------------
     fun setLink(on: Boolean) = EngineNative.nativeSetLink(on)

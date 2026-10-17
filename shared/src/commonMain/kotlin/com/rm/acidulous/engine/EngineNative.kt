@@ -182,6 +182,7 @@ internal expect object EngineNative {
     fun nativeAudioAnchor(out: LongArray)
     fun nativeSetExternalSync(on: Boolean)
     fun nativeSetTuning(rack: Int, ratios: FloatArray?) // line
+    fun nativeSetMacroNames(rack: Int, names: String) // line
     fun nativeSetLink(on: Boolean)
     fun nativeLinkEnabled(): Boolean
     fun nativeSetLinkStartStop(on: Boolean)

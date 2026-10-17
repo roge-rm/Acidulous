@@ -1314,4 +1314,13 @@
     <string name="pw_prime">Premier</string>
     <string name="pw_stack_b26dc7">étage</string>
     <string name="pw_pluck_07542a">pincer</string>
+    <string name="pw_by_1">prof. 1</string>
+    <string name="pw_to_1">vers 1</string>
+    <string name="pw_by_2">prof. 2</string>
+    <string name="pw_to_2">vers 2</string>
+    <string name="pw_by_3">prof. 3</string>
+    <string name="pw_to_3">vers 3</string>
+    <string name="pw_by_4">prof. 4</string>
+    <string name="pw_to_4">vers 4</string>
+    <string name="pw_macro_n">macro %d</string>
 </resources>

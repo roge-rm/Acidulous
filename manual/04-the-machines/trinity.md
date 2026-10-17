@@ -46,6 +46,18 @@ The mod wheel also opens both filters, whatever the matrix says, and **wheel**
 in the voice section sets how much. At zero the wheel only does what the matrix
 tells it to.
 
+## Macros
+
+The **play** section has eight macro knobs. A patch can name them (Open,
+Bite, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** section sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob adds knob times amount to the destination, like a matrix row with the
+knob as its source. Tap a macro's name to rename it.
+
 ## Tips
 
 - Start with the oscillators (table position and density) instead of the

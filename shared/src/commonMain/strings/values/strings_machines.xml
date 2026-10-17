@@ -126,4 +126,6 @@
     </plurals>
     <string name="mosaic_spread">spread</string>
     <string name="mosaic_clear">clear</string>
+    <string name="macro_name_title">Macro name</string>
+    <string name="macro_unnamed">name</string>
 </resources>

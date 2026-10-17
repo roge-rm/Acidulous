@@ -425,6 +425,16 @@ internal actual object EngineNative {
         EngineLines.writer?.call("SetTuning") { int(rack); floats(ratios) }
         jni_nativeSetTuning(rack, ratios)
     }
+    @JvmName("nativeSetMacroNames")
+    private external fun jni_nativeSetMacroNames(rack: Int, names: String)
+    @JvmName("lines_nativeSetMacroNames")
+    actual fun nativeSetMacroNames(rack: Int, names: String) {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("SetMacroNames") { int(rack); str(names) }; return }
+        EngineLines.sent++
+        EngineLines.writer?.call("SetMacroNames") { int(rack); str(names) }
+        jni_nativeSetMacroNames(rack, names)
+    }
     actual external fun nativeSetLink(on: Boolean)
     actual external fun nativeLinkEnabled(): Boolean
     actual external fun nativeSetLinkStartStop(on: Boolean)

@@ -146,6 +146,10 @@
     <string name="pw_button">button</string>
     <string name="pw_buzz">buzz</string>
     <string name="pw_buzz_the_classic_shape">buzz - the classic shape</string>
+    <string name="pw_by_1">by 1</string>
+    <string name="pw_by_2">by 2</string>
+    <string name="pw_by_3">by 3</string>
+    <string name="pw_by_4">by 4</string>
     <string name="pw_by_key">by key</string>
     <string name="pw_bypass">bypass</string>
     <string name="pw_c">c</string>
@@ -654,6 +658,7 @@
     <string name="pw_ma">ma</string>
     <string name="pw_machine">machine</string>
     <string name="pw_macro">macro</string>
+    <string name="pw_macro_n">macro %d</string>
     <string name="pw_macros">macros</string>
     <string name="pw_magneto">Magneto</string>
     <string name="pw_major">major</string>
@@ -1174,6 +1179,10 @@
     <string name="pw_tin">tin</string>
     <string name="pw_tine">tine</string>
     <string name="pw_to">to</string>
+    <string name="pw_to_1">to 1</string>
+    <string name="pw_to_2">to 2</string>
+    <string name="pw_to_3">to 3</string>
+    <string name="pw_to_4">to 4</string>
     <string name="pw_todi">todi</string>
     <string name="pw_toms">toms</string>
     <string name="pw_tone">tone</string>

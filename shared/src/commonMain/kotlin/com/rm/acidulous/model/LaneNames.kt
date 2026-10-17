@@ -68,6 +68,7 @@ fun laneUnitLabel(track: Track, key: String, word: (String) -> String = { it }):
 fun laneShortLabel(track: Track, key: String, word: (String) -> String = { it }): String {
     val param = laneParam(key)
     if (laneUnit(key) == "machine") {
+        macroName(track, param)?.let { return it }
         PANEL_SHORT["${track.machine.type}:$param"]?.let { return word(it) }
         PANEL_LABELS["${track.machine.type}:$param"]?.let { return it.split('|').joinToString(" ", transform = word) }
     }
@@ -77,6 +78,14 @@ fun laneShortLabel(track: Track, key: String, word: (String) -> String = { it })
 /** Unit and parameter, for a list where one "cutoff" needs telling from another. */
 fun laneLabel(track: Track, key: String, word: (String) -> String = { it }): String {
     val param = laneParam(key)
+    if (laneUnit(key) == "machine") macroName(track, param)?.let { return "${laneUnitLabel(track, key, word)} · $it" }
     val named = if (laneUnit(key) == "machine") PANEL_LABELS["${track.machine.type}:$param"] else null
     return "${laneUnitLabel(track, key, word)} · ${named?.split('|')?.joinToString(" ", transform = word) ?: humanise(param, word)}"
 }
+
+/** A Trinity macro knob's own name, when its patch or the player gave it one. */
+private fun macroName(track: Track, param: String): String? {
+    if (track.machine.type != "Trinity" || !param.matches(MACRO_KNOB)) return null
+    return track.machine.settings["macro" + param.substring(3)]?.takeIf { it.isNotBlank() }
+}
+private val MACRO_KNOB = Regex("mac[1-8]")

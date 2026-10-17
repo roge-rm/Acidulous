@@ -126,4 +126,6 @@
     </plurals>
     <string name="mosaic_spread">étalement</string>
     <string name="mosaic_clear">vider</string>
+    <string name="macro_name_title">Nom de la macro</string>
+    <string name="macro_unnamed">nom</string>
 </resources>

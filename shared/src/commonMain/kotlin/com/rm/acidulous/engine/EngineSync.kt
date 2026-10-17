@@ -88,6 +88,8 @@ object EngineSync {
         val mountedGroupInserts = Array(MAX_GROUPS) { arrayOfNulls<String>(GROUP_INSERT_SLOTS) }
         /** What each rack was last told about its tuning, so only changes are pushed. */
         val pushedTuning = arrayOfNulls<String>(RACKS)
+        /** The macro names each rack was last told. */
+        val pushedMacros = arrayOfNulls<String>(RACKS)
         /** The formula each Formula effect slot was last given, by [effectFormulaKey]; absent when it isn't a Formula. */
         val loadedEffectFormulas = mutableMapOf<String, String>()
 
@@ -110,6 +112,7 @@ object EngineSync {
         mountedMasterInserts.fill(null)
         mountedGroupInserts.forEach { it.fill(null) }
         pushedTuning.fill(null)
+        pushedMacros.fill(null)
         voiceSpecs.clear()
     }
     }
@@ -161,7 +164,7 @@ object EngineSync {
         add("mounted", m.mounted); add("input", m.mountedInput); add("maps", m.loadedMaps); add("freezes", m.loadedFreezes)
         add("clouds", m.builtClouds); add("formulas", m.loadedFormulas); add("takes", m.loadedTakes); add("reels", m.loadedReels)
         add("voices", m.loadedVoices); add("patches", m.loadedPatches); add("sends", m.mountedSends)
-        add("masterInserts", m.mountedMasterInserts); add("tuning", m.pushedTuning)
+        add("masterInserts", m.mountedMasterInserts); add("tuning", m.pushedTuning); add("macros", m.pushedMacros)
         m.mountedEffects.forEachIndexed { i, a -> add("fx$i", a) }
         m.mountedModifiers.forEachIndexed { i, a -> add("mod$i", a) }
         m.mountedGroupInserts.forEachIndexed { i, a -> add("group$i", a) }
@@ -807,6 +810,19 @@ object EngineSync {
         ensureReels(song, m)
         if (frozen) ensureFrozen(song, m)
         ensureTunings(song, m)
+        ensureMacroNames(song, m)
+    }
+
+    /** The macro names of every Trinity, sent when they change. A rack with none (or no longer a Trinity) sends "", which clears. */
+    private fun ensureMacroNames(song: Song, m: Memory = live) {
+        for (rack in 0 until RACKS) {
+            val machine = song.tracks.getOrNull(rack)?.machine
+            val names = if (machine?.type != "Trinity") ""
+            else (1..8).joinToString("\n") { machine.settings["macro$it"].orEmpty() }.takeIf { it.isNotBlank() }.orEmpty()
+            if (m.pushedMacros[rack] == names) continue
+            m.pushedMacros[rack] = names
+            NativeEngine.setMacroNames(rack, names)
+        }
     }
 
 

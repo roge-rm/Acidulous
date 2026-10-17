@@ -15,6 +15,8 @@ import com.rm.acidulous.model.Scene
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.SongBundle
 import com.rm.acidulous.model.SongEngine
+import com.rm.acidulous.model.withParam
+import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.TakeRef
 import com.rm.acidulous.model.withEffect
 import com.rm.acidulous.model.withEffectParam
@@ -53,6 +55,7 @@ fun main(args: Array<String>) {
         "squelch" -> DemoSong.build()
         "sampled" -> EngineLinesTool.sampledSong(user)
         "tape" -> EngineLinesTool.tapeSong(user)
+        "macros" -> EngineLinesTool.macroSong()
         "frozen" -> kotlinx.coroutines.runBlocking { EngineLinesTool.frozenSong(user) }
         "tailover" -> kotlinx.coroutines.runBlocking {
             // The same scene change played live first, to compare with.
@@ -145,6 +148,16 @@ object EngineLinesTool {
             b.id to Clip(bars = 1, notes = second),
         )).withEffect(0, "Delay").withEffectParam(0, "feedback", 0.8f).withEffectParam(0, "mix", 0.6f)
         return Song(name = "Tail over", tempo = 120f, loopSong = false, scenes = listOf(a, b), tracks = listOf(bass))
+    }
+
+    /** A Trinity with a named macro that opens its filter, held at full: the names travel as a line and the route is in the parameters. */
+    fun macroSong(): Song {
+        val a = Scene(id = "s-a", name = "A")
+        val notes = listOf(Note(0, PPQN, 48, 110), Note(2 * PPQN, PPQN, 55, 110))
+        val lead = Track(id = "t-lead", name = "Lead", machine = Machine("Trinity"), clips = mapOf(a.id to Clip(bars = 1, notes = notes)))
+            .withSetting("macro1", "Open")
+            .withParam("mac1", 1f).withParam("mac1_d1", 23f / 33f).withParam("mac1_a1", 0.95f)
+        return Song(name = "Macros", tempo = 120f, loopSong = false, scenes = listOf(a), tracks = listOf(lead))
     }
 
     /** [song] with every clip frozen on the engine, the way [frozenSong] freezes. */

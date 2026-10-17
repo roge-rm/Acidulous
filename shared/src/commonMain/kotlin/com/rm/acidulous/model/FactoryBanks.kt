@@ -256,7 +256,8 @@ internal object FactoryBanks {
         low = 24, high = 55)
 
     private fun trinity7() = Patch("Trinity", "Electric Piano",
-        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.6458333f, "o2_level" to 0.66f, "fm21" to 0.28f, "f1_type" to 0.09090909f, "f1_freq" to 0.774073064f, "f1_env" to 0.675f, "f1_key" to 0.5f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.12f, "a_release" to 0.618813455f, "f_decay" to 0.618813455f, "f_sustain" to 0.05f, "volume" to 0.53f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.6458333f, "o2_level" to 0.66f, "fm21" to 0.28f, "f1_type" to 0.09090909f, "f1_freq" to 0.774073064f, "f1_env" to 0.675f, "f1_key" to 0.5f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.12f, "a_release" to 0.618813455f, "f_decay" to 0.618813455f, "f_sustain" to 0.05f, "volume" to 0.53f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.199999988f, "mac2_d1" to 0.6363636f, "mac2_a1" to 0.725f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.65f, "mac4_d1" to 0.75757575f, "mac4_a1" to 0.75f),
+        mapOf("macro1" to "Mellow", "macro2" to "Bark", "macro3" to "Tine", "macro4" to "Honk"),
         family = "keys",
         low = 36, high = 84)
 
@@ -296,7 +297,8 @@ internal object FactoryBanks {
         low = 40, high = 79)
 
     private fun trinity15() = Patch("Trinity", "Warm Pad",
-        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.3f, "o1_drift" to 0.25f, "o2_fine" to 0.42f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o3_wave" to 0.0571428575f, "o3_coarse" to 0.25f, "o3_level" to 0.57f, "f1_freq" to 0.6804642f, "f1_res" to 0.12f, "a_attack" to 0.7385606f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7848632f, "volume" to 0.39f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.3f, "o1_drift" to 0.25f, "o2_fine" to 0.42f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o3_wave" to 0.0571428575f, "o3_coarse" to 0.25f, "o3_level" to 0.57f, "f1_freq" to 0.6804642f, "f1_res" to 0.12f, "a_attack" to 0.7385606f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7848632f, "volume" to 0.39f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.8f, "mac2_d1" to 0.5151515f, "mac2_a1" to 0.75f, "mac3_d1" to 0.3030303f, "mac3_a1" to 0.7f, "mac4_d1" to 0.545454562f, "mac4_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Width", "macro3" to "Air", "macro4" to "Breath"),
         family = "pad",
         low = 36, high = 79)
 
@@ -361,7 +363,8 @@ internal object FactoryBanks {
         low = 36, high = 79)
 
     private fun trinity28() = Patch("Trinity", "Analog Strings",
-        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.38f, "o1_drift" to 0.5f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.58f, "o2_level" to 0.82f, "o2_pw" to 0.416666627f, "f1_type" to 0.181818187f, "f1_freq" to 0.6666667f, "a_attack" to 0.6747425f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7491727f, "l1_rate" to 0.2649158f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.675f, "volume" to 0.31f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.38f, "o1_drift" to 0.5f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.58f, "o2_level" to 0.82f, "o2_pw" to 0.416666627f, "f1_type" to 0.181818187f, "f1_freq" to 0.6666667f, "a_attack" to 0.6747425f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7491727f, "l1_rate" to 0.2649158f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.675f, "volume" to 0.31f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.75f, "mac2_d1" to 0.5151515f, "mac2_a1" to 0.8f, "mac3_d1" to 0.363636374f, "mac3_a1" to 0.8f, "mac4_d1" to 0.939393938f, "mac4_d2" to 0.6969697f, "mac4_a1" to 0.9f, "mac4_a2" to 0.6f),
+        mapOf("macro1" to "Bright", "macro2" to "Width", "macro3" to "Hollow", "macro4" to "Wander"),
         family = "ensemble",
         low = 36, high = 79)
 
@@ -381,7 +384,8 @@ internal object FactoryBanks {
         low = 24, high = 55)
 
     private fun trinity32() = Patch("Trinity", "Wobble",
-        mapOf("o1_level" to 1f, "o1_drift" to 0.1f, "o2_fine" to 0.32f, "o2_level" to 1f, "f1_freq" to 0.333333343f, "f1_res" to 0.55f, "f1_drive" to 0.45f, "f1_env" to 0.55f, "a_decay" to 0.7419396f, "a_sustain" to 1f, "a_release" to 0.4588705f, "l1_sync" to 0.235294119f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.9f, "volume" to 0.45f),
+        mapOf("o1_level" to 1f, "o1_drift" to 0.1f, "o2_fine" to 0.32f, "o2_level" to 1f, "f1_freq" to 0.333333343f, "f1_res" to 0.55f, "f1_drive" to 0.45f, "f1_env" to 0.55f, "a_decay" to 0.7419396f, "a_sustain" to 1f, "a_release" to 0.4588705f, "l1_sync" to 0.235294119f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.9f, "volume" to 0.45f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.725f, "mac2_d1" to 0.75757575f, "mac2_d2" to 0.8484849f, "mac2_a1" to 0.675f, "mac2_a2" to 0.6f, "mac3_d1" to 0.939393938f, "mac3_a1" to 0.75f, "mac4_d1" to 0.6363636f, "mac4_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Speed", "macro4" to "Grit"),
         family = "bass",
         low = 24, high = 55)
 
@@ -421,7 +425,8 @@ internal object FactoryBanks {
         low = 48, high = 91)
 
     private fun trinity40() = Patch("Trinity", "Saw Lead",
-        mapOf("o1_level" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "o3_fine" to 0.45f, "o3_level" to 0.83f, "f1_freq" to 0.651414156f, "f1_res" to 0.25f, "f1_key" to 0.8f, "a_attack" to 0.2257725f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "volume" to 0.39f),
+        mapOf("o1_level" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "o3_fine" to 0.45f, "o3_level" to 0.83f, "f1_freq" to 0.651414156f, "f1_res" to 0.25f, "f1_key" to 0.8f, "a_attack" to 0.2257725f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "volume" to 0.39f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.75f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.75f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.3030303f, "mac3_a1" to 0.0500000119f, "mac3_a2" to 0.15f, "mac4_d1" to 0.575757563f, "mac4_a1" to 0.675f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Thin", "macro4" to "Ring", "macro5" to "Fizz"),
         family = "lead",
         low = 48, high = 91,
         inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.485719174f, "tone" to 0.6456324f, "mix" to 0.6f, "gain" to 0.427083343f)), UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.368421048f, "mix" to 0.25f))))
@@ -457,7 +462,8 @@ internal object FactoryBanks {
         low = 48, high = 91)
 
     private fun trinity47() = Patch("Trinity", "Noise Sweep",
-        mapOf("o1_level" to 0f, "o2_level" to 0f, "noise" to 1f, "noisecol" to 0.5f, "f1_type" to 0.09090909f, "f1_freq" to 0.440739781f, "f1_res" to 0.45f, "f1_env" to 0.95f, "a_attack" to 0.650515f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.774181366f, "f_attack" to 0.861789465f, "f_decay" to 0.81962353f, "f_sustain" to 0.9f, "volume" to 1f),
+        mapOf("o1_level" to 0f, "o2_level" to 0f, "noise" to 1f, "noisecol" to 0.5f, "f1_type" to 0.09090909f, "f1_freq" to 0.440739781f, "f1_res" to 0.45f, "f1_env" to 0.95f, "a_attack" to 0.650515f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.774181366f, "f_attack" to 0.861789465f, "f_decay" to 0.81962353f, "f_sustain" to 0.9f, "volume" to 1f, "mac1_d1" to 0.6969697f, "mac1_a1" to 0.9f, "mac2_d1" to 0.75757575f, "mac2_a1" to 0.725f, "mac3_d1" to 0.6969697f, "mac3_a1" to 0.25f, "mac4_d1" to 0.8787879f, "mac4_a1" to 0.25f),
+        mapOf("macro1" to "Open", "macro2" to "Ring", "macro3" to "Dark", "macro4" to "Hush"),
         family = "texture",
         low = 36, high = 79)
 
