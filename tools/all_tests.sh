@@ -93,6 +93,8 @@ echo "--- forage"; "$ROOT/tools/forage_test.sh" | tail -2 || fail=1
 echo "--- format"; "$ROOT/tools/format_test.sh" | tail -2 || fail=1
 # A patch's inserts and sends: the bank format and EngineHost::applyPatchChain.
 echo "--- patch chain"; "$ROOT/tools/patch_chain_test.sh" 2>&1 | grep -v "^I/" | tail -2 || fail=1
+# The engine's .acpreset reader and writer against the app's fixtures.
+echo "--- preset file"; "$ROOT/tools/preset_file_test.sh" 2>&1 | grep -v "^[IE]/" | tail -2 || fail=1
 echo "--- edit";  "$ROOT/tools/sampleedit_test.sh" | tail -2 || fail=1
 # These two check the source tree rather than run the engine.
 #

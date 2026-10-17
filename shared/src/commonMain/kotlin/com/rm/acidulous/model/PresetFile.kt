@@ -25,6 +25,10 @@ import kotlinx.serialization.json.Json
  * engine/ is there only when the platform can record (not the browser).
  * Its lines name media as zip:media/..., files that are in the zip as they
  * are, a voice's takes too.
+ *
+ * The engine reads and writes these too, without media or engine/, for hosts
+ * that drive it directly (engine/core/PresetFile.h). PresetFixtureTest keeps
+ * the two alike.
  */
 object PresetFile {
     const val EXTENSION = "acpreset"
