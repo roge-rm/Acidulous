@@ -7,7 +7,7 @@ import kotlin.concurrent.Volatile
  * (engine.txt) so a host without Kotlin can build the same state by making
  * the same calls.
  *
- * The first line is `acidulous-engine 1`. Then one call per line: its name
+ * The first line is `acidulous-engine 2`. Then one call per line: its name
  * without `native`, then its arguments, separated by spaces:
  *
  *     MountMachine 2 "Reflux"
@@ -30,13 +30,17 @@ import kotlin.concurrent.Volatile
  *   runs on a worker comes after the load.
  * - Lines starting with # are comments.
  *
+ * Version 1 stored Trinity's waves over 12 steps and Nexus's wtosc tables
+ * over 8. The replayer moves those onto today's counts
+ * (engine/machine/TableCounts.h).
+ *
  * Which calls are written is marked in EngineNative's list (`// line`).
  * Writing them (EngineNative.jvm.kt) and replaying them
  * (platform/lines/lines_dispatch.cpp) are both generated from that list by
  * tools/gen_engine_bridge.py.
  */
 object EngineLines {
-    const val HEADER = "acidulous-engine 1"
+    const val HEADER = "acidulous-engine 2"
 
     /**
      * Where recorded calls go, or null when nothing is recording. Every

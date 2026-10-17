@@ -224,7 +224,7 @@ internal object FactoryBanks {
         family = "keys")
 
     private fun trinity1() = Patch("Trinity", "Bell Keys",
-        mapOf("o1_wave" to 0.6363636f, "o1_pos" to 0.7f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0.57f, "ring12" to 0.35f, "f1_freq" to 0.8844042f, "f1_env" to 0.75f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.05f, "a_release" to 0.716931f, "f_sustain" to 0f, "volume" to 0.79f),
+        mapOf("o1_wave" to 0.2f, "o1_pos" to 0.7f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_level" to 0.57f, "ring12" to 0.35f, "f1_freq" to 0.8844042f, "f1_env" to 0.75f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.05f, "a_release" to 0.716931f, "f_sustain" to 0f, "volume" to 0.79f),
         family = "keys",
         low = 36, high = 84)
 
@@ -234,44 +234,44 @@ internal object FactoryBanks {
         low = 36, high = 79)
 
     private fun trinity3() = Patch("Trinity", "Glass Pad",
-        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.2f, "o1_level" to 1f, "o2_wave" to 0.363636374f, "o2_pos" to 0.6f, "o2_fine" to 0.56f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "f1_res" to 0.2f, "a_attack" to 0.7257725f, "a_decay" to 0.774181366f, "a_sustain" to 0.75f, "a_release" to 0.79919f, "l1_rate" to 0.3265052f, "l2_rate" to 0.2346152f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.7f, "m02_src" to 0.933333337f, "m02_dest" to 0.6969697f, "m02_depth" to 0.575f, "m03_src" to 0.13333334f, "m03_dest" to 0.151515156f, "m03_depth" to 0.75f, "m04_src" to 0.2f, "m04_dest" to 0.6969697f, "m04_depth" to 0.725f, "volume" to 0.96f),
+        mapOf("o1_wave" to 0.142857149f, "o1_pos" to 0.2f, "o1_level" to 1f, "o2_wave" to 0.114285715f, "o2_pos" to 0.6f, "o2_fine" to 0.56f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "f1_res" to 0.2f, "a_attack" to 0.7257725f, "a_decay" to 0.774181366f, "a_sustain" to 0.75f, "a_release" to 0.79919f, "l1_rate" to 0.3265052f, "l2_rate" to 0.2346152f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.7f, "m02_src" to 0.933333337f, "m02_dest" to 0.6969697f, "m02_depth" to 0.575f, "m03_src" to 0.13333334f, "m03_dest" to 0.151515156f, "m03_depth" to 0.75f, "m04_src" to 0.2f, "m04_dest" to 0.6969697f, "m04_depth" to 0.725f, "volume" to 0.96f),
         family = "pad",
         low = 36, high = 79,
         inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "gain" to 0.46875f))),
         sendReverb = 0.3f, sendDelay = 0f)
 
     private fun trinity4() = Patch("Trinity", "Drift Strings",
-        mapOf("o1_level" to 0.95f, "o1_density" to 0.142857149f, "o1_detune" to 0.3f, "o1_drift" to 0.8f, "o2_fine" to 0.43f, "o2_level" to 0.87f, "o2_drift" to 0.9f, "o3_wave" to 0.181818187f, "o3_coarse" to 0.75f, "o3_level" to 0.55f, "o3_drift" to 0.7f, "f1_type" to 0.181818187f, "f1_freq" to 0.747679353f, "f1_res" to 0.05f, "a_attack" to 0.636016965f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.7342073f, "l1_rate" to 0.736582041f, "l1_delay" to 0.4f, "m01_src" to 0.8666667f, "m01_src2" to 0.13333334f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.51f, "volume" to 0.45f),
+        mapOf("o1_level" to 0.95f, "o1_density" to 0.142857149f, "o1_detune" to 0.3f, "o1_drift" to 0.8f, "o2_fine" to 0.43f, "o2_level" to 0.87f, "o2_drift" to 0.9f, "o3_wave" to 0.0571428575f, "o3_coarse" to 0.75f, "o3_level" to 0.55f, "o3_drift" to 0.7f, "f1_type" to 0.181818187f, "f1_freq" to 0.747679353f, "f1_res" to 0.05f, "a_attack" to 0.636016965f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.7342073f, "l1_rate" to 0.736582041f, "l1_delay" to 0.4f, "m01_src" to 0.8666667f, "m01_src2" to 0.13333334f, "m01_dest" to 0.0303030312f, "m01_depth" to 0.51f, "volume" to 0.45f),
         family = "ensemble",
         low = 36, high = 79)
 
     private fun trinity5() = Patch("Trinity", "Sync Lead",
-        mapOf("o1_level" to 1f, "o1_sync" to 0.25f, "o2_wave" to 0.09090909f, "o2_fine" to 0.55f, "o2_level" to 0.49f, "f1_freq" to 0.84802264f, "a_attack" to 0.24999997f, "a_decay" to 0.618813455f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "m01_src" to 0.13333334f, "m01_dest" to 0.424242437f, "m01_depth" to 0.85f, "m02_src" to 0.266666681f, "m02_dest" to 0.6969697f, "m02_depth" to 0.65f, "voicemode" to 0.6666667f, "glide" to 0.06f, "volume" to 0.45f),
+        mapOf("o1_level" to 1f, "o1_sync" to 0.25f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.55f, "o2_level" to 0.49f, "f1_freq" to 0.84802264f, "a_attack" to 0.24999997f, "a_decay" to 0.618813455f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "m01_src" to 0.13333334f, "m01_dest" to 0.424242437f, "m01_depth" to 0.85f, "m02_src" to 0.266666681f, "m02_dest" to 0.6969697f, "m02_depth" to 0.65f, "voicemode" to 0.6666667f, "glide" to 0.06f, "volume" to 0.45f),
         family = "lead",
         low = 48, high = 91)
 
     private fun trinity6() = Patch("Trinity", "FM Bass",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0f, "fm21" to 0.55f, "f1_freq" to 0.551070869f, "f1_res" to 0.25f, "f1_env" to 0.775f, "a_attack" to 0.075257495f, "a_decay" to 0.578839362f, "a_sustain" to 0.35f, "a_release" to 0.483879149f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.65f, "voicemode" to 0.333333343f, "glide" to 0.04f, "volume" to 1f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_level" to 0f, "fm21" to 0.55f, "f1_freq" to 0.551070869f, "f1_res" to 0.25f, "f1_env" to 0.775f, "a_attack" to 0.075257495f, "a_decay" to 0.578839362f, "a_sustain" to 0.35f, "a_release" to 0.483879149f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.6363636f, "m01_depth" to 0.65f, "voicemode" to 0.333333343f, "glide" to 0.04f, "volume" to 1f),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity7() = Patch("Trinity", "Electric Piano",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.6458333f, "o2_level" to 0.66f, "fm21" to 0.28f, "f1_type" to 0.09090909f, "f1_freq" to 0.774073064f, "f1_env" to 0.675f, "f1_key" to 0.5f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.12f, "a_release" to 0.618813455f, "f_decay" to 0.618813455f, "f_sustain" to 0.05f, "volume" to 0.53f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.6458333f, "o2_level" to 0.66f, "fm21" to 0.28f, "f1_type" to 0.09090909f, "f1_freq" to 0.774073064f, "f1_env" to 0.675f, "f1_key" to 0.5f, "a_attack" to 0.075257495f, "a_decay" to 0.7491727f, "a_sustain" to 0.12f, "a_release" to 0.618813455f, "f_decay" to 0.618813455f, "f_sustain" to 0.05f, "volume" to 0.53f),
         family = "keys",
         low = 36, high = 84)
 
     private fun trinity8() = Patch("Trinity", "Clav",
-        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o1_pw" to 0.166666672f, "o2_wave" to 0.09090909f, "o2_fine" to 0.56f, "o2_level" to 1f, "o2_pw" to 0.249999985f, "f1_type" to 0.181818187f, "f1_freq" to 0.6930604f, "f1_res" to 0.25f, "f1_env" to 0.75f, "f1_key" to 0.6f, "a_attack" to 0f, "a_decay" to 0.6070053f, "a_sustain" to 0f, "a_release" to 0.5043127f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "volume" to 0.71f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o1_pw" to 0.166666672f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.56f, "o2_level" to 1f, "o2_pw" to 0.249999985f, "f1_type" to 0.181818187f, "f1_freq" to 0.6930604f, "f1_res" to 0.25f, "f1_env" to 0.75f, "f1_key" to 0.6f, "a_attack" to 0f, "a_decay" to 0.6070053f, "a_sustain" to 0f, "a_release" to 0.5043127f, "f_decay" to 0.5161209f, "f_sustain" to 0f, "volume" to 0.71f),
         family = "keys",
         low = 36, high = 84)
 
     private fun trinity9() = Patch("Trinity", "Mallet",
-        mapOf("o1_wave" to 0.6363636f, "o1_pos" to 0.25f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.75f, "o2_level" to 0.66f, "f1_env" to 0.775f, "f1_key" to 0.7f, "a_attack" to 0f, "a_decay" to 0.6846892f, "a_sustain" to 0f, "a_release" to 0.578839362f, "f_decay" to 0.553830743f, "f_sustain" to 0f, "volume" to 0.8f),
+        mapOf("o1_wave" to 0.2f, "o1_pos" to 0.25f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.75f, "o2_level" to 0.66f, "f1_env" to 0.775f, "f1_key" to 0.7f, "a_attack" to 0f, "a_decay" to 0.6846892f, "a_sustain" to 0f, "a_release" to 0.578839362f, "f_decay" to 0.553830743f, "f_sustain" to 0f, "volume" to 0.8f),
         family = "keys",
         low = 36, high = 84)
 
     private fun trinity10() = Patch("Trinity", "Music Box",
-        mapOf("o1_wave" to 0.6363636f, "o1_pos" to 0.7f, "o1_level" to 1f, "o1_drift" to 0.05f, "o2_wave" to 0.272727281f, "o2_coarse" to 1f, "o2_level" to 0.35f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "f1_key" to 0.8f, "a_attack" to 0f, "a_decay" to 0.707179248f, "a_sustain" to 0f, "a_release" to 0.639247f, "volume" to 0.84f),
+        mapOf("o1_wave" to 0.2f, "o1_pos" to 0.7f, "o1_level" to 1f, "o1_drift" to 0.05f, "o2_wave" to 0.08571429f, "o2_coarse" to 1f, "o2_level" to 0.35f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "f1_key" to 0.8f, "a_attack" to 0f, "a_decay" to 0.707179248f, "a_sustain" to 0f, "a_release" to 0.639247f, "volume" to 0.84f),
         family = "keys",
         low = 36, high = 84)
 
@@ -281,12 +281,12 @@ internal object FactoryBanks {
         low = 36, high = 84)
 
     private fun trinity12() = Patch("Trinity", "Kalimba",
-        mapOf("o1_wave" to 0.727272749f, "o1_pos" to 0.4f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.6458333f, "noise" to 0.2f, "noisecol" to 0.8f, "f1_type" to 0.09090909f, "f1_freq" to 0.7046478f, "f1_env" to 0.7f, "f1_key" to 0.6f, "a_attack" to 0f, "a_decay" to 0.6294953f, "a_sustain" to 0f, "f_decay" to 0.4134283f, "f_sustain" to 0f, "volume" to 1f),
+        mapOf("o1_wave" to 0.22857143f, "o1_pos" to 0.4f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.6458333f, "noise" to 0.2f, "noisecol" to 0.8f, "f1_type" to 0.09090909f, "f1_freq" to 0.7046478f, "f1_env" to 0.7f, "f1_key" to 0.6f, "a_attack" to 0f, "a_decay" to 0.6294953f, "a_sustain" to 0f, "f_decay" to 0.4134283f, "f_sustain" to 0f, "volume" to 1f),
         family = "keys",
         low = 36, high = 84)
 
     private fun trinity13() = Patch("Trinity", "Toy Piano",
-        mapOf("o1_wave" to 0.8181818f, "o1_pos" to 0.3f, "o1_warp" to 0.35f, "o1_level" to 1f, "o1_drift" to 0.4f, "o2_wave" to 0.181818187f, "o2_fine" to 0.28f, "o2_level" to 0.73f, "f1_type" to 0.09090909f, "f1_freq" to 0.743482947f, "f1_env" to 0.725f, "f1_key" to 0.5f, "a_attack" to 0f, "a_decay" to 0.671488762f, "a_sustain" to 0f, "volume" to 0.83f),
+        mapOf("o1_wave" to 0.257142872f, "o1_pos" to 0.3f, "o1_warp" to 0.35f, "o1_level" to 1f, "o1_drift" to 0.4f, "o2_wave" to 0.0571428575f, "o2_fine" to 0.28f, "o2_level" to 0.73f, "f1_type" to 0.09090909f, "f1_freq" to 0.743482947f, "f1_env" to 0.725f, "f1_key" to 0.5f, "a_attack" to 0f, "a_decay" to 0.671488762f, "a_sustain" to 0f, "volume" to 0.83f),
         family = "keys",
         low = 36, high = 84)
 
@@ -296,47 +296,47 @@ internal object FactoryBanks {
         low = 40, high = 79)
 
     private fun trinity15() = Patch("Trinity", "Warm Pad",
-        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.3f, "o1_drift" to 0.25f, "o2_fine" to 0.42f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o3_wave" to 0.181818187f, "o3_coarse" to 0.25f, "o3_level" to 0.57f, "f1_freq" to 0.6804642f, "f1_res" to 0.12f, "a_attack" to 0.7385606f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7848632f, "volume" to 0.39f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.3f, "o1_drift" to 0.25f, "o2_fine" to 0.42f, "o2_level" to 1f, "o2_density" to 0.2857143f, "o3_wave" to 0.0571428575f, "o3_coarse" to 0.25f, "o3_level" to 0.57f, "f1_freq" to 0.6804642f, "f1_res" to 0.12f, "a_attack" to 0.7385606f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7848632f, "volume" to 0.39f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity16() = Patch("Trinity", "Choir",
-        mapOf("o1_wave" to 0.545454562f, "o1_pos" to 0.35f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.25f, "o1_drift" to 0.35f, "o2_wave" to 0.545454562f, "o2_pos" to 0.6f, "o2_coarse" to 0.6458333f, "o2_level" to 0.83f, "o2_drift" to 0.4f, "f1_type" to 0.09090909f, "f1_freq" to 0.73470664f, "f1_res" to 0.2f, "a_attack" to 0.6945378f, "a_decay" to 0.79919f, "a_sustain" to 0.8f, "a_release" to 0.762373149f, "volume" to 1f),
+        mapOf("o1_wave" to 0.171428576f, "o1_pos" to 0.35f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.25f, "o1_drift" to 0.35f, "o2_wave" to 0.171428576f, "o2_pos" to 0.6f, "o2_coarse" to 0.6458333f, "o2_level" to 0.83f, "o2_drift" to 0.4f, "f1_type" to 0.09090909f, "f1_freq" to 0.73470664f, "f1_res" to 0.2f, "a_attack" to 0.6945378f, "a_decay" to 0.79919f, "a_sustain" to 0.8f, "a_release" to 0.762373149f, "volume" to 1f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity17() = Patch("Trinity", "Sweep Pad",
-        mapOf("o1_wave" to 0.363636374f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.142857149f, "o2_wave" to 0.363636374f, "o2_pos" to 0.7f, "o2_fine" to 0.44f, "o2_level" to 1f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "a_attack" to 0.7697953f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.8035856f, "l1_rate" to 0.299601138f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.75f, "volume" to 1f),
+        mapOf("o1_wave" to 0.114285715f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.142857149f, "o2_wave" to 0.114285715f, "o2_pos" to 0.7f, "o2_fine" to 0.44f, "o2_level" to 1f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "a_attack" to 0.7697953f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.8035856f, "l1_rate" to 0.299601138f, "m01_src" to 0.8666667f, "m01_dest" to 0.151515156f, "m01_depth" to 0.75f, "volume" to 1f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity18() = Patch("Trinity", "Dark Pad",
-        mapOf("o1_coarse" to 0.25f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o2_wave" to 0.181818187f, "o2_level" to 0.86f, "noise" to 0.31f, "noisecol" to 0.25f, "f1_freq" to 0.5146893f, "f1_res" to 0.25f, "f1_env" to 0.6f, "a_attack" to 0.786532f, "a_decay" to 0.8518653f, "a_release" to 0.81962353f, "volume" to 0.53f),
+        mapOf("o1_coarse" to 0.25f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o2_wave" to 0.0571428575f, "o2_level" to 0.86f, "noise" to 0.31f, "noisecol" to 0.25f, "f1_freq" to 0.5146893f, "f1_res" to 0.25f, "f1_env" to 0.6f, "a_attack" to 0.786532f, "a_decay" to 0.8518653f, "a_release" to 0.81962353f, "volume" to 0.53f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity19() = Patch("Trinity", "Shimmer",
-        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.5f, "o1_level" to 1f, "o1_drift" to 0.5f, "o2_wave" to 0.454545468f, "o2_pos" to 0.75f, "o2_coarse" to 0.8958333f, "o2_level" to 0.45f, "o2_drift" to 0.45f, "o3_wave" to 0.272727281f, "o3_level" to 0.55f, "f1_type" to 0.454545468f, "f1_freq" to 0.259383738f, "f1_key" to 0.9f, "a_attack" to 0.80103f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.8368998f, "volume" to 0.73f),
+        mapOf("o1_wave" to 0.142857149f, "o1_pos" to 0.5f, "o1_level" to 1f, "o1_drift" to 0.5f, "o2_wave" to 0.142857149f, "o2_pos" to 0.75f, "o2_coarse" to 0.8958333f, "o2_level" to 0.45f, "o2_drift" to 0.45f, "o3_wave" to 0.08571429f, "o3_level" to 0.55f, "f1_type" to 0.454545468f, "f1_freq" to 0.259383738f, "f1_key" to 0.9f, "a_attack" to 0.80103f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.8368998f, "volume" to 0.73f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity20() = Patch("Trinity", "Breath Pad",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.6458333f, "o2_level" to 0.6f, "noise" to 1f, "noisecol" to 0.55f, "f1_type" to 0.727272749f, "f1_freq" to 0.5927171f, "f1_res" to 0.3f, "f1_env" to 0.625f, "f1_key" to 0.9f, "a_attack" to 0.7603482f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7946149f, "volume" to 1f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.6458333f, "o2_level" to 0.6f, "noise" to 1f, "noisecol" to 0.55f, "f1_type" to 0.727272749f, "f1_freq" to 0.5927171f, "f1_res" to 0.3f, "f1_env" to 0.625f, "f1_key" to 0.9f, "a_attack" to 0.7603482f, "a_decay" to 0.81962353f, "a_sustain" to 0.75f, "a_release" to 0.7946149f, "volume" to 1f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity21() = Patch("Trinity", "Rotor Pad",
-        mapOf("o1_wave" to 1f, "o1_level" to 1f, "o2_wave" to 1f, "o2_fine" to 0.54f, "o2_level" to 1f, "f1_type" to 0.09090909f, "a_attack" to 0.5440228f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.639247f, "l1_rate" to 0.762949f, "m01_src" to 0.8666667f, "m01_dest" to 0.09090909f, "m01_depth" to 0.56f, "volume" to 0.53f),
+        mapOf("o1_wave" to 0.314285725f, "o1_level" to 1f, "o2_wave" to 0.314285725f, "o2_fine" to 0.54f, "o2_level" to 1f, "f1_type" to 0.09090909f, "a_attack" to 0.5440228f, "a_decay" to 0.774181366f, "a_sustain" to 0.85f, "a_release" to 0.639247f, "l1_rate" to 0.762949f, "m01_src" to 0.8666667f, "m01_dest" to 0.09090909f, "m01_depth" to 0.56f, "volume" to 0.53f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity22() = Patch("Trinity", "Glass Ice",
-        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.15f, "o1_level" to 0.75f, "o1_density" to 0.142857149f, "o2_wave" to 0.454545468f, "o2_pos" to 0.85f, "o2_fine" to 0.39f, "f1_type" to 0.909090936f, "f1_freq" to 0.5927171f, "f1_res" to 0.5f, "a_attack" to 0.7112745f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7848632f, "l1_rate" to 0.361190557f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.725f, "volume" to 0.82f),
+        mapOf("o1_wave" to 0.142857149f, "o1_pos" to 0.15f, "o1_level" to 0.75f, "o1_density" to 0.142857149f, "o2_wave" to 0.142857149f, "o2_pos" to 0.85f, "o2_fine" to 0.39f, "f1_type" to 0.909090936f, "f1_freq" to 0.5927171f, "f1_res" to 0.5f, "a_attack" to 0.7112745f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7848632f, "l1_rate" to 0.361190557f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.725f, "volume" to 0.82f),
         family = "pad",
         low = 36, high = 79)
 
     private fun trinity23() = Patch("Trinity", "Wash",
-        mapOf("o1_level" to 1f, "o1_density" to 1f, "o1_detune" to 0.8f, "o1_drift" to 0.6f, "o2_wave" to 0.181818187f, "o2_coarse" to 0.395833343f, "o2_level" to 0.77f, "o2_density" to 1f, "o2_detune" to 0.7f, "f1_type" to 0.09090909f, "f1_freq" to 0.651414156f, "a_attack" to 0.849485f, "a_decay" to 0.8768739f, "a_sustain" to 0.8f, "a_release" to 0.8518653f, "volume" to 0.51f),
+        mapOf("o1_level" to 1f, "o1_density" to 1f, "o1_detune" to 0.8f, "o1_drift" to 0.6f, "o2_wave" to 0.0571428575f, "o2_coarse" to 0.395833343f, "o2_level" to 0.77f, "o2_density" to 1f, "o2_detune" to 0.7f, "f1_type" to 0.09090909f, "f1_freq" to 0.651414156f, "a_attack" to 0.849485f, "a_decay" to 0.8768739f, "a_sustain" to 0.8f, "a_release" to 0.8518653f, "volume" to 0.51f),
         family = "pad",
         low = 36, high = 79)
 
@@ -346,32 +346,32 @@ internal object FactoryBanks {
         low = 48, high = 84)
 
     private fun trinity25() = Patch("Trinity", "Ensemble",
-        mapOf("o1_level" to 1f, "o1_density" to 0.714285731f, "o1_detune" to 0.32f, "o1_drift" to 0.45f, "o2_wave" to 0.181818187f, "o2_fine" to 0.43f, "o2_level" to 0.97f, "o2_density" to 0.5714286f, "o2_detune" to 0.28f, "o2_drift" to 0.3f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "f1_res" to 0.1f, "a_attack" to 0.636016965f, "a_decay" to 0.79919f, "a_sustain" to 0.85f, "a_release" to 0.716931f, "volume" to 0.38f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.714285731f, "o1_detune" to 0.32f, "o1_drift" to 0.45f, "o2_wave" to 0.0571428575f, "o2_fine" to 0.43f, "o2_level" to 0.97f, "o2_density" to 0.5714286f, "o2_detune" to 0.28f, "o2_drift" to 0.3f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "f1_res" to 0.1f, "a_attack" to 0.636016965f, "a_decay" to 0.79919f, "a_sustain" to 0.85f, "a_release" to 0.716931f, "volume" to 0.38f),
         family = "ensemble",
         low = 36, high = 79)
 
     private fun trinity26() = Patch("Trinity", "Brass Section",
-        mapOf("o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.22f, "o2_fine" to 0.59f, "o2_level" to 1f, "o3_wave" to 0.09090909f, "o3_coarse" to 0.25f, "o3_level" to 0.59f, "f1_freq" to 0.5146893f, "f1_res" to 0.22f, "f1_env" to 0.875f, "f1_key" to 0.4f, "a_attack" to 0.40051496f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "f_attack" to 0.444537818f, "f_decay" to 0.618813455f, "f_sustain" to 0.45f, "volume" to 0.4f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.22f, "o2_fine" to 0.59f, "o2_level" to 1f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.25f, "o3_level" to 0.59f, "f1_freq" to 0.5146893f, "f1_res" to 0.22f, "f1_env" to 0.875f, "f1_key" to 0.4f, "a_attack" to 0.40051496f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "f_attack" to 0.444537818f, "f_decay" to 0.618813455f, "f_sustain" to 0.45f, "volume" to 0.4f),
         family = "ensemble",
         low = 40, high = 79)
 
     private fun trinity27() = Patch("Trinity", "Soft Horn",
-        mapOf("o1_level" to 1f, "o1_density" to 0.142857149f, "o2_wave" to 0.181818187f, "o2_fine" to 0.45f, "o2_level" to 0.92f, "o3_wave" to 0.272727281f, "o3_coarse" to 0.25f, "o3_level" to 0.5f, "f1_freq" to 0.5801209f, "f1_res" to 0.1f, "f1_env" to 0.6f, "a_attack" to 0.619280338f, "a_decay" to 0.774181366f, "a_sustain" to 0.8f, "a_release" to 0.671488762f, "volume" to 0.35f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.142857149f, "o2_wave" to 0.0571428575f, "o2_fine" to 0.45f, "o2_level" to 0.92f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.25f, "o3_level" to 0.5f, "f1_freq" to 0.5801209f, "f1_res" to 0.1f, "f1_env" to 0.6f, "a_attack" to 0.619280338f, "a_decay" to 0.774181366f, "a_sustain" to 0.8f, "a_release" to 0.671488762f, "volume" to 0.35f),
         family = "ensemble",
         low = 36, high = 79)
 
     private fun trinity28() = Patch("Trinity", "Analog Strings",
-        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.38f, "o1_drift" to 0.5f, "o2_wave" to 0.09090909f, "o2_fine" to 0.58f, "o2_level" to 0.82f, "o2_pw" to 0.416666627f, "f1_type" to 0.181818187f, "f1_freq" to 0.6666667f, "a_attack" to 0.6747425f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7491727f, "l1_rate" to 0.2649158f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.675f, "volume" to 0.31f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.38f, "o1_drift" to 0.5f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.58f, "o2_level" to 0.82f, "o2_pw" to 0.416666627f, "f1_type" to 0.181818187f, "f1_freq" to 0.6666667f, "a_attack" to 0.6747425f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.7491727f, "l1_rate" to 0.2649158f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.675f, "volume" to 0.31f),
         family = "ensemble",
         low = 36, high = 79)
 
     private fun trinity29() = Patch("Trinity", "Swell",
-        mapOf("o1_wave" to 0.363636374f, "o1_pos" to 0.45f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.3f, "o2_coarse" to 0.395833343f, "o2_level" to 0.61f, "f1_type" to 0.09090909f, "f1_freq" to 0.7046478f, "f1_env" to 0.7f, "a_delay" to 0.125f, "a_attack" to 0.7603482f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.79919f, "volume" to 0.81f),
+        mapOf("o1_wave" to 0.114285715f, "o1_pos" to 0.45f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.3f, "o2_coarse" to 0.395833343f, "o2_level" to 0.61f, "f1_type" to 0.09090909f, "f1_freq" to 0.7046478f, "f1_env" to 0.7f, "a_delay" to 0.125f, "a_attack" to 0.7603482f, "a_decay" to 0.81962353f, "a_sustain" to 0.8f, "a_release" to 0.79919f, "volume" to 0.81f),
         family = "ensemble",
         low = 36, high = 69)
 
     private fun trinity30() = Patch("Trinity", "Sub Bass",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.75f, "o2_level" to 0.2f, "f1_type" to 0.09090909f, "f1_freq" to 0.5146893f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.6f, "a_release" to 0.483879149f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.75f, "o2_level" to 0.2f, "f1_type" to 0.09090909f, "f1_freq" to 0.5146893f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.6f, "a_release" to 0.483879149f),
         family = "bass",
         low = 24, high = 55)
 
@@ -386,37 +386,37 @@ internal object FactoryBanks {
         low = 24, high = 55)
 
     private fun trinity33() = Patch("Trinity", "Wub",
-        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.8f, "f1_freq" to 0.30102998f, "f1_res" to 0.5f, "f1_drive" to 0.3f, "a_sustain" to 1f, "a_release" to 0.483879149f, "l1_sync" to 0.5294118f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.925f, "volume" to 0.5f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.8f, "f1_freq" to 0.30102998f, "f1_res" to 0.5f, "f1_drive" to 0.3f, "a_sustain" to 1f, "a_release" to 0.483879149f, "l1_sync" to 0.5294118f, "m01_src" to 0.8666667f, "m01_dest" to 0.6969697f, "m01_depth" to 0.925f, "volume" to 0.5f),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity34() = Patch("Trinity", "Pluck Bass",
-        mapOf("o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.75f, "o2_level" to 0.69f, "o2_pw" to 0.34374997f, "f1_freq" to 0.46598f, "f1_res" to 0.35f, "f1_env" to 0.85f, "a_attack" to 0.075257495f, "a_decay" to 0.618813455f, "a_sustain" to 0.15f, "a_release" to 0.5161209f, "f_decay" to 0.4588705f, "f_sustain" to 0f, "volume" to 0.99f),
+        mapOf("o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.75f, "o2_level" to 0.69f, "o2_pw" to 0.34374997f, "f1_freq" to 0.46598f, "f1_res" to 0.35f, "f1_env" to 0.85f, "a_attack" to 0.075257495f, "a_decay" to 0.618813455f, "a_sustain" to 0.15f, "a_release" to 0.5161209f, "f_decay" to 0.4588705f, "f_sustain" to 0f, "volume" to 0.99f),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity35() = Patch("Trinity", "Growl Bass",
-        mapOf("o1_wave" to 0.909090936f, "o1_pos" to 0.4f, "o1_warp" to 0.5f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.65f, "f1_freq" to 0.492373765f, "f1_res" to 0.3f, "f1_drivetype" to 0.4f, "f1_drive" to 0.3f, "f1_env" to 0.7f, "a_attack" to 0.15051499f, "a_decay" to 0.69649744f, "a_release" to 0.5161209f, "volume" to 1f),
+        mapOf("o1_wave" to 0.2857143f, "o1_pos" to 0.4f, "o1_warp" to 0.5f, "o1_level" to 1f, "o2_coarse" to 0.25f, "o2_level" to 0.65f, "f1_freq" to 0.492373765f, "f1_res" to 0.3f, "f1_drivetype" to 0.4f, "f1_drive" to 0.3f, "f1_env" to 0.7f, "a_attack" to 0.15051499f, "a_decay" to 0.69649744f, "a_release" to 0.5161209f, "volume" to 1f),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity36() = Patch("Trinity", "Wide Bass",
-        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.2f, "o2_wave" to 0.272727281f, "o2_level" to 0.74f, "f1_freq" to 0.426251173f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.194537818f, "a_decay" to 0.716931f, "a_sustain" to 0.75f, "a_release" to 0.5161209f, "volume" to 0.62f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.2f, "o2_wave" to 0.08571429f, "o2_level" to 0.74f, "f1_freq" to 0.426251173f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.194537818f, "a_decay" to 0.716931f, "a_sustain" to 0.75f, "a_release" to 0.5161209f, "volume" to 0.62f),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity37() = Patch("Trinity", "Square Bass",
-        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o1_pw" to 0.37499997f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.25f, "o2_level" to 0.64f, "f1_type" to 0.181818187f, "f1_freq" to 0.551070869f, "f1_res" to 0.05f, "f1_env" to 0.6f, "a_attack" to 0.119280316f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "volume" to 0.46f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o1_pw" to 0.37499997f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.25f, "o2_level" to 0.64f, "f1_type" to 0.181818187f, "f1_freq" to 0.551070869f, "f1_res" to 0.05f, "f1_env" to 0.6f, "a_attack" to 0.119280316f, "a_decay" to 0.69649744f, "a_release" to 0.483879149f, "volume" to 0.46f),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity38() = Patch("Trinity", "Ring Bass",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.395833343f, "o2_level" to 1f, "ring12" to 0.65f, "f1_freq" to 0.53402f, "f1_res" to 0.25f, "f1_env" to 0.7f, "a_attack" to 0.119280316f, "a_decay" to 0.6846892f, "a_sustain" to 0.5f, "a_release" to 0.5161209f, "volume" to 0.58f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.395833343f, "o2_level" to 1f, "ring12" to 0.65f, "f1_freq" to 0.53402f, "f1_res" to 0.25f, "f1_env" to 0.7f, "a_attack" to 0.119280316f, "a_decay" to 0.6846892f, "a_sustain" to 0.5f, "a_release" to 0.5161209f, "volume" to 0.58f),
         family = "bass",
         low = 24, high = 55)
 
     private fun trinity39() = Patch("Trinity", "Square Lead",
-        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_fine" to 0.44f, "o2_level" to 0.64f, "o2_pw" to 0.447916627f, "f1_freq" to 0.7046478f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5411295f, "glide" to 0.015f, "volume" to 0.27f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.44f, "o2_level" to 0.64f, "o2_pw" to 0.447916627f, "f1_freq" to 0.7046478f, "f1_res" to 0.2f, "f1_env" to 0.675f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.8f, "a_release" to 0.5411295f, "glide" to 0.015f, "volume" to 0.27f),
         family = "lead",
         low = 48, high = 91)
 
@@ -427,12 +427,12 @@ internal object FactoryBanks {
         inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.485719174f, "tone" to 0.6456324f, "mix" to 0.6f, "gain" to 0.427083343f)), UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.368421048f, "mix" to 0.25f))))
 
     private fun trinity41() = Patch("Trinity", "Fifth Lead",
-        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_coarse" to 0.6458333f, "o2_level" to 0.91f, "o3_wave" to 0.09090909f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "volume" to 0.24f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_coarse" to 0.6458333f, "o2_level" to 0.91f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "f1_type" to 0.181818187f, "f1_freq" to 0.73470664f, "a_attack" to 0.24999997f, "a_decay" to 0.69649744f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "volume" to 0.24f),
         family = "lead",
         low = 48, high = 91)
 
     private fun trinity42() = Patch("Trinity", "Soft Lead",
-        mapOf("o1_wave" to 0.181818187f, "o1_level" to 1f, "o1_drift" to 0.2f, "o2_wave" to 0.272727281f, "o2_level" to 0.81f, "f1_type" to 0.09090909f, "f1_freq" to 0.634363353f, "f1_env" to 0.6f, "a_attack" to 0.444537818f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.618813455f, "glide" to 0.045f, "volume" to 0.37f),
+        mapOf("o1_wave" to 0.0571428575f, "o1_level" to 1f, "o1_drift" to 0.2f, "o2_wave" to 0.08571429f, "o2_level" to 0.81f, "f1_type" to 0.09090909f, "f1_freq" to 0.634363353f, "f1_env" to 0.6f, "a_attack" to 0.444537818f, "a_decay" to 0.7419396f, "a_sustain" to 0.85f, "a_release" to 0.618813455f, "glide" to 0.045f, "volume" to 0.37f),
         family = "lead",
         low = 48, high = 91)
 
@@ -442,17 +442,17 @@ internal object FactoryBanks {
         low = 48, high = 91)
 
     private fun trinity44() = Patch("Trinity", "PWM Lead",
-        mapOf("o1_wave" to 0.09090909f, "o1_level" to 1f, "o2_wave" to 0.09090909f, "o2_fine" to 0.46f, "o2_level" to 0.96f, "f1_freq" to 0.71537596f, "f1_res" to 0.12f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.4589631f, "m01_src" to 0.8666667f, "m01_dest" to 0.333333343f, "m01_depth" to 0.7f, "m02_src" to 0.8666667f, "m02_dest" to 0.363636374f, "m02_depth" to 0.325f, "volume" to 0.22f),
+        mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.46f, "o2_level" to 0.96f, "f1_freq" to 0.71537596f, "f1_res" to 0.12f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.4589631f, "m01_src" to 0.8666667f, "m01_dest" to 0.333333343f, "m01_depth" to 0.7f, "m02_src" to 0.8666667f, "m02_dest" to 0.363636374f, "m02_depth" to 0.325f, "volume" to 0.22f),
         family = "lead",
         low = 48, high = 91)
 
     private fun trinity45() = Patch("Trinity", "Vowel Lead",
-        mapOf("o1_wave" to 0.545454562f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.2f, "o2_wave" to 0.545454562f, "o2_pos" to 0.5f, "o2_fine" to 0.56f, "o2_level" to 0.93f, "f1_type" to 0.181818187f, "f1_res" to 0.2f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.8f, "volume" to 1f),
+        mapOf("o1_wave" to 0.171428576f, "o1_pos" to 0.2f, "o1_level" to 1f, "o1_density" to 0.2857143f, "o1_detune" to 0.2f, "o2_wave" to 0.171428576f, "o2_pos" to 0.5f, "o2_fine" to 0.56f, "o2_level" to 0.93f, "f1_type" to 0.181818187f, "f1_res" to 0.2f, "a_attack" to 0.24999997f, "a_decay" to 0.716931f, "a_sustain" to 0.8f, "m01_src" to 0.533333361f, "m01_dest" to 0.151515156f, "m01_depth" to 0.8f, "volume" to 1f),
         family = "lead",
         low = 48, high = 91)
 
     private fun trinity46() = Patch("Trinity", "Whistle",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 1f, "o1_drift" to 0.35f, "o2_wave" to 0.272727281f, "o2_fine" to 0.53f, "o2_level" to 0.49f, "f1_type" to 0.09090909f, "f1_freq" to 0.799313366f, "a_attack" to 0.4247425f, "a_decay" to 0.69649744f, "a_sustain" to 0.9f, "a_release" to 0.593804836f, "glide" to 0.06f, "volume" to 0.36f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 1f, "o1_drift" to 0.35f, "o2_wave" to 0.08571429f, "o2_fine" to 0.53f, "o2_level" to 0.49f, "f1_type" to 0.09090909f, "f1_freq" to 0.799313366f, "a_attack" to 0.4247425f, "a_decay" to 0.69649744f, "a_sustain" to 0.9f, "a_release" to 0.593804836f, "glide" to 0.06f, "volume" to 0.36f),
         family = "lead",
         low = 48, high = 91)
 
@@ -462,27 +462,27 @@ internal object FactoryBanks {
         low = 36, high = 79)
 
     private fun trinity48() = Patch("Trinity", "Ring Bells",
-        mapOf("o1_wave" to 0.272727281f, "o1_level" to 0.98f, "o2_wave" to 0.272727281f, "o2_coarse" to 0.625f, "o2_level" to 0.98f, "o3_wave" to 0.6363636f, "o3_coarse" to 0.75f, "o3_level" to 0.41f, "ring12" to 0.9f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "a_attack" to 0.075257495f, "a_decay" to 0.79919f, "a_sustain" to 0f, "a_release" to 0.716931f, "volume" to 0.39f),
+        mapOf("o1_wave" to 0.08571429f, "o1_level" to 0.98f, "o2_wave" to 0.08571429f, "o2_coarse" to 0.625f, "o2_level" to 0.98f, "o3_wave" to 0.2f, "o3_coarse" to 0.75f, "o3_level" to 0.41f, "ring12" to 0.9f, "f1_type" to 0.09090909f, "f1_freq" to 0.8257071f, "a_attack" to 0.075257495f, "a_decay" to 0.79919f, "a_sustain" to 0f, "a_release" to 0.716931f, "volume" to 0.39f),
         family = "texture",
         low = 36, high = 79)
 
     private fun trinity49() = Patch("Trinity", "Drone",
-        mapOf("o1_wave" to 1f, "o1_level" to 1f, "o1_drift" to 0.55f, "o2_wave" to 1f, "o2_coarse" to 0.6458333f, "o2_level" to 0.75f, "o2_drift" to 0.5f, "o3_wave" to 1f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "o3_drift" to 0.6f, "f1_type" to 0.09090909f, "f1_freq" to 0.6930604f, "a_attack" to 0.8252575f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.81962353f, "volume" to 0.56f),
+        mapOf("o1_wave" to 0.314285725f, "o1_level" to 1f, "o1_drift" to 0.55f, "o2_wave" to 0.314285725f, "o2_coarse" to 0.6458333f, "o2_level" to 0.75f, "o2_drift" to 0.5f, "o3_wave" to 0.314285725f, "o3_coarse" to 0.75f, "o3_level" to 0.58f, "o3_drift" to 0.6f, "f1_type" to 0.09090909f, "f1_freq" to 0.6930604f, "a_attack" to 0.8252575f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.81962353f, "volume" to 0.56f),
         family = "texture",
         low = 36, high = 79)
 
     private fun trinity50() = Patch("Trinity", "Metallic",
-        mapOf("o1_wave" to 0.8181818f, "o1_pos" to 0.8f, "o1_warp" to 0.75f, "o1_level" to 1f, "o2_wave" to 0.8181818f, "o2_pos" to 0.3f, "o2_coarse" to 0.625f, "o2_level" to 0.81f, "f1_type" to 1f, "f1_freq" to 0.651414156f, "f1_res" to 0.6f, "a_attack" to 0.24999997f, "a_decay" to 0.81962353f, "a_sustain" to 0.3f, "a_release" to 0.7419396f, "volume" to 0.33f),
+        mapOf("o1_wave" to 0.257142872f, "o1_pos" to 0.8f, "o1_warp" to 0.75f, "o1_level" to 1f, "o2_wave" to 0.257142872f, "o2_pos" to 0.3f, "o2_coarse" to 0.625f, "o2_level" to 0.81f, "f1_type" to 1f, "f1_freq" to 0.651414156f, "f1_res" to 0.6f, "a_attack" to 0.24999997f, "a_decay" to 0.81962353f, "a_sustain" to 0.3f, "a_release" to 0.7419396f, "volume" to 0.33f),
         family = "texture",
         low = 36, high = 79)
 
     private fun trinity51() = Patch("Trinity", "Sweep Down",
-        mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o2_wave" to 0.909090936f, "o2_level" to 0.55f, "noise" to 0.35f, "f1_freq" to 0.8844042f, "f1_res" to 0.45f, "f1_env" to 0.025000006f, "a_attack" to 0.24999997f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.7419396f, "f_attack" to 0.24999997f, "f_decay" to 0.8518653f, "f_sustain" to 0f, "volume" to 0.42f),
+        mapOf("o1_level" to 1f, "o1_density" to 0.5714286f, "o1_detune" to 0.45f, "o2_wave" to 0.2857143f, "o2_level" to 0.55f, "noise" to 0.35f, "f1_freq" to 0.8844042f, "f1_res" to 0.45f, "f1_env" to 0.025000006f, "a_attack" to 0.24999997f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.7419396f, "f_attack" to 0.24999997f, "f_decay" to 0.8518653f, "f_sustain" to 0f, "volume" to 0.42f),
         family = "texture",
         low = 36, high = 79)
 
     private fun trinity52() = Patch("Trinity", "Air",
-        mapOf("o1_wave" to 0.454545468f, "o1_pos" to 0.9f, "o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.5f, "o1_drift" to 0.6f, "noise" to 0.3f, "noisecol" to 0.9f, "f1_type" to 0.454545468f, "f1_freq" to 0.492373765f, "f1_res" to 0.2f, "f1_key" to 0.8f, "a_attack" to 0.7940228f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "volume" to 0.95f),
+        mapOf("o1_wave" to 0.142857149f, "o1_pos" to 0.9f, "o1_level" to 1f, "o1_density" to 0.428571433f, "o1_detune" to 0.5f, "o1_drift" to 0.6f, "noise" to 0.3f, "noisecol" to 0.9f, "f1_type" to 0.454545468f, "f1_freq" to 0.492373765f, "f1_res" to 0.2f, "f1_key" to 0.8f, "a_attack" to 0.7940228f, "a_decay" to 0.8518653f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "volume" to 0.95f),
         family = "texture",
         low = 36, high = 79)
 
@@ -1837,127 +1837,127 @@ internal object FactoryBanks {
     private val filament: List<Patch> by lazy { listOf(filament0(), filament1(), filament2(), filament3(), filament4(), filament5(), filament6(), filament7(), filament8(), filament9()) }
 
     private fun nexus0() = Patch("Nexus", "Init", emptyMap(),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
         family = "basic")
 
     private fun nexus1() = Patch("Nexus", "Subtractive",
         mapOf("s02_p2" to 0.45f, "s02_p3" to 0.35f, "s03_p2" to 0.05f, "s03_p4" to 0.3f, "s05_p1" to 0.35f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
         family = "basic")
 
     private fun nexus2() = Patch("Nexus", "Plucked",
         mapOf("s02_p3" to 0.02f, "s04_p2" to 0.94f, "s05_p1" to 0.95f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0"),
         family = "house")
 
     private fun nexus3() = Patch("Nexus", "Rotor String",
         mapOf("s02_p3" to 0.02f, "s04_p2" to 0.95f, "s06_p1" to 0.95f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|noise\nm|2|env\nm|3|vca\nm|4|string\nm|5|rotary|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
         family = "house")
 
     private fun nexus4() = Patch("Nexus", "Two Operators",
         mapOf("s01_p2" to 0.1f, "s03_p3" to 0.5f, "s05_p1" to 0.35f, "volume" to 0.87f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|op\nm|2|op\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|op\nm|2|op\nm|3|env\nm|4|vca\nm|5|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
         family = "house")
 
     private fun nexus5() = Patch("Nexus", "Runs Itself",
         mapOf("s01_p2" to 0.3f, "s05_p2" to 0.05f, "s05_p4" to 0.25f, "s07_p1" to 0.35f, "volume" to 0.82f),
-        mapOf("nexus" to "v|1\nm|0|clock|mono\nm|1|euclid|mono\nm|2|rand|mono\nm|3|quant|mono\nm|4|osc\nm|5|env\nm|6|vca\nm|7|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|3.0|4.0|1.0\nc|1.0|5.0|1.0\nc|4.0|6.0|1.0\nc|5.0|6.1|1.0\nc|6.0|7.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|clock|mono\nm|1|euclid|mono\nm|2|rand|mono\nm|3|quant|mono\nm|4|osc\nm|5|env\nm|6|vca\nm|7|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|3.0|4.0|1.0\nc|1.0|5.0|1.0\nc|4.0|6.0|1.0\nc|5.0|6.1|1.0\nc|6.0|7.0|1.0"),
         family = "generative")
 
     private fun nexus6() = Patch("Nexus", "Listening",
         mapOf("s01_p2" to 0.18f, "s01_p3" to 0.6f, "s01_p6" to 0.9f, "s02_p1" to 0.95f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|audioin|mono\nm|1|grain|mono\nm|2|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|audioin|mono\nm|1|grain|mono\nm|2|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0"),
         family = "house")
 
     private fun nexus7() = Patch("Nexus", "Macro Sweep",
         mapOf("s02_p2" to 0.3f, "s02_p3" to 0.45f, "s03_p1" to 0.02f, "s03_p4" to 0.25f, "s06_p1" to 0.85f, "macro1" to 0.45f, "volume" to 0.41f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|macro|mono\nm|6|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|6.0|1.0\nc|5.0|2.1|0.8"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|env\nm|4|vca\nm|5|macro|mono\nm|6|out|mono\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|6.0|1.0\nc|5.0|2.1|0.8"),
         family = "macro")
 
     private fun nexus8() = Patch("Nexus", "One Knob, Four Things",
         mapOf("s02_p2" to 0.52f, "s05_p2" to 0.25f, "s05_p3" to 0.4f, "s06_p1" to 0.02f, "s06_p4" to 0.3f, "s09_p1" to 0.8f, "macro1" to 0.4f, "volume" to 0.4f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|osc\nm|3|noise\nm|4|mix|mono\nm|5|filter\nm|6|env\nm|7|vca\nm|8|macro|mono\nm|9|out|mono\nc|1.0|4.0|1.0\nc|2.0|4.1|0.6\nc|3.0|4.2|0.25\nc|4.0|5.0|1.0\nc|5.0|7.0|1.0\nc|0.1|6.0|1.0\nc|6.0|7.1|1.0\nc|7.0|9.0|1.0\nc|8.0|5.1|0.9\nc|8.0|2.0|0.1\nc|8.0|4.2|0.5"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|osc\nm|2|osc\nm|3|noise\nm|4|mix|mono\nm|5|filter\nm|6|env\nm|7|vca\nm|8|macro|mono\nm|9|out|mono\nc|1.0|4.0|1.0\nc|2.0|4.1|0.6\nc|3.0|4.2|0.25\nc|4.0|5.0|1.0\nc|5.0|7.0|1.0\nc|0.1|6.0|1.0\nc|6.0|7.1|1.0\nc|7.0|9.0|1.0\nc|8.0|5.1|0.9\nc|8.0|2.0|0.1\nc|8.0|4.2|0.5"),
         family = "macro")
 
     private fun nexus9() = Patch("Nexus", "Morphing",
         mapOf("s03_p2" to 0.03f, "s05_p2" to 0.93f, "s06_p1" to 0.9f, "morph" to 0.35f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|noise\nm|2|osc\nm|3|env\nm|4|vca\nm|5|string\nm|6|out|mono\nc|1.0|4.0|1.0|0.0\nc|2.0|4.0|0.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|noise\nm|2|osc\nm|3|env\nm|4|vca\nm|5|string\nm|6|out|mono\nc|1.0|4.0|1.0|0.0\nc|2.0|4.0|0.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0"),
         family = "morph")
 
     private fun nexus10() = Patch("Nexus", "Tonewheels",
         mapOf("s02_p2" to 0.55f, "s03_p1" to 0.04f, "s03_p4" to 0.2f, "s05_p1" to 0.8f, "volume" to 0.39f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|wheels\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|wheels\nm|2|filter\nm|3|env\nm|4|vca\nm|5|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|4.0|1.0\nc|0.1|3.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
         family = "house")
 
     private fun nexus11() = Patch("Nexus", "Wavetable Drift",
         mapOf("s02_p2" to 0.22f, "s03_p2" to 0.6f, "s04_p1" to 0.08f, "s04_p4" to 0.35f, "s06_p1" to 0.85f, "volume" to 0.74f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|wtosc\nm|2|lfo|mono\nm|3|filter\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|2.0|1.2|0.7\nc|1.0|3.0|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|wtosc\nm|2|lfo|mono\nm|3|filter\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|2.0|1.2|0.7\nc|1.0|3.0|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
         family = "house")
 
     private fun nexus12() = Patch("Nexus", "Talking",
         mapOf("s01_p1" to 0.25f, "s04_p1" to 0.02f, "s04_p4" to 0.2f, "s06_p1" to 0.9f, "volume" to 0.88f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|audioin|mono\nm|3|bands|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|osc\nm|2|audioin|mono\nm|3|bands|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|5.0|1.0\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
         family = "house")
 
     private fun nexus13() = Patch("Nexus", "Sample and Hold",
         mapOf("s00_p1" to 0.3f, "s04_p1" to 0.01f, "s04_p4" to 0.18f, "s06_p2" to 0.45f, "s06_p3" to 0.35f, "s07_p1" to 0.8f, "volume" to 0.62f),
-        mapOf("nexus" to "v|1\nm|0|clock|mono\nm|1|rand|mono\nm|2|quant|mono\nm|3|osc\nm|4|env\nm|5|vca\nm|6|filter\nm|7|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|0.0|4.0|1.0\nc|3.0|6.0|1.0\nc|6.0|5.0|1.0\nc|4.0|5.1|1.0\nc|5.0|7.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|clock|mono\nm|1|rand|mono\nm|2|quant|mono\nm|3|osc\nm|4|env\nm|5|vca\nm|6|filter\nm|7|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|0.0|4.0|1.0\nc|3.0|6.0|1.0\nc|6.0|5.0|1.0\nc|4.0|5.1|1.0\nc|5.0|7.0|1.0"),
         family = "generative")
 
     private fun nexus14() = Patch("Nexus", "Feeding Back",
         mapOf("s02_p2" to 0.4f, "s02_p3" to 0.5f, "s03_p1" to 0.3f, "s03_p2" to 0.25f, "s04_p1" to 0.01f, "s04_p4" to 0.3f, "s06_p1" to 0.75f, "volume" to 0.44f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|delay|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|5.0|1.0\nc|5.0|3.0|0.5\nc|3.0|2.0|0.35\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|osc\nm|2|filter\nm|3|delay|mono\nm|4|env\nm|5|vca\nm|6|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|2.0|5.0|1.0\nc|5.0|3.0|0.5\nc|3.0|2.0|0.35\nc|0.1|4.0|1.0\nc|4.0|5.1|1.0\nc|5.0|6.0|1.0"),
         family = "texture")
 
     private fun nexus15() = Patch("Nexus", "Horn in a Hall",
         mapOf("s01_p1" to 0.08f, "s01_p3" to 0.8f, "s01_p4" to 0.25f, "s03_p5" to 0.25f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|env\nm|2|bore\nm|3|reverb|mono\nm|4|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|0.0|2.1|1.0\nc|2.0|3.0|1.0\nc|3.0|4.0|1.0\nc|3.1|4.2|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|env\nm|2|bore\nm|3|reverb|mono\nm|4|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|0.0|2.1|1.0\nc|2.0|3.0|1.0\nc|3.0|4.0|1.0\nc|3.1|4.2|1.0"),
         family = "house")
 
     private fun nexus16() = Patch("Nexus", "Talking Harp",
         mapOf("s01_p8" to 0.9f, "s02_p2" to 0.25f, "s03_p1" to 0.1f, "s03_p5" to 1f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|jaw\nm|2|lfo|mono\nm|3|throat\nm|4|out|mono\nc|0.1|1.0|1.0\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|2.1|3.1|0.8\nc|3.0|4.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|jaw\nm|2|lfo|mono\nm|3|throat\nm|4|out|mono\nc|0.1|1.0|1.0\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|2.1|3.1|0.8\nc|3.0|4.0|1.0"),
         family = "house")
 
     private fun nexus17() = Patch("Nexus", "Bytebeat",
         mapOf("s01_p2" to 0.3f, "s02_p3" to 0.6f, "s04_p1" to 0.6f, "s05_p1" to 0.4f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|formula\nm|2|env\nm|3|vca\nm|4|crush\nm|5|out|mono\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\ne|01|t * (t >> 5 | t >> 8)"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|formula\nm|2|env\nm|3|vca\nm|4|crush\nm|5|out|mono\nc|0.0|1.1|1.0\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\ne|01|t * (t >> 5 | t >> 8)"),
         family = "generative")
 
     private fun nexus18() = Patch("Nexus", "Sing to the Piano",
         mapOf("s01_p3" to 1f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|audioin|mono\nm|1|follow|mono\nm|2|piano|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|1.1|2.1|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"),
+        mapOf("nexus" to "v|2\nm|0|audioin|mono\nm|1|follow|mono\nm|2|piano|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0\nc|1.1|2.1|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"),
         family = "house")
 
     private fun nexus19() = Patch("Nexus", "Wall Pad",
         mapOf("s01_p1" to 0.66f, "s02_p1" to 0.4f, "s02_p4" to 0.6f, "s04_p3" to 0.8f, "s04_p5" to 0.4f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|osc\nm|2|env\nm|3|vca\nm|4|swell\nm|5|chorus|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|osc\nm|2|env\nm|3|vca\nm|4|swell\nm|5|chorus|mono\nm|6|out|mono\nc|1.0|3.0|1.0\nc|0.1|2.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0\nc|4.0|5.0|1.0\nc|5.0|6.0|1.0\nc|5.1|6.2|1.0"),
         family = "texture")
 
     private fun nexus20() = Patch("Nexus", "Free Reeds",
         mapOf("s01_p1" to 0.2f, "s01_p3" to 0.9f, "s02_p1" to 0.3f, "s03_p2" to 0.25f, "s03_p8" to 0.35f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|env\nm|2|reed\nm|3|pipe\nm|4|mix\nm|5|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|1.0|3.0|0.9\nc|0.0|2.1|1.0\nc|0.0|3.1|1.0\nc|2.0|4.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|env\nm|2|reed\nm|3|pipe\nm|4|mix\nm|5|out|mono\nc|0.1|1.0|1.0\nc|1.0|2.0|1.0\nc|1.0|3.0|0.9\nc|0.0|2.1|1.0\nc|0.0|3.1|1.0\nc|2.0|4.0|1.0\nc|3.0|4.1|1.0\nc|4.0|5.0|1.0"),
         family = "house")
 
     private fun nexus21() = Patch("Nexus", "Talk Box Guitar",
         mapOf("s01_p7" to 0.8f, "s02_p2" to 0.2f, "s03_p5" to 1f, "s04_p1" to 1f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|guitar|mono\nm|2|lfo|mono\nm|3|throat\nm|4|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|3.0|1.0\nc|2.1|3.1|0.8\nc|3.0|4.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|guitar|mono\nm|2|lfo|mono\nm|3|throat\nm|4|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|3.0|1.0\nc|2.1|3.1|0.8\nc|3.0|4.0|1.0"),
         family = "house")
 
     private fun nexus22() = Patch("Nexus", "Birds by the Brook",
         mapOf("s01_p1" to 0.6f, "s01_p7" to 0.5f, "s02_p1" to 0.5f, "s02_p2" to 0.4f, "volume" to 0.9f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|bird|mono\nm|2|water|mono\nm|3|mix\nm|4|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|0.0|2.0|1.0\nc|0.1|2.1|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|bird|mono\nm|2|water|mono\nm|3|mix\nm|4|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|0.0|2.0|1.0\nc|0.1|2.1|1.0\nc|1.0|3.0|1.0\nc|2.0|3.1|1.0\nc|3.0|4.0|1.0"),
         family = "texture")
 
     private fun nexus23() = Patch("Nexus", "Drum Echoes",
         mapOf("s02_p2" to 0.55f, "volume" to 1f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|drum|mono\nm|2|delay|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|drum|mono\nm|2|delay|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0"),
         family = "generative")
 
     private fun nexus24() = Patch("Nexus", "Sitar Hall",
         mapOf("s01_p8" to 0.9f, "s02_p1" to 0.8f, "s02_p5" to 0.45f, "volume" to 0.9f),
-        mapOf("nexus" to "v|1\nm|0|voice\nm|1|sitar|mono\nm|2|reverb|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"),
+        mapOf("nexus" to "v|2\nm|0|voice\nm|1|sitar|mono\nm|2|reverb|mono\nm|3|out|mono\nc|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|2.0|1.0\nc|2.0|3.0|1.0\nc|2.1|3.2|1.0"),
         family = "texture")
 
     private val nexus: List<Patch> by lazy { listOf(nexus0(), nexus1(), nexus2(), nexus3(), nexus4(), nexus5(), nexus6(), nexus7(), nexus8(), nexus9(), nexus10(), nexus11(), nexus12(), nexus13(), nexus14(), nexus15(), nexus16(), nexus17(), nexus18(), nexus19(), nexus20(), nexus21(), nexus22(), nexus23(), nexus24()) }

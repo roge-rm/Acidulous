@@ -1904,7 +1904,11 @@ private fun GenericPanel(b: ParamBinding) {
 // the repeating sections (oscillator, envelope, LFO, matrix slot) have their
 // own selector. Names mirror engine/machine/trinity/Trinity.cpp.
 
-val TRINITY_WAVES = listOf("saw", "square", "tri", "sine", "Sweep", "Glass", "Vowel", "Bell", "Comb", "Fold", "Grit", "Organ")
+val TRINITY_WAVES = listOf(
+    "saw", "square", "tri", "sine", "Sweep", "Glass", "Vowel", "Bell", "Comb", "Fold", "Grit", "Organ",
+    "Hollow", "Even", "Round", "Sync", "Twin", "Reso", "Index", "Reed", "Bent", "Ping", "Crush", "Stair",
+    "Choir", "Nasal", "Bow", "Brass", "Dust", "Metal", "Chip", "Spiral", "Tilt", "Prime", "Stack", "Pluck",
+)
 val TRINITY_FILTERS = listOf("LP6", "LP12", "LP18", "LP24", "HP6", "HP12", "HP18", "HP24", "BP6", "BP12", "notch", "peak")
 val TRINITY_DRIVES = listOf("clean", "valve", "diode", "clip", "fold", "crush")
 val TRINITY_LFO_WAVES = listOf("sine", "tri", "saw+", "saw-", "sqr", "s&h", "rand", "step8", "step16")

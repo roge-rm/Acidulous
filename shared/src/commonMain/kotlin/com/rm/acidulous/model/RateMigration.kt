@@ -10,9 +10,15 @@ import kotlin.math.roundToInt
  * knob, a lane's points, a step lock) to the same rate on the new list.
  */
 internal object RateMigration {
-    /** The song and patch versions that have the seventeen. */
-    const val SONG_VERSION = 2
-    const val PATCH_VERSION = 2
+    /**
+     * The song and patch versions saved today: 2 has the seventeen rates and
+     * 3 the 32 wavetables ([TableMigration]). [song] and [patch] bring an
+     * older one up through both.
+     */
+    const val SONG_VERSION = 3
+    const val PATCH_VERSION = 3
+    /** The first song and patch version with the seventeen. */
+    private const val RATES_VERSION = 2
 
     /** Where each of the old eight is on the new list. */
     private val OLD_TO_NEW = intArrayOf(2, 5, 8, 11, 13, 14, 15, 16)
@@ -52,9 +58,14 @@ internal object RateMigration {
     private fun lane(convert: (Float) -> Float, lane: Lane): Lane =
         lane.copy(points = lane.points.map { if (it.value == LANE_BASE) it else it.copy(value = convert(it.value)) })
 
-    /** [song] with its rates on the seventeen, if it was saved with the eight. */
+    /** [song] on today's rates and wavetables, if it was saved before them. */
     fun song(song: Song): Song {
         if (song.version >= SONG_VERSION) return song
+        val rated = if (song.version >= RATES_VERSION) song else rates(song)
+        return TableMigration.song(rated).copy(version = SONG_VERSION)
+    }
+
+    private fun rates(song: Song): Song {
         val master = song.master.copy(sends = song.master.sends.map(::slot), inserts = song.master.inserts.map(::slot))
         val input = song.input.map(::slot)
         // A lane's unit is the track's machine, one of its effects, or a
@@ -83,11 +94,14 @@ internal object RateMigration {
                 },
             )
         }
-        return song.copy(version = SONG_VERSION, master = master, input = input, tracks = tracks)
+        return song.copy(master = master, input = input, tracks = tracks)
     }
 
-    /** A patch saved with the eight, on the seventeen. */
-    fun patch(patch: Patch): Patch =
-        if (patch.version >= PATCH_VERSION) patch
-        else patch.copy(params = params(patch.machine.removePrefix("fx."), patch.params), version = PATCH_VERSION)
+    /** A patch saved before today's rates and wavetables, on them. */
+    fun patch(patch: Patch): Patch {
+        if (patch.version >= PATCH_VERSION) return patch
+        val rated = if (patch.version >= RATES_VERSION) patch
+        else patch.copy(params = params(patch.machine.removePrefix("fx."), patch.params))
+        return TableMigration.patch(rated).copy(version = PATCH_VERSION)
+    }
 }

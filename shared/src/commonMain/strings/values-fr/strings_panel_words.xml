@@ -121,7 +121,7 @@
     <string name="pw_bongo">bongo</string>
     <string name="pw_bossa">bossa</string>
     <string name="pw_both">les deux</string>
-    <string name="pw_bow">archet</string>
+    <string name="pw_bow">Archet</string>
     <string name="pw_bowed">frottés</string>
     <string name="pw_bowl">bol</string>
     <string name="pw_bp">BP</string>
@@ -129,7 +129,7 @@
     <string name="pw_bp12">BP12</string>
     <string name="pw_bp6">BP6</string>
     <string name="pw_brake">frein</string>
-    <string name="pw_brass">laiton</string>
+    <string name="pw_brass">Cuivre</string>
     <string name="pw_brassiness">cuivré</string>
     <string name="pw_breath">souffle</string>
     <string name="pw_bridge">chevalet</string>
@@ -165,9 +165,9 @@
     <string name="pw_chiff">chiff</string>
     <string name="pw_chikari">chikari</string>
     <string name="pw_chimes">cloches</string>
-    <string name="pw_chip">puce</string>
+    <string name="pw_chip">Puce</string>
     <string name="pw_chirp">gazouillis</string>
-    <string name="pw_choir">chœur</string>
+    <string name="pw_choir">Chœur</string>
     <string name="pw_choke">étouffe</string>
     <string name="pw_chop_on_the_clock">hacher au rythme du compteur</string>
     <string name="pw_chord">Chord</string>
@@ -221,7 +221,7 @@
     <string name="pw_crossing">traversée</string>
     <string name="pw_crotales">crotales</string>
     <string name="pw_crunch">crunch</string>
-    <string name="pw_crush">écraser</string>
+    <string name="pw_crush">Écrasé</string>
     <string name="pw_crush_it_with_knob_a">écrasé par le bouton a</string>
     <string name="pw_cuica">cuíca</string>
     <string name="pw_cup">creux</string>
@@ -492,7 +492,7 @@
     <string name="pw_hits">frappes</string>
     <string name="pw_hold">tenir</string>
     <string name="pw_holes">trous</string>
-    <string name="pw_hollow">creux</string>
+    <string name="pw_hollow">Creux</string>
     <string name="pw_hollowbody">demi-caisse</string>
     <string name="pw_honky_tonk">honky-tonk</string>
     <string name="pw_honour">respecter</string>
@@ -658,7 +658,7 @@
     <string name="pw_melodica">melodica</string>
     <string name="pw_membrane">membrane</string>
     <string name="pw_memory">mémoire</string>
-    <string name="pw_metal">métal</string>
+    <string name="pw_metal">Métal</string>
     <string name="pw_mic">mic</string>
     <string name="pw_mics">mics</string>
     <string name="pw_mid">médium</string>
@@ -704,7 +704,7 @@
     <string name="pw_mute_lane">muet</string>
     <string name="pw_muted">étouffé</string>
     <string name="pw_n">n</string>
-    <string name="pw_nasal">nasal</string>
+    <string name="pw_nasal">Nasal</string>
     <string name="pw_natural">naturel</string>
     <string name="pw_near">proche</string>
     <string name="pw_nearest">plus proche</string>
@@ -809,7 +809,7 @@
     <string name="pw_playing">jeu</string>
     <string name="pw_plays_at">joue au</string>
     <string name="pw_play_now">jouez</string>
-    <string name="pw_pluck">pincer</string>
+    <string name="pw_pluck">Pincé</string>
     <string name="pw_plucked">pincé</string>
     <string name="pw_pollen">pollen</string>
     <string name="pw_pollination">pollinisation</string>
@@ -872,7 +872,7 @@
     <string name="pw_rchance">proba rép.</string>
     <string name="pw_read_from">lit depuis</string>
     <string name="pw_rect">redr.</string>
-    <string name="pw_reed">anche</string>
+    <string name="pw_reed">Anche</string>
     <string name="pw_reeds">anches</string>
     <string name="pw_reedy">anché</string>
     <string name="pw_reggae">reggae</string>
@@ -885,7 +885,7 @@
     <string name="pw_repluck">repincer</string>
     <string name="pw_res">rés.</string>
     <string name="pw_reset">réinit.</string>
-    <string name="pw_reso">rés.</string>
+    <string name="pw_reso">Réso</string>
     <string name="pw_resonance">résonance</string>
     <string name="pw_resonator">Resonator</string>
     <string name="pw_response">réponse</string>
@@ -1043,7 +1043,7 @@
     <string name="pw_square">carré</string>
     <string name="pw_squash">écraser</string>
     <string name="pw_squeeze">serrer</string>
-    <string name="pw_stack">étage</string>
+    <string name="pw_stack">Pile</string>
     <string name="pw_stages">étages</string>
     <string name="pw_stairs">escalier</string>
     <string name="pw_start">début</string>
@@ -1097,7 +1097,7 @@
     <string name="pw_swing">swing</string>
     <string name="pw_syllables">syllabes</string>
     <string name="pw_sympathy">sympathie</string>
-    <string name="pw_sync">sync</string>
+    <string name="pw_sync">Synchro</string>
     <string name="pw_sync1">sync1</string>
     <string name="pw_sync2">sync2</string>
     <string name="pw_sync3">sync3</string>
@@ -1141,7 +1141,7 @@
     <string name="pw_thumb">pouce</string>
     <string name="pw_thunder">tonnerre</string>
     <string name="pw_tight">serré</string>
-    <string name="pw_tilt">pente</string>
+    <string name="pw_tilt">Penché</string>
     <string name="pw_timbre">timbre</string>
     <string name="pw_time">temps</string>
     <string name="pw_times">fois</string>
@@ -1290,4 +1290,28 @@
     <string name="pw_horn_bd6ad7">pavillon</string>
     <string name="pw_formula_be121f">formule</string>
     <string name="pw_glass_170fd7">verre</string>
+    <string name="pw_hollow_89f0ef">creux</string>
+    <string name="pw_even">Pair</string>
+    <string name="pw_round">Rond</string>
+    <string name="pw_sync_6b387c">sync</string>
+    <string name="pw_twin">Jumeau</string>
+    <string name="pw_reso_3a898c">rés.</string>
+    <string name="pw_index">Indice</string>
+    <string name="pw_reed_f5cabf">anche</string>
+    <string name="pw_bent">Courbé</string>
+    <string name="pw_ping">Ping</string>
+    <string name="pw_crush_54eda0">écraser</string>
+    <string name="pw_stair">Escalier</string>
+    <string name="pw_choir_dec848">chœur</string>
+    <string name="pw_nasal_be5900">nasal</string>
+    <string name="pw_bow_fa5bd3">archet</string>
+    <string name="pw_brass_80c48f">laiton</string>
+    <string name="pw_dust">Poussière</string>
+    <string name="pw_metal_4963bb">métal</string>
+    <string name="pw_chip_c6b6df">puce</string>
+    <string name="pw_spiral">Spirale</string>
+    <string name="pw_tilt_fc9879">pente</string>
+    <string name="pw_prime">Premier</string>
+    <string name="pw_stack_b26dc7">étage</string>
+    <string name="pw_pluck_07542a">pincer</string>
 </resources>

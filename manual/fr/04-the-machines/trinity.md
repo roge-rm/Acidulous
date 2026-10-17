@@ -10,6 +10,13 @@ filtres avec une matrice de modulation par-dessus.
 Chaque oscillateur joue une table d’ondes, une rangée de formes d’onde que
 **pos** parcourt. Automatisez **pos** pour balayer le timbre.
 
+**onde** choisit dent de scie, carré, triangle ou sinus, ou l’une des 32 tables
+d’ondes de huit formes chacune : des tables additives simples (Creux, Pile,
+Pair), des balayages de filtre et de synchro (Réso, Synchro), des formes FM et
+courbées (Indice, Anche, Courbé), des voix (Voyelle, Chœur, Nasal), des
+instruments (Archet, Cuivre, Pincé, Orgue, Cloche) et des tables numériques et
+étranges (Écrasé, Escalier, Puce, Poussière, Spirale).
+
 - **densité** empile des copies de l’oscillateur, **désaccord** les écarte et
   **dérive** fait errer un peu chaque copie. C’est ainsi qu’on obtient un gros
   son de supersaw.

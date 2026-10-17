@@ -10,6 +10,12 @@ with a modulation matrix on top.
 Each oscillator plays a wavetable, a row of waveshapes that **pos** moves
 through. Automate **pos** to sweep the tone.
 
+**wave** picks saw, square, triangle or sine, or one of 32 wavetables of eight
+shapes each: plain additive ones (Hollow, Stack, Even), filter and sync sweeps
+(Reso, Sync), FM and bent shapes (Index, Reed, Bent), voices (Vowel, Choir,
+Nasal), instruments (Bow, Brass, Pluck, Organ, Bell) and digital and strange
+ones (Crush, Stair, Chip, Dust, Spiral).
+
 - **density** stacks copies of the oscillator, **detune** spreads them out and
   **drift** makes each copy wander a little. This is how you get a big
   supersaw sound.

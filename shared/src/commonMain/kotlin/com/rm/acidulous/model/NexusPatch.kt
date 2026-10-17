@@ -44,9 +44,12 @@ data class NexusPatch(
      */
     val texts: Map<Int, String> = emptyMap(),
 ) {
-    /** What the engine is asked to build. Cable order fixes which depth parameters apply. */
+    /**
+     * What the engine is asked to build. Cable order fixes which depth
+     * parameters apply. Version 2 has the 32 wavetables ([TableMigration]).
+     */
     fun encode(): String = buildString {
-        append("v|1\n")
+        append("v|2\n")
         modules.sortedBy { it.slot }.forEach {
             append("m|%02d|%s|%s\n".format(it.slot, it.type, if (it.poly) "poly" else "mono"))
         }

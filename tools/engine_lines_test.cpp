@@ -107,7 +107,7 @@ const int kCallCount = sizeof kCalls / sizeof kCalls[0];
 } // namespace acidulous::lines
 
 int main() {
-    const std::string text = R"(acidulous-engine 1
+    const std::string text = R"(acidulous-engine 2
 # comment
 Str "a \"q\" \\ \n\t\x01\x00z"
 Str null
@@ -180,6 +180,37 @@ F 1 2 3 4 5
     Replay other;
     other.env = &env;
     other.log = [](const std::string &) {};
-    check(!acidulous::lines::replay("acidulous-engine 2\nStr \"x\"\n", other), "another version is refused");
+    check(!acidulous::lines::replay("acidulous-engine 3\nStr \"x\"\n", other), "another version is refused");
+
+    // Version 1 lines: Trinity's waves were over 12 steps and Nexus's wtosc
+    // tables over 8. Each must land on the same wave or table.
+    Replay u;
+    u.version = 1;
+    u.noteTables("LoadNexusPatch 3 \"v|1\\nm|01|wtosc|poly\\nm|02|osc|poly\"");
+    u.upgradeLine("MountMachine 2 \"Trinity\"");
+    u.upgradeLine("MountMachine 3 \"Nexus\"");
+    auto f9 = [](double v) { char b[32]; std::snprintf(b, sizeof b, "%.9g", static_cast<double>(static_cast<float>(v))); return std::string(b); };
+    const std::pair<std::string, std::string> upgrades[] = {
+        {"SetParam 2 \"machine\" \"o1_wave\" 0.6363636 false 0", "SetParam 2 \"machine\" \"o1_wave\" " + f9(7.0 / 35.0) + " false 0"},
+        {"SetParam 2 \"machine\" \"o3_wave\" 1.0 false 0", "SetParam 2 \"machine\" \"o3_wave\" " + f9(11.0 / 35.0) + " false 0"},
+        {"SetParam 2 \"machine\" \"o1_pos\" 0.5 false 0", "SetParam 2 \"machine\" \"o1_pos\" 0.5 false 0"},
+        {"SetParam 2 \"effect1\" \"o1_wave\" 0.5 false 0", "SetParam 2 \"effect1\" \"o1_wave\" 0.5 false 0"},
+        {"SetParam 3 \"machine\" \"s01_p1\" 0.3 false 0", "SetParam 3 \"machine\" \"s01_p1\" " + f9(2.5 / 32.0) + " false 0"},
+        {"SetParam 3 \"machine\" \"s02_p1\" 0.3 false 0", "SetParam 3 \"machine\" \"s02_p1\" 0.3 false 0"},
+        {"SetParam 3 \"machine\" \"s01_p2\" 0.3 false 0", "SetParam 3 \"machine\" \"s01_p2\" 0.3 false 0"},
+        {"SnapshotSetLane @0 2 1 \"Trinity\" \"machine\" \"o2_wave\" false f[4: 0.0 0.27272728 1536.0 -1.0]",
+         "SnapshotSetLane @0 2 1 \"Trinity\" \"machine\" \"o2_wave\" false f[4: 0.0 " + f9(3.0 / 35.0) + " 1536.0 -1.0]"},
+        {"SnapshotSetLane @0 3 1 \"Nexus\" \"machine\" \"s01_p1\" true f[2: 0.0 0.99]",
+         "SnapshotSetLane @0 3 1 \"Nexus\" \"machine\" \"s01_p1\" true f[2: 0.0 " + f9(7.5 / 32.0) + "]"},
+        {"SnapshotSetLane @0 2 1 \"Trinity\" \"machine\" \"o2_wave\" false f[0:]",
+         "SnapshotSetLane @0 2 1 \"Trinity\" \"machine\" \"o2_wave\" false f[0:]"},
+    };
+    for (const auto &[in, want] : upgrades) {
+        const std::string got = u.upgradeLine(in);
+        check(got == want, "upgrade " + in + (got == want ? "" : "   got " + got));
+    }
+    u.upgradeLine("UnmountMachine 2");
+    check(u.upgradeLine("SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0") == "SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0",
+          "an unmounted rack is left alone");
     return fail;
 }
