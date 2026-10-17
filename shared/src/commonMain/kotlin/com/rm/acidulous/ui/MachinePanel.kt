@@ -1938,12 +1938,12 @@ private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
     // Too many groups for one row, so sections pick which groups show. Inside a
     // section it's the usual Group row.
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("play", "osc", "mix", "filter", "env", "lfo", "mod", "macros", "voice"), section, { section = it }) { sec ->
+    PanelSections(listOf("osc", "mix", "filter", "env", "lfo", "mod", "macros", "voice", "play"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> Group("play") {
+            8 -> Group("play") {
                 for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
             }
-            1 -> for (o in 1..3) key(o) { Group("osc $o") {
+            0 -> for (o in 1..3) key(o) { Group("osc $o") {
                 val p = "o${o}_"
                 PanelStepKnob(b, p + "wave", TRINITY_WAVES, "wave", PanelAmber)
                 PanelKnob(b, p + "pos", "pos", PanelAmber)
@@ -1958,12 +1958,12 @@ private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 PanelKnob(b, p + "drift", "drift")
                 PanelKnob(b, p + "level", "level")
             } }
-            2 -> {
+            1 -> {
                 Group("ring") { PanelKnob(b, "ring12", "1·2", PanelAmber); PanelKnob(b, "ring23", "2·3", PanelAmber) }
                 Group("fm") { PanelKnob(b, "fm21", "2→1", PanelAmber); PanelKnob(b, "fm32", "3→2", PanelAmber) }
                 Group("noise") { PanelKnob(b, "noise", "level"); PanelKnob(b, "noisecol", "colour") }
             }
-            3 -> {
+            2 -> {
                 Group("routing") { PanelSwitch(b, "route", listOf("serial", "para", "split")); PanelKnob(b, "balance", "balance") }
                 for (f in 1..2) key(f) { Group("filter $f") {
                     val p = "f${f}_"
@@ -1976,7 +1976,7 @@ private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelKnob(b, p + "key", "key")
                 } }
             }
-            4 -> for ((title, prefix) in TRINITY_ENVS) key(prefix) { Group(title) {
+            3 -> for ((title, prefix) in TRINITY_ENVS) key(prefix) { Group(title) {
                 PanelKnob(b, prefix + "_delay", "delay")
                 PanelKnob(b, prefix + "_attack", "attack", PanelAmber)
                 PanelKnob(b, prefix + "_decay", "decay", PanelAmber)
@@ -1984,7 +1984,7 @@ private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 PanelKnob(b, prefix + "_release", "release", PanelAmber)
                 PanelSwitch(b, prefix + "_repeat", listOf("once", "loop"), "repeat")
             } }
-            5 -> for (l in 1..3) key(l) { Group("lfo $l") {
+            4 -> for (l in 1..3) key(l) { Group("lfo $l") {
                 val p = "l${l}_"
                 PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                 PanelKnob(b, p + "rate", "rate", PanelAmber)
@@ -1995,14 +1995,14 @@ private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
                 PanelSwitch(b, p + "oneshot", listOf("cycle", "once"), "run")
             } }
-            6 -> for (m in 1..12) key(m) { Group("mod $m") {
+            5 -> for (m in 1..12) key(m) { Group("mod $m") {
                 val p = "m%02d_".format(m)
                 PanelStepKnob(b, p + "src", TRINITY_SOURCES, "from", PanelAmber)
                 PanelStepKnob(b, p + "src2", TRINITY_SOURCES, "× from")
                 PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
                 PanelKnob(b, p + "depth", "depth", PanelAmber)
             } }
-            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+            6 -> for (k in 1..8) key(k) { Group("macro $k") {
                 TextButton(onClick = { renaming = k }) {
                     Text(
                         macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
