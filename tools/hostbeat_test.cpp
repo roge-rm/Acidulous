@@ -426,6 +426,40 @@ void exportTest() {
     ok("the host still has the tempo after, at its own", srcHost == Transport::SyncHost &&
                                                              std::fabs(bpmHost - 127.0f) < 0.01f, d);
 }
+
+// An arp started in restart sync off the grid, then switched to free with the
+// key still held, plays its next steps on the grid.
+void syncSwitchTest() {
+    std::unique_ptr<InputMod> arp(InputModRegistry::create("Arp"));
+    arp->params().jump(modifier::Arp::Rate, 3.0f / 9.0f); // 1/4, normalised
+    arp->params().jumpAll();
+    Sink sink;
+    const int64_t block = 37, rate = kPPQN;
+    int64_t t = 1000 * block; // a key pressed off the grid
+    arp->handleMidi(0x90, 60, 100, sink);
+    auto runTo = [&](int64_t end) {
+        for (; t < end; t += block) { sink.tick = t; arp->run(t, t + block, 120.0f, sink); }
+    };
+    runTo(t + 4 * rate);
+    const int64_t restartPhase = sink.events.empty() ? -1 : sink.events.front().tick % rate;
+    arp->params().jump(modifier::Arp::Sync, 1.0f); // free
+    arp->params().jumpAll();
+    const size_t from = sink.events.size();
+    runTo(t + 8 * rate);
+    int64_t ons = 0, worst = 0;
+    for (size_t i = from; i < sink.events.size(); ++i) {
+        const auto &ev = sink.events[i];
+        if ((ev.status & 0xf0) != 0x90) continue;
+        ++ons;
+        // An event comes out in the block that holds its tick.
+        const int64_t gridTick = ((ev.tick + rate - 1) / rate) * rate;
+        worst = std::max(worst, gridTick - ev.tick >= block ? gridTick - ev.tick : int64_t(0));
+    }
+    char d[96];
+    std::snprintf(d, sizeof d, "restart phase %lld, %lld notes after, worst %lld ticks", static_cast<long long>(restartPhase),
+                  static_cast<long long>(ons), static_cast<long long>(worst));
+    ok("restart to free with a key held moves onto the grid", restartPhase != 0 && ons >= 6 && worst == 0, d);
+}
 } // namespace
 
 int main() {
@@ -440,6 +474,7 @@ int main() {
     stoppedTest(90.0, 1.37);
     stoppedTest(140.0, 2.81);
     exportTest();
+    syncSwitchTest();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
