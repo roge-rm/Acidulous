@@ -300,94 +300,271 @@ internal object FactoryBanks {
         family = "sub",
         low = 36, high = 67)
 
-    private fun reflux38() = Patch("Reflux", "Wasp",
-        mapOf("cutoff" to 0.6673927f, "resonance" to 0.88f, "envmod" to 0.4f, "decay" to 0.389075637f, "accent" to 0.55f, "slide" to 0.451545f, "volume" to 0.5f),
+    private fun reflux38() = Patch("Reflux", "Warm Drive",
+        mapOf("cutoff" to 0.412248433f, "resonance" to 0.65f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.520696342f, "drive" to 0.5f, "volume" to 0.62f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Drive", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55)
+
+    private fun reflux39() = Patch("Reflux", "Grit",
+        mapOf("cutoff" to 0.39470154f, "resonance" to 0.7f, "envmod" to 0.65f, "decay" to 0.44230327f, "accent" to 0.8f, "slide" to 0.5f, "drive" to 0.4f, "volume" to 0.653333366f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Drive", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("tone" to 0.618699849f, "mix" to 0.5f, "mode" to 1f, "gain" to 0.4375f))))
+
+    private fun reflux40() = Patch("Reflux", "Rasp",
+        mapOf("cutoff" to 0.5810506f, "resonance" to 0.5f, "envmod" to 0.3f, "decay" to 0.411954373f, "slide" to 0.477121264f, "drive" to 0.7f, "volume" to 0.613333344f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.25f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Clean", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55)
+
+    private fun reflux41() = Patch("Reflux", "Wasp",
+        mapOf("cutoff" to 0.6673927f, "resonance" to 0.88f, "envmod" to 0.4f, "decay" to 0.389075637f, "accent" to 0.55f, "slide" to 0.451545f, "volume" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Drive", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "dirty",
         low = 36, high = 67)
 
-    private fun reflux39() = Patch("Reflux", "Buzzsaw",
+    private fun reflux42() = Patch("Reflux", "Crunch",
+        mapOf("wave" to 1f, "cutoff" to 0.4243444f, "resonance" to 0.75f, "envmod" to 0.7f, "decay" to 0.411954373f, "accent" to 0.85f, "slide" to 0.477121264f, "drive" to 0.3f, "volume" to 0.5933333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Drive", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.436294526f, "tone" to 0.6456324f, "mix" to 0.6f, "mode" to 0.333333343f, "gain" to 0.395833343f))))
+
+    private fun reflux43() = Patch("Reflux", "Tube Acid",
+        mapOf("cutoff" to 0.369967341f, "resonance" to 0.82f, "envmod" to 0.75f, "decay" to 0.460409373f, "accent" to 0.85f, "drive" to 0.6f, "volume" to 0.626666665f, "mix" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Drive", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.563705444f, "tone" to 0.588591933f, "mix" to 0.7f, "mode" to 1f, "gain" to 0.416666657f))))
+
+    private fun reflux44() = Patch("Reflux", "Screamer",
+        mapOf("cutoff" to 0.480530232f, "resonance" to 0.8f, "envmod" to 0.75f, "decay" to 0.451545f, "accent" to 0.8f, "slide" to 0.477121264f, "drive" to 1f, "volume" to 0.58f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.25f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Clean", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55)
+
+    private fun reflux45() = Patch("Reflux", "Buzzsaw",
         mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 0.6066667f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.6f, "mac2_d1" to 0.125f, "mac2_a1" to 0.75f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.0625f, "mac4_a1" to 0.575f, "mac4_a2" to 0.45f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
         mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Grit", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "dirty",
         low = 24, high = 55)
 
-    private fun reflux40() = Patch("Reflux", "Screamer",
-        mapOf("cutoff" to 0.480530232f, "resonance" to 0.8f, "envmod" to 0.75f, "decay" to 0.451545f, "accent" to 0.8f, "slide" to 0.477121264f, "drive" to 1f, "volume" to 0.58f),
-        family = "dirty",
-        low = 24, high = 55)
-
-    private fun reflux41() = Patch("Reflux", "Grind",
-        mapOf("cutoff" to 0.273177415f, "resonance" to 0.4f, "envmod" to 0.35f, "decay" to 0.650515f, "drive" to 0.9f, "volume" to 0.653333366f, "sub" to 0.4f),
+    private fun reflux46() = Patch("Reflux", "Grind",
+        mapOf("cutoff" to 0.273177415f, "resonance" to 0.4f, "envmod" to 0.35f, "decay" to 0.650515f, "drive" to 0.9f, "volume" to 0.653333366f, "sub" to 0.4f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.25f, "mac5_d1" to 0.625f, "mac5_a1" to 0.35f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Clean", "macro5" to "Body", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "dirty",
         low = 24, high = 48)
 
-    private fun reflux42() = Patch("Reflux", "Rasp",
-        mapOf("cutoff" to 0.5810506f, "resonance" to 0.5f, "envmod" to 0.3f, "decay" to 0.411954373f, "slide" to 0.477121264f, "drive" to 0.7f, "volume" to 0.613333344f),
+    private fun reflux47() = Patch("Reflux", "Folded",
+        mapOf("cutoff" to 0.353257328f, "resonance" to 0.6f, "envmod" to 0.8f, "decay" to 0.4850184f, "accent" to 0.8f, "slide" to 0.5f, "drive" to 0.3f, "volume" to 0.5266667f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Drive", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "dirty",
-        low = 24, high = 55)
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.297817349f, "tone" to 0.6922378f, "mix" to 0.7f, "mode" to 0.6666667f))))
 
-    private fun reflux43() = Patch("Reflux", "Long Sweep",
-        mapOf("cutoff" to 0.26369825f, "resonance" to 0.72f, "envmod" to 0.95f, "decay" to 0.863499343f, "accent" to 0.45f, "drive" to 0.15f, "volume" to 0.6066667f),
+    private fun reflux48() = Patch("Reflux", "Crushed",
+        mapOf("cutoff" to 0.442816436f, "resonance" to 0.72f, "envmod" to 0.65f, "decay" to 0.451545f, "accent" to 0.8f, "slide" to 0.5f, "drive" to 0.35f, "volume" to 0.5933333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Drive", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Bitcrusher", mapOf("bits" to 0.333333343f, "rate" to 0.63324964f, "tone" to 0.7500248f, "mix" to 0.7f))))
+
+    private fun reflux49() = Patch("Reflux", "Shredder",
+        mapOf("cutoff" to 0.474781454f, "resonance" to 0.8f, "envmod" to 0.7f, "decay" to 0.432650715f, "accent" to 0.9f, "slide" to 0.477121264f, "drive" to 0.9f, "volume" to 0.56f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.25f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Clean", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "dirty",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("tone" to 0.7316421f, "mix" to 0.8f, "mode" to 0.6666667f, "gain" to 0.4375f)), UnitSlot("Bitcrusher", mapOf("bits" to 0.266666681f, "rate" to 0.5781893f, "jitter" to 0.3f, "tone" to 0.713319659f, "mix" to 0.5f))))
+
+    private fun reflux50() = Patch("Reflux", "Talk",
+        mapOf("cutoff" to 0.480530232f, "resonance" to 0.6f, "envmod" to 1f, "decay" to 0.5271788f, "accent" to 0.7f, "slide" to 0.573064f, "volume" to 0.566666663f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "motion",
         low = 24, high = 55)
 
-    private fun reflux44() = Patch("Reflux", "Slide Line",
+    private fun reflux51() = Patch("Reflux", "Snap Back",
+        mapOf("cutoff" to 0.2821703f, "resonance" to 0.75f, "envmod" to 1f, "decay" to 0.282135725f, "accent" to 0.8f, "slide" to 0.7781513f, "drive" to 0.15f, "volume" to 0.613333344f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55)
+
+    private fun reflux52() = Patch("Reflux", "Wah",
+        mapOf("cutoff" to 0.328168571f, "resonance" to 0.85f, "envmod" to 0.8f, "decay" to 0.6194411f, "accent" to 1f, "drive" to 0.15f, "volume" to 0.56f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55)
+
+    private fun reflux53() = Patch("Reflux", "Slide Line",
         mapOf("cutoff" to 0.39470154f, "resonance" to 0.68f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.9621396f, "drive" to 0.14f, "volume" to 0.5933333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.3f),
         mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Tight"),
         family = "motion",
         low = 24, high = 55)
 
-    private fun reflux45() = Patch("Reflux", "Crawl",
-        mapOf("cutoff" to 0.192611188f, "resonance" to 0.7f, "envmod" to 0.85f, "decay" to 0.7821357f, "accent" to 0.4f, "slide" to 0.889075637f, "drive" to 0.12f, "volume" to 0.880000055f),
+    private fun reflux54() = Patch("Reflux", "Long Glide",
+        mapOf("wave" to 1f, "cutoff" to 0.3802834f, "resonance" to 0.6f, "envmod" to 0.55f, "decay" to 0.533473432f, "slide" to 0.849485f, "volume" to 0.4333333f, "pw" to 0.444444418f, "filter" to 0.333333343f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55)
+
+    private fun reflux55() = Patch("Reflux", "Glide Echo",
+        mapOf("cutoff" to 0.412248433f, "resonance" to 0.7f, "envmod" to 0.6f, "accent" to 0.7f, "slide" to 0.80103f, "drive" to 0.15f, "volume" to 0.54f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.5714286f, "feedback" to 0.368421048f, "tone" to 0.562381864f, "mix" to 0.25f))),
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun reflux56() = Patch("Reflux", "Long Sweep",
+        mapOf("cutoff" to 0.26369825f, "resonance" to 0.72f, "envmod" to 0.95f, "decay" to 0.863499343f, "accent" to 0.45f, "drive" to 0.15f, "volume" to 0.6066667f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55)
+
+    private fun reflux57() = Patch("Reflux", "Crawl",
+        mapOf("cutoff" to 0.192611188f, "resonance" to 0.7f, "envmod" to 0.85f, "decay" to 0.7821357f, "accent" to 0.4f, "slide" to 0.889075637f, "drive" to 0.12f, "volume" to 0.880000055f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "motion",
         low = 24, high = 48)
 
-    private fun reflux46() = Patch("Reflux", "Talk",
-        mapOf("cutoff" to 0.480530232f, "resonance" to 0.6f, "envmod" to 1f, "decay" to 0.5271788f, "accent" to 0.7f, "slide" to 0.573064f, "volume" to 0.566666663f),
+    private fun reflux58() = Patch("Reflux", "Breathing",
+        mapOf("cutoff" to 0.353257328f, "resonance" to 0.65f, "envmod" to 0.35f, "decay" to 0.562469363f, "drive" to 0.12f, "volume" to 0.613333344f, "sub" to 0.2f, "lfo_sync" to 0.8235294f, "lfo_cut" to 0.675f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Depth", "macro8" to "Glide"),
         family = "motion",
         low = 24, high = 55)
 
-    private fun reflux47() = Patch("Reflux", "Siren",
-        mapOf("cutoff" to 0.13215296f, "resonance" to 0.9f, "envmod" to 1f, "decay" to 0.9689261f, "accent" to 0.35f, "slide" to 0.60205996f, "drive" to 0.14f, "volume" to 0.62f),
+    private fun reflux59() = Patch("Reflux", "Pulse Sweep",
+        mapOf("wave" to 1f, "cutoff" to 0.442816436f, "decay" to 0.533473432f, "volume" to 0.50666666f, "lfo_sync" to 0.882352948f, "lfo_shape" to 0.25f, "lfo_pw" to 0.95f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 1f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Depth", "macro8" to "Glide"),
         family = "motion",
         low = 24, high = 55)
 
-    private fun reflux48() = Patch("Reflux", "Octave Down",
-        mapOf("tune" to 0f, "cutoff" to 0.353257328f, "resonance" to 0.5f, "envmod" to 0.45f, "decay" to 0.573064f, "accent" to 0.5f, "volume" to 0.706666648f, "sub" to 0.55f),
+    private fun reflux60() = Patch("Reflux", "Tide",
+        mapOf("cutoff" to 0.298880249f, "resonance" to 0.82f, "envmod" to 0.45f, "accent" to 0.7f, "drive" to 0.15f, "volume" to 0.566666663f, "lfo_sync" to 0.9411765f, "lfo_shape" to 0.25f, "lfo_cut" to 0.75f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Depth", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun reflux61() = Patch("Reflux", "Siren",
+        mapOf("cutoff" to 0.13215296f, "resonance" to 0.9f, "envmod" to 1f, "decay" to 0.9689261f, "accent" to 0.35f, "slide" to 0.60205996f, "drive" to 0.14f, "volume" to 0.62f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55)
+
+    private fun reflux62() = Patch("Reflux", "Drift",
+        mapOf("cutoff" to 0.39470154f, "resonance" to 0.7f, "envmod" to 0.55f, "accent" to 0.65f, "slide" to 0.627636254f, "drive" to 0.12f, "volume" to 0.5933333f, "lfo_rate" to 0.4404695f, "lfo_shape" to 1f, "lfo_cut" to 0.675f, "lfo_pitch" to 0.504f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Depth", "macro8" to "Glide"),
+        family = "motion",
+        low = 24, high = 55)
+
+    private fun reflux63() = Patch("Reflux", "Octave Down",
+        mapOf("tune" to 0f, "cutoff" to 0.353257328f, "resonance" to 0.5f, "envmod" to 0.45f, "decay" to 0.573064f, "accent" to 0.5f, "volume" to 0.706666648f, "sub" to 0.55f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.25f, "mac3_a1" to 0.65f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_a1" to 0.35f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Sweep", "macro4" to "Bite", "macro5" to "Body", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "motion",
         low = 36, high = 60)
 
-    private fun reflux49() = Patch("Reflux", "Wub",
-        mapOf("cutoff" to 0.328168571f, "resonance" to 0.6f, "envmod" to 0.2f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.3f, "volume" to 0.7f, "sub" to 0.3f, "lfo_sync" to 0.3529412f, "lfo_retrig" to 1f, "lfo_cut" to 0.8f),
+    private fun reflux64() = Patch("Reflux", "Slow Wob",
+        mapOf("cutoff" to 0.3141353f, "resonance" to 0.6f, "envmod" to 0.2f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.3f, "volume" to 0.673333347f, "sub" to 0.3f, "lfo_sync" to 0.7058824f, "lfo_cut" to 0.8f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
         family = "wobble",
         low = 24, high = 55)
 
-    private fun reflux50() = Patch("Reflux", "Band Squelch",
+    private fun reflux65() = Patch("Reflux", "Wub",
+        mapOf("cutoff" to 0.328168571f, "resonance" to 0.6f, "envmod" to 0.2f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.3f, "volume" to 0.7f, "sub" to 0.3f, "lfo_sync" to 0.3529412f, "lfo_retrig" to 1f, "lfo_cut" to 0.8f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux66() = Patch("Reflux", "Quarter Wob",
+        mapOf("cutoff" to 0.3212923f, "resonance" to 0.65f, "envmod" to 0.2f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.3f, "volume" to 0.6933333f, "sub" to 0.3f, "lfo_sync" to 0.5294118f, "lfo_shape" to 0.25f, "lfo_retrig" to 1f, "lfo_cut" to 0.8f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux67() = Patch("Reflux", "Triplet Wob",
+        mapOf("cutoff" to 0.328168571f, "resonance" to 0.6f, "envmod" to 0.2f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.3f, "volume" to 0.6933333f, "sub" to 0.3f, "lfo_sync" to 0.235294119f, "lfo_retrig" to 1f, "lfo_cut" to 0.775f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux68() = Patch("Reflux", "Saw Wob",
+        mapOf("cutoff" to 0.328168571f, "resonance" to 0.65f, "envmod" to 0.15f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.3f, "volume" to 0.686666667f, "sub" to 0.25f, "lfo_sync" to 0.5294118f, "lfo_shape" to 0.75f, "lfo_retrig" to 1f, "lfo_cut" to 0.8f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux69() = Patch("Reflux", "Chop",
+        mapOf("cutoff" to 0.353257328f, "envmod" to 0.15f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.25f, "volume" to 0.686666667f, "sub" to 0.2f, "lfo_sync" to 0.1764706f, "lfo_shape" to 0.5f, "lfo_cut" to 0.75f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux70() = Patch("Reflux", "Triplet Chop",
+        mapOf("cutoff" to 0.364572376f, "resonance" to 0.6f, "envmod" to 0.15f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.25f, "volume" to 0.686666667f, "sub" to 0.2f, "lfo_sync" to 0.117647059f, "lfo_shape" to 0.5f, "lfo_retrig" to 1f, "lfo_cut" to 0.75f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux71() = Patch("Reflux", "PWM Wob",
+        mapOf("wave" to 1f, "cutoff" to 0.474781454f, "resonance" to 0.45f, "envmod" to 0.25f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.2f, "volume" to 0.5466667f, "sub" to 0.25f, "lfo_sync" to 0.4117647f, "lfo_shape" to 0.25f, "lfo_cut" to 0.6f, "lfo_pw" to 0.95f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 1f, "mac4_a1" to 0.6f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux72() = Patch("Reflux", "Random Steps",
+        mapOf("cutoff" to 0.3802834f, "resonance" to 0.7f, "envmod" to 0.2f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.25f, "volume" to 0.6666667f, "sub" to 0.2f, "lfo_sync" to 0.1764706f, "lfo_shape" to 1f, "lfo_cut" to 0.8f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux73() = Patch("Reflux", "Warble",
+        mapOf("cutoff" to 0.412248433f, "resonance" to 0.5f, "envmod" to 0.3f, "decay" to 0.7129844f, "accent" to 0.5f, "drive" to 0.2f, "volume" to 0.7733333f, "sub" to 0.2f, "lfo_sync" to 0.3529412f, "lfo_retrig" to 1f, "lfo_cut" to 0.575f, "lfo_pitch" to 0.51f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.9375f, "mac4_a1" to 0.51f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Chorus", mapOf("depth" to 0.4f, "mix" to 0.3f))))
+
+    private fun reflux74() = Patch("Reflux", "Trill",
+        mapOf("cutoff" to 0.442816436f, "envmod" to 0.3f, "decay" to 0.7129844f, "accent" to 0.5f, "drive" to 0.2f, "volume" to 0.626666665f, "lfo_sync" to 0.1764706f, "lfo_shape" to 0.5f, "lfo_pitch" to 0.54165f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux75() = Patch("Reflux", "Growl",
+        mapOf("cutoff" to 0.34116134f, "resonance" to 0.75f, "envmod" to 0.2f, "decay" to 0.7385606f, "drive" to 0.6f, "volume" to 0.5933333f, "pw" to 0.3888889f, "sub" to 0.25f, "mix" to 0.5f, "lfo_sync" to 0.235294119f, "lfo_shape" to 0.75f, "lfo_retrig" to 1f, "lfo_cut" to 0.8f, "lfo_pw" to 0.75f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.625f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.625f, "mac4_d1" to 0.875f, "mac4_d2" to 1f, "mac4_a1" to 0.65f, "mac4_a2" to 0.6f, "mac5_d1" to 0.4375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.625f, "mac6_a1" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 1f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Rate", "macro4" to "Depth", "macro5" to "Bite", "macro6" to "Sub", "macro7" to "Blend", "macro8" to "Glide"),
+        family = "wobble",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.297817349f, "tone" to 0.6456324f, "mix" to 0.4f, "mode" to 1f))))
+
+    private fun reflux76() = Patch("Reflux", "Band Squelch",
         mapOf("cutoff" to 0.499284834f, "resonance" to 0.85f, "envmod" to 0.8f, "decay" to 0.30102998f, "accent" to 0.9f, "drive" to 0.55f, "volume" to 1f, "mode" to 1f),
         family = "band",
         low = 24, high = 55)
 
-    private fun reflux51() = Patch("Reflux", "Band Lead",
+    private fun reflux77() = Patch("Reflux", "Band Lead",
         mapOf("cutoff" to 0.588843942f, "resonance" to 0.93f, "envmod" to 0.45f, "decay" to 0.411954373f, "slide" to 0.627636254f, "drive" to 0.35f, "volume" to 0.84f, "mode" to 1f),
         family = "band",
         low = 36, high = 67)
 
-    private fun reflux52() = Patch("Reflux", "Ghost",
+    private fun reflux78() = Patch("Reflux", "Ghost",
         mapOf("cutoff" to 0.39470154f, "resonance" to 0.5f, "envmod" to 0.25f, "decay" to 0.8345034f, "accent" to 0.3f, "slide" to 0.7781513f, "volume" to 1f, "mode" to 1f),
         family = "band",
         low = 36, high = 67)
 
-    private fun reflux53() = Patch("Reflux", "Wide",
+    private fun reflux79() = Patch("Reflux", "Wide",
         mapOf("wave" to 1f, "cutoff" to 0.5458685f, "resonance" to 0.15f, "envmod" to 0.1f, "decay" to 0.6839884f, "accent" to 0.4f, "slide" to 0.5f, "drive" to 0.06f, "volume" to 0.68f, "sub" to 1f),
         family = "band",
         low = 24, high = 55)
 
-    private fun reflux54() = Patch("Reflux", "Notch Sweep",
+    private fun reflux80() = Patch("Reflux", "Notch Sweep",
         mapOf("cutoff" to 0.26369825f, "resonance" to 0.35f, "envmod" to 0.8f, "decay" to 0.650515f, "drive" to 0.2f, "volume" to 0.613333344f, "filter" to 1f),
         family = "filter",
         low = 24, high = 55)
 
-    private val reflux: List<Patch> by lazy { listOf(reflux0(), reflux1(), reflux2(), reflux3(), reflux4(), reflux5(), reflux6(), reflux7(), reflux8(), reflux9(), reflux10(), reflux11(), reflux12(), reflux13(), reflux14(), reflux15(), reflux16(), reflux17(), reflux18(), reflux19(), reflux20(), reflux21(), reflux22(), reflux23(), reflux24(), reflux25(), reflux26(), reflux27(), reflux28(), reflux29(), reflux30(), reflux31(), reflux32(), reflux33(), reflux34(), reflux35(), reflux36(), reflux37(), reflux38(), reflux39(), reflux40(), reflux41(), reflux42(), reflux43(), reflux44(), reflux45(), reflux46(), reflux47(), reflux48(), reflux49(), reflux50(), reflux51(), reflux52(), reflux53(), reflux54()) }
+    private val reflux: List<Patch> by lazy { listOf(reflux0(), reflux1(), reflux2(), reflux3(), reflux4(), reflux5(), reflux6(), reflux7(), reflux8(), reflux9(), reflux10(), reflux11(), reflux12(), reflux13(), reflux14(), reflux15(), reflux16(), reflux17(), reflux18(), reflux19(), reflux20(), reflux21(), reflux22(), reflux23(), reflux24(), reflux25(), reflux26(), reflux27(), reflux28(), reflux29(), reflux30(), reflux31(), reflux32(), reflux33(), reflux34(), reflux35(), reflux36(), reflux37(), reflux38(), reflux39(), reflux40(), reflux41(), reflux42(), reflux43(), reflux44(), reflux45(), reflux46(), reflux47(), reflux48(), reflux49(), reflux50(), reflux51(), reflux52(), reflux53(), reflux54(), reflux55(), reflux56(), reflux57(), reflux58(), reflux59(), reflux60(), reflux61(), reflux62(), reflux63(), reflux64(), reflux65(), reflux66(), reflux67(), reflux68(), reflux69(), reflux70(), reflux71(), reflux72(), reflux73(), reflux74(), reflux75(), reflux76(), reflux77(), reflux78(), reflux79(), reflux80()) }
 
     private fun trinity0() = Patch("Trinity", "Init", emptyMap(),
         family = "lead")
