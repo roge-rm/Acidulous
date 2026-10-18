@@ -1,38 +1,38 @@
-# Ratio - fifty patches, six operators and thirty-two ways of wiring them.
+# Ratio - 81 patches, six operators and thirty-two ways of wiring them.
 #
 # Each operator has sixteen waveforms, eight modes, a ratio from a quarter to
 # sixty-four, its own feedback and its own four-stage envelope. On top of that
-# are two algorithms at once with a morph between them, which no other machine
-# here has, and snap and skew on the ratios. A bank of seven was a sample of
-# it.
+# are two algorithms at once with a morph between them, and snap and skew on
+# the ratios.
 #
-# The patches are grouped the way this kind of synthesis is actually heard -
-# keys, bells and metal, basses, leads and brass, organs and reeds, strings
-# and pads, then percussion and effects - rather than by algorithm, because
-# nobody hears "algorithm fourteen" as a category. Spread through those groups
-# are the ones that are this machine's own rather than the family's: the morph
-# between two algorithms, the skew that fans the partials apart, and `snap`
-# set to none so a ratio can sit between two notes of the scale.
+# Families in tab order: keys (20), bass (18), lead (18), bell, reed, pad and
+# texture. Within a family the patches run plainest to strangest, and the
+# strange ones are what this machine has of its own: the morph between two
+# algorithms, the skew that fans the partials apart, `snap` set to none, and
+# the ring, fold, sync, filter, phase and crush modes.
 #
 # **Bells get their own demo.** A struck sound is its tail, and every other
 # phrase here starts the next note before the last one has finished. `bell`
 # leaves a second and a half between strikes, puts two together so two tails
 # beat, and leaves the last one ringing on its own.
 #
-# Levelled to the house figure of -21 dB on the loudness column, the same as
-# every other machine in the app. Five decibels of that came out of the
-# machine's own output (`kHouse` in Ratio.cpp) so Init lands there too. Five
-# patches sit one to six decibels under and all five are either a single
-# operator with nothing modulating it or a strike short enough that four
-# hundred milliseconds of it is mostly silence.
+# Levelled to the house figure on the loudness column, the same as every
+# other machine in the app. Part of that came out of the machine's own output
+# (`kHouse` in Ratio.cpp) so Init lands there too. A few patches sit one to
+# six decibels under and they are either a single operator with nothing
+# modulating it or a strike short enough that four hundred milliseconds of it
+# is mostly silence.
 #
-# **Three patches did not play the note you pressed**, which is the fault this
-# kind of synthesis invites and the range sweep is the only thing that finds
-# it: a carrier written at half the ratio sounded an octave down, one at four
-# times sounded two octaves up, and one with the *carrier* fixed rather than
-# the modulator sounded fifty hertz whatever key was held. A ratio is a
-# multiplier on the note, so the carrier's is almost always one and everything
-# interesting happens in the operators feeding it.
+# A ratio is a multiplier on the note, so a carrier's is almost always one and
+# everything interesting happens in the operators feeding it. A carrier at
+# half or four times plays the wrong octave, and a fixed carrier plays the
+# same pitch whatever key is held. The range sweep is what finds these.
+#
+# Every keys, bass and lead patch but Init has eight named macros. Where a
+# macro at full moved the level by more than about 3 dB, an amp route on it
+# takes that back out. A morph macro needs `algob` set to where it goes; at
+# morph 0 the second algorithm has no effect. Lines under "Silent until a
+# macro reaches them" set up an operator at level 0 for a macro to bring in.
 #
 # Values are in each parameter's own units; `audition params Ratio` lists
 # them. A patch names only what it changes.
@@ -41,6 +41,175 @@ machine Ratio
 role    keys
 
 patch Init family=keys
+
+patch "Soft Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Dark"
+  set macro3 "Octave"
+  set macro4 "Twelfth"
+  set macro5 "Growl"
+  set macro6 "Morph"
+  set macro7 "Skew"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #17
+  mac1_a1  0.35
+  mac2_d1  #17
+  mac2_a1  -0.25
+  mac3_d1  #5
+  mac3_a1  0.3
+  mac4_d1  #6
+  mac4_a1  0.35
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac7_d1  #3
+  mac7_a1  0.12
+  mac8_d1  #12
+  mac8_a1  0.12
+  # Almost no modulation at all: two carriers a fifth apart, which is a
+  # machine like this being asked to be simple. It is the patch the rest
+  # of the bank is measured against.
+  algoa          #22
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       2.5 s
+  o1_sustain     0.35
+  o2_ratio       2
+  o2_level       0.59
+  o2_decay       2 s
+  o2_sustain     0.25
+  o3_ratio       3
+  o3_level       0.23
+  o3_decay       1.5 s
+  o3_sustain     0.1
+  o4_level       0.00
+  o5_level       0.00
+  o6_level       0.00
+  f_type         #2
+  f_freq         3000 Hz
+  volume         1.00
+  # Morph goes to one chain, so the partials modulate each other.
+  algob          #0
+
+patch "Mellow Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #7
+  mac2_a1  0.35
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac3_d2  #7
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.25
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # Pairs with the modulators at the unison and not much of them, under a
+  # gentle low-pass. The tine with the felt left on.
+  algoa          #2
+  algob          #14
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       3.5 s
+  o1_sustain     0.25
+  o1_release     0.6 s
+  o2_ratio       1
+  o2_level       0.24
+  o2_decay       0.8 s
+  o2_sustain     0.05
+  o2_vel         0.9
+  o3_ratio       2
+  o3_level       0.22
+  o3_decay       2 s
+  o3_sustain     0.1
+  o4_ratio       1
+  o4_level       0.15
+  o4_decay       0.4 s
+  o4_sustain     0
+  f_type         #1
+  f_freq         2500 Hz
+  f_key          0.5
+  volume         0.87
+  insert Chorus
+    voices       #1
+    rate         #14
+    depth        0.35
+    spread       0.9
+    drift        0.1
+    mix          0.35
+  send reverb    0.12
+
+patch "Stage Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #7
+  mac2_a1  0.35
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac3_d2  #7
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # Two pairs, the modulator a fourth above its carrier and decaying
+  # faster than it. The whole electric piano is that one relationship.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       3 s
+  o1_sustain     0.2
+  o1_release     0.7 s
+  o2_ratio       4
+  o2_level       0.42
+  o2_decay       0.5 s
+  o2_sustain     0.0
+  o2_vel         0.8
+  o3_ratio       1
+  o3_level       0.5
+  o3_decay       2.5 s
+  o3_sustain     0.15
+  o4_ratio       7
+  o4_level       0.22
+  o4_decay       0.3 s
+  o4_sustain     0.0
+  o5_level       0
+  o6_level       0
+  volume         0.72
+  # Morph goes to every operator into the first.
+  algob          #14
 
 patch Tine family=keys  note=60 range=36..84 role=keys
   set macro1 "Bright"
@@ -90,7 +259,2706 @@ patch Tine family=keys  note=60 range=36..84 role=keys
   o4_sustain     0
   volume         0.76
 
+patch "Wide Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #7
+  mac2_a1  0.35
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac3_d2  #7
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # Three pairs: a bright tine in the middle and two plain ones a few cents
+  # either side of it, then a chorus. The bright ballad piano.
+  algoa          #6
+  algob          #14
+  o1_ratio       1
+  o1_level       0.85
+  o1_decay       2.8 s
+  o1_sustain     0.2
+  o1_release     0.6 s
+  o2_ratio       14
+  o2_level       0.3
+  o2_decay       0.25 s
+  o2_sustain     0
+  o2_vel         0.9
+  o3_ratio       1
+  o3_fine        6
+  o3_level       0.55
+  o3_decay       2.2 s
+  o3_sustain     0.15
+  o3_release     0.5 s
+  o4_ratio       1
+  o4_level       0.3
+  o4_decay       1.2 s
+  o4_sustain     0.1
+  o4_vel         0.8
+  o5_ratio       1
+  o5_fine        -6
+  o5_level       0.45
+  o5_decay       2.4 s
+  o5_sustain     0.15
+  o5_release     0.5 s
+  o6_ratio       2
+  o6_level       0.2
+  o6_decay       0.6 s
+  o6_sustain     0
+  volume         0.76
+  insert Chorus
+    voices       #1
+    rate         #14
+    depth        0.35
+    spread       0.9
+    drift        0.1
+    mix          0.35
+  send reverb    0.15
+
+patch Upright family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Hammer"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Stretch"
+  set macro6 "Growl"
+  set macro7 "Morph"
+  set macro8 "Bell"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #9
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  -0.25
+  mac3_d2  #7
+  mac3_a2  -0.15
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #3
+  mac5_a1  0.03
+  mac6_d1  #16
+  mac6_a1  0.25
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac7_d2  #19
+  mac7_a2  -0.265
+  mac8_d1  #7
+  mac8_a1  0.3
+  # A piano from three pairs, the brightness falling away faster than the
+  # note and faster again up the keyboard. A touch of skew stretches the
+  # upper partials sharp, the way a stiff string does.
+  algoa          #6
+  algob          #0
+  skew           0.005
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       4 s
+  o1_sustain     0
+  o1_release     0.4 s
+  o1_key         -0.2
+  o2_ratio       1
+  o2_level       0.4
+  o2_decay       1 s
+  o2_sustain     0
+  o2_vel         0.8
+  o2_key         -0.3
+  o3_ratio       2
+  o3_level       0.5
+  o3_decay       2.5 s
+  o3_sustain     0
+  o3_release     0.4 s
+  o4_ratio       1
+  o4_level       0.25
+  o4_decay       0.5 s
+  o4_sustain     0
+  o4_vel         0.9
+  o5_ratio       3
+  o5_level       0.2
+  o5_decay       1.5 s
+  o5_sustain     0
+  o6_ratio       15
+  o6_level       0.15
+  o6_decay       0.03 s
+  o6_sustain     0
+  volume         0.86
+  send reverb    0.15
+
+patch "Reed Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #7
+  mac2_a1  0.35
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac3_d2  #7
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # Harder and hollower than the tine: the modulator is a square, which
+  # puts a reed's buzz on the front of every note.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       2.2 s
+  o1_sustain     0.18
+  o2_wave        #8
+  o2_ratio       2
+  o2_level       0.5
+  o2_decay       0.35 s
+  o2_sustain     0.0
+  o2_vel         0.9
+  o3_ratio       1
+  o3_level       0.4
+  o3_decay       1.8 s
+  o3_sustain     0.1
+  o4_ratio       3
+  o4_level       0.3
+  o4_decay       0.2 s
+  o4_sustain     0.0
+  o5_level       0
+  o6_level       0
+  volume         0.77
+  # Morph goes to every operator into the first.
+  algob          #14
+
+patch "Tremolo Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #7
+  mac2_a1  0.35
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac3_d2  #7
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # A reedy piano: a triangle modulator at the unison barks when it is hit
+  # hard, and a tremolo pans it from side to side.
+  algoa          #6
+  algob          #14
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       2.5 s
+  o1_sustain     0.3
+  o1_release     0.4 s
+  o2_wave        #6
+  o2_ratio       1
+  o2_level       0.45
+  o2_decay       0.6 s
+  o2_sustain     0.05
+  o2_vel         0.9
+  o3_ratio       1
+  o3_level       0.5
+  o3_decay       2 s
+  o3_sustain     0.2
+  o4_ratio       3
+  o4_level       0.25
+  o4_decay       0.3 s
+  o4_sustain     0
+  o4_vel         0.9
+  volume         0.8
+  insert Tremolo
+    rate         #8
+    depth        0.35
+    pan          1
+    mix          1
+  send reverb    0.1
+
+patch Hammer family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Knock"
+  set macro4 "Soft"
+  set macro5 "Dark"
+  set macro6 "Growl"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #6
+  mac2_a1  0.3
+  mac3_d1  #9
+  mac3_a1  0.3
+  mac4_d1  #5
+  mac4_a1  -0.25
+  mac4_d2  #6
+  mac4_a2  -0.15
+  mac4_d3  #9
+  mac4_a3  -0.25
+  mac5_d1  #17
+  mac5_a1  -0.5
+  mac6_d1  #16
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # The attack is a burst of noise from operator six and nothing else;
+  # after forty milliseconds it is gone and a plain tone is left.
+  algoa          #14
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       1.6 s
+  o1_sustain     0.1
+  o2_ratio       2
+  o2_level       0.3
+  o2_decay       0.5 s
+  o2_sustain     0.0
+  o3_ratio       3
+  o3_level       0.2
+  o3_decay       0.3 s
+  o3_sustain     0.0
+  o6_wave        #15
+  o6_level       0.35
+  o6_decay       0.04 s
+  o6_sustain     0.0
+  o4_level       0
+  o5_level       0
+  volume         0.63
+  # Morph goes to one chain.
+  algob          #0
+
+patch "Funk Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bite"
+  set macro3 "Open"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #6
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.3
+  mac4_d1  #17
+  mac4_a1  -0.25
+  mac5_d1  #16
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # A stack of three with feedback on the top of it, decaying almost at
+  # once. Feedback is what turns a sine into a saw here.
+  algoa          #5
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       0.7 s
+  o1_sustain     0.05
+  o1_release     0.2 s
+  o2_ratio       3
+  o2_level       1.00
+  o2_decay       0.25 s
+  o2_sustain     0.0
+  o3_ratio       1
+  o3_fb          0.45
+  o3_level       1.00
+  o3_decay       0.2 s
+  o3_sustain     0.0
+  o4_level       0.00
+  o5_level       0.00
+  o6_level       0.00
+  f_type         #2
+  f_freq         4000 Hz
+  f_key          0.6
+  volume         1.00
+  # Morph goes to three pairs, so the feedback operator is heard.
+  algob          #6
+
+patch "Pulse Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Open"
+  set macro2 "Dark"
+  set macro3 "Res"
+  set macro4 "Bite"
+  set macro5 "Body"
+  set macro6 "Growl"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #17
+  mac1_a1  0.35
+  mac2_d1  #17
+  mac2_a1  -0.2
+  mac3_d1  #18
+  mac3_a1  0.4
+  mac4_d1  #5
+  mac4_a1  0.3
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #16
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A square carrier through a low-pass that snaps shut, with a short FM
+  # flick on the front. Funk rhythm keys, and a phaser on them.
+  algoa          #2
+  algob          #14
+  o1_wave        #8
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       0.9 s
+  o1_sustain     0.1
+  o1_release     0.1 s
+  o2_ratio       1
+  o2_level       0.25
+  o2_decay       0.15 s
+  o2_sustain     0
+  o2_vel         0.8
+  o3_ratio       1
+  o3_level       0.5
+  o3_decay       0.9 s
+  o3_sustain     0.1
+  o3_release     0.1 s
+  f_type         #3
+  f_freq         900 Hz
+  f_res          0.35
+  f_env          0.6
+  f_decay        0.25 s
+  f_sustain      0.1
+  f_key          0.5
+  volume         0.62
+  insert Phaser
+    stages       #1
+    rate         #14
+    depth        0.6
+    feedback     0.3
+    mix          0.4
+    gain         3.5 dB
+
+patch Harpsichord family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Pluck"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Octave"
+  set macro6 "Growl"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #6
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  -0.25
+  mac3_d2  #8
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #7
+  mac5_a1  0.3
+  mac6_d1  #16
+  mac6_a1  0.2
+  mac7_d1  #3
+  mac7_a1  0.12
+  mac8_d1  #2
+  mac8_a1  0.5
+  # Two stacks, one at the note and one an octave up, both bright, both
+  # gone almost as soon as the key comes up.
+  algoa          #3
+  algob          #14
+  o1_ratio       1
+  o1_level       0.8
+  o1_decay       1.5 s
+  o1_sustain     0
+  o1_release     0.1 s
+  o2_ratio       3
+  o2_level       0.4
+  o2_decay       1 s
+  o2_sustain     0
+  o3_ratio       1
+  o3_fb          0.5
+  o3_level       0.35
+  o3_decay       0.8 s
+  o3_sustain     0
+  o4_ratio       2
+  o4_level       0.45
+  o4_decay       1.2 s
+  o4_sustain     0
+  o4_release     0.1 s
+  o5_ratio       1
+  o5_level       0.35
+  o5_decay       0.6 s
+  o5_sustain     0
+  o6_ratio       5
+  o6_level       0.2
+  o6_decay       0.1 s
+  o6_sustain     0
+  volume         0.8
+  send reverb    0.12
+
+patch Plucked family=keys  note=55 range=40..79 role=arp
+  set macro1 "Bright"
+  set macro2 "Bite"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #6
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac3_d2  #6
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # Everything short. The point is the envelope rather than the spectrum:
+  # an FM stack with a fast decay is a plucked string and nobody has to
+  # model one.
+  algoa          #5
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       0.9 s
+  o1_sustain     0.0
+  o1_release     0.3 s
+  o2_ratio       2
+  o2_level       0.52
+  o2_decay       0.25 s
+  o2_sustain     0.0
+  o3_ratio       5
+  o3_level       0.34
+  o3_decay       0.12 s
+  o3_sustain     0.0
+  o4_level       0.00
+  o5_level       0.00
+  o6_level       0.00
+  volume         1.00
+  # Morph goes to three pairs.
+  algob          #6
+
+patch Vibes family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #7
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  -0.25
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.2
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # A mallet bar: a sine with a fourth-harmonic strike that is gone at
+  # once, a long ring and a slow tremolo.
+  algoa          #6
+  algob          #14
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       4 s
+  o1_sustain     0
+  o1_release     1.5 s
+  o2_ratio       4
+  o2_level       0.3
+  o2_decay       0.15 s
+  o2_sustain     0
+  o2_vel         0.9
+  o3_ratio       1
+  o3_level       0.35
+  o3_decay       2.5 s
+  o3_sustain     0
+  o3_release     1.2 s
+  o4_ratio       10
+  o4_level       0.1
+  o4_decay       0.08 s
+  o4_sustain     0
+  volume         0.72
+  insert Tremolo
+    rate         #8
+    depth        0.25
+    mix          1
+  send reverb    0.18
+
+patch "Glass Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Bell"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #7
+  mac2_a1  0.35
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac3_d2  #7
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # Ratios of seven and eleven, which are nowhere near harmonic, held
+  # back to a level where they colour the note instead of destroying it.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.85
+  o1_decay       2.5 s
+  o1_sustain     0.12
+  o2_ratio       7
+  o2_level       0.2
+  o2_decay       1.2 s
+  o2_sustain     0.0
+  o3_ratio       1
+  o3_level       0.45
+  o3_decay       2 s
+  o3_sustain     0.1
+  o4_ratio       11
+  o4_level       0.14
+  o4_decay       0.8 s
+  o4_sustain     0.0
+  o5_level       0
+  o6_level       0
+  volume         0.76
+  # Morph goes to every operator into the first.
+  algob          #14
+
+patch "Morph Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Morph"
+  set macro2 "Bright"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Still"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.4
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  -0.2
+  mac3_d2  #7
+  mac3_a2  -0.2
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  -0.5
+  mac8_d1  #13
+  mac8_a1  0.08
+  # Every note starts on one long chain and morphs into three pairs as an
+  # envelope falls, so the attack is a dense stack and the tail a plain
+  # piano. The routing itself is the envelope.
+  algoa          #6
+  algob          #0
+  e1_decay       0.7 s
+  e1_sustain     0
+  m01_src        #7
+  m01_dest       #2
+  m01_depth      0.7
+  o1_ratio       1
+  o1_level       0.85
+  o1_decay       3 s
+  o1_sustain     0.2
+  o1_release     0.5 s
+  o2_ratio       2
+  o2_level       0.35
+  o2_decay       1 s
+  o2_sustain     0.05
+  o3_ratio       1
+  o3_level       0.5
+  o3_decay       2.5 s
+  o3_sustain     0.15
+  o4_ratio       3
+  o4_level       0.3
+  o4_decay       0.8 s
+  o4_sustain     0
+  o5_ratio       1
+  o5_level       0.35
+  o5_decay       2 s
+  o5_sustain     0.1
+  o6_ratio       1
+  o6_level       0.2
+  o6_decay       0.5 s
+  o6_sustain     0
+  volume         0.54
+  send reverb    0.12
+
+patch "Phase Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Edge"
+  set macro2 "Open"
+  set macro3 "Dark"
+  set macro4 "Res"
+  set macro5 "Body"
+  set macro6 "Bright"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.2
+  mac4_d1  #18
+  mac4_a1  0.4
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #7
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A triangle with its cycle bent, so the first half is fast and the
+  # second drags, which gives it an edge without a filter. A bent triangle
+  # keeps no offset, where a bent sine does. Under it a plain pair, and over
+  # both a low-pass that closes as the note falls.
+  algoa          #6
+  algob          #14
+  o1_mode        #6
+  o1_wave        #6
+  o1_fb          0.6
+  o1_ratio       1
+  o1_level       0.8
+  o1_decay       1.8 s
+  o1_sustain     0.2
+  o1_release     0.3 s
+  o3_ratio       1
+  o3_level       0.5
+  o3_decay       2 s
+  o3_sustain     0.15
+  o4_ratio       1
+  o4_level       0.3
+  o4_decay       0.3 s
+  o4_sustain     0
+  f_type         #3
+  f_freq         1200 Hz
+  f_env          0.5
+  f_decay        0.4 s
+  f_sustain      0.2
+  f_key          0.5
+  volume         0.95
+  send reverb    0.12
+
+patch "Ring Keys" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Ring"
+  set macro2 "Metal"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Body"
+  set macro6 "Growl"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #11
+  mac2_a1  0.1
+  mac3_d1  #5
+  mac3_a1  -0.4
+  mac3_d2  #19
+  mac3_a2  0.55
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #16
+  mac6_a1  0.2
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A ring-modulated pair: the note times its own octave, which leaves the
+  # note and the twelfth and nothing between. Hollow and glassy, with a
+  # plain pair under it to hold the pitch.
+  algoa          #6
+  algob          #14
+  o1_mode        #1
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       2.5 s
+  o1_sustain     0.2
+  o1_release     0.5 s
+  o2_ratio       2
+  o2_level       0.8
+  o2_decay       1.5 s
+  o2_sustain     0.2
+  o3_ratio       1
+  o3_level       0.4
+  o3_decay       2 s
+  o3_sustain     0.15
+  o4_ratio       3
+  o4_level       0.15
+  o4_decay       0.3 s
+  o4_sustain     0
+  volume         0.97
+  send reverb    0.15
+
+patch "Toy Box" family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Chime"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac2_d1  #12
+  mac2_a1  0.5
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac4_d1  #17
+  mac4_a1  -0.35
+  mac4_d2  #19
+  mac4_a2  0.417
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.06
+  # A ratio of nine over a crushed sine. High, thin and mechanical: a
+  # music box that has been dropped.
+  algoa          #6
+  o1_wave        #2
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       1.4 s
+  o1_sustain     0.0
+  o2_ratio       9
+  o2_level       0.39
+  o2_decay       0.7 s
+  o2_sustain     0.0
+  o3_ratio       2
+  o3_level       0.45
+  o3_decay       1 s
+  o3_sustain     0.0
+  o4_level       0.00
+  o5_level       0.00
+  o6_level       0.00
+  volume         0.84
+  # Morph goes to every operator into the first.
+  algob          #14
+
+patch "Deep Sine" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Bright"
+  set macro2 "Dark"
+  set macro3 "Growl"
+  set macro4 "Octave"
+  set macro5 "Metal"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Thin"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.7
+  mac3_d1  #16
+  mac3_a1  0.35
+  mac4_d1  #11
+  mac4_a1  0.5
+  mac5_d1  #11
+  mac5_a1  0.08
+  mac6_d1  #3
+  mac6_a1  0.2
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #4
+  mac8_a1  -0.4
+  mac8_d2  #19
+  mac8_a2  0.738
+  # One carrier, one modulator at the octave, and almost nothing else. The
+  # bass that does not fight anything.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.95
+  o1_decay       1.5 s
+  o1_sustain     0.65
+  o2_ratio       2
+  o2_level       0.18
+  o2_decay       0.4 s
+  o2_sustain     0.05
+  o3_level       0
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  volume         1.00
+  # Morph goes to all six heard, the modulator an octave up.
+  algob          #22
+
+patch "Finger Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Bright"
+  set macro2 "Dark"
+  set macro3 "Open"
+  set macro4 "Growl"
+  set macro5 "Body"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Soft"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.25
+  mac3_d1  #17
+  mac3_a1  0.4
+  mac4_d1  #16
+  mac4_a1  0.3
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  -0.3
+  # A round bass with a little pluck on the front: the modulator is at the
+  # unison and falls away in a quarter of a second.
+  algoa          #2
+  algob          #14
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       1.2 s
+  o1_sustain     0.5
+  o1_release     0.12 s
+  o2_ratio       1
+  o2_level       0.32
+  o2_decay       0.25 s
+  o2_sustain     0.1
+  o2_vel         0.8
+  o3_ratio       2
+  o3_level       0.2
+  o3_decay       0.5 s
+  o3_sustain     0.2
+  o3_release     0.12 s
+  o4_ratio       1
+  o4_level       0.1
+  o4_decay       0.3 s
+  o4_sustain     0
+  f_type         #3
+  f_freq         1400 Hz
+  f_key          0.4
+  voicemode      #1
+  volume         1.00
+
+patch Slap family=bass  note=36 range=24..55 role=bass
+  set macro1 "Bright"
+  set macro2 "Dark"
+  set macro3 "Growl"
+  set macro4 "Body"
+  set macro5 "Metal"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Soft"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.7
+  mac3_d1  #16
+  mac3_a1  0.3
+  mac4_d1  #6
+  mac4_a1  0.3
+  mac5_d1  #11
+  mac5_a1  0.08
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  -0.4
+  # The modulator is loud for sixty milliseconds and then gone, which is
+  # the click of a thumb and nothing more. Under it the note is a sine.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       1.2 s
+  o1_sustain     0.3
+  o2_ratio       5
+  o2_level       0.7
+  o2_decay       0.06 s
+  o2_sustain     0.0
+  o2_vel         0.9
+  o3_ratio       1
+  o3_level       0.4
+  o3_decay       0.9 s
+  o3_sustain     0.2
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  volume         1.00
+  # Morph goes to every operator into the first.
+  algob          #14
+
+patch "Pluck Bass FM" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Bright"
+  set macro2 "Bite"
+  set macro3 "Open"
+  set macro4 "Dark"
+  set macro5 "Res"
+  set macro6 "Growl"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #6
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.4
+  mac4_d1  #17
+  mac4_a1  -0.3
+  mac5_d1  #18
+  mac5_a1  0.5
+  mac6_d1  #16
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # Short, with the filter closing faster than the amplitude so the note
+  # goes dull before it goes quiet.
+  algoa          #5
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       0.6 s
+  o1_sustain     0.1
+  o2_ratio       2
+  o2_level       0.86
+  o2_decay       0.15 s
+  o2_sustain     0.0
+  o3_ratio       4
+  o3_level       0.52
+  o3_decay       0.08 s
+  o3_sustain     0.0
+  o4_level       0.00
+  o5_level       0.00
+  o6_level       0.00
+  f_type         #3
+  f_freq         700 Hz
+  f_env          0.6
+  f_decay        0.15 s
+  f_sustain      0.0
+  volume         1.00
+  # Morph goes to three pairs.
+  algob          #6
+
+patch "Pulse Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Open"
+  set macro2 "Dark"
+  set macro3 "Res"
+  set macro4 "Sub"
+  set macro5 "Bite"
+  set macro6 "Growl"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #17
+  mac1_a1  0.4
+  mac2_d1  #17
+  mac2_a1  -0.3
+  mac3_d1  #18
+  mac3_a1  0.4
+  mac4_d1  #6
+  mac4_a1  0.3
+  mac5_d1  #5
+  mac5_a1  0.3
+  mac6_d1  #16
+  mac6_a1  0.2
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A square and a sine at the same note through a low-pass with a short
+  # envelope on it. The plainest analogue-style bass this machine makes.
+  algoa          #6
+  algob          #14
+  o1_wave        #8
+  o1_ratio       1
+  o1_level       0.7
+  o1_decay       1 s
+  o1_sustain     0.6
+  o1_release     0.1 s
+  o3_ratio       1
+  o3_level       0.5
+  o3_decay       1 s
+  o3_sustain     0.7
+  o3_release     0.1 s
+  f_type         #3
+  f_freq         500 Hz
+  f_res          0.3
+  f_env          0.5
+  f_decay        0.3 s
+  f_sustain      0.2
+  f_key          0.3
+  voicemode      #1
+  volume         0.9
+
+patch Fretless family=bass  note=36 range=24..55 role=bass
+  set macro1 "Mwah"
+  set macro2 "Dark"
+  set macro3 "Open"
+  set macro4 "Growl"
+  set macro5 "Body"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Soft"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.4
+  mac3_d1  #17
+  mac3_a1  0.4
+  mac4_d1  #16
+  mac4_a1  0.25
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  -0.3
+  # Legato with a slide between notes, and a modulator that rises a little
+  # after the note starts, so each one swells into its tone.
+  algoa          #2
+  algob          #14
+  voicemode      #2
+  glide          0.08 s
+  m01_src        #11
+  m01_src2       #2
+  m01_dest       #1
+  m01_depth      0.008
+  l1_rate        5 Hz
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       2 s
+  o1_sustain     0.8
+  o1_release     0.15 s
+  o2_ratio       1
+  o2_level       0.35
+  o2_attack      0.08 s
+  o2_decay       0.6 s
+  o2_sustain     0.2
+  o3_ratio       2
+  o3_level       0.15
+  o3_decay       1 s
+  o3_sustain     0.5
+  f_type         #1
+  f_freq         1800 Hz
+  f_key          0.3
+  volume         0.9
+
+patch "Wide Bass FM" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Bright"
+  set macro2 "Open"
+  set macro3 "Dark"
+  set macro4 "Res"
+  set macro5 "Growl"
+  set macro6 "Metal"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac1_d2  #7
+  mac1_a2  0.3
+  mac2_d1  #17
+  mac2_a1  0.4
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #18
+  mac4_a1  0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #11
+  mac6_a1  0.08
+  mac6_d2  #13
+  mac6_a2  0.08
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  mac8_d2  #19
+  mac8_a2  0.421
+  # Two carriers a few cents apart panned hard, which on a bass is usually
+  # a mistake and here is not, because the filter keeps the beating under
+  # the note.
+  #
+  # Both modulators were at a fifth of their carriers, which is barely any
+  # index at all: the patch was two detuned sines with four per cent of its
+  # energy above a hundred and fifty hertz, so on anything without real bass
+  # extension there was nothing to hear. Dan reported it as quiet and it was
+  # not quiet, it was empty.
+  algoa          #6
+  o1_ratio       1
+  o1_fine        -7
+  o1_pan         -0.6
+  o1_level       0.8
+  o1_decay       1.4 s
+  o1_sustain     0.6
+  o2_ratio       2
+  o2_level       0.5
+  o2_decay       0.5 s
+  o2_sustain     0.1
+  o3_ratio       1
+  o3_fine        7
+  o3_pan         0.6
+  o3_level       0.8
+  o3_decay       1.4 s
+  o3_sustain     0.6
+  o4_ratio       2
+  o4_level       0.5
+  o4_decay       0.5 s
+  o4_sustain     0.1
+  o5_level       0
+  o6_level       0
+  f_type         #3
+  f_freq         1500 Hz
+  volume         0.72
+  # Morph goes to every operator into the first.
+  algob          #14
+
+patch "Hollow Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Bright"
+  set macro2 "Dark"
+  set macro3 "Open"
+  set macro4 "Growl"
+  set macro5 "Body"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Soft"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.4
+  mac3_d1  #17
+  mac3_a1  0.4
+  mac4_d1  #16
+  mac4_a1  0.25
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  -0.3
+  # A modulator at twice the carrier puts every sideband on an odd harmonic,
+  # so the bass is hollow like a square with none of a square's buzz.
+  algoa          #2
+  algob          #14
+  o1_ratio       1
+  o1_level       1.00
+  o1_decay       1.5 s
+  o1_sustain     0.7
+  o1_release     0.12 s
+  o2_ratio       2
+  o2_level       0.45
+  o2_decay       0.7 s
+  o2_sustain     0.3
+  o2_vel         0.7
+  o3_ratio       3
+  o3_level       0.2
+  o3_decay       1 s
+  o3_sustain     0.5
+  o4_ratio       2
+  o4_level       0.2
+  o4_decay       0.5 s
+  o4_sustain     0.2
+  f_type         #3
+  f_freq         1500 Hz
+  f_key          0.3
+  voicemode      #1
+  volume         0.84
+
+# Starts at 30: below that the fixed modulator is *above* the note and its
+# sidebands stop being harmonics of anything, which reads a hundred cents
+# out even though the note is still the loudest thing there.
+patch "Sub Drop FM" family=bass  note=36 range=30..55 role=bass
+  set macro1 "Bright"
+  set macro2 "Open"
+  set macro3 "Dark"
+  set macro4 "Res"
+  set macro5 "Sub"
+  set macro6 "Growl"
+  set macro7 "Skew"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #6
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  0.4
+  mac3_d1  #17
+  mac3_a1  -0.3
+  mac4_d1  #18
+  mac4_a1  0.5
+  mac5_d1  #5
+  mac5_a1  0.3
+  mac6_d1  #16
+  mac6_a1  0.35
+  mac7_d1  #3
+  mac7_a1  0.2
+  mac8_d1  #12
+  mac8_a1  0.1
+  # A second carrier fixed at fifty hertz under one that tracks the keyboard,
+  # so every note has the same rumble beneath it however high it is played.
+  # Fixed ratios are the other half of what this machine can do.
+  #
+  # **A fixed operator's ratio is in units of 55 Hz, not hertz.** Written as
+  # 50 it was not fifty hertz, it was two thousand seven hundred and fifty,
+  # and the patch called Sub Drop had a centroid of nearly three kilohertz.
+  # 0.91 is fifty. It was wrong twice before that as well - once with the
+  # fixed operator as the carrier, so it played the same pitch whatever key
+  # was held, and once with it modulating a carrier a tone below it, which
+  # throws sidebands everywhere.
+  algoa          #22
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       2 s
+  o1_sustain     0.55
+  o2_fixed       1
+  o2_ratio       0.91
+  o2_level       0.5
+  o2_decay       2 s
+  o2_sustain     0.5
+  o3_ratio       2
+  o3_level       0.12
+  o3_decay       0.6 s
+  o3_sustain     0.15
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  f_type         #3
+  f_freq         600 Hz
+  volume         1.00
+
+patch "Growl FM" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Growl"
+  set macro2 "Bright"
+  set macro3 "Open"
+  set macro4 "Dark"
+  set macro5 "Res"
+  set macro6 "Bite"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.15
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.4
+  mac4_d1  #17
+  mac4_a1  -0.3
+  mac5_d1  #18
+  mac5_a1  0.5
+  mac6_d1  #7
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # Feedback on a *modulator*, which is the one way to get a saw out of a
+  # sine, driven hard into a carrier on the same note. Dirty and entirely
+  # harmonic - every sideband of a unison modulator lands on a harmonic.
+  #
+  # Written first on the algorithm where all six operators are carriers,
+  # which means nothing modulates anything: it was two sines an octave apart
+  # with a low-pass on them, it had no growl in it at all, and Dan reported
+  # it as too quiet to really hear. It was not quiet, it was empty.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.95
+  o1_decay       1.5 s
+  o1_sustain     0.75
+  o2_ratio       1
+  o2_fb          0.85
+  o2_level       0.6
+  o2_decay       1.2 s
+  o2_sustain     0.55
+  o3_ratio       0.5
+  o3_level       0.5
+  o3_decay       1.5 s
+  o3_sustain     0.6
+  o4_ratio       2
+  o4_level       0.3
+  o4_decay       0.6 s
+  o4_sustain     0.25
+  o5_level       0
+  o6_level       0
+  f_type         #3
+  f_freq         1600 Hz
+  f_res          0.2
+  volume         1.00
+
+  # Morph goes to every operator into the first.
+  algob          #14
+
+patch Squelch family=bass  note=36 range=24..55 role=bass
+  set macro1 "Open"
+  set macro2 "Dark"
+  set macro3 "Res"
+  set macro4 "Growl"
+  set macro5 "Env"
+  set macro6 "Bite"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #17
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.3
+  mac3_d1  #18
+  mac3_a1  0.25
+  mac4_d1  #16
+  mac4_a1  0.15
+  mac5_d1  #17
+  mac5_a1  0.15
+  mac5_d2  #18
+  mac5_a2  0.1
+  mac6_d1  #5
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # Feedback on the carrier turns its sine into a saw, and a resonant
+  # low-pass with a fast envelope does the rest. Legato with a short slide,
+  # into a little drive.
+  algoa          #0
+  algob          #14
+  voicemode      #2
+  glide          0.06 s
+  o1_ratio       1
+  o1_fb          0.7
+  o1_level       1.00
+  o1_decay       0.4 s
+  o1_sustain     0.5
+  o1_attack      0.012 s
+  o1_release     0.08 s
+  o2_ratio       1
+  o2_level       0
+  f_type         #3
+  f_freq         420 Hz
+  f_res          0.7
+  f_env          0.7
+  f_decay        0.22 s
+  f_sustain      0
+  f_key          0.3
+  m01_src        #4
+  m01_dest       #17
+  m01_depth      0.2
+  volume         0.96
+  insert Distortion
+    drive        6
+    tone         5000 Hz
+    mix          0.6
+    gain         -3.5 dB
+
+patch "Grit Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Grit"
+  set macro2 "Open"
+  set macro3 "Dark"
+  set macro4 "Fold"
+  set macro5 "Skew"
+  set macro6 "Morph"
+  set macro7 "Growl"
+  set macro8 "Sub"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac1_d2  #19
+  mac1_a2  -0.1
+  mac2_d1  #17
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.5
+  mac4_d1  #16
+  mac4_a1  0.4
+  mac5_d1  #3
+  mac5_a1  0.2
+  mac6_d1  #2
+  mac6_a1  0.5
+  mac7_d1  #11
+  mac7_a1  0.1
+  mac7_d2  #12
+  mac7_a2  0.06
+  mac8_d1  #6
+  mac8_a1  -0.3
+  f_freq         2200 Hz
+  f_res          0.2
+  m01_depth      0.35
+  m01_dest       #5
+  m01_src        #4
+  o1_decay       0.5 s
+  o1_level       0.9
+  o1_sustain     0.6
+  o2_decay       0.25 s
+  o2_fb          0.55
+  o2_level       0.65
+  o2_sustain     0.15
+  o3_fb          0.4
+  o3_level       0.4
+  o3_mode        #7
+  voicemode      #1
+  volume         0.95
+
+patch "Sync Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Sync"
+  set macro2 "Low"
+  set macro3 "Dark"
+  set macro4 "Open"
+  set macro5 "Body"
+  set macro6 "Res"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #10
+  mac1_a1  0.3
+  mac2_d1  #10
+  mac2_a1  -0.2
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #17
+  mac4_a1  0.3
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #18
+  mac6_a1  0.4
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A saw hard-synced to a sine at the note. An envelope sweeps the saw's
+  # ratio down over the first third of a second, which is the sync sweep;
+  # the pitch stays the master's.
+  algoa          #2
+  algob          #14
+  o1_mode        #5
+  o1_wave        #7
+  o1_ratio       2
+  o1_level       0.9
+  o1_decay       1 s
+  o1_sustain     0.6
+  o1_release     0.1 s
+  o2_ratio       1
+  o2_level       0.5
+  o3_ratio       1
+  o3_level       0.6
+  o3_decay       1 s
+  o3_sustain     0.7
+  o3_release     0.1 s
+  e1_decay       0.35 s
+  e1_sustain     0
+  m01_src        #7
+  m01_dest       #10
+  m01_depth      0.5
+  f_type         #3
+  f_freq         2500 Hz
+  f_key          0.3
+  voicemode      #1
+  volume         1.00
+
+patch "Fold Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Fold"
+  set macro2 "Drive"
+  set macro3 "Dark"
+  set macro4 "Open"
+  set macro5 "Sub"
+  set macro6 "Res"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.3
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #17
+  mac4_a1  0.3
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #18
+  mac6_a1  0.4
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A sine pushed through a wavefolder. An envelope on the sine's level
+  # drives it hard at the start and lets it relax, so the note opens with a
+  # bark and settles to a rounder fold.
+  algoa          #2
+  algob          #14
+  o1_mode        #4
+  o1_fb          0.3
+  o1_level       0.9
+  o1_decay       1.2 s
+  o1_sustain     0.6
+  o1_release     0.1 s
+  o2_ratio       1
+  o2_level       0.4
+  e1_decay       0.4 s
+  e1_sustain     0.2
+  m01_src        #7
+  m01_dest       #5
+  m01_depth      0.4
+  o3_ratio       1
+  o3_level       0.6
+  o3_decay       1 s
+  o3_sustain     0.7
+  o3_release     0.1 s
+  f_type         #3
+  f_freq         3000 Hz
+  voicemode      #1
+  volume         0.78
+
+patch "Metal Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Metal"
+  set macro2 "Dark"
+  set macro3 "Growl"
+  set macro4 "Body"
+  set macro5 "Bend"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Soft"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.7
+  mac3_d1  #16
+  mac3_a1  0.3
+  mac4_d1  #6
+  mac4_a1  0.3
+  mac5_d1  #11
+  mac5_a1  0.1
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  -0.2
+  # A ratio of three and a half, which is not a harmonic of anything, kept
+  # quiet enough to be a colour on a bass rather than a bell.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       1.2 s
+  o1_sustain     0.5
+  o2_ratio       3.5
+  o2_level       0.28
+  o2_decay       0.5 s
+  o2_sustain     0.1
+  o3_ratio       1
+  o3_level       0.35
+  o3_decay       1 s
+  o3_sustain     0.4
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  snap           #0
+  volume         1.00
+  # Morph goes to every operator into the first.
+  algob          #14
+
+patch "Morph Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Morph"
+  set macro2 "Bright"
+  set macro3 "Dark"
+  set macro4 "Open"
+  set macro5 "Growl"
+  set macro6 "Res"
+  set macro7 "Skew"
+  set macro8 "Still"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.3
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #17
+  mac4_a1  0.3
+  mac5_d1  #16
+  mac5_a1  0.25
+  mac6_d1  #18
+  mac6_a1  0.4
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  -0.4
+  # Three pairs that morph into one long chain as an envelope rises, so
+  # the note starts plain and grows teeth a moment later.
+  algoa          #6
+  algob          #0
+  e1_attack      0.25 s
+  e1_decay       0.6 s
+  e1_sustain     0.5
+  m01_src        #7
+  m01_dest       #2
+  m01_depth      0.8
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       1.5 s
+  o1_sustain     0.7
+  o1_release     0.1 s
+  o2_ratio       1
+  o2_level       0.3
+  o2_sustain     0.6
+  o3_ratio       2
+  o3_level       0.3
+  o3_sustain     0.6
+  o4_ratio       1
+  o4_level       0.25
+  o4_sustain     0.6
+  o5_ratio       3
+  o5_level       0.2
+  o5_sustain     0.6
+  o6_ratio       1
+  o6_level       0.25
+  o6_sustain     0.6
+  f_type         #3
+  f_freq         2000 Hz
+  voicemode      #1
+  volume         0.85
+
+patch Wobble family=bass  note=36 range=24..55 role=bass
+  set macro1 "Speed"
+  set macro2 "Bright"
+  set macro3 "Dark"
+  set macro4 "Open"
+  set macro5 "Growl"
+  set macro6 "Body"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.25
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.3
+  mac4_d1  #17
+  mac4_a1  0.3
+  mac5_d1  #16
+  mac5_a1  0.2
+  mac6_d1  #6
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # An LFO locked to eighth notes sweeps the filter and the modulator
+  # together, so a held note talks in time with the song.
+  algoa          #2
+  algob          #14
+  voicemode      #2
+  l1_sync        #6
+  l1_wave        #0
+  m01_src        #11
+  m01_dest       #17
+  m01_depth      0.35
+  m02_src        #11
+  m02_dest       #5
+  m02_depth      0.25
+  o1_ratio       1
+  o1_fb          0.3
+  o1_level       1.00
+  o1_decay       2 s
+  o1_sustain     0.9
+  o1_release     0.1 s
+  o2_ratio       1
+  o2_fb          0.3
+  o2_level       0.4
+  o2_sustain     0.8
+  o3_ratio       1
+  o3_level       0.3
+  o3_sustain     0.9
+  f_type         #3
+  f_freq         600 Hz
+  f_res          0.45
+  volume         0.98
+
+patch "Crunch Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Crush"
+  set macro2 "Drive"
+  set macro3 "Dark"
+  set macro4 "Open"
+  set macro5 "Body"
+  set macro6 "Bite"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.25
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #17
+  mac4_a1  0.3
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #7
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A sine crushed to a few dozen steps by an operator in crush mode, with a
+  # clean pair under it for the low end.
+  algoa          #2
+  algob          #14
+  o1_mode        #7
+  o1_fb          0.6
+  o1_level       0.9
+  o1_decay       1 s
+  o1_sustain     0.6
+  o1_release     0.1 s
+  o2_ratio       1
+  o2_level       0.6
+  o3_ratio       1
+  o3_level       0.6
+  o3_decay       1 s
+  o3_sustain     0.7
+  o3_release     0.1 s
+  o4_ratio       2
+  o4_level       0.15
+  o4_decay       0.3 s
+  o4_sustain     0.1
+  f_type         #3
+  f_freq         2500 Hz
+  voicemode      #1
+  volume         0.94
+
+patch "Whistle FM" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Edge"
+  set macro2 "Air"
+  set macro3 "Octave"
+  set macro4 "Twelfth"
+  set macro5 "Dark"
+  set macro6 "Thin"
+  set macro7 "Skew"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.3
+  mac2_d1  #9
+  mac2_a1  0.15
+  mac3_d1  #5
+  mac3_a1  0.3
+  mac4_d1  #6
+  mac4_a1  0.3
+  mac5_d1  #17
+  mac5_a1  -0.6
+  mac6_d1  #4
+  mac6_a1  -0.4
+  mac6_d2  #19
+  mac6_a2  0.679
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #11
+  mac8_a1  0.1
+  # One operator, one sine, nothing else on at all. Proof that the machine
+  # will get out of the way when it is asked to.
+  algoa          #22
+  o1_ratio       1
+  o1_level       1.00
+  o1_attack      0.04 s
+  o1_decay       2 s
+  o1_sustain     0.9
+  o2_level       0.00
+  o3_level       0.00
+  o4_level       0.00
+  o5_level       0.00
+  o6_level       0.00
+  glide          0.1 s
+  volume         1.00
+  # Silent until a macro reaches them: an octave, a twelfth and noise.
+  o2_ratio       2
+  o3_ratio       3
+  o6_wave        #15
+
+patch "Breath Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Breath"
+  set macro2 "Bright"
+  set macro3 "Dark"
+  set macro4 "Edge"
+  set macro5 "Octave"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Pure"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #9
+  mac1_a1  0.04
+  mac2_d1  #5
+  mac2_a1  0.2
+  mac3_d1  #17
+  mac3_a1  -0.5
+  mac4_d1  #16
+  mac4_a1  0.25
+  mac5_d1  #6
+  mac5_a1  0.2
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac7_d2  #19
+  mac7_a2  0.37
+  mac8_d1  #9
+  mac8_a1  -0.03
+  # A sine with a little noise blown into it and a vibrato that waits a
+  # moment before it starts. A flute, more or less.
+  algoa          #14
+  algob          #22
+  voicemode      #2
+  glide          0.05 s
+  l1_rate        5.5 Hz
+  l1_delay       0.35
+  m01_src        #11
+  m01_dest       #1
+  m01_depth      0.005
+  o1_ratio       1
+  o1_level       0.9
+  o1_attack      0.06 s
+  o1_decay       2 s
+  o1_sustain     0.9
+  o1_release     0.2 s
+  o2_ratio       2
+  o2_level       0.1
+  o2_attack      0.08 s
+  o2_sustain     0.8
+  o3_ratio       3
+  o3_level       0.04
+  o3_sustain     0.8
+  o6_wave        #15
+  o6_level       0.04
+  o6_attack      0.03 s
+  o6_sustain     0.6
+  volume         0.38
+  insert Delay
+    time         #2
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.2
+  send reverb    0.1
+
+patch "Square Lead FM" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Bright"
+  set macro2 "Soft"
+  set macro3 "Dark"
+  set macro4 "Growl"
+  set macro5 "Octave"
+  set macro6 "Metal"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #5
+  mac2_a1  -0.25
+  mac3_d1  #17
+  mac3_a1  -0.5
+  mac4_d1  #16
+  mac4_a1  0.3
+  mac5_d1  #11
+  mac5_a1  0.5
+  mac6_d1  #11
+  mac6_a1  0.08
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A square modulator at the unison, which is how to get a hollow pulse
+  # out of a machine with no pulse in it.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       1.5 s
+  o1_sustain     0.85
+  o2_wave        #8
+  o2_ratio       1
+  o2_level       0.4
+  o2_decay       1 s
+  o2_sustain     0.6
+  o3_level       0
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  glide          0.03 s
+  volume         0.89
+  # Morph goes to all six heard, the square modulator too.
+  algob          #22
+
+patch "Reed Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Bright"
+  set macro2 "Soft"
+  set macro3 "Dark"
+  set macro4 "Growl"
+  set macro5 "Buzz"
+  set macro6 "Metal"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #5
+  mac2_a1  -0.2
+  mac3_d1  #17
+  mac3_a1  -0.5
+  mac4_d1  #16
+  mac4_a1  0.3
+  mac5_d1  #11
+  mac5_a1  0.5
+  mac6_d1  #11
+  mac6_a1  0.08
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # An odd-harmonic modulator at three times the note, which is a clarinet
+  # written as two numbers.
+  algoa          #6
+  o1_ratio       1
+  o1_level       0.9
+  o1_attack      0.03 s
+  o1_decay       2 s
+  o1_sustain     0.8
+  o2_wave        #13
+  o2_ratio       3
+  o2_level       0.32
+  o2_attack      0.05 s
+  o2_decay       1 s
+  o2_sustain     0.5
+  o3_level       0
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  volume         0.87
+  # Morph goes to all six heard.
+  algob          #22
+
+patch "Brass FM" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Bright"
+  set macro2 "Bite"
+  set macro3 "Soft"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #6
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  -0.25
+  mac3_d2  #6
+  mac3_a2  -0.15
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # The modulator rises with the amplitude rather than falling, which is
+  # what a brass attack is: the sound gets brighter as it gets louder.
+  algoa          #5
+  o1_ratio       1
+  o1_level       0.9
+  o1_attack      0.04 s
+  o1_decay       2 s
+  o1_sustain     0.8
+  o2_ratio       1
+  o2_level       0.45
+  o2_attack      0.12 s
+  o2_decay       1.5 s
+  o2_sustain     0.55
+  o3_ratio       2
+  o3_level       0.25
+  o3_attack      0.18 s
+  o3_decay       1 s
+  o3_sustain     0.35
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  volume         0.72
+  # Morph goes to three pairs.
+  algob          #6
+
+patch "Saw Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Open"
+  set macro2 "Dark"
+  set macro3 "Res"
+  set macro4 "Edge"
+  set macro5 "Bright"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Thin"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #17
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.4
+  mac3_d1  #18
+  mac3_a1  0.4
+  mac4_d1  #16
+  mac4_a1  0.15
+  mac5_d1  #5
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #6
+  mac8_a1  -0.3
+  # Two carriers with feedback, which makes each a saw, a few cents apart
+  # under a low-pass. Legato, with eighth-note echoes.
+  algoa          #6
+  algob          #14
+  voicemode      #2
+  glide          0.04 s
+  o1_ratio       1
+  o1_fine        -3
+  o1_fb          0.75
+  o1_level       0.85
+  o1_decay       2 s
+  o1_sustain     0.85
+  o1_release     0.2 s
+  o3_ratio       1
+  o3_fine        5
+  o3_fb          0.75
+  o3_level       0.7
+  o3_decay       2 s
+  o3_sustain     0.85
+  o3_release     0.2 s
+  f_type         #3
+  f_freq         3500 Hz
+  f_res          0.15
+  f_key          0.5
+  volume         0.65
+  insert Delay
+    time         #2
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.2
+  send reverb    0.1
+
+patch Fiddle family=lead  note=67 range=48..91 role=lead
+  set macro1 "Bow"
+  set macro2 "Dark"
+  set macro3 "Open"
+  set macro4 "Rosin"
+  set macro5 "Body"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Soft"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac2_d1  #17
+  mac2_a1  -0.25
+  mac2_d2  #19
+  mac2_a2  0.337
+  mac3_d1  #17
+  mac3_a1  0.3
+  mac4_d1  #16
+  mac4_a1  0.2
+  mac5_d1  #6
+  mac5_a1  0.2
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  -0.3
+  # A slow bow: the tone swells in after the note, a saw-like modulator
+  # with feedback gives it the rasp, and the vibrato arrives late.
+  algoa          #5
+  algob          #6
+  voicemode      #2
+  glide          0.06 s
+  l1_rate        5.5 Hz
+  l1_delay       0.35
+  m01_src        #11
+  m01_dest       #1
+  m01_depth      0.006
+  o1_ratio       1
+  o1_level       0.9
+  o1_attack      0.1 s
+  o1_decay       2 s
+  o1_sustain     0.85
+  o1_release     0.25 s
+  o2_ratio       1
+  o2_fb          0.6
+  o2_level       0.5
+  o2_attack      0.15 s
+  o2_decay       1.5 s
+  o2_sustain     0.6
+  o3_ratio       3
+  o3_level       0.15
+  o3_attack      0.2 s
+  o3_sustain     0.5
+  f_type         #3
+  f_freq         4500 Hz
+  f_res          0.2
+  f_key          0.3
+  volume         0.68
+  send reverb    0.15
+
+patch "Fifth Stack" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Bright"
+  set macro2 "Octave"
+  set macro3 "Fifth"
+  set macro4 "Dark"
+  set macro5 "Growl"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #9
+  mac1_a1  0.3
+  mac2_d1  #6
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  0.3
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac4_d2  #19
+  mac4_a2  0.401
+  mac5_d1  #16
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #15
+  mac8_a1  0.08
+  # Three carriers at the unison, the fifth and the octave, with one
+  # modulator across all of them. Hollow and very large.
+  algoa          #10
+  o1_ratio       1
+  o1_level       0.7
+  o1_decay       2 s
+  o1_sustain     0.8
+  o2_ratio       1.5
+  o2_level       0.55
+  o2_decay       2 s
+  o2_sustain     0.8
+  o3_ratio       2
+  o3_level       0.4
+  o3_decay       2 s
+  o3_sustain     0.8
+  o4_level       0
+  o5_level       0
+  o6_ratio       2
+  o6_level       0.3
+  o6_decay       1.5 s
+  o6_sustain     0.5
+  volume         0.90
+  # Morph goes to one chain.
+  algob          #0
+
+patch "Sync Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Sync"
+  set macro2 "Low"
+  set macro3 "Dark"
+  set macro4 "Open"
+  set macro5 "Body"
+  set macro6 "Res"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #10
+  mac1_a1  0.3
+  mac2_d1  #10
+  mac2_a1  -0.2
+  mac3_d1  #17
+  mac3_a1  -0.25
+  mac4_d1  #17
+  mac4_a1  0.3
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #18
+  mac6_a1  0.4
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A saw synced to the note, its ratio swept down by an envelope over a
+  # second. Ratios are free here, so the sweep is smooth.
+  algoa          #2
+  algob          #14
+  snap           #0
+  voicemode      #2
+  glide          0.05 s
+  o1_mode        #5
+  o1_wave        #7
+  o1_ratio       2.3
+  o1_level       0.9
+  o1_decay       2 s
+  o1_sustain     0.85
+  o1_release     0.2 s
+  o2_ratio       1
+  o2_level       0.5
+  o3_ratio       1
+  o3_level       0.45
+  o3_sustain     0.9
+  e1_decay       1.2 s
+  e1_sustain     0.15
+  m01_src        #7
+  m01_dest       #10
+  m01_depth      0.5
+  f_type         #3
+  f_freq         5000 Hz
+  f_key          0.3
+  volume         0.82
+  insert Delay
+    time         #2
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.2
+
+patch "Fold Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Fold"
+  set macro2 "Drive"
+  set macro3 "Grit"
+  set macro4 "Ring"
+  set macro5 "Dark"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Soft"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.35
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac3_d1  #6
+  mac3_a1  0.3
+  mac4_d1  #7
+  mac4_a1  0.4
+  mac5_d1  #17
+  mac5_a1  -0.5
+  mac6_d1  #3
+  mac6_a1  0.2
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  -0.4
+  algoa          #3
+  glide          0.1 s
+  m01_depth      0.3
+  m01_dest       #3
+  m01_src        #3
+  o1_fb          0.45
+  o1_level       0.85
+  o1_mode        #4
+  o1_sustain     0.9
+  o2_level       0.8
+  o2_sustain     0.9
+  o2_wave        #7
+  voicemode      #2
+  volume         0.99
+  # Morph goes to every operator into the first.
+  algob          #14
+  # Silent until a macro reaches them: a ring operator fed by
+  # operator five.
+  o4_mode        #1
+  o5_ratio       2
+  o5_level       0.6
+
+patch "Chip Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Octave"
+  set macro2 "Dark"
+  set macro3 "Growl"
+  set macro4 "Bright"
+  set macro5 "Thin"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #6
+  mac1_a1  0.3
+  mac2_d1  #17
+  mac2_a1  -0.5
+  mac3_d1  #16
+  mac3_a1  0.2
+  mac4_d1  #5
+  mac4_a1  0.2
+  mac5_d1  #4
+  mac5_a1  -0.3
+  mac5_d2  #19
+  mac5_a2  0.37
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # A square and a quieter square an octave up, into a bit crusher, with a
+  # quick vibrato. The small-console lead.
+  algoa          #6
+  algob          #14
+  voicemode      #1
+  l1_rate        6 Hz
+  l1_delay       0.25
+  m01_src        #11
+  m01_dest       #1
+  m01_depth      0.008
+  o1_wave        #8
+  o1_ratio       1
+  o1_level       0.7
+  o1_decay       2 s
+  o1_sustain     0.85
+  o1_release     0.05 s
+  o2_ratio       1
+  o2_level       0
+  o3_wave        #8
+  o3_ratio       2
+  o3_level       0.25
+  o3_decay       2 s
+  o3_sustain     0.85
+  o3_release     0.05 s
+  volume         0.8
+  insert Bitcrusher
+    bits         6
+    rate         12000 Hz
+    mix          0.4
+
+patch "Vowel Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Vowel"
+  set macro2 "Close"
+  set macro3 "Dark"
+  set macro4 "Buzz"
+  set macro5 "Body"
+  set macro6 "Bright"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #10
+  mac1_a1  0.2
+  mac2_d1  #10
+  mac2_a1  -0.15
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #16
+  mac4_a1  0.15
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #5
+  mac6_a1  0.2
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A saw from feedback into an operator in filter-FM mode: a low-pass at
+  # three times the note, its cutoff swung by the operator's own wave. It
+  # talks, and a slow LFO moves the vowel.
+  algoa          #6
+  algob          #14
+  voicemode      #2
+  glide          0.05 s
+  o1_mode        #3
+  o1_ratio       3
+  o1_level       0.9
+  o1_attack      0.02 s
+  o1_decay       2 s
+  o1_sustain     0.85
+  o1_release     0.2 s
+  o2_ratio       1
+  o2_fb          0.8
+  o2_level       0.9
+  o2_sustain     0.9
+  o3_ratio       1
+  o3_level       0.3
+  o3_sustain     0.9
+  o3_release     0.2 s
+  l1_rate        0.3 Hz
+  l1_wave        #1
+  m01_src        #11
+  m01_dest       #10
+  m01_depth      0.1
+  volume         0.85
+  send reverb    0.12
+
+patch "Morph Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Morph"
+  set macro2 "Bright"
+  set macro3 "Dark"
+  set macro4 "Growl"
+  set macro5 "Speed"
+  set macro6 "Res"
+  set macro7 "Skew"
+  set macro8 "Still"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.3
+  mac2_d1  #5
+  mac2_a1  0.2
+  mac3_d1  #17
+  mac3_a1  -0.25
+  mac3_d2  #19
+  mac3_a2  0.297
+  mac4_d1  #16
+  mac4_a1  0.2
+  mac5_d1  #21
+  mac5_a1  0.3
+  mac6_d1  #18
+  mac6_a1  0.4
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  -0.3
+  # The same six operators wired two ways, one long chain and all five into
+  # the first, with a slow LFO morphing between them. Every operator is on
+  # a harmonic, so the note holds still while its colour turns over.
+  algoa          #0
+  algob          #14
+  morph          0.5
+  voicemode      #2
+  glide          0.04 s
+  l1_rate        0.3 Hz
+  l1_wave        #1
+  m01_src        #11
+  m01_dest       #2
+  m01_depth      0.45
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       2 s
+  o1_sustain     0.9
+  o1_release     0.2 s
+  o2_ratio       1
+  o2_level       0.35
+  o2_sustain     0.7
+  o3_ratio       2
+  o3_level       0.3
+  o3_sustain     0.7
+  o4_ratio       3
+  o4_level       0.25
+  o4_sustain     0.7
+  o5_ratio       1
+  o5_fb          0.3
+  o5_level       0.2
+  o5_sustain     0.7
+  o6_ratio       4
+  o6_level       0.15
+  o6_sustain     0.7
+  f_type         #3
+  f_freq         5000 Hz
+  volume         0.62
+  insert Delay
+    time         #2
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.2
+
+patch "Phase Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Edge"
+  set macro2 "Open"
+  set macro3 "Dark"
+  set macro4 "Res"
+  set macro5 "Body"
+  set macro6 "Bright"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.25
+  mac2_d1  #17
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #18
+  mac4_a1  0.4
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #7
+  mac6_a1  0.3
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # Two phase-bent triangles a few cents apart. An envelope bends the
+  # cycle hard at the start and eases off, so the note opens with a
+  # resonant edge and settles.
+  algoa          #6
+  algob          #14
+  voicemode      #2
+  glide          0.04 s
+  o1_mode        #6
+  o1_wave        #6
+  o1_fb          0.5
+  o1_ratio       1
+  o1_fine        -3
+  o1_level       0.85
+  o1_decay       2 s
+  o1_sustain     0.9
+  o1_release     0.2 s
+  o3_mode        #6
+  o3_wave        #6
+  o3_fb          0.4
+  o3_ratio       1
+  o3_fine        4
+  o3_level       0.6
+  o3_decay       2 s
+  o3_sustain     0.9
+  o3_release     0.2 s
+  e1_decay       0.6 s
+  e1_sustain     0
+  m01_src        #7
+  m01_dest       #16
+  m01_depth      0.3
+  f_type         #3
+  f_freq         4000 Hz
+  f_res          0.25
+  f_key          0.3
+  volume         0.88
+  insert Delay
+    time         #2
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.2
+
 patch "Sync Stab" family=lead  note=60 range=36..84 role=keys
+  set macro1 "Sync"
+  set macro2 "Low"
+  set macro3 "Body"
+  set macro4 "Grit"
+  set macro5 "Dark"
+  set macro6 "Skew"
+  set macro7 "Wobble"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #10
+  mac1_a1  0.3
+  mac2_d1  #10
+  mac2_a1  -0.2
+  mac3_d1  #7
+  mac3_a1  0.4
+  mac4_d1  #6
+  mac4_a1  0.3
+  mac5_d1  #17
+  mac5_a1  -0.5
+  mac5_d2  #19
+  mac5_a2  0.719
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #21
+  mac7_a1  0.3
+  mac8_d1  #2
+  mac8_a1  0.5
   algoa          #3
   l1_rate        0.4 Hz
   m01_depth      0.25
@@ -106,6 +2974,192 @@ patch "Sync Stab" family=lead  note=60 range=36..84 role=keys
   o2_wave        #7
   snap           #0
   volume         0.90
+  # Morph goes to every operator into the first.
+  algob          #14
+  # Silent until a macro reaches them: a sine under the note.
+  o4_ratio       1
+
+patch Scream family=lead  note=67 range=48..91 role=lead
+  set macro1 "Scream"
+  set macro2 "Bright"
+  set macro3 "Bite"
+  set macro4 "Dark"
+  set macro5 "Res"
+  set macro6 "Skew"
+  set macro7 "Morph"
+  set macro8 "Metal"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #16
+  mac1_a1  0.2
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac3_d1  #6
+  mac3_a1  0.3
+  mac4_d1  #17
+  mac4_a1  -0.25
+  mac4_d2  #19
+  mac4_a2  0.669
+  mac5_d1  #18
+  mac5_a1  0.4
+  mac6_d1  #3
+  mac6_a1  0.15
+  mac7_d1  #2
+  mac7_a1  0.5
+  mac8_d1  #11
+  mac8_a1  0.08
+  # Feedback almost all the way up on a stack of three. Past about 0.8 the
+  # operator stops being a sine at all and starts being noise, and this
+  # sits just under that.
+  algoa          #5
+  o1_ratio       1
+  o1_fb          0.55
+  o1_level       0.9
+  o1_decay       1.5 s
+  o1_sustain     0.8
+  o2_ratio       2
+  o2_fb          0.75
+  o2_level       0.5
+  o2_decay       1 s
+  o2_sustain     0.6
+  o3_ratio       1
+  o3_level       0.4
+  o3_decay       1 s
+  o3_sustain     0.5
+  o4_level       0
+  o5_level       0
+  o6_level       0
+  f_type         #3
+  f_freq         4000 Hz
+  f_res          0.2
+  volume         0.86
+  # Morph goes to three pairs.
+  algob          #6
+
+patch "Ring Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Ring"
+  set macro2 "Metal"
+  set macro3 "Dark"
+  set macro4 "Body"
+  set macro5 "Growl"
+  set macro6 "Soft"
+  set macro7 "Skew"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #11
+  mac2_a1  0.06
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #6
+  mac4_a1  0.3
+  mac5_d1  #16
+  mac5_a1  0.2
+  mac6_d1  #5
+  mac6_a1  -0.4
+  mac7_d1  #3
+  mac7_a1  0.15
+  mac8_d1  #2
+  mac8_a1  0.5
+  # A ring-modulated pair over a plain one. The ring pair gives the note and
+  # the twelfth, and a slow LFO nudges the ring operator's ratio so they
+  # shimmer against the pair under them.
+  algoa          #6
+  algob          #14
+  voicemode      #2
+  glide          0.04 s
+  o1_mode        #1
+  o1_ratio       1
+  o1_level       0.7
+  o1_decay       2 s
+  o1_sustain     0.85
+  o1_release     0.2 s
+  o2_ratio       2
+  o2_level       0.6
+  o2_sustain     0.8
+  o3_ratio       1
+  o3_level       0.8
+  o3_sustain     0.85
+  o3_release     0.2 s
+  o4_ratio       1
+  o4_level       0.25
+  o4_sustain     0.6
+  l1_rate        0.5 Hz
+  m01_src        #11
+  m01_dest       #11
+  m01_depth      0.005
+  volume         1.00
+  insert Delay
+    time         #2
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.2
+
+patch "Stretch Lead" family=lead  note=67 range=48..91 role=lead
+  set macro1 "Stretch"
+  set macro2 "Bright"
+  set macro3 "Dark"
+  set macro4 "Growl"
+  set macro5 "Body"
+  set macro6 "Soft"
+  set macro7 "Squash"
+  set macro8 "Morph"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #3
+  mac1_a1  0.05
+  mac2_d1  #5
+  mac2_a1  0.2
+  mac3_d1  #17
+  mac3_a1  -0.4
+  mac4_d1  #16
+  mac4_a1  0.2
+  mac5_d1  #6
+  mac5_a1  0.3
+  mac6_d1  #5
+  mac6_a1  -0.2
+  mac6_d2  #7
+  mac6_a2  -0.15
+  mac7_d1  #3
+  mac7_a1  -0.1
+  mac8_d1  #2
+  mac8_a1  0.5
+  # Snap off and the partials skewed apart, so every modulator sits a
+  # little above its harmonic and the partials run sharp as they climb. The
+  # carriers stay at one, so it still plays the note; pressure stretches
+  # it further.
+  algoa          #6
+  algob          #14
+  snap           #0
+  skew           0.02
+  voicemode      #2
+  glide          0.04 s
+  m02_src        #3
+  m02_dest       #3
+  m02_depth      0.1
+  o1_ratio       1
+  o1_level       0.9
+  o1_decay       2 s
+  o1_sustain     0.85
+  o1_release     0.2 s
+  o2_ratio       3
+  o2_level       0.3
+  o2_sustain     0.5
+  o3_ratio       1
+  o3_level       0.5
+  o3_sustain     0.85
+  o3_release     0.2 s
+  o4_ratio       4
+  o4_level       0.2
+  o4_sustain     0.5
+  volume         0.57
+  insert Delay
+    time         #2
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.2
+  send reverb    0.12
 
 patch Bell family=bell  note=60 range=36..84 role=bell
   set macro1 "Strike"
@@ -160,286 +3214,6 @@ patch Bell family=bell  note=60 range=36..84 role=bell
   snap           #5
   volume         0.79
 
-patch Stretched family=pad  note=60 range=36..84 role=bell
-  algoa          #6
-  m01_depth      0.5
-  m01_dest       #3
-  m01_src        #2
-  o1_decay       3 s
-  o1_level       0.85
-  o1_release     2 s
-  o1_sustain     0.3
-  o2_level       0.62
-  o2_ratio       3
-  o3_level       0.45
-  o3_ratio       7
-  skew           0.22
-  volume         0.72
-
-patch "Grit Bass" family=bass  note=36 range=24..55 role=bass
-  set macro1 "Grit"
-  set macro2 "Open"
-  set macro3 "Dark"
-  set macro4 "Fold"
-  set macro5 "Skew"
-  set macro6 "Morph"
-  set macro7 "Growl"
-  set macro8 "Sub"
-  # Macros: each knob adds its depth to the destinations below.
-  mac1_d1  #5
-  mac1_a1  0.3
-  mac1_d2  #19
-  mac1_a2  -0.1
-  mac2_d1  #17
-  mac2_a1  0.3
-  mac3_d1  #17
-  mac3_a1  -0.5
-  mac4_d1  #16
-  mac4_a1  0.4
-  mac5_d1  #3
-  mac5_a1  0.2
-  mac6_d1  #2
-  mac6_a1  0.5
-  mac7_d1  #11
-  mac7_a1  0.1
-  mac7_d2  #12
-  mac7_a2  0.06
-  mac8_d1  #6
-  mac8_a1  -0.3
-  f_freq         2200 Hz
-  f_res          0.2
-  m01_depth      0.35
-  m01_dest       #5
-  m01_src        #4
-  o1_decay       0.5 s
-  o1_level       0.9
-  o1_sustain     0.6
-  o2_decay       0.25 s
-  o2_fb          0.55
-  o2_level       0.65
-  o2_sustain     0.15
-  o3_fb          0.4
-  o3_level       0.4
-  o3_mode        #7
-  voicemode      #1
-  volume         0.95
-
-patch "Fold Lead" family=lead  note=67 range=48..91 role=lead
-  algoa          #3
-  glide          0.1 s
-  m01_depth      0.3
-  m01_dest       #3
-  m01_src        #3
-  o1_fb          0.45
-  o1_level       0.85
-  o1_mode        #4
-  o1_sustain     0.9
-  o2_level       0.8
-  o2_sustain     0.9
-  o2_wave        #7
-  voicemode      #2
-  volume         0.99
-
-patch "Morph Sweep" family=pad  note=55 range=36..79 role=pad
-  e1_attack      1.2 s
-  e1_decay       3 s
-  e1_sustain     0.4
-  m01_depth      0.7
-  m01_dest       #2
-  m01_src        #7
-  m02_depth      0.6
-  m02_dest       #2
-  m02_src        #2
-  o1_attack      0.4 s
-  o1_level       0.7
-  o1_release     1.5 s
-  o1_sustain     0.8
-  o2_level       0.6
-  o2_ratio       2
-  o2_sustain     0.7
-  o3_level       0.5
-  o3_ratio       3
-  o3_sustain     0.6
-  o4_level       0.45
-  o4_ratio       4
-  o5_level       0.4
-  o5_ratio       6
-  o6_level       0.35
-  o6_ratio       8
-  volume         0.60
-
-patch "Stage Keys" family=keys  note=60 range=36..84 role=keys
-  # Two pairs, the modulator a fourth above its carrier and decaying
-  # faster than it. The whole electric piano is that one relationship.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.9
-  o1_decay       3 s
-  o1_sustain     0.2
-  o1_release     0.7 s
-  o2_ratio       4
-  o2_level       0.42
-  o2_decay       0.5 s
-  o2_sustain     0.0
-  o2_vel         0.8
-  o3_ratio       1
-  o3_level       0.5
-  o3_decay       2.5 s
-  o3_sustain     0.15
-  o4_ratio       7
-  o4_level       0.22
-  o4_decay       0.3 s
-  o4_sustain     0.0
-  o5_level       0
-  o6_level       0
-  volume         0.72
-
-patch "Reed Keys" family=keys  note=60 range=36..84 role=keys
-  # Harder and hollower than the tine: the modulator is a square, which
-  # puts a reed's buzz on the front of every note.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.9
-  o1_decay       2.2 s
-  o1_sustain     0.18
-  o2_wave        #8
-  o2_ratio       2
-  o2_level       0.5
-  o2_decay       0.35 s
-  o2_sustain     0.0
-  o2_vel         0.9
-  o3_ratio       1
-  o3_level       0.4
-  o3_decay       1.8 s
-  o3_sustain     0.1
-  o4_ratio       3
-  o4_level       0.3
-  o4_decay       0.2 s
-  o4_sustain     0.0
-  o5_level       0
-  o6_level       0
-  volume         0.77
-
-patch "Funk Keys" family=keys  note=60 range=36..84 role=keys
-  # A stack of three with feedback on the top of it, decaying almost at
-  # once. Feedback is what turns a sine into a saw here.
-  algoa          #5
-  o1_ratio       1
-  o1_level       1.00
-  o1_decay       0.7 s
-  o1_sustain     0.05
-  o1_release     0.2 s
-  o2_ratio       3
-  o2_level       1.00
-  o2_decay       0.25 s
-  o2_sustain     0.0
-  o3_ratio       1
-  o3_fb          0.45
-  o3_level       1.00
-  o3_decay       0.2 s
-  o3_sustain     0.0
-  o4_level       0.00
-  o5_level       0.00
-  o6_level       0.00
-  f_type         #2
-  f_freq         4000 Hz
-  f_key          0.6
-  volume         1.00
-
-patch "Glass Keys" family=keys  note=60 range=36..84 role=keys
-  # Ratios of seven and eleven, which are nowhere near harmonic, held
-  # back to a level where they colour the note instead of destroying it.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.85
-  o1_decay       2.5 s
-  o1_sustain     0.12
-  o2_ratio       7
-  o2_level       0.2
-  o2_decay       1.2 s
-  o2_sustain     0.0
-  o3_ratio       1
-  o3_level       0.45
-  o3_decay       2 s
-  o3_sustain     0.1
-  o4_ratio       11
-  o4_level       0.14
-  o4_decay       0.8 s
-  o4_sustain     0.0
-  o5_level       0
-  o6_level       0
-  volume         0.76
-
-patch Hammer family=keys  note=60 range=36..84 role=keys
-  # The attack is a burst of noise from operator six and nothing else;
-  # after forty milliseconds it is gone and a plain tone is left.
-  algoa          #14
-  o1_ratio       1
-  o1_level       0.9
-  o1_decay       1.6 s
-  o1_sustain     0.1
-  o2_ratio       2
-  o2_level       0.3
-  o2_decay       0.5 s
-  o2_sustain     0.0
-  o3_ratio       3
-  o3_level       0.2
-  o3_decay       0.3 s
-  o3_sustain     0.0
-  o6_wave        #15
-  o6_level       0.35
-  o6_decay       0.04 s
-  o6_sustain     0.0
-  o4_level       0
-  o5_level       0
-  volume         0.63
-
-patch "Soft Keys" family=keys  note=60 range=36..84 role=keys
-  # Almost no modulation at all: two carriers a fifth apart, which is a
-  # machine like this being asked to be simple. It is the patch the rest
-  # of the bank is measured against.
-  algoa          #22
-  o1_ratio       1
-  o1_level       1.00
-  o1_decay       2.5 s
-  o1_sustain     0.35
-  o2_ratio       2
-  o2_level       0.59
-  o2_decay       2 s
-  o2_sustain     0.25
-  o3_ratio       3
-  o3_level       0.23
-  o3_decay       1.5 s
-  o3_sustain     0.1
-  o4_level       0.00
-  o5_level       0.00
-  o6_level       0.00
-  f_type         #2
-  f_freq         3000 Hz
-  volume         1.00
-
-patch "Toy Box" family=keys  note=60 range=36..84 role=keys
-  # A ratio of nine over a crushed sine. High, thin and mechanical: a
-  # music box that has been dropped.
-  algoa          #6
-  o1_wave        #2
-  o1_ratio       1
-  o1_level       1.00
-  o1_decay       1.4 s
-  o1_sustain     0.0
-  o2_ratio       9
-  o2_level       0.39
-  o2_decay       0.7 s
-  o2_sustain     0.0
-  o3_ratio       2
-  o3_level       0.45
-  o3_decay       1 s
-  o3_sustain     0.0
-  o4_level       0.00
-  o5_level       0.00
-  o6_level       0.00
-  volume         0.84
-
 patch "Struck Glass" family=bell  note=60 range=36..84 role=bell
   # Two modulators at a seventh and a thirteenth of the carrier, so every
   # partial lands between two notes of the scale. It rings for a long time
@@ -466,29 +3240,6 @@ patch "Struck Glass" family=bell  note=60 range=36..84 role=bell
   o6_level       0
   snap           #0
   volume         0.69
-
-patch Plucked family=keys  note=55 range=40..79 role=arp
-  # Everything short. The point is the envelope rather than the spectrum:
-  # an FM stack with a fast decay is a plucked string and nobody has to
-  # model one.
-  algoa          #5
-  o1_ratio       1
-  o1_level       1.00
-  o1_decay       0.9 s
-  o1_sustain     0.0
-  o1_release     0.3 s
-  o2_ratio       2
-  o2_level       0.52
-  o2_decay       0.25 s
-  o2_sustain     0.0
-  o3_ratio       5
-  o3_level       0.34
-  o3_decay       0.12 s
-  o3_sustain     0.0
-  o4_level       0.00
-  o5_level       0.00
-  o6_level       0.00
-  volume         1.00
 
 patch Tubular family=bell  note=60 range=36..84 role=bell
   # Five modulators into one carrier, all at ratios that share no factors.
@@ -676,335 +3427,6 @@ patch "Kalimba FM" family=bell  note=60 range=36..84 role=bell
   o6_level       0.00
   volume         1.00
 
-patch "Deep Sine" family=bass  note=36 range=24..55 role=bass
-  # One carrier, one modulator at the octave, and almost nothing else. The
-  # bass that does not fight anything.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.95
-  o1_decay       1.5 s
-  o1_sustain     0.65
-  o2_ratio       2
-  o2_level       0.18
-  o2_decay       0.4 s
-  o2_sustain     0.05
-  o3_level       0
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  volume         1.00
-
-patch Slap family=bass  note=36 range=24..55 role=bass
-  # The modulator is loud for sixty milliseconds and then gone, which is
-  # the click of a thumb and nothing more. Under it the note is a sine.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.9
-  o1_decay       1.2 s
-  o1_sustain     0.3
-  o2_ratio       5
-  o2_level       0.7
-  o2_decay       0.06 s
-  o2_sustain     0.0
-  o2_vel         0.9
-  o3_ratio       1
-  o3_level       0.4
-  o3_decay       0.9 s
-  o3_sustain     0.2
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  volume         1.00
-
-patch "Growl FM" family=bass  note=36 range=24..55 role=bass
-  # Feedback on a *modulator*, which is the one way to get a saw out of a
-  # sine, driven hard into a carrier on the same note. Dirty and entirely
-  # harmonic - every sideband of a unison modulator lands on a harmonic.
-  #
-  # Written first on the algorithm where all six operators are carriers,
-  # which means nothing modulates anything: it was two sines an octave apart
-  # with a low-pass on them, it had no growl in it at all, and Dan reported
-  # it as too quiet to really hear. It was not quiet, it was empty.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.95
-  o1_decay       1.5 s
-  o1_sustain     0.75
-  o2_ratio       1
-  o2_fb          0.85
-  o2_level       0.6
-  o2_decay       1.2 s
-  o2_sustain     0.55
-  o3_ratio       0.5
-  o3_level       0.5
-  o3_decay       1.5 s
-  o3_sustain     0.6
-  o4_ratio       2
-  o4_level       0.3
-  o4_decay       0.6 s
-  o4_sustain     0.25
-  o5_level       0
-  o6_level       0
-  f_type         #3
-  f_freq         1600 Hz
-  f_res          0.2
-  volume         1.00
-
-# Starts at 30: below that the fixed modulator is *above* the note and its
-# sidebands stop being harmonics of anything, which reads a hundred cents
-# out even though the note is still the loudest thing there.
-  volume         1.00
-patch "Sub Drop FM" family=bass  note=36 range=30..55 role=bass
-  # A second carrier fixed at fifty hertz under one that tracks the keyboard,
-  # so every note has the same rumble beneath it however high it is played.
-  # Fixed ratios are the other half of what this machine can do.
-  #
-  # **A fixed operator's ratio is in units of 55 Hz, not hertz.** Written as
-  # 50 it was not fifty hertz, it was two thousand seven hundred and fifty,
-  # and the patch called Sub Drop had a centroid of nearly three kilohertz.
-  # 0.91 is fifty. It was wrong twice before that as well - once with the
-  # fixed operator as the carrier, so it played the same pitch whatever key
-  # was held, and once with it modulating a carrier a tone below it, which
-  # throws sidebands everywhere.
-  algoa          #22
-  o1_ratio       1
-  o1_level       0.9
-  o1_decay       2 s
-  o1_sustain     0.55
-  o2_fixed       1
-  o2_ratio       0.91
-  o2_level       0.5
-  o2_decay       2 s
-  o2_sustain     0.5
-  o3_ratio       2
-  o3_level       0.12
-  o3_decay       0.6 s
-  o3_sustain     0.15
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  f_type         #3
-  f_freq         600 Hz
-  volume         1.00
-
-patch "Metal Bass" family=bass  note=36 range=24..55 role=bass
-  # A ratio of three and a half, which is not a harmonic of anything, kept
-  # quiet enough to be a colour on a bass rather than a bell.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.9
-  o1_decay       1.2 s
-  o1_sustain     0.5
-  o2_ratio       3.5
-  o2_level       0.28
-  o2_decay       0.5 s
-  o2_sustain     0.1
-  o3_ratio       1
-  o3_level       0.35
-  o3_decay       1 s
-  o3_sustain     0.4
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  snap           #0
-  volume         1.00
-
-patch "Pluck Bass FM" family=bass  note=36 range=24..55 role=bass
-  # Short, with the filter closing faster than the amplitude so the note
-  # goes dull before it goes quiet.
-  algoa          #5
-  o1_ratio       1
-  o1_level       1.00
-  o1_decay       0.6 s
-  o1_sustain     0.1
-  o2_ratio       2
-  o2_level       0.86
-  o2_decay       0.15 s
-  o2_sustain     0.0
-  o3_ratio       4
-  o3_level       0.52
-  o3_decay       0.08 s
-  o3_sustain     0.0
-  o4_level       0.00
-  o5_level       0.00
-  o6_level       0.00
-  f_type         #3
-  f_freq         700 Hz
-  f_env          0.6
-  f_decay        0.15 s
-  f_sustain      0.0
-  volume         1.00
-
-patch "Wide Bass FM" family=bass  note=36 range=24..55 role=bass
-  # Two carriers a few cents apart panned hard, which on a bass is usually
-  # a mistake and here is not, because the filter keeps the beating under
-  # the note.
-  #
-  # Both modulators were at a fifth of their carriers, which is barely any
-  # index at all: the patch was two detuned sines with four per cent of its
-  # energy above a hundred and fifty hertz, so on anything without real bass
-  # extension there was nothing to hear. Dan reported it as quiet and it was
-  # not quiet, it was empty.
-  algoa          #6
-  o1_ratio       1
-  o1_fine        -7
-  o1_pan         -0.6
-  o1_level       0.8
-  o1_decay       1.4 s
-  o1_sustain     0.6
-  o2_ratio       2
-  o2_level       0.5
-  o2_decay       0.5 s
-  o2_sustain     0.1
-  o3_ratio       1
-  o3_fine        7
-  o3_pan         0.6
-  o3_level       0.8
-  o3_decay       1.4 s
-  o3_sustain     0.6
-  o4_ratio       2
-  o4_level       0.5
-  o4_decay       0.5 s
-  o4_sustain     0.1
-  o5_level       0
-  o6_level       0
-  f_type         #3
-  f_freq         1500 Hz
-  volume         0.72
-
-patch "Brass FM" family=lead  note=67 range=48..91 role=lead
-  # The modulator rises with the amplitude rather than falling, which is
-  # what a brass attack is: the sound gets brighter as it gets louder.
-  algoa          #5
-  o1_ratio       1
-  o1_level       0.9
-  o1_attack      0.04 s
-  o1_decay       2 s
-  o1_sustain     0.8
-  o2_ratio       1
-  o2_level       0.45
-  o2_attack      0.12 s
-  o2_decay       1.5 s
-  o2_sustain     0.55
-  o3_ratio       2
-  o3_level       0.25
-  o3_attack      0.18 s
-  o3_decay       1 s
-  o3_sustain     0.35
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  volume         0.72
-
-patch "Square Lead FM" family=lead  note=67 range=48..91 role=lead
-  # A square modulator at the unison, which is how to get a hollow pulse
-  # out of a machine with no pulse in it.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.9
-  o1_decay       1.5 s
-  o1_sustain     0.85
-  o2_wave        #8
-  o2_ratio       1
-  o2_level       0.4
-  o2_decay       1 s
-  o2_sustain     0.6
-  o3_level       0
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  glide          0.03 s
-  volume         0.89
-
-patch "Reed Lead" family=lead  note=67 range=48..91 role=lead
-  # An odd-harmonic modulator at three times the note, which is a clarinet
-  # written as two numbers.
-  algoa          #6
-  o1_ratio       1
-  o1_level       0.9
-  o1_attack      0.03 s
-  o1_decay       2 s
-  o1_sustain     0.8
-  o2_wave        #13
-  o2_ratio       3
-  o2_level       0.32
-  o2_attack      0.05 s
-  o2_decay       1 s
-  o2_sustain     0.5
-  o3_level       0
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  volume         0.87
-
-patch Scream family=lead  note=67 range=48..91 role=lead
-  # Feedback almost all the way up on a stack of three. Past about 0.8 the
-  # operator stops being a sine at all and starts being noise, and this
-  # sits just under that.
-  algoa          #5
-  o1_ratio       1
-  o1_fb          0.55
-  o1_level       0.9
-  o1_decay       1.5 s
-  o1_sustain     0.8
-  o2_ratio       2
-  o2_fb          0.75
-  o2_level       0.5
-  o2_decay       1 s
-  o2_sustain     0.6
-  o3_ratio       1
-  o3_level       0.4
-  o3_decay       1 s
-  o3_sustain     0.5
-  o4_level       0
-  o5_level       0
-  o6_level       0
-  f_type         #3
-  f_freq         4000 Hz
-  f_res          0.2
-  volume         0.86
-
-patch "Whistle FM" family=lead  note=67 range=48..91 role=lead
-  # One operator, one sine, nothing else on at all. Proof that the machine
-  # will get out of the way when it is asked to.
-  algoa          #22
-  o1_ratio       1
-  o1_level       1.00
-  o1_attack      0.04 s
-  o1_decay       2 s
-  o1_sustain     0.9
-  o2_level       0.00
-  o3_level       0.00
-  o4_level       0.00
-  o5_level       0.00
-  o6_level       0.00
-  glide          0.1 s
-  volume         1.00
-
-patch "Fifth Stack" family=lead  note=67 range=48..91 role=lead
-  # Three carriers at the unison, the fifth and the octave, with one
-  # modulator across all of them. Hollow and very large.
-  algoa          #10
-  o1_ratio       1
-  o1_level       0.7
-  o1_decay       2 s
-  o1_sustain     0.8
-  o2_ratio       1.5
-  o2_level       0.55
-  o2_decay       2 s
-  o2_sustain     0.8
-  o3_ratio       2
-  o3_level       0.4
-  o3_decay       2 s
-  o3_sustain     0.8
-  o4_level       0
-  o5_level       0
-  o6_ratio       2
-  o6_level       0.3
-  o6_decay       1.5 s
-  o6_sustain     0.5
-  volume         0.90
-
 patch Drawbars family=reed  note=60 range=36..84 role=keys
   # All six operators as carriers at the octave, the fifth, the double
   # octave and so on, which is exactly what an organ's drawbars are. No
@@ -1159,6 +3581,50 @@ patch Pipe family=reed  note=55 range=36..79 role=pad
   o5_level       0.00
   o6_level       0.00
   volume         1.00
+
+patch Stretched family=pad  note=60 range=36..84 role=bell
+  algoa          #6
+  m01_depth      0.5
+  m01_dest       #3
+  m01_src        #2
+  o1_decay       3 s
+  o1_level       0.85
+  o1_release     2 s
+  o1_sustain     0.3
+  o2_level       0.62
+  o2_ratio       3
+  o3_level       0.45
+  o3_ratio       7
+  skew           0.22
+  volume         0.72
+
+patch "Morph Sweep" family=pad  note=55 range=36..79 role=pad
+  e1_attack      1.2 s
+  e1_decay       3 s
+  e1_sustain     0.4
+  m01_depth      0.7
+  m01_dest       #2
+  m01_src        #7
+  m02_depth      0.6
+  m02_dest       #2
+  m02_src        #2
+  o1_attack      0.4 s
+  o1_level       0.7
+  o1_release     1.5 s
+  o1_sustain     0.8
+  o2_level       0.6
+  o2_ratio       2
+  o2_sustain     0.7
+  o3_level       0.5
+  o3_ratio       3
+  o3_sustain     0.6
+  o4_level       0.45
+  o4_ratio       4
+  o5_level       0.4
+  o5_ratio       6
+  o6_level       0.35
+  o6_ratio       8
+  volume         0.60
 
 patch "String Pad FM" family=pad  note=55 range=36..79 role=pad
   set macro1 "Bloom"

@@ -1970,261 +1970,492 @@ internal object FactoryBanks {
     private fun ratio0() = Patch("Ratio", "Init", emptyMap(),
         family = "keys")
 
-    private fun ratio1() = Patch("Ratio", "Tine",
+    private fun ratio1() = Patch("Ratio", "Soft Keys",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.79919f, "o1_sustain" to 0.35f, "o2_ratio" to 0.375f, "o2_level" to 0.59f, "o2_decay" to 0.774181366f, "o2_sustain" to 0.25f, "o3_ratio" to 0.448120326f, "o3_level" to 0.23f, "o3_decay" to 0.7419396f, "o3_sustain" to 0.1f, "algoa" to 0.7096774f, "algob" to 0f, "f_type" to 0.181818187f, "f_freq" to 0.725363731f, "volume" to 1f, "mac1_d1" to 0.739130437f, "mac1_a1" to 0.675f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.375f, "mac3_d1" to 0.2173913f, "mac3_a1" to 0.65f, "mac4_d1" to 0.260869563f, "mac4_a1" to 0.675f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.08695652f, "mac6_a1" to 0.7f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.56f, "mac8_d1" to 0.5217391f, "mac8_a1" to 0.56f),
+        mapOf("macro1" to "Bright", "macro2" to "Dark", "macro3" to "Octave", "macro4" to "Twelfth", "macro5" to "Growl", "macro6" to "Morph", "macro7" to "Skew", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84)
+
+    private fun ratio2() = Patch("Ratio", "Mellow Keys",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.8368998f, "o1_sustain" to 0.25f, "o1_release" to 0.639247f, "o2_level" to 0.24f, "o2_sustain" to 0.05f, "o2_vel" to 0.9f, "o3_ratio" to 0.375f, "o3_level" to 0.22f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.1f, "o4_level" to 0.15f, "o4_decay" to 0.593804836f, "o4_sustain" to 0f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_type" to 0.09090909f, "f_freq" to 0.69897f, "f_key" to 0.5f, "volume" to 0.87f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.3043478f, "mac2_a1" to 0.675f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.35f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.375f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.35f))),
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun ratio3() = Patch("Ratio", "Stage Keys",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.2f, "o1_release" to 0.656523347f, "o2_ratio" to 0.5f, "o2_level" to 0.42f, "o2_decay" to 0.618813455f, "o2_sustain" to 0f, "o2_vel" to 0.8f, "o3_level" to 0.5f, "o3_decay" to 0.79919f, "o3_sustain" to 0.15f, "o4_ratio" to 0.600919366f, "o4_level" to 0.22f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.72f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.3043478f, "mac2_a1" to 0.675f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.35f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84)
+
+    private fun ratio4() = Patch("Ratio", "Tine",
         mapOf("o1_decay" to 0.79919f, "o1_sustain" to 0.25f, "o2_ratio" to 0.7259193f, "o2_level" to 0.55f, "o2_decay" to 0.578839362f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.5f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.2f, "o4_ratio" to 0.448120326f, "o4_level" to 0.35f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.76f, "mac1_d1" to 0.2173913f, "mac1_d2" to 0.3043478f, "mac1_d3" to 0.826086938f, "mac1_a1" to 0.675f, "mac1_a2" to 0.65f, "mac1_a3" to 0.45f, "mac2_d1" to 0.478260875f, "mac2_a1" to 0.55f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.260869563f, "mac3_a1" to 0.25f, "mac3_a2" to 0.3f, "mac4_d1" to 0.130434781f, "mac4_a1" to 0.575f, "mac5_d1" to 0.739130437f, "mac5_a1" to 0.25f, "mac6_d1" to 0.08695652f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6956522f, "mac7_a1" to 0.7f, "mac8_d1" to 0.5652174f, "mac8_a1" to 0.625f),
         mapOf("macro1" to "Bright", "macro2" to "Warp", "macro3" to "Soft", "macro4" to "Skew", "macro5" to "Dark", "macro6" to "Morph", "macro7" to "Wobble", "macro8" to "Tone"),
         family = "keys",
         low = 36, high = 84)
 
-    private fun ratio2() = Patch("Ratio", "Sync Stab",
-        mapOf("o1_mode" to 0.714285731f, "o1_ratio" to 0.521240652f, "o1_level" to 1f, "o1_decay" to 0.639247f, "o1_sustain" to 0.3f, "o2_wave" to 0.466666669f, "o2_level" to 1f, "o2_sustain" to 1f, "algoa" to 0.09677419f, "snap" to 0f, "l1_rate" to 0.4447622f, "m01_src" to 0.846153855f, "m01_dest" to 0.4347826f, "m01_depth" to 0.625f, "volume" to 0.9f),
-        family = "lead",
+    private fun ratio5() = Patch("Ratio", "Wide Keys",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.8118912f, "o1_sustain" to 0.2f, "o1_release" to 0.639247f, "o2_ratio" to 0.7259193f, "o2_level" to 0.3f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_fine" to 0.56f, "o3_level" to 0.55f, "o3_decay" to 0.7848632f, "o3_sustain" to 0.15f, "o3_release" to 0.618813455f, "o4_level" to 0.3f, "o4_decay" to 0.716931f, "o4_sustain" to 0.1f, "o4_vel" to 0.8f, "o5_fine" to 0.44f, "o5_level" to 0.45f, "o5_decay" to 0.7946149f, "o5_sustain" to 0.15f, "o5_release" to 0.618813455f, "o6_ratio" to 0.375f, "o6_level" to 0.2f, "o6_decay" to 0.639247f, "o6_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.76f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.3043478f, "mac2_a1" to 0.675f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.35f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.35f))),
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun ratio6() = Patch("Ratio", "Upright",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.8518653f, "o1_sustain" to 0f, "o1_release" to 0.593804836f, "o1_key" to 0.4f, "o2_level" to 0.4f, "o2_decay" to 0.69649744f, "o2_sustain" to 0f, "o2_vel" to 0.8f, "o2_key" to 0.35f, "o3_ratio" to 0.375f, "o3_level" to 0.5f, "o3_decay" to 0.79919f, "o3_sustain" to 0f, "o3_release" to 0.593804836f, "o4_level" to 0.25f, "o4_decay" to 0.618813455f, "o4_sustain" to 0f, "o4_vel" to 0.9f, "o5_ratio" to 0.448120326f, "o5_level" to 0.2f, "o5_decay" to 0.7419396f, "o5_sustain" to 0f, "o6_ratio" to 0.738361359f, "o6_level" to 0.15f, "o6_decay" to 0.303502649f, "o6_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0f, "skew" to 0.505f, "volume" to 0.86f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.391304344f, "mac2_a1" to 0.65f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.375f, "mac3_a2" to 0.425f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.130434781f, "mac5_a1" to 0.515f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.625f, "mac7_d1" to 0.08695652f, "mac7_d2" to 0.826086938f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3675f, "mac8_d1" to 0.3043478f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Hammer", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Stretch", "macro6" to "Growl", "macro7" to "Morph", "macro8" to "Bell"),
+        family = "keys",
+        low = 36, high = 84,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun ratio7() = Patch("Ratio", "Reed Keys",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7848632f, "o1_sustain" to 0.18f, "o2_wave" to 0.533333361f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.578839362f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.4f, "o3_decay" to 0.762373149f, "o3_sustain" to 0.1f, "o4_ratio" to 0.448120326f, "o4_level" to 0.3f, "o4_decay" to 0.5161209f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.77f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.3043478f, "mac2_a1" to 0.675f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.35f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
         low = 36, high = 84)
 
-    private fun ratio3() = Patch("Ratio", "Bell",
-        mapOf("o1_decay" to 0.897307456f, "o1_sustain" to 0f, "o1_release" to 0.897307456f, "o2_ratio" to 0.433083534f, "o2_level" to 0.6f, "o2_decay" to 0.81962353f, "o2_sustain" to 0f, "o2_release" to 0.81962353f, "o3_ratio" to 0.554119945f, "o3_level" to 0.45f, "o3_decay" to 0.8518653f, "o3_sustain" to 0f, "o3_release" to 0.8518653f, "algoa" to 0.193548381f, "snap" to 1f, "volume" to 0.79f, "mac1_d1" to 0.2173913f, "mac1_d2" to 0.260869563f, "mac1_a1" to 0.65f, "mac1_a2" to 0.65f, "mac2_d1" to 0.478260875f, "mac2_d2" to 0.5217391f, "mac2_a1" to 0.54f, "mac2_a2" to 0.525f, "mac3_d1" to 0.6086956f, "mac3_d2" to 0.652173936f, "mac3_a1" to 0.515f, "mac3_a2" to 0.52f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.130434781f, "mac5_a1" to 0.6f, "mac6_d1" to 0.08695652f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6956522f, "mac7_a1" to 0.675f, "mac8_d1" to 0.2173913f, "mac8_d2" to 0.260869563f, "mac8_d3" to 0.826086938f, "mac8_a1" to 0.25f, "mac8_a2" to 0.275f, "mac8_a3" to 0.55f),
-        mapOf("macro1" to "Strike", "macro2" to "Metal", "macro3" to "Shimmer", "macro4" to "Dark", "macro5" to "Skew", "macro6" to "Morph", "macro7" to "Wobble", "macro8" to "Thin"),
-        family = "bell",
+    private fun ratio8() = Patch("Ratio", "Tremolo Keys",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.79919f, "o1_sustain" to 0.3f, "o1_release" to 0.593804836f, "o2_wave" to 0.4f, "o2_level" to 0.45f, "o2_decay" to 0.639247f, "o2_sustain" to 0.05f, "o2_vel" to 0.9f, "o3_level" to 0.5f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.2f, "o4_ratio" to 0.448120326f, "o4_level" to 0.25f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "o4_vel" to 0.9f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.8f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.3043478f, "mac2_a1" to 0.675f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.35f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Tremolo", mapOf("depth" to 0.35f, "pan" to 1f))),
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun ratio9() = Patch("Ratio", "Hammer",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7491727f, "o1_sustain" to 0.1f, "o2_ratio" to 0.375f, "o2_level" to 0.3f, "o2_decay" to 0.618813455f, "o2_sustain" to 0f, "o3_ratio" to 0.448120326f, "o3_level" to 0.2f, "o3_decay" to 0.5615631f, "o3_sustain" to 0f, "o6_wave" to 1f, "o6_level" to 0.35f, "o6_decay" to 0.335744351f, "o6_sustain" to 0f, "algoa" to 0.4516129f, "algob" to 0f, "volume" to 0.63f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.260869563f, "mac2_a1" to 0.65f, "mac3_d1" to 0.391304344f, "mac3_a1" to 0.65f, "mac4_d1" to 0.2173913f, "mac4_d2" to 0.260869563f, "mac4_d3" to 0.391304344f, "mac4_a1" to 0.375f, "mac4_a2" to 0.425f, "mac4_a3" to 0.375f, "mac5_d1" to 0.739130437f, "mac5_a1" to 0.25f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Knock", "macro4" to "Soft", "macro5" to "Dark", "macro6" to "Growl", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "keys",
         low = 36, high = 84)
 
-    private fun ratio4() = Patch("Ratio", "Stretched",
-        mapOf("o1_level" to 0.85f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.3f, "o1_release" to 0.774181366f, "o2_ratio" to 0.448120326f, "o2_level" to 0.62f, "o3_ratio" to 0.600919366f, "o3_level" to 0.45f, "algoa" to 0.193548381f, "skew" to 0.72f, "m01_src" to 0.15384616f, "m01_dest" to 0.130434781f, "m01_depth" to 0.75f, "volume" to 0.72f),
-        family = "pad",
+    private fun ratio10() = Patch("Ratio", "Funk Keys",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.656523347f, "o1_sustain" to 0.05f, "o1_release" to 0.5161209f, "o2_ratio" to 0.448120326f, "o2_level" to 1f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o3_level" to 1f, "o3_fb" to 0.45f, "o3_decay" to 0.5161209f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "algob" to 0.193548381f, "f_type" to 0.181818187f, "f_freq" to 0.76701f, "f_key" to 0.6f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.260869563f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.65f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.375f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.625f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bite", "macro3" to "Open", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
         low = 36, high = 84)
 
-    private fun ratio5() = Patch("Ratio", "Grit Bass",
+    private fun ratio11() = Patch("Ratio", "Pulse Keys",
+        mapOf("o1_wave" to 0.533333361f, "o1_level" to 1f, "o1_decay" to 0.6846892f, "o1_sustain" to 0.1f, "o1_release" to 0.438436955f, "o2_level" to 0.25f, "o2_decay" to 0.483879149f, "o2_sustain" to 0f, "o2_vel" to 0.8f, "o3_level" to 0.5f, "o3_decay" to 0.6846892f, "o3_sustain" to 0.1f, "o3_release" to 0.438436955f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_freq" to 0.551070869f, "f_res" to 0.35f, "f_env" to 0.8f, "f_key" to 0.5f, "f_decay" to 0.5411295f, "f_sustain" to 0.1f, "volume" to 0.62f, "mac1_d1" to 0.739130437f, "mac1_a1" to 0.675f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.4f, "mac3_d1" to 0.7826087f, "mac3_a1" to 0.7f, "mac4_d1" to 0.2173913f, "mac4_a1" to 0.65f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Dark", "macro3" to "Res", "macro4" to "Bite", "macro5" to "Body", "macro6" to "Growl", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "keys",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Phaser", mapOf("depth" to 0.6f, "mix" to 0.4f, "gain" to 0.5729167f))))
+
+    private fun ratio12() = Patch("Ratio", "Harpsichord",
+        mapOf("o1_decay" to 0.7419396f, "o1_sustain" to 0f, "o1_release" to 0.438436955f, "o2_ratio" to 0.448120326f, "o2_level" to 0.4f, "o2_decay" to 0.69649744f, "o2_sustain" to 0f, "o3_level" to 0.35f, "o3_fb" to 0.5f, "o3_sustain" to 0f, "o4_ratio" to 0.375f, "o4_level" to 0.45f, "o4_decay" to 0.716931f, "o4_sustain" to 0f, "o4_release" to 0.438436955f, "o5_level" to 0.35f, "o5_decay" to 0.639247f, "o5_sustain" to 0f, "o6_ratio" to 0.540241f, "o6_level" to 0.2f, "o6_decay" to 0.438436955f, "o6_sustain" to 0f, "algoa" to 0.09677419f, "algob" to 0.4516129f, "volume" to 0.8f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.260869563f, "mac2_a1" to 0.65f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3478261f, "mac3_a1" to 0.375f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.3043478f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.6f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.56f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Pluck", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Octave", "macro6" to "Growl", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "keys",
+        low = 36, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun ratio13() = Patch("Ratio", "Plucked",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.6846892f, "o1_sustain" to 0f, "o1_release" to 0.5615631f, "o2_ratio" to 0.375f, "o2_level" to 0.52f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o3_ratio" to 0.540241f, "o3_level" to 0.34f, "o3_decay" to 0.4588705f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "algob" to 0.193548381f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.260869563f, "mac2_a1" to 0.65f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.260869563f, "mac3_a1" to 0.35f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bite", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 40, high = 79)
+
+    private fun ratio14() = Patch("Ratio", "Vibes",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.8518653f, "o1_sustain" to 0f, "o1_release" to 0.7419396f, "o2_ratio" to 0.5f, "o2_level" to 0.3f, "o2_decay" to 0.483879149f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.35f, "o3_decay" to 0.79919f, "o3_sustain" to 0f, "o3_release" to 0.716931f, "o4_ratio" to 0.665241f, "o4_level" to 0.1f, "o4_decay" to 0.4134283f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.72f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.3043478f, "mac2_a1" to 0.65f, "mac3_d1" to 0.2173913f, "mac3_a1" to 0.375f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.6f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Tremolo", mapOf("depth" to 0.25f))),
+        sendReverb = 0.18f, sendDelay = 0f)
+
+    private fun ratio15() = Patch("Ratio", "Glass Keys",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.79919f, "o1_sustain" to 0.12f, "o2_ratio" to 0.600919366f, "o2_level" to 0.2f, "o2_decay" to 0.716931f, "o2_sustain" to 0f, "o3_level" to 0.45f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.1f, "o4_ratio" to 0.682428956f, "o4_level" to 0.14f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.76f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.3043478f, "mac2_a1" to 0.675f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.35f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bell", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84)
+
+    private fun ratio16() = Patch("Ratio", "Morph Keys",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.2f, "o1_release" to 0.618813455f, "o2_ratio" to 0.375f, "o2_level" to 0.35f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.05f, "o3_level" to 0.5f, "o3_decay" to 0.79919f, "o3_sustain" to 0.15f, "o4_ratio" to 0.448120326f, "o4_level" to 0.3f, "o4_sustain" to 0f, "o5_level" to 0.35f, "o5_decay" to 0.774181366f, "o5_sustain" to 0.1f, "o6_level" to 0.2f, "o6_decay" to 0.618813455f, "o6_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0f, "e1_decay" to 0.656523347f, "m01_src" to 0.538461566f, "m01_dest" to 0.08695652f, "m01_depth" to 0.85f, "volume" to 0.54f, "mac1_d1" to 0.08695652f, "mac1_a1" to 0.7f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.65f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.3043478f, "mac3_a1" to 0.4f, "mac3_a2" to 0.4f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.25f, "mac8_d1" to 0.5652174f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Morph", "macro2" to "Bright", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Still", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun ratio17() = Patch("Ratio", "Phase Keys",
+        mapOf("o1_wave" to 0.4f, "o1_mode" to 0.857142866f, "o1_fb" to 0.6f, "o1_decay" to 0.762373149f, "o1_sustain" to 0.2f, "o1_release" to 0.5615631f, "o3_level" to 0.5f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.15f, "o4_level" to 0.3f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "f_freq" to 0.5927171f, "f_env" to 0.75f, "f_key" to 0.5f, "f_decay" to 0.593804836f, "f_sustain" to 0.2f, "volume" to 0.95f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.4f, "mac4_d1" to 0.7826087f, "mac4_a1" to 0.7f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.3043478f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Edge", "macro2" to "Open", "macro3" to "Dark", "macro4" to "Res", "macro5" to "Body", "macro6" to "Bright", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "keys",
+        low = 36, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun ratio18() = Patch("Ratio", "Ring Keys",
+        mapOf("o1_mode" to 0.142857149f, "o1_level" to 0.9f, "o1_decay" to 0.79919f, "o1_sustain" to 0.2f, "o1_release" to 0.618813455f, "o2_ratio" to 0.375f, "o2_level" to 0.8f, "o2_decay" to 0.7419396f, "o2_sustain" to 0.2f, "o3_level" to 0.4f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.15f, "o4_ratio" to 0.448120326f, "o4_level" to 0.15f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.97f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.478260875f, "mac2_a1" to 0.55f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.826086938f, "mac3_a1" to 0.3f, "mac3_a2" to 0.775f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.6f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Ring", "macro2" to "Metal", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Body", "macro6" to "Growl", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "keys",
+        low = 36, high = 84,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun ratio19() = Patch("Ratio", "Toy Box",
+        mapOf("o1_wave" to 0.13333334f, "o1_level" to 1f, "o1_decay" to 0.7342073f, "o1_sustain" to 0f, "o2_ratio" to 0.646240652f, "o2_level" to 0.39f, "o2_decay" to 0.656523347f, "o2_sustain" to 0f, "o3_ratio" to 0.375f, "o3_level" to 0.45f, "o3_decay" to 0.69649744f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 0.84f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.625f, "mac2_d1" to 0.5217391f, "mac2_a1" to 0.75f, "mac3_d1" to 0.2173913f, "mac3_a1" to 0.35f, "mac4_d1" to 0.739130437f, "mac4_d2" to 0.826086938f, "mac4_a1" to 0.325f, "mac4_a2" to 0.7085f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.53f),
+        mapOf("macro1" to "Bright", "macro2" to "Chime", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "keys",
+        low = 36, high = 84)
+
+    private fun ratio20() = Patch("Ratio", "Deep Sine",
+        mapOf("o1_level" to 0.95f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.65f, "o2_ratio" to 0.375f, "o2_level" to 0.18f, "o2_decay" to 0.593804836f, "o2_sustain" to 0.05f, "algoa" to 0.193548381f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.15f, "mac3_d1" to 0.6956522f, "mac3_a1" to 0.675f, "mac4_d1" to 0.478260875f, "mac4_a1" to 0.75f, "mac5_d1" to 0.478260875f, "mac5_a1" to 0.54f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.6f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.173913047f, "mac8_d2" to 0.826086938f, "mac8_a1" to 0.3f, "mac8_a2" to 0.868999958f),
+        mapOf("macro1" to "Bright", "macro2" to "Dark", "macro3" to "Growl", "macro4" to "Octave", "macro5" to "Metal", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Thin"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio21() = Patch("Ratio", "Finger Bass",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.716931f, "o1_sustain" to 0.5f, "o1_release" to 0.4588705f, "o2_level" to 0.32f, "o2_decay" to 0.5411295f, "o2_sustain" to 0.1f, "o2_vel" to 0.8f, "o3_ratio" to 0.375f, "o3_level" to 0.2f, "o3_decay" to 0.618813455f, "o3_sustain" to 0.2f, "o3_release" to 0.4588705f, "o4_level" to 0.1f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_freq" to 0.6150327f, "f_key" to 0.4f, "voicemode" to 0.5f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.375f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.65f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2173913f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "Bright", "macro2" to "Dark", "macro3" to "Open", "macro4" to "Growl", "macro5" to "Body", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Soft"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio22() = Patch("Ratio", "Slap",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.716931f, "o1_sustain" to 0.3f, "o2_ratio" to 0.540241f, "o2_level" to 0.7f, "o2_decay" to 0.381186575f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.4f, "o3_decay" to 0.6846892f, "o3_sustain" to 0.2f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.15f, "mac3_d1" to 0.6956522f, "mac3_a1" to 0.65f, "mac4_d1" to 0.260869563f, "mac4_a1" to 0.65f, "mac5_d1" to 0.478260875f, "mac5_a1" to 0.54f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2173913f, "mac8_a1" to 0.3f),
+        mapOf("macro1" to "Bright", "macro2" to "Dark", "macro3" to "Growl", "macro4" to "Body", "macro5" to "Metal", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Soft"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio23() = Patch("Ratio", "Pluck Bass FM",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.639247f, "o1_sustain" to 0.1f, "o2_ratio" to 0.375f, "o2_level" to 0.86f, "o2_decay" to 0.483879149f, "o2_sustain" to 0f, "o3_ratio" to 0.5f, "o3_level" to 0.52f, "o3_decay" to 0.4134283f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "algob" to 0.193548381f, "f_freq" to 0.5146893f, "f_env" to 0.8f, "f_decay" to 0.483879149f, "f_sustain" to 0f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.260869563f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.35f, "mac5_d1" to 0.7826087f, "mac5_a1" to 0.75f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Bite", "macro3" to "Open", "macro4" to "Dark", "macro5" to "Res", "macro6" to "Growl", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio24() = Patch("Ratio", "Pulse Bass",
+        mapOf("o1_wave" to 0.533333361f, "o1_level" to 0.7f, "o1_decay" to 0.69649744f, "o1_sustain" to 0.6f, "o1_release" to 0.438436955f, "o3_level" to 0.5f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.7f, "o3_release" to 0.438436955f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "f_freq" to 0.46598f, "f_res" to 0.3f, "f_env" to 0.75f, "f_key" to 0.3f, "f_decay" to 0.5615631f, "f_sustain" to 0.2f, "voicemode" to 0.5f, "volume" to 0.9f, "mac1_d1" to 0.739130437f, "mac1_a1" to 0.7f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.35f, "mac3_d1" to 0.7826087f, "mac3_a1" to 0.7f, "mac4_d1" to 0.260869563f, "mac4_a1" to 0.65f, "mac5_d1" to 0.2173913f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.6f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Dark", "macro3" to "Res", "macro4" to "Sub", "macro5" to "Bite", "macro6" to "Growl", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio25() = Patch("Ratio", "Fretless",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o1_release" to 0.483879149f, "o2_level" to 0.35f, "o2_attack" to 0.4757725f, "o2_decay" to 0.639247f, "o2_sustain" to 0.2f, "o3_ratio" to 0.375f, "o3_level" to 0.15f, "o3_decay" to 0.69649744f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_type" to 0.09090909f, "f_freq" to 0.651414156f, "f_key" to 0.3f, "l1_rate" to 0.749285161f, "m01_src" to 0.846153855f, "m01_src2" to 0.15384616f, "m01_dest" to 0.04347826f, "m01_depth" to 0.504f, "voicemode" to 1f, "glide" to 0.04f, "volume" to 0.9f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.3f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.625f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2173913f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "Mwah", "macro2" to "Dark", "macro3" to "Open", "macro4" to "Growl", "macro5" to "Body", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Soft"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio26() = Patch("Ratio", "Wide Bass FM",
+        mapOf("o1_fine" to 0.43f, "o1_decay" to 0.7342073f, "o1_sustain" to 0.6f, "o1_pan" to 0.199999988f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.618813455f, "o2_sustain" to 0.1f, "o3_fine" to 0.57f, "o3_level" to 0.8f, "o3_decay" to 0.7342073f, "o3_sustain" to 0.6f, "o3_pan" to 0.8f, "o4_ratio" to 0.375f, "o4_level" to 0.5f, "o4_decay" to 0.618813455f, "o4_sustain" to 0.1f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "f_freq" to 0.625020444f, "volume" to 0.72f, "mac1_d1" to 0.2173913f, "mac1_d2" to 0.3043478f, "mac1_a1" to 0.65f, "mac1_a2" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.7f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.7826087f, "mac4_a1" to 0.75f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.478260875f, "mac6_d2" to 0.5652174f, "mac6_a1" to 0.54f, "mac6_a2" to 0.54f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_d2" to 0.826086938f, "mac8_a1" to 0.75f, "mac8_a2" to 0.7105f),
+        mapOf("macro1" to "Bright", "macro2" to "Open", "macro3" to "Dark", "macro4" to "Res", "macro5" to "Growl", "macro6" to "Metal", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio27() = Patch("Ratio", "Hollow Bass",
+        mapOf("o1_level" to 1f, "o1_decay" to 0.7419396f, "o1_release" to 0.4588705f, "o2_ratio" to 0.375f, "o2_level" to 0.45f, "o2_decay" to 0.656523347f, "o2_sustain" to 0.3f, "o2_vel" to 0.7f, "o3_ratio" to 0.448120326f, "o3_level" to 0.2f, "o3_decay" to 0.69649744f, "o4_ratio" to 0.375f, "o4_level" to 0.2f, "o4_decay" to 0.618813455f, "o4_sustain" to 0.2f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_freq" to 0.625020444f, "f_key" to 0.3f, "voicemode" to 0.5f, "volume" to 0.84f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.3f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.625f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2173913f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "Bright", "macro2" to "Dark", "macro3" to "Open", "macro4" to "Growl", "macro5" to "Body", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Soft"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio28() = Patch("Ratio", "Sub Drop FM",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.55f, "o2_ratio" to 0.2329923f, "o2_fixed" to 1f, "o2_level" to 0.5f, "o2_decay" to 0.774181366f, "o3_ratio" to 0.375f, "o3_level" to 0.12f, "o3_decay" to 0.639247f, "o3_sustain" to 0.15f, "algoa" to 0.7096774f, "f_freq" to 0.492373765f, "volume" to 1f, "mac1_d1" to 0.260869563f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.7f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.35f, "mac4_d1" to 0.7826087f, "mac4_a1" to 0.75f, "mac5_d1" to 0.2173913f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6956522f, "mac6_a1" to 0.675f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.6f, "mac8_d1" to 0.5217391f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Bright", "macro2" to "Open", "macro3" to "Dark", "macro4" to "Res", "macro5" to "Sub", "macro6" to "Growl", "macro7" to "Skew", "macro8" to "Metal"),
+        family = "bass",
+        low = 30, high = 55)
+
+    private fun ratio29() = Patch("Ratio", "Growl FM",
+        mapOf("o1_level" to 0.95f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.75f, "o2_level" to 0.6f, "o2_fb" to 0.85f, "o2_decay" to 0.716931f, "o2_sustain" to 0.55f, "o3_ratio" to 0.125f, "o3_level" to 0.5f, "o3_decay" to 0.7419396f, "o3_sustain" to 0.6f, "o4_ratio" to 0.375f, "o4_level" to 0.3f, "o4_decay" to 0.639247f, "o4_sustain" to 0.25f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "f_freq" to 0.634363353f, "f_res" to 0.2f, "volume" to 1f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.575f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.7f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.35f, "mac5_d1" to 0.7826087f, "mac5_a1" to 0.75f, "mac6_d1" to 0.3043478f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Growl", "macro2" to "Bright", "macro3" to "Open", "macro4" to "Dark", "macro5" to "Res", "macro6" to "Bite", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio30() = Patch("Ratio", "Squelch",
+        mapOf("o1_level" to 1f, "o1_fb" to 0.7f, "o1_attack" to 0.2697953f, "o1_decay" to 0.593804836f, "o1_sustain" to 0.5f, "o1_release" to 0.4134283f, "algob" to 0.4516129f, "f_freq" to 0.440739781f, "f_res" to 0.7f, "f_env" to 0.85f, "f_key" to 0.3f, "f_decay" to 0.5268027f, "f_sustain" to 0f, "m01_src" to 0.307692319f, "m01_dest" to 0.739130437f, "m01_depth" to 0.6f, "voicemode" to 1f, "glide" to 0.03f, "volume" to 0.96f, "mac1_d1" to 0.739130437f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.35f, "mac3_d1" to 0.7826087f, "mac3_a1" to 0.625f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.575f, "mac5_d1" to 0.739130437f, "mac5_d2" to 0.7826087f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.2173913f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Dark", "macro3" to "Res", "macro4" to "Growl", "macro5" to "Env", "macro6" to "Bite", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Distortion", mapOf("drive" to 0.485719174f, "tone" to 0.6456324f, "mix" to 0.6f, "gain" to 0.427083343f))))
+
+    private fun ratio31() = Patch("Ratio", "Grit Bass",
         mapOf("o1_level" to 0.9f, "o1_decay" to 0.618813455f, "o1_sustain" to 0.6f, "o2_level" to 0.65f, "o2_fb" to 0.55f, "o2_decay" to 0.5411295f, "o2_sustain" to 0.15f, "o3_mode" to 1f, "o3_level" to 0.4f, "o3_fb" to 0.4f, "f_freq" to 0.6804642f, "f_res" to 0.2f, "m01_src" to 0.307692319f, "m01_dest" to 0.2173913f, "m01_depth" to 0.675f, "voicemode" to 0.5f, "volume" to 0.95f, "mac1_d1" to 0.2173913f, "mac1_d2" to 0.826086938f, "mac1_a1" to 0.65f, "mac1_a2" to 0.45f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.25f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.7f, "mac5_d1" to 0.130434781f, "mac5_a1" to 0.6f, "mac6_d1" to 0.08695652f, "mac6_a1" to 0.75f, "mac7_d1" to 0.478260875f, "mac7_d2" to 0.5217391f, "mac7_a1" to 0.55f, "mac7_a2" to 0.53f, "mac8_d1" to 0.260869563f, "mac8_a1" to 0.35f),
         mapOf("macro1" to "Grit", "macro2" to "Open", "macro3" to "Dark", "macro4" to "Fold", "macro5" to "Skew", "macro6" to "Morph", "macro7" to "Growl", "macro8" to "Sub"),
         family = "bass",
         low = 24, high = 55)
 
-    private fun ratio6() = Patch("Ratio", "Fold Lead",
-        mapOf("o1_mode" to 0.5714286f, "o1_level" to 0.85f, "o1_fb" to 0.45f, "o1_sustain" to 0.9f, "o2_wave" to 0.466666669f, "o2_level" to 0.8f, "o2_sustain" to 0.9f, "algoa" to 0.09677419f, "m01_src" to 0.230769232f, "m01_dest" to 0.130434781f, "m01_depth" to 0.65f, "voicemode" to 1f, "glide" to 0.05f, "volume" to 0.99f),
+    private fun ratio32() = Patch("Ratio", "Sync Bass",
+        mapOf("o1_wave" to 0.466666669f, "o1_mode" to 0.714285731f, "o1_ratio" to 0.375f, "o1_level" to 0.9f, "o1_decay" to 0.69649744f, "o1_sustain" to 0.6f, "o1_release" to 0.438436955f, "o2_level" to 0.5f, "o3_level" to 0.6f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.7f, "o3_release" to 0.438436955f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_freq" to 0.69897f, "f_key" to 0.3f, "e1_decay" to 0.578839362f, "m01_src" to 0.538461566f, "m01_dest" to 0.4347826f, "m01_depth" to 0.75f, "voicemode" to 0.5f, "volume" to 1f, "mac1_d1" to 0.4347826f, "mac1_a1" to 0.65f, "mac2_d1" to 0.4347826f, "mac2_a1" to 0.4f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.65f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7826087f, "mac6_a1" to 0.7f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Sync", "macro2" to "Low", "macro3" to "Dark", "macro4" to "Open", "macro5" to "Body", "macro6" to "Res", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio33() = Patch("Ratio", "Fold Bass",
+        mapOf("o1_mode" to 0.5714286f, "o1_level" to 0.9f, "o1_fb" to 0.3f, "o1_decay" to 0.716931f, "o1_sustain" to 0.6f, "o1_release" to 0.438436955f, "o2_level" to 0.4f, "o3_level" to 0.6f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.7f, "o3_release" to 0.438436955f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_freq" to 0.725363731f, "e1_decay" to 0.593804836f, "e1_sustain" to 0.2f, "m01_src" to 0.538461566f, "m01_dest" to 0.2173913f, "m01_depth" to 0.7f, "voicemode" to 0.5f, "volume" to 0.78f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.65f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7826087f, "mac6_a1" to 0.7f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Fold", "macro2" to "Drive", "macro3" to "Dark", "macro4" to "Open", "macro5" to "Sub", "macro6" to "Res", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio34() = Patch("Ratio", "Metal Bass",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.716931f, "o1_sustain" to 0.5f, "o2_ratio" to 0.475919366f, "o2_level" to 0.28f, "o2_decay" to 0.618813455f, "o2_sustain" to 0.1f, "o3_level" to 0.35f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.4f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "snap" to 0f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.15f, "mac3_d1" to 0.6956522f, "mac3_a1" to 0.65f, "mac4_d1" to 0.260869563f, "mac4_a1" to 0.65f, "mac5_d1" to 0.478260875f, "mac5_a1" to 0.55f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2173913f, "mac8_a1" to 0.4f),
+        mapOf("macro1" to "Metal", "macro2" to "Dark", "macro3" to "Growl", "macro4" to "Body", "macro5" to "Bend", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Soft"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio35() = Patch("Ratio", "Morph Bass",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7419396f, "o1_release" to 0.438436955f, "o2_level" to 0.3f, "o2_sustain" to 0.6f, "o3_ratio" to 0.375f, "o3_level" to 0.3f, "o3_sustain" to 0.6f, "o4_level" to 0.25f, "o4_sustain" to 0.6f, "o5_ratio" to 0.448120326f, "o5_level" to 0.2f, "o5_sustain" to 0.6f, "o6_level" to 0.25f, "o6_sustain" to 0.6f, "algoa" to 0.193548381f, "algob" to 0f, "f_freq" to 0.6666667f, "e1_attack" to 0.599485f, "e1_decay" to 0.639247f, "e1_sustain" to 0.5f, "m01_src" to 0.538461566f, "m01_dest" to 0.08695652f, "m01_depth" to 0.9f, "voicemode" to 0.5f, "volume" to 0.85f, "mac1_d1" to 0.08695652f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.625f, "mac6_d1" to 0.7826087f, "mac6_a1" to 0.7f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.3f),
+        mapOf("macro1" to "Morph", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Open", "macro5" to "Growl", "macro6" to "Res", "macro7" to "Skew", "macro8" to "Still"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio36() = Patch("Ratio", "Wobble",
+        mapOf("o1_level" to 1f, "o1_fb" to 0.3f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.9f, "o1_release" to 0.438436955f, "o2_level" to 0.4f, "o2_fb" to 0.3f, "o2_sustain" to 0.8f, "o3_level" to 0.3f, "o3_sustain" to 0.9f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_freq" to 0.492373765f, "f_res" to 0.45f, "l1_sync" to 0.3529412f, "m01_src" to 0.846153855f, "m01_dest" to 0.739130437f, "m01_depth" to 0.675f, "m02_src" to 0.846153855f, "m02_dest" to 0.2173913f, "m02_depth" to 0.625f, "voicemode" to 1f, "volume" to 0.98f, "mac1_d1" to 0.9130435f, "mac1_a1" to 0.625f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.35f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.6f, "mac6_d1" to 0.260869563f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Speed", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Open", "macro5" to "Growl", "macro6" to "Body", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio37() = Patch("Ratio", "Crunch Bass",
+        mapOf("o1_mode" to 1f, "o1_level" to 0.9f, "o1_fb" to 0.6f, "o1_decay" to 0.69649744f, "o1_sustain" to 0.6f, "o1_release" to 0.438436955f, "o2_level" to 0.6f, "o3_level" to 0.6f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.7f, "o3_release" to 0.438436955f, "o4_ratio" to 0.375f, "o4_level" to 0.15f, "o4_decay" to 0.5615631f, "o4_sustain" to 0.1f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "f_freq" to 0.69897f, "voicemode" to 0.5f, "volume" to 0.94f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.625f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.65f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.3043478f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Crush", "macro2" to "Drive", "macro3" to "Dark", "macro4" to "Open", "macro5" to "Body", "macro6" to "Bite", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "bass",
+        low = 24, high = 55)
+
+    private fun ratio38() = Patch("Ratio", "Whistle FM",
+        mapOf("o1_level" to 1f, "o1_attack" to 0.40051496f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.9f, "o2_ratio" to 0.375f, "o3_ratio" to 0.448120326f, "o6_wave" to 1f, "algoa" to 0.7096774f, "glide" to 0.05f, "volume" to 1f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.65f, "mac2_d1" to 0.391304344f, "mac2_a1" to 0.575f, "mac3_d1" to 0.2173913f, "mac3_a1" to 0.65f, "mac4_d1" to 0.260869563f, "mac4_a1" to 0.65f, "mac5_d1" to 0.739130437f, "mac5_a1" to 0.199999988f, "mac6_d1" to 0.173913047f, "mac6_d2" to 0.826086938f, "mac6_a1" to 0.3f, "mac6_a2" to 0.8395f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Air", "macro3" to "Octave", "macro4" to "Twelfth", "macro5" to "Dark", "macro6" to "Thin", "macro7" to "Skew", "macro8" to "Metal"),
         family = "lead",
         low = 48, high = 91)
 
-    private fun ratio7() = Patch("Ratio", "Morph Sweep",
-        mapOf("o1_level" to 0.7f, "o1_attack" to 0.650515f, "o1_sustain" to 0.8f, "o1_release" to 0.7419396f, "o2_ratio" to 0.375f, "o2_level" to 0.6f, "o2_sustain" to 0.7f, "o3_ratio" to 0.448120326f, "o3_level" to 0.5f, "o3_sustain" to 0.6f, "o4_ratio" to 0.5f, "o4_level" to 0.45f, "o5_ratio" to 0.5731203f, "o5_level" to 0.4f, "o6_ratio" to 0.625f, "o6_level" to 0.35f, "e1_attack" to 0.7697953f, "e1_decay" to 0.81962353f, "e1_sustain" to 0.4f, "m01_src" to 0.538461566f, "m01_dest" to 0.08695652f, "m01_depth" to 0.85f, "m02_src" to 0.15384616f, "m02_dest" to 0.08695652f, "m02_depth" to 0.8f, "volume" to 0.6f),
-        family = "pad",
-        low = 36, high = 79)
+    private fun ratio39() = Patch("Ratio", "Breath Lead",
+        mapOf("o1_level" to 0.9f, "o1_attack" to 0.444537818f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.9f, "o1_release" to 0.5161209f, "o2_ratio" to 0.375f, "o2_level" to 0.1f, "o2_attack" to 0.4757725f, "o2_sustain" to 0.8f, "o3_ratio" to 0.448120326f, "o3_level" to 0.04f, "o3_sustain" to 0.8f, "o6_wave" to 1f, "o6_level" to 0.04f, "o6_attack" to 0.3692803f, "o6_sustain" to 0.6f, "algoa" to 0.4516129f, "l1_rate" to 0.7607766f, "l1_delay" to 0.07f, "m01_src" to 0.846153855f, "m01_dest" to 0.04347826f, "m01_depth" to 0.5025f, "voicemode" to 1f, "glide" to 0.025f, "volume" to 0.38f, "mac1_d1" to 0.391304344f, "mac1_a1" to 0.52f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.6f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.25f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.625f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.6f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_d2" to 0.826086938f, "mac7_a1" to 0.75f, "mac7_a2" to 0.685f, "mac8_d1" to 0.391304344f, "mac8_a1" to 0.485f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Edge", "macro5" to "Octave", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Pure"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mix" to 0.2f))),
+        sendReverb = 0.1f, sendDelay = 0f)
 
-    private fun ratio8() = Patch("Ratio", "Stage Keys",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.2f, "o1_release" to 0.656523347f, "o2_ratio" to 0.5f, "o2_level" to 0.42f, "o2_decay" to 0.618813455f, "o2_sustain" to 0f, "o2_vel" to 0.8f, "o3_level" to 0.5f, "o3_decay" to 0.79919f, "o3_sustain" to 0.15f, "o4_ratio" to 0.600919366f, "o4_level" to 0.22f, "o4_decay" to 0.5615631f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.72f),
-        family = "keys",
+    private fun ratio40() = Patch("Ratio", "Square Lead FM",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.85f, "o2_wave" to 0.533333361f, "o2_level" to 0.4f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "algoa" to 0.193548381f, "glide" to 0.015f, "volume" to 0.89f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.375f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.25f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.65f, "mac5_d1" to 0.478260875f, "mac5_a1" to 0.75f, "mac6_d1" to 0.478260875f, "mac6_a1" to 0.54f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Soft", "macro3" to "Dark", "macro4" to "Growl", "macro5" to "Octave", "macro6" to "Metal", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "lead",
+        low = 48, high = 91)
+
+    private fun ratio41() = Patch("Ratio", "Reed Lead",
+        mapOf("o1_level" to 0.9f, "o1_attack" to 0.3692803f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_wave" to 0.8666667f, "o2_ratio" to 0.448120326f, "o2_level" to 0.32f, "o2_attack" to 0.4247425f, "o2_decay" to 0.69649744f, "algoa" to 0.193548381f, "volume" to 0.87f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.4f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.25f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.65f, "mac5_d1" to 0.478260875f, "mac5_a1" to 0.75f, "mac6_d1" to 0.478260875f, "mac6_a1" to 0.54f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Soft", "macro3" to "Dark", "macro4" to "Growl", "macro5" to "Buzz", "macro6" to "Metal", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "lead",
+        low = 48, high = 91)
+
+    private fun ratio42() = Patch("Ratio", "Brass FM",
+        mapOf("o1_level" to 0.9f, "o1_attack" to 0.40051496f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_level" to 0.45f, "o2_attack" to 0.5197953f, "o2_decay" to 0.7419396f, "o2_sustain" to 0.55f, "o3_ratio" to 0.375f, "o3_level" to 0.25f, "o3_attack" to 0.5638181f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.35f, "algoa" to 0.161290318f, "algob" to 0.193548381f, "volume" to 0.72f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.260869563f, "mac2_a1" to 0.65f, "mac3_d1" to 0.2173913f, "mac3_d2" to 0.260869563f, "mac3_a1" to 0.375f, "mac3_a2" to 0.425f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Bite", "macro3" to "Soft", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "lead",
+        low = 48, high = 91)
+
+    private fun ratio43() = Patch("Ratio", "Saw Lead",
+        mapOf("o1_fine" to 0.47f, "o1_level" to 0.85f, "o1_fb" to 0.75f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.85f, "o1_release" to 0.5161209f, "o3_fine" to 0.55f, "o3_level" to 0.7f, "o3_fb" to 0.75f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.85f, "o3_release" to 0.5161209f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "f_freq" to 0.747679353f, "f_res" to 0.15f, "f_key" to 0.5f, "voicemode" to 1f, "glide" to 0.02f, "volume" to 0.65f, "mac1_d1" to 0.739130437f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.3f, "mac3_d1" to 0.7826087f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.575f, "mac5_d1" to 0.2173913f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.260869563f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "Open", "macro2" to "Dark", "macro3" to "Res", "macro4" to "Edge", "macro5" to "Bright", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Thin"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mix" to 0.2f))),
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun ratio44() = Patch("Ratio", "Fiddle",
+        mapOf("o1_level" to 0.9f, "o1_attack" to 0.5f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.85f, "o2_level" to 0.5f, "o2_fb" to 0.6f, "o2_attack" to 0.5440228f, "o2_decay" to 0.7419396f, "o2_sustain" to 0.6f, "o3_ratio" to 0.448120326f, "o3_level" to 0.15f, "o3_attack" to 0.5752575f, "algoa" to 0.161290318f, "algob" to 0.193548381f, "f_freq" to 0.784060836f, "f_res" to 0.2f, "f_key" to 0.3f, "l1_rate" to 0.7607766f, "l1_delay" to 0.07f, "m01_src" to 0.846153855f, "m01_dest" to 0.04347826f, "m01_depth" to 0.503f, "voicemode" to 1f, "glide" to 0.03f, "volume" to 0.68f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.625f, "mac2_d1" to 0.739130437f, "mac2_d2" to 0.826086938f, "mac2_a1" to 0.375f, "mac2_a2" to 0.6685f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.6f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.6f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2173913f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "Bow", "macro2" to "Dark", "macro3" to "Open", "macro4" to "Rosin", "macro5" to "Body", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Soft"),
+        family = "lead",
+        low = 48, high = 91,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun ratio45() = Patch("Ratio", "Fifth Stack",
+        mapOf("o1_level" to 0.7f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_ratio" to 0.323120326f, "o2_level" to 0.55f, "o2_decay" to 0.774181366f, "o2_sustain" to 0.8f, "o3_ratio" to 0.375f, "o3_level" to 0.4f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.8f, "o6_ratio" to 0.375f, "o6_level" to 0.3f, "o6_decay" to 0.7419396f, "algoa" to 0.322580636f, "algob" to 0f, "volume" to 0.9f, "mac1_d1" to 0.391304344f, "mac1_a1" to 0.65f, "mac2_d1" to 0.260869563f, "mac2_a1" to 0.65f, "mac3_d1" to 0.2173913f, "mac3_a1" to 0.65f, "mac4_d1" to 0.739130437f, "mac4_d2" to 0.826086938f, "mac4_a1" to 0.25f, "mac4_a2" to 0.7005f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.65f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.652173936f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Octave", "macro3" to "Fifth", "macro4" to "Dark", "macro5" to "Growl", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "lead",
+        low = 48, high = 91)
+
+    private fun ratio46() = Patch("Ratio", "Sync Lead",
+        mapOf("o1_wave" to 0.466666669f, "o1_mode" to 0.714285731f, "o1_ratio" to 0.400204241f, "o1_level" to 0.9f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.85f, "o1_release" to 0.5161209f, "o2_level" to 0.5f, "o3_level" to 0.45f, "o3_sustain" to 0.9f, "algoa" to 0.06451613f, "algob" to 0.4516129f, "snap" to 0f, "f_freq" to 0.799313366f, "f_key" to 0.3f, "e1_decay" to 0.716931f, "e1_sustain" to 0.15f, "m01_src" to 0.538461566f, "m01_dest" to 0.4347826f, "m01_depth" to 0.75f, "voicemode" to 1f, "glide" to 0.025f, "volume" to 0.82f, "mac1_d1" to 0.4347826f, "mac1_a1" to 0.65f, "mac2_d1" to 0.4347826f, "mac2_a1" to 0.4f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.375f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.65f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7826087f, "mac6_a1" to 0.7f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Sync", "macro2" to "Low", "macro3" to "Dark", "macro4" to "Open", "macro5" to "Body", "macro6" to "Res", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mix" to 0.2f))))
+
+    private fun ratio47() = Patch("Ratio", "Fold Lead",
+        mapOf("o1_mode" to 0.5714286f, "o1_level" to 0.85f, "o1_fb" to 0.45f, "o1_sustain" to 0.9f, "o2_wave" to 0.466666669f, "o2_level" to 0.8f, "o2_sustain" to 0.9f, "o4_mode" to 0.142857149f, "o5_ratio" to 0.375f, "o5_level" to 0.6f, "algoa" to 0.09677419f, "algob" to 0.4516129f, "m01_src" to 0.230769232f, "m01_dest" to 0.130434781f, "m01_depth" to 0.65f, "voicemode" to 1f, "glide" to 0.05f, "volume" to 0.99f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.675f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.7f, "mac3_d1" to 0.260869563f, "mac3_a1" to 0.65f, "mac4_d1" to 0.3043478f, "mac4_a1" to 0.7f, "mac5_d1" to 0.739130437f, "mac5_a1" to 0.25f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.6f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2173913f, "mac8_a1" to 0.3f),
+        mapOf("macro1" to "Fold", "macro2" to "Drive", "macro3" to "Grit", "macro4" to "Ring", "macro5" to "Dark", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Soft"),
+        family = "lead",
+        low = 48, high = 91)
+
+    private fun ratio48() = Patch("Ratio", "Chip Lead",
+        mapOf("o1_wave" to 0.533333361f, "o1_level" to 0.7f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.85f, "o1_release" to 0.36075303f, "o3_wave" to 0.533333361f, "o3_ratio" to 0.375f, "o3_level" to 0.25f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.85f, "o3_release" to 0.36075303f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "l1_rate" to 0.7712674f, "l1_delay" to 0.05f, "m01_src" to 0.846153855f, "m01_dest" to 0.04347826f, "m01_depth" to 0.504f, "voicemode" to 0.5f, "volume" to 0.8f, "mac1_d1" to 0.260869563f, "mac1_a1" to 0.65f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.25f, "mac3_d1" to 0.6956522f, "mac3_a1" to 0.6f, "mac4_d1" to 0.2173913f, "mac4_a1" to 0.6f, "mac5_d1" to 0.173913047f, "mac5_d2" to 0.826086938f, "mac5_a1" to 0.35f, "mac5_a2" to 0.685f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Octave", "macro2" to "Dark", "macro3" to "Growl", "macro4" to "Bright", "macro5" to "Thin", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Bitcrusher", mapOf("bits" to 0.333333343f, "mix" to 0.4f))))
+
+    private fun ratio49() = Patch("Ratio", "Vowel Lead",
+        mapOf("o1_mode" to 0.428571433f, "o1_ratio" to 0.448120326f, "o1_level" to 0.9f, "o1_attack" to 0.32525748f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.85f, "o1_release" to 0.5161209f, "o2_level" to 0.9f, "o2_fb" to 0.8f, "o2_sustain" to 0.9f, "o3_level" to 0.3f, "o3_sustain" to 0.9f, "o3_release" to 0.5161209f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "l1_wave" to 0.125f, "l1_rate" to 0.410076827f, "m01_src" to 0.846153855f, "m01_dest" to 0.4347826f, "m01_depth" to 0.55f, "voicemode" to 1f, "glide" to 0.025f, "volume" to 0.85f, "mac1_d1" to 0.4347826f, "mac1_a1" to 0.6f, "mac2_d1" to 0.4347826f, "mac2_a1" to 0.425f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.575f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.2173913f, "mac6_a1" to 0.6f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Vowel", "macro2" to "Close", "macro3" to "Dark", "macro4" to "Buzz", "macro5" to "Body", "macro6" to "Bright", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "lead",
+        low = 48, high = 91,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun ratio50() = Patch("Ratio", "Morph Lead",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.9f, "o1_release" to 0.5161209f, "o2_level" to 0.35f, "o2_sustain" to 0.7f, "o3_ratio" to 0.375f, "o3_level" to 0.3f, "o3_sustain" to 0.7f, "o4_ratio" to 0.448120326f, "o4_level" to 0.25f, "o4_sustain" to 0.7f, "o5_level" to 0.2f, "o5_fb" to 0.3f, "o5_sustain" to 0.7f, "o6_ratio" to 0.5f, "o6_level" to 0.15f, "o6_sustain" to 0.7f, "algob" to 0.4516129f, "morph" to 0.5f, "f_freq" to 0.799313366f, "l1_wave" to 0.125f, "l1_rate" to 0.410076827f, "m01_src" to 0.846153855f, "m01_dest" to 0.08695652f, "m01_depth" to 0.725f, "voicemode" to 1f, "glide" to 0.02f, "volume" to 0.62f, "mac1_d1" to 0.08695652f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.6f, "mac3_d1" to 0.739130437f, "mac3_d2" to 0.826086938f, "mac3_a1" to 0.375f, "mac3_a2" to 0.648499966f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.6f, "mac5_d1" to 0.9130435f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7826087f, "mac6_a1" to 0.7f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "Morph", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Growl", "macro5" to "Speed", "macro6" to "Res", "macro7" to "Skew", "macro8" to "Still"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mix" to 0.2f))))
+
+    private fun ratio51() = Patch("Ratio", "Phase Lead",
+        mapOf("o1_wave" to 0.4f, "o1_mode" to 0.857142866f, "o1_fine" to 0.47f, "o1_level" to 0.85f, "o1_fb" to 0.5f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.9f, "o1_release" to 0.5161209f, "o3_wave" to 0.4f, "o3_mode" to 0.857142866f, "o3_fine" to 0.54f, "o3_level" to 0.6f, "o3_fb" to 0.4f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.9f, "o3_release" to 0.5161209f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "f_freq" to 0.76701f, "f_res" to 0.25f, "f_key" to 0.3f, "e1_decay" to 0.639247f, "m01_src" to 0.538461566f, "m01_dest" to 0.6956522f, "m01_depth" to 0.65f, "voicemode" to 1f, "glide" to 0.02f, "volume" to 0.88f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.625f, "mac2_d1" to 0.739130437f, "mac2_a1" to 0.65f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.7826087f, "mac4_a1" to 0.7f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.3043478f, "mac6_a1" to 0.65f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Edge", "macro2" to "Open", "macro3" to "Dark", "macro4" to "Res", "macro5" to "Body", "macro6" to "Bright", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mix" to 0.2f))))
+
+    private fun ratio52() = Patch("Ratio", "Sync Stab",
+        mapOf("o1_mode" to 0.714285731f, "o1_ratio" to 0.521240652f, "o1_level" to 1f, "o1_decay" to 0.639247f, "o1_sustain" to 0.3f, "o2_wave" to 0.466666669f, "o2_level" to 1f, "o2_sustain" to 1f, "algoa" to 0.09677419f, "algob" to 0.4516129f, "snap" to 0f, "l1_rate" to 0.4447622f, "m01_src" to 0.846153855f, "m01_dest" to 0.4347826f, "m01_depth" to 0.625f, "volume" to 0.9f, "mac1_d1" to 0.4347826f, "mac1_a1" to 0.65f, "mac2_d1" to 0.4347826f, "mac2_a1" to 0.4f, "mac3_d1" to 0.3043478f, "mac3_a1" to 0.7f, "mac4_d1" to 0.260869563f, "mac4_a1" to 0.65f, "mac5_d1" to 0.739130437f, "mac5_d2" to 0.826086938f, "mac5_a1" to 0.25f, "mac5_a2" to 0.8595f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.9130435f, "mac7_a1" to 0.65f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Sync", "macro2" to "Low", "macro3" to "Body", "macro4" to "Grit", "macro5" to "Dark", "macro6" to "Skew", "macro7" to "Wobble", "macro8" to "Morph"),
+        family = "lead",
         low = 36, high = 84)
 
-    private fun ratio9() = Patch("Ratio", "Reed Keys",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7848632f, "o1_sustain" to 0.18f, "o2_wave" to 0.533333361f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.578839362f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.4f, "o3_decay" to 0.762373149f, "o3_sustain" to 0.1f, "o4_ratio" to 0.448120326f, "o4_level" to 0.3f, "o4_decay" to 0.5161209f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.77f),
-        family = "keys",
+    private fun ratio53() = Patch("Ratio", "Scream",
+        mapOf("o1_level" to 0.9f, "o1_fb" to 0.55f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.8f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_fb" to 0.75f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "o3_level" to 0.4f, "o3_decay" to 0.69649744f, "algoa" to 0.161290318f, "algob" to 0.193548381f, "f_freq" to 0.76701f, "f_res" to 0.2f, "volume" to 0.86f, "mac1_d1" to 0.6956522f, "mac1_a1" to 0.6f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.65f, "mac3_d1" to 0.260869563f, "mac3_a1" to 0.65f, "mac4_d1" to 0.739130437f, "mac4_d2" to 0.826086938f, "mac4_a1" to 0.375f, "mac4_a2" to 0.8345f, "mac5_d1" to 0.7826087f, "mac5_a1" to 0.7f, "mac6_d1" to 0.130434781f, "mac6_a1" to 0.575f, "mac7_d1" to 0.08695652f, "mac7_a1" to 0.75f, "mac8_d1" to 0.478260875f, "mac8_a1" to 0.54f),
+        mapOf("macro1" to "Scream", "macro2" to "Bright", "macro3" to "Bite", "macro4" to "Dark", "macro5" to "Res", "macro6" to "Skew", "macro7" to "Morph", "macro8" to "Metal"),
+        family = "lead",
+        low = 48, high = 91)
+
+    private fun ratio54() = Patch("Ratio", "Ring Lead",
+        mapOf("o1_mode" to 0.142857149f, "o1_level" to 0.7f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.85f, "o1_release" to 0.5161209f, "o2_ratio" to 0.375f, "o2_level" to 0.6f, "o2_sustain" to 0.8f, "o3_level" to 0.8f, "o3_sustain" to 0.85f, "o3_release" to 0.5161209f, "o4_level" to 0.25f, "o4_sustain" to 0.6f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "l1_rate" to 0.471666247f, "m01_src" to 0.846153855f, "m01_dest" to 0.478260875f, "m01_depth" to 0.5025f, "voicemode" to 1f, "glide" to 0.02f, "volume" to 1f, "mac1_d1" to 0.2173913f, "mac1_a1" to 0.65f, "mac2_d1" to 0.478260875f, "mac2_a1" to 0.53f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.260869563f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6956522f, "mac5_a1" to 0.6f, "mac6_d1" to 0.2173913f, "mac6_a1" to 0.3f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.575f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Ring", "macro2" to "Metal", "macro3" to "Dark", "macro4" to "Body", "macro5" to "Growl", "macro6" to "Soft", "macro7" to "Skew", "macro8" to "Morph"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mix" to 0.2f))))
+
+    private fun ratio55() = Patch("Ratio", "Stretch Lead",
+        mapOf("o1_level" to 0.9f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.85f, "o1_release" to 0.5161209f, "o2_ratio" to 0.448120326f, "o2_level" to 0.3f, "o3_level" to 0.5f, "o3_sustain" to 0.85f, "o3_release" to 0.5161209f, "o4_ratio" to 0.5f, "o4_level" to 0.2f, "algoa" to 0.193548381f, "algob" to 0.4516129f, "snap" to 0f, "skew" to 0.52f, "m02_src" to 0.230769232f, "m02_dest" to 0.130434781f, "m02_depth" to 0.55f, "voicemode" to 1f, "glide" to 0.02f, "volume" to 0.57f, "mac1_d1" to 0.130434781f, "mac1_a1" to 0.525f, "mac2_d1" to 0.2173913f, "mac2_a1" to 0.6f, "mac3_d1" to 0.739130437f, "mac3_a1" to 0.3f, "mac4_d1" to 0.6956522f, "mac4_a1" to 0.6f, "mac5_d1" to 0.260869563f, "mac5_a1" to 0.65f, "mac6_d1" to 0.2173913f, "mac6_d2" to 0.3043478f, "mac6_a1" to 0.4f, "mac6_a2" to 0.425f, "mac7_d1" to 0.130434781f, "mac7_a1" to 0.45f, "mac8_d1" to 0.08695652f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Stretch", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Growl", "macro5" to "Body", "macro6" to "Soft", "macro7" to "Squash", "macro8" to "Morph"),
+        family = "lead",
+        low = 48, high = 91,
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mix" to 0.2f))),
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun ratio56() = Patch("Ratio", "Bell",
+        mapOf("o1_decay" to 0.897307456f, "o1_sustain" to 0f, "o1_release" to 0.897307456f, "o2_ratio" to 0.433083534f, "o2_level" to 0.6f, "o2_decay" to 0.81962353f, "o2_sustain" to 0f, "o2_release" to 0.81962353f, "o3_ratio" to 0.554119945f, "o3_level" to 0.45f, "o3_decay" to 0.8518653f, "o3_sustain" to 0f, "o3_release" to 0.8518653f, "algoa" to 0.193548381f, "snap" to 1f, "volume" to 0.79f, "mac1_d1" to 0.2173913f, "mac1_d2" to 0.260869563f, "mac1_a1" to 0.65f, "mac1_a2" to 0.65f, "mac2_d1" to 0.478260875f, "mac2_d2" to 0.5217391f, "mac2_a1" to 0.54f, "mac2_a2" to 0.525f, "mac3_d1" to 0.6086956f, "mac3_d2" to 0.652173936f, "mac3_a1" to 0.515f, "mac3_a2" to 0.52f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.25f, "mac5_d1" to 0.130434781f, "mac5_a1" to 0.6f, "mac6_d1" to 0.08695652f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6956522f, "mac7_a1" to 0.675f, "mac8_d1" to 0.2173913f, "mac8_d2" to 0.260869563f, "mac8_d3" to 0.826086938f, "mac8_a1" to 0.25f, "mac8_a2" to 0.275f, "mac8_a3" to 0.55f),
+        mapOf("macro1" to "Strike", "macro2" to "Metal", "macro3" to "Shimmer", "macro4" to "Dark", "macro5" to "Skew", "macro6" to "Morph", "macro7" to "Wobble", "macro8" to "Thin"),
+        family = "bell",
         low = 36, high = 84)
 
-    private fun ratio10() = Patch("Ratio", "Funk Keys",
-        mapOf("o1_level" to 1f, "o1_decay" to 0.656523347f, "o1_sustain" to 0.05f, "o1_release" to 0.5161209f, "o2_ratio" to 0.448120326f, "o2_level" to 1f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o3_level" to 1f, "o3_fb" to 0.45f, "o3_decay" to 0.5161209f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "f_type" to 0.181818187f, "f_freq" to 0.76701f, "f_key" to 0.6f, "volume" to 1f),
-        family = "keys",
-        low = 36, high = 84)
-
-    private fun ratio11() = Patch("Ratio", "Glass Keys",
-        mapOf("o1_level" to 0.85f, "o1_decay" to 0.79919f, "o1_sustain" to 0.12f, "o2_ratio" to 0.600919366f, "o2_level" to 0.2f, "o2_decay" to 0.716931f, "o2_sustain" to 0f, "o3_level" to 0.45f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.1f, "o4_ratio" to 0.682428956f, "o4_level" to 0.14f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.76f),
-        family = "keys",
-        low = 36, high = 84)
-
-    private fun ratio12() = Patch("Ratio", "Hammer",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7491727f, "o1_sustain" to 0.1f, "o2_ratio" to 0.375f, "o2_level" to 0.3f, "o2_decay" to 0.618813455f, "o2_sustain" to 0f, "o3_ratio" to 0.448120326f, "o3_level" to 0.2f, "o3_decay" to 0.5615631f, "o3_sustain" to 0f, "o6_wave" to 1f, "o6_level" to 0.35f, "o6_decay" to 0.335744351f, "o6_sustain" to 0f, "algoa" to 0.4516129f, "volume" to 0.63f),
-        family = "keys",
-        low = 36, high = 84)
-
-    private fun ratio13() = Patch("Ratio", "Soft Keys",
-        mapOf("o1_level" to 1f, "o1_decay" to 0.79919f, "o1_sustain" to 0.35f, "o2_ratio" to 0.375f, "o2_level" to 0.59f, "o2_decay" to 0.774181366f, "o2_sustain" to 0.25f, "o3_ratio" to 0.448120326f, "o3_level" to 0.23f, "o3_decay" to 0.7419396f, "o3_sustain" to 0.1f, "algoa" to 0.7096774f, "f_type" to 0.181818187f, "f_freq" to 0.725363731f, "volume" to 1f),
-        family = "keys",
-        low = 36, high = 84)
-
-    private fun ratio14() = Patch("Ratio", "Toy Box",
-        mapOf("o1_wave" to 0.13333334f, "o1_level" to 1f, "o1_decay" to 0.7342073f, "o1_sustain" to 0f, "o2_ratio" to 0.646240652f, "o2_level" to 0.39f, "o2_decay" to 0.656523347f, "o2_sustain" to 0f, "o3_ratio" to 0.375f, "o3_level" to 0.45f, "o3_decay" to 0.69649744f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 0.84f),
-        family = "keys",
-        low = 36, high = 84)
-
-    private fun ratio15() = Patch("Ratio", "Struck Glass",
+    private fun ratio57() = Patch("Ratio", "Struck Glass",
         mapOf("o1_level" to 0.85f, "o1_decay" to 0.897307456f, "o1_sustain" to 0f, "o1_release" to 0.81962353f, "o2_ratio" to 0.600919366f, "o2_level" to 0.3f, "o2_decay" to 0.81962353f, "o2_sustain" to 0f, "o3_level" to 0.4f, "o3_decay" to 0.8768739f, "o3_sustain" to 0f, "o4_ratio" to 0.712554932f, "o4_level" to 0.18f, "o4_decay" to 0.774181366f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.69f),
         family = "bell",
         low = 36, high = 84)
 
-    private fun ratio16() = Patch("Ratio", "Plucked",
-        mapOf("o1_level" to 1f, "o1_decay" to 0.6846892f, "o1_sustain" to 0f, "o1_release" to 0.5615631f, "o2_ratio" to 0.375f, "o2_level" to 0.52f, "o2_decay" to 0.5411295f, "o2_sustain" to 0f, "o3_ratio" to 0.540241f, "o3_level" to 0.34f, "o3_decay" to 0.4588705f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "volume" to 1f),
-        family = "keys",
-        low = 40, high = 79)
-
-    private fun ratio17() = Patch("Ratio", "Tubular",
+    private fun ratio58() = Patch("Ratio", "Tubular",
         mapOf("o1_level" to 0.9f, "o1_decay" to 0.929549158f, "o1_sustain" to 0f, "o1_release" to 0.8518653f, "o2_ratio" to 0.475919366f, "o2_level" to 0.22f, "o2_decay" to 0.8518653f, "o2_sustain" to 0f, "o3_ratio" to 0.540241f, "o3_level" to 0.16f, "o3_decay" to 0.81962353f, "o3_sustain" to 0f, "o4_ratio" to 0.600919366f, "o4_level" to 0.12f, "o4_decay" to 0.774181366f, "o4_sustain" to 0f, "o5_ratio" to 0.682428956f, "o5_level" to 0.08f, "o5_decay" to 0.716931f, "o5_sustain" to 0f, "algoa" to 0.4516129f, "snap" to 0f, "volume" to 0.54f),
         family = "bell",
         low = 36, high = 84)
 
-    private fun ratio18() = Patch("Ratio", "Gamelan",
+    private fun ratio59() = Patch("Ratio", "Gamelan",
         mapOf("o1_decay" to 0.8768739f, "o1_sustain" to 0f, "o2_ratio" to 0.433083534f, "o2_level" to 0.35f, "o2_decay" to 0.774181366f, "o2_sustain" to 0f, "o3_ratio" to 0.2517944f, "o3_level" to 0.7f, "o3_decay" to 0.8768739f, "o3_sustain" to 0f, "o4_ratio" to 0.554119945f, "o4_level" to 0.25f, "o4_decay" to 0.7419396f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.77f),
         family = "bell",
         low = 36, high = 84)
 
-    private fun ratio19() = Patch("Ratio", "Church",
+    private fun ratio60() = Patch("Ratio", "Church",
         mapOf("o1_level" to 0.85f, "o1_decay" to 0.9427497f, "o1_sustain" to 0f, "o1_release" to 0.8768739f, "o2_ratio" to 0.448120326f, "o2_level" to 0.24f, "o2_decay" to 0.8768739f, "o2_sustain" to 0f, "o3_ratio" to 0.125f, "o3_level" to 0.5f, "o3_decay" to 0.9145838f, "o3_sustain" to 0f, "o4_ratio" to 0.508798659f, "o4_level" to 0.14f, "o4_decay" to 0.81962353f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.86f),
         family = "bell",
         low = 36, high = 84)
 
-    private fun ratio20() = Patch("Ratio", "Ice",
+    private fun ratio61() = Patch("Ratio", "Ice",
         mapOf("o1_level" to 1f, "o1_decay" to 0.8518653f, "o1_sustain" to 0f, "o2_ratio" to 0.646240652f, "o2_level" to 0.26f, "o2_decay" to 0.774181366f, "o2_sustain" to 0f, "o3_ratio" to 0.5f, "o3_level" to 0.46f, "o3_decay" to 0.81962353f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "f_type" to 0.454545468f, "f_freq" to 0.46598f, "f_key" to 0.8f, "volume" to 0.73f),
         family = "bell",
         low = 48, high = 88)
 
-    private fun ratio21() = Patch("Ratio", "Anvil",
+    private fun ratio62() = Patch("Ratio", "Anvil",
         mapOf("o1_level" to 0.85f, "o1_decay" to 0.79919f, "o1_sustain" to 0f, "o2_mode" to 0.142857149f, "o2_ratio" to 0.485940665f, "o2_level" to 0.8f, "o2_decay" to 0.774181366f, "o2_sustain" to 0f, "o3_level" to 0.4f, "o3_decay" to 0.7419396f, "o3_sustain" to 0f, "o4_mode" to 0.142857149f, "o4_ratio" to 0.581919f, "o4_level" to 0.5f, "o4_decay" to 0.69649744f, "o4_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.86f),
         family = "bell",
         low = 36, high = 84)
 
-    private fun ratio22() = Patch("Ratio", "Bowl",
+    private fun ratio63() = Patch("Ratio", "Bowl",
         mapOf("o1_level" to 0.85f, "o1_decay" to 0.954557836f, "o1_sustain" to 0f, "o1_release" to 0.897307456f, "o2_ratio" to 0.4078793f, "o2_level" to 0.3f, "o2_decay" to 0.7419396f, "o2_sustain" to 0f, "o3_fine" to 0.56f, "o3_level" to 0.5f, "o3_decay" to 0.9427497f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 0.82f),
         family = "bell",
         low = 36, high = 84)
 
-    private fun ratio23() = Patch("Ratio", "Kalimba FM",
+    private fun ratio64() = Patch("Ratio", "Kalimba FM",
         mapOf("o1_level" to 1f, "o1_decay" to 0.762373149f, "o1_sustain" to 0f, "o2_ratio" to 0.504453f, "o2_level" to 0.36f, "o2_decay" to 0.4588705f, "o2_sustain" to 0f, "o3_ratio" to 0.375f, "o3_level" to 0.3f, "o3_decay" to 0.6846892f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "volume" to 1f),
         family = "bell",
         low = 36, high = 84)
 
-    private fun ratio24() = Patch("Ratio", "Deep Sine",
-        mapOf("o1_level" to 0.95f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.65f, "o2_ratio" to 0.375f, "o2_level" to 0.18f, "o2_decay" to 0.593804836f, "o2_sustain" to 0.05f, "algoa" to 0.193548381f, "volume" to 1f),
-        family = "bass",
-        low = 24, high = 55)
-
-    private fun ratio25() = Patch("Ratio", "Slap",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.716931f, "o1_sustain" to 0.3f, "o2_ratio" to 0.540241f, "o2_level" to 0.7f, "o2_decay" to 0.381186575f, "o2_sustain" to 0f, "o2_vel" to 0.9f, "o3_level" to 0.4f, "o3_decay" to 0.6846892f, "o3_sustain" to 0.2f, "algoa" to 0.193548381f, "volume" to 1f),
-        family = "bass",
-        low = 24, high = 55)
-
-    private fun ratio26() = Patch("Ratio", "Growl FM",
-        mapOf("o1_level" to 0.95f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.75f, "o2_level" to 0.6f, "o2_fb" to 0.85f, "o2_decay" to 0.716931f, "o2_sustain" to 0.55f, "o3_ratio" to 0.125f, "o3_level" to 0.5f, "o3_decay" to 0.7419396f, "o3_sustain" to 0.6f, "o4_ratio" to 0.375f, "o4_level" to 0.3f, "o4_decay" to 0.639247f, "o4_sustain" to 0.25f, "algoa" to 0.193548381f, "f_freq" to 0.634363353f, "f_res" to 0.2f, "volume" to 1f),
-        family = "bass",
-        low = 24, high = 55)
-
-    private fun ratio27() = Patch("Ratio", "Sub Drop FM",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.55f, "o2_ratio" to 0.2329923f, "o2_fixed" to 1f, "o2_level" to 0.5f, "o2_decay" to 0.774181366f, "o3_ratio" to 0.375f, "o3_level" to 0.12f, "o3_decay" to 0.639247f, "o3_sustain" to 0.15f, "algoa" to 0.7096774f, "f_freq" to 0.492373765f, "volume" to 1f),
-        family = "bass",
-        low = 30, high = 55)
-
-    private fun ratio28() = Patch("Ratio", "Metal Bass",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.716931f, "o1_sustain" to 0.5f, "o2_ratio" to 0.475919366f, "o2_level" to 0.28f, "o2_decay" to 0.618813455f, "o2_sustain" to 0.1f, "o3_level" to 0.35f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.4f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 1f),
-        family = "bass",
-        low = 24, high = 55)
-
-    private fun ratio29() = Patch("Ratio", "Pluck Bass FM",
-        mapOf("o1_level" to 1f, "o1_decay" to 0.639247f, "o1_sustain" to 0.1f, "o2_ratio" to 0.375f, "o2_level" to 0.86f, "o2_decay" to 0.483879149f, "o2_sustain" to 0f, "o3_ratio" to 0.5f, "o3_level" to 0.52f, "o3_decay" to 0.4134283f, "o3_sustain" to 0f, "algoa" to 0.161290318f, "f_freq" to 0.5146893f, "f_env" to 0.8f, "f_decay" to 0.483879149f, "f_sustain" to 0f, "volume" to 1f),
-        family = "bass",
-        low = 24, high = 55)
-
-    private fun ratio30() = Patch("Ratio", "Wide Bass FM",
-        mapOf("o1_fine" to 0.43f, "o1_decay" to 0.7342073f, "o1_sustain" to 0.6f, "o1_pan" to 0.199999988f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.618813455f, "o2_sustain" to 0.1f, "o3_fine" to 0.57f, "o3_level" to 0.8f, "o3_decay" to 0.7342073f, "o3_sustain" to 0.6f, "o3_pan" to 0.8f, "o4_ratio" to 0.375f, "o4_level" to 0.5f, "o4_decay" to 0.618813455f, "o4_sustain" to 0.1f, "algoa" to 0.193548381f, "f_freq" to 0.625020444f, "volume" to 0.72f),
-        family = "bass",
-        low = 24, high = 55)
-
-    private fun ratio31() = Patch("Ratio", "Brass FM",
-        mapOf("o1_level" to 0.9f, "o1_attack" to 0.40051496f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_level" to 0.45f, "o2_attack" to 0.5197953f, "o2_decay" to 0.7419396f, "o2_sustain" to 0.55f, "o3_ratio" to 0.375f, "o3_level" to 0.25f, "o3_attack" to 0.5638181f, "o3_decay" to 0.69649744f, "o3_sustain" to 0.35f, "algoa" to 0.161290318f, "volume" to 0.72f),
-        family = "lead",
-        low = 48, high = 91)
-
-    private fun ratio32() = Patch("Ratio", "Square Lead FM",
-        mapOf("o1_level" to 0.9f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.85f, "o2_wave" to 0.533333361f, "o2_level" to 0.4f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "algoa" to 0.193548381f, "glide" to 0.015f, "volume" to 0.89f),
-        family = "lead",
-        low = 48, high = 91)
-
-    private fun ratio33() = Patch("Ratio", "Reed Lead",
-        mapOf("o1_level" to 0.9f, "o1_attack" to 0.3692803f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_wave" to 0.8666667f, "o2_ratio" to 0.448120326f, "o2_level" to 0.32f, "o2_attack" to 0.4247425f, "o2_decay" to 0.69649744f, "algoa" to 0.193548381f, "volume" to 0.87f),
-        family = "lead",
-        low = 48, high = 91)
-
-    private fun ratio34() = Patch("Ratio", "Scream",
-        mapOf("o1_level" to 0.9f, "o1_fb" to 0.55f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.8f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_fb" to 0.75f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "o3_level" to 0.4f, "o3_decay" to 0.69649744f, "algoa" to 0.161290318f, "f_freq" to 0.76701f, "f_res" to 0.2f, "volume" to 0.86f),
-        family = "lead",
-        low = 48, high = 91)
-
-    private fun ratio35() = Patch("Ratio", "Whistle FM",
-        mapOf("o1_level" to 1f, "o1_attack" to 0.40051496f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.9f, "algoa" to 0.7096774f, "glide" to 0.05f, "volume" to 1f),
-        family = "lead",
-        low = 48, high = 91)
-
-    private fun ratio36() = Patch("Ratio", "Fifth Stack",
-        mapOf("o1_level" to 0.7f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_ratio" to 0.323120326f, "o2_level" to 0.55f, "o2_decay" to 0.774181366f, "o2_sustain" to 0.8f, "o3_ratio" to 0.375f, "o3_level" to 0.4f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.8f, "o6_ratio" to 0.375f, "o6_level" to 0.3f, "o6_decay" to 0.7419396f, "algoa" to 0.322580636f, "volume" to 0.9f),
-        family = "lead",
-        low = 48, high = 91)
-
-    private fun ratio37() = Patch("Ratio", "Drawbars",
+    private fun ratio65() = Patch("Ratio", "Drawbars",
         mapOf("o1_attack" to 0.24999997f, "o1_decay" to 0.929549158f, "o1_sustain" to 1f, "o2_ratio" to 0.375f, "o2_level" to 0.55f, "o2_decay" to 0.929549158f, "o2_sustain" to 1f, "o3_ratio" to 0.448120326f, "o3_level" to 0.4f, "o3_decay" to 0.929549158f, "o3_sustain" to 1f, "o4_ratio" to 0.5f, "o4_level" to 0.3f, "o4_decay" to 0.929549158f, "o4_sustain" to 1f, "o5_ratio" to 0.5731203f, "o5_level" to 0.2f, "o5_decay" to 0.929549158f, "o5_sustain" to 1f, "o6_ratio" to 0.625f, "o6_level" to 0.15f, "o6_decay" to 0.929549158f, "o6_sustain" to 1f, "algoa" to 0.7096774f, "volume" to 0.99f),
         family = "reed",
         low = 36, high = 84)
 
-    private fun ratio38() = Patch("Ratio", "Percussive Organ",
+    private fun ratio66() = Patch("Ratio", "Percussive Organ",
         mapOf("o1_level" to 0.96f, "o1_decay" to 0.929549158f, "o1_sustain" to 1f, "o2_ratio" to 0.375f, "o2_level" to 0.6f, "o2_decay" to 0.929549158f, "o2_sustain" to 1f, "o3_ratio" to 0.448120326f, "o3_level" to 0.54f, "o3_decay" to 0.5411295f, "o3_sustain" to 0f, "o4_ratio" to 0.5f, "o4_level" to 0.42f, "o4_decay" to 0.5043127f, "o4_sustain" to 0f, "algoa" to 0.7096774f, "volume" to 1f),
         family = "reed",
         low = 36, high = 84)
 
-    private fun ratio39() = Patch("Ratio", "Harmonica",
+    private fun ratio67() = Patch("Ratio", "Harmonica",
         mapOf("o1_level" to 0.85f, "o1_attack" to 0.4247425f, "o1_decay" to 0.774181366f, "o1_sustain" to 0.8f, "o2_wave" to 0.4f, "o2_ratio" to 0.375f, "o2_level" to 0.22f, "o2_decay" to 0.69649744f, "o3_ratio" to 0.323120326f, "o3_level" to 0.4f, "o3_attack" to 0.461274475f, "o3_decay" to 0.774181366f, "o3_sustain" to 0.75f, "o4_ratio" to 0.448120326f, "o4_level" to 0.15f, "o4_decay" to 0.69649744f, "o4_sustain" to 0.4f, "algoa" to 0.193548381f, "l1_rate" to 0.7607766f, "volume" to 0.87f),
         family = "reed",
         low = 36, high = 84)
 
-    private fun ratio40() = Patch("Ratio", "Oboe FM",
+    private fun ratio68() = Patch("Ratio", "Oboe FM",
         mapOf("o1_level" to 1f, "o1_attack" to 0.40051496f, "o1_decay" to 0.7419396f, "o1_sustain" to 0.8f, "o2_wave" to 0.266666681f, "o2_ratio" to 0.375f, "o2_level" to 0.45f, "o2_attack" to 0.444537818f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.55f, "algoa" to 0.193548381f, "volume" to 0.87f),
         family = "reed",
         low = 48, high = 91)
 
-    private fun ratio41() = Patch("Ratio", "Accordion",
+    private fun ratio69() = Patch("Ratio", "Accordion",
         mapOf("o1_level" to 0.7f, "o1_attack" to 0.32525748f, "o1_decay" to 0.897307456f, "o1_sustain" to 0.95f, "o2_fine" to 0.59f, "o2_level" to 0.6f, "o2_decay" to 0.897307456f, "o2_sustain" to 0.95f, "o3_ratio" to 0.375f, "o3_fine" to 0.44f, "o3_level" to 0.45f, "o3_decay" to 0.897307456f, "o3_sustain" to 0.95f, "o4_ratio" to 0.448120326f, "o4_level" to 0.25f, "o4_decay" to 0.897307456f, "o4_sustain" to 0.9f, "algoa" to 0.7096774f, "volume" to 0.93f),
         family = "reed",
         low = 36, high = 84)
 
-    private fun ratio42() = Patch("Ratio", "Pipe",
+    private fun ratio70() = Patch("Ratio", "Pipe",
         mapOf("o1_wave" to 0.333333343f, "o1_level" to 1f, "o1_attack" to 0.5197953f, "o1_decay" to 0.8518653f, "o1_sustain" to 0.9f, "o2_wave" to 0.2f, "o2_ratio" to 0.375f, "o2_level" to 0.82f, "o2_attack" to 0.5752575f, "o2_decay" to 0.8518653f, "o2_sustain" to 0.85f, "algoa" to 0.7096774f, "volume" to 1f),
         family = "reed",
         low = 36, high = 79)
 
-    private fun ratio43() = Patch("Ratio", "String Pad FM",
+    private fun ratio71() = Patch("Ratio", "Stretched",
+        mapOf("o1_level" to 0.85f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.3f, "o1_release" to 0.774181366f, "o2_ratio" to 0.448120326f, "o2_level" to 0.62f, "o3_ratio" to 0.600919366f, "o3_level" to 0.45f, "algoa" to 0.193548381f, "skew" to 0.72f, "m01_src" to 0.15384616f, "m01_dest" to 0.130434781f, "m01_depth" to 0.75f, "volume" to 0.72f),
+        family = "pad",
+        low = 36, high = 84)
+
+    private fun ratio72() = Patch("Ratio", "Morph Sweep",
+        mapOf("o1_level" to 0.7f, "o1_attack" to 0.650515f, "o1_sustain" to 0.8f, "o1_release" to 0.7419396f, "o2_ratio" to 0.375f, "o2_level" to 0.6f, "o2_sustain" to 0.7f, "o3_ratio" to 0.448120326f, "o3_level" to 0.5f, "o3_sustain" to 0.6f, "o4_ratio" to 0.5f, "o4_level" to 0.45f, "o5_ratio" to 0.5731203f, "o5_level" to 0.4f, "o6_ratio" to 0.625f, "o6_level" to 0.35f, "e1_attack" to 0.7697953f, "e1_decay" to 0.81962353f, "e1_sustain" to 0.4f, "m01_src" to 0.538461566f, "m01_dest" to 0.08695652f, "m01_depth" to 0.85f, "m02_src" to 0.15384616f, "m02_dest" to 0.08695652f, "m02_depth" to 0.8f, "volume" to 0.6f),
+        family = "pad",
+        low = 36, high = 79)
+
+    private fun ratio73() = Patch("Ratio", "String Pad FM",
         mapOf("o1_attack" to 0.7257725f, "o1_decay" to 0.8518653f, "o1_sustain" to 0.85f, "o1_release" to 0.762373149f, "o2_ratio" to 0.448120326f, "o2_level" to 0.22f, "o2_attack" to 0.786532f, "o2_decay" to 0.81962353f, "o2_sustain" to 0.6f, "o3_fine" to 0.58f, "o3_level" to 0.55f, "o3_attack" to 0.75f, "o3_decay" to 0.8518653f, "o3_sustain" to 0.8f, "o4_ratio" to 0.375f, "o4_level" to 0.15f, "o4_attack" to 0.7697953f, "o4_decay" to 0.81962353f, "algoa" to 0.193548381f, "volume" to 0.71f, "mac1_d1" to 0.2173913f, "mac1_d2" to 0.3043478f, "mac1_a1" to 0.625f, "mac1_a2" to 0.6f, "mac2_d1" to 0.2173913f, "mac2_d2" to 0.826086938f, "mac2_a1" to 0.65f, "mac2_a2" to 0.46f, "mac3_d1" to 0.5217391f, "mac3_a1" to 0.55f, "mac4_d1" to 0.739130437f, "mac4_a1" to 0.199999988f, "mac5_d1" to 0.130434781f, "mac5_a1" to 0.6f, "mac6_d1" to 0.08695652f, "mac6_a1" to 0.75f, "mac7_d1" to 0.9130435f, "mac7_d2" to 0.478260875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.52f, "mac8_d1" to 0.6956522f, "mac8_a1" to 0.65f),
         mapOf("macro1" to "Bloom", "macro2" to "Bow", "macro3" to "Hollow", "macro4" to "Dark", "macro5" to "Skew", "macro6" to "Morph", "macro7" to "Drift", "macro8" to "Air"),
         family = "pad",
         low = 36, high = 79)
 
-    private fun ratio44() = Patch("Ratio", "Choir FM",
+    private fun ratio74() = Patch("Ratio", "Choir FM",
         mapOf("o1_attack" to 0.6945378f, "o1_decay" to 0.81962353f, "o1_sustain" to 0.85f, "o1_release" to 0.7419396f, "o2_wave" to 0.266666681f, "o2_level" to 0.25f, "o2_attack" to 0.75f, "o2_decay" to 0.81962353f, "o2_sustain" to 0.6f, "o3_ratio" to 0.323120326f, "o3_level" to 0.5f, "o3_attack" to 0.7112745f, "o3_decay" to 0.81962353f, "o3_sustain" to 0.8f, "algoa" to 0.193548381f, "f_type" to 0.181818187f, "f_freq" to 0.725363731f, "volume" to 0.89f),
         family = "pad",
         low = 36, high = 79)
 
-    private fun ratio45() = Patch("Ratio", "Morph Pad",
+    private fun ratio75() = Patch("Ratio", "Morph Pad",
         mapOf("o1_level" to 0.75f, "o1_attack" to 0.7112745f, "o1_decay" to 0.8518653f, "o1_sustain" to 0.85f, "o1_release" to 0.774181366f, "o2_ratio" to 0.375f, "o2_level" to 0.4f, "o2_attack" to 0.75f, "o2_decay" to 0.8518653f, "o2_sustain" to 0.7f, "o3_ratio" to 0.448120326f, "o3_level" to 0.3f, "o3_attack" to 0.7697953f, "o3_decay" to 0.8518653f, "o3_sustain" to 0.6f, "o4_ratio" to 0.5f, "o4_level" to 0.2f, "o4_attack" to 0.786532f, "o4_decay" to 0.8518653f, "algoa" to 0.193548381f, "morph" to 0.35f, "volume" to 0.96f),
         family = "pad",
         low = 36, high = 79)
 
-    private fun ratio46() = Patch("Ratio", "Skewed Pad",
+    private fun ratio76() = Patch("Ratio", "Skewed Pad",
         mapOf("o1_level" to 0.94f, "o1_attack" to 0.7385606f, "o1_decay" to 0.8768739f, "o1_sustain" to 0.85f, "o1_release" to 0.79919f, "o2_ratio" to 0.375f, "o2_level" to 0.57f, "o2_attack" to 0.7603482f, "o2_decay" to 0.8768739f, "o2_sustain" to 0.8f, "o3_ratio" to 0.448120326f, "o3_level" to 0.38f, "o3_attack" to 0.7784858f, "o3_decay" to 0.8768739f, "o3_sustain" to 0.7f, "o4_ratio" to 0.540241f, "o4_level" to 0.23f, "o4_attack" to 0.7940228f, "o4_decay" to 0.8768739f, "o4_sustain" to 0.6f, "algoa" to 0.7096774f, "snap" to 0f, "skew" to 0.78f, "volume" to 1f),
         family = "pad",
         low = 36, high = 79)
 
-    private fun ratio47() = Patch("Ratio", "Drone FM",
+    private fun ratio77() = Patch("Ratio", "Drone FM",
         mapOf("o1_level" to 0.7f, "o1_attack" to 0.8252575f, "o1_decay" to 0.954557836f, "o1_sustain" to 0.9f, "o1_release" to 0.8518653f, "o2_fine" to 0.61f, "o2_level" to 0.5f, "o2_attack" to 0.8450528f, "o2_decay" to 0.954557836f, "o2_sustain" to 0.9f, "o3_ratio" to 0.375f, "o3_level" to 0.4f, "o3_attack" to 0.861789465f, "o3_decay" to 0.954557836f, "o3_sustain" to 0.9f, "o4_ratio" to 0.448120326f, "o4_fine" to 0.42f, "o4_level" to 0.25f, "o4_attack" to 0.869280338f, "o4_decay" to 0.954557836f, "o4_sustain" to 0.9f, "o5_ratio" to 0.540241f, "o5_level" to 0.15f, "o5_attack" to 0.8828697f, "o5_decay" to 0.954557836f, "o5_sustain" to 0.9f, "algoa" to 0.7096774f, "volume" to 1f),
         family = "pad",
         low = 36, high = 79)
 
-    private fun ratio48() = Patch("Ratio", "Wood",
+    private fun ratio78() = Patch("Ratio", "Wood",
         mapOf("o1_level" to 1f, "o1_decay" to 0.5268027f, "o1_sustain" to 0f, "o1_release" to 0.438436955f, "o2_wave" to 1f, "o2_ratio" to 0.625f, "o2_level" to 1f, "o2_decay" to 0.155367866f, "o2_sustain" to 0f, "o3_ratio" to 0.465308249f, "o3_level" to 1f, "o3_decay" to 0.483879149f, "o3_sustain" to 0f, "algoa" to 0.193548381f, "snap" to 0f, "volume" to 1f),
         family = "texture",
         low = 36, high = 84)
 
-    private fun ratio49() = Patch("Ratio", "Crush",
+    private fun ratio79() = Patch("Ratio", "Crush",
         mapOf("o1_wave" to 0.13333334f, "o1_level" to 0.85f, "o1_decay" to 0.7419396f, "o2_mode" to 1f, "o2_ratio" to 0.375f, "o2_level" to 0.5f, "o2_decay" to 0.69649744f, "o2_sustain" to 0.6f, "o3_mode" to 1f, "o3_ratio" to 0.448120326f, "o3_level" to 0.35f, "o3_sustain" to 0.4f, "algoa" to 0.161290318f, "volume" to 0.88f),
         family = "texture",
         low = 48, high = 91)
 
-    private fun ratio50() = Patch("Ratio", "Riser",
+    private fun ratio80() = Patch("Ratio", "Riser",
         mapOf("o1_level" to 0.92f, "o1_attack" to 0.869280338f, "o1_decay" to 0.897307456f, "o1_sustain" to 0.9f, "o1_release" to 0.69649744f, "o2_wave" to 0.933333337f, "o2_ratio" to 0.6981203f, "o2_fixed" to 1f, "o2_level" to 0.63f, "o2_attack" to 0.869280338f, "o2_decay" to 0.897307456f, "o2_sustain" to 0.8f, "algoa" to 0.193548381f, "f_freq" to 0.492373765f, "f_env" to 0.925f, "f_attack" to 0.886017f, "f_sustain" to 0.9f, "volume" to 1f),
         family = "texture",
         low = 36, high = 79)
 
-    private val ratio: List<Patch> by lazy { listOf(ratio0(), ratio1(), ratio2(), ratio3(), ratio4(), ratio5(), ratio6(), ratio7(), ratio8(), ratio9(), ratio10(), ratio11(), ratio12(), ratio13(), ratio14(), ratio15(), ratio16(), ratio17(), ratio18(), ratio19(), ratio20(), ratio21(), ratio22(), ratio23(), ratio24(), ratio25(), ratio26(), ratio27(), ratio28(), ratio29(), ratio30(), ratio31(), ratio32(), ratio33(), ratio34(), ratio35(), ratio36(), ratio37(), ratio38(), ratio39(), ratio40(), ratio41(), ratio42(), ratio43(), ratio44(), ratio45(), ratio46(), ratio47(), ratio48(), ratio49(), ratio50()) }
+    private val ratio: List<Patch> by lazy { listOf(ratio0(), ratio1(), ratio2(), ratio3(), ratio4(), ratio5(), ratio6(), ratio7(), ratio8(), ratio9(), ratio10(), ratio11(), ratio12(), ratio13(), ratio14(), ratio15(), ratio16(), ratio17(), ratio18(), ratio19(), ratio20(), ratio21(), ratio22(), ratio23(), ratio24(), ratio25(), ratio26(), ratio27(), ratio28(), ratio29(), ratio30(), ratio31(), ratio32(), ratio33(), ratio34(), ratio35(), ratio36(), ratio37(), ratio38(), ratio39(), ratio40(), ratio41(), ratio42(), ratio43(), ratio44(), ratio45(), ratio46(), ratio47(), ratio48(), ratio49(), ratio50(), ratio51(), ratio52(), ratio53(), ratio54(), ratio55(), ratio56(), ratio57(), ratio58(), ratio59(), ratio60(), ratio61(), ratio62(), ratio63(), ratio64(), ratio65(), ratio66(), ratio67(), ratio68(), ratio69(), ratio70(), ratio71(), ratio72(), ratio73(), ratio74(), ratio75(), ratio76(), ratio77(), ratio78(), ratio79(), ratio80()) }
 
     private fun manual0() = Patch("Manual", "Init", emptyMap(),
         family = "tonewheel")
