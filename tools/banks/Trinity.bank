@@ -1,4 +1,4 @@
-# Trinity - two hundred and eleven patches, growing in batches by family.
+# Trinity - two hundred and fifty-six patches in ten families.
 #
 # Three oscillators, each with thirty-six waveforms - four analogue shapes and
 # thirty-two wavetables - eight voices of unison apiece with their own detune
@@ -8,9 +8,10 @@
 #
 # The patches are grouped by what they are for: leads (Init, a plain saw,
 # first), basses, pads, keys, plucks, sequences, strings, brass and choirs,
-# bells, then textures last, and each group runs from the plainest sounds to
-# the strangest. Each says which demo it is auditioned with, because a pad judged
-# on a melody and a lead judged on a chord both sound like mistakes. Four
+# bells, sounds that move by themselves, then textures last, and each group
+# runs from the plainest sounds to the strangest. Each says which demo it is
+# auditioned with, because a pad judged on a melody and a lead judged on a
+# chord both sound like mistakes. Four
 # demos are new for this machine - `pad` (four chords, held and overlapping),
 # `lead` (one line with long notes, a run and a leap), `keys` (a root
 # underneath and stabs above it) and a rewritten `arp` (a broken chord over a
@@ -36,9 +37,8 @@
 # same more slowly. Six and twelve decibels a octave respectively, and they
 # came back fifteen and four decibels.
 #
-# Every bass, lead, pad, keys, pluck, sequence, ensemble and bells patch but
-# Init has eight named macros, each a few routes to the matrix destinations.
-# Where a macro at full moves the level by more than about 3 dB, an amp route
+# Every patch but Init has eight named macros, each a few routes to the
+# matrix destinations. Where a macro at full moves the level by more than about 3 dB, an amp route
 # on it takes that back out. Sync resets every unison voice of an oscillator
 # together, which makes a stack louder at once, so a sync macro goes on an
 # oscillator with one voice. The filter drive squashes anything hotter than its own nominal
@@ -109,7 +109,7 @@ patch "Saw Lead" family=lead  note=67 range=48..91 role=lead
   a_decay        1.2 s
   a_sustain      0.85
   a_release      0.3 s
-  volume         0.39
+  volume         0.36
   # Crunch first, then eighth-note echoes across the stereo field.
   insert Distortion
     drive        6
@@ -234,10 +234,8 @@ patch "Wide Saws" family=lead  note=55 range=36..79 role=pad
   mac2_a1  0.35
   mac3_d1  #17
   mac3_a1  0.4
-  mac4_d1  #14
+  mac4_d1  #16
   mac4_a1  0.4
-  mac4_d2  #29
-  mac4_a2  -0.151
   mac5_d1  #10
   mac5_a1  0.3
   mac6_d1  #3
@@ -290,10 +288,10 @@ patch "Big Lead" family=lead  note=67 range=48..91 role=lead
   mac2_a1  0.3
   mac3_d1  #25
   mac3_a1  0.4
-  mac4_d1  #14
+  mac4_d1  #16
   mac4_a1  0.25
-  mac4_d2  #29
-  mac4_a2  -0.238
+  mac4_d2  #10
+  mac4_a2  0.35
   mac5_d1  #9
   mac5_a1  0.4
   mac6_d1  #21
@@ -325,13 +323,13 @@ patch "Big Lead" family=lead  note=67 range=48..91 role=lead
   a_release      0.35 s
   voicemode      #2
   glide          0.03 s
-  volume         0.43
+  volume         0.45
   insert Delay
     time         #3
     feedback     0.4
     pingpong     #1
-    mix          0.2
-  send reverb  0.2
+    mix          0.17
+  send reverb    0.14
 
 patch "Fifth Lead" family=lead  note=67 range=48..91 role=lead
   set macro1 "Open"
@@ -775,8 +773,8 @@ patch "Soft Flute" family=lead  note=67 range=48..91 role=lead
   a_release      0.3 s
   voicemode      #2
   glide          0.04 s
-  volume         0.42
-  send reverb  0.18
+  volume         0.44
+  send reverb    0.13
 
 patch Whistle family=lead  note=67 range=48..91 role=lead
   set macro1 "Breath"
@@ -901,7 +899,7 @@ patch "Brass Lead" family=lead  note=67 range=48..91 role=lead
   mac2_a1  0.4
   mac3_d1  #5
   mac3_a1  0.4
-  mac4_d1  #14
+  mac4_d1  #15
   mac4_a1  0.3
   mac5_d1  #3
   mac5_a1  -0.008
@@ -1019,10 +1017,8 @@ patch "Vowel Lead" family=lead  note=67 range=48..91 role=lead
   mac3_a1  0.35
   mac4_d1  #17
   mac4_a1  0.4
-  mac5_d1  #14
+  mac5_d1  #15
   mac5_a1  0.4
-  mac5_d2  #29
-  mac5_a2  -0.324
   mac6_d1  #21
   mac6_a1  0.3
   mac7_d1  #19
@@ -1110,14 +1106,14 @@ patch "Bell Lead" family=lead  note=67 range=48..91 role=lead
   a_release      0.6 s
   voicemode      #2
   glide          0.03 s
-  volume         0.39
+  volume         0.41
   insert Delay
     time         #3
     feedback     0.4
     tone         6000 Hz
     pingpong     #1
-    mix          0.25
-  send reverb  0.2
+    mix          0.21
+  send reverb    0.14
 
 patch "Stab Lead" family=lead  note=67 range=48..91 role=lead
   set macro1 "Open"
@@ -1193,9 +1189,9 @@ patch "Chip Lead" family=lead  note=67 range=48..91 role=lead
   set macro8 "Noise"
   # Macros: each knob adds its depth to the destinations below.
   mac1_d1  #5
-  mac1_a1  0.43
+  mac1_a1  0.143
   mac1_d2  #29
-  mac1_a2  0.271
+  mac1_a2  0.27
   mac2_d1  #9
   mac2_a1  0.5
   mac3_d1  #23
@@ -1261,10 +1257,8 @@ patch "Phase Lead" family=lead  note=67 range=48..91 role=lead
   mac2_a1  0.4
   mac3_d1  #11
   mac3_a1  0.3
-  mac4_d1  #14
+  mac4_d1  #15
   mac4_a1  0.4
-  mac4_d2  #29
-  mac4_a2  -0.144
   mac5_d1  #19
   mac5_a1  0.3
   mac6_d1  #21
@@ -1293,7 +1287,7 @@ patch "Phase Lead" family=lead  note=67 range=48..91 role=lead
   a_release      0.3 s
   voicemode      #2
   glide          0.03 s
-  volume         0.41
+  volume         0.34
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
@@ -1306,6 +1300,7 @@ patch "Phase Lead" family=lead  note=67 range=48..91 role=lead
     stages       #3
     spread       0.6
     mix          0.5
+    gain         1.5 dB
 
 patch "Sync Sweep" family=lead  note=67 range=48..91 role=lead
   set macro1 "Tear"
@@ -1387,7 +1382,7 @@ patch "Scan Lead" family=lead  note=67 range=48..91 role=lead
   mac3_a1  0.3
   mac4_d1  #25
   mac4_a1  0.4
-  mac5_d1  #14
+  mac5_d1  #15
   mac5_a1  0.4
   mac6_d1  #17
   mac6_a1  0.5
@@ -1751,7 +1746,7 @@ patch Scream family=lead  note=67 range=48..91 role=lead
   mac1_a1  0.3
   mac2_d1  #25
   mac2_a1  0.3
-  mac3_d1  #14
+  mac3_d1  #15
   mac3_a1  0.4
   mac4_d1  #21
   mac4_a1  0.3
@@ -2014,7 +2009,7 @@ patch "Felt Bass" family=bass  note=36 range=24..55 role=bass
   mac2_d1  #14
   mac2_a1  0.25
   mac2_d2  #29
-  mac2_a2  0.404
+  mac2_a2  0.023
   mac3_d1  #9
   mac3_a1  0.5
   mac4_d1  #3
@@ -2093,7 +2088,7 @@ patch "Pluck Bass" family=bass  note=36 range=24..55 role=bass
   a_decay        0.5 s
   a_sustain      0.15
   a_release      0.2 s
-  volume         0.99
+  volume         0.95
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #12
@@ -2102,7 +2097,7 @@ patch "Wide Bass" family=bass  note=36 range=24..55 role=bass
   set macro1 "Open"
   set macro2 "Bite"
   set macro3 "Width"
-  set macro4 "Edge"
+  set macro4 "Sub"
   set macro5 "Body"
   set macro6 "FM"
   set macro7 "Ring"
@@ -2114,10 +2109,8 @@ patch "Wide Bass" family=bass  note=36 range=24..55 role=bass
   mac2_a1  0.35
   mac3_d1  #17
   mac3_a1  0.4
-  mac4_d1  #14
-  mac4_a1  0.4
-  mac4_d2  #29
-  mac4_a2  -0.242
+  mac4_d1  #10
+  mac4_a1  0.35
   mac5_d1  #9
   mac5_a1  0.5
   mac6_d1  #21
@@ -2142,6 +2135,7 @@ patch "Wide Bass" family=bass  note=36 range=24..55 role=bass
   a_decay        1.2 s
   a_sustain      0.75
   a_release      0.2 s
+  o3_coarse      #12
   volume         0.62
 
 patch "Old Mono" family=bass  note=36 range=24..55 role=bass
@@ -2476,7 +2470,7 @@ patch "Knock FM" family=bass  note=36 range=24..55 role=bass
   o3_wave        #3
   o3_coarse      #12
   o3_level       0
-  volume         1.00
+  volume         0.84
 
 patch "Wood Pluck" family=bass  note=36 range=24..55 role=bass
   # An octave up from the key, where this bass has its character.
@@ -2496,6 +2490,8 @@ patch "Wood Pluck" family=bass  note=36 range=24..55 role=bass
   mac2_a1  0.4
   mac3_d1  #5
   mac3_a1  0.5
+  mac3_d2  #29
+  mac3_a2  0.472
   mac4_d1  #24
   mac4_a1  -0.5
   mac5_d1  #9
@@ -2526,7 +2522,7 @@ patch "Wood Pluck" family=bass  note=36 range=24..55 role=bass
   a_decay        0.7 s
   a_sustain      0
   a_release      0.15 s
-  volume         0.92
+  volume         0.84
 
 patch "Rubber Bass" family=bass  note=36 range=24..55 role=bass
   # An octave up from the key, where this bass has its character.
@@ -2581,7 +2577,7 @@ patch "Rubber Bass" family=bass  note=36 range=24..55 role=bass
   voicemode      #2
   glide          0.07 s
   glidemode      #1
-  volume         0.90
+  volume         0.74
 
 patch "Drop Sub" family=bass  note=36 range=24..55 role=bass
   set macro1 "Open"
@@ -2653,6 +2649,8 @@ patch Sour family=bass  note=36 range=24..55 role=acid
   mac1_a1  0.4
   mac2_d1  #25
   mac2_a1  0.3
+  mac2_d2  #29
+  mac2_a2  -0.322
   mac3_d1  #14
   mac3_a1  0.4
   mac4_d1  #8
@@ -2696,7 +2694,7 @@ patch Sour family=bass  note=36 range=24..55 role=acid
   voicemode      #2
   glide          0.06 s
   glidemode      #1
-  volume         0.89
+  volume         0.78
   insert Distortion
     drive        5
     tone         5000 Hz
@@ -2763,7 +2761,7 @@ patch Tart family=bass  note=36 range=24..55 role=acid
   voicemode      #2
   glide          0.05 s
   glidemode      #1
-  volume         0.84
+  volume         0.77
 
 patch "Chip Bass" family=bass  note=36 range=24..55 role=bass
   # An octave up from the key, where this bass has its character.
@@ -2778,7 +2776,9 @@ patch "Chip Bass" family=bass  note=36 range=24..55 role=bass
   set macro8 "Beat"
   # Macros: each knob adds its depth to the destinations below.
   mac1_d1  #5
-  mac1_a1  0.43
+  mac1_a1  0.143
+  mac1_d2  #29
+  mac1_a2  -0.25
   mac2_d1  #6
   mac2_a1  0.3
   mac3_d1  #9
@@ -2817,7 +2817,7 @@ patch "Chip Bass" family=bass  note=36 range=24..55 role=bass
   a_sustain      0.7
   a_release      0.05 s
   voicemode      #1
-  volume         0.86
+  volume         0.72
 
 patch "Ring Bass" family=bass  note=36 range=24..55 role=bass
   # An octave up from the key, where this bass has its character.
@@ -2864,7 +2864,7 @@ patch "Ring Bass" family=bass  note=36 range=24..55 role=bass
   a_decay        0.9 s
   a_sustain      0.5
   a_release      0.2 s
-  volume         0.58
+  volume         0.46
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #12
@@ -2967,7 +2967,7 @@ patch Grind family=bass  note=36 range=24..55 role=bass
   a_sustain      0.8
   a_release      0.15 s
   voicemode      #1
-  volume         0.60
+  volume         0.46
   insert Distortion
     mode         #1
     drive        15
@@ -3028,7 +3028,7 @@ patch "Fold Bass" family=bass  note=36 range=24..55 role=bass
   a_sustain      0.5
   a_release      0.15 s
   voicemode      #1
-  volume         0.76
+  volume         0.73
 
 patch "Chain FM" family=bass  note=36 range=24..55 role=bass
   # An octave up from the key, where this bass has its character.
@@ -3092,7 +3092,7 @@ patch "Chain FM" family=bass  note=36 range=24..55 role=bass
   voicemode      #1
   f2_type        #4
   f2_freq        20 Hz
-  volume         0.62
+  volume         0.55
 
 patch Bloom family=bass  note=36 range=24..55 role=bass
   set macro1 "Bloom"
@@ -3151,7 +3151,7 @@ patch "Talk Growl" family=bass  note=36 range=24..55 role=bass
   octave         1
   set macro1 "Open"
   set macro2 "Bite"
-  set macro3 "Speed"
+  set macro3 "Double"
   set macro4 "Vowel"
   set macro5 "Edge"
   set macro6 "Sub"
@@ -3170,6 +3170,8 @@ patch "Talk Growl" family=bass  note=36 range=24..55 role=bass
   mac5_a1  0.4
   mac6_d1  #9
   mac6_a1  0.5
+  mac6_d2  #29
+  mac6_a2  -0.354
   mac7_d1  #21
   mac7_a1  0.3
   mac8_d1  #3
@@ -3197,7 +3199,7 @@ patch "Talk Growl" family=bass  note=36 range=24..55 role=bass
   a_sustain      0.9
   a_release      0.15 s
   voicemode      #1
-  volume         1.00
+  volume         0.86
   insert Distortion
     drive        4
     tone         3000 Hz
@@ -3218,7 +3220,7 @@ patch "Twin Sweep" family=bass  note=36 range=24..55 role=bass
   mac1_a1  0.4
   mac2_d1  #25
   mac2_a1  0.4
-  mac3_d1  #14
+  mac3_d1  #15
   mac3_a1  0.4
   mac4_d1  #17
   mac4_a1  0.5
@@ -3232,6 +3234,8 @@ patch "Twin Sweep" family=bass  note=36 range=24..55 role=bass
   mac7_a1  0.4
   mac7_d2  #6
   mac7_a2  0.4
+  mac7_d3  #29
+  mac7_a3  0.75
   mac8_d1  #10
   mac8_a1  0.6
   # The beating pair on the sweep table, each moved by its own slow LFO,
@@ -3278,7 +3282,7 @@ patch "Twin Sweep" family=bass  note=36 range=24..55 role=bass
 patch Wobble family=bass  note=36 range=24..55 role=bass
   set macro1 "Open"
   set macro2 "Bite"
-  set macro3 "Speed"
+  set macro3 "Double"
   set macro4 "Grit"
   set macro5 "Sub"
   set macro6 "Beat"
@@ -3325,7 +3329,7 @@ patch Wobble family=bass  note=36 range=24..55 role=bass
   a_decay        1.5 s
   a_sustain      1.0
   a_release      0.12 s
-  volume         0.45
+  volume         0.52
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #12
@@ -3333,7 +3337,7 @@ patch Wobble family=bass  note=36 range=24..55 role=bass
 patch Wub family=bass  note=36 range=24..55 role=bass
   set macro1 "Open"
   set macro2 "Bite"
-  set macro3 "Speed"
+  set macro3 "Double"
   set macro4 "FM"
   set macro5 "Beat"
   set macro6 "PW"
@@ -3373,14 +3377,14 @@ patch Wub family=bass  note=36 range=24..55 role=bass
   a_attack       0.005 s
   a_sustain      1.0
   a_release      0.15 s
-  volume         0.5
+  volume         0.44
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #12
 
 patch "Wobble Knob" family=bass  note=36 range=24..55 role=bass
   set macro1 "Wobble"
-  set macro2 "Speed"
+  set macro2 "Double"
   set macro3 "Open"
   set macro4 "Bite"
   set macro5 "Edge"
@@ -3441,7 +3445,7 @@ patch "Wobble Knob" family=bass  note=36 range=24..55 role=bass
 patch "Warm Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Bright"
   set macro2 "Width"
-  set macro3 "Air"
+  set macro3 "Glow"
   set macro4 "Breath"
   set macro5 "Res"
   set macro6 "Ring"
@@ -3460,7 +3464,7 @@ patch "Warm Pad" family=pad  note=55 range=36..79 role=pad
   mac5_a1  0.3
   mac6_d1  #19
   mac6_a1  0.3
-  mac7_d1  #14
+  mac7_d1  #16
   mac7_a1  0.3
   mac8_d1  #3
   mac8_a1  -0.006
@@ -3490,7 +3494,7 @@ patch "Warm Pad" family=pad  note=55 range=36..79 role=pad
 
 patch Velvet family=pad  note=55 range=36..79 role=pad
   set macro1 "Bright"
-  set macro2 "Body"
+  set macro2 "Soft"
   set macro3 "Upper"
   set macro4 "Width"
   set macro5 "Air"
@@ -3535,7 +3539,7 @@ patch Velvet family=pad  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      1.5 s
-  volume         0.37
+  volume         0.40
   f2_key         1
   insert Chorus
     voices       #2
@@ -3543,8 +3547,8 @@ patch Velvet family=pad  note=55 range=36..79 role=pad
     depth        0.5
     spread       1
     drift        0.15
-    mix          0.6
-  send reverb    0.25
+    mix          0.35
+  send reverb    0.08
 
 patch "Open Fifths" family=pad  note=55 range=36..79 role=pad
   set macro1 "Fifth"
@@ -3568,7 +3572,7 @@ patch "Open Fifths" family=pad  note=55 range=36..79 role=pad
   mac5_a1  0.4
   mac6_d1  #19
   mac6_a1  0.3
-  mac7_d1  #14
+  mac7_d1  #15
   mac7_a1  0.3
   mac8_d1  #3
   mac8_a1  0.006
@@ -3592,10 +3596,10 @@ patch "Open Fifths" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2 s
-  volume         0.41
+  volume         0.43
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.2
+  send reverb    0.14
 
 patch Wash family=pad  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -3615,10 +3619,10 @@ patch Wash family=pad  note=55 range=36..79 role=pad
   mac3_a1  0.3
   mac4_d1  #19
   mac4_a1  0.3
-  mac5_d1  #14
+  mac5_d1  #16
   mac5_a1  0.2
-  mac5_d2  #29
-  mac5_a2  -0.277
+  mac5_d2  #10
+  mac5_a2  0.35
   mac6_d1  #18
   mac6_a1  0.1
   mac7_d1  #10
@@ -3656,7 +3660,7 @@ patch Wall family=pad  note=55 range=36..79 role=pad
   set macro3 "Width"
   set macro4 "Upper"
   set macro5 "Ring"
-  set macro6 "Sync"
+  set macro6 "FM"
   set macro7 "Beat"
   set macro8 "Air"
   # Macros: each knob adds its depth to the destinations below.
@@ -3670,10 +3674,8 @@ patch Wall family=pad  note=55 range=36..79 role=pad
   mac4_a1  0.3
   mac5_d1  #19
   mac5_a1  0.3
-  mac6_d1  #14
-  mac6_a1  0.3
-  mac6_d2  #29
-  mac6_a2  -0.107
+  mac6_d1  #21
+  mac6_a1  0.15
   mac7_d1  #3
   mac7_a1  -0.006
   mac8_d1  #18
@@ -3703,10 +3705,10 @@ patch Wall family=pad  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.85
   a_release      1.5 s
-  volume         0.30
+  volume         0.32
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Dark Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -3728,10 +3730,8 @@ patch "Dark Pad" family=pad  note=55 range=36..79 role=pad
   mac4_a1  0.3
   mac5_d1  #19
   mac5_a1  0.3
-  mac6_d1  #14
+  mac6_d1  #15
   mac6_a1  0.3
-  mac6_d2  #29
-  mac6_a2  -0.18
   mac7_d1  #3
   mac7_a1  0.006
   mac8_d1  #10
@@ -3814,7 +3814,7 @@ patch "Drift Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      3 s
-  volume         0.29
+  volume         0.31
   f2_type        #5
   f2_freq        20 Hz
   insert Chorus
@@ -3823,8 +3823,8 @@ patch "Drift Pad" family=pad  note=55 range=36..79 role=pad
     depth        0.3
     spread       0.7
     drift        0.4
-    mix          0.35
-  send reverb    0.2
+    mix          0.29
+  send reverb    0.14
 
 patch "Worn Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -3844,7 +3844,7 @@ patch "Worn Pad" family=pad  note=55 range=36..79 role=pad
   mac3_a1  0.4
   mac4_d1  #19
   mac4_a1  0.3
-  mac5_d1  #14
+  mac5_d1  #15
   mac5_a1  0.3
   mac6_d1  #18
   mac6_a1  0.1
@@ -3869,7 +3869,7 @@ patch "Worn Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2 s
-  volume         0.35
+  volume         0.39
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
@@ -3882,7 +3882,7 @@ patch "Worn Pad" family=pad  note=55 range=36..79 role=pad
     tone         7000 Hz
     hiss         0
     age          0.5
-  send reverb    0.2
+  send reverb    0.07
 
 patch "Pulse Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -3906,7 +3906,7 @@ patch "Pulse Pad" family=pad  note=55 range=36..79 role=pad
   mac4_a1  0.4
   mac5_d1  #18
   mac5_a1  0.12
-  mac6_d1  #14
+  mac6_d1  #15
   mac6_a1  0.4
   mac7_d1  #10
   mac7_a1  0.4
@@ -3945,7 +3945,7 @@ patch "Pulse Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.8
   a_release      2 s
-  volume         0.17
+  volume         0.19
   f2_type        #5
   f2_freq        20 Hz
   f1_key         0.2
@@ -3957,8 +3957,8 @@ patch "Pulse Pad" family=pad  note=55 range=36..79 role=pad
     rate         #14
     depth        0.4
     spread       0.8
-    mix          0.4
-  send reverb    0.25
+    mix          0.28
+  send reverb    0.12
 
 patch "Hollow Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Scan"
@@ -4013,10 +4013,10 @@ patch "Hollow Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2 s
-  volume         0.29
+  volume         0.30
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Bow Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Bow"
@@ -4075,13 +4075,13 @@ patch "Bow Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      1.8 s
-  volume         0.37
+  volume         0.39
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
   o3_wave        #26
   o3_coarse      #36
-  send reverb    0.2
+  send reverb    0.14
 
 patch Choir family=pad  note=55 range=36..79 role=pad
   set macro1 "Vowel"
@@ -4195,10 +4195,10 @@ patch Hymn family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2.5 s
-  volume         0.52
+  volume         0.55
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.25
+  send reverb    0.17
 
 patch "Glass Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Scan"
@@ -4212,6 +4212,8 @@ patch "Glass Pad" family=pad  note=55 range=36..79 role=pad
   # Macros: each knob adds its depth to the destinations below.
   mac1_d1  #5
   mac1_a1  0.4
+  mac1_d2  #29
+  mac1_a2  0.579
   mac2_d1  #23
   mac2_a1  0.35
   mac3_d1  #25
@@ -4253,7 +4255,7 @@ patch "Glass Pad" family=pad  note=55 range=36..79 role=pad
   o2_fine        6
   o2_pos         0.6
   o2_wave        #4
-  volume         0.96
+  volume         0.90
   # A wide, slow chorus and some room, the way a glass pad is usually heard.
   # Silent until a macro reaches them.
   o3_wave        #3
@@ -4387,15 +4389,15 @@ patch Halo family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      3 s
-  volume         0.32
+  volume         0.38
   octave         1
   insert Chorus
     voices       #1
     rate         #14
     depth        0.3
     spread       0.9
-    mix          0.35
-  send reverb    0.25
+    mix          0.20
+  send reverb    0.08
 
 patch Mist family=pad  note=55 range=36..79 role=pad
   set macro1 "Air"
@@ -4448,14 +4450,14 @@ patch Mist family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      3 s
-  volume         0.64
+  volume         0.71
   insert Chorus
     voices       #1
     rate         #14
     depth        0.4
     spread       1
-    mix          0.4
-  send reverb    0.3
+    mix          0.28
+  send reverb    0.15
 
 patch "Breath Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Tone"
@@ -4559,10 +4561,10 @@ patch Undertow family=pad  note=55 range=36..79 role=pad
   a_decay        4 s
   a_sustain      0.85
   a_release      4 s
-  volume         0.28
+  volume         0.32
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.3
+  send reverb    0.15
 
 patch "Sweep Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Scan"
@@ -4670,13 +4672,13 @@ patch "Sync Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2.5 s
-  volume         0.38
+  volume         0.40
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
   o3_wave        #2
   o3_coarse      #12
-  send reverb    0.2
+  send reverb    0.14
 
 patch Swirl family=pad  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -4698,7 +4700,7 @@ patch Swirl family=pad  note=55 range=36..79 role=pad
   mac4_a1  0.3
   mac5_d1  #19
   mac5_a1  0.3
-  mac6_d1  #14
+  mac6_d1  #15
   mac6_a1  0.3
   mac7_d1  #10
   mac7_a1  0.3
@@ -4802,6 +4804,8 @@ patch "Glass Ice" family=pad  note=55 range=36..79 role=pad
   mac2_a1  0.4
   mac2_d2  #6
   mac2_a2  -0.4
+  mac2_d3  #29
+  mac2_a3  0.365
   mac3_d1  #23
   mac3_a1  0.3
   mac4_d1  #25
@@ -4897,7 +4901,7 @@ patch "Glass Scan" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2.5 s
-  volume         0.64
+  volume         0.68
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
@@ -4908,8 +4912,8 @@ patch "Glass Scan" family=pad  note=55 range=36..79 role=pad
     feedback     0.35
     tone         5000 Hz
     pingpong     #1
-    mix          0.2
-  send reverb    0.2
+    mix          0.17
+  send reverb    0.14
 
 patch "Spiral Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Scan"
@@ -4971,7 +4975,7 @@ patch "Spiral Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2.5 s
-  volume         0.56
+  volume         0.59
   f2_type        #5
   f2_freq        20 Hz
   insert Delay
@@ -4979,8 +4983,8 @@ patch "Spiral Pad" family=pad  note=55 range=36..79 role=pad
     feedback     0.35
     tone         5000 Hz
     pingpong     #1
-    mix          0.2
-  send reverb    0.2
+    mix          0.17
+  send reverb    0.14
 
 patch "Iron Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Ring"
@@ -5025,13 +5029,13 @@ patch "Iron Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2.5 s
-  volume         0.45
+  volume         0.51
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
   o3_wave        #29
   o3_coarse      #36
-  send reverb    0.25
+  send reverb    0.12
 
 patch "Dust Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Scan"
@@ -5080,14 +5084,14 @@ patch "Dust Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2 s
-  volume         0.49
+  volume         0.52
   f2_type        #5
   f2_freq        20 Hz
   insert Bitcrusher
     bits         10
     rate         16000 Hz
     mix          0.4
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Gate Pad" family=pad  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -5107,7 +5111,7 @@ patch "Gate Pad" family=pad  note=55 range=36..79 role=pad
   mac3_a1  0.3
   mac4_d1  #19
   mac4_a1  0.3
-  mac5_d1  #14
+  mac5_d1  #15
   mac5_a1  0.3
   mac6_d1  #18
   mac6_a1  0.1
@@ -5139,7 +5143,7 @@ patch "Gate Pad" family=pad  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      0.8 s
-  volume         0.37
+  volume         0.40
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
@@ -5150,8 +5154,8 @@ patch "Gate Pad" family=pad  note=55 range=36..79 role=pad
     feedback     0.3
     tone         5000 Hz
     pingpong     #1
-    mix          0.2
-  send reverb    0.2
+    mix          0.17
+  send reverb    0.14
 
 patch Tide family=pad  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -5173,7 +5177,7 @@ patch Tide family=pad  note=55 range=36..79 role=pad
   mac4_a1  0.4
   mac5_d1  #19
   mac5_a1  0.3
-  mac6_d1  #14
+  mac6_d1  #15
   mac6_a1  0.3
   mac7_d1  #18
   mac7_a1  0.1
@@ -5201,10 +5205,10 @@ patch Tide family=pad  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.85
   a_release      2.5 s
-  volume         0.34
+  volume         0.36
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Electric Piano" family=keys  note=60 range=36..84 role=keys
   set macro1 "Mellow"
@@ -5458,6 +5462,8 @@ patch "Reed Piano" family=keys  note=60 range=36..84 role=keys
   mac1_a1  0.3
   mac2_d1  #23
   mac2_a1  -0.4
+  mac2_d2  #29
+  mac2_a2  0.324
   mac3_d1  #25
   mac3_a1  0.35
   mac4_d1  #11
@@ -5558,11 +5564,11 @@ patch "Digital Piano" family=keys  note=60 range=36..84 role=keys
   a_decay        3 s
   a_sustain      0.0
   a_release      0.5 s
-  volume         0.78
+  volume         0.82
   # Silent until a macro reaches them.
   o3_wave        #2
   o3_coarse      #48
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Synth Piano" family=keys  note=60 range=36..84 role=keys
   set macro1 "Open"
@@ -5628,7 +5634,7 @@ patch "Felt Keys" family=keys  note=60 range=36..84 role=keys
   set macro5 "Ring"
   set macro6 "Beat"
   set macro7 "FM"
-  set macro8 "Air"
+  set macro8 "Bright"
   # Macros: each knob adds its depth to the destinations below.
   mac1_d1  #23
   mac1_a1  0.35
@@ -5668,11 +5674,11 @@ patch "Felt Keys" family=keys  note=60 range=36..84 role=keys
   a_decay        1.8 s
   a_sustain      0.0
   a_release      0.5 s
-  volume         0.60
+  volume         0.64
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #36
-  send reverb    0.25
+  send reverb    0.17
 
 patch "Stage Organ" family=keys  note=60 range=36..84 role=keys
   set macro1 "Drawbar"
@@ -5732,7 +5738,7 @@ patch "Perc Organ" family=keys  note=60 range=36..84 role=keys
   set macro1 "Drawbar"
   set macro2 "Perc"
   set macro3 "Sub"
-  set macro4 "Bright"
+  set macro4 "Mellow"
   set macro5 "Ring"
   set macro6 "Click"
   set macro7 "Beat"
@@ -5779,11 +5785,12 @@ patch "Perc Organ" family=keys  note=60 range=36..84 role=keys
   a_decay        0.1 s
   a_sustain      1
   a_release      0.06 s
-  volume         0.76
+  volume         0.62
   f2_type        #5
   f2_freq        20 Hz
   insert Rotary
     mix          0.7
+    gain         1.8 dB
 
 patch Clav family=keys  note=60 range=36..84 role=keys
   set macro1 "Open"
@@ -6011,7 +6018,7 @@ patch "Marimba Keys" family=keys  note=60 range=36..84 role=keys
   set macro5 "Res"
   set macro6 "Beat"
   set macro7 "Octave"
-  set macro8 "Air"
+  set macro8 "Bright"
   # Macros: each knob adds its depth to the destinations below.
   mac1_d1  #21
   mac1_a1  0.25
@@ -6427,14 +6434,14 @@ patch "Chime Keys" family=keys  note=60 range=36..84 role=keys
   a_decay        3 s
   a_sustain      0.1
   a_release      1 s
-  volume         0.45
+  volume         0.48
   insert Delay
     time         #3
     feedback     0.3
     tone         6000 Hz
     pingpong     #1
-    mix          0.2
-  send reverb    0.2
+    mix          0.17
+  send reverb    0.14
 
 patch "Music Box" family=keys  note=60 range=36..84 role=keys
   set macro1 "Dark"
@@ -6552,10 +6559,10 @@ patch "Pluck Wide" family=keys  note=55 range=40..79 role=arp
   mac4_a1  0.3
   mac5_d1  #19
   mac5_a1  0.3
-  mac6_d1  #14
+  mac6_d1  #16
   mac6_a1  0.25
-  mac6_d2  #29
-  mac6_a2  -0.603
+  mac6_d2  #10
+  mac6_a2  0.35
   mac7_d1  #3
   mac7_a1  0.006
   mac8_d1  #18
@@ -6709,6 +6716,8 @@ patch "Warm Pluck" family=pluck  note=55 range=36..79 role=arp
   mac6_a1  0.006
   mac7_d1  #10
   mac7_a1  0.4
+  mac7_d2  #29
+  mac7_a2  -0.247
   mac8_d1  #21
   mac8_a1  0.2
   # A saw over a square an octave down, through a low pass that closes
@@ -6734,7 +6743,7 @@ patch "Warm Pluck" family=pluck  note=55 range=36..79 role=arp
   a_decay        1.2 s
   a_sustain      0.0
   a_release      0.3 s
-  volume         0.80
+  volume         0.74
   send reverb    0.15
 
 
@@ -6864,8 +6873,10 @@ patch Pizzicato family=pluck  note=60 range=36..84 role=arp
   mac5_a1  0.2
   mac6_d1  #3
   mac6_a1  0.006
-  mac7_d1  #14
+  mac7_d1  #16
   mac7_a1  0.25
+  mac7_d2  #10
+  mac7_a2  0.35
   mac8_d1  #18
   mac8_a1  0.05
   # Three saws stacked a little apart, very short, through a low pass and
@@ -6892,7 +6903,7 @@ patch Pizzicato family=pluck  note=60 range=36..84 role=arp
   o2_level       0.0
   o3_wave        #0
   o3_coarse      #36
-  send reverb    0.3
+  send reverb    0.15
 
 patch Harp family=pluck  note=60 range=36..96 role=arp
   set macro1 "Open"
@@ -6939,11 +6950,11 @@ patch Harp family=pluck  note=60 range=36..96 role=arp
   a_decay        2.0 s
   a_sustain      0.0
   a_release      1.2 s
-  volume         0.59
+  volume         0.67
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #48
-  send reverb    0.3
+  send reverb    0.15
 
 patch Nylon family=pluck  note=55 range=40..84 role=arp
   set macro1 "Open"
@@ -6993,11 +7004,11 @@ patch Nylon family=pluck  note=55 range=40..84 role=arp
   a_decay        1.4 s
   a_sustain      0.0
   a_release      0.3 s
-  volume         0.87
+  volume         0.92
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #36
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Tap Pluck" family=pluck  note=60 range=36..84 role=arp
   set macro1 "Open"
@@ -7050,7 +7061,7 @@ patch "Tap Pluck" family=pluck  note=60 range=36..84 role=arp
   a_decay        0.45 s
   a_sustain      0.0
   a_release      0.15 s
-  volume         0.95
+  volume         0.87
   send reverb    0.15
 
 
@@ -7074,10 +7085,10 @@ patch "Bright Pluck" family=pluck  note=60 range=36..84 role=arp
   mac4_a1  0.3
   mac5_d1  #19
   mac5_a1  0.2
-  mac6_d1  #14
+  mac6_d1  #16
   mac6_a1  0.2
-  mac6_d2  #29
-  mac6_a2  -0.45
+  mac6_d2  #10
+  mac6_a2  0.35
   mac7_d1  #9
   mac7_a1  0.3
   mac8_d1  #21
@@ -7104,7 +7115,7 @@ patch "Bright Pluck" family=pluck  note=60 range=36..84 role=arp
   a_decay        0.7 s
   a_sustain      0.0
   a_release      0.3 s
-  volume         0.89
+  volume         0.95
   # Silent until a macro reaches them.
   o3_wave        #0
   o3_coarse      #36
@@ -7113,8 +7124,8 @@ patch "Bright Pluck" family=pluck  note=60 range=36..84 role=arp
     feedback     0.35
     tone         5000 Hz
     pingpong     #1
-    mix          0.22
-  send reverb    0.25
+    mix          0.18
+  send reverb    0.17
 
 patch "FM Pluck" family=pluck  note=60 range=36..84 role=arp
   set macro1 "Strike"
@@ -7280,11 +7291,11 @@ patch "Steel Tongue" family=pluck  note=60 range=36..84 role=arp
   a_decay        1.8 s
   a_sustain      0.0
   a_release      1.0 s
-  volume         0.50
+  volume         0.54
   # Silent until a macro reaches them.
   o3_wave        #3
   o3_coarse      #36
-  send reverb    0.25
+  send reverb    0.17
 
 patch "Glass Pluck" family=pluck  note=60 range=36..84 role=arp
   set macro1 "Res"
@@ -7300,6 +7311,8 @@ patch "Glass Pluck" family=pluck  note=60 range=36..84 role=arp
   mac1_a1  0.3
   mac2_d1  #5
   mac2_a1  0.4
+  mac2_d2  #29
+  mac2_a2  0.496
   mac3_d1  #23
   mac3_a1  -0.4
   mac4_d1  #10
@@ -8276,8 +8289,8 @@ patch "Pump Pad" family=sequence  note=55 range=36..79 role=sequence
   a_decay        1.0 s
   a_sustain      1.0
   a_release      0.6 s
-  volume         0.34
-  send reverb    0.2
+  volume         0.36
+  send reverb    0.14
 
 
 patch "Triplet Swell" family=sequence  note=55 range=36..79 role=sequence
@@ -8304,7 +8317,7 @@ patch "Triplet Swell" family=sequence  note=55 range=36..79 role=sequence
   mac6_a1  0.25
   mac7_d1  #3
   mac7_a1  0.006
-  mac8_d1  #14
+  mac8_d1  #15
   mac8_a1  0.3
   # Saws that swell up in eighth triplets and drop away, the level and the
   # filter rising together. A chord played backwards, three times a beat.
@@ -8454,14 +8467,14 @@ patch "Dub Chords" family=sequence  note=55 range=40..79 role=keys
   a_decay        0.3 s
   a_sustain      0.0
   a_release      0.15 s
-  volume         0.82
+  volume         0.90
   insert Delay
     time         #4
     feedback     0.5
     tone         2200 Hz
     pingpong     #0
-    mix          0.28
-  send reverb    0.2
+    mix          0.23
+  send reverb    0.14
 
 
 patch "Octave Bounce" family=sequence  note=36 range=24..55 role=ostinato
@@ -8553,7 +8566,7 @@ patch "Stepped Gate" family=sequence  note=55 range=36..79 role=sequence
   mac3_a1  0.25
   mac4_d1  #34
   mac4_a1  -0.25
-  mac5_d1  #14
+  mac5_d1  #15
   mac5_a1  0.3
   mac6_d1  #9
   mac6_a1  0.35
@@ -8657,14 +8670,14 @@ patch "Trance Gate" family=sequence  note=55 range=36..79 role=sequence
   a_decay        1.0 s
   a_sustain      1.0
   a_release      0.3 s
-  volume         0.30
+  volume         0.36
   insert Delay
     time         #2
     feedback     0.3
     tone         6000 Hz
     pingpong     #1
-    mix          0.15
-  send reverb    0.18
+    mix          0.13
+  send reverb    0.13
 
 
 patch Ratchet family=sequence  note=55 range=36..79 role=sequence
@@ -8790,7 +8803,7 @@ patch "Step Bass" family=sequence  note=43 range=36..60 role=ostinato
   a_decay        1.0 s
   a_sustain      1.0
   a_release      0.1 s
-  volume         0.70
+  volume         0.68
 
 
 patch "Sixteen Steps" family=sequence  note=60 range=48..79 role=ostinato
@@ -8957,10 +8970,8 @@ patch Scatter family=sequence  note=55 range=36..79 role=sequence
   mac3_a1  0.25
   mac4_d1  #34
   mac4_a1  -0.25
-  mac5_d1  #14
+  mac5_d1  #15
   mac5_a1  0.25
-  mac5_d2  #29
-  mac5_a2  -0.1
   mac6_d1  #9
   mac6_a1  0.35
   mac7_d1  #19
@@ -8996,7 +9007,7 @@ patch Scatter family=sequence  note=55 range=36..79 role=sequence
   a_decay        1.0 s
   a_sustain      1.0
   a_release      0.3 s
-  volume         0.48
+  volume         0.44
   send reverb    0.15
 
 
@@ -9063,8 +9074,8 @@ patch "Stereo Scatter" family=sequence  note=55 range=36..79 role=sequence
   a_decay        1.0 s
   a_sustain      1.0
   a_release      0.3 s
-  volume         0.51
-  send reverb    0.2
+  volume         0.54
+  send reverb    0.14
 
 
 patch "Table Steps" family=sequence  note=55 range=36..79 role=sequence
@@ -9189,7 +9200,7 @@ patch "PWM Pulse" family=sequence  note=48 range=36..72 role=ostinato
   a_decay        1.0 s
   a_sustain      1.0
   a_release      0.15 s
-  volume         0.44
+  volume         0.42
 
 
 patch "Sync Steps" family=sequence  note=60 range=48..79 role=ostinato
@@ -9524,7 +9535,7 @@ patch "Engine Room" family=sequence  note=48 range=36..72 role=ostinato
   mac1_d1  #23
   mac1_a1  0.25
   mac1_d2  #29
-  mac1_a2  -0.1
+  mac1_a2  -0.384
   mac2_d1  #25
   mac2_a1  0.35
   mac3_d1  #34
@@ -9580,7 +9591,7 @@ patch "Engine Room" family=sequence  note=48 range=36..72 role=ostinato
   a_sustain      1.0
   a_release      0.15 s
   volume         1.00
-  send reverb    0.2
+  send reverb    0.14
 
 patch "String Section" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Bright"
@@ -9634,11 +9645,11 @@ patch "String Section" family=ensemble  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      1 s
-  volume         0.33
+  volume         0.35
   # Silent until a macro reaches them.
   o3_wave        #0
   o3_coarse      #36
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Analog Strings" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Bright"
@@ -9800,11 +9811,11 @@ patch "Chamber Strings" family=ensemble  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      0.8 s
-  volume         0.34
+  volume         0.35
   # Silent until a macro reaches them.
   o3_wave        #0
   o3_coarse      #36
-  send reverb    0.15
+  send reverb    0.10
 
 patch "Slow Strings" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Bright"
@@ -9859,8 +9870,8 @@ patch "Slow Strings" family=ensemble  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.9
   a_release      2.5 s
-  volume         0.25
-  send reverb    0.3
+  volume         0.29
+  send reverb    0.15
 
 patch "Bright Strings" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Bright"
@@ -9916,8 +9927,8 @@ patch "Bright Strings" family=ensemble  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      1 s
-  volume         0.51
-  send reverb    0.2
+  volume         0.53
+  send reverb    0.14
 
 patch "Drift Strings" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Bright"
@@ -10072,8 +10083,8 @@ patch "Long Bows" family=ensemble  note=55 range=36..79 role=pad
   a_decay        3 s
   a_sustain      0.9
   a_release      2 s
-  volume         0.49
-  send reverb    0.25
+  volume         0.55
+  send reverb    0.12
 
 patch "Octave Strings" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Bright"
@@ -10125,8 +10136,8 @@ patch "Octave Strings" family=ensemble  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      1.2 s
-  volume         0.36
-  send reverb    0.2
+  volume         0.39
+  send reverb    0.14
 
 patch "Synth Strings" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Bright"
@@ -10184,7 +10195,7 @@ patch "Synth Strings" family=ensemble  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      1.2 s
-  volume         0.34
+  volume         0.33
   # Silent until a macro reaches them.
   o3_wave        #0
   o3_coarse      #36
@@ -10249,11 +10260,11 @@ patch "Tremolo Strings" family=ensemble  note=55 range=36..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      0.8 s
-  volume         0.32
+  volume         0.34
   # Silent until a macro reaches them.
   o3_wave        #0
   o3_coarse      #36
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Brass Section" family=ensemble  note=55 range=40..79 role=keys
   set macro1 "Open"
@@ -10462,10 +10473,10 @@ patch "Low Horns" family=ensemble  note=48 range=36..67 role=pad
   a_decay        2 s
   a_sustain      0.85
   a_release      0.5 s
-  volume         0.57
+  volume         0.60
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Swell Brass" family=ensemble  note=55 range=40..79 role=pad
   set macro1 "Open"
@@ -10514,13 +10525,13 @@ patch "Swell Brass" family=ensemble  note=55 range=40..79 role=pad
   a_decay        2 s
   a_sustain      0.9
   a_release      0.6 s
-  volume         0.30
+  volume         0.32
   f2_type        #5
   f2_freq        20 Hz
   # Silent until a macro reaches them.
   o3_wave        #0
   o3_coarse      #12
-  send reverb    0.2
+  send reverb    0.14
 
 patch "Synth Brass" family=ensemble  note=55 range=40..79 role=keys
   set macro1 "Open"
@@ -10573,10 +10584,10 @@ patch "Synth Brass" family=ensemble  note=55 range=40..79 role=keys
   a_decay        1.5 s
   a_sustain      0.85
   a_release      0.35 s
-  volume         0.32
+  volume         0.34
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.15
+  send reverb    0.10
 
 patch Fanfare family=ensemble  note=55 range=40..79 role=keys
   set macro1 "Open"
@@ -10630,10 +10641,10 @@ patch Fanfare family=ensemble  note=55 range=40..79 role=keys
   a_decay        1.5 s
   a_sustain      0.85
   a_release      0.4 s
-  volume         0.58
+  volume         0.62
   f2_type        #5
   f2_freq        20 Hz
-  send reverb    0.2
+  send reverb    0.14
 
 patch Oohs family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -10690,11 +10701,11 @@ patch Oohs family=ensemble  note=55 range=36..79 role=pad
   a_decay        2.5 s
   a_sustain      0.9
   a_release      1.5 s
-  volume         0.56
+  volume         0.64
   # Silent until a macro reaches them.
   o3_wave        #24
   o3_coarse      #36
-  send reverb    0.3
+  send reverb    0.15
 
 patch Aahs family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -10751,11 +10762,11 @@ patch Aahs family=ensemble  note=55 range=36..79 role=pad
   a_decay        2.5 s
   a_sustain      0.9
   a_release      1.5 s
-  volume         0.60
+  volume         0.66
   # Silent until a macro reaches them.
   o3_wave        #24
   o3_coarse      #36
-  send reverb    0.3
+  send reverb    0.15
 
 patch "Formant Choir" family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Vowel"
@@ -10826,11 +10837,11 @@ patch "Formant Choir" family=ensemble  note=55 range=36..79 role=pad
   a_decay        2.5 s
   a_sustain      0.9
   a_release      1.5 s
-  volume         0.93
+  volume         1.00
   # Silent until a macro reaches them.
   o3_wave        #24
   o3_coarse      #36
-  send reverb    0.3
+  send reverb    0.15
 
 patch Swell family=ensemble  note=55 range=36..69 role=pad
   set macro1 "Open"
@@ -10850,6 +10861,8 @@ patch Swell family=ensemble  note=55 range=36..69 role=pad
   mac3_a1  0.4
   mac4_d1  #9
   mac4_a1  -0.3
+  mac4_d2  #29
+  mac4_a2  0.388
   mac5_d1  #25
   mac5_a1  0.3
   mac6_d1  #18
@@ -10933,8 +10946,8 @@ patch Orchestra family=ensemble  note=55 range=36..79 role=pad
   a_decay        2.5 s
   a_sustain      0.9
   a_release      1.4 s
-  volume         0.30
-  send reverb    0.3
+  volume         0.34
+  send reverb    0.15
 
 patch Tutti family=ensemble  note=55 range=36..79 role=pad
   set macro1 "Open"
@@ -10990,8 +11003,8 @@ patch Tutti family=ensemble  note=55 range=36..79 role=pad
   a_decay        2.5 s
   a_sustain      0.9
   a_release      2 s
-  volume         0.35
-  send reverb    0.35
+  volume         0.43
+  send reverb    0.12
 
 patch "Full Hall" family=ensemble  note=55 range=36..72 role=pad
   set macro1 "Open"
@@ -11048,8 +11061,8 @@ patch "Full Hall" family=ensemble  note=55 range=36..72 role=pad
   a_decay        3 s
   a_sustain      0.9
   a_release      3 s
-  volume         0.33
-  send reverb    0.45
+  volume         0.43
+  send reverb    0.15
 
 patch "FM Bell" family=bells  note=72 range=48..96 role=bell
   set macro1 "Strike"
@@ -11105,8 +11118,64 @@ patch "FM Bell" family=bells  note=72 range=48..96 role=bell
   a_decay        4 s
   a_sustain      0
   a_release      4 s
-  volume         0.42
-  send reverb    0.2
+  volume         0.44
+  send reverb    0.14
+
+patch "Soft Bell" family=bells  note=72 range=48..96 role=bell
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Upper"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac4_d1  #10
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.25
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A sine modulated three and a half times up, gently, with a sine an
+  # octave up and an attack slow enough to take the knock off the strike.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #46
+  o2_fine        -6
+  o2_level       0.00
+  o3_wave        #3
+  o3_coarse      #36
+  o3_level       0.15
+  fm21           0.08
+  e3_attack      0.001 s
+  e3_decay       1 s
+  e3_sustain     0
+  m01_src        #9
+  m01_dest       #21
+  m01_depth      0.15
+  f1_type        #1
+  f1_freq        10000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.01 s
+  a_decay        3.5 s
+  a_sustain      0
+  a_release      3.5 s
+  volume         0.44
+  send reverb    0.17
 
 patch "Hand Bells" family=bells  note=72 range=48..96 role=bell
   set macro1 "Strike"
@@ -11160,8 +11229,65 @@ patch "Hand Bells" family=bells  note=72 range=48..96 role=bell
   a_decay        2.5 s
   a_sustain      0
   a_release      2.5 s
-  volume         0.45
-  send reverb    0.2
+  volume         0.50
+  send reverb    0.14
+
+patch Glock family=bells  note=84 range=67..103 role=bell
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Upper"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.2
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac4_d1  #10
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.3
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Small steel bars: a sine with a quiet partial about 2.7 times up that
+  # also gives the strike a short burst of FM, and a quick fall.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #41
+  o2_fine        27
+  o2_level       0.25
+  fm21           0.05
+  e3_attack      0.001 s
+  e3_decay       0.15 s
+  e3_sustain     0
+  m01_src        #9
+  m01_dest       #21
+  m01_depth      0.2
+  f1_type        #1
+  f1_freq        12000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.001 s
+  a_decay        1.6 s
+  a_sustain      0
+  a_release      1.2 s
+  volume         0.48
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #48
+  o3_fine        35
+  send reverb    0.15
 
 patch Celeste family=bells  note=79 range=60..96 role=bell
   set macro1 "Strike"
@@ -11219,6 +11345,65 @@ patch Celeste family=bells  note=79 range=60..96 role=bell
   o3_coarse      #48
   send reverb    0.15
 
+patch "Toy Bell" family=bells  note=84 range=67..103 role=bell
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Upper"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac4_d1  #10
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.3
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A wind-up toy's tine: a sine and a sine two octaves up, a tick of noise
+  # on the strike, a short fall and a slow wow in the pitch.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #48
+  o2_level       0.3
+  noisecol       0.8
+  e3_attack      0.001 s
+  e3_decay       0.02 s
+  e3_sustain     0
+  m01_src        #9
+  m01_dest       #18
+  m01_depth      0.25
+  l1_rate        0.6 Hz
+  m02_src        #13
+  m02_dest       #1
+  m02_depth      0.0015
+  f1_type        #1
+  f1_freq        12000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.001 s
+  a_decay        1.2 s
+  a_sustain      0
+  a_release      0.8 s
+  volume         0.53
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #43
+  send reverb    0.12
+
 patch Tubular family=bells  note=60 range=48..84 role=bell
   set macro1 "Strike"
   set macro2 "Ring"
@@ -11273,8 +11458,8 @@ patch Tubular family=bells  note=60 range=48..84 role=bell
   a_decay        6 s
   a_sustain      0
   a_release      6 s
-  volume         0.41
-  send reverb    0.25
+  volume         0.43
+  send reverb    0.17
 
 patch Chimes family=bells  note=79 range=60..96 role=bell
   set macro1 "Strike"
@@ -11324,14 +11509,14 @@ patch Chimes family=bells  note=79 range=60..96 role=bell
   a_decay        3 s
   a_sustain      0
   a_release      3 s
-  volume         0.37
+  volume         0.41
   insert Delay
     time         #3
     feedback     0.3
     tone         6000 Hz
     pingpong     #1
-    mix          0.2
-  send reverb    0.3
+    mix          0.14
+  send reverb    0.15
 
 patch "Glass Bell" family=bells  note=72 range=48..96 role=bell
   set macro1 "Scan"
@@ -11380,10 +11565,10 @@ patch "Glass Bell" family=bells  note=72 range=48..96 role=bell
   a_decay        3.5 s
   a_sustain      0
   a_release      3 s
-  volume         0.50
+  volume         0.53
   o3_level       0.6
   o3_wave        #3
-  send reverb    0.2
+  send reverb    0.14
 
 patch Crystal family=bells  note=79 range=60..96 role=bell
   set macro1 "Strike"
@@ -11438,15 +11623,80 @@ patch Crystal family=bells  note=79 range=60..96 role=bell
   a_decay        2.2 s
   a_sustain      0
   a_release      2 s
-  volume         0.71
+  volume         0.74
   o2_fine        30
   insert Delay
     time         #3
     feedback     0.3
     tone         6000 Hz
     pingpong     #1
-    mix          0.2
-  send reverb    0.2
+    mix          0.17
+  send reverb    0.14
+
+patch "Ice Bell" family=bells  note=79 range=60..96 role=bell
+  set macro1 "Scan"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Strike"
+  set macro5 "Beat"
+  set macro6 "Upper"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.3
+  mac3_d2  #29
+  mac3_a2  0.8
+  mac4_d1  #21
+  mac4_a1  0.2
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #10
+  mac6_a1  0.3
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # The glass table high up, rung against a sine a ninth above, through a
+  # slow wide chorus and a ping-pong echo.
+  o1_wave        #5
+  o1_pos         0.85
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #38
+  o2_level       0.4
+  ring12         0.25
+  f1_type        #1
+  f1_freq        12000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.001 s
+  a_decay        3 s
+  a_sustain      0
+  a_release      2.5 s
+  volume         0.80
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #48
+  insert Chorus
+    voices       #1
+    rate         #14
+    depth        0.4
+    spread       1
+    drift        0.1
+    mix          0.24
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.14
+  send reverb    0.12
 
 patch Bowl family=bells  note=55 range=36..72 role=bell
   set macro1 "Strike"
@@ -11500,8 +11750,78 @@ patch Bowl family=bells  note=55 range=36..72 role=bell
   a_decay        9 s
   a_sustain      0
   a_release      8 s
-  volume         0.33
-  send reverb    0.3
+  volume         0.37
+  send reverb    0.15
+
+patch "Bell Pad" family=bells  note=60 range=36..84 role=pad
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Body"
+  set macro5 "Beat"
+  set macro6 "Width"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac3_d2  #29
+  mac3_a2  0.308
+  mac4_d1  #10
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #17
+  mac6_a1  0.25
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A bell's strike over a held pad: FM on a sine that falls away in a
+  # second, and a soft stack of saws that swells in under it.
+  o1_wave        #3
+  o1_level       0.2
+  o2_wave        #3
+  o2_coarse      #46
+  o2_fine        -6
+  o2_level       0.00
+  o3_wave        #0
+  o3_density     #2
+  o3_detune      0.3
+  o3_level       0.00
+  fm21           0.1
+  e3_attack      0.001 s
+  e3_decay       1.2 s
+  e3_sustain     0
+  e4_attack      1.5 s
+  e4_decay       2 s
+  e4_sustain     1
+  e4_release     2.5 s
+  m01_src        #9
+  m01_dest       #21
+  m01_depth      0.3
+  m02_src        #9
+  m02_dest       #8
+  m02_depth      0.8
+  m03_src        #10
+  m03_dest       #10
+  m03_depth      0.45
+  f1_type        #3
+  f1_freq        2500 Hz
+  f1_key         0.3
+  f1_env         0.2
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.002 s
+  a_decay        3 s
+  a_sustain      0.8
+  a_release      2.5 s
+  volume         0.59
+  send reverb    0.17
 
 patch Bronze family=bells  note=60 range=48..84 role=bell
   set macro1 "Strike"
@@ -11563,7 +11883,121 @@ patch Bronze family=bells  note=60 range=48..84 role=bell
   a_sustain      0
   a_release      3 s
   volume         0.45
-  send reverb    0.2
+  send reverb    0.14
+
+patch Gamelan family=bells  note=67 range=48..84 role=bell
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Shimmer"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac4_d1  #31
+  mac4_a1  0.3
+  mac5_d1  #4
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.3
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A bronze key and its twin tuned a few cents apart, so every note
+  # beats, struck hard with FM from a sine about 2.4 times up.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #39
+  o2_level       0.00
+  o3_wave        #3
+  o3_fine        8
+  o3_level       0.6
+  fm21           0.12
+  e3_attack      0.001 s
+  e3_decay       0.5 s
+  e3_sustain     0
+  m01_src        #9
+  m01_dest       #21
+  m01_depth      0.3
+  l1_rate        5 Hz
+  m02_src        #13
+  m02_dest       #29
+  m02_depth      0.04
+  f1_type        #1
+  f1_freq        8000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.002 s
+  a_decay        3.5 s
+  a_sustain      0
+  a_release      3 s
+  volume         0.45
+  send reverb    0.12
+
+patch Carillon family=bells  note=72 range=55..91 role=bell
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Upper"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac4_d1  #10
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.2
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A tower bell played from a keyboard: the strike with a minor tenth and
+  # an octave and a fifth above it, the tenth giving the strike its FM.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #39
+  o2_level       0.3
+  o3_wave        #3
+  o3_coarse      #43
+  o3_level       0.15
+  fm21           0.08
+  e3_attack      0.001 s
+  e3_decay       1 s
+  e3_sustain     0
+  m01_src        #9
+  m01_dest       #21
+  m01_depth      0.2
+  f1_type        #1
+  f1_freq        8000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.003 s
+  a_decay        4 s
+  a_sustain      0
+  a_release      4 s
+  volume         0.42
+  send reverb    0.15
 
 patch Steeple family=bells  note=55 range=36..72 role=bell
   set macro1 "Strike"
@@ -11619,8 +12053,72 @@ patch Steeple family=bells  note=55 range=36..72 role=bell
   a_decay        8 s
   a_sustain      0
   a_release      8 s
-  volume         0.34
-  send reverb    0.3
+  volume         0.39
+  send reverb    0.15
+
+patch Gong family=bells  note=43 range=31..60 role=bell
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Scan"
+  set macro5 "Beat"
+  set macro6 "Shimmer"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac3_d2  #29
+  mac3_a2  0.573
+  mac4_d1  #5
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #31
+  mac6_a1  0.3
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # The metal table low down, rung against a sine a sharp tritone up, the
+  # filter swelling open for half a second after the strike and ten seconds
+  # of ring.
+  o1_wave        #29
+  o1_pos         0.3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #30
+  o2_fine        17
+  o2_level       0.00
+  ring12         0.4
+  noise          0.05
+  noisecol       0.4
+  l1_rate        0.3 Hz
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.15
+  e3_attack      0.4 s
+  e3_decay       3 s
+  e3_sustain     0.2
+  e3_release     4 s
+  m02_src        #9
+  m02_dest       #23
+  m02_depth      0.3
+  f1_type        #1
+  f1_freq        2500 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.003 s
+  a_decay        10 s
+  a_sustain      0
+  a_release      8 s
+  volume         0.93
+  send reverb    0.15
 
 patch "Digital Bell" family=bells  note=72 range=48..96 role=bell
   set macro1 "Scan"
@@ -11672,14 +12170,14 @@ patch "Digital Bell" family=bells  note=72 range=48..96 role=bell
   a_decay        2.5 s
   a_sustain      0
   a_release      2 s
-  volume         0.50
+  volume         0.53
   insert Delay
     time         #3
     feedback     0.3
     tone         6000 Hz
     pingpong     #1
-    mix          0.2
-  send reverb    0.2
+    mix          0.17
+  send reverb    0.14
 
 patch "Struck Metal" family=bells  note=60 range=48..84 role=bell
   set macro1 "Scan"
@@ -11729,8 +12227,8 @@ patch "Struck Metal" family=bells  note=60 range=48..84 role=bell
   a_decay        2.2 s
   a_sustain      0
   a_release      2 s
-  volume         0.72
-  send reverb    0.2
+  volume         0.75
+  send reverb    0.14
 
 patch Shard family=bells  note=72 range=48..96 role=bell
   set macro1 "Scan"
@@ -11790,7 +12288,1470 @@ patch Shard family=bells  note=72 range=48..96 role=bell
     mix          0.4
   send reverb    0.2
 
+patch "Reverse Bell" family=bells  note=72 range=48..96 role=pad
+  set macro1 "Strike"
+  set macro2 "Ring"
+  set macro3 "Dark"
+  set macro4 "Upper"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #19
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac4_d1  #10
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.25
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A bell played backwards: the FM and the level swell up over a second
+  # and a half and stop short, into an echo that keeps the tail. Hold the
+  # note for the whole swell.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #46
+  o2_fine        -6
+  o2_level       0.00
+  e3_attack      1.5 s
+  e3_decay       0.08 s
+  e3_sustain     0
+  m01_src        #9
+  m01_dest       #21
+  m01_depth      0.35
+  f1_type        #1
+  f1_freq        10000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       1.5 s
+  a_decay        0.08 s
+  a_sustain      0
+  a_release      0.08 s
+  volume         0.38
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #36
+  insert Delay
+    time         #3
+    feedback     0.35
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.21
+  send reverb    0.17
+
+patch "Slow Sweep" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Width"
+  set macro5 "Beat"
+  set macro6 "Ring"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #17
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  -0.006
+  mac6_d1  #19
+  mac6_a1  0.25
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A stack of saws under a low-pass that a slow sine opens and closes,
+  # about once every eight seconds.
+  o1_wave        #0
+  o1_density     #2
+  o1_detune      0.25
+  o1_level       1.00
+  o2_wave        #0
+  o2_fine        -7
+  o2_level       0.8
+  l1_rate        0.12 Hz
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.3
+  f1_type        #3
+  f1_freq        1200 Hz
+  f1_res         0.2
+  f1_key         0.3
+  f1_env         0
+  a_attack       0.8 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2.5 s
+  volume         0.32
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  send reverb    0.12
+
+patch Breathing family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Width"
+  set macro5 "Beat"
+  set macro6 "PW"
+  set macro7 "Octave"
+  set macro8 "Breath"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #17
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  -0.006
+  mac6_d1  #12
+  mac6_a1  0.3
+  mac7_d1  #10
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.1
+  # A soft pad that swells and fades by itself: one slow sine on the filter
+  # and the level together, and a breath of noise.
+  o1_wave        #0
+  o1_density     #1
+  o1_detune      0.2
+  o1_level       1.00
+  o2_wave        #1
+  o2_fine        -5
+  o2_level       0.5
+  noise          0.08
+  noisecol       0.5
+  l1_rate        0.18 Hz
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.2
+  m02_src        #13
+  m02_dest       #29
+  m02_depth      0.05
+  f1_type        #1
+  f1_freq        1500 Hz
+  f1_res         0.1
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       1.5 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      3 s
+  volume         0.28
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #36
+  send reverb    0.15
+
+patch "Long Swell" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Width"
+  set macro4 "Beat"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.25
+  mac4_d1  #3
+  mac4_a1  -0.006
+  mac5_d1  #19
+  mac5_a1  0.25
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # One long breath in: the filter takes eight seconds to open and a saw a
+  # fifth up fades in under it over six.
+  o1_wave        #0
+  o1_density     #3
+  o1_detune      0.3
+  o1_level       1.00
+  o2_wave        #0
+  o2_coarse      #31
+  o2_level       0.00
+  e3_attack      6 s
+  e3_decay       2 s
+  e3_sustain     1
+  e3_release     4 s
+  m01_src        #9
+  m01_dest       #9
+  m01_depth      0.6
+  f1_type        #3
+  f1_freq        500 Hz
+  f1_res         0.25
+  f1_key         0.2
+  f1_env         0.7
+  f_attack       8 s
+  f_decay        4 s
+  f_sustain      0.8
+  f_release      4 s
+  a_attack       2 s
+  a_decay        4 s
+  a_sustain      0.9
+  a_release      4 s
+  volume         0.49
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  send reverb    0.15
+
+patch "PWM Wash" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "PW"
+  set macro5 "Beat"
+  set macro6 "Ring"
+  set macro7 "Octave"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac3_d2  #32
+  mac3_a2  0.25
+  mac3_d3  #33
+  mac3_a3  0.25
+  mac4_d1  #11
+  mac4_a1  0.2
+  mac4_d2  #12
+  mac4_a2  0.2
+  mac5_d1  #3
+  mac5_a1  -0.006
+  mac6_d1  #19
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Three squares with their pulse widths on three slow triangles at
+  # different rates, so the chord never sits still.
+  o1_wave        #1
+  o1_level       1.00
+  o2_wave        #1
+  o2_fine        -6
+  o2_level       0.8
+  o3_wave        #1
+  o3_coarse      #36
+  o3_level       0.35
+  l1_wave        #1
+  l1_rate        0.21 Hz
+  l2_wave        #1
+  l2_rate        0.33 Hz
+  l3_wave        #1
+  l3_rate        0.13 Hz
+  m01_src        #13
+  m01_dest       #11
+  m01_depth      0.35
+  m02_src        #14
+  m02_dest       #12
+  m02_depth      0.35
+  m03_src        #15
+  m03_dest       #13
+  m03_depth      0.35
+  f1_type        #3
+  f1_freq        3000 Hz
+  f1_res         0.1
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.7 s
+  a_decay        3 s
+  a_sustain      0.85
+  a_release      2.5 s
+  volume         0.21
+  send reverb    0.12
+
+patch "Phase Drift" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Width"
+  set macro4 "Beat"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.25
+  mac4_d1  #3
+  mac4_a1  -0.006
+  mac5_d1  #19
+  mac5_a1  0.25
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Two saws drifting a long way apart through a phaser that turns once
+  # every four bars.
+  o1_wave        #0
+  o1_density     #1
+  o1_detune      0.2
+  o1_drift       0.6
+  o1_level       1.00
+  o2_wave        #0
+  o2_fine        -9
+  o2_drift       0.6
+  o2_level       0.8
+  f1_type        #3
+  f1_freq        4000 Hz
+  f1_env         0
+  a_attack       0.6 s
+  a_decay        3 s
+  a_sustain      0.85
+  a_release      2.5 s
+  volume         0.48
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  insert Phaser
+    rate         #15
+    depth        0.8
+    feedback     0.6
+    stages       #2
+    spread       0.5
+    mix          0.55
+  send reverb    0.25
+
+patch Pendulum family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Double"
+  set macro4 "Half"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Octave"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #34
+  mac3_a1  0.25
+  mac3_d2  #35
+  mac3_a2  0.25
+  mac4_d1  #34
+  mac4_a1  -0.25
+  mac4_d2  #35
+  mac4_a2  -0.25
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #10
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # The chord swings from left to right and back once a bar, the filter
+  # opening on every swing, locked to the song.
+  o1_wave        #0
+  o1_density     #2
+  o1_detune      0.2
+  o1_level       1.00
+  o2_wave        #1
+  o2_fine        -5
+  o2_level       0.5
+  l1_sync        #14
+  l2_wave        #1
+  l2_sync        #13
+  m01_src        #13
+  m01_dest       #30
+  m01_depth      0.7
+  m02_src        #14
+  m02_dest       #23
+  m02_depth      0.15
+  f1_type        #3
+  f1_freq        2200 Hz
+  f1_res         0.15
+  f1_env         0
+  a_attack       0.4 s
+  a_decay        2 s
+  a_sustain      0.9
+  a_release      2 s
+  volume         0.38
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #36
+  send reverb    0.12
+
+patch "Tempo Sweep" family=motion  note=55 range=36..79 role=sequence
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Double"
+  set macro4 "Half"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Ring"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac1_d2  #29
+  mac1_a2  -0.181
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #34
+  mac3_a1  0.25
+  mac4_d1  #34
+  mac4_a1  -0.25
+  mac4_d2  #29
+  mac4_a2  0.214
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #19
+  mac7_a1  0.25
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A stack of saws and a sub under a low-pass that a synced triangle
+  # sweeps up and down every two bars.
+  o1_wave        #0
+  o1_density     #3
+  o1_detune      0.3
+  o1_level       1.00
+  o2_wave        #0
+  o2_coarse      #12
+  o2_level       0.4
+  l1_wave        #1
+  l1_sync        #15
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.35
+  f1_type        #3
+  f1_freq        600 Hz
+  f1_res         0.35
+  f1_key         0.3
+  f1_env         0
+  a_attack       0.05 s
+  a_decay        2 s
+  a_sustain      0.9
+  a_release      1.2 s
+  volume         0.50
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.13
+  send reverb    0.10
+
+patch "Notch Sweep" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Notch"
+  set macro2 "Res"
+  set macro3 "Soft"
+  set macro4 "Speed"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #24
+  mac3_a1  -0.3
+  mac4_d1  #31
+  mac4_a1  0.25
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A bright stack of saws through a notch that a slow triangle walks up
+  # and down the range: a hollow that moves through the sound.
+  o1_wave        #0
+  o1_density     #2
+  o1_detune      0.25
+  o1_level       1.00
+  o2_wave        #0
+  o2_level       0.7
+  l1_wave        #1
+  l1_rate        0.1 Hz
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.35
+  f1_type        #10
+  f1_freq        800 Hz
+  f1_res         0.6
+  f1_key         0.5
+  f1_env         0
+  f2_type        #1
+  f2_freq        6000 Hz
+  a_attack       0.3 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2 s
+  volume         0.37
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  send reverb    0.12
+
+patch "Table Drift" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Scan"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Beat"
+  set macro6 "Ring"
+  set macro7 "FM"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac1_d2  #6
+  mac1_a2  -0.25
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac2_d2  #32
+  mac2_a2  0.25
+  mac2_d3  #33
+  mac2_a3  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  -0.006
+  mac6_d1  #19
+  mac6_a1  0.2
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Three oscillators on three tables, each with its position on its own
+  # slow LFO, so the colour turns over without ever quite repeating.
+  o1_wave        #14
+  o1_pos         0.3
+  o1_level       1.00
+  o2_wave        #19
+  o2_pos         0.5
+  o2_fine        -6
+  o2_level       0.6
+  o3_wave        #13
+  o3_pos         0.4
+  o3_coarse      #36
+  o3_level       0.3
+  l1_rate        0.07 Hz
+  l2_wave        #1
+  l2_rate        0.11 Hz
+  l3_rate        0.17 Hz
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.3
+  m02_src        #14
+  m02_dest       #6
+  m02_depth      0.3
+  m03_src        #15
+  m03_dest       #7
+  m03_depth      0.3
+  f1_type        #3
+  f1_freq        5000 Hz
+  f1_env         0
+  a_attack       1 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      3 s
+  volume         0.33
+  send reverb    0.15
+
+patch "Vowel Morph" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Vowel"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac1_d2  #6
+  mac1_a2  -0.3
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.08
+  # The vowel table walked from one vowel to the next by a slow triangle,
+  # with a second voice a fifth up walking the other way.
+  o1_wave        #6
+  o1_pos         0.2
+  o1_density     #1
+  o1_detune      0.2
+  o1_level       1.00
+  o2_wave        #6
+  o2_pos         0.8
+  o2_coarse      #31
+  o2_level       0.8
+  l1_wave        #1
+  l1_rate        0.15 Hz
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.4
+  m02_src        #13
+  m02_dest       #6
+  m02_depth      -0.4
+  f1_type        #3
+  f1_freq        5000 Hz
+  f1_env         0
+  a_attack       0.6 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2.5 s
+  volume         1.00
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  send reverb    0.15
+
+patch "Choir Turn" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Vowel"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Octave"
+  set macro8 "Breath"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac1_d2  #6
+  mac1_a2  -0.3
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac2_d2  #32
+  mac2_a2  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #10
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.08
+  # The choir table turning slowly through its voices on two LFOs, with a
+  # chorus that makes a section of it.
+  o1_wave        #24
+  o1_pos         0.3
+  o1_density     #2
+  o1_detune      0.25
+  o1_level       1.00
+  o2_wave        #24
+  o2_pos         0.6
+  o2_fine        -8
+  o2_level       0.6
+  l1_rate        0.09 Hz
+  l2_rate        0.13 Hz
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.35
+  m02_src        #14
+  m02_dest       #6
+  m02_depth      0.3
+  f1_type        #1
+  f1_freq        4500 Hz
+  f1_env         0
+  a_attack       1.2 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      3 s
+  volume         0.53
+  # Silent until a macro reaches them.
+  o3_wave        #24
+  o3_coarse      #36
+  insert Chorus
+    voices       #1
+    rate         #14
+    depth        0.35
+    spread       0.8
+    drift        0.1
+    mix          0.21
+  send reverb    0.15
+
+patch "Glass Wheel" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Scan"
+  set macro2 "Double"
+  set macro3 "Half"
+  set macro4 "Open"
+  set macro5 "Res"
+  set macro6 "Beat"
+  set macro7 "Ring"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac2_d1  #34
+  mac2_a1  0.25
+  mac3_d1  #34
+  mac3_a1  -0.25
+  mac4_d1  #23
+  mac4_a1  0.3
+  mac5_d1  #25
+  mac5_a1  0.3
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #19
+  mac7_a1  0.25
+  mac8_d1  #18
+  mac8_a1  0.06
+  # The glass table with its position on a sample and hold that slides
+  # from step to step, a new colour every half bar.
+  o1_wave        #5
+  o1_pos         0.5
+  o1_density     #1
+  o1_detune      0.2
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #36
+  o2_level       0.3
+  l1_wave        #5
+  l1_sync        #12
+  l1_slew        0.6
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.35
+  f1_type        #1
+  f1_freq        9000 Hz
+  f1_env         0
+  a_attack       0.3 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2.5 s
+  volume         0.77
+  insert Delay
+    time         #3
+    feedback     0.35
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.14
+  send reverb    0.15
+
+patch "Comb Sweep" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Scan"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # The comb table swept by a slow triangle, which sounds like a flanger
+  # inside the oscillator rather than after it.
+  o1_wave        #8
+  o1_pos         0.2
+  o1_density     #2
+  o1_detune      0.2
+  o1_level       1.00
+  o2_wave        #0
+  o2_fine        -6
+  o2_level       0.5
+  l1_wave        #1
+  l1_rate        0.08 Hz
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.5
+  f1_type        #3
+  f1_freq        6000 Hz
+  f1_env         0
+  a_attack       0.4 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2 s
+  volume         0.69
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  send reverb    0.17
+
+patch "Step Drift" family=motion  note=55 range=36..79 role=sequence
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Double"
+  set macro4 "Half"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Ring"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #34
+  mac3_a1  0.25
+  mac4_d1  #34
+  mac4_a1  -0.25
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #19
+  mac7_a1  0.25
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A low-pass that a sample and hold moves every quarter note and glides
+  # between, so a held chord steps through colours in time.
+  o1_wave        #0
+  o1_density     #2
+  o1_detune      0.25
+  o1_level       1.00
+  o2_wave        #1
+  o2_fine        -6
+  o2_level       0.6
+  l1_wave        #5
+  l1_sync        #9
+  l1_slew        0.4
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.3
+  f1_type        #3
+  f1_freq        1500 Hz
+  f1_res         0.35
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.1 s
+  a_decay        2 s
+  a_sustain      0.9
+  a_release      1.5 s
+  volume         0.32
+  insert Delay
+    time         #3
+    feedback     0.35
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.17
+  send reverb    0.14
+
+patch "Band Walk" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Width"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Octave"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac2_d2  #29
+  mac2_a2  0.591
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #17
+  mac4_a1  0.25
+  mac5_d1  #19
+  mac5_a1  0.3
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.1
+  # Noise and a saw through a band-pass that wanders at random, slowly and
+  # smoothly, with the resonance up far enough to whistle.
+  o1_wave        #0
+  o1_density     #1
+  o1_detune      0.2
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #31
+  o2_level       0.00
+  noise          0.6
+  noisecol       0.6
+  l1_wave        #6
+  l1_rate        0.25 Hz
+  l1_slew        0.8
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.25
+  f1_type        #8
+  f1_freq        900 Hz
+  f1_res         0.55
+  f1_key         0.5
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.5 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2.5 s
+  volume         1.00
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #36
+  send reverb    0.15
+
+patch "Sync Drift" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Edge"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.3
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #17
+  mac5_a1  0.25
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A saw synced to its own note, the sync swept up and down by a slow
+  # triangle so the edge rises and falls. The synced oscillator has one
+  # voice, so the sweep stays smooth.
+  o1_wave        #0
+  o1_sync        0.15
+  o1_level       1.00
+  o2_wave        #0
+  o2_density     #1
+  o2_detune      0.2
+  o2_fine        -7
+  o2_level       0.7
+  l1_wave        #1
+  l1_rate        0.12 Hz
+  m01_src        #13
+  m01_dest       #14
+  m01_depth      0.15
+  f1_type        #3
+  f1_freq        4500 Hz
+  f1_res         0.1
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.3 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2 s
+  volume         0.36
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  send reverb    0.12
+
+patch "FM Drift" family=motion  note=55 range=36..79 role=pad
+  set macro1 "FM"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A sine with its FM index on a slow triangle and the modulator just off
+  # the octave, so the tone slowly grows teeth and loses them again.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #36
+  o2_fine        4
+  o2_level       0.00
+  fm21           0.15
+  l1_wave        #1
+  l1_rate        0.1 Hz
+  m01_src        #13
+  m01_dest       #21
+  m01_depth      0.15
+  f1_type        #1
+  f1_freq        8000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.5 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2.5 s
+  volume         0.43
+  # Silent until a macro reaches them.
+  o3_wave        #2
+  o3_coarse      #12
+  send reverb    0.10
+
+patch "Ring Sweep" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Ring"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Beat"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #19
+  mac1_a1  0.3
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #21
+  mac6_a1  0.15
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A triangle rung against a sine whose pitch glides up and down a few
+  # semitones on a slow LFO: a siren made of sidebands.
+  o1_wave        #2
+  o1_level       0.6
+  o2_wave        #3
+  o2_coarse      #31
+  o2_level       0.2
+  ring12         0.6
+  l1_wave        #1
+  l1_rate        0.07 Hz
+  m01_src        #13
+  m01_dest       #3
+  m01_depth      0.15
+  f1_type        #3
+  f1_freq        5000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.4 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2 s
+  volume         0.72
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.17
+  send reverb    0.17
+
+patch Riser family=motion  note=55 range=36..79 role=hold
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Width"
+  set macro4 "Beat"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.25
+  mac4_d1  #3
+  mac4_a1  -0.006
+  mac5_d1  #19
+  mac5_a1  0.25
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Everything climbs while the note is held: the pitch up an octave over
+  # eight seconds, the filter opening and noise rising under it.
+  o1_wave        #0
+  o1_density     #3
+  o1_detune      0.3
+  o1_level       1.00
+  o2_wave        #0
+  o2_coarse      #36
+  o2_level       0.4
+  e3_attack      8 s
+  e3_decay       0.1 s
+  e3_sustain     1
+  e3_release     1.5 s
+  m01_src        #9
+  m01_dest       #1
+  m01_depth      0.5
+  m02_src        #9
+  m02_dest       #18
+  m02_depth      0.3
+  f1_type        #3
+  f1_freq        600 Hz
+  f1_res         0.2
+  f1_env         0.8
+  f_attack       8 s
+  f_decay        0.1 s
+  f_sustain      1
+  f_release      1.5 s
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.3 s
+  a_decay        2 s
+  a_sustain      1
+  a_release      1.5 s
+  volume         0.46
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.14
+  send reverb    0.15
+
+patch Corkscrew family=motion  note=55 range=36..79 role=pad
+  set macro1 "Scan"
+  set macro2 "Double"
+  set macro3 "Half"
+  set macro4 "Open"
+  set macro5 "Res"
+  set macro6 "Width"
+  set macro7 "Beat"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac2_d1  #34
+  mac2_a1  0.25
+  mac2_d2  #35
+  mac2_a2  0.25
+  mac3_d1  #34
+  mac3_a1  -0.25
+  mac3_d2  #35
+  mac3_a2  -0.25
+  mac4_d1  #23
+  mac4_a1  0.3
+  mac5_d1  #25
+  mac5_a1  0.3
+  mac6_d1  #17
+  mac6_a1  0.25
+  mac7_d1  #3
+  mac7_a1  -0.006
+  mac8_d1  #18
+  mac8_a1  0.06
+  # The spiral table turning on a synced triangle while the chord circles
+  # the stereo field, a bar for each turn.
+  o1_wave        #31
+  o1_pos         0.3
+  o1_density     #1
+  o1_detune      0.2
+  o1_level       1.00
+  o2_wave        #31
+  o2_pos         0.7
+  o2_fine        -7
+  o2_level       0.6
+  l1_wave        #1
+  l1_sync        #14
+  l2_sync        #14
+  l2_phase       0.25
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.4
+  m02_src        #14
+  m02_dest       #30
+  m02_depth      0.6
+  f1_type        #3
+  f1_freq        5000 Hz
+  f1_env         0
+  a_attack       0.4 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2 s
+  volume         0.47
+  send reverb    0.12
+
+patch "Dust Storm" family=motion  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Scan"
+  set macro5 "Width"
+  set macro6 "Beat"
+  set macro7 "Ring"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac3_d2  #32
+  mac3_a2  0.25
+  mac4_d1  #5
+  mac4_a1  0.25
+  mac5_d1  #17
+  mac5_a1  0.2
+  mac6_d1  #3
+  mac6_a1  -0.006
+  mac7_d1  #19
+  mac7_a1  0.25
+  mac8_d1  #18
+  mac8_a1  0.08
+  # The dust table and noise, one random LFO on the filter and another on
+  # the table, through a tape that is falling apart.
+  o1_wave        #28
+  o1_pos         0.5
+  o1_density     #3
+  o1_detune      0.4
+  o1_drift       0.7
+  o1_level       1.00
+  o2_wave        #28
+  o2_coarse      #12
+  o2_level       0.4
+  noise          0.3
+  noisecol       0.5
+  l1_wave        #6
+  l1_rate        1.5 Hz
+  l1_slew        0.5
+  l2_wave        #6
+  l2_rate        0.6 Hz
+  l2_slew        0.7
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.2
+  m02_src        #14
+  m02_dest       #5
+  m02_depth      0.3
+  f1_type        #1
+  f1_freq        2500 Hz
+  f1_res         0.3
+  f1_env         0
+  a_attack       1 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      3 s
+  volume         0.53
+  insert Tape
+    wow          0.3
+    flutter      0.2
+    drive        0.3
+    tone         7000 Hz
+    hiss         0
+    age          0.6
+    gain         -1.5 dB
+  send reverb    0.2
+
+patch Kaleidoscope family=motion  note=55 range=36..79 role=pad
+  set macro1 "Scan"
+  set macro2 "Double"
+  set macro3 "Half"
+  set macro4 "Ring"
+  set macro5 "FM"
+  set macro6 "Open"
+  set macro7 "Res"
+  set macro8 "Beat"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac1_d2  #6
+  mac1_a2  0.25
+  mac1_d3  #7
+  mac1_a3  0.25
+  mac2_d1  #34
+  mac2_a1  0.25
+  mac2_d2  #35
+  mac2_a2  0.25
+  mac2_d3  #36
+  mac2_a3  0.25
+  mac3_d1  #34
+  mac3_a1  -0.25
+  mac3_d2  #35
+  mac3_a2  -0.25
+  mac3_d3  #36
+  mac3_a3  -0.25
+  mac4_d1  #19
+  mac4_a1  0.25
+  mac5_d1  #21
+  mac5_a1  0.2
+  mac6_d1  #23
+  mac6_a1  0.3
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #3
+  mac8_a1  -0.006
+  # Three tables, each position on its own synced LFO at a different note
+  # value, ring and FM between them, into a ping-pong echo. Nothing in it
+  # holds still.
+  o1_wave        #16
+  o1_pos         0.3
+  o1_level       1.00
+  o2_wave        #18
+  o2_pos         0.5
+  o2_coarse      #31
+  o2_level       0.5
+  o3_wave        #33
+  o3_pos         0.5
+  o3_coarse      #36
+  o3_level       0.3
+  ring12         0.15
+  fm32           0.1
+  l1_wave        #1
+  l1_sync        #14
+  l2_sync        #11
+  l3_wave        #1
+  l3_sync        #10
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.35
+  m02_src        #14
+  m02_dest       #6
+  m02_depth      0.35
+  m03_src        #15
+  m03_dest       #7
+  m03_depth      0.35
+  f1_type        #3
+  f1_freq        6000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.3 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2.5 s
+  volume         0.50
+  insert Delay
+    time         #3
+    feedback     0.4
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.18
+  send reverb    0.15
+
 patch Drone family=texture  note=55 range=36..79 role=pad
+  set macro1 "Scan"
+  set macro2 "Open"
+  set macro3 "Res"
+  set macro4 "Beat"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Metal"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #23
+  mac2_a1  0.3
+  mac3_d1  #25
+  mac3_a1  0.3
+  mac4_d1  #3
+  mac4_a1  0.006
+  mac5_d1  #19
+  mac5_a1  0.2
+  mac6_d1  #21
+  mac6_a1  0.15
+  mac7_d1  #22
+  mac7_a1  0.15
+  mac8_d1  #18
+  mac8_a1  0.06
   # Three oscillators on the organ table at the octave and the fifth, no
   # envelope movement at all, and enough drift that it never quite repeats.
   o1_wave        #11
@@ -11812,7 +13773,194 @@ patch Drone family=texture  note=55 range=36..79 role=pad
   a_release      3 s
   volume         0.56
 
+patch "Deep Drone" family=texture  note=36 range=24..60 role=drone
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Width"
+  set macro5 "Beat"
+  set macro6 "Ring"
+  set macro7 "FM"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #17
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #19
+  mac6_a1  0.2
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A low sine, a saw a fifth up and a sine an octave down under a closed
+  # filter that a very slow LFO opens a little, with the drift up high.
+  o1_wave        #3
+  o1_drift       0.4
+  o1_level       1.00
+  o2_wave        #0
+  o2_coarse      #31
+  o2_density     #1
+  o2_detune      0.2
+  o2_drift       0.5
+  o2_level       0.5
+  o3_wave        #3
+  o3_coarse      #12
+  o3_level       0.5
+  l1_rate        0.05 Hz
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.15
+  f1_type        #3
+  f1_freq        400 Hz
+  f1_res         0.25
+  f1_key         0.4
+  f1_env         0
+  a_attack       3 s
+  a_decay        8 s
+  a_sustain      0.9
+  a_release      4 s
+  volume         0.61
+
+patch "Bow Drone" family=texture  note=48 range=36..72 role=drone
+  set macro1 "Scan"
+  set macro2 "Open"
+  set macro3 "Res"
+  set macro4 "Width"
+  set macro5 "Beat"
+  set macro6 "Low"
+  set macro7 "Ring"
+  set macro8 "Breath"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #23
+  mac2_a1  0.3
+  mac3_d1  #25
+  mac3_a1  0.3
+  mac4_d1  #17
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #10
+  mac6_a1  0.3
+  mac7_d1  #19
+  mac7_a1  0.2
+  mac8_d1  #18
+  mac8_a1  0.08
+  # The bow table on two oscillators a few cents apart and the octave
+  # below, a section holding one note, with the rosin in the noise.
+  o1_wave        #26
+  o1_pos         0.4
+  o1_density     #1
+  o1_detune      0.15
+  o1_level       1.00
+  o2_wave        #26
+  o2_pos         0.6
+  o2_fine        -9
+  o2_level       0.7
+  o3_wave        #26
+  o3_coarse      #12
+  o3_level       0.4
+  noise          0.04
+  noisecol       0.6
+  f1_type        #1
+  f1_freq        3000 Hz
+  f1_env         0
+  a_attack       2 s
+  a_decay        4 s
+  a_sustain      0.9
+  a_release      3 s
+  volume         0.57
+  send reverb    0.17
+
+patch Hum family=texture  note=36 range=24..60 role=drone
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Ring"
+  set macro4 "Beat"
+  set macro5 "PW"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #19
+  mac3_a1  0.3
+  mac4_d1  #3
+  mac4_a1  0.006
+  mac5_d1  #11
+  mac5_a1  0.3
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Mains hum and its harmonics: a low square with a buzz of ring
+  # modulation from a saw an octave up and a slow pulse in the level.
+  o1_wave        #1
+  o1_level       0.7
+  o2_wave        #0
+  o2_coarse      #36
+  o2_fine        3
+  o2_level       0.25
+  ring12         0.3
+  l1_rate        0.5 Hz
+  m01_src        #13
+  m01_dest       #29
+  m01_depth      0.05
+  f1_type        #1
+  f1_freq        1200 Hz
+  f1_res         0.2
+  f1_key         0.5
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.5 s
+  a_decay        2 s
+  a_sustain      1
+  a_release      1 s
+  volume         0.59
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+
 patch Air family=texture  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Scan"
+  set macro4 "Width"
+  set macro5 "Beat"
+  set macro6 "Ring"
+  set macro7 "Octave"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #5
+  mac3_a1  -0.3
+  mac4_d1  #17
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #19
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.1
   # A high-pass at four kilohertz on almost nothing: what is left is the top
   # of the drift and the top of the noise. Sits above a mix without being
   # in it.
@@ -11838,21 +13986,239 @@ patch Air family=texture  note=55 range=36..79 role=pad
   a_sustain      0.85
   a_release      3 s
   volume         0.95
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #36
+
+patch Wind family=texture  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Wander"
+  set macro4 "Speed"
+  set macro5 "Soft"
+  set macro6 "Body"
+  set macro7 "Low"
+  set macro8 "Hush"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac1_d2  #29
+  mac1_a2  -0.413
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac2_d2  #29
+  mac2_a2  0.477
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #32
+  mac4_a1  0.25
+  mac5_d1  #24
+  mac5_a1  -0.3
+  mac6_d1  #8
+  mac6_a1  0.3
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #29
+  mac8_a1  -0.3
+  # Noise through a resonant band-pass that a slow random LFO pushes about,
+  # and a second LFO on the level for the gusts.
+  o1_wave        #2
+  o1_level       0.00
+  o2_level       0.00
+  noise          1.00
+  noisecol       1
+  l1_wave        #6
+  l1_rate        0.3 Hz
+  l1_slew        0.9
+  l2_rate        0.15 Hz
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.3
+  m02_src        #14
+  m02_dest       #29
+  m02_depth      0.25
+  f1_type        #8
+  f1_freq        900 Hz
+  f1_res         0.5
+  f1_key         0.3
+  f1_env         0
+  a_attack       1.5 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      3 s
+  volume         1.00
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+  send reverb    0.15
+
+patch Surf family=texture  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Swirl"
+  set macro5 "Soft"
+  set macro6 "Body"
+  set macro7 "Low"
+  set macro8 "Hush"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac1_d2  #29
+  mac1_a2  -0.225
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #32
+  mac4_a1  0.25
+  mac5_d1  #24
+  mac5_a1  -0.3
+  mac6_d1  #8
+  mac6_a1  0.3
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac7_d2  #29
+  mac7_a2  -0.211
+  mac8_d1  #29
+  mac8_a1  -0.3
+  # Waves on a beach: noise swelling and falling every eight seconds on a
+  # slow LFO, the low-pass opening with each wave, and the spray drifting
+  # from side to side.
+  o1_wave        #2
+  o1_level       0.00
+  o2_level       0.00
+  noise          1.00
+  noisecol       0.4
+  l1_rate        0.12 Hz
+  l2_rate        0.07 Hz
+  m01_src        #13
+  m01_dest       #29
+  m01_depth      0.3
+  m02_src        #13
+  m02_dest       #23
+  m02_depth      0.25
+  m03_src        #14
+  m03_dest       #30
+  m03_depth      0.4
+  f1_type        #1
+  f1_freq        1800 Hz
+  f1_res         0.1
+  f1_env         0
+  a_attack       2 s
+  a_decay        3 s
+  a_sustain      1
+  a_release      3 s
+  volume         0.82
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+  send reverb    0.17
+
+patch Rain family=texture  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Wander"
+  set macro5 "Soft"
+  set macro6 "Body"
+  set macro7 "Low"
+  set macro8 "Hush"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #32
+  mac4_a1  0.25
+  mac5_d1  #24
+  mac5_a1  -0.3
+  mac5_d2  #29
+  mac5_a2  0.25
+  mac6_d1  #8
+  mac6_a1  0.3
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #29
+  mac8_a1  -0.15
+  # Ticks of high noise at random, from a fast sample and hold on the
+  # level, with another moving the filter, into a wide echo.
+  o1_wave        #2
+  o1_level       0.00
+  o2_level       0.00
+  noise          1.00
+  noisecol       0.8
+  l1_wave        #5
+  l1_rate        12 Hz
+  l1_slew        0.1
+  l2_wave        #5
+  l2_rate        9 Hz
+  m01_src        #13
+  m01_dest       #29
+  m01_depth      0.6
+  m02_src        #14
+  m02_dest       #23
+  m02_depth      0.2
+  f1_type        #5
+  f1_freq        2500 Hz
+  f1_res         0.1
+  f1_env         0
+  a_attack       0.5 s
+  a_decay        3 s
+  a_sustain      1
+  a_release      2 s
+  volume         0.37
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+  insert Delay
+    time         #2
+    feedback     0.35
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.18
+  send reverb    0.15
 
 patch "Noise Sweep" family=texture  note=55 range=36..79 role=pad
   set macro1 "Open"
-  set macro2 "Ring"
+  set macro2 "Res"
   set macro3 "Dark"
   set macro4 "Hush"
+  set macro5 "Soft"
+  set macro6 "Body"
+  set macro7 "Octave"
+  set macro8 "Sub"
   # Macros: each knob adds its depth to the destinations below.
   mac1_d1  #23
-  mac1_a1  0.8
+  mac1_a1  0.4
+  mac1_d2  #29
+  mac1_a2  -0.55
   mac2_d1  #25
   mac2_a1  0.45
+  mac2_d2  #29
+  mac2_a2  -0.563
   mac3_d1  #23
-  mac3_a1  -0.5
+  mac3_a1  -0.3
+  mac3_d2  #29
+  mac3_a2  1.0
   mac4_d1  #29
   mac4_a1  -0.5
+  mac5_d1  #24
+  mac5_a1  -0.3
+  mac6_d1  #8
+  mac6_a1  0.3
+  mac6_d2  #29
+  mac6_a2  -0.324
+  mac7_d1  #9
+  mac7_a1  0.3
+  mac7_d2  #29
+  mac7_a2  -0.308
+  mac8_d1  #10
+  mac8_a1  0.35
+  mac8_d2  #29
+  mac8_a2  -0.444
   # All noise, with a resonant low-pass opening over three seconds. No
   # oscillator at all: proof the filter is an instrument on its own.
   o1_level       0.00
@@ -11871,8 +14237,37 @@ patch "Noise Sweep" family=texture  note=55 range=36..79 role=pad
   a_sustain      0.85
   a_release      2 s
   volume         1.00
+  # Silent until a macro reaches them.
+  o2_coarse      #36
+  o3_wave        #3
+  o3_coarse      #12
 
 patch "Sweep Down" family=texture  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Width"
+  set macro4 "Beat"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.25
+  mac4_d1  #3
+  mac4_a1  0.006
+  mac5_d1  #19
+  mac5_a1  0.25
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.1
   # A filter falling from the top of its range to the bottom over four
   # seconds, with nothing else happening. The one you put at the end of a
   # bar.
@@ -11895,8 +14290,214 @@ patch "Sweep Down" family=texture  note=55 range=36..79 role=pad
   a_sustain      0.6
   a_release      1.5 s
   volume         0.42
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+
+patch "Sweep Up" family=texture  note=55 range=36..79 role=pad
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Width"
+  set macro4 "Beat"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac1_d2  #29
+  mac1_a2  -0.139
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  0.25
+  mac4_d1  #3
+  mac4_a1  0.006
+  mac5_d1  #19
+  mac5_a1  0.25
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.1
+  # Sweep Down the other way: a resonant low-pass climbing from the bottom
+  # over four seconds, the one you put before the drop.
+  o1_wave        #0
+  o1_density     #4
+  o1_detune      0.45
+  o1_level       1.00
+  o2_wave        #10
+  o2_level       0.55
+  noise          0.35
+  f1_type        #3
+  f1_freq        150 Hz
+  f1_res         0.45
+  f1_env         0.95
+  f_attack       4 s
+  f_decay        0.1 s
+  f_sustain      1
+  f_release      1.5 s
+  a_attack       0.01 s
+  a_decay        5 s
+  a_sustain      0.9
+  a_release      1.5 s
+  volume         0.45
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+
+patch Swarm family=texture  note=55 range=36..79 role=pad
+  set macro1 "Width"
+  set macro2 "Open"
+  set macro3 "Res"
+  set macro4 "Speed"
+  set macro5 "Beat"
+  set macro6 "Ring"
+  set macro7 "Low"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #17
+  mac1_a1  0.2
+  mac2_d1  #23
+  mac2_a1  0.3
+  mac2_d2  #29
+  mac2_a2  0.718
+  mac3_d1  #25
+  mac3_a1  0.3
+  mac4_d1  #31
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #19
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Eight saws on each of two oscillators, detuned wide with the drift at
+  # the top, through a band-pass that wanders: a cloud of insects.
+  o1_wave        #0
+  o1_density     #7
+  o1_detune      0.7
+  o1_drift       1
+  o1_level       1.00
+  o2_wave        #0
+  o2_density     #7
+  o2_detune      0.7
+  o2_drift       1
+  o2_coarse      #36
+  o2_level       0.8
+  l1_wave        #6
+  l1_rate        0.4 Hz
+  l1_slew        0.8
+  m01_src        #13
+  m01_dest       #23
+  m01_depth      0.2
+  f1_type        #9
+  f1_freq        1800 Hz
+  f1_res         0.3
+  f1_key         0.5
+  f1_env         0
+  a_attack       1 s
+  a_decay        3 s
+  a_sustain      0.9
+  a_release      2 s
+  volume         0.96
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  send reverb    0.12
+
+patch "Deep Space" family=texture  note=48 range=36..72 role=drone
+  set macro1 "FM"
+  set macro2 "Speed"
+  set macro3 "Open"
+  set macro4 "Res"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Ring"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #31
+  mac2_a1  0.25
+  mac3_d1  #23
+  mac3_a1  0.3
+  mac4_d1  #25
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.2
+  mac7_d1  #19
+  mac7_a1  0.2
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A slow FM drone on sines an odd ratio apart and the octave below, the
+  # index rising and falling over half a minute, into a long echo and a
+  # lot of reverb.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #3
+  o2_coarse      #43
+  o2_fine        13
+  o2_level       0.00
+  o3_wave        #3
+  o3_coarse      #12
+  o3_level       0.35
+  fm21           0.1
+  l1_wave        #1
+  l1_rate        0.04 Hz
+  m01_src        #13
+  m01_dest       #21
+  m01_depth      0.1
+  f1_type        #1
+  f1_freq        5000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       4 s
+  a_decay        6 s
+  a_sustain      0.9
+  a_release      6 s
+  volume         0.54
+  insert Delay
+    time         #5
+    feedback     0.55
+    tone         3000 Hz
+    pingpong     #1
+    mix          0.13
+  send reverb    0.08
 
 patch "Ring Bells" family=texture  note=55 range=36..79 role=keys
+  set macro1 "Strike"
+  set macro2 "Edge"
+  set macro3 "Dark"
+  set macro4 "Scan"
+  set macro5 "Beat"
+  set macro6 "Metal"
+  set macro7 "Res"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #15
+  mac2_a1  0.3
+  mac3_d1  #23
+  mac3_a1  -0.4
+  mac4_d1  #7
+  mac4_a1  0.3
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #22
+  mac6_a1  0.3
+  mac7_d1  #25
+  mac7_a1  0.3
+  mac8_d1  #18
+  mac8_a1  0.06
   # Ring modulation between two oscillators a tritone apart, which has no
   # harmonic relationship at all and therefore sounds like metal.
   o1_wave        #3
@@ -11917,6 +14518,35 @@ patch "Ring Bells" family=texture  note=55 range=36..79 role=keys
   volume         0.39
 
 patch Metallic family=texture  note=55 range=36..79 role=pad
+  set macro1 "Scan"
+  set macro2 "Open"
+  set macro3 "Res"
+  set macro4 "Beat"
+  set macro5 "Ring"
+  set macro6 "FM"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac2_d1  #23
+  mac2_a1  0.3
+  mac2_d2  #29
+  mac2_a2  0.199
+  mac3_d1  #25
+  mac3_a1  0.2
+  mac3_d2  #29
+  mac3_a2  -0.102
+  mac4_d1  #3
+  mac4_a1  0.006
+  mac5_d1  #19
+  mac5_a1  0.3
+  mac6_d1  #21
+  mac6_a1  0.2
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.08
   # The fold table warped hard through a peaking filter. Inharmonic on
   # purpose: it has a pitch but it does not have a key.
   o1_wave        #9
@@ -11935,3 +14565,329 @@ patch Metallic family=texture  note=55 range=36..79 role=pad
   a_sustain      0.3
   a_release      1.5 s
   volume         0.33
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+
+patch Siren family=texture  note=67 range=48..84 role=hold
+  set macro1 "Speed"
+  set macro2 "Open"
+  set macro3 "Res"
+  set macro4 "Ring"
+  set macro5 "FM"
+  set macro6 "Beat"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #31
+  mac1_a1  0.25
+  mac2_d1  #23
+  mac2_a1  0.3
+  mac3_d1  #25
+  mac3_a1  0.3
+  mac4_d1  #19
+  mac4_a1  0.3
+  mac5_d1  #21
+  mac5_a1  0.2
+  mac6_d1  #3
+  mac6_a1  0.006
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A sine and a square an octave up, the pitch swept up and down a fifth
+  # by a triangle twice a second.
+  o1_wave        #3
+  o1_level       1.00
+  o2_wave        #1
+  o2_coarse      #36
+  o2_level       0.3
+  l1_wave        #1
+  l1_rate        0.5 Hz
+  m01_src        #13
+  m01_dest       #1
+  m01_depth      0.15
+  f1_type        #1
+  f1_freq        6000 Hz
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.05 s
+  a_decay        2 s
+  a_sustain      1
+  a_release      0.5 s
+  volume         0.37
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.17
+  send reverb    0.14
+
+patch Laser family=texture  note=60 range=36..84 role=keys
+  set macro1 "FM"
+  set macro2 "Open"
+  set macro3 "Res"
+  set macro4 "Ring"
+  set macro5 "Beat"
+  set macro6 "Edge"
+  set macro7 "Sub"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #21
+  mac1_a1  0.2
+  mac2_d1  #23
+  mac2_a1  0.3
+  mac3_d1  #25
+  mac3_a1  0.3
+  mac4_d1  #19
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #14
+  mac6_a1  0.3
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #18
+  mac8_a1  0.06
+  # A zap: the pitch falls a long way in a fifth of a second with a burst
+  # of FM on the way down, into a ping-pong echo.
+  o1_wave        #0
+  o1_level       1.00
+  o2_wave        #1
+  o2_coarse      #36
+  o2_level       0.00
+  fm21           0.1
+  e3_attack      0.001 s
+  e3_decay       0.2 s
+  e3_sustain     0
+  m01_src        #9
+  m01_dest       #1
+  m01_depth      0.75
+  m02_src        #9
+  m02_dest       #21
+  m02_depth      0.3
+  f1_type        #3
+  f1_freq        8000 Hz
+  f1_res         0.3
+  f1_env         0.3
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.001 s
+  a_decay        0.5 s
+  a_sustain      0
+  a_release      0.2 s
+  volume         1.00
+  # Silent until a macro reaches them.
+  o3_wave        #0
+  o3_coarse      #12
+  insert Delay
+    time         #2
+    feedback     0.4
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.3
+  send reverb    0.15
+
+patch Radio family=texture  note=67 range=48..84 role=lead
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Speed"
+  set macro4 "Ring"
+  set macro5 "Beat"
+  set macro6 "Air"
+  set macro7 "FM"
+  set macro8 "Low"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac1_d2  #29
+  mac1_a2  0.916
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #31
+  mac3_a1  0.25
+  mac4_d1  #19
+  mac4_a1  0.25
+  mac5_d1  #3
+  mac5_a1  0.006
+  mac6_d1  #18
+  mac6_a1  0.15
+  mac7_d1  #21
+  mac7_a1  0.2
+  mac8_d1  #10
+  mac8_a1  0.35
+  # A station not quite tuned in: a saw and a square through a narrow band,
+  # the pitch wandering on a random LFO, crackle in the noise and the
+  # level, and a bit crusher after.
+  o1_wave        #0
+  o1_level       1.00
+  o2_wave        #1
+  o2_fine        -20
+  o2_level       0.4
+  noise          0.25
+  noisecol       0.9
+  l1_wave        #6
+  l1_rate        2 Hz
+  l1_slew        0.6
+  l2_wave        #5
+  l2_rate        8 Hz
+  l2_slew        0.2
+  m01_src        #13
+  m01_dest       #1
+  m01_depth      0.004
+  m02_src        #14
+  m02_dest       #29
+  m02_depth      0.08
+  f1_type        #9
+  f1_freq        1500 Hz
+  f1_res         0.2
+  f1_key         0.5
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.1 s
+  a_decay        2 s
+  a_sustain      1
+  a_release      0.8 s
+  volume         0.92
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+  insert Bitcrusher
+    bits         8
+    rate         11000 Hz
+    mix          0.6
+
+patch Static family=texture  note=55 range=36..79 role=sequence
+  set macro1 "Open"
+  set macro2 "Res"
+  set macro3 "Double"
+  set macro4 "Half"
+  set macro5 "Body"
+  set macro6 "Ring"
+  set macro7 "Low"
+  set macro8 "Hush"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #23
+  mac1_a1  0.3
+  mac2_d1  #25
+  mac2_a1  0.3
+  mac3_d1  #34
+  mac3_a1  0.25
+  mac4_d1  #34
+  mac4_a1  -0.25
+  mac5_d1  #8
+  mac5_a1  0.3
+  mac6_d1  #19
+  mac6_a1  0.4
+  mac7_d1  #10
+  mac7_a1  0.35
+  mac8_d1  #29
+  mac8_a1  -0.2
+  # Noise in bursts on a sixteenth-note random gate, crushed, with a
+  # square buzzing under it.
+  o1_wave        #1
+  o1_level       0.3
+  o2_wave        #3
+  o2_coarse      #31
+  o2_level       0.00
+  noise          0.7
+  noisecol       1
+  l1_wave        #5
+  l1_sync        #3
+  l1_slew        0.05
+  m01_src        #13
+  m01_dest       #29
+  m01_depth      0.5
+  f1_type        #5
+  f1_freq        300 Hz
+  f1_env         0
+  a_attack       0.01 s
+  a_decay        2 s
+  a_sustain      1
+  a_release      0.5 s
+  volume         0.47
+  # Silent until a macro reaches them.
+  o3_wave        #3
+  o3_coarse      #12
+  insert Bitcrusher
+    bits         6
+    rate         8000 Hz
+    mix          0.5
+    gain         2.5 dB
+
+patch "Bit Rot" family=texture  note=55 range=36..79 role=sequence
+  set macro1 "Scan"
+  set macro2 "Double"
+  set macro3 "Half"
+  set macro4 "Open"
+  set macro5 "Res"
+  set macro6 "Ring"
+  set macro7 "FM"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac2_d1  #34
+  mac2_a1  0.25
+  mac2_d2  #35
+  mac2_a2  0.25
+  mac3_d1  #34
+  mac3_a1  -0.25
+  mac3_d2  #35
+  mac3_a2  -0.25
+  mac4_d1  #23
+  mac4_a1  0.3
+  mac5_d1  #25
+  mac5_a1  0.3
+  mac6_d1  #19
+  mac6_a1  0.25
+  mac7_d1  #21
+  mac7_a1  0.2
+  mac8_d1  #18
+  mac8_a1  0.06
+  # Table positions and pitches stepped by two step LFOs, sixteen steps to
+  # a bar and eight, through a bit crusher and an echo.
+  o1_wave        #22
+  o1_pos         0.5
+  o1_level       1.00
+  o2_wave        #30
+  o2_coarse      #36
+  o2_level       0.4
+  l1_wave        #8
+  l1_sync        #3
+  l2_wave        #7
+  l2_sync        #6
+  m01_src        #13
+  m01_dest       #5
+  m01_depth      0.4
+  m02_src        #14
+  m02_dest       #3
+  m02_depth      0.25
+  f1_type        #3
+  f1_freq        7000 Hz
+  f1_res         0.2
+  f1_env         0
+  f2_type        #5
+  f2_freq        20 Hz
+  a_attack       0.005 s
+  a_decay        2 s
+  a_sustain      0.9
+  a_release      0.6 s
+  volume         0.43
+  insert Bitcrusher
+    bits         8
+    rate         12000 Hz
+    mix          0.5
+  insert Delay
+    time         #3
+    feedback     0.35
+    tone         6000 Hz
+    pingpong     #1
+    mix          0.2
+  send reverb    0.15
