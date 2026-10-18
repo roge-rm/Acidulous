@@ -6,7 +6,8 @@
 // the host's, the tick never jumps (every block starts where the last one
 // ended), an arp clocked off those ticks keeps every step and every note-off,
 // the song's tempo takes over again on releaseBeat or once the calls stop,
-// and a play pressed while stopped starts on the host's bar line.
+// a play pressed while stopped starts on the host's bar line, and a stopped
+// engine jumps its free-running tick onto the host's phase once and holds it.
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -263,6 +264,89 @@ void startTest(double hostBpm, double beatAtPlay) {
     ok("in phase a quarter second in", std::fabs(errAfter) < 2.0, d);
 }
 /**
+ * Stopped, never played, the host calling: the free-running tick jumps
+ * forward onto the host's bar phase once and is held there, so a free 1/4 arp
+ * lands on the host's beats.
+ */
+void stoppedTest(double hostBpm, double offsetBeats) {
+    std::printf("--- stopped, host at %.2f bpm, %.2f beats ahead ---\n", hostBpm, offsetBeats);
+    std::shared_ptr<SongSnapshot> snap;
+    auto engine = makeEngine(snap);
+    float scratch[kBlockFrames * 2];
+    engine->renderBlock(nullptr, scratch);
+
+    std::unique_ptr<InputMod> arp(InputModRegistry::create("Arp"));
+    arp->params().jump(modifier::Arp::Sync, 1.0f);
+    arp->params().jump(modifier::Arp::Rate, 3.0f / 9.0f); // 1/4, normalised
+    arp->params().jumpAll();
+    Sink sink;
+    arp->handleMidi(0x90, 60, 100, sink);
+
+    // A second with no host, so the arp is running when the tick jumps.
+    const int64_t hostFrom = static_cast<int64_t>(kRate * 1.0) / kBlockFrames;
+    const int64_t f0 = engine->framesOut.load() + hostFrom * kBlockFrames;
+    const double ourBeat0 = static_cast<double>(hostFrom * kBlockFrames) * 120.0 / (60.0 * kRate);
+    // [offsetBeats] ahead of us, so the jump is longer than an arp step.
+    auto hostBeat = [&](int64_t frame) {
+        return ourBeat0 + offsetBeats + static_cast<double>(frame - f0) * hostBpm / (60.0 * kRate);
+    };
+    const int64_t callEvery = static_cast<int64_t>(kRate * 0.2) / kBlockFrames;
+    const int64_t settle = hostFrom + static_cast<int64_t>(kRate * 1.0) / kBlockFrames;
+    const int64_t blocks = hostFrom + static_cast<int64_t>(kRate * 12.0) / kBlockFrames;
+    int64_t lastEnd = engine->clock.position(), jumps = 0, widest = 0, onsBefore = 0, mostOns = 0;
+    bool back = false;
+    double worstErr = 0.0, worstArp = 0.0;
+    int64_t ons = 0;
+    for (int64_t b = 0; b < blocks; ++b) {
+        if (b >= hostFrom && (b - hostFrom) % callEvery == 0) {
+            const int64_t at = engine->framesOut.load();
+            alignBeat(*engine, hostBeat(at), hostBpm, at);
+        }
+        const int64_t before = engine->framesOut.load();
+        engine->renderBlock(nullptr, scratch);
+        const int64_t s = engine->clock.blockStart(), e = engine->clock.blockEnd();
+        if (s < lastEnd || e < s) back = true;
+        if (s != lastEnd) ++jumps;
+        widest = std::max(widest, e - s);
+        lastEnd = e;
+        sink.tick = s;
+        const size_t had = sink.events.size();
+        arp->run(s, e, engine->clock.bpm(), sink);
+        int64_t onsHere = 0;
+        for (size_t i = had; i < sink.events.size(); ++i) onsHere += (sink.events[i].status & 0xf0) == 0x90;
+        mostOns = std::max(mostOns, onsHere);
+        if (b < hostFrom) onsBefore += onsHere;
+        if (b < settle) continue;
+        // Our phase at the end of the block against the host's there.
+        const double theirs = std::fmod(hostBeat(engine->framesOut.load()) * kPPQN, kBar);
+        double err = std::fmod(engine->clock.phase(), kBar) - theirs;
+        if (err > kBar / 2) err -= kBar;
+        if (err < -kBar / 2) err += kBar;
+        worstErr = std::max(worstErr, std::fabs(err));
+        // A note-on comes out in the block holding its step, so the host's
+        // phase at that block's start is up to a tick short of a beat.
+        for (size_t i = had; i < sink.events.size(); ++i) {
+            if ((sink.events[i].status & 0xf0) != 0x90) continue;
+            ++ons;
+            double off = std::fmod(hostBeat(before) * kPPQN, static_cast<double>(kPPQN));
+            if (off > kPPQN / 2) off -= kPPQN;
+            worstArp = std::max(worstArp, std::fabs(off));
+        }
+    }
+    char d[128];
+    std::snprintf(d, sizeof d, "worst %.3f ticks after the first second", worstErr);
+    ok("the free tick sits on the host's phase", worstErr <= 1.0, d);
+    std::snprintf(d, sizeof d, "%lld jumps, widest block %lld ticks", static_cast<long long>(jumps),
+                  static_cast<long long>(widest));
+    ok("one jump forward, never back, no wide block", jumps == 1 && !back && widest <= 1, d);
+    std::snprintf(d, sizeof d, "%lld notes before the host, at most %lld in a block", static_cast<long long>(onsBefore),
+                  static_cast<long long>(mostOns));
+    ok("the jump lands mid-arp and plays no skipped steps", onsBefore >= 2 && mostOns == 1, d);
+    std::snprintf(d, sizeof d, "%lld notes, worst %.3f ticks off a host beat", static_cast<long long>(ons), worstArp);
+    ok("a free 1/4 arp lands on the host's beats", ons >= 10 && worstArp <= 1.5, d);
+}
+
+/**
  * An export while the host has the tempo renders exactly what it would with no
  * host: the song's tempo, play at once, no pull. Two engines with the same live
  * history, one following a host, then the steps EngineHost::renderTargets takes.
@@ -353,6 +437,8 @@ int main() {
     report("most of a bar out", 120.5, 1.9, 120.0, false);
     startTest(121.0, 2.37);
     startTest(96.0, 7.9);
+    stoppedTest(90.0, 1.37);
+    stoppedTest(140.0, 2.81);
     exportTest();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
