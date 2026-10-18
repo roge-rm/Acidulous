@@ -189,7 +189,7 @@ fun MachinePanel(
                     com.rm.acidulous.engine.EngineSync.remountEffects(trackIndex, chained.placed)
                     var next = chained.track.withPatch(params)
                     // Macro names belong to the patch, so the last one's go.
-                    if (type == "Trinity") for (i in 1..8) next = next.withSetting("macro$i", null)
+                    if (type == "Trinity" || type == "Ratio") for (i in 1..8) next = next.withSetting("macro$i", null)
                     for ((k, v) in patch.settings) next = next.withSetting(k, v)
                     // Set last, so a patch that happens to carry these keys
                     // can't rename itself. Stored in settings so the name
@@ -244,7 +244,7 @@ fun MachinePanel(
             "Molt" -> MoltPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Diction" -> DictionPanel(binding, track, trackIndex, editor)
             "Trinity" -> TrinityPanel(binding, track, trackIndex, editor)
-            "Ratio" -> RatioPanel(binding)
+            "Ratio" -> RatioPanel(binding, track, trackIndex, editor)
             "Manual" -> ManualPanel(binding)
             "Cipher" -> CipherPanel(binding)
             "Cumulus" -> CumulusPanel(binding)
@@ -743,7 +743,7 @@ private const val kPatchName = com.rm.acidulous.model.PatchMark.NAME
 private const val kPatchStamp = com.rm.acidulous.model.PatchMark.STAMP
 private fun stampOf(params: Map<String, Float>): String = com.rm.acidulous.model.PatchMark.stampOf(params)
 
-/** The params' stamp, plus a Trinity's macro names, so renaming a macro counts as an edit. */
+/** The params' stamp, plus the macro names of Trinity and Ratio, so renaming a macro counts as an edit. */
 private fun machineStamp(m: Machine): String {
     val names = (1..8).joinToString("\n") { m.settings["macro$it"].orEmpty() }
     return stampOf(m.params) + if (names.isBlank()) "" else names
@@ -2100,10 +2100,15 @@ val RATIO_DESTS = listOf(
 )
 
 @Composable
-private fun RatioPanel(b: ParamBinding) {
+private fun RatioPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("op", "algo", "filter", "env", "lfo", "mod", "voice"), section, { section = it }) { sec ->
+    PanelSections(listOf("op", "algo", "filter", "env", "lfo", "mod", "macros", "voice", "play"), section, { section = it }) { sec ->
         when (sec) {
+            8 -> Group("play") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
             0 -> for (o in 1..6) key(o) { Group("op $o") {
                 val p = "o${o}_"
                 PanelStepKnob(b, p + "wave", RATIO_WAVES, "wave", PanelAmber)
@@ -2170,6 +2175,24 @@ private fun RatioPanel(b: ParamBinding) {
                 PanelStepKnob(b, p + "dest", RATIO_DESTS, "to", PanelAmber)
                 PanelKnob(b, p + "depth", "depth", PanelAmber)
             } }
+            6 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", RATIO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", RATIO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", RATIO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", RATIO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             else -> {
                 Group("voice") {
                     PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
@@ -2184,6 +2207,14 @@ private fun RatioPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Manual -----------------------------------------------------------------

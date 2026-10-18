@@ -43,6 +43,37 @@ role    keys
 patch Init family=keys
 
 patch Tine family=keys  note=60 range=36..84 role=keys
+  set macro1 "Bright"
+  set macro2 "Warp"
+  set macro3 "Soft"
+  set macro4 "Skew"
+  set macro5 "Dark"
+  set macro6 "Morph"
+  set macro7 "Wobble"
+  set macro8 "Tone"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.35
+  mac1_d2  #7
+  mac1_a2  0.3
+  mac1_d3  #19
+  mac1_a3  -0.1
+  mac2_d1  #11
+  mac2_a1  0.1
+  mac3_d1  #5
+  mac3_a1  -0.5
+  mac3_d2  #6
+  mac3_a2  -0.4
+  mac4_d1  #3
+  mac4_a1  0.15
+  mac5_d1  #17
+  mac5_a1  -0.5
+  mac6_d1  #2
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.4
+  mac8_d1  #13
+  mac8_a1  0.25
   algoa          #6
   o1_decay       2.5 s
   o1_sustain     0.25
@@ -77,6 +108,41 @@ patch "Sync Stab" family=lead  note=60 range=36..84 role=keys
   volume         0.90
 
 patch Bell family=bell  note=60 range=36..84 role=bell
+  set macro1 "Strike"
+  set macro2 "Metal"
+  set macro3 "Shimmer"
+  set macro4 "Dark"
+  set macro5 "Skew"
+  set macro6 "Morph"
+  set macro7 "Wobble"
+  set macro8 "Thin"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac1_d2  #6
+  mac1_a2  0.3
+  mac2_d1  #11
+  mac2_a1  0.08
+  mac2_d2  #12
+  mac2_a2  0.05
+  mac3_d1  #14
+  mac3_a1  0.03
+  mac3_d2  #15
+  mac3_a2  0.04
+  mac4_d1  #17
+  mac4_a1  -0.5
+  mac5_d1  #3
+  mac5_a1  0.2
+  mac6_d1  #2
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.35
+  mac8_d1  #5
+  mac8_a1  -0.5
+  mac8_d2  #6
+  mac8_a2  -0.45
+  mac8_d3  #19
+  mac8_a3  0.1
   algoa          #6
   o1_decay       6 s
   o1_release     6 s
@@ -111,6 +177,35 @@ patch Stretched family=pad  note=60 range=36..84 role=bell
   volume         0.72
 
 patch "Grit Bass" family=bass  note=36 range=24..55 role=bass
+  set macro1 "Grit"
+  set macro2 "Open"
+  set macro3 "Dark"
+  set macro4 "Fold"
+  set macro5 "Skew"
+  set macro6 "Morph"
+  set macro7 "Growl"
+  set macro8 "Sub"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.3
+  mac1_d2  #19
+  mac1_a2  -0.1
+  mac2_d1  #17
+  mac2_a1  0.3
+  mac3_d1  #17
+  mac3_a1  -0.5
+  mac4_d1  #16
+  mac4_a1  0.4
+  mac5_d1  #3
+  mac5_a1  0.2
+  mac6_d1  #2
+  mac6_a1  0.5
+  mac7_d1  #11
+  mac7_a1  0.1
+  mac7_d2  #12
+  mac7_a2  0.06
+  mac8_d1  #6
+  mac8_a1  -0.3
   f_freq         2200 Hz
   f_res          0.2
   m01_depth      0.35
@@ -1066,6 +1161,37 @@ patch Pipe family=reed  note=55 range=36..79 role=pad
   volume         1.00
 
 patch "String Pad FM" family=pad  note=55 range=36..79 role=pad
+  set macro1 "Bloom"
+  set macro2 "Bow"
+  set macro3 "Hollow"
+  set macro4 "Dark"
+  set macro5 "Skew"
+  set macro6 "Morph"
+  set macro7 "Drift"
+  set macro8 "Air"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #5
+  mac1_a1  0.25
+  mac1_d2  #7
+  mac1_a2  0.2
+  mac2_d1  #5
+  mac2_a1  0.3
+  mac2_d2  #19
+  mac2_a2  -0.08
+  mac3_d1  #12
+  mac3_a1  0.1
+  mac4_d1  #17
+  mac4_a1  -0.6
+  mac5_d1  #3
+  mac5_a1  0.2
+  mac6_d1  #2
+  mac6_a1  0.5
+  mac7_d1  #21
+  mac7_a1  0.3
+  mac7_d2  #11
+  mac7_a2  0.04
+  mac8_d1  #16
+  mac8_a1  0.3
   # A slow attack on both the carrier and its modulator, so the patch
   # gets brighter as it arrives rather than fading in at a fixed colour.
   algoa          #6
@@ -1223,7 +1349,7 @@ patch "Drone FM" family=pad  note=55 range=36..79 role=pad
   o6_level       0
   volume         1.00
 
-patch Wood family=noise  note=60 range=36..84 role=bell
+patch Wood family=texture  note=60 range=36..84 role=bell
   # A noise operator lasting eight milliseconds into a carrier that lasts
   # two hundred. That is the whole of a wood block, and it is two numbers.
   algoa          #6
@@ -1247,7 +1373,7 @@ patch Wood family=noise  note=60 range=36..84 role=bell
   snap           #0
   volume         1.00
 
-patch Crush family=noise  note=67 range=48..91 role=lead
+patch Crush family=texture  note=67 range=48..91 role=lead
   # The crush mode on two operators at once, which quantises the phase
   # rather than the amplitude and is therefore an aliasing effect with a
   # pitch. Not subtle.
@@ -1272,7 +1398,7 @@ patch Crush family=noise  note=67 range=48..91 role=lead
   o6_level       0
   volume         0.88
 
-patch Riser family=noise  note=55 range=36..79 role=pad
+patch Riser family=texture  note=55 range=36..79 role=pad
   # A sample-and-hold operator at a fixed rate under a carrier with a very
   # long attack. Nothing about it is pitched and it is in the bank because
   # every bank needs one thing that is not.

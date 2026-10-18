@@ -1,4 +1,4 @@
-// Checks Trinity's macro routes move the destinations they name.
+// Checks Trinity's and Ratio's macro routes move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -11,6 +11,7 @@
 // and a free one must double or halve its rate.
 
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/trinity/Trinity.h>
 #include <engine/dsp/Lfo.h>
 #include <engine/dsp/LfoGen.h>
@@ -39,6 +40,10 @@ void ok(bool pass, const std::string &what, const std::string &detail) {
     std::printf("  %-4s %-58s %s\n", pass ? "ok" : "FAIL", what.c_str(), detail.c_str());
 }
 
+// The machine under test; main() runs the basic checks once for each.
+const char *gType = "Trinity";
+int gDests = T::DestCount;
+
 struct Route { int macro, route, dest; float depth; float knob; };
 
 void setNorm(ParamSet &p, const std::string &name, float v) {
@@ -48,13 +53,13 @@ void setNorm(ParamSet &p, const std::string &name, float v) {
 }
 
 std::vector<float> play(const Route *r) {
-    Machine *m = MachineRegistry::create("Trinity");
+    Machine *m = MachineRegistry::create(gType);
     m->prepare(kRate);
     ParamSet &p = m->params();
     if (r != nullptr) {
         const std::string k = "mac" + std::to_string(r->macro);
         setNorm(p, k, r->knob);
-        setNorm(p, k + "_d" + std::to_string(r->route), r->dest / (T::DestCount - 1.0f));
+        setNorm(p, k + "_d" + std::to_string(r->route), r->dest / (gDests - 1.0f));
         setNorm(p, k + "_a" + std::to_string(r->route), (r->depth + 1.0f) * 0.5f);
     }
     p.jumpAll();
@@ -283,46 +288,55 @@ void stepChecks() {
     }
 }
 
-} // namespace
-
-int main() {
+/** The checks every machine with macros shares. [dstAmp], [dstPitch] and [dstOff] are its own destination numbers. */
+void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, int macros) {
+    gType = type;
+    gDests = dests;
+    const std::string who = std::string(type) + ": ";
     const auto base = play(nullptr);
-    ok(rms(base, 0) > 1e-4, "Trinity makes sound", "");
+    ok(rms(base, 0) > 1e-4, who + "makes sound", "");
     const double baseRms = rms(base, 0);
 
-    for (int macro = 1; macro <= T::kMacros; ++macro) {
+    for (int macro = 1; macro <= macros; ++macro) {
         // At zero the route does nothing, bit for bit.
-        Route off{macro, 1, T::DstAmp, -0.5f, 0.0f};
-        ok(play(&off) == base, "macro " + std::to_string(macro) + " at zero leaves the sound alone", "");
+        Route off{macro, 1, dstAmp, -0.5f, 0.0f};
+        ok(play(&off) == base, who + "macro " + std::to_string(macro) + " at zero leaves the sound alone", "");
         for (int route = 1; route <= 4; ++route) {
             // Volume 0.7 minus 0.5 leaves 0.2, so the level is 2/7 of the base.
-            Route r{macro, route, T::DstAmp, -0.5f, 1.0f};
+            Route r{macro, route, dstAmp, -0.5f, 1.0f};
             const double ratio = rms(play(&r), 0) / baseRms;
             char buf[64];
             std::snprintf(buf, sizeof(buf), "ratio %.3f (want 0.286)", ratio);
-            ok(std::fabs(ratio - 2.0 / 7.0) < 0.02, "macro " + std::to_string(macro) + " route " + std::to_string(route) + " scales the level", buf);
+            ok(std::fabs(ratio - 2.0 / 7.0) < 0.02, who + "macro " + std::to_string(macro) + " route " + std::to_string(route) + " scales the level", buf);
         }
     }
 
     // Half the knob is half the depth.
-    Route half{1, 1, T::DstAmp, -0.5f, 0.5f};
+    Route half{1, 1, dstAmp, -0.5f, 0.5f};
     const double h = rms(play(&half), 0) / baseRms;
     char buf[64];
     std::snprintf(buf, sizeof(buf), "ratio %.3f (want 0.643)", h);
-    ok(std::fabs(h - 0.45 / 0.7) < 0.02, "half the knob is half the depth", buf);
+    ok(std::fabs(h - 0.45 / 0.7) < 0.02, who + "half the knob is half the depth", buf);
 
-    // Pitch: DstPitch is in units of 24 semitones, so 1/24 of depth is one.
+    // Pitch: the destination is in units of 24 semitones, so 1/24 of depth is one.
     const double f0 = hz(base);
-    Route up{3, 2, T::DstPitch, 12.0f / 24.0f, 1.0f};
+    Route up{3, 2, dstPitch, 12.0f / 24.0f, 1.0f};
     const double f1 = hz(play(&up));
     std::snprintf(buf, sizeof(buf), "%.1f Hz -> %.1f Hz", f0, f1);
-    ok(f0 > 0 && std::fabs(f1 / f0 - 2.0) < 0.03, "a pitch route moves the note an octave", buf);
+    ok(f0 > 0 && std::fabs(f1 / f0 - 2.0) < 0.03, who + "a pitch route moves the note an octave", buf);
 
     // A route to nothing does nothing.
-    Route none{2, 3, T::DstOff, 1.0f, 1.0f};
-    ok(play(&none) == base, "a route to off does nothing", "");
+    Route none{2, 3, dstOff, 1.0f, 1.0f};
+    ok(play(&none) == base, who + "a route to off does nothing", "");
+}
 
+} // namespace
+
+int main() {
+    basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
+    basics("Ratio", acidulous::machine::Ratio::DestCount, acidulous::machine::Ratio::DstAmp,
+           acidulous::machine::Ratio::DstPitch, acidulous::machine::Ratio::DstOff, acidulous::machine::Ratio::kMacros);
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

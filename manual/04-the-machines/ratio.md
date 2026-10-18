@@ -35,6 +35,18 @@ destination, depth) that work like Trinity's.
 **snap** keeps ratios on useful values (whole numbers, odd numbers, semitones,
 bell partials), and **skew** bends them all away from those values together.
 
+## Macros
+
+The **play** section has eight macro knobs. A patch can name them (Bright,
+Warp, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** section sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob adds knob times amount to the destination, like a matrix row with the
+knob as its source. Tap a macro's name to rename it.
+
 ## Tips
 
 - Whole-number ratios (1, 2, 3) sound harmonic, and others (1.41, 3.14) sound

@@ -813,11 +813,11 @@ object EngineSync {
         ensureMacroNames(song, m)
     }
 
-    /** The macro names of every Trinity, sent when they change. A rack with none (or no longer a Trinity) sends "", which clears. */
+    /** The macro names of every Trinity and Ratio, sent when they change. A rack with none (or no longer one of them) sends "", which clears. */
     private fun ensureMacroNames(song: Song, m: Memory = live) {
         for (rack in 0 until RACKS) {
             val machine = song.tracks.getOrNull(rack)?.machine
-            val names = if (machine?.type != "Trinity") ""
+            val names = if (machine?.type != "Trinity" && machine?.type != "Ratio") ""
             else (1..8).joinToString("\n") { machine.settings["macro$it"].orEmpty() }.takeIf { it.isNotBlank() }.orEmpty()
             if (m.pushedMacros[rack] == names) continue
             m.pushedMacros[rack] = names

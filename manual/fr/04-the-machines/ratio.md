@@ -37,6 +37,19 @@ celles de Trinity.
 impairs, demi-tons, partiels de cloche), et **biais** les éloigne tous ensemble
 de ces valeurs.
 
+## Macros
+
+La section **jeu** a huit boutons macro. Un patch peut les nommer (Brillant,
+Chaleur, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La section **macros** règle ce que fait chacune. Une macro a quatre routes,
+une destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton ajoute bouton fois quantité à la destination, comme une
+rangée de matrice dont le bouton serait la source. Touchez le nom d’une macro
+pour la renommer.
+
 ## Astuces
 
 - Les ratios entiers (1, 2, 3) sonnent harmoniques, et les autres (1.41, 3.14)
