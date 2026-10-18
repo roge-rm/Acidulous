@@ -67,6 +67,7 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
 import com.rm.acidulous.model.Machine
 import com.rm.acidulous.model.MachineUi
+import com.rm.acidulous.model.MACRO_MACHINES
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.SIDECHAIN_STEPS
 import com.rm.acidulous.model.SongEditor
@@ -189,7 +190,7 @@ fun MachinePanel(
                     com.rm.acidulous.engine.EngineSync.remountEffects(trackIndex, chained.placed)
                     var next = chained.track.withPatch(params)
                     // Macro names belong to the patch, so the last one's go.
-                    if (type == "Trinity" || type == "Ratio") for (i in 1..8) next = next.withSetting("macro$i", null)
+                    if (type in MACRO_MACHINES) for (i in 1..8) next = next.withSetting("macro$i", null)
                     for ((k, v) in patch.settings) next = next.withSetting(k, v)
                     // Set last, so a patch that happens to carry these keys
                     // can't rename itself. Stored in settings so the name
@@ -236,7 +237,7 @@ fun MachinePanel(
             vertical = vertical,
         )
         if (body && !minimized) when (type) {
-            "Reflux" -> RefluxPanel(binding)
+            "Reflux" -> RefluxPanel(binding, track, trackIndex, editor)
             "Hexbeat" -> HexbeatPanel(binding)
             "Genesis" -> GenesisPanel(binding)
             "Resonance" -> ResonancePanel(binding, selectedPad)
@@ -743,7 +744,7 @@ private const val kPatchName = com.rm.acidulous.model.PatchMark.NAME
 private const val kPatchStamp = com.rm.acidulous.model.PatchMark.STAMP
 private fun stampOf(params: Map<String, Float>): String = com.rm.acidulous.model.PatchMark.stampOf(params)
 
-/** The params' stamp, plus the macro names of Trinity and Ratio, so renaming a macro counts as an edit. */
+/** The params' stamp, plus the macro names of a machine with macros, so renaming a macro counts as an edit. */
 private fun machineStamp(m: Machine): String {
     val names = (1..8).joinToString("\n") { m.settings["macro$it"].orEmpty() }
     return stampOf(m.params) + if (names.isBlank()) "" else names
@@ -1613,15 +1614,69 @@ private fun EvenLines(modifier: Modifier, perLine: Int, centred: Boolean, conten
     }
 }
 
-/** Reflux: the classic layer left to right, then the open layer. */
+/** Reflux's lowpass types, in its "filter" order. */
+val REFLUX_FILTERS = listOf("LP24", "LP12", "HP", "notch")
+val REFLUX_LFO_SHAPES = listOf("sine", "tri", "sqr", "saw", "rand")
+/** Where a Reflux macro route goes, in the engine's Dest order. */
+val REFLUX_DESTS = listOf(
+    "off", "cutoff", "reso", "envmod", "decay", "accent", "slide", "drive",
+    "volume", "pw", "sub", "mix", "pitch", "lfo rate", "lfo cut", "lfo pitch", "lfo pw",
+)
+
+/** Reflux: the sound on one page, the LFO, the macro routes and the macro knobs. */
 @Composable
-private fun RefluxPanel(b: ParamBinding) {
-    GroupRow {
-        Group("osc") { PanelSwitch(b, "wave", listOf("saw", "pulse")); PanelKnob(b, "pw"); PanelKnob(b, "sub"); PanelKnob(b, "tune") }
-        Group("filter") { PanelKnob(b, "cutoff", accent = PanelAmber); PanelKnob(b, "resonance", "reso", PanelAmber); PanelKnob(b, "envmod", accent = PanelAmber); PanelKnob(b, "decay", accent = PanelAmber); PanelSwitch(b, "mode", listOf("lp", "bp")) }
-        Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "slide"); PanelKnob(b, "velocity", "vel") }
-        Group("out") { PanelKnob(b, "drive", accent = PanelPink); PanelKnob(b, "volume") }
+private fun RefluxPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    var section by rememberSaveable { mutableStateOf(0) }
+    PanelSections(listOf("sound", "lfo", "macros", "play"), section, { section = it }) { sec ->
+        when (sec) {
+            3 -> Group("play") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            1 -> Group("lfo") {
+                PanelKnob(b, "lfo_rate", "rate", PanelAmber)
+                PanelStepKnob(b, "lfo_sync", TRINITY_LFO_SYNC, "sync", PanelAmber)
+                PanelStepKnob(b, "lfo_shape", REFLUX_LFO_SHAPES, "shape", PanelAmber)
+                PanelSwitch(b, "lfo_retrig", listOf("free", "note"), "restart")
+                PanelKnob(b, "lfo_cut", "cutoff")
+                PanelKnob(b, "lfo_pitch", "pitch")
+                PanelKnob(b, "lfo_pw", "pw")
+            }
+            2 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", REFLUX_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", REFLUX_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", REFLUX_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", REFLUX_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            else -> {
+                Group("osc") { PanelSwitch(b, "wave", listOf("saw", "pulse")); PanelKnob(b, "mix"); PanelKnob(b, "pw"); PanelKnob(b, "sub"); PanelKnob(b, "tune") }
+                Group("filter") { PanelKnob(b, "cutoff", accent = PanelAmber); PanelKnob(b, "resonance", "reso", PanelAmber); PanelKnob(b, "envmod", accent = PanelAmber); PanelKnob(b, "decay", accent = PanelAmber); PanelSwitch(b, "mode", listOf("lp", "bp")); PanelStepKnob(b, "filter", REFLUX_FILTERS, "type") }
+                Group("touch") { PanelKnob(b, "accent"); PanelKnob(b, "slide"); PanelKnob(b, "velocity", "vel") }
+                Group("out") { PanelKnob(b, "drive", accent = PanelPink); PanelKnob(b, "volume") }
+            }
+        }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 /** Hexbeat: a group per voice family, in kit order. */

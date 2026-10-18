@@ -1,5 +1,5 @@
 #!/bin/bash
-# Checks Trinity's and Ratio's macro routes move what they name.
+# Checks the macro routes of Trinity, Ratio and Reflux move what they name.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

@@ -591,6 +591,10 @@
     <string name="pw_lfo">LFO</string>
     <string name="pw_lfo_2d699f">lfo</string>
     <string name="pw_lfo_n">lfo %d</string>
+    <string name="pw_lfo_cut">lfo coup.</string>
+    <string name="pw_lfo_pitch">lfo haut.</string>
+    <string name="pw_lfo_pw">lfo pw</string>
+    <string name="pw_lfo_rate">lfo vit.</string>
     <string name="pw_lfo_1">lfo 1</string>
     <string name="pw_lfo_2">lfo 2</string>
     <string name="pw_lfo1">lfo1</string>

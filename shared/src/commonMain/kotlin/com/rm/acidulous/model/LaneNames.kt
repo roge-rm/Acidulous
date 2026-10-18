@@ -83,9 +83,12 @@ fun laneLabel(track: Track, key: String, word: (String) -> String = { it }): Str
     return "${laneUnitLabel(track, key, word)} · ${named?.split('|')?.joinToString(" ", transform = word) ?: humanise(param, word)}"
 }
 
-/** A Trinity or Ratio macro knob's own name, when its patch or the player gave it one. */
+/** The machines with eight macro knobs a patch or the player can name. */
+val MACRO_MACHINES = setOf("Trinity", "Ratio", "Reflux")
+
+/** A macro knob's own name, when its patch or the player gave it one. */
 private fun macroName(track: Track, param: String): String? {
-    if (track.machine.type != "Trinity" && track.machine.type != "Ratio" || !param.matches(MACRO_KNOB)) return null
+    if (track.machine.type !in MACRO_MACHINES || !param.matches(MACRO_KNOB)) return null
     return track.machine.settings["macro" + param.substring(3)]?.takeIf { it.isNotBlank() }
 }
 private val MACRO_KNOB = Regex("mac[1-8]")

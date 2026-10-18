@@ -610,6 +610,10 @@
     <string name="pw_lfo_n">lfo %d</string>
     <string name="pw_lfo_1">lfo 1</string>
     <string name="pw_lfo_2">lfo 2</string>
+    <string name="pw_lfo_cut">lfo cut</string>
+    <string name="pw_lfo_pitch">lfo pitch</string>
+    <string name="pw_lfo_pw">lfo pw</string>
+    <string name="pw_lfo_rate">lfo rate</string>
     <string name="pw_lfo1">lfo1</string>
     <string name="pw_lfo2">lfo2</string>
     <string name="pw_lfo3">lfo3</string>

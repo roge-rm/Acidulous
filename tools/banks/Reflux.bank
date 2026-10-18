@@ -67,6 +67,35 @@ patch Init family=classic
 # judged on first.
 
 patch Classic family=classic  note=36 range=24..55
+  set macro1 "Open"
+  set macro2 "Squelch"
+  set macro3 "Snap"
+  set macro4 "Bite"
+  set macro5 "Sub"
+  set macro6 "Blend"
+  set macro7 "Wobble"
+  set macro8 "Glide"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.25
+  mac1_d2  #3
+  mac1_a2  0.15
+  mac2_d1  #2
+  mac2_a1  0.3
+  mac3_d1  #4
+  mac3_a1  -0.3
+  mac3_d2  #5
+  mac3_a2  0.2
+  mac4_d1  #7
+  mac4_a1  0.5
+  mac5_d1  #10
+  mac5_a1  0.6
+  mac6_d1  #11
+  mac6_a1  1
+  mac7_d1  #14
+  mac7_a1  0.3
+  mac8_d1  #6
+  mac8_a1  0.3
   # The one everybody means. Open enough to hear the note, resonant enough to
   # hear the filter, and a decay that shuts before the next eighth.
   #
@@ -83,6 +112,35 @@ patch Classic family=classic  note=36 range=24..55
   volume         0.88
 
 patch Squelch family=classic  note=36 range=24..55
+  set macro1 "Open"
+  set macro2 "Squelch"
+  set macro3 "Snap"
+  set macro4 "Bite"
+  set macro5 "Sub"
+  set macro6 "Blend"
+  set macro7 "Wobble"
+  set macro8 "Glide"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.25
+  mac1_d2  #3
+  mac1_a2  0.15
+  mac2_d1  #2
+  mac2_a1  0.1
+  mac2_d2  #3
+  mac2_a2  0.15
+  mac3_d1  #4
+  mac3_a1  -0.25
+  mac4_d1  #7
+  mac4_a1  0.5
+  mac5_d1  #10
+  mac5_a1  0.6
+  mac6_d1  #11
+  mac6_a1  1
+  mac7_d1  #14
+  mac7_a1  0.3
+  mac8_d1  #6
+  mac8_a1  0.3
   # Further into the resonance and a much faster decay: the blip rather than
   # the sweep. Accent nearly all the way up, because on a line like this the
   # accented steps are the line.
@@ -122,6 +180,35 @@ patch "Long Sweep" family=motion  note=36 range=24..55
   volume         0.91
 
 patch "Slide Line" family=motion  note=36 range=24..55
+  set macro1 "Open"
+  set macro2 "Squelch"
+  set macro3 "Snap"
+  set macro4 "Bite"
+  set macro5 "Sub"
+  set macro6 "Blend"
+  set macro7 "Wobble"
+  set macro8 "Tight"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.25
+  mac1_d2  #3
+  mac1_a2  0.15
+  mac2_d1  #2
+  mac2_a1  0.3
+  mac3_d1  #4
+  mac3_a1  -0.3
+  mac3_d2  #5
+  mac3_a2  0.2
+  mac4_d1  #7
+  mac4_a1  0.5
+  mac5_d1  #10
+  mac5_a1  0.6
+  mac6_d1  #11
+  mac6_a1  1
+  mac7_d1  #14
+  mac7_a1  0.3
+  mac8_d1  #6
+  mac8_a1  -0.4
   # Every note glides into the next. The slide is the other half of what
   # this machine is for and nothing else here is built around it: at half a
   # second the line stops being notes and becomes one moving pitch.
@@ -314,6 +401,35 @@ patch "Thin Ice" family=sub  note=48 range=36..67
   volume         0.76
 
 patch Buzzsaw family=dirty  note=36 range=24..55
+  set macro1 "Open"
+  set macro2 "Squelch"
+  set macro3 "Snap"
+  set macro4 "Grit"
+  set macro5 "Sub"
+  set macro6 "Blend"
+  set macro7 "Wobble"
+  set macro8 "Glide"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.2
+  mac2_d1  #2
+  mac2_a1  0.5
+  mac3_d1  #4
+  mac3_a1  -0.3
+  mac3_d2  #5
+  mac3_a2  0.2
+  mac4_d1  #7
+  mac4_a1  0.15
+  mac4_d2  #1
+  mac4_a2  -0.1
+  mac5_d1  #10
+  mac5_a1  0.6
+  mac6_d1  #11
+  mac6_a1  1
+  mac7_d1  #14
+  mac7_a1  0.3
+  mac8_d1  #6
+  mac8_a1  0.3
   # Filter nearly out of the way and the drive doing the work. Not acid at
   # all - the machine's other end, and the reason drive is in the voice
   # rather than in an insert.
@@ -479,3 +595,31 @@ patch Pluck family=short  note=36 range=24..55
   slide          30 ms
   drive          0.3
   volume         0.95
+
+# --- What came with the LFO and the filter types ---------------------
+
+patch Wub family=wobble  note=36 range=24..55
+  # A sine on the cutoff at eighths, restarting with each note so the line
+  # wobbles on the beat.
+  cutoff         260 Hz
+  resonance      0.6
+  envmod         0.2
+  decay          900 ms
+  accent         0.5
+  sub            0.3
+  drive          0.3
+  lfo_sync       #6
+  lfo_retrig     #1
+  lfo_cut        0.6
+  volume         1.05
+
+patch "Notch Sweep" family=filter  note=36 range=24..55
+  # The notch: the envelope drags a hole down through the saw.
+  filter         #3
+  cutoff         180 Hz
+  resonance      0.35
+  envmod         0.8
+  decay          600 ms
+  accent         0.6
+  drive          0.2
+  volume         0.92

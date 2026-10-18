@@ -74,12 +74,14 @@ internal object FactoryBanks {
         family = "classic")
 
     private fun reflux1() = Patch("Reflux", "Classic",
-        mapOf("cutoff" to 0.408023566f, "resonance" to 0.72f, "envmod" to 0.64f, "decay" to 0.4850184f, "accent" to 0.75f, "slide" to 0.5f, "drive" to 0.16f, "volume" to 0.586666644f),
+        mapOf("cutoff" to 0.408023566f, "resonance" to 0.72f, "envmod" to 0.64f, "decay" to 0.4850184f, "accent" to 0.75f, "slide" to 0.5f, "drive" to 0.16f, "volume" to 0.586666644f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "classic",
         low = 24, high = 55)
 
     private fun reflux2() = Patch("Reflux", "Squelch",
-        mapOf("cutoff" to 0.369967341f, "resonance" to 0.9f, "envmod" to 0.85f, "decay" to 0.318411052f, "accent" to 0.92f, "slide" to 0.451545f, "drive" to 0.22f, "volume" to 0.599999964f),
+        mapOf("cutoff" to 0.369967341f, "resonance" to 0.9f, "envmod" to 0.85f, "decay" to 0.318411052f, "accent" to 0.92f, "slide" to 0.451545f, "drive" to 0.22f, "volume" to 0.599999964f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_d2" to 0.1875f, "mac2_a1" to 0.55f, "mac2_a2" to 0.575f, "mac3_d1" to 0.25f, "mac3_a1" to 0.375f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "classic",
         low = 24, high = 55)
 
@@ -94,7 +96,8 @@ internal object FactoryBanks {
         low = 24, high = 55)
 
     private fun reflux5() = Patch("Reflux", "Slide Line",
-        mapOf("cutoff" to 0.39470154f, "resonance" to 0.68f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.9621396f, "drive" to 0.14f, "volume" to 0.5933333f),
+        mapOf("cutoff" to 0.39470154f, "resonance" to 0.68f, "envmod" to 0.6f, "decay" to 0.468926072f, "accent" to 0.7f, "slide" to 0.9621396f, "drive" to 0.14f, "volume" to 0.5933333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.1875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.125f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.3f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Bite", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Tight"),
         family = "motion",
         low = 24, high = 55)
 
@@ -164,7 +167,8 @@ internal object FactoryBanks {
         low = 36, high = 67)
 
     private fun reflux19() = Patch("Reflux", "Buzzsaw",
-        mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 0.6066667f),
+        mapOf("cutoff" to 0.7682668f, "resonance" to 0.25f, "envmod" to 0.25f, "decay" to 0.562469363f, "accent" to 0.55f, "drive" to 0.85f, "volume" to 0.6066667f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.6f, "mac2_d1" to 0.125f, "mac2_a1" to 0.75f, "mac3_d1" to 0.25f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.35f, "mac3_a2" to 0.6f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.0625f, "mac4_a1" to 0.575f, "mac4_a2" to 0.45f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.6875f, "mac6_a1" to 1f, "mac7_d1" to 0.875f, "mac7_a1" to 0.65f, "mac8_d1" to 0.375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Squelch", "macro3" to "Snap", "macro4" to "Grit", "macro5" to "Sub", "macro6" to "Blend", "macro7" to "Wobble", "macro8" to "Glide"),
         family = "dirty",
         low = 24, high = 55)
 
@@ -218,7 +222,17 @@ internal object FactoryBanks {
         family = "short",
         low = 24, high = 55)
 
-    private val reflux: List<Patch> by lazy { listOf(reflux0(), reflux1(), reflux2(), reflux3(), reflux4(), reflux5(), reflux6(), reflux7(), reflux8(), reflux9(), reflux10(), reflux11(), reflux12(), reflux13(), reflux14(), reflux15(), reflux16(), reflux17(), reflux18(), reflux19(), reflux20(), reflux21(), reflux22(), reflux23(), reflux24(), reflux25(), reflux26(), reflux27(), reflux28(), reflux29()) }
+    private fun reflux30() = Patch("Reflux", "Wub",
+        mapOf("cutoff" to 0.328168571f, "resonance" to 0.6f, "envmod" to 0.2f, "decay" to 0.7385606f, "accent" to 0.5f, "drive" to 0.3f, "volume" to 0.7f, "sub" to 0.3f, "lfo_sync" to 0.3529412f, "lfo_retrig" to 1f, "lfo_cut" to 0.8f),
+        family = "wobble",
+        low = 24, high = 55)
+
+    private fun reflux31() = Patch("Reflux", "Notch Sweep",
+        mapOf("cutoff" to 0.26369825f, "resonance" to 0.35f, "envmod" to 0.8f, "decay" to 0.650515f, "drive" to 0.2f, "volume" to 0.613333344f, "filter" to 1f),
+        family = "filter",
+        low = 24, high = 55)
+
+    private val reflux: List<Patch> by lazy { listOf(reflux0(), reflux1(), reflux2(), reflux3(), reflux4(), reflux5(), reflux6(), reflux7(), reflux8(), reflux9(), reflux10(), reflux11(), reflux12(), reflux13(), reflux14(), reflux15(), reflux16(), reflux17(), reflux18(), reflux19(), reflux20(), reflux21(), reflux22(), reflux23(), reflux24(), reflux25(), reflux26(), reflux27(), reflux28(), reflux29(), reflux30(), reflux31()) }
 
     private fun trinity0() = Patch("Trinity", "Init", emptyMap(),
         family = "lead")

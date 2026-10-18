@@ -1,4 +1,4 @@
-// Checks Trinity's and Ratio's macro routes move the destinations they name.
+// Checks the macro routes of Trinity, Ratio and Reflux move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -12,6 +12,7 @@
 
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/ratio/Ratio.h>
+#include <engine/machine/reflux/Reflux.h>
 #include <engine/machine/trinity/Trinity.h>
 #include <engine/dsp/Lfo.h>
 #include <engine/dsp/LfoGen.h>
@@ -288,8 +289,12 @@ void stepChecks() {
     }
 }
 
-/** The checks every machine with macros shares. [dstAmp], [dstPitch] and [dstOff] are its own destination numbers. */
-void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, int macros) {
+/**
+ * The checks every machine with macros shares. [dstAmp], [dstPitch] and [dstOff] are its own destination numbers.
+ * [full] and [halfWant] are the level ratios an amp route of -0.5 gives at full and half knob.
+ */
+void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, int macros,
+            double full = 2.0 / 7.0, double halfWant = 0.45 / 0.7) {
     gType = type;
     gDests = dests;
     const std::string who = std::string(type) + ": ";
@@ -302,12 +307,12 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         Route off{macro, 1, dstAmp, -0.5f, 0.0f};
         ok(play(&off) == base, who + "macro " + std::to_string(macro) + " at zero leaves the sound alone", "");
         for (int route = 1; route <= 4; ++route) {
-            // Volume 0.7 minus 0.5 leaves 0.2, so the level is 2/7 of the base.
+            // On Trinity, volume 0.7 minus 0.5 leaves 0.2, so the level is 2/7 of the base.
             Route r{macro, route, dstAmp, -0.5f, 1.0f};
             const double ratio = rms(play(&r), 0) / baseRms;
             char buf[64];
-            std::snprintf(buf, sizeof(buf), "ratio %.3f (want 0.286)", ratio);
-            ok(std::fabs(ratio - 2.0 / 7.0) < 0.02, who + "macro " + std::to_string(macro) + " route " + std::to_string(route) + " scales the level", buf);
+            std::snprintf(buf, sizeof(buf), "ratio %.3f (want %.3f)", ratio, full);
+            ok(std::fabs(ratio - full) < 0.02, who + "macro " + std::to_string(macro) + " route " + std::to_string(route) + " scales the level", buf);
         }
     }
 
@@ -315,8 +320,8 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
     Route half{1, 1, dstAmp, -0.5f, 0.5f};
     const double h = rms(play(&half), 0) / baseRms;
     char buf[64];
-    std::snprintf(buf, sizeof(buf), "ratio %.3f (want 0.643)", h);
-    ok(std::fabs(h - 0.45 / 0.7) < 0.02, who + "half the knob is half the depth", buf);
+    std::snprintf(buf, sizeof(buf), "ratio %.3f (want %.3f)", h, halfWant);
+    ok(std::fabs(h - halfWant) < 0.02, who + "half the knob is half the depth", buf);
 
     // Pitch: the destination is in units of 24 semitones, so 1/24 of depth is one.
     const double f0 = hz(base);
@@ -337,6 +342,10 @@ int main() {
     stepChecks();
     basics("Ratio", acidulous::machine::Ratio::DestCount, acidulous::machine::Ratio::DstAmp,
            acidulous::machine::Ratio::DstPitch, acidulous::machine::Ratio::DstOff, acidulous::machine::Ratio::kMacros);
+    // Reflux moves its volume knob in the knob's own range, 0 to 1.5: 0.8 is
+    // 0.533 of it, so -0.5 leaves 0.05 (1/16 of the level) and -0.25 leaves 0.425.
+    using X = acidulous::machine::Reflux;
+    basics("Reflux", X::DestCount, X::DstAmp, X::DstPitch, X::DstOff, X::kMacros, 0.05 / 0.8, 0.425 / 0.8);
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;
