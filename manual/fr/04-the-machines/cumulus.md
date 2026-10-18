@@ -36,6 +36,20 @@ que vous changez le spectre. Tout à partir de **morph** change tout de suite.
 **vitesse** et **épars** gardent le son en mouvement. Ensuite viennent un
 filtre avec sa propre enveloppe, une enveloppe d’ampli et une saturation.
 
+## Macros
+
+La section **jeu** commence par huit boutons macro. Un patch peut les nommer
+(Éclat, Épanouir, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La section **macros** règle ce que fait chacune. Une macro a quatre routes,
+une destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur va de 24 demi-tons à 1. Les commandes
+du nuage et du morph vers refont la table, elles ne peuvent donc pas être des
+destinations. Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Utilisez de longues attaques et de longs relâchements et laissez les notes

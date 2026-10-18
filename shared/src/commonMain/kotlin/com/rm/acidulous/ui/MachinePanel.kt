@@ -248,7 +248,7 @@ fun MachinePanel(
             "Ratio" -> RatioPanel(binding, track, trackIndex, editor)
             "Manual" -> ManualPanel(binding)
             "Cipher" -> CipherPanel(binding)
-            "Cumulus" -> CumulusPanel(binding)
+            "Cumulus" -> CumulusPanel(binding, track, trackIndex, editor)
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding)
             "Brazen" -> BrazenPanel(binding)
@@ -2699,6 +2699,13 @@ private fun CipherPanel(b: ParamBinding) {
 // intervals. Names mirror engine/machine/cumulus/Cloud.cpp.
 private val CUMULUS_SHIMMER = listOf("5th", "8ve", "8ve+5", "2 8ve")
 private val CUMULUS_FILTERS = listOf("LP6", "LP12", "LP18", "LP24", "HP6", "HP12", "HP18", "HP24", "BP6", "BP12", "notch", "peak")
+/** Where a Cumulus macro route goes, in the engine's Dest order. */
+val CUMULUS_DESTS = listOf(
+    "off", "morph", "shimmer", "width", "scatter", "drift", "detune", "apart",
+    "cutoff", "reso", "filter env", "filter drive", "drive", "volume", "pan",
+    "attack", "decay", "release", "filt decay",
+    "lfo1 rate", "lfo1 morph", "lfo2 rate", "lfo2 cut", "lfo2 pan", "pitch",
+)
 private val CUMULUS_LFO = listOf("sine", "tri", "saw↑", "saw↓", "square", "s&h", "smooth", "8 step", "16 step")
 
 /**
@@ -2708,9 +2715,11 @@ private val CUMULUS_LFO = listOf("sine", "tri", "saw↑", "saw↓", "square", "s
  * separate sections for that reason, and the build knobs are amber.
  */
 @Composable
-private fun CumulusPanel(b: ParamBinding) {
+private fun CumulusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("cloud", "morph to", "play", "shape", "env", "mod", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("cloud", "morph to", "play", "shape", "env", "mod", "out", "macros"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
                 Group("partials") {
@@ -2747,7 +2756,28 @@ private fun CumulusPanel(b: ParamBinding) {
                     PanelKnob(b, "morphkey", "· by key")
                 }
             }
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", CUMULUS_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", CUMULUS_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", CUMULUS_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", CUMULUS_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             2 -> {
+                Group("play") {
+                    for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+                }
                 Group("copies") {
                     PanelStepKnob(b, "spread", listOf("1", "2", "3"), "how many", PanelAmber)
                     PanelKnob(b, "detune", "detune", PanelAmber)
@@ -2824,6 +2854,14 @@ private fun CumulusPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Formulate -------------------------------------------------------------------

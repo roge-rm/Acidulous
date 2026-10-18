@@ -1331,4 +1331,11 @@
     <string name="pw_by_4">prof. 4</string>
     <string name="pw_to_4">vers 4</string>
     <string name="pw_macro_n">macro %d</string>
+    <string name="pw_filter_drive">satur. filtre</string>
+    <string name="pw_filt_decay">déclin filtre</string>
+    <string name="pw_lfo1_rate">lfo1 vit.</string>
+    <string name="pw_lfo1_morph">lfo1 morph</string>
+    <string name="pw_lfo2_rate">lfo2 vit.</string>
+    <string name="pw_lfo2_cut">lfo2 coup.</string>
+    <string name="pw_lfo2_pan">lfo2 pan</string>
 </resources>

@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio and Reflux move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux and Cumulus move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -11,6 +11,8 @@
 // and a free one must double or halve its rate.
 
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/cumulus/Cloud.h>
+#include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
 #include <engine/machine/trinity/Trinity.h>
@@ -44,6 +46,9 @@ void ok(bool pass, const std::string &what, const std::string &detail) {
 // The machine under test; main() runs the basic checks once for each.
 const char *gType = "Trinity";
 int gDests = T::DestCount;
+// One more param to set in play(), for comparing a route against the param it stands in for.
+const char *gExtra = nullptr;
+float gExtraNorm = 0.0f;
 
 struct Route { int macro, route, dest; float depth; float knob; };
 
@@ -63,7 +68,11 @@ std::vector<float> play(const Route *r) {
         setNorm(p, k + "_d" + std::to_string(r->route), r->dest / (gDests - 1.0f));
         setNorm(p, k + "_a" + std::to_string(r->route), (r->depth + 1.0f) * 0.5f);
     }
+    if (gExtra != nullptr) setNorm(p, gExtra, gExtraNorm);
     p.jumpAll();
+    // Cumulus plays nothing without a table.
+    if (std::strcmp(gType, "Cumulus") == 0)
+        m->swapObject(0, acidulous::machine::cumulus::buildCloud(static_cast<acidulous::machine::Cumulus *>(m)->spec(), kRate).release());
     m->allNotesOff();
     m->reset();
     m->noteOn(57, 100);
@@ -324,11 +333,27 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
     ok(std::fabs(h - halfWant) < 0.02, who + "half the knob is half the depth", buf);
 
     // Pitch: the destination is in units of 24 semitones, so 1/24 of depth is one.
-    const double f0 = hz(base);
     Route up{3, 2, dstPitch, 12.0f / 24.0f, 1.0f};
-    const double f1 = hz(play(&up));
-    std::snprintf(buf, sizeof(buf), "%.1f Hz -> %.1f Hz", f0, f1);
-    ok(f0 > 0 && std::fabs(f1 / f0 - 2.0) < 0.03, who + "a pitch route moves the note an octave", buf);
+    if (std::strcmp(type, "Cumulus") == 0) {
+        // A cloud has no pitch to count, so the route must match the octave knob.
+        gExtra = "octave";
+        gExtraNorm = 4.0f / 6.0f;
+        const auto octave = play(nullptr);
+        gExtra = nullptr;
+        const auto routed = play(&up);
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < octave.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(octave[i] - routed[i])));
+            peak = std::max(peak, double(std::fabs(octave[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the octave knob", buf);
+    } else {
+        const double f0 = hz(base);
+        const double f1 = hz(play(&up));
+        std::snprintf(buf, sizeof(buf), "%.1f Hz -> %.1f Hz", f0, f1);
+        ok(f0 > 0 && std::fabs(f1 / f0 - 2.0) < 0.03, who + "a pitch route moves the note an octave", buf);
+    }
 
     // A route to nothing does nothing.
     Route none{2, 3, dstOff, 1.0f, 1.0f};
@@ -346,6 +371,10 @@ int main() {
     // 0.533 of it, so -0.5 leaves 0.05 (1/16 of the level) and -0.25 leaves 0.425.
     using X = acidulous::machine::Reflux;
     basics("Reflux", X::DestCount, X::DstAmp, X::DstPitch, X::DstOff, X::kMacros, 0.05 / 0.8, 0.425 / 0.8);
+    // Cumulus's volume is 0 to 1.5 and starts at 1.07, so -0.5 leaves 1.07 - 0.75 = 0.32
+    // and -0.25 leaves 0.695.
+    using C = acidulous::machine::Cumulus;
+    basics("Cumulus", C::DestCount, C::DstAmp, C::DstPitch, C::DstOff, C::kMacros, 0.32 / 1.07, 0.695 / 1.07);
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

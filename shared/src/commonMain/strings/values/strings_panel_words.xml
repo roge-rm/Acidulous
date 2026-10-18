@@ -1331,4 +1331,11 @@
     <string name="pw_morph_173ffb">→ morph</string>
     <string name="pw_pan_c55c68">→ pan</string>
     <string name="pw_pitch_ed8dff">→ pitch</string>
+    <string name="pw_filter_drive">filter drive</string>
+    <string name="pw_filt_decay">filt decay</string>
+    <string name="pw_lfo1_rate">lfo1 rate</string>
+    <string name="pw_lfo1_morph">lfo1 morph</string>
+    <string name="pw_lfo2_rate">lfo2 rate</string>
+    <string name="pw_lfo2_cut">lfo2 cut</string>
+    <string name="pw_lfo2_pan">lfo2 pan</string>
 </resources>

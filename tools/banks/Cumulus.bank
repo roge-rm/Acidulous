@@ -42,7 +42,10 @@ machine Cumulus
 #           because the drift and the morph are slower than any other phrase
 role    pad
 
+# --- pad ---------------------------------------------------------
+
 patch Init family=pad
+
 # High and thin, with the bands wide enough that no partial is a line
 # any more. Nothing down low at all - this is the one that goes over
 # something else.
@@ -103,6 +106,41 @@ patch Nimbus note=60 range=36..84 family=pad
 # The one to reach for without reading anything: soft, mid, no tricks.
 # Every bank needs one patch that just plays chords.
 patch "Warm Bed" note=60 range=36..84 family=pad
+  set macro1 "Brighten"
+  set macro2 "Bloom"
+  set macro3 "Width"
+  set macro4 "Shimmer"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Lift"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #13
+  mac2_a1  -0.15
+  mac2_d2  #1
+  mac2_a2  0.5
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac4_d1  #2
+  mac4_a1  0.6
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #4
+  mac7_a2  -0.3
+  mac8_d1  #24
+  mac8_a1  0.5
   partials       40
   tilt           -13 dB/oct
   bandwidth      28 cents
@@ -169,9 +207,103 @@ patch Veil note=60 range=36..84 family=pad
   amprelease     3.4 s
   volume         1.01
 
+# --- hollow ------------------------------------------------------
+
+# Odd partials only, which is a tube stopped at one end - and the
+# second spectrum puts the even ones back, so the morph opens it from
+# a clarinet into something whole.
+patch Hollow note=60 range=36..84 family=hollow
+  partials       40
+  tilt           -11 dB/oct
+  bandwidth      30 cents
+  bbandwidth     70 cents
+  odd            1
+  bodd           -0.6
+  comb           0.55
+  bcomb          -0.5
+  detune         5 cents
+  cutoff         7000 Hz
+  ampattack      0.9 s
+  amprelease     2.4 s
+  volume         0.86
+
+# Odd-heavy with a vowel over it: reedy in both senses, and neither of
+# them is a filter.
+patch "Reed Bed" note=57 range=40..81 family=hollow
+  partials       38
+  tilt           -10 dB/oct
+  bandwidth      24 cents
+  bbandwidth     50 cents
+  odd            0.88
+  vowel          0.35
+  vowelamount    0.6
+  bodd           -0.3
+  detune         9 cents
+  drift          11 cents
+  width          0.75
+  cutoff         6800 Hz
+  ampattack      0.6 s
+  amprelease     2 s
+  volume         1.31
+
+# Narrow bands, odd partials, almost no drift: as close as this machine
+# gets to standing still, which against everything else in the bank is
+# its own kind of effect.
+patch "Pipe Cloud" note=64 range=43..88 family=hollow
+  partials       30
+  tilt           -9 dB/oct
+  bandwidth      6 cents
+  bbandwidth     20 cents
+  odd            0.92
+  detune         2 cents
+  drift          2 cents
+  driftrate      0.05 Hz
+  width          0.5
+  cutoff         9000 Hz
+  ampattack      0.25 s
+  amprelease     1.2 s
+  volume         0.86
+
+# --- voice -------------------------------------------------------
+
 # Three formants, interpolated, on a spectrum wide enough to be a
 # section rather than a person.
 patch Choir note=60 range=43..84 family=voice
+  set macro1 "Open"
+  set macro2 "Breathe"
+  set macro3 "Spread"
+  set macro4 "Air"
+  set macro5 "Attack"
+  set macro6 "Release"
+  set macro7 "Shift"
+  set macro8 "Warble"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #1
+  mac1_a2  0.3
+  mac2_d1  #9
+  mac2_a1  0.2
+  mac2_d2  #13
+  mac2_a2  -0.1
+  mac3_d1  #6
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #3
+  mac3_a3  0.3
+  mac4_d1  #2
+  mac4_a1  0.5
+  mac5_d1  #15
+  mac5_a1  0.5
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #24
+  mac7_a1  0.5
+  mac8_d1  #5
+  mac8_a1  0.5
+  mac8_d2  #19
+  mac8_a2  0.3
   partials       44
   tilt           -8 dB/oct
   bandwidth      22 cents
@@ -265,6 +397,350 @@ patch "Vowel Morph" note=60 range=43..84 family=voice role=drone
   ampattack      0.8 s
   amprelease     2.6 s
   volume         1.03
+
+# --- shimmer -----------------------------------------------------
+
+# A second reader an octave up, out of the same table. Not a pitch
+# shifter and not a delay - the octave is the same cloud, so it drifts
+# with it instead of against it.
+patch "Shimmer Pad" note=62 range=43..88 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Sweep"
+  set macro6 "Drive"
+  set macro7 "Slow"
+  set macro8 "Scatter"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #8
+  mac5_a1  0.3
+  mac5_d2  #10
+  mac5_a2  0.4
+  mac5_d3  #22
+  mac5_a3  0.4
+  mac6_d1  #12
+  mac6_a1  0.5
+  mac7_d1  #19
+  mac7_a1  -0.2
+  mac7_d2  #21
+  mac7_a2  -0.2
+  mac7_d3  #15
+  mac7_a3  0.4
+  mac8_d1  #4
+  mac8_a1  -0.5
+  partials       50
+  tilt           -12 dB/oct
+  bandwidth      32 cents
+  bbandwidth     50 cents
+  shimmer        0.6
+  shimmerint     #1
+  detune         8 cents
+  drift          10 cents
+  width          0.85
+  cutoff         12000 Hz
+  ampattack      1.1 s
+  amprelease     3.2 s
+  volume         1.09
+
+# The same trick at a fifth, which does not fuse the way an octave does
+# - you hear two things, and the chord gets an extra note it was never
+# given.
+patch "Fifth Up" note=62 range=43..88 family=shimmer
+  partials       46
+  tilt           -10 dB/oct
+  bandwidth      26 cents
+  bbandwidth     45 cents
+  shimmer        0.5
+  shimmerint     #0
+  detune         7 cents
+  drift          8 cents
+  width          0.8
+  cutoff         11000 Hz
+  ampattack      0.9 s
+  amprelease     2.8 s
+  volume         0.96
+
+# Two octaves up and quiet, which is how you make a low pad sound large
+# without making it bright.
+patch "Two Octaves" note=57 range=40..84 family=shimmer
+  partials       58
+  tilt           -15 dB/oct
+  bandwidth      60 cents
+  bbandwidth     40 cents
+  shimmer        0.4
+  shimmerint     #3
+  detune         11 cents
+  drift          13 cents
+  driftrate      0.08 Hz
+  width          0.9
+  cutoff         6500 Hz
+  ampattack      1.8 s
+  amprelease     4 s
+  volume         0.85
+
+# --- dark --------------------------------------------------------
+
+# Low, narrow and almost nothing above the fifth partial. A pad that
+# occupies the bottom of a mix without any of it being a sine.
+patch "Sub Cloud" note=40 range=28..60 family=dark
+  partials       12
+  tilt           -20 dB/oct
+  bandwidth      9 cents
+  bbandwidth     25 cents
+  detune         5 cents
+  drift          4 cents
+  width          0.4
+  cutoff         1400 Hz
+  ampattack      0.8 s
+  amprelease     2.4 s
+  volume         0.51
+
+# The same register with the bands thrown open. It has no pitch to speak
+# of and is not supposed to - it is the low end moving.
+patch Undertow note=40 range=28..64 family=dark
+  partials       48
+  tilt           -19 dB/oct
+  bandwidth      230 cents
+  bbandwidth     -90 cents
+  bwscale        1.5
+  detune         17 cents
+  drift          22 cents
+  driftrate      0.035 Hz
+  width          1
+  cutoff         2400 Hz
+  ampattack      3 s
+  amprelease     6.5 s
+  spread         #2
+  volume         1.21
+
+# --- morph -------------------------------------------------------
+
+# Dark and narrow at the bottom of the keyboard, bright and smeared at
+# the top, on one patch. Key tracking drives the morph, so the left hand
+# and the right hand are playing two different instruments.
+patch "Morph Key" note=60 range=36..88 family=morph role=drone
+  partials       64
+  tilt           -16 dB/oct
+  bandwidth      16 cents
+  bbandwidth     180 cents
+  btilt          10 dB/oct
+  bodd           -0.3
+  morphkey       1
+  detune         9 cents
+  drift          10 cents
+  width          0.85
+  cutoff         9000 Hz
+  filterkey      0.6
+  ampattack      1 s
+  amprelease     3 s
+  volume         0.85
+
+# Thirty seconds from one spectrum to the other and back. Slower than
+# any phrase will show you, which is deliberate: it is meant to be
+# still moving when the piece ends.
+patch "Slow Turn" note=60 range=36..84 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Grit"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  1
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac2_d2  #20
+  mac2_a2  0.4
+  mac3_d1  #8
+  mac3_a1  0.4
+  mac3_d2  #9
+  mac3_a2  0.15
+  mac4_d1  #5
+  mac4_a1  0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #14
+  mac5_a2  0.2
+  mac6_d1  #12
+  mac6_a1  0.5
+  mac6_d2  #11
+  mac6_a2  0.4
+  mac7_d1  #17
+  mac7_a1  0.5
+  mac7_d2  #13
+  mac7_a2  -0.15
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       68
+  tilt           -12 dB/oct
+  bandwidth      50 cents
+  bbandwidth     120 cents
+  bstretch       0.014
+  btilt          6 dB/oct
+  bodd           -0.4
+  lfo1morph      1
+  lfo1rate       0.022 Hz
+  detune         11 cents
+  drift          14 cents
+  driftrate      0.045 Hz
+  width          0.9
+  cutoff         8200 Hz
+  ampattack      2.2 s
+  amprelease     4.5 s
+  spread         #2
+  volume         1.09
+
+# Two slow things at rates that do not divide into each other - the
+# morph on one, the filter on the other - so it never arrives at the
+# same place twice inside a piece.
+patch Breathing note=60 range=36..84 family=morph role=drone
+  partials       60
+  tilt           -13 dB/oct
+  bandwidth      70 cents
+  bbandwidth     -30 cents
+  bwscale        1.25
+  btilt          -5 dB/oct
+  lfo1morph      0.85
+  lfo1rate       0.037 Hz
+  lfo2wave       #0
+  lfo2rate       0.059 Hz
+  lfo2cutoff     0.5
+  detune         12 cents
+  drift          16 cents
+  driftrate      0.06 Hz
+  width          0.95
+  cutoff         5600 Hz
+  resonance      0.2
+  ampattack      2.6 s
+  amprelease     5.2 s
+  volume         0.87
+
+# Built to be held. The drift is wide, the rate is slow, the scatter is
+# full, and every voice starts somewhere else in a table a second and a
+# half long - so a chord is never the same cloud twice and never
+# settles.
+patch "Drone Field" note=45 range=33..72 family=morph role=drone
+  partials       88
+  tilt           -14 dB/oct
+  bandwidth      110 cents
+  bbandwidth     70 cents
+  bwscale        1.45
+  bstretch       0.008
+  btilt          3 dB/oct
+  lfo1morph      0.7
+  lfo1rate       0.028 Hz
+  scatter        1
+  detune         18 cents
+  drift          26 cents
+  driftrate      0.04 Hz
+  width          1
+  spread         #2
+  spreadwidth    1
+  cutoff         7000 Hz
+  ampattack      3.4 s
+  amprelease     7 s
+  volume         1.25
+
+# --- pluck -------------------------------------------------------
+
+# The whole cloud, given a hard attack and a short decay. A pad machine
+# playing something that is not a pad, which the envelope alone decides.
+patch "Spectral Pluck" note=60 range=40..84 family=pluck role=keys
+  partials       42
+  tilt           -10 dB/oct
+  bandwidth      16 cents
+  bbandwidth     70 cents
+  stretch        0.006
+  detune         6 cents
+  drift          4 cents
+  cutoff         11000 Hz
+  filterenv      0.5
+  filtdecay      0.6 s
+  filterkey      0.5
+  ampattack      0.002 s
+  ampdecay       1.1 s
+  ampsustain     0
+  amprelease     0.9 s
+  volume         1.25
+
+# Softer at the front and longer at the back, with the bands narrow
+# enough to keep the pitch clear under a fast passage.
+patch "Harp Cloud" note=64 range=43..88 family=pluck role=keys
+  partials       36
+  tilt           -11 dB/oct
+  bandwidth      11 cents
+  bbandwidth     45 cents
+  odd            0.58
+  detune         4 cents
+  drift          3 cents
+  width          0.7
+  cutoff         10000 Hz
+  ampattack      0.006 s
+  ampdecay       2.2 s
+  ampsustain     0.08
+  amprelease     2 s
+  volume         1.10
+
+# Struck strings with a little stretch on them and a lot of top. The
+# unison spread is what does the ringing, not a reverb.
+patch Cimbalom note=64 range=45..88 family=pluck role=keys
+  partials       52
+  tilt           -7 dB/oct
+  bandwidth      14 cents
+  bbandwidth     55 cents
+  stretch        0.012
+  detune         14 cents
+  spread         #2
+  spreadwidth    0.9
+  cutoff         14000 Hz
+  filterenv      0.35
+  ampattack      0.002 s
+  ampdecay       1.8 s
+  ampsustain     0.1
+  amprelease     2.4 s
+  volume         1.13
+
+# Stretch for the string and a comb for whatever has been laid across
+# it. Every note has a different set of partials missing because the
+# scallop is fixed in the spectrum while the note moves under it.
+patch "Prepared Piano" note=55 range=36..84 family=pluck role=keys
+  partials       48
+  tilt           -9 dB/oct
+  bandwidth      13 cents
+  bbandwidth     90 cents
+  stretch        0.02
+  comb           0.55
+  combperiod     3.5
+  bcomb          0.4
+  detune         7 cents
+  cutoff         12000 Hz
+  ampattack      0.003 s
+  ampdecay       2.4 s
+  ampsustain     0.12
+  amprelease     2.6 s
+  volume         1.50
+
+# --- bell --------------------------------------------------------
 
 # Partial n at n^1.032, which is what makes a bell a bell: the overtones
 # are sharp of harmonic and get sharper as they climb. Narrow bands so
@@ -391,7 +867,7 @@ patch "Music Box" note=84 range=60..103 family=bell role=bell
 # Stretch at the top of its travel with the bands wide open: the
 # partials are neither harmonic nor separable, which is the sound of a
 # large sheet of metal deciding what note it is.
-patch Gong note=45 range=33..72 family=gong role=bell
+patch Gong note=45 range=33..72 family=bell role=bell
   partials       80
   tilt           -8 dB/oct
   bandwidth      120 cents
@@ -413,7 +889,7 @@ patch Gong note=45 range=33..72 family=gong role=bell
 
 # The same idea with a scallop cut through it, so it rings in bands
 # instead of everywhere at once.
-patch "Sheet Metal" note=52 range=36..79 family=gong role=bell
+patch "Sheet Metal" note=52 range=36..79 family=bell role=bell
   partials       66
   tilt           -6 dB/oct
   bandwidth      60 cents
@@ -435,7 +911,7 @@ patch "Sheet Metal" note=52 range=36..79 family=gong role=bell
 # Stretch below zero, which nothing acoustic does: the partials crowd
 # *towards* the fundamental instead of away from it, and the result
 # sounds like a room rather than an instrument.
-patch Cavern note=45 range=33..72 family=gong
+patch Cavern note=45 range=33..72 family=bell
   partials       70
   tilt           -14 dB/oct
   bandwidth      140 cents
@@ -453,137 +929,7 @@ patch Cavern note=45 range=33..72 family=gong
   spread         #2
   volume         1.03
 
-# The whole cloud, given a hard attack and a short decay. A pad machine
-# playing something that is not a pad, which the envelope alone decides.
-patch "Spectral Pluck" note=60 range=40..84 family=pluck role=keys
-  partials       42
-  tilt           -10 dB/oct
-  bandwidth      16 cents
-  bbandwidth     70 cents
-  stretch        0.006
-  detune         6 cents
-  drift          4 cents
-  cutoff         11000 Hz
-  filterenv      0.5
-  filtdecay      0.6 s
-  filterkey      0.5
-  ampattack      0.002 s
-  ampdecay       1.1 s
-  ampsustain     0
-  amprelease     0.9 s
-  volume         1.25
-
-# Softer at the front and longer at the back, with the bands narrow
-# enough to keep the pitch clear under a fast passage.
-patch "Harp Cloud" note=64 range=43..88 family=pluck role=keys
-  partials       36
-  tilt           -11 dB/oct
-  bandwidth      11 cents
-  bbandwidth     45 cents
-  odd            0.58
-  detune         4 cents
-  drift          3 cents
-  width          0.7
-  cutoff         10000 Hz
-  ampattack      0.006 s
-  ampdecay       2.2 s
-  ampsustain     0.08
-  amprelease     2 s
-  volume         1.10
-
-# Struck strings with a little stretch on them and a lot of top. The
-# unison spread is what does the ringing, not a reverb.
-patch Cimbalom note=64 range=45..88 family=pluck role=keys
-  partials       52
-  tilt           -7 dB/oct
-  bandwidth      14 cents
-  bbandwidth     55 cents
-  stretch        0.012
-  detune         14 cents
-  spread         #2
-  spreadwidth    0.9
-  cutoff         14000 Hz
-  filterenv      0.35
-  ampattack      0.002 s
-  ampdecay       1.8 s
-  ampsustain     0.1
-  amprelease     2.4 s
-  volume         1.13
-
-# Stretch for the string and a comb for whatever has been laid across
-# it. Every note has a different set of partials missing because the
-# scallop is fixed in the spectrum while the note moves under it.
-patch "Prepared Piano" note=55 range=36..84 family=pluck role=keys
-  partials       48
-  tilt           -9 dB/oct
-  bandwidth      13 cents
-  bbandwidth     90 cents
-  stretch        0.02
-  comb           0.55
-  combperiod     3.5
-  bcomb          0.4
-  detune         7 cents
-  cutoff         12000 Hz
-  ampattack      0.003 s
-  ampdecay       2.4 s
-  ampsustain     0.12
-  amprelease     2.6 s
-  volume         1.50
-
-# Odd partials only, which is a tube stopped at one end - and the
-# second spectrum puts the even ones back, so the morph opens it from
-# a clarinet into something whole.
-patch Hollow note=60 range=36..84 family=hollow
-  partials       40
-  tilt           -11 dB/oct
-  bandwidth      30 cents
-  bbandwidth     70 cents
-  odd            1
-  bodd           -0.6
-  comb           0.55
-  bcomb          -0.5
-  detune         5 cents
-  cutoff         7000 Hz
-  ampattack      0.9 s
-  amprelease     2.4 s
-  volume         0.86
-
-# Odd-heavy with a vowel over it: reedy in both senses, and neither of
-# them is a filter.
-patch "Reed Bed" note=57 range=40..81 family=hollow
-  partials       38
-  tilt           -10 dB/oct
-  bandwidth      24 cents
-  bbandwidth     50 cents
-  odd            0.88
-  vowel          0.35
-  vowelamount    0.6
-  bodd           -0.3
-  detune         9 cents
-  drift          11 cents
-  width          0.75
-  cutoff         6800 Hz
-  ampattack      0.6 s
-  amprelease     2 s
-  volume         1.31
-
-# Narrow bands, odd partials, almost no drift: as close as this machine
-# gets to standing still, which against everything else in the bank is
-# its own kind of effect.
-patch "Pipe Cloud" note=64 range=43..88 family=hollow
-  partials       30
-  tilt           -9 dB/oct
-  bandwidth      6 cents
-  bbandwidth     20 cents
-  odd            0.92
-  detune         2 cents
-  drift          2 cents
-  driftrate      0.05 Hz
-  width          0.5
-  cutoff         9000 Hz
-  ampattack      0.25 s
-  amprelease     1.2 s
-  volume         0.86
+# --- comb --------------------------------------------------------
 
 # A scallop three partials wide cut through a plain spectrum. It is a
 # phaser's shape without a phaser's motion - the notches are *in the
@@ -643,185 +989,3 @@ patch Scallop note=64 range=43..88 family=comb
   ampattack      0.7 s
   amprelease     2.2 s
   volume         1.05
-
-# A second reader an octave up, out of the same table. Not a pitch
-# shifter and not a delay - the octave is the same cloud, so it drifts
-# with it instead of against it.
-patch "Shimmer Pad" note=62 range=43..88 family=shimmer
-  partials       50
-  tilt           -12 dB/oct
-  bandwidth      32 cents
-  bbandwidth     50 cents
-  shimmer        0.6
-  shimmerint     #1
-  detune         8 cents
-  drift          10 cents
-  width          0.85
-  cutoff         12000 Hz
-  ampattack      1.1 s
-  amprelease     3.2 s
-  volume         1.09
-
-# The same trick at a fifth, which does not fuse the way an octave does
-# - you hear two things, and the chord gets an extra note it was never
-# given.
-patch "Fifth Up" note=62 range=43..88 family=shimmer
-  partials       46
-  tilt           -10 dB/oct
-  bandwidth      26 cents
-  bbandwidth     45 cents
-  shimmer        0.5
-  shimmerint     #0
-  detune         7 cents
-  drift          8 cents
-  width          0.8
-  cutoff         11000 Hz
-  ampattack      0.9 s
-  amprelease     2.8 s
-  volume         0.96
-
-# Two octaves up and quiet, which is how you make a low pad sound large
-# without making it bright.
-patch "Two Octaves" note=57 range=40..84 family=shimmer
-  partials       58
-  tilt           -15 dB/oct
-  bandwidth      60 cents
-  bbandwidth     40 cents
-  shimmer        0.4
-  shimmerint     #3
-  detune         11 cents
-  drift          13 cents
-  driftrate      0.08 Hz
-  width          0.9
-  cutoff         6500 Hz
-  ampattack      1.8 s
-  amprelease     4 s
-  volume         0.85
-
-# Dark and narrow at the bottom of the keyboard, bright and smeared at
-# the top, on one patch. Key tracking drives the morph, so the left hand
-# and the right hand are playing two different instruments.
-patch "Morph Key" note=60 range=36..88 family=morph role=drone
-  partials       64
-  tilt           -16 dB/oct
-  bandwidth      16 cents
-  bbandwidth     180 cents
-  btilt          10 dB/oct
-  bodd           -0.3
-  morphkey       1
-  detune         9 cents
-  drift          10 cents
-  width          0.85
-  cutoff         9000 Hz
-  filterkey      0.6
-  ampattack      1 s
-  amprelease     3 s
-  volume         0.85
-
-# Thirty seconds from one spectrum to the other and back. Slower than
-# any phrase will show you, which is deliberate: it is meant to be
-# still moving when the piece ends.
-patch "Slow Turn" note=60 range=36..84 family=morph role=drone
-  partials       68
-  tilt           -12 dB/oct
-  bandwidth      50 cents
-  bbandwidth     120 cents
-  bstretch       0.014
-  btilt          6 dB/oct
-  bodd           -0.4
-  lfo1morph      1
-  lfo1rate       0.022 Hz
-  detune         11 cents
-  drift          14 cents
-  driftrate      0.045 Hz
-  width          0.9
-  cutoff         8200 Hz
-  ampattack      2.2 s
-  amprelease     4.5 s
-  spread         #2
-  volume         1.09
-
-# Two slow things at rates that do not divide into each other - the
-# morph on one, the filter on the other - so it never arrives at the
-# same place twice inside a piece.
-patch Breathing note=60 range=36..84 family=morph role=drone
-  partials       60
-  tilt           -13 dB/oct
-  bandwidth      70 cents
-  bbandwidth     -30 cents
-  bwscale        1.25
-  btilt          -5 dB/oct
-  lfo1morph      0.85
-  lfo1rate       0.037 Hz
-  lfo2wave       #0
-  lfo2rate       0.059 Hz
-  lfo2cutoff     0.5
-  detune         12 cents
-  drift          16 cents
-  driftrate      0.06 Hz
-  width          0.95
-  cutoff         5600 Hz
-  resonance      0.2
-  ampattack      2.6 s
-  amprelease     5.2 s
-  volume         0.87
-
-# Built to be held. The drift is wide, the rate is slow, the scatter is
-# full, and every voice starts somewhere else in a table a second and a
-# half long - so a chord is never the same cloud twice and never
-# settles.
-patch "Drone Field" note=45 range=33..72 family=morph role=drone
-  partials       88
-  tilt           -14 dB/oct
-  bandwidth      110 cents
-  bbandwidth     70 cents
-  bwscale        1.45
-  bstretch       0.008
-  btilt          3 dB/oct
-  lfo1morph      0.7
-  lfo1rate       0.028 Hz
-  scatter        1
-  detune         18 cents
-  drift          26 cents
-  driftrate      0.04 Hz
-  width          1
-  spread         #2
-  spreadwidth    1
-  cutoff         7000 Hz
-  ampattack      3.4 s
-  amprelease     7 s
-  volume         1.25
-
-# Low, narrow and almost nothing above the fifth partial. A pad that
-# occupies the bottom of a mix without any of it being a sine.
-patch "Sub Cloud" note=40 range=28..60 family=dark
-  partials       12
-  tilt           -20 dB/oct
-  bandwidth      9 cents
-  bbandwidth     25 cents
-  detune         5 cents
-  drift          4 cents
-  width          0.4
-  cutoff         1400 Hz
-  ampattack      0.8 s
-  amprelease     2.4 s
-  volume         0.51
-
-# The same register with the bands thrown open. It has no pitch to speak
-# of and is not supposed to - it is the low end moving.
-patch Undertow note=40 range=28..64 family=dark
-  partials       48
-  tilt           -19 dB/oct
-  bandwidth      230 cents
-  bbandwidth     -90 cents
-  bwscale        1.5
-  detune         17 cents
-  drift          22 cents
-  driftrate      0.035 Hz
-  width          1
-  cutoff         2400 Hz
-  ampattack      3 s
-  amprelease     6.5 s
-  spread         #2
-  volume         1.21
-
