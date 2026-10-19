@@ -4122,7 +4122,7 @@ internal object FactoryBanks {
         family = "lead",
         low = 48, high = 88)
 
-    private fun formulate3() = Patch("Formulate", "Eighth Pulse",
+    private fun formulate3() = Patch("Formulate", "Thin Pulse",
         mapOf("duty" to 0.125f, "ampattack" to 0.07712607f, "ampdecay" to 0.554957747f, "ampsustain" to 0.65f, "amprelease" to 0.281852722f, "mono" to 1f, "volume" to 0.75333333f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.03846154f, "mac2_a1" to 0.6875f, "mac3_d1" to 0.07692308f, "mac3_d2" to 0.115384616f, "mac3_a1" to 0.6f, "mac3_a2" to 0.65f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.65f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.375f, "mac5_a2" to 0.4f, "mac6_d1" to 0.846153855f, "mac6_a1" to 0.575f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Wide", "macro3" to "Wobble", "macro4" to "Crunch", "macro5" to "Short", "macro6" to "Glide", "macro7" to "Drive", "macro8" to "Octave"),
         family = "lead",
@@ -4134,7 +4134,7 @@ internal object FactoryBanks {
         family = "lead",
         low = 48, high = 88)
 
-    private fun formulate5() = Patch("Formulate", "PWM Lead",
+    private fun formulate5() = Patch("Formulate", "Swirl Lead",
         mapOf("duty" to 0.4f, "pwmdepth" to 0.44f, "pwmrate" to 0.784529448f, "ampattack" to 0.07712607f, "ampdecay" to 0.5939509f, "ampsustain" to 0.75f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.52f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.625f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.65f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.375f, "mac5_a2" to 0.4f, "mac6_d1" to 0.846153855f, "mac6_a1" to 0.575f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Depth", "macro3" to "Rate", "macro4" to "Crunch", "macro5" to "Short", "macro6" to "Glide", "macro7" to "Drive", "macro8" to "Octave"),
         family = "lead",
@@ -4161,19 +4161,19 @@ internal object FactoryBanks {
         inserts = listOf(UnitSlot("Delay", mapOf("tone" to 0.63264513f, "mix" to 0.3f))),
         sendReverb = 0.1f, sendDelay = 0f)
 
-    private fun formulate9() = Patch("Formulate", "Saw Lead",
+    private fun formulate9() = Patch("Formulate", "Chip Saw",
         mapOf("wave" to 0.5f, "cutoff" to 0.8578259f, "ampattack" to 0.07712607f, "ampdecay" to 0.624196351f, "ampsustain" to 0.7f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.8866667f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.35f, "mac1_a2" to 0.575f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.75f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.230769232f, "mac3_a1" to 0.25f, "mac3_a2" to 0.65f, "mac4_d1" to 0.269230783f, "mac4_a1" to 0.7f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.375f, "mac5_a2" to 0.4f, "mac6_d1" to 0.846153855f, "mac6_a1" to 0.575f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Sub", "macro3" to "Crunch", "macro4" to "Soft", "macro5" to "Short", "macro6" to "Glide", "macro7" to "Drive", "macro8" to "Octave"),
         family = "lead",
         low = 45, high = 84)
 
-    private fun formulate10() = Patch("Formulate", "Two Bit",
+    private fun formulate10() = Patch("Formulate", "Four Level",
         mapOf("bits" to 0.142857149f, "ampattack" to 0.07712607f, "ampdecay" to 0.6489087f, "ampsustain" to 0.7f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.66f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.03846154f, "mac2_a1" to 0.35f, "mac3_d1" to 0.07692308f, "mac3_d2" to 0.115384616f, "mac3_a1" to 0.625f, "mac3_a2" to 0.65f, "mac4_d1" to 0.1923077f, "mac4_a1" to 0.8f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.375f, "mac6_a2" to 0.4f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Thin", "macro3" to "Wobble", "macro4" to "Clean", "macro5" to "Crush", "macro6" to "Short", "macro7" to "Drive", "macro8" to "Octave"),
         family = "lead",
         low = 45, high = 84)
 
-    private fun formulate11() = Patch("Formulate", "One Bit",
+    private fun formulate11() = Patch("Formulate", "Single Bit",
         mapOf("wave" to 0.25f, "bits" to 0f, "cutoff" to 0.807388842f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "amprelease" to 0.3368105f, "mono" to 1f, "volume" to 0.946666658f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.35f, "mac1_a2" to 0.575f, "mac2_d1" to 0.1923077f, "mac2_a1" to 0.75f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.675f, "mac4_d1" to 0.269230783f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.375f, "mac5_a2" to 0.4f, "mac6_d1" to 0.846153855f, "mac6_a1" to 0.575f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Clean", "macro3" to "Crush", "macro4" to "Soft", "macro5" to "Short", "macro6" to "Glide", "macro7" to "Drive", "macro8" to "Octave"),
         family = "lead",
@@ -4203,7 +4203,7 @@ internal object FactoryBanks {
         family = "bass",
         low = 24, high = 55)
 
-    private fun formulate16() = Patch("Formulate", "Sub Bass",
+    private fun formulate16() = Patch("Formulate", "Octave Sub",
         mapOf("wave" to 0.25f, "sub" to 0.85f, "cutoff" to 0.6314876f, "ampdecay" to 0.8120982f, "ampsustain" to 0.9f, "amprelease" to 0.4060491f, "mono" to 1f, "volume" to 0.960000038f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.65f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.1923077f, "mac3_a1" to 0.25f, "mac4_d1" to 0.230769232f, "mac4_a1" to 0.7f, "mac5_d1" to 0.846153855f, "mac5_a1" to 0.56f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
         mapOf("macro1" to "Tone", "macro2" to "Lift", "macro3" to "Grit", "macro4" to "Crush", "macro5" to "Glide", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Drop"),
         family = "bass",
@@ -4268,75 +4268,83 @@ internal object FactoryBanks {
         mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.34116134f, "resonance" to 0.35f, "ampattack" to 0f, "ampdecay" to 0.469754547f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "drive" to 0.4f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.6f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.7f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Ring", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive"),
         family = "drum",
-        low = 24, high = 55)
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.6166667f))))
 
     private fun formulate27() = Patch("Formulate", "Pitch Kick",
         mapOf("wave" to 0.25f, "framerate" to 1f, "ampattack" to 0f, "ampdecay" to 0.5302454f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "drive" to 0.3f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Rate", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive", "arp" to "36 28 22 17 13 10 7 5 3 2 1 0 |"),
         family = "drum",
-        low = 24, high = 55)
+        low = 24, high = 55,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.639583349f))))
 
     private fun formulate28() = Patch("Formulate", "Noise Snare",
         mapOf("wave" to 0.75f, "framerate" to 0.85521704f, "ampattack" to 0f, "ampdecay" to 0.554957747f, "ampsustain" to 0f, "amprelease" to 0.312098175f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.5f, "mac4_d2" to 0.7692308f, "mac4_a1" to 0.4f, "mac4_a2" to 0.575f, "mac5_d1" to 0.1923077f, "mac5_a1" to 0.25f, "mac6_d1" to 0.230769232f, "mac6_a1" to 0.7f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.75f, "mac7_a2" to 0.45f, "mac8_d1" to 0.5f, "mac8_a1" to 0.6f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Grit", "macro6" to "Crush", "macro7" to "Drive", "macro8" to "Short", "vol" to "255 190 120 70 40 20 8 0 |"),
         family = "drum",
-        low = 36, high = 72)
+        low = 36, high = 72,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.53125f))))
 
     private fun formulate29() = Patch("Formulate", "Tight Snare",
         mapOf("wave" to 0.75f, "framerate" to 0.939909637f, "cutoff" to 0.83441484f, "resonance" to 0.2f, "ampattack" to 0f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.5f, "mac4_d2" to 0.7692308f, "mac4_a1" to 0.4f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Ring", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive", "arp" to "12 5 0 -5 -12 |", "vol" to "255 220 160 110 70 40 20 8 0 |"),
         family = "drum",
-        low = 36, high = 72)
+        low = 36, high = 72,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.566666663f))))
 
     private fun formulate30() = Patch("Formulate", "Noise Hat",
-        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.955938935f, "ampattack" to 0f, "ampdecay" to 0.3368105f, "ampsustain" to 0f, "amprelease" to 0.187901825f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.375f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
+        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.955938935f, "ampattack" to 0f, "ampdecay" to 0.3368105f, "ampsustain" to 0f, "amprelease" to 0.187901825f, "volume" to 0.913333356f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.375f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Ring", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive"),
         family = "drum",
         low = 48, high = 84)
 
     private fun formulate31() = Patch("Formulate", "Open Hat",
-        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.942946255f, "ampattack" to 0f, "ampdecay" to 0.609915555f, "ampsustain" to 0f, "amprelease" to 0.4060491f, "volume" to 0.49333334f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.375f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
+        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.942946255f, "ampattack" to 0f, "ampdecay" to 0.609915555f, "ampsustain" to 0f, "amprelease" to 0.4060491f, "volume" to 0.8333333f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.375f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Ring", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive"),
         family = "drum",
         low = 48, high = 84)
 
     private fun formulate32() = Patch("Formulate", "Rack Tom",
-        mapOf("wave" to 0.25f, "framerate" to 0.85521704f, "ampattack" to 0f, "ampdecay" to 0.5758517f, "ampsustain" to 0f, "amprelease" to 0.312098175f, "volume" to 0.933333337f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
+        mapOf("wave" to 0.25f, "framerate" to 0.85521704f, "ampattack" to 0f, "ampdecay" to 0.5758517f, "ampsustain" to 0f, "amprelease" to 0.312098175f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Rate", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive", "arp" to "12 9 7 5 3 2 1 0 |"),
         family = "drum",
-        low = 40, high = 64)
+        low = 40, high = 64,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.575f))))
 
     private fun formulate33() = Patch("Formulate", "Floor Tom",
         mapOf("wave" to 0.25f, "sub" to 0.3f, "ampattack" to 0f, "ampdecay" to 0.624196351f, "ampsustain" to 0f, "amprelease" to 0.3368105f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Rate", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive", "arp" to "12 9 7 5 4 3 2 1 0 |"),
         family = "drum",
-        low = 31, high = 55)
+        low = 31, high = 55,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.558333337f))))
 
     private fun formulate34() = Patch("Formulate", "Clap",
-        mapOf("wave" to 0.75f, "framerate" to 1f, "cutoff" to 0.65389967f, "resonance" to 0.4f, "ampattack" to 0f, "ampdecay" to 0.554957747f, "ampsustain" to 0f, "amprelease" to 0.312098175f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.5f, "mac4_d2" to 0.7692308f, "mac4_a1" to 0.4f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
+        mapOf("wave" to 0.75f, "framerate" to 1f, "cutoff" to 0.65389967f, "resonance" to 0.4f, "ampattack" to 0f, "ampdecay" to 0.554957747f, "ampsustain" to 0f, "amprelease" to 0.312098175f, "volume" to 0.786666632f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.5f, "mac4_d2" to 0.7692308f, "mac4_a1" to 0.4f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.7f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Ring", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive", "vol" to "255 0 0 230 0 0 210 150 110 80 55 35 20 10 0 |"),
         family = "drum",
         low = 48, high = 72,
         sendReverb = 0.15f, sendDelay = 0f)
 
     private fun formulate35() = Patch("Formulate", "Metal Hit",
-        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.6858647f, "resonance" to 0.7f, "ampattack" to 0f, "ampdecay" to 0.624196351f, "ampsustain" to 0f, "volume" to 0.393333316f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.625f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
+        mapOf("wave" to 0.75f, "noiseshort" to 1f, "cutoff" to 0.6858647f, "resonance" to 0.7f, "ampattack" to 0f, "ampdecay" to 0.624196351f, "ampsustain" to 0f, "volume" to 0.42f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5769231f, "mac5_a1" to 0.625f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.25f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Ring", "macro6" to "Grit", "macro7" to "Crush", "macro8" to "Drive"),
         family = "drum",
         low = 48, high = 84,
         sendReverb = 0.1f, sendDelay = 0f)
 
     private fun formulate36() = Patch("Formulate", "Laser Zap",
-        mapOf("duty" to 0.25f, "framerate" to 1f, "ampattack" to 0f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "volume" to 0.6666667f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.03846154f, "mac6_a1" to 0.435f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
+        mapOf("duty" to 0.25f, "framerate" to 1f, "ampattack" to 0f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.03846154f, "mac6_a1" to 0.435f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Rate", "macro6" to "Thin", "macro7" to "Crush", "macro8" to "Drive", "arp" to "36 31 26 22 18 14 11 8 5 3 1 0 |"),
         family = "drum",
-        low = 48, high = 84)
+        low = 48, high = 84,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.537499964f))))
 
     private fun formulate37() = Patch("Formulate", "Glitch Hit",
-        mapOf("wave" to 0.75f, "bits" to 0.2857143f, "crush" to 0.264160424f, "framerate" to 1f, "ampattack" to 0f, "ampdecay" to 0.485719174f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "volume" to 0.766666651f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.7f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
+        mapOf("wave" to 0.75f, "bits" to 0.2857143f, "crush" to 0.264160424f, "framerate" to 1f, "ampattack" to 0f, "ampdecay" to 0.485719174f, "ampsustain" to 0f, "amprelease" to 0.281852722f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 1f, "mac3_a1" to 0.375f, "mac4_d1" to 0.7692308f, "mac4_d2" to 0.8076923f, "mac4_a1" to 0.575f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5f, "mac5_a1" to 0.4f, "mac6_d1" to 0.1923077f, "mac6_a1" to 0.7f, "mac7_d1" to 0.230769232f, "mac7_a1" to 0.7f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
         mapOf("macro1" to "Tone", "macro2" to "Tune", "macro3" to "Drop", "macro4" to "Length", "macro5" to "Rate", "macro6" to "Clean", "macro7" to "Crush", "macro8" to "Drive", "arp" to "24 -12 31 0 19 -7 12"),
         family = "drum",
-        low = 48, high = 72)
+        low = 48, high = 72,
+        inserts = listOf(UnitSlot("Eq", mapOf("gain" to 0.545833349f))))
 
     private fun formulate38() = Patch("Formulate", "Triangle Pad",
         mapOf("wave" to 0.25f, "ampattack" to 0.7437927f, "ampdecay" to 0.773105f, "ampsustain" to 0.85f, "amprelease" to 0.6879018f, "volume" to 0.66f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.35f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.75f, "mac3_d1" to 0.1923077f, "mac3_a1" to 0.275f, "mac4_d1" to 0.230769232f, "mac4_a1" to 0.65f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7307692f, "mac6_a1" to 0.56f, "mac7_d1" to 0.8076923f, "mac7_a1" to 0.575f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.45f),
@@ -4437,7 +4445,7 @@ internal object FactoryBanks {
         low = 48, high = 88,
         sendReverb = 0.15f, sendDelay = 0f)
 
-    private fun formulate52() = Patch("Formulate", "Echo Pluck",
+    private fun formulate52() = Patch("Formulate", "Frame Echo",
         mapOf("duty" to 0.25f, "framerate" to 0.7104341f, "ampattack" to 0.07712607f, "ampdecay" to 0.9060491f, "ampsustain" to 1f, "amprelease" to 0.312098175f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 0.03846154f, "mac2_a1" to 0.435f, "mac3_d1" to 0.5f, "mac3_a1" to 0.375f, "mac4_d1" to 0.07692308f, "mac4_d2" to 0.115384616f, "mac4_a1" to 0.7f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1923077f, "mac5_d2" to 0.230769232f, "mac5_a1" to 0.25f, "mac5_a2" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Thin", "macro3" to "Slow", "macro4" to "Wobble", "macro5" to "Crunch", "macro6" to "Sub", "macro7" to "Drive", "macro8" to "Octave", "vol" to "255 90 0 0 200 60 0 0 150 40 0 0 100 25 0 0 60 12 0 0 |"),
         family = "arp",
@@ -4531,7 +4539,7 @@ internal object FactoryBanks {
         family = "shape",
         low = 45, high = 84)
 
-    private fun formulate67() = Patch("Formulate", "Fold Back",
+    private fun formulate67() = Patch("Formulate", "Fold Over",
         mapOf("wave" to 0.25f, "formula" to 1f, "cutoff" to 0.8969479f, "ampattack" to 0.07712607f, "ampdecay" to 0.6879018f, "ampsustain" to 0.7f, "volume" to 0.74666667f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 0.538461566f, "mac2_d2" to 0.5769231f, "mac2_a1" to 0.375f, "mac2_a2" to 0.8f, "mac3_d1" to 0.269230783f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.199999988f, "mac5_d1" to 0.1923077f, "mac5_d2" to 0.230769232f, "mac5_a1" to 0.25f, "mac5_a2" to 0.625f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Peak", "macro3" to "Smooth", "macro4" to "Plain", "macro5" to "Crunch", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Octave", "formula" to "abs(x - 128) * 2"),
         family = "shape",
@@ -4604,7 +4612,7 @@ internal object FactoryBanks {
         family = "formula",
         low = 40, high = 79)
 
-    private fun formulate79() = Patch("Formulate", "Crunch",
+    private fun formulate79() = Patch("Formulate", "Byte Crunch",
         mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.8784759f, "ampattack" to 0.07712607f, "ampdecay" to 0.7428596f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "volume" to 0.8066667f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 0.538461566f, "mac2_d2" to 0.5769231f, "mac2_a1" to 0.375f, "mac2_a2" to 0.8f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.615384638f, "mac3_a1" to 0.325f, "mac3_a2" to 0.65f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Peak", "macro3" to "Pluck", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(t * (((t >> 16 | t >> 14) & 7) | 1)) & 255"),
         family = "formula",
@@ -4616,7 +4624,7 @@ internal object FactoryBanks {
         family = "formula",
         low = 45, high = 84)
 
-    private fun formulate81() = Patch("Formulate", "Dice",
+    private fun formulate81() = Patch("Formulate", "Held Steps",
         mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.83441484f, "resonance" to 0.3f, "ampattack" to 0.07712607f, "ampdecay" to 0.624196351f, "ampsustain" to 0.4f, "volume" to 1f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 0.538461566f, "mac2_d2" to 0.5769231f, "mac2_a1" to 0.375f, "mac2_a2" to 0.8f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.615384638f, "mac3_a1" to 0.325f, "mac3_a2" to 0.65f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Tone", "macro2" to "Peak", "macro3" to "Pluck", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(((t >> 5) & 7) * 97) & 255"),
         family = "formula",
@@ -4629,8 +4637,8 @@ internal object FactoryBanks {
         low = 45, high = 84)
 
     private fun formulate83() = Patch("Formulate", "Two Sines",
-        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "ampattack" to 0.5124145f, "ampdecay" to 0.7428596f, "amprelease" to 0.5302454f, "volume" to 0.6333333f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 0.1923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.65f, "mac4_d1" to 0.7307692f, "mac4_a1" to 0.725f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.35f, "mac5_a2" to 0.4f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Tone", "macro2" to "Grit", "macro3" to "Crush", "macro4" to "Swell", "macro5" to "Short", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Octave", "formula" to "sin(t) + (sin(t * 2) >> 1) + 128"),
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "ampattack" to 0.5124145f, "ampdecay" to 0.7428596f, "amprelease" to 0.5302454f, "volume" to 0.960000038f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 0.1923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.65f, "mac4_d1" to 0.7307692f, "mac4_a1" to 0.725f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.35f, "mac5_a2" to 0.4f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Grit", "macro3" to "Crush", "macro4" to "Swell", "macro5" to "Short", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(sin(t) * 5 >> 3) + (sin(t * 2) * 5 >> 4) + 128"),
         family = "formula",
         low = 40, high = 84)
 
@@ -4647,31 +4655,72 @@ internal object FactoryBanks {
         family = "formula",
         low = 45, high = 84)
 
-    private fun formulate86() = Patch("Formulate", "Table Ring",
-        mapOf("formula" to 1f, "formulamode" to 0.5f, "framerate" to 0.723914742f, "ampattack" to 0.07712607f, "ampdecay" to 0.7428596f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.859999955f),
-        mapOf("formula" to "((s & 3) * 60 + 90) & 255", "arp" to "0 4 7 12", "duty" to "64 96 128 160"),
+    private fun formulate86() = Patch("Formulate", "Sine Blend",
+        mapOf("formula" to 1f, "timescale" to 0.204828769f, "b" to 0.5019608f, "framerate" to 0.6723512f, "ampdecay" to 0.6879018f, "ampsustain" to 0.7f, "amprelease" to 0.46100685f, "volume" to 0.66f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.423076928f, "mac2_a1" to 0.7f, "mac3_d1" to 0.03846154f, "mac3_a1" to 0.35f, "mac4_d1" to 0.07692308f, "mac4_d2" to 0.115384616f, "mac4_a1" to 0.7f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1923077f, "mac5_d2" to 0.230769232f, "mac5_a1" to 0.25f, "mac5_a2" to 0.625f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.35f, "mac6_a2" to 0.4f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Blend", "macro3" to "Width", "macro4" to "Wobble", "macro5" to "Crunch", "macro6" to "Short", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(x * b + (sin(t) + 128) * (255 - b)) >> 8", "duty" to "128 112 96 80 64 48 |"),
+        family = "hybrid",
+        low = 45, high = 84,
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun formulate87() = Patch("Formulate", "Frame Octave",
+        mapOf("duty" to 0.25f, "formula" to 1f, "timescale" to 0.204828769f, "framerate" to 0.5791318f, "ampdecay" to 0.6489087f, "ampsustain" to 0.65f, "amprelease" to 0.4307614f, "volume" to 0.72f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.5f, "mac2_a1" to 0.65f, "mac3_d1" to 0.03846154f, "mac3_a1" to 0.425f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.35f, "mac6_a2" to 0.4f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Rate", "macro3" to "Thin", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Short", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(x >> 1) + ((sin(t << (s & 1)) + 128) >> 1)"),
+        family = "hybrid",
+        low = 45, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun formulate88() = Patch("Formulate", "Table Ring",
+        mapOf("formula" to 1f, "formulamode" to 0.5f, "framerate" to 0.723914742f, "ampattack" to 0.07712607f, "ampdecay" to 0.7428596f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.859999955f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.307692319f, "mac2_a1" to 0.25f, "mac3_d1" to 0.5f, "mac3_a1" to 0.65f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.35f, "mac6_a2" to 0.4f, "mac7_d1" to 0.846153855f, "mac7_a1" to 0.575f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.8f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Tone", "macro2" to "Ring", "macro3" to "Rate", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Short", "macro7" to "Glide", "macro8" to "Drive", "formula" to "((s & 3) * 60 + 90) & 255", "arp" to "0 4 7 12", "duty" to "64 96 128 160"),
         family = "hybrid",
         low = 45, high = 84)
 
-    private fun formulate87() = Patch("Formulate", "Macro Morph",
+    private fun formulate89() = Patch("Formulate", "Macro Morph",
         mapOf("duty" to 0.375f, "formula" to 1f, "timescale" to 0.204828769f, "a" to 0.2509804f, "b" to 0.627451f, "c" to 0.3764706f, "ampattack" to 0.07712607f, "ampdecay" to 0.7181473f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "volume" to 0.68f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.423076928f, "mac2_a1" to 0.3f, "mac3_d1" to 0.461538464f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.3f, "mac5_d1" to 0.1923077f, "mac5_d2" to 0.230769232f, "mac5_a1" to 0.25f, "mac5_a2" to 0.625f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.199999988f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Shape", "macro2" to "Chip", "macro3" to "Fold", "macro4" to "Tone", "macro5" to "Crunch", "macro6" to "Plain", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(x * b >> 8) + (sin(t * (a >> 5) + c) >> 1) & 255"),
         family = "hybrid",
         low = 45, high = 84)
 
-    private fun formulate88() = Patch("Formulate", "Keyed Chaos",
-        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.8969479f, "ampattack" to 0.07712607f, "ampdecay" to 0.7181473f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.813333333f),
-        mapOf("formula" to "(t & 255) ^ (f & 255)"),
-        family = "hybrid",
-        low = 36, high = 84)
-
-    private fun formulate89() = Patch("Formulate", "Crush Formula",
-        mapOf("wave" to 1f, "bits" to 0.2857143f, "crush" to 0.597493768f, "formula" to 1f, "timescale" to 0.204828769f, "smooth" to 0.2f, "ampattack" to 0.07712607f, "ampdecay" to 0.731065869f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "drive" to 0.3f, "volume" to 0.406666666f),
-        mapOf("formula" to "(t & 255) ^ (t >> 9 & 48)"),
+    private fun formulate90() = Patch("Formulate", "Fold Clock",
+        mapOf("wave" to 0.25f, "formula" to 1f, "framerate" to 0.7104341f, "ampdecay" to 0.773105f, "amprelease" to 0.46100685f, "volume" to 0.733333349f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.461538464f, "mac2_a1" to 0.75f, "mac3_d1" to 0.5f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.35f, "mac6_a2" to 0.4f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Fold", "macro3" to "Speed", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Short", "macro7" to "Drive", "macro8" to "Octave", "formula" to "min(abs((((x - 128) * (16 + (min(s, 48) * c >> 5)) >> 4) + 128 & 511) - 256), 255)"),
         family = "hybrid",
         low = 40, high = 79)
 
-    private val formulate: List<Patch> by lazy { listOf(formulate0(), formulate1(), formulate2(), formulate3(), formulate4(), formulate5(), formulate6(), formulate7(), formulate8(), formulate9(), formulate10(), formulate11(), formulate12(), formulate13(), formulate14(), formulate15(), formulate16(), formulate17(), formulate18(), formulate19(), formulate20(), formulate21(), formulate22(), formulate23(), formulate24(), formulate25(), formulate26(), formulate27(), formulate28(), formulate29(), formulate30(), formulate31(), formulate32(), formulate33(), formulate34(), formulate35(), formulate36(), formulate37(), formulate38(), formulate39(), formulate40(), formulate41(), formulate42(), formulate43(), formulate44(), formulate45(), formulate46(), formulate47(), formulate48(), formulate49(), formulate50(), formulate51(), formulate52(), formulate53(), formulate54(), formulate55(), formulate56(), formulate57(), formulate58(), formulate59(), formulate60(), formulate61(), formulate62(), formulate63(), formulate64(), formulate65(), formulate66(), formulate67(), formulate68(), formulate69(), formulate70(), formulate71(), formulate72(), formulate73(), formulate74(), formulate75(), formulate76(), formulate77(), formulate78(), formulate79(), formulate80(), formulate81(), formulate82(), formulate83(), formulate84(), formulate85(), formulate86(), formulate87(), formulate88(), formulate89()) }
+    private fun formulate91() = Patch("Formulate", "Three on Four",
+        mapOf("wave" to 0.5f, "formula" to 1f, "framerate" to 0.6257415f, "cutoff" to 0.83441484f, "ampdecay" to 0.624196351f, "ampsustain" to 0.6f, "amprelease" to 0.4060491f, "volume" to 0.94f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.5f, "mac2_a1" to 0.65f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.199999988f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.35f, "mac6_a2" to 0.4f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Rate", "macro3" to "Mix", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Short", "macro7" to "Drive", "macro8" to "Octave", "formula" to "x ^ ((s & 3) << 6)", "arp" to "0 7 12"),
+        family = "hybrid",
+        low = 45, high = 84,
+        inserts = listOf(UnitSlot("Delay", mapOf("feedback" to 0.3157895f, "tone" to 0.63264513f, "mix" to 0.2f))))
+
+    private fun formulate92() = Patch("Formulate", "Overtone Ring",
+        mapOf("formula" to 1f, "formulamode" to 0.5f, "timescale" to 0.204828769f, "smooth" to 0.2f, "framerate" to 0.6638244f, "ampdecay" to 0.6698026f, "ampsustain" to 0.6f, "amprelease" to 0.4060491f, "volume" to 0.859999955f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.5f, "mac2_a1" to 0.65f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.25f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.35f, "mac6_a2" to 0.4f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Rate", "macro3" to "Ring", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Short", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(t * ((s >> 1) % 5 + 1)) & 255", "arp" to "0 7"),
+        family = "hybrid",
+        low = 45, high = 84,
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun formulate93() = Patch("Formulate", "Dropout",
+        mapOf("formula" to 1f, "formulamode" to 0.75f, "framerate" to 0.5656512f, "cutoff" to 0.8578259f, "ampdecay" to 0.6879018f, "ampsustain" to 0.5f, "amprelease" to 0.4307614f, "volume" to 0.62f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.7f, "mac3_d1" to 0.5f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.230769232f, "mac4_a1" to 0.25f, "mac4_a2" to 0.625f, "mac5_d1" to 0.269230783f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.8076923f, "mac6_a1" to 0.35f, "mac6_a2" to 0.4f, "mac7_d1" to 0.8076923f, "mac7_a1" to 0.65f, "mac8_d1" to 0.884615362f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.8f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Tone", "macro2" to "Keep", "macro3" to "Rate", "macro4" to "Crunch", "macro5" to "Smooth", "macro6" to "Short", "macro7" to "Tail", "macro8" to "Drive", "formula" to "min(max(r + (a >> 1) + (s * 37 & 63) - 32, 0), 255)"),
+        family = "hybrid",
+        low = 45, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun formulate94() = Patch("Formulate", "Keyed Chaos",
+        mapOf("wave" to 1f, "formula" to 1f, "timescale" to 0.204828769f, "cutoff" to 0.8969479f, "ampattack" to 0.07712607f, "ampdecay" to 0.7181473f, "ampsustain" to 0.7f, "amprelease" to 0.4060491f, "volume" to 0.813333333f, "mac1_d1" to 0.538461566f, "mac1_a1" to 0.3f, "mac2_d1" to 0.5769231f, "mac2_a1" to 0.75f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.230769232f, "mac3_a1" to 0.25f, "mac3_a2" to 0.625f, "mac4_d1" to 0.269230783f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.35f, "mac5_a2" to 0.4f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Peak", "macro3" to "Crunch", "macro4" to "Smooth", "macro5" to "Short", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(t & 255) ^ (f & 255)"),
+        family = "hybrid",
+        low = 36, high = 84)
+
+    private fun formulate95() = Patch("Formulate", "Crush Formula",
+        mapOf("wave" to 1f, "bits" to 0.2857143f, "crush" to 0.597493768f, "formula" to 1f, "timescale" to 0.204828769f, "smooth" to 0.2f, "ampattack" to 0.07712607f, "ampdecay" to 0.731065869f, "ampsustain" to 0.75f, "amprelease" to 0.4060491f, "drive" to 0.3f, "volume" to 0.82f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.5769231f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.1923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.35f, "mac4_d1" to 0.269230783f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7692308f, "mac5_d2" to 0.8076923f, "mac5_a1" to 0.35f, "mac5_a2" to 0.4f, "mac6_d1" to 0.8076923f, "mac6_a1" to 0.65f, "mac7_d1" to 0.884615362f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.8f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Tone", "macro2" to "Clean", "macro3" to "Clock", "macro4" to "Smooth", "macro5" to "Short", "macro6" to "Tail", "macro7" to "Drive", "macro8" to "Octave", "formula" to "(t & 255) ^ (t >> 9 & 48)"),
+        family = "hybrid",
+        low = 40, high = 79)
+
+    private val formulate: List<Patch> by lazy { listOf(formulate0(), formulate1(), formulate2(), formulate3(), formulate4(), formulate5(), formulate6(), formulate7(), formulate8(), formulate9(), formulate10(), formulate11(), formulate12(), formulate13(), formulate14(), formulate15(), formulate16(), formulate17(), formulate18(), formulate19(), formulate20(), formulate21(), formulate22(), formulate23(), formulate24(), formulate25(), formulate26(), formulate27(), formulate28(), formulate29(), formulate30(), formulate31(), formulate32(), formulate33(), formulate34(), formulate35(), formulate36(), formulate37(), formulate38(), formulate39(), formulate40(), formulate41(), formulate42(), formulate43(), formulate44(), formulate45(), formulate46(), formulate47(), formulate48(), formulate49(), formulate50(), formulate51(), formulate52(), formulate53(), formulate54(), formulate55(), formulate56(), formulate57(), formulate58(), formulate59(), formulate60(), formulate61(), formulate62(), formulate63(), formulate64(), formulate65(), formulate66(), formulate67(), formulate68(), formulate69(), formulate70(), formulate71(), formulate72(), formulate73(), formulate74(), formulate75(), formulate76(), formulate77(), formulate78(), formulate79(), formulate80(), formulate81(), formulate82(), formulate83(), formulate84(), formulate85(), formulate86(), formulate87(), formulate88(), formulate89(), formulate90(), formulate91(), formulate92(), formulate93(), formulate94(), formulate95()) }
 
     private fun pollen0() = Patch("Pollen", "Init", emptyMap(),
         family = "cloud")

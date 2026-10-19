@@ -143,7 +143,7 @@ patch "Quarter Pulse" note=64 range=48..88 family=lead
 
 # An eighth: nasal and small, the one that cuts through everything
 # because there is nothing else up there.
-patch "Eighth Pulse" note=67 range=52..91 family=lead
+patch "Thin Pulse" note=67 range=52..91 family=lead
   set macro1 "Tone"
   set macro2 "Wide"
   set macro3 "Wobble"
@@ -237,7 +237,7 @@ patch "Blip Lead" note=64 range=48..88 family=lead
 
 # Faster and shallower, so it reads as a texture on a lead rather than
 # as movement in a pad.
-patch "PWM Lead" note=64 range=48..88 family=lead
+patch "Swirl Lead" note=64 range=48..88 family=lead
   set macro1 "Tone"
   set macro2 "Depth"
   set macro3 "Rate"
@@ -432,7 +432,7 @@ patch "Echo Lead" note=64 range=48..88 family=lead
 # Not a chip waveform - the hardware could not make one - which is why
 # it is here: the machine is a chip *and* an equation, and this is the
 # oscillator being honest about the second part.
-patch "Saw Lead" note=60 range=45..84 family=lead
+patch "Chip Saw" note=60 range=45..84 family=lead
   set macro1 "Tone"
   set macro2 "Sub"
   set macro3 "Crunch"
@@ -477,7 +477,7 @@ patch "Saw Lead" note=60 range=45..84 family=lead
 
 # Four levels. Everything quiet in the source becomes a staircase, and
 # the distortion is the quantiser rather than a clipper.
-patch "Two Bit" note=60 range=45..84 family=lead
+patch "Four Level" note=60 range=45..84 family=lead
   set macro1 "Tone"
   set macro2 "Thin"
   set macro3 "Wobble"
@@ -523,7 +523,7 @@ patch "Two Bit" note=60 range=45..84 family=lead
 
 # Two levels: on and off. Every patch in this bank passes through the
 # same quantiser and this is the far end of it.
-patch "One Bit" note=60 range=45..84 family=lead
+patch "Single Bit" note=60 range=45..84 family=lead
   set macro1 "Tone"
   set macro2 "Clean"
   set macro3 "Crush"
@@ -739,7 +739,7 @@ patch "Fat Pulse" note=36 range=24..55 family=bass
 
 # Triangle with the sub octave under it. Nothing above the fourth
 # harmonic worth speaking of.
-patch "Sub Bass" note=36 range=24..55 family=bass
+patch "Octave Sub" note=36 range=24..55 family=bass
   set macro1 "Tone"
   set macro2 "Lift"
   set macro3 "Grit"
@@ -1204,6 +1204,8 @@ patch "Noise Kick" note=36 range=24..55 family=drum
   amprelease     0.04 s
   drive          0.4
   volume         1.5
+  insert Eq
+    gain         5.6 dB
 
 # The triangle falling three octaves at 120 steps a second. The
 # chip kick drum.
@@ -1246,6 +1248,8 @@ patch "Pitch Kick" note=36 range=24..55 family=drum
   drive          0.3
   volume         1.50
   set arp "36 28 22 17 13 10 7 5 3 2 1 0 |"
+  insert Eq
+    gain         6.7 dB
 
 # White noise with a volume table that runs out and stops. The table's
 # bar is at the end, which means no loop - a one-shot, which is how a
@@ -1288,6 +1292,8 @@ patch "Noise Snare" note=48 range=36..72 family=drum
   framerate      60 Hz
   volume         1.5
   set vol "255 190 120 70 40 20 8 0 |"
+  insert Eq
+    gain         1.5 dB
 
 # Noise falling an octave as its volume table runs out. Short and dry.
 patch "Tight Snare" note=48 range=36..72 family=drum
@@ -1331,6 +1337,8 @@ patch "Tight Snare" note=48 range=36..72 family=drum
   volume         1.50
   set arp "12 5 0 -5 -12 |"
   set vol "255 220 160 110 70 40 20 8 0 |"
+  insert Eq
+    gain         3.2 dB
 
 # The same, over in a twentieth of a second, with the short register on
 # so it is metallic rather than hissy.
@@ -1371,7 +1379,7 @@ patch "Noise Hat" note=60 range=48..84 family=drum
   ampsustain     0
   amprelease     0.02 s
   cutoff         14000 Hz
-  volume         1.5
+  volume         1.37
 
 # The metallic noise left to ring for half a second.
 patch "Open Hat" note=60 range=48..84 family=drum
@@ -1411,7 +1419,7 @@ patch "Open Hat" note=60 range=48..84 family=drum
   ampdecay       0.45 s
   ampsustain     0
   amprelease     0.1 s
-  volume         0.74
+  volume         1.25
 
 # A triangle falling an octave onto the note.
 patch "Rack Tom" note=50 range=40..64 family=drum
@@ -1450,8 +1458,10 @@ patch "Rack Tom" note=50 range=40..64 family=drum
   ampsustain     0
   amprelease     0.05 s
   framerate      60 Hz
-  volume         1.40
+  volume         1.5
   set arp "12 9 7 5 3 2 1 0 |"
+  insert Eq
+    gain         3.6 dB
 
 # The same, lower and longer, with the sub under it.
 patch "Floor Tom" note=43 range=31..55 family=drum
@@ -1493,6 +1503,8 @@ patch "Floor Tom" note=43 range=31..55 family=drum
   framerate      50 Hz
   volume         1.5
   set arp "12 9 7 5 4 3 2 1 0 |"
+  insert Eq
+    gain         2.8 dB
 
 # Three bursts of noise a frame apart, then a short tail. The volume
 # table does it all.
@@ -1534,7 +1546,7 @@ patch Clap note=60 range=48..72 family=drum
   ampsustain     0
   amprelease     0.05 s
   framerate      120 Hz
-  volume         1.5
+  volume         1.18
   set vol "255 0 0 230 0 0 210 150 110 80 55 35 20 10 0 |"
   send reverb    0.15
 
@@ -1577,7 +1589,7 @@ patch "Metal Hit" note=60 range=48..84 family=drum
   ampdecay       0.5 s
   ampsustain     0
   amprelease     0.08 s
-  volume         0.59
+  volume         0.63
   send reverb    0.1
 
 # A quarter pulse falling three octaves in a tenth of a second.
@@ -1618,8 +1630,10 @@ patch "Laser Zap" note=60 range=48..84 family=drum
   ampsustain     0
   amprelease     0.04 s
   framerate      120 Hz
-  volume         1.0
+  volume         1.5
   set arp "36 31 26 22 18 14 11 8 5 3 1 0 |"
+  insert Eq
+    gain         1.8 dB
 
 # Three-bit noise jumping between seven pitches at 120 steps a second.
 patch "Glitch Hit" note=60 range=48..72 family=drum
@@ -1660,8 +1674,10 @@ patch "Glitch Hit" note=60 range=48..72 family=drum
   ampsustain     0
   amprelease     0.04 s
   framerate      120 Hz
-  volume         1.15
+  volume         1.5
   set arp "24 -12 31 0 19 -7 12"
+  insert Eq
+    gain         2.2 dB
 
 # The triangle, slow in and out, with a chorus.
 patch "Triangle Pad" note=55 range=40..79 family=pad role=pad
@@ -2304,7 +2320,7 @@ patch "Tone Trill" note=64 range=48..88 family=arp
 
 # A volume table with silences in it, so one key gives four hits that
 # get quieter. A delay made of a list, and it costs nothing.
-patch "Echo Pluck" note=60 range=45..84 family=arp
+patch "Frame Echo" note=60 range=45..84 family=arp
   set macro1 "Tone"
   set macro2 "Thin"
   set macro3 "Slow"
@@ -3005,7 +3021,7 @@ patch "Half Wave" note=60 range=45..84 family=shape
 # Full-wave rectification, written as arithmetic: everything below the
 # centre is folded above it, which doubles the pitch and fills the
 # spectrum with even harmonics.
-patch "Fold Back" note=60 range=45..84 family=shape
+patch "Fold Over" note=60 range=45..84 family=shape
   set macro1 "Tone"
   set macro2 "Peak"
   set macro3 "Smooth"
@@ -3580,7 +3596,7 @@ patch "Harmonic Walk" note=55 range=40..79 family=formula
 # # the pitch being re-rolled three hundred times a second, which is a
 # # fizz rather than a sound. Every published formula needs its shifts
 # # moved right before it means anything here.
-patch Crunch note=55 range=40..79 family=formula
+patch "Byte Crunch" note=55 range=40..79 family=formula
   set macro1 "Tone"
   set macro2 "Peak"
   set macro3 "Pluck"
@@ -3696,7 +3712,7 @@ patch "Bit Melody" note=60 range=45..84 family=formula
 # # matters is that the pattern closes at the note. It used to step by
 # # 37 and wrap after 6.9 holds, which put a saw at 4.62 times the note
 # # - between a major third and a fourth, which is not an interval.
-patch Dice note=60 range=45..84 family=formula
+patch "Held Steps" note=60 range=45..84 family=formula
   set macro1 "Tone"
   set macro2 "Peak"
   set macro3 "Pluck"
@@ -3833,8 +3849,8 @@ patch "Two Sines" note=57 range=40..84 family=formula role=pad
   ampdecay       1.2 s
   ampsustain     0.8
   amprelease     0.25 s
-  volume         0.95
-  set formula "sin(t) + (sin(t * 2) >> 1) + 128"
+  volume         1.44
+  set formula "(sin(t) * 5 >> 3) + (sin(t * 2) * 5 >> 4) + 128"
 
 # Three sines at the note, the octave and the twelfth, like an organ's
 # first drawbars. `b` pulls out the top one. The sum is clamped, so
@@ -3930,10 +3946,148 @@ patch Stair note=60 range=45..84 family=formula
   volume         1.02
   set formula "((sin(t) + 128) / max(c, 4)) * max(c, 4)"
 
+# A square and a sine at the note, mixed in the formula by `b`. The duty
+# table narrows the square over the first quarter second, so the chip
+# half brightens while the sine half stays put.
+patch "Sine Blend" note=60 range=45..84 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Blend"
+  set macro3 "Width"
+  set macro4 "Wobble"
+  set macro5 "Crunch"
+  set macro6 "Short"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #11
+  mac2_a1  0.4
+  mac3_d1  #1
+  mac3_a1  -0.3
+  mac4_d1  #2
+  mac4_a1  0.4
+  mac4_d2  #3
+  mac4_a2  0.3
+  mac5_d1  #5
+  mac5_a1  -0.5
+  mac5_d2  #6
+  mac5_a2  0.25
+  mac6_d1  #20
+  mac6_a1  -0.3
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #0
+  duty           0.5
+  formula        1
+  formulamode    #1
+  timescale      0.293
+  b              128
+  framerate      25 Hz
+  ampattack      0.002 s
+  ampdecay       0.8 s
+  ampsustain     0.7
+  amprelease     0.15 s
+  volume         0.99
+  set formula "(x * b + (sin(t) + 128) * (255 - b)) >> 8"
+  set duty "128 112 96 80 64 48 |"
+  send reverb    0.1
+
+# Half a quarter pulse, half a sine that jumps an octave on every table
+# step, so the frame clock trills the top while the chip holds the note.
+patch "Frame Octave" note=60 range=45..84 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Rate"
+  set macro3 "Thin"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Short"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #13
+  mac2_a1  0.3
+  mac3_d1  #1
+  mac3_a1  -0.15
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.25
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #20
+  mac6_a1  -0.3
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #0
+  duty           0.25
+  formula        1
+  formulamode    #1
+  timescale      0.293
+  framerate      16 Hz
+  ampattack      0.002 s
+  ampdecay       0.6 s
+  ampsustain     0.65
+  amprelease     0.12 s
+  volume         1.08
+  set formula "(x >> 1) + ((sin(t << (s & 1)) + 128) >> 1)"
+  send reverb    0.12
+
 # The arpeggio table moves the note, and `s` moves the formula that is
 # ringing it. Neither half is an effect on the other - they are clocked
 # together and the sound is what happens in between.
 patch "Table Ring" note=60 range=45..84 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Ring"
+  set macro3 "Rate"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Short"
+  set macro7 "Glide"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #8
+  mac2_a1  -0.5
+  mac3_d1  #13
+  mac3_a1  0.3
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.25
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #20
+  mac6_a1  -0.3
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #22
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.6
+  mac8_d2  #24
+  mac8_a2  -0.1
   wave           #0
   duty           0.5
   formula        1
@@ -3996,6 +4150,215 @@ patch "Macro Morph" note=60 range=45..84 family=hybrid
   volume         1.02
   set formula "(x * b >> 8) + (sin(t * (a >> 5) + c) >> 1) & 255"
 
+# The triangle folded harder on every table step, so the note starts
+# plain and grows brighter for a second and a half, then holds. `c` is
+# how fast it folds.
+patch "Fold Clock" note=55 range=40..79 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Fold"
+  set macro3 "Speed"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Short"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #12
+  mac2_a1  0.5
+  mac3_d1  #13
+  mac3_a1  0.4
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.25
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #20
+  mac6_a1  -0.3
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #1
+  formula        1
+  formulamode    #1
+  c              32
+  framerate      30 Hz
+  ampattack      0.002 s
+  ampdecay       1.5 s
+  ampsustain     0.8
+  amprelease     0.15 s
+  volume         1.10
+  set formula "min(abs((((x - 128) * (16 + (min(s, 48) * c >> 5)) >> 4) + 128 & 511) - 256), 255)"
+
+# A saw arpeggio three steps long, and a formula flipping its top two
+# bits in a pattern four steps long. Both run on the same frame clock,
+# so the shape and the note only line up again every twelve steps.
+patch "Three on Four" note=60 range=45..84 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Rate"
+  set macro3 "Mix"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Short"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #13
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  -0.6
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.25
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #20
+  mac6_a1  -0.3
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #2
+  formula        1
+  formulamode    #1
+  framerate      20 Hz
+  cutoff         7000 Hz
+  ampattack      0.002 s
+  ampdecay       0.5 s
+  ampsustain     0.6
+  amprelease     0.1 s
+  volume         1.41
+  set formula "x ^ ((s & 3) << 6)"
+  set arp "0 7 12"
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         4000 Hz
+    pingpong     #1
+    mix          0.2
+
+# A square trilling a fifth, ringing a saw that climbs the first five
+# harmonics of whichever note the table is on. Two loops of different
+# lengths on one clock.
+patch "Overtone Ring" note=60 range=45..84 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Rate"
+  set macro3 "Ring"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Short"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #13
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  -0.5
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.25
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #20
+  mac6_a1  -0.3
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #0
+  duty           0.5
+  formula        1
+  formulamode    #2
+  timescale      0.293
+  framerate      24 Hz
+  smooth         0.2
+  ampattack      0.002 s
+  ampdecay       0.7 s
+  ampsustain     0.6
+  amprelease     0.1 s
+  volume         1.29
+  set formula "(t * ((s >> 1) % 5 + 1)) & 255"
+  set arp "0 7"
+  send reverb    0.1
+
+# A square with samples dropped at random, more or fewer on each table
+# step, so the note crackles in a rhythm of its own. `a` sets how many
+# get through.
+patch Dropout note=60 range=45..84 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Keep"
+  set macro3 "Rate"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Short"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac3_d1  #13
+  mac3_a1  0.4
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.25
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #20
+  mac6_a1  -0.3
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #21
+  mac7_a1  0.3
+  mac8_d1  #23
+  mac8_a1  0.6
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  duty           0.5
+  formula        1
+  formulamode    #3
+  framerate      15 Hz
+  ampattack      0.002 s
+  ampdecay       0.8 s
+  ampsustain     0.5
+  amprelease     0.12 s
+  cutoff         8000 Hz
+  volume         0.93
+  set formula "min(max(r + (a >> 1) + (s * 37 & 63) - 32, 0), 255)"
+  send reverb    0.12
+
 # A saw exclusive-ORed with a number taken from the frequency, so the
 # *waveform* is a different permutation at every note while the pitch
 # tracks exactly. Play a scale and it is not one sound getting higher.
@@ -4005,6 +4368,37 @@ patch "Macro Morph" note=60 range=45..84 family=hybrid
 # # leaps in octaves instead of tracking, and sits at 16 Hz at the
 # # bottom of the range. `f` belongs in the timbre, not in the clock.
 patch "Keyed Chaos" note=60 range=36..84 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Peak"
+  set macro3 "Crunch"
+  set macro4 "Smooth"
+  set macro5 "Short"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac2_d1  #15
+  mac2_a1  0.5
+  mac3_d1  #5
+  mac3_a1  -0.5
+  mac3_d2  #6
+  mac3_a2  0.25
+  mac4_d1  #7
+  mac4_a1  0.5
+  mac5_d1  #20
+  mac5_a1  -0.3
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #4
   formula        1
   formulamode    #1
@@ -4028,6 +4422,37 @@ patch "Keyed Chaos" note=60 range=36..84 family=hybrid
 # # a second that term was stepping sixty-seven units a tick, which is
 # # aliasing rather than a pitch.
 patch "Crush Formula" note=55 range=40..79 family=hybrid
+  set macro1 "Tone"
+  set macro2 "Clean"
+  set macro3 "Clock"
+  set macro4 "Smooth"
+  set macro5 "Short"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac3_d1  #6
+  mac3_a1  -0.3
+  mac4_d1  #7
+  mac4_a1  0.5
+  mac5_d1  #20
+  mac5_a1  -0.3
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #4
   formula        1
   formulamode    #1
@@ -4040,5 +4465,5 @@ patch "Crush Formula" note=55 range=40..79 family=hybrid
   ampsustain     0.75
   amprelease     0.1 s
   drive          0.3
-  volume         0.61
+  volume         1.23
   set formula "(t & 255) ^ (t >> 9 & 48)"
