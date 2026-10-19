@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate and Hexbeat move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat and Genesis move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -14,6 +14,7 @@
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Formulate.h>
+#include <engine/machine/genesis/Genesis.h>
 #include <engine/machine/hexbeat/Hexbeat.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
@@ -359,6 +360,20 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         }
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the octave knob", buf);
+    } else if (std::strcmp(type, "Genesis") == 0) {
+        // The kick starts at 40 Hz, so the octave up stays inside its 90 Hz top.
+        gUnits = {{"kicktune", 40.0f}};
+        const auto routed = play(&up);
+        gUnits = {{"kicktune", 80.0f}};
+        const auto tuned = play(nullptr);
+        gUnits.clear();
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < tuned.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(tuned[i] - routed[i])));
+            peak = std::max(peak, double(std::fabs(tuned[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the kick's tune knob", buf);
     } else if (std::strcmp(type, "Hexbeat") == 0) {
         // A drum has no steady pitch to count, so the route must match the kick's tune knob.
         gUnits = {{"kick_tune", 110.0f}};
@@ -459,6 +474,35 @@ void hexbeatRoutes() {
     gNote = 57;
 }
 
+// Genesis's other routes: a route to drive matches the knob, a route to a
+// decay changes the next hit.
+void genesisRoutes() {
+    using G = acidulous::machine::Genesis;
+    gType = "Genesis";
+    gDests = G::DestCount;
+    gNote = 36;
+    char buf[96];
+    // Drive 0.5 against a default of 0.15.
+    gUnits = {{"drive", 0.5f}};
+    const auto knob = play(nullptr);
+    gUnits.clear();
+    Route r{4, 2, G::DstDrive, 0.35f, 1.0f};
+    const auto routed = play(&r);
+    double worst = 0;
+    for (size_t i = 0; i < knob.size(); ++i) worst = std::max(worst, double(std::fabs(knob[i] - routed[i])));
+    std::snprintf(buf, sizeof(buf), "worst difference %.2g", worst);
+    ok(worst < 1e-5 && routed != play(nullptr), "Genesis: a route to drive matches the knob", buf);
+
+    const auto base = play(nullptr);
+    Route longer{1, 1, G::DstKickDecay, 0.3f, 1.0f};
+    const auto ring = play(&longer);
+    const size_t tail = base.size() / 2;
+    std::snprintf(buf, sizeof(buf), "tail rms %.4f -> %.4f", rms(base, tail), rms(ring, tail));
+    ok(rms(ring, tail) > rms(base, tail) * 1.3, "Genesis: a route to kick decay lengthens the next hit", buf);
+
+    gNote = 57;
+}
+
 } // namespace
 
 int main() {
@@ -484,6 +528,11 @@ int main() {
     // and -0.25 leaves 0.525.
     basics("Hexbeat", Hx::DestCount, Hx::DstVolume, Hx::DstPitch, Hx::DstOff, Hx::kMacros, 0.15 / 0.9, 0.525 / 0.9);
     hexbeatRoutes();
+    using Gn = acidulous::machine::Genesis;
+    gNote = 36;
+    // Genesis's volume has the same range and default as Hexbeat's.
+    basics("Genesis", Gn::DestCount, Gn::DstVolume, Gn::DstPitch, Gn::DstOff, Gn::kMacros, 0.15 / 0.9, 0.525 / 0.9);
+    genesisRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

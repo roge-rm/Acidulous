@@ -1373,4 +1373,12 @@
     <string name="pw_bell_level">bell level</string>
     <string name="pw_clave_tune">clave tune</string>
     <string name="pw_clave_level">clave level</string>
+    <string name="pw_kick_sweep">kick sweep</string>
+    <string name="pw_kick_click">kick click</string>
+    <string name="pw_kick_drive">kick drive</string>
+    <string name="pw_clap_spread">clap spread</string>
+    <string name="pw_rim_decay">rim decay</string>
+    <string name="pw_tom_bend">tom bend</string>
+    <string name="pw_ride_tone">ride tone</string>
+    <string name="pw_ride_bell">ride bell</string>
 </resources>

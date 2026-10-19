@@ -1373,4 +1373,12 @@
     <string name="pw_bell_level">niveau cloche</string>
     <string name="pw_clave_tune">accord. claves</string>
     <string name="pw_clave_level">niveau claves</string>
+    <string name="pw_kick_sweep">balayage g. caisse</string>
+    <string name="pw_kick_click">clic g. caisse</string>
+    <string name="pw_kick_drive">satur. g. caisse</string>
+    <string name="pw_clap_spread">écart clap</string>
+    <string name="pw_rim_decay">déclin cercle</string>
+    <string name="pw_tom_bend">courbe tom</string>
+    <string name="pw_ride_tone">ton ride</string>
+    <string name="pw_ride_bell">cloche ride</string>
 </resources>

@@ -239,7 +239,7 @@ fun MachinePanel(
         if (body && !minimized) when (type) {
             "Reflux" -> RefluxPanel(binding, track, trackIndex, editor)
             "Hexbeat" -> HexbeatPanel(binding, track, trackIndex, editor)
-            "Genesis" -> GenesisPanel(binding)
+            "Genesis" -> GenesisPanel(binding, track, trackIndex, editor)
             "Resonance" -> ResonancePanel(binding, selectedPad)
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
             "Molt" -> MoltPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -3175,16 +3175,53 @@ private fun FormulaDialog(
 
 // --- Genesis ---------------------------------------------------------------------
 
+/** Where a Genesis macro route goes, in the engine's Dest order. */
+val GENESIS_DESTS = listOf(
+    "off", "kick tune", "kick decay", "kick punch", "kick sweep", "kick click", "kick drive", "kick level",
+    "snare tune", "snare decay", "snappy", "snare tone", "snare level",
+    "clap spread", "clap decay", "clap tone", "clap level",
+    "rim tune", "rim decay", "rim level",
+    "tom tune", "tom decay", "tom bend", "tom level",
+    "hat tune", "hat decay", "hat tone", "hat level",
+    "crash decay", "crash tone", "crash level",
+    "ride decay", "ride tone", "ride bell", "ride level",
+    "bell tune", "bell decay", "bell level",
+    "drift", "accent", "compress", "duck", "drive", "volume", "pitch",
+)
+
 /**
  * Genesis's panel. Every voice has its own group, and the bus is at the end,
  * since the compressor and duck are part of the sound.
  */
 @Composable
-private fun GenesisPanel(b: ParamBinding) {
+private fun GenesisPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("kick", "snare", "toms", "metal", "bus"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "kick", "snare", "toms", "metal", "bus", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            6 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", GENESIS_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", GENESIS_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", GENESIS_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", GENESIS_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("kick") {
                     PanelKnob(b, "kicktune", "tune", PanelAmber)
                     PanelKnob(b, "kickdecay", "decay", PanelAmber)
@@ -3195,7 +3232,7 @@ private fun GenesisPanel(b: ParamBinding) {
                     PanelKnob(b, "kicklevel", "level")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("snare") {
                     PanelKnob(b, "snaretune", "tune", PanelAmber)
                     PanelKnob(b, "snaredecay", "decay", PanelAmber)
@@ -3215,7 +3252,7 @@ private fun GenesisPanel(b: ParamBinding) {
                     PanelKnob(b, "rimlevel", "level")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("toms") {
                     PanelKnob(b, "tomlotune", "low", PanelAmber)
                     PanelKnob(b, "tommidtune", "mid", PanelAmber)
@@ -3230,7 +3267,7 @@ private fun GenesisPanel(b: ParamBinding) {
                     PanelKnob(b, "belllevel", "level")
                 }
             }
-            3 -> {
+            4 -> {
                 Group("hats") {
                     PanelKnob(b, "hattune", "tune", PanelAmber)
                     PanelKnob(b, "hatclosed", "closed", PanelAmber)
@@ -3269,6 +3306,14 @@ private fun GenesisPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Resonance -------------------------------------------------------------------
