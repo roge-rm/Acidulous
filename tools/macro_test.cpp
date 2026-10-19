@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat and Genesis move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis and Resonance move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -18,6 +18,7 @@
 #include <engine/machine/hexbeat/Hexbeat.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
+#include <engine/machine/resonance/Resonance.h>
 #include <engine/machine/trinity/Trinity.h>
 #include <engine/dsp/Lfo.h>
 #include <engine/dsp/LfoGen.h>
@@ -374,6 +375,19 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         }
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the kick's tune knob", buf);
+    } else if (std::strcmp(type, "Resonance") == 0) {
+        // Every pad's tune goes up an octave: the pads are all at 120 Hz, so 240 Hz is the same.
+        const auto routed = play(&up);
+        for (int pad = 0; pad < 8; ++pad) gUnits.push_back({"p0" + std::to_string(pad) + "_tune", 240.0f});
+        const auto tuned = play(nullptr);
+        gUnits.clear();
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < tuned.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(tuned[i] - routed[i])));
+            peak = std::max(peak, double(std::fabs(tuned[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the pads' tune", buf);
     } else if (std::strcmp(type, "Hexbeat") == 0) {
         // A drum has no steady pitch to count, so the route must match the kick's tune knob.
         gUnits = {{"kick_tune", 110.0f}};
@@ -503,6 +517,41 @@ void genesisRoutes() {
     gNote = 57;
 }
 
+// Resonance's other routes: all-pads decay lengthens the hit, a pad's level
+// route moves that pad and no other.
+void resonanceRoutes() {
+    using R = acidulous::machine::Resonance;
+    gType = "Resonance";
+    gDests = R::DestCount;
+    gNote = 36;
+    char buf[96];
+    const auto base = play(nullptr);
+    Route longer{1, 1, R::DstDecay, 0.3f, 1.0f};
+    const auto ring = play(&longer);
+    const size_t tail = base.size() / 2;
+    // The longer pad is trimmed quieter, so compare how much of the hit is left at the end.
+    auto left = [&](const std::vector<float> &v) { return rms(v, tail) / rms(v, 0); };
+    std::snprintf(buf, sizeof(buf), "left at the end %.3f -> %.3f", left(base), left(ring));
+    ok(left(ring) > left(base) * 1.1, "Resonance: a route to every pad's decay lengthens the next hit", buf);
+
+    // Pad 1 struck, coupling off so no other pad rings. Its level default is 0.8 of 0..1.5.
+    gNote = 37;
+    gUnits = {{"coupling", 0.0f}};
+    const auto one = play(nullptr);
+    Route other{2, 1, R::DstLevel + 0, 0.35f, 1.0f};
+    ok(play(&other) == one, "Resonance: pad 0's level route leaves pad 1 alone", "");
+    Route mine{2, 1, R::DstLevel + 1, 0.35f, 1.0f};
+    const auto routed = play(&mine);
+    gUnits = {{"coupling", 0.0f}, {"p01_level", 0.8f + 0.35f * 1.5f}};
+    const auto knob = play(nullptr);
+    gUnits.clear();
+    double worst = 0;
+    for (size_t i = 0; i < knob.size(); ++i) worst = std::max(worst, double(std::fabs(knob[i] - routed[i])));
+    std::snprintf(buf, sizeof(buf), "worst difference %.2g", worst);
+    ok(worst < 1e-5 && routed != one, "Resonance: pad 1's level route matches its level knob", buf);
+    gNote = 57;
+}
+
 } // namespace
 
 int main() {
@@ -533,6 +582,11 @@ int main() {
     // Genesis's volume has the same range and default as Hexbeat's.
     basics("Genesis", Gn::DestCount, Gn::DstVolume, Gn::DstPitch, Gn::DstOff, Gn::kMacros, 0.15 / 0.9, 0.525 / 0.9);
     genesisRoutes();
+    gNote = 36;
+    using Rs = acidulous::machine::Resonance;
+    // Resonance's volume is 0 to 1.5 from 0.5, so -0.5 leaves nothing and -0.25 leaves 0.125.
+    basics("Resonance", Rs::DestCount, Rs::DstVolume, Rs::DstPitch, Rs::DstOff, Rs::kMacros, 0.0, 0.125 / 0.5);
+    resonanceRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

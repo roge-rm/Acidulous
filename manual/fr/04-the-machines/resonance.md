@@ -30,6 +30,21 @@ Frappez-en un et les autres répondent doucement à leur propre hauteur, et un k
 sonne comme des objets dans une même pièce. **humaniser** varie un peu chaque
 coup.
 
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Serré, Amorti,
+etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
+dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
+patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. Les destinations « tous » déplacent cette
+commande sur tous les pads ensemble. La hauteur déplace l’accordage de chaque
+pad, 24 demi-tons à 1. Un changement d’accordage ou de déclin s’entend au coup
+suivant. Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Réglez **où** et **forme** avant d’accorder.

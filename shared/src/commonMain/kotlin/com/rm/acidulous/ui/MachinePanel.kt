@@ -240,7 +240,7 @@ fun MachinePanel(
             "Reflux" -> RefluxPanel(binding, track, trackIndex, editor)
             "Hexbeat" -> HexbeatPanel(binding, track, trackIndex, editor)
             "Genesis" -> GenesisPanel(binding, track, trackIndex, editor)
-            "Resonance" -> ResonancePanel(binding, selectedPad)
+            "Resonance" -> ResonancePanel(binding, selectedPad, track, trackIndex, editor)
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
             "Molt" -> MoltPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Diction" -> DictionPanel(binding, track, trackIndex, editor)
@@ -3320,50 +3320,68 @@ private fun GenesisPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
 
 private val RESONANCE_SHAPES = listOf("membrane", "bar", "plate", "tube", "bowl", "metal")
 
+/** Where a Resonance macro route goes, in the engine's Dest order. */
+val RESONANCE_DESTS = listOf(
+    "off", "all decay", "all damping", "all stiffness", "all where", "all hardness", "all grit", "all drive", "pitch",
+    "coupling", "humanise", "accent", "volume",
+) + (1..8).map { "tune $it" } + (1..8).map { "level $it" }
+
 /**
  * Resonance's panel: one object at a time, chosen with the pads, since eight
- * sets of fourteen knobs is too many. The kit-wide controls are at the end,
- * including coupling, which ties the objects into one kit.
+ * sets of fourteen knobs is too many. The kit-wide controls are in the kit
+ * section, including coupling, which ties the objects into one kit.
  */
 @Composable
-private fun ResonancePanel(b: ParamBinding, pad: Int) {
-    val p = pad.coerceIn(0, 7)
-    fun n(name: String) = "p%02d_%s".format(p, name)
+private fun ResonancePanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, editor: SongEditor) {
+    val pd = pad.coerceIn(0, 7)
+    fun n(name: String) = "p%02d_%s".format(pd, name)
     val hot = Acid.colors.accent
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(stringResource(Res.string.resonance_object, p + 1), color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+    var section by rememberSaveable { mutableStateOf(0) }
+    // Picking another pad shows its object.
+    var shownPad by rememberSaveable { mutableStateOf(pd) }
+    LaunchedEffect(pd) { if (pd != shownPad) { shownPad = pd; section = 1 } }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "object", "kit", "macros"), section, { section = it }, above = { sec ->
+        if (sec == 1) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(stringResource(Res.string.resonance_object, pd + 1), color = hot, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
             Text(
                 stringResource(Res.string.resonance_about),
                 color = Acid.colors.textDim, fontSize = 10.sp, maxLines = 1,
             )
         }
-        GroupRow {
-            Group("object") {
-                PanelStepKnob(b, n("kind"), RESONANCE_SHAPES, "shape", hot)
-                PanelKnob(b, n("tune"), "tune", hot)
-                PanelKnob(b, n("inharm"), "stiffness", hot)
+    }) { sec ->
+        when (sec) {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
             }
-            Group("ring") {
-                PanelKnob(b, n("decay"), "decay", hot)
-                PanelKnob(b, n("damp"), "damping", hot)
+            1 -> {
+                Group("object") {
+                    PanelStepKnob(b, n("kind"), RESONANCE_SHAPES, "shape", hot)
+                    PanelKnob(b, n("tune"), "tune", hot)
+                    PanelKnob(b, n("inharm"), "stiffness", hot)
+                }
+                Group("ring") {
+                    PanelKnob(b, n("decay"), "decay", hot)
+                    PanelKnob(b, n("damp"), "damping", hot)
+                }
+                Group("strike") {
+                    PanelKnob(b, n("hit"), "where", hot)
+                    PanelKnob(b, n("hard"), "hardness", hot)
+                    PanelKnob(b, n("noise"), "grit")
+                }
+                Group("bend") {
+                    PanelKnob(b, n("bend"), "amount")
+                    PanelKnob(b, n("bendtime"), "time")
+                }
+                Group("out") {
+                    PanelKnob(b, n("drive"), "drive", Acid.colors.pink)
+                    PanelKnob(b, n("level"), "level")
+                    PanelKnob(b, n("pan"), "pan")
+                    PanelKnob(b, n("couple"), "listens", hot)
+                }
             }
-            Group("strike") {
-                PanelKnob(b, n("hit"), "where", hot)
-                PanelKnob(b, n("hard"), "hardness", hot)
-                PanelKnob(b, n("noise"), "grit")
-            }
-            Group("bend") {
-                PanelKnob(b, n("bend"), "amount")
-                PanelKnob(b, n("bendtime"), "time")
-            }
-            Group("out") {
-                PanelKnob(b, n("drive"), "drive", Acid.colors.pink)
-                PanelKnob(b, n("level"), "level")
-                PanelKnob(b, n("pan"), "pan")
-                PanelKnob(b, n("couple"), "listens", hot)
-            }
-            Group("kit") {
+            2 -> Group("kit") {
                 PanelKnob(b, "coupling", "coupling", hot)
                 PanelStepKnob(b, "modes", listOf("4", "8", "12", "16", "20", "24"), "modes")
                 PanelKnob(b, "humanise", "humanise")
@@ -3371,8 +3389,34 @@ private fun ResonancePanel(b: ParamBinding, pad: Int) {
                 PanelKnob(b, "volume", "volume")
                 PanelKnob(b, "pan", "pan")
             }
+            else -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", RESONANCE_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", RESONANCE_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", RESONANCE_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", RESONANCE_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Dice ------------------------------------------------------------------------

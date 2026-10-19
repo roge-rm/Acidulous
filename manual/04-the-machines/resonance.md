@@ -27,6 +27,20 @@ strikes it. Nothing is sampled.
 others answer quietly at their own pitches, so a kit sounds like objects in one
 room. **humanise** varies each hit a little.
 
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Tighter, Damp,
+etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. The "all" destinations move that control on every pad together.
+Pitch moves every pad's tune together, 24 semitones at 1. A tune or decay
+change is heard from the next hit. Tap a macro's name to rename it.
+
 ## Tips
 
 - Set **hit** and **shape** before tuning.
