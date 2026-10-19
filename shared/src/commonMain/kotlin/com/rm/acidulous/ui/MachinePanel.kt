@@ -238,7 +238,7 @@ fun MachinePanel(
         )
         if (body && !minimized) when (type) {
             "Reflux" -> RefluxPanel(binding, track, trackIndex, editor)
-            "Hexbeat" -> HexbeatPanel(binding)
+            "Hexbeat" -> HexbeatPanel(binding, track, trackIndex, editor)
             "Genesis" -> GenesisPanel(binding)
             "Resonance" -> ResonancePanel(binding, selectedPad)
             "Dice" -> DicePanel(binding, track, trackIndex, editor, selectedPad, onImportOneSample)
@@ -1679,20 +1679,68 @@ private fun RefluxPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
     )
 }
 
-/** Hexbeat: a group per voice family, in kit order. */
+/** Where a Hexbeat macro route goes, in the engine's Dest order. */
+val HEXBEAT_DESTS = listOf(
+    "off", "kick tune", "kick decay", "kick punch", "kick level",
+    "snare tune", "snare decay", "snappy", "snare tone", "snare level",
+    "tom tune", "tom decay", "tom level",
+    "hat tune", "hat decay", "hat tone", "hat level",
+    "crash decay", "crash tone", "crash level", "ride decay", "ride level",
+    "clap decay", "clap tone", "clap level",
+    "rim tune", "rim level", "bell tune", "bell decay", "bell level",
+    "clave tune", "clave level",
+    "accent", "drive", "volume", "pitch",
+)
+
+/** Hexbeat: a group per voice family, in kit order, then the macro routes. */
 @Composable
-private fun HexbeatPanel(b: ParamBinding) {
+private fun HexbeatPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     val hot = PanelAmber
-    GroupRow {
-        Group("kick") { PanelKnob(b, "kick_tune", "tune", hot); PanelKnob(b, "kick_decay", "decay"); PanelKnob(b, "kick_punch", "punch"); PanelKnob(b, "kick_level", "level") }
-        Group("snare") { PanelKnob(b, "snare_tune", "tune", hot); PanelKnob(b, "snare_decay", "decay"); PanelKnob(b, "snare_snappy", "snappy"); PanelKnob(b, "snare_tone", "tone"); PanelKnob(b, "snare_level", "level") }
-        Group("toms") { PanelKnob(b, "tom_lo_tune", "lo", hot); PanelKnob(b, "tom_mid_tune", "mid", hot); PanelKnob(b, "tom_hi_tune", "hi", hot); PanelKnob(b, "tom_decay", "decay"); PanelKnob(b, "tom_level", "level") }
-        Group("hats") { PanelKnob(b, "hat_tune", "tune", hot); PanelKnob(b, "hat_closed_decay", "closed"); PanelKnob(b, "hat_open_decay", "open"); PanelKnob(b, "hat_tone", "tone"); PanelKnob(b, "hat_level", "level") }
-        Group("cymbals") { PanelKnob(b, "cym_decay", "crash"); PanelKnob(b, "cym_tone", "tone"); PanelKnob(b, "cym_level", "level"); PanelKnob(b, "ride_decay", "ride"); PanelKnob(b, "ride_level", "level") }
-        Group("perc") { PanelKnob(b, "clap_decay", "clap"); PanelKnob(b, "clap_tone", "tone"); PanelKnob(b, "clap_level", "level"); PanelKnob(b, "rim_tune", "rim", hot); PanelKnob(b, "rim_level", "level") }
-        Group("bell / clave") { PanelKnob(b, "bell_tune", "bell", hot); PanelKnob(b, "bell_decay", "decay"); PanelKnob(b, "bell_level", "level"); PanelKnob(b, "clave_tune", "clave", hot); PanelKnob(b, "clave_level", "level") }
-        Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume") }
+    var section by rememberSaveable { mutableStateOf(0) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("kit", "macros"), section, { section = it }) { sec ->
+        if (sec == 1) {
+            for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", HEXBEAT_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", HEXBEAT_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", HEXBEAT_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", HEXBEAT_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+        } else {
+            Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            Group("kick") { PanelKnob(b, "kick_tune", "tune", hot); PanelKnob(b, "kick_decay", "decay"); PanelKnob(b, "kick_punch", "punch"); PanelKnob(b, "kick_level", "level") }
+            Group("snare") { PanelKnob(b, "snare_tune", "tune", hot); PanelKnob(b, "snare_decay", "decay"); PanelKnob(b, "snare_snappy", "snappy"); PanelKnob(b, "snare_tone", "tone"); PanelKnob(b, "snare_level", "level") }
+            Group("toms") { PanelKnob(b, "tom_lo_tune", "lo", hot); PanelKnob(b, "tom_mid_tune", "mid", hot); PanelKnob(b, "tom_hi_tune", "hi", hot); PanelKnob(b, "tom_decay", "decay"); PanelKnob(b, "tom_level", "level") }
+            Group("hats") { PanelKnob(b, "hat_tune", "tune", hot); PanelKnob(b, "hat_closed_decay", "closed"); PanelKnob(b, "hat_open_decay", "open"); PanelKnob(b, "hat_tone", "tone"); PanelKnob(b, "hat_level", "level") }
+            Group("cymbals") { PanelKnob(b, "cym_decay", "crash"); PanelKnob(b, "cym_tone", "tone"); PanelKnob(b, "cym_level", "level"); PanelKnob(b, "ride_decay", "ride"); PanelKnob(b, "ride_level", "level") }
+            Group("perc") { PanelKnob(b, "clap_decay", "clap"); PanelKnob(b, "clap_tone", "tone"); PanelKnob(b, "clap_level", "level"); PanelKnob(b, "rim_tune", "rim", hot); PanelKnob(b, "rim_level", "level") }
+            Group("bell / clave") { PanelKnob(b, "bell_tune", "bell", hot); PanelKnob(b, "bell_decay", "decay"); PanelKnob(b, "bell_level", "level"); PanelKnob(b, "clave_tune", "clave", hot); PanelKnob(b, "clave_level", "level") }
+            Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "drive"); PanelKnob(b, "volume") }
+        }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 /** Forage: the selected pad's sample and its controls. Tap a pad to select it. */

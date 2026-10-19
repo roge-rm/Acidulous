@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus and Formulate move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate and Hexbeat move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -14,6 +14,7 @@
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Formulate.h>
+#include <engine/machine/hexbeat/Hexbeat.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
 #include <engine/machine/trinity/Trinity.h>
@@ -52,6 +53,8 @@ const char *gExtra = nullptr;
 float gExtraNorm = 0.0f;
 // More params to set in play(), by name and in their own units.
 std::vector<std::pair<std::string, float>> gUnits;
+// The note to play: 57 for the pitched machines, the kick for Hexbeat.
+int gNote = 57;
 
 struct Route { int macro, route, dest; float depth; float knob; };
 
@@ -83,7 +86,7 @@ std::vector<float> play(const Route *r) {
         m->swapObject(0, acidulous::machine::cumulus::buildCloud(static_cast<acidulous::machine::Cumulus *>(m)->spec(), kRate).release());
     m->allNotesOff();
     m->reset();
-    m->noteOn(57, 100);
+    m->noteOn(gNote, 100);
     std::vector<float> out;
     float L[kBlock], R[kBlock];
     for (int32_t b = 0; b < kBlocks; ++b) {
@@ -356,6 +359,19 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         }
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the octave knob", buf);
+    } else if (std::strcmp(type, "Hexbeat") == 0) {
+        // A drum has no steady pitch to count, so the route must match the kick's tune knob.
+        gUnits = {{"kick_tune", 110.0f}};
+        const auto tuned = play(nullptr);
+        gUnits.clear();
+        const auto routed = play(&up);
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < tuned.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(tuned[i] - routed[i])));
+            peak = std::max(peak, double(std::fabs(tuned[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the kick's tune knob", buf);
     } else {
         const double f0 = hz(base);
         const double f1 = hz(play(&up));
@@ -407,6 +423,42 @@ void formulateFilterEnv() {
     ok(worst < 1e-4, "Formulate: a macro route to the amount matches the knob", buf);
 }
 
+// Hexbeat's drive and its other routes: the drive knob's default is the old
+// fixed 0.375, a route to it matches the knob, and a route to a decay changes
+// the next hit the way the knob does.
+void hexbeatRoutes() {
+    using H = acidulous::machine::Hexbeat;
+    gType = "Hexbeat";
+    gDests = H::DestCount;
+    gNote = 36;
+    char buf[96];
+    Machine *m = MachineRegistry::create("Hexbeat");
+    m->prepare(kRate);
+    const ParamDef &d = m->params().def(m->params().indexOf("drive"));
+    ok(d.def == 0.375f && m->params().get(m->params().indexOf("drive")) == 0.375f, "Hexbeat: drive starts at the old fixed 0.375", "");
+    delete m;
+
+    // Drive 1.0 in the knob's own units: (1.0 - 0.125) / 2.
+    gUnits = {{"drive", 1.0f}};
+    const auto knob = play(nullptr);
+    gUnits.clear();
+    Route r{4, 2, H::DstDrive, (1.0f - 0.375f) / 2.0f, 1.0f};
+    const auto routed = play(&r);
+    double worst = 0;
+    for (size_t i = 0; i < knob.size(); ++i) worst = std::max(worst, double(std::fabs(knob[i] - routed[i])));
+    std::snprintf(buf, sizeof(buf), "worst difference %.2g", worst);
+    ok(worst < 1e-5 && routed != play(nullptr), "Hexbeat: a route to drive matches the knob", buf);
+
+    // A longer kick decay rings longer on the very next hit.
+    const auto base = play(nullptr);
+    Route longer{1, 1, H::DstKickDecay, 0.3f, 1.0f};
+    const auto ring = play(&longer);
+    const size_t tail = base.size() / 2;
+    std::snprintf(buf, sizeof(buf), "tail rms %.4f -> %.4f", rms(base, tail), rms(ring, tail));
+    ok(rms(ring, tail) > rms(base, tail) * 1.5, "Hexbeat: a route to kick decay lengthens the next hit", buf);
+    gNote = 57;
+}
+
 } // namespace
 
 int main() {
@@ -426,6 +478,12 @@ int main() {
     using Fo = acidulous::machine::Formulate;
     basics("Formulate", Fo::DestCount, Fo::DstAmp, Fo::DstPitch, Fo::DstOff, Fo::kMacros, 0.05 / 0.8, 0.425 / 0.8);
     formulateFilterEnv();
+    gNote = 36;
+    using Hx = acidulous::machine::Hexbeat;
+    // Hexbeat's volume is 0 to 1.5 from 0.9, so -0.5 leaves 0.9 - 0.75 = 0.15
+    // and -0.25 leaves 0.525.
+    basics("Hexbeat", Hx::DestCount, Hx::DstVolume, Hx::DstPitch, Hx::DstOff, Hx::kMacros, 0.15 / 0.9, 0.525 / 0.9);
+    hexbeatRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

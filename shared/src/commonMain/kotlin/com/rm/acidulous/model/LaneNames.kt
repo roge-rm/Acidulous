@@ -84,7 +84,7 @@ fun laneLabel(track: Track, key: String, word: (String) -> String = { it }): Str
 }
 
 /** The machines with eight macro knobs a patch or the player can name. */
-val MACRO_MACHINES = setOf("Trinity", "Ratio", "Reflux", "Cumulus", "Formulate", "Nexus")
+val MACRO_MACHINES = setOf("Trinity", "Ratio", "Reflux", "Cumulus", "Formulate", "Nexus", "Hexbeat")
 
 /** A macro knob's own name, when its patch or the player gave it one. */
 private fun macroName(track: Track, param: String): String? {

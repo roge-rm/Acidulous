@@ -5741,127 +5741,147 @@ internal object FactoryBanks {
         mapOf("kick_tune" to 0.409931868f, "kick_decay" to 0.3317472f, "kick_punch" to 0.72f, "snare_decay" to 0.292238653f, "snare_snappy" to 0.72f, "tom_decay" to 0.3766126f, "hat_closed_decay" to 0.25292173f, "hat_open_decay" to 0.3436954f, "cym_decay" to 0.502073348f, "ride_decay" to 0.405683875f, "clap_decay" to 0.396240622f, "bell_decay" to 0.462756425f, "accent" to 0.7f),
         family = "classic")
 
-    private fun hexbeat3() = Patch("Hexbeat", "Punchy",
-        mapOf("kick_tune" to 0.4640582f, "kick_decay" to 0.38902992f, "kick_punch" to 1f, "kick_level" to 1f, "snare_tune" to 0.464807659f, "snare_decay" to 0.3436954f, "snare_snappy" to 0.85f, "snare_tone" to 0.6559898f, "tom_decay" to 0.435612649f, "hat_closed_decay" to 0.208347827f, "hat_open_decay" to 0.388269275f, "clap_decay" to 0.3446279f, "accent" to 0.8f, "volume" to 0.5466667f),
-        family = "classic")
-
-    private fun hexbeat4() = Patch("Hexbeat", "Boomy",
-        mapOf("kick_tune" to 0.203965187f, "kick_decay" to 0.798193336f, "kick_punch" to 0.35f, "kick_level" to 0.95f, "snare_decay" to 0.598104f, "snare_snappy" to 0.4f, "tom_lo_tune" to 0.151433319f, "tom_mid_tune" to 0.181639671f, "tom_hi_tune" to 0.238944024f, "tom_decay" to 0.7495728f, "hat_open_decay" to 0.598104f, "volume" to 0.5733333f),
-        family = "classic")
-
-    private fun hexbeat5() = Patch("Hexbeat", "Deep",
-        mapOf("kick_tune" to 0.06674396f, "kick_decay" to 0.634828448f, "snare_tune" to 0.128035f, "snare_decay" to 0.550335765f, "snare_tone" to 0.344010174f, "tom_lo_tune" to 0.0272346623f, "tom_mid_tune" to 0.044907365f, "tom_hi_tune" to 0.06648219f, "tom_decay" to 0.6885239f, "hat_tune" to 0.263034433f, "hat_tone" to 0.3062702f, "cym_tone" to 0.174435332f, "bell_tune" to 0.170518458f, "clave_tune" to 0.238944024f),
-        family = "classic")
-
-    private fun hexbeat6() = Patch("Hexbeat", "Garage",
+    private fun hexbeat3() = Patch("Hexbeat", "Garage",
         mapOf("kick_tune" to 0.381452f, "kick_decay" to 0.46701625f, "kick_punch" to 0.6f, "snare_decay" to 0.3667258f, "snare_snappy" to 0.65f, "snare_level" to 0.55f, "tom_decay" to 0.4611952f, "hat_closed_decay" to 0.156891063f, "hat_open_decay" to 0.4085063f, "hat_tone" to 0.738140464f, "hat_level" to 0.72f, "clap_decay" to 0.5343759f, "clap_tone" to 0.523704231f, "clap_level" to 0.95f, "accent" to 0.75f, "volume" to 0.473333329f),
         family = "classic")
 
-    private fun hexbeat7() = Patch("Hexbeat", "Hall",
-        mapOf("kick_tune" to 0.2563443f, "kick_decay" to 0.6825098f, "kick_punch" to 0.45f, "snare_decay" to 0.7104212f, "snare_snappy" to 0.5f, "snare_tone" to 0.5849686f, "tom_decay" to 0.8000992f, "hat_closed_decay" to 0.43371132f, "hat_open_decay" to 0.8294822f, "cym_decay" to 0.903969347f, "cym_level" to 0.6f, "ride_decay" to 0.850274146f, "ride_level" to 0.6f, "clap_decay" to 0.7675974f, "bell_decay" to 0.8294822f),
-        family = "room")
+    private fun hexbeat4() = Patch("Hexbeat", "Punchy",
+        mapOf("kick_tune" to 0.4640582f, "kick_decay" to 0.38902992f, "kick_punch" to 1f, "kick_level" to 1f, "snare_tune" to 0.464807659f, "snare_decay" to 0.3436954f, "snare_snappy" to 0.85f, "snare_tone" to 0.6559898f, "tom_decay" to 0.435612649f, "hat_closed_decay" to 0.208347827f, "hat_open_decay" to 0.388269275f, "clap_decay" to 0.3446279f, "accent" to 0.8f, "volume" to 0.5466667f),
+        family = "classic")
 
-    private fun hexbeat8() = Patch("Hexbeat", "Stadium",
-        mapOf("kick_tune" to 0.167068228f, "kick_decay" to 0.744744f, "kick_punch" to 0.3f, "kick_level" to 0.85f, "snare_decay" to 0.6770125f, "snare_snappy" to 0.45f, "snare_level" to 0.7f, "tom_lo_tune" to 0.07916309f, "tom_mid_tune" to 0.08751075f, "tom_hi_tune" to 0.139816508f, "tom_decay" to 0.9088101f, "tom_level" to 1f, "hat_open_decay" to 0.7334516f, "cym_decay" to 0.8562011f, "clap_decay" to 0.844627857f, "clap_tone" to 0.310581356f, "clap_level" to 0.9f, "volume" to 0.5466667f),
-        family = "room")
+    private fun hexbeat5() = Patch("Hexbeat", "Backbeat",
+        mapOf("kick_tune" to 0.321306437f, "kick_decay" to 0.5351438f, "kick_punch" to 0.55f, "snare_tune" to 0.424283326f, "snare_decay" to 0.462756425f, "snare_snappy" to 0.5f, "snare_tone" to 0.524120867f, "tom_decay" to 0.5457778f, "hat_closed_decay" to 0.401896f, "hat_open_decay" to 0.502073348f, "cym_decay" to 0.64956075f, "ride_decay" to 0.534302831f, "clap_decay" to 0.481499881f, "mac1_d1" to 0.0571428575f, "mac1_d2" to 0.171428576f, "mac1_d3" to 0.314285725f, "mac1_d4" to 0.4f, "mac1_a1" to 0.35f, "mac1_a2" to 0.35f, "mac1_a3" to 0.35f, "mac1_a4" to 0.35f, "mac2_d1" to 1f, "mac2_a1" to 0.625f, "mac3_d1" to 0.2f, "mac3_d2" to 0.22857143f, "mac3_d3" to 0.6571429f, "mac3_d4" to 0.08571429f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.6f, "mac3_a4" to 0.65f, "mac4_d1" to 0.45714286f, "mac4_d2" to 0.428571433f, "mac4_d3" to 0.54285717f, "mac4_d4" to 0.6f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac4_a3" to 0.65f, "mac4_a4" to 0.65f, "mac5_d1" to 0.0285714287f, "mac5_d2" to 0.0571428575f, "mac5_d3" to 0.2857143f, "mac5_d4" to 0.114285715f, "mac5_a1" to 0.35f, "mac5_a2" to 0.6f, "mac5_a3" to 0.4f, "mac5_a4" to 0.55f, "mac6_d1" to 0.6857143f, "mac6_d2" to 0.628571451f, "mac6_d3" to 0.257142872f, "mac6_a1" to 0.65f, "mac6_a2" to 0.6f, "mac6_a3" to 0.35f, "mac7_d1" to 0.942857146f, "mac7_d2" to 0.9142857f, "mac7_d3" to 0.9714286f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.45f, "mac8_d1" to 0.828571439f, "mac8_d2" to 0.8f, "mac8_d3" to 0.8857143f, "mac8_d4" to 0.742857158f, "mac8_a1" to 0.7f, "mac8_a2" to 0.6f, "mac8_a3" to 0.7f, "mac8_a4" to 0.65f),
+        mapOf("macro1" to "Tighter", "macro2" to "Pitch", "macro3" to "Snap", "macro4" to "Hats", "macro5" to "Weight", "macro6" to "Clap", "macro7" to "Push", "macro8" to "Small"),
+        family = "classic")
 
-    private fun hexbeat9() = Patch("Hexbeat", "Distant",
-        mapOf("kick_tune" to 0.221803173f, "kick_decay" to 0.7154089f, "kick_punch" to 0.28f, "kick_level" to 0.7f, "snare_decay" to 0.7407883f, "snare_snappy" to 0.35f, "snare_tone" to 0.3119796f, "snare_level" to 0.6f, "tom_decay" to 0.822440147f, "tom_level" to 0.65f, "hat_tune" to 0.320772976f, "hat_closed_decay" to 0.514213145f, "hat_open_decay" to 0.7686218f, "hat_tone" to 0.23881422f, "hat_level" to 0.4f, "cym_decay" to 0.880939f, "cym_tone" to 0.174435332f, "cym_level" to 0.34f, "ride_decay" to 0.8313331f, "ride_level" to 0.32f, "clap_decay" to 0.8157586f, "clap_tone" to 0.172690585f, "rim_level" to 0.4f, "bell_level" to 0.3f, "clave_level" to 0.35f, "volume" to 0.76f),
-        family = "room")
+    private fun hexbeat6() = Patch("Hexbeat", "Boomy",
+        mapOf("kick_tune" to 0.203965187f, "kick_decay" to 0.798193336f, "kick_punch" to 0.35f, "kick_level" to 0.95f, "snare_decay" to 0.598104f, "snare_snappy" to 0.4f, "tom_lo_tune" to 0.151433319f, "tom_mid_tune" to 0.181639671f, "tom_hi_tune" to 0.238944024f, "tom_decay" to 0.7495728f, "hat_open_decay" to 0.598104f, "volume" to 0.5733333f),
+        family = "classic")
 
-    private fun hexbeat10() = Patch("Hexbeat", "Plate",
-        mapOf("kick_decay" to 0.446926683f, "kick_punch" to 0.65f, "snare_tune" to 0.5757166f, "snare_decay" to 0.890342653f, "snare_snappy" to 0.95f, "snare_tone" to 0.822981536f, "snare_level" to 1f, "tom_decay" to 0.484728873f, "hat_closed_decay" to 0.231378213f, "cym_decay" to 0.8004371f, "cym_tone" to 0.7304227f, "ride_decay" to 0.718565f, "clap_decay" to 0.8713567f, "clap_tone" to 0.846667f, "volume" to 0.5466667f),
-        family = "room")
+    private fun hexbeat7() = Patch("Hexbeat", "Deep",
+        mapOf("kick_tune" to 0.06674396f, "kick_decay" to 0.634828448f, "snare_tune" to 0.128035f, "snare_decay" to 0.550335765f, "snare_tone" to 0.344010174f, "tom_lo_tune" to 0.0272346623f, "tom_mid_tune" to 0.044907365f, "tom_hi_tune" to 0.06648219f, "tom_decay" to 0.6885239f, "hat_tune" to 0.263034433f, "hat_tone" to 0.3062702f, "cym_tone" to 0.174435332f, "bell_tune" to 0.170518458f, "clave_tune" to 0.238944024f),
+        family = "classic")
 
-    private fun hexbeat11() = Patch("Hexbeat", "Enormous",
-        mapOf("kick_tune" to 0.147971049f, "kick_decay" to 0.9395091f, "kick_punch" to 0.25f, "kick_level" to 1f, "snare_decay" to 0.8404277f, "snare_snappy" to 0.5f, "snare_level" to 0.95f, "tom_decay" to 0.934392631f, "tom_level" to 0.95f, "hat_open_decay" to 0.92551285f, "cym_decay" to 0.982877851f, "cym_level" to 0.7f, "ride_decay" to 0.9471572f, "ride_level" to 0.7f, "clap_decay" to 0.951838732f, "accent" to 0.5f, "volume" to 0.5466667f),
-        family = "room")
-
-    private fun hexbeat12() = Patch("Hexbeat", "Cardboard",
-        mapOf("kick_tune" to 0.5625539f, "kick_decay" to 0.259024829f, "kick_punch" to 0.85f, "snare_tune" to 0.6421988f, "snare_decay" to 0.196207985f, "snare_snappy" to 0.25f, "snare_tone" to 0.277738333f, "tom_decay" to 0.257400155f, "hat_closed_decay" to 0.0960306451f, "hat_open_decay" to 0.08757933f, "hat_tone" to 0.127216786f, "hat_level" to 0.42f, "cym_decay" to 0.231378213f, "cym_level" to 0.3f, "ride_decay" to 0.206648976f, "ride_level" to 0.35f, "rim_tune" to 0.341763f, "clave_tune" to 0.185339361f),
-        family = "dry")
-
-    private fun hexbeat13() = Patch("Hexbeat", "Wooden",
+    private fun hexbeat8() = Patch("Hexbeat", "Wooden",
         mapOf("kick_tune" to 0.489825249f, "kick_decay" to 0.3618988f, "kick_punch" to 0.8f, "snare_tune" to 0.5403673f, "snare_decay" to 0.263193548f, "snare_snappy" to 0.3f, "snare_tone" to 0.402466118f, "tom_decay" to 0.3230075f, "hat_closed_decay" to 0.183609977f, "hat_open_decay" to 0.196207985f, "hat_tone" to 0.398916781f, "cym_level" to 0.18f, "ride_level" to 0.28f, "rim_tune" to 0.52645576f, "rim_level" to 0.85f, "bell_level" to 0.3f, "clave_tune" to 0.464807659f, "clave_level" to 0.8f),
         family = "dry")
 
-    private fun hexbeat14() = Patch("Hexbeat", "Clatter",
-        mapOf("kick_decay" to 0.279114425f, "kick_punch" to 0.9f, "snare_decay" to 0.156891063f, "snare_snappy" to 0.85f, "tom_decay" to 0.231817588f, "hat_closed_decay" to 0.0608604439f, "hat_open_decay" to 0.156891063f, "cym_decay" to 0.186804339f, "cym_level" to 0.35f, "ride_decay" to 0.149725839f, "clap_decay" to 0.211999208f, "rim_tune" to 0.8349093f, "rim_level" to 0.9f, "bell_tune" to 0.7762705f, "bell_decay" to 0.3667258f, "bell_level" to 0.8f, "clave_tune" to 0.7882907f, "clave_level" to 0.85f, "accent" to 0.85f, "volume" to 0.56f),
-        family = "dry")
-
-    private fun hexbeat15() = Patch("Hexbeat", "Deadened",
+    private fun hexbeat9() = Patch("Hexbeat", "Deadened",
         mapOf("kick_tune" to 0.5147993f, "kick_decay" to 0.2011281f, "kick_punch" to 0.9f, "snare_tune" to 0.6096227f, "snare_decay" to 0.112317182f, "snare_snappy" to 0.4f, "snare_tone" to 0.429299772f, "tom_decay" to 0.156012192f, "hat_closed_decay" to 0.0215435047f, "hat_open_decay" to 0.0466536768f, "hat_level" to 0.5f, "cym_decay" to 0.08757933f, "cym_level" to 0.28f, "ride_decay" to 0.06732578f, "ride_level" to 0.3f, "clap_decay" to 0.121356696f, "bell_decay" to 0.135347575f, "accent" to 0.9f, "volume" to 0.5933333f),
         family = "dry")
 
-    private fun hexbeat16() = Patch("Hexbeat", "Tabletop",
+    private fun hexbeat10() = Patch("Hexbeat", "Cardboard",
+        mapOf("kick_tune" to 0.5625539f, "kick_decay" to 0.259024829f, "kick_punch" to 0.85f, "snare_tune" to 0.6421988f, "snare_decay" to 0.196207985f, "snare_snappy" to 0.25f, "snare_tone" to 0.277738333f, "tom_decay" to 0.257400155f, "hat_closed_decay" to 0.0960306451f, "hat_open_decay" to 0.08757933f, "hat_tone" to 0.127216786f, "hat_level" to 0.42f, "cym_decay" to 0.231378213f, "cym_level" to 0.3f, "ride_decay" to 0.206648976f, "ride_level" to 0.35f, "rim_tune" to 0.341763f, "clave_tune" to 0.185339361f),
+        family = "dry")
+
+    private fun hexbeat11() = Patch("Hexbeat", "Tabletop",
         mapOf("kick_tune" to 0.810399652f, "kick_decay" to 0.237326488f, "kick_punch" to 0.75f, "kick_level" to 0.7f, "snare_tune" to 0.84021914f, "snare_decay" to 0.177128062f, "snare_snappy" to 0.5f, "snare_tone" to 0.688020349f, "tom_lo_tune" to 0.6421988f, "tom_mid_tune" to 0.620624f, "tom_hi_tune" to 0.7037516f, "tom_decay" to 0.203795046f, "hat_tune" to 0.7164797f, "hat_closed_decay" to 0.041780483f, "hat_open_decay" to 0.112317182f, "hat_tone" to 0.7873546f, "cym_level" to 0.34f, "ride_level" to 0.34f, "rim_tune" to 0.8867172f, "rim_level" to 0.9f, "bell_tune" to 0.8684828f, "bell_decay" to 0.231378213f, "clave_tune" to 0.865014434f, "clave_level" to 0.85f),
         family = "dry")
 
-    private fun hexbeat17() = Patch("Hexbeat", "Trashy",
-        mapOf("snare_snappy" to 0.9f, "snare_tone" to 0.7987669f, "hat_tune" to 0.792481244f, "hat_closed_decay" to 0.5372436f, "hat_open_decay" to 0.7334516f, "hat_tone" to 0.8784545f, "hat_level" to 0.7f, "cym_decay" to 0.8562011f, "cym_tone" to 0.8516409f, "clap_tone" to 0.7039877f, "accent" to 0.9f, "volume" to 0.5733333f),
-        family = "metal")
+    private fun hexbeat12() = Patch("Hexbeat", "Hall",
+        mapOf("kick_tune" to 0.2563443f, "kick_decay" to 0.6825098f, "kick_punch" to 0.45f, "snare_decay" to 0.7104212f, "snare_snappy" to 0.5f, "snare_tone" to 0.5849686f, "tom_decay" to 0.8000992f, "hat_closed_decay" to 0.43371132f, "hat_open_decay" to 0.8294822f, "cym_decay" to 0.903969347f, "cym_level" to 0.6f, "ride_decay" to 0.850274146f, "ride_level" to 0.6f, "clap_decay" to 0.7675974f, "bell_decay" to 0.8294822f),
+        family = "room")
 
-    private fun hexbeat18() = Patch("Hexbeat", "Glassy",
+    private fun hexbeat13() = Patch("Hexbeat", "Plate",
+        mapOf("kick_decay" to 0.446926683f, "kick_punch" to 0.65f, "snare_tune" to 0.5757166f, "snare_decay" to 0.890342653f, "snare_snappy" to 0.95f, "snare_tone" to 0.822981536f, "snare_level" to 1f, "tom_decay" to 0.484728873f, "hat_closed_decay" to 0.231378213f, "cym_decay" to 0.8004371f, "cym_tone" to 0.7304227f, "ride_decay" to 0.718565f, "clap_decay" to 0.8713567f, "clap_tone" to 0.846667f, "volume" to 0.5466667f),
+        family = "room")
+
+    private fun hexbeat14() = Patch("Hexbeat", "Distant",
+        mapOf("kick_tune" to 0.221803173f, "kick_decay" to 0.7154089f, "kick_punch" to 0.28f, "kick_level" to 0.7f, "snare_decay" to 0.7407883f, "snare_snappy" to 0.35f, "snare_tone" to 0.3119796f, "snare_level" to 0.6f, "tom_decay" to 0.822440147f, "tom_level" to 0.65f, "hat_tune" to 0.320772976f, "hat_closed_decay" to 0.514213145f, "hat_open_decay" to 0.7686218f, "hat_tone" to 0.23881422f, "hat_level" to 0.4f, "cym_decay" to 0.880939f, "cym_tone" to 0.174435332f, "cym_level" to 0.34f, "ride_decay" to 0.8313331f, "ride_level" to 0.32f, "clap_decay" to 0.8157586f, "clap_tone" to 0.172690585f, "rim_level" to 0.4f, "bell_level" to 0.3f, "clave_level" to 0.35f, "volume" to 0.76f),
+        family = "room")
+
+    private fun hexbeat15() = Patch("Hexbeat", "Parlour",
+        mapOf("kick_tune" to 0.2730787f, "kick_decay" to 0.634828448f, "kick_punch" to 0.48f, "snare_decay" to 0.658964455f, "snare_snappy" to 0.5f, "snare_tone" to 0.5655033f, "tom_decay" to 0.740238249f, "hat_closed_decay" to 0.4149882f, "hat_open_decay" to 0.7334516f, "cym_decay" to 0.8294822f, "cym_level" to 0.55f, "ride_decay" to 0.767874062f, "ride_level" to 0.55f, "clap_decay" to 0.711999238f, "bell_decay" to 0.7686218f, "mac1_d1" to 0.0571428575f, "mac1_d2" to 0.171428576f, "mac1_d3" to 0.314285725f, "mac1_d4" to 0.4857143f, "mac1_a1" to 0.625f, "mac1_a2" to 0.625f, "mac1_a3" to 0.65f, "mac1_a4" to 0.625f, "mac2_d1" to 0.45714286f, "mac2_d2" to 0.54285717f, "mac2_d3" to 0.22857143f, "mac2_d4" to 0.6571429f, "mac2_a1" to 0.35f, "mac2_a2" to 0.4f, "mac2_a3" to 0.35f, "mac2_a4" to 0.35f, "mac3_d1" to 0.0285714287f, "mac3_d2" to 0.114285715f, "mac3_d3" to 0.2857143f, "mac3_d4" to 0.342857152f, "mac3_a1" to 0.35f, "mac3_a2" to 0.55f, "mac3_a3" to 0.375f, "mac3_a4" to 0.6f, "mac4_d1" to 0.4857143f, "mac4_d2" to 0.5714286f, "mac4_d3" to 0.4f, "mac4_d4" to 0.54285717f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac4_a3" to 0.65f, "mac4_a4" to 0.6f, "mac5_d1" to 0.0571428575f, "mac5_d2" to 0.171428576f, "mac5_d3" to 0.314285725f, "mac5_d4" to 0.628571451f, "mac5_a1" to 0.325f, "mac5_a2" to 0.325f, "mac5_a3" to 0.3f, "mac5_a4" to 0.3f, "mac6_d1" to 0.6857143f, "mac6_d2" to 0.628571451f, "mac6_d3" to 0.257142872f, "mac6_d4" to 0.6571429f, "mac6_a1" to 0.65f, "mac6_a2" to 0.6f, "mac6_a3" to 0.35f, "mac6_a4" to 0.55f, "mac7_d1" to 0.428571433f, "mac7_d2" to 0.514285743f, "mac7_d3" to 0.22857143f, "mac7_d4" to 0.371428579f, "mac7_a1" to 0.25f, "mac7_a2" to 0.25f, "mac7_a3" to 0.35f, "mac7_a4" to 0.35f, "mac8_d1" to 0.9142857f, "mac8_d2" to 0.942857146f, "mac8_d3" to 0.08571429f, "mac8_d4" to 0.2f, "mac8_a1" to 0.7f, "mac8_a2" to 0.6f, "mac8_a3" to 0.65f, "mac8_a4" to 0.65f),
+        mapOf("macro1" to "Size", "macro2" to "Distance", "macro3" to "Boom", "macro4" to "Wash", "macro5" to "Dry Up", "macro6" to "Clap", "macro7" to "Dark", "macro8" to "Hit"),
+        family = "room")
+
+    private fun hexbeat16() = Patch("Hexbeat", "Stadium",
+        mapOf("kick_tune" to 0.167068228f, "kick_decay" to 0.744744f, "kick_punch" to 0.3f, "kick_level" to 0.85f, "snare_decay" to 0.6770125f, "snare_snappy" to 0.45f, "snare_level" to 0.7f, "tom_lo_tune" to 0.07916309f, "tom_mid_tune" to 0.08751075f, "tom_hi_tune" to 0.139816508f, "tom_decay" to 0.9088101f, "tom_level" to 1f, "hat_open_decay" to 0.7334516f, "cym_decay" to 0.8562011f, "clap_decay" to 0.844627857f, "clap_tone" to 0.310581356f, "clap_level" to 0.9f, "volume" to 0.5466667f),
+        family = "room")
+
+    private fun hexbeat17() = Patch("Hexbeat", "Enormous",
+        mapOf("kick_tune" to 0.147971049f, "kick_decay" to 0.9395091f, "kick_punch" to 0.25f, "kick_level" to 1f, "snare_decay" to 0.8404277f, "snare_snappy" to 0.5f, "snare_level" to 0.95f, "tom_decay" to 0.934392631f, "tom_level" to 0.95f, "hat_open_decay" to 0.92551285f, "cym_decay" to 0.982877851f, "cym_level" to 0.7f, "ride_decay" to 0.9471572f, "ride_level" to 0.7f, "clap_decay" to 0.951838732f, "accent" to 0.5f, "volume" to 0.5466667f),
+        family = "room")
+
+    private fun hexbeat18() = Patch("Hexbeat", "Clatter",
+        mapOf("kick_decay" to 0.279114425f, "kick_punch" to 0.9f, "snare_decay" to 0.156891063f, "snare_snappy" to 0.85f, "tom_decay" to 0.231817588f, "hat_closed_decay" to 0.0608604439f, "hat_open_decay" to 0.156891063f, "cym_decay" to 0.186804339f, "cym_level" to 0.35f, "ride_decay" to 0.149725839f, "clap_decay" to 0.211999208f, "rim_tune" to 0.8349093f, "rim_level" to 0.9f, "bell_tune" to 0.7762705f, "bell_decay" to 0.3667258f, "bell_level" to 0.8f, "clave_tune" to 0.7882907f, "clave_level" to 0.85f, "accent" to 0.85f, "volume" to 0.56f),
+        family = "dirty")
+
+    private fun hexbeat19() = Patch("Hexbeat", "Trashy",
+        mapOf("snare_snappy" to 0.9f, "snare_tone" to 0.7987669f, "hat_tune" to 0.792481244f, "hat_closed_decay" to 0.5372436f, "hat_open_decay" to 0.7334516f, "hat_tone" to 0.8784545f, "hat_level" to 0.7f, "cym_decay" to 0.8562011f, "cym_tone" to 0.8516409f, "clap_tone" to 0.7039877f, "accent" to 0.9f, "volume" to 0.5733333f),
+        family = "dirty")
+
+    private fun hexbeat20() = Patch("Hexbeat", "Gravel",
+        mapOf("kick_tune" to 0.409931868f, "kick_decay" to 0.401640832f, "kick_punch" to 0.8f, "snare_decay" to 0.3667258f, "snare_snappy" to 0.7f, "snare_tone" to 0.6559898f, "tom_decay" to 0.435612649f, "hat_closed_decay" to 0.2731587f, "hat_open_decay" to 0.388269275f, "cym_decay" to 0.5372436f, "ride_decay" to 0.405683875f, "clap_decay" to 0.419517964f, "volume" to 0.286666662f, "drive" to 0.3875f, "mac1_d1" to 0.942857146f, "mac1_d2" to 0.9714286f, "mac1_d3" to 0.9142857f, "mac1_a1" to 0.675f, "mac1_a2" to 0.425f, "mac1_a3" to 0.6f, "mac2_d1" to 0.2f, "mac2_d2" to 0.22857143f, "mac2_d3" to 0.428571433f, "mac2_d4" to 0.942857146f, "mac2_a1" to 0.7f, "mac2_a2" to 0.65f, "mac2_a3" to 0.65f, "mac2_a4" to 0.575f, "mac3_d1" to 0.08571429f, "mac3_d2" to 0.114285715f, "mac3_d3" to 0.0571428575f, "mac3_d4" to 0.0285714287f, "mac3_a1" to 0.7f, "mac3_a2" to 0.55f, "mac3_a3" to 0.6f, "mac3_a4" to 0.4f, "mac4_d1" to 0.371428579f, "mac4_d2" to 0.514285743f, "mac4_d3" to 0.428571433f, "mac4_a1" to 0.35f, "mac4_a2" to 0.3f, "mac4_a3" to 0.35f, "mac5_d1" to 0.4f, "mac5_d2" to 0.0571428575f, "mac5_d3" to 0.171428576f, "mac5_d4" to 0.314285725f, "mac5_a1" to 0.35f, "mac5_a2" to 0.35f, "mac5_a3" to 0.35f, "mac5_a4" to 0.35f, "mac6_d1" to 0.6857143f, "mac6_d2" to 0.742857158f, "mac6_d3" to 0.628571451f, "mac6_d4" to 0.257142872f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac6_a3" to 0.4f, "mac6_a4" to 0.4f, "mac7_d1" to 1f, "mac7_d2" to 0.942857146f, "mac7_a1" to 0.625f, "mac7_a2" to 0.45f, "mac8_d1" to 0.828571439f, "mac8_d2" to 0.7714286f, "mac8_d3" to 0.8857143f, "mac8_d4" to 0.857142866f, "mac8_a1" to 0.7f, "mac8_a2" to 0.6f, "mac8_a3" to 0.65f, "mac8_a4" to 0.6f),
+        mapOf("macro1" to "Grit", "macro2" to "Fuzz", "macro3" to "Thump", "macro4" to "Rust", "macro5" to "Choke", "macro6" to "Slap", "macro7" to "Tilt", "macro8" to "Bell"),
+        family = "dirty")
+
+    private fun hexbeat21() = Patch("Hexbeat", "Glassy",
         mapOf("kick_decay" to 0.446926683f, "hat_tune" to 0.9437626f, "hat_closed_decay" to 0.32740885f, "hat_tone" to 0.738140464f, "hat_level" to 0.34f, "cym_decay" to 0.8294822f, "cym_tone" to 0.7304227f, "cym_level" to 0.28f, "ride_decay" to 0.8854693f, "ride_level" to 0.34f, "rim_tune" to 0.9571323f, "rim_level" to 0.85f, "bell_tune" to 0.969299734f, "bell_decay" to 0.9522318f, "bell_level" to 1f, "clave_tune" to 0.9573967f, "clave_level" to 0.95f, "volume" to 0.5133333f),
         family = "metal")
 
-    private fun hexbeat19() = Patch("Hexbeat", "Ironworks",
-        mapOf("kick_tune" to 0.1857264f, "kick_decay" to 0.6131301f, "snare_snappy" to 0.45f, "snare_tone" to 0.2409584f, "hat_tune" to 0f, "hat_closed_decay" to 0.598104f, "hat_open_decay" to 0.880939f, "hat_tone" to 0f, "hat_level" to 0.68f, "cym_decay" to 0.9457498f, "cym_tone" to 0f, "cym_level" to 0.62f, "ride_decay" to 0.9175999f, "ride_level" to 0.58f, "rim_tune" to 0.07776823f, "bell_tune" to 0.04655474f, "bell_decay" to 0.880939f, "bell_level" to 0.7f, "clave_tune" to 0.0339060426f),
-        family = "metal")
-
-    private fun hexbeat20() = Patch("Hexbeat", "Splash",
+    private fun hexbeat22() = Patch("Hexbeat", "Splash",
         mapOf("kick_decay" to 0.401640832f, "kick_punch" to 0.7f, "snare_decay" to 0.318957537f, "snare_snappy" to 0.8f, "snare_tone" to 0.746476352f, "tom_decay" to 0.392509162f, "hat_tune" to 0.8390359f, "hat_closed_decay" to 0.127845958f, "hat_open_decay" to 0.231378213f, "hat_tone" to 0.9207989f, "cym_decay" to 0f, "cym_tone" to 1f, "cym_level" to 0.72f, "ride_decay" to 0f, "ride_level" to 0.62f, "accent" to 0.85f),
         family = "metal")
 
-    private fun hexbeat21() = Patch("Hexbeat", "Gamelan",
-        mapOf("kick_tune" to 0.321306437f, "kick_decay" to 0.5769318f, "kick_punch" to 0.35f, "snare_decay" to 0.52361685f, "snare_level" to 0.4f, "tom_lo_tune" to 0.50344646f, "tom_mid_tune" to 0.50344646f, "tom_hi_tune" to 0.6029513f, "tom_decay" to 0.7305976f, "hat_tune" to 0.962999761f, "hat_closed_decay" to 0.48947534f, "hat_open_decay" to 0.8004371f, "hat_level" to 0.42f, "cym_decay" to 0.92551285f, "cym_tone" to 0.6352807f, "cym_level" to 0.55f, "ride_decay" to 0.974523067f, "rim_tune" to 0.6826062f, "rim_level" to 0.75f, "bell_tune" to 1f, "bell_decay" to 1f, "bell_level" to 1f, "clave_tune" to 1f, "clave_level" to 0.9f, "volume" to 0.50666666f),
-        family = "metal")
-
-    private fun hexbeat22() = Patch("Hexbeat", "Sizzle",
+    private fun hexbeat23() = Patch("Hexbeat", "Sizzle",
         mapOf("kick_tune" to 0.289475143f, "kick_decay" to 0.485719174f, "snare_decay" to 0.4085063f, "snare_snappy" to 0.8f, "snare_tone" to 0.8460695f, "tom_decay" to 0.4611952f, "hat_tune" to 0.882767439f, "hat_closed_decay" to 0f, "hat_open_decay" to 1f, "hat_tone" to 1f, "hat_level" to 0.75f, "cym_decay" to 0.7334516f, "cym_tone" to 0.9216908f, "cym_level" to 0.42f, "ride_decay" to 1f, "ride_level" to 0.68f, "accent" to 0.7f),
         family = "metal")
 
-    private fun hexbeat23() = Patch("Hexbeat", "Circuitry",
+    private fun hexbeat24() = Patch("Hexbeat", "Ironworks",
+        mapOf("kick_tune" to 0.1857264f, "kick_decay" to 0.6131301f, "snare_snappy" to 0.45f, "snare_tone" to 0.2409584f, "hat_tune" to 0f, "hat_closed_decay" to 0.598104f, "hat_open_decay" to 0.880939f, "hat_tone" to 0f, "hat_level" to 0.68f, "cym_decay" to 0.9457498f, "cym_tone" to 0f, "cym_level" to 0.62f, "ride_decay" to 0.9175999f, "ride_level" to 0.58f, "rim_tune" to 0.07776823f, "bell_tune" to 0.04655474f, "bell_decay" to 0.880939f, "bell_level" to 0.7f, "clave_tune" to 0.0339060426f),
+        family = "metal")
+
+    private fun hexbeat25() = Patch("Hexbeat", "Circuitry",
         mapOf("kick_tune" to 0.5854172f, "kick_decay" to 0.315312773f, "kick_punch" to 0.95f, "snare_tune" to 0.9573967f, "snare_decay" to 0.214256078f, "snare_snappy" to 0.15f, "snare_tone" to 0.9095135f, "tom_lo_tune" to 0.761056f, "tom_mid_tune" to 0.761056f, "tom_hi_tune" to 0.865014434f, "tom_decay" to 0.280933827f, "hat_tune" to 0.7680265f, "hat_closed_decay" to 0.07890851f, "hat_open_decay" to 0.24766475f, "hat_tone" to 0.8340438f, "rim_tune" to 0.934535861f, "rim_level" to 0.85f, "bell_tune" to 0.9239985f, "bell_decay" to 0.282834977f, "clave_tune" to 0.9124893f, "clave_level" to 0.8f, "accent" to 0.9f, "volume" to 0.58f),
         family = "electro")
 
-    private fun hexbeat24() = Patch("Hexbeat", "Rubber",
+    private fun hexbeat26() = Patch("Hexbeat", "Rubber",
         mapOf("kick_tune" to 0.108373269f, "kick_decay" to 0.549800634f, "kick_punch" to 1f, "kick_level" to 1f, "snare_tune" to 0.238944024f, "snare_decay" to 0.3667258f, "snare_snappy" to 0.1f, "snare_tone" to 0.201233059f, "snare_level" to 0.6f, "tom_lo_tune" to 0f, "tom_mid_tune" to 0f, "tom_hi_tune" to 0f, "tom_decay" to 0.52680254f, "hat_tune" to 0.382767379f, "hat_closed_decay" to 0.231378213f, "hat_open_decay" to 0.3667258f, "hat_tone" to 0.273166984f, "hat_level" to 0.45f, "cym_level" to 0.2f, "ride_level" to 0.24f, "clap_level" to 0.3f, "bell_tune" to 0.242713392f, "clave_tune" to 0.128035f, "volume" to 0.5466667f),
         family = "electro")
 
-    private fun hexbeat25() = Patch("Hexbeat", "Falling",
+    private fun hexbeat27() = Patch("Hexbeat", "Falling",
         mapOf("kick_tune" to 0.0451001376f, "kick_decay" to 0.7835365f, "kick_punch" to 1f, "snare_decay" to 0.462756425f, "snare_snappy" to 0.5f, "snare_level" to 0.55f, "tom_lo_tune" to 0f, "tom_hi_tune" to 0.84021914f, "tom_decay" to 1f, "tom_level" to 1f, "hat_closed_decay" to 0.282834977f, "hat_open_decay" to 0.64956075f, "hat_level" to 0.45f, "cym_decay" to 0.8294822f, "cym_tone" to 0.3527932f, "cym_level" to 0.35f, "ride_level" to 0.42f, "accent" to 0.55f, "volume" to 0.54f),
         family = "electro")
 
-    private fun hexbeat26() = Patch("Hexbeat", "Chordal",
-        mapOf("kick_tune" to 0.502408266f, "kick_decay" to 0.5769318f, "kick_punch" to 0.4f, "snare_tune" to 0.4075033f, "snare_decay" to 0.550335765f, "snare_snappy" to 0.3f, "snare_tone" to 0.402466118f, "snare_level" to 0.6f, "tom_lo_tune" to 0.4075033f, "tom_mid_tune" to 0.217915416f, "tom_hi_tune" to 0.168559343f, "tom_decay" to 0.849810064f, "tom_level" to 0.95f, "hat_tune" to 0.423998415f, "hat_closed_decay" to 0.32740885f, "hat_open_decay" to 0.550335765f, "hat_level" to 0.42f, "cym_level" to 0.26f, "ride_level" to 0.28f, "rim_tune" to 0.5968708f, "bell_tune" to 0.192945555f, "bell_decay" to 0.9769696f, "bell_level" to 0.75f, "clave_tune" to 0.222163931f, "volume" to 0.5733333f),
-        family = "electro")
-
-    private fun hexbeat27() = Patch("Hexbeat", "Bleep",
+    private fun hexbeat28() = Patch("Hexbeat", "Bleep",
         mapOf("kick_tune" to 0.670927167f, "kick_decay" to 0.279114425f, "kick_punch" to 0.8f, "kick_level" to 0.7f, "snare_tune" to 0.865014434f, "snare_decay" to 0.156891063f, "snare_snappy" to 0.2f, "snare_tone" to 0.868131042f, "snare_level" to 0.5f, "tom_decay" to 0.231817588f, "tom_level" to 0.5f, "hat_tune" to 0.8390359f, "hat_closed_decay" to 0.0215435047f, "hat_open_decay" to 0.135347575f, "hat_level" to 0.4f, "cym_level" to 0.16f, "ride_level" to 0.2f, "clap_level" to 0.3f, "rim_tune" to 1f, "rim_level" to 1f, "bell_tune" to 0.969299734f, "bell_decay" to 0.0960306451f, "bell_level" to 0.8f, "clave_tune" to 1f, "clave_level" to 1f, "accent" to 0.95f, "volume" to 0.46f),
         family = "electro")
 
-    private fun hexbeat28() = Patch("Hexbeat", "Handclap",
+    private fun hexbeat29() = Patch("Hexbeat", "Handclap",
         mapOf("kick_tune" to 0.289475143f, "kick_decay" to 0.5032146f, "kick_level" to 1f, "snare_decay" to 0.3436954f, "snare_snappy" to 0.3f, "snare_level" to 0.28f, "hat_closed_decay" to 0.2731587f, "hat_open_decay" to 0.292238653f, "hat_level" to 0.38f, "cym_level" to 0.25f, "ride_level" to 0.3f, "clap_decay" to 0.981499851f, "clap_tone" to 0.108723558f, "clap_level" to 1f, "rim_level" to 0.4f, "bell_level" to 0.35f, "volume" to 0.5466667f),
         family = "perc")
 
-    private fun hexbeat29() = Patch("Hexbeat", "Clapback",
+    private fun hexbeat30() = Patch("Hexbeat", "Clapback",
         mapOf("kick_tune" to 0.409931868f, "kick_decay" to 0.413691f, "kick_punch" to 0.7f, "snare_tune" to 0.50344646f, "snare_decay" to 0.292238653f, "snare_snappy" to 0.7f, "snare_tone" to 0.7181085f, "snare_level" to 0.75f, "tom_decay" to 0.4075901f, "hat_closed_decay" to 0.127845958f, "hat_open_decay" to 0.318957537f, "hat_tone" to 0.796886f, "clap_decay" to 0f, "clap_tone" to 1f, "clap_level" to 1f, "accent" to 0.85f, "volume" to 0.34f),
         family = "perc")
 
-    private fun hexbeat30() = Patch("Hexbeat", "Blocks",
-        mapOf("kick_tune" to 0.607654f, "kick_decay" to 0.297817349f, "kick_punch" to 0.8f, "snare_tune" to 0.732897937f, "snare_decay" to 0.231378213f, "snare_snappy" to 0.25f, "snare_level" to 0.6f, "tom_lo_tune" to 0.561756968f, "tom_mid_tune" to 0.537956357f, "tom_hi_tune" to 0.6162409f, "tom_decay" to 0.341982722f, "tom_level" to 0.9f, "hat_closed_decay" to 0.112317182f, "hat_open_decay" to 0.177128062f, "hat_tone" to 0.338211745f, "hat_level" to 0.45f, "cym_level" to 0.34f, "ride_level" to 0.34f, "rim_tune" to 0.451049984f, "rim_level" to 1f, "bell_tune" to 0.670518458f, "bell_decay" to 0.202333108f, "bell_level" to 0.8f, "clave_tune" to 0.38168f, "clave_level" to 0.95f, "volume" to 0.5466667f),
-        family = "perc")
-
-    private fun hexbeat31() = Patch("Hexbeat", "Cowbells",
-        mapOf("kick_tune" to 0.351936251f, "kick_decay" to 0.485719174f, "kick_level" to 0.8f, "snare_decay" to 0.427586228f, "snare_snappy" to 0.5f, "snare_level" to 0.6f, "tom_decay" to 0.5065177f, "tom_level" to 0.65f, "hat_closed_decay" to 0.231378213f, "hat_open_decay" to 0.4456343f, "hat_level" to 0.45f, "cym_level" to 0.26f, "ride_level" to 0.3f, "clap_level" to 0.4f, "rim_tune" to 0.560983241f, "rim_level" to 0.6f, "bell_decay" to 0.880939f, "bell_level" to 1f, "clave_tune" to 0.50344646f, "clave_level" to 0.7f, "volume" to 0.533333361f),
-        family = "perc")
-
-    private fun hexbeat32() = Patch("Hexbeat", "Sidestick",
+    private fun hexbeat31() = Patch("Hexbeat", "Sidestick",
         mapOf("kick_tune" to 0.321306437f, "kick_decay" to 0.519649f, "kick_level" to 0.95f, "snare_decay" to 0.3667258f, "snare_level" to 0.22f, "tom_decay" to 0.5457778f, "hat_closed_decay" to 0.292238653f, "hat_open_decay" to 0.494571745f, "hat_tone" to 0.584240556f, "hat_level" to 0.55f, "cym_decay" to 0.694134653f, "cym_level" to 0.34f, "ride_decay" to 0.629511237f, "ride_level" to 0.42f, "clap_level" to 0.35f, "rim_level" to 1f, "bell_level" to 0.35f, "clave_level" to 0.45f, "volume" to 0.5466667f),
         family = "perc")
 
-    private val hexbeat: List<Patch> by lazy { listOf(hexbeat0(), hexbeat1(), hexbeat2(), hexbeat3(), hexbeat4(), hexbeat5(), hexbeat6(), hexbeat7(), hexbeat8(), hexbeat9(), hexbeat10(), hexbeat11(), hexbeat12(), hexbeat13(), hexbeat14(), hexbeat15(), hexbeat16(), hexbeat17(), hexbeat18(), hexbeat19(), hexbeat20(), hexbeat21(), hexbeat22(), hexbeat23(), hexbeat24(), hexbeat25(), hexbeat26(), hexbeat27(), hexbeat28(), hexbeat29(), hexbeat30(), hexbeat31(), hexbeat32()) }
+    private fun hexbeat32() = Patch("Hexbeat", "Blocks",
+        mapOf("kick_tune" to 0.607654f, "kick_decay" to 0.297817349f, "kick_punch" to 0.8f, "snare_tune" to 0.732897937f, "snare_decay" to 0.231378213f, "snare_snappy" to 0.25f, "snare_level" to 0.6f, "tom_lo_tune" to 0.561756968f, "tom_mid_tune" to 0.537956357f, "tom_hi_tune" to 0.6162409f, "tom_decay" to 0.341982722f, "tom_level" to 0.9f, "hat_closed_decay" to 0.112317182f, "hat_open_decay" to 0.177128062f, "hat_tone" to 0.338211745f, "hat_level" to 0.45f, "cym_level" to 0.34f, "ride_level" to 0.34f, "rim_tune" to 0.451049984f, "rim_level" to 1f, "bell_tune" to 0.670518458f, "bell_decay" to 0.202333108f, "bell_level" to 0.8f, "clave_tune" to 0.38168f, "clave_level" to 0.95f, "volume" to 0.5466667f),
+        family = "perc")
+
+    private fun hexbeat33() = Patch("Hexbeat", "Cowbells",
+        mapOf("kick_tune" to 0.351936251f, "kick_decay" to 0.485719174f, "kick_level" to 0.8f, "snare_decay" to 0.427586228f, "snare_snappy" to 0.5f, "snare_level" to 0.6f, "tom_decay" to 0.5065177f, "tom_level" to 0.65f, "hat_closed_decay" to 0.231378213f, "hat_open_decay" to 0.4456343f, "hat_level" to 0.45f, "cym_level" to 0.26f, "ride_level" to 0.3f, "clap_level" to 0.4f, "rim_tune" to 0.560983241f, "rim_level" to 0.6f, "bell_decay" to 0.880939f, "bell_level" to 1f, "clave_tune" to 0.50344646f, "clave_level" to 0.7f, "volume" to 0.533333361f),
+        family = "perc")
+
+    private fun hexbeat34() = Patch("Hexbeat", "Chordal",
+        mapOf("kick_tune" to 0.502408266f, "kick_decay" to 0.5769318f, "kick_punch" to 0.4f, "snare_tune" to 0.4075033f, "snare_decay" to 0.550335765f, "snare_snappy" to 0.3f, "snare_tone" to 0.402466118f, "snare_level" to 0.6f, "tom_lo_tune" to 0.4075033f, "tom_mid_tune" to 0.217915416f, "tom_hi_tune" to 0.168559343f, "tom_decay" to 0.849810064f, "tom_level" to 0.95f, "hat_tune" to 0.423998415f, "hat_closed_decay" to 0.32740885f, "hat_open_decay" to 0.550335765f, "hat_level" to 0.42f, "cym_level" to 0.26f, "ride_level" to 0.28f, "rim_tune" to 0.5968708f, "bell_tune" to 0.192945555f, "bell_decay" to 0.9769696f, "bell_level" to 0.75f, "clave_tune" to 0.222163931f, "volume" to 0.5733333f),
+        family = "odd")
+
+    private fun hexbeat35() = Patch("Hexbeat", "Gamelan",
+        mapOf("kick_tune" to 0.321306437f, "kick_decay" to 0.5769318f, "kick_punch" to 0.35f, "snare_decay" to 0.52361685f, "snare_level" to 0.4f, "tom_lo_tune" to 0.50344646f, "tom_mid_tune" to 0.50344646f, "tom_hi_tune" to 0.6029513f, "tom_decay" to 0.7305976f, "hat_tune" to 0.962999761f, "hat_closed_decay" to 0.48947534f, "hat_open_decay" to 0.8004371f, "hat_level" to 0.42f, "cym_decay" to 0.92551285f, "cym_tone" to 0.6352807f, "cym_level" to 0.55f, "ride_decay" to 0.974523067f, "rim_tune" to 0.6826062f, "rim_level" to 0.75f, "bell_tune" to 1f, "bell_decay" to 1f, "bell_level" to 1f, "clave_tune" to 1f, "clave_level" to 0.9f, "volume" to 0.50666666f),
+        family = "odd")
+
+    private fun hexbeat36() = Patch("Hexbeat", "Windup",
+        mapOf("kick_tune" to 0.76651907f, "kick_decay" to 0.237326488f, "kick_punch" to 0.7f, "snare_tune" to 0.9573967f, "snare_decay" to 0.196207985f, "snare_snappy" to 0.9f, "snare_tone" to 0.9477094f, "tom_lo_tune" to 0.9573967f, "tom_mid_tune" to 0.9426957f, "tom_hi_tune" to 0.9573967f, "tom_decay" to 0.302722633f, "hat_tune" to 0.8390359f, "hat_closed_decay" to 0.0960306451f, "hat_open_decay" to 0.156891063f, "hat_tone" to 0.9207989f, "cym_decay" to 0.231378213f, "cym_tone" to 0.9619976f, "ride_decay" to 0.3383581f, "clap_decay" to 0.211999208f, "clap_tone" to 0.9525916f, "rim_tune" to 0.9571323f, "bell_tune" to 0.9372346f, "bell_decay" to 0.3667258f, "clave_tune" to 0.9573967f, "mac1_d1" to 1f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2857143f, "mac2_d2" to 0.0285714287f, "mac2_d3" to 0.7714286f, "mac2_d4" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.65f, "mac2_a3" to 0.35f, "mac2_a4" to 0.6f, "mac3_d1" to 0.4f, "mac3_d2" to 0.371428579f, "mac3_d3" to 0.2f, "mac3_d4" to 0.628571451f, "mac3_a1" to 0.7f, "mac3_a2" to 0.35f, "mac3_a3" to 0.3f, "mac3_a4" to 0.65f, "mac4_d1" to 0.714285731f, "mac4_d2" to 0.857142866f, "mac4_d3" to 0.7714286f, "mac4_d4" to 0.142857149f, "mac4_a1" to 0.7f, "mac4_a2" to 0.65f, "mac4_a3" to 0.65f, "mac4_a4" to 0.6f, "mac5_d1" to 0.0571428575f, "mac5_d2" to 0.314285725f, "mac5_d3" to 0.171428576f, "mac5_d4" to 0.8f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.65f, "mac5_a4" to 0.65f, "mac6_d1" to 0.4857143f, "mac6_d2" to 0.514285743f, "mac6_d3" to 0.5714286f, "mac6_d4" to 0.54285717f, "mac6_a1" to 0.65f, "mac6_a2" to 0.3f, "mac6_a3" to 0.65f, "mac6_a4" to 0.6f, "mac7_d1" to 0.942857146f, "mac7_d2" to 1f, "mac7_d3" to 0.08571429f, "mac7_a1" to 0.7f, "mac7_a2" to 0.4f, "mac7_a3" to 0.65f, "mac8_d1" to 0.9714286f, "mac8_d2" to 0.428571433f, "mac8_d3" to 0.22857143f, "mac8_d4" to 0.6571429f, "mac8_a1" to 0.4f, "mac8_a2" to 0.3f, "mac8_a3" to 0.3f, "mac8_a4" to 0.3f),
+        mapOf("macro1" to "Wind", "macro2" to "Wobble", "macro3" to "Rattle", "macro4" to "Squeak", "macro5" to "Mush", "macro6" to "Clank", "macro7" to "Crumple", "macro8" to "Hush"),
+        family = "odd")
+
+    private val hexbeat: List<Patch> by lazy { listOf(hexbeat0(), hexbeat1(), hexbeat2(), hexbeat3(), hexbeat4(), hexbeat5(), hexbeat6(), hexbeat7(), hexbeat8(), hexbeat9(), hexbeat10(), hexbeat11(), hexbeat12(), hexbeat13(), hexbeat14(), hexbeat15(), hexbeat16(), hexbeat17(), hexbeat18(), hexbeat19(), hexbeat20(), hexbeat21(), hexbeat22(), hexbeat23(), hexbeat24(), hexbeat25(), hexbeat26(), hexbeat27(), hexbeat28(), hexbeat29(), hexbeat30(), hexbeat31(), hexbeat32(), hexbeat33(), hexbeat34(), hexbeat35(), hexbeat36()) }
 
     private fun genesis0() = Patch("Genesis", "Init", emptyMap(),
         family = "classic")

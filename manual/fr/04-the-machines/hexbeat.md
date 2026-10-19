@@ -25,7 +25,23 @@ quelques commandes à elles :
 - **cloche** et **claves** - accord et niveau.
 
 **accent** est ce qu’un coup fort ajoute à tout le kit, et **vél.** est la part
-de la vélocité dans le niveau de chaque coup.
+de la vélocité dans le niveau de chaque coup. **drive** est la force avec
+laquelle les voix poussent l’écrêteur de sortie : bas, le son reste propre,
+haut, il craque sur un kit chargé.
+
+## Macros
+
+La carte **macros** de la page du kit a huit boutons macro. Un patch peut les
+nommer (Serré, Salle, etc.) et les noms s’affichent sur les boutons, dans les
+lanes d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La section **macros** règle ce que fait chacune. Une macro a quatre routes,
+une destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tous les accordages ensemble,
+24 demi-tons à 1. Un changement d’accordage ou de déclin s’entend au coup
+suivant. Touchez le nom d’une macro pour la renommer.
 
 ## Astuces
 
