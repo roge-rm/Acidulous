@@ -1941,6 +1941,8 @@ patch "Shimmer Pad" note=62 range=43..88 family=shimmer
   # Macros: each knob adds its depth to the destinations below.
   mac1_d1  #2
   mac1_a1  0.8
+  mac1_d2  #13
+  mac1_a2  -0.2
   mac2_d1  #8
   mac2_a1  -0.3
   mac2_d2  #9
@@ -3297,7 +3299,7 @@ patch "Slow Turn" note=60 range=36..84 family=morph role=drone
   mac6_d2  #11
   mac6_a2  0.4
   mac6_d3  #13
-  mac6_a3  -0.25
+  mac6_a3  -0.4
   mac7_d1  #17
   mac7_a1  0.5
   mac7_d2  #13
@@ -3814,6 +3816,51 @@ patch "Inside Out" note=60 range=36..84 family=morph role=drone
 # The whole cloud, given a hard attack and a short decay. A pad machine
 # playing something that is not a pad, which the envelope alone decides.
 patch "Spectral Pluck" note=60 range=40..84 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.15
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.08
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
   partials       42
   tilt           -10 dB/oct
   bandwidth      16 cents
@@ -3831,9 +3878,119 @@ patch "Spectral Pluck" note=60 range=40..84 family=pluck role=keys
   amprelease     0.9 s
   volume         1.25
 
+# Few partials, a dark tilt and a low cutoff with a little envelope on
+# it. The soft one, for under a melody.
+patch "Felt Pluck" note=60 range=40..84 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.3
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.15
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       30
+  tilt           -14 dB/oct
+  bandwidth      12 cents
+  bbandwidth     40 cents
+  detune         5 cents
+  drift          3 cents
+  cutoff         4500 Hz
+  filterenv      0.3
+  filtdecay      0.4 s
+  filterkey      0.5
+  ampattack      0.004 s
+  ampdecay       1.4 s
+  ampsustain     0
+  amprelease     1.2 s
+  volume         1.24
+  send reverb    0.12
+
 # Softer at the front and longer at the back, with the bands narrow
 # enough to keep the pitch clear under a fast passage.
 patch "Harp Cloud" note=64 range=43..88 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.2
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.12
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
   partials       36
   tilt           -11 dB/oct
   bandwidth      11 cents
@@ -3852,6 +4009,51 @@ patch "Harp Cloud" note=64 range=43..88 family=pluck role=keys
 # Struck strings with a little stretch on them and a lot of top. The
 # unison spread is what does the ringing, not a reverb.
 patch Cimbalom note=64 range=45..88 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.15
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.08
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
   partials       52
   tilt           -7 dB/oct
   bandwidth      14 cents
@@ -3868,10 +4070,122 @@ patch Cimbalom note=64 range=45..88 family=pluck role=keys
   amprelease     2.4 s
   volume         1.13
 
+# A tine: mostly odd partials, very narrow, a hair sharp as they climb.
+patch "Thumb Cloud" note=64 range=48..91 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.15
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.08
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       16
+  tilt           -5 dB/oct
+  bandwidth      6 cents
+  bbandwidth     30 cents
+  odd            0.8
+  stretch        0.01
+  detune         3 cents
+  drift          2 cents
+  cutoff         12000 Hz
+  filterenv      0.25
+  filtdecay      0.5 s
+  ampattack      0.002 s
+  ampdecay       1.3 s
+  ampsustain     0.04
+  amprelease     1.4 s
+  volume         1.12
+  send reverb    0.15
+
 # Stretch for the string and a comb for whatever has been laid across
 # it. Every note has a different set of partials missing because the
 # scallop is fixed in the spectrum while the note moves under it.
 patch "Prepared Piano" note=55 range=36..84 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac4_d2  #13
+  mac4_a2  -0.12
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.4
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.15
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
   partials       48
   tilt           -9 dB/oct
   bandwidth      13 cents
@@ -3888,12 +4202,193 @@ patch "Prepared Piano" note=55 range=36..84 family=pluck role=keys
   amprelease     2.6 s
   volume         1.50
 
+# A pluck with the octave reader on, through a short ping-pong delay.
+patch "Glint Pick" note=67 range=48..91 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.15
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.08
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       40
+  tilt           -9 dB/oct
+  bandwidth      14 cents
+  bbandwidth     60 cents
+  morphkey       0.5
+  stretch        0.004
+  shimmer        0.45
+  shimmerint     #1
+  detune         6 cents
+  width          0.85
+  cutoff         13000 Hz
+  filterenv      0.3
+  filtdecay      0.6 s
+  ampattack      0.002 s
+  ampdecay       1.6 s
+  ampsustain     0.06
+  amprelease     2 s
+  volume         0.87
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.22
+  send reverb    0.18
+
+# Crowded flat at the bottom of the keyboard and stretched sharp at the
+# top, with a comb through it, so no two notes sound like the same string.
+patch "Torn Pluck" note=57 range=40..84 family=pluck role=keys
+  set macro1 "Bright"
+  set macro2 "Snap"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Width"
+  set macro6 "Shimmer"
+  set macro7 "Drift"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  -0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.15
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #3
+  mac5_a1  0.4
+  mac5_d2  #7
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.15
+  mac6_d1  #2
+  mac6_a1  0.4
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac7_d3  #13
+  mac7_a3  -0.08
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       56
+  tilt           -5.5 dB/oct
+  bandwidth      30 cents
+  bbandwidth     140 cents
+  stretch        -0.015
+  bstretch       0.03
+  morphkey       1
+  comb           0.25
+  combperiod     5
+  detune         10 cents
+  drift          8 cents
+  cutoff         10000 Hz
+  filterenv      0.5
+  filtdecay      0.3 s
+  drive          0.2
+  ampattack      0.002 s
+  ampdecay       1.5 s
+  ampsustain     0
+  amprelease     1.4 s
+  volume         1.5
+
 # --- bell --------------------------------------------------------
 
 # Partial n at n^1.032, which is what makes a bell a bell: the overtones
 # are sharp of harmonic and get sharper as they climb. Narrow bands so
 # each one is audible on its own.
 patch "Bell Cloud" note=72 range=48..91 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.25
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       28
   tilt           -6 dB/oct
   bandwidth      10 cents
@@ -3912,9 +4407,166 @@ patch "Bell Cloud" note=72 range=48..91 family=bell role=bell
   amprelease     5 s
   volume         1.17
 
+# A small bell with a round tilt and a long, plain ring.
+patch "Chapel Bell" note=67 range=48..88 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac4_d2  #13
+  mac4_a2  -0.2
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       24
+  tilt           -9 dB/oct
+  bandwidth      8 cents
+  bbandwidth     40 cents
+  stretch        0.026
+  odd            0.6
+  detune         3 cents
+  drift          3 cents
+  cutoff         12000 Hz
+  filterenv      0.25
+  ampattack      0.003 s
+  ampdecay       5 s
+  ampsustain     0.2
+  amprelease     6 s
+  volume         1.11
+  send reverb    0.2
+
+# Small, bright and gone almost at once. Few partials, narrow bands, and
+# a decay measured in fractions of a second.
+patch "Music Box" note=84 range=60..103 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.25
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       14
+  tilt           -3 dB/oct
+  bandwidth      5 cents
+  bbandwidth     30 cents
+  stretch        0.028
+  odd            0.65
+  detune         2 cents
+  cutoff         17000 Hz
+  ampattack      0.002 s
+  ampdecay       0.85 s
+  ampsustain     0.05
+  amprelease     1.1 s
+  volume         1.27
+
 # A long tube rather than a cast bell: fewer partials, less stretch, and
 # a decay you can wait out.
 patch Tubular note=67 range=48..88 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       18
   tilt           -4 dB/oct
   bandwidth      7 cents
@@ -3930,10 +4582,108 @@ patch Tubular note=67 range=48..88 family=bell role=bell
   amprelease     7 s
   volume         0.99
 
+# Stretch and a deep scallop together, hit hard. The comb is what makes
+# it sound like a plate with a shape rather than a tone with an attack.
+patch "Struck Metal" note=64 range=45..88 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       34
+  tilt           -5 dB/oct
+  bandwidth      9 cents
+  bbandwidth     80 cents
+  stretch        0.04
+  comb           0.65
+  combperiod     2.5
+  bcomb          -0.4
+  cutoff         15000 Hz
+  filterenv      0.45
+  filtdecay      1.2 s
+  ampattack      0.002 s
+  ampdecay       2.6 s
+  ampsustain     0.18
+  amprelease     3.2 s
+  volume         0.98
+
 # High, thin and lit from above: the shimmer reads the same table two
 # octaves up, so the sparkle is made of the sound itself rather than of
 # a pitch shifter after it.
 patch "Glass Rain" note=79 range=55..100 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       40
   tilt           -12 dB/oct
   bandwidth      28 cents
@@ -3952,30 +4702,49 @@ patch "Glass Rain" note=79 range=55..100 family=bell role=bell
   amprelease     3 s
   volume         0.62
 
-# Stretch and a deep scallop together, hit hard. The comb is what makes
-# it sound like a plate with a shape rather than a tone with an attack.
-patch "Struck Metal" note=64 range=45..88 family=bell role=bell
-  partials       34
-  tilt           -5 dB/oct
-  bandwidth      9 cents
-  bbandwidth     80 cents
-  stretch        0.04
-  comb           0.65
-  combperiod     2.5
-  bcomb          -0.4
-  cutoff         15000 Hz
-  filterenv      0.45
-  filtdecay      1.2 s
-  ampattack      0.002 s
-  ampdecay       2.6 s
-  ampsustain     0.18
-  amprelease     3.2 s
-  volume         0.98
-
 # A big one, struck once and left. The stretch is wide enough that the
 # top of it is no longer in the same key as the bottom, which is what a
 # large bell actually does.
 patch Temple note=48 range=36..72 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       44
   tilt           -7 dB/oct
   bandwidth      22 cents
@@ -3995,27 +4764,112 @@ patch Temple note=48 range=36..72 family=bell role=bell
   amprelease     9 s
   volume         1.16
 
-# Small, bright and gone almost at once. Few partials, narrow bands, and
-# a decay measured in fractions of a second.
-patch "Music Box" note=84 range=60..103 family=bell role=bell
-  partials       14
-  tilt           -3 dB/oct
-  bandwidth      5 cents
-  bbandwidth     30 cents
-  stretch        0.028
-  odd            0.65
-  detune         2 cents
-  cutoff         17000 Hz
-  ampattack      0.002 s
-  ampdecay       0.85 s
-  ampsustain     0.05
-  amprelease     1.1 s
-  volume         1.27
+# A glass rim rubbed rather than struck: a slow attack, a few narrow
+# stretched partials and a fast drift that makes them beat.
+patch "Rim Song" note=72 range=55..96 family=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.25
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac4_d2  #13
+  mac4_a2  -0.2
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       10
+  tilt           -12 dB/oct
+  bandwidth      4 cents
+  bbandwidth     20 cents
+  stretch        0.02
+  odd            0.55
+  detune         4 cents
+  drift          6 cents
+  driftrate      0.3 Hz
+  lfo1morph      0.6
+  lfo1rate       0.15 Hz
+  cutoff         14000 Hz
+  ampattack      1.4 s
+  amprelease     6 s
+  volume         0.97
+  send reverb    0.2
 
 # Stretch at the top of its travel with the bands wide open: the
 # partials are neither harmonic nor separable, which is the sound of a
 # large sheet of metal deciding what note it is.
 patch Gong note=45 range=33..72 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       80
   tilt           -8 dB/oct
   bandwidth      120 cents
@@ -4035,9 +4889,112 @@ patch Gong note=45 range=33..72 family=bell role=bell
   spread         #2
   volume         1.22
 
+# A gong hit hard: every partial wide, stretched as far as it goes and
+# falling back over the length of the keyboard.
+patch "Wind Gong" note=43 range=31..67 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       100
+  tilt           -4 dB/oct
+  bandwidth      200 cents
+  bbandwidth     200 cents
+  bwscale        2
+  stretch        0.06
+  bstretch       -0.03
+  morphkey       0.6
+  detune         20 cents
+  drift          25 cents
+  driftrate      0.1 Hz
+  width          1
+  cutoff         14000 Hz
+  filterenv      0.4
+  filtdecay      2 s
+  ampattack      0.01 s
+  ampdecay       6 s
+  ampsustain     0.3
+  amprelease     9 s
+  volume         0.87
+  send reverb    0.15
+
 # The same idea with a scallop cut through it, so it rings in bands
 # instead of everywhere at once.
 patch "Sheet Metal" note=52 range=36..79 family=bell role=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       66
   tilt           -6 dB/oct
   bandwidth      60 cents
@@ -4060,6 +5017,45 @@ patch "Sheet Metal" note=52 range=36..79 family=bell role=bell
 # *towards* the fundamental instead of away from it, and the result
 # sounds like a room rather than an instrument.
 patch Cavern note=45 range=33..72 family=bell
+  set macro1 "Bright"
+  set macro2 "Strike"
+  set macro3 "Ring"
+  set macro4 "Smear"
+  set macro5 "Shimmer"
+  set macro6 "Beat"
+  set macro7 "Wobble"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.4
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #18
+  mac2_a2  0.3
+  mac3_d1  #16
+  mac3_a1  0.4
+  mac3_d2  #17
+  mac3_a2  0.3
+  mac4_d1  #1
+  mac4_a1  0.6
+  mac5_d1  #2
+  mac5_a1  0.4
+  mac5_d2  #13
+  mac5_a2  -0.1
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac6_d2  #6
+  mac6_a2  0.2
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac7_d3  #23
+  mac7_a3  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       70
   tilt           -14 dB/oct
   bandwidth      140 cents
@@ -4083,6 +5079,51 @@ patch Cavern note=45 range=33..72 family=bell
 # phaser's shape without a phaser's motion - the notches are *in the
 # sound*, so they do not move when the note does.
 patch "Comb Pad" note=60 range=36..84 family=comb
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.12
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
   partials       56
   tilt           -10 dB/oct
   bandwidth      40 cents
@@ -4098,10 +5139,241 @@ patch "Comb Pad" note=60 range=36..84 family=comb
   amprelease     2.6 s
   volume         1.25
 
+# A long-period comb - twelve partials between notches - which reads as
+# a formant rather than as a phaser.
+patch Scallop note=64 range=43..88 family=comb
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       64
+  tilt           -8 dB/oct
+  bandwidth      26 cents
+  bbandwidth     60 cents
+  comb           0.6
+  combperiod     11
+  bcomb          0.3
+  detune         7 cents
+  drift          7 cents
+  width          0.75
+  cutoff         10500 Hz
+  ampattack      0.7 s
+  amprelease     2.2 s
+  volume         1.05
+
+# The comb under a vowel, so the notches cut through a voice.
+patch "Combed Choir" note=57 range=40..81 family=comb
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.12
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       56
+  tilt           -10 dB/oct
+  bandwidth      30 cents
+  bbandwidth     40 cents
+  vowel          0.6
+  vowelamount    0.7
+  comb           0.6
+  combperiod     4
+  bcomb          -0.5
+  detune         9 cents
+  drift          10 cents
+  width          0.8
+  cutoff         8000 Hz
+  ampattack      1.2 s
+  amprelease     3 s
+  volume         1.08
+  send reverb    0.15
+
+# The morph follows the key, from a deep comb to its opposite, so the
+# notches sit in a different place on every note.
+patch "Key Comb" note=60 range=36..88 family=comb
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       60
+  tilt           -10 dB/oct
+  bandwidth      30 cents
+  bbandwidth     20 cents
+  comb           0.8
+  combperiod     3
+  bcomb          -1
+  morphkey       1
+  detune         8 cents
+  drift          8 cents
+  width          0.8
+  cutoff         9500 Hz
+  ampattack      0.6 s
+  amprelease     2.4 s
+  volume         0.96
+
 # And this is what happens when the notches *do* move: LFO1 walks the
 # morph from a deep comb to its opposite, so the peaks and the troughs
 # trade places over half a minute.
 patch "Phase Cloud" note=60 range=36..84 family=comb role=drone
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
   partials       60
   tilt           -11 dB/oct
   bandwidth      45 cents
@@ -4120,20 +5392,207 @@ patch "Phase Cloud" note=60 range=36..84 family=comb role=drone
   amprelease     3.6 s
   volume         1.01
 
-# A long-period comb - twelve partials between notches - which reads as
-# a formant rather than as a phaser.
-patch Scallop note=64 range=43..88 family=comb
-  partials       64
-  tilt           -8 dB/oct
-  bandwidth      26 cents
+# A comb with the octave reader over it and the LFO turning the comb
+# slowly, like light through a fence.
+patch "Slatted Light" note=64 range=45..88 family=comb role=drone
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac1_d2  #13
+  mac1_a2  -0.15
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac5_d3  #13
+  mac5_a3  -0.12
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       48
+  tilt           -11 dB/oct
+  bandwidth      36 cents
   bbandwidth     60 cents
-  comb           0.6
-  combperiod     11
-  bcomb          0.3
-  detune         7 cents
-  drift          7 cents
-  width          0.75
-  cutoff         10500 Hz
-  ampattack      0.7 s
-  amprelease     2.2 s
-  volume         1.05
+  comb           0.7
+  combperiod     2.5
+  bcomb          -0.5
+  shimmer        0.5
+  shimmerint     #1
+  lfo1morph      0.6
+  lfo1rate       0.05 Hz
+  detune         8 cents
+  drift          10 cents
+  width          0.9
+  cutoff         12000 Hz
+  ampattack      1.4 s
+  amprelease     3.5 s
+  volume         0.82
+  insert Chorus
+    voices       #1
+    rate         #12
+    depth        0.35
+    spread       0.8
+    drift        0.1
+    mix          0.3
+  send reverb    0.2
+
+# Low and narrow-notched, through a driven filter that LFO2 moves a
+# little. A grille rather than a pad.
+patch Grate note=40 range=28..64 family=comb role=drone
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.3
+  partials       80
+  tilt           -8 dB/oct
+  bandwidth      18 cents
+  bbandwidth     40 cents
+  comb           0.9
+  combperiod     1.6
+  bcomb          -0.3
+  morphkey       0.5
+  detune         12 cents
+  drift          10 cents
+  cutoff         3500 Hz
+  resonance      0.3
+  filterdrive    0.4
+  lfo2cutoff     0.2
+  lfo2rate       0.1 Hz
+  drive          0.3
+  ampattack      0.8 s
+  amprelease     2.5 s
+  volume         0.40
+
+# A long comb on partials that go from crowded to stretched as the LFO
+# turns, so the notches slide across a spectrum that is itself moving.
+patch Lattice note=60 range=36..84 family=comb role=drone
+  set macro1 "Turn"
+  set macro2 "Bright"
+  set macro3 "Width"
+  set macro4 "Weather"
+  set macro5 "Sweep"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #8
+  mac2_a1  0.35
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #3
+  mac3_a1  0.4
+  mac3_d2  #7
+  mac3_a2  0.3
+  mac3_d3  #13
+  mac3_a3  -0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #20
+  mac5_a1  0.5
+  mac5_d2  #19
+  mac5_a2  0.3
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac6_d2  #13
+  mac6_a2  -0.1
+  mac7_d1  #15
+  mac7_a1  0.3
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #12
+  mac8_a1  0.5
+  mac8_d2  #13
+  mac8_a2  -0.1
+  partials       72
+  tilt           -10 dB/oct
+  bandwidth      26 cents
+  bbandwidth     80 cents
+  comb           0.85
+  combperiod     7
+  bcomb          -1
+  stretch        -0.012
+  bstretch       0.035
+  lfo1morph      0.9
+  lfo1rate       0.04 Hz
+  detune         10 cents
+  drift          12 cents
+  width          0.95
+  cutoff         9000 Hz
+  ampattack      1.8 s
+  amprelease     4 s
+  volume         0.74
+  send reverb    0.2
