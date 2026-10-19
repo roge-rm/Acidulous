@@ -3480,211 +3480,360 @@ internal object FactoryBanks {
     private fun cumulus0() = Patch("Cumulus", "Init", emptyMap(),
         family = "pad")
 
-    private fun cumulus1() = Patch("Cumulus", "Cirrus",
-        mapOf("partials" to 0.433070868f, "tilt" to 0.466666669f, "bandwidth" to 0.5018075f, "bwscale" to 0.24000001f, "bbandwidth" to 0.483333319f, "width" to 0.7f, "drift" to 0.16f, "driftrate" to 0.3667258f, "detune" to 0.14f, "cutoff" to 0.9230136f, "ampattack" to 0.7437927f, "amprelease" to 0.782037735f, "volume" to 0.686666667f),
+    private fun cumulus1() = Patch("Cumulus", "Soft Focus",
+        mapOf("partials" to 0.338582665f, "tilt" to 0.4f, "bbandwidth" to 0.4f, "width" to 0.7f, "drift" to 0.16f, "cutoff" to 0.85235703f, "ampattack" to 0.728934765f, "amprelease" to 0.782037735f, "volume" to 0.586666644f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.7f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.75f, "mac2_a2" to 0.45f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.8f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Lift"),
+        family = "pad",
+        low = 36, high = 84,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun cumulus2() = Patch("Cumulus", "Cirrus",
+        mapOf("partials" to 0.433070868f, "tilt" to 0.466666669f, "bandwidth" to 0.5018075f, "bwscale" to 0.24000001f, "bbandwidth" to 0.483333319f, "width" to 0.7f, "drift" to 0.16f, "driftrate" to 0.3667258f, "detune" to 0.14f, "cutoff" to 0.9230136f, "ampattack" to 0.7437927f, "amprelease" to 0.782037735f, "volume" to 0.686666667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.65f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.8f, "mac2_a2" to 0.45f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.65f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
         family = "pad",
         low = 48, high = 96)
 
-    private fun cumulus2() = Patch("Cumulus", "Stratus",
-        mapOf("partials" to 0.5590551f, "tilt" to 0.3f, "bandwidth" to 0.676871836f, "bwscale" to 0.32f, "bbandwidth" to 0.266666681f, "width" to 0.85f, "drift" to 0.24f, "driftrate" to 0.2686218f, "spread" to 1f, "detune" to 0.24f, "cutoff" to 0.8058892f, "ampattack" to 0.9111505f, "ampdecay" to 0.9060491f, "amprelease" to 0.8875185f, "volume" to 0.913333356f),
+    private fun cumulus3() = Patch("Cumulus", "Stratus",
+        mapOf("partials" to 0.5590551f, "tilt" to 0.3f, "bandwidth" to 0.676871836f, "bwscale" to 0.32f, "bbandwidth" to 0.266666681f, "width" to 0.85f, "drift" to 0.24f, "driftrate" to 0.2686218f, "spread" to 1f, "detune" to 0.24f, "cutoff" to 0.8058892f, "ampattack" to 0.9111505f, "ampdecay" to 0.9060491f, "amprelease" to 0.8875185f, "volume" to 0.913333356f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.7f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.575f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.3f, "mac5_a2" to 0.4f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.7f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Brighten", "macro2" to "Focus", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Quick", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Lift"),
         family = "pad",
         low = 36, high = 79)
 
-    private fun cumulus3() = Patch("Cumulus", "Nimbus",
-        mapOf("partials" to 0.496063f, "tilt" to 0.433333337f, "bandwidth" to 0.5810506f, "bwscale" to 0.26f, "width" to 0.75f, "drift" to 0.32f, "driftrate" to 0.428100556f, "spread" to 1f, "detune" to 0.2f, "cutoff" to 0.8652129f, "ampattack" to 0.7889086f, "amprelease" to 0.813022554f, "volume" to 0.9066667f),
+    private fun cumulus4() = Patch("Cumulus", "Nimbus",
+        mapOf("partials" to 0.496063f, "tilt" to 0.433333337f, "bandwidth" to 0.5810506f, "bwscale" to 0.26f, "width" to 0.75f, "drift" to 0.32f, "driftrate" to 0.428100556f, "spread" to 1f, "detune" to 0.2f, "cutoff" to 0.8652129f, "ampattack" to 0.7889086f, "amprelease" to 0.813022554f, "volume" to 0.9066667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.7f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.8f, "mac2_a2" to 0.45f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.8f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Lift"),
         family = "pad",
         low = 36, high = 84)
 
-    private fun cumulus4() = Patch("Cumulus", "Warm Bed",
+    private fun cumulus5() = Patch("Cumulus", "Warm Bed",
         mapOf("partials" to 0.307086617f, "tilt" to 0.366666675f, "bandwidth" to 0.4626855f, "bbandwidth" to 0.391666681f, "drift" to 0.14f, "cutoff" to 0.8383484f, "ampattack" to 0.7021008f, "amprelease" to 0.756255269f, "volume" to 0.58f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.7f, "mac1_a2" to 0.55f, "mac2_d1" to 0.5416667f, "mac2_d2" to 0.0416666679f, "mac2_a1" to 0.425f, "mac2_a2" to 0.75f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.8f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.166666672f, "mac7_a1" to 0.7f, "mac7_a2" to 0.35f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Lift"),
         family = "pad",
         low = 36, high = 84)
 
-    private fun cumulus5() = Patch("Cumulus", "Deep Wash",
-        mapOf("partials" to 0.496063f, "tilt" to 0.266666681f, "bandwidth" to 0.788916767f, "bwscale" to 0.359999985f, "bbandwidth" to 0.13333334f, "width" to 0.9f, "drift" to 0.28f, "driftrate" to 0.324780375f, "spread" to 1f, "detune" to 0.28f, "cutoff" to 0.8282594f, "ampattack" to 0.8705769f, "amprelease" to 0.8875185f, "volume" to 0.74666667f),
+    private fun cumulus6() = Patch("Cumulus", "Ember",
+        mapOf("tilt" to 0.333333343f, "bandwidth" to 0.474781454f, "btilt" to 0.6111111f, "bbandwidth" to 0.383333325f, "width" to 0.7f, "drift" to 0.18f, "detune" to 0.2f, "cutoff" to 0.7568567f, "resonance" to 0.2f, "filterdrive" to 0.1f, "amprelease" to 0.782037735f, "drive" to 0.12f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.5f, "mac2_d2" to 0.458333343f, "mac2_d3" to 0.5416667f, "mac2_a1" to 0.75f, "mac2_a2" to 0.7f, "mac2_a3" to 0.45f, "mac3_d1" to 0.0416666679f, "mac3_a1" to 0.8f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Glow", "macro2" to "Heat", "macro3" to "Bloom", "macro4" to "Width", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
+        family = "pad",
+        low = 36, high = 79,
+        inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.75f, "depth" to 0.35f, "spread" to 0.8f, "drift" to 0.1f, "mix" to 0.3f))))
+
+    private fun cumulus7() = Patch("Cumulus", "Slow Bloom",
+        mapOf("partials" to 0.496063f, "bandwidth" to 0.5458685f, "bbandwidth" to 0.416666657f, "width" to 0.75f, "drift" to 0.2f, "detune" to 0.2f, "cutoff" to 0.531692147f, "resonance" to 0.2f, "filterenv" to 0.775f, "ampattack" to 0.7889086f, "amprelease" to 0.8218869f, "filtattack" to 0.8908637f, "filtdecay" to 0.9060491f, "filtrelease" to 0.8218869f, "volume" to 0.7f, "mac1_d1" to 0.333333343f, "mac1_a1" to 0.675f, "mac2_d1" to 0.416666657f, "mac2_d2" to 0.75f, "mac2_a1" to 0.7f, "mac2_a2" to 0.6f, "mac3_d1" to 0.375f, "mac3_a1" to 0.7f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.0416666679f, "mac5_a1" to 0.85f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Bloom", "macro3" to "Peak", "macro4" to "Width", "macro5" to "Morph", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Lift"),
+        family = "pad",
+        low = 36, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun cumulus8() = Patch("Cumulus", "Deep Wash",
+        mapOf("partials" to 0.496063f, "tilt" to 0.266666681f, "bandwidth" to 0.788916767f, "bwscale" to 0.359999985f, "bbandwidth" to 0.13333334f, "width" to 0.9f, "drift" to 0.28f, "driftrate" to 0.324780375f, "spread" to 1f, "detune" to 0.28f, "cutoff" to 0.8282594f, "ampattack" to 0.8705769f, "amprelease" to 0.8875185f, "volume" to 0.74666667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.9f, "mac2_a2" to 0.475f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.55f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.3f, "mac5_a2" to 0.4f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.65f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Focus", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Quick", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
         family = "pad",
         low = 33, high = 72)
 
-    private fun cumulus6() = Patch("Cumulus", "Halo",
-        mapOf("tilt" to 0.6f, "bandwidth" to 0.3141353f, "bbandwidth" to 0.4f, "shimmer" to 0.25f, "width" to 0.8f, "drift" to 0.1f, "driftrate" to 0.5f, "detune" to 0.1f, "cutoff" to 0.9714986f, "ampattack" to 0.6797723f, "amprelease" to 0.80350107f, "volume" to 0.5733333f),
+    private fun cumulus9() = Patch("Cumulus", "Halo",
+        mapOf("tilt" to 0.6f, "bandwidth" to 0.3141353f, "bbandwidth" to 0.4f, "shimmer" to 0.25f, "width" to 0.8f, "drift" to 0.1f, "driftrate" to 0.5f, "detune" to 0.1f, "cutoff" to 0.9714986f, "ampattack" to 0.6797723f, "amprelease" to 0.80350107f, "volume" to 0.5733333f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.575f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.85f, "mac2_a2" to 0.45f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.6f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.7f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
         family = "pad",
         low = 48, high = 96)
 
-    private fun cumulus7() = Patch("Cumulus", "Veil",
-        mapOf("partials" to 0.4015748f, "tilt" to 0.2f, "bandwidth" to 0.623331666f, "bwscale" to 0.280000031f, "bbandwidth" to 0.383333325f, "width" to 0.7f, "drift" to 0.2f, "detune" to 0.18f, "cutoff" to 0.7299922f, "resonance" to 0.15f, "ampattack" to 0.8340244f, "amprelease" to 0.837968f, "volume" to 0.673333347f),
+    private fun cumulus10() = Patch("Cumulus", "Glow",
+        mapOf("partials" to 0.4015748f, "tilt" to 0.533333361f, "bandwidth" to 0.403694421f, "shimmer" to 0.35f, "width" to 0.85f, "drift" to 0.14f, "driftrate" to 0.4147411f, "detune" to 0.14f, "cutoff" to 0.9491284f, "ampattack" to 0.7437927f, "amprelease" to 0.8218869f, "volume" to 0.5466667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.6f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.8f, "mac2_a2" to 0.45f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.575f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.7f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.7f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
+        family = "pad",
+        low = 48, high = 91,
+        sendReverb = 0.22f, sendDelay = 0f)
+
+    private fun cumulus11() = Patch("Cumulus", "Veil",
+        mapOf("partials" to 0.4015748f, "tilt" to 0.2f, "bandwidth" to 0.623331666f, "bwscale" to 0.280000031f, "bbandwidth" to 0.383333325f, "width" to 0.7f, "drift" to 0.2f, "detune" to 0.18f, "cutoff" to 0.7299922f, "resonance" to 0.15f, "ampattack" to 0.8340244f, "amprelease" to 0.837968f, "volume" to 0.673333347f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.8f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.65f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.7f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Lift"),
         family = "pad",
         low = 36, high = 84)
 
-    private fun cumulus8() = Patch("Cumulus", "Hollow",
-        mapOf("partials" to 0.307086617f, "tilt" to 0.433333337f, "odd" to 1f, "comb" to 0.55f, "bandwidth" to 0.474781454f, "bbandwidth" to 0.45f, "bcomb" to 0.25f, "bodd" to 0.199999988f, "detune" to 0.1f, "cutoff" to 0.85235703f, "ampattack" to 0.7568984f, "amprelease" to 0.793217063f, "volume" to 0.5733333f),
+    private fun cumulus12() = Patch("Cumulus", "Worn Sky",
+        mapOf("partials" to 0.385826766f, "tilt" to 0.366666675f, "bandwidth" to 0.5018075f, "bbandwidth" to 0.4f, "width" to 0.7f, "drift" to 0.2f, "detune" to 0.18f, "cutoff" to 0.8146574f, "ampattack" to 0.7568984f, "amprelease" to 0.80350107f, "volume" to 0.586666644f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.8f, "mac2_a2" to 0.45f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.65f, "mac3_a2" to 0.65f, "mac4_d1" to 0.5f, "mac4_d2" to 0.458333343f, "mac4_d3" to 0.5416667f, "mac4_a1" to 0.7f, "mac4_a2" to 0.65f, "mac4_a3" to 0.4f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.75f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Grit", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
+        family = "pad",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Tape", mapOf("flutter" to 0.15f, "drive" to 0.35f, "tone" to 0.477121264f, "hiss" to 0f, "age" to 0.5f))))
+
+    private fun cumulus13() = Patch("Cumulus", "Tidal Pad",
+        mapOf("partials" to 0.433070868f, "tilt" to 0.466666669f, "bandwidth" to 0.5018075f, "bbandwidth" to 0.4f, "width" to 0.8f, "drift" to 0.16f, "detune" to 0.18f, "cutoff" to 0.685020268f, "resonance" to 0.3f, "ampattack" to 0.6914957f, "amprelease" to 0.782037735f, "lfo2rate" to 0.423486f, "lfo2sync" to 1f, "lfo2cutoff" to 0.4f, "lfo2pan" to 0.35f, "volume" to 0.5933333f, "mac1_d1" to 0.333333343f, "mac1_a1" to 0.65f, "mac2_d1" to 0.9166667f, "mac2_d2" to 0.9583333f, "mac2_a1" to 0.75f, "mac2_a2" to 0.7f, "mac3_d1" to 0.875f, "mac3_a1" to 0.575f, "mac4_d1" to 0.375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.0416666679f, "mac5_a1" to 0.8f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Depth", "macro3" to "Rate", "macro4" to "Peak", "macro5" to "Bloom", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Lift"),
+        family = "pad",
+        low = 36, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun cumulus14() = Patch("Cumulus", "Turning Sky",
+        mapOf("partials" to 0.464566916f, "tilt" to 0.433333337f, "btilt" to 0.6111111f, "bbandwidth" to 0.5f, "width" to 0.8f, "drift" to 0.18f, "detune" to 0.18f, "cutoff" to 0.873231351f, "ampattack" to 0.806060851f, "amprelease" to 0.830178857f, "lfo1rate" to 0.211743f, "lfo1morph" to 0.6f, "volume" to 0.76f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.65f, "mac1_a2" to 0.55f, "mac2_d1" to 0.8333333f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7916667f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.6f, "mac4_a2" to 0.65f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.7f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Turn", "macro3" to "Speed", "macro4" to "Width", "macro5" to "Shimmer", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
+        family = "pad",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Phaser", mapOf("rate" to 0.6875f, "depth" to 0.6f, "feedback" to 0.444444478f, "spread" to 0.6f, "mix" to 0.4f))))
+
+    private fun cumulus15() = Patch("Cumulus", "Inward",
+        mapOf("partials" to 0.464566916f, "tilt" to 0.466666669f, "bandwidth" to 0.4204044f, "stretch" to 0.099999994f, "bstretch" to 0.650000036f, "width" to 0.75f, "detune" to 0.12f, "cutoff" to 0.891643763f, "ampattack" to 0.7568984f, "amprelease" to 0.813022554f, "volume" to 0.553333342f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.65f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.85f, "mac2_a2" to 0.45f, "mac3_d1" to 0.125f, "mac3_d2" to 0.291666657f, "mac3_a1" to 0.65f, "mac3_a2" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.64585f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bloom", "macro3" to "Width", "macro4" to "Shimmer", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Fifth"),
+        family = "pad",
+        low = 36, high = 84,
+        sendReverb = 0.18f, sendDelay = 0f)
+
+    private fun cumulus16() = Patch("Cumulus", "Hollow",
+        mapOf("partials" to 0.307086617f, "tilt" to 0.433333337f, "odd" to 1f, "comb" to 0.55f, "bandwidth" to 0.474781454f, "bbandwidth" to 0.45f, "bcomb" to 0.25f, "bodd" to 0.199999988f, "detune" to 0.1f, "cutoff" to 0.85235703f, "ampattack" to 0.7568984f, "amprelease" to 0.793217063f, "volume" to 0.5733333f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.208333328f, "mac3_a1" to 0.3f, "mac3_a2" to 0.6f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.625f, "mac6_d2" to 0.7083333f, "mac6_a1" to 0.7f, "mac6_a2" to 0.65f, "mac7_d1" to 0.7083333f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Brighten", "macro2" to "Fill", "macro3" to "Breath", "macro4" to "Width", "macro5" to "Shimmer", "macro6" to "Slow", "macro7" to "Tail", "macro8" to "Lift"),
         family = "hollow",
         low = 36, high = 84)
 
-    private fun cumulus9() = Patch("Cumulus", "Reed Bed",
-        mapOf("partials" to 0.2913386f, "tilt" to 0.466666669f, "odd" to 0.88f, "vowel" to 0.35f, "vowelamount" to 0.6f, "bandwidth" to 0.435659438f, "bbandwidth" to 0.416666657f, "bodd" to 0.35f, "width" to 0.75f, "drift" to 0.22f, "detune" to 0.18f, "cutoff" to 0.8478255f, "amprelease" to 0.76979214f, "volume" to 0.8733333f),
+    private fun cumulus17() = Patch("Cumulus", "Wooden Tube",
+        mapOf("partials" to 0.275590539f, "tilt" to 0.4f, "odd" to 0.95f, "vowel" to 0.75f, "vowelamount" to 0.3f, "bandwidth" to 0.353257328f, "bbandwidth" to 0.383333325f, "bodd" to 0.25f, "drift" to 0.08f, "detune" to 0.08f, "cutoff" to 0.799758f, "ampattack" to 0.6346564f, "amprelease" to 0.7328303f, "volume" to 0.36f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.208333328f, "mac3_a1" to 0.3f, "mac3_a2" to 0.6f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.625f, "mac6_d2" to 0.7083333f, "mac6_a1" to 0.7f, "mac6_a2" to 0.65f, "mac7_d1" to 0.7083333f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Fill", "macro3" to "Breath", "macro4" to "Width", "macro5" to "Shimmer", "macro6" to "Slow", "macro7" to "Tail", "macro8" to "Sink"),
         family = "hollow",
         low = 40, high = 81)
 
-    private fun cumulus10() = Patch("Cumulus", "Pipe Cloud",
-        mapOf("partials" to 0.228346452f, "odd" to 0.92f, "bandwidth" to 0.192611188f, "bbandwidth" to 0.366666675f, "width" to 0.5f, "drift" to 0.04f, "driftrate" to 0.2686218f, "detune" to 0.04f, "cutoff" to 0.891643763f, "ampattack" to 0.614369631f, "amprelease" to 0.7041605f, "volume" to 0.5733333f),
+    private fun cumulus18() = Patch("Cumulus", "Square Mist",
+        mapOf("tilt" to 0.6f, "odd" to 1f, "bandwidth" to 0.474781454f, "bbandwidth" to 0.466666669f, "bodd" to 0.3f, "width" to 0.7f, "drift" to 0.14f, "detune" to 0.14f, "cutoff" to 0.697533f, "resonance" to 0.25f, "filterenv" to 0.675f, "ampattack" to 0.5895406f, "filtattack" to 0.435288459f, "filtdecay" to 0.7428596f, "filtsustain" to 0.4f, "volume" to 0.826666653f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.416666657f, "mac3_d2" to 0.75f, "mac3_a1" to 0.65f, "mac3_a2" to 0.4f, "mac4_d1" to 0.375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.125f, "mac5_d2" to 0.291666657f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Fill", "macro3" to "Snap", "macro4" to "Peak", "macro5" to "Width", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
+        family = "hollow",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Chorus", mapOf("rate" to 0.875f, "depth" to 0.35f, "spread" to 0.9f, "drift" to 0.1f, "mix" to 0.35f))))
+
+    private fun cumulus19() = Patch("Cumulus", "Reed Bed",
+        mapOf("partials" to 0.2913386f, "tilt" to 0.466666669f, "odd" to 0.88f, "vowel" to 0.35f, "vowelamount" to 0.6f, "bandwidth" to 0.435659438f, "bbandwidth" to 0.416666657f, "bodd" to 0.35f, "width" to 0.75f, "drift" to 0.22f, "detune" to 0.18f, "cutoff" to 0.8478255f, "amprelease" to 0.76979214f, "volume" to 0.8733333f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.208333328f, "mac3_a1" to 0.3f, "mac3_a2" to 0.6f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.625f, "mac6_d2" to 0.7083333f, "mac6_a1" to 0.7f, "mac6_a2" to 0.65f, "mac7_d1" to 0.7083333f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Brighten", "macro2" to "Fill", "macro3" to "Breath", "macro4" to "Width", "macro5" to "Shimmer", "macro6" to "Slow", "macro7" to "Tail", "macro8" to "Lift"),
+        family = "hollow",
+        low = 40, high = 81)
+
+    private fun cumulus20() = Patch("Cumulus", "Pipe Cloud",
+        mapOf("partials" to 0.228346452f, "odd" to 0.92f, "bandwidth" to 0.192611188f, "bbandwidth" to 0.366666675f, "width" to 0.5f, "drift" to 0.04f, "driftrate" to 0.2686218f, "detune" to 0.04f, "cutoff" to 0.891643763f, "ampattack" to 0.614369631f, "amprelease" to 0.7041605f, "volume" to 0.5733333f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.208333328f, "mac3_a1" to 0.3f, "mac3_a2" to 0.6f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.625f, "mac6_d2" to 0.7083333f, "mac6_a1" to 0.7f, "mac6_a2" to 0.65f, "mac7_d1" to 0.7083333f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Fill", "macro3" to "Breath", "macro4" to "Width", "macro5" to "Shimmer", "macro6" to "Slow", "macro7" to "Tail", "macro8" to "Sink"),
         family = "hollow",
         low = 43, high = 88)
 
-    private fun cumulus11() = Patch("Cumulus", "Choir",
+    private fun cumulus21() = Patch("Cumulus", "Blown Bottle",
+        mapOf("partials" to 0.11811024f, "tilt" to 0.266666681f, "odd" to 0.9f, "bwscale" to 0.44f, "bbandwidth" to 0.233333334f, "bodd" to 0.3f, "detune" to 0.1f, "cutoff" to 0.8282594f, "ampattack" to 0.6666667f, "volume" to 0.38f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.208333328f, "mac3_a1" to 0.3f, "mac3_a2" to 0.65f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.625f, "mac6_d2" to 0.7083333f, "mac6_a1" to 0.7f, "mac6_a2" to 0.65f, "mac7_d1" to 0.7083333f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Fill", "macro3" to "Breath", "macro4" to "Width", "macro5" to "Shimmer", "macro6" to "Slow", "macro7" to "Tail", "macro8" to "Sink"),
+        family = "hollow",
+        low = 45, high = 88,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun cumulus22() = Patch("Cumulus", "Hollow Fifth",
+        mapOf("partials" to 0.307086617f, "tilt" to 0.466666669f, "odd" to 1f, "bandwidth" to 0.442816436f, "bbandwidth" to 0.4f, "bodd" to 0.25f, "shimmer" to 0.45f, "shimmerint" to 0f, "width" to 0.8f, "detune" to 0.12f, "cutoff" to 0.8631424f, "ampattack" to 0.6914957f, "amprelease" to 0.76979214f, "volume" to 0.6666667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.0833333358f, "mac3_a1" to 0.7f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.625f, "mac5_d2" to 0.7083333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 0.208333328f, "mac7_d2" to 0.25f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Fill", "macro3" to "Fifth", "macro4" to "Width", "macro5" to "Slow", "macro6" to "Tail", "macro7" to "Drift", "macro8" to "Sink"),
+        family = "hollow",
+        low = 40, high = 84,
+        inserts = listOf(UnitSlot("Delay", mapOf("feedback" to 0.368421048f, "tone" to 0.63264513f, "mix" to 0.2f))))
+
+    private fun cumulus23() = Patch("Cumulus", "Bent Tube",
+        mapOf("partials" to 0.307086617f, "odd" to 1f, "bandwidth" to 0.385222375f, "stretch" to 0.350000024f, "bbandwidth" to 0.383333325f, "bstretch" to 0.625f, "width" to 0.7f, "drift" to 0.1f, "detune" to 0.1f, "cutoff" to 0.873231351f, "amprelease" to 0.793217063f, "lfo1rate" to 0.2560104f, "lfo1morph" to 0.5f, "volume" to 0.373333335f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.375f, "mac1_a1" to 0.675f, "mac1_a2" to 0.55f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.8f, "mac3_d1" to 0.8333333f, "mac3_a1" to 0.7f, "mac4_d1" to 0.7916667f, "mac4_a1" to 0.65f, "mac5_d1" to 0.125f, "mac5_d2" to 0.291666657f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.0833333358f, "mac6_a1" to 0.75f, "mac7_d1" to 0.7083333f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Brighten", "macro2" to "Bend", "macro3" to "Turn", "macro4" to "Speed", "macro5" to "Width", "macro6" to "Shimmer", "macro7" to "Tail", "macro8" to "Sink"),
+        family = "hollow",
+        low = 40, high = 84,
+        sendReverb = 0.18f, sendDelay = 0f)
+
+    private fun cumulus24() = Patch("Cumulus", "Choir",
         mapOf("partials" to 0.338582665f, "tilt" to 0.533333361f, "vowel" to 0.25f, "vowelamount" to 0.85f, "bandwidth" to 0.4204044f, "bbandwidth" to 0.4f, "bvowel" to 0.65f, "morphkey" to 0.65f, "width" to 0.8f, "drift" to 0.18f, "driftrate" to 0.3843109f, "spread" to 1f, "detune" to 0.18f, "cutoff" to 0.873231351f, "ampattack" to 0.6914957f, "amprelease" to 0.76979214f, "volume" to 0.6666667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
         mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
         family = "voice",
         low = 43, high = 84)
 
-    private fun cumulus12() = Patch("Cumulus", "Ooh",
-        mapOf("partials" to 0.275590539f, "tilt" to 0.4f, "vowel" to 0.92f, "vowelamount" to 1f, "bandwidth" to 0.385222375f, "bbandwidth" to 0.375f, "bvowel" to 0.375f, "width" to 0.7f, "drift" to 0.16f, "detune" to 0.14f, "cutoff" to 0.799758f, "ampattack" to 0.728934765f, "amprelease" to 0.782037735f, "volume" to 0.5266667f),
+    private fun cumulus25() = Patch("Cumulus", "Ooh",
+        mapOf("partials" to 0.275590539f, "tilt" to 0.4f, "vowel" to 0.92f, "vowelamount" to 1f, "bandwidth" to 0.385222375f, "bbandwidth" to 0.375f, "bvowel" to 0.375f, "width" to 0.7f, "drift" to 0.16f, "detune" to 0.14f, "cutoff" to 0.799758f, "ampattack" to 0.728934765f, "amprelease" to 0.782037735f, "volume" to 0.5266667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
         family = "voice",
         low = 40, high = 79)
 
-    private fun cumulus13() = Patch("Cumulus", "Ahh",
-        mapOf("vowel" to 0.05f, "vowelamount" to 0.95f, "bandwidth" to 0.403694421f, "bbandwidth" to 0.408333331f, "bvowel" to 0.7f, "width" to 0.75f, "drift" to 0.18f, "cutoff" to 0.9000958f, "ampattack" to 0.7021008f, "amprelease" to 0.77606076f, "volume" to 0.75333333f),
+    private fun cumulus26() = Patch("Cumulus", "Ahh",
+        mapOf("vowel" to 0.05f, "vowelamount" to 0.95f, "bandwidth" to 0.403694421f, "bbandwidth" to 0.408333331f, "bvowel" to 0.7f, "width" to 0.75f, "drift" to 0.18f, "cutoff" to 0.9000958f, "ampattack" to 0.7021008f, "amprelease" to 0.77606076f, "volume" to 0.75333333f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
         family = "voice",
         low = 45, high = 84)
 
-    private fun cumulus14() = Patch("Cumulus", "Whisper Choir",
-        mapOf("partials" to 0.464566916f, "tilt" to 0.333333343f, "vowel" to 0.5f, "vowelamount" to 0.7f, "bandwidth" to 0.815942764f, "bwscale" to 0.4f, "bbandwidth" to 0.483333319f, "width" to 1f, "drift" to 0.36f, "driftrate" to 0.462756425f, "detune" to 0.26f, "cutoff" to 0.9230136f, "ampattack" to 0.806060851f, "amprelease" to 0.813022554f, "volume" to 0.733333349f),
+    private fun cumulus27() = Patch("Cumulus", "Closed Mouth",
+        mapOf("partials" to 0.228346452f, "tilt" to 0.333333343f, "vowel" to 1f, "vowelamount" to 1f, "bandwidth" to 0.353257328f, "bbandwidth" to 0.366666675f, "bvowel" to 0.375f, "width" to 0.7f, "drift" to 0.14f, "detune" to 0.14f, "cutoff" to 0.6914018f, "amprelease" to 0.76979214f, "volume" to 0.393333316f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
+        family = "voice",
+        low = 40, high = 79)
+
+    private fun cumulus28() = Patch("Cumulus", "Low Chant",
+        mapOf("partials" to 0.464566916f, "tilt" to 0.533333361f, "vowel" to 0.75f, "vowelamount" to 0.9f, "bandwidth" to 0.385222375f, "bbandwidth" to 0.383333325f, "bvowel" to 0.25f, "width" to 0.8f, "spread" to 1f, "detune" to 0.2f, "cutoff" to 0.799758f, "amprelease" to 0.793217063f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
+        family = "voice",
+        low = 36, high = 67,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun cumulus29() = Patch("Cumulus", "Upper Voices",
+        mapOf("partials" to 0.244094491f, "vowel" to 0.25f, "vowelamount" to 0.8f, "bandwidth" to 0.442816436f, "bbandwidth" to 0.391666681f, "bvowel" to 0.375f, "width" to 0.8f, "drift" to 0.14f, "cutoff" to 0.908114254f, "amprelease" to 0.793217063f, "volume" to 0.653333366f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
+        family = "voice",
+        low = 55, high = 91)
+
+    private fun cumulus30() = Patch("Cumulus", "Nave",
+        mapOf("vowel" to 0.1f, "vowelamount" to 0.85f, "bandwidth" to 0.474781454f, "bbandwidth" to 0.4f, "bvowel" to 0.7f, "width" to 0.9f, "drift" to 0.18f, "spread" to 1f, "detune" to 0.2f, "cutoff" to 0.873231351f, "ampattack" to 0.7686218f, "amprelease" to 0.873981655f, "volume" to 0.480000019f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
+        family = "voice",
+        low = 40, high = 84,
+        sendReverb = 0.35f, sendDelay = 0f)
+
+    private fun cumulus31() = Patch("Cumulus", "Whisper Choir",
+        mapOf("partials" to 0.464566916f, "tilt" to 0.333333343f, "vowel" to 0.5f, "vowelamount" to 0.7f, "bandwidth" to 0.815942764f, "bwscale" to 0.4f, "bbandwidth" to 0.483333319f, "width" to 1f, "drift" to 0.36f, "driftrate" to 0.462756425f, "detune" to 0.26f, "cutoff" to 0.9230136f, "ampattack" to 0.806060851f, "amprelease" to 0.813022554f, "volume" to 0.733333349f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
         family = "voice",
         low = 48, high = 88)
 
-    private fun cumulus15() = Patch("Cumulus", "Vowel Morph",
-        mapOf("partials" to 0.354330719f, "vowel" to 0.05f, "vowelamount" to 0.9f, "bandwidth" to 0.435659438f, "btilt" to 0.3888889f, "bbandwidth" to 0.366666675f, "bvowel" to 0.925f, "morphkey" to 1f, "width" to 0.8f, "drift" to 0.2f, "cutoff" to 0.8845368f, "ampattack" to 0.7437927f, "amprelease" to 0.80350107f, "volume" to 0.686666667f),
+    private fun cumulus32() = Patch("Cumulus", "Vowel Morph",
+        mapOf("partials" to 0.354330719f, "vowel" to 0.05f, "vowelamount" to 0.9f, "bandwidth" to 0.435659438f, "btilt" to 0.3888889f, "bbandwidth" to 0.366666675f, "bvowel" to 0.925f, "morphkey" to 1f, "width" to 0.8f, "drift" to 0.2f, "cutoff" to 0.8845368f, "ampattack" to 0.7437927f, "amprelease" to 0.80350107f, "volume" to 0.686666667f, "mac1_d1" to 0.333333343f, "mac1_d2" to 0.0416666679f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.375f, "mac2_d2" to 0.5416667f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.291666657f, "mac3_d3" to 0.125f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.65f, "mac4_d1" to 0.0833333358f, "mac4_a1" to 0.75f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_d2" to 0.7916667f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Open", "macro2" to "Breathe", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
         family = "voice",
         low = 43, high = 84)
 
-    private fun cumulus16() = Patch("Cumulus", "Shimmer Pad",
+    private fun cumulus33() = Patch("Cumulus", "Talking Cloud",
+        mapOf("partials" to 0.354330719f, "vowelamount" to 0.95f, "bandwidth" to 0.4204044f, "bbandwidth" to 0.37f, "bvowel" to 0.875f, "width" to 0.8f, "drift" to 0.16f, "cutoff" to 0.8827085f, "ampattack" to 0.728934765f, "amprelease" to 0.793217063f, "lfo1rate" to 0.3562801f, "lfo1morph" to 0.8f, "volume" to 0.6333333f, "mac1_d1" to 0.333333343f, "mac1_a1" to 0.7f, "mac2_d1" to 0.8333333f, "mac2_a1" to 0.65f, "mac3_d1" to 0.7916667f, "mac3_a1" to 0.65f, "mac4_d1" to 0.25f, "mac4_d2" to 0.291666657f, "mac4_d3" to 0.125f, "mac4_a1" to 0.7f, "mac4_a2" to 0.65f, "mac4_a3" to 0.65f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Open", "macro2" to "Talk", "macro3" to "Speed", "macro4" to "Spread", "macro5" to "Air", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
+        family = "voice",
+        low = 43, high = 84)
+
+    private fun cumulus34() = Patch("Cumulus", "Overtone Chant",
+        mapOf("partials" to 0.496063f, "tilt" to 0.6666667f, "vowel" to 0.5f, "vowelamount" to 0.7f, "bandwidth" to 0.121524125f, "bbandwidth" to 0.343333334f, "width" to 0.4f, "drift" to 0.04f, "spread" to 0f, "detune" to 0.06f, "cutoff" to 0.600761652f, "resonance" to 0.75f, "filtertype" to 1f, "filterkey" to 0f, "ampattack" to 0.7437927f, "amprelease" to 0.80350107f, "lfo2wave" to 0.125f, "lfo2rate" to 0.2560104f, "lfo2cutoff" to 0.3f, "volume" to 0.413333327f, "mac1_d1" to 0.375f, "mac1_d2" to 0.5416667f, "mac1_a1" to 0.56f, "mac1_a2" to 0.425f, "mac2_d1" to 0.333333343f, "mac2_a1" to 0.575f, "mac3_d1" to 0.9166667f, "mac3_a1" to 0.65f, "mac4_d1" to 0.875f, "mac4_a1" to 0.625f, "mac5_d1" to 0.25f, "mac5_d2" to 0.125f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Whistle", "macro2" to "Pitch", "macro3" to "Wander", "macro4" to "Speed", "macro5" to "Spread", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
+        family = "voice",
+        low = 36, high = 64,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun cumulus35() = Patch("Cumulus", "Tin Choir",
+        mapOf("partials" to 0.307086617f, "tilt" to 0.566666663f, "vowel" to 0.25f, "vowelamount" to 1f, "bandwidth" to 0.0710870549f, "bbandwidth" to 0.338333338f, "bvowel" to 0.75f, "width" to 0.3f, "drift" to 0f, "spread" to 0f, "detune" to 0f, "cutoff" to 0.891643763f, "ampattack" to 0.6346564f, "amprelease" to 0.723966f, "volume" to 0.793333352f, "mac1_d1" to 0.333333343f, "mac1_a1" to 0.7f, "mac2_d1" to 0.0416666679f, "mac2_a1" to 0.9f, "mac3_d1" to 0.25f, "mac3_d2" to 0.125f, "mac3_d3" to 0.5416667f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac3_a3" to 0.325f, "mac4_d1" to 0.0833333358f, "mac4_d2" to 0.5416667f, "mac4_a1" to 0.75f, "mac4_a2" to 0.325f, "mac5_d1" to 0.625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7083333f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.75f, "mac8_d1" to 0.208333328f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Open", "macro2" to "Vowel", "macro3" to "Spread", "macro4" to "Air", "macro5" to "Attack", "macro6" to "Release", "macro7" to "Shift", "macro8" to "Warble"),
+        family = "voice",
+        low = 43, high = 84,
+        inserts = listOf(UnitSlot("Bitcrusher", mapOf("bits" to 0.4f, "rate" to 0.7593058f, "tone" to 0.7500248f, "mix" to 0.5f))))
+
+    private fun cumulus36() = Patch("Cumulus", "Shimmer Pad",
         mapOf("partials" to 0.385826766f, "tilt" to 0.4f, "bandwidth" to 0.4860965f, "bbandwidth" to 0.416666657f, "shimmer" to 0.6f, "width" to 0.85f, "drift" to 0.2f, "ampattack" to 0.7792269f, "amprelease" to 0.830178857f, "volume" to 0.7266667f, "mac1_d1" to 0.0833333358f, "mac1_a1" to 0.9f, "mac2_d1" to 0.333333343f, "mac2_d2" to 0.375f, "mac2_a1" to 0.35f, "mac2_a2" to 0.55f, "mac3_d1" to 0.0416666679f, "mac3_a1" to 0.9f, "mac4_d1" to 0.125f, "mac4_d2" to 0.291666657f, "mac4_a1" to 0.7f, "mac4_a2" to 0.65f, "mac5_d1" to 0.333333343f, "mac5_d2" to 0.416666657f, "mac5_d3" to 0.9166667f, "mac5_a1" to 0.65f, "mac5_a2" to 0.7f, "mac5_a3" to 0.7f, "mac6_d1" to 0.5f, "mac6_a1" to 0.75f, "mac7_d1" to 0.7916667f, "mac7_d2" to 0.875f, "mac7_d3" to 0.625f, "mac7_a1" to 0.4f, "mac7_a2" to 0.4f, "mac7_a3" to 0.7f, "mac8_d1" to 0.166666672f, "mac8_a1" to 0.25f),
         mapOf("macro1" to "Shimmer", "macro2" to "Dark", "macro3" to "Morph", "macro4" to "Width", "macro5" to "Sweep", "macro6" to "Drive", "macro7" to "Slow", "macro8" to "Scatter"),
         family = "shimmer",
         low = 43, high = 88)
 
-    private fun cumulus17() = Patch("Cumulus", "Fifth Up",
+    private fun cumulus37() = Patch("Cumulus", "Fifth Up",
         mapOf("partials" to 0.354330719f, "tilt" to 0.466666669f, "bandwidth" to 0.4496927f, "bbandwidth" to 0.408333331f, "shimmer" to 0.5f, "shimmerint" to 0f, "width" to 0.8f, "drift" to 0.16f, "detune" to 0.14f, "cutoff" to 0.9230136f, "ampattack" to 0.7568984f, "amprelease" to 0.813022554f, "volume" to 0.64f),
         family = "shimmer",
         low = 43, high = 88)
 
-    private fun cumulus18() = Patch("Cumulus", "Two Octaves",
+    private fun cumulus38() = Patch("Cumulus", "Two Octaves",
         mapOf("partials" to 0.4488189f, "tilt" to 0.3f, "bandwidth" to 0.5963056f, "bbandwidth" to 0.4f, "shimmer" to 0.4f, "shimmerint" to 1f, "width" to 0.9f, "drift" to 0.26f, "driftrate" to 0.347067326f, "detune" to 0.22f, "cutoff" to 0.840772152f, "ampattack" to 0.8340244f, "amprelease" to 0.8588487f, "volume" to 0.566666663f),
         family = "shimmer",
         low = 40, high = 84)
 
-    private fun cumulus19() = Patch("Cumulus", "Sub Cloud",
+    private fun cumulus39() = Patch("Cumulus", "Sub Cloud",
         mapOf("partials" to 0.08661418f, "tilt" to 0.13333334f, "bandwidth" to 0.26369825f, "bbandwidth" to 0.375f, "width" to 0.4f, "drift" to 0.08f, "detune" to 0.1f, "cutoff" to 0.600761652f, "ampattack" to 0.7437927f, "amprelease" to 0.793217063f, "volume" to 0.34f),
         family = "dark",
         low = 28, high = 60)
 
-    private fun cumulus20() = Patch("Cumulus", "Undertow",
+    private fun cumulus40() = Patch("Cumulus", "Undertow",
         mapOf("tilt" to 0.166666672f, "bandwidth" to 0.8318922f, "bwscale" to 0.4f, "bbandwidth" to 0.183333337f, "width" to 1f, "drift" to 0.44f, "driftrate" to 0.209091261f, "spread" to 1f, "detune" to 0.34f, "cutoff" to 0.685020268f, "ampattack" to 0.8908637f, "amprelease" to 0.921227455f, "volume" to 0.8066667f),
         family = "dark",
         low = 28, high = 64)
 
-    private fun cumulus21() = Patch("Cumulus", "Morph Key",
+    private fun cumulus41() = Patch("Cumulus", "Morph Key",
         mapOf("partials" to 0.496063f, "tilt" to 0.266666681f, "bandwidth" to 0.364572376f, "btilt" to 0.7777778f, "bbandwidth" to 0.6333333f, "bodd" to 0.35f, "morphkey" to 1f, "width" to 0.85f, "drift" to 0.2f, "detune" to 0.18f, "cutoff" to 0.891643763f, "filterkey" to 0.6f, "ampattack" to 0.7686218f, "amprelease" to 0.8218869f, "volume" to 0.566666663f),
         family = "morph",
         low = 36, high = 88)
 
-    private fun cumulus22() = Patch("Cumulus", "Slow Turn",
+    private fun cumulus42() = Patch("Cumulus", "Slow Turn",
         mapOf("partials" to 0.527559042f, "tilt" to 0.4f, "bandwidth" to 0.5643406f, "bbandwidth" to 0.533333361f, "bstretch" to 0.675f, "bodd" to 0.3f, "width" to 0.9f, "drift" to 0.28f, "driftrate" to 0.2510367f, "spread" to 1f, "detune" to 0.22f, "cutoff" to 0.8770914f, "ampattack" to 0.856353f, "amprelease" to 0.873981655f, "lfo1rate" to 0.103732072f, "lfo1morph" to 1f, "volume" to 0.7266667f, "mac1_d1" to 0.0416666679f, "mac1_a1" to 1f, "mac2_d1" to 0.7916667f, "mac2_d2" to 0.8333333f, "mac2_a1" to 0.65f, "mac2_a2" to 0.7f, "mac3_d1" to 0.333333343f, "mac3_d2" to 0.375f, "mac3_a1" to 0.7f, "mac3_a2" to 0.575f, "mac4_d1" to 0.208333328f, "mac4_d2" to 0.25f, "mac4_d3" to 0.166666672f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.4f, "mac5_d1" to 0.9583333f, "mac5_d2" to 0.5833333f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.5f, "mac6_d2" to 0.458333343f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac7_d1" to 0.7083333f, "mac7_d2" to 0.5416667f, "mac7_a1" to 0.75f, "mac7_a2" to 0.425f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
         mapOf("macro1" to "Turn", "macro2" to "Speed", "macro3" to "Bright", "macro4" to "Weather", "macro5" to "Pan", "macro6" to "Grit", "macro7" to "Fade", "macro8" to "Sink"),
         family = "morph",
         low = 36, high = 84)
 
-    private fun cumulus23() = Patch("Cumulus", "Breathing",
+    private fun cumulus43() = Patch("Cumulus", "Breathing",
         mapOf("partials" to 0.464566916f, "tilt" to 0.366666675f, "bandwidth" to 0.623331666f, "bwscale" to 0.3f, "btilt" to 0.3611111f, "bbandwidth" to 0.283333331f, "width" to 0.95f, "drift" to 0.32f, "driftrate" to 0.299052f, "detune" to 0.24f, "cutoff" to 0.817474067f, "resonance" to 0.2f, "ampattack" to 0.874940932f, "amprelease" to 0.8925576f, "lfo1rate" to 0.172128618f, "lfo1morph" to 0.85f, "lfo2rate" to 0.233518645f, "lfo2cutoff" to 0.5f, "volume" to 0.58f),
         family = "morph",
         low = 36, high = 84)
 
-    private fun cumulus24() = Patch("Cumulus", "Drone Field",
+    private fun cumulus44() = Patch("Cumulus", "Drone Field",
         mapOf("partials" to 0.685039341f, "tilt" to 0.333333343f, "bandwidth" to 0.7025747f, "bwscale" to 0.380000025f, "btilt" to 0.5833333f, "bbandwidth" to 0.45f, "bstretch" to 0.6f, "width" to 1f, "drift" to 0.52f, "driftrate" to 0.231378213f, "spread" to 1f, "detune" to 0.36f, "spreadwidth" to 1f, "cutoff" to 0.85235703f, "ampattack" to 0.9047905f, "amprelease" to 0.93074894f, "lfo1rate" to 0.135460153f, "lfo1morph" to 0.7f, "volume" to 0.8333333f),
         family = "morph",
         low = 33, high = 72)
 
-    private fun cumulus25() = Patch("Cumulus", "Spectral Pluck",
+    private fun cumulus45() = Patch("Cumulus", "Spectral Pluck",
         mapOf("partials" to 0.322834641f, "tilt" to 0.466666669f, "bandwidth" to 0.364572376f, "stretch" to 0.325000018f, "bbandwidth" to 0.45f, "drift" to 0.08f, "detune" to 0.12f, "cutoff" to 0.9230136f, "filterenv" to 0.75f, "filterkey" to 0.5f, "ampattack" to 0.07712607f, "ampdecay" to 0.731065869f, "ampsustain" to 0f, "amprelease" to 0.6671987f, "filtdecay" to 0.6489087f, "volume" to 0.8333333f),
         family = "pluck",
         low = 40, high = 84)
 
-    private fun cumulus26() = Patch("Cumulus", "Harp Cloud",
+    private fun cumulus46() = Patch("Cumulus", "Harp Cloud",
         mapOf("partials" to 0.275590539f, "tilt" to 0.433333337f, "odd" to 0.58f, "bandwidth" to 0.298880249f, "bbandwidth" to 0.408333331f, "width" to 0.7f, "drift" to 0.06f, "detune" to 0.08f, "cutoff" to 0.908114254f, "ampattack" to 0.199368f, "ampdecay" to 0.825016737f, "ampsustain" to 0.08f, "amprelease" to 0.76979214f, "volume" to 0.733333349f),
         family = "pluck",
         low = 43, high = 88)
 
-    private fun cumulus27() = Patch("Cumulus", "Cimbalom",
+    private fun cumulus47() = Patch("Cumulus", "Cimbalom",
         mapOf("partials" to 0.4015748f, "tilt" to 0.566666663f, "bandwidth" to 0.34116134f, "stretch" to 0.399999976f, "bbandwidth" to 0.425f, "spread" to 1f, "detune" to 0.28f, "spreadwidth" to 0.9f, "cutoff" to 0.960713267f, "filterenv" to 0.675f, "ampattack" to 0.07712607f, "ampdecay" to 0.797817349f, "ampsustain" to 0.1f, "amprelease" to 0.793217063f, "volume" to 0.75333333f),
         family = "pluck",
         low = 45, high = 88)
 
-    private fun cumulus28() = Patch("Cumulus", "Prepared Piano",
+    private fun cumulus48() = Patch("Cumulus", "Prepared Piano",
         mapOf("comb" to 0.55f, "combperiod" to 0.227272734f, "bandwidth" to 0.328168571f, "stretch" to 0.5f, "bbandwidth" to 0.483333319f, "bcomb" to 0.7f, "detune" to 0.14f, "ampattack" to 0.122241929f, "ampdecay" to 0.83681047f, "ampsustain" to 0.12f, "amprelease" to 0.80350107f, "volume" to 1f),
         family = "pluck",
         low = 36, high = 84)
 
-    private fun cumulus29() = Patch("Cumulus", "Bell Cloud",
+    private fun cumulus49() = Patch("Cumulus", "Bell Cloud",
         mapOf("partials" to 0.212598428f, "tilt" to 0.6f, "comb" to 0.35f, "combperiod" to 0.272727281f, "bandwidth" to 0.2821703f, "stretch" to 0.650000036f, "bbandwidth" to 0.533333361f, "bstretch" to 0.75f, "shimmer" to 0.2f, "spread" to 0f, "cutoff" to 0.960713267f, "filterenv" to 0.65f, "ampattack" to 0.154252142f, "ampdecay" to 0.9060491f, "ampsustain" to 0.25f, "amprelease" to 0.8875185f, "volume" to 0.78f),
         family = "bell",
         low = 48, high = 91)
 
-    private fun cumulus30() = Patch("Cumulus", "Tubular",
+    private fun cumulus50() = Patch("Cumulus", "Tubular",
         mapOf("partials" to 0.133858263f, "tilt" to 0.6666667f, "odd" to 0.72f, "bandwidth" to 0.219637215f, "stretch" to 0.475f, "drift" to 0.08f, "detune" to 0.06f, "ampattack" to 0.122241929f, "ampdecay" to 0.9610069f, "ampsustain" to 0.15f, "amprelease" to 0.93074894f, "volume" to 0.66f),
         family = "bell",
         low = 48, high = 88)
 
-    private fun cumulus31() = Patch("Cumulus", "Glass Rain",
+    private fun cumulus51() = Patch("Cumulus", "Glass Rain",
         mapOf("partials" to 0.307086617f, "tilt" to 0.4f, "odd" to 0.75f, "bandwidth" to 0.4626855f, "btilt" to 0.7222222f, "bbandwidth" to 0.5833333f, "bodd" to 0.25f, "shimmer" to 0.55f, "shimmerint" to 1f, "width" to 0.9f, "detune" to 0.12f, "cutoff" to 0.9815876f, "ampattack" to 0.6346564f, "amprelease" to 0.8218869f, "lfo1rate" to 0.273578227f, "lfo1morph" to 0.8f, "volume" to 0.413333327f),
         family = "bell",
         low = 55, high = 100)
 
-    private fun cumulus32() = Patch("Cumulus", "Struck Metal",
+    private fun cumulus52() = Patch("Cumulus", "Struck Metal",
         mapOf("partials" to 0.259842515f, "tilt" to 0.6333333f, "comb" to 0.65f, "combperiod" to 0.13636364f, "bandwidth" to 0.26369825f, "stretch" to 0.75f, "bbandwidth" to 0.466666669f, "bcomb" to 0.3f, "cutoff" to 0.9714986f, "filterenv" to 0.725f, "ampattack" to 0.07712607f, "ampdecay" to 0.8476597f, "ampsustain" to 0.18f, "amprelease" to 0.830178857f, "filtdecay" to 0.7428596f, "volume" to 0.653333366f),
         family = "bell",
         low = 45, high = 88)
 
-    private fun cumulus33() = Patch("Cumulus", "Temple",
+    private fun cumulus53() = Patch("Cumulus", "Temple",
         mapOf("partials" to 0.338582665f, "tilt" to 0.566666663f, "comb" to 0.25f, "combperiod" to 0.363636374f, "bandwidth" to 0.4204044f, "stretch" to 0.8500001f, "bbandwidth" to 0.6f, "bstretch" to 0.625f, "width" to 0.9f, "drift" to 0.18f, "driftrate" to 0.231378213f, "detune" to 0.22f, "cutoff" to 0.891643763f, "ampattack" to 0.256207228f, "ampdecay" to 0.9819008f, "ampsustain" to 0.3f, "amprelease" to 0.9630382f, "volume" to 0.7733333f),
         family = "bell",
         low = 36, high = 72)
 
-    private fun cumulus34() = Patch("Cumulus", "Music Box",
+    private fun cumulus54() = Patch("Cumulus", "Music Box",
         mapOf("partials" to 0.102362208f, "tilt" to 0.7f, "odd" to 0.65f, "bandwidth" to 0.160646155f, "stretch" to 0.6f, "bbandwidth" to 0.383333325f, "detune" to 0.04f, "cutoff" to 0.9910647f, "ampattack" to 0.07712607f, "ampdecay" to 0.696119f, "ampsustain" to 0.05f, "amprelease" to 0.6929812f, "volume" to 0.846666634f),
         family = "bell",
         low = 60, high = 103)
 
-    private fun cumulus35() = Patch("Cumulus", "Gong",
+    private fun cumulus55() = Patch("Cumulus", "Gong",
         mapOf("partials" to 0.622047246f, "tilt" to 0.533333361f, "bandwidth" to 0.7178297f, "bwscale" to 0.44f, "stretch" to 0.93750006f, "bbandwidth" to 0.6666667f, "bstretch" to 0.25f, "width" to 1f, "drift" to 0.4f, "driftrate" to 0.299052f, "spread" to 1f, "detune" to 0.32f, "cutoff" to 0.908114254f, "ampattack" to 0.3333333f, "ampdecay" to 1f, "ampsustain" to 0.35f, "amprelease" to 0.9765751f, "volume" to 0.813333333f),
         family = "bell",
         low = 33, high = 72)
 
-    private fun cumulus36() = Patch("Cumulus", "Sheet Metal",
+    private fun cumulus56() = Patch("Cumulus", "Sheet Metal",
         mapOf("partials" to 0.511811f, "tilt" to 0.6f, "comb" to 0.8f, "combperiod" to 0.09090909f, "bandwidth" to 0.5963056f, "stretch" to 0.775f, "bbandwidth" to 0.283333331f, "bcomb" to 0.199999988f, "width" to 0.95f, "drift" to 0.3f, "detune" to 0.26f, "cutoff" to 0.9491284f, "ampattack" to 0.231378213f, "ampdecay" to 0.9220137f, "ampsustain" to 0.25f, "amprelease" to 0.8997641f, "volume" to 0.786666632f),
         family = "bell",
         low = 36, high = 79)
 
-    private fun cumulus37() = Patch("Cumulus", "Cavern",
+    private fun cumulus57() = Patch("Cumulus", "Cavern",
         mapOf("partials" to 0.543307066f, "tilt" to 0.333333343f, "bandwidth" to 0.7448557f, "bwscale" to 0.34f, "stretch" to 0.0250000041f, "bstretch" to 0.625f, "width" to 1f, "drift" to 0.36f, "driftrate" to 0.2686218f, "spread" to 1f, "detune" to 0.3f, "cutoff" to 0.7933765f, "ampattack" to 0.8831869f, "amprelease" to 0.910943449f, "volume" to 0.686666667f),
         family = "bell",
         low = 33, high = 72)
 
-    private fun cumulus38() = Patch("Cumulus", "Comb Pad",
+    private fun cumulus58() = Patch("Cumulus", "Comb Pad",
         mapOf("partials" to 0.433070868f, "tilt" to 0.466666669f, "comb" to 0.75f, "bbandwidth" to 0.4f, "bcomb" to 0.15f, "width" to 0.8f, "drift" to 0.18f, "detune" to 0.18f, "cutoff" to 0.8881307f, "ampattack" to 0.7686218f, "amprelease" to 0.80350107f, "volume" to 0.8333333f),
         family = "comb",
         low = 36, high = 84)
 
-    private fun cumulus39() = Patch("Cumulus", "Phase Cloud",
+    private fun cumulus59() = Patch("Cumulus", "Phase Cloud",
         mapOf("partials" to 0.464566916f, "tilt" to 0.433333337f, "comb" to 0.85f, "combperiod" to 0.13636364f, "bandwidth" to 0.5458685f, "btilt" to 0.6111111f, "bbandwidth" to 0.366666675f, "bcomb" to 0f, "width" to 0.9f, "drift" to 0.24f, "detune" to 0.2f, "cutoff" to 0.9000958f, "ampattack" to 0.8209188f, "amprelease" to 0.8453118f, "lfo1rate" to 0.164817646f, "lfo1morph" to 1f, "volume" to 0.673333347f),
         family = "comb",
         low = 36, high = 84)
 
-    private fun cumulus40() = Patch("Cumulus", "Scallop",
+    private fun cumulus60() = Patch("Cumulus", "Scallop",
         mapOf("partials" to 0.496063f, "tilt" to 0.533333361f, "comb" to 0.6f, "combperiod" to 0.909090936f, "bandwidth" to 0.4496927f, "bcomb" to 0.65f, "width" to 0.75f, "drift" to 0.14f, "detune" to 0.14f, "cutoff" to 0.9157413f, "ampattack" to 0.728934765f, "amprelease" to 0.782037735f, "volume" to 0.7f),
         family = "comb",
         low = 43, high = 88)
 
-    private val cumulus: List<Patch> by lazy { listOf(cumulus0(), cumulus1(), cumulus2(), cumulus3(), cumulus4(), cumulus5(), cumulus6(), cumulus7(), cumulus8(), cumulus9(), cumulus10(), cumulus11(), cumulus12(), cumulus13(), cumulus14(), cumulus15(), cumulus16(), cumulus17(), cumulus18(), cumulus19(), cumulus20(), cumulus21(), cumulus22(), cumulus23(), cumulus24(), cumulus25(), cumulus26(), cumulus27(), cumulus28(), cumulus29(), cumulus30(), cumulus31(), cumulus32(), cumulus33(), cumulus34(), cumulus35(), cumulus36(), cumulus37(), cumulus38(), cumulus39(), cumulus40()) }
+    private val cumulus: List<Patch> by lazy { listOf(cumulus0(), cumulus1(), cumulus2(), cumulus3(), cumulus4(), cumulus5(), cumulus6(), cumulus7(), cumulus8(), cumulus9(), cumulus10(), cumulus11(), cumulus12(), cumulus13(), cumulus14(), cumulus15(), cumulus16(), cumulus17(), cumulus18(), cumulus19(), cumulus20(), cumulus21(), cumulus22(), cumulus23(), cumulus24(), cumulus25(), cumulus26(), cumulus27(), cumulus28(), cumulus29(), cumulus30(), cumulus31(), cumulus32(), cumulus33(), cumulus34(), cumulus35(), cumulus36(), cumulus37(), cumulus38(), cumulus39(), cumulus40(), cumulus41(), cumulus42(), cumulus43(), cumulus44(), cumulus45(), cumulus46(), cumulus47(), cumulus48(), cumulus49(), cumulus50(), cumulus51(), cumulus52(), cumulus53(), cumulus54(), cumulus55(), cumulus56(), cumulus57(), cumulus58(), cumulus59(), cumulus60()) }
 
     private fun formulate0() = Patch("Formulate", "Init", emptyMap(),
         family = "chip")
