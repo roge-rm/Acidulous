@@ -2868,6 +2868,13 @@ private fun CumulusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
 
 private val FORMULATE_WAVES = listOf("pulse", "tri", "saw", "noise", "off")
 private val FORMULATE_MODES = listOf("off", "replace", "ring", "gate", "xor")
+/** Where a Formulate macro route goes, in the engine's Dest order. */
+val FORMULATE_DESTS = listOf(
+    "off", "duty", "pwm", "pwm rate", "sub", "bits", "sample rate", "smooth",
+    "formula", "formula rate", "a", "b", "c", "table rate",
+    "cutoff", "reso", "filter env", "env attack", "env decay",
+    "attack", "decay", "release", "glide", "drive", "volume", "pan", "pitch",
+)
 
 /** Example expressions to start from, all original. Also offered for Nexus's formula module. */
 internal val FORMULA_EXAMPLES = listOf(
@@ -2885,10 +2892,33 @@ internal val FORMULA_EXAMPLES = listOf(
 private fun FormulatePanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
     var editing by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val error = com.rm.acidulous.engine.EngineSync.formulaErrors[trackIndex].orEmpty()
-    PanelSections(listOf("chip", "formula", "tables", "shape", "env", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("chip", "formula", "tables", "shape", "env", "out", "macros"), section, { section = it }) { sec ->
         when (sec) {
+            6 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", FORMULATE_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", FORMULATE_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", FORMULATE_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", FORMULATE_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             0 -> {
+                Group("play") {
+                    for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+                }
                 Group("oscillator") {
                     PanelStepKnob(b, "wave", FORMULATE_WAVES, "wave", PanelAmber)
                     PanelKnob(b, "duty", "duty", PanelAmber)
@@ -2937,6 +2967,13 @@ private fun FormulatePanel(b: ParamBinding, track: Track, trackIndex: Int, edito
                     PanelKnob(b, "resonance", "reso", PanelAmber)
                     PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
                 }
+                Group("filter env") {
+                    PanelKnob(b, "fenv", "amount", PanelAmber)
+                    PanelKnob(b, "fattack", "A")
+                    PanelKnob(b, "fdecay", "D")
+                    PanelKnob(b, "fsustain", "S")
+                    PanelKnob(b, "frelease", "R")
+                }
             }
             4 -> {
                 Group("amp") {
@@ -2966,6 +3003,14 @@ private fun FormulatePanel(b: ParamBinding, track: Track, trackIndex: Int, edito
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
     if (editing) {
         FormulaDialog(track, error, onDismiss = { editing = false }) { formula, arp, duty, vol ->
             editor.edit(trackIndex) { t ->

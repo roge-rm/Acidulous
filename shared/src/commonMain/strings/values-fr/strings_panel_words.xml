@@ -1338,4 +1338,9 @@
     <string name="pw_lfo2_rate">lfo2 vit.</string>
     <string name="pw_lfo2_cut">lfo2 coup.</string>
     <string name="pw_lfo2_pan">lfo2 pan</string>
+    <string name="pw_pwm_rate">vit. pwm</string>
+    <string name="pw_formula_rate">vit. formule</string>
+    <string name="pw_table_rate">vit. table</string>
+    <string name="pw_env_attack">attaque env</string>
+    <string name="pw_env_decay">déclin env</string>
 </resources>

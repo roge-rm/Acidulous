@@ -37,14 +37,53 @@
 # them. A patch names only what it changes.
 
 machine Formulate
+# Families in tab order: lead, bass, drum, pad, arp, shape, formula,
+# hybrid, plainest to strangest within each.
+#
 # Demos: `chip` is sixteenths with wide leaps, because the tables run at
 # fifty steps a second and every other phrase here is too legato to show
 # them; `pad` for the sustained few.
 role    chip
 
-patch Init family=chip
+patch Init family=lead
+
 # A square, played one note at a time. The whole vocabulary starts here.
-patch "Pulse Lead" note=64 range=48..88 family=chip
+patch "Pulse Lead" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Wobble"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  -0.35
+  mac3_d1  #2
+  mac3_a1  0.5
+  mac3_d2  #3
+  mac3_a2  0.3
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.3
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
   duty           0.5
   mono           #1
@@ -57,7 +96,42 @@ patch "Pulse Lead" note=64 range=48..88 family=chip
 
 # A quarter duty: thinner, and it leaves room under itself for a bass.
 # Three duty settings is most of what a pulse channel had.
-patch "Quarter Pulse" note=64 range=48..88 family=chip
+patch "Quarter Pulse" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Wobble"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  -0.13
+  mac3_d1  #2
+  mac3_a1  0.25
+  mac3_d2  #3
+  mac3_a2  0.3
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
   duty           0.25
   mono           #1
@@ -69,7 +143,42 @@ patch "Quarter Pulse" note=64 range=48..88 family=chip
 
 # An eighth: nasal and small, the one that cuts through everything
 # because there is nothing else up there.
-patch "Eighth Pulse" note=67 range=52..91 family=chip
+patch "Eighth Pulse" note=67 range=52..91 family=lead
+  set macro1 "Tone"
+  set macro2 "Wide"
+  set macro3 "Wobble"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  0.375
+  mac3_d1  #2
+  mac3_a1  0.2
+  mac3_d2  #3
+  mac3_a2  0.3
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
   duty           0.125
   mono           #1
@@ -79,101 +188,89 @@ patch "Eighth Pulse" note=67 range=52..91 family=chip
   amprelease     0.04 s
   volume         1.13
 
-# The triangle channel, which on the hardware had no volume control at
-# all - it was on or it was off, and that is why chip bass sounds the
-# way it does.
-patch "Triangle Bass" note=40 range=28..60 family=chip
-  wave           #1
-  mono           #1
-  glide          0 s
-  ampattack      0.001 s
-  ampdecay       1.5 s
-  ampsustain     0.9
-  amprelease     0.08 s
-  volume         1.30
-
-# Triangle with the sub octave under it. Nothing above the fourth
-# harmonic worth speaking of.
-patch "Sub Bass" note=36 range=24..55 family=chip
-  wave           #1
-  sub            0.85
-  mono           #1
-  cutoff         2200 Hz
-  ampattack      0.002 s
-  ampdecay       2 s
-  ampsustain     0.9
-  amprelease     0.1 s
-  volume         1.44
-
-# Not a chip waveform - the hardware could not make one - which is why
-# it is here: the machine is a chip *and* an equation, and this is the
-# oscillator being honest about the second part.
-patch "Saw Lead" note=60 range=45..84 family=chip
-  wave           #2
-  mono           #1
-  cutoff         8000 Hz
-  ampattack      0.001 s
-  ampdecay       0.5 s
-  ampsustain     0.7
-  amprelease     0.06 s
-  volume         1.33
-
-# White noise with a volume table that runs out and stops. The table's
-# bar is at the end, which means no loop - a one-shot, which is how a
-# tracker made a drum.
-patch "Noise Snare" note=48 range=36..72 family=chip
-  wave           #3
-  ampattack      0.0005 s
-  ampdecay       0.3 s
-  ampsustain     0
-  amprelease     0.05 s
-  framerate      60 Hz
-  volume         1.5
-  set vol "255 190 120 70 40 20 8 0 |"
-
-# The same, over in a twentieth of a second, with the short register on
-# so it is metallic rather than hissy.
-patch "Noise Hat" note=60 range=48..84 family=chip
-  wave           #3
-  noiseshort     #1
-  ampattack      0.0005 s
-  ampdecay       0.06 s
-  ampsustain     0
-  amprelease     0.02 s
-  cutoff         14000 Hz
-  volume         1.5
-
-# Noise low enough to be a thump, with everything above 400 Hz taken
-# off. The hardware made drums out of whatever channel was free.
-patch "Noise Kick" note=36 range=24..55 family=chip
-  wave           #3
-  noiseshort     #1
-  cutoff         420 Hz
-  resonance      0.35
-  ampattack      0.0005 s
-  ampdecay       0.16 s
-  ampsustain     0
-  amprelease     0.04 s
-  drive          0.4
-  volume         1.5
-
-# The duty swept slowly by the hardware's own modulator, which is the
-# one way a pulse channel could sound wide.
-patch "PWM Pad" note=55 range=40..79 family=chip role=pad
+# Two frames an octave up and then the note, which is how a pulse
+# channel got an attack it did not have.
+patch "Blip Lead" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Blip"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  -0.13
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
-  duty           0.5
-  pwmdepth       0.42
-  pwmrate        0.6 Hz
-  ampattack      0.35 s
-  ampdecay       1.2 s
-  ampsustain     0.85
-  amprelease     0.6 s
-  cutoff         7000 Hz
-  volume         0.78
+  duty           0.25
+  mono           #1
+  ampattack      0.001 s
+  ampdecay       0.4 s
+  ampsustain     0.7
+  amprelease     0.05 s
+  framerate      50 Hz
+  volume         0.86
+  set arp "12 12 0 |"
 
 # Faster and shallower, so it reads as a texture on a lead rather than
 # as movement in a pad.
-patch "PWM Lead" note=64 range=48..88 family=chip
+patch "PWM Lead" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Depth"
+  set macro3 "Rate"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #2
+  mac2_a1  0.25
+  mac3_d1  #3
+  mac3_a1  0.25
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
   duty           0.4
   pwmdepth       0.22
@@ -185,22 +282,235 @@ patch "PWM Lead" note=64 range=48..88 family=chip
   amprelease     0.06 s
   volume         0.78
 
-# The noise register on its short loop. It stops being noise and starts
-# being a pitch - a very ugly one, which is the point.
-patch "Metal Noise" note=55 range=40..79 family=chip
-  wave           #3
-  noiseshort     #1
-  cutoff         9000 Hz
-  resonance      0.25
+# Holds the note for half a second, then the arp table rocks it a
+# semitone either way. Delayed vibrato, done in a table.
+patch "Vibrato Lead" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Rate"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  -0.3
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #0
+  duty           0.5
+  mono           #1
   ampattack      0.001 s
-  ampdecay       0.7 s
-  ampsustain     0.4
-  amprelease     0.1 s
-  volume         0.93
+  ampdecay       0.5 s
+  ampsustain     0.75
+  amprelease     0.08 s
+  framerate      25 Hz
+  volume         0.66
+  set arp "0 0 0 0 0 0 0 0 0 0 0 0 | 0 1 0 -1"
+  send reverb    0.1
+
+# Starts square and narrows to an eighth over a quarter second, from
+# the duty table.
+patch "Duty Fall" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Slow"
+  set macro3 "Sub"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #13
+  mac2_a1  -0.35
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #0
+  mono           #1
+  ampattack      0.001 s
+  ampdecay       0.5 s
+  ampsustain     0.7
+  amprelease     0.06 s
+  framerate      30 Hz
+  volume         0.85
+  set duty "128 112 96 80 64 48 40 32 |"
+
+# A quarter pulse into a ping-pong echo, the spare channel's old job.
+patch "Echo Lead" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Wobble"
+  set macro4 "Crunch"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  -0.13
+  mac3_d1  #2
+  mac3_a1  0.25
+  mac3_d2  #3
+  mac3_a2  0.3
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #0
+  duty           0.25
+  mono           #1
+  ampattack      0.001 s
+  ampdecay       0.3 s
+  ampsustain     0.6
+  amprelease     0.05 s
+  volume         0.89
+  insert Delay
+    time         #3
+    feedback     0.4
+    tone         4000 Hz
+    pingpong     #1
+    mix          0.3
+  send reverb    0.1
+
+# Not a chip waveform - the hardware could not make one - which is why
+# it is here: the machine is a chip *and* an equation, and this is the
+# oscillator being honest about the second part.
+patch "Saw Lead" note=60 range=45..84 family=lead
+  set macro1 "Tone"
+  set macro2 "Sub"
+  set macro3 "Crunch"
+  set macro4 "Soft"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac1_d2  #15
+  mac1_a2  0.15
+  mac2_d1  #4
+  mac2_a1  0.5
+  mac3_d1  #5
+  mac3_a1  -0.5
+  mac3_d2  #6
+  mac3_a2  0.3
+  mac4_d1  #7
+  mac4_a1  0.4
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #2
+  mono           #1
+  cutoff         8000 Hz
+  ampattack      0.001 s
+  ampdecay       0.5 s
+  ampsustain     0.7
+  amprelease     0.06 s
+  volume         1.33
 
 # Four levels. Everything quiet in the source becomes a staircase, and
 # the distortion is the quantiser rather than a clipper.
-patch "Two Bit" note=60 range=45..84 family=chip
+patch "Two Bit" note=60 range=45..84 family=lead
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Wobble"
+  set macro4 "Clean"
+  set macro5 "Crush"
+  set macro6 "Short"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  -0.3
+  mac3_d1  #2
+  mac3_a1  0.25
+  mac3_d2  #3
+  mac3_a2  0.3
+  mac4_d1  #5
+  mac4_a1  0.6
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac6_d1  #20
+  mac6_a1  -0.25
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
   duty           0.5
   bits           #1
@@ -213,7 +523,38 @@ patch "Two Bit" note=60 range=45..84 family=chip
 
 # Two levels: on and off. Every patch in this bank passes through the
 # same quantiser and this is the far end of it.
-patch "One Bit" note=60 range=45..84 family=chip
+patch "One Bit" note=60 range=45..84 family=lead
+  set macro1 "Tone"
+  set macro2 "Clean"
+  set macro3 "Crush"
+  set macro4 "Soft"
+  set macro5 "Short"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac1_d2  #15
+  mac1_a2  0.15
+  mac2_d1  #5
+  mac2_a1  0.5
+  mac3_d1  #6
+  mac3_a1  0.35
+  mac4_d1  #7
+  mac4_a1  0.5
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #22
+  mac6_a1  0.15
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #1
   bits           #0
   mono           #1
@@ -224,10 +565,1508 @@ patch "One Bit" note=60 range=45..84 family=chip
   amprelease     0.06 s
   volume         1.42
 
+# The sample clock divided by six, so the high notes fold back down
+# into tones that are not in the key.
+patch "Alias Lead" note=64 range=48..88 family=lead
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Alias"
+  set macro4 "Clean"
+  set macro5 "Soft"
+  set macro6 "Short"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac1_d2  #15
+  mac1_a2  0.2
+  mac2_d1  #1
+  mac2_a1  -0.3
+  mac3_d1  #6
+  mac3_a1  0.25
+  mac4_d1  #6
+  mac4_a1  -0.43
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #20
+  mac6_a1  -0.25
+  mac6_d2  #21
+  mac6_a2  -0.2
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #0
+  duty           0.5
+  crush          6
+  smooth         0.15
+  mono           #1
+  cutoff         12000 Hz
+  ampattack      0.001 s
+  ampdecay       0.4 s
+  ampsustain     0.7
+  amprelease     0.05 s
+  volume         0.80
+
+# The noise register on its short loop. It stops being noise and starts
+# being a pitch - a very ugly one, which is the point.
+patch "Metal Noise" note=55 range=40..79 family=lead
+  set macro1 "Tone"
+  set macro2 "Ring"
+  set macro3 "Crunch"
+  set macro4 "Crush"
+  set macro5 "Short"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac1_d2  #15
+  mac1_a2  0.15
+  mac2_d1  #15
+  mac2_a1  0.4
+  mac3_d1  #5
+  mac3_a1  -0.5
+  mac3_d2  #6
+  mac3_a2  0.3
+  mac4_d1  #6
+  mac4_a1  0.4
+  mac5_d1  #20
+  mac5_a1  -0.25
+  mac5_d2  #21
+  mac5_a2  -0.2
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
+  wave           #3
+  noiseshort     #1
+  cutoff         9000 Hz
+  resonance      0.25
+  ampattack      0.001 s
+  ampdecay       0.7 s
+  ampsustain     0.4
+  amprelease     0.1 s
+  volume         0.93
+
+# The triangle channel, which on the hardware had no volume control at
+# all - it was on or it was off, and that is why chip bass sounds the
+# way it does.
+patch "Triangle Bass" note=40 range=28..60 family=bass
+  set macro1 "Tone"
+  set macro2 "Sub"
+  set macro3 "Grit"
+  set macro4 "Crush"
+  set macro5 "Glide"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.5
+  mac2_d1  #4
+  mac2_a1  0.7
+  mac3_d1  #5
+  mac3_a1  -0.5
+  mac4_d1  #6
+  mac4_a1  0.4
+  mac5_d1  #22
+  mac5_a1  0.12
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.7
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #1
+  mono           #1
+  glide          0 s
+  ampattack      0.001 s
+  ampdecay       1.5 s
+  ampsustain     0.9
+  amprelease     0.08 s
+  volume         1.30
+
+# A square with the sub under it and the top taken off.
+patch "Fat Pulse" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Sub"
+  set macro4 "Grit"
+  set macro5 "Glide"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #1
+  mac2_a1  -0.3
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac5_d1  #22
+  mac5_a1  0.12
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #0
+  duty           0.5
+  sub            0.4
+  mono           #1
+  cutoff         2500 Hz
+  ampattack      0.001 s
+  ampdecay       1 s
+  ampsustain     0.8
+  amprelease     0.06 s
+  volume         1.35
+
+# Triangle with the sub octave under it. Nothing above the fourth
+# harmonic worth speaking of.
+patch "Sub Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Lift"
+  set macro3 "Grit"
+  set macro4 "Crush"
+  set macro5 "Glide"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.3
+  mac2_d1  #4
+  mac2_a1  -0.6
+  mac3_d1  #5
+  mac3_a1  -0.5
+  mac4_d1  #6
+  mac4_a1  0.4
+  mac5_d1  #22
+  mac5_a1  0.12
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #1
+  sub            0.85
+  mono           #1
+  cutoff         2200 Hz
+  ampattack      0.002 s
+  ampdecay       2 s
+  ampsustain     0.9
+  amprelease     0.1 s
+  volume         1.44
+
+# A quarter pulse whose volume table steps down to a hold, so every
+# note is plucked.
+patch "Duty Pluck" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Sub"
+  set macro4 "Slow"
+  set macro5 "Grit"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #1
+  mac2_a1  -0.13
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #13
+  mac4_a1  -0.3
+  mac5_d1  #5
+  mac5_a1  -0.5
+  mac6_d1  #22
+  mac6_a1  0.12
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #0
+  duty           0.25
+  mono           #1
+  cutoff         3000 Hz
+  ampattack      0.001 s
+  ampdecay       0.6 s
+  ampsustain     0.8
+  amprelease     0.05 s
+  framerate      50 Hz
+  volume         1.42
+  set vol "255 235 215 195 180 170 160 |"
+
+# A saw under a low filter.
+patch "Saw Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Reso"
+  set macro3 "Sub"
+  set macro4 "Grit"
+  set macro5 "Crush"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #15
+  mac2_a1  0.35
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac6_d1  #22
+  mac6_a1  0.12
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #2
+  mono           #1
+  cutoff         1400 Hz
+  resonance      0.2
+  ampattack      0.001 s
+  ampdecay       1 s
+  ampsustain     0.8
+  amprelease     0.06 s
+  volume         1.50
+
+# A saw under a low cutoff, opened four octaves at each note and closed
+# again in a fifth of a second. The filter envelope's own patch.
+patch "Filter Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Env"
+  set macro3 "Snap"
+  set macro4 "Reso"
+  set macro5 "Sub"
+  set macro6 "Crunch"
+  set macro7 "Drive"
+  set macro8 "Glide"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.3
+  mac2_d1  #16
+  mac2_a1  0.15
+  mac3_d1  #18
+  mac3_a1  -0.2
+  mac4_d1  #15
+  mac4_a1  0.4
+  mac5_d1  #4
+  mac5_a1  0.6
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #22
+  mac8_a1  0.12
+  wave           #2
+  mono           #1
+  cutoff         300 Hz
+  resonance      0.45
+  fenv           4 oct
+  fattack        0.001 s
+  fdecay         0.18 s
+  fsustain       0
+  frelease       0.1 s
+  ampattack      0.001 s
+  ampdecay       0.6 s
+  ampsustain     0.7
+  amprelease     0.06 s
+  volume         1.50
+
+# The filter envelope with a slow attack, so the note opens after it
+# starts rather than at once.
+patch "Wah Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Env"
+  set macro3 "Slow"
+  set macro4 "Reso"
+  set macro5 "Sub"
+  set macro6 "Grit"
+  set macro7 "Drive"
+  set macro8 "Glide"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #16
+  mac2_a1  0.15
+  mac3_d1  #17
+  mac3_a1  0.2
+  mac4_d1  #15
+  mac4_a1  0.3
+  mac5_d1  #4
+  mac5_a1  0.5
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #22
+  mac8_a1  0.12
+  wave           #0
+  duty           0.5
+  mono           #1
+  cutoff         250 Hz
+  resonance      0.6
+  fenv           3.5 oct
+  fattack        0.06 s
+  fdecay         0.35 s
+  fsustain       0.2
+  frelease       0.1 s
+  ampattack      0.001 s
+  ampdecay       0.8 s
+  ampsustain     0.75
+  amprelease     0.06 s
+  volume         0.90
+
+# The duty table walks the pulse narrow and back, sixteen steps a
+# second. Stepped PWM, as a tracker wrote it.
+patch "Sweep Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Rate"
+  set macro3 "Sub"
+  set macro4 "Grit"
+  set macro5 "Crush"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #13
+  mac2_a1  0.25
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac6_d1  #22
+  mac6_a1  0.12
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #0
+  mono           #1
+  cutoff         2500 Hz
+  ampattack      0.001 s
+  ampdecay       1 s
+  ampsustain     0.8
+  amprelease     0.06 s
+  framerate      16 Hz
+  volume         1.0
+  set duty "16 32 48 64 80 96 112 128 112 96 80 64 48 32"
+
+# Each note falls an octave into place over a tenth of a second.
+patch "Drop Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Slow"
+  set macro3 "Sub"
+  set macro4 "Grit"
+  set macro5 "Crush"
+  set macro6 "Glide"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #13
+  mac2_a1  -0.3
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac6_d1  #22
+  mac6_a1  0.12
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #0
+  duty           0.5
+  sub            0.3
+  mono           #1
+  cutoff         2000 Hz
+  ampattack      0.001 s
+  ampdecay       0.8 s
+  ampsustain     0.75
+  amprelease     0.06 s
+  framerate      60 Hz
+  volume         1.24
+  set arp "12 7 4 2 1 0 |"
+
+# The triangle drops three octaves in a twentieth of a second, so
+# each note starts as a kick drum.
+patch "Kick Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Thump"
+  set macro3 "Sub"
+  set macro4 "Grit"
+  set macro5 "Crush"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac2_d1  #13
+  mac2_a1  -0.2
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.5
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #1
+  mono           #1
+  ampattack      0.001 s
+  ampdecay       0.8 s
+  ampsustain     0.75
+  amprelease     0.08 s
+  framerate      120 Hz
+  volume         1.50
+  set arp "36 24 17 12 7 3 0 |"
+
+# A four-bit saw at a third of the sample rate, through a distortion.
+patch "Bit Bass" note=36 range=24..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Clean"
+  set macro3 "Crush"
+  set macro4 "Sub"
+  set macro5 "Glide"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #5
+  mac2_a1  0.5
+  mac3_d1  #6
+  mac3_a1  0.3
+  mac4_d1  #4
+  mac4_a1  0.5
+  mac5_d1  #22
+  mac5_a1  0.12
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #2
+  bits           #3
+  crush          3
+  mono           #1
+  cutoff         2500 Hz
+  ampattack      0.001 s
+  ampdecay       1 s
+  ampsustain     0.8
+  amprelease     0.06 s
+  volume         1.22
+  insert Distortion
+    drive        3
+    tone         4000 Hz
+    mix          0.4
+
+# The duty table jumps between six widths at 60 steps a second, so
+# the note rasps. The filter envelope closes over it.
+patch "Rasp Bass" note=36 range=28..55 family=bass
+  set macro1 "Tone"
+  set macro2 "Env"
+  set macro3 "Reso"
+  set macro4 "Sub"
+  set macro5 "Grit"
+  set macro6 "Crush"
+  set macro7 "Drive"
+  set macro8 "Drop"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #16
+  mac2_a1  0.15
+  mac3_d1  #15
+  mac3_a1  0.3
+  mac4_d1  #4
+  mac4_a1  0.4
+  mac5_d1  #5
+  mac5_a1  -0.5
+  mac6_d1  #6
+  mac6_a1  0.4
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  -0.5
+  wave           #0
+  mono           #1
+  cutoff         900 Hz
+  resonance      0.3
+  fenv           2.5 oct
+  fattack        0.001 s
+  fdecay         0.25 s
+  fsustain       0.2
+  ampattack      0.001 s
+  ampdecay       0.8 s
+  ampsustain     0.75
+  amprelease     0.06 s
+  framerate      60 Hz
+  volume         1.01
+  set duty "24 120 48 96 32 112"
+
+# Noise low enough to be a thump, with everything above 400 Hz taken
+# off. The hardware made drums out of whatever channel was free.
+patch "Noise Kick" note=36 range=24..55 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Ring"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.2
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.4
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #3
+  noiseshort     #1
+  cutoff         420 Hz
+  resonance      0.35
+  ampattack      0.0005 s
+  ampdecay       0.16 s
+  ampsustain     0
+  amprelease     0.04 s
+  drive          0.4
+  volume         1.5
+
+# The triangle falling three octaves at 120 steps a second. The
+# chip kick drum.
+patch "Pitch Kick" note=36 range=24..55 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Rate"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #13
+  mac5_a1  -0.2
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #1
+  ampattack      0.0005 s
+  ampdecay       0.25 s
+  ampsustain     0
+  amprelease     0.04 s
+  framerate      120 Hz
+  drive          0.3
+  volume         1.50
+  set arp "36 28 22 17 13 10 7 5 3 2 1 0 |"
+
+# White noise with a volume table that runs out and stops. The table's
+# bar is at the end, which means no loop - a one-shot, which is how a
+# tracker made a drum.
+patch "Noise Snare" note=48 range=36..72 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Grit"
+  set macro6 "Crush"
+  set macro7 "Drive"
+  set macro8 "Short"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #13
+  mac4_a1  -0.2
+  mac4_d2  #20
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  -0.5
+  mac6_d1  #6
+  mac6_a1  0.4
+  mac7_d1  #23
+  mac7_a1  0.5
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #13
+  mac8_a1  0.2
+  wave           #3
+  ampattack      0.0005 s
+  ampdecay       0.3 s
+  ampsustain     0
+  amprelease     0.05 s
+  framerate      60 Hz
+  volume         1.5
+  set vol "255 190 120 70 40 20 8 0 |"
+
+# Noise falling an octave as its volume table runs out. Short and dry.
+patch "Tight Snare" note=48 range=36..72 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Ring"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #13
+  mac4_a1  -0.2
+  mac4_d2  #20
+  mac4_a2  0.15
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #3
+  cutoff         7000 Hz
+  resonance      0.2
+  ampattack      0.0005 s
+  ampdecay       0.2 s
+  ampsustain     0
+  amprelease     0.04 s
+  framerate      90 Hz
+  volume         1.50
+  set arp "12 5 0 -5 -12 |"
+  set vol "255 220 160 110 70 40 20 8 0 |"
+
+# The same, over in a twentieth of a second, with the short register on
+# so it is metallic rather than hissy.
+patch "Noise Hat" note=60 range=48..84 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Ring"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.25
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #3
+  noiseshort     #1
+  ampattack      0.0005 s
+  ampdecay       0.06 s
+  ampsustain     0
+  amprelease     0.02 s
+  cutoff         14000 Hz
+  volume         1.5
+
+# The metallic noise left to ring for half a second.
+patch "Open Hat" note=60 range=48..84 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Ring"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.25
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #3
+  noiseshort     #1
+  cutoff         13000 Hz
+  ampattack      0.0005 s
+  ampdecay       0.45 s
+  ampsustain     0
+  amprelease     0.1 s
+  volume         0.74
+
+# A triangle falling an octave onto the note.
+patch "Rack Tom" note=50 range=40..64 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Rate"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #13
+  mac5_a1  -0.2
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #1
+  ampattack      0.0005 s
+  ampdecay       0.35 s
+  ampsustain     0
+  amprelease     0.05 s
+  framerate      60 Hz
+  volume         1.40
+  set arp "12 9 7 5 3 2 1 0 |"
+
+# The same, lower and longer, with the sub under it.
+patch "Floor Tom" note=43 range=31..55 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Rate"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #13
+  mac5_a1  -0.2
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #1
+  sub            0.3
+  ampattack      0.0005 s
+  ampdecay       0.5 s
+  ampsustain     0
+  amprelease     0.06 s
+  framerate      50 Hz
+  volume         1.5
+  set arp "12 9 7 5 4 3 2 1 0 |"
+
+# Three bursts of noise a frame apart, then a short tail. The volume
+# table does it all.
+patch Clap note=60 range=48..72 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Ring"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #13
+  mac4_a1  -0.2
+  mac4_d2  #20
+  mac4_a2  0.15
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #3
+  cutoff         2500 Hz
+  resonance      0.4
+  ampattack      0.0005 s
+  ampdecay       0.3 s
+  ampsustain     0
+  amprelease     0.05 s
+  framerate      120 Hz
+  volume         1.5
+  set vol "255 0 0 230 0 0 210 150 110 80 55 35 20 10 0 |"
+  send reverb    0.15
+
+# The short noise loop through a resonant filter, so it clanks.
+patch "Metal Hit" note=60 range=48..84 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Ring"
+  set macro6 "Grit"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #15
+  mac5_a1  0.25
+  mac6_d1  #5
+  mac6_a1  -0.5
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #3
+  noiseshort     #1
+  cutoff         3000 Hz
+  resonance      0.7
+  ampattack      0.0005 s
+  ampdecay       0.5 s
+  ampsustain     0
+  amprelease     0.08 s
+  volume         0.59
+  send reverb    0.1
+
+# A quarter pulse falling three octaves in a tenth of a second.
+patch "Laser Zap" note=60 range=48..84 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Rate"
+  set macro6 "Thin"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #13
+  mac5_a1  -0.2
+  mac6_d1  #1
+  mac6_a1  -0.13
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  duty           0.25
+  ampattack      0.0005 s
+  ampdecay       0.2 s
+  ampsustain     0
+  amprelease     0.04 s
+  framerate      120 Hz
+  volume         1.0
+  set arp "36 31 26 22 18 14 11 8 5 3 1 0 |"
+
+# Three-bit noise jumping between seven pitches at 120 steps a second.
+patch "Glitch Hit" note=60 range=48..72 family=drum
+  set macro1 "Tone"
+  set macro2 "Tune"
+  set macro3 "Drop"
+  set macro4 "Length"
+  set macro5 "Rate"
+  set macro6 "Clean"
+  set macro7 "Crush"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #26
+  mac2_a1  0.25
+  mac3_d1  #26
+  mac3_a1  -0.25
+  mac4_d1  #20
+  mac4_a1  0.15
+  mac4_d2  #21
+  mac4_a2  0.1
+  mac5_d1  #13
+  mac5_a1  -0.2
+  mac6_d1  #5
+  mac6_a1  0.4
+  mac7_d1  #6
+  mac7_a1  0.4
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #3
+  bits           #2
+  crush          3
+  ampattack      0.0005 s
+  ampdecay       0.18 s
+  ampsustain     0
+  amprelease     0.04 s
+  framerate      120 Hz
+  volume         1.15
+  set arp "24 -12 31 0 19 -7 12"
+
+# The triangle, slow in and out, with a chorus.
+patch "Triangle Pad" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Sub"
+  set macro3 "Crunch"
+  set macro4 "Crush"
+  set macro5 "Smooth"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #4
+  mac2_a1  0.5
+  mac3_d1  #5
+  mac3_a1  -0.45
+  mac4_d1  #6
+  mac4_a1  0.3
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #1
+  ampattack      0.4 s
+  ampdecay       1.5 s
+  ampsustain     0.85
+  amprelease     0.8 s
+  volume         0.99
+  insert Chorus
+    voices       #1
+    rate         #12
+    depth        0.35
+    spread       0.8
+    mix          0.35
+  send reverb    0.2
+
+# A square with its corners smoothed and the top filtered off.
+patch "Soft Square" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Motion"
+  set macro3 "Sub"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.3
+  mac2_d1  #2
+  mac2_a1  0.25
+  mac2_d2  #3
+  mac2_a2  0.2
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.45
+  mac5_d1  #7
+  mac5_a1  0.4
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  duty           0.5
+  smooth         0.3
+  cutoff         1800 Hz
+  ampattack      0.3 s
+  ampdecay       1.5 s
+  ampsustain     0.85
+  amprelease     0.7 s
+  volume         0.60
+  send reverb    0.2
+
+# The duty swept slowly by the hardware's own modulator, which is the
+# one way a pulse channel could sound wide.
+patch "PWM Pad" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Rate"
+  set macro3 "Sub"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.3
+  mac2_d1  #3
+  mac2_a1  0.25
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.45
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  duty           0.5
+  pwmdepth       0.42
+  pwmrate        0.6 Hz
+  ampattack      0.35 s
+  ampdecay       1.2 s
+  ampsustain     0.85
+  amprelease     0.6 s
+  cutoff         7000 Hz
+  volume         0.67
+  send reverb    0.15
+
+# A saw whose filter opens over the first second of each note.
+patch "Saw Strings" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Env"
+  set macro3 "Sub"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #16
+  mac2_a1  0.15
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.45
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #2
+  cutoff         1500 Hz
+  fenv           1.5 oct
+  fattack        0.8 s
+  fdecay         2 s
+  fsustain       0.5
+  frelease       1 s
+  ampattack      0.5 s
+  ampdecay       1.5 s
+  ampsustain     0.85
+  amprelease     1 s
+  volume         1.0
+  insert Chorus
+    voices       #2
+    rate         #12
+    depth        0.4
+    spread       0.8
+    mix          0.4
+  send reverb    0.2
+
+# A quarter pulse whose volume table rises and falls once a second.
+patch "Pulse Swell" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Rate"
+  set macro3 "Thin"
+  set macro4 "Sub"
+  set macro5 "Crunch"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #13
+  mac2_a1  0.25
+  mac3_d1  #1
+  mac3_a1  -0.13
+  mac4_d1  #4
+  mac4_a1  0.5
+  mac5_d1  #5
+  mac5_a1  -0.45
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  duty           0.25
+  cutoff         5000 Hz
+  ampattack      0.5 s
+  ampdecay       1.5 s
+  ampsustain     0.85
+  amprelease     0.8 s
+  framerate      12 Hz
+  volume         0.75
+  set vol "120 150 180 210 240 255 240 210 180 150 120 100"
+  insert Chorus
+    voices       #1
+    rate         #12
+    depth        0.35
+    spread       0.8
+    mix          0.35
+  send reverb    0.2
+
+# The duty table walking the pulse width over two seconds, in steps
+# you can hear.
+patch "Step PWM" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Rate"
+  set macro3 "Sub"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #13
+  mac2_a1  0.25
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.45
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  cutoff         4000 Hz
+  ampattack      0.4 s
+  ampdecay       1.5 s
+  ampsustain     0.85
+  amprelease     0.8 s
+  framerate      6 Hz
+  volume         0.65
+  set duty "32 48 64 80 96 112 128 112 96 80 64 48"
+  insert Chorus
+    voices       #1
+    rate         #12
+    depth        0.35
+    spread       0.8
+    mix          0.35
+  send reverb    0.2
+
+# Every note plays root, fifth and octave from the arp table, slow in
+# and washed out.
+patch "Chord Haze" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Slow"
+  set macro3 "Sub"
+  set macro4 "Crunch"
+  set macro5 "Smooth"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #13
+  mac2_a1  -0.3
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  -0.45
+  mac5_d1  #7
+  mac5_a1  0.5
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  duty           0.5
+  smooth         0.2
+  cutoff         3500 Hz
+  ampattack      0.4 s
+  ampdecay       1.5 s
+  ampsustain     0.85
+  amprelease     0.9 s
+  framerate      50 Hz
+  volume         0.57
+  set arp "0 7 12"
+  insert Chorus
+    voices       #1
+    rate         #12
+    depth        0.35
+    spread       0.8
+    mix          0.35
+  send reverb    0.25
+
+# Five bits at a quarter of the sample rate, through worn tape.
+patch "Crushed Pad" note=55 range=40..79 family=pad role=pad
+  set macro1 "Tone"
+  set macro2 "Motion"
+  set macro3 "Sub"
+  set macro4 "Clean"
+  set macro5 "Crush"
+  set macro6 "Swell"
+  set macro7 "Tail"
+  set macro8 "Drive"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  0.25
+  mac2_d1  #2
+  mac2_a1  0.25
+  mac2_d2  #3
+  mac2_a2  0.2
+  mac3_d1  #4
+  mac3_a1  0.5
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac5_d1  #6
+  mac5_a1  0.25
+  mac6_d1  #19
+  mac6_a1  0.12
+  mac7_d1  #21
+  mac7_a1  0.15
+  mac8_d1  #23
+  mac8_a1  0.5
+  mac8_d2  #24
+  mac8_a2  -0.1
+  wave           #0
+  duty           0.5
+  pwmdepth       0.3
+  pwmrate        0.4 Hz
+  bits           #4
+  crush          4
+  smooth         0.25
+  ampattack      0.6 s
+  ampdecay       1.5 s
+  ampsustain     0.85
+  amprelease     0.9 s
+  volume         0.58
+  insert Tape
+    wow          0.3
+    flutter      0.15
+    drive        0.3
+    tone         7000 Hz
+    hiss         0
+    age          0.4
+  send reverb    0.2
+
 # One voice playing a chord, fifty times a second. This is where
 # chiptune harmony came from - there were not enough channels to hold
 # one each, so the channel took turns.
-patch "Major Arp" note=60 range=45..84 family=table
+patch "Major Arp" note=60 range=45..84 family=arp
+  set macro1 "Tone"
+  set macro2 "Thin"
+  set macro3 "Slow"
+  set macro4 "Wobble"
+  set macro5 "Crunch"
+  set macro6 "Tail"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #14
+  mac1_a1  -0.4
+  mac2_d1  #1
+  mac2_a1  -0.3
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #2
+  mac4_a1  0.4
+  mac5_d1  #5
+  mac5_a1  -0.5
+  mac5_d2  #6
+  mac5_a2  0.25
+  mac6_d1  #21
+  mac6_a1  0.3
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
   duty           0.5
   mono           #1
@@ -241,7 +2080,7 @@ patch "Major Arp" note=60 range=45..84 family=table
 
 # The same with a flat third. One character changes the chord, which is
 # the argument for writing harmony as a table.
-patch "Minor Arp" note=60 range=45..84 family=table
+patch "Minor Arp" note=60 range=45..84 family=arp
   wave           #0
   duty           0.25
   mono           #1
@@ -255,7 +2094,7 @@ patch "Minor Arp" note=60 range=45..84 family=table
 
 # Four steps rather than three, so the cycle is slower and you start to
 # hear the individual notes instead of a chord.
-patch "Seventh Arp" note=60 range=45..84 family=table
+patch "Seventh Arp" note=60 range=45..84 family=arp
   wave           #0
   duty           0.375
   mono           #1
@@ -269,7 +2108,7 @@ patch "Seventh Arp" note=60 range=45..84 family=table
 
 # Two steps an octave apart at full rate: not a chord any more, a
 # timbre. The pitch you hear is the note; the octave is texture.
-patch "Octave Trill" note=60 range=45..84 family=table
+patch "Octave Trill" note=60 range=45..84 family=arp
   wave           #0
   duty           0.5
   mono           #1
@@ -283,7 +2122,7 @@ patch "Octave Trill" note=60 range=45..84 family=table
 
 # A volume table with silences in it, so one key gives four hits that
 # get quieter. A delay made of a list, and it costs nothing.
-patch "Echo Pluck" note=60 range=45..84 family=table
+patch "Echo Pluck" note=60 range=45..84 family=arp
   wave           #0
   duty           0.25
   framerate      30 Hz
@@ -296,7 +2135,7 @@ patch "Echo Pluck" note=60 range=45..84 family=table
 
 # The pulse width stepped through a table instead of swept by an LFO.
 # Stepped is what the hardware did, and it does not sound the same.
-patch "Duty Sweep" note=60 range=45..84 family=table
+patch "Duty Sweep" note=60 range=45..84 family=arp
   wave           #0
   framerate      36 Hz
   mono           #1
@@ -310,7 +2149,7 @@ patch "Duty Sweep" note=60 range=45..84 family=table
 # The same arpeggio at twelve steps a second instead of fifty. Slow
 # enough to be a riff rather than a chord, which is the whole of the
 # frame rate knob.
-patch "Slow Frame" note=60 range=45..84 family=table
+patch "Slow Frame" note=60 range=45..84 family=arp
   wave           #0
   duty           0.25
   mono           #1
@@ -325,7 +2164,7 @@ patch "Slow Frame" note=60 range=45..84 family=table
 # The tables clocked from the transport rather than from a rate in
 # hertz, so the arpeggio stays with the song when the tempo moves.
 # No chip could do this; every tracker wished it could.
-patch "Locked Arp" note=60 range=45..84 family=table
+patch "Locked Arp" note=60 range=45..84 family=arp
   wave           #0
   duty           0.5
   mono           #1
@@ -653,6 +2492,35 @@ patch "Table Ring" note=60 range=45..84 family=hybrid
 # `b` how much of the chip survives, `c` where it folds. A formula that
 # is played rather than only typed - and all three automate.
 patch "Macro Morph" note=60 range=45..84 family=hybrid
+  set macro1 "Shape"
+  set macro2 "Chip"
+  set macro3 "Fold"
+  set macro4 "Tone"
+  set macro5 "Crunch"
+  set macro6 "Plain"
+  set macro7 "Drive"
+  set macro8 "Octave"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #10
+  mac1_a1  0.5
+  mac2_d1  #11
+  mac2_a1  -0.4
+  mac3_d1  #12
+  mac3_a1  0.4
+  mac4_d1  #14
+  mac4_a1  -0.4
+  mac5_d1  #5
+  mac5_a1  -0.5
+  mac5_d2  #6
+  mac5_a2  0.25
+  mac6_d1  #8
+  mac6_a1  -0.6
+  mac7_d1  #23
+  mac7_a1  0.6
+  mac7_d2  #24
+  mac7_a2  -0.1
+  mac8_d1  #26
+  mac8_a1  0.5
   wave           #0
   duty           0.375
   a              64
@@ -714,4 +2582,3 @@ patch "Crush Formula" note=55 range=40..79 family=hybrid
   drive          0.3
   volume         0.61
   set formula "(t & 255) ^ (t >> 9 & 48)"
-

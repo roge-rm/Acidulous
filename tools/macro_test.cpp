@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux and Cumulus move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus and Formulate move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -13,6 +13,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/formulate/Formulate.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
 #include <engine/machine/trinity/Trinity.h>
@@ -49,6 +50,8 @@ int gDests = T::DestCount;
 // One more param to set in play(), for comparing a route against the param it stands in for.
 const char *gExtra = nullptr;
 float gExtraNorm = 0.0f;
+// More params to set in play(), by name and in their own units.
+std::vector<std::pair<std::string, float>> gUnits;
 
 struct Route { int macro, route, dest; float depth; float knob; };
 
@@ -69,6 +72,11 @@ std::vector<float> play(const Route *r) {
         setNorm(p, k + "_a" + std::to_string(r->route), (r->depth + 1.0f) * 0.5f);
     }
     if (gExtra != nullptr) setNorm(p, gExtra, gExtraNorm);
+    for (const auto &[name, value] : gUnits) {
+        const int32_t i = p.indexOf(name.c_str());
+        if (i < 0) { std::printf("  FAIL no parameter %s\n", name.c_str()); ++failures; continue; }
+        p.set(i, p.def(i).unmap(value));
+    }
     p.jumpAll();
     // Cumulus plays nothing without a table.
     if (std::strcmp(gType, "Cumulus") == 0)
@@ -360,6 +368,45 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
     ok(play(&none) == base, who + "a route to off does nothing", "");
 }
 
+// Formulate's filter envelope: with the cutoff low, an amount opens the
+// front of the note and leaves the tail where it was, and a macro route to
+// the amount does the same as the knob.
+void formulateFilterEnv() {
+    using F = acidulous::machine::Formulate;
+    gType = "Formulate";
+    gDests = F::DestCount;
+    const std::vector<std::pair<std::string, float>> low = {
+        {"wave", 2.0f}, {"cutoff", 200.0f}, {"fdecay", 0.05f}, {"fsustain", 0.0f}};
+    gUnits = low;
+    const auto closed = play(nullptr);
+    gUnits = low;
+    gUnits.push_back({"fenv", 4.0f});
+    const auto open = play(nullptr);
+    gUnits = low;
+    // 4 octaves is a third of the -6..6 range from the centre.
+    Route r{2, 3, F::DstFiltEnv, 1.0f / 3.0f, 1.0f};
+    const auto routed = play(&r);
+    gUnits.clear();
+
+    const size_t front = kRate / 50, tail = closed.size() * 3 / 4;
+    auto seg = [](const std::vector<float> &v, size_t a, size_t b) {
+        double s = 0;
+        for (size_t i = a; i < b; ++i) s += double(v[i]) * v[i];
+        return std::sqrt(s / double(b - a));
+    };
+    char buf[96];
+    const double f0 = seg(closed, 0, front), f1 = seg(open, 0, front);
+    std::snprintf(buf, sizeof(buf), "front rms %.4f -> %.4f", f0, f1);
+    ok(f1 > f0 * 1.5, "Formulate: the filter envelope opens the front of the note", buf);
+    const double t0 = seg(closed, tail, closed.size()), t1 = seg(open, tail, open.size());
+    std::snprintf(buf, sizeof(buf), "tail rms %.4f -> %.4f", t0, t1);
+    ok(std::fabs(t1 / t0 - 1.0) < 0.05, "Formulate: with no sustain the tail is the filter as set", buf);
+    double worst = 0;
+    for (size_t i = 0; i < open.size(); ++i) worst = std::max(worst, double(std::fabs(open[i] - routed[i])));
+    std::snprintf(buf, sizeof(buf), "worst difference %.2g", worst);
+    ok(worst < 1e-4, "Formulate: a macro route to the amount matches the knob", buf);
+}
+
 } // namespace
 
 int main() {
@@ -375,6 +422,10 @@ int main() {
     // and -0.25 leaves 0.695.
     using C = acidulous::machine::Cumulus;
     basics("Cumulus", C::DestCount, C::DstAmp, C::DstPitch, C::DstOff, C::kMacros, 0.32 / 1.07, 0.695 / 1.07);
+    // Formulate's volume is Reflux's, 0 to 1.5 from 0.8.
+    using Fo = acidulous::machine::Formulate;
+    basics("Formulate", Fo::DestCount, Fo::DstAmp, Fo::DstPitch, Fo::DstOff, Fo::kMacros, 0.05 / 0.8, 0.425 / 0.8);
+    formulateFilterEnv();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

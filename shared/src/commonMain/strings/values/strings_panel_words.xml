@@ -1338,4 +1338,9 @@
     <string name="pw_lfo2_rate">lfo2 rate</string>
     <string name="pw_lfo2_cut">lfo2 cut</string>
     <string name="pw_lfo2_pan">lfo2 pan</string>
+    <string name="pw_pwm_rate">pwm rate</string>
+    <string name="pw_formula_rate">formula rate</string>
+    <string name="pw_table_rate">table rate</string>
+    <string name="pw_env_attack">env attack</string>
+    <string name="pw_env_decay">env decay</string>
 </resources>
