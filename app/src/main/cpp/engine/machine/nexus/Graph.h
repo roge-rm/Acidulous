@@ -19,6 +19,9 @@ struct Node {
     int32_t type = TBlank;
     bool poly = true;
     bool unknown = false;       // a type this build doesn't have, kept as a placeholder
+    // Its outputs are one note's controls (the voice and touch modules), so a
+    // mono module reads the lead voice's instead of a sum across voices.
+    bool perNote = false;
     int32_t outBase = 0;        // where this node's outputs start in the port row
     int32_t inCount = 0, outCount = 0;
     int32_t cableFirst = 0, cableCount = 0; // cables arriving here, contiguous
@@ -52,6 +55,12 @@ class Graph {
      * in any patch without a cable.
      */
     const float *voiceLevel = nullptr;
+    /**
+     * The voice a mono module follows for pitch, gate and the other per-note
+     * controls: the newest held note, or the newest note if none is held.
+     * -1 when no voice is sounding. Set by the machine once a block.
+     */
+    int32_t leadVoice = -1;
     /** Worker thread. Returns null and fills `error` if the text is unusable. */
     static Graph *parse(const std::string &text, float sampleRate, std::string &error);
 

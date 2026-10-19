@@ -15,7 +15,10 @@
 
 #include <engine/dsp/Swell.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/machine/MachineRegistry.h>
 #include <engine/machine/nexus/Modules.h>
+
+#include "audition_settings.h"
 
 using namespace acidulous;
 using namespace acidulous::machine::nexus;
@@ -455,6 +458,120 @@ void theFollowerHearsThePitch() {
     ok("silence keeps it shut", peak(shut) == 0.0);
 }
 
+// --- poly voices into a mono module -----------------------------------------------
+
+/** A Nexus playing [patch], with every knob at its module's default. */
+std::unique_ptr<Machine> nexusWith(const std::string &patch) {
+    std::unique_ptr<Machine> m(MachineRegistry::create("Nexus"));
+    m->prepare(static_cast<int32_t>(kRate));
+    std::unique_ptr<Graph> unused;
+    audition::mountNexusGraph(m.get(), patch, kRate, {}, unused);
+    m->onBlock(0, 0, 120.0f);
+    return m;
+}
+
+/** [seconds] of the machine's left channel. */
+std::vector<float> play(Machine &m, float seconds) {
+    const size_t n = static_cast<size_t>(seconds * kRate);
+    std::vector<float> out;
+    float L[256], R[256];
+    while (out.size() < n) {
+        m.render(L, R, 256);
+        out.insert(out.end(), L, L + 256);
+    }
+    out.resize(n);
+    return out;
+}
+
+double rms(const std::vector<float> &x) {
+    double sum = 0.0;
+    for (float v : x) sum += double(v) * v;
+    return x.empty() ? 0.0 : std::sqrt(sum / x.size());
+}
+
+/**
+ * How far the sound is from [note], in cents, from the best autocorrelation
+ * lag within half an octave down and up of the note's period, so the answer
+ * can't land on an octave. 9999 if it's silent.
+ */
+double centsFrom(const std::vector<float> &x, float note) {
+    if (rms(x) < 1e-5) return 9999.0;
+    const double period = kRate / hzOf(note);
+    const int lo = static_cast<int>(period / 1.414), hi = static_cast<int>(period * 1.414) + 1;
+    const size_t span = x.size() - static_cast<size_t>(hi) - 2;
+    std::vector<double> r(static_cast<size_t>(hi) + 2, 0.0);
+    for (int lag = lo - 1; lag <= hi + 1; ++lag) {
+        double ab = 0.0, aa = 0.0, bb = 0.0;
+        for (size_t i = 0; i < span; ++i) {
+            ab += double(x[i]) * x[i + lag];
+            aa += double(x[i]) * x[i];
+            bb += double(x[i + lag]) * x[i + lag];
+        }
+        r[static_cast<size_t>(lag)] = ab / std::sqrt(aa * bb + 1e-30);
+    }
+    int best = lo;
+    for (int lag = lo; lag <= hi; ++lag) if (r[static_cast<size_t>(lag)] > r[static_cast<size_t>(best)]) best = lag;
+    // Parabolic interpolation for the fraction of a sample.
+    const double a = r[static_cast<size_t>(best - 1)], b = r[static_cast<size_t>(best)];
+    const double c = r[static_cast<size_t>(best + 1)];
+    const double den = a - 2.0 * b + c;
+    const double lag = best + (den != 0.0 ? 0.5 * (a - c) / den : 0.0);
+    return 1200.0 * std::log2(period / lag);
+}
+
+std::string centsText(double c) {
+    char buf[32];
+    std::snprintf(buf, sizeof buf, "%+.1f cents", c);
+    return buf;
+}
+
+void monoModulesFollowTheLeadVoice() {
+    printf("- poly voices into a mono module\n");
+    // The keys into a mono saw: its pitch is one note's, at any velocity.
+    const std::string saw = "v|2\nm|0|voice\nm|1|osc|mono\nm|2|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0";
+    for (int vel : {30, 127}) {
+        auto m = nexusWith(saw);
+        m->noteOn(60, static_cast<uint8_t>(vel));
+        play(*m, 0.1f);
+        const double c = centsFrom(play(*m, 0.2f), 60.0f);
+        ok("a mono saw plays the note at velocity " + std::to_string(vel), std::fabs(c) < 5.0, centsText(c));
+    }
+    {
+        auto m = nexusWith(saw);
+        m->noteOn(60, 40);
+        play(*m, 0.1f);
+        m->noteOn(67, 110);
+        play(*m, 0.1f);
+        const double up = centsFrom(play(*m, 0.2f), 67.0f);
+        ok("an overlapping note takes the mono saw to its pitch", std::fabs(up) < 5.0, centsText(up));
+        m->noteOff(67);
+        play(*m, 0.1f);
+        const double back = centsFrom(play(*m, 0.2f), 60.0f);
+        ok("letting it go returns to the note still held", std::fabs(back) < 5.0, centsText(back));
+    }
+
+    // A whole machine played from the keys: it speaks at a low velocity and
+    // overlapping notes play the newest.
+    const std::string guitar = "v|2\nm|0|voice\nm|1|guitar|mono\nm|2|out|mono\n"
+                               "c|0.0|1.0|1.0\nc|0.1|1.1|1.0\nc|0.2|1.2|1.0\nc|1.0|2.0|1.0";
+    for (int vel : {30, 127}) {
+        auto m = nexusWith(guitar);
+        m->noteOn(57, static_cast<uint8_t>(vel));
+        play(*m, 0.1f);
+        const double c = centsFrom(play(*m, 0.2f), 57.0f);
+        ok("the mono guitar plays the note at velocity " + std::to_string(vel), std::fabs(c) < 15.0, centsText(c));
+    }
+    {
+        auto m = nexusWith(guitar);
+        m->noteOn(57, 50);
+        play(*m, 0.15f);
+        m->noteOn(64, 100);
+        play(*m, 0.05f);
+        const double c = centsFrom(play(*m, 0.2f), 64.0f);
+        ok("an overlapping note plays the guitar at its pitch", std::fabs(c) < 15.0, centsText(c));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -471,6 +588,7 @@ int main() {
     theThroatMakesVowels();
     formulasRunFromTheirText();
     theFollowerHearsThePitch();
+    monoModulesFollowTheLeadVoice();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

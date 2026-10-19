@@ -376,8 +376,12 @@ void checkBank(const Bank &bank) {
         // Play the note the patch is meant for, since e.g. a piccolo trumpet
         // preset at C3 isn't representative.
         const int note = patch.note > 0 ? patch.note : 48;
+        // The values the patch names itself, so a Nexus graph keeps its knobs
+        // instead of taking every module's defaults.
+        std::set<std::string> named;
+        for (const auto &v : patch.values) named.insert(v.name);
         out.audio = bank.isEffect() ? renderEffect(bank.typeName(), r.norm, r.settings)
-                                    : renderMachine(bank.unit, r.norm, note, r.settings);
+                                    : renderMachine(bank.unit, r.norm, note, r.settings, named);
         if (out.audio.empty()) {
             fail(who, "nothing rendered at all");
             continue;
@@ -406,7 +410,7 @@ void checkBank(const Bank &bank) {
         // reset. reset_test checks this at default settings, but a patch can
         // hide state behind a value.
         const std::vector<float> again = bank.isEffect() ? renderEffect(bank.typeName(), r.norm, r.settings)
-                                                         : renderMachine(bank.unit, r.norm, note, r.settings);
+                                                         : renderMachine(bank.unit, r.norm, note, r.settings, named);
         if (again != out.audio) fail(who, "played differently the second time");
 
         if (out.m.dcDb > -40.0f) warn(who, "carries a DC offset");

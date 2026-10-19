@@ -85,6 +85,7 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
             }
             const ModuleInfo &info = infoFor(n.type);
             n.text = textOf[static_cast<size_t>(slot)];
+            n.perNote = n.type == TVoice || n.type == TTouch;
             n.poly = f.size() >= 4 ? (f[3] == "poly") : true;
             if (!n.poly && (info.cap & CapMono) == 0) n.poly = true;
             if (n.poly && (info.cap & CapPoly) == 0) n.poly = false;
@@ -346,7 +347,15 @@ void Graph::gather(const Node &n, int32_t nodeIndex, int32_t voice, const int32_
         const Node &src = nodes[static_cast<size_t>(k.srcNode)];
 
         float x = 0.0f;
-        if (k.delayed) {
+        if (src.poly && monoDest && src.perNote) {
+            // One note's controls aren't summed: a pitch or gate summed over
+            // voices is no note at all. The mono module follows the lead voice.
+            if (leadVoice >= 0) {
+                x = k.delayed ? prev[static_cast<size_t>(leadVoice) * (delayedPorts.size() + 1) +
+                                     static_cast<size_t>(k.prevSlot)]
+                              : readPort(k.srcNode, k.srcPort, leadVoice);
+            }
+        } else if (k.delayed) {
             const int32_t row = src.poly ? (monoDest ? -1 : voice) : kVoices;
             if (row < 0) {
                 for (int32_t a = 0; a < activeCount; ++a) {
@@ -367,8 +376,10 @@ void Graph::gather(const Node &n, int32_t nodeIndex, int32_t voice, const int32_
         float depth = k.base;
         if (k.modNode >= 0) {
             const Node &m = nodes[static_cast<size_t>(k.modNode)];
-            const float mv = m.poly && monoDest ? readPort(k.modNode, k.modPort, active[0])
-                                                : readPort(k.modNode, k.modPort, voice);
+            float mv = 0.0f;
+            if (!m.poly || !monoDest) mv = readPort(k.modNode, k.modPort, voice);
+            else if (m.perNote) mv = leadVoice >= 0 ? readPort(k.modNode, k.modPort, leadVoice) : 0.0f;
+            else mv = readPort(k.modNode, k.modPort, active[0]);
             depth += mv * k.modAmount;
         }
         in[k.dstPort] += x * depth;

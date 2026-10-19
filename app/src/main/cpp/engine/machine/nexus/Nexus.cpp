@@ -193,6 +193,16 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
         pitchOf[i] = tuned + voices[i].bend;
         active[activeCount++] = i;
     }
+    // The lead voice for mono modules: the newest held note, else the newest note.
+    int32_t lead = -1;
+    bool leadHeld = false;
+    for (int32_t a = 0; a < activeCount; ++a) {
+        const Voice &v = voices[active[a]];
+        const bool better = lead < 0 || (v.gate && !leadHeld) ||
+                            (v.gate == leadHeld && v.age > voices[lead].age);
+        if (better) { lead = active[a]; leadHeld = v.gate; }
+    }
+    g->leadVoice = lead;
     ctx.tickInc = frames > 0 ? tickStep / static_cast<double>(frames) : 0.0;
     ctx.tick = tickCursor;
 

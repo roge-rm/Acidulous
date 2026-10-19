@@ -601,6 +601,9 @@ class FxMod final : public Module {
         const ModuleInfo &info = infoFor(type);
         for (int i = 0; i < kKnobs; ++i) param[i] = info.knob[i] != nullptr ? fx->params().indexOf(info.knob[i]) : -1;
         cvParam = info.in[1] != nullptr ? fx->params().indexOf(info.in[1]) : -1;
+        // Drive and crush have one output: a second write would land in the
+        // next module's ports, or past the end of the port table.
+        stereoOut = info.out[1] != nullptr;
         reset();
     }
     void reset() override {
@@ -615,7 +618,7 @@ class FxMod final : public Module {
     }
     void step(const float *in, float *out, const Context &c) override {
         out[0] = outL[pos];
-        out[1] = outR[pos];
+        if (stereoOut) out[1] = outR[pos];
         inBuf[pos] = in[0];
         if (pos == 0) {
             // What the block's first sample saw, which is when the effect
@@ -642,6 +645,7 @@ class FxMod final : public Module {
     Effect *fx = nullptr;
     int32_t param[kKnobs]{};
     int32_t cvParam = -1;
+    bool stereoOut = true;
     float knob[kKnobs]{};
     float cv = 0.0f;
     double blockTick = 0.0;
