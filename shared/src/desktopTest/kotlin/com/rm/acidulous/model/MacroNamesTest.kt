@@ -1,0 +1,30 @@
+package com.rm.acidulous.model
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+/** A named macro shows its name in the lane lists, on every machine with macros. */
+class MacroNamesTest {
+
+    private fun track(type: String, settings: Map<String, String>) =
+        Track(id = "t", name = "t", machine = Machine(type, settings = settings))
+
+    @Test
+    fun nexusMacrosTakeThePatchNames() {
+        val t = track("Nexus", mapOf("macro1" to "Cutoff"))
+        assertEquals("Cutoff", laneShortLabel(t, laneKey("machine", "macro1")))
+        assertEquals("Nexus · Cutoff", laneLabel(t, laneKey("machine", "macro1")))
+        // An unnamed one falls back to the panel's word.
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "macro2")))
+    }
+
+    @Test
+    fun theOtherMachinesStillCallThemMac() {
+        val t = track("Cumulus", mapOf("macro3" to "Bloom"))
+        assertEquals("Bloom", laneShortLabel(t, laneKey("machine", "mac3")))
+        // Only Nexus's knobs are called macro1..macro8.
+        assertEquals(null, track("Mosaic", mapOf("macro1" to "x")).let { m ->
+            laneShortLabel(m, laneKey("machine", "macro1")).takeIf { it == "x" }
+        })
+    }
+}

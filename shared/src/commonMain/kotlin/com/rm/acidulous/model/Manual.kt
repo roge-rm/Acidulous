@@ -1094,7 +1094,8 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**follow** - Molt's ear: the pitch of whatever's in its input, a gate while it's sure of it, and its level. Sing into it to play the patch."),
         ManualBlock(ManualKind.Para, "The blown ones (**bore**, **pipe** and **reed**) take their air from the **breath** input, from an envelope or a pressure source. With nothing in it, the keys blow them."),
         ManualBlock(ManualKind.Heading, "Macros"),
-        ManualBlock(ManualKind.Para, "Eight macros, **macro1** to **macro8**, plus **morph**. The patch decides what they control, so a big patch can be played with a few knobs."),
+        ManualBlock(ManualKind.Para, "The **patch** section starts with a **play** card of eight macro knobs. A macro does nothing until the patch has a **macro** module. Each of its eight outputs is one knob, and you patch it to what it should move, like a filter's cutoff, so a big patch can be played with a few knobs. **morph** sits beside them."),
+        ManualBlock(ManualKind.Para, "A patch can name its macros (Cutoff, Echo, etc.) and the names show on the knobs, on automation lanes and in the controller mapping list. Tap a name in the **macros** section to rename it.", "A patch can name its macros (Cutoff, Echo, etc.) and the names show on the knobs, on automation lanes and in the controller mapping list. Click a name in the **macros** section to rename it."),
         ManualBlock(ManualKind.Heading, "MPE"),
         ManualBlock(ManualKind.Para, "The **touch** module gives each voice the pressure and slide of the finger playing it, from an MPE controller or a keyboard with poly aftertouch. Patch its **prs** and **slide** into anything, like a filter's cutoff or a VCA."),
         ManualBlock(ManualKind.Heading, "Audio input"),
@@ -1102,6 +1103,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "Keep patches small and name your macros."),
         ManualBlock(ManualKind.Bullet, "Wire **morph** to the two or three things that change the patch the most."),
+        ManualBlock(ManualKind.Bullet, "Some patches in the **generative** and **texture** families play themselves while the song plays, with no key held. The **morph** patches are built around the **A→B** knob."),
         ManualBlock(ManualKind.Bullet, "Nexus isn't the easiest place to start. The other machines do most things more directly, and Nexus is for combinations they don't cover."),
     ))
 
@@ -3136,7 +3138,8 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**follow** : l’oreille de Molt : la hauteur de ce qui entre, un gate tant qu’il en est sûr, et son niveau. Chantez dedans pour jouer le patch."),
         ManualBlock(ManualKind.Para, "Les instruments à vent (**bore**, **pipe** et **reed**) prennent leur air à l’entrée **breath**, depuis une enveloppe ou une source de pression. Sans rien dedans, ce sont les touches qui soufflent."),
         ManualBlock(ManualKind.Heading, "Les macros"),
-        ManualBlock(ManualKind.Para, "Huit macros, **1** à **8** sous **macros**, plus **morph**. Le patch décide de ce qu’elles contrôlent, et un gros patch peut se jouer avec quelques boutons."),
+        ManualBlock(ManualKind.Para, "La section **patch** commence par une carte **jeu** de huit boutons macro. Une macro ne fait rien tant que le patch n’a pas de module **macro**. Chacune de ses huit sorties est un bouton, et vous la reliez à ce qu’elle doit faire bouger, comme la coupure d’un filtre, et un gros patch peut se jouer avec quelques boutons. **morph** est à côté."),
+        ManualBlock(ManualKind.Para, "Un patch peut nommer ses macros (Coupure, Écho, etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et dans la liste de mappage du contrôleur. Touchez un nom dans la section **macros** pour le renommer.", "Un patch peut nommer ses macros (Coupure, Écho, etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et dans la liste de mappage du contrôleur. Cliquez un nom dans la section **macros** pour le renommer."),
         ManualBlock(ManualKind.Heading, "MPE"),
         ManualBlock(ManualKind.Para, "Le module **touch** donne à chaque voix la pression et le glissé du doigt qui la joue, depuis un contrôleur MPE ou un clavier à aftertouch polyphonique. Reliez ses sorties **prs** et **slide** à n’importe quoi, comme la coupure d’un filtre ou un VCA."),
         ManualBlock(ManualKind.Heading, "L’entrée audio"),
@@ -3144,6 +3147,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Gardez les patchs petits et nommez vos macros."),
         ManualBlock(ManualKind.Bullet, "Reliez **morph** aux deux ou trois choses qui changent le plus le patch."),
+        ManualBlock(ManualKind.Bullet, "Certains sons des familles **generative** et **texture** jouent tout seuls pendant que la chanson joue, sans touche enfoncée. Les sons **morph** sont faits autour du bouton **A→B**."),
         ManualBlock(ManualKind.Bullet, "Nexus n’est pas l’endroit le plus facile pour commencer. Les autres machines font la plupart des choses plus directement, et Nexus sert aux combinaisons qu’elles ne couvrent pas."),
     ))
 

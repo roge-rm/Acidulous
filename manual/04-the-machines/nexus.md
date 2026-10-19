@@ -72,8 +72,15 @@ the keys blow them.
 
 ## Macros
 
-Eight macros, **macro1** to **macro8**, plus **morph**. The patch decides what
-they control, so a big patch can be played with a few knobs.
+The **patch** section starts with a **play** card of eight macro knobs. A
+macro does nothing until the patch has a **macro** module. Each of its eight
+outputs is one knob, and you patch it to what it should move, like a filter's
+cutoff, so a big patch can be played with a few knobs. **morph** sits beside
+them.
+
+A patch can name its macros (Cutoff, Echo, etc.) and the names show on the
+knobs, on automation lanes and in the controller mapping list. Tap a name in
+the **macros** section to rename it.
 
 ## MPE
 
@@ -90,5 +97,8 @@ through a patch.
 
 - Keep patches small and name your macros.
 - Wire **morph** to the two or three things that change the patch the most.
+- Some patches in the **generative** and **texture** families play themselves
+  while the song plays, with no key held. The **morph** patches are built
+  around the **A→B** knob.
 - Nexus isn't the easiest place to start. The other machines do most things
   more directly, and Nexus is for combinations they don't cover.

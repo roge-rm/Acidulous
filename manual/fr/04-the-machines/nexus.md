@@ -74,8 +74,15 @@ dedans, ce sont les touches qui soufflent.
 
 ## Les macros
 
-Huit macros, **1** à **8** sous **macros**, plus **morph**. Le patch décide de
-ce qu’elles contrôlent, et un gros patch peut se jouer avec quelques boutons.
+La section **patch** commence par une carte **jeu** de huit boutons macro. Une
+macro ne fait rien tant que le patch n’a pas de module **macro**. Chacune de ses
+huit sorties est un bouton, et vous la reliez à ce qu’elle doit faire bouger,
+comme la coupure d’un filtre, et un gros patch peut se jouer avec quelques
+boutons. **morph** est à côté.
+
+Un patch peut nommer ses macros (Coupure, Écho, etc.) et les noms s’affichent
+sur les boutons, dans les lanes d’automation et dans la liste de mappage du
+contrôleur. Touchez un nom dans la section **macros** pour le renommer.
 
 ## MPE
 
@@ -93,6 +100,9 @@ passer par un patch.
 
 - Gardez les patchs petits et nommez vos macros.
 - Reliez **morph** aux deux ou trois choses qui changent le plus le patch.
+- Certains sons des familles **generative** et **texture** jouent tout seuls
+  pendant que la chanson joue, sans touche enfoncée. Les sons **morph** sont
+  faits autour du bouton **A→B**.
 - Nexus n’est pas l’endroit le plus facile pour commencer. Les autres machines
   font la plupart des choses plus directement, et Nexus sert aux combinaisons
   qu’elles ne couvrent pas.

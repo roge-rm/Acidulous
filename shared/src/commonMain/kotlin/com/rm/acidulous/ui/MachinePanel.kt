@@ -263,7 +263,7 @@ fun MachinePanel(
             "Aviary" -> AviaryPanel(binding, selectedPad)
             "Fathom" -> FathomPanel(binding, selectedPad)
             "Timber" -> TimberPanel(binding)
-            "Nexus" -> NexusPanel(binding, track, onOpenPatch)
+            "Nexus" -> NexusPanel(binding, track, trackIndex, editor, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Bias" -> BiasPanel(binding, track, trackIndex, sceneId, editor)
             "Mosaic" -> MosaicPanel(binding, track, trackIndex, editor, onImportSoundFont, onPickPreset, onImportZoneSamples)
@@ -5078,17 +5078,24 @@ private fun TimberPanel(b: ParamBinding) {
 // --- Nexus ------------------------------------------------------------------
 //
 // The panel holds what you reach for while playing (the macros, the morph,
-// the output) and a way through to the graph canvas.
+// the output) and a way through to the graph canvas. A macro reaches the
+// sound only through a cable from a `macro` module, so its section names the
+// knobs and the routes are drawn in the patch.
 
 @Composable
-private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
+private fun NexusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, onOpenPatch: () -> Unit) {
     var section by rememberSaveable { mutableStateOf(0) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val patch = remember(track.machine.settings["nexus"]) {
         com.rm.acidulous.model.NexusPatch.decode(track.machine.settings["nexus"])
     }
     PanelSections(listOf("patch", "macros", "voice", "out"), section, { section = it }) { sec ->
         when (sec) {
             0 -> {
+                Group("play") {
+                    for (k in 1..8) PanelKnob(b, "macro$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+                }
                 Group("patch") {
                     Column(horizontalAlignment = Alignment.Start) {
                         Text(
@@ -5107,7 +5114,15 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
                 }
                 Group("morph") { PanelKnob(b, "morph", "A→B", PanelAmber) }
             }
-            1 -> Group("macros") { for (i in 1..8) PanelKnob(b, "macro$i", "$i", PanelAmber) }
+            1 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+            } }
             2 -> Group("voice") {
                 PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
                 PanelKnob(b, "glide", "glide")
@@ -5124,6 +5139,14 @@ private fun NexusPanel(b: ParamBinding, track: Track, onOpenPatch: () -> Unit) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Mosaic ----------------------------------------------------------------------
