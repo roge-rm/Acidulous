@@ -205,6 +205,9 @@ void Cumulus::reset() {
         v.filterL.reset();
         v.filterR.reset();
     }
+    // A fresh LFO, since reset() keeps the random waves' seed.
+    lfo[0] = dsp::LfoGen();
+    lfo[1] = dsp::LfoGen();
     lfo[0].reset(0.0f);
     lfo[1].reset(0.25f);
     // Reset the rng, since it sets where each reader starts and how it

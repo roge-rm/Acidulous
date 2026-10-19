@@ -1981,10 +1981,95 @@ patch "Shimmer Pad" note=62 range=43..88 family=shimmer
   amprelease     3.2 s
   volume         1.09
 
+# An octave reader kept low and soft under a warm pad, with a little
+# room. The plain one.
+patch "Pale Octave" note=60 range=40..84 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       40
+  tilt           -13 dB/oct
+  bandwidth      28 cents
+  bbandwidth     40 cents
+  btilt          4 dB/oct
+  shimmer        0.35
+  shimmerint     #1
+  detune         7 cents
+  drift          8 cents
+  width          0.8
+  cutoff         9000 Hz
+  ampattack      0.9 s
+  amprelease     3 s
+  volume         0.90
+  send reverb    0.15
+
 # The same trick at a fifth, which does not fuse the way an octave does
 # - you hear two things, and the chord gets an extra note it was never
 # given.
 patch "Fifth Up" note=62 range=43..88 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Fifth"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #24
+  mac3_a1  0.2917
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       46
   tilt           -10 dB/oct
   bandwidth      26 cents
@@ -1999,9 +2084,93 @@ patch "Fifth Up" note=62 range=43..88 family=shimmer
   amprelease     2.8 s
   volume         0.96
 
+# The octave and a fifth above, so the shimmer sits on the third
+# partial and colours rather than doubles.
+patch "Twelfth Glow" note=60 range=40..84 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       44
+  tilt           -12 dB/oct
+  bandwidth      34 cents
+  bbandwidth     60 cents
+  shimmer        0.4
+  shimmerint     #2
+  detune         9 cents
+  drift          10 cents
+  width          0.85
+  cutoff         9500 Hz
+  ampattack      1.2 s
+  amprelease     3.4 s
+  volume         0.74
+  send reverb    0.18
+
 # Two octaves up and quiet, which is how you make a low pad sound large
 # without making it bright.
 patch "Two Octaves" note=57 range=40..84 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       58
   tilt           -15 dB/oct
   bandwidth      60 cents
@@ -2017,11 +2186,353 @@ patch "Two Octaves" note=57 range=40..84 family=shimmer
   amprelease     4 s
   volume         0.85
 
+# An Ooh spectrum with an octave above it and a chorus, so a held chord
+# reads as a choir behind glass.
+patch "Frost Choir" note=60 range=43..84 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Open"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #1
+  mac3_a1  0.7
+  mac3_d2  #8
+  mac3_a2  0.15
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       46
+  tilt           -9 dB/oct
+  bandwidth      26 cents
+  bbandwidth     30 cents
+  vowel          0.75
+  vowelamount    0.85
+  bvowel         -0.6
+  shimmer        0.45
+  shimmerint     #1
+  detune         8 cents
+  drift          9 cents
+  width          0.8
+  cutoff         8000 Hz
+  ampattack      1 s
+  amprelease     3 s
+  volume         0.77
+  insert Chorus
+    voices       #1
+    rate         #12
+    depth        0.35
+    spread       0.8
+    drift        0.1
+    mix          0.3
+  send reverb    0.2
+
+# High and narrow, with the second LFO opening the filter slowly so the
+# shimmer rises and falls. A ping-pong echo on top.
+patch "Rising Glass" note=72 range=55..96 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Rise"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #22
+  mac3_a1  0.3
+  mac3_d2  #21
+  mac3_a2  0.2
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       36
+  tilt           -8 dB/oct
+  bandwidth      14 cents
+  bbandwidth     30 cents
+  shimmer        0.5
+  shimmerint     #1
+  detune         6 cents
+  drift          6 cents
+  width          0.9
+  cutoff         6000 Hz
+  lfo2wave       #0
+  lfo2rate       0.07 Hz
+  lfo2cutoff     0.35
+  ampattack      0.8 s
+  amprelease     3.2 s
+  volume         0.62
+  insert Delay
+    time         #3
+    feedback     0.35
+    tone         5000 Hz
+    pingpong     #1
+    mix          0.18
+  send reverb    0.22
+
+# Two octaves up, with the LFO walking the morph to a stretched second
+# spectrum, so the top of the cloud slowly turns metallic and back.
+patch "Lantern Swell" note=57 range=40..84 family=shimmer role=drone
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Turn"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #20
+  mac3_a1  0.3
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       56
+  tilt           -13 dB/oct
+  bandwidth      40 cents
+  bbandwidth     60 cents
+  bstretch       0.012
+  btilt          4 dB/oct
+  lfo1wave       #0
+  lfo1rate       0.04 Hz
+  lfo1morph      0.65
+  shimmer        0.4
+  shimmerint     #3
+  detune         10 cents
+  drift          12 cents
+  driftrate      0.07 Hz
+  width          0.9
+  cutoff         8000 Hz
+  ampattack      2 s
+  amprelease     4.5 s
+  volume         0.76
+  send reverb    0.2
+
+# Partials stretched sharp, so the cloud is half a bell, with an octave
+# of shimmer and a phaser turning slowly through it.
+patch "Stretched Halo" note=64 range=45..88 family=shimmer
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Bend"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #1
+  mac3_a1  0.7
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       48
+  tilt           -10 dB/oct
+  bandwidth      22 cents
+  bbandwidth     40 cents
+  stretch        0.01
+  bstretch       0.01
+  shimmer        0.4
+  shimmerint     #1
+  detune         7 cents
+  drift          8 cents
+  width          0.85
+  cutoff         9500 Hz
+  ampattack      1 s
+  amprelease     3.5 s
+  volume         1.05
+  insert Phaser
+    stages       #1
+    rate         #11
+    depth        0.5
+    feedback     0.35
+    spread       0.6
+    mix          0.35
+  send reverb    0.2
+
+# Partials squeezed towards the fundamental, so nothing is quite in
+# tune with anything, and a fifth above it that is. An echo smears it.
+patch "Mirror Ice" note=60 range=40..84 family=shimmer role=drone
+  set macro1 "Shimmer"
+  set macro2 "Dark"
+  set macro3 "Thaw"
+  set macro4 "Width"
+  set macro5 "Slow"
+  set macro6 "Tail"
+  set macro7 "Drift"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #2
+  mac1_a1  0.35
+  mac2_d1  #8
+  mac2_a1  -0.3
+  mac2_d2  #9
+  mac2_a2  0.1
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.4
+  mac4_d2  #7
+  mac4_a2  0.3
+  mac5_d1  #15
+  mac5_a1  0.4
+  mac5_d2  #17
+  mac5_a2  0.3
+  mac6_d1  #17
+  mac6_a1  0.5
+  mac7_d1  #5
+  mac7_a1  0.4
+  mac7_d2  #6
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       52
+  tilt           -11 dB/oct
+  bandwidth      30 cents
+  bbandwidth     90 cents
+  stretch        -0.012
+  bstretch       0.02
+  shimmer        0.5
+  shimmerint     #0
+  detune         9 cents
+  drift          10 cents
+  width          0.9
+  cutoff         8500 Hz
+  ampattack      1.4 s
+  amprelease     4 s
+  volume         0.88
+  insert Delay
+    time         #4
+    feedback     0.45
+    tone         3500 Hz
+    pingpong     #1
+    mix          0.22
+  send reverb    0.2
+
 # --- dark --------------------------------------------------------
 
 # Low, narrow and almost nothing above the fifth partial. A pad that
 # occupies the bottom of a mix without any of it being a sine.
 patch "Sub Cloud" note=40 range=28..60 family=dark
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Under"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.7
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.25
+  mac5_d2  #12
+  mac5_a2  0.05
+  mac5_d3  #13
+  mac5_a3  -0.1
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.2917
   partials       12
   tilt           -20 dB/oct
   bandwidth      9 cents
@@ -2034,9 +2545,229 @@ patch "Sub Cloud" note=40 range=28..60 family=dark
   amprelease     2.4 s
   volume         0.51
 
+# Low, warm and slow to arrive, with the filter well down. A bed for
+# under a slow song.
+patch "Dusk Bed" note=45 range=31..67 family=dark
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Abyss"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.7
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.3
+  mac5_d2  #12
+  mac5_a2  0.1
+  mac5_d3  #13
+  mac5_a3  -0.2
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       24
+  tilt           -17 dB/oct
+  bandwidth      20 cents
+  bbandwidth     30 cents
+  btilt          -3 dB/oct
+  detune         7 cents
+  drift          7 cents
+  width          0.6
+  cutoff         1800 Hz
+  filtertype     #3
+  ampattack      1.4 s
+  amprelease     3.5 s
+  volume         0.71
+  send reverb    0.12
+
+# An Oh vowel in the low register, closing to an Oo on the morph.
+# A choir singing under its breath.
+patch "Mourning Choir" note=48 range=36..67 family=dark
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Close"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Abyss"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.3
+  mac5_d2  #12
+  mac5_a2  0.1
+  mac5_d3  #13
+  mac5_a3  -0.2
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       40
+  tilt           -12 dB/oct
+  bandwidth      22 cents
+  bbandwidth     30 cents
+  vowel          0.55
+  vowelamount    0.9
+  bvowel         0.3
+  detune         8 cents
+  drift          9 cents
+  width          0.75
+  cutoff         3500 Hz
+  ampattack      1.3 s
+  amprelease     3.5 s
+  volume         0.92
+  send reverb    0.2
+
+# Odd partials only, low and filtered, so it is a stopped pipe in a
+# cold room. The morph puts the even ones back.
+patch "Cellar Air" note=43 range=31..64 family=dark role=drone
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Fill"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Abyss"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.25
+  mac5_d2  #12
+  mac5_a2  0.05
+  mac5_d3  #13
+  mac5_a3  -0.25
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       30
+  tilt           -14 dB/oct
+  bandwidth      45 cents
+  bbandwidth     40 cents
+  odd            1
+  bodd           -0.7
+  detune         9 cents
+  drift          10 cents
+  driftrate      0.06 Hz
+  width          0.8
+  cutoff         2200 Hz
+  ampattack      2 s
+  amprelease     4.5 s
+  volume         1.16
+  send reverb    0.15
+
 # The same register with the bands thrown open. It has no pitch to speak
 # of and is not supposed to - it is the low end moving.
 patch Undertow note=40 range=28..64 family=dark
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Under"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.7
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.25
+  mac5_d2  #12
+  mac5_a2  0.05
+  mac5_d3  #13
+  mac5_a3  -0.25
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.2917
   partials       48
   tilt           -19 dB/oct
   bandwidth      230 cents
@@ -2052,12 +2783,357 @@ patch Undertow note=40 range=28..64 family=dark
   spread         #2
   volume         1.21
 
+# A resonant low-pass moved by a slow LFO over a wide, dark cloud, so
+# the drone rises out of the water and sinks again.
+patch "Black Water" note=40 range=28..60 family=dark role=drone
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Depth"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Abyss"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.7
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #22
+  mac5_a1  0.3
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       40
+  tilt           -15 dB/oct
+  bandwidth      55 cents
+  bbandwidth     60 cents
+  detune         12 cents
+  drift          14 cents
+  driftrate      0.05 Hz
+  width          0.9
+  cutoff         900 Hz
+  resonance      0.45
+  filtertype     #3
+  lfo2wave       #0
+  lfo2rate       0.045 Hz
+  lfo2cutoff     0.4
+  ampattack      2.5 s
+  amprelease     5 s
+  volume         0.93
+  send reverb    0.15
+
+# A comb on narrow bands, low, so it hums like a transformer, with the
+# morph thickening the comb. Tape wears the edges off.
+patch "Iron Hum" note=36 range=28..55 family=dark role=drone
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Thicken"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Under"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.3
+  mac5_d2  #12
+  mac5_a2  0.1
+  mac5_d3  #13
+  mac5_a3  -0.2
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.2917
+  partials       36
+  tilt           -12 dB/oct
+  bandwidth      10 cents
+  bbandwidth     30 cents
+  comb           0.6
+  combperiod     4
+  bcomb          0.3
+  stretch        0.002
+  detune         5 cents
+  drift          5 cents
+  width          0.6
+  cutoff         2600 Hz
+  ampattack      1.2 s
+  amprelease     3.5 s
+  volume         0.62
+  insert Tape
+    wow          0.2
+    flutter      0.1
+    drive        0.4
+    tone         4000 Hz
+    hiss         0
+    age          0.6
+
+# Low and driven through the filter, so the bottom of a chord grinds.
+# A soft clip on the way out keeps it from getting loud.
+patch "Coal Seam" note=40 range=28..60 family=dark
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Morph"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Abyss"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.7
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.3
+  mac5_d2  #12
+  mac5_a2  0.1
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       32
+  tilt           -14 dB/oct
+  bandwidth      35 cents
+  bbandwidth     50 cents
+  btilt          4 dB/oct
+  detune         10 cents
+  drift          9 cents
+  width          0.7
+  cutoff         1600 Hz
+  resonance      0.25
+  filterdrive    0.5
+  drive          0.25
+  ampattack      0.9 s
+  amprelease     3 s
+  volume         0.36
+
+# A slow random LFO moves the morph between a dark cloud and a smeared
+# one, so the bed never settles into a loop.
+patch "Night Engine" note=40 range=28..60 family=dark role=drone
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Wander"
+  set macro4 "Spread"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Abyss"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #20
+  mac3_a1  0.3
+  mac3_d2  #19
+  mac3_a2  0.2
+  mac4_d1  #7
+  mac4_a1  0.3
+  mac5_d1  #11
+  mac5_a1  0.25
+  mac5_d2  #12
+  mac5_a2  0.05
+  mac5_d3  #13
+  mac5_a3  -0.25
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       44
+  tilt           -16 dB/oct
+  bandwidth      30 cents
+  bbandwidth     180 cents
+  bstretch       0.006
+  btilt          5 dB/oct
+  lfo1wave       #6
+  lfo1rate       0.12 Hz
+  lfo1morph      0.8
+  detune         10 cents
+  drift          12 cents
+  width          0.85
+  cutoff         2400 Hz
+  ampattack      2 s
+  amprelease     5 s
+  spread         #2
+  volume         1.07
+  send reverb    0.15
+
+# Partials crowded down onto the fundamental and smeared wide, an
+# octave below where you play. No pitch to hold on to, just the floor.
+patch Abyss note=48 range=36..67 family=dark role=drone
+  set macro1 "Open"
+  set macro2 "Weather"
+  set macro3 "Crush"
+  set macro4 "Width"
+  set macro5 "Grit"
+  set macro6 "Swell"
+  set macro7 "Throb"
+  set macro8 "Rise"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #8
+  mac1_a1  0.3
+  mac1_d2  #9
+  mac1_a2  0.1
+  mac2_d1  #5
+  mac2_a1  0.4
+  mac2_d2  #6
+  mac2_a2  0.3
+  mac2_d3  #4
+  mac2_a3  -0.2
+  mac3_d1  #1
+  mac3_a1  0.8
+  mac4_d1  #3
+  mac4_a1  0.2
+  mac4_d2  #7
+  mac4_a2  0.2
+  mac5_d1  #11
+  mac5_a1  0.25
+  mac5_d2  #12
+  mac5_a2  0.05
+  mac5_d3  #13
+  mac5_a3  -0.25
+  mac6_d1  #15
+  mac6_a1  0.4
+  mac6_d2  #17
+  mac6_a2  0.3
+  mac7_d1  #22
+  mac7_a1  0.4
+  mac7_d2  #21
+  mac7_a2  0.2
+  mac8_d1  #24
+  mac8_a1  0.5
+  partials       60
+  tilt           -16 dB/oct
+  bandwidth      90 cents
+  bbandwidth     150 cents
+  bwscale        1.4
+  stretch        -0.006
+  bstretch       -0.02
+  octave         -1
+  detune         15 cents
+  drift          20 cents
+  driftrate      0.03 Hz
+  width          1
+  cutoff         2000 Hz
+  ampattack      3 s
+  amprelease     6 s
+  spread         #2
+  volume         1.20
+  send reverb    0.2
+
 # --- morph -------------------------------------------------------
 
 # Dark and narrow at the bottom of the keyboard, bright and smeared at
 # the top, on one patch. Key tracking drives the morph, so the left hand
 # and the right hand are playing two different instruments.
 patch "Morph Key" note=60 range=36..88 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Depth"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.5
+  mac2_d1  #20
+  mac2_a1  0.4
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       64
   tilt           -16 dB/oct
   bandwidth      16 cents
@@ -2073,6 +3149,115 @@ patch "Morph Key" note=60 range=36..88 family=morph role=drone
   ampattack      1 s
   amprelease     3 s
   volume         0.85
+
+# A slow sine walks the morph from wide bands to narrow ones, so the
+# cloud comes into focus and blurs again.
+patch Lens note=60 range=36..84 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       52
+  tilt           -12 dB/oct
+  bandwidth      90 cents
+  bbandwidth     -70 cents
+  lfo1wave       #0
+  lfo1rate       0.06 Hz
+  lfo1morph      0.8
+  detune         8 cents
+  drift          10 cents
+  width          0.85
+  cutoff         8000 Hz
+  ampattack      1.2 s
+  amprelease     3.5 s
+  volume         1.00
+  send reverb    0.15
+
+# The morph is played by hand: slide on an MPE controller, or the
+# first knob, takes it from dark and hollow to bright and full.
+patch "Slide Glow" note=60 range=36..84 family=morph
+  set macro1 "Morph"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  1
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       56
+  tilt           -15 dB/oct
+  bandwidth      20 cents
+  bbandwidth     80 cents
+  btilt          10 dB/oct
+  odd            0.9
+  bodd           -0.8
+  mpetimbre      1
+  detune         8 cents
+  drift          8 cents
+  width          0.8
+  cutoff         9500 Hz
+  ampattack      0.6 s
+  amprelease     2.8 s
+  volume         0.67
+  send reverb    0.12
 
 # Thirty seconds from one spectrum to the other and back. Slower than
 # any phrase will show you, which is deliberate: it is meant to be
@@ -2111,6 +3296,8 @@ patch "Slow Turn" note=60 range=36..84 family=morph role=drone
   mac6_a1  0.5
   mac6_d2  #11
   mac6_a2  0.4
+  mac6_d3  #13
+  mac6_a3  -0.25
   mac7_d1  #17
   mac7_a1  0.5
   mac7_d2  #13
@@ -2140,6 +3327,41 @@ patch "Slow Turn" note=60 range=36..84 family=morph role=drone
 # morph on one, the filter on the other - so it never arrives at the
 # same place twice inside a piece.
 patch Breathing note=60 range=36..84 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       60
   tilt           -13 dB/oct
   bandwidth      70 cents
@@ -2161,11 +3383,165 @@ patch Breathing note=60 range=36..84 family=morph role=drone
   amprelease     5.2 s
   volume         0.87
 
+# Odd partials at one end, all of them at the other, with a slow LFO
+# between, so a stopped pipe opens and closes.
+patch "Hollow Turn" note=57 range=40..81 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       44
+  tilt           -11 dB/oct
+  bandwidth      26 cents
+  bbandwidth     40 cents
+  odd            1
+  bodd           -1
+  lfo1wave       #1
+  lfo1rate       0.05 Hz
+  lfo1morph      0.9
+  detune         7 cents
+  drift          8 cents
+  width          0.8
+  cutoff         8000 Hz
+  ampattack      1 s
+  amprelease     3 s
+  volume         0.62
+  send reverb    0.15
+
+# A comb comes in on the far spectrum, and a triangle LFO rocks the
+# morph between them, so a notch sweeps through like a tide.
+patch "Tide Table" note=60 range=36..84 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       64
+  tilt           -11 dB/oct
+  bandwidth      45 cents
+  bbandwidth     30 cents
+  bcomb          0.8
+  combperiod     5
+  lfo1wave       #1
+  lfo1rate       0.09 Hz
+  lfo1morph      0.85
+  detune         10 cents
+  drift          11 cents
+  width          0.9
+  cutoff         8500 Hz
+  ampattack      1.6 s
+  amprelease     4 s
+  volume         0.79
+  insert Chorus
+    voices       #1
+    rate         #14
+    depth        0.3
+    spread       0.9
+    drift        0.1
+    mix          0.3
+  send reverb    0.15
+
 # Built to be held. The drift is wide, the rate is slow, the scatter is
 # full, and every voice starts somewhere else in a table a second and a
 # half long - so a chord is never the same cloud twice and never
 # settles.
 patch "Drone Field" note=45 range=33..72 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #19
+  mac2_a1  0.2
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
   partials       88
   tilt           -14 dB/oct
   bandwidth      110 cents
@@ -2186,6 +3562,252 @@ patch "Drone Field" note=45 range=33..72 family=morph role=drone
   ampattack      3.4 s
   amprelease     7 s
   volume         1.25
+
+# An eight-step LFO synced to the tempo jumps the morph, one step a
+# beat, so a held chord changes colour in time with the song.
+patch "Stepping Cloud" note=60 range=36..84 family=morph role=drone
+  set macro1 "Steps"
+  set macro2 "Depth"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #20
+  mac1_a1  0.2
+  mac2_d1  #20
+  mac2_a1  0.4
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       56
+  tilt           -11 dB/oct
+  bandwidth      30 cents
+  bbandwidth     120 cents
+  btilt          8 dB/oct
+  bvowel         0.6
+  vowelamount    0.5
+  lfo1wave       #7
+  lfo1sync       #1
+  lfo1rate       0.125 Hz
+  lfo1morph      0.8
+  detune         8 cents
+  drift          8 cents
+  width          0.85
+  cutoff         9000 Hz
+  ampattack      0.8 s
+  amprelease     3 s
+  volume         1.27
+  insert Delay
+    time         #3
+    feedback     0.3
+    tone         4500 Hz
+    pingpong     #1
+    mix          0.15
+
+# A smooth random LFO on the morph between a plain cloud and a stretched,
+# vowelled one, so it drifts somewhere new each time it is held.
+patch "Random Sky" note=60 range=36..84 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       60
+  tilt           -12 dB/oct
+  bandwidth      50 cents
+  bbandwidth     60 cents
+  bstretch       0.01
+  bvowel         0.7
+  vowelamount    0.6
+  lfo1wave       #6
+  lfo1rate       0.15 Hz
+  lfo1morph      0.9
+  scatter        1
+  detune         11 cents
+  drift          14 cents
+  driftrate      0.05 Hz
+  width          0.95
+  cutoff         8000 Hz
+  ampattack      1.8 s
+  amprelease     4.5 s
+  spread         #2
+  volume         1.0
+  send reverb    0.18
+
+# Key tracking and a slow LFO both push towards a stretched, bright
+# spectrum, so the top of the keyboard rusts into a bell while the bottom
+# stays a pad.
+patch "Rust Bloom" note=60 range=36..88 family=morph role=drone
+  set macro1 "Turn"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.8
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       64
+  tilt           -14 dB/oct
+  bandwidth      24 cents
+  bbandwidth     40 cents
+  bstretch       0.03
+  btilt          8 dB/oct
+  morphkey       0.6
+  lfo1wave       #0
+  lfo1rate       0.035 Hz
+  lfo1morph      0.4
+  mpetimbre      1
+  detune         8 cents
+  drift          9 cents
+  width          0.85
+  cutoff         9000 Hz
+  filterkey      0.4
+  ampattack      1.2 s
+  amprelease     4 s
+  volume         0.80
+  send reverb    0.2
+
+# From partials crowded flat to partials stretched sharp, and a square
+# LFO flips between them, so the cloud turns inside out every few seconds.
+patch "Inside Out" note=60 range=36..84 family=morph role=drone
+  set macro1 "Flip"
+  set macro2 "Speed"
+  set macro3 "Bright"
+  set macro4 "Weather"
+  set macro5 "Pan"
+  set macro6 "Shimmer"
+  set macro7 "Fade"
+  set macro8 "Sink"
+  # Macros: each knob adds its depth to the destinations below.
+  mac1_d1  #1
+  mac1_a1  0.5
+  mac2_d1  #19
+  mac2_a1  0.3
+  mac3_d1  #8
+  mac3_a1  0.35
+  mac3_d2  #9
+  mac3_a2  0.1
+  mac4_d1  #5
+  mac4_a1  0.4
+  mac4_d2  #6
+  mac4_a2  0.3
+  mac4_d3  #4
+  mac4_a3  -0.2
+  mac5_d1  #23
+  mac5_a1  0.5
+  mac5_d2  #21
+  mac5_a2  0.2
+  mac6_d1  #2
+  mac6_a1  0.35
+  mac7_d1  #15
+  mac7_a1  0.5
+  mac7_d2  #17
+  mac7_a2  0.3
+  mac8_d1  #24
+  mac8_a1  -0.5
+  partials       60
+  tilt           -12 dB/oct
+  bandwidth      35 cents
+  bbandwidth     50 cents
+  stretch        -0.014
+  bstretch       0.035
+  lfo1wave       #4
+  lfo1rate       0.11 Hz
+  lfo1morph      0.75
+  detune         9 cents
+  drift          10 cents
+  width          0.9
+  cutoff         8500 Hz
+  ampattack      1.5 s
+  amprelease     4 s
+  volume         1.14
+  insert Phaser
+    stages       #1
+    rate         #11
+    depth        0.5
+    feedback     0.3
+    spread       0.7
+    mix          0.3
+  send reverb    0.18
 
 # --- pluck -------------------------------------------------------
 
