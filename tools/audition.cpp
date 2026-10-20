@@ -230,11 +230,15 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             bottom = range.high - range.low >= kSpan ? std::clamp(note - 10, range.low, range.high - kSpan)
                                                      : range.low;
         }
+        // If the range is narrower than the tune, the steps above it play the
+        // highest step that fits, so the top of the tune flattens out rather
+        // than dropping an octave, which sounds like a fault in the patch.
+        int top = 0;
         for (const Step &st : kTune) {
-            int n = bottom + st.step;
-            // If the range is narrower than the tune, high notes drop an
-            // octave to stay inside it.
-            if (range.set()) while (n > range.high) n -= 12;
+            if (!range.set() || bottom + st.step <= range.high) top = std::max(top, st.step);
+        }
+        for (const Step &st : kTune) {
+            const int n = bottom + std::min(st.step, top);
             p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, n, st.vel));
         }
         p.frames = p.lastOff + secondsToFrames(2.5f);
