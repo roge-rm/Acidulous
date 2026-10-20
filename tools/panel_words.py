@@ -131,6 +131,8 @@ def from_panels():
                 continue
             args = split_args(text, m.end() - 1)
             words.update(template(a[1:-1]) for a in args if re.fullmatch(r'"[^"]*"', a))
+        # A list built from a number: (1..8).map { "tune $it" }.
+        words.update(template(w) for w in re.findall(r'\.map\s*\{\s*"([^"]*\$[^"]*)"\s*\}', text))
         # A word looked up directly: panelWord("stops").
         words.update(template(w) for w in re.findall(r'\bpanelWords?\(\s*"([^"]*)"\s*\)', text))
         # A word with its sense after a tilde, "key~music", wherever it is: see PanelText.kt.
@@ -168,22 +170,31 @@ def from_model():
     voices = (MODEL / "MachineUi.kt").read_text()
     words.update(template(m.group(1)) for m in re.finditer(r'DrumVoice\([^,]+,\s*"([^"]*)"', voices))
     banks = (MODEL / "FactoryBanks.kt").read_text()
-    words.update(m.group(1) for m in re.finditer(r'family\s*=\s*"([^"]*)"', banks))
+    families = {m.group(1) for m in re.finditer(r'family\s*=\s*"([^"]*)"', banks)}
+    words.update(families)
+    # A family that needs its own word as a shelf name: the bank browser looks
+    # up "odd~family" before "odd" (FileDialogs.kt).
+    words.update(f + "~family" for f in families & FAMILY_SENSES)
     return words
 
 
 # Words no panel writes as a literal: gen_param_labels.py's "pad %d" in a
 # lane's name, and Forage's unloaded pads.
 LANE_WORDS = {"pad %d", "Pad %d"}
+# Bank families that read differently on a shelf than on a panel.
+FAMILY_SENSES = {"odd"}
+# Nexus's old bank families, which no bank uses now; kept so values-fr's
+# translations of them still have an English key.
+KEPT_WORDS = {"basic", "macro"}
 
 
 def harvest():
-    words = from_panels() | from_engine() | from_model() | LANE_WORDS
+    words = from_panels() | from_engine() | from_model() | LANE_WORDS | KEPT_WORDS
     out = set()
     for w in words:
         w = w.strip()
-        # A template that's only a number isn't a word.
-        if is_word(w) and re.sub(r"%d|\s", "", w):
+        # A template that's only a number, or "+%d", isn't a word.
+        if is_word(w.replace("%d", "")) and re.sub(r"%d|\s", "", w):
             out.add(w)
     return sorted(out, key=lambda s: (s.lower(), s))
 

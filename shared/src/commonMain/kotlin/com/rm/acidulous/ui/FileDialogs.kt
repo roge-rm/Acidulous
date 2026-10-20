@@ -91,7 +91,10 @@ fun PatchBrowserDialog(
     }
     // The families are named by the bank, the three tabs the app adds are ours.
     val labels = (if (families.isEmpty()) listOf(stringResource(Res.string.patches_factory)) else families.map {
-        if (it == OTHER) stringResource(Res.string.patches_other) else it
+        // A family whose word means something else on a panel has its own
+        // sense, "odd~family", so it can translate differently.
+        if (it == OTHER) stringResource(Res.string.patches_other)
+        else if (PANEL_WORDS.containsKey("$it~family")) "$it~family" else it
     }) + stringResource(Res.string.patches_user)
     var tab by rememberSaveable(machine) { mutableStateOf(0) }
     if (tab >= labels.size) tab = 0

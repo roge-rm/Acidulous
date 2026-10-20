@@ -1415,4 +1415,11 @@
     <string name="pw_picked">au médiator</string>
     <string name="pw_blown">soufflé</string>
     <string name="pw_sympathetic">sympathique</string>
+    <string name="pw_tongue_time">temps langue</string>
+    <string name="pw_flutter_rate">vitesse flutter</string>
+    <string name="pw_swell_time">temps crescendo</string>
+    <string name="pw_sax">sax</string>
+    <string name="pw_odd_family">insolite</string>
+    <string name="pw_arp_19ddb1">arpège</string>
+    <string name="pw_found">objets</string>
 </resources>

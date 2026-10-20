@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance and Filament move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament and Timber move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -20,6 +20,7 @@
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
 #include <engine/machine/resonance/Resonance.h>
+#include <engine/machine/timber/Timber.h>
 #include <engine/machine/trinity/Trinity.h>
 #include <engine/dsp/Lfo.h>
 #include <engine/dsp/LfoGen.h>
@@ -389,8 +390,8 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         }
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the pads' tune", buf);
-    } else if (std::strcmp(type, "Filament") == 0) {
-        // A plucked string's zero crossings wander, so the route must match the transpose knob.
+    } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0) {
+        // A plucked string's (or a reed's onset's) zero crossings wander, so the route must match the transpose knob.
         gUnits = {{"transpose", 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -637,6 +638,144 @@ void filamentRoutes() {
     same("Filament: a route to vibrato rate matches the knob", fast, fastRouted);
 }
 
+// A note at [first], held, and a second at 60 slurred onto it at [slurAt]
+// samples, from a fresh Timber with [units] set.
+// A negative [slurAt] holds [first] alone.
+std::vector<float> timberSlur(const std::vector<std::pair<std::string, float>> &units, int32_t slurAt,
+                              uint8_t first = 57) {
+    Machine *m = MachineRegistry::create("Timber");
+    m->prepare(kRate);
+    ParamSet &p = m->params();
+    for (const auto &[name, value] : units) {
+        const int32_t i = p.indexOf(name.c_str());
+        p.set(i, p.def(i).unmap(value));
+    }
+    p.jumpAll();
+    m->reset();
+    m->noteOn(first, 100);
+    std::vector<float> out;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < kBlocks * (slurAt < 0 ? 4 : 2); ++b) {
+        if (b * kBlock == slurAt) m->noteOn(60, 100);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+    }
+    delete m;
+    return out;
+}
+
+double rmsRange(const std::vector<float> &v, size_t from, size_t to) {
+    double s = 0;
+    for (size_t i = from; i < to; ++i) s += double(v[i]) * v[i];
+    return std::sqrt(s / double(to - from));
+}
+
+// Timber's breath swell: a route to it matches the knob, a rising swell
+// starts quiet and arrives, a falling one starts loud, and a slurred note
+// carries on the swell it joined rather than starting another.
+void timberRoutes() {
+    using Tb = acidulous::machine::Timber;
+    gType = "Timber";
+    gDests = Tb::MacroDestCount;
+    gNote = 57;
+    char buf[96];
+    auto same = [&](const char *what, const std::vector<float> &a, const std::vector<float> &b) {
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(a[i] - b[i])));
+            peak = std::max(peak, double(std::fabs(a[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-4, what, buf);
+    };
+    gUnits = {{"swelltime", 0.1f}};
+    const auto base = play(nullptr);
+
+    // Swell is -1..1 from 0, so +0.4 of its range is 0.8.
+    gUnits = {{"swelltime", 0.1f}, {"swell", 0.8f}};
+    const auto rise = play(nullptr);
+    gUnits = {{"swelltime", 0.1f}};
+    Route r{4, 2, Tb::McSwell, 0.4f, 1.0f};
+    same("Timber: a route to swell matches the knob", rise, play(&r));
+
+    const size_t front = 2400, tail = 7000;
+    std::snprintf(buf, sizeof(buf), "front %.4f against %.4f", rmsRange(rise, 0, front), rmsRange(base, 0, front));
+    ok(rmsRange(rise, 0, front) < rmsRange(base, 0, front) * 0.5, "Timber: a rising swell starts quiet", buf);
+    std::snprintf(buf, sizeof(buf), "tail %.4f against %.4f", rmsRange(rise, tail, rise.size()),
+                  rmsRange(base, tail, base.size()));
+    ok(rmsRange(rise, tail, rise.size()) > rmsRange(base, tail, base.size()) * 0.7,
+       "Timber: a rising swell arrives", buf);
+
+    gUnits = {{"swelltime", 0.1f}, {"swell", -0.8f}};
+    const auto fall = play(nullptr);
+    gUnits.clear();
+    std::snprintf(buf, sizeof(buf), "front %.4f against %.4f", rmsRange(fall, 0, 4800), rmsRange(base, 0, 4800));
+    ok(rmsRange(fall, 0, 4800) > rmsRange(base, 0, 4800) * 1.1, "Timber: a falling swell starts loud", buf);
+
+    // Every sample moves the breath, so nothing in the swell steps: the
+    // largest jump between samples is no bigger than without it.
+    double jumpRise = 0, jumpBase = 0;
+    for (size_t i = 1; i < base.size(); ++i) {
+        jumpRise = std::max(jumpRise, double(std::fabs(rise[i] - rise[i - 1])));
+        jumpBase = std::max(jumpBase, double(std::fabs(base[i] - base[i - 1])));
+    }
+    std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f", jumpRise, jumpBase);
+    ok(jumpRise <= jumpBase * 1.05, "Timber: the swell has no steps in it", buf);
+
+    // Slurred at 120 ms, after the swell is done: the second note does not
+    // start another one, so it sounds as it does with no swell at all.
+    const int32_t slurAt = 90 * kBlock;
+    const auto slurBase = timberSlur({{"swelltime", 0.05f}}, slurAt);
+    const auto slurSwell = timberSlur({{"swelltime", 0.05f}, {"swell", 1.0f}}, slurAt);
+    // Window by window, 5 ms each, so a swell that restarts part way (a dip
+    // of a few milliseconds) can't hide in the average.
+    const double a = rmsRange(slurSwell, slurAt, slurAt + 2400), b = rmsRange(slurBase, slurAt, slurAt + 2400);
+    double worstWin = 10.0;
+    for (int32_t w = 0; w < 10; ++w) {
+        const size_t from = slurAt + w * 240;
+        const double bw = rmsRange(slurBase, from, from + 240);
+        if (bw > 1e-4) worstWin = std::min(worstWin, rmsRange(slurSwell, from, from + 240) / bw);
+    }
+    std::snprintf(buf, sizeof(buf), "after the slur %.4f against %.4f, worst 5 ms %.3f", a, b, worstWin);
+    ok(b > 1e-3 && std::fabs(a - b) < b * 0.05 && worstWin > 0.9, "Timber: a slurred note carries on the swell", buf);
+
+    // Flutter on an air jet: the tongue breaks the jet up at the flutter
+    // rate, so the level moves at that rate, and smoothly.
+    const std::vector<std::pair<std::string, float>> jet = {
+        {"family", 2.0f}, {"bore", 1.0f}, {"body", 261.6f}, {"breath", 0.45f}, {"lattice", 1400.0f},
+        {"pressure", 0.8f}, {"vibrato", 0.0f}, {"flutterrate", 25.0f}};
+    auto withFlutter = jet;
+    withFlutter.push_back({"flutter", 0.6f});
+    const auto still = timberSlur(jet, -1, 72);
+    const auto fluttered = timberSlur(withFlutter, -1, 72);
+    // The level's movement at 25 Hz over the held note, against its mean,
+    // from 5 ms block levels.
+    auto wobble = [](const std::vector<float> &v) {
+        const size_t hop = 240, from = 9600;
+        double re = 0, im = 0, mean = 0;
+        int n = 0;
+        for (size_t s = from; s + hop <= v.size(); s += hop, ++n) {
+            const double lv = rmsRange(v, s, s + hop), t = double(s) / kRate;
+            re += lv * std::cos(2 * M_PI * 25.0 * t);
+            im += lv * std::sin(2 * M_PI * 25.0 * t);
+            mean += lv;
+        }
+        return mean > 0 ? 2.0 * std::sqrt(re * re + im * im) / mean : 0.0;
+    };
+    const double wStill = wobble(still), wFlutter = wobble(fluttered);
+    std::snprintf(buf, sizeof(buf), "25 Hz movement %.3f against %.3f", wFlutter, wStill);
+    ok(wFlutter > 0.15 && wFlutter > wStill * 4, "Timber: flutter moves an air jet", buf);
+    double jumpStill = 0, jumpFlutter = 0;
+    for (size_t i = 1; i < still.size(); ++i) {
+        jumpStill = std::max(jumpStill, double(std::fabs(still[i] - still[i - 1])));
+        jumpFlutter = std::max(jumpFlutter, double(std::fabs(fluttered[i] - fluttered[i - 1])));
+    }
+    std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f", jumpFlutter, jumpStill);
+    ok(jumpFlutter <= jumpStill * 1.05, "Timber: a jet's flutter has no steps in it", buf);
+}
+
 } // namespace
 
 int main() {
@@ -677,6 +816,11 @@ int main() {
     // Filament's volume is Reflux's, 0 to 1.5 from 0.8.
     basics("Filament", Fl::MacroDestCount, Fl::McVolume, Fl::McPitch, Fl::McOff, Fl::kMacros, 0.05 / 0.8, 0.425 / 0.8);
     filamentRoutes();
+    gNote = 57;
+    using Tm = acidulous::machine::Timber;
+    // Timber's volume is Filament's, 0 to 1.5 from 0.8.
+    basics("Timber", Tm::MacroDestCount, Tm::McVolume, Tm::McPitch, Tm::McOff, Tm::kMacros, 0.05 / 0.8, 0.425 / 0.8);
+    timberRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

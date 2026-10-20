@@ -42,4 +42,19 @@ class MacroNamesTest {
         val families = FactoryBanks.of("Filament").map { it.family }.distinct()
         assertEquals(listOf("plucked", "picked", "struck", "bowed", "blown", "sympathetic", "prepared"), families)
     }
+
+    @Test
+    fun timberMacrosTakeThePatchNames() {
+        val t = track("Timber", mapOf("macro1" to "Blow"))
+        assertEquals("Blow", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        // The swell's lanes take the panel's words.
+        assertEquals("amount", laneShortLabel(t, laneKey("machine", "swell")))
+    }
+
+    @Test
+    fun timberBankHasItsFamiliesInOrder() {
+        val families = FactoryBanks.of("Timber").map { it.family }.distinct()
+        assertEquals(listOf("clarinet", "sax", "double", "flute", "pipe", "low", "odd"), families)
+    }
 }

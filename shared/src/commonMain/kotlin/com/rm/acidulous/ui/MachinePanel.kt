@@ -262,7 +262,7 @@ fun MachinePanel(
             "Chanter" -> ChanterPanel(binding)
             "Aviary" -> AviaryPanel(binding, selectedPad)
             "Fathom" -> FathomPanel(binding, selectedPad)
-            "Timber" -> TimberPanel(binding)
+            "Timber" -> TimberPanel(binding, track, trackIndex, editor)
             "Nexus" -> NexusPanel(binding, track, trackIndex, editor, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Bias" -> BiasPanel(binding, track, trackIndex, sceneId, editor)
@@ -5179,12 +5179,52 @@ private val TIMBER_FAMILY = listOf("reed", "double", "air")
 private val TIMBER_BORE = listOf("cylinder", "cone")
 private val TIMBER_REGISTER = listOf("natural", "register", "altissimo")
 
+/** Where a Timber macro route goes, in the engine's MacroDest order. */
+val TIMBER_MACRO_DESTS = listOf(
+    "off", "lowest", "lattice", "holes", "forked", "below", "answers",
+    "stiffness", "embouchure", "pressure", "breath", "crossing", "aim",
+    "bell", "loss",
+    "tongue", "tongue time", "flutter", "flutter rate", "key noise",
+    "attack", "decay", "sustain", "release",
+    "vib depth", "vib rate", "vib delay",
+    "cutoff", "reso", "glide", "velocity",
+    "drive", "volume", "pan", "slide",
+    "swell", "swell time",
+    "pitch",
+)
+
 @Composable
-private fun TimberPanel(b: ParamBinding) {
+private fun TimberPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("pipe", "mouth", "holes", "tongue", "shape", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "pipe", "mouth", "holes", "tongue", "shape", "out", "macros"),
+        section, { section = it },
+    ) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", TIMBER_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", TIMBER_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", TIMBER_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", TIMBER_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("pipe") {
                     PanelStepKnob(b, "family", TIMBER_FAMILY, "started by", PanelAmber)
                     PanelStepKnob(b, "bore", TIMBER_BORE, "shape", PanelAmber)
@@ -5200,7 +5240,7 @@ private fun TimberPanel(b: ParamBinding) {
                     PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("reed") {
                     PanelKnob(b, "reed", "stiffness", PanelAmber)
                     PanelKnob(b, "embouchure", "embouchure", PanelAmber)
@@ -5210,12 +5250,16 @@ private fun TimberPanel(b: ParamBinding) {
                     PanelKnob(b, "breath", "breath")
                     PanelKnob(b, "mpetimbre", "slide")
                 }
+                Group("swell") {
+                    PanelKnob(b, "swell", "amount", PanelAmber)
+                    PanelKnob(b, "swelltime", "time")
+                }
                 Group("jet") {
                     PanelKnob(b, "jet", "crossing", PanelPink)
                     PanelKnob(b, "aim", "aim", PanelPink)
                 }
             }
-            2 -> {
+            3 -> {
                 Group("lattice") {
                     PanelKnob(b, "lattice", "cutoff", PanelAmber)
                     PanelKnob(b, "holes", "holes")
@@ -5227,7 +5271,7 @@ private fun TimberPanel(b: ParamBinding) {
                     PanelKnob(b, "answer", "answers", PanelPink)
                 }
             }
-            3 -> {
+            4 -> {
                 Group("tongue") {
                     PanelKnob(b, "tongue", "depth", PanelAmber)
                     PanelKnob(b, "tonguetime", "time")
@@ -5238,7 +5282,7 @@ private fun TimberPanel(b: ParamBinding) {
                 }
                 Group("keys") { PanelKnob(b, "keys", "key noise") }
             }
-            4 -> {
+            5 -> {
                 Group("envelope") {
                     PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
                     PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
@@ -5267,6 +5311,14 @@ private fun TimberPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Nexus ------------------------------------------------------------------

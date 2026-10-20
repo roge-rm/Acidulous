@@ -224,6 +224,9 @@ class Pipe {
     /** The tongue on the reed. 1 holds it shut. */
     void setTongue(float amount) { tongue = clampf(amount, 0.0f, 1.0f); }
 
+    /** The tongue across the air jet, for flutter. 1 stops the jet. */
+    void setJetCut(float amount) { jetCut = clampf(amount, 0.0f, 1.0f); }
+
     // --- tuning --------------------------------------------------------------
 
     /**
@@ -479,7 +482,11 @@ class Pipe {
             breathLp += (breath - breathLp) * 0.002f;
             write(jetLine, wJet, bore + noise + (breath - breathLp) * 0.5f);
             const float late = read(jetLine, wJet, jetDelay);
-            in = bore - (dsp::fastTanh(jetGain * late + jetAim) - jetRest);
+            float edge = dsp::fastTanh(jetGain * late + jetAim) - jetRest;
+            // A rolled tongue breaking the jet up (flutter): less of it
+            // reaches the edge, so the loop loses gain while it's cut.
+            if (jetCut > 0.0f) edge *= 1.0f - jetCut;
+            in = bore - edge;
         } else {
             // mouth + difference x reflection, where the reflection is the
             // reed table read at the (lagged, for the reed's inertia)
@@ -641,7 +648,7 @@ class Pipe {
     float reedShut = 0.1f, reedScale = 1.0f, rRest = 0.7f;
     float jetRatio = 0.5f, jetAim = 0.0f, jetDelay = 48.0f, jetGain = 1.0f, jetSlope = 1.0f, jetRest = 0.0f;
 
-    float pressure = 0.5f, drive = 1.0f, loss = 0.999f, tongue = 0.0f;
+    float pressure = 0.5f, drive = 1.0f, loss = 0.999f, tongue = 0.0f, jetCut = 0.0f;
     float bellLp = 0.0f, breathLp = 0.0f;
     float ventCoeff = 0.0f, ventLp = 0.0f;
     float wallCoeff = 1.0f, wallLp = 0.0f, wallDepth = kWallDepth;

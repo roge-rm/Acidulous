@@ -4948,54 +4948,319 @@ internal object FactoryBanks {
     private val brazen: List<Patch> by lazy { listOf(brazen0(), brazen1(), brazen2(), brazen3(), brazen4(), brazen5(), brazen6(), brazen7(), brazen8(), brazen9(), brazen10(), brazen11(), brazen12(), brazen13(), brazen14(), brazen15()) }
 
     private fun timber0() = Patch("Timber", "Init", emptyMap(),
-        family = "single")
+        family = "clarinet")
 
     private fun timber1() = Patch("Timber", "Clarinet",
-        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "fine" to 0.61f, "volume" to 0.553333342f),
-        family = "single",
+        mapOf("breath" to 0.1f, "keys" to 0.2f, "attack" to 0.3333333f, "fine" to 0.61f, "volume" to 0.553333342f, "swell" to 0.675f, "swelltime" to 0.612503f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
+        family = "clarinet",
         low = 52, high = 76)
 
-    private fun timber2() = Patch("Timber", "Bass Clarinet",
-        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "fine" to 0.63f, "volume" to 0.653333366f),
-        family = "single",
-        low = 40, high = 62)
+    private fun timber2() = Patch("Timber", "A Clarinet",
+        mapOf("body" to 0.5439642f, "lattice" to 0.448549658f, "breath" to 0.1f, "keys" to 0.2f, "attack" to 0.365636677f, "vibrato" to 0f, "cutoff" to 0.715336f, "fine" to 0.61f, "volume" to 0.444666654f, "swell" to 0.6f, "swelltime" to 0.5518465f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.0540540554f, "mac6_d2" to 0.1891892f, "mac6_d3" to 0.8648649f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.55f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Brighter", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
+        family = "clarinet",
+        low = 51, high = 75,
+        sendReverb = 0.12f, sendDelay = 0f)
 
-    private fun timber3() = Patch("Timber", "Alto Sax",
-        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "fine" to 0.59f, "volume" to 0.38f),
-        family = "single",
+    private fun timber3() = Patch("Timber", "High Clarinet",
+        mapOf("body" to 0.6671323f, "lattice" to 0.694134653f, "embouchure" to 0.5692308f, "pressure" to 0.7307693f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0f, "fine" to 0.57f, "volume" to 0.571333349f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.0540540554f, "mac4_d2" to 0.1891892f, "mac4_d3" to 0.8648649f, "mac4_a1" to 0.625f, "mac4_a2" to 0.575f, "mac4_a3" to 0.55f, "mac5_d1" to 0.9459459f, "mac5_d2" to 0.972973f, "mac5_a1" to 0.35f, "mac5_a2" to 0.45f, "mac6_d1" to 0.6486486f, "mac6_d2" to 0.7027027f, "mac6_a1" to 0.65f, "mac6_a2" to 0.45f, "mac7_d1" to 0.7297297f, "mac7_d2" to 0.0540540554f, "mac7_a1" to 0.325f, "mac7_a2" to 0.425f, "mac8_d1" to 0.459459454f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Blow", "macro2" to "Tighter", "macro3" to "Breathy", "macro4" to "Brighter", "macro5" to "Accent", "macro6" to "Vibrato", "macro7" to "Dark", "macro8" to "Flutter"),
+        family = "clarinet",
+        low = 57, high = 81)
+
+    private fun timber4() = Patch("Timber", "Chalumeau",
+        mapOf("lattice" to 0.43371132f, "pressure" to 0.538461566f, "breath" to 0.15f, "tongue" to 0.4f, "keys" to 0.15f, "attack" to 0.46598f, "release" to 0.612503f, "vibrato" to 0f, "cutoff" to 0.6018144f, "fine" to 0.53f, "volume" to 0.566666663f, "swell" to 0.7f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.9459459f, "mac3_d2" to 0.972973f, "mac3_a1" to 0.6f, "mac3_a2" to 0.55f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.0540540554f, "mac4_a1" to 0.325f, "mac4_a2" to 0.425f, "mac5_d1" to 0.216216221f, "mac5_d2" to 0.1891892f, "mac5_a1" to 0.375f, "mac5_a2" to 0.575f, "mac6_d1" to 0.6486486f, "mac6_d2" to 0.7027027f, "mac6_a1" to 0.65f, "mac6_a2" to 0.45f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.575f, "mac7_a2" to 0.575f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Swell", "macro4" to "Darker", "macro5" to "Looser", "macro6" to "Vibrato", "macro7" to "Slow Swell", "macro8" to "Soft Tongue"),
+        family = "clarinet",
+        low = 50, high = 66,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun timber5() = Patch("Timber", "Basset Horn",
+        mapOf("body" to 0.379664838f, "lattice" to 0.347645819f, "embouchure" to 0.4153846f, "keys" to 0.3f, "vibrato" to 0.06666667f, "cutoff" to 0.66574645f, "fine" to 0.62f, "volume" to 0.42f, "swell" to 0.625f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.0540540554f, "mac6_d2" to 0.1891892f, "mac6_d3" to 0.8648649f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.55f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.5405405f, "mac7_a1" to 0.3f, "mac7_a2" to 0.575f, "mac8_d1" to 0.459459454f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Brighter", "macro7" to "Soft Tongue", "macro8" to "Flutter"),
+        family = "clarinet",
+        low = 43, high = 72,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun timber6() = Patch("Timber", "Jazz Clarinet",
+        mapOf("embouchure" to 0.3846154f, "breath" to 0.18f, "keys" to 0.2f, "attack" to 0.3333333f, "vibrato" to 0.3f, "vibratorate" to 0.7545169f, "vibratodelay" to 0.075f, "glide" to 0.08f, "fine" to 0.62f, "volume" to 0.414f, "swell" to 0.625f, "swelltime" to 0.508810043f, "mac1_d1" to 0.7837838f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6486486f, "mac2_d2" to 0.7027027f, "mac2_a1" to 0.65f, "mac2_a2" to 0.45f, "mac3_d1" to 1f, "mac3_a1" to 0.47915f, "mac4_d1" to 0.243243247f, "mac4_d2" to 0.270270258f, "mac4_a1" to 0.625f, "mac4_a2" to 0.575f, "mac5_d1" to 0.270270258f, "mac5_a1" to 0.7f, "mac6_d1" to 0.459459454f, "mac6_d2" to 0.8378378f, "mac6_a1" to 0.7f, "mac6_a2" to 0.65f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.6f, "mac7_a2" to 0.55f, "mac8_d1" to 0.7297297f, "mac8_d2" to 0.0540540554f, "mac8_a1" to 0.325f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Glide", "macro2" to "Vibrato", "macro3" to "Bend", "macro4" to "Blow", "macro5" to "Breathy", "macro6" to "Growl", "macro7" to "Swell", "macro8" to "Dark"),
+        family = "clarinet",
+        low = 52, high = 79,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun timber7() = Patch("Timber", "Klezmer",
+        mapOf("embouchure" to 0.3846154f, "pressure" to 0.7692308f, "breath" to 0.15f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.2916871f, "vibrato" to 0.5f, "vibratorate" to 0.807081759f, "vibratodelay" to 0.05f, "glide" to 0.12f, "fine" to 0.51f, "drive" to 0.15f, "volume" to 0.346f, "swell" to 0.35f, "swelltime" to 0.405117065f, "mac1_d1" to 0.6486486f, "mac1_d2" to 0.6756757f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.7837838f, "mac2_a1" to 0.65f, "mac3_d1" to 1f, "mac3_a1" to 0.47915f, "mac4_d1" to 0.243243247f, "mac4_d2" to 0.270270258f, "mac4_a1" to 0.625f, "mac4_a2" to 0.575f, "mac5_d1" to 0.216216221f, "mac5_d2" to 0.1891892f, "mac5_a1" to 0.375f, "mac5_a2" to 0.575f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.35f, "mac6_a2" to 0.45f, "mac7_d1" to 0.459459454f, "mac7_d2" to 0.8378378f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac8_d1" to 0.270270258f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Wail", "macro2" to "Glide", "macro3" to "Bend", "macro4" to "Blow", "macro5" to "Looser", "macro6" to "Accent", "macro7" to "Growl", "macro8" to "Breathy"),
+        family = "clarinet",
+        low = 55, high = 81,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun timber8() = Patch("Timber", "Alto Sax",
+        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.2916871f, "vibrato" to 0.15f, "fine" to 0.59f, "volume" to 0.38f, "swell" to 0.3f, "swelltime" to 0.448153526f, "mac1_d1" to 0.459459454f, "mac1_d2" to 0.8378378f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.243243247f, "mac2_a1" to 0.6f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.4f, "mac4_d1" to 0.270270258f, "mac4_a1" to 0.675f, "mac5_d1" to 0.0540540554f, "mac5_a1" to 0.625f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.35f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6486486f, "mac7_d2" to 0.6756757f, "mac7_a1" to 0.65f, "mac7_a2" to 0.55f, "mac8_d1" to 0.8378378f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Growl", "macro2" to "Blow", "macro3" to "Looser", "macro4" to "Breathy", "macro5" to "Brighter", "macro6" to "Accent", "macro7" to "Vibrato", "macro8" to "Drive"),
+        family = "sax",
         low = 50, high = 74)
 
-    private fun timber4() = Patch("Timber", "Oboe",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.3076923f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "fine" to 0.58f, "volume" to 0.28f),
+    private fun timber9() = Patch("Timber", "Soprano Sax",
+        mapOf("bore" to 1f, "body" to 0.6877408f, "lattice" to 0.514213145f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.15f, "tongue" to 0.75f, "attack" to 0.2916871f, "vibrato" to 0.2f, "fine" to 0.59f, "volume" to 0.308666676f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.0540540554f, "mac4_d2" to 0.1891892f, "mac4_d3" to 0.8648649f, "mac4_a1" to 0.625f, "mac4_a2" to 0.575f, "mac4_a3" to 0.55f, "mac5_d1" to 0.9459459f, "mac5_d2" to 0.972973f, "mac5_a1" to 0.35f, "mac5_a2" to 0.45f, "mac6_d1" to 0.6486486f, "mac6_d2" to 0.7027027f, "mac6_a1" to 0.65f, "mac6_a2" to 0.45f, "mac7_d1" to 0.7837838f, "mac7_a1" to 0.65f, "mac8_d1" to 0.8378378f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Brighter", "macro5" to "Accent", "macro6" to "Vibrato", "macro7" to "Glide", "macro8" to "Drive"),
+        family = "sax",
+        low = 58, high = 82)
+
+    private fun timber10() = Patch("Timber", "Tenor Sax",
+        mapOf("bore" to 1f, "body" to 0.4411971f, "lattice" to 0.282834977f, "embouchure" to 0.353846163f, "pressure" to 0.7307693f, "breath" to 0.22f, "keys" to 0.3f, "attack" to 0.3180808f, "vibrato" to 0.166666672f, "fine" to 0.63f, "volume" to 0.318f, "swell" to 0.35f, "swelltime" to 0.448153526f, "mac1_d1" to 0.459459454f, "mac1_d2" to 0.8378378f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.243243247f, "mac2_d2" to 0.270270258f, "mac2_a1" to 0.625f, "mac2_a2" to 0.575f, "mac3_d1" to 0.216216221f, "mac3_d2" to 0.1891892f, "mac3_a1" to 0.375f, "mac3_a2" to 0.575f, "mac4_d1" to 0.270270258f, "mac4_a1" to 0.7f, "mac5_d1" to 0.0540540554f, "mac5_d2" to 0.1891892f, "mac5_d3" to 0.8648649f, "mac5_a1" to 0.625f, "mac5_a2" to 0.575f, "mac5_a3" to 0.55f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.35f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6486486f, "mac7_d2" to 0.7027027f, "mac7_a1" to 0.65f, "mac7_a2" to 0.45f, "mac8_d1" to 0.8378378f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Growl", "macro2" to "Blow", "macro3" to "Looser", "macro4" to "Breathy", "macro5" to "Brighter", "macro6" to "Accent", "macro7" to "Vibrato", "macro8" to "Drive"),
+        family = "sax",
+        low = 46, high = 70)
+
+    private fun timber11() = Patch("Timber", "Baritone Sax",
+        mapOf("bore" to 1f, "body" to 0.2975917f, "lattice" to 0.170517758f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.2f, "keys" to 0.35f, "attack" to 0.3333333f, "vibrato" to 0.1f, "fine" to 0.59f, "volume" to 0.45933333f, "mac1_d1" to 0.459459454f, "mac1_d2" to 0.8378378f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.243243247f, "mac2_d2" to 0.270270258f, "mac2_a1" to 0.625f, "mac2_a2" to 0.575f, "mac3_d1" to 0.216216221f, "mac3_d2" to 0.1891892f, "mac3_a1" to 0.375f, "mac3_a2" to 0.575f, "mac4_d1" to 0.270270258f, "mac4_a1" to 0.7f, "mac5_d1" to 0.0540540554f, "mac5_d2" to 0.1891892f, "mac5_d3" to 0.8648649f, "mac5_a1" to 0.625f, "mac5_a2" to 0.575f, "mac5_a3" to 0.55f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.3f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6486486f, "mac7_d2" to 0.7027027f, "mac7_a1" to 0.65f, "mac7_a2" to 0.45f, "mac8_d1" to 0.8378378f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Growl", "macro2" to "Blow", "macro3" to "Looser", "macro4" to "Breathy", "macro5" to "Brighter", "macro6" to "Bark", "macro7" to "Vibrato", "macro8" to "Drive"),
+        family = "sax",
+        low = 39, high = 63)
+
+    private fun timber12() = Patch("Timber", "Subtone",
+        mapOf("bore" to 1f, "body" to 0.4411971f, "lattice" to 0.282834977f, "embouchure" to 0.3076923f, "pressure" to 0.4615385f, "breath" to 0.45f, "tongue" to 0.3f, "keys" to 0.2f, "attack" to 0.46598f, "vibrato" to 0.233333334f, "vibratorate" to 0.691374242f, "cutoff" to 0.561296761f, "fine" to 0.66f, "volume" to 0.369333357f, "swell" to 0.6f, "swelltime" to 0.5518465f, "mac1_d1" to 0.270270258f, "mac1_d2" to 0.243243247f, "mac1_a1" to 0.725f, "mac1_a2" to 0.45f, "mac2_d1" to 0.243243247f, "mac2_a1" to 0.65f, "mac3_d1" to 0.7297297f, "mac3_d2" to 0.0540540554f, "mac3_a1" to 0.325f, "mac3_a2" to 0.425f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.9459459f, "mac5_d2" to 0.972973f, "mac5_a1" to 0.6f, "mac5_a2" to 0.55f, "mac6_d1" to 0.216216221f, "mac6_d2" to 0.1891892f, "mac6_a1" to 0.375f, "mac6_a2" to 0.575f, "mac7_d1" to 0.7837838f, "mac7_a1" to 0.65f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Air", "macro2" to "Push", "macro3" to "Darker", "macro4" to "Vibrato", "macro5" to "Swell", "macro6" to "Looser", "macro7" to "Glide", "macro8" to "Soft Tongue"),
+        family = "sax",
+        low = 46, high = 70,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun timber13() = Patch("Timber", "Ballad Tenor",
+        mapOf("bore" to 1f, "body" to 0.4411971f, "lattice" to 0.305865377f, "embouchure" to 0.338461548f, "pressure" to 0.6923077f, "breath" to 0.3f, "tongue" to 0.6f, "release" to 0.612503f, "vibrato" to 0.333333343f, "vibratodelay" to 0.125f, "glide" to 0.1f, "fine" to 0.63f, "volume" to 0.237999991f, "swell" to 0.65f, "swelltime" to 0.612503f, "mac1_d1" to 0.6486486f, "mac1_d2" to 0.7027027f, "mac1_a1" to 0.65f, "mac1_a2" to 0.45f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.270270258f, "mac3_a1" to 0.625f, "mac3_a2" to 0.575f, "mac4_d1" to 0.7837838f, "mac4_a1" to 0.65f, "mac5_d1" to 0.9459459f, "mac5_d2" to 0.972973f, "mac5_a1" to 0.6f, "mac5_a2" to 0.55f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.216216221f, "mac7_d2" to 0.1891892f, "mac7_a1" to 0.375f, "mac7_a2" to 0.575f, "mac8_d1" to 0.459459454f, "mac8_d2" to 0.8378378f, "mac8_a1" to 0.7f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Breathy", "macro3" to "Blow", "macro4" to "Glide", "macro5" to "Swell", "macro6" to "Darker", "macro7" to "Looser", "macro8" to "Growl"),
+        family = "sax",
+        low = 46, high = 72,
+        sendReverb = 0.25f, sendDelay = 0f)
+
+    private fun timber14() = Patch("Timber", "Sax Section",
+        mapOf("bore" to 1f, "body" to 0.5439642f, "lattice" to 0.3667258f, "embouchure" to 0.353846163f, "pressure" to 0.7307693f, "breath" to 0.2f, "tongue" to 0.75f, "keys" to 0.3f, "attack" to 0.3333333f, "vibrato" to 0.166666672f, "mono" to 0f, "fine" to 0.59f, "volume" to 0.333333343f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.0540540554f, "mac3_d2" to 0.1891892f, "mac3_d3" to 0.8648649f, "mac3_a1" to 0.625f, "mac3_a2" to 0.575f, "mac3_a3" to 0.55f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.35f, "mac4_a2" to 0.45f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.216216221f, "mac6_d2" to 0.1891892f, "mac6_a1" to 0.375f, "mac6_a2" to 0.575f, "mac7_d1" to 0.459459454f, "mac7_d2" to 0.8378378f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac8_d1" to 0.9459459f, "mac8_d2" to 0.972973f, "mac8_a1" to 0.6f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Brighter", "macro4" to "Accent", "macro5" to "Vibrato", "macro6" to "Looser", "macro7" to "Growl", "macro8" to "Swell"),
+        family = "sax",
+        low = 50, high = 74,
+        inserts = listOf(UnitSlot("Chorus", mapOf("mix" to 0.3f))),
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun timber15() = Patch("Timber", "Honker",
+        mapOf("bore" to 1f, "body" to 0.4411971f, "lattice" to 0.32740885f, "embouchure" to 0.261538446f, "pressure" to 0.8461539f, "breath" to 0.25f, "tongue" to 0.85f, "flutter" to 0.35f, "keys" to 0.3f, "attack" to 0.259383738f, "vibrato" to 0.1f, "fine" to 0.64f, "drive" to 0.5f, "volume" to 0.341333359f, "swell" to 0.3f, "swelltime" to 0.405117065f, "mac1_d1" to 0.459459454f, "mac1_d2" to 0.8378378f, "mac1_a1" to 0.7f, "mac1_a2" to 0.65f, "mac2_d1" to 0.8378378f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.270270258f, "mac3_a1" to 0.625f, "mac3_a2" to 0.575f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.3f, "mac4_a2" to 0.45f, "mac5_d1" to 0.0540540554f, "mac5_d2" to 0.1891892f, "mac5_d3" to 0.8648649f, "mac5_a1" to 0.625f, "mac5_a2" to 0.575f, "mac5_a3" to 0.55f, "mac6_d1" to 0.7837838f, "mac6_a1" to 0.65f, "mac7_d1" to 1f, "mac7_a1" to 0.47915f, "mac8_d1" to 0.216216221f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.375f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Growl", "macro2" to "Drive", "macro3" to "Blow", "macro4" to "Bark", "macro5" to "Brighter", "macro6" to "Glide", "macro7" to "Bend", "macro8" to "Looser"),
+        family = "sax",
+        low = 46, high = 70)
+
+    private fun timber16() = Patch("Timber", "Oboe",
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.7287489f, "lattice" to 0.558787048f, "embouchure" to 0.3076923f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.2f, "fine" to 0.58f, "volume" to 0.28f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.0540540554f, "mac4_a1" to 0.325f, "mac4_a2" to 0.425f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.5405405f, "mac7_a1" to 0.3f, "mac7_a2" to 0.575f, "mac8_d1" to 0.9459459f, "mac8_d2" to 0.972973f, "mac8_a1" to 0.35f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Darker", "macro5" to "Vibrato", "macro6" to "Swell", "macro7" to "Soft Tongue", "macro8" to "Accent"),
         family = "double",
         low = 60, high = 84)
 
-    private fun timber5() = Patch("Timber", "Bassoon",
-        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.353846163f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "fine" to 0.6f, "volume" to 0.5733333f),
+    private fun timber17() = Patch("Timber", "Cor Anglais",
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.605505347f, "lattice" to 0.43371132f, "embouchure" to 0.323076934f, "pressure" to 0.7307693f, "breath" to 0.1f, "tongue" to 0.75f, "keys" to 0.2f, "attack" to 0.2916871f, "vibrato" to 0.166666672f, "cutoff" to 0.715336f, "fine" to 0.64f, "volume" to 0.340666652f, "swell" to 0.6f, "swelltime" to 0.5518465f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.0540540554f, "mac4_a1" to 0.325f, "mac4_a2" to 0.425f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.5405405f, "mac7_a1" to 0.3f, "mac7_a2" to 0.575f, "mac8_d1" to 0.459459454f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Darker", "macro5" to "Vibrato", "macro6" to "Swell", "macro7" to "Soft Tongue", "macro8" to "Flutter"),
         family = "double",
-        low = 36, high = 60)
+        low = 52, high = 76,
+        sendReverb = 0.15f, sendDelay = 0f)
 
-    private fun timber6() = Patch("Timber", "Flute",
-        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.153333336f),
+    private fun timber18() = Patch("Timber", "Oboe d'Amore",
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.6877408f, "lattice" to 0.514213145f, "embouchure" to 0.323076934f, "pressure" to 0.7307693f, "breath" to 0.09f, "tongue" to 0.8f, "keys" to 0.2f, "attack" to 0.259383738f, "vibrato" to 0.166666672f, "cutoff" to 0.7558536f, "fine" to 0.63f, "volume" to 0.336666673f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.0540540554f, "mac4_a1" to 0.325f, "mac4_a2" to 0.425f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.5405405f, "mac7_a1" to 0.3f, "mac7_a2" to 0.575f, "mac8_d1" to 0.9459459f, "mac8_d2" to 0.972973f, "mac8_a1" to 0.35f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Darker", "macro5" to "Vibrato", "macro6" to "Swell", "macro7" to "Soft Tongue", "macro8" to "Accent"),
+        family = "double",
+        low = 56, high = 80,
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun timber19() = Patch("Timber", "Piccolo Oboe",
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.831345737f, "lattice" to 0.665089548f, "embouchure" to 0.338461548f, "pressure" to 0.7307693f, "breath" to 0.08f, "tongue" to 0.85f, "keys" to 0.2f, "attack" to 0.232989982f, "vibrato" to 0.2f, "fine" to 0.58f, "volume" to 0.360666662f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.0540540554f, "mac4_a1" to 0.325f, "mac4_a2" to 0.425f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.35f, "mac6_a2" to 0.45f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Darker", "macro5" to "Vibrato", "macro6" to "Accent", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
+        family = "double",
+        low = 64, high = 88)
+
+    private fun timber20() = Patch("Timber", "Shawm",
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.8108881f, "lattice" to 0.707761347f, "embouchure" to 0.2f, "pressure" to 0.8461539f, "tongue" to 0.9f, "keys" to 0.2f, "attack" to 0.232989982f, "vibrato" to 0f, "fine" to 0.58f, "drive" to 0.3f, "volume" to 0.272666663f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.216216221f, "mac1_a1" to 0.625f, "mac1_a2" to 0.45f, "mac2_d1" to 0.8378378f, "mac2_a1" to 0.7f, "mac3_d1" to 0.216216221f, "mac3_d2" to 0.1891892f, "mac3_a1" to 0.375f, "mac3_a2" to 0.575f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.0540540554f, "mac4_a1" to 0.325f, "mac4_a2" to 0.425f, "mac5_d1" to 0.270270258f, "mac5_a1" to 0.7f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.35f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6486486f, "mac7_d2" to 0.7027027f, "mac7_a1" to 0.65f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_a1" to 0.47915f),
+        mapOf("macro1" to "Blast", "macro2" to "Drive", "macro3" to "Looser", "macro4" to "Darker", "macro5" to "Breathy", "macro6" to "Accent", "macro7" to "Vibrato", "macro8" to "Bend"),
+        family = "double",
+        low = 62, high = 81,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun timber21() = Patch("Timber", "Apricot Reed",
+        mapOf("family" to 0.5f, "body" to 0.6671323f, "lattice" to 0.48947534f, "embouchure" to 0.3846154f, "pressure" to 0.5769231f, "breath" to 0.25f, "tongue" to 0.5f, "keys" to 0.1f, "attack" to 0.534019947f, "release" to 0.655539453f, "vibrato" to 0.25f, "vibratorate" to 0.691374242f, "vibratodelay" to 0.2f, "cutoff" to 0.561296761f, "glide" to 0.15f, "fine" to 0.55f, "volume" to 0.360666662f, "swell" to 0.75f, "swelltime" to 0.655539453f, "mac1_d1" to 0.9459459f, "mac1_d2" to 0.972973f, "mac1_a1" to 0.6f, "mac1_a2" to 0.55f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 1f, "mac3_a1" to 0.47915f, "mac4_d1" to 0.7837838f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.243243247f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 0.9459459f, "mac8_d2" to 0.972973f, "mac8_a1" to 0.575f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Swell", "macro2" to "Breathy", "macro3" to "Bend", "macro4" to "Glide", "macro5" to "Vibrato", "macro6" to "Darker", "macro7" to "Blow", "macro8" to "Slow Swell"),
+        family = "double",
+        low = 56, high = 72,
+        sendReverb = 0.3f, sendDelay = 0f)
+
+    private fun timber22() = Patch("Timber", "Crumhorn",
+        mapOf("family" to 0.5f, "body" to 0.626037359f, "lattice" to 0.598104f, "holes" to 0.2f, "embouchure" to 0.230769247f, "pressure" to 0.8076923f, "breath" to 0.08f, "bell" to 0.0588235334f, "tongue" to 0.9f, "keys" to 0.2f, "attack" to 0.232989982f, "vibrato" to 0f, "fine" to 0.68f, "drive" to 0.25f, "volume" to 0.378f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.216216221f, "mac1_a1" to 0.65f, "mac1_a2" to 0.425f, "mac2_d1" to 0.243243247f, "mac2_d2" to 0.270270258f, "mac2_a1" to 0.625f, "mac2_a2" to 0.575f, "mac3_d1" to 0.8378378f, "mac3_a1" to 0.7f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.7567568f, "mac4_a1" to 0.375f, "mac4_a2" to 0.725f, "mac5_d1" to 0.216216221f, "mac5_d2" to 0.1891892f, "mac5_a1" to 0.375f, "mac5_a2" to 0.575f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.35f, "mac6_a2" to 0.45f, "mac7_d1" to 0.270270258f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7297297f, "mac8_d2" to 0.0540540554f, "mac8_a1" to 0.325f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Buzz", "macro2" to "Blow", "macro3" to "Drive", "macro4" to "Nasal", "macro5" to "Looser", "macro6" to "Accent", "macro7" to "Breathy", "macro8" to "Darker"),
+        family = "double",
+        low = 53, high = 67,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun timber23() = Patch("Timber", "Flute",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.43367663f, "vibrato" to 0.18f, "volume" to 0.153333336f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.2972973f, "mac3_a1" to 0.65f, "mac3_a2" to 0.425f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.675f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Overblow", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Swell", "macro7" to "Chiff", "macro8" to "Edge"),
         family = "flute",
         low = 62, high = 86)
 
-    private fun timber7() = Patch("Timber", "Pan Pipe",
-        mapOf("family" to 1f, "body" to 0.6671323f, "lattice" to 0.665089548f, "pressure" to 0.538461566f, "breath" to 0.6f, "jet" to 0.350000024f, "aim" to 0.5625f, "tongue" to 0.2f, "attack" to 0.492373765f, "volume" to 0.366666675f),
+    private fun timber24() = Patch("Timber", "Alto Flute",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.6671323f, "lattice" to 0.43371132f, "pressure" to 0.615384638f, "breath" to 0.5f, "tongue" to 0.35f, "keys" to 0.15f, "attack" to 0.46598f, "vibrato" to 0.166666672f, "cutoff" to 0.7558536f, "volume" to 0.146666661f, "swell" to 0.6f, "swelltime" to 0.5518465f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.2972973f, "mac3_a1" to 0.65f, "mac3_a2" to 0.425f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.675f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Overblow", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Swell", "macro7" to "Chiff", "macro8" to "Edge"),
         family = "flute",
-        low = 57, high = 79)
+        low = 55, high = 79,
+        sendReverb = 0.15f, sendDelay = 0f)
 
-    private fun timber8() = Patch("Timber", "Stopped Wood",
-        mapOf("body" to 0.461817741f, "lattice" to 0.282834977f, "holes" to 0.5f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "cutoff" to 0.66574645f, "fine" to 0.64f, "drive" to 0.2f, "volume" to 0.313333333f),
+    private fun timber25() = Patch("Timber", "Piccolo Flute",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.995637f, "lattice" to 0.7686218f, "pressure" to 0.615384638f, "breath" to 0.35f, "tongue" to 0.4f, "keys" to 0.1f, "vibrato" to 0.166666672f, "fine" to 0.44f, "volume" to 0.153333336f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.2972973f, "mac3_a1" to 0.575f, "mac3_a2" to 0.46f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.35f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.675f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Overblow", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Accent", "macro7" to "Chiff", "macro8" to "Edge"),
+        family = "flute",
+        low = 74, high = 96)
+
+    private fun timber26() = Patch("Timber", "Whisper Flute",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.5f, "breath" to 0.8f, "tongue" to 0.25f, "keys" to 0.1f, "attack" to 0.492373765f, "release" to 0.612503f, "volume" to 0.142f, "swell" to 0.625f, "mac1_d1" to 0.270270258f, "mac1_d2" to 0.243243247f, "mac1_a1" to 0.725f, "mac1_a2" to 0.45f, "mac2_d1" to 0.243243247f, "mac2_d2" to 0.270270258f, "mac2_a1" to 0.625f, "mac2_a2" to 0.575f, "mac3_d1" to 0.6486486f, "mac3_d2" to 0.7027027f, "mac3_a1" to 0.65f, "mac3_a2" to 0.45f, "mac4_d1" to 0.7297297f, "mac4_d2" to 0.0540540554f, "mac4_a1" to 0.325f, "mac4_a2" to 0.425f, "mac5_d1" to 0.9459459f, "mac5_d2" to 0.972973f, "mac5_a1" to 0.6f, "mac5_a2" to 0.55f, "mac6_d1" to 0.3243243f, "mac6_d2" to 0.270270258f, "mac6_a1" to 0.6f, "mac6_a2" to 0.45f, "mac7_d1" to 0.7837838f, "mac7_a1" to 0.65f, "mac8_d1" to 0.5405405f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Air", "macro2" to "Blow", "macro3" to "Vibrato", "macro4" to "Darker", "macro5" to "Swell", "macro6" to "Edge", "macro7" to "Glide", "macro8" to "Slow Attack"),
+        family = "flute",
+        low = 62, high = 86,
+        sendReverb = 0.25f, sendDelay = 0f)
+
+    private fun timber27() = Patch("Timber", "Traverso",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.8108881f, "lattice" to 0.558787048f, "holes" to 0.6f, "fingering" to 0.2f, "pressure" to 0.538461566f, "breath" to 0.35f, "tongue" to 0.4f, "keys" to 0.1f, "attack" to 0.43367663f, "vibrato" to 0f, "cutoff" to 0.66574645f, "volume" to 0.116666667f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7297297f, "mac3_d2" to 0.08108108f, "mac3_a1" to 0.35f, "mac3_a2" to 0.65f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.9459459f, "mac5_d2" to 0.972973f, "mac5_a1" to 0.6f, "mac5_a2" to 0.55f, "mac6_d1" to 0.5135135f, "mac6_d2" to 0.270270258f, "mac6_a1" to 0.675f, "mac6_a2" to 0.55f, "mac7_d1" to 0.243243247f, "mac7_d2" to 0.2972973f, "mac7_a1" to 0.65f, "mac7_a2" to 0.425f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Wood", "macro4" to "Vibrato", "macro5" to "Swell", "macro6" to "Chiff", "macro7" to "Overblow", "macro8" to "Edge"),
+        family = "flute",
+        low = 62, high = 84,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun timber28() = Patch("Timber", "Irish Flute",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.8108881f, "lattice" to 0.598104f, "breath" to 0.55f, "tongue" to 0.6f, "keys" to 0.2f, "attack" to 0.3333333f, "vibrato" to 0.1f, "cutoff" to 0.790110767f, "volume" to 0.17f, "swell" to 0.35f, "swelltime" to 0.371735364f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.9459459f, "mac3_d2" to 0.972973f, "mac3_a1" to 0.35f, "mac3_a2" to 0.45f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.08108108f, "mac5_a1" to 0.35f, "mac5_a2" to 0.65f, "mac6_d1" to 0.5135135f, "mac6_d2" to 0.270270258f, "mac6_a1" to 0.675f, "mac6_a2" to 0.55f, "mac7_d1" to 0.7837838f, "mac7_a1" to 0.65f, "mac8_d1" to 0.243243247f, "mac8_d2" to 0.2972973f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Accent", "macro4" to "Vibrato", "macro5" to "Wood", "macro6" to "Chiff", "macro7" to "Glide", "macro8" to "Overblow"),
+        family = "flute",
+        low = 62, high = 86,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun timber29() = Patch("Timber", "Bansuri",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.7491924f, "pressure" to 0.5769231f, "breath" to 0.5f, "tongue" to 0.3f, "keys" to 0.05f, "attack" to 0.492373765f, "release" to 0.612503f, "vibrato" to 0.233333334f, "vibratodelay" to 0.2f, "cutoff" to 0.7558536f, "glide" to 0.18f, "volume" to 0.166666672f, "swell" to 0.675f, "swelltime" to 0.508810043f, "mac1_d1" to 1f, "mac1_a1" to 0.47915f, "mac2_d1" to 0.7837838f, "mac2_a1" to 0.65f, "mac3_d1" to 0.6486486f, "mac3_d2" to 0.7027027f, "mac3_a1" to 0.65f, "mac3_a2" to 0.45f, "mac4_d1" to 0.270270258f, "mac4_a1" to 0.7f, "mac5_d1" to 0.9459459f, "mac5_d2" to 0.972973f, "mac5_a1" to 0.6f, "mac5_a2" to 0.55f, "mac6_d1" to 0.243243247f, "mac6_d2" to 0.270270258f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.7297297f, "mac7_d2" to 0.0540540554f, "mac7_a1" to 0.325f, "mac7_a2" to 0.425f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Bend", "macro2" to "Glide", "macro3" to "Vibrato", "macro4" to "Breathy", "macro5" to "Swell", "macro6" to "Blow", "macro7" to "Darker", "macro8" to "Edge"),
+        family = "flute",
+        low = 59, high = 81,
+        sendReverb = 0.3f, sendDelay = 0f)
+
+    private fun timber30() = Patch("Timber", "Overblown",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.558787048f, "pressure" to 0.8076923f, "breath" to 0.65f, "aim" to 0.75f, "tongue" to 0.4f, "keys" to 0.2f, "attack" to 0.3333333f, "vibrato" to 0.266666681f, "vibratorate" to 0.7545169f, "vibratodelay" to 0.1f, "glide" to 0.06f, "fine" to 0.44f, "drive" to 0.35f, "volume" to 0.126f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.3243243f, "mac3_d2" to 0.270270258f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac4_d1" to 0.8378378f, "mac4_a1" to 0.7f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7837838f, "mac6_a1" to 0.65f, "mac7_d1" to 1f, "mac7_a1" to 0.47915f, "mac8_d1" to 0.7297297f, "mac8_d2" to 0.0540540554f, "mac8_a1" to 0.325f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Edge", "macro4" to "Drive", "macro5" to "Vibrato", "macro6" to "Glide", "macro7" to "Bend", "macro8" to "Darker"),
+        family = "flute",
+        low = 62, high = 86,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun timber31() = Patch("Timber", "Recorder",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.87240994f, "lattice" to 0.6332742f, "pressure" to 0.5538462f, "breath" to 0.25f, "aim" to 0.65624994f, "keys" to 0.1f, "vibrato" to 0f, "fine" to 0.46f, "volume" to 0.154666662f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.2972973f, "mac3_a1" to 0.65f, "mac3_a2" to 0.425f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.675f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Overblow", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Swell", "macro7" to "Chiff", "macro8" to "Edge"),
+        family = "pipe",
+        low = 67, high = 89,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun timber32() = Patch("Timber", "Pan Pipe",
+        mapOf("family" to 1f, "body" to 0.6671323f, "lattice" to 0.665089548f, "pressure" to 0.538461566f, "breath" to 0.6f, "jet" to 0.350000024f, "aim" to 0.5625f, "tongue" to 0.2f, "attack" to 0.492373765f, "volume" to 0.288000017f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.0540540554f, "mac3_d2" to 0.3243243f, "mac3_a1" to 0.375f, "mac3_a2" to 0.45f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.675f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Hollow", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Swell", "macro7" to "Chiff", "macro8" to "Edge"),
+        family = "pipe",
+        low = 57, high = 79,
+        sendReverb = 0.25f, sendDelay = 0f)
+
+    private fun timber33() = Patch("Timber", "Tin Whistle",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.995637f, "lattice" to 0.720853567f, "breath" to 0.45f, "aim" to 0.71875f, "keys" to 0.2f, "attack" to 0.2916871f, "vibrato" to 0.1f, "vibratorate" to 0.7818957f, "vibratodelay" to 0.25f, "glide" to 0.05f, "fine" to 0.44f, "volume" to 0.13f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.2972973f, "mac3_a1" to 0.65f, "mac3_a2" to 0.425f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 1f, "mac5_d2" to 0.7837838f, "mac5_a1" to 0.47915f, "mac5_a2" to 0.65f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 1f, "mac7_a1" to 0.52085f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Overblow", "macro4" to "Vibrato", "macro5" to "Cut", "macro6" to "Swell", "macro7" to "Bend", "macro8" to "Edge"),
+        family = "pipe",
+        low = 74, high = 91,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun timber34() = Patch("Timber", "Ocarina",
+        mapOf("family" to 1f, "body" to 0.87240994f, "lattice" to 0.558787048f, "pressure" to 0.538461566f, "breath" to 0.3f, "aim" to 0.59375f, "keys" to 0.05f, "attack" to 0.46598f, "release" to 0.5518465f, "vibratodelay" to 0.2f, "cutoff" to 0.715336f, "fine" to 0.43f, "volume" to 0.15866667f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.0540540554f, "mac3_d2" to 0.3243243f, "mac3_a1" to 0.375f, "mac3_a2" to 0.45f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.675f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Hollow", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Swell", "macro7" to "Chiff", "macro8" to "Edge"),
+        family = "pipe",
+        low = 67, high = 84,
+        sendReverb = 0.3f, sendDelay = 0f)
+
+    private fun timber35() = Patch("Timber", "Bent Bamboo",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.8108881f, "lattice" to 0.43371132f, "pressure" to 0.5769231f, "breath" to 0.8f, "aim" to 0.625f, "keys" to 0.05f, "attack" to 0.534019947f, "release" to 0.655539453f, "vibrato" to 0f, "cutoff" to 0.636071563f, "glide" to 0.25f, "volume" to 0.148666665f, "swell" to 0.725f, "swelltime" to 0.612503f, "mac1_d1" to 1f, "mac1_a1" to 0.47915f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.675f, "mac3_d1" to 0.9459459f, "mac3_d2" to 0.972973f, "mac3_a1" to 0.625f, "mac3_a2" to 0.55f, "mac4_d1" to 0.243243247f, "mac4_d2" to 0.270270258f, "mac4_a1" to 0.625f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.675f, "mac5_a2" to 0.425f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.7837838f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Bend Down", "macro2" to "Breathy", "macro3" to "Swell", "macro4" to "Blow", "macro5" to "Vibrato", "macro6" to "Darker", "macro7" to "Glide", "macro8" to "Edge"),
+        family = "pipe",
+        low = 62, high = 79,
+        sendReverb = 0.35f, sendDelay = 0f)
+
+    private fun timber36() = Patch("Timber", "Jug",
+        mapOf("family" to 1f, "body" to 0.502963841f, "lattice" to 0.282834977f, "breath" to 0.55f, "aim" to 0.53125f, "keys" to 0.1f, "attack" to 0.46598f, "vibrato" to 0f, "cutoff" to 0.561296761f, "volume" to 0.258f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.675f, "mac3_d1" to 0.9459459f, "mac3_d2" to 0.972973f, "mac3_a1" to 0.625f, "mac3_a2" to 0.55f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.6756757f, "mac4_a1" to 0.75f, "mac4_a2" to 0.6f, "mac5_d1" to 0.7297297f, "mac5_a1" to 0.325f, "mac6_d1" to 1f, "mac6_a1" to 0.47915f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.5405405f, "mac7_a1" to 0.7f, "mac7_a2" to 0.45f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Swell", "macro4" to "Wobble", "macro5" to "Darker", "macro6" to "Bend", "macro7" to "Puff", "macro8" to "Edge"),
+        family = "pipe",
+        low = 48, high = 64)
+
+    private fun timber37() = Patch("Timber", "Bass Clarinet",
+        mapOf("body" to 0.318022f, "lattice" to 0.401896f, "embouchure" to 0.3846154f, "pressure" to 0.6923077f, "breath" to 0.16f, "tongue" to 0.6f, "keys" to 0.35f, "fine" to 0.63f, "volume" to 0.653333366f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
+        family = "low",
+        low = 40, high = 62)
+
+    private fun timber38() = Patch("Timber", "Bassoon",
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.2361563f, "lattice" to 0.282834977f, "embouchure" to 0.353846163f, "pressure" to 0.6923077f, "keys" to 0.4f, "attack" to 0.365636677f, "fine" to 0.6f, "volume" to 0.5733333f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_d2" to 0.8378378f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Buzz", "macro8" to "Soft Tongue"),
+        family = "low",
+        low = 36, high = 60)
+
+    private fun timber39() = Patch("Timber", "Bass Flute",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.523376167f, "lattice" to 0.401896f, "pressure" to 0.5769231f, "breath" to 0.4f, "aim" to 0.65624994f, "keys" to 0.2f, "attack" to 0.46598f, "release" to 0.585228145f, "vibrato" to 0.15f, "vibratodelay" to 0.2f, "volume" to 0.2f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.2972973f, "mac3_a1" to 0.65f, "mac3_a2" to 0.425f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.5135135f, "mac7_d2" to 0.270270258f, "mac7_a1" to 0.675f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Overblow", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Swell", "macro7" to "Chiff", "macro8" to "Edge"),
+        family = "low",
+        low = 50, high = 74,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun timber40() = Patch("Timber", "Contrabass Clarinet",
+        mapOf("body" to 0.07164947f, "lattice" to 0.231378213f, "embouchure" to 0.3846154f, "pressure" to 0.7307693f, "breath" to 0.15f, "tongue" to 0.6f, "keys" to 0.35f, "fine" to 0.58f, "volume" to 0.92f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
+        family = "low",
+        low = 28, high = 50)
+
+    private fun timber41() = Patch("Timber", "Contrabassoon",
+        mapOf("family" to 0.5f, "bore" to 1f, "body" to 0.112760238f, "lattice" to 0.112317182f, "embouchure" to 0.353846163f, "pressure" to 0.7307693f, "keys" to 0.4f, "fine" to 0.53f, "volume" to 0.488666654f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_d2" to 0.8378378f, "mac7_a1" to 0.7f, "mac7_a2" to 0.6f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Buzz", "macro8" to "Soft Tongue"),
+        family = "low",
+        low = 32, high = 53)
+
+    private fun timber42() = Patch("Timber", "Stopped Wood",
+        mapOf("body" to 0.461817741f, "lattice" to 0.282834977f, "holes" to 0.5f, "answer" to 0.7f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.3f, "tongue" to 0.5f, "attack" to 0.46598f, "cutoff" to 0.66574645f, "fine" to 0.64f, "drive" to 0.2f, "volume" to 0.306f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.270270258f, "mac3_a1" to 0.7f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_a1" to 0.325f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
         family = "odd",
         low = 46, high = 68)
 
-    private fun timber9() = Patch("Timber", "Forked",
-        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "fine" to 0.52f, "volume" to 0.18f),
+    private fun timber43() = Patch("Timber", "Forked",
+        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "fine" to 0.52f, "volume" to 0.18f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.162162155f, "mac3_d2" to 0.108108111f, "mac3_a1" to 0.55f, "mac3_a2" to 0.6f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Fork", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
         family = "odd",
         low = 52, high = 74)
 
-    private val timber: List<Patch> by lazy { listOf(timber0(), timber1(), timber2(), timber3(), timber4(), timber5(), timber6(), timber7(), timber8(), timber9()) }
+    private fun timber44() = Patch("Timber", "Flutter Flute",
+        mapOf("family" to 1f, "bore" to 1f, "body" to 0.769748747f, "lattice" to 0.514213145f, "pressure" to 0.615384638f, "breath" to 0.45f, "flutter" to 0.5f, "flutterrate" to 0.5856813f, "keys" to 0.15f, "vibrato" to 0f, "fine" to 0.47f, "volume" to 0.168666661f, "mac1_d1" to 0.459459454f, "mac1_a1" to 0.675f, "mac2_d1" to 0.4864865f, "mac2_a1" to 0.625f, "mac3_d1" to 0.243243247f, "mac3_d2" to 0.270270258f, "mac3_a1" to 0.625f, "mac3_a2" to 0.575f, "mac4_d1" to 0.270270258f, "mac4_a1" to 0.7f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.6f, "mac7_a2" to 0.55f, "mac8_d1" to 0.3243243f, "mac8_d2" to 0.270270258f, "mac8_a1" to 0.6f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Flutter", "macro2" to "Rate", "macro3" to "Blow", "macro4" to "Breathy", "macro5" to "Vibrato", "macro6" to "Darker", "macro7" to "Swell", "macro8" to "Edge"),
+        family = "odd",
+        low = 62, high = 86,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun timber45() = Patch("Timber", "Buzz Reed",
+        mapOf("body" to 0.502963841f, "lattice" to 0.401896f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.2f, "tongue" to 0.8f, "flutter" to 0.55f, "flutterrate" to 0.902110755f, "attack" to 0.3333333f, "vibrato" to 0f, "fine" to 0.6f, "drive" to 0.3f, "volume" to 0.44933334f, "mac1_d1" to 0.459459454f, "mac1_a1" to 0.7f, "mac2_d1" to 0.4864865f, "mac2_a1" to 0.65f, "mac3_d1" to 0.8378378f, "mac3_a1" to 0.7f, "mac4_d1" to 0.243243247f, "mac4_d2" to 0.270270258f, "mac4_a1" to 0.625f, "mac4_a2" to 0.575f, "mac5_d1" to 0.216216221f, "mac5_d2" to 0.1891892f, "mac5_a1" to 0.375f, "mac5_a2" to 0.575f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.6f, "mac7_a2" to 0.55f, "mac8_d1" to 1f, "mac8_a1" to 0.47915f),
+        mapOf("macro1" to "Buzz", "macro2" to "Rate", "macro3" to "Drive", "macro4" to "Blow", "macro5" to "Looser", "macro6" to "Dark", "macro7" to "Swell", "macro8" to "Bend"),
+        family = "odd",
+        low = 48, high = 69)
+
+    private fun timber46() = Patch("Timber", "Squeal",
+        mapOf("lattice" to 0.598104f, "embouchure" to 0.7692308f, "pressure" to 0.9615385f, "breath" to 0.2f, "tongue" to 0.9f, "keys" to 0.3f, "attack" to 0.232989982f, "vibrato" to 0.166666672f, "fine" to 0.4f, "drive" to 0.4f, "volume" to 0.596666634f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_a1" to 0.55f, "mac3_d1" to 0.8378378f, "mac3_a1" to 0.7f, "mac4_d1" to 1f, "mac4_a1" to 0.47915f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_a1" to 0.325f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.9459459f, "mac8_d2" to 0.972973f, "mac8_a1" to 0.4f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Blow", "macro2" to "Bite", "macro3" to "Drive", "macro4" to "Bend", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Swell"),
+        family = "odd",
+        low = 60, high = 79)
+
+    private fun timber47() = Patch("Timber", "Glass Jet",
+        mapOf("family" to 1f, "body" to 0.7491924f, "lattice" to 0.7686218f, "pressure" to 0.615384638f, "breath" to 0.2f, "aim" to 0.625f, "keys" to 0f, "attack" to 0.56632334f, "release" to 0.7592324f, "vibrato" to 0.0833333358f, "vibratorate" to 0.654312849f, "fine" to 0.54f, "volume" to 0.222f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_a1" to 0.7f, "mac3_d1" to 0.3243243f, "mac3_d2" to 0.0540540554f, "mac3_a1" to 0.625f, "mac3_a2" to 0.6f, "mac4_d1" to 0.6486486f, "mac4_d2" to 0.7027027f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.7297297f, "mac5_d2" to 0.0540540554f, "mac5_a1" to 0.325f, "mac5_a2" to 0.425f, "mac6_d1" to 0.9459459f, "mac6_d2" to 0.972973f, "mac6_a1" to 0.6f, "mac6_a2" to 0.55f, "mac7_d1" to 0.6216216f, "mac7_a1" to 0.625f, "mac8_d1" to 0.08108108f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Blow", "macro2" to "Breathy", "macro3" to "Shine", "macro4" to "Vibrato", "macro5" to "Darker", "macro6" to "Swell", "macro7" to "Release", "macro8" to "Hollow"),
+        family = "odd",
+        low = 60, high = 81,
+        sendReverb = 0.45f, sendDelay = 0f)
+
+    private val timber: List<Patch> by lazy { listOf(timber0(), timber1(), timber2(), timber3(), timber4(), timber5(), timber6(), timber7(), timber8(), timber9(), timber10(), timber11(), timber12(), timber13(), timber14(), timber15(), timber16(), timber17(), timber18(), timber19(), timber20(), timber21(), timber22(), timber23(), timber24(), timber25(), timber26(), timber27(), timber28(), timber29(), timber30(), timber31(), timber32(), timber33(), timber34(), timber35(), timber36(), timber37(), timber38(), timber39(), timber40(), timber41(), timber42(), timber43(), timber44(), timber45(), timber46(), timber47()) }
 
     private fun cipher0() = Patch("Cipher", "Init", emptyMap(),
         family = "classic")
