@@ -4868,84 +4868,306 @@ internal object FactoryBanks {
     private val pollen: List<Patch> by lazy { listOf(pollen0(), pollen1(), pollen2(), pollen3(), pollen4(), pollen5(), pollen6(), pollen7(), pollen8(), pollen9(), pollen10(), pollen11(), pollen12(), pollen13(), pollen14(), pollen15(), pollen16(), pollen17(), pollen18(), pollen19(), pollen20(), pollen21(), pollen22(), pollen23(), pollen24(), pollen25(), pollen26(), pollen27(), pollen28(), pollen29(), pollen30(), pollen31(), pollen32(), pollen33(), pollen34(), pollen35()) }
 
     private fun brazen0() = Patch("Brazen", "Init", emptyMap(),
-        family = "horn")
+        family = "high")
 
-    private fun brazen1() = Patch("Brazen", "Tuba",
-        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.88f, "breath" to 0f, "bite" to 0.9f, "brass" to 0.62f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.462117672f, "fine" to 0.63f, "volume" to 0.473333329f),
-        family = "low",
-        low = 29, high = 53)
-
-    private fun brazen2() = Patch("Brazen", "Bass Trombone",
-        mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.88f, "breath" to 0.03f, "bite" to 0.88f, "brass" to 0.68f, "attack" to 0.43367663f, "vibrato" to 0.06666667f, "cutoff" to 0.6161569f, "glide" to 0.09f, "fine" to 0.65f, "volume" to 0.466666669f),
-        family = "low",
-        low = 34, high = 58)
-
-    private fun brazen3() = Patch("Brazen", "Trombone",
-        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.88f, "breath" to 0.04f, "bite" to 0.82f, "brass" to 0.72f, "attack" to 0.382042676f, "vibrato" to 0.0833333358f, "cutoff" to 0.715336f, "glide" to 0.12f, "fine" to 0.68f, "volume" to 0.426666647f),
-        family = "low",
-        low = 40, high = 67)
-
-    private fun brazen4() = Patch("Brazen", "Horn",
-        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.78f, "brass" to 0.6f, "width" to 0.5f, "attack" to 0.450727522f, "release" to 0.655539453f, "vibrato" to 0.1f, "cutoff" to 0.7062641f, "fine" to 0.62f, "volume" to 0.413333327f),
-        family = "horn",
-        low = 41, high = 72)
-
-    private fun brazen5() = Patch("Brazen", "Flugel",
-        mapOf("size" to 0.55f, "bell" to 0.7444445f, "lipdamp" to 0.444444418f, "pressure" to 0.82f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.55f, "attack" to 0.392030418f, "vibrato" to 0.0833333358f, "fine" to 0.57f, "volume" to 0.406666666f),
-        family = "horn",
-        low = 52, high = 77)
-
-    private fun brazen6() = Patch("Brazen", "Cornet",
-        mapOf("size" to 0.72f, "bell" to 0.6333333f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.72f, "brass" to 0.62f, "attack" to 0.347130865f, "vibrato" to 0.116666667f, "fine" to 0.61f, "volume" to 0.393333316f),
-        family = "high",
-        low = 52, high = 77)
-
-    private fun brazen7() = Patch("Brazen", "Trumpet",
-        mapOf("size" to 0.95f, "bell" to 0.5888889f, "lipdamp" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.08f, "bite" to 0.6f, "brass" to 0.78f, "attack" to 0.28169933f, "vibrato" to 0.13333334f, "vibratodelay" to 0.25f, "volume" to 0.38f),
+    private fun brazen1() = Patch("Brazen", "Trumpet",
+        mapOf("size" to 0.95f, "bell" to 0.5888889f, "lipdamp" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.08f, "bite" to 0.6f, "brass" to 0.78f, "attack" to 0.28169933f, "vibrato" to 0.13333334f, "vibratodelay" to 0.25f, "fine" to 0.54f, "volume" to 0.38f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.6f, "mac2_a2" to 0.575f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.325f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Growl"),
         family = "high",
         low = 52, high = 82)
 
-    private fun brazen8() = Patch("Brazen", "Piccolo",
-        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.7222222f, "pressure" to 0.98f, "breath" to 0.1f, "bite" to 0.75f, "brass" to 0.9f, "attack" to 0.200686663f, "vibrato" to 0.1f, "fine" to 0.61f, "volume" to 0.373333335f),
+    private fun brazen2() = Patch("Brazen", "C Trumpet",
+        mapOf("size" to 0.98f, "bell" to 0.611111164f, "lipdamp" to 0.6666666f, "pressure" to 0.9f, "breath" to 0.07f, "bite" to 0.62f, "brass" to 0.8f, "attack" to 0.259383738f, "vibrato" to 0.1f, "vibratodelay" to 0.2f, "fine" to 0.55f, "volume" to 0.38f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Growl"),
+        family = "high",
+        low = 54, high = 84)
+
+    private fun brazen3() = Patch("Brazen", "Cornet",
+        mapOf("size" to 0.72f, "bell" to 0.6333333f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.72f, "brass" to 0.62f, "attack" to 0.347130865f, "vibrato" to 0.116666667f, "fine" to 0.58f, "volume" to 0.393333316f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "high",
+        low = 52, high = 77)
+
+    private fun brazen4() = Patch("Brazen", "Rotary Trumpet",
+        mapOf("size" to 0.84f, "bell" to 0.7444445f, "lipdamp" to 0.5f, "pressure" to 0.85f, "breath" to 0.04f, "bite" to 0.75f, "brass" to 0.5f, "attack" to 0.359727085f, "vibrato" to 0f, "cutoff" to 0.6543474f, "fine" to 0.6f, "volume" to 0.366666675f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "high",
+        low = 52, high = 80,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun brazen5() = Patch("Brazen", "Lead Trumpet",
+        mapOf("size" to 1f, "bell" to 0.611111164f, "lipdamp" to 0.7222222f, "pressure" to 0.95f, "breath" to 0.06f, "bite" to 0.66f, "brass" to 0.95f, "attack" to 0.200686663f, "vibrato" to 0.2f, "vibratorate" to 0.7545169f, "vibratodelay" to 0.15f, "fine" to 0.57f, "drive" to 0.15f, "volume" to 0.366666675f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.35f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.270270258f, "mac8_d2" to 0.7837838f, "mac8_a1" to 0.6f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Fall Off", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Bark"),
+        family = "high",
+        low = 58, high = 86)
+
+    private fun brazen6() = Patch("Brazen", "Piccolo",
+        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.7222222f, "pressure" to 0.98f, "breath" to 0.1f, "bite" to 0.75f, "brass" to 0.9f, "attack" to 0.200686663f, "vibrato" to 0.1f, "fine" to 0.61f, "volume" to 0.373333335f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Growl"),
         family = "high",
         low = 64, high = 91)
 
-    private fun brazen9() = Patch("Brazen", "Straight Mute",
-        mapOf("size" to 0.9f, "bell" to 0.544444442f, "mute" to 0.333333343f, "mutetone" to 0.7f, "pressure" to 0.85f, "breath" to 0.09f, "bite" to 0.6f, "brass" to 0.7f, "attack" to 0.30102998f, "cutoff" to 0.6765892f, "volume" to 0.706666648f),
+    private fun brazen7() = Patch("Brazen", "Late Set",
+        mapOf("size" to 0.92f, "bell" to 0.611111164f, "lipdamp" to 0.5555556f, "pressure" to 0.86f, "breath" to 0.14f, "bite" to 0.65f, "brass" to 0.6f, "attack" to 0.3333333f, "vibrato" to 0.3f, "vibratorate" to 0.691374242f, "vibratodelay" to 0.125f, "mono" to 1f, "glide" to 0.08f, "fine" to 0.56f, "volume" to 0.34f, "swell" to 0.6f, "swelltime" to 0.508810043f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_a1" to 0.625f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Slide", "macro8" to "Growl"),
+        family = "high",
+        low = 52, high = 80,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun brazen8() = Patch("Brazen", "Horn",
+        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.78f, "brass" to 0.6f, "width" to 0.5f, "attack" to 0.450727522f, "release" to 0.655539453f, "vibrato" to 0.1f, "cutoff" to 0.7062641f, "fine" to 0.62f, "volume" to 0.413333327f, "swell" to 0.65f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.56f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.65f, "mac2_a2" to 0.55f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.45f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "horn",
+        low = 41, high = 72)
+
+    private fun brazen9() = Patch("Brazen", "Flugel",
+        mapOf("size" to 0.55f, "bell" to 0.7444445f, "lipdamp" to 0.444444418f, "pressure" to 0.82f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.55f, "attack" to 0.392030418f, "vibrato" to 0.0833333358f, "fine" to 0.57f, "volume" to 0.406666666f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "horn",
+        low = 52, high = 77)
+
+    private fun brazen10() = Patch("Brazen", "Alto Horn",
+        mapOf("size" to 0.45f, "bell" to 0.7222222f, "lipdamp" to 0.444444418f, "pressure" to 0.84f, "breath" to 0.05f, "bite" to 0.75f, "brass" to 0.55f, "attack" to 0.392030418f, "vibrato" to 0.06666667f, "cutoff" to 0.691921532f, "fine" to 0.63f, "volume" to 0.4f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "horn",
+        low = 48, high = 74)
+
+    private fun brazen11() = Patch("Brazen", "Euphonium",
+        mapOf("size" to 0.22f, "bell" to 0.8111111f, "lipdamp" to 0.444444418f, "pressure" to 0.87f, "breath" to 0.03f, "bite" to 0.85f, "brass" to 0.6f, "attack" to 0.414346f, "vibrato" to 0.116666667f, "vibratodelay" to 0.2f, "cutoff" to 0.636071563f, "fine" to 0.68f, "volume" to 0.413333327f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "horn",
+        low = 40, high = 70)
+
+    private fun brazen12() = Patch("Brazen", "Wagner Tuba",
+        mapOf("size" to 0.28f, "bell" to 0.877777755f, "lipdamp" to 0.3888889f, "pressure" to 0.86f, "breath" to 0.03f, "bite" to 0.82f, "brass" to 0.55f, "release" to 0.655539453f, "vibrato" to 0f, "cutoff" to 0.5700128f, "fine" to 0.69f, "volume" to 0.353333324f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.0270270277f, "mac8_d2" to 0.0540540554f, "mac8_a1" to 0.44f, "mac8_a2" to 0.53f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Bigger"),
+        family = "horn",
+        low = 38, high = 65,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun brazen13() = Patch("Brazen", "Distant Horn",
+        mapOf("size" to 0.34f, "bell" to 0.855555534f, "lipdamp" to 0.4111111f, "pressure" to 0.86f, "breath" to 0.06f, "bite" to 0.8f, "attack" to 0.5146893f, "release" to 0.716195941f, "vibrato" to 0.06666667f, "cutoff" to 0.586482f, "fine" to 0.66f, "volume" to 0.32f, "swell" to 0.75f, "swelltime" to 0.6731595f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "horn",
+        low = 41, high = 72,
+        sendReverb = 0.3f, sendDelay = 0f)
+
+    private fun brazen14() = Patch("Brazen", "Horn Call",
+        mapOf("size" to 0.36f, "bell" to 0.7666667f, "lipdamp" to 0.5f, "pressure" to 0.9f, "breath" to 0.05f, "bite" to 0.8f, "brass" to 0.85f, "attack" to 0.3333333f, "vibrato" to 0.05f, "mono" to 1f, "glide" to 0.05f, "fine" to 0.67f, "volume" to 0.306666672f, "swell" to 0.35f, "swelltime" to 0.4815352f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.35f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.7297297f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Fall Off", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Slide"),
+        family = "horn",
+        low = 43, high = 74,
+        sendReverb = 0.25f, sendDelay = 0f)
+
+    private fun brazen15() = Patch("Brazen", "Trombone",
+        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.88f, "breath" to 0.04f, "bite" to 0.82f, "brass" to 0.72f, "attack" to 0.382042676f, "vibrato" to 0.0833333358f, "cutoff" to 0.715336f, "glide" to 0.12f, "fine" to 0.68f, "volume" to 0.426666647f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_a1" to 0.625f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Slide", "macro8" to "Growl"),
+        family = "low",
+        low = 40, high = 67)
+
+    private fun brazen16() = Patch("Brazen", "Valve Trombone",
+        mapOf("size" to 0.4f, "bell" to 0.5888889f, "lipdamp" to 0.5555556f, "pressure" to 0.88f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 0.82f, "attack" to 0.3333333f, "vibrato" to 0.06666667f, "cutoff" to 0.7558536f, "glide" to 0f, "fine" to 0.66f, "volume" to 0.426666647f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Growl"),
+        family = "low",
+        low = 40, high = 67)
+
+    private fun brazen17() = Patch("Brazen", "Bass Trombone",
+        mapOf("size" to 0.16f, "bell" to 0.7888889f, "lipdamp" to 0.5f, "pressure" to 0.88f, "breath" to 0.03f, "bite" to 0.88f, "brass" to 0.68f, "attack" to 0.43367663f, "vibrato" to 0.06666667f, "cutoff" to 0.6161569f, "glide" to 0.09f, "fine" to 0.65f, "volume" to 0.466666669f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_a1" to 0.625f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Slide", "macro8" to "Growl"),
+        family = "low",
+        low = 34, high = 58)
+
+    private fun brazen18() = Patch("Brazen", "Tuba",
+        mapOf("size" to 0.03f, "bell" to 0.922222257f, "lipdamp" to 0.444444418f, "pressure" to 0.88f, "breath" to 0f, "bite" to 0.9f, "brass" to 0.62f, "release" to 0.622157753f, "vibrato" to 0.0333333351f, "cutoff" to 0.462117672f, "fine" to 0.66f, "volume" to 0.473333329f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "low",
+        low = 31, high = 53)
+
+    private fun brazen19() = Patch("Brazen", "Contrabass Tuba",
+        mapOf("size" to 0f, "bell" to 0.9444444f, "lipdamp" to 0.4111111f, "pressure" to 0.92f, "breath" to 0f, "bite" to 0.95f, "brass" to 0.66f, "attack" to 0.492373765f, "release" to 0.6355635f, "vibrato" to 0f, "cutoff" to 0.3981856f, "fine" to 0.67f, "volume" to 0.52f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "low",
+        low = 31, high = 50)
+
+    private fun brazen20() = Patch("Brazen", "Cimbasso",
+        mapOf("size" to 0.1f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.92f, "breath" to 0.02f, "bite" to 0.9f, "brass" to 0.8f, "attack" to 0.43367663f, "vibrato" to 0f, "cutoff" to 0.5700128f, "fine" to 0.66f, "drive" to 0.1f, "volume" to 0.5266667f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.270270258f, "mac7_d2" to 0.7837838f, "mac7_a1" to 0.6f, "mac7_a2" to 0.625f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Bark", "macro8" to "Growl"),
+        family = "low",
+        low = 31, high = 55)
+
+    private fun brazen21() = Patch("Brazen", "Sousaphone",
+        mapOf("size" to 0.06f, "bell" to 0.7222222f, "lipdamp" to 0.5f, "pressure" to 0.9f, "breath" to 0.02f, "bite" to 0.9f, "brass" to 0.72f, "attack" to 0.43367663f, "decay" to 0.655539453f, "sustain" to 0.7f, "release" to 0.508810043f, "vibrato" to 0f, "cutoff" to 0.5328882f, "fine" to 0.7f, "volume" to 0.626666665f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4864865f, "mac7_d2" to 0.1891892f, "mac7_a1" to 0.575f, "mac7_a2" to 0.46f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Soft Attack", "macro8" to "Growl"),
+        family = "low",
+        low = 31, high = 53)
+
+    private fun brazen22() = Patch("Brazen", "Tailgate",
+        mapOf("size" to 0.3f, "bell" to 0.6333333f, "pressure" to 0.9f, "breath" to 0.06f, "bite" to 0.82f, "brass" to 0.82f, "growl" to 0.2f, "growlrate" to 0.4421141f, "attack" to 0.3333333f, "vibrato" to 0.233333334f, "vibratorate" to 0.7818957f, "vibratodelay" to 0.1f, "mono" to 1f, "glide" to 0.22f, "fine" to 0.68f, "volume" to 0.46f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_a1" to 0.625f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Slide", "macro8" to "Growl"),
+        family = "low",
+        low = 40, high = 67)
+
+    private fun brazen23() = Patch("Brazen", "Straight Mute",
+        mapOf("size" to 0.9f, "bell" to 0.544444442f, "mute" to 0.333333343f, "mutetone" to 0.7f, "pressure" to 0.85f, "breath" to 0.09f, "bite" to 0.6f, "brass" to 0.7f, "attack" to 0.30102998f, "cutoff" to 0.6765892f, "fine" to 0.53f, "volume" to 0.706666648f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.7f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Mute Tone", "macro7" to "Flutter", "macro8" to "Growl"),
         family = "muted",
         low = 52, high = 82)
 
-    private fun brazen10() = Patch("Brazen", "Cup Mute",
-        mapOf("size" to 0.82f, "bell" to 0.7666667f, "mute" to 0.6666667f, "mutetone" to 0.3f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.82f, "brass" to 0.66f, "attack" to 0.371314436f, "cutoff" to 0.6161569f, "fine" to 0.66f, "volume" to 0.4333333f),
+    private fun brazen24() = Patch("Brazen", "Cup Mute",
+        mapOf("size" to 0.82f, "bell" to 0.7666667f, "mute" to 0.6666667f, "mutetone" to 0.3f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.82f, "brass" to 0.66f, "attack" to 0.371314436f, "cutoff" to 0.6161569f, "fine" to 0.63f, "volume" to 0.4333333f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.7f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Mute Tone", "macro7" to "Flutter", "macro8" to "Growl"),
         family = "muted",
         low = 52, high = 82)
 
-    private fun brazen11() = Patch("Brazen", "Harmon",
-        mapOf("size" to 0.95f, "bell" to 0.5f, "mute" to 1f, "mutetone" to 0.65f, "pressure" to 0.86f, "breath" to 0.12f, "bite" to 0.55f, "brass" to 0.62f, "attack" to 0.3333333f, "cutoff" to 0.715336f, "volume" to 0.78f),
+    private fun brazen25() = Patch("Brazen", "Bucket Mute",
+        mapOf("size" to 0.9f, "bell" to 0.7f, "mute" to 0.6666667f, "mutetone" to 0.15f, "pressure" to 0.84f, "breath" to 0.08f, "bite" to 0.7f, "brass" to 0.5f, "attack" to 0.392030418f, "vibrato" to 0.1f, "cutoff" to 0.5328882f, "fine" to 0.59f, "volume" to 0.36f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.7f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Mute Tone", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "muted",
+        low = 52, high = 80)
+
+    private fun brazen26() = Patch("Brazen", "Muted Trombone",
+        mapOf("size" to 0.3f, "bell" to 0.6333333f, "mute" to 0.333333343f, "mutetone" to 0.35f, "lipdamp" to 0.5555556f, "pressure" to 0.88f, "breath" to 0.06f, "bite" to 0.82f, "brass" to 0.74f, "attack" to 0.347130865f, "vibrato" to 0.06666667f, "cutoff" to 0.66574645f, "glide" to 0.1f, "fine" to 0.66f, "volume" to 0.92f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.7f, "mac7_d1" to 0.7297297f, "mac7_a1" to 0.625f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Mute Tone", "macro7" to "Slide", "macro8" to "Growl"),
+        family = "muted",
+        low = 40, high = 67)
+
+    private fun brazen27() = Patch("Brazen", "Harmon",
+        mapOf("size" to 0.95f, "bell" to 0.5f, "mute" to 1f, "mutetone" to 0.65f, "pressure" to 0.86f, "breath" to 0.12f, "bite" to 0.55f, "brass" to 0.62f, "attack" to 0.3333333f, "cutoff" to 0.715336f, "volume" to 0.78f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.8f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Wah", "macro7" to "Flutter", "macro8" to "Growl"),
         family = "muted",
         low = 52, high = 82)
 
-    private fun brazen12() = Patch("Brazen", "Section",
-        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.6f, "players" to 1f, "spread" to 0.233333334f, "scatter" to 0.183333337f, "lock" to 0.88f, "drift" to 0.16f, "attack" to 0.450727522f, "cutoff" to 0.66574645f, "fine" to 0.56f, "volume" to 0.286666662f),
-        family = "ensemble",
+    private fun brazen28() = Patch("Brazen", "Practice Mute",
+        mapOf("size" to 0.95f, "mute" to 0.6666667f, "mutetone" to 0.8f, "pressure" to 0.85f, "breath" to 0.2f, "bite" to 0.6f, "brass" to 0.6f, "attack" to 0.30102998f, "vibrato" to 0.06666667f, "cutoff" to 0.5522248f, "resonance" to 0.5f, "fine" to 0.54f, "volume" to 0.426666647f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.7f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Mute Tone", "macro7" to "Flutter", "macro8" to "Growl"),
+        family = "muted",
+        low = 52, high = 80)
+
+    private fun brazen29() = Patch("Brazen", "Plunger",
+        mapOf("size" to 0.92f, "mute" to 1f, "mutetone" to 0.3f, "pressure" to 0.88f, "breath" to 0.1f, "bite" to 0.62f, "brass" to 0.7f, "growl" to 0.25f, "growlrate" to 0.537243962f, "attack" to 0.3180808f, "vibrato" to 0.13333334f, "cutoff" to 0.691921532f, "fine" to 0.55f, "volume" to 0.733333349f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.8f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Wah", "macro7" to "Flutter", "macro8" to "Growl"),
+        family = "muted",
+        low = 52, high = 80)
+
+    private fun brazen30() = Patch("Brazen", "Section",
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.05f, "bite" to 0.7f, "brass" to 0.6f, "players" to 1f, "spread" to 0.233333334f, "scatter" to 0f, "lock" to 0.88f, "drift" to 0.16f, "attack" to 0.450727522f, "cutoff" to 0.66574645f, "fine" to 0.56f, "volume" to 0.113333337f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.432432443f, "mac7_d3" to 0.3783784f, "mac7_a1" to 0.25f, "mac7_a2" to 0.625f, "mac7_a3" to 0.575f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Loose", "macro8" to "Growl"),
+        family = "section",
         low = 55, high = 79)
 
-    private fun brazen13() = Patch("Brazen", "Shambles",
-        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.78f, "brass" to 0.6f, "players" to 1f, "spread" to 0.8f, "scatter" to 0.7083333f, "lock" to 0.03f, "drift" to 0.76f, "width" to 1f, "attack" to 0.5146893f, "cutoff" to 0.6869274f, "fine" to 0.77f, "volume" to 0.186666667f),
-        family = "ensemble",
+    private fun brazen31() = Patch("Brazen", "Horn Choir",
+        mapOf("size" to 0.34f, "bell" to 0.8333334f, "lipdamp" to 0.4111111f, "pressure" to 0.85f, "breath" to 0.04f, "bite" to 0.78f, "brass" to 0.55f, "players" to 1f, "spread" to 0.166666672f, "scatter" to 0f, "lock" to 0.8f, "release" to 0.6889211f, "vibrato" to 0.05f, "cutoff" to 0.642332f, "fine" to 0.62f, "volume" to 0.0933333337f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.432432443f, "mac7_d3" to 0.3783784f, "mac7_a1" to 0.25f, "mac7_a2" to 0.625f, "mac7_a3" to 0.575f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Loose", "macro8" to "Soft Attack"),
+        family = "section",
+        low = 41, high = 70,
+        sendReverb = 0.25f, sendDelay = 0f)
+
+    private fun brazen32() = Patch("Brazen", "Trombone Choir",
+        mapOf("size" to 0.3f, "bell" to 0.6777778f, "lipdamp" to 0.5555556f, "pressure" to 0.88f, "breath" to 0.04f, "bite" to 0.82f, "brass" to 0.7f, "players" to 0.6666667f, "spread" to 0.2f, "scatter" to 0f, "lock" to 0.85f, "attack" to 0.414346f, "release" to 0.6355635f, "vibrato" to 0.05f, "cutoff" to 0.6765892f, "glide" to 0.08f, "fine" to 0.69f, "volume" to 0.14f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.432432443f, "mac7_d3" to 0.3783784f, "mac7_a1" to 0.25f, "mac7_a2" to 0.625f, "mac7_a3" to 0.575f, "mac8_d1" to 0.7297297f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Loose", "macro8" to "Slide"),
+        family = "section",
+        low = 40, high = 67,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun brazen33() = Patch("Brazen", "Big Band",
+        mapOf("size" to 0.95f, "bell" to 0.611111164f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.06f, "bite" to 0.65f, "brass" to 0.9f, "players" to 1f, "spread" to 0.166666672f, "scatter" to 0f, "lock" to 0.9f, "attack" to 0.232989982f, "vibratorate" to 0.7545169f, "vibratodelay" to 0.15f, "fine" to 0.56f, "drive" to 0.1f, "volume" to 0.113333337f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.35f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.432432443f, "mac7_d3" to 0.3783784f, "mac7_a1" to 0.25f, "mac7_a2" to 0.625f, "mac7_a3" to 0.575f, "mac8_d1" to 0.270270258f, "mac8_d2" to 0.7837838f, "mac8_a1" to 0.6f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Fall Off", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Loose", "macro8" to "Bark"),
+        family = "section",
+        low = 55, high = 82)
+
+    private fun brazen34() = Patch("Brazen", "Fanfare",
+        mapOf("size" to 1f, "bell" to 0.6333333f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 1f, "players" to 0.333333343f, "spread" to 0.15f, "lock" to 0.9f, "attack" to 0.232989982f, "vibrato" to 0.06666667f, "fine" to 0.64f, "volume" to 0.313333333f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.35f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.432432443f, "mac7_d3" to 0.3783784f, "mac7_a1" to 0.25f, "mac7_a2" to 0.625f, "mac7_a3" to 0.575f, "mac8_d1" to 0.270270258f, "mac8_d2" to 0.7837838f, "mac8_a1" to 0.6f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Fall Off", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Loose", "macro8" to "Bark"),
+        family = "section",
         low = 55, high = 79)
 
-    private fun brazen14() = Patch("Brazen", "Growl",
-        mapOf("size" to 0.86f, "bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.92f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.85f, "growl" to 0.75f, "growlrate" to 0.5775205f, "attack" to 0.3180808f, "fine" to 0.6f, "drive" to 0.28f, "volume" to 0.5733333f),
-        family = "ensemble",
+    private fun brazen35() = Patch("Brazen", "Brass Hits",
+        mapOf("size" to 0.8f, "bell" to 0.611111164f, "lipdamp" to 0.6666666f, "pressure" to 0.95f, "breath" to 0.05f, "bite" to 0.75f, "brass" to 0.9f, "players" to 1f, "spread" to 0.166666672f, "scatter" to 0f, "lock" to 0.92f, "drift" to 0.08f, "attack" to 0.159040421f, "decay" to 0.508810043f, "sustain" to 0.6f, "release" to 0.414771825f, "vibrato" to 0f, "drive" to 0.15f, "volume" to 0.126666665f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5135135f, "mac5_d2" to 0.5405405f, "mac5_a1" to 0.4f, "mac5_a2" to 0.35f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.432432443f, "mac7_d3" to 0.3783784f, "mac7_a1" to 0.35f, "mac7_a2" to 0.575f, "mac7_a3" to 0.55f, "mac8_d1" to 0.270270258f, "mac8_d2" to 0.7837838f, "mac8_a1" to 0.6f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Short", "macro6" to "Dark", "macro7" to "Loose", "macro8" to "Bark"),
+        family = "section",
+        low = 48, high = 79,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun brazen36() = Patch("Brazen", "Growl",
+        mapOf("size" to 0.86f, "bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.92f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.85f, "growl" to 0.75f, "growlrate" to 0.5775205f, "attack" to 0.3180808f, "fine" to 0.6f, "drive" to 0.28f, "volume" to 0.553333342f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.2972973f, "mac7_d2" to 0.3243243f, "mac7_a1" to 0.6f, "mac7_a2" to 0.425f, "mac8_d1" to 0.7837838f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Growl", "macro8" to "Grit"),
+        family = "section",
         low = 55, high = 77)
 
-    private fun brazen15() = Patch("Brazen", "Fanfare",
-        mapOf("size" to 1f, "bell" to 0.6333333f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.07f, "bite" to 0.8f, "brass" to 1f, "players" to 0.333333343f, "spread" to 0.15f, "lock" to 0.9f, "attack" to 0.232989982f, "vibrato" to 0.06666667f, "fine" to 0.64f, "volume" to 0.313333333f),
-        family = "ensemble",
+    private fun brazen37() = Patch("Brazen", "Shambles",
+        mapOf("size" to 0.55f, "bell" to 0.611111164f, "pressure" to 0.85f, "breath" to 0.06f, "bite" to 0.78f, "brass" to 0.6f, "players" to 1f, "spread" to 0.8f, "scatter" to 0.7083333f, "lock" to 0.03f, "drift" to 0.76f, "width" to 1f, "attack" to 0.5146893f, "cutoff" to 0.6869274f, "fine" to 0.77f, "volume" to 0.186666667f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.4054054f, "mac7_d2" to 0.432432443f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Tighten", "macro8" to "Growl"),
+        family = "section",
         low = 55, high = 79)
 
-    private val brazen: List<Patch> by lazy { listOf(brazen0(), brazen1(), brazen2(), brazen3(), brazen4(), brazen5(), brazen6(), brazen7(), brazen8(), brazen9(), brazen10(), brazen11(), brazen12(), brazen13(), brazen14(), brazen15()) }
+    private fun brazen38() = Patch("Brazen", "Bugle",
+        mapOf("size" to 0.85f, "bell" to 0.611111164f, "pressure" to 0.9f, "breath" to 0.07f, "bite" to 0.65f, "brass" to 0.75f, "attack" to 0.259383738f, "release" to 0.475428343f, "vibrato" to 0f, "mono" to 1f, "glide" to 0.04f, "fine" to 0.56f, "volume" to 0.326666683f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_d2" to 0.8918919f, "mac7_a1" to 0.65f, "mac7_a2" to 0.625f, "mac8_d1" to 0.9459459f, "mac8_d2" to 0.972973f, "mac8_a1" to 0.7f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Rip", "macro8" to "Flutter"),
+        family = "natural",
+        low = 55, high = 72,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun brazen39() = Patch("Brazen", "Post Horn",
+        mapOf("size" to 1f, "bell" to 0.655555546f, "lipdamp" to 0.6777778f, "pressure" to 0.92f, "breath" to 0.08f, "bite" to 0.7f, "brass" to 0.85f, "attack" to 0.232989982f, "release" to 0.475428343f, "vibrato" to 0f, "mono" to 1f, "glide" to 0.03f, "fine" to 0.6f, "volume" to 0.333333343f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_d2" to 0.8918919f, "mac7_a1" to 0.65f, "mac7_a2" to 0.625f, "mac8_d1" to 0.9459459f, "mac8_d2" to 0.972973f, "mac8_a1" to 0.7f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Rip", "macro8" to "Flutter"),
+        family = "natural",
+        low = 60, high = 79,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun brazen40() = Patch("Brazen", "Alphorn",
+        mapOf("size" to 0.25f, "bell" to 0.855555534f, "lipdamp" to 0.4111111f, "pressure" to 0.86f, "breath" to 0.05f, "bite" to 0.82f, "brass" to 0.5f, "attack" to 0.492373765f, "release" to 0.414771825f, "vibrato" to 0f, "cutoff" to 0.5700128f, "mono" to 1f, "glide" to 0.1f, "fine" to 0.69f, "volume" to 0.28f, "swell" to 0.575f, "swelltime" to 0.4815352f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_d2" to 0.8918919f, "mac7_a1" to 0.65f, "mac7_a2" to 0.625f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Rip", "macro8" to "Soft Attack"),
+        family = "natural",
+        low = 48, high = 67,
+        sendReverb = 0.35f, sendDelay = 0f)
+
+    private fun brazen41() = Patch("Brazen", "Conch",
+        mapOf("size" to 0.2f, "bell" to 0.922222257f, "lipdamp" to 0.3888889f, "pressure" to 0.86f, "breath" to 0.25f, "bite" to 0.85f, "brass" to 0.3f, "release" to 0.414771825f, "vibrato" to 0f, "cutoff" to 0.488292783f, "mono" to 1f, "glide" to 0.15f, "fine" to 0.71f, "volume" to 0.293333322f, "swell" to 0.575f, "swelltime" to 0.448153526f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_d2" to 0.8918919f, "mac7_a1" to 0.65f, "mac7_a2" to 0.625f, "mac8_d1" to 0.216216221f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.625f, "mac8_a2" to 0.48f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Rip", "macro8" to "Air"),
+        family = "natural",
+        low = 48, high = 62,
+        sendReverb = 0.25f, sendDelay = 0f)
+
+    private fun brazen42() = Patch("Brazen", "Ram Horn",
+        mapOf("size" to 0.7f, "bell" to 0.5f, "lipdamp" to 0.6777778f, "pressure" to 0.92f, "breath" to 0.1f, "bite" to 0.65f, "brass" to 0.9f, "growl" to 0.15f, "growlrate" to 0.4421141f, "attack" to 0.2916871f, "release" to 0.475428343f, "vibrato" to 0f, "mono" to 1f, "glide" to 0.12f, "fine" to 0.59f, "drive" to 0.2f, "volume" to 0.286666662f, "swell" to 0.3f, "swelltime" to 0.508810043f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.35f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7297297f, "mac7_d2" to 0.8918919f, "mac7_a1" to 0.65f, "mac7_a2" to 0.625f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Fall Off", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Rip", "macro8" to "Growl"),
+        family = "natural",
+        low = 55, high = 70,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun brazen43() = Patch("Brazen", "Tin Horn",
+        mapOf("size" to 1f, "bell" to 0.4111111f, "mute" to 0.333333343f, "mutetone" to 0.9f, "lipdamp" to 0.7222222f, "pressure" to 0.92f, "breath" to 0.1f, "bite" to 0.6f, "brass" to 0.85f, "attack" to 0.200686663f, "vibrato" to 0.0833333358f, "fine" to 0.54f, "volume" to 0.346666664f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.108108111f, "mac6_a1" to 0.3f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.0540540554f, "mac8_a1" to 0.45f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Mute Tone", "macro7" to "Flutter", "macro8" to "Smaller"),
+        family = "odd",
+        low = 67, high = 91)
+
+    private fun brazen44() = Patch("Brazen", "Foghorn",
+        mapOf("size" to 0f, "bell" to 0.9444444f, "lipdamp" to 0.4111111f, "pressure" to 0.92f, "breath" to 0.03f, "bite" to 0.95f, "brass" to 0.66f, "players" to 0.333333343f, "scatter" to 0f, "lock" to 0.6f, "width" to 0.6f, "attack" to 0.725363731f, "release" to 0.8532706f, "vibrato" to 0f, "cutoff" to 0.432442755f, "fine" to 0.69f, "volume" to 0.293333322f, "swell" to 0.8f, "swelltime" to 0.716195941f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.9189189f, "mac4_a1" to 0.56f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9189189f, "mac7_d2" to 0.5675676f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 0.2972973f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Tide", "macro8" to "Growl"),
+        family = "odd",
+        low = 31, high = 48,
+        sendReverb = 0.35f, sendDelay = 0f)
+
+    private fun brazen45() = Patch("Brazen", "Air Leak",
+        mapOf("size" to 0.7f, "bell" to 0.6777778f, "lipdamp" to 0.5f, "pressure" to 0.8f, "breath" to 0.7f, "bite" to 0.7f, "brass" to 0.4f, "attack" to 0.43367663f, "release" to 0.655539453f, "vibrato" to 0.1f, "fine" to 0.57f, "volume" to 0.326666683f, "swell" to 0.65f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_d2" to 0.1891892f, "mac3_a1" to 0.65f, "mac3_a2" to 0.475f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.9459459f, "mac7_d2" to 0.972973f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.4864865f, "mac8_d2" to 0.1891892f, "mac8_a1" to 0.575f, "mac8_a2" to 0.46f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Air", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Attack"),
+        family = "odd",
+        low = 50, high = 74,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun brazen46() = Patch("Brazen", "Hornet",
+        mapOf("size" to 0.95f, "bell" to 0.611111164f, "lipdamp" to 0.6777778f, "pressure" to 0.92f, "breath" to 0.06f, "bite" to 0.65f, "brass" to 0.85f, "players" to 0.333333343f, "spread" to 0.333333343f, "scatter" to 0.25f, "drift" to 0.24f, "attack" to 0.259383738f, "vibrato" to 0f, "fine" to 0.62f, "volume" to 0.333333343f, "flutter" to 0.4f, "flutterrate" to 0.8390359f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.972973f, "mac7_a1" to 0.3f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.432432443f, "mac8_d3" to 0.3783784f, "mac8_a1" to 0.25f, "mac8_a2" to 0.625f, "mac8_a3" to 0.575f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Rate", "macro8" to "Loose"),
+        family = "odd",
+        low = 55, high = 82)
+
+    private fun brazen47() = Patch("Brazen", "Gargle",
+        mapOf("bell" to 0.566666663f, "lipdamp" to 0.7f, "pressure" to 0.93f, "breath" to 0.08f, "bite" to 0.7f, "brass" to 0.95f, "growl" to 1f, "growlrate" to 0.352314562f, "attack" to 0.2916871f, "fine" to 0.67f, "drive" to 0.5f, "volume" to 0.613333344f, "mac1_d1" to 0.1891892f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.54f, "mac1_a2" to 0.575f, "mac2_d1" to 0.270270258f, "mac2_d2" to 0.243243247f, "mac2_a1" to 0.625f, "mac2_a2" to 0.56f, "mac3_d1" to 0.216216221f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8918919f, "mac4_d2" to 0.9189189f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5945946f, "mac5_d2" to 0.6486486f, "mac5_a1" to 0.6f, "mac5_a2" to 0.425f, "mac6_d1" to 0.6756757f, "mac6_a1" to 0.35f, "mac7_d1" to 0.3243243f, "mac7_a1" to 0.65f, "mac8_d1" to 0.7837838f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Blow", "macro2" to "Brassy", "macro3" to "Breathy", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Gargle", "macro8" to "Grit"),
+        family = "odd",
+        low = 45, high = 72)
+
+    private val brazen: List<Patch> by lazy { listOf(brazen0(), brazen1(), brazen2(), brazen3(), brazen4(), brazen5(), brazen6(), brazen7(), brazen8(), brazen9(), brazen10(), brazen11(), brazen12(), brazen13(), brazen14(), brazen15(), brazen16(), brazen17(), brazen18(), brazen19(), brazen20(), brazen21(), brazen22(), brazen23(), brazen24(), brazen25(), brazen26(), brazen27(), brazen28(), brazen29(), brazen30(), brazen31(), brazen32(), brazen33(), brazen34(), brazen35(), brazen36(), brazen37(), brazen38(), brazen39(), brazen40(), brazen41(), brazen42(), brazen43(), brazen44(), brazen45(), brazen46(), brazen47()) }
 
     private fun timber0() = Patch("Timber", "Init", emptyMap(),
         family = "clarinet")
@@ -5229,7 +5451,7 @@ internal object FactoryBanks {
         low = 46, high = 68)
 
     private fun timber43() = Patch("Timber", "Forked",
-        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.581818163f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "fine" to 0.52f, "volume" to 0.18f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.162162155f, "mac3_d2" to 0.108108111f, "mac3_a1" to 0.55f, "mac3_a2" to 0.6f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
+        mapOf("family" to 0.5f, "bore" to 1f, "lattice" to 0.462756425f, "fingering" to 0.8f, "below" to 0.55f, "answer" to 0.454545438f, "embouchure" to 0.3076923f, "pressure" to 0.7692308f, "breath" to 0.25f, "tongue" to 0.6f, "flutter" to 0.35f, "attack" to 0.43367663f, "fine" to 0.52f, "volume" to 0.18f, "mac1_d1" to 0.243243247f, "mac1_d2" to 0.270270258f, "mac1_a1" to 0.625f, "mac1_a2" to 0.575f, "mac2_d1" to 0.216216221f, "mac2_d2" to 0.1891892f, "mac2_a1" to 0.375f, "mac2_a2" to 0.575f, "mac3_d1" to 0.162162155f, "mac3_d2" to 0.108108111f, "mac3_a1" to 0.55f, "mac3_a2" to 0.6f, "mac4_d1" to 0.9459459f, "mac4_d2" to 0.972973f, "mac4_a1" to 0.6f, "mac4_a2" to 0.55f, "mac5_d1" to 0.6486486f, "mac5_d2" to 0.7027027f, "mac5_a1" to 0.65f, "mac5_a2" to 0.45f, "mac6_d1" to 0.7297297f, "mac6_d2" to 0.0540540554f, "mac6_a1" to 0.325f, "mac6_a2" to 0.425f, "mac7_d1" to 0.459459454f, "mac7_a1" to 0.75f, "mac8_d1" to 0.4054054f, "mac8_d2" to 0.5405405f, "mac8_a1" to 0.3f, "mac8_a2" to 0.575f),
         mapOf("macro1" to "Blow", "macro2" to "Looser", "macro3" to "Fork", "macro4" to "Swell", "macro5" to "Vibrato", "macro6" to "Dark", "macro7" to "Flutter", "macro8" to "Soft Tongue"),
         family = "odd",
         low = 52, high = 74)

@@ -503,6 +503,7 @@
     <string name="pw_grit_with_b">grit with b</string>
     <string name="pw_groupings">groupings</string>
     <string name="pw_growl">growl</string>
+    <string name="pw_growl_rate">growl rate</string>
     <string name="pw_guitar">guitar</string>
     <string name="pw_gurdy">gurdy</string>
     <string name="pw_gust">gust</string>
@@ -557,6 +558,7 @@
     <string name="pw_honour">honour</string>
     <string name="pw_horn">Horn</string>
     <string name="pw_horn_bd6ad7">horn</string>
+    <string name="pw_horn_family">horn</string>
     <string name="pw_house">house</string>
     <string name="pw_how">how</string>
     <string name="pw_how_many">how many</string>
@@ -786,6 +788,7 @@
     <string name="pw_music_box">music box</string>
     <string name="pw_mutate">mutate</string>
     <string name="pw_mute">mute</string>
+    <string name="pw_mute_tone">mute tone</string>
     <string name="pw_muted">muted</string>
     <string name="pw_mute_lane">mute</string>
     <string name="pw_n">n</string>

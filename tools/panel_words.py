@@ -182,7 +182,7 @@ def from_model():
 # lane's name, and Forage's unloaded pads.
 LANE_WORDS = {"pad %d", "Pad %d"}
 # Bank families that read differently on a shelf than on a panel.
-FAMILY_SENSES = {"odd"}
+FAMILY_SENSES = {"odd", "horn"}
 # Nexus's old bank families, which no bank uses now; kept so values-fr's
 # translations of them still have an English key.
 KEPT_WORDS = {"basic", "macro"}

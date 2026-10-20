@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament and Timber move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber and Brazen move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -13,6 +13,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/brazen/Brazen.h>
 #include <engine/machine/filament/Filament.h>
 #include <engine/machine/formulate/Formulate.h>
 #include <engine/machine/genesis/Genesis.h>
@@ -390,8 +391,9 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         }
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the pads' tune", buf);
-    } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0) {
-        // A plucked string's (or a reed's onset's) zero crossings wander, so the route must match the transpose knob.
+    } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0 ||
+               std::strcmp(type, "Brazen") == 0) {
+        // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
         gUnits = {{"transpose", 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -776,6 +778,322 @@ void timberRoutes() {
     ok(jumpFlutter <= jumpStill * 1.05, "Timber: a jet's flutter has no steps in it", buf);
 }
 
+// One note event for timberEvents: at block [block], note [note] on (or off
+// when [on] is false).
+struct NoteEvent {
+    int32_t block;
+    uint8_t note;
+    bool on;
+};
+
+// A fresh Timber with [units] set, played [events] over [blocks] blocks.
+std::vector<float> timberEvents(const std::vector<std::pair<std::string, float>> &units,
+                                const std::vector<NoteEvent> &events, int32_t blocks) {
+    Machine *m = MachineRegistry::create("Timber");
+    m->prepare(kRate);
+    ParamSet &p = m->params();
+    for (const auto &[name, value] : units) {
+        const int32_t i = p.indexOf(name.c_str());
+        p.set(i, p.def(i).unmap(value));
+    }
+    p.jumpAll();
+    m->reset();
+    std::vector<float> out;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < blocks; ++b) {
+        for (const auto &e : events) {
+            if (e.block != b) continue;
+            if (e.on) m->noteOn(e.note, 100);
+            else m->noteOff(e.note);
+        }
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+    }
+    delete m;
+    return out;
+}
+
+// The largest second difference in [from, to): a corner, which is what a
+// click is.
+double largestCorner(const std::vector<float> &v, size_t from, size_t to) {
+    double c = 0;
+    for (size_t i = std::max<size_t>(from, 2); i < std::min(to, v.size()); ++i)
+        c = std::max(c, std::fabs(double(v[i]) - 2.0 * v[i - 1] + v[i - 2]));
+    return c;
+}
+
+// Timber played mono and legato: a slur onto a held note keeps the level and
+// has no corner at the join, a note after the last one let go is tongued
+// afresh without a click, and fast notes, even two in a row inside the 2 ms
+// fade, never step.
+void timberPlaying() {
+    char buf[128];
+    const std::vector<std::pair<std::string, float>> mono = {
+        {"mono", 1.0f}, {"glide", 0.05f}, {"attack", 0.05f}, {"release", 0.3f}, {"cutoff", 1800.0f}};
+    const int32_t at = 180, blocks = 300;
+    const size_t join = size_t(at) * kBlock;
+
+    // A slur onto the held note.
+    {
+        const auto v = timberEvents(mono, {{0, 57, true}, {at, 60, true}}, blocks);
+        const double held = rmsRange(v, join - 4800, join);
+        double low = 10.0;
+        for (int32_t w = 0; w < 10; ++w) {
+            const size_t from = join + w * 480;
+            low = std::min(low, rmsRange(v, from, from + 480) / held);
+        }
+        const double corner = largestCorner(v, join - 4800, join - 480);
+        const double atJoin = largestCorner(v, join - 480, join + 480);
+        std::snprintf(buf, sizeof(buf), "lowest 10 ms %.2f of the held note, join corner %.2fx", low,
+                      atJoin / std::max(corner, 1e-12));
+        ok(low > 0.85 && atJoin < corner * 2.0, "Timber: a slur does not dip or click", buf);
+    }
+    // A note played after the last one was let go, while its tail sounds:
+    // tongued again on a voice of its own rather than slurred, the old tail
+    // ringing out under it, and no click.
+    {
+        const auto v = timberEvents(mono, {{0, 57, true}, {at - 6, 57, false}, {at, 60, true}}, blocks);
+        const auto alone = timberEvents(mono, {{0, 60, true}}, blocks - at);
+        const double tail = rmsRange(v, join - 480, join);
+        const double corner = largestCorner(v, join + 4800, v.size());
+        const double atJoin = largestCorner(v, join - 480, join + 480);
+        // Tongued afresh, it sounds as the same note played alone.
+        const double a = rmsRange(v, join + 2400, join + 7200), b = rmsRange(alone, 2400, 7200);
+        // The 10 ms after the new note against the 10 ms before: the tail
+        // goes on falling at its own rate rather than being cut.
+        const double rings = rmsRange(v, join, join + 480) / std::max(tail, 1e-12);
+        std::snprintf(buf, sizeof(buf), "tail %.4f, then %.2f of it, join corner %.2fx, level %.4f against alone %.4f",
+                      tail, rings, atJoin / std::max(corner, 1e-12), a, b);
+        ok(tail > 1e-3 && rings > 0.4 && atJoin < corner * 2.0 && std::fabs(a - b) < b * 0.1,
+           "Timber: a note after a release is tongued, the tail rings out", buf);
+    }
+    // Fast notes: eighths of 60 ms, and two notes a block apart, inside the
+    // fade. Nothing in it steps further than a held note does.
+    {
+        std::vector<NoteEvent> ev;
+        for (int32_t k = 0; k < 8; ++k) {
+            ev.push_back({20 + k * 45, uint8_t(k % 2 ? 62 : 60), true});
+            ev.push_back({20 + k * 45 + 30, uint8_t(k % 2 ? 62 : 60), false});
+        }
+        const auto v = timberEvents(mono, ev, 420);
+        const auto held = timberEvents(mono, {{0, 62, true}}, 420);
+        const double c = largestCorner(v, 0, v.size()), h = largestCorner(held, 2400, held.size());
+        std::snprintf(buf, sizeof(buf), "largest corner %.4f against a held note's %.4f", c, h);
+        ok(c < h * 2.0, "Timber: fast repeated notes do not click", buf);
+
+        const auto twice = timberEvents(mono, {{0, 57, true}, {at, 57, false}, {at + 3, 60, true}, {at + 4, 62, true}}, blocks);
+        const double c2 = largestCorner(twice, join, twice.size());
+        const double h2 = largestCorner(twice, 4800, join);
+        std::snprintf(buf, sizeof(buf), "largest corner %.4f against the held note's %.4f", c2, h2);
+        ok(c2 < h2 * 2.0, "Timber: a second note inside the fade does not click", buf);
+    }
+}
+
+// A note at [first], held, and a second at 60 slurred onto it at [slurAt]
+// samples, from a fresh Brazen with [units] set. A negative [slurAt] holds
+// [first] alone.
+std::vector<float> brazenSlur(const std::vector<std::pair<std::string, float>> &units, int32_t slurAt,
+                              uint8_t first = 57) {
+    Machine *m = MachineRegistry::create("Brazen");
+    m->prepare(kRate);
+    ParamSet &p = m->params();
+    for (const auto &[name, value] : units) {
+        const int32_t i = p.indexOf(name.c_str());
+        if (i < 0) { std::printf("  FAIL no parameter %s\n", name.c_str()); ++failures; continue; }
+        p.set(i, p.def(i).unmap(value));
+    }
+    p.jumpAll();
+    m->reset();
+    m->noteOn(first, 100);
+    std::vector<float> out;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < kBlocks * (slurAt < 0 ? 4 : 2); ++b) {
+        if (b * kBlock == slurAt) m->noteOn(60, 100);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+    }
+    delete m;
+    return out;
+}
+
+double largestStep(const std::vector<float> &v) {
+    double j = 0;
+    for (size_t i = 1; i < v.size(); ++i) j = std::max(j, double(std::fabs(v[i] - v[i - 1])));
+    return j;
+}
+
+// How much a block's edge stands out: the mean size of the second
+// difference at each of the 64 positions in a block, the largest against
+// their average. A value set once a block and applied to every sample puts a
+// corner at one position, wherever the tube's delay carries it; a smooth
+// signal reads close to 1.
+double blockEdge(const std::vector<float> &v, size_t from, size_t to) {
+    double m[kBlock] = {};
+    int n[kBlock] = {};
+    for (size_t i = std::max<size_t>(from, 2); i < to; ++i) {
+        m[i % kBlock] += std::fabs(double(v[i]) - 2.0 * v[i - 1] + v[i - 2]);
+        ++n[i % kBlock];
+    }
+    double top = 0, sum = 0;
+    for (int k = 0; k < kBlock; ++k) {
+        const double a = n[k] > 0 ? m[k] / n[k] : 0.0;
+        top = std::max(top, a);
+        sum += a;
+    }
+    return sum > 0 ? top / (sum / kBlock) : 0.0;
+}
+
+// Brazen's breath swell and flutter: a route to the swell matches the knob,
+// a rising swell starts quiet and arrives, a falling one starts loud, neither
+// steps, a slurred note keeps the swell it joined, and flutter moves the
+// level at its rate without steps.
+void brazenRoutes() {
+    using Bz = acidulous::machine::Brazen;
+    gType = "Brazen";
+    gDests = Bz::MacroDestCount;
+    gNote = 57;
+    char buf[96];
+    auto same = [&](const char *what, const std::vector<float> &a, const std::vector<float> &b) {
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(a[i] - b[i])));
+            peak = std::max(peak, double(std::fabs(a[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-4, what, buf);
+    };
+    // A quick-speaking horn, so the swell is the only slow thing.
+    const std::vector<std::pair<std::string, float>> horn = {
+        {"size", 0.95f}, {"pressure", 0.9f}, {"attack", 0.005f}, {"vibrato", 0.0f}, {"swelltime", 0.1f}};
+    auto with = [&](std::initializer_list<std::pair<std::string, float>> more) {
+        auto u = horn;
+        for (const auto &x : more) u.push_back(x);
+        return u;
+    };
+    gUnits = horn;
+    const auto base = play(nullptr);
+    gUnits = with({{"swell", 0.8f}});
+    const auto rise = play(nullptr);
+    // Swell is -1..1 from 0, so +0.4 of its range is 0.8.
+    gUnits = horn;
+    Route r{4, 2, Bz::McSwell, 0.4f, 1.0f};
+    same("Brazen: a route to swell matches the knob", rise, play(&r));
+
+    const size_t front = 2400, tail = 7000;
+    std::snprintf(buf, sizeof(buf), "front %.4f against %.4f", rmsRange(rise, 0, front), rmsRange(base, 0, front));
+    ok(rmsRange(rise, 0, front) < rmsRange(base, 0, front) * 0.5, "Brazen: a rising swell starts quiet", buf);
+    std::snprintf(buf, sizeof(buf), "tail %.4f against %.4f", rmsRange(rise, tail, rise.size()),
+                  rmsRange(base, tail, base.size()));
+    ok(rmsRange(rise, tail, rise.size()) > rmsRange(base, tail, base.size()) * 0.7,
+       "Brazen: a rising swell arrives", buf);
+
+    gUnits = with({{"swell", -0.8f}});
+    const auto fall = play(nullptr);
+    gUnits.clear();
+    std::snprintf(buf, sizeof(buf), "front %.4f against %.4f", rmsRange(fall, 0, 4800), rmsRange(base, 0, 4800));
+    ok(rmsRange(fall, 0, 4800) > rmsRange(base, 0, 4800) * 1.1, "Brazen: a falling swell starts loud", buf);
+
+    // Every sample moves the breath, so nothing in the swell steps: the
+    // largest jump between samples is no bigger than the loudest note the
+    // swell passes through, held. A harder-blown horn has a steeper wave,
+    // so a falling swell is held against its own starting pressure: 0.8
+    // falling by 0.2 starts at 0.96.
+    gUnits = with({{"pressure", 0.8f}, {"swell", -0.2f}});
+    const auto fallSoft = play(nullptr);
+    gUnits = with({{"pressure", 0.96f}});
+    const auto hard = play(nullptr);
+    gUnits.clear();
+    std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f, %.4f against %.4f", largestStep(rise),
+                  largestStep(base), largestStep(fallSoft), largestStep(hard));
+    ok(largestStep(rise) <= largestStep(base) * 1.05 && largestStep(fallSoft) <= largestStep(hard) * 1.05,
+       "Brazen: the swell jumps no further than a held note", buf);
+    // And no corner at a block's edge while it rises from quiet, where one
+    // would show. A falling swell starts loud, and a loud horn's own edges
+    // (the lift at note-on) hide one there.
+    const auto riseSlow = brazenSlur(with({{"swelltime", 0.1f}, {"swell", 1.0f}}), -1);
+    const auto baseSlow = brazenSlur(with({{"swelltime", 0.1f}}), -1);
+    std::snprintf(buf, sizeof(buf), "block edge %.3f against %.3f", blockEdge(riseSlow, 0, 4800),
+                  blockEdge(baseSlow, 0, 4800));
+    ok(blockEdge(riseSlow, 0, 4800) <= std::max(1.4, blockEdge(baseSlow, 0, 4800)),
+       "Brazen: the swell has no steps in it", buf);
+
+    // Mono with a glide, slurred at 240 ms once the swell has arrived: the
+    // second note does not start another one, so it sounds as it does with
+    // no swell at all.
+    const int32_t slurAt = 180 * kBlock;
+    const auto slurBase = brazenSlur(with({{"mono", 1.0f}, {"glide", 0.05f}, {"swelltime", 0.05f}}), slurAt);
+    const auto slurSwell =
+        brazenSlur(with({{"mono", 1.0f}, {"glide", 0.05f}, {"swelltime", 0.05f}, {"swell", 1.0f}}), slurAt);
+    // Window by window, 5 ms each, so a swell that restarts part way can't
+    // hide in the average.
+    const double a = rmsRange(slurSwell, slurAt, slurAt + 2400), b = rmsRange(slurBase, slurAt, slurAt + 2400);
+    double worstWin = 10.0;
+    for (int32_t w = 0; w < 10; ++w) {
+        const size_t from = slurAt + w * 240;
+        const double bw = rmsRange(slurBase, from, from + 240);
+        if (bw > 1e-4) worstWin = std::min(worstWin, rmsRange(slurSwell, from, from + 240) / bw);
+    }
+    std::snprintf(buf, sizeof(buf), "after the slur %.4f against %.4f, worst 5 ms %.3f", a, b, worstWin);
+    // The two tubes are in different states when the slur lands, so the
+    // re-tongued onset differs a little; a swell started again dips to a
+    // third.
+    ok(b > 1e-3 && std::fabs(a - b) < b * 0.05 && worstWin > 0.75, "Brazen: a slurred note keeps the swell", buf);
+
+    // A slur carries the breath and the filter on: the level stays near the
+    // held note's in every 10 ms of the first 100, and nothing steps at the join.
+    {
+        const auto slur = brazenSlur(with({{"mono", 1.0f}, {"glide", 0.05f}, {"cutoff", 1800.0f}, {"attack", 0.05f}}), slurAt);
+        const double held = rmsRange(slur, slurAt - 4800, slurAt);
+        double low = 10.0;
+        for (int32_t w = 0; w < 10; ++w) {
+            const size_t from = slurAt + w * 480;
+            low = std::min(low, rmsRange(slur, from, from + 480) / held);
+        }
+        double stepJoin = 0, stepHeld = 0;
+        for (size_t i = slurAt - 4800; i < size_t(slurAt + 480); ++i) {
+            const double d = std::fabs(double(slur[i]) - 2.0 * slur[i - 1] + slur[i - 2]);
+            (i < size_t(slurAt - 480) ? stepHeld : stepJoin) = std::max(i < size_t(slurAt - 480) ? stepHeld : stepJoin, d);
+        }
+        std::snprintf(buf, sizeof(buf), "lowest 10 ms %.2f of the held note, join corner %.2fx", low,
+                      stepJoin / std::max(stepHeld, 1e-12));
+        ok(low > 0.85 && stepJoin < stepHeld * 2.0, "Brazen: a slur does not dip or click", buf);
+    }
+
+    // Flutter: the air chopped at its rate, so the level moves at that rate,
+    // and smoothly.
+    const auto steady = with({{"flutterrate", 25.0f}});
+    auto withFlutter = steady;
+    withFlutter.push_back({"flutter", 0.6f});
+    const auto still = brazenSlur(steady, -1, 62);
+    const auto fluttered = brazenSlur(withFlutter, -1, 62);
+    // The level's movement at 25 Hz over the held note, against its mean,
+    // from 5 ms block levels.
+    auto wobble = [](const std::vector<float> &v) {
+        const size_t hop = 240, from = 9600;
+        double re = 0, im = 0, mean = 0;
+        for (size_t s = from; s + hop <= v.size(); s += hop) {
+            const double lv = rmsRange(v, s, s + hop), t = double(s) / kRate;
+            re += lv * std::cos(2 * M_PI * 25.0 * t);
+            im += lv * std::sin(2 * M_PI * 25.0 * t);
+            mean += lv;
+        }
+        return mean > 0 ? 2.0 * std::sqrt(re * re + im * im) / mean : 0.0;
+    };
+    const double wStill = wobble(still), wFlutter = wobble(fluttered);
+    std::snprintf(buf, sizeof(buf), "25 Hz movement %.3f against %.3f", wFlutter, wStill);
+    ok(wFlutter > 0.15 && wFlutter > wStill * 4, "Brazen: flutter moves the sound", buf);
+    std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f, block edge %.3f against %.3f",
+                  largestStep(fluttered), largestStep(still), blockEdge(fluttered, 2400, 30000),
+                  blockEdge(still, 2400, 30000));
+    ok(largestStep(fluttered) <= largestStep(still) * 1.05 &&
+           blockEdge(fluttered, 2400, 30000) <= std::max(1.4, blockEdge(still, 2400, 30000) * 1.1),
+       "Brazen: flutter has no steps in it", buf);
+}
+
 } // namespace
 
 int main() {
@@ -821,6 +1139,12 @@ int main() {
     // Timber's volume is Filament's, 0 to 1.5 from 0.8.
     basics("Timber", Tm::MacroDestCount, Tm::McVolume, Tm::McPitch, Tm::McOff, Tm::kMacros, 0.05 / 0.8, 0.425 / 0.8);
     timberRoutes();
+    timberPlaying();
+    gNote = 57;
+    using Bz = acidulous::machine::Brazen;
+    // Brazen's volume is Timber's, 0 to 1.5 from 0.8.
+    basics("Brazen", Bz::MacroDestCount, Bz::McVolume, Bz::McPitch, Bz::McOff, Bz::kMacros, 0.05 / 0.8, 0.425 / 0.8);
+    brazenRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

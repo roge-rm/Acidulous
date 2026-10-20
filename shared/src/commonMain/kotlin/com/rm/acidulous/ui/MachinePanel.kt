@@ -251,7 +251,7 @@ fun MachinePanel(
             "Cumulus" -> CumulusPanel(binding, track, trackIndex, editor)
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding, track, trackIndex, editor)
-            "Brazen" -> BrazenPanel(binding)
+            "Brazen" -> BrazenPanel(binding, track, trackIndex, editor)
             "Hammer" -> HammerPanel(binding)
             "Tongue" -> TonguePanel(binding, editor)
             "Draw" -> DrawPanel(binding)
@@ -4157,12 +4157,52 @@ private fun FilamentPanel(b: ParamBinding, track: Track, trackIndex: Int, editor
 
 private val BRAZEN_MUTES = listOf("open", "straight", "cup", "harmon")
 
+/** Where a Brazen macro route goes, in the engine's MacroDest order. */
+val BRAZEN_MACRO_DESTS = listOf(
+    "off", "size", "bell~brass", "loss", "mute tone",
+    "tension", "damping", "pressure", "breath", "bite", "brassiness",
+    "growl", "growl rate",
+    "spread", "scatter", "lock", "drift", "width",
+    "attack", "decay", "sustain", "release",
+    "vib depth", "vib rate", "vib delay",
+    "cutoff", "reso", "glide", "velocity",
+    "drive", "volume", "pan", "slide",
+    "swell", "swell time", "flutter", "flutter rate",
+    "pitch",
+)
+
 @Composable
-private fun BrazenPanel(b: ParamBinding) {
+private fun BrazenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("horn", "player", "section", "shape", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "horn", "player", "section", "shape", "out", "macros"),
+        section, { section = it },
+    ) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            6 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", BRAZEN_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", BRAZEN_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", BRAZEN_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", BRAZEN_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("tube") {
                     PanelKnob(b, "size", "tuba→trpt", PanelAmber)
                     PanelKnob(b, "bell", "bell~brass", PanelAmber)
@@ -4178,7 +4218,7 @@ private fun BrazenPanel(b: ParamBinding) {
                     PanelStepKnob(b, "filtertype", CUMULUS_FILTERS, "type")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("lips") {
                     PanelKnob(b, "tension", "tension", PanelAmber)
                     PanelKnob(b, "lipdamp", "damping", PanelAmber)
@@ -4194,8 +4234,16 @@ private fun BrazenPanel(b: ParamBinding) {
                     PanelKnob(b, "growl", "growl", PanelPink)
                     PanelKnob(b, "growlrate", "rate")
                 }
+                Group("swell") {
+                    PanelKnob(b, "swell", "amount", PanelAmber)
+                    PanelKnob(b, "swelltime", "time")
+                }
+                Group("flutter") {
+                    PanelKnob(b, "flutter", "amount", PanelPink)
+                    PanelKnob(b, "flutterrate", "rate")
+                }
             }
-            2 -> {
+            3 -> {
                 Group("players") {
                     PanelStepKnob(b, "players", listOf("1", "2", "3", "4"), "how many", PanelAmber)
                     PanelKnob(b, "spread", "spread", PanelAmber)
@@ -4207,7 +4255,7 @@ private fun BrazenPanel(b: ParamBinding) {
                     PanelKnob(b, "drift", "drift", PanelPink)
                 }
             }
-            3 -> {
+            4 -> {
                 Group("envelope") {
                     PanelKnob(b, "attack", "attack"); PanelKnob(b, "decay", "decay")
                     PanelKnob(b, "sustain", "sustain"); PanelKnob(b, "release", "release")
@@ -4236,6 +4284,14 @@ private fun BrazenPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Hammer -----------------------------------------------------------------

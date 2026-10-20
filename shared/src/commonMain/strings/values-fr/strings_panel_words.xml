@@ -1422,4 +1422,7 @@
     <string name="pw_odd_family">insolite</string>
     <string name="pw_arp_19ddb1">arpège</string>
     <string name="pw_found">objets</string>
+    <string name="pw_growl_rate">vitesse grogne</string>
+    <string name="pw_horn_family">cor</string>
+    <string name="pw_mute_tone">ton sourdine</string>
 </resources>
