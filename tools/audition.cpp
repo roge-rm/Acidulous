@@ -230,15 +230,26 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             bottom = range.high - range.low >= kSpan ? std::clamp(note - 10, range.low, range.high - kSpan)
                                                      : range.low;
         }
-        // If the range is narrower than the tune, the steps above it play the
-        // highest step that fits, so the top of the tune flattens out rather
-        // than dropping an octave, which sounds like a fault in the patch.
-        int top = 0;
+        // If the range is narrower than the tune, the answer (the steps
+        // over the octave) is sung lower in the same scale, as many scale
+        // degrees down as it takes to fit, so every note stays a real note
+        // of the tune's own key. Under an octave, steps that don't fit play
+        // an octave lower.
+        static const int kDegree[] = {0, 3, 5, 7, 10, 12, 15, 17, 19};
+        const int width = range.set() ? range.high - bottom : kSpan;
+        int drop = 0;
+        while (drop < 3 && kDegree[8 - drop] > width) ++drop;
+        auto place = [&](int step) {
+            if (width >= kSpan) return step;
+            if (width >= 12) {
+                int d = 0;
+                while (kDegree[d] != step) ++d;
+                return d >= 6 ? kDegree[d - drop] : step;
+            }
+            return step > width ? std::max(0, step - 12) : step;
+        };
         for (const Step &st : kTune) {
-            if (!range.set() || bottom + st.step <= range.high) top = std::max(top, st.step);
-        }
-        for (const Step &st : kTune) {
-            const int n = bottom + std::min(st.step, top);
+            const int n = bottom + place(st.step);
             p.lastOff = std::max(p.lastOff, hit(p, beat * st.at, beat * st.len, n, st.vel));
         }
         p.frames = p.lastOff + secondsToFrames(2.5f);
