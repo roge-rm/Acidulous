@@ -236,10 +236,28 @@ constexpr int32_t kFadeFrames = 96;
 
 void Timber::noteOn(uint8_t note, uint8_t velocity) {
     updateMacros(true); // a note reads where the knobs are going, so renders repeat
-    const bool mono = steppedTargetOf(Mono) != 0;
-    Voice *vp = mono ? &voices[0] : allocate();
+    // Mono slurs onto the note that is held, or takes the place of one
+    // waiting to start. A note played after the last one let go is tongued
+    // on a voice of its own, so the old tail rings out instead of being cut.
+    Voice *vp = nullptr;
+    if (steppedTargetOf(Mono) != 0) {
+        for (auto &w : voices) {
+            if (w.used && (w.gate || w.pendingNote >= 0)) { vp = &w; break; }
+        }
+    }
+    if (vp == nullptr) vp = allocate();
     if (vp == nullptr) return;
     Voice &v = *vp;
+
+    if (v.pendingNote >= 0) {
+        // Already fading out for a waiting note. This one takes its place,
+        // and the fade goes on where it is, since starting it again would
+        // step the old note back up.
+        v.pendingNote = note;
+        v.pendingVel = velocity;
+        v.pendingOff = false;
+        return;
+    }
 
     const float glide = goalOf(Glide);
     // A slurred note arrives without the tongue and without restarting the

@@ -2371,8 +2371,10 @@ patch Forked family=odd  note=62 range=52..74
   mac8_a2  0.15
   # 0.4675, seeded from what shipped, is past the point where the fork
   # stops being a colour and becomes a note the tube cannot hold: it read
-  # -4137 cents, which is no pitch at all. It plays at 0.32.
-  answer         0.32
+  # -4137 cents, which is no pitch at all. At 0.28 and up, note 55 speaks
+  # an octave up or 50 cents flat on some breath noise and not others; 0.25
+  # held on twelve noise seeds.
+  answer         0.25
   attack         0.04 s
   below          1.74
   bore           #1
