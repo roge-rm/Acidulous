@@ -32,10 +32,12 @@ data class Patch(
      */
     val family: String = "",
     /**
-     * 2 from 0.9.12, when the LFOs' rates grew from eight to seventeen, and 3
-     * when the wavetables grew to 32. Not written for a default, so a patch
-     * saved before 0.9.12 reads as 1, and an older one is moved onto both
-     * ([RateMigration], [TableMigration]).
+     * 2 from 0.9.12, when the LFOs' rates grew from eight to seventeen, 3
+     * when the wavetables grew to 32, 4 when Trinity's destinations grew to
+     * 37 and 5 when Filament's sympathetic bank got louder. Not written for a
+     * default, so a patch saved before 0.9.12 reads as 1, and an older one is
+     * moved onto all of them ([RateMigration], [TableMigration],
+     * [FilamentMigration]).
      */
     val version: Int = 1,
     /**

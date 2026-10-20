@@ -107,7 +107,7 @@ const int kCallCount = sizeof kCalls / sizeof kCalls[0];
 } // namespace acidulous::lines
 
 int main() {
-    const std::string text = R"(acidulous-engine 3
+    const std::string text = R"(acidulous-engine 4
 # comment
 Str "a \"q\" \\ \n\t\x01\x00z"
 Str null
@@ -180,7 +180,7 @@ F 1 2 3 4 5
     Replay other;
     other.env = &env;
     other.log = [](const std::string &) {};
-    check(!acidulous::lines::replay("acidulous-engine 4\nStr \"x\"\n", other), "another version is refused");
+    check(!acidulous::lines::replay("acidulous-engine 5\nStr \"x\"\n", other), "another version is refused");
     Replay two;
     two.env = &env;
     two.log = [](const std::string &) {};
@@ -229,6 +229,47 @@ F 1 2 3 4 5
         check(v2.upgradeLine(wave) == wave, "a version 2 wave is left alone");
         const std::string depth = "SetParam 2 \"machine\" \"mac3_a1\" 0.6 false 0";
         check(v2.upgradeLine(depth) == depth, "a depth is left alone");
+    }
+    // Versions 1 to 3: Filament's sympathetic level was for a bank at 0.2 of
+    // today's 3, and it scales both the feed and the output.
+    {
+        const double k = std::sqrt(0.2 / 3.0);
+        Replay v3;
+        v3.version = 3;
+        check(v3.upgradeLine("MountMachine 4 \"Filament\"") ==
+                  "MountMachine 4 \"Filament\"\nSetParam 4 \"machine\" \"symlevel\" " + f9(0.35 * k) + " false 0",
+              "a version 3 Filament gets its old default level");
+        check(v3.upgradeLine("SetParam 4 \"machine\" \"symlevel\" 0.7 false 0") ==
+                  "SetParam 4 \"machine\" \"symlevel\" " + f9(0.7 * k) + " false 0", "a version 3 level is scaled");
+        // A depth set before its slot is aimed at the bank is set again once it is.
+        const std::string amt = "SetParam 4 \"machine\" \"m2_amt\" 0.9 false 0";
+        check(v3.upgradeLine(amt) == amt, "a depth aimed elsewhere is left alone");
+        const std::string dst = "SetParam 4 \"machine\" \"m2_dst\" " + f9(12.0 / 17.0) + " false 0";
+        check(v3.upgradeLine(dst) == dst + "\nSetParam 4 \"machine\" \"m2_amt\" " + f9((0.8 * k + 1.0) / 2.0) + " false 0",
+              "aiming a slot at the bank scales its depth");
+        check(v3.upgradeLine("SetParam 4 \"machine\" \"m2_amt\" 0.25 false 0") ==
+                  "SetParam 4 \"machine\" \"m2_amt\" " + f9((-0.5 * k + 1.0) / 2.0) + " false 0",
+              "a depth aimed at the bank is scaled");
+        check(v3.upgradeLine("SnapshotSetLane @0 4 1 \"Filament\" \"machine\" \"m2_amt\" false f[2: 0.0 1.0]") ==
+                  "SnapshotSetLane @0 4 1 \"Filament\" \"machine\" \"m2_amt\" false f[2: 0.0 " + f9((k + 1.0) / 2.0) + "]",
+              "a depth lane aimed at the bank is scaled");
+        check(v3.upgradeLine("SnapshotSetLane @0 4 1 \"Filament\" \"machine\" \"symlevel\" false f[4: 0.0 0.5 96.0 -1.0]") ==
+                  "SnapshotSetLane @0 4 1 \"Filament\" \"machine\" \"symlevel\" false f[4: 0.0 " + f9(0.5 * k) + " 96.0 -1.0]",
+              "a level lane is scaled");
+        check(v3.upgradeLine("SetParam 4 \"machine\" \"m2_dst\" 0.0 false 0") ==
+                  "SetParam 4 \"machine\" \"m2_dst\" 0.0 false 0\nSetParam 4 \"machine\" \"m2_amt\" 0.25 false 0",
+              "aiming a slot away from the bank puts its depth back");
+        const std::string mac = "SetParam 4 \"machine\" \"mac1_a1\" 0.9 false 0";
+        check(v3.upgradeLine(mac) == mac, "a macro route is left alone");
+        v3.upgradeLine("MountMachine 2 \"Trinity\"");
+        const std::string dest = "SetParam 2 \"machine\" \"mac3_d1\" 0.5 false 0";
+        check(v3.upgradeLine(dest) == dest, "a version 3 Trinity destination is left alone");
+        // Replayed, the added lines are calls of their own.
+        Replay whole;
+        whole.env = &env;
+        whole.log = [](const std::string &) {};
+        acidulous::lines::replay("acidulous-engine 3\nMountMachine 4 \"Filament\"\n", whole);
+        check(whole.version == 3 && whole.calls + whole.skipped == 2, "an added line is replayed");
     }
     u.upgradeLine("UnmountMachine 2");
     check(u.upgradeLine("SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0") == "SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0",

@@ -103,7 +103,8 @@ internal object TableMigration {
         if (moved == t) t else refreshFreezes(song, t, moved)
     })
 
-    private fun refreshFreezes(song: Song, before: Track, after: Track): Track {
+    /** [after]'s frozen clips still marked as matching, if they matched [before]. */
+    internal fun refreshFreezes(song: Song, before: Track, after: Track): Track {
         val voiceBefore = Freeze.voiceOf(before)
         val voiceAfter = Freeze.voiceOf(after)
         return after.copy(clips = after.clips.mapValues { (id, clip) ->

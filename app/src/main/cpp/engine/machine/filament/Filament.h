@@ -31,7 +31,7 @@ class Filament final : public Machine {
   public:
     static constexpr int kVoices = 8;
     static constexpr int kSympathetic = 6;
-    static constexpr int kBodyModes = 4;
+    static constexpr int kBodyModes = 6; // per side
     static constexpr int kMatrixSlots = 8;
     static constexpr int kMatrixParams = 3;
 
@@ -127,6 +127,10 @@ class Filament final : public Machine {
         uint8_t note = 0;
         float velocity = 1.0f, key01 = 0.5f;
         float freq = 220.0f, target = 220.0f;
+        /** Where a glide started and how far along it is (1 when done). */
+        float glideFrom = 220.0f, glidePos = 1.0f;
+        /** The sample clock at the glide's last step, so it moves by the samples gone. */
+        int64_t glideAt = 0;
         /** What the string was last tuned to, kept for the pick comb below. */
         float freqNow = 220.0f;
         Waveguide a, b;          // a course: two strings, slightly apart
@@ -158,6 +162,14 @@ class Filament final : public Machine {
         // at the last string update.
         float vibPhase = 0.0f;
         int64_t vibStart = 0, vibAt = 0;
+        /**
+         * What this string's sound is scaled by on its way into the body, so
+         * its note comes out about as loud wherever it falls against the
+         * body's resonances. [bodyGoal] is worked out for [bodyHzAt] and the
+         * body as it was at [bodyGenAt]; [bodyG] follows it.
+         */
+        float bodyG = 1.0f, bodyGoal = 1.0f, bodyHzAt = -1.0f;
+        int32_t bodyGenAt = -1;
     };
 
     /** Param [p], smoothed, with the macros' routes to it added. */
@@ -172,6 +184,18 @@ class Filament final : public Machine {
     float sourceValue(int32_t src, const Voice &v) const;
     void applyMatrix(const Voice &v, float *dest);
     void retuneSympathetic(float rootHz);
+    /** Mono and legato: moves voice 0 to [note] without exciting it, gliding if glide is on. */
+    void moveTo(uint8_t note);
+    /** Points [v] at [note], from where it sounds now if glide is on and it's sounding. */
+    void aim(Voice &v, uint8_t note);
+
+    /**
+     * Mono and legato: the keys held, oldest first, so letting go of the
+     * newest goes back to the one before. A key held twice is in twice.
+     */
+    static constexpr int kHeld = 16;
+    uint8_t keys[kHeld] = {};
+    int32_t heldCount = 0;
 
     float sampleRate = 48000.0f;
     Voice voices[kVoices];
@@ -180,7 +204,20 @@ class Filament final : public Machine {
     float lastRoot = 0.0f;
     int32_t lastTuning = -1;
 
-    dsp::Biquad body[kBodyModes];
+    /** The body's resonances, left and right a little apart. */
+    dsp::Biquad body[2][kBodyModes];
+    float bodySizeAt = -1.0f, bodyDampAt = -1.0f, bodyWet = 1.0f;
+    float bodyMixAt = 0.0f, bodyDryGain = 1.0f, bodyWetGain = 0.0f;
+    /** Counts changes to the body's resonances, so each voice knows to work out its gain again. */
+    int32_t bodyGen = 0;
+    /** The body's resonances in Hz, each side, and their Q, as last set. */
+    float bodyHz[2][kBodyModes] = {};
+    float bodyQ = 1.0f;
+    /**
+     * How much the body passes of a string at [hz], its direct share
+     * included: an rms over its first harmonics, weighted as a string's fall.
+     */
+    float bodyLevelAt(float hz) const;
     dsp::Adsr eg[2];
     dsp::LfoGen lfo[2];
     float lfoValue[2] = {0.0f, 0.0f};

@@ -704,7 +704,11 @@ data class Master(
 
 @Serializable
 data class Song(
-    /** 2 from 0.9.12: the LFOs' seventeen rates ([RateMigration]). 3: the 32 wavetables ([TableMigration]). */
+    /**
+     * 2 from 0.9.12: the LFOs' seventeen rates ([RateMigration]). 3: the 32
+     * wavetables, 4: Trinity's 37 destinations ([TableMigration]). 5:
+     * Filament's louder sympathetic bank ([FilamentMigration]).
+     */
     val version: Int = RateMigration.SONG_VERSION,
     val name: String,
     val tempo: Float = 120f,

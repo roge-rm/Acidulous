@@ -12,11 +12,12 @@ import kotlin.math.roundToInt
 internal object RateMigration {
     /**
      * The song and patch versions saved today: 2 has the seventeen rates, 3
-     * the 32 wavetables and 4 Trinity's 37 destinations ([TableMigration]).
-     * [song] and [patch] bring an older one up through all of them.
+     * the 32 wavetables, 4 Trinity's 37 destinations ([TableMigration]) and
+     * 5 Filament's louder sympathetic bank ([FilamentMigration]). [song] and
+     * [patch] bring an older one up through all of them.
      */
-    const val SONG_VERSION = 4
-    const val PATCH_VERSION = 4
+    const val SONG_VERSION = 5
+    const val PATCH_VERSION = 5
     /** The first song and patch version with the seventeen. */
     private const val RATES_VERSION = 2
 
@@ -58,11 +59,11 @@ internal object RateMigration {
     private fun lane(convert: (Float) -> Float, lane: Lane): Lane =
         lane.copy(points = lane.points.map { if (it.value == LANE_BASE) it else it.copy(value = convert(it.value)) })
 
-    /** [song] on today's rates, wavetables and destinations, if it was saved before them. */
+    /** [song] on today's rates, wavetables, destinations and levels, if it was saved before them. */
     fun song(song: Song): Song {
         if (song.version >= SONG_VERSION) return song
         val rated = if (song.version >= RATES_VERSION) song else rates(song)
-        return TableMigration.song(rated).copy(version = SONG_VERSION)
+        return FilamentMigration.song(TableMigration.song(rated)).copy(version = SONG_VERSION)
     }
 
     private fun rates(song: Song): Song {
@@ -97,11 +98,11 @@ internal object RateMigration {
         return song.copy(master = master, input = input, tracks = tracks)
     }
 
-    /** A patch saved before today's rates, wavetables and destinations, on them. */
+    /** A patch saved before today's rates, wavetables, destinations and levels, on them. */
     fun patch(patch: Patch): Patch {
         if (patch.version >= PATCH_VERSION) return patch
         val rated = if (patch.version >= RATES_VERSION) patch
         else patch.copy(params = params(patch.machine.removePrefix("fx."), patch.params))
-        return TableMigration.patch(rated).copy(version = PATCH_VERSION)
+        return FilamentMigration.patch(TableMigration.patch(rated)).copy(version = PATCH_VERSION)
     }
 }

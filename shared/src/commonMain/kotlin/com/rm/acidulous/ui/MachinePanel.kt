@@ -4087,6 +4087,7 @@ private fun FilamentPanel(b: ParamBinding, track: Track, trackIndex: Int, editor
                     PanelKnob(b, "bodydamp", "damp")
                 }
                 Group("tuning") {
+                    PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
                     PanelKnob(b, "glide", "glide")
                     PanelKnob(b, "bend", "bend")
                     PanelKnob(b, "mpetimbre", "slide")

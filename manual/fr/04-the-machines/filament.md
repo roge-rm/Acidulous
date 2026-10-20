@@ -26,9 +26,10 @@ corde avec un micro.
 
 ## La caisse
 
-Quatre résonances tiennent lieu de caisse de l’instrument. **taille** les
-déplace, **amortir** les élargit et **mélange** règle combien vous les
-entendez. Il y a aussi des **cordes** sympathiques, sous **sympathie**, qui
+Six résonances tiennent lieu de caisse de l’instrument, de l’air dans la
+caisse jusqu’à ses tables. **taille** les déplace, d’une grande caisse à une
+petite, **amortir** les élargit et **mélange** passe de la corde seule à la
+corde entendue à travers la caisse. Il y a aussi des **cordes** sympathiques, sous **sympathie**, qui
 résonnent avec ce que vous jouez.
 
 ## Modulation
@@ -52,6 +53,16 @@ Le groupe **vibrato** de la page **mod** donne à chaque note son propre
 vibrato. **prof.** est en cents et est coupé à zéro, **vitesse** règle sa
 rapidité et **délai** le temps qu’il met à arriver après le début de la note,
 alors une note tenue peut commencer droite et s’épanouir.
+
+## Une corde à la fois
+
+**mode**, dans le groupe **accordage**, joue chaque note sur sa propre corde
+(**poly**) ou tout sur une seule corde (**mono**). **leg** est mono, mais une
+note jouée pendant qu’une autre est tenue change la hauteur de la corde qui
+sonne sans la pincer, la frapper ni l’archer de nouveau, comme un hammer-on ou
+un glissé. Dans les deux, relâcher une note pendant qu’une note précédente
+est encore tenue revient à celle-ci sans rejouer la corde. **porta.** est le
+temps que met la corde à rejoindre une nouvelle note en mono et en leg.
 
 ## Macros
 

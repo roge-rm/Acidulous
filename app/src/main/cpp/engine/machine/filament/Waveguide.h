@@ -48,7 +48,7 @@ class Waveguide {
     void setFrequency(float hz) {
         const float d = clampf(sr / clampf(hz, 18.0f, 8000.0f), 2.0f,
                                static_cast<float>(buffer.size() - 2));
-        if (d == baseDelay) return;
+        if (d == baseDelay && solved) return;
         baseDelay = d;
         refreshDispersion();
         refreshLoop();
@@ -267,7 +267,9 @@ class Waveguide {
         const float dcMag = std::sqrt((1.0f - cw) * (1.0f - cw) + sw * sw) /
                             std::sqrt((1.0f - dcPole * cw) * (1.0f - dcPole * cw) +
                                       (dcPole * sw) * (dcPole * sw));
-        const float frac = d - std::floor(d);
+        // The delay the line will really read, after the clamp on loopTrim.
+        const float read0 = clampf(baseDelay - loopTrim, 2.0f, static_cast<float>(buffer.size() - 2));
+        const float frac = read0 - std::floor(read0);
         const float ir = 1.0f - frac + frac * cw, ii = -frac * sw;
         const float interp = std::sqrt(ir * ir + ii * ii);
         loopKeeps = clampf(toneMag * dcMag * interp, 0.05f, 1.05f);
@@ -276,6 +278,7 @@ class Waveguide {
         // sin(0.9w) >= 0.9 sin(w). See refreshCap.
         noteX = sw * sw / (1.0f + cw);
         secondX = 1.62f * sw * sw;
+        solved = true;
         refreshCap();
         effGain = feedback();
     }
@@ -322,7 +325,10 @@ class Waveguide {
         const float peak = k > 0.0f ? std::fmin(2.0f, (std::sqrt(b * b * C * C + k * C) - b * C) / k) : 2.0f;
         float most = keeps2(peak);
         if (damperPressure <= 0.0f && baseDelay > 4.0f) {
-            if (peak > noteX) most = std::fmax(keeps2(noteX), keeps2(clampf(peak, secondX, 2.0f)));
+            // Tension raises the note by up to 2 %, which moves x up by about
+            // twice that, so the note is checked where it can climb to.
+            const float noteHigh = std::fmin(noteX * (1.0f + 0.04f * tension), peak);
+            if (peak > noteX) most = std::fmax(keeps2(noteHigh), keeps2(clampf(peak, secondX, 2.0f)));
         }
         feedbackCap = kUnderUnity / std::sqrt(std::fmax(most, 1e-6f));
     }
@@ -360,6 +366,9 @@ class Waveguide {
     // second partial sit as 1 - cos(w).
     float loopKeeps = 1.0f, feedbackCap = 1.05f, effGain = 0.995f, loopFrac = 0.0f;
     float noteX = 0.0f, secondX = 0.0f;
+    // Whether refreshLoop has run, so the first setFrequency solves the loop
+    // even when it asks for the default baseDelay.
+    bool solved = false;
     static constexpr float kUnderUnity = 0.9999f;
     float tension = 0.0f;
     float damperPos = 0.5f;

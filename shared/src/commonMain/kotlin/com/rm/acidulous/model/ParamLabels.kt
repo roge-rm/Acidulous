@@ -715,6 +715,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Filament:vibdelay" to "vibrato|delay",
     "Filament:vibdepth" to "vibrato|depth",
     "Filament:vibrate" to "vibrato|rate",
+    "Filament:voicemode" to "tuning|mode",
     "Filament:volume" to "out|volume",
     "Forage:accent" to "play|accent",
     "Forage:p00_choke" to "pad 1|amp|choke",
@@ -818,10 +819,10 @@ private fun labels0(): Map<String, String> = mapOf(
     "Forage:p06_pdecay" to "pad 7|punch|decay",
     "Forage:p06_penv" to "pad 7|punch|pitch env",
     "Forage:p06_pitch" to "pad 7|sample|pitch",
-    "Forage:p06_play" to "pad 7|sample|play",
 )
 
 private fun labels1(): Map<String, String> = mapOf(
+    "Forage:p06_play" to "pad 7|sample|play",
     "Forage:p06_reso" to "pad 7|tone|reso",
     "Forage:p06_reverse" to "pad 7|sample|reverse",
     "Forage:p06_start" to "pad 7|sample|start",
@@ -1621,10 +1622,10 @@ private fun labels1(): Map<String, String> = mapOf(
     "Palm:spread" to "hands|spread",
     "Palm:squeeze" to "head|squeeze",
     "Palm:stroke" to "hand|stroke",
-    "Palm:tune" to "instrument|tune",
 )
 
 private fun labels2(): Map<String, String> = mapOf(
+    "Palm:tune" to "instrument|tune",
     "Palm:velocity" to "play|velocity",
     "Palm:voices" to "play|voices",
     "Palm:volume" to "out|volume",
@@ -2424,10 +2425,10 @@ private fun labels2(): Map<String, String> = mapOf(
     "Trinity:mac1" to "play|macro 1",
     "Trinity:mac1_a1" to "macro 1|by 1",
     "Trinity:mac1_a2" to "macro 1|by 2",
-    "Trinity:mac1_a3" to "macro 1|by 3",
 )
 
 private fun labels3(): Map<String, String> = mapOf(
+    "Trinity:mac1_a3" to "macro 1|by 3",
     "Trinity:mac1_a4" to "macro 1|by 4",
     "Trinity:mac1_d1" to "macro 1|to 1",
     "Trinity:mac1_d2" to "macro 1|to 2",
@@ -3213,6 +3214,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Filament:vibdelay" to "delay",
     "Filament:vibdepth" to "depth",
     "Filament:vibrate" to "rate",
+    "Filament:voicemode" to "mode",
     "Filament:volume" to "volume",
     "Forage:accent" to "accent",
     "Forage:p00_choke" to "choke",
@@ -3351,10 +3353,10 @@ private fun short0(): Map<String, String> = mapOf(
     "Forage:p08_reverse" to "reverse",
     "Forage:p08_start" to "start",
     "Forage:p09_choke" to "choke",
-    "Forage:p09_crush" to "crush",
 )
 
 private fun short1(): Map<String, String> = mapOf(
+    "Forage:p09_crush" to "crush",
     "Forage:p09_cutoff" to "cutoff",
     "Forage:p09_decay" to "decay",
     "Forage:p09_end" to "end",
@@ -4154,10 +4156,10 @@ private fun short1(): Map<String, String> = mapOf(
     "Pollen:snap" to "onset snap",
     "Pollen:source" to "read from",
     "Pollen:spray" to "spray",
-    "Pollen:spread" to "amount",
 )
 
 private fun short2(): Map<String, String> = mapOf(
+    "Pollen:spread" to "amount",
     "Pollen:transpose" to "semis",
     "Pollen:velocity" to "velocity",
     "Pollen:volume" to "volume",
@@ -4957,10 +4959,10 @@ private fun short2(): Map<String, String> = mapOf(
     "Trinity:mac7" to "macro 7",
     "Trinity:mac7_a1" to "by 1",
     "Trinity:mac7_a2" to "by 2",
-    "Trinity:mac7_a3" to "by 3",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Trinity:mac7_a3" to "by 3",
     "Trinity:mac7_a4" to "by 4",
     "Trinity:mac7_d1" to "to 1",
     "Trinity:mac7_d2" to "to 2",
