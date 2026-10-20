@@ -27,4 +27,19 @@ class MacroNamesTest {
             laneShortLabel(m, laneKey("machine", "macro1")).takeIf { it == "x" }
         })
     }
+
+    @Test
+    fun filamentMacrosTakeThePatchNames() {
+        val t = track("Filament", mapOf("macro1" to "Bow Harder"))
+        assertEquals("Bow Harder", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        // The vibrato's lanes take the panel's words.
+        assertEquals("depth", laneShortLabel(t, laneKey("machine", "vibdepth")))
+    }
+
+    @Test
+    fun filamentBankHasItsFamiliesInOrder() {
+        val families = FactoryBanks.of("Filament").map { it.family }.distinct()
+        assertEquals(listOf("plucked", "picked", "struck", "bowed", "blown", "sympathetic", "prepared"), families)
+    }
 }

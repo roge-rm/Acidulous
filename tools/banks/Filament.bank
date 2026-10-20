@@ -142,6 +142,12 @@
 # is not. And `edge` says a plucked string is twenty times brighter at its
 # attack than in its tail, which is true and is not a click.
 #
+# Families in tab order: plucked (Init first), picked, struck, bowed, blown,
+# sympathetic, prepared. Nylon, Bowed and Blown carry eight named macros;
+# Bowed and Blown have a gentle vibrato that fades in after the note starts.
+# Macro destinations are numbered as in Filament.h's MacroDest, so #8 is
+# sustain, #47 vibrato depth and #49 pitch.
+#
 # Values are in each parameter's own units; `audition params Filament` lists
 # them. A patch names only what it changes.
 
@@ -154,6 +160,54 @@ role    tune
 patch Init family=plucked
 
 patch Nylon family=plucked  note=52 range=40..76
+  set macro1 "Bridge"
+  set macro2 "Brighter"
+  set macro3 "Ring"
+  set macro4 "Mute"
+  set macro5 "Body"
+  set macro6 "Chorus"
+  set macro7 "Vibrato"
+  set macro8 "Buzz"
+  mac1_d1  #1
+  mac1_a1  -0.4
+  mac1_d2  #10
+  mac1_a2  0.2
+  mac1_d3  #5
+  mac1_a3  0.2
+  mac2_d1  #10
+  mac2_a1  0.4
+  mac2_d2  #5
+  mac2_a2  0.3
+  mac3_d1  #8
+  mac3_a1  0.2
+  mac3_d2  #9
+  mac3_a2  -0.3
+  mac4_d1  #15
+  mac4_a1  0.25
+  mac4_d2  #8
+  mac4_a2  -0.35
+  mac4_d3  #10
+  mac4_a3  -0.1
+  mac5_d1  #24
+  mac5_a1  0.4
+  mac5_d2  #23
+  mac5_a2  0.3
+  mac5_d3  #25
+  mac5_a3  -0.3
+  mac6_d1  #18
+  mac6_a1  0.2
+  mac6_d2  #20
+  mac6_a2  0.3
+  mac6_d3  #19
+  mac6_a3  0.4
+  mac7_d1  #47
+  mac7_a1  0.2
+  mac8_d1  #16
+  mac8_a1  0.4
+  mac8_d2  #17
+  mac8_a2  -0.15
+  mac8_d3  #26
+  mac8_a3  0.2
   bodymix        0.45
   couple         0.3
   detune         5 c
@@ -168,7 +222,7 @@ patch Nylon family=plucked  note=52 range=40..76
   tone           0.4
   volume         1.00
 
-patch Steel family=plucked  note=52 range=40..79
+patch Steel family=picked  note=52 range=40..79
   bodymix        0.4
   couple         0.4
   detune         6 c
@@ -183,6 +237,20 @@ patch Steel family=plucked  note=52 range=40..79
   # thing in the note. A steel string is bright and still has a fundamental.
   tone           0.5
   volume         1.33
+
+patch Wire family=picked  note=64 range=52..88
+  couple         0.8
+  detune         30 c
+  drive          0.3
+  exciter        #1
+  position       0.044
+  rattle         0.3
+  stages         #4
+  stiffness      0.85
+  sustain        0.907
+  tension        0.8
+  tone           0.85
+  volume         0.86
 
 patch Hammered family=struck  note=60 range=36..84
   bodymix        0.3
@@ -201,7 +269,56 @@ patch Hammered family=struck  note=60 range=36..84
   tone           0.5
   volume         0.34
 
-patch Bowed family=sustained  note=55 range=36..76
+patch Bowed family=bowed  note=55 range=36..76
+  vibrate        5.2 Hz
+  vibdepth       12 c
+  vibdelay       0.45 s
+  set macro1 "Bow Harder"
+  set macro2 "Brighter"
+  set macro3 "Vibrato"
+  set macro4 "Sul Pont"
+  set macro5 "Body"
+  set macro6 "Ensemble"
+  set macro7 "Grit"
+  set macro8 "Darker"
+  mac1_d1  #3
+  mac1_a1  0.15
+  mac1_d2  #4
+  mac1_a2  0.15
+  mac2_d1  #10
+  mac2_a1  0.3
+  mac2_d2  #5
+  mac2_a2  0.2
+  mac3_d1  #47
+  mac3_a1  0.25
+  mac3_d2  #46
+  mac3_a2  0.1
+  mac4_d1  #10
+  mac4_a1  0.35
+  mac4_d2  #5
+  mac4_a2  0.4
+  mac4_d3  #4
+  mac4_a3  -0.1
+  mac5_d1  #24
+  mac5_a1  0.3
+  mac5_d2  #23
+  mac5_a2  0.3
+  mac5_d3  #25
+  mac5_a3  -0.2
+  mac6_d1  #18
+  mac6_a1  0.15
+  mac6_d2  #20
+  mac6_a2  0.3
+  mac6_d3  #19
+  mac6_a3  0.4
+  mac7_d1  #5
+  mac7_a1  0.5
+  mac7_d2  #3
+  mac7_a2  0.1
+  mac8_d1  #10
+  mac8_a1  -0.25
+  mac8_d2  #5
+  mac8_a2  -0.2
   bodymix        0.4
   exciter        #3
   grit           0.3
@@ -220,7 +337,41 @@ patch Bowed family=sustained  note=55 range=36..76
 # 48..82 rather than 84: at a kilohertz a string blown at rather than
 # struck is nine parts jet noise to one part note, and 84 measured 0.11 on
 # the harmonic series with the right pitch underneath it.
-patch Blown family=sustained  note=67 range=48..82
+
+patch Blown family=blown  note=67 range=48..82
+  vibrate        4.8 Hz
+  vibdepth       10 c
+  vibdelay       0.6 s
+  set macro1 "Blow Harder"
+  set macro2 "Breathy"
+  set macro3 "Vibrato"
+  set macro4 "Brighter"
+  set macro5 "Body"
+  set macro6 "Ring"
+  set macro7 "Stiff"
+  set macro8 "Flutter"
+  mac1_d1  #3
+  mac1_a1  0.3
+  mac2_d1  #5
+  mac2_a1  0.25
+  mac2_d2  #29
+  mac2_a2  0.1
+  mac3_d1  #47
+  mac3_a1  0.25
+  mac4_d1  #10
+  mac4_a1  0.3
+  mac5_d1  #24
+  mac5_a1  0.3
+  mac5_d2  #23
+  mac5_a2  -0.2
+  mac6_d1  #8
+  mac6_a1  0.25
+  mac7_d1  #12
+  mac7_a1  0.3
+  mac8_d1  #46
+  mac8_a1  0.25
+  mac8_d2  #47
+  mac8_a2  0.15
   bodymix        0.5
   exciter        #4
   grit           0.7
@@ -231,7 +382,7 @@ patch Blown family=sustained  note=67 range=48..82
   tone           0.3
   volume         0.53
 
-patch Sympathy family=prepared  note=60 range=45..81
+patch Sympathy family=sympathetic  note=60 range=45..81
   "on release"   #0
   symlevel       0.7
   sympathy       #1
@@ -271,17 +422,3 @@ patch "Spoken To" family=prepared  note=55 range=36..72
   symtune        #2
   tone           0.55
   volume         1.50
-
-patch Wire family=plucked  note=64 range=52..88
-  couple         0.8
-  detune         30 c
-  drive          0.3
-  exciter        #1
-  position       0.044
-  rattle         0.3
-  stages         #4
-  stiffness      0.85
-  sustain        0.907
-  tension        0.8
-  tone           0.85
-  volume         0.86

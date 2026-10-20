@@ -69,8 +69,37 @@ class Filament final : public Machine {
         // What MPE pressure does when the matrix doesn't use it: pushes the
         // bow or breath, brightens and raises the level.
         MpePressure,
-        Count
+        // A vibrato per voice: rate in Hz, depth in cents (0 is off) and the
+        // time it takes to fade in after the note starts. Not a matrix
+        // destination; the macros can reach it.
+        VibRate, VibDepth, VibDelay,
+        // Eight macro knobs, each with four routes: a destination (a
+        // MacroDest) and a depth. A macro's knob times a route's depth is
+        // added to the destination, in its own 0..1 range. Block rate. Pitch
+        // is 24 semitones per unit.
+        MacroBase,
+        MacroParams = 9, // knob, 4 destinations, 4 depths
+        Count = MacroBase + 8 * MacroParams
     };
+    // Where a macro route goes. Continuous params only: the exciter, stages,
+    // sympathy, symtune, body and voice mode switches are left out.
+    enum MacroDest : int32_t {
+        McOff, McPosition, McHardness, McPressure, McSpeed, McGrit, McLength, McInGain,
+        McSustain, McSustainKey, McTone, McToneKey, McStiffness, McTension,
+        McDamperAt, McDamper, McRattle, McRattleAt,
+        McDetune, McSpread, McCouple,
+        McSymLevel, McSymSustain,
+        McBodySize, McBodyMix, McBodyDamp,
+        McDrive, McVolume, McPan, McExciterOut, McDampTime,
+        McEg1A, McEg1D, McEg1S, McEg1R, McEg2A, McEg2D, McEg2S, McEg2R,
+        McLfo1Rate, McLfo1Depth, McLfo2Rate, McLfo2Depth,
+        McVelocity, McMpeTimbre, McMpePressure,
+        McVibRate, McVibDepth, McVibDelay,
+        McPitch,
+        MacroDestCount
+    };
+    static constexpr int kMacros = 8;
+    static_assert(Count <= kMaxParams, "Filament declares more parameters than a unit can hold");
     enum MatP { XSrc = 0, XDest, XDepth };
 
     Filament();
@@ -124,9 +153,20 @@ class Filament final : public Machine {
         // them, and until then the channel's values are used.
         float bend = 0.0f, pressure = -1.0f, timbre = -1.0f;
         float prsGlide = 0.0f; // see glidePressure
+        // The vibrato's phase (0..1), and the sample clock at the note-on and
+        // at the last string update.
+        float vibPhase = 0.0f;
+        int64_t vibStart = 0, vibAt = 0;
     };
 
-    float paramOf(int32_t p) const { return params_.get(p); }
+    /** Param [p], smoothed, with the macros' routes to it added. */
+    float paramOf(int32_t p) const { return val(p, false); }
+    /** Param [p]'s target with the macros' targets added, for note-on seeds. */
+    float goalOf(int32_t p) const { return val(p, true); }
+    float val(int32_t p, bool goal) const;
+    /** Fills [mac_] from the macro knobs, smoothed or (when [goal]) their targets. */
+    void updateMacros(bool goal = false);
+    float read(int32_t p, bool goal) const { return goal ? params_.target(p) : params_.get(p); }
     int32_t steppedOf(int32_t p) const;
     float sourceValue(int32_t src, const Voice &v) const;
     void applyMatrix(const Voice &v, float *dest);
@@ -159,6 +199,10 @@ class Filament final : public Machine {
     float bpm = 120.0f;
     static constexpr uint32_t kRngSeed = 0x51f3aa1u;
     uint32_t rngState = kRngSeed;
+
+    float mac_[MacroDestCount]{};
+    /** Samples rendered since the last reset, for the vibrato's timing. */
+    int64_t clock_ = 0;
 };
 
 } // namespace acidulous::machine

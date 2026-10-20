@@ -5110,49 +5110,52 @@ internal object FactoryBanks {
         family = "plucked")
 
     private fun filament1() = Patch("Filament", "Nylon",
-        mapOf("position" to 0.5416667f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 0.6666667f),
+        mapOf("position" to 0.5416667f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 0.6666667f, "mac1_d1" to 0.0204081628f, "mac1_d2" to 0.20408164f, "mac1_d3" to 0.10204082f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac1_a3" to 0.6f, "mac2_d1" to 0.20408164f, "mac2_d2" to 0.10204082f, "mac2_a1" to 0.7f, "mac2_a2" to 0.65f, "mac3_d1" to 0.1632653f, "mac3_d2" to 0.183673471f, "mac3_a1" to 0.6f, "mac3_a2" to 0.35f, "mac4_d1" to 0.306122452f, "mac4_d2" to 0.1632653f, "mac4_d3" to 0.20408164f, "mac4_a1" to 0.625f, "mac4_a2" to 0.325f, "mac4_a3" to 0.45f, "mac5_d1" to 0.489795923f, "mac5_d2" to 0.46938777f, "mac5_d3" to 0.5102041f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac5_a3" to 0.35f, "mac6_d1" to 0.367346942f, "mac6_d2" to 0.408163279f, "mac6_d3" to 0.3877551f, "mac6_a1" to 0.6f, "mac6_a2" to 0.65f, "mac6_a3" to 0.7f, "mac7_d1" to 0.9591837f, "mac7_a1" to 0.6f, "mac8_d1" to 0.3265306f, "mac8_d2" to 0.3469388f, "mac8_d3" to 0.53061223f, "mac8_a1" to 0.7f, "mac8_a2" to 0.425f, "mac8_a3" to 0.6f),
+        mapOf("macro1" to "Bridge", "macro2" to "Brighter", "macro3" to "Ring", "macro4" to "Mute", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Vibrato", "macro8" to "Buzz"),
         family = "plucked",
         low = 40, high = 76)
 
     private fun filament2() = Patch("Filament", "Steel",
         mapOf("exciter" to 0.2f, "position" to 0.25000003f, "sustain" to 0.807f, "tone" to 0.5f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 0.8866667f),
-        family = "plucked",
+        family = "picked",
         low = 40, high = 79)
 
-    private fun filament3() = Patch("Filament", "Hammered",
+    private fun filament3() = Patch("Filament", "Wire",
+        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.5733333f),
+        family = "picked",
+        low = 52, high = 88)
+
+    private fun filament4() = Patch("Filament", "Hammered",
         mapOf("exciter" to 0.4f, "hardness" to 0.55f, "length" to 0.04999988f, "sustain" to 0.943f, "tone" to 0.5f, "stiffness" to 0.55f, "stages" to 1f, "tension" to 0.3f, "couple" to 0.5f, "sympathy" to 1f, "symtune" to 1f, "symlevel" to 0.25f, "size" to 0.3f, "bodymix" to 0.3f, "volume" to 0.226666674f),
         family = "struck",
         low = 36, high = 84)
 
-    private fun filament4() = Patch("Filament", "Bowed",
-        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.3f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.113333337f, "velocity" to 0.4f),
-        family = "sustained",
+    private fun filament5() = Patch("Filament", "Bowed",
+        mapOf("exciter" to 0.6f, "position" to 0.18f, "pressure" to 0.85f, "speed" to 0.8f, "grit" to 0.3f, "sustain" to 0.454f, "tone" to 0.4f, "bodymix" to 0.4f, "volume" to 0.113333337f, "velocity" to 0.4f, "vibrate" to 0.781713963f, "vibdepth" to 0.12f, "vibdelay" to 0.225f, "mac1_d1" to 0.06122449f, "mac1_d2" to 0.08163265f, "mac1_a1" to 0.575f, "mac1_a2" to 0.575f, "mac2_d1" to 0.20408164f, "mac2_d2" to 0.10204082f, "mac2_a1" to 0.65f, "mac2_a2" to 0.6f, "mac3_d1" to 0.9591837f, "mac3_d2" to 0.938775539f, "mac3_a1" to 0.625f, "mac3_a2" to 0.55f, "mac4_d1" to 0.20408164f, "mac4_d2" to 0.10204082f, "mac4_d3" to 0.08163265f, "mac4_a1" to 0.675f, "mac4_a2" to 0.7f, "mac4_a3" to 0.45f, "mac5_d1" to 0.489795923f, "mac5_d2" to 0.46938777f, "mac5_d3" to 0.5102041f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.4f, "mac6_d1" to 0.367346942f, "mac6_d2" to 0.408163279f, "mac6_d3" to 0.3877551f, "mac6_a1" to 0.575f, "mac6_a2" to 0.65f, "mac6_a3" to 0.7f, "mac7_d1" to 0.10204082f, "mac7_d2" to 0.06122449f, "mac7_a1" to 0.75f, "mac7_a2" to 0.55f, "mac8_d1" to 0.20408164f, "mac8_d2" to 0.10204082f, "mac8_a1" to 0.375f, "mac8_a2" to 0.4f),
+        mapOf("macro1" to "Bow Harder", "macro2" to "Brighter", "macro3" to "Vibrato", "macro4" to "Sul Pont", "macro5" to "Body", "macro6" to "Ensemble", "macro7" to "Grit", "macro8" to "Darker"),
+        family = "bowed",
         low = 36, high = 76)
 
-    private fun filament5() = Patch("Filament", "Blown",
-        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 0.353333324f),
-        family = "sustained",
+    private fun filament6() = Patch("Filament", "Blown",
+        mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 0.353333324f, "vibrate" to 0.754995048f, "vibdepth" to 0.1f, "vibdelay" to 0.3f, "mac1_d1" to 0.06122449f, "mac1_a1" to 0.65f, "mac2_d1" to 0.10204082f, "mac2_d2" to 0.591836751f, "mac2_a1" to 0.625f, "mac2_a2" to 0.55f, "mac3_d1" to 0.9591837f, "mac3_a1" to 0.625f, "mac4_d1" to 0.20408164f, "mac4_a1" to 0.65f, "mac5_d1" to 0.489795923f, "mac5_d2" to 0.46938777f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4f, "mac6_d1" to 0.1632653f, "mac6_a1" to 0.625f, "mac7_d1" to 0.244897962f, "mac7_a1" to 0.65f, "mac8_d1" to 0.938775539f, "mac8_d2" to 0.9591837f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Blow Harder", "macro2" to "Breathy", "macro3" to "Vibrato", "macro4" to "Brighter", "macro5" to "Body", "macro6" to "Ring", "macro7" to "Stiff", "macro8" to "Flutter"),
+        family = "blown",
         low = 48, high = 82)
 
-    private fun filament6() = Patch("Filament", "Sympathy",
+    private fun filament7() = Patch("Filament", "Sympathy",
         mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.453333348f, "on release" to 0f),
-        family = "prepared",
+        family = "sympathetic",
         low = 45, high = 81)
 
-    private fun filament7() = Patch("Filament", "Prepared",
+    private fun filament8() = Patch("Filament", "Prepared",
         mapOf("exciter" to 0.4f, "sustain" to 0.727f, "tone" to 0.6f, "stiffness" to 0.3f, "stages" to 0.75f, "damper" to 0.4f, "rattle" to 0.55f, "rattle at" to 0.2f, "drive" to 0.2f, "volume" to 0.166666672f),
         family = "prepared",
         low = 36, high = 76)
 
-    private fun filament8() = Patch("Filament", "Spoken To",
+    private fun filament9() = Patch("Filament", "Spoken To",
         mapOf("exciter" to 1f, "in gain" to 0.5f, "sustain" to 0.727f, "tone" to 0.55f, "sympathy" to 1f, "symtune" to 0.4f, "symlevel" to 0.4f, "bodymix" to 0.3f, "volume" to 1f),
         family = "prepared",
         low = 36, high = 72)
-
-    private fun filament9() = Patch("Filament", "Wire",
-        mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.5733333f),
-        family = "plucked",
-        low = 52, high = 88)
 
     private val filament: List<Patch> by lazy { listOf(filament0(), filament1(), filament2(), filament3(), filament4(), filament5(), filament6(), filament7(), filament8(), filament9()) }
 

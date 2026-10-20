@@ -1,6 +1,7 @@
 #include "Filament.h"
 #include <engine/machine/Voices.h>
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 
@@ -129,10 +130,85 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
         lin(Fine, "fine", -50.0f, 50.0f, 0.0f, "c");
         lin(VelocityAmount, "velocity", 0.0f, 1.0f, 1.0f);
         step(Release, "on release", 2, 1.0f); // ring on, or damp
+        exp_(VibRate, "vibrate", 0.5f, 10.0f, 5.0f, "Hz");
+        lin(VibDepth, "vibdepth", 0.0f, 100.0f, 0.0f, "c");
+        lin(VibDelay, "vibdelay", 0.0f, 2.0f, 0.0f, "s");
+        for (int k = 0; k < kMacros; ++k) {
+            char n[12];
+            const int32_t b = MacroBase + k * MacroParams;
+            std::snprintf(n, sizeof(n), "mac%d", k + 1);
+            lin(b, n, 0.0f, 1.0f, 0.0f);
+            for (int r = 0; r < 4; ++r) {
+                std::snprintf(n, sizeof(n), "mac%d_d%d", k + 1, r + 1);
+                step(b + 1 + r, n, MacroDestCount, 0.0f);
+                std::snprintf(n, sizeof(n), "mac%d_a%d", k + 1, r + 1);
+                lin(b + 5 + r, n, -1.0f, 1.0f, 0.0f);
+            }
+        }
         built = true;
     }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Filament::Count];
+    DestMap() {
+        using F = Filament;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {F::Position, F::McPosition}, {F::Hardness, F::McHardness}, {F::Pressure, F::McPressure},
+            {F::Speed, F::McSpeed}, {F::Noise, F::McGrit}, {F::ExcitLength, F::McLength},
+            {F::ExternalGain, F::McInGain}, {F::Damping, F::McSustain}, {F::DampingKey, F::McSustainKey},
+            {F::Tone, F::McTone}, {F::ToneKey, F::McToneKey}, {F::Dispersion, F::McStiffness},
+            {F::Tension, F::McTension}, {F::DamperPos, F::McDamperAt}, {F::DamperPressure, F::McDamper},
+            {F::Rattle, F::McRattle}, {F::RattleThreshold, F::McRattleAt}, {F::Detune, F::McDetune},
+            {F::Spread, F::McSpread}, {F::Couple, F::McCouple}, {F::SympatheticLevel, F::McSymLevel},
+            {F::SympatheticDamping, F::McSymSustain}, {F::BodySize, F::McBodySize},
+            {F::BodyMix, F::McBodyMix}, {F::BodyDamp, F::McBodyDamp}, {F::Drive, F::McDrive},
+            {F::Volume, F::McVolume}, {F::Pan, F::McPan}, {F::Dry, F::McExciterOut},
+            {F::AmpRelease, F::McDampTime},
+            {F::Eg1A, F::McEg1A}, {F::Eg1D, F::McEg1D}, {F::Eg1S, F::McEg1S}, {F::Eg1R, F::McEg1R},
+            {F::Eg2A, F::McEg2A}, {F::Eg2D, F::McEg2D}, {F::Eg2S, F::McEg2S}, {F::Eg2R, F::McEg2R},
+            {F::Lfo1Rate, F::McLfo1Rate}, {F::Lfo1Depth, F::McLfo1Depth},
+            {F::Lfo2Rate, F::McLfo2Rate}, {F::Lfo2Depth, F::McLfo2Depth},
+            {F::VelocityAmount, F::McVelocity}, {F::MpeTimbre, F::McMpeTimbre},
+            {F::MpePressure, F::McMpePressure},
+            {F::VibRate, F::McVibRate}, {F::VibDepth, F::McVibDepth}, {F::VibDelay, F::McVibDelay},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Filament::val(int32_t p, bool goal) const {
+    const float v = read(p, goal);
+    const int d = destMap().of[p];
+    const float off = d < 0 ? 0.0f : mac_[d];
+    if (off == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + off);
+}
+
+void Filament::updateMacros(bool goal) {
+    for (float &m : mac_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = read(b, goal);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            const int dest = static_cast<int>(read(b + 1 + r, goal) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * read(b + 5 + r, goal);
+        }
+    }
+    // Two octaves either way.
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
 }
 
 int32_t Filament::steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
@@ -171,7 +247,11 @@ void Filament::reset() {
         v.bend = 0.0f;
         v.pressure = v.timbre = -1.0f;
         v.prsGlide = 0.0f;
+        v.vibPhase = 0.0f;
+        v.vibStart = v.vibAt = 0;
     }
+    clock_ = 0;
+    for (auto &m : mac_) m = 0.0f;
     for (auto &s : sympathetic) s.clear();
     dampersUp = false;
     damperMix = 0.0f;
@@ -206,6 +286,7 @@ void Filament::retuneSympathetic(float rootHz) {
 }
 
 void Filament::noteOn(uint8_t note, uint8_t velocity) {
+    updateMacros(true); // a note reads where the knobs are going, so renders repeat
     // The two mod envelopes belong to the machine, like the LFOs. They start
     // on the first note of a phrase and release when the last note does. A
     // note added on top of a held one doesn't restart them, which would
@@ -231,6 +312,8 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     v->bend = 0.0f;
     v->pressure = v->timbre = -1.0f;
     v->prsGlide = 0.0f;
+    v->vibPhase = 0.0f;
+    v->vibStart = v->vibAt = clock_;
     v->velocity = static_cast<float>(velocity) / 127.0f;
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v->target = noteHz(static_cast<float>(note));
@@ -238,12 +321,12 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     v->damp = 0.0f;
     rngState = rngState * 1664525u + 1013904223u;
     v->pan = ((static_cast<float>((rngState >> 9) & 0xffff) / 32768.0f) - 1.0f);
-    const float velAmt = targetOf(VelocityAmount);
+    const float velAmt = goalOf(VelocityAmount);
     v->exciteGain = velocityGain(v->velocity, velAmt);
     const int32_t mode = steppedTargetOf(ExciterMode);
     const float lengthSeconds = mode == Bow || mode == Breath || mode == External
                                     ? 0.0f
-                                    : targetOf(ExcitLength);
+                                    : goalOf(ExcitLength);
     // A pluck or pick displaces the whole string, so its excitation lasts at
     // least one full turn of the loop. A shorter burst would just go round as
     // a pulse train instead of sounding like a string.
@@ -337,6 +420,9 @@ void Filament::applyMatrix(const Voice &v, float *dest) {
 
 bool Filament::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
+    const int64_t blockStart = clock_;
+    clock_ += frames;
     const float dt = static_cast<float>(frames) / sampleRate;
     static const float kSyncBeats[6] = {0.0f, 4.0f, 2.0f, 1.0f, 0.5f, 1.0f / 3.0f};
     for (int i = 0; i < 2; ++i) {
@@ -409,7 +495,11 @@ bool Filament::render(float *L, float *R, int32_t frames) {
     // the drive.
     const float exciteDcCoeff = 1.0f - std::exp(-2.0f * kPiF * 30.0f / sampleRate);
     const float pitchScale = std::pow(2.0f, (bendSemis + paramOf(Octave) * 12.0f + paramOf(Transpose) +
-                                             paramOf(Fine) * 0.01f) / 12.0f);
+                                             paramOf(Fine) * 0.01f + mac_[McPitch] * 24.0f) / 12.0f);
+    const float vibRate = paramOf(VibRate);
+    const float vibDepth = paramOf(VibDepth);
+    const float vibDelay = paramOf(VibDelay);
+    const float mpeTimbre = paramOf(MpeTimbre);
     const float releaseCoeff = 1.0f - std::exp(-1.0f / std::fmax(1.0f, paramOf(AmpRelease) * sampleRate));
     const float rattle = paramOf(Rattle);
     const float rattleAt = paramOf(RattleThreshold);
@@ -472,7 +562,23 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // darker (tonekey) and ring shorter, like real short strings.
             const float keyTone = 1.0f - paramOf(ToneKey) * v.key01 * 0.5f;
             const float tone = clampf((paramOf(Tone) + v.mod[DstTone]) * keyTone, 0.02f, 1.0f);
-            const float freq = v.freq * pitchScale * noteBendMul(v) * std::pow(2.0f, v.mod[DstPitch]);
+            float freq = v.freq * pitchScale * noteBendMul(v) * std::pow(2.0f, v.mod[DstPitch]);
+
+            // Vibrato. The phase runs from the note-on whether the depth is
+            // up or not, so a macro raising it mid-note joins in time; the
+            // depth fades in over `vibdelay`.
+            {
+                const int64_t now = blockStart + n;
+                v.vibPhase += vibRate * static_cast<float>(now - v.vibAt) / sampleRate;
+                v.vibPhase -= std::floor(v.vibPhase);
+                v.vibAt = now;
+                if (vibDepth > 0.0f) {
+                    const float age = static_cast<float>(now - v.vibStart) / sampleRate;
+                    const float fade = vibDelay > 0.0f ? std::fmin(1.0f, age / vibDelay) : 1.0f;
+                    const float cents = vibDepth * fade * std::sin(2.0f * kPiF * v.vibPhase);
+                    freq *= std::exp2(cents / 1200.0f);
+                }
+            }
 
             // How long the string rings is a time, not a loop gain. A string
             // goes round f times a second, so a fixed gain per turn would make
@@ -592,7 +698,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // MPE slide moves the pick along the string.
             const float slide = v.timbre >= 0.0f ? v.timbre : 0.0f;
             const float pos = clampf(position + v.mod[DstPosition] +
-                                         slide * paramOf(MpeTimbre) * 0.28f,
+                                         slide * mpeTimbre * 0.28f,
                                      0.02f, 0.5f);
             // Pluck, pick and hammer act at one point and leave, so they get
             // the comb (like a piano hammer placed to lose the 7th harmonic).

@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis and Resonance move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance and Filament move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -13,6 +13,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/filament/Filament.h>
 #include <engine/machine/formulate/Formulate.h>
 #include <engine/machine/genesis/Genesis.h>
 #include <engine/machine/hexbeat/Hexbeat.h>
@@ -388,6 +389,19 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         }
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the pads' tune", buf);
+    } else if (std::strcmp(type, "Filament") == 0) {
+        // A plucked string's zero crossings wander, so the route must match the transpose knob.
+        gUnits = {{"transpose", 12.0f}};
+        const auto tuned = play(nullptr);
+        gUnits.clear();
+        const auto routed = play(&up);
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < tuned.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(tuned[i] - routed[i])));
+            peak = std::max(peak, double(std::fabs(tuned[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the transpose knob", buf);
     } else if (std::strcmp(type, "Hexbeat") == 0) {
         // A drum has no steady pitch to count, so the route must match the kick's tune knob.
         gUnits = {{"kick_tune", 110.0f}};
@@ -552,6 +566,77 @@ void resonanceRoutes() {
     gNote = 57;
 }
 
+// The difference between two renders, as an rms.
+double diffRms(const std::vector<float> &a, const std::vector<float> &b, size_t upTo = 0) {
+    const size_t n = upTo == 0 ? a.size() : upTo;
+    double s = 0;
+    for (size_t i = 0; i < n; ++i) s += double(a[i] - b[i]) * (a[i] - b[i]);
+    return std::sqrt(s / double(n));
+}
+
+// Filament's other routes: routes to sustain and to the vibrato match their
+// knobs, the vibrato moves the note, and its delay holds it back.
+void filamentRoutes() {
+    using F = acidulous::machine::Filament;
+    gType = "Filament";
+    gDests = F::MacroDestCount;
+    gNote = 57;
+    char buf[96];
+    auto same = [&](const char *what, const std::vector<float> &a, const std::vector<float> &b) {
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(a[i] - b[i])));
+            peak = std::max(peak, double(std::fabs(a[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-4, what, buf);
+    };
+    const auto base = play(nullptr);
+
+    // Sustain 0.8 by default, so +0.2 is the top.
+    gUnits = {{"sustain", 1.0f}};
+    const auto knob = play(nullptr);
+    gUnits.clear();
+    Route r{5, 3, F::McSustain, 0.2f, 1.0f};
+    const auto routed = play(&r);
+    same("Filament: a route to sustain matches the knob", knob, routed);
+
+    // 50 cents of vibrato from the knob and from a route.
+    gUnits = {{"vibdepth", 50.0f}};
+    const auto vib = play(nullptr);
+    gUnits.clear();
+    Route v{2, 4, F::McVibDepth, 0.5f, 1.0f};
+    same("Filament: a route to vibrato depth matches the knob", vib, play(&v));
+    std::snprintf(buf, sizeof(buf), "rms difference %.4f of %.4f", diffRms(vib, base), rms(base, 0));
+    ok(diffRms(vib, base) > rms(base, 0) * 0.05, "Filament: the vibrato moves the note", buf);
+
+    // Two seconds of fade-in: over the first 60 ms the note has barely moved.
+    // A dark string picked off the comb's integer steps, so the difference
+    // is the pitch rather than the pick or the top partials.
+    gUnits = {{"position", 0.31f}, {"tone", 0.1f}};
+    const auto darkBase = play(nullptr);
+    gUnits.push_back({"vibdepth", 50.0f});
+    const auto darkVib = play(nullptr);
+    gUnits.push_back({"vibdelay", 2.0f});
+    const auto late = play(nullptr);
+    gUnits.clear();
+    const size_t front = 2880;
+    std::snprintf(buf, sizeof(buf), "rms difference %.5f against %.5f", diffRms(late, darkBase, front),
+                  diffRms(darkVib, darkBase, front));
+    ok(diffRms(late, darkBase, front) < diffRms(darkVib, darkBase, front) * 0.2,
+       "Filament: the vibrato delay holds it back", buf);
+
+    // A route to the rate matches the knob.
+    gUnits = {{"vibdepth", 50.0f}, {"vibrate", 10.0f}};
+    const auto fast = play(nullptr);
+    gUnits.clear();
+    Route rate{7, 1, F::McVibRate, 1.0f, 1.0f};
+    gUnits = {{"vibdepth", 50.0f}};
+    const auto fastRouted = play(&rate);
+    gUnits.clear();
+    same("Filament: a route to vibrato rate matches the knob", fast, fastRouted);
+}
+
 } // namespace
 
 int main() {
@@ -587,6 +672,11 @@ int main() {
     // Resonance's volume is 0 to 1.5 from 0.5, so -0.5 leaves nothing and -0.25 leaves 0.125.
     basics("Resonance", Rs::DestCount, Rs::DstVolume, Rs::DstPitch, Rs::DstOff, Rs::kMacros, 0.0, 0.125 / 0.5);
     resonanceRoutes();
+    gNote = 57;
+    using Fl = acidulous::machine::Filament;
+    // Filament's volume is Reflux's, 0 to 1.5 from 0.8.
+    basics("Filament", Fl::MacroDestCount, Fl::McVolume, Fl::McPitch, Fl::McOff, Fl::kMacros, 0.05 / 0.8, 0.425 / 0.8);
+    filamentRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

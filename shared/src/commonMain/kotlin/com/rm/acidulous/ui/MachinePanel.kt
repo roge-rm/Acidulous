@@ -250,7 +250,7 @@ fun MachinePanel(
             "Cipher" -> CipherPanel(binding)
             "Cumulus" -> CumulusPanel(binding, track, trackIndex, editor)
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
-            "Filament" -> FilamentPanel(binding)
+            "Filament" -> FilamentPanel(binding, track, trackIndex, editor)
             "Brazen" -> BrazenPanel(binding)
             "Hammer" -> HammerPanel(binding)
             "Tongue" -> TonguePanel(binding, editor)
@@ -3974,12 +3974,55 @@ private val FILAMENT_DESTS = listOf(
 )
 private val FILAMENT_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
 
+/** Where a Filament macro route goes, in the engine's MacroDest order. */
+val FILAMENT_MACRO_DESTS = listOf(
+    "off", "position", "hardness", "pressure", "speed", "grit", "length", "in gain",
+    "sustain", "sustain key", "tone", "tone key", "stiffness", "tension",
+    "damper at", "damper", "rattle", "rattle at",
+    "detune", "spread", "couple",
+    "sym level", "sym sustain",
+    "body size", "body mix", "body damp",
+    "drive", "volume", "pan", "exciter out", "damp time",
+    "eg1 attack", "eg1 decay", "eg1 sustain", "eg1 release",
+    "eg2 attack", "eg2 decay", "eg2 sustain", "eg2 release",
+    "lfo1 rate", "lfo1 depth", "lfo2 rate", "lfo2 depth",
+    "velocity", "slide", "press",
+    "vib rate", "vib depth", "vib delay",
+    "pitch",
+)
+
 @Composable
-private fun FilamentPanel(b: ParamBinding) {
+private fun FilamentPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("exciter", "string", "prepare", "around", "mod", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "exciter", "string", "prepare", "around", "mod", "out", "macros"),
+        section, { section = it },
+    ) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", FILAMENT_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", FILAMENT_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", FILAMENT_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", FILAMENT_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("exciter") {
                     PanelStepKnob(b, "exciter", FILAMENT_EXCITERS, "kind", PanelAmber)
                     PanelKnob(b, "position", "where", PanelAmber)
@@ -4001,7 +4044,7 @@ private fun FilamentPanel(b: ParamBinding) {
                     PanelKnob(b, "damp time", "damp time")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("string") {
                     PanelKnob(b, "sustain", "sustain", PanelAmber)
                     PanelKnob(b, "sustainkey", "· by key")
@@ -4019,7 +4062,7 @@ private fun FilamentPanel(b: ParamBinding) {
                     PanelKnob(b, "spread", "spread")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("damper") {
                     PanelKnob(b, "damper at", "where", PanelAmber)
                     PanelKnob(b, "damper", "pressure", PanelAmber)
@@ -4036,7 +4079,7 @@ private fun FilamentPanel(b: ParamBinding) {
                     PanelKnob(b, "symwide", "spread")
                 }
             }
-            3 -> {
+            4 -> {
                 Group("body") {
                     PanelOnOff(b, "body", "body")
                     PanelKnob(b, "size", "size", PanelAmber)
@@ -4053,7 +4096,12 @@ private fun FilamentPanel(b: ParamBinding) {
                     PanelKnob(b, "fine", "fine")
                 }
             }
-            4 -> {
+            5 -> {
+                Group("vibrato") {
+                    PanelKnob(b, "vibdepth", "depth", PanelAmber)
+                    PanelKnob(b, "vibrate", "rate")
+                    PanelKnob(b, "vibdelay", "delay")
+                }
                 Group("lfo 1") {
                     PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                     PanelKnob(b, "lfo1rate", "rate", PanelAmber)
@@ -4090,6 +4138,14 @@ private fun FilamentPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Brazen -----------------------------------------------------------------

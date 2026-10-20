@@ -46,6 +46,29 @@ Les destinations comprennent **maintien**, **ton**, **position**, **pression**,
 note. **corps**, **satur.** et **sympathie** s’appliquent à tout l’instrument
 et suivent la dernière note.
 
+## Vibrato
+
+Le groupe **vibrato** de la page **mod** donne à chaque note son propre
+vibrato. **prof.** est en cents et est coupé à zéro, **vitesse** règle sa
+rapidité et **délai** le temps qu’il met à arriver après le début de la note,
+alors une note tenue peut commencer droite et s’épanouir.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Archet appuyé,
+Plus brillant, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tout l’instrument, 24
+demi-tons à 1. L’excitateur, les étages de raideur, l’interrupteur et
+l’accord de la sympathie et l’interrupteur de la caisse ne sont pas
+accessibles. Un changement de longueur ou de vélocité s’entend à la note
+suivante. Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Changez **où** en premier, avant le filtre ou la caisse.

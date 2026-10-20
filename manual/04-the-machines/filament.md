@@ -42,6 +42,28 @@ a hammer's hardness), and **rattle** and **volume** are per note. **body**,
 **drive** and **sympathy** apply to the whole instrument and follow the latest
 note.
 
+## Vibrato
+
+The **vibrato** group on the **mod** page gives each note its own vibrato.
+**depth** is in cents and is off at zero, **rate** is how fast it goes and
+**delay** is how long it takes to fade in after the note starts, so a held note
+can start straight and bloom.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Bow Harder,
+Brighter, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves the whole instrument, 24 semitones at 1. The exciter,
+stiffness stages, sympathy switch and tuning and the body switch can't be
+reached. A change to length or velocity is heard from the next note. Tap a
+macro's name to rename it.
+
 ## Tips
 
 - Change **position** first, before the filter or body.
