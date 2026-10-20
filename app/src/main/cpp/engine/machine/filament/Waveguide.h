@@ -66,7 +66,7 @@ class Waveguide {
         gain = clampf(loopGain, 0.0f, 1.02f);
         const float t = clampf(toneCutoff01, 0.02f, 1.0f);
         if (t != tone) { tone = t; refreshLoop(); }
-        else effGain = clampf(gain / loopKeeps, 0.0f, 1.05f);
+        else effGain = feedback();
     }
     void setDispersion(float amount01, int stages) {
         const float a = clampf(amount01, 0.0f, 1.0f);
@@ -77,7 +77,13 @@ class Waveguide {
         refreshDispersion();
         refreshLoop();
     }
-    void setTension(float amount01) { tension = clampf(amount01, 0.0f, 1.0f); }
+    void setTension(float amount01) {
+        const float t = clampf(amount01, 0.0f, 1.0f);
+        if (t == tension) return; // see setFrequency
+        tension = t;
+        refreshCap();
+        effGain = feedback();
+    }
     /**
      * Where the DC blocker sits, as a fraction of the note (kDcBelow unless
      * set). It leads in phase at the note, and the loop is shortened to make
@@ -252,20 +258,73 @@ class Waveguide {
 
         // How much the loop's filters reduce a partial at the note, which the
         // feedback makes up so `sustain` is accurate in seconds. The allpass
-        // chain doesn't change the level, so it's left out.
+        // chain and the damper never add level, so they're left out. Linear
+        // interpolation of the fractional delay is also a lowpass; it loses
+        // little per turn, but high notes make many turns a second, so it's
+        // counted too.
         const float toneMag = tone / std::sqrt((1.0f - (1.0f - tone) * cw) * (1.0f - (1.0f - tone) * cw) +
                                                ((1.0f - tone) * sw) * ((1.0f - tone) * sw));
         const float dcMag = std::sqrt((1.0f - cw) * (1.0f - cw) + sw * sw) /
                             std::sqrt((1.0f - dcPole * cw) * (1.0f - dcPole * cw) +
                                       (dcPole * sw) * (dcPole * sw));
-        // Linear interpolation of the fractional delay is also a lowpass. It
-        // loses little per turn, but high notes make many turns a second, so
-        // it's counted too.
         const float frac = d - std::floor(d);
         const float ir = 1.0f - frac + frac * cw, ii = -frac * sw;
         const float interp = std::sqrt(ir * ir + ii * ii);
-        loopKeeps = clampf(toneMag * dcMag * interp, 0.05f, 1.0f);
-        effGain = clampf(gain / loopKeeps, 0.0f, 1.05f);
+        loopKeeps = clampf(toneMag * dcMag * interp, 0.05f, 1.05f);
+        loopFrac = frac;
+        // x at the note, and at or below 1.8 times it, since
+        // sin(0.9w) >= 0.9 sin(w). See refreshCap.
+        noteX = sw * sw / (1.0f + cw);
+        secondX = 1.62f * sw * sw;
+        refreshCap();
+        effGain = feedback();
+    }
+    float feedback() const { return std::fmin(clampf(gain / loopKeeps, 0.0f, 1.05f), feedbackCap); }
+
+    /**
+     * The DC blocker takes a little from the note and less from the partials
+     * above it, and above about 760 Hz it adds a little, so making up its
+     * loss at the note can lift another partial, or the note itself, over
+     * one, and that partial then grows for ever. So the feedback is also held
+     * under one at the note and at the loudest point the next partial up can
+     * sit.
+     *
+     * With x = 1 - cos(w), one turn keeps the square root of
+     *   tone^2 * 2x * (1 - b x) / ((tone^2 + 2 a x) * ((1 - p)^2 + 2 p x))
+     * with a = 1 - tone, p the DC blocker's pole and b = 2 frac (1 - frac)
+     * from the interpolation. It rises to one peak and falls: the peak is
+     * where C - 2bCx - (A + bB) x^2 = 0, or at Nyquist (x = 2).
+     *
+     * Between the note and its second partial there's no partial, so that
+     * stretch is skipped. The DC blocker can flatten the second partial, so
+     * it's taken from 1.8 times the note. A damper makes partials of its own,
+     * so with one the whole range counts. The one partial below the note
+     * sits under the DC blocker's corner, where the level is still rising.
+     *
+     * Tension shortens the read by up to `baseDelay * tension * 0.02` (the
+     * level is at most 1), so the interpolation is taken at whichever end of
+     * that range loses least, or as losing nothing if it passes a whole
+     * sample.
+     */
+    void refreshCap() {
+        const float shift = baseDelay * tension * 0.02f;
+        float b = 0.0f;
+        if (loopFrac - shift > 0.0f) {
+            const float lo = loopFrac - shift;
+            b = 2.0f * std::fmin(loopFrac * (1.0f - loopFrac), lo * (1.0f - lo));
+        }
+        const float a = 1.0f - tone, t2 = tone * tone, q = 1.0f - dcPole;
+        const float A = 4.0f * a * dcPole, B = 2.0f * (a * q * q + dcPole * t2), C = t2 * q * q;
+        const auto keeps2 = [&](float x) {
+            return t2 * 2.0f * x * (1.0f - b * x) / ((t2 + 2.0f * a * x) * (q * q + 2.0f * dcPole * x));
+        };
+        const float k = A + b * B;
+        const float peak = k > 0.0f ? std::fmin(2.0f, (std::sqrt(b * b * C * C + k * C) - b * C) / k) : 2.0f;
+        float most = keeps2(peak);
+        if (damperPressure <= 0.0f && baseDelay > 4.0f) {
+            if (peak > noteX) most = std::fmax(keeps2(noteX), keeps2(clampf(peak, secondX, 2.0f)));
+        }
+        feedbackCap = kUnderUnity / std::sqrt(std::fmax(most, 1e-6f));
     }
 
     /**
@@ -295,9 +354,13 @@ class Waveguide {
     float loopTrim = 0.0f; // what the rest of the loop already costs, in samples
     float dcIn = 0.0f, dcOut = 0.0f, dcPole = 0.999f;
     float dcBelow = kDcBelow;
-    // How much one turn keeps of a partial at the note, and the feedback
-    // that makes up for it to give the requested gain.
-    float loopKeeps = 1.0f, effGain = 0.995f;
+    // How much one turn keeps of a partial at the note, the most feedback
+    // that keeps every partial under one (refreshCap), the feedback used,
+    // the fractional part of the loop's length, and where the note and its
+    // second partial sit as 1 - cos(w).
+    float loopKeeps = 1.0f, feedbackCap = 1.05f, effGain = 0.995f, loopFrac = 0.0f;
+    float noteX = 0.0f, secondX = 0.0f;
+    static constexpr float kUnderUnity = 0.9999f;
     float tension = 0.0f;
     float damperPos = 0.5f;
     float damperPressure = 0.0f;

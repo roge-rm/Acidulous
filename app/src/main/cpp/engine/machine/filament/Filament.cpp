@@ -346,6 +346,7 @@ void Filament::noteOn(uint8_t note, uint8_t velocity) {
     }
     v->exciteLeft = static_cast<int32_t>(spread ? std::max(contact * sampleRate, turn)
                                                 : contact * sampleRate);
+    v->exciteTotal = std::max(1, v->exciteLeft);
     retuneSympathetic(v->target);
 }
 
@@ -643,7 +644,9 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 if (v.exciteLeft > 0) {
                     // A hammer is a soft impulse, softened further by the
                     // hardness setting, like felt compressing.
-                    const float t = 1.0f - static_cast<float>(v.exciteLeft) / std::fmax(1.0f, paramOf(ExcitLength) * sampleRate);
+                    // One bump over the contact this note was given, so it starts and
+                    // ends at zero whatever the note.
+                    const float t = 1.0f - static_cast<float>(v.exciteLeft) / static_cast<float>(v.exciteTotal);
                     const float soft = std::sin(kPiF * t);
                     excite = soft * soft * (1.0f - hardNow * 0.6f) * v.exciteGain * 2.0f;
                     --v.exciteLeft;

@@ -131,6 +131,7 @@ class Filament final : public Machine {
         float freqNow = 220.0f;
         Waveguide a, b;          // a course: two strings, slightly apart
         int32_t exciteLeft = 0;  // samples of excitation remaining
+        int32_t exciteTotal = 1; // samples of excitation at the note-on, for the hammer's shape
         float exciteGain = 0.0f;
         float exciteDc = 0.0f;   // the slow part of the drive, kept out of the string
         float lastPick = 0.0f;   // a pick differentiates the excitation
