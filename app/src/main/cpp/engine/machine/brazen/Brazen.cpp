@@ -110,6 +110,9 @@ const ParamDef *Brazen::paramDefs(int32_t &count) const {
                 put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
             }
         }
+        // Legato is on by default, so a patch saved without it slurs onto a held key.
+        defs[Legato] = ParamDef{"legato", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""};
+        defs[Choke] = ParamDef{"choke", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""};
         built = true;
     }
     count = Count;
@@ -228,11 +231,16 @@ Brazen::Voice *Brazen::allocate() {
 void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     updateMacros(true); // a note reads where the knobs are going, so renders repeat
     const float glide = goalOf(Glide);
-    // Mono slurs onto a held note, gliding over `glide` or jumping at 0.
-    // Poly glides when it takes over a voice that is still sounding.
-    const bool gliding = steppedTargetOf(Mono) != 0 ? v.used && v.gate : glide > 0.001f && v.used;
-    // A slur onto a held note carries on its swell and flutter. Anything
-    // else starts them again.
+    // Mono with legato slurs onto a held note, gliding over `glide` or
+    // jumping at 0. Without legato, or onto a released voice with choke, it
+    // slurs only while glide is on and is tongued otherwise. Poly glides
+    // when it takes over a voice that is still sounding.
+    bool gliding;
+    if (steppedTargetOf(Mono) == 0) gliding = glide > 0.001f && v.used;
+    else if (v.used && v.gate) gliding = steppedTargetOf(Legato) != 0 || glide > 0.001f;
+    else gliding = v.used && steppedTargetOf(Choke) != 0 && glide > 0.001f;
+    // A slur carries on the swell and flutter of the note it joined.
+    // Anything else starts them again.
     if (!(gliding && v.gate)) {
         // 1 - swell of the set pressure, so +1 starts from nothing and -1
         // at twice it.
@@ -303,10 +311,16 @@ void Brazen::noteOn(uint8_t note, uint8_t velocity) {
     // Mono slurs onto the note that is held. A note played after the last
     // one let go is tongued on a voice of its own, so the old tail rings out
     // instead of being cut.
+    // With choke, it takes the last voice let go instead and cuts its tail.
     Voice *v = nullptr;
     if (steppedTargetOf(Mono) != 0) {
         for (auto &w : voices) {
             if (w.used && w.gate) { v = &w; break; }
+        }
+        if (v == nullptr && steppedTargetOf(Choke) != 0) {
+            for (auto &w : voices) {
+                if (w.used && (v == nullptr || w.age > v->age)) v = &w;
+            }
         }
     }
     if (v == nullptr) v = allocate();

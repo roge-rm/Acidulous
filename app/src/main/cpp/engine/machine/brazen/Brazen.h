@@ -51,7 +51,13 @@ class Brazen final : public Machine {
         // is 24 semitones per unit.
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
-        Count = MacroBase + 8 * MacroParams
+        // Added after the macros. Mono only. Legato on slurs a note onto a
+        // held key, gliding over `glide` or jumping at 0; off tongues it,
+        // unless glide is on. Choke on makes a note after a release cut the
+        // old tail: it slurs from it with glide on, and is tongued on that
+        // voice at 0. Off lets the tail ring on its own voice.
+        Legato = MacroBase + 8 * MacroParams, Choke,
+        Count
     };
     // Where a macro route goes. Continuous params only: mute, players,
     // filter type, mono and the tuning steps are left out.

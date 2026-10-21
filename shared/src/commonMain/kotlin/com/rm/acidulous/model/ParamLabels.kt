@@ -72,6 +72,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Brazen:bite" to "lips|bite",
     "Brazen:brass" to "air|brassiness",
     "Brazen:breath" to "air|breath",
+    "Brazen:choke" to "tuning|choke",
     "Brazen:cutoff" to "filter|cutoff",
     "Brazen:decay" to "envelope|decay",
     "Brazen:drift" to "listening|drift",
@@ -83,6 +84,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Brazen:glide" to "tuning|glide",
     "Brazen:growl" to "growl",
     "Brazen:growlrate" to "growl|rate",
+    "Brazen:legato" to "tuning|legato",
     "Brazen:lipdamp" to "lips|damping",
     "Brazen:lock" to "listening|lock",
     "Brazen:loss" to "tube|loss",
@@ -817,11 +819,11 @@ private fun labels0(): Map<String, String> = mapOf(
     "Forage:p01_level" to "pad 2|amp|level",
     "Forage:p01_mode" to "pad 2|tone|mode",
     "Forage:p01_pan" to "pad 2|amp|pan",
-    "Forage:p01_pdecay" to "pad 2|punch|decay",
-    "Forage:p01_penv" to "pad 2|punch|pitch env",
 )
 
 private fun labels1(): Map<String, String> = mapOf(
+    "Forage:p01_pdecay" to "pad 2|punch|decay",
+    "Forage:p01_penv" to "pad 2|punch|pitch env",
     "Forage:p01_pitch" to "pad 2|sample|pitch",
     "Forage:p01_play" to "pad 2|sample|play",
     "Forage:p01_reso" to "pad 2|tone|reso",
@@ -1620,11 +1622,11 @@ private fun labels1(): Map<String, String> = mapOf(
     "Mosaic:loop" to "playback|loop",
     "Mosaic:m01_depth" to "mod 1|depth",
     "Mosaic:m01_dest" to "mod 1|to",
-    "Mosaic:m01_src" to "mod 1|from",
-    "Mosaic:m01_src2" to "mod 1|× from",
 )
 
 private fun labels2(): Map<String, String> = mapOf(
+    "Mosaic:m01_src" to "mod 1|from",
+    "Mosaic:m01_src2" to "mod 1|× from",
     "Mosaic:m02_depth" to "mod 2|depth",
     "Mosaic:m02_dest" to "mod 2|to",
     "Mosaic:m02_src" to "mod 2|from",
@@ -2423,11 +2425,11 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:swelltime" to "swell|time",
     "Timber:tongue" to "tongue|depth",
     "Timber:tonguetime" to "tongue|time",
-    "Timber:transpose" to "tuning|transpose",
-    "Timber:velocity" to "out|velocity",
 )
 
 private fun labels3(): Map<String, String> = mapOf(
+    "Timber:transpose" to "tuning|transpose",
+    "Timber:velocity" to "out|velocity",
     "Timber:vibrato" to "vibrato|depth",
     "Timber:vibratodelay" to "vibrato|delay",
     "Timber:vibratorate" to "vibrato|rate",
@@ -2752,6 +2754,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Brazen:bite" to "bite",
     "Brazen:brass" to "brassiness",
     "Brazen:breath" to "breath",
+    "Brazen:choke" to "choke",
     "Brazen:cutoff" to "cutoff",
     "Brazen:decay" to "decay",
     "Brazen:drift" to "drift",
@@ -2762,6 +2765,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Brazen:flutterrate" to "rate",
     "Brazen:glide" to "glide",
     "Brazen:growlrate" to "rate",
+    "Brazen:legato" to "legato",
     "Brazen:lipdamp" to "damping",
     "Brazen:lock" to "lock",
     "Brazen:loss" to "loss",
@@ -3501,11 +3505,11 @@ private fun short0(): Map<String, String> = mapOf(
     "Forage:p03_pitch" to "pitch",
     "Forage:p03_play" to "play",
     "Forage:p03_reso" to "reso",
-    "Forage:p03_reverse" to "reverse",
-    "Forage:p03_start" to "start",
 )
 
 private fun short1(): Map<String, String> = mapOf(
+    "Forage:p03_reverse" to "reverse",
+    "Forage:p03_start" to "start",
     "Forage:p04_choke" to "choke",
     "Forage:p04_crush" to "crush",
     "Forage:p04_cutoff" to "cutoff",
@@ -4304,11 +4308,11 @@ private fun short1(): Map<String, String> = mapOf(
     "Mosaic:velamt" to "vel",
     "Mosaic:velfade" to "vel xf",
     "Mosaic:veltofilter" to "vel",
-    "Mosaic:voicemode" to "mode",
-    "Mosaic:volume" to "volume",
 )
 
 private fun short2(): Map<String, String> = mapOf(
+    "Mosaic:voicemode" to "mode",
+    "Mosaic:volume" to "volume",
     "Nexus:bend" to "bend",
     "Nexus:drive" to "drive",
     "Nexus:fine" to "fine",
@@ -5107,11 +5111,11 @@ private fun short2(): Map<String, String> = mapOf(
     "Tongue:sustain" to "sustain",
     "Tongue:tune" to "tune",
     "Tongue:velocity" to "velocity",
-    "Tongue:voices" to "voices",
-    "Tongue:volume" to "volume",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Tongue:voices" to "voices",
+    "Tongue:volume" to "volume",
     "Tongue:words" to "words",
     "Trinity:balance" to "balance",
     "Trinity:bend" to "bend",
