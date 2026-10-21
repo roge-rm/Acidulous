@@ -118,6 +118,9 @@ const ParamDef *Timber::paramDefs(int32_t &count) const {
                 put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
             }
         }
+        // Legato is off by default, so a patch saved without it slurs only with glide on.
+        defs[Legato] = ParamDef{"legato", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""};
+        defs[Choke] = ParamDef{"choke", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""};
         built = true;
     }
     count = Count;
@@ -239,10 +242,17 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     // Mono slurs onto the note that is held, or takes the place of one
     // waiting to start. A note played after the last one let go is tongued
     // on a voice of its own, so the old tail rings out instead of being cut.
+    // With choke, it takes the last voice let go instead and cuts its tail.
     Voice *vp = nullptr;
-    if (steppedTargetOf(Mono) != 0) {
+    const bool mono = steppedTargetOf(Mono) != 0;
+    if (mono) {
         for (auto &w : voices) {
             if (w.used && (w.gate || w.pendingNote >= 0)) { vp = &w; break; }
+        }
+        if (vp == nullptr && steppedTargetOf(Choke) != 0) {
+            for (auto &w : voices) {
+                if (w.used && (vp == nullptr || w.age > vp->age)) vp = &w;
+            }
         }
     }
     if (vp == nullptr) vp = allocate();
@@ -262,7 +272,12 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     const float glide = goalOf(Glide);
     // A slurred note arrives without the tongue and without restarting the
     // instrument. A tongued note is stopped and started again.
-    const bool slurred = glide > 0.001f && v.used && v.gate && v.pendingNote < 0;
+    // Legato slurs onto a held key at any glide, and choke onto the tail of
+    // a released one while glide is on.
+    const bool held = v.used && v.gate && v.pendingNote < 0;
+    const bool slurred = held ? glide > 0.001f || (mono && steppedTargetOf(Legato) != 0)
+                              : mono && v.used && steppedTargetOf(Choke) != 0 && glide > 0.001f &&
+                                    v.pendingNote < 0;
     if (!slurred && v.used && v.amp.value() > 0.0001f) {
         // Still sounding (usually its own release, since the patches are
         // mono). Cutting it now would click, so fade it over 2 ms and start
@@ -280,6 +295,7 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
 
 void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) {
     updateMacros(true);
+    const bool wasHeld = v.gate;
     v.glideFrom = slurred ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = slurred ? 0.0f : 1.0f;
     if (!v.used) v.outGain = velocityGain(static_cast<float>(velocity) / 127.0f, goalOf(VelocityAmount));
@@ -316,6 +332,8 @@ void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) 
         v.lift = true;
     } else {
         v.tongueLeft = 0.0f;
+        // A choke slurs onto a tail in its release, so the breath comes back.
+        if (!wasHeld) v.amp.trigger();
     }
 }
 

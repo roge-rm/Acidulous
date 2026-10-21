@@ -5352,6 +5352,8 @@ private fun TimberPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 }
                 Group("tuning") {
                     PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
+                    PanelOnOff(b, "legato", "legato")
+                    PanelOnOff(b, "choke", "choke")
                     PanelKnob(b, "glide", "glide")
                     PanelKnob(b, "bendrange", "bend")
                     PanelKnob(b, "octave", "octave")

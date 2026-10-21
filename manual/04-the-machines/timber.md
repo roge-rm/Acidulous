@@ -39,6 +39,14 @@ pressure, so the note grows out of nothing at 1. Turn it down and the breath
 starts above the pressure and falls back to it, an accent. **time** is how
 long it takes. A slurred note carries on the swell it joined.
 
+## Mono
+
+With **mono** on, a note played while the last one is still held is slurred
+onto it when **glide** is up, and tongued at 0. Turn **legato** on and it's
+always slurred, jumping at 0. A note played after you let go is tongued, and the
+last one rings out under it. With **choke** on it cuts that tail instead, and
+slides from it when glide is up.
+
 ## Macros
 
 The **play** page has eight macro knobs. A patch can name them (Blow, Breathy,

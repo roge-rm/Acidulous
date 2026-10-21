@@ -2323,6 +2323,7 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:body" to "pipe|lowest",
     "Timber:bore" to "pipe|shape",
     "Timber:breath" to "air|breath",
+    "Timber:choke" to "tuning|choke",
     "Timber:cutoff" to "filter|cutoff",
     "Timber:decay" to "envelope|decay",
     "Timber:drive" to "out|drive",
@@ -2338,6 +2339,7 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:jet" to "jet|crossing",
     "Timber:keys" to "keys|key noise",
     "Timber:lattice" to "lattice|cutoff",
+    "Timber:legato" to "tuning|legato",
     "Timber:loss" to "end|loss",
     "Timber:mac1" to "macros|macro 1",
     "Timber:mac1_a1" to "macro 1|by 1",
@@ -2423,11 +2425,11 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:sustain" to "envelope|sustain",
     "Timber:swell" to "swell|amount",
     "Timber:swelltime" to "swell|time",
-    "Timber:tongue" to "tongue|depth",
-    "Timber:tonguetime" to "tongue|time",
 )
 
 private fun labels3(): Map<String, String> = mapOf(
+    "Timber:tongue" to "tongue|depth",
+    "Timber:tonguetime" to "tongue|time",
     "Timber:transpose" to "tuning|transpose",
     "Timber:velocity" to "out|velocity",
     "Timber:vibrato" to "vibrato|depth",
@@ -4961,6 +4963,7 @@ private fun short2(): Map<String, String> = mapOf(
     "Timber:body" to "lowest",
     "Timber:bore" to "shape",
     "Timber:breath" to "breath",
+    "Timber:choke" to "choke",
     "Timber:cutoff" to "cutoff",
     "Timber:decay" to "decay",
     "Timber:drive" to "drive",
@@ -4976,6 +4979,7 @@ private fun short2(): Map<String, String> = mapOf(
     "Timber:jet" to "crossing",
     "Timber:keys" to "key noise",
     "Timber:lattice" to "cutoff",
+    "Timber:legato" to "legato",
     "Timber:loss" to "loss",
     "Timber:mac1" to "macro 1",
     "Timber:mac1_a1" to "by 1",
@@ -5109,11 +5113,11 @@ private fun short2(): Map<String, String> = mapOf(
     "Tongue:stop" to "stop",
     "Tongue:strum" to "strum",
     "Tongue:sustain" to "sustain",
-    "Tongue:tune" to "tune",
-    "Tongue:velocity" to "velocity",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Tongue:tune" to "tune",
+    "Tongue:velocity" to "velocity",
     "Tongue:voices" to "voices",
     "Tongue:volume" to "volume",
     "Tongue:words" to "words",
