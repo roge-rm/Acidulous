@@ -652,6 +652,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Filament:eg2dec" to "eg 2|decay",
     "Filament:eg2rel" to "eg 2|release",
     "Filament:eg2sus" to "eg 2|sustain",
+    "Filament:evenness" to "body|evenness",
     "Filament:exciter" to "exciter|kind",
     "Filament:exciter out" to "out|exciter",
     "Filament:fine" to "tuning|fine",
@@ -818,10 +819,10 @@ private fun labels0(): Map<String, String> = mapOf(
     "Forage:p01_end" to "pad 2|sample|end",
     "Forage:p01_level" to "pad 2|amp|level",
     "Forage:p01_mode" to "pad 2|tone|mode",
-    "Forage:p01_pan" to "pad 2|amp|pan",
 )
 
 private fun labels1(): Map<String, String> = mapOf(
+    "Forage:p01_pan" to "pad 2|amp|pan",
     "Forage:p01_pdecay" to "pad 2|punch|decay",
     "Forage:p01_penv" to "pad 2|punch|pitch env",
     "Forage:p01_pitch" to "pad 2|sample|pitch",
@@ -1621,10 +1622,10 @@ private fun labels1(): Map<String, String> = mapOf(
     "Mosaic:l2_wave" to "lfo 2|wave",
     "Mosaic:loop" to "playback|loop",
     "Mosaic:m01_depth" to "mod 1|depth",
-    "Mosaic:m01_dest" to "mod 1|to",
 )
 
 private fun labels2(): Map<String, String> = mapOf(
+    "Mosaic:m01_dest" to "mod 1|to",
     "Mosaic:m01_src" to "mod 1|from",
     "Mosaic:m01_src2" to "mod 1|× from",
     "Mosaic:m02_depth" to "mod 2|depth",
@@ -2424,10 +2425,10 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:resonance" to "filter|reso",
     "Timber:sustain" to "envelope|sustain",
     "Timber:swell" to "swell|amount",
-    "Timber:swelltime" to "swell|time",
 )
 
 private fun labels3(): Map<String, String> = mapOf(
+    "Timber:swelltime" to "swell|time",
     "Timber:tongue" to "tongue|depth",
     "Timber:tonguetime" to "tongue|time",
     "Timber:transpose" to "tuning|transpose",
@@ -3305,6 +3306,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Filament:eg2dec" to "decay",
     "Filament:eg2rel" to "release",
     "Filament:eg2sus" to "sustain",
+    "Filament:evenness" to "evenness",
     "Filament:exciter" to "kind",
     "Filament:exciter out" to "exciter",
     "Filament:fine" to "fine",
@@ -3506,10 +3508,10 @@ private fun short0(): Map<String, String> = mapOf(
     "Forage:p03_penv" to "pitch env",
     "Forage:p03_pitch" to "pitch",
     "Forage:p03_play" to "play",
-    "Forage:p03_reso" to "reso",
 )
 
 private fun short1(): Map<String, String> = mapOf(
+    "Forage:p03_reso" to "reso",
     "Forage:p03_reverse" to "reverse",
     "Forage:p03_start" to "start",
     "Forage:p04_choke" to "choke",
@@ -4309,10 +4311,10 @@ private fun short1(): Map<String, String> = mapOf(
     "Mosaic:transpose" to "transpose",
     "Mosaic:velamt" to "vel",
     "Mosaic:velfade" to "vel xf",
-    "Mosaic:veltofilter" to "vel",
 )
 
 private fun short2(): Map<String, String> = mapOf(
+    "Mosaic:veltofilter" to "vel",
     "Mosaic:voicemode" to "mode",
     "Mosaic:volume" to "volume",
     "Nexus:bend" to "bend",
@@ -5112,10 +5114,10 @@ private fun short2(): Map<String, String> = mapOf(
     "Tongue:sidechain" to "follow",
     "Tongue:stop" to "stop",
     "Tongue:strum" to "strum",
-    "Tongue:sustain" to "sustain",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Tongue:sustain" to "sustain",
     "Tongue:tune" to "tune",
     "Tongue:velocity" to "velocity",
     "Tongue:voices" to "voices",

@@ -45,12 +45,6 @@ constexpr float kBodyLevel = 1.4f;
 // How many of a string's harmonics bodyLevelAt reads. Their power is taken
 // to fall as 1/k, which measured closer than a sawtooth's 1/k^2.
 constexpr int kBodyHarmonics = 8;
-// How far each note is evened out against the body's resonances, as a power
-// of what the body does to it: 0 leaves the body's wolf notes as they fall
-// and 1 would take them all out. A string's spectrum isn't known ahead, so
-// all the way overshoots; a half took the per-note spread of a bowed string
-// at full body from 3.5..10.7 dB down to 1.7..5.5.
-constexpr float kBodyEven = 0.5f;
 } // namespace
 
 Filament::Filament() { initParams(); }
@@ -198,6 +192,7 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
                 lin(b + 5 + r, n, -1.0f, 1.0f, 0.0f);
             }
         }
+        lin(Evenness, "evenness", 0.0f, 1.0f, 0.5f);
         built = true;
     }
     count = Count;
@@ -279,7 +274,7 @@ void Filament::prepare(int32_t sr) {
     for (auto &s : sympathetic) s.prepare(sampleRate);
     for (auto &e : eg) e.setSampleRate(sampleRate);
     lastTuning = -1;
-    bodySizeAt = bodyDampAt = -1.0f; // the body's coefficients follow the rate
+    bodySizeAt = bodyDampAt = bodyEvenAt = -1.0f; // the body's coefficients follow the rate
     reset();
 }
 
@@ -654,6 +649,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 body[1][i].bandpass(bodyHz[1][i], q, sampleRate);
             }
         }
+        // Each note's evening out is worked out again when the knob moves.
+        const float evenNow = paramOf(Evenness);
+        if (evenNow != bodyEvenAt) {
+            bodyEvenAt = evenNow;
+            ++bodyGen;
+        }
     }
     for (int i = 0; i < kSympathetic; ++i) {
         // Sympathetic string damping is a time too, worked out from each
@@ -759,7 +760,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // and on a real note change only.
                         const float bodyHz = v.target * pitchScale / std::pow(2.0f, bendSemis / 12.0f);
             if (bodyOn && (v.bodyGenAt != bodyGen || v.bodyHzAt < 0.0f || std::fabs(bodyHz - v.bodyHzAt) > v.bodyHzAt * 0.002f)) {
-                v.bodyGoal = std::pow(kBodyLevel * bodyLevelAt(bodyHz), -kBodyEven);
+                v.bodyGoal = std::pow(kBodyLevel * bodyLevelAt(bodyHz), -bodyEvenAt);
                 if (v.bodyHzAt < 0.0f) v.bodyG = v.bodyGoal;
                 v.bodyGenAt = bodyGen;
                 v.bodyHzAt = bodyHz;

@@ -29,7 +29,9 @@ corde avec un micro.
 Six résonances tiennent lieu de caisse de l’instrument, de l’air dans la
 caisse jusqu’à ses tables. **taille** les déplace, d’une grande caisse à une
 petite, **amortir** les élargit et **mélange** passe de la corde seule à la
-corde entendue à travers la caisse. Il y a aussi des **cordes** sympathiques, sous **sympathie**, qui
+corde entendue à travers la caisse. **égalise** égalise le volume de chaque
+note à travers la caisse ; à 0 les notes qui tombent sur une résonance
+ressortent, notes du loup comprises. Il y a aussi des **cordes** sympathiques, sous **sympathie**, qui
 résonnent avec ce que vous jouez.
 
 ## Modulation

@@ -390,6 +390,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "esraj" to Res.string.pw_esraj,
     "europe" to Res.string.pw_europe,
     "Even" to Res.string.pw_even,
+    "evenness" to Res.string.pw_evenness,
     "every" to Res.string.pw_every,
     "excite" to Res.string.pw_excite,
     "exciter" to Res.string.pw_exciter,
