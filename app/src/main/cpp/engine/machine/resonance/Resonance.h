@@ -36,7 +36,11 @@ class Resonance final : public Machine {
         // multiplies every pad's tune.
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
-        Count = MacroBase + 8 * MacroParams
+        // Added after the macros. How much of a driven pad's bend reaches the
+        // coupling bus, 0 the clean pad. Not a macro destination, since adding
+        // one would move every saved destination.
+        DriveCouple = MacroBase + 8 * MacroParams,
+        Count
     };
     enum Dest : int32_t {
         DstOff, DstDecay, DstDamp, DstInharm, DstHit, DstHard, DstNoise, DstDrive, DstPitch,

@@ -280,6 +280,7 @@
     <string name="pw_drift">dérive</string>
     <string name="pw_drips">gouttes</string>
     <string name="pw_drive">satur.</string>
+    <string name="pw_drive_heard">satur. écoutée</string>
     <string name="pw_drone">bourdon</string>
     <string name="pw_drones">bourdons</string>
     <string name="pw_drop">omettre</string>

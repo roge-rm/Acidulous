@@ -3383,6 +3383,7 @@ private fun ResonancePanel(b: ParamBinding, pad: Int, track: Track, trackIndex: 
             }
             2 -> Group("kit") {
                 PanelKnob(b, "coupling", "coupling", hot)
+                PanelKnob(b, "drivecouple", "drive heard", hot)
                 PanelStepKnob(b, "modes", listOf("4", "8", "12", "16", "20", "24"), "modes")
                 PanelKnob(b, "humanise", "humanise")
                 PanelKnob(b, "accent", "accent")

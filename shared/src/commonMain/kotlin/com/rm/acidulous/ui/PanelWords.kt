@@ -319,6 +319,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "drift" to Res.string.pw_drift,
     "drips" to Res.string.pw_drips,
     "drive" to Res.string.pw_drive,
+    "drive heard" to Res.string.pw_drive_heard,
     "drone" to Res.string.pw_drone,
     "drones" to Res.string.pw_drones,
     "drop" to Res.string.pw_drop,

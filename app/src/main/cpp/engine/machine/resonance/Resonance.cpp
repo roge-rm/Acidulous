@@ -91,6 +91,7 @@ struct Table {
         defs[R::Accent] = {"accent", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""};
         defs[R::Volume] = {"volume", 0.0f, 1.5f, 0.5f, Curve::Linear, 0, ""}; // Init on the house line
         defs[R::MasterPan] = {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
+        defs[R::DriveCouple] = {"drivecouple", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
         for (int k = 0; k < R::kMacros; ++k) {
             const int32_t b = R::MacroBase + k * R::MacroParams;
             char *n = macroNames[k * R::MacroParams];
@@ -343,6 +344,7 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
     const float coupling = val(Coupling);
     const float volume = val(Volume);
     const float masterPan = params_.get(MasterPan);
+    const float driveCouple = params_.get(DriveCouple);
     // Half the partials in lean mode, see `modesFor`. The ones dropped are the
     // quietest, since the series rolls off.
     const int32_t wantModes = modesFor(params_.get(Modes));
@@ -440,10 +442,21 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
 
             const float modes = sum; // before the level knob, for the drive
             sum *= vLevel[pad];
-            p.last = sum;
+            // What this pad puts on the ring bus. With drivecouple, part of
+            // it goes through the drive's curve scaled to a slope of 1 at
+            // zero. |tanh(x)| <= |x|, so it adds harmonics and never level,
+            // and the loop gain stays where the clean pad has it.
+            float toBus = sum;
+            const float drive = vDrive[pad];
+            if (driveCouple > 0.0f && drive > 0.0001f) {
+                const float g = drive * kDriveGain;
+                const float bent = dsp::fastTanh(modes * (g / kDriveNominal)) * (kDriveNominal / g) * vLevel[pad];
+                toBus = sum + (bent - sum) * driveCouple;
+            }
+            p.last = toBus;
             // Both the ring and the strike itself go onto the buses. The
             // broadband strike is what excites neighbouring pads.
-            ringOut += sum * kRingToBus;
+            ringOut += toBus * kRingToBus;
             knockOut += strike * kKnockToBus;
 
             if (p.ringing && p.exciteLeft <= 0.0f && std::fabs(sum) < 1e-5f) {
@@ -455,11 +468,10 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
                 if (quiet) p.ringing = false;
             }
 
-            // The drive is after the bus, so the neighbours hear the clean
-            // pad and its gain can't feed the coupling loop. It's normalised
-            // on kDriveNominal, so a pad at that level passes at its own size
-            // and the knob adds grit and sustain rather than cutting level.
-            const float drive = vDrive[pad];
+            // The drive's gain is after the bus, so it can't feed the coupling
+            // loop. It's normalised on kDriveNominal, so a pad at that level
+            // passes at its own size and the knob adds grit and sustain
+            // rather than cutting level.
             if (drive > 0.0001f) {
                 const float g = drive * kDriveGain;
                 sum = dsp::fastTanh(modes * (g / kDriveNominal)) *

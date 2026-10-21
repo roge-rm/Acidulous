@@ -2106,6 +2106,7 @@ private fun labels2(): Map<String, String> = mapOf(
     "Reflux:wave" to "osc|wave",
     "Resonance:accent" to "kit|accent",
     "Resonance:coupling" to "kit|coupling",
+    "Resonance:drivecouple" to "kit|drive heard",
     "Resonance:humanise" to "kit|humanise",
     "Resonance:mac1" to "macros|macro 1",
     "Resonance:mac1_a1" to "macro 1|by 1",
@@ -2424,10 +2425,10 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:release" to "envelope|release",
     "Timber:resonance" to "filter|reso",
     "Timber:sustain" to "envelope|sustain",
-    "Timber:swell" to "swell|amount",
 )
 
 private fun labels3(): Map<String, String> = mapOf(
+    "Timber:swell" to "swell|amount",
     "Timber:swelltime" to "swell|time",
     "Timber:tongue" to "tongue|depth",
     "Timber:tonguetime" to "tongue|time",
@@ -4749,6 +4750,7 @@ private fun short2(): Map<String, String> = mapOf(
     "Reflux:wave" to "wave",
     "Resonance:accent" to "accent",
     "Resonance:coupling" to "coupling",
+    "Resonance:drivecouple" to "drive heard",
     "Resonance:humanise" to "humanise",
     "Resonance:mac1" to "macro 1",
     "Resonance:mac1_a1" to "by 1",
@@ -5113,10 +5115,10 @@ private fun short2(): Map<String, String> = mapOf(
     "Tongue:set" to "set",
     "Tongue:sidechain" to "follow",
     "Tongue:stop" to "stop",
-    "Tongue:strum" to "strum",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Tongue:strum" to "strum",
     "Tongue:sustain" to "sustain",
     "Tongue:tune" to "tune",
     "Tongue:velocity" to "velocity",

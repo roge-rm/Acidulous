@@ -314,6 +314,7 @@
     <string name="pw_drift">drift</string>
     <string name="pw_drips">drips</string>
     <string name="pw_drive">drive</string>
+    <string name="pw_drive_heard">drive heard</string>
     <string name="pw_drone">drone</string>
     <string name="pw_drones">drones</string>
     <string name="pw_drop">drop</string>

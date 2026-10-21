@@ -25,7 +25,8 @@ strikes it. Nothing is sampled.
 
 **coupling** sets how much the pads ring into each other. Hit one and the
 others answer quietly at their own pitches, so a kit sounds like objects in one
-room. **humanise** varies each hit a little.
+room. **drive heard** lets the others hear a driven pad's grit as well as its
+ring, without making the loop any louder. **humanise** varies each hit a little.
 
 ## Macros
 
