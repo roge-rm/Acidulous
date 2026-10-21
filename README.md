@@ -1,22 +1,12 @@
 # Acidulous
 
-Acidulous is a music studio for Android 8.1 and up. 
-It also runs on Linux, on Windows and in a web browser.
+Acidulous is a music studio for Android 8.1 or newer, Linux, Windows and browsers. Combine up to 16 synthesizers, drum machines, samplers and processors into scenes, then play them in order or launch clips as you go.
 
-Combine up to 16 synthesizers, drum machines, noise generators and processors together into scenes of music and play them in order or pick and choose to generate something new every time.
+It's an homage to Caustic and a collection of things I've liked or wanted in other music tools. You can sequence, record, play live, change your voice and export songs or stems. It's nearly at 1.0 and ready for people other than me to test.
 
-This is an homage to Caustic and a collection of all the good ideas I've seen and had when making music with a variety of tools over the years. Some things I liked a certain way, some things I wished were another; this is the combination of all of those ideas into something I hope is cohesive and fun to use.
+Let me know what works, what doesn't and what you'd like in #acidulous [on my discord](https://discord.gg/9Wun47jGC6), or open an issue here.
 
-Read below for more details on the machines, sequencer, and app capabilities. 
-
-Acidulous is very near a 1.0 release which means I think it is feature ready for use and proper testing by people other than myself.
-You can very much make music with this now, sequencing and recording, playing and performing. You can record and alter your voice, other instruments, other synths and drum machines. You can export via a number of formats, in full form or split into stems.
-
-Please do all of these things and then let me know what works, what doesn't work, what could work in the future so I can grow it into something even more interesting.
-
-And please join me in the #acidulous channel **[on my discord](https://discord.gg/9Wun47jGC6)**  to share comments, ask questions, report bugs or issues with different devices, or to request new features. Or feel free to open an issue here.
-
-The manual is in [manual/](manual/) and in the app in the **Help…** window. 
+The [manual](manual/) is also in the app under Help….
 
 Enjoy,<br>
 Dan
@@ -44,114 +34,45 @@ All six are the demo song, Squelch.
 
 ## What's in it
 
-### Thirty-one machines
+### Machines and effects
 
-**Synths**
+There are 31 machines. Each has patches to start from and a [manual page](manual/04-the-machines.md).
 
-| | |
+| Machine | What it does |
 |---|---|
-| **Cumulus** | Big, smooth pads built from a spectrum of partials. |
-| **Formulate** | An 8-bit chip synth with tracker-style tables, and you can type in your own waveform as a formula. |
-| **Ratio** | Six-operator FM. Morph between two algorithms, and snap or skew the operator ratios. |
-| **Reflux** | Acid bass. One oscillator and a filter that screams. Play harder for accent and overlap notes to slide. |
-| **Trinity** | A three-oscillator poly synth with wavetables, stacked voices, FM between the oscillators and some drift. |
+| Cumulus | Pads built from a spectrum of partials. |
+| Formulate | An 8-bit chip synth with tables and formula waveforms. |
+| Ratio | Six-operator FM with morphing algorithms. |
+| Reflux | Acid bass with accents and slides. |
+| Trinity | Three oscillators, wavetables, FM and voice drift. |
+| Dice | Tempo-matched loop slicing with chance and repeats. |
+| Forage | A drum machine with thirteen sample pads. |
+| Genesis | Modelled drums with circuit drift and bus compression. |
+| Hexbeat | Thirteen synthesized drum voices. |
+| Palm | Modelled hand drums with different strokes and pressure. |
+| Resonance | Eight struck objects that ring into each other. |
+| Hammer | Modelled pianos, electric pianos and related instruments. |
+| Manual | Two-manual organ, pedals and rotary cabinet. |
+| Tine | Modelled bars, tines, pans and bells. |
+| Filament | Strings you can pluck, pick, hammer, bow or blow. |
+| Fret | Modelled guitars and basses with an amp. |
+| Sympath | Strings with buzzing bridges and sympathetic resonance. |
+| Brazen | Modelled brass, solo or in a section. |
+| Chanter | Bagpipes and hurdy-gurdy. |
+| Draw | Harmonicas, accordions and other free reeds. |
+| Timber | Modelled woodwinds. |
+| Tongue | Modelled jaw harps with mouth control. |
+| Aviary | Modelled birdsong, from one bird or a flock. |
+| Fathom | Water, weather and environmental sounds. |
+| Molt | Record a voice and play it at drawn pitches. |
+| Mosaic | SoundFonts, multisamples and granular playback. |
+| Pollen | Grains from a file or live input. |
+| Bias | Four audio recording tracks along the song. |
+| Cipher | A vocoder with rearrangeable bands. |
+| Diction | A vocal synthesizer trained on your voice. |
+| Nexus | A modular synth built from the other machines. |
 
-**Drums**
-
-| | |
-|---|---|
-| **Dice** | A loop slicer that keeps a loop at the song's tempo, and can shuffle, stutter, reverse and drop slices by chance. |
-| **Forage** | A sample drum machine with thirteen pads for your own sounds. |
-| **Genesis** | The big drum box: a heavy kick, some circuit drift and a bus compressor the kick ducks. |
-| **Hexbeat** | A synthesized drum machine in the style of the classic small boxes, with thirteen voices. |
-| **Palm** | Modelled hand drums from tabla to cuíca, with open, slap, muted and rim strokes, and pressure squeezing a talking drum. |
-| **Resonance** | Eight struck objects (drums, wood, metal, bells) that ring into each other. |
-
-**Keys**
-
-| | |
-|---|---|
-| **Hammer** | Modelled pianos and their relatives: grands, uprights, electric pianos, celesta, toy piano, dulcimer and cimbalom. |
-| **Manual** | An organ with two manuals and pedals, four models (tonewheel, combo, reed, pipe) and a rotary cabinet. |
-| **Tine** | Modelled bars, tines and pans: marimba, vibraphone, thumb piano, steel pan, gamelan, bells and blocks. Rolls, and pressure bows a held bar. |
-
-**Strings**
-
-| | |
-|---|---|
-| **Filament** | Modelled strings you can pluck, pick, hammer, bow or blow. |
-| **Fret** | Modelled electric guitars and basses, hollowbody, steel and fretless too, with pickups, palm muting, harmonics, slides and an amp loud enough to feed back. |
-| **Sympath** | Modelled sitar, tanpura, shamisen and others, plucked or bowed: a buzzing bridge, sympathetic strings tuned to a scale, and a tanpura that plays in time. |
-
-**Winds**
-
-| | |
-|---|---|
-| **Brazen** | Modelled brass, from tuba to trumpet, or a section of four players. |
-| **Chanter** | Modelled bagpipes from a dozen traditions and the hurdy-gurdy: drones that carry on between notes, grace notes, and a trompette that buzzes on the beat. |
-| **Draw** | Modelled free reeds: harmonicas you bend with your tongue, accordions with registers and bellows shake, bandoneon, concertina, melodica, harmonium, and the sheng, shō and khaen. A harmonica can talk. |
-| **Timber** | Modelled woodwinds: clarinet, oboe, sax, flute and friends. |
-| **Tongue** | Modelled jaw harps, ten kinds from steel to bamboo, up to five reeds as a chord, and a mouth on the mod wheel that picks out the tune. |
-
-**Nature**
-
-| | |
-|---|---|
-| **Aviary** | Modelled birdsong: whistles, chirps, trills and calls in time with the tempo, from one bird or a flock. |
-| **Fathom** | Modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail and snow. |
-
-**Samples**
-
-| | |
-|---|---|
-| **Molt** | Sing a take and play it back tuned to the notes you draw. |
-| **Mosaic** | A multisample player for SoundFonts or your own samples, which can also turn them into grain clouds. |
-| **Pollen** | Granular clouds from a file or from the live input. |
-
-**Beyond**
-
-| | |
-|---|---|
-| **Bias** | A four-track for audio recordings that runs along the song. |
-| **Cipher** | A vocoder where you can rearrange which bands drive which. |
-| **Diction** | A vocal synthesizer trained on your voice. |
-| **Nexus** | A modular synth whose modules are the other machines. |
-
-### Twenty-nine effects
-
-Each has the usual controls plus one extra, and its own page in the manual.
-
-| | |
-|---|---|
-| **Acid** | The acid bass filter on any track, opened by each note or by a pattern on the beat. |
-| **Amp** | A guitar amp with a cabinet you can resize from a small combo to a full stack. |
-| **Bitcrusher** | Fewer bits, a lower sample rate and an unsteady clock if you want one. |
-| **Chorus** | Two to four detuned voices that drift. |
-| **Compressor** | The usual controls, a sidechain from any track and a pump that follows the tempo. |
-| **Delay** | Echoes on a note value, and it can duck while you play. |
-| **Distortion** | Four kinds of clipping and a bias control. |
-| **Eq** | Three bands and a tilt. |
-| **Filter** | Low, band or high pass, moved by an LFO, the signal's level or another track. |
-| **Flanger** | A short sweeping delay, with negative feedback for the hollow sound. |
-| **Formula** | Type a formula and it shapes the track, a sample at a time. |
-| **Gate** | A noise gate that another track can open. |
-| **Grain** | A cloud of short slices of what the track just played, which can freeze. |
-| **Harmonizer** | Adds two voices at scale steps, so they stay in key. |
-| **Horn** | The track plays a horn, a clarinet, an oboe or a flute, following its pitch and level. |
-| **Magneto** | The sound of a small recordable disc's formats, from the clean original to the long-play swirl, copied up to four times. |
-| **Mouth** | Vowels, moved by an LFO, the track's level or another track. |
-| **Phaser** | Two to eight stages. |
-| **Resonator** | Strings tuned to a key, ringing in sympathy with the track. |
-| **Reverb** | A room that can also freeze, gate, shimmer up an octave or crush itself down to 8 bits. |
-| **Rotary** | The organ's rotating speaker cabinet for any track, slow, fast or on the beat. |
-| **Shifter** | Frequency shifting, for metallic and detuned sounds. |
-| **Slicer** | Cuts the track into slices on the beat and repeats, reverses or drops some of them. |
-| **Smash** | Three bands squashed from both sides: the loud parts come down and the quiet parts come up. |
-| **Spectral** | Freeze, blur, smear or robotise the track's frequencies. |
-| **Swell** | Upward compression in one band or three: the quiet parts come up to meet the loud ones. |
-| **Tape** | A worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop. |
-| **Tremolo** | Volume on an LFO, or auto-pan. |
-| **Width** | Wider, narrower, mono below a frequency or rotated. |
+There are 29 effects, including filters, distortion, amps, dynamics, delays, reverb, modulation, pitch and frequency shifting, granular and spectral processing. Some follow the tempo, the signal or another track. Each has its own page in the manual.
 
 ### Mixing
 
@@ -195,7 +116,7 @@ Two controllers have special support, as I have these myself. Each has its own p
 | | |
 |---|---|
 | <a href="manual/07-midi-and-sync/exquis.md"><img src="manual/images/exquis-session.png" width="250" alt="The Exquis on its Session page"></a> | <a href="manual/07-midi-and-sync/launchpad.md"><img src="manual/images/launchpad-note.png" width="330" alt="The Launchpad Pro on its Note page"></a> |
-| **[Exquis](manual/07-midi-and-sync/exquis.md)** by Intuitive Instruments: its own playing with MPE, and the song grid, the mixer and steps on its pads. | **[Launchpad Pro MK3](manual/07-midi-and-sync/launchpad.md)** by Novation: notes, the song grid, steps, the mixer, chords and the perform effects. |
+| [Exquis](manual/07-midi-and-sync/exquis.md) by Intuitive Instruments: its own playing with MPE, and the song grid, the mixer and steps on its pads. | [Launchpad Pro MK3](manual/07-midi-and-sync/launchpad.md) by Novation: notes, the song grid, steps, the mixer, chords and the perform effects. |
 
 Either can be kept on its notes page, to play live while you change scenes and clips on the screen.
 
@@ -215,15 +136,9 @@ Works with TalkBack. Every control says what it is and what it's set to, knobs a
 
 ## Installing
 
-The easiest way to install Acidulous on Android and keep it up to date is my F-Droid repo:
+Add [my F-Droid repo](https://hunke.ws/fdroid/repo?fingerprint=80438B253C257BCCE05CDCB9E3AC9B6174C2250659962B14FCBE7F32FD42D53E), then search for Acidulous. F-Droid offers new versions as updates.
 
-[https://hunke.ws/fdroid/repo](https://hunke.ws/fdroid/repo?fingerprint=80438B253C257BCCE05CDCB9E3AC9B6174C2250659962B14FCBE7F32FD42D53E)
-
-Then search for Acidulous in F-Droid, and it will offer each new version as an update.
-
-You can also download the APK from the [Releases](https://github.com/roge-rm/Acidulous/releases)
-page and sideload it. There are two, the usual 64-bit one and a 32-bit one
-for tablets that run 32-bit Android like the Fire HD 8.
+Or get an APK from [Releases](https://github.com/roge-rm/Acidulous/releases). Use the usual 64-bit APK, or the 32-bit one for devices such as the Fire HD 8 that run 32-bit Android.
 
 ### Linux
 
@@ -241,9 +156,9 @@ Then `sudo apt install acidulous`. It brings Java 21 with it.
 
 Or from the [Releases](https://github.com/roge-rm/Acidulous/releases) page:
 
-- **Debian and Raspberry Pi OS:** the `.deb` for your machine, amd64 or
+- Debian and Raspberry Pi OS: the `.deb` for your machine, amd64 or
   arm64. Install it with `sudo apt install ./acidulous_*.deb`.
-- **Anything else** (Ubuntu 22.04 and newer, Fedora, Arch, the Steam Deck):
+- Other distributions (Ubuntu 22.04 and newer, Fedora, Arch, the Steam Deck):
   the AppImage, x86_64 or aarch64. It has its own Java, so just make it
   executable and run it.
 
@@ -309,13 +224,7 @@ The engine tests run on the computer and take a few minutes:
 tools/all_tests.sh
 ```
 
-They check things like:
-
-- every machine sounds the same after a panic as before it (`reset_test`)
-- a song renders the same twice, sidechains and groups work, and exports ignore the lean quality setting (`render_test`)
-- every modulation source and destination in every machine does something (`modsource_test`)
-- every factory patch makes a sound without clipping, and no two patches in a bank are the same (`bank_test`)
-- the loudness meter reads the EBU's test signals correctly (`loudness_test`)
+They check machine resets, repeatable rendering, sidechains, groups, modulation, factory patches and loudness readings. Export tests check that the lean quality setting doesn't change the output.
 
 `tools/cpu_test.sh` measures what each machine and effect costs.
 
@@ -335,8 +244,7 @@ tools/audition.sh params Mosaic           # the parameter table
 
 ## Licence
 
-Acidulous is free software under the **GNU General Public License, version 3
-or later**. See [LICENSE](LICENSE).
+Acidulous is free software under the GNU General Public License, version 3 or later. See [LICENSE](LICENSE).
 
 Copyright © 2026 Dan Hunke.
 
