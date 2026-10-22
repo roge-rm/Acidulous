@@ -63,7 +63,7 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
 
 ## Macros
 
-La page **jeu** a huit boutons macro. Un patch peut les nommer (Grain, Manche,
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Grit, Palm,
 etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
 dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
 patch, ce qui donne le patch tel qu’il a été fait.

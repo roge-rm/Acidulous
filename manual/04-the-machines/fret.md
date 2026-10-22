@@ -60,7 +60,7 @@ hear the 4th harmonic at all.
 
 ## Macros
 
-The **play** page has eight macro knobs. A patch can name them (Grit, Neck,
+The **play** page has eight macro knobs. A patch can name them (Grit, Palm,
 etc.) and the names show on the knobs, on automation lanes and in the
 controller mapping list. They sit at zero when a patch loads, which is the
 patch as it was made.
