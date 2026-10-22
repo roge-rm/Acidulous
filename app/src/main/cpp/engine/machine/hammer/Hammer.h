@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <cstdint>
 #include <engine/machine/Machine.h>
 #include <engine/machine/hammer/Board.h>
@@ -153,8 +154,9 @@ class Hammer final : public Machine {
         int quietBlocks = 0;
         /** What it was struck with: its note, Hz, and how hard, for a roll to strike it again. */
         float hz = 440.0f, velocity01 = 0.8f;
-        /** Samples until a roll strikes it again. */
+        /** Samples until a roll strikes it again, and the even interval that wait was set from. */
         int32_t rollLeft = 0;
+        float rollEvery = 0.0f;
         /** The pitch macro it was struck at, and the one its strings are bent to now, in its 0..1 units. */
         float macStruck = 0.0f, macPitch = 0.0f;
         /**
@@ -271,6 +273,8 @@ class Hammer final : public Machine {
     float lastDuplex = 0.0f;
     /** A roll's unevenness. */
     uint32_t rollNoise = 0x2c1b3c6du;
+    /** A roll's even interval at [hz], in samples, at most a minute so it fits an int32. */
+    float rollInterval(float hz) const { return std::fmin(static_cast<float>(sampleRate) / hz, 60.0f * static_cast<float>(sampleRate)); }
     /** -1 to 1, for a roll's unevenness. */
     float rollWhite() {
         rollNoise = rollNoise * 1664525u + 1013904223u;

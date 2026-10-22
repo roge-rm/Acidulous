@@ -144,5 +144,5 @@ destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
 knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model,
 the register, the switches and stepped choices and the tuning can't be
-reached. A change to the attack, release or velocity is heard from the next
-note. Tap a macro's name to rename it.
+reached. A change to the attack, release, velocity, **set**, **chamber** or
+**detune** is heard from the next note. Tap a macro's name to rename it.

@@ -170,8 +170,9 @@ knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model,
 the switches and stepped choices and the tuning steps can't be reached. Most
 of a piano is set when a key is struck, so a change to the hammer, the strings
-or the dampers is heard from the next note; the board, the room, the amp, the
-tremolo, **duplex**, **roll**, volume and pan move at once. Tap a macro's name
+or the dampers, and the board's **width**, is heard from the next note; the
+rest of the board, the room, the amp, the tremolo, **duplex**, **roll**, volume
+and pan move at once. Tap a macro's name
 to rename it.
 
 ## Tips

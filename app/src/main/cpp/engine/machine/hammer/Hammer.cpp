@@ -306,6 +306,7 @@ void Hammer::reset() {
         v.barX = 0.0f;
         v.speed = 0.0f;
         v.rollLeft = 0;
+        v.rollEvery = 0.0f;
         v.macStruck = v.macPitch = 0.0f;
         v.dupHas = false;
         for (int d = 0; d < Voice::kDuplex; ++d) v.dupY1[d] = v.dupY2[d] = 0.0f;
@@ -574,7 +575,8 @@ void Hammer::noteOn(uint8_t note, uint8_t velocity) {
     if (isBar(model)) strikeBar(*v, model, key, v->hz, v->velocity01);
     else strike(*v, key, v->hz, v->velocity01);
     const float roll = goalOf(Roll);
-    v->rollLeft = roll > 0.0f ? static_cast<int32_t>(sampleRate / roll) : 0;
+    v->rollEvery = roll > 0.0f ? rollInterval(roll) : 0.0f;
+    v->rollLeft = static_cast<int32_t>(v->rollEvery);
     // A new note takes the wheel where it is.
     bendVoice(*v);
     asleep = false;
@@ -1071,6 +1073,8 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
     }
     board.voice(voicing());
     if (asleep) {
+        // The duplex stays current, so the block that wakes doesn't ramp from a stale level.
+        lastDuplex = paramOf(Duplex);
         for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
         return true;
     }
@@ -1195,12 +1199,19 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
         // A roll strikes a held note again on its own sample, never quite evenly.
         int32_t at = 0;
         if (rollHz > 0.0f && v.held && !v.retiring) {
+            // A faster roll shortens the wait already running, in proportion.
+            const float every = rollInterval(rollHz);
+            if (every < v.rollEvery) {
+                v.rollLeft = static_cast<int32_t>(static_cast<float>(v.rollLeft) * (every / v.rollEvery));
+                v.rollEvery = every;
+            }
             while (v.rollLeft < frames - at) {
                 const int32_t hit = at + std::max(0, v.rollLeft);
                 run(v, at, hit);
                 at = hit;
                 restrike(v);
-                v.rollLeft = std::max(1, static_cast<int32_t>(sampleRate / rollHz * (1.0f + 0.08f * rollWhite())));
+                v.rollEvery = every;
+                v.rollLeft = std::max(1, static_cast<int32_t>(every * (1.0f + 0.08f * rollWhite())));
             }
             v.rollLeft -= frames - at;
         }

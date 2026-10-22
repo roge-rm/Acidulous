@@ -184,7 +184,7 @@ destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace tout l’instrument, 24
 demi-tons à 1. Le modèle, les interrupteurs et les choix par pas, et les pas d’accord ne sont pas accessibles. Presque tout un piano se règle quand une touche est frappée, alors un changement du marteau, des cordes ou des
-étouffoirs s’entend à la note suivante ; la table, la salle, l’ampli, le trémolo, **duplex**, **roulement**, le
+étouffoirs, et la **largeur** de la table, s’entend à la note suivante ; le reste de la table, la salle, l’ampli, le trémolo, **duplex**, **roulement**, le
 volume et le pano bougent tout de suite. Touchez le nom d’une
 macro pour la renommer.
 

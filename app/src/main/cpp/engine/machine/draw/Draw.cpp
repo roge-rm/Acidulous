@@ -337,7 +337,6 @@ void Draw::reset() {
     }
     for (float &m : mac_) m = 0.0f;
     for (float &m : macGoal_) m = 0.0f;
-    for (float &m : madeWith) m = 0.0f;
     for (float &m : blownWith) m = 0.0f;
     bend = channelPressure_ = 0.0f;
     lowState = 0.0f;
@@ -813,20 +812,18 @@ bool Draw::render(float *L, float *R, int32_t frames) {
     updateMacros();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (asleep) return true;
-    // A macro moving what a note's reeds are made from remakes them, and one
-    // moving how hard they're blown blows them again. Only when one moved.
+    // A macro moving how hard the reeds are blown blows them again, and the
+    // pitch macro bends what's sounding. What reeds are made from (set,
+    // chamber, air, detune) is read at a note, as their knobs are.
     {
-        const float made[4] = {macGoal_[McSet], macGoal_[McChamber], macGoal_[McAir], macGoal_[McDetune]};
         const float blown[2] = {macGoal_[McPressure], macGoal_[McVelocity]};
-        const bool remake = !std::equal(made, made + 4, madeWith);
         const bool reblow = !std::equal(blown, blown + 2, blownWith);
-        std::copy(made, made + 4, madeWith);
         std::copy(blown, blown + 2, blownWith);
         for (Voice &v : voices) {
             if (!v.used) continue;
             const bool moved = v.macPitch != mac_[McPitch];
             v.macPitch = mac_[McPitch];
-            if (remake || moved) retune(v);
+            if (moved) retune(v);
             if (reblow && v.held) v.aim = aimFor(v);
         }
     }

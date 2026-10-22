@@ -222,8 +222,8 @@ class Draw final : public Machine {
     int quietSamples = 0;
     bool asleep = true;
     float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
-    /** The macro offsets the voices were last made and blown with, to remake them when one moves. */
-    float madeWith[4] = {}, blownWith[2] = {};
+    /** The macro offsets the voices were last blown with, to blow them again when one moves. */
+    float blownWith[2] = {};
 };
 
 } // namespace acidulous::machine

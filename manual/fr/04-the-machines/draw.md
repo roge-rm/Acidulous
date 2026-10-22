@@ -157,6 +157,6 @@ La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace tout l’instrument, 24
-demi-tons à 1. Le modèle, le registre, les interrupteurs et les choix par pas, et l’accordage ne sont pas accessibles. Un changement d’attaque, de relâchement ou de vélocité s’entend à la note
+demi-tons à 1. Le modèle, le registre, les interrupteurs et les choix par pas, et l’accordage ne sont pas accessibles. Un changement d’attaque, de relâchement, de vélocité, d’**assise**, de **chambre** ou de **désaccord** s’entend à la note
 suivante. Touchez le nom d’une
 macro pour la renommer.
