@@ -10623,381 +10623,677 @@ internal object FactoryBanks {
         low = 45, high = 67)
 
     private fun palm1() = Patch("Palm", "Djembe Bass",
-        mapOf("stroke" to 0.6f, "body" to 0.8f),
+        mapOf("stroke" to 0.6f, "body" to 0.8f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4215f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5714286f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.199999988f, "mac5_a2" to 0.606f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2995f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Dry", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm2() = Patch("Palm", "Djembe Tone",
-        mapOf("position" to 0.55f, "decay" to 0.6f),
+        mapOf("position" to 0.55f, "decay" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6385f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.469f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.31f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Rattles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm3() = Patch("Palm", "Djembe Slap",
-        mapOf("stroke" to 0.2f),
+        mapOf("stroke" to 0.2f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4345f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.606f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4585f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Rattles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm4() = Patch("Palm", "Djembe By Touch",
-        mapOf("stroke" to 1f, "hand" to 0.65f),
+        mapOf("stroke" to 1f, "hand" to 0.65f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.633f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.469f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.31f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Rattles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm5() = Patch("Palm", "Djembe Rattles",
-        mapOf("stroke" to 1f, "rattle" to 0.6f),
+        mapOf("stroke" to 1f, "rattle" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.633f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4655f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3255f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm6() = Patch("Palm", "Djembe Muted",
-        mapOf("damp" to 0.7f),
+        mapOf("damp" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.547f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.2857143f, "mac3_d3" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.199999988f, "mac3_a3" to 0.3445f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.65f, "mac4_a2" to 0.6275f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4515f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.31f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Rattles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm7() = Patch("Palm", "Talking Drum",
-        mapOf("model" to 0.2777778f, "stroke" to 0.6f, "squeeze" to 0.416666657f),
+        mapOf("model" to 0.2777778f, "stroke" to 0.6f, "squeeze" to 0.416666657f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5755f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.292500019f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm8() = Patch("Palm", "Talking Squeeze",
-        mapOf("model" to 0.2777778f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
+        mapOf("model" to 0.2777778f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5755f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.454999983f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4345f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.5955f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2995f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm9() = Patch("Palm", "Talking Open",
-        mapOf("model" to 0.2777778f, "squeeze" to 0.416666657f),
+        mapOf("model" to 0.2777778f, "squeeze" to 0.416666657f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.440999985f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm10() = Patch("Palm", "Talking Roll",
-        mapOf("model" to 0.2777778f, "squeeze" to 0.416666657f, "roll" to 0.416666657f, "volume" to 0.45f),
+        mapOf("model" to 0.2777778f, "squeeze" to 0.416666657f, "roll" to 0.416666657f, "volume" to 0.45f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.456f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4515f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5965f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4625f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)
 
     private fun palm11() = Patch("Palm", "Ashiko",
-        mapOf("model" to 0.8888889f),
+        mapOf("model" to 0.8888889f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6275f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.448f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.306500018f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 43, high = 57)
 
     private fun palm12() = Patch("Palm", "Ashiko Bass",
-        mapOf("model" to 0.8888889f, "stroke" to 0.6f, "body" to 0.7f),
+        mapOf("model" to 0.8888889f, "stroke" to 0.6f, "body" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5565f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4215f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5714286f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.199999988f, "mac5_a2" to 0.534f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3135f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Dry", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 36, high = 50)
 
     private fun palm13() = Patch("Palm", "Ashiko Slap",
-        mapOf("model" to 0.8888889f, "stroke" to 0.2f),
+        mapOf("model" to 0.8888889f, "stroke" to 0.2f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.6275f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4345f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.606f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.454999983f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.306500018f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 48, high = 62)
 
     private fun palm14() = Patch("Palm", "Udu",
-        mapOf("model" to 0.9444444f, "stroke" to 0.6f, "body" to 0.8f),
+        mapOf("model" to 0.9444444f, "stroke" to 0.6f, "body" to 0.8f, "mac1_d1" to 0.357142866f, "mac1_a1" to 0.85f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4655f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 1f, "mac5_a1" to 0.45f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.566f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.304499984f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Drop", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Low", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 41, high = 55)
 
     private fun palm15() = Patch("Palm", "Udu Bloop",
-        mapOf("model" to 0.9444444f, "stroke" to 0.6f, "drop" to 1f, "body" to 1f),
+        mapOf("model" to 0.9444444f, "stroke" to 0.6f, "drop" to 1f, "body" to 1f, "mac1_d1" to 1f, "mac1_a1" to 0.45f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.714285731f, "mac5_a1" to 0.9f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Low", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Wide", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 38, high = 52)
 
     private fun palm16() = Patch("Palm", "Udu Tap",
-        mapOf("model" to 0.9444444f, "stroke" to 0.8f),
+        mapOf("model" to 0.9444444f, "stroke" to 0.8f, "mac1_d1" to 0.357142866f, "mac1_a1" to 0.85f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.25f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4245f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 1f, "mac5_a1" to 0.45f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.297999978f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Drop", "macro2" to "Soft", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Low", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 48, high = 62)
 
-    private fun palm17() = Patch("Palm", "Cajon Bass",
-        mapOf("model" to 0.166666672f, "stroke" to 0.6f, "rattle" to 0.2f),
+    private fun palm17() = Patch("Palm", "Djembe Flam",
+        mapOf("stroke" to 0.2f, "flam" to 0.366666675f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.440999985f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5955f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.625f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3235f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Rattles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "africa",
+        low = 45, high = 67)
+
+    private fun palm18() = Patch("Palm", "Ashiko By Touch",
+        mapOf("model" to 0.8888889f, "stroke" to 1f, "hand" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6275f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4515f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3135f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "africa",
+        low = 43, high = 57)
+
+    private fun palm19() = Patch("Palm", "Talking By Touch",
+        mapOf("model" to 0.2777778f, "stroke" to 1f, "hand" to 0.65f, "squeeze" to 0.5833333f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.440999985f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.309499979f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "africa",
+        low = 45, high = 67)
+
+    private fun palm20() = Patch("Palm", "Djembe Roll",
+        mapOf("hand" to 0.6f, "roll" to 0.5f, "volume" to 0.33f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4675f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.563f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.472f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Rattles", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "africa",
+        low = 45, high = 67)
+
+    private fun palm21() = Patch("Palm", "Udu Flutter",
+        mapOf("model" to 0.9444444f, "stroke" to 0.6f, "hand" to 0.3f, "body" to 0.9f, "roll" to 0.375f, "volume" to 0.35f, "mac1_d1" to 0.357142866f, "mac1_a1" to 0.85f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4845f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4705f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.575f, "mac5_d1" to 1f, "mac5_a1" to 0.45f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.446f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.481f),
+        mapOf("macro1" to "Drop", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Low", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "africa",
+        low = 41, high = 55)
+
+    private fun palm22() = Patch("Palm", "Cajon Bass",
+        mapOf("model" to 0.166666672f, "stroke" to 0.6f, "rattle" to 0.2f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.606f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.469f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4215f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5714286f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4215f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.312f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Body", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 40, high = 60)
 
-    private fun palm18() = Patch("Palm", "Cajon Slap",
-        mapOf("model" to 0.166666672f, "stroke" to 0.2f, "rattle" to 0.8f, "volume" to 1f),
+    private fun palm23() = Patch("Palm", "Cajon Slap",
+        mapOf("model" to 0.166666672f, "stroke" to 0.2f, "rattle" to 0.8f, "volume" to 1f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.416f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.675f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4305f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.223500013f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 40, high = 60)
 
-    private fun palm19() = Patch("Palm", "Cajon Snares",
-        mapOf("model" to 0.166666672f, "stroke" to 1f, "rattle" to 1f),
+    private fun palm24() = Patch("Palm", "Cajon Snares",
+        mapOf("model" to 0.166666672f, "stroke" to 1f, "rattle" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4445f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6275f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4585f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3215f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 40, high = 60)
 
-    private fun palm20() = Patch("Palm", "Cajon Dry",
-        mapOf("model" to 0.166666672f, "stroke" to 1f),
+    private fun palm25() = Patch("Palm", "Cajon Dry",
+        mapOf("model" to 0.166666672f, "stroke" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4445f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6275f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4585f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.31f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Snares", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 40, high = 60)
 
-    private fun palm21() = Patch("Palm", "Cajon By Touch",
-        mapOf("model" to 0.166666672f, "stroke" to 1f, "rattle" to 0.5f),
+    private fun palm26() = Patch("Palm", "Cajon By Touch",
+        mapOf("model" to 0.166666672f, "stroke" to 1f, "rattle" to 0.5f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4445f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6275f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4585f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3195f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Snares", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 40, high = 60)
 
-    private fun palm22() = Patch("Palm", "Conga Open",
-        mapOf("model" to 0.333333343f),
+    private fun palm27() = Patch("Palm", "Conga Open",
+        mapOf("model" to 0.333333343f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4445f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.454999983f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.301f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 50, high = 64)
 
-    private fun palm23() = Patch("Palm", "Quinto Slap",
-        mapOf("model" to 0.333333343f, "stroke" to 0.2f, "decay" to 0.4f, "volume" to 0.95f),
+    private fun palm28() = Patch("Palm", "Quinto Slap",
+        mapOf("model" to 0.333333343f, "stroke" to 0.2f, "decay" to 0.4f, "volume" to 0.95f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.525f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4025f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.675f, "mac4_a2" to 0.525f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.239499986f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 55, high = 69)
 
-    private fun palm24() = Patch("Palm", "Tumba",
-        mapOf("model" to 0.333333343f, "stroke" to 1f, "body" to 0.7f),
+    private fun palm29() = Patch("Palm", "Tumba",
+        mapOf("model" to 0.333333343f, "stroke" to 1f, "body" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.448f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 45, high = 59)
 
-    private fun palm25() = Patch("Palm", "Conga Muted",
-        mapOf("model" to 0.333333343f, "stroke" to 0.4f, "volume" to 1f),
+    private fun palm30() = Patch("Palm", "Conga Muted",
+        mapOf("model" to 0.333333343f, "stroke" to 0.4f, "volume" to 1f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.416f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.675f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4305f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.231f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 50, high = 64)
 
-    private fun palm26() = Patch("Palm", "Bongo Macho",
-        mapOf("model" to 0.3888889f, "stroke" to 1f),
+    private fun palm31() = Patch("Palm", "Bongo Macho",
+        mapOf("model" to 0.3888889f, "stroke" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.425f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.440999985f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3135f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 62, high = 76)
 
-    private fun palm27() = Patch("Palm", "Bongo Hembra",
-        mapOf("model" to 0.3888889f),
+    private fun palm32() = Patch("Palm", "Bongo Hembra",
+        mapOf("model" to 0.3888889f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.428f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6445f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.438f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.312f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 57, high = 71)
 
-    private fun palm28() = Patch("Palm", "Bongo Martillo",
-        mapOf("model" to 0.3888889f, "stroke" to 1f, "roll" to 0.25f),
+    private fun palm33() = Patch("Palm", "Bongo Martillo",
+        mapOf("model" to 0.3888889f, "stroke" to 1f, "roll" to 0.25f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.425f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4215f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
         family = "latin",
         low = 60, high = 74)
 
-    private fun palm29() = Patch("Palm", "Bata Iya",
-        mapOf("model" to 0.7222222f, "body" to 0.6f),
+    private fun palm34() = Patch("Palm", "Bata Iya",
+        mapOf("model" to 0.7222222f, "body" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4445f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6445f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.438f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 43, high = 57)
 
-    private fun palm30() = Patch("Palm", "Bata Okonkolo",
-        mapOf("model" to 0.7222222f, "stroke" to 0.2f, "volume" to 0.95f),
+    private fun palm35() = Patch("Palm", "Bata Okonkolo",
+        mapOf("model" to 0.7222222f, "stroke" to 0.2f, "volume" to 0.95f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.525f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4025f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.675f, "mac4_a2" to 0.525f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.239499986f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 55, high = 69)
 
-    private fun palm31() = Patch("Palm", "Bata Itotele",
-        mapOf("model" to 0.7222222f),
+    private fun palm36() = Patch("Palm", "Bata Itotele",
+        mapOf("model" to 0.7222222f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.440999985f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.469f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.306500018f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 48, high = 62)
 
-    private fun palm32() = Patch("Palm", "Cuica",
-        mapOf("model" to 1f, "volume" to 0.3f),
+    private fun palm37() = Patch("Palm", "Cuica",
+        mapOf("model" to 1f, "volume" to 0.3f, "mac1_d1" to 1f, "mac1_a1" to 0.425f, "mac2_d1" to 0.714285731f, "mac2_a1" to 0.9f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.75f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6425f, "mac5_d1" to 1f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.75f, "mac5_a2" to 0.524f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Low", "macro2" to "Wide", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "High", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 57, high = 71)
 
-    private fun palm33() = Patch("Palm", "Cuica Laugh",
-        mapOf("model" to 1f, "squeeze" to 0.75f, "volume" to 0.3f),
+    private fun palm38() = Patch("Palm", "Cuica Laugh",
+        mapOf("model" to 1f, "squeeze" to 0.75f, "volume" to 0.3f, "mac1_d1" to 1f, "mac1_a1" to 0.425f, "mac2_d1" to 0.714285731f, "mac2_a1" to 0.9f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.75f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6325f, "mac5_d1" to 1f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.75f, "mac5_a2" to 0.524f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Low", "macro2" to "Wide", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "High", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 53, high = 67)
 
-    private fun palm34() = Patch("Palm", "Cuica Low",
-        mapOf("model" to 1f, "stroke" to 0.4f, "squeeze" to 0.416666657f),
+    private fun palm39() = Patch("Palm", "Cuica Low",
+        mapOf("model" to 1f, "stroke" to 0.4f, "squeeze" to 0.416666657f, "mac1_d1" to 1f, "mac1_a1" to 0.425f, "mac2_d1" to 0.714285731f, "mac2_a1" to 0.9f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.75f, "mac3_a2" to 0.395f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.675f, "mac4_a2" to 0.5905f, "mac5_d1" to 1f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.75f, "mac5_a2" to 0.65f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Low", "macro2" to "Wide", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "High", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "latin",
         low = 45, high = 59)
 
-    private fun palm35() = Patch("Palm", "Frame Doum",
-        mapOf("model" to 0.222222224f, "stroke" to 0.6f),
+    private fun palm40() = Patch("Palm", "Conga Flam",
+        mapOf("model" to 0.333333343f, "flam" to 0.3f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.454999983f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.438f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6115f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.625f, "mac6_a2" to 0.4215f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2995f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "latin",
+        low = 50, high = 64)
+
+    private fun palm41() = Patch("Palm", "Bongo Flam",
+        mapOf("model" to 0.3888889f, "flam" to 0.2f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4095f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.625f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.338f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.538f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "latin",
+        low = 57, high = 71)
+
+    private fun palm42() = Patch("Palm", "Quinto By Touch",
+        mapOf("model" to 0.333333343f, "stroke" to 1f, "hand" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.438f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4345f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.31f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "latin",
+        low = 55, high = 69)
+
+    private fun palm43() = Patch("Palm", "Bata By Touch",
+        mapOf("model" to 0.7222222f, "stroke" to 1f, "body" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.438f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.469f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.31f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "latin",
+        low = 48, high = 62)
+
+    private fun palm44() = Patch("Palm", "Conga Roll",
+        mapOf("model" to 0.333333343f, "hand" to 0.6f, "roll" to 0.5833333f, "volume" to 0.36f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.466499984f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4645f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5715f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4715f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "latin",
+        low = 50, high = 64)
+
+    private fun palm45() = Patch("Palm", "Cajon Roll",
+        mapOf("model" to 0.166666672f, "stroke" to 0.8f, "rattle" to 0.7f, "roll" to 0.6666667f, "volume" to 0.69f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.402f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.442f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5945f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.442f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "latin",
+        low = 40, high = 60)
+
+    private fun palm46() = Patch("Palm", "Frame Doum",
+        mapOf("model" to 0.222222224f, "stroke" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.75f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.469f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.5425f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 33, high = 57)
 
-    private fun palm36() = Patch("Palm", "Frame Tek",
-        mapOf("model" to 0.222222224f, "stroke" to 0.8f),
+    private fun palm47() = Patch("Palm", "Frame Tek",
+        mapOf("model" to 0.222222224f, "stroke" to 0.8f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.440999985f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4345f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6165f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.454999983f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.306500018f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 33, high = 57)
 
-    private fun palm37() = Patch("Palm", "Frame Jingles",
-        mapOf("model" to 0.222222224f, "rattle" to 1f),
+    private fun palm48() = Patch("Palm", "Frame Jingles",
+        mapOf("model" to 0.222222224f, "rattle" to 1f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.633f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.440999985f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.315500021f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 33, high = 57)
 
-    private fun palm38() = Patch("Palm", "Frame Roll",
-        mapOf("model" to 0.222222224f, "hand" to 0.3f, "roll" to 0.5833333f, "volume" to 0.4f),
+    private fun palm49() = Patch("Palm", "Frame Roll",
+        mapOf("model" to 0.222222224f, "hand" to 0.3f, "roll" to 0.5833333f, "volume" to 0.4f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.466499984f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.573f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4785f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
         family = "arabic",
         low = 33, high = 57)
 
-    private fun palm39() = Patch("Palm", "Big Frame",
-        mapOf("model" to 0.222222224f, "stroke" to 0.6f, "decay" to 0.75f),
+    private fun palm50() = Patch("Palm", "Big Frame",
+        mapOf("model" to 0.222222224f, "stroke" to 0.6f, "decay" to 0.75f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.75f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.448f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4185f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.299f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 28, high = 52)
 
-    private fun palm40() = Patch("Palm", "Frame By Touch",
-        mapOf("model" to 0.222222224f, "stroke" to 1f, "rattle" to 0.3f),
+    private fun palm51() = Patch("Palm", "Frame By Touch",
+        mapOf("model" to 0.222222224f, "stroke" to 1f, "rattle" to 0.3f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6385f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.469f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3315f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 33, high = 57)
 
-    private fun palm41() = Patch("Palm", "Darbuka Doum",
-        mapOf("model" to 0.444444448f, "stroke" to 0.6f, "body" to 0.7f),
+    private fun palm52() = Patch("Palm", "Darbuka Doum",
+        mapOf("model" to 0.444444448f, "stroke" to 0.6f, "body" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5855f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.454999983f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4215f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5714286f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.199999988f, "mac5_a2" to 0.534f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2995f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Dry", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 43, high = 57)
 
-    private fun palm42() = Patch("Palm", "Darbuka Tek",
-        mapOf("model" to 0.444444448f, "stroke" to 0.8f),
+    private fun palm53() = Patch("Palm", "Darbuka Tek",
+        mapOf("model" to 0.444444448f, "stroke" to 0.8f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.440999985f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6385f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 52, high = 66)
 
-    private fun palm43() = Patch("Palm", "Darbuka Ka",
-        mapOf("model" to 0.444444448f, "position" to 0.7f),
+    private fun palm54() = Patch("Palm", "Darbuka Ka",
+        mapOf("model" to 0.444444448f, "position" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.376f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.315500021f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 52, high = 66)
 
-    private fun palm44() = Patch("Palm", "Riq",
-        mapOf("model" to 0.5f, "rattle" to 0.8f),
+    private fun palm55() = Patch("Palm", "Riq",
+        mapOf("model" to 0.5f, "rattle" to 0.8f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4345f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6165f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.448f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.315500021f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 57, high = 71)
 
-    private fun palm45() = Patch("Palm", "Riq Shake",
-        mapOf("model" to 0.5f, "stroke" to 0.4f, "rattle" to 1f, "roll" to 0.5f),
+    private fun palm56() = Patch("Palm", "Riq Shake",
+        mapOf("model" to 0.5f, "stroke" to 0.4f, "rattle" to 1f, "roll" to 0.5f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.538f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4345f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4585f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5565f, "mac5_d1" to 0.5f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0f, "mac5_a2" to 0.5615f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4445f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.538f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
         family = "arabic",
         low = 57, high = 71)
 
-    private fun palm46() = Patch("Palm", "Tar",
-        mapOf("model" to 0.5555556f, "stroke" to 0.6f),
+    private fun palm57() = Patch("Palm", "Tar",
+        mapOf("model" to 0.5555556f, "stroke" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5425f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4655f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4125f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3025f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 38, high = 52)
 
-    private fun palm47() = Patch("Palm", "Tar Edge",
-        mapOf("model" to 0.5555556f, "stroke" to 0.8f),
+    private fun palm58() = Patch("Palm", "Tar Edge",
+        mapOf("model" to 0.5555556f, "stroke" to 0.8f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.425f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6385f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4585f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 45, high = 59)
 
-    private fun palm48() = Patch("Palm", "Bendir",
-        mapOf("model" to 0.6111111f, "stroke" to 0.6f, "rattle" to 0.7f),
+    private fun palm59() = Patch("Palm", "Bendir",
+        mapOf("model" to 0.6111111f, "stroke" to 0.6f, "rattle" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5475f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4585f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.31f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 40, high = 54)
 
-    private fun palm49() = Patch("Palm", "Riq Slap",
-        mapOf("model" to 0.5f, "stroke" to 0.2f, "rattle" to 0.6f),
+    private fun palm60() = Patch("Palm", "Riq Slap",
+        mapOf("model" to 0.5f, "stroke" to 0.2f, "rattle" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.440999985f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5905f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.448f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.312f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 59, high = 73)
 
-    private fun palm50() = Patch("Palm", "Tar Roll",
-        mapOf("model" to 0.5555556f, "decay" to 0.7f, "roll" to 0.416666657f, "volume" to 0.25f),
+    private fun palm61() = Patch("Palm", "Tar Roll",
+        mapOf("model" to 0.5555556f, "decay" to 0.7f, "roll" to 0.416666657f, "volume" to 0.25f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.489f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4825f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5475f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.479f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
         family = "arabic",
         low = 38, high = 52)
 
-    private fun palm51() = Patch("Palm", "Bendir Edge",
-        mapOf("model" to 0.6111111f, "stroke" to 0.8f, "rattle" to 0.6f),
+    private fun palm62() = Patch("Palm", "Bendir Edge",
+        mapOf("model" to 0.6111111f, "stroke" to 0.8f, "rattle" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.428f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6275f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4585f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.303f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "arabic",
         low = 45, high = 59)
 
-    private fun palm52() = Patch("Palm", "Bendir Roll",
-        mapOf("model" to 0.6111111f, "rattle" to 0.8f, "roll" to 0.333333343f, "volume" to 0.32f),
+    private fun palm63() = Patch("Palm", "Bendir Roll",
+        mapOf("model" to 0.6111111f, "rattle" to 0.8f, "roll" to 0.333333343f, "volume" to 0.32f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.467f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.556f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4685f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
         family = "arabic",
         low = 40, high = 54)
 
-    private fun palm53() = Patch("Palm", "Tabla Na",
-        mapOf("model" to 0f, "stroke" to 0.8f),
+    private fun palm64() = Patch("Palm", "Frame Flam",
+        mapOf("model" to 0.222222224f, "stroke" to 0.6f, "flam" to 0.416666657f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.538f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.462f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.625f, "mac6_a2" to 0.4515f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.315500021f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.440999985f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "arabic",
+        low = 33, high = 57)
+
+    private fun palm65() = Patch("Palm", "Darbuka Flam",
+        mapOf("model" to 0.444444448f, "stroke" to 0.8f, "flam" to 0.25f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4585f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6385f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.625f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3275f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "arabic",
+        low = 52, high = 66)
+
+    private fun palm66() = Patch("Palm", "Darbuka By Touch",
+        mapOf("model" to 0.444444448f, "stroke" to 1f, "body" to 0.6f, "volume" to 0.5f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4465f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.603f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4755f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.363f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "arabic",
+        low = 48, high = 62)
+
+    private fun palm67() = Patch("Palm", "Bendir By Touch",
+        mapOf("model" to 0.6111111f, "stroke" to 1f, "rattle" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6385f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.336f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "arabic",
+        low = 40, high = 54)
+
+    private fun palm68() = Patch("Palm", "Darbuka Roll",
+        mapOf("model" to 0.444444448f, "stroke" to 0.8f, "hand" to 0.7f, "roll" to 0.6666667f, "volume" to 0.35f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.472f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.3f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.467f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.572f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.481f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Soft", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "arabic",
+        low = 52, high = 66)
+
+    private fun palm69() = Patch("Palm", "Tabla Na",
+        mapOf("model" to 0f, "stroke" to 0.8f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.431f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 55, high = 74)
 
-    private fun palm54() = Patch("Palm", "Tabla Tin",
-        mapOf("model" to 0f),
+    private fun palm70() = Patch("Palm", "Tabla Tin",
+        mapOf("model" to 0f, "volume" to 0.47f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.678f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4515f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6085f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.456f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.383000016f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 55, high = 74)
 
-    private fun palm55() = Patch("Palm", "Tabla Tun",
-        mapOf("model" to 0f, "stroke" to 0.6f, "volume" to 1f),
+    private fun palm71() = Patch("Palm", "Tabla Tun",
+        mapOf("model" to 0f, "stroke" to 0.6f, "volume" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.239499986f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.392499983f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.411f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.231f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 55, high = 74)
 
-    private fun palm56() = Patch("Palm", "Tabla Te",
-        mapOf("model" to 0f, "stroke" to 0.4f),
+    private fun palm72() = Patch("Palm", "Tabla Te",
+        mapOf("model" to 0f, "stroke" to 0.4f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.35f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.448f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4445f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3215f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.5295f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 55, high = 74)
 
-    private fun palm57() = Patch("Palm", "Tabla By Touch",
-        mapOf("model" to 0f, "stroke" to 1f, "hand" to 0.7f),
+    private fun palm73() = Patch("Palm", "Tabla By Touch",
+        mapOf("model" to 0f, "stroke" to 1f, "hand" to 0.7f, "volume" to 0.47f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.6875f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.3f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.454f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6125f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.454f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3815f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Soft", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 55, high = 74)
 
-    private fun palm58() = Patch("Palm", "Bayan Ghe",
-        mapOf("model" to 0.055555556f, "stroke" to 0.6f, "drop" to 0.5f, "squeeze" to 0.333333343f),
+    private fun palm74() = Patch("Palm", "Bayan Ghe",
+        mapOf("model" to 0.055555556f, "stroke" to 0.6f, "drop" to 0.5f, "squeeze" to 0.333333343f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5805f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.5565f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.306500018f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 36, high = 55)
 
-    private fun palm59() = Patch("Palm", "Bayan Ke",
-        mapOf("model" to 0.055555556f, "stroke" to 0.4f, "volume" to 1f),
+    private fun palm75() = Patch("Palm", "Bayan Ke",
+        mapOf("model" to 0.055555556f, "stroke" to 0.4f, "volume" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4305f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.397f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.456f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.228500009f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 36, high = 55)
 
-    private fun palm60() = Patch("Palm", "Bayan Swoop",
-        mapOf("model" to 0.055555556f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f),
+    private fun palm76() = Patch("Palm", "Bayan Swoop",
+        mapOf("model" to 0.055555556f, "stroke" to 0.6f, "decay" to 0.7f, "squeeze" to 0.5833333f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5755f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4445f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.534f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.32950002f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 36, high = 55)
 
-    private fun palm61() = Patch("Palm", "Bayan Open",
-        mapOf("model" to 0.055555556f),
+    private fun palm77() = Patch("Palm", "Bayan Open",
+        mapOf("model" to 0.055555556f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.406499982f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4245f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.312f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 36, high = 55)
 
-    private fun palm62() = Patch("Palm", "Kanjira",
-        mapOf("model" to 0.6666667f, "squeeze" to 0.25f, "rattle" to 0.5f),
+    private fun palm78() = Patch("Palm", "Kanjira",
+        mapOf("model" to 0.6666667f, "squeeze" to 0.25f, "rattle" to 0.5f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4655f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.440999985f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3195f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 55, high = 69)
 
-    private fun palm63() = Patch("Palm", "Mridangam",
-        mapOf("model" to 0.7777778f, "decay" to 0.7f),
+    private fun palm79() = Patch("Palm", "Mridangam",
+        mapOf("model" to 0.7777778f, "decay" to 0.7f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4515f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4185f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3535f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 53, high = 67)
 
-    private fun palm64() = Patch("Palm", "Mridangam Thom",
-        mapOf("model" to 0.7777778f, "stroke" to 0.6f, "volume" to 1f),
+    private fun palm80() = Patch("Palm", "Mridangam Thom",
+        mapOf("model" to 0.7777778f, "stroke" to 0.6f, "volume" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.334f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4205f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4205f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.675f, "mac5_d1" to 0.5714286f, "mac5_a1" to 0.75f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.3795f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2595f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Body", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 41, high = 55)
 
-    private fun palm65() = Patch("Palm", "Dholak",
-        mapOf("model" to 0.8333333f),
+    private fun palm81() = Patch("Palm", "Dholak",
+        mapOf("model" to 0.8333333f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.395f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.422f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.462f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 48, high = 62)
 
-    private fun palm66() = Patch("Palm", "Dholak Bass",
-        mapOf("model" to 0.8333333f, "stroke" to 0.6f, "squeeze" to 0.333333343f),
+    private fun palm82() = Patch("Palm", "Dholak Bass",
+        mapOf("model" to 0.8333333f, "stroke" to 0.6f, "squeeze" to 0.333333343f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5905f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5714286f, "mac5_a1" to 0.75f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.5425f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.304499984f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Body", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 36, high = 50)
 
-    private fun palm67() = Patch("Palm", "Kanjira Slap",
-        mapOf("model" to 0.6666667f, "stroke" to 0.2f, "rattle" to 0.4f),
+    private fun palm83() = Patch("Palm", "Kanjira Slap",
+        mapOf("model" to 0.6666667f, "stroke" to 0.2f, "rattle" to 0.4f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.6445f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.633f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.462f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 57, high = 71)
 
-    private fun palm68() = Patch("Palm", "Kanjira Glide",
-        mapOf("model" to 0.6666667f, "decay" to 0.7f, "squeeze" to 0.416666657f),
+    private fun palm84() = Patch("Palm", "Kanjira Glide",
+        mapOf("model" to 0.6666667f, "decay" to 0.7f, "squeeze" to 0.416666657f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.469f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4345f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4445f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.315500021f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Jingles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 53, high = 67)
 
-    private fun palm69() = Patch("Palm", "Mridangam Chapu",
-        mapOf("model" to 0.7777778f, "stroke" to 0.8f),
+    private fun palm85() = Patch("Palm", "Mridangam Chapu",
+        mapOf("model" to 0.7777778f, "stroke" to 0.8f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4655f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.8f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.462f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3195f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 57, high = 71)
 
-    private fun palm70() = Patch("Palm", "Dholak Slap",
-        mapOf("model" to 0.8333333f, "stroke" to 0.2f, "volume" to 1f),
+    private fun palm86() = Patch("Palm", "Dholak Slap",
+        mapOf("model" to 0.8333333f, "stroke" to 0.2f, "volume" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.416f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.392499983f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.416f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.220999986f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "india",
         low = 50, high = 64)
 
-    private fun palm71() = Patch("Palm", "Hand Drum Kit",
-        mapOf("kit" to 1f),
+    private fun palm87() = Patch("Palm", "Mridangam By Touch",
+        mapOf("model" to 0.7777778f, "stroke" to 1f, "decay" to 0.6f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.438f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3735f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "india",
+        low = 53, high = 67)
+
+    private fun palm88() = Patch("Palm", "Bayan Press",
+        mapOf("model" to 0.055555556f, "stroke" to 0.6f, "squeeze" to 0.5833333f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5805f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.428f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.566f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.306500018f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "india",
+        low = 36, high = 55)
+
+    private fun palm89() = Patch("Palm", "Tabla Roll",
+        mapOf("model" to 0f, "stroke" to 0.8f, "hand" to 0.7f, "roll" to 0.5833333f, "volume" to 0.25f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.3f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4805f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5535f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.512f),
+        mapOf("macro1" to "Middle", "macro2" to "Soft", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "india",
+        low = 55, high = 74)
+
+    private fun palm90() = Patch("Palm", "Dholak Roll",
+        mapOf("model" to 0.8333333f, "roll" to 0.416666657f, "volume" to 0.4f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.435f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4605f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.596f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.47f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "india",
+        low = 48, high = 62)
+
+    private fun palm91() = Patch("Palm", "Kanjira Roll",
+        mapOf("model" to 0.6666667f, "squeeze" to 0.25f, "rattle" to 0.6f, "roll" to 0.75f, "volume" to 0.28f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4805f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.486f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.474f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.551f, "mac5_d1" to 0.5f, "mac5_a1" to 0f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.65f, "mac7_a2" to 0.478f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Faster", "macro8" to "Tight"),
+        family = "india",
+        low = 55, high = 69)
+
+    private fun palm92() = Patch("Palm", "Hand Drum Kit",
+        mapOf("kit" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.427f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.675f, "mac7_a2" to 0.4425f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private fun palm72() = Patch("Palm", "Latin Kit",
-        mapOf("kit" to 1f, "p01_model" to 0.333333343f, "p01_note" to 0.319444448f, "p02_model" to 0.333333343f, "p03_model" to 0.333333343f, "p03_note" to 0.3888889f, "p04_model" to 0.333333343f, "p04_note" to 0.3888889f, "p05_model" to 0.333333343f, "p05_stroke" to 0f, "p05_note" to 0.458333343f, "p06_model" to 0.333333343f, "p06_note" to 0.458333343f, "p07_model" to 0.3888889f, "p07_stroke" to 0f, "p07_note" to 0.5555556f, "p08_model" to 0.3888889f, "p08_stroke" to 0.2f, "p08_note" to 0.5555556f, "p09_model" to 0.3888889f, "p09_stroke" to 0f, "p10_model" to 0.3888889f, "p10_stroke" to 0.2f, "p10_note" to 0.625f, "p11_model" to 0.166666672f, "p11_stroke" to 0.6f, "p11_note" to 0.222222224f, "p12_model" to 0.166666672f, "p12_note" to 0.3888889f, "p13_model" to 0.7222222f, "p13_note" to 0.3611111f, "p14_model" to 0.7222222f, "p14_stroke" to 0.2f, "p14_note" to 0.5277778f, "p15_model" to 0.166666672f, "p15_stroke" to 0.8f, "p15_note" to 0.458333343f, "p16_model" to 0.333333343f, "p16_stroke" to 1f, "p16_note" to 0.291666657f),
+    private fun palm93() = Patch("Palm", "Latin Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.333333343f, "p01_note" to 0.319444448f, "p02_model" to 0.333333343f, "p03_model" to 0.333333343f, "p03_note" to 0.3888889f, "p04_model" to 0.333333343f, "p04_note" to 0.3888889f, "p05_model" to 0.333333343f, "p05_stroke" to 0f, "p05_note" to 0.458333343f, "p06_model" to 0.333333343f, "p06_note" to 0.458333343f, "p07_model" to 0.3888889f, "p07_stroke" to 0f, "p07_note" to 0.5555556f, "p08_model" to 0.3888889f, "p08_stroke" to 0.2f, "p08_note" to 0.5555556f, "p09_model" to 0.3888889f, "p09_stroke" to 0f, "p10_model" to 0.3888889f, "p10_stroke" to 0.2f, "p10_note" to 0.625f, "p11_model" to 0.166666672f, "p11_stroke" to 0.6f, "p11_note" to 0.222222224f, "p12_model" to 0.166666672f, "p12_note" to 0.3888889f, "p13_model" to 0.7222222f, "p13_note" to 0.3611111f, "p14_model" to 0.7222222f, "p14_stroke" to 0.2f, "p14_note" to 0.5277778f, "p15_model" to 0.166666672f, "p15_stroke" to 0.8f, "p15_note" to 0.458333343f, "p16_model" to 0.333333343f, "p16_stroke" to 1f, "p16_note" to 0.291666657f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.634f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.43f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6315f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.675f, "mac7_a2" to 0.4445f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private fun palm73() = Patch("Palm", "Tabla Kit",
-        mapOf("kit" to 1f, "p01_model" to 0.055555556f, "p01_note" to 0.222222224f, "p02_model" to 0f, "p02_stroke" to 0.8f, "p02_note" to 0.625f, "p03_model" to 0f, "p03_stroke" to 0.4f, "p03_note" to 0.5555556f, "p04_model" to 0f, "p04_stroke" to 0.2f, "p04_note" to 0.5277778f, "p05_model" to 0.055555556f, "p05_stroke" to 0f, "p05_note" to 0.2638889f, "p06_model" to 0f, "p06_stroke" to 0f, "p06_note" to 0.5277778f, "p07_model" to 0.055555556f, "p07_stroke" to 0.2f, "p07_note" to 0.333333343f, "p08_model" to 0.7777778f, "p08_note" to 0.5f, "p09_model" to 0.7777778f, "p09_stroke" to 0.6f, "p09_note" to 0.333333343f, "p10_model" to 0.7777778f, "p10_stroke" to 0.8f, "p11_model" to 0.8333333f, "p11_note" to 0.430555552f, "p12_model" to 0.8333333f, "p12_stroke" to 0.6f, "p12_note" to 0.2638889f, "p13_model" to 0.6666667f, "p13_note" to 0.5277778f, "p14_model" to 0.6666667f, "p14_stroke" to 0.2f, "p14_note" to 0.5555556f, "p15_model" to 0f, "p15_stroke" to 1f, "p15_note" to 0.5277778f, "p16_model" to 0.055555556f, "p16_stroke" to 1f, "p16_note" to 0.2638889f),
+    private fun palm94() = Patch("Palm", "Tabla Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.055555556f, "p01_note" to 0.222222224f, "p02_model" to 0f, "p02_stroke" to 0.8f, "p02_note" to 0.625f, "p03_model" to 0f, "p03_stroke" to 0.4f, "p03_note" to 0.5555556f, "p04_model" to 0f, "p04_stroke" to 0.2f, "p04_note" to 0.5277778f, "p05_model" to 0.055555556f, "p05_stroke" to 0f, "p05_note" to 0.2638889f, "p06_model" to 0f, "p06_stroke" to 0f, "p06_note" to 0.5277778f, "p07_model" to 0.055555556f, "p07_stroke" to 0.2f, "p07_note" to 0.333333343f, "p08_model" to 0.7777778f, "p08_note" to 0.5f, "p09_model" to 0.7777778f, "p09_stroke" to 0.6f, "p09_note" to 0.333333343f, "p10_model" to 0.7777778f, "p10_stroke" to 0.8f, "p11_model" to 0.8333333f, "p11_note" to 0.430555552f, "p12_model" to 0.8333333f, "p12_stroke" to 0.6f, "p12_note" to 0.2638889f, "p13_model" to 0.6666667f, "p13_note" to 0.5277778f, "p14_model" to 0.6666667f, "p14_stroke" to 0.2f, "p14_note" to 0.5555556f, "p15_model" to 0f, "p15_stroke" to 1f, "p15_note" to 0.5277778f, "p16_model" to 0.055555556f, "p16_stroke" to 1f, "p16_note" to 0.2638889f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.429f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.675f, "mac7_a2" to 0.4475f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private fun palm74() = Patch("Palm", "African Kit",
-        mapOf("kit" to 1f, "p01_model" to 0.8888889f, "p04_note" to 0.3888889f, "p05_model" to 0.111111112f, "p05_stroke" to 0f, "p05_note" to 0.430555552f, "p06_model" to 0.111111112f, "p06_note" to 0.5f, "p07_model" to 0.111111112f, "p07_stroke" to 0.6f, "p07_note" to 0.2638889f, "p08_model" to 0.8888889f, "p08_note" to 0.3611111f, "p09_model" to 0.8888889f, "p09_stroke" to 0.2f, "p09_note" to 0.430555552f, "p10_model" to 0.2777778f, "p10_stroke" to 0f, "p10_note" to 0.430555552f, "p11_model" to 0.2777778f, "p11_stroke" to 0.6f, "p11_note" to 0.3611111f, "p12_model" to 0.2777778f, "p12_note" to 0.5f, "p13_model" to 0.7222222f, "p13_note" to 0.3611111f, "p14_model" to 0.7222222f, "p14_stroke" to 0f, "p14_note" to 0.430555552f, "p15_model" to 0.7222222f, "p15_stroke" to 0.2f, "p15_note" to 0.5277778f, "p16_model" to 0.111111112f, "p16_stroke" to 1f, "p16_note" to 0.3888889f),
+    private fun palm95() = Patch("Palm", "African Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.8888889f, "p04_note" to 0.3888889f, "p05_model" to 0.111111112f, "p05_stroke" to 0f, "p05_note" to 0.430555552f, "p06_model" to 0.111111112f, "p06_note" to 0.5f, "p07_model" to 0.111111112f, "p07_stroke" to 0.6f, "p07_note" to 0.2638889f, "p08_model" to 0.8888889f, "p08_note" to 0.3611111f, "p09_model" to 0.8888889f, "p09_stroke" to 0.2f, "p09_note" to 0.430555552f, "p10_model" to 0.2777778f, "p10_stroke" to 0f, "p10_note" to 0.430555552f, "p11_model" to 0.2777778f, "p11_stroke" to 0.6f, "p11_note" to 0.3611111f, "p12_model" to 0.2777778f, "p12_note" to 0.5f, "p13_model" to 0.7222222f, "p13_note" to 0.3611111f, "p14_model" to 0.7222222f, "p14_stroke" to 0f, "p14_note" to 0.430555552f, "p15_model" to 0.7222222f, "p15_stroke" to 0.2f, "p15_note" to 0.5277778f, "p16_model" to 0.111111112f, "p16_stroke" to 1f, "p16_note" to 0.3888889f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.628f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.429f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6335f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_a1" to 0.675f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private fun palm75() = Patch("Palm", "Arabic Kit",
-        mapOf("kit" to 1f, "p01_model" to 0.444444448f, "p01_note" to 0.3611111f, "p02_model" to 0.444444448f, "p02_stroke" to 0.8f, "p02_note" to 0.4861111f, "p03_model" to 0.444444448f, "p03_stroke" to 0f, "p03_note" to 0.4861111f, "p04_model" to 0.444444448f, "p04_stroke" to 0.2f, "p04_note" to 0.5138889f, "p05_model" to 0.5f, "p05_stroke" to 0f, "p05_note" to 0.5555556f, "p06_model" to 0.5f, "p06_note" to 0.5833333f, "p07_model" to 0.5f, "p07_stroke" to 0.4f, "p07_note" to 0.5555556f, "p08_model" to 0.5555556f, "p08_stroke" to 0.6f, "p08_note" to 0.291666657f, "p09_model" to 0.5555556f, "p09_note" to 0.3888889f, "p10_model" to 0.6111111f, "p10_stroke" to 0.6f, "p10_note" to 0.319444448f, "p11_model" to 0.6111111f, "p11_stroke" to 0.8f, "p11_note" to 0.3888889f, "p12_model" to 0.222222224f, "p12_stroke" to 0.6f, "p12_note" to 0.291666657f, "p13_note" to 0.3888889f, "p14_note" to 0.458333343f, "p15_model" to 0.444444448f, "p15_stroke" to 1f, "p16_model" to 0.5f, "p16_stroke" to 1f, "p16_note" to 0.5555556f),
+    private fun palm96() = Patch("Palm", "Arabic Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.444444448f, "p01_note" to 0.3611111f, "p02_model" to 0.444444448f, "p02_stroke" to 0.8f, "p02_note" to 0.4861111f, "p03_model" to 0.444444448f, "p03_stroke" to 0f, "p03_note" to 0.4861111f, "p04_model" to 0.444444448f, "p04_stroke" to 0.2f, "p04_note" to 0.5138889f, "p05_model" to 0.5f, "p05_stroke" to 0f, "p05_note" to 0.5555556f, "p06_model" to 0.5f, "p06_note" to 0.5833333f, "p07_model" to 0.5f, "p07_stroke" to 0.4f, "p07_note" to 0.5555556f, "p08_model" to 0.5555556f, "p08_stroke" to 0.6f, "p08_note" to 0.291666657f, "p09_model" to 0.5555556f, "p09_note" to 0.3888889f, "p10_model" to 0.6111111f, "p10_stroke" to 0.6f, "p10_note" to 0.319444448f, "p11_model" to 0.6111111f, "p11_stroke" to 0.8f, "p11_note" to 0.3888889f, "p12_model" to 0.222222224f, "p12_stroke" to 0.6f, "p12_note" to 0.291666657f, "p13_note" to 0.3888889f, "p14_note" to 0.458333343f, "p15_model" to 0.444444448f, "p15_stroke" to 1f, "p16_model" to 0.5f, "p16_stroke" to 1f, "p16_note" to 0.5555556f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.597f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4265f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.646f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5f, "mac6_a1" to 1f, "mac7_d1" to 0.9285714f, "mac7_a1" to 0.675f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Jingles", "macro7" to "Flam", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30(), palm31(), palm32(), palm33(), palm34(), palm35(), palm36(), palm37(), palm38(), palm39(), palm40(), palm41(), palm42(), palm43(), palm44(), palm45(), palm46(), palm47(), palm48(), palm49(), palm50(), palm51(), palm52(), palm53(), palm54(), palm55(), palm56(), palm57(), palm58(), palm59(), palm60(), palm61(), palm62(), palm63(), palm64(), palm65(), palm66(), palm67(), palm68(), palm69(), palm70(), palm71(), palm72(), palm73(), palm74(), palm75()) }
+    private fun palm97() = Patch("Palm", "World Kit",
+        mapOf("rattle" to 0.4f, "kit" to 1f, "p02_note" to 0.430555552f, "p03_note" to 0.5f, "p04_model" to 0.166666672f, "p04_stroke" to 0.6f, "p04_note" to 0.222222224f, "p05_stroke" to 0.2f, "p05_note" to 0.3888889f, "p05_level" to 1f, "p06_model" to 0.333333343f, "p06_stroke" to 0f, "p06_note" to 0.458333343f, "p07_model" to 0.333333343f, "p07_stroke" to 0.2f, "p08_model" to 0.333333343f, "p08_note" to 0.3888889f, "p09_model" to 0.3888889f, "p09_stroke" to 1f, "p10_model" to 0.444444448f, "p10_stroke" to 0.6f, "p10_note" to 0.3611111f, "p11_model" to 0.444444448f, "p11_stroke" to 0.8f, "p11_note" to 0.4861111f, "p12_model" to 0.5f, "p12_stroke" to 0f, "p12_note" to 0.5555556f, "p13_model" to 0f, "p13_stroke" to 0.8f, "p13_note" to 0.5277778f, "p14_model" to 0.055555556f, "p14_stroke" to 0.6f, "p14_note" to 0.2638889f, "p15_model" to 0.9444444f, "p15_stroke" to 0.6f, "p15_note" to 0.333333343f, "p15_level" to 1f, "p16_stroke" to 0.6f, "p16_note" to 0.430555552f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.546f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.426f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.5714286f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4725f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_a1" to 0.675f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Body", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun palm98() = Patch("Palm", "Cajon Kit",
+        mapOf("rattle" to 0.6f, "kit" to 1f, "p01_model" to 0.166666672f, "p01_note" to 0.222222224f, "p02_model" to 0.166666672f, "p02_stroke" to 0.8f, "p02_level" to 1f, "p03_model" to 0.166666672f, "p03_note" to 0.3888889f, "p03_level" to 1f, "p04_model" to 0.166666672f, "p04_note" to 0.319444448f, "p04_level" to 1f, "p05_note" to 0.2638889f, "p06_note" to 0.430555552f, "p06_level" to 1f, "p07_stroke" to 0f, "p07_note" to 0.319444448f, "p08_model" to 0.166666672f, "p08_stroke" to 1f, "p08_note" to 0.319444448f, "p09_model" to 0.5f, "p09_stroke" to 0.4f, "p09_note" to 0.5555556f, "p09_level" to 1f, "p10_model" to 0.5f, "p10_stroke" to 0f, "p11_model" to 0.6666667f, "p11_note" to 0.5277778f, "p12_model" to 0.222222224f, "p12_stroke" to 0.8f, "p12_note" to 0.291666657f, "p13_model" to 0.3888889f, "p13_note" to 0.625f, "p14_model" to 0.3888889f, "p14_stroke" to 0f, "p14_note" to 0.5555556f, "p15_model" to 0.9444444f, "p15_stroke" to 0.6f, "p15_note" to 0.333333343f, "p16_model" to 0.166666672f, "p16_stroke" to 0.2f, "p16_note" to 0.4861111f, "p16_level" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.65f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.429499984f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.638f, "mac5_d1" to 0.5714286f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5f, "mac6_a1" to 0f, "mac7_d1" to 0.9285714f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.675f, "mac7_a2" to 0.445500016f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Body", "macro6" to "Bare", "macro7" to "Flam", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51,
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun palm99() = Patch("Palm", "Frame Kit",
+        mapOf("rattle" to 0.6f, "volume" to 0.55f, "kit" to 1f, "p01_model" to 0.222222224f, "p02_model" to 0.222222224f, "p02_stroke" to 0.8f, "p02_note" to 0.2638889f, "p03_model" to 0.222222224f, "p03_stroke" to 0f, "p03_note" to 0.291666657f, "p04_model" to 0.222222224f, "p04_stroke" to 0.6f, "p04_note" to 0.194444448f, "p05_model" to 0.5555556f, "p05_note" to 0.291666657f, "p06_model" to 0.5555556f, "p06_stroke" to 0.8f, "p07_model" to 0.6111111f, "p07_stroke" to 0.6f, "p07_note" to 0.319444448f, "p08_model" to 0.6111111f, "p08_stroke" to 0.8f, "p08_note" to 0.3888889f, "p09_model" to 0.5f, "p09_stroke" to 0f, "p09_note" to 0.5555556f, "p10_model" to 0.5f, "p10_stroke" to 0.2f, "p10_note" to 0.5833333f, "p11_model" to 0.5f, "p11_stroke" to 0.4f, "p11_note" to 0.5555556f, "p12_model" to 0.6666667f, "p12_stroke" to 0f, "p12_note" to 0.5277778f, "p13_model" to 0.6666667f, "p13_stroke" to 0.2f, "p13_note" to 0.5555556f, "p14_model" to 0.444444448f, "p14_stroke" to 0.6f, "p14_note" to 0.3611111f, "p15_model" to 0.444444448f, "p15_stroke" to 0.8f, "p15_note" to 0.4861111f, "p16_model" to 0.444444448f, "p16_stroke" to 0f, "p16_note" to 0.4861111f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.5505f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.443f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.613f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5f, "mac6_a1" to 0f, "mac7_d1" to 0.9285714f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.675f, "mac7_a2" to 0.4755f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Bare", "macro7" to "Flam", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun palm100() = Patch("Palm", "Conga Set",
+        mapOf("volume" to 0.85f, "kit" to 1f, "p01_model" to 0.333333343f, "p01_note" to 0.3888889f, "p02_model" to 0.333333343f, "p03_model" to 0.333333343f, "p03_note" to 0.3888889f, "p04_model" to 0.333333343f, "p04_note" to 0.3888889f, "p05_model" to 0.333333343f, "p05_note" to 0.458333343f, "p06_model" to 0.333333343f, "p06_stroke" to 0f, "p06_note" to 0.458333343f, "p07_model" to 0.333333343f, "p07_stroke" to 0.2f, "p08_model" to 0.333333343f, "p08_stroke" to 0.4f, "p08_note" to 0.458333343f, "p09_model" to 0.333333343f, "p09_stroke" to 0.6f, "p09_note" to 0.5277778f, "p10_model" to 0.333333343f, "p10_stroke" to 0f, "p10_note" to 0.5277778f, "p11_model" to 0.333333343f, "p11_stroke" to 0.2f, "p11_note" to 0.5277778f, "p12_model" to 0.333333343f, "p12_stroke" to 0.4f, "p12_note" to 0.5277778f, "p13_model" to 0.333333343f, "p13_stroke" to 0.8f, "p13_note" to 0.3888889f, "p13_level" to 1f, "p14_model" to 0.333333343f, "p14_note" to 0.458333343f, "p14_level" to 1f, "p15_model" to 0.333333343f, "p15_stroke" to 0.8f, "p15_note" to 0.5277778f, "p15_level" to 1f, "p16_model" to 0.333333343f, "p16_stroke" to 1f, "p16_note" to 0.3888889f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.575f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.415f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.575f, "mac5_d1" to 0.5714286f, "mac5_a1" to 0.75f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.675f, "mac7_a2" to 0.429f, "mac8_d1" to 0.642857134f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.7f, "mac8_a2" to 0.2595f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Body", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Roll"),
+        family = "kit",
+        low = 36, high = 51,
+        sendReverb = 0.1f, sendDelay = 0f)
+
+    private fun palm101() = Patch("Palm", "Tabla Pair",
+        mapOf("squeeze" to 0.333333343f, "volume" to 1f, "kit" to 1f, "p01_model" to 0.055555556f, "p02_model" to 0.055555556f, "p02_stroke" to 0.4f, "p02_note" to 0.2638889f, "p02_level" to 1f, "p03_model" to 0.055555556f, "p03_stroke" to 0f, "p03_note" to 0.291666657f, "p04_model" to 0.055555556f, "p04_stroke" to 0.6f, "p04_note" to 0.2361111f, "p05_model" to 0.055555556f, "p05_note" to 0.333333343f, "p06_model" to 0.055555556f, "p06_note" to 0.2638889f, "p06_level" to 1f, "p07_model" to 0.055555556f, "p07_note" to 0.291666657f, "p07_level" to 1f, "p08_stroke" to 1f, "p09_note" to 0.5277778f, "p10_stroke" to 0f, "p10_note" to 0.5277778f, "p11_model" to 0f, "p11_stroke" to 0.6f, "p11_note" to 0.5277778f, "p11_level" to 1f, "p12_model" to 0f, "p12_stroke" to 0.4f, "p12_note" to 0.5277778f, "p13_model" to 0f, "p13_stroke" to 0.2f, "p13_note" to 0.5277778f, "p14_model" to 0f, "p14_note" to 0.5555556f, "p15_model" to 0f, "p15_note" to 0.5f, "p16_model" to 0f, "p16_note" to 0.5555556f, "p16_level" to 1f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.75f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.3895f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.65f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.675f, "mac7_a2" to 0.4375f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun palm102() = Patch("Palm", "Talking Kit",
+        mapOf("squeeze" to 0.416666657f, "kit" to 1f, "p01_model" to 0.2777778f, "p02_model" to 0.2777778f, "p02_stroke" to 0.6f, "p02_note" to 0.291666657f, "p03_model" to 0.2777778f, "p03_stroke" to 0.6f, "p03_note" to 0.333333343f, "p04_model" to 0.2777778f, "p04_stroke" to 0.6f, "p05_model" to 0.2777778f, "p05_note" to 0.3888889f, "p06_model" to 0.2777778f, "p06_stroke" to 0.6f, "p06_note" to 0.430555552f, "p07_model" to 0.2777778f, "p07_stroke" to 0.6f, "p08_model" to 0.2777778f, "p08_stroke" to 0.6f, "p08_note" to 0.5f, "p09_model" to 0.2777778f, "p09_stroke" to 0f, "p09_note" to 0.430555552f, "p10_model" to 0.2777778f, "p10_stroke" to 0f, "p10_note" to 0.5f, "p11_model" to 0.2777778f, "p11_stroke" to 0.8f, "p11_note" to 0.5277778f, "p11_level" to 1f, "p12_model" to 0.2777778f, "p12_stroke" to 0.4f, "p12_note" to 0.430555552f, "p12_level" to 1f, "p13_model" to 0.111111112f, "p13_stroke" to 0.6f, "p13_note" to 0.2638889f, "p14_model" to 0.111111112f, "p14_stroke" to 0.2f, "p14_note" to 0.5f, "p15_model" to 0.6666667f, "p15_note" to 0.5277778f, "p16_model" to 0.9444444f, "p16_stroke" to 0.6f, "p16_note" to 0.333333343f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.75f, "mac1_a2" to 0.557f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.426f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 0.357142866f, "mac6_a1" to 0.85f, "mac7_d1" to 0.9285714f, "mac7_a1" to 0.675f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Drop", "macro7" to "Flam", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun palm103() = Patch("Palm", "Udu Kit",
+        mapOf("body" to 0.8f, "volume" to 1f, "kit" to 1f, "p01_model" to 0.9444444f, "p01_note" to 0.166666672f, "p01_level" to 1f, "p02_model" to 0.9444444f, "p02_stroke" to 0.6f, "p02_note" to 0.2361111f, "p02_level" to 1f, "p03_model" to 0.9444444f, "p03_stroke" to 0.6f, "p03_note" to 0.291666657f, "p03_level" to 1f, "p04_model" to 0.9444444f, "p04_stroke" to 0.6f, "p04_note" to 0.333333343f, "p04_level" to 1f, "p05_model" to 0.9444444f, "p05_note" to 0.3888889f, "p05_level" to 1f, "p06_model" to 0.9444444f, "p06_stroke" to 0f, "p06_note" to 0.333333343f, "p06_level" to 1f, "p07_model" to 0.9444444f, "p07_stroke" to 0f, "p07_note" to 0.3888889f, "p07_level" to 1f, "p08_model" to 0.9444444f, "p08_note" to 0.430555552f, "p08_level" to 1f, "p09_model" to 0.9444444f, "p09_stroke" to 0f, "p09_note" to 0.5f, "p09_level" to 1f, "p10_model" to 0.9444444f, "p10_stroke" to 0.2f, "p10_note" to 0.3888889f, "p10_level" to 1f, "p11_model" to 0.9444444f, "p11_stroke" to 0.2f, "p11_note" to 0.458333343f, "p11_level" to 1f, "p12_model" to 0.9444444f, "p12_stroke" to 0.4f, "p12_level" to 1f, "p13_model" to 0.9444444f, "p13_stroke" to 0.8f, "p13_note" to 0.430555552f, "p13_level" to 1f, "p14_model" to 0.9444444f, "p14_note" to 0.5f, "p14_level" to 1f, "p15_model" to 0.9444444f, "p15_stroke" to 0.8f, "p15_note" to 0.5555556f, "p15_level" to 1f, "p16_model" to 0.9444444f, "p16_stroke" to 0.8f, "p16_note" to 0.5972222f, "p16_level" to 1f, "mac1_d1" to 0.357142866f, "mac1_a1" to 0.85f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.392499983f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.65f, "mac5_d1" to 1f, "mac5_a1" to 0.55f, "mac6_d1" to 1f, "mac6_a1" to 0.45f, "mac7_d1" to 0.9285714f, "mac7_a1" to 0.675f, "mac8_d1" to 0.714285731f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Drop", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Tight", "macro6" to "Low", "macro7" to "Flam", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun palm104() = Patch("Palm", "Talking Bass",
+        mapOf("model" to 0.2777778f, "stroke" to 0.6f, "decay" to 0.8f, "squeeze" to 0.25f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.75f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.3f, "mac3_a2" to 0.6165f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.462f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3255f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Edge", "macro2" to "Quick", "macro3" to "Short", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "odd",
+        low = 28, high = 48)
+
+    private fun palm105() = Patch("Palm", "Udu Bass",
+        mapOf("model" to 0.9444444f, "stroke" to 0.6f, "decay" to 0.8f, "body" to 1f, "mac1_d1" to 0.357142866f, "mac1_a1" to 0.85f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.3f, "mac3_a2" to 0.622f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 1f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0.45f, "mac5_a2" to 0.538f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.283f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.4725f),
+        mapOf("macro1" to "Drop", "macro2" to "Quick", "macro3" to "Short", "macro4" to "Damp", "macro5" to "Low", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "odd",
+        low = 26, high = 43)
+
+    private fun palm106() = Patch("Palm", "Giant Tabla",
+        mapOf("model" to 0f, "decay" to 0.7f, "volume" to 0.32f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.659f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.478f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5685f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.456f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.428f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "odd",
+        low = 30, high = 50)
+
+    private fun palm107() = Patch("Palm", "Giant Bongo",
+        mapOf("model" to 0.3888889f, "stroke" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4585f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.431f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.622f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4655f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3135f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "odd",
+        low = 36, high = 55)
+
+    private fun palm108() = Patch("Palm", "Tiny Djembe",
+        mapOf("stroke" to 1f, "decay" to 0.7f, "volume" to 1f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.323f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.35f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.411f, "mac4_d1" to 0.2857143f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5f, "mac5_a1" to 0.95f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.445500016f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.228500009f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Rattles", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "odd",
+        low = 76, high = 96)
+
+    private fun palm109() = Patch("Palm", "Bell Tabla",
+        mapOf("model" to 0f, "stroke" to 0.8f, "hand" to 0.9f, "decay" to 1f, "volume" to 0.35f, "mac1_d1" to 0.0714285746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.3f, "mac2_a2" to 0.538f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.3f, "mac3_a2" to 0.553f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.581f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.5235f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.421f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Soft", "macro3" to "Short", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "odd",
+        low = 72, high = 96,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun palm110() = Patch("Palm", "Whirring Riq",
+        mapOf("model" to 0.5f, "stroke" to 0.4f, "rattle" to 1f, "roll" to 1f, "volume" to 0.54f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.526f, "mac2_d1" to 0.142857149f, "mac2_d2" to 0.857142866f, "mac2_a1" to 0.7f, "mac2_a2" to 0.447f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.4705f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.547f, "mac5_d1" to 0.5f, "mac5_d2" to 0.857142866f, "mac5_a1" to 0f, "mac5_a2" to 0.5435f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.3f, "mac7_a2" to 0.574f, "mac8_d1" to 1f, "mac8_d2" to 0.857142866f, "mac8_a1" to 0.55f, "mac8_a2" to 0.526f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Bare", "macro6" to "Flam", "macro7" to "Slower", "macro8" to "Tight"),
+        family = "odd",
+        low = 57, high = 71)
+
+    private fun palm111() = Patch("Palm", "Squeeze Sweep",
+        mapOf("model" to 0.2777778f, "decay" to 0.9f, "squeeze" to 1f, "volume" to 0.59f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.456f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.3f, "mac3_a2" to 0.594f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6365f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_d2" to 0.857142866f, "mac6_a1" to 0.7f, "mac6_a2" to 0.536f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3445f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Short", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
+        family = "odd",
+        low = 40, high = 60)
+
+    private val palm: List<Patch> by lazy { listOf(palm0(), palm1(), palm2(), palm3(), palm4(), palm5(), palm6(), palm7(), palm8(), palm9(), palm10(), palm11(), palm12(), palm13(), palm14(), palm15(), palm16(), palm17(), palm18(), palm19(), palm20(), palm21(), palm22(), palm23(), palm24(), palm25(), palm26(), palm27(), palm28(), palm29(), palm30(), palm31(), palm32(), palm33(), palm34(), palm35(), palm36(), palm37(), palm38(), palm39(), palm40(), palm41(), palm42(), palm43(), palm44(), palm45(), palm46(), palm47(), palm48(), palm49(), palm50(), palm51(), palm52(), palm53(), palm54(), palm55(), palm56(), palm57(), palm58(), palm59(), palm60(), palm61(), palm62(), palm63(), palm64(), palm65(), palm66(), palm67(), palm68(), palm69(), palm70(), palm71(), palm72(), palm73(), palm74(), palm75(), palm76(), palm77(), palm78(), palm79(), palm80(), palm81(), palm82(), palm83(), palm84(), palm85(), palm86(), palm87(), palm88(), palm89(), palm90(), palm91(), palm92(), palm93(), palm94(), palm95(), palm96(), palm97(), palm98(), palm99(), palm100(), palm101(), palm102(), palm103(), palm104(), palm105(), palm106(), palm107(), palm108(), palm109(), palm110(), palm111()) }
 
     private fun chanter0() = Patch("Chanter", "Init", emptyMap(),
         family = "isles",
