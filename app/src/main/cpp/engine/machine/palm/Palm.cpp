@@ -563,7 +563,10 @@ void Palm::noteOn(uint8_t note, uint8_t velocity) {
         // The grace stroke now, softer and quieter; the stroke itself in render.
         strike(*v, kGrace * vel);
         for (int32_t i = 0; i < v->strikeLength; ++i) v->strike[static_cast<size_t>(i)] *= kGrace;
-        v->flamLeft = std::max(1, static_cast<int32_t>(flam * 0.001f * sampleRate));
+        // The stroke waits for the grace's contact pulse to finish, and rolls
+        // keep the stroke's velocity.
+        v->velocity = vel;
+        v->flamLeft = std::max({1, static_cast<int32_t>(flam * 0.001f * sampleRate), v->strikeLength + v->settleLeft});
         v->flamVelocity = vel;
     } else {
         v->flamLeft = 0;
@@ -650,8 +653,12 @@ bool Palm::render(float *L, float *R, int32_t frames) {
                 retune(v);
                 if (v.kind == Cuica) v.rubStep = noteHz(pitchNow(v) + v.squeezed) / sampleRate;
             }
-            if (v.flamLeft > 0 && --v.flamLeft == 0) strike(v, v.flamVelocity);
-            if (v.held && roll > 0.0f && --v.rollLeft <= 0) {
+            if (v.flamLeft > 0 && --v.flamLeft == 0) {
+                strike(v, v.flamVelocity);
+                // The flam's stroke takes the place of a roll stroke.
+                if (roll > 0.0f) v.rollLeft = static_cast<int32_t>(sampleRate / roll);
+            }
+            if (v.held && roll > 0.0f && v.flamLeft == 0 && --v.rollLeft <= 0) {
                 strike(v, clampf(v.velocity * (0.8f + 0.15f * white()), 0.05f, 1.0f));
                 v.rollLeft = static_cast<int32_t>(sampleRate / roll * (1.0f + 0.08f * white()));
             }

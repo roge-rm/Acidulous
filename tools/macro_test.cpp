@@ -1630,6 +1630,23 @@ void palmRoutes() {
 
     ok(sameAfterReset("Palm", {{"flam", 40.0f}}, 57), "Palm: a flammed hit plays the same after a reset", "");
 
+    // A roll under a flam: nothing strikes between the grace and the flam's
+    // stroke, and the stroke takes a roll stroke's place.
+    {
+        const auto rolled = playHeld("Palm", {{"flam", 60.0f}, {"roll", 20.0f}}, {57}, blocks);
+        const auto lone = playHeld("Palm", {{"flam", 60.0f}}, {57}, blocks);
+        const double a = rmsRange(rolled, 44 * 48, 61 * 48), b = rmsRange(lone, 44 * 48, 61 * 48);
+        std::snprintf(buf, sizeof(buf), "%.5f against %.5f", a, b);
+        ok(std::fabs(a - b) <= b * 0.05, "Palm: a roll waits for the flam's stroke", buf);
+    }
+    // A flam shorter than the grace's pulse: the stroke waits for it, so the
+    // head isn't stepped.
+    {
+        // Both are shorter than the pulse, so both are held to its length.
+        ok2(sameAs(playHeld("Palm", {{"flam", 0.1f}}, {21}, blocks), playHeld("Palm", {{"flam", 0.2f}}, {21}, blocks), buf, sizeof(buf)),
+            "Palm: a flam shorter than the grace's pulse waits for it", buf);
+    }
+
     // Kit mode: a route to decay reaches every pad, as the knob does.
     for (uint8_t pad : {uint8_t(36), uint8_t(40), uint8_t(43)}) {
         const auto knob = playHeld("Palm", {{"kit", 1.0f}, {"decay", 0.8f}}, {pad}, blocks);
