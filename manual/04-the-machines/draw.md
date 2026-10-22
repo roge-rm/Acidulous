@@ -134,8 +134,8 @@ own, makes that note louder and brighter.
 
 ## Macros
 
-The **play** page has eight macro knobs. A patch can name them (Squeeze,
-Musette, etc.) and the names show on the knobs, on automation lanes and in the
+The **play** page has eight macro knobs. A patch can name them (Bellows,
+Shake, etc.) and the names show on the knobs, on automation lanes and in the
 controller mapping list. They sit at zero when a patch loads, which is the
 patch as it was made.
 

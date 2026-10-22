@@ -8810,221 +8810,402 @@ internal object FactoryBanks {
         low = 45, high = 81)
 
     private fun draw1() = Patch("Draw", "Soft Accordion",
-        mapOf("pressure" to 0.3f, "attack" to 0.696023047f, "release" to 0.6261961f),
+        mapOf("pressure" to 0.3f, "attack" to 0.696023047f, "release" to 0.6261961f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4125f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw2() = Patch("Draw", "Pushed Accordion",
-        mapOf("pressure" to 0.8f, "attack" to 0.229475543f),
+        mapOf("pressure" to 0.8f, "attack" to 0.229475543f, "volume" to 0.62f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw3() = Patch("Draw", "Dry Accordion",
-        mapOf("detune" to 0f),
+        mapOf("detune" to 0f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_d2" to 0.5f, "mac2_a1" to 0.3f, "mac2_a2" to 0.622f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.5955f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_d3" to 0.5f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac6_a3" to 0.5855f, "mac7_d1" to 0.3125f, "mac7_d2" to 0.5f, "mac7_a1" to 0.75f, "mac7_a2" to 0.5755f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw4() = Patch("Draw", "Wet Accordion",
-        mapOf("detune" to 0.625f),
+        mapOf("detune" to 0.625f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.325f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Dry", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw5() = Patch("Draw", "Musette",
-        mapOf("register" to 0.25f, "detune" to 0.45f),
+        mapOf("register" to 0.25f, "detune" to 0.45f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
-    private fun draw6() = Patch("Draw", "Master",
-        mapOf("register" to 1f, "detune" to 0.3f, "cassotto" to 1f),
+    private fun draw6() = Patch("Draw", "Master Register",
+        mapOf("register" to 1f, "detune" to 0.3f, "cassotto" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4095f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
-    private fun draw7() = Patch("Draw", "Bassoon",
-        mapOf("register" to 0.333333343f, "cassotto" to 1f),
+    private fun draw7() = Patch("Draw", "Bassoon Register",
+        mapOf("register" to 0.333333343f, "cassotto" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5805f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
-    private fun draw8() = Patch("Draw", "Oboe",
-        mapOf("register" to 0.5833333f),
+    private fun draw8() = Patch("Draw", "Oboe Register",
+        mapOf("register" to 0.5833333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4095f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5805f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw9() = Patch("Draw", "Shaken Accordion",
-        mapOf("shake" to 0.5f),
+        mapOf("shake" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw10() = Patch("Draw", "Shaken in Time",
-        mapOf("sync" to 0.6666667f),
+        mapOf("sync" to 0.6666667f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.5905f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Touch", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw11() = Patch("Draw", "Cajun Accordion",
-        mapOf("pressure" to 0.75f, "attack" to 0.229475543f, "register" to 0.25f, "detune" to 0.55f),
+        mapOf("pressure" to 0.75f, "attack" to 0.229475543f, "volume" to 0.62f, "register" to 0.25f, "detune" to 0.55f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
     private fun draw12() = Patch("Draw", "Fifths Accordion",
-        mapOf("register" to 0.5833333f, "high rank" to 0.260869563f),
+        mapOf("register" to 0.5833333f, "high rank" to 0.260869563f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "accordion",
         low = 45, high = 81)
 
-    private fun draw13() = Patch("Draw", "Bandoneon",
-        mapOf("model" to 0.416666657f),
+    private fun draw13() = Patch("Draw", "Polka Accordion",
+        mapOf("pressure" to 0.6f, "attack" to 0.2895659f, "register" to 0.25f, "detune" to 0.5f, "bass" to 0.377952754f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4215f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.9375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Bass"),
+        family = "accordion",
+        low = 36, high = 84)
+
+    private fun draw14() = Patch("Draw", "Bandoneon",
+        mapOf("model" to 0.416666657f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4095f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "button",
         low = 40, high = 84)
 
-    private fun draw14() = Patch("Draw", "Tango Bandoneon",
-        mapOf("model" to 0.416666657f, "pressure" to 0.75f, "attack" to 0.182865858f, "release" to 0.40972814f),
+    private fun draw15() = Patch("Draw", "Tango Bandoneon",
+        mapOf("model" to 0.416666657f, "pressure" to 0.75f, "attack" to 0.182865858f, "release" to 0.40972814f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.606f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "button",
         low = 40, high = 84)
 
-    private fun draw15() = Patch("Draw", "Concertina",
-        mapOf("model" to 0.5f),
+    private fun draw16() = Patch("Draw", "Bandoneon Both Hands",
+        mapOf("model" to 0.416666657f, "volume" to 0.9f, "bass" to 0.377952754f, "bass chord" to 1f, "bass level" to 0.533333361f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.35799998f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.55f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_d2" to 0.5f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4245f, "mac8_d1" to 0.9375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Bass"),
+        family = "button",
+        low = 36, high = 84)
+
+    private fun draw17() = Patch("Draw", "Slow Bandoneon",
+        mapOf("model" to 0.416666657f, "pressure" to 0.4f, "attack" to 0.6456497f, "release" to 0.7456276f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4125f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
+        family = "button",
+        low = 40, high = 84,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun draw18() = Patch("Draw", "Concertina",
+        mapOf("model" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4215f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "button",
         low = 55, high = 91)
 
-    private fun draw16() = Patch("Draw", "English Concertina",
-        mapOf("model" to 0.5f, "pressure" to 0.4f, "register" to 0.0833333358f),
+    private fun draw19() = Patch("Draw", "English Concertina",
+        mapOf("model" to 0.5f, "pressure" to 0.4f, "register" to 0.0833333358f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "button",
         low = 55, high = 91)
 
-    private fun draw17() = Patch("Draw", "Anglo Concertina",
-        mapOf("model" to 0.5f, "register" to 0.166666672f, "detune" to 0.15f, "shake" to 0.375f),
+    private fun draw20() = Patch("Draw", "Anglo Concertina",
+        mapOf("model" to 0.5f, "register" to 0.166666672f, "detune" to 0.15f, "shake" to 0.375f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.428f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
         family = "button",
         low = 55, high = 91)
 
-    private fun draw18() = Patch("Draw", "Harmonium",
-        mapOf("model" to 0.6666667f, "attack" to 0.5791318f, "release" to 0.5695119f),
+    private fun draw21() = Patch("Draw", "Concertina Jig",
+        mapOf("model" to 0.5f, "pressure" to 0.7f, "attack" to 0.144782946f, "release" to 0.353043973f, "volume" to 0.52f, "register" to 0.166666672f, "detune" to 0.1f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
+        family = "button",
+        low = 55, high = 91)
+
+    private fun draw22() = Patch("Draw", "Harmonium",
+        mapOf("model" to 0.6666667f, "attack" to 0.5791318f, "release" to 0.5695119f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.392f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_d3" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac5_a3" to 0.440999985f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "harmonium",
         low = 40, high = 84)
 
-    private fun draw19() = Patch("Draw", "Soft Harmonium",
-        mapOf("model" to 0.6666667f, "pressure" to 0.35f, "attack" to 0.696023047f, "release" to 0.6261961f, "register" to 0.0833333358f),
+    private fun draw23() = Patch("Draw", "Soft Harmonium",
+        mapOf("model" to 0.6666667f, "pressure" to 0.35f, "attack" to 0.696023047f, "release" to 0.6261961f, "register" to 0.0833333358f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.406499982f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5905f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "harmonium",
         low = 40, high = 84)
 
-    private fun draw20() = Patch("Draw", "Full Harmonium",
-        mapOf("model" to 0.6666667f, "attack" to 0.5791318f, "release" to 0.5695119f, "register" to 0.75f),
+    private fun draw24() = Patch("Draw", "Full Harmonium",
+        mapOf("model" to 0.6666667f, "attack" to 0.5791318f, "release" to 0.5695119f, "volume" to 0.62f, "register" to 0.75f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4475f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.58f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_d3" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac5_a3" to 0.563f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_d2" to 0.5f, "mac8_a1" to 0.8f, "mac8_a2" to 0.5715f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "harmonium",
         low = 40, high = 84)
 
-    private fun draw21() = Patch("Draw", "Tierce Harmonium",
-        mapOf("model" to 0.6666667f, "attack" to 0.5791318f, "release" to 0.5695119f, "register" to 0.75f, "high rank" to 0.652173936f),
+    private fun draw25() = Patch("Draw", "Tierce Harmonium",
+        mapOf("model" to 0.6666667f, "attack" to 0.5791318f, "release" to 0.5695119f, "register" to 0.75f, "high rank" to 0.652173936f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.6115f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_d3" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac5_a3" to 0.571f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_d3" to 0.5f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac6_a3" to 0.571f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_d2" to 0.5f, "mac8_a1" to 0.8f, "mac8_a2" to 0.571f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "harmonium",
         low = 40, high = 84)
 
-    private fun draw22() = Patch("Draw", "Indian Harmonium",
-        mapOf("model" to 0.6666667f, "attack" to 0.406457126f, "release" to 0.5199935f, "air" to 0.7f),
+    private fun draw26() = Patch("Draw", "Indian Harmonium",
+        mapOf("model" to 0.6666667f, "attack" to 0.406457126f, "release" to 0.5199935f, "air" to 0.7f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.633f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "harmonium",
         low = 40, high = 84)
 
-    private fun draw23() = Patch("Draw", "Celeste Harmonium",
-        mapOf("model" to 0.6666667f, "attack" to 0.6037341f, "release" to 0.590271831f, "register" to 0.166666672f, "detune" to 0.175f),
+    private fun draw27() = Patch("Draw", "Celeste Harmonium",
+        mapOf("model" to 0.6666667f, "attack" to 0.6037341f, "release" to 0.590271831f, "register" to 0.166666672f, "detune" to 0.175f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "harmonium",
         low = 40, high = 84)
 
-    private fun draw24() = Patch("Draw", "Sheng",
-        mapOf("model" to 0.75f),
-        family = "pipes",
-        low = 55, high = 93)
-
-    private fun draw25() = Patch("Draw", "Sheng Octaves",
-        mapOf("model" to 0.75f, "register" to 0.5833333f),
-        family = "pipes",
-        low = 55, high = 93)
-
-    private fun draw26() = Patch("Draw", "Sheng Fifths",
-        mapOf("model" to 0.75f, "register" to 0.5833333f, "high rank" to 0.260869563f),
-        family = "pipes",
-        low = 55, high = 93)
-
-    private fun draw27() = Patch("Draw", "Sho",
-        mapOf("model" to 0.8333333f, "attack" to 0.85521704f, "release" to 0.863423944f),
-        family = "pipes",
-        low = 57, high = 93)
-
-    private fun draw28() = Patch("Draw", "Sho Pipes",
-        mapOf("model" to 0.8333333f, "playing" to 1f),
-        family = "pipes",
-        low = 69, high = 90)
-
-    private fun draw29() = Patch("Draw", "Khaen",
-        mapOf("model" to 0.9166667f),
-        family = "pipes",
+    private fun draw28() = Patch("Draw", "Drone Box",
+        mapOf("model" to 0.6666667f, "attack" to 0.6638244f, "release" to 0.806739748f, "air" to 0.6f, "volume" to 0.56f, "register" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.453f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5725f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "harmonium",
         low = 45, high = 81)
 
-    private fun draw30() = Patch("Draw", "Khaen Drone",
-        mapOf("model" to 0.9166667f, "attack" to 0.6638244f, "release" to 0.7268479f, "volume" to 0.42f, "register" to 0.166666672f, "detune" to 0.125f),
-        family = "pipes",
-        low = 40, high = 64)
+    private fun draw29() = Patch("Draw", "Devotional Harmonium",
+        mapOf("model" to 0.6666667f, "attack" to 0.5190414f, "release" to 0.7268479f, "air" to 0.65f, "volume" to 0.57f, "register" to 0.9166667f, "detune" to 0.15f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.401f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "harmonium",
+        low = 40, high = 84,
+        sendReverb = 0.15f, sendDelay = 0f)
 
-    private fun draw31() = Patch("Draw", "Pitch Pipe",
-        mapOf("model" to 1f),
-        family = "pipes",
-        low = 60, high = 84)
+    private fun draw30() = Patch("Draw", "Parlour Harmonium",
+        mapOf("model" to 0.6666667f, "pressure" to 0.4f, "attack" to 0.6456497f, "release" to 0.670163751f, "register" to 0.8333333f, "detune" to 0.1f, "cassotto" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.431f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "harmonium",
+        low = 40, high = 84)
 
-    private fun draw32() = Patch("Draw", "Melodica",
-        mapOf("model" to 0.5833333f),
+    private fun draw31() = Patch("Draw", "Melodica",
+        mapOf("model" to 0.5833333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4155f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "melodica",
         low = 53, high = 77)
 
-    private fun draw33() = Patch("Draw", "Melodica Lead",
-        mapOf("model" to 0.5833333f, "pressure" to 0.75f, "attack" to 0.182865858f, "vibrato" to 0.2f, "vib rate" to 0.5f),
+    private fun draw32() = Patch("Draw", "Melodica Lead",
+        mapOf("model" to 0.5833333f, "pressure" to 0.75f, "attack" to 0.182865858f, "volume" to 0.62f, "vibrato" to 0.2f, "vib rate" to 0.5f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5755f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "melodica",
         low = 53, high = 77)
 
-    private fun draw34() = Patch("Draw", "Soft Melodica",
-        mapOf("model" to 0.5833333f, "pressure" to 0.25f, "attack" to 0.6456497f, "release" to 0.670163751f),
+    private fun draw33() = Patch("Draw", "Soft Melodica",
+        mapOf("model" to 0.5833333f, "pressure" to 0.25f, "attack" to 0.6456497f, "release" to 0.670163751f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.406499982f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5905f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "melodica",
         low = 53, high = 77)
 
-    private fun draw35() = Patch("Draw", "Breathy Melodica",
-        mapOf("model" to 0.5833333f, "pressure" to 0.35f, "attack" to 0.5512401f, "air" to 0.6f),
+    private fun draw34() = Patch("Draw", "Breathy Melodica",
+        mapOf("model" to 0.5833333f, "pressure" to 0.35f, "attack" to 0.5512401f, "air" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4095f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
         family = "melodica",
         low = 53, high = 77)
 
-    private fun draw36() = Patch("Draw", "Harp",
-        mapOf("model" to 0f),
+    private fun draw35() = Patch("Draw", "Dub Melodica",
+        mapOf("model" to 0.5833333f, "pressure" to 0.7f, "attack" to 0.229475543f, "volume" to 0.47f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4435f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.571f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "melodica",
+        low = 53, high = 77,
+        inserts = listOf(UnitSlot("Delay", mapOf("feedback" to 0.5263158f, "tone" to 0.51785177f))),
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun draw36() = Patch("Draw", "Bass Melodica",
+        mapOf("model" to 0.5833333f, "pressure" to 0.6f, "volume" to 0.52f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.444f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5635f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "melodica",
+        low = 36, high = 60)
+
+    private fun draw37() = Patch("Draw", "Street Melodica",
+        mapOf("model" to 0.5833333f, "pressure" to 0.6f, "air" to 0.65f, "volume" to 0.58f, "register" to 0.166666672f, "detune" to 0.25f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4325f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "melodica",
+        low = 53, high = 77)
+
+    private fun draw38() = Patch("Draw", "C Harp",
+        mapOf("model" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4215f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.6275f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw37() = Patch("Draw", "Cupped Harp",
-        mapOf("model" to 0f, "cup" to 0.55f, "vibrato" to 0.35f, "vib rate" to 0.5f),
+    private fun draw39() = Patch("Draw", "Cupped Harp",
+        mapOf("model" to 0f, "volume" to 0.84f, "cup" to 0.55f, "vibrato" to 0.35f, "vib rate" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.402f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.58f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw38() = Patch("Draw", "G Harp",
-        mapOf("model" to 0f, "harp key" to 0f),
+    private fun draw40() = Patch("Draw", "G Harp",
+        mapOf("model" to 0f, "volume" to 0.78f, "harp key" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.431f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.5955f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 55, high = 84)
 
-    private fun draw39() = Patch("Draw", "Wah Harp",
-        mapOf("model" to 0f, "cup" to 0.4f, "vibrato" to 0.5f, "vib rate" to 0.214285716f),
+    private fun draw41() = Patch("Draw", "Wah Harp",
+        mapOf("model" to 0f, "volume" to 0.77f, "cup" to 0.4f, "vibrato" to 0.5f, "vib rate" to 0.214285716f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.407f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.615f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw40() = Patch("Draw", "Straight Harp",
-        mapOf("model" to 0f, "playing" to 1f),
+    private fun draw42() = Patch("Draw", "Straight Harp",
+        mapOf("model" to 0f, "playing" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4005f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.65f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw41() = Patch("Draw", "Chromatic",
-        mapOf("model" to 0.0833333358f, "vibrato" to 0.2f, "vib rate" to 0.5714286f),
+    private fun draw43() = Patch("Draw", "Chromatic",
+        mapOf("model" to 0.0833333358f, "vibrato" to 0.2f, "vib rate" to 0.5714286f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.398f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.65f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw42() = Patch("Draw", "Tremolo Harp",
-        mapOf("model" to 0.166666672f, "detune" to 0.3f),
+    private fun draw44() = Patch("Draw", "Tremolo Harp",
+        mapOf("model" to 0.166666672f, "detune" to 0.3f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4005f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.65f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6875f, "mac5_a1" to 0.8f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Wet", "macro5" to "Vibrato", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 60, high = 84)
 
-    private fun draw43() = Patch("Draw", "Octave Harp",
-        mapOf("model" to 0.25f),
+    private fun draw45() = Patch("Draw", "Octave Harmonica",
+        mapOf("model" to 0.25f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.65f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
         family = "harmonica",
         low = 60, high = 84)
 
-    private val draw: List<Patch> by lazy { listOf(draw0(), draw1(), draw2(), draw3(), draw4(), draw5(), draw6(), draw7(), draw8(), draw9(), draw10(), draw11(), draw12(), draw13(), draw14(), draw15(), draw16(), draw17(), draw18(), draw19(), draw20(), draw21(), draw22(), draw23(), draw24(), draw25(), draw26(), draw27(), draw28(), draw29(), draw30(), draw31(), draw32(), draw33(), draw34(), draw35(), draw36(), draw37(), draw38(), draw39(), draw40(), draw41(), draw42(), draw43()) }
+    private fun draw46() = Patch("Draw", "Low F Harp",
+        mapOf("model" to 0f, "octave" to 0.25f, "volume" to 1f, "harp key" to 0.909090936f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.85f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
+        family = "harmonica",
+        low = 53, high = 84)
+
+    private fun draw47() = Patch("Draw", "Chord Harp",
+        mapOf("model" to 0.166666672f, "volume" to 0.92f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.417999983f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.54f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6875f, "mac5_a1" to 0.8f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Wet", "macro5" to "Vibrato", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
+        family = "harmonica",
+        low = 55, high = 84)
+
+    private fun draw48() = Patch("Draw", "Amped Harp",
+        mapOf("model" to 0f, "pressure" to 0.7f, "volume" to 0.5f, "cup" to 0.55f, "vibrato" to 0.3f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.85f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
+        family = "harmonica",
+        low = 60, high = 84,
+        inserts = listOf(UnitSlot("Amp", mapOf("drive" to 0.6f, "bass" to 0.6f, "treble" to 0.4f, "master" to 0.4f, "gain" to 0.458333343f))))
+
+    private fun draw49() = Patch("Draw", "Ballad Chromatic",
+        mapOf("model" to 0.0833333358f, "pressure" to 0.4f, "attack" to 0.5190414f, "vibrato" to 0.45f, "vib rate" to 0.357142866f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.392f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.65f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.75f, "mac5_d2" to 0.6875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.6f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Speed", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
+        family = "harmonica",
+        low = 60, high = 84,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun draw50() = Patch("Draw", "Sheng",
+        mapOf("model" to 0.75f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5755f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 55, high = 93)
+
+    private fun draw51() = Patch("Draw", "Sheng Octaves",
+        mapOf("model" to 0.75f, "register" to 0.5833333f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5755f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 55, high = 93)
+
+    private fun draw52() = Patch("Draw", "Sheng Fifths",
+        mapOf("model" to 0.75f, "register" to 0.5833333f, "high rank" to 0.260869563f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5755f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 55, high = 93)
+
+    private fun draw53() = Patch("Draw", "Festival Sheng",
+        mapOf("model" to 0.75f, "pressure" to 0.8f, "attack" to 0.229475543f, "volume" to 0.6f, "register" to 0.75f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.569f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 55, high = 93)
+
+    private fun draw54() = Patch("Draw", "Sho",
+        mapOf("model" to 0.8333333f, "attack" to 0.85521704f, "release" to 0.863423944f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.440999985f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5905f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 57, high = 93)
+
+    private fun draw55() = Patch("Draw", "Sho Pipes",
+        mapOf("model" to 0.8333333f, "playing" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.425f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 69, high = 90)
+
+    private fun draw56() = Patch("Draw", "Khaen",
+        mapOf("model" to 0.9166667f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5805f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 45, high = 81)
+
+    private fun draw57() = Patch("Draw", "Khaen Drone",
+        mapOf("model" to 0.9166667f, "attack" to 0.6638244f, "release" to 0.7268479f, "volume" to 0.42f, "register" to 0.166666672f, "detune" to 0.125f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_d2" to 0.5f, "mac2_a1" to 0.3f, "mac2_a2" to 0.659f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.623f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_d3" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac5_a3" to 0.6425f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_d3" to 0.5f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac6_a3" to 0.604f, "mac7_d1" to 0.3125f, "mac7_d2" to 0.5f, "mac7_a1" to 0.75f, "mac7_a2" to 0.5455f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 40, high = 64)
+
+    private fun draw58() = Patch("Draw", "Pitch Pipe",
+        mapOf("model" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4095f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.75f, "mac3_a2" to 0.6115f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5955f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "pipes",
+        low = 60, high = 84)
+
+    private fun draw59() = Patch("Draw", "Tritone Reeds",
+        mapOf("register" to 0.75f, "high rank" to 0.2173913f, "low rank" to 0.7826087f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4095f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5955f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
+        family = "odd",
+        low = 45, high = 81)
+
+    private fun draw60() = Patch("Draw", "Word Harp",
+        mapOf("model" to 0f, "cup" to 0.2f, "words" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4185f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_d2" to 0.5f, "mac3_a1" to 0.85f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.6875f, "mac4_a1" to 0.8f, "mac5_d1" to 0.875f, "mac5_a1" to 0.199999988f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.375f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.479f),
+        mapOf("macro1" to "Breath", "macro2" to "Bright", "macro3" to "Hands", "macro4" to "Vibrato", "macro5" to "Words", "macro6" to "Swell", "macro7" to "Air", "macro8" to "Bend"),
+        family = "odd",
+        low = 60, high = 84)
+
+    private fun draw61() = Patch("Draw", "Pumping Bellows",
+        mapOf("register" to 1f, "sync" to 0.333333343f, "bass" to 0.377952754f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.7f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.4375f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6115f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.9375f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Touch", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Bass"),
+        family = "odd",
+        low = 36, high = 84)
+
+    private fun draw62() = Patch("Draw", "Giant Reeds",
+        mapOf("volume" to 0.6f, "register" to 0.5f, "detune" to 0.5f, "low rank" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4175f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.7f, "mac4_a2" to 0.582f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
+        family = "odd",
+        low = 45, high = 81)
+
+    private fun draw63() = Patch("Draw", "Mutation Harmonium",
+        mapOf("model" to 0.6666667f, "attack" to 0.5190414f, "release" to 0.670163751f, "volume" to 0.65f, "register" to 0.75f, "high rank" to 0.7826087f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4025f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.7f, "mac5_d1" to 0.125f, "mac5_d2" to 0.1875f, "mac5_a1" to 0.675f, "mac5_a2" to 0.625f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.325f, "mac6_a2" to 0.375f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Touch", "macro5" to "Swell", "macro6" to "Snap", "macro7" to "Box", "macro8" to "Air"),
+        family = "odd",
+        low = 40, high = 84)
+
+    private fun draw64() = Patch("Draw", "Seasick Accordion",
+        mapOf("register" to 0.25f, "detune" to 1f, "shake" to 0.15625f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4155f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.325f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bellows", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Dry", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Air"),
+        family = "odd",
+        low = 45, high = 81)
+
+    private fun draw65() = Patch("Draw", "Gasping Reeds",
+        mapOf("pressure" to 1f, "attack" to 0.09817325f, "air" to 1f, "volume" to 0.48f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.5f, "mac1_a1" to 0.3f, "mac1_a2" to 0.569f, "mac2_d1" to 0.25f, "mac2_a1" to 0.3f, "mac3_d1" to 0.625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.5625f, "mac4_a1" to 0.65f, "mac5_d1" to 0.8125f, "mac5_a1" to 0.75f, "mac6_d1" to 0.125f, "mac6_d2" to 0.1875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.625f, "mac7_d1" to 0.3125f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_a1" to 0.199999988f),
+        mapOf("macro1" to "Soft", "macro2" to "Bright", "macro3" to "Dark", "macro4" to "Wet", "macro5" to "Shake", "macro6" to "Swell", "macro7" to "Box", "macro8" to "Clean", "0.05" to ""),
+        family = "odd",
+        low = 45, high = 81)
+
+    private val draw: List<Patch> by lazy { listOf(draw0(), draw1(), draw2(), draw3(), draw4(), draw5(), draw6(), draw7(), draw8(), draw9(), draw10(), draw11(), draw12(), draw13(), draw14(), draw15(), draw16(), draw17(), draw18(), draw19(), draw20(), draw21(), draw22(), draw23(), draw24(), draw25(), draw26(), draw27(), draw28(), draw29(), draw30(), draw31(), draw32(), draw33(), draw34(), draw35(), draw36(), draw37(), draw38(), draw39(), draw40(), draw41(), draw42(), draw43(), draw44(), draw45(), draw46(), draw47(), draw48(), draw49(), draw50(), draw51(), draw52(), draw53(), draw54(), draw55(), draw56(), draw57(), draw58(), draw59(), draw60(), draw61(), draw62(), draw63(), draw64(), draw65()) }
 
     private fun fret0() = Patch("Fret", "Init", emptyMap(),
         family = "clean",

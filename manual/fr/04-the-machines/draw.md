@@ -148,7 +148,7 @@ touche qui envoie la sienne, rend cette note plus forte et plus brillante.
 
 ## Macros
 
-La page **jeu** a huit boutons macro. Un patch peut les nommer (Serrer, Musette,
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Bellows, Shake,
 etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
 dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
 patch, ce qui donne le patch tel qu’il a été fait.

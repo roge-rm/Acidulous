@@ -325,6 +325,33 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         p.lastOff = std::max(p.lastOff, hit(p, end + 2.2f, 1.0f, note + 24, 100));
         p.lastOff = std::max(p.lastOff, hit(p, end + 3.3f, 0.7f, note + 36, 100));
         p.frames = p.lastOff + secondsToFrames(2.5f);
+    } else if (kind == "squeeze") {
+        // An accordion played with both hands: a tune in the right hand over
+        // I IV V I, and the left hand's buttons on beats 1 and 3, the root
+        // and then its fifth. The buttons are written in absolute notes, C2
+        // to B2 (36..47), as Draw's left hand plays every key of a name the
+        // same: a patch that sets `bass` to 48 or more hears them as its
+        // left hand. The tune is relative to the note, as `chord`'s is.
+        static const int kRoot[4] = {0, 5, 7, 0};
+        struct Step { float at; float len; int step; };
+        static const Step kTune[] = {
+            {0.0f, 0.9f, 0},  {1.0f, 0.9f, 4},  {2.0f, 0.9f, 7},  {3.0f, 0.9f, 4},
+            {4.0f, 0.9f, 5},  {5.0f, 0.9f, 9},  {6.0f, 0.9f, 12}, {7.0f, 0.9f, 9},
+            {8.0f, 0.9f, 7},  {9.0f, 0.45f, 11}, {9.5f, 0.45f, 12}, {10.0f, 0.9f, 14}, {11.0f, 0.9f, 11},
+            {12.0f, 2.9f, 12},
+        };
+        const int pc = ((note % 12) + 12) % 12;
+        for (int b = 0; b < 4; ++b) {
+            const float at = static_cast<float>(b) * beat * 4.0f;
+            const int root = 36 + (pc + kRoot[b]) % 12;
+            const int fifth = 36 + (pc + kRoot[b] + 7) % 12;
+            p.lastOff = std::max(p.lastOff, hit(p, at, beat * 0.6f, root, 96));
+            p.lastOff = std::max(p.lastOff, hit(p, at + beat * 2.0f, beat * 0.6f, b == 3 ? root : fifth, 88));
+        }
+        for (const Step &st : kTune) {
+            p.lastOff = std::max(p.lastOff, hit(p, st.at * beat, st.len * beat, note + st.step, st.step == 12 ? 100 : 92));
+        }
+        p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "keys") {
         // A root in the left hand and chords on the off beats above it.
         // Shows whether the machine has enough voices for both and how
@@ -2103,7 +2130,7 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|jaw|harmonics\n"
-        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic\n"
+        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
