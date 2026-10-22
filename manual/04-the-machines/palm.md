@@ -40,9 +40,11 @@ there to damp it.
   jingles.
 - **body** - a djembe's or a cajón's air, booming under a bass stroke.
 
-## Play
+## Hands
 
 - **rolls** - held notes struck again and again, this many times a second.
+- **flam** - each hit is two: a softer grace stroke, then the stroke this
+  many milliseconds after it. At 0 a hit is one stroke.
 - **spread** - low drums to the left, high to the right.
 - **voices**, **velocity**, **octave**, **bend** and **volume**.
 
@@ -56,6 +58,23 @@ Turn on **kit** and the keys from C2 up are sixteen pads, each its own drum, so 
 - The other knobs (position, hand, decay and so on) work on every pad.
 - **Hand Drum Kit** starts with djembe, cajón, tabla, bayan, frame drum and talking drum, **African Kit** with djembes, ashiko, talking drum and batá, **Latin Kit** with congas, bongos, cajón and batá, **Arabic Kit** with darbuka, riq, tar, bendir and frame drum, and **Tabla Kit** with tabla, bayan, mridangam, dholak and kanjira.
 - Turn kit off to play one drum across the keys again.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Slap,
+Ring, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves every drum, 24 semitones at 1. The model, tune,
+stroke, the stepped choices and a kit's pads can't be reached; in a kit the
+routes move the knobs every pad shares. A change to the position, hand,
+decay, damp, pitch drop, body, spread, velocity or flam is heard from the
+next hit, or the next stroke of a roll. Squeeze, rattle, rolls and volume
+move at once. Tap a macro's name to rename it.
 
 ## Tips
 

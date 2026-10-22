@@ -252,13 +252,13 @@ fun MachinePanel(
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding, track, trackIndex, editor)
             "Brazen" -> BrazenPanel(binding, track, trackIndex, editor)
-            "Hammer" -> HammerPanel(binding)
+            "Hammer" -> HammerPanel(binding, track, trackIndex, editor)
             "Tongue" -> TonguePanel(binding, editor)
-            "Draw" -> DrawPanel(binding)
-            "Fret" -> FretPanel(binding)
-            "Tine" -> TinePanel(binding)
+            "Draw" -> DrawPanel(binding, track, trackIndex, editor)
+            "Fret" -> FretPanel(binding, track, trackIndex, editor)
+            "Tine" -> TinePanel(binding, track, trackIndex, editor)
             "Sympath" -> SympathPanel(binding)
-            "Palm" -> PalmPanel(binding, selectedPad)
+            "Palm" -> PalmPanel(binding, selectedPad, track, trackIndex, editor)
             "Chanter" -> ChanterPanel(binding)
             "Aviary" -> AviaryPanel(binding, selectedPad)
             "Fathom" -> FathomPanel(binding, selectedPad)
@@ -4390,15 +4390,52 @@ private val DRAW_REGISTERS = listOf(
     "16′ 8′ 4′", "8′ 8′ 4′", "16′ 8′ 8′ 4′", "16′ 8′ 8′ 8′ 4′",
 )
 
+/** The left hand's split: off, or the note the bass buttons start below. */
+private val DRAW_BASS_SPLITS = listOf("off") + (1..127).map { noteName(it) }
+private val DRAW_BASS_CHORDS = listOf("major", "minor", "7th", "dim", "none")
+
 private val DRAW_HARP_KEYS = listOf("G", "A♭", "A", "B♭", "B", "C", "D♭", "D", "E♭", "E", "F", "F♯")
 
 /** Draw: the reeds, the breath or bellows, and the rest. */
+/** Where a Draw macro route goes, in the engine's MacroDest order. */
+val DRAW_MACRO_DESTS = listOf(
+    "off", "pressure", "attack", "release", "set", "chamber", "air", "velocity", "volume",
+    "detune", "cup", "vibrato", "vib rate", "shake", "words", "bass level",
+    "pitch",
+)
+
 @Composable
-private fun DrawPanel(b: ParamBinding) {
+private fun DrawPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("reeds", "breath", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "reeds", "breath", "out", "macros"),
+        section, { section = it },
+    ) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", DRAW_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", DRAW_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", DRAW_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", DRAW_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", DRAW_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
@@ -4414,12 +4451,17 @@ private fun DrawPanel(b: ParamBinding) {
                     PanelStepKnob(b, "high rank", (1..24).map { "+$it" }, "high")
                     PanelStepKnob(b, "low rank", (-24..-1).map { "$it" }, "low")
                 }
+                Group("left hand") {
+                    PanelStepKnob(b, "bass", DRAW_BASS_SPLITS, "below", PanelAmber)
+                    PanelStepKnob(b, "bass chord", DRAW_BASS_CHORDS, "chord")
+                    PanelKnob(b, "bass level", "level")
+                }
                 Group("harp") {
                     PanelStepKnob(b, "harp key", DRAW_HARP_KEYS, "key~music", PanelAmber)
                     PanelStepKnob(b, "playing", listOf("player", "straight"), "playing")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("breath") {
                     PanelKnob(b, "pressure", "pressure", PanelAmber)
                     PanelKnob(b, "attack", "attack")
@@ -4449,6 +4491,14 @@ private fun DrawPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val FRET_MODELS = listOf("guitar", "12-string", "baritone", "bass", "5-string", "hollowbody", "steel~guitar", "fretless")
@@ -4459,12 +4509,45 @@ private val FRET_HARMONICS = listOf("off", "12", "7", "5")
 private val FRET_DIRECTIONS = listOf("down", "up", "both")
 
 /** Fret: the guitar and its pickups, the hands, and the amp. */
+/** Where a Fret macro route goes, in the engine's MacroDest order. */
+val FRET_MACRO_DESTS = listOf(
+    "off", "tone", "hardness", "position", "mute", "sustain", "bright", "buzz",
+    "strum", "slide", "vibrato", "drive", "feedback", "velocity", "volume", "ring~strings", "swell",
+    "pitch",
+)
+
 @Composable
-private fun FretPanel(b: ParamBinding) {
+private fun FretPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("guitar", "hands", "amp"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "guitar", "hands", "amp", "macros"),
+        section, { section = it },
+    ) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", FRET_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", FRET_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", FRET_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", FRET_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", FRET_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
@@ -4480,11 +4563,12 @@ private fun FretPanel(b: ParamBinding) {
                     PanelKnob(b, "ring", "ring~strings")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("pick") {
                     PanelStepKnob(b, "stroke", FRET_STROKES, "stroke", PanelAmber)
                     PanelKnob(b, "hardness", "hardness")
                     PanelKnob(b, "position", "position")
+                    PanelKnob(b, "swell", "swell")
                 }
                 Group("fretting") {
                     PanelKnob(b, "mute", "mute", PanelPink)
@@ -4515,21 +4599,60 @@ private fun FretPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val TINE_MODELS = listOf("marimba", "vibes", "xylophone", "glock", "thumb", "music box", "steel pan", "handpan", "tongue drum",
     "chimes", "crotales", "saron", "bonang", "gong", "bowl", "slit drum", "temple block", "cowbell", "triangle")
 
-/** Tine: the bar and what strikes it, the instrument around it, and the player. */
+/** Where a Tine macro route goes, in the engine's MacroDest order. */
+val TINE_MACRO_DESTS = listOf(
+    "off", "mallet", "position", "decay", "bright", "damp", "tube", "motor", "depth",
+    "bloom", "buzz", "rolls", "spread", "velocity", "volume", "pair",
+    "pitch",
+)
+
+/** Tine: the macros, the bar and what strikes it, the instrument around it, and the player. */
 @Composable
-private fun TinePanel(b: ParamBinding) {
+private fun TinePanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("bar", "body", "play"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "bar", "body", "hands", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", TINE_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", TINE_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", TINE_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", TINE_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", TINE_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
+                    PanelKnob(b, "pair", "pair")
                 }
                 Group("mallet") {
                     PanelKnob(b, "mallet", "mallet", PanelAmber)
@@ -4541,7 +4664,7 @@ private fun TinePanel(b: ParamBinding) {
                     PanelKnob(b, "damp", "damp", PanelPink)
                 }
             }
-            1 -> {
+            2 -> {
                 Group("tube") {
                     PanelKnob(b, "tube", "tube", PanelAmber)
                     PanelKnob(b, "motor", "motor")
@@ -4569,6 +4692,14 @@ private fun TinePanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val SYMPATH_MODELS = listOf("sitar", "tanpura", "veena", "shamisen", "sarod", "rudra veena", "swarmandal", "biwa", "sanxian", "ektara", "e-sitar",
@@ -4635,13 +4766,43 @@ private fun SympathPanel(b: ParamBinding) {
 private val PALM_MODELS = listOf("tabla", "bayan", "djembe", "cajon", "frame drum", "talking", "conga", "bongo", "darbuka", "riq", "tar", "bendir", "kanjira", "bata", "mridangam", "dholak", "ashiko", "udu", "cuica")
 private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "velocity")
 
-/** Palm: the drum and the hand, its body, and the player. */
+/** Where a Palm macro route goes, in the engine's MacroDest order. */
+val PALM_MACRO_DESTS = listOf(
+    "off", "position", "hand", "decay", "damp", "pitch drop", "squeeze", "rattle", "body",
+    "rolls", "spread", "velocity", "volume", "flam",
+    "pitch",
+)
+
+/** Palm: the macros, the drum and the hand, its body, the player and the kit. */
 @Composable
-private fun PalmPanel(b: ParamBinding, pad: Int) {
+private fun PalmPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("drum", "body", "play", "kit"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "drum", "body", "hands", "kit", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            3 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", PALM_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", PALM_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", PALM_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", PALM_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            4 -> {
                 // In kit mode the keys from C2 are sixteen pads; the pad picked on
                 // the drum grid is the one these knobs set.
                 val p = pad.coerceIn(0, 15)
@@ -4657,7 +4818,7 @@ private fun PalmPanel(b: ParamBinding, pad: Int) {
                     PanelKnob(b, n("level"), "level", hot)
                 }
             }
-            0 -> {
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", PALM_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
@@ -4672,7 +4833,7 @@ private fun PalmPanel(b: ParamBinding, pad: Int) {
                     PanelKnob(b, "damp", "damp", PanelPink)
                 }
             }
-            1 -> {
+            2 -> {
                 Group("head") {
                     PanelKnob(b, "drop", "pitch drop")
                     PanelKnob(b, "squeeze", "squeeze", PanelPink)
@@ -4685,6 +4846,7 @@ private fun PalmPanel(b: ParamBinding, pad: Int) {
             else -> {
                 Group("hands") {
                     PanelKnob(b, "roll", "rolls", PanelAmber)
+                    PanelKnob(b, "flam", "flam")
                     PanelKnob(b, "spread", "spread")
                 }
                 Group("play") {
@@ -4699,6 +4861,14 @@ private fun PalmPanel(b: ParamBinding, pad: Int) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val CHANTER_MODELS = listOf("highland", "smallpipes", "gaita", "hurdy-gurdy", "uilleann", "gaida", "cornemuse", "musette", "säckpipa", "dudy", "zampogna", "tulum", "launeddas")
@@ -4972,12 +5142,51 @@ private val HAMMER_STRINGS = listOf("auto", "1", "2", "3")
 private val HAMMER_PICKUPS = listOf("bridge", "neck", "both", "against")
 private val HAMMER_VOICES = listOf("4", "6", "8", "10", "12", "16", "20", "24", "32")
 
+/** Where a Hammer macro route goes, in the engine's MacroDest order. */
+val HAMMER_MACRO_DESTS = listOf(
+    "off", "size", "age",
+    "hardness", "hard key", "weight", "strike at", "moderator", "tacks", "velocity",
+    "sustain", "sustain key", "tone", "tone key", "stiffness", "stretch", "unison", "couple", "across",
+    "dampers", "damp time", "lifts at", "span", "una corda", "sympathy", "duplex", "noises",
+    "board", "lid", "room", "width",
+    "near", "offset", "tonebar", "mute", "drive", "trem depth", "trem rate", "trem pan",
+    "prep where", "prep amount",
+    "volume", "pan", "roll",
+    "pitch",
+)
+
 @Composable
-private fun HammerPanel(b: ParamBinding) {
+private fun HammerPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("instrument", "hammer", "strings", "pedals", "sound", "prepare", "electric", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "instrument", "hammer", "strings", "pedals", "sound", "prepare", "electric", "out", "macros"),
+        section, { section = it },
+    ) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            9 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", HAMMER_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", HAMMER_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", HAMMER_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", HAMMER_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", HAMMER_MODELS, "model", PanelAmber)
                     PanelKnob(b, "size", "size")
@@ -4985,7 +5194,7 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelStepKnob(b, "seed", (0..7).map { "$it" }, "seed")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("felt") {
                     PanelKnob(b, "hardness", "hardness", PanelAmber)
                     PanelKnob(b, "hardkey", "by key")
@@ -4998,9 +5207,10 @@ private fun HammerPanel(b: ParamBinding) {
                 }
                 Group("touch") {
                     PanelKnob(b, "velocity", "velocity", PanelAmber)
+                    PanelKnob(b, "roll", "roll~strike")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("ring") {
                     PanelKnob(b, "sustain", "sustain", PanelAmber)
                     PanelKnob(b, "sustainkey", "by key")
@@ -5011,6 +5221,7 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelKnob(b, "stiffness", "stiffness", PanelPink)
                     PanelKnob(b, "stretch", "stretch")
                     PanelStepKnob(b, "strings", HAMMER_STRINGS, "strings")
+                    PanelKnob(b, "duplex", "duplex")
                 }
                 Group("unison") {
                     PanelKnob(b, "unison", "unison", PanelAmber)
@@ -5018,7 +5229,7 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelKnob(b, "polar", "across")
                 }
             }
-            3 -> {
+            4 -> {
                 Group("dampers") {
                     PanelKnob(b, "dampers", "dampers", PanelAmber)
                     PanelKnob(b, "damp time", "time")
@@ -5033,7 +5244,7 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelKnob(b, "una corda", "una corda")
                 }
             }
-            4 -> {
+            5 -> {
                 Group("board") {
                     PanelKnob(b, "board", "board", PanelAmber)
                     PanelKnob(b, "lid", "lid")
@@ -5044,7 +5255,7 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelKnob(b, "width", "width")
                 }
             }
-            5 -> {
+            6 -> {
                 Group("prepare") {
                     PanelStepKnob(b, "prep", HAMMER_PREPS, "what", PanelAmber)
                     PanelStepKnob(b, "prepkeys", HAMMER_PREP_KEYS, "keys")
@@ -5052,7 +5263,7 @@ private fun HammerPanel(b: ParamBinding) {
                     PanelKnob(b, "prepamt", "amount")
                 }
             }
-            6 -> {
+            7 -> {
                 Group("pickup") {
                     PanelKnob(b, "pickup", "near", PanelAmber)
                     PanelKnob(b, "offset", "offset")
@@ -5090,6 +5301,14 @@ private fun HammerPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Timber -----------------------------------------------------------------

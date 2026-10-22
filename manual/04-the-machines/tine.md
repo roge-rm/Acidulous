@@ -25,6 +25,10 @@ overtones start, so they ring out.
   **gong**, **bowl** (singing bowl), **slit drum**, **temple block**,
   **cowbell** or **triangle**. A balafon is the marimba with **buzz** up.
 - **tune** - in cents.
+- **pair** - each note sounds twice, the second this many cents sharp, so
+  the two beat as a gamelan's pairs of instruments do. It gives chorused
+  vibes and bells too. At 0 a note sounds once. Turning it up from 0 is heard
+  from the next note; on a note already paired it moves at once.
 - **mallet** - how hard the mallet, finger or pin: soft yarn to bare metal.
   Playing harder makes it a little harder too.
 - **position** - where it's struck. In the middle a bar's second overtone
@@ -46,7 +50,7 @@ overtones start, so they ring out.
   it's struck.
 - **buzz** - a rattle that touches a tine when it swings wide.
 
-## Play
+## Hands
 
 - **rolls** - held notes struck again and again, this many times a second,
   never quite evenly. At 0 a note is struck once.
@@ -55,6 +59,23 @@ overtones start, so they ring out.
 
 Pressure (from the keyboard or each note's own, with MPE) draws a bow across
 a held bar: the note swells up and sustains for as long as you press.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Mallet,
+Shimmer, etc.) and the names show on the knobs, on automation lanes and in
+the controller mapping list. They sit at zero when a patch loads, which is
+the patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model,
+tune and the stepped choices can't be reached. A change to the mallet,
+position, decay, bright, spread or velocity is heard from the next note, or
+the next stroke of a roll; damp from the next note let go. The tube, motor,
+depth, bloom, buzz, rolls, volume and a paired note's pair move at once. Tap
+a macro's name to rename it.
 
 ## Tips
 

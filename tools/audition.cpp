@@ -200,6 +200,73 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             p.lastOff = hit(p, 3.4f + 0.02f * static_cast<float>(i), 3.0f, note + 12 + kMin7[i], velocity);
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "chug") {
+        // Palm-muted power chords on the low strings: root, fifth and octave
+        // on a gallop of eighths and sixteenths, with accented chords held a
+        // little longer. Four bars, relative to the note, which is the low
+        // string.
+        struct Step { int at; int len; int semi; bool accent; };
+        static const Step kBar1[] = {
+            {0, 1, 0, false}, {2, 1, 0, false}, {3, 1, 0, false}, {4, 1, 0, false},
+            {6, 1, 0, false}, {7, 1, 0, false}, {8, 1, 0, false}, {10, 1, 0, false},
+            {11, 1, 0, false}, {12, 4, 3, true},
+        };
+        static const Step kBar2[] = {
+            {0, 1, 0, false}, {1, 1, 0, false}, {2, 1, 0, false}, {3, 1, 0, false},
+            {4, 1, 0, false}, {6, 1, 0, false}, {7, 1, 0, false}, {8, 2, 5, true},
+            {10, 1, 0, false}, {11, 1, 0, false}, {12, 3, 6, true}, {15, 1, 0, false},
+        };
+        static const Step kBar4[] = {
+            {0, 1, 0, false}, {2, 1, 0, false}, {3, 1, 0, false}, {4, 1, 0, false},
+            {6, 1, 0, false}, {7, 1, 0, false}, {8, 2, 3, true}, {10, 2, 2, true},
+            {12, 4, 0, true},
+        };
+        static const int kPower[] = {0, 7, 12};
+        const float step = beat * 0.25f;
+        const auto bar = [&](const Step *steps, size_t count, int at) {
+            for (size_t i = 0; i < count; ++i) {
+                const Step &s = steps[i];
+                const float on = static_cast<float>(at + s.at) * step;
+                const float len = s.accent ? static_cast<float>(s.len) * step * 0.9f : step * 0.6f;
+                const int vel = s.accent ? 124 : (s.at % 4 == 0 ? 110 : 98);
+                for (const int semi : kPower) {
+                    p.lastOff = std::max(p.lastOff, hit(p, on, len, note + s.semi + semi, vel));
+                }
+            }
+        };
+        bar(kBar1, sizeof(kBar1) / sizeof(kBar1[0]), 0);
+        bar(kBar2, sizeof(kBar2) / sizeof(kBar2[0]), 16);
+        bar(kBar1, sizeof(kBar1) / sizeof(kBar1[0]), 32);
+        bar(kBar4, sizeof(kBar4) / sizeof(kBar4[0]), 48);
+        p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "funk") {
+        // Sixteenth-note strumming of a ninth chord on the upper strings: 'A'
+        // an accent with the hand off the strings, 'g' a ghost scratch with
+        // the strings deadened (the mod wheel, which is the palm), '.' the
+        // hand passing over them. The chord's top note sits an octave above
+        // the note; the last half bar moves up a fourth.
+        static const char *kBars[4] = {"A.gAg.gA.gA.gAgg", "A.ggA.gAg.A.gAgA",
+                                       "A.gAg.gA.gA.gAgg", "A.ggA.gAA.gAg.AA"};
+        static const int kNinth[] = {-3, 3, 7, 12}; // third, seventh, ninth and fifth above the root
+        const float step = beat * 0.25f;
+        int wheel = -1;
+        for (int b = 0; b < 4; ++b) {
+            for (int i = 0; i < 16; ++i) {
+                const char c = kBars[b][i];
+                if (c == '.') continue;
+                const bool accent = c == 'A';
+                const float on = static_cast<float>(b * 16 + i) * step;
+                const int want = accent ? 0 : 127;
+                if (want != wheel) { wheelAt(p, on, want); wheel = want; }
+                const int shift = b == 3 && i >= 8 ? 5 : 0;
+                for (const int semi : kNinth) {
+                    p.lastOff = std::max(p.lastOff, hit(p, on, step * (accent ? 0.7f : 0.5f), note + shift + semi,
+                                                        accent ? (i % 4 == 0 ? 110 : 102) : 60));
+                }
+            }
+        }
+        wheelAt(p, static_cast<float>(64) * step, 0);
+        p.frames = p.lastOff + secondsToFrames(2.0f);
     } else if (kind == "tune") {
         // One melody, an octave and a fifth wide, kept inside the
         // instrument's range. Most problems show at one end of a range
@@ -324,6 +391,33 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         p.lastOff = std::max(p.lastOff, hit(p, end + 0.2f, 1.8f, note - 32, 110));
         p.lastOff = std::max(p.lastOff, hit(p, end + 2.2f, 1.0f, note + 24, 100));
         p.lastOff = std::max(p.lastOff, hit(p, end + 3.3f, 0.7f, note + 36, 100));
+        p.frames = p.lastOff + secondsToFrames(2.5f);
+    } else if (kind == "squeeze") {
+        // An accordion played with both hands: a tune in the right hand over
+        // I IV V I, and the left hand's buttons on beats 1 and 3, the root
+        // and then its fifth. The buttons are written in absolute notes, C2
+        // to B2 (36..47), as Draw's left hand plays every key of a name the
+        // same: a patch that sets `bass` to 48 or more hears them as its
+        // left hand. The tune is relative to the note, as `chord`'s is.
+        static const int kRoot[4] = {0, 5, 7, 0};
+        struct Step { float at; float len; int step; };
+        static const Step kTune[] = {
+            {0.0f, 0.9f, 0},  {1.0f, 0.9f, 4},  {2.0f, 0.9f, 7},  {3.0f, 0.9f, 4},
+            {4.0f, 0.9f, 5},  {5.0f, 0.9f, 9},  {6.0f, 0.9f, 12}, {7.0f, 0.9f, 9},
+            {8.0f, 0.9f, 7},  {9.0f, 0.45f, 11}, {9.5f, 0.45f, 12}, {10.0f, 0.9f, 14}, {11.0f, 0.9f, 11},
+            {12.0f, 2.9f, 12},
+        };
+        const int pc = ((note % 12) + 12) % 12;
+        for (int b = 0; b < 4; ++b) {
+            const float at = static_cast<float>(b) * beat * 4.0f;
+            const int root = 36 + (pc + kRoot[b]) % 12;
+            const int fifth = 36 + (pc + kRoot[b] + 7) % 12;
+            p.lastOff = std::max(p.lastOff, hit(p, at, beat * 0.6f, root, 96));
+            p.lastOff = std::max(p.lastOff, hit(p, at + beat * 2.0f, beat * 0.6f, b == 3 ? root : fifth, 88));
+        }
+        for (const Step &st : kTune) {
+            p.lastOff = std::max(p.lastOff, hit(p, st.at * beat, st.len * beat, note + st.step, st.step == 12 ? 100 : 92));
+        }
         p.frames = p.lastOff + secondsToFrames(2.5f);
     } else if (kind == "keys") {
         // A root in the left hand and chords on the off beats above it.
@@ -2103,7 +2197,8 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|jaw|harmonics\n"
-        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic\n"
+        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
+        "          |chug|funk\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"

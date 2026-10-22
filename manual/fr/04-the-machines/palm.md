@@ -46,10 +46,12 @@ elle y reste pour l’étouffer.
 - **corps** : l’air d’un djembé ou d’un cajón, qui gronde sous une frappe
   basse.
 
-## Jeu
+## Mains
 
 - **roulés** : les notes tenues frappées encore et encore, tant de fois par
   seconde.
+- **fla** : chaque coup en fait deux, un coup de grâce plus doux, puis le
+  coup ce nombre de millisecondes après. À 0, un coup est un seul coup.
 - **écart** : les tambours graves à gauche, les aigus à droite.
 - **voix**, **vélocité**, **octave**, **bend** et **volume**.
 
@@ -64,6 +66,24 @@ Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun so
 - Les autres boutons (position, main, déclin, etc.) agissent sur tous les pads.
 - **Hand Drum Kit** commence avec djembé, cajón, tabla, bayan, tambour sur cadre et tambour d’aisselle, **African Kit** avec djembés, ashiko, tambour d’aisselle et batá, **Latin Kit** avec congas, bongos, cajón et batá, **Arabic Kit** avec darbouka, riq, tar, bendir et tambour sur cadre, et **Tabla Kit** avec tabla, bayan, mridangam, dholak et kanjira.
 - Désactivez kit pour rejouer un seul tambour sur tout le clavier.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Claque,
+Résonance, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tous les tambours, 24
+demi-tons à 1. Le modèle, l’accordage, le coup, les choix par pas et les pads
+d’un kit ne sont pas accessibles; dans un kit, les routes bougent les boutons
+que tous les pads partagent. Un changement de position, de main, de déclin,
+d’amortir, de chute, de corps, d’écart, de vélocité ou de fla s’entend au coup
+suivant, roulés compris. Serrer, grésil, roulés et volume
+bougent tout de suite. Touchez le nom d’une macro pour la renommer.
 
 ## Astuces
 

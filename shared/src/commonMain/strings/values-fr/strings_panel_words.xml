@@ -1503,4 +1503,15 @@
     <string name="pw_wind_noise">bruit vent</string>
     <string name="pw_wind_resp">réponse vent</string>
     <string name="pw_wind_sag">affaiss. vent</string>
+    <string name="pw_bass_level">niveau basses</string>
+    <string name="pw_dim">dim</string>
+    <string name="pw_duplex">duplex</string>
+    <string name="pw_hard_key">dureté clavier</string>
+    <string name="pw_left_hand">main gauche</string>
+    <string name="pw_prep_amount">prép. intensité</string>
+    <string name="pw_prep_where">prép. où</string>
+    <string name="pw_roll_strike">roulement</string>
+    <string name="pw_trem_pan">trémolo pano</string>
+    <string name="pw_flam">fla</string>
+    <string name="pw_pair">paire</string>
 </resources>

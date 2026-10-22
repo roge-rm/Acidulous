@@ -65,6 +65,10 @@ désaccordent. **graine** choisit dans quel sens dérive chaque touche.
   dure et brillante, si doucement que vous jouiez. Un piano à punaises.
 - **modérateur** - une bande de feutre entre les marteaux et les cordes : doux
   et étouffé.
+- **roulement** - refrappe une note tenue encore et encore, ce nombre de fois
+  par seconde, jamais tout à fait régulièrement : le trémolo d’un dulcimer ou
+  d’un cymbalum, ou un trémolo de mandoline sur le piano à queue. À 0, une note
+  est frappée une fois.
 
 ## Les cordes
 
@@ -84,6 +88,10 @@ désaccordent. **graine** choisit dans quel sens dérive chaque touche.
 - **couplage** - à quel point les cordes se parlent par le chevalet.
 - **travers** - à quel point les cordes bougent en travers de la table en plus
   de vers elle, ce qui garde une note sonnante après la première chute rapide.
+- **duplex** - sur les pianos, les petites longueurs de corde au-delà du
+  point de frappe et au-delà du chevalet sont laissées libres, accordées près
+  des harmoniques de la note. Elles résonnent faiblement avec elle, surtout
+  dans l’aigu, ce qui ajoute un miroitement. À 0, elles se taisent.
 
 ## Les pédales
 
@@ -163,6 +171,22 @@ et **précis**.
 **voix** est le nombre maximal de notes qui sonnent à la fois. **détail** sur
 **auto** suit le réglage de qualité, et un téléphone plus lent joue un piano
 plus léger. **complet** joue toujours le modèle entier.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Couvercle, Feutre,
+etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
+dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
+patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tout l’instrument, 24
+demi-tons à 1. Le modèle, les interrupteurs et les choix par pas, et les pas d’accord ne sont pas accessibles. Presque tout un piano se règle quand une touche est frappée, alors un changement du marteau, des cordes ou des
+étouffoirs, et la **largeur** de la table, s’entend à la note suivante ; le reste de la table, la salle, l’ampli, le trémolo, **duplex**, **roulement**, le
+volume et le pano bougent tout de suite. Touchez le nom d’une
+macro pour la renommer.
 
 ## Astuces
 
