@@ -52,6 +52,38 @@ air pressure). Horn and drum don't move while the rotary is stopped.
 The destinations include each drawbar, and all the drawbars of a manual at
 once.
 
+## The swell pedal
+
+**swell** in the **touch** group on the **out** page picks what works the swell
+pedal: off, the mod wheel, pressure or **ped**, an expression pedal on CC 11.
+**ped** starts open until the pedal sends something. Closed, the organ plays at
+a quarter of its level. Turn up **shutters** and closing it also makes the sound darker, like
+the shutters of a pipe organ's swell box. At 0 the pedal only changes the
+level.
+
+## Bar glide
+
+**bar glide** on the **bars** page is how long the drawbars, tabs, ranks and the
+morph take to get to a new setting, whether you move them by hand or with a
+lane, a macro or the matrix. At 0 they move straight away. With a second or two
+a drawbar pulled under a held chord opens the sound up slowly.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Pull, Full,
+etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Every drawbar is a destination. Pitch moves the whole instrument,
+24 semitones at 1. The model, the splits, the switches and stepped choices, the
+matrix and the tuning steps can't be reached. A change to the attack, release,
+click, contacts, chiff, percussion time or keytrack or velocity is heard from
+the next note. Tap a macro's name to rename it.
+
 ## Tips
 
 - Switch the rotary speed while playing. The speeding up and slowing down is

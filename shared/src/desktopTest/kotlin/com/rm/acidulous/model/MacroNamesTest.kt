@@ -74,4 +74,21 @@ class MacroNamesTest {
         assertEquals(listOf("high", "horn", "low", "muted", "section", "natural", "odd"), families)
         assertEquals("Init", FactoryBanks.of("Brazen").first().name)
     }
+
+    @Test
+    fun manualMacrosTakeThePatchNames() {
+        val t = track("Manual", mapOf("macro1" to "Pull"))
+        assertEquals("Pull", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        // The swell box's and bar glide's lanes take the panel's words.
+        assertEquals("shutters", laneShortLabel(t, laneKey("machine", "swellbox")))
+        assertEquals("bar glide", laneShortLabel(t, laneKey("machine", "barglide")))
+    }
+
+    @Test
+    fun manualBankHasItsFamiliesInOrder() {
+        val families = FactoryBanks.of("Manual").map { it.family }.distinct()
+        assertEquals(listOf("tonewheel", "cabinet", "combo", "church", "theatre", "reed", "split", "odd"), families)
+        assertEquals("Init", FactoryBanks.of("Manual").first().name)
+    }
 }

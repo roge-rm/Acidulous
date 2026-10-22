@@ -246,7 +246,7 @@ fun MachinePanel(
             "Diction" -> DictionPanel(binding, track, trackIndex, editor)
             "Trinity" -> TrinityPanel(binding, track, trackIndex, editor)
             "Ratio" -> RatioPanel(binding, track, trackIndex, editor)
-            "Manual" -> ManualPanel(binding)
+            "Manual" -> ManualPanel(binding, track, trackIndex, editor)
             "Cipher" -> CipherPanel(binding)
             "Cumulus" -> CumulusPanel(binding, track, trackIndex, editor)
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
@@ -2370,18 +2370,74 @@ private fun Drawbars(b: ParamBinding, prefix: String, names: List<String>, colou
     }
 }
 
+/** Where a Manual macro route goes, in the engine's MacroDest order. */
+val MANUAL_MACRO_DESTS = listOf(
+    "off",
+    "age", "leakage", "hum", "click", "click off", "contacts",
+    "upper", "lower", "pedal", "ped sus",
+    "upper A 16", "upper A 5⅓", "upper A 8", "upper A 4", "upper A 2⅔", "upper A 2", "upper A 1⅗", "upper A 1⅓", "upper A 1",
+    "upper B 16", "upper B 5⅓", "upper B 8", "upper B 4", "upper B 2⅔", "upper B 2", "upper B 1⅗", "upper B 1⅓", "upper B 1",
+    "lower A 16", "lower A 5⅓", "lower A 8", "lower A 4", "lower A 2⅔", "lower A 2", "lower A 1⅗", "lower A 1⅓", "lower A 1",
+    "lower B 16", "lower B 5⅓", "lower B 8", "lower B 4", "lower B 2⅔", "lower B 2", "lower B 1⅗", "lower B 1⅓", "lower B 1",
+    "pedal A 16", "pedal A 8", "pedal B 16", "pedal B 8",
+    "morph", "morph amt",
+    "spray", "spray rate", "spray width",
+    "perc level", "perc time", "perc key",
+    "vib rate", "vib depth", "vib width",
+    "wind sag", "wind resp", "wind noise", "trem rate", "trem depth",
+    "principal", "flute", "string", "reed", "mixture", "chiff", "tracker",
+    "tab 16'", "tab 8'", "tab 4'", "tab 2'", "tab II", "tab IV", "reedy", "combo atk",
+    "pressure", "buzz", "reed trem",
+    "horn slow", "horn fast", "drum slow", "drum fast", "ramp up", "ramp down",
+    "mic dist", "mic angle", "rotor width",
+    "drive", "bias", "bass", "mid", "treble", "volume", "pan",
+    "attack", "release",
+    "eg1 attack", "eg1 decay", "eg1 sustain", "eg1 release",
+    "eg2 attack", "eg2 decay", "eg2 sustain", "eg2 release",
+    "lfo1 rate", "lfo1 depth", "lfo2 rate", "lfo2 depth",
+    "velocity", "shutters", "bar glide",
+    "pitch",
+)
+
 @Composable
-private fun ManualPanel(b: ParamBinding) {
+private fun ManualPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("bars~organ", "perc", "vib", "rotary", "voice", "wind", "mod", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "bars~organ", "perc", "vib", "rotary", "voice", "wind", "mod", "out", "macros"),
+        section, { section = it },
+    ) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            9 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", MANUAL_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", MANUAL_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", MANUAL_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", MANUAL_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("upper A") { Drawbars(b, "ua_", MANUAL_BARS, BAR_COLOURS) }
                 Group("upper B") { Drawbars(b, "ub_", MANUAL_BARS, BAR_COLOURS) }
                 Group("morph") {
                     PanelKnob(b, "morph", "A→B", PanelAmber)
                     PanelStepKnob(b, "morphsrc", MANUAL_SOURCES, "from", PanelAmber)
                     PanelKnob(b, "morphamt", "amount")
+                    PanelKnob(b, "barglide", "bar glide")
                 }
                 Group("lower A") { Drawbars(b, "la_", MANUAL_BARS, BAR_COLOURS) }
                 Group("lower B") { Drawbars(b, "lb_", MANUAL_BARS, BAR_COLOURS) }
@@ -2396,7 +2452,7 @@ private fun ManualPanel(b: ParamBinding) {
                     PanelStepKnob(b, "spraypat", listOf("up", "down", "fan"), "shape")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("percussion") {
                     PanelOnOff(b, "perc", "perc")
                     PanelSwitch(b, "percharm", listOf("3rd", "2nd"), "harm")
@@ -2421,7 +2477,7 @@ private fun ManualPanel(b: ParamBinding) {
                     PanelKnob(b, "hum", "hum")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("scanner") {
                     PanelStepKnob(b, "vibtype", MANUAL_VIB, "type", PanelAmber)
                     PanelKnob(b, "vibrate", "rate", PanelAmber)
@@ -2447,7 +2503,7 @@ private fun ManualPanel(b: ParamBinding) {
                     PanelKnob(b, "lfo2phase", "phase")
                 }
             }
-            3 -> {
+            4 -> {
                 Group("cabinet") {
                     PanelOnOff(b, "rotary", "rotary")
                     PanelStepKnob(b, "rotspeed", MANUAL_ROT, "speed", PanelAmber)
@@ -2471,7 +2527,7 @@ private fun ManualPanel(b: ParamBinding) {
                     PanelKnob(b, "rotwide", "width")
                 }
             }
-            4 -> {
+            5 -> {
                 Group("manuals") {
                     PanelKnob(b, "split", "split", PanelAmber)
                     PanelKnob(b, "pedsplit", "pedal at", PanelAmber)
@@ -2510,7 +2566,7 @@ private fun ManualPanel(b: ParamBinding) {
                     PanelKnob(b, "reedtrem", "tremolo")
                 }
             }
-            5 -> {
+            6 -> {
                 Group("wind") {
                     PanelKnob(b, "windsag", "sag", PanelAmber)
                     PanelKnob(b, "windresp", "response", PanelAmber)
@@ -2533,7 +2589,7 @@ private fun ManualPanel(b: ParamBinding) {
                     PanelKnob(b, "eg2sus", "sustain"); PanelKnob(b, "eg2rel", "release")
                 }
             }
-            6 -> for (m in 1..8) key(m) { Group("mod $m") {
+            7 -> for (m in 1..8) key(m) { Group("mod $m") {
                 PanelStepKnob(b, "m${m}_src", MANUAL_SOURCES, "from", PanelAmber)
                 PanelStepKnob(b, "m${m}_dst", MANUAL_DESTS, "to", PanelAmber)
                 PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
@@ -2556,11 +2612,20 @@ private fun ManualPanel(b: ParamBinding) {
                 }
                 Group("touch") {
                     PanelKnob(b, "vel", "velocity")
-                    PanelStepKnob(b, "express", listOf("off", "mod", "prs"), "swell", PanelAmber)
+                    PanelStepKnob(b, "express", listOf("off", "mod", "prs", "ped"), "swell", PanelAmber)
+                    PanelKnob(b, "swellbox", "shutters", PanelAmber)
                 }
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Cipher -----------------------------------------------------------------

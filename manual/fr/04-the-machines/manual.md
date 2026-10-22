@@ -56,6 +56,41 @@ est arrêté.
 Les destinations comprennent chaque tirette, et toutes les tirettes d’un
 clavier à la fois.
 
+## La pédale d’expression
+
+**crescendo** dans le groupe **toucher** de la page **sortie** choisit ce qui
+actionne la pédale d’expression : rien, la molette de modulation, la pression
+ou **péd**, une pédale d’expression sur le CC 11. **péd** reste ouverte tant que
+la pédale n’a rien envoyé. Fermée, l’orgue joue au quart de son niveau. Montez **jalousies** et
+la fermer rend aussi le son plus sombre, comme les jalousies de la boîte
+expressive d’un orgue à tuyaux. À 0, la pédale ne change que le niveau.
+
+## Le portamento des tirettes
+
+**porta. tirettes** sur la page **tirettes** règle le temps que mettent les
+tirettes, les tirants, les jeux et le morph pour arriver à un nouveau réglage,
+que vous les bougiez à la main ou avec une lane, une macro ou la matrice. À 0,
+ils bougent tout de suite. Avec une seconde ou deux, une tirette tirée sous un
+accord tenu ouvre le son lentement.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Tirer, Plein,
+etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
+dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
+patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. Chaque tirette est une destination. La hauteur
+déplace tout l’instrument, 24 demi-tons à 1. Le modèle, les partages, les
+interrupteurs et les choix par pas, la matrice et les pas d’accord ne sont pas
+accessibles. Un changement d’attaque, de relâchement, de clic, de contacts, de
+chiff, de temps ou de suivi de la percussion ou de vélocité s’entend à la note
+suivante.
+Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Changez la vitesse du rotatif en jouant. L’accélération et le ralentissement

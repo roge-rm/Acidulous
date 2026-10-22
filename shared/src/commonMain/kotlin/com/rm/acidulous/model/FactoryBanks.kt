@@ -3270,212 +3270,389 @@ internal object FactoryBanks {
     private fun manual0() = Patch("Manual", "Init", emptyMap(),
         family = "tonewheel")
 
-    private fun manual1() = Patch("Manual", "Gospel",
-        mapOf("click" to 0.4f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "pa_2" to 0.625f, "perclvl" to 0.7f, "percdec" to 0.42361632f, "vibtype" to 0.6f, "vibdepth" to 0.45f, "rotspeed" to 0.5f, "drive" to 0.28f, "volume" to 0.505f),
+    private fun manual1() = Patch("Manual", "Jazz Flutes",
+        mapOf("click" to 0.2f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.75f, "rotspeed" to 0.5f, "drive" to 0.08f, "volume" to 0.5f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.875f, "mac2_d1" to 0.135593221f, "mac2_d2" to 0.161016956f, "mac2_a1" to 0.8f, "mac2_a2" to 0.75f, "mac3_d1" to 0.0338983051f, "mac3_a1" to 0.65f, "mac4_d1" to 0.5084746f, "mac4_d2" to 0.5f, "mac4_a1" to 0.625f, "mac4_a2" to 0.55f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.625f, "mac6_d1" to 0.720339f, "mac6_d2" to 0.7372881f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.7711864f, "mac7_d2" to 0.7881356f, "mac7_a1" to 0.35f, "mac7_a2" to 0.575f, "mac8_d1" to 0.008474576f, "mac8_d2" to 0.0169491526f, "mac8_a1" to 0.7f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Click", "macro4" to "Vibrato", "macro5" to "Drive", "macro6" to "Rotor", "macro7" to "Close Mic", "macro8" to "Worn"),
         family = "tonewheel",
-        low = 29, high = 84)
+        low = 48, high = 84)
 
-    private fun manual2() = Patch("Manual", "Full Draw",
-        mapOf("click" to 0.55f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "la_223" to 1f, "la_2" to 1f, "la_135" to 1f, "la_113" to 1f, "la_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.7f, "rotspeed" to 1f, "drive" to 0.5f, "volume" to 0.515f),
+    private fun manual2() = Patch("Manual", "Third Perc",
+        mapOf("click" to 0.5f, "loweron" to 1f, "ua_4" to 0f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "percharm" to 0f, "perclvl" to 1f, "percdec" to 0.338109434f, "perckey" to 0.45f, "rotspeed" to 1f, "drive" to 0.3f, "volume" to 0.535f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.875f, "mac2_d1" to 0.101694912f, "mac2_a1" to 0.75f, "mac3_d1" to 0.483050853f, "mac3_a1" to 0.65f, "mac4_d1" to 0.0338983051f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.625f, "mac6_d1" to 0.7288136f, "mac6_d2" to 0.7457627f, "mac6_a1" to 0.35f, "mac6_a2" to 0.35f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.56f, "mac8_d1" to 0.008474576f, "mac8_d2" to 0.0169491526f, "mac8_a1" to 0.7f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Fill", "macro2" to "Body", "macro3" to "Long Perc", "macro4" to "Click", "macro5" to "Drive", "macro6" to "Wind Down", "macro7" to "Bright", "macro8" to "Worn"),
         family = "tonewheel",
-        low = 36, high = 84)
+        low = 48, high = 84)
 
-    private fun manual3() = Patch("Manual", "Smoke",
-        mapOf("age" to 0.45f, "leakage" to 0.32f, "click" to 0.45f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.42f, "treble" to 0.416666657f, "volume" to 0.515f),
+    private fun manual3() = Patch("Manual", "Slow Tap",
+        mapOf("ua_513" to 0.75f, "ua_4" to 0f, "perclvl" to 0.45f, "percfast" to 0f, "percdec" to 0.659597039f, "perckey" to 0.2f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.5f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.875f, "mac2_d1" to 0.135593221f, "mac2_d2" to 0.161016956f, "mac2_a1" to 0.75f, "mac2_a2" to 0.7f, "mac3_d1" to 0.474576265f, "mac3_a1" to 0.65f, "mac4_d1" to 0.483050853f, "mac4_a1" to 0.375f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.720339f, "mac6_d2" to 0.7372881f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.5084746f, "mac7_a1" to 0.65f, "mac8_d1" to 0.008474576f, "mac8_d2" to 0.0169491526f, "mac8_a1" to 0.7f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Perc", "macro4" to "Short Perc", "macro5" to "Drive", "macro6" to "Rotor", "macro7" to "Vibrato", "macro8" to "Worn"),
         family = "tonewheel",
-        low = 36, high = 84)
+        low = 48, high = 84)
 
     private fun manual4() = Patch("Manual", "Comping",
-        mapOf("split" to 0.503937f, "upper" to 0.8f, "loweron" to 1f, "ua_513" to 0.375f, "ua_4" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "pa_1" to 0.75f, "pa_2" to 0.375f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.15f, "volume" to 0.52f),
+        mapOf("split" to 0.503937f, "upper" to 0.8f, "loweron" to 1f, "ua_513" to 0.375f, "ua_4" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "pa_1" to 0.75f, "pa_2" to 0.375f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.15f, "volume" to 0.52f, "mac1_d1" to 0.118644066f, "mac1_d2" to 0.271186441f, "mac1_a1" to 0.8f, "mac1_a2" to 0.75f, "mac2_d1" to 0.135593221f, "mac2_a1" to 0.75f, "mac3_d1" to 0.0593220331f, "mac3_a1" to 0.6f, "mac4_d1" to 0.0338983051f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.720339f, "mac6_d2" to 0.7372881f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.5084746f, "mac7_a1" to 0.65f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Lift", "macro4" to "Click", "macro5" to "Drive", "macro6" to "Rotor", "macro7" to "Vibrato", "macro8" to "Dark"),
         family = "tonewheel",
         low = 41, high = 79)
 
-    private fun manual5() = Patch("Manual", "Jazz Flutes",
-        mapOf("click" to 0.2f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.75f, "rotspeed" to 0.5f, "drive" to 0.08f, "volume" to 0.5f),
+    private fun manual5() = Patch("Manual", "Smoke",
+        mapOf("age" to 0.45f, "leakage" to 0.32f, "click" to 0.45f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.42f, "treble" to 0.416666657f, "volume" to 0.515f, "mac1_d1" to 0.008474576f, "mac1_d2" to 0.0169491526f, "mac1_a1" to 0.35f, "mac1_a2" to 0.375f, "mac2_d1" to 0.1440678f, "mac2_d2" to 0.152542368f, "mac2_a1" to 0.25f, "mac2_a2" to 0.25f, "mac3_d1" to 0.7966102f, "mac3_a1" to 0.6f, "mac4_d1" to 0.0254237279f, "mac4_a1" to 0.625f, "mac5_d1" to 0.720339f, "mac5_d2" to 0.7372881f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.8305085f, "mac6_a1" to 0.44f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.65f, "mac8_d1" to 0.5084746f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Clear", "macro2" to "Thin Top", "macro3" to "Drive", "macro4" to "Hum", "macro5" to "Rotor", "macro6" to "Dark", "macro7" to "Click", "macro8" to "Vibrato"),
         family = "tonewheel",
-        low = 48, high = 84)
+        low = 36, high = 84)
 
-    private fun manual6() = Patch("Manual", "Third Perc",
-        mapOf("click" to 0.5f, "loweron" to 1f, "ua_4" to 0f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "percharm" to 0f, "perclvl" to 1f, "percdec" to 0.338109434f, "perckey" to 0.45f, "rotspeed" to 1f, "drive" to 0.3f, "volume" to 0.535f),
-        family = "tonewheel",
-        low = 48, high = 84)
-
-    private fun manual7() = Patch("Manual", "Slow Tap",
-        mapOf("ua_513" to 0.75f, "ua_4" to 0f, "perclvl" to 0.45f, "percfast" to 0f, "percdec" to 0.659597039f, "perckey" to 0.2f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.5f),
-        family = "tonewheel",
-        low = 48, high = 84)
-
-    private fun manual8() = Patch("Manual", "Blues Wail",
-        mapOf("click" to 0.5f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 1f, "drive" to 0.72f, "bias" to 0.56f, "mid" to 0.5833333f, "volume" to 0.555f),
-        family = "tonewheel",
-        low = 48, high = 84)
-
-    private fun manual9() = Patch("Manual", "Overdrive",
-        mapOf("click" to 0.6f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 1f, "hornfast" to 0.8129129f, "drive" to 0.92f, "bias" to 0.65f, "bass" to 0.5833333f, "treble" to 0.375f, "volume" to 0.53f),
-        family = "tonewheel",
-        low = 41, high = 84)
-
-    private fun manual10() = Patch("Manual", "Whistle",
-        mapOf("click" to 0.45f, "ua_16" to 0f, "ua_8" to 0.875f, "ua_4" to 0f, "ua_223" to 0.75f, "ua_1" to 0.625f, "perc" to 0f, "vibtype" to 0.4f, "vibdepth" to 0.5f, "rotspeed" to 1f, "drive" to 0.28f, "volume" to 0.725f),
+    private fun manual6() = Patch("Manual", "Whistle Bars",
+        mapOf("click" to 0.45f, "ua_16" to 0f, "ua_8" to 0.875f, "ua_4" to 0f, "ua_223" to 0.75f, "ua_1" to 0.625f, "perc" to 0f, "vibtype" to 0.4f, "vibdepth" to 0.5f, "rotspeed" to 1f, "drive" to 0.28f, "volume" to 0.725f, "mac1_d1" to 0.09322034f, "mac1_a1" to 0.75f, "mac2_d1" to 0.118644066f, "mac2_a1" to 0.8f, "mac3_d1" to 0.135593221f, "mac3_a1" to 0.75f, "mac4_d1" to 0.7966102f, "mac4_a1" to 0.6f, "mac5_d1" to 0.7288136f, "mac5_d2" to 0.7457627f, "mac5_a1" to 0.35f, "mac5_a2" to 0.35f, "mac6_d1" to 0.5084746f, "mac6_a1" to 0.65f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.65f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Sub", "macro2" to "Fill", "macro3" to "Gap", "macro4" to "Drive", "macro5" to "Wind Down", "macro6" to "Vibrato", "macro7" to "Click", "macro8" to "Dark"),
         family = "tonewheel",
         low = 48, high = 88)
 
-    private fun manual11() = Patch("Manual", "Bright Ballad",
-        mapOf("loweron" to 1f, "ua_16" to 0f, "ua_8" to 0.75f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "la_8" to 0.5f, "la_4" to 0.625f, "perc" to 0f, "vibdepth" to 0.5f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.63f),
+    private fun manual7() = Patch("Manual", "Bright Ballad",
+        mapOf("loweron" to 1f, "ua_16" to 0f, "ua_8" to 0.75f, "ua_4" to 1f, "ua_223" to 0.875f, "ua_2" to 0.75f, "ua_135" to 0.625f, "ua_113" to 0.5f, "la_8" to 0.5f, "la_4" to 0.625f, "perc" to 0f, "vibdepth" to 0.5f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.63f, "mac1_d1" to 0.09322034f, "mac1_a1" to 0.75f, "mac2_d1" to 0.161016956f, "mac2_a1" to 0.75f, "mac3_d1" to 0.127118647f, "mac3_d2" to 0.1440678f, "mac3_a1" to 0.25f, "mac3_a2" to 0.25f, "mac4_d1" to 0.7966102f, "mac4_a1" to 0.6f, "mac5_d1" to 0.720339f, "mac5_d2" to 0.7372881f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.5084746f, "mac6_a1" to 0.65f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.65f, "mac8_d1" to 0.008474576f, "mac8_d2" to 0.0169491526f, "mac8_a1" to 0.7f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Sub", "macro2" to "Top", "macro3" to "Thin", "macro4" to "Drive", "macro5" to "Rotor", "macro6" to "Vibrato", "macro7" to "Click", "macro8" to "Worn"),
         family = "tonewheel",
         low = 48, high = 84)
 
-    private fun manual12() = Patch("Manual", "Two Manuals",
-        mapOf("lower" to 0.75f, "pedal" to 0.95f, "loweron" to 1f, "pedsus" to 0.25f, "ua_513" to 1f, "ua_4" to 1f, "la_8" to 0.5f, "la_4" to 0.625f, "la_223" to 0.5f, "la_2" to 0.5f, "la_135" to 0.25f, "la_113" to 0.25f, "la_1" to 0.25f, "pa_2" to 0.75f, "perclvl" to 0.65f, "rotspeed" to 0.5f, "drive" to 0.3f, "volume" to 0.505f),
+    private fun manual8() = Patch("Manual", "Low Light",
+        mapOf("click" to 0.2f, "pedal" to 0.85f, "loweron" to 1f, "ua_16" to 0.375f, "ua_4" to 0.5f, "la_8" to 1f, "la_4" to 0.375f, "pa_2" to 0.375f, "perc" to 0f, "vibdepth" to 0.4f, "rotspeed" to 0.5f, "micdist" to 0.45f, "drive" to 0.05f, "bass" to 0.5416667f, "treble" to 0.375f, "volume" to 0.1315f, "express" to 1f, "swellbox" to 0.5f, "barglide" to 0.2f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.75f, "mac2_d1" to 0.135593221f, "mac2_d2" to 0.161016956f, "mac2_a1" to 0.75f, "mac2_a2" to 0.65f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.7f, "mac4_d1" to 0.5084746f, "mac4_a1" to 0.65f, "mac5_d1" to 0.720339f, "mac5_d2" to 0.7372881f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.008474576f, "mac7_d2" to 0.0169491526f, "mac7_a1" to 0.7f, "mac7_a2" to 0.625f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Shutters", "macro4" to "Vibrato", "macro5" to "Rotor", "macro6" to "Drive", "macro7" to "Worn", "macro8" to "Click"),
         family = "tonewheel",
+        low = 41, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun manual9() = Patch("Manual", "Chorus Vib",
+        mapOf("ua_16" to 0f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibrate" to 0.6491668f, "vibdepth" to 1f, "vibwide" to 0.7f, "drive" to 0.12f, "volume" to 0.475f, "mac1_d1" to 0.5084746f, "mac1_a1" to 0.25f, "mac2_d1" to 0.5f, "mac2_a1" to 0.6f, "mac3_d1" to 0.008474576f, "mac3_d2" to 0.0169491526f, "mac3_a1" to 0.7f, "mac3_a2" to 0.625f, "mac4_d1" to 0.09322034f, "mac4_a1" to 0.75f, "mac5_d1" to 0.161016956f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.65f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Shallow", "macro2" to "Faster", "macro3" to "Worn", "macro4" to "Sub", "macro5" to "Top", "macro6" to "Drive", "macro7" to "Click", "macro8" to "Dark"),
+        family = "tonewheel",
+        low = 48, high = 84)
+
+    private fun manual10() = Patch("Manual", "Gospel",
+        mapOf("click" to 0.4f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 0f, "la_16" to 1f, "la_513" to 0.375f, "la_8" to 1f, "la_4" to 0f, "pa_2" to 0.625f, "perclvl" to 0.7f, "percdec" to 0.42361632f, "vibtype" to 0.6f, "vibdepth" to 0.45f, "rotspeed" to 0.5f, "drive" to 0.28f, "volume" to 0.505f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.875f, "mac2_d1" to 0.135593221f, "mac2_d2" to 0.161016956f, "mac2_a1" to 0.8f, "mac2_a2" to 0.75f, "mac3_d1" to 0.474576265f, "mac3_a1" to 0.65f, "mac4_d1" to 0.483050853f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.625f, "mac6_d1" to 0.720339f, "mac6_d2" to 0.7372881f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.7711864f, "mac7_d2" to 0.7881356f, "mac7_a1" to 0.35f, "mac7_a2" to 0.575f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Perc", "macro4" to "Long Perc", "macro5" to "Drive", "macro6" to "Rotor", "macro7" to "Close Mic", "macro8" to "Click"),
+        family = "cabinet",
         low = 29, high = 84)
 
-    private fun manual13() = Patch("Manual", "Pedal Bass",
-        mapOf("split" to 0.503937f, "pedsplit" to 0.417322844f, "upper" to 0.7f, "lower" to 0.7f, "pedal" to 1f, "loweron" to 1f, "pedsus" to 0.45f, "ua_16" to 0f, "ua_8" to 0.5f, "la_16" to 1f, "la_8" to 0.75f, "la_4" to 0f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.35f, "bass" to 0.625f, "volume" to 0.54f),
-        family = "tonewheel",
-        low = 29, high = 79)
+    private fun manual11() = Patch("Manual", "Full Draw",
+        mapOf("click" to 0.55f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "la_223" to 1f, "la_2" to 1f, "la_135" to 1f, "la_113" to 1f, "la_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibdepth" to 0.7f, "rotspeed" to 1f, "drive" to 0.5f, "volume" to 0.515f, "mac1_d1" to 0.1440678f, "mac1_d2" to 0.152542368f, "mac1_a1" to 0.199999988f, "mac1_a2" to 0.199999988f, "mac2_d1" to 0.09322034f, "mac2_a1" to 0f, "mac3_d1" to 0.7966102f, "mac3_a1" to 0.6f, "mac4_d1" to 0.7288136f, "mac4_d2" to 0.7457627f, "mac4_a1" to 0.35f, "mac4_a2" to 0.35f, "mac5_d1" to 0.0338983051f, "mac5_a1" to 0.625f, "mac6_d1" to 0.8305085f, "mac6_a1" to 0.56f, "mac7_d1" to 0.5084746f, "mac7_a1" to 0.625f, "mac8_d1" to 0.008474576f, "mac8_d2" to 0.0169491526f, "mac8_a1" to 0.7f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Thin Top", "macro2" to "No Sub", "macro3" to "Drive", "macro4" to "Wind Down", "macro5" to "Click", "macro6" to "Bright", "macro7" to "Vibrato", "macro8" to "Worn"),
+        family = "cabinet",
+        low = 36, high = 84)
 
-    private fun manual14() = Patch("Manual", "Chorus Vib",
-        mapOf("ua_16" to 0f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "perc" to 0f, "vibtype" to 1f, "vibrate" to 0.6491668f, "vibdepth" to 1f, "vibwide" to 0.7f, "drive" to 0.12f, "volume" to 0.475f),
-        family = "tonewheel",
+    private fun manual12() = Patch("Manual", "Blues Wail",
+        mapOf("click" to 0.5f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 1f, "drive" to 0.72f, "bias" to 0.56f, "mid" to 0.5833333f, "volume" to 0.555f, "mac1_d1" to 0.135593221f, "mac1_d2" to 0.161016956f, "mac1_a1" to 0.8f, "mac1_a2" to 0.75f, "mac2_d1" to 0.7966102f, "mac2_a1" to 0.6f, "mac3_d1" to 0.805084765f, "mac3_a1" to 0.575f, "mac4_d1" to 0.7288136f, "mac4_d2" to 0.7457627f, "mac4_a1" to 0.35f, "mac4_a2" to 0.35f, "mac5_d1" to 0.8220339f, "mac5_a1" to 0.56f, "mac6_d1" to 0.0338983051f, "mac6_a1" to 0.65f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.5084746f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Top", "macro2" to "Drive", "macro3" to "Grit", "macro4" to "Wind Down", "macro5" to "Mid", "macro6" to "Click", "macro7" to "Dark", "macro8" to "Vibrato"),
+        family = "cabinet",
         low = 48, high = 84)
 
-    private fun manual15() = Patch("Manual", "Tired Machine",
-        mapOf("age" to 0.9f, "leakage" to 0.62f, "hum" to 0.35f, "click" to 0.7f, "clickoff" to 0.5f, "contacts" to 0.8f, "loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0.5f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.3f, "sprayrate" to 0.383417428f, "spraywide" to 0.6f, "perc" to 0f, "drive" to 0.3f, "volume" to 0.6f),
-        family = "tonewheel",
-        low = 41, high = 79)
-
-    private fun manual16() = Patch("Manual", "Drawbar Morph",
-        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 1f, "ub_4" to 1f, "ub_223" to 1f, "ub_2" to 1f, "ub_135" to 1f, "ub_113" to 1f, "ub_1" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_8" to 0.5f, "lb_4" to 0.75f, "lb_223" to 0.75f, "lb_2" to 0.75f, "lb_135" to 0.5f, "lb_113" to 0f, "lb_1" to 0f, "morph" to 0.4f, "morphsrc" to 0.642857134f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.535f, "lfo1wave" to 0.125f, "lfo1rate" to 0.289074183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 1f),
-        family = "tonewheel",
+    private fun manual13() = Patch("Manual", "Driven Wheels",
+        mapOf("click" to 0.6f, "loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 1f, "la_4" to 1f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 1f, "hornfast" to 0.8129129f, "drive" to 0.92f, "bias" to 0.65f, "bass" to 0.5833333f, "treble" to 0.375f, "volume" to 0.53f, "mac1_d1" to 0.7966102f, "mac1_a1" to 0.3f, "mac2_d1" to 0.805084765f, "mac2_a1" to 0.575f, "mac3_d1" to 0.7288136f, "mac3_d2" to 0.7457627f, "mac3_a1" to 0.35f, "mac3_a2" to 0.35f, "mac4_d1" to 0.8135593f, "mac4_a1" to 0.55f, "mac5_d1" to 0.8305085f, "mac5_a1" to 0.44f, "mac6_d1" to 0.1440678f, "mac6_d2" to 0.152542368f, "mac6_a1" to 0.199999988f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.625f, "mac8_d1" to 0.8220339f, "mac8_a1" to 0.56f),
+        mapOf("macro1" to "Clean Up", "macro2" to "Grit", "macro3" to "Wind Down", "macro4" to "Bass", "macro5" to "Dark", "macro6" to "Thin Top", "macro7" to "Click", "macro8" to "Mid"),
+        family = "cabinet",
         low = 41, high = 84)
 
-    private fun manual17() = Patch("Manual", "Combo Bright",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.2f, "vibrate" to 0.7149028f, "vibdepth" to 0.55f, "tab16" to 0.9f, "tab4" to 0.75f, "tab2" to 0.15f, "reedy" to 0.55f, "comboatk" to 0.22f, "rotary" to 0f, "drive" to 0.25f, "volume" to 0.465f),
-        family = "combo",
-        low = 48, high = 84)
-
-    private fun manual18() = Patch("Manual", "Combo Reed",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibrate" to 0.800935864f, "vibdepth" to 0.4f, "combowave" to 0.5f, "tab16" to 0.4f, "tab4" to 0.6f, "tab2" to 0.25f, "reedy" to 0.95f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.35f, "mid" to 0.6041667f, "volume" to 0.41f),
-        family = "combo",
-        low = 48, high = 84)
-
-    private fun manual19() = Patch("Manual", "Combo Sixties",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.4f, "vibrate" to 0.82689923f, "vibdepth" to 0.45f, "combowave" to 1f, "tab16" to 0.35f, "tab4" to 0.8f, "tab2" to 0.4f, "tab2r" to 0.35f, "reedy" to 0.5f, "comboatk" to 0.06f, "rotary" to 0f, "drive" to 0.4f, "volume" to 0.555f),
-        family = "combo",
-        low = 48, high = 84)
-
-    private fun manual20() = Patch("Manual", "Combo Mixture",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibdepth" to 0.4f, "tab16" to 0.7f, "tab2" to 0.45f, "tab2r" to 0.6f, "tab4r" to 0.45f, "reedy" to 0.35f, "rotary" to 0f, "drive" to 0.22f, "treble" to 0.4375f, "volume" to 0.455f),
-        family = "combo",
-        low = 48, high = 84)
-
-    private fun manual21() = Patch("Manual", "Combo Stab",
-        mapOf("model" to 0.333333343f, "click" to 0.8f, "clickoff" to 0.45f, "contacts" to 0.15f, "perc" to 0f, "vibdepth" to 0f, "tab16" to 0.3f, "tab4" to 0.85f, "tab2" to 0.6f, "reedy" to 0.88f, "comboatk" to 0f, "rotary" to 0f, "drive" to 0.45f, "volume" to 0.395f, "attack" to 0.06803998f, "release" to 0.259383738f),
-        family = "combo",
-        low = 48, high = 84)
-
-    private fun manual22() = Patch("Manual", "Combo Split",
-        mapOf("model" to 0.333333343f, "lower" to 1f, "loweron" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 0f, "la_4" to 0f, "perc" to 0f, "vibtype" to 0.2f, "vibdepth" to 0.5f, "combowave" to 0.5f, "tab16" to 0.5f, "tab2" to 0.35f, "tab2r" to 0.3f, "reedy" to 0.7f, "comboatk" to 0.07f, "rotary" to 0f, "drive" to 0.45f, "bass" to 0.6041667f, "volume" to 0.45f),
-        family = "combo",
+    private fun manual14() = Patch("Manual", "Parked Horn",
+        mapOf("click" to 0.45f, "loweron" to 1f, "ua_513" to 0.75f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "percharm" to 0f, "perclvl" to 0.55f, "percdec" to 0.4088883f, "micdist" to 0.6f, "micangle" to 0.6f, "drive" to 0.45f, "bias" to 0.55f, "mid" to 0.6041667f, "volume" to 0.405f, "mac1_d1" to 0.127118647f, "mac1_a1" to 0.8f, "mac2_d1" to 0.135593221f, "mac2_d2" to 0.161016956f, "mac2_a1" to 0.8f, "mac2_a2" to 0.75f, "mac3_d1" to 0.474576265f, "mac3_a1" to 0.65f, "mac4_d1" to 0.7966102f, "mac4_a1" to 0.625f, "mac5_d1" to 0.805084765f, "mac5_a1" to 0.575f, "mac6_d1" to 0.7711864f, "mac6_a1" to 0.65f, "mac7_d1" to 0.8220339f, "mac7_d2" to 0.8305085f, "mac7_a1" to 0.55f, "mac7_a2" to 0.55f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Perc", "macro4" to "Drive", "macro5" to "Grit", "macro6" to "Far Mic", "macro7" to "Bright", "macro8" to "Click"),
+        family = "cabinet",
         low = 41, high = 84)
 
-    private fun manual23() = Patch("Manual", "Combo Thin",
-        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibdepth" to 0.5f, "combowave" to 1f, "tab16" to 0f, "tab4" to 0.9f, "tab2" to 0.6f, "tab2r" to 0.35f, "tab4r" to 0.15f, "reedy" to 0.3f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.18f, "bass" to 0.333333343f, "volume" to 0.63f),
+    private fun manual15() = Patch("Manual", "Cabinet Mod",
+        mapOf("ua_513" to 1f, "ua_4" to 0.5f, "perc" to 0f, "rotspeed" to 0.5f, "micdist" to 0.55f, "micangle" to 0.85f, "rotwide" to 0.8f, "drive" to 0.22f, "volume" to 0.445f, "m1_src" to 0.785714269f, "m1_dst" to 0.5833333f, "m1_amt" to 0.58f, "m2_src" to 0.857142866f, "m2_dst" to 0.416666657f, "m2_amt" to 0.65f, "m3_src" to 0.785714269f, "m3_dst" to 0.125f, "m3_amt" to 0.55f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.75f, "mac2_d1" to 0.135593221f, "mac2_a1" to 0.8f, "mac3_d1" to 0.720339f, "mac3_d2" to 0.7372881f, "mac3_a1" to 0.65f, "mac3_a2" to 0.65f, "mac4_d1" to 0.7711864f, "mac4_d2" to 0.7881356f, "mac4_a1" to 0.35f, "mac4_a2" to 0.575f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.7881356f, "mac6_a1" to 0.6f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.65f, "mac8_d1" to 0.5084746f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Rotor", "macro4" to "Close Mic", "macro5" to "Drive", "macro6" to "Wide", "macro7" to "Click", "macro8" to "Vibrato"),
+        family = "cabinet",
+        low = 48, high = 84)
+
+    private fun manual16() = Patch("Manual", "Tempo Rotor",
+        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_4" to 0f, "ub_16" to 0.75f, "ub_513" to 0.5f, "ub_8" to 1f, "ub_4" to 1f, "ub_223" to 0f, "ub_2" to 1f, "ub_135" to 0f, "ub_113" to 0f, "ub_1" to 1f, "la_8" to 1f, "la_4" to 0.625f, "perclvl" to 0.55f, "percdec" to 0.4088883f, "vibtype" to 0.6f, "vibdepth" to 0.4f, "rotspeed" to 0.5f, "micdist" to 0.5f, "rotsync" to 0.6f, "drive" to 0.3f, "volume" to 0.46f, "barglide" to 0.15f, "mac1_d1" to 0.432203382f, "mac1_a1" to 1f, "mac2_d1" to 0.118644066f, "mac2_a1" to 0.875f, "mac3_d1" to 0.474576265f, "mac3_a1" to 0.65f, "mac4_d1" to 0.7966102f, "mac4_a1" to 0.625f, "mac5_d1" to 0.7711864f, "mac5_d2" to 0.7881356f, "mac5_a1" to 0.35f, "mac5_a2" to 0.575f, "mac6_d1" to 0.7881356f, "mac6_a1" to 0.6f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.65f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Pull", "macro2" to "Fill", "macro3" to "Perc", "macro4" to "Drive", "macro5" to "Close Mic", "macro6" to "Wide", "macro7" to "Click", "macro8" to "Glide"),
+        family = "cabinet",
+        low = 29, high = 84)
+
+    private fun manual17() = Patch("Manual", "Slow Wander",
+        mapOf("loweron" to 1f, "ua_8" to 0.75f, "ua_4" to 1f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 0.5f, "ub_4" to 0.75f, "ub_223" to 0.75f, "ub_2" to 0.75f, "ub_135" to 1f, "ub_113" to 0.25f, "ub_1" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_4" to 1f, "lb_223" to 0.5f, "lb_2" to 0.5f, "lb_135" to 0f, "lb_113" to 0f, "lb_1" to 0f, "morphsrc" to 0.642857134f, "spray" to 0.12f, "sprayrate" to 0.300690442f, "spraywide" to 0.8f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.515f, "lfo1wave" to 0.125f, "lfo1rate" to 0.200773031f, "lfo2rate" to 0.387380183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 0.95f, "m2_src" to 0.714285731f, "m2_dst" to 0.0833333358f, "m2_amt" to 0.725f, "mac1_d1" to 0.440677971f, "mac1_d2" to 0.9491525f, "mac1_a1" to 0.199999988f, "mac1_a2" to 0.199999988f, "mac2_d1" to 0.449152529f, "mac2_a1" to 0.56f, "mac3_d1" to 0.940677941f, "mac3_d2" to 0.9576271f, "mac3_a1" to 0.6f, "mac3_a2" to 0.6f, "mac4_d1" to 0.135593221f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.720339f, "mac6_d2" to 0.7372881f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Settle", "macro2" to "Spray", "macro3" to "Faster", "macro4" to "Top", "macro5" to "Drive", "macro6" to "Rotor", "macro7" to "Dark", "macro8" to "Click"),
+        family = "cabinet",
+        low = 41, high = 84)
+
+    private fun manual18() = Patch("Manual", "Slow Pull",
+        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_4" to 0f, "ub_16" to 1f, "ub_513" to 1f, "ub_8" to 1f, "ub_4" to 1f, "ub_223" to 0.75f, "ub_2" to 1f, "ub_135" to 0f, "ub_113" to 0.5f, "ub_1" to 1f, "la_8" to 1f, "la_4" to 0.75f, "pa_2" to 0.625f, "percdec" to 0.42361632f, "vibtype" to 0.6f, "vibdepth" to 0.45f, "rotspeed" to 0.5f, "drive" to 0.22f, "volume" to 0.125f, "express" to 1f, "swellbox" to 0.35f, "barglide" to 0.375f, "mac1_d1" to 0.432203382f, "mac1_a1" to 1f, "mac2_d1" to 0.118644066f, "mac2_d2" to 0.135593221f, "mac2_a1" to 0.875f, "mac2_a2" to 0.8f, "mac3_d1" to 0.161016956f, "mac3_d2" to 0.152542368f, "mac3_a1" to 0.9f, "mac3_a2" to 0.75f, "mac4_d1" to 0.474576265f, "mac4_d2" to 0.483050853f, "mac4_a1" to 0.675f, "mac4_a2" to 0.425f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.625f, "mac6_d1" to 0.7711864f, "mac6_d2" to 0.7881356f, "mac6_a1" to 0.35f, "mac6_a2" to 0.575f, "mac7_d1" to 0.9830508f, "mac7_a1" to 0.75f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Pull", "macro2" to "Fill", "macro3" to "Top", "macro4" to "Perc", "macro5" to "Drive", "macro6" to "Close Mic", "macro7" to "Shutters", "macro8" to "Glide"),
+        family = "cabinet",
+        low = 29, high = 84)
+
+    private fun manual19() = Patch("Manual", "Combo Bright",
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.2f, "vibrate" to 0.7149028f, "vibdepth" to 0.55f, "tab16" to 0.9f, "tab4" to 0.75f, "tab2" to 0.15f, "reedy" to 0.55f, "comboatk" to 0.22f, "rotary" to 0f, "drive" to 0.25f, "volume" to 0.465f, "mac1_d1" to 0.652542353f, "mac1_a1" to 0.8f, "mac2_d1" to 0.661016941f, "mac2_d2" to 0.6694915f, "mac2_a1" to 0.75f, "mac2_a2" to 0.65f, "mac3_d1" to 0.6779661f, "mac3_a1" to 0.675f, "mac4_d1" to 0.5084746f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.6864407f, "mac6_a1" to 0.65f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.627118647f, "mac8_a1" to 0.0500000119f),
+        mapOf("macro1" to "2'", "macro2" to "Mixture", "macro3" to "Reedy", "macro4" to "Vibrato", "macro5" to "Drive", "macro6" to "Soft Attack", "macro7" to "Dark", "macro8" to "No 16'"),
+        family = "combo",
+        low = 48, high = 84)
+
+    private fun manual20() = Patch("Manual", "Combo Mellow",
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibrate" to 0.5746415f, "vibdepth" to 0.45f, "tab4" to 0.3f, "reedy" to 0.15f, "comboatk" to 0.4f, "rotary" to 0f, "drive" to 0.1f, "treble" to 0.166666672f, "volume" to 0.1325f, "express" to 1f, "swellbox" to 0.5f, "mac1_d1" to 0.6440678f, "mac1_a1" to 0.75f, "mac2_d1" to 0.652542353f, "mac2_a1" to 0.75f, "mac3_d1" to 0.661016941f, "mac3_d2" to 0.6694915f, "mac3_a1" to 0.7f, "mac3_a2" to 0.7f, "mac4_d1" to 0.6779661f, "mac4_a1" to 0.7f, "mac5_d1" to 0.5084746f, "mac5_a1" to 0.65f, "mac6_d1" to 0.9830508f, "mac6_a1" to 0.7f, "mac7_d1" to 0.7966102f, "mac7_a1" to 0.6f, "mac8_d1" to 0.6864407f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "4'", "macro2" to "2'", "macro3" to "Mixture", "macro4" to "Reedy", "macro5" to "Vibrato", "macro6" to "Shutters", "macro7" to "Drive", "macro8" to "Soft Attack"),
+        family = "combo",
+        low = 41, high = 84,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun manual21() = Patch("Manual", "Combo Reed",
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibrate" to 0.800935864f, "vibdepth" to 0.4f, "combowave" to 0.5f, "tab16" to 0.4f, "tab4" to 0.6f, "tab2" to 0.25f, "reedy" to 0.95f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.35f, "mid" to 0.6041667f, "volume" to 0.41f, "mac1_d1" to 0.652542353f, "mac1_a1" to 0.75f, "mac2_d1" to 0.661016941f, "mac2_a1" to 0.7f, "mac3_d1" to 0.6779661f, "mac3_a1" to 0.25f, "mac4_d1" to 0.5084746f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.6864407f, "mac6_a1" to 0.7f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.56f, "mac8_d1" to 0.627118647f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "2'", "macro2" to "Mixture", "macro3" to "Clean", "macro4" to "Vibrato", "macro5" to "Drive", "macro6" to "Soft Attack", "macro7" to "Bright", "macro8" to "16'"),
+        family = "combo",
+        low = 48, high = 84)
+
+    private fun manual22() = Patch("Manual", "Combo Sixties",
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0.4f, "vibrate" to 0.82689923f, "vibdepth" to 0.45f, "combowave" to 1f, "tab16" to 0.35f, "tab4" to 0.8f, "tab2" to 0.4f, "tab2r" to 0.35f, "reedy" to 0.5f, "comboatk" to 0.06f, "rotary" to 0f, "drive" to 0.4f, "volume" to 0.555f, "mac1_d1" to 0.661016941f, "mac1_d2" to 0.6694915f, "mac1_a1" to 0.7f, "mac1_a2" to 0.7f, "mac2_d1" to 0.6779661f, "mac2_a1" to 0.7f, "mac3_d1" to 0.5084746f, "mac3_a1" to 0.65f, "mac4_d1" to 0.5f, "mac4_a1" to 0.575f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.0338983051f, "mac6_a1" to 0.65f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.627118647f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Mixture", "macro2" to "Reedy", "macro3" to "Vibrato", "macro4" to "Fast Vib", "macro5" to "Drive", "macro6" to "Click", "macro7" to "Dark", "macro8" to "16'"),
+        family = "combo",
+        low = 48, high = 84)
+
+    private fun manual23() = Patch("Manual", "Combo Mixture",
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibdepth" to 0.4f, "tab16" to 0.7f, "tab2" to 0.45f, "tab2r" to 0.6f, "tab4r" to 0.45f, "reedy" to 0.35f, "rotary" to 0f, "drive" to 0.22f, "treble" to 0.4375f, "volume" to 0.455f, "mac1_d1" to 0.661016941f, "mac1_d2" to 0.6694915f, "mac1_a1" to 0.199999988f, "mac1_a2" to 0.275f, "mac2_d1" to 0.6779661f, "mac2_a1" to 0.7f, "mac3_d1" to 0.5084746f, "mac3_a1" to 0.65f, "mac4_d1" to 0.8305085f, "mac4_a1" to 0.56f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.6864407f, "mac6_a1" to 0.7f, "mac7_d1" to 0.449152529f, "mac7_a1" to 0.55f, "mac8_d1" to 0.627118647f, "mac8_a1" to 0.15f),
+        mapOf("macro1" to "No Mix", "macro2" to "Reedy", "macro3" to "Vibrato", "macro4" to "Bright", "macro5" to "Drive", "macro6" to "Soft Attack", "macro7" to "Celeste", "macro8" to "No 16'"),
+        family = "combo",
+        low = 48, high = 84)
+
+    private fun manual24() = Patch("Manual", "Combo Stab",
+        mapOf("model" to 0.333333343f, "click" to 0.8f, "clickoff" to 0.45f, "contacts" to 0.15f, "perc" to 0f, "vibdepth" to 0f, "tab16" to 0.3f, "tab4" to 0.85f, "tab2" to 0.6f, "reedy" to 0.88f, "comboatk" to 0f, "rotary" to 0f, "drive" to 0.45f, "volume" to 0.395f, "attack" to 0.06803998f, "release" to 0.259383738f, "mac1_d1" to 0.864406765f, "mac1_a1" to 0.65f, "mac2_d1" to 0.661016941f, "mac2_a1" to 0.7f, "mac3_d1" to 0.6779661f, "mac3_a1" to 0.25f, "mac4_d1" to 0.0338983051f, "mac4_a1" to 0.25f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.5084746f, "mac6_a1" to 0.7f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.627118647f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Length", "macro2" to "Mixture", "macro3" to "Clean", "macro4" to "No Click", "macro5" to "Drive", "macro6" to "Vibrato", "macro7" to "Dark", "macro8" to "16'"),
+        family = "combo",
+        low = 48, high = 84)
+
+    private fun manual25() = Patch("Manual", "Combo Thin",
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibtype" to 0f, "vibdepth" to 0.5f, "combowave" to 1f, "tab16" to 0f, "tab4" to 0.9f, "tab2" to 0.6f, "tab2r" to 0.35f, "tab4r" to 0.15f, "reedy" to 0.3f, "comboatk" to 0.05f, "rotary" to 0f, "drive" to 0.18f, "bass" to 0.333333343f, "volume" to 0.63f, "mac1_d1" to 0.627118647f, "mac1_a1" to 0.7f, "mac2_d1" to 0.661016941f, "mac2_d2" to 0.6694915f, "mac2_a1" to 0.7f, "mac2_a2" to 0.7f, "mac3_d1" to 0.6779661f, "mac3_a1" to 0.7f, "mac4_d1" to 0.5084746f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.6864407f, "mac6_a1" to 0.7f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.449152529f, "mac8_a1" to 0.56f),
+        mapOf("macro1" to "Body", "macro2" to "Mixture", "macro3" to "Reedy", "macro4" to "Vibrato", "macro5" to "Drive", "macro6" to "Soft Attack", "macro7" to "Dark", "macro8" to "Celeste"),
         family = "combo",
         low = 55, high = 88)
 
-    private fun manual24() = Patch("Manual", "Diapason",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_4" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.3f, "windresp" to 0.709560335f, "windnoise" to 0.1f, "flute" to 0.35f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.22f, "tracker" to 0.25f, "rotary" to 0f, "volume" to 0.38f, "attack" to 0.534019947f, "release" to 0.551070869f),
-        family = "pipe",
-        low = 36, high = 84)
-
-    private fun manual25() = Patch("Manual", "Flutes 8 and 4",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_16" to 0f, "ua_4" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.22f, "windresp" to 0.665026367f, "windnoise" to 0.2f, "principal" to 0f, "flute" to 1f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.5f, "tracker" to 0.55f, "rotary" to 0f, "volume" to 0.625f, "attack" to 0.5927171f, "release" to 0.551070869f),
-        family = "pipe",
-        low = 41, high = 88)
-
-    private fun manual26() = Patch("Manual", "Strings Celeste",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_4" to 1f, "pa_2" to 0.75f, "spray" to 0.3f, "sprayrate" to 0.4724755f, "spraywide" to 0.8f, "spraypat" to 0.5f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.18f, "principal" to 0.3f, "flute" to 0.15f, "string" to 1f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.08f, "tracker" to 0.15f, "rotary" to 0f, "volume" to 0.65f, "attack" to 0.725363731f, "release" to 0.6150327f),
-        family = "pipe",
-        low = 41, high = 84)
-
-    private fun manual27() = Patch("Manual", "Cornet",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_16" to 0f, "ua_4" to 1f, "ua_223" to 0.625f, "ua_2" to 1f, "ua_135" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.25f, "principal" to 0.2f, "flute" to 1f, "string" to 0.55f, "reed" to 0f, "mixture" to 0f, "rotary" to 0f, "volume" to 0.335f, "attack" to 0.534019947f, "release" to 0.551070869f),
-        family = "pipe",
+    private fun manual26() = Patch("Manual", "Combo Spin",
+        mapOf("model" to 0.333333343f, "perc" to 0f, "vibdepth" to 0f, "combowave" to 1f, "tab16" to 0.3f, "tab2" to 0.5f, "tab2r" to 0.4f, "reedy" to 0.4f, "comboatk" to 0.08f, "rotspeed" to 0.5f, "drive" to 0.3f, "volume" to 0.58f, "mac1_d1" to 0.720339f, "mac1_d2" to 0.7372881f, "mac1_a1" to 0.65f, "mac1_a2" to 0.65f, "mac2_d1" to 0.7711864f, "mac2_d2" to 0.7881356f, "mac2_a1" to 0.35f, "mac2_a2" to 0.575f, "mac3_d1" to 0.661016941f, "mac3_d2" to 0.6694915f, "mac3_a1" to 0.65f, "mac3_a2" to 0.7f, "mac4_d1" to 0.627118647f, "mac4_a1" to 0.75f, "mac5_d1" to 0.6779661f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.5084746f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Rotor", "macro2" to "Close Mic", "macro3" to "Mixture", "macro4" to "16'", "macro5" to "Reedy", "macro6" to "Drive", "macro7" to "Dark", "macro8" to "Vibrato"),
+        family = "combo",
         low = 48, high = 84)
 
-    private fun manual28() = Patch("Manual", "Reed Stop",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_4" to 0.5f, "ua_113" to 1f, "ua_1" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.32f, "windresp" to 0.678795636f, "principal" to 0.4f, "flute" to 0.08f, "string" to 0f, "reed" to 1f, "mixture" to 0.55f, "chiff" to 0.35f, "tracker" to 0.3f, "rotary" to 0f, "volume" to 0.505f, "attack" to 0.534019947f, "release" to 0.551070869f),
-        family = "pipe",
-        low = 41, high = 84)
-
-    private fun manual29() = Patch("Manual", "Plenum",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0.5f, "ua_4" to 1f, "ua_2" to 1f, "ua_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.38f, "windresp" to 0.678795636f, "windnoise" to 0.12f, "flute" to 0f, "string" to 0.2f, "reed" to 0f, "mixture" to 0.6f, "chiff" to 0.25f, "tracker" to 0.3f, "rotary" to 0f, "volume" to 0.39f, "attack" to 0.534019947f, "release" to 0.551070869f),
-        family = "pipe",
+    private fun manual27() = Patch("Manual", "Diapason",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_4" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.3f, "windresp" to 0.709560335f, "windnoise" to 0.1f, "flute" to 0.35f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.22f, "tracker" to 0.25f, "rotary" to 0f, "volume" to 0.38f, "attack" to 0.534019947f, "release" to 0.551070869f, "mac1_d1" to 0.135593221f, "mac1_a1" to 0.875f, "mac2_d1" to 0.601694942f, "mac2_d2" to 0.161016956f, "mac2_a1" to 0.725f, "mac2_a2" to 0.75f, "mac3_d1" to 0.5762712f, "mac3_a1" to 0.7f, "mac4_d1" to 0.584745765f, "mac4_a1" to 0.7f, "mac5_d1" to 0.593220353f, "mac5_a1" to 0.725f, "mac6_d1" to 0.6101695f, "mac6_d2" to 0.618644059f, "mac6_a1" to 0.65f, "mac6_a2" to 0.625f, "mac7_d1" to 0.5254237f, "mac7_d2" to 0.5423729f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 0.559322059f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Octave", "macro2" to "Mixture", "macro3" to "Flutes", "macro4" to "Strings", "macro5" to "Reeds", "macro6" to "Chiff", "macro7" to "Wind", "macro8" to "Trem"),
+        family = "church",
         low = 36, high = 84)
 
-    private fun manual30() = Patch("Manual", "Full Organ",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.72f, "windresp" to 0.7807439f, "windnoise" to 0.22f, "string" to 0.6f, "reed" to 0.9f, "mixture" to 0.9f, "tracker" to 0.4f, "rotary" to 0f, "volume" to 0.165f, "attack" to 0.534019947f, "release" to 0.551070869f),
-        family = "pipe",
+    private fun manual28() = Patch("Manual", "Flutes 8 and 4",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_16" to 0f, "ua_4" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.22f, "windresp" to 0.665026367f, "windnoise" to 0.2f, "principal" to 0f, "flute" to 1f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.5f, "tracker" to 0.55f, "rotary" to 0f, "volume" to 0.625f, "attack" to 0.5927171f, "release" to 0.551070869f, "mac1_d1" to 0.135593221f, "mac1_a1" to 0.8f, "mac2_d1" to 0.127118647f, "mac2_a1" to 0.75f, "mac3_d1" to 0.5677966f, "mac3_a1" to 0.65f, "mac4_d1" to 0.584745765f, "mac4_a1" to 0.7f, "mac5_d1" to 0.6101695f, "mac5_d2" to 0.618644059f, "mac5_a1" to 0.65f, "mac5_a2" to 0.625f, "mac6_d1" to 0.5254237f, "mac6_d2" to 0.5423729f, "mac6_a1" to 0.6f, "mac6_a2" to 0.6f, "mac7_d1" to 0.559322059f, "mac7_a1" to 0.675f, "mac8_d1" to 0.09322034f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Piccolo", "macro2" to "Nazard", "macro3" to "Principal", "macro4" to "Strings", "macro5" to "Chiff", "macro6" to "Wind", "macro7" to "Trem", "macro8" to "Bourdon"),
+        family = "church",
+        low = 41, high = 88)
+
+    private fun manual29() = Patch("Manual", "Strings Celeste",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_4" to 1f, "pa_2" to 0.75f, "spray" to 0.3f, "sprayrate" to 0.4724755f, "spraywide" to 0.8f, "spraypat" to 0.5f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.18f, "principal" to 0.3f, "flute" to 0.15f, "string" to 1f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.08f, "tracker" to 0.15f, "rotary" to 0f, "volume" to 0.65f, "attack" to 0.725363731f, "release" to 0.6150327f, "mac1_d1" to 0.449152529f, "mac1_a1" to 0.575f, "mac2_d1" to 0.5677966f, "mac2_a1" to 0.7f, "mac3_d1" to 0.5762712f, "mac3_a1" to 0.7f, "mac4_d1" to 0.135593221f, "mac4_a1" to 0.75f, "mac5_d1" to 0.593220353f, "mac5_a1" to 0.675f, "mac6_d1" to 0.559322059f, "mac6_a1" to 0.65f, "mac7_d1" to 0.5254237f, "mac7_d2" to 0.5423729f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 0.8559322f, "mac8_a1" to 0.575f),
+        mapOf("macro1" to "Beat", "macro2" to "Principal", "macro3" to "Flutes", "macro4" to "Octave", "macro5" to "Oboe", "macro6" to "Trem", "macro7" to "Wind", "macro8" to "Bow"),
+        family = "church",
+        low = 41, high = 84)
+
+    private fun manual30() = Patch("Manual", "Sesquialtera",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_16" to 0f, "ua_4" to 1f, "ua_223" to 0.625f, "ua_2" to 1f, "ua_135" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.25f, "principal" to 0.2f, "flute" to 1f, "string" to 0.55f, "reed" to 0f, "mixture" to 0f, "rotary" to 0f, "volume" to 0.335f, "attack" to 0.534019947f, "release" to 0.551070869f, "mac1_d1" to 0.1440678f, "mac1_a1" to 0.199999988f, "mac2_d1" to 0.593220353f, "mac2_a1" to 0.725f, "mac3_d1" to 0.5677966f, "mac3_a1" to 0.75f, "mac4_d1" to 0.09322034f, "mac4_a1" to 0.8f, "mac5_d1" to 0.6101695f, "mac5_d2" to 0.618644059f, "mac5_a1" to 0.65f, "mac5_a2" to 0.625f, "mac6_d1" to 0.5254237f, "mac6_d2" to 0.5423729f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.559322059f, "mac7_a1" to 0.65f, "mac8_d1" to 0.584745765f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "No Tierce", "macro2" to "Reeds", "macro3" to "Principal", "macro4" to "Bourdon", "macro5" to "Chiff", "macro6" to "Wind", "macro7" to "Trem", "macro8" to "Pure"),
+        family = "church",
+        low = 48, high = 84)
+
+    private fun manual31() = Patch("Manual", "Reed Stop",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_4" to 0.5f, "ua_113" to 1f, "ua_1" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.32f, "windresp" to 0.678795636f, "principal" to 0.4f, "flute" to 0.08f, "string" to 0f, "reed" to 1f, "mixture" to 0.55f, "chiff" to 0.35f, "tracker" to 0.3f, "rotary" to 0f, "volume" to 0.505f, "attack" to 0.534019947f, "release" to 0.551070869f, "mac1_d1" to 0.601694942f, "mac1_a1" to 0.7f, "mac2_d1" to 0.5677966f, "mac2_a1" to 0.7f, "mac3_d1" to 0.5762712f, "mac3_a1" to 0.75f, "mac4_d1" to 0.135593221f, "mac4_a1" to 0.8f, "mac5_d1" to 0.6101695f, "mac5_d2" to 0.618644059f, "mac5_a1" to 0.65f, "mac5_a2" to 0.625f, "mac6_d1" to 0.5254237f, "mac6_d2" to 0.5423729f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.559322059f, "mac7_a1" to 0.65f, "mac8_d1" to 0.584745765f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Mixture", "macro2" to "Principal", "macro3" to "Flutes", "macro4" to "Octave", "macro5" to "Chiff", "macro6" to "Wind", "macro7" to "Trem", "macro8" to "Strings"),
+        family = "church",
+        low = 41, high = 84)
+
+    private fun manual32() = Patch("Manual", "Plenum",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0.5f, "ua_4" to 1f, "ua_2" to 1f, "ua_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.38f, "windresp" to 0.678795636f, "windnoise" to 0.12f, "flute" to 0f, "string" to 0.2f, "reed" to 0f, "mixture" to 0.6f, "chiff" to 0.25f, "tracker" to 0.3f, "rotary" to 0f, "volume" to 0.39f, "attack" to 0.534019947f, "release" to 0.551070869f, "mac1_d1" to 0.601694942f, "mac1_a1" to 0.7f, "mac2_d1" to 0.593220353f, "mac2_a1" to 0.75f, "mac3_d1" to 0.09322034f, "mac3_a1" to 0.75f, "mac4_d1" to 0.152542368f, "mac4_a1" to 0.8f, "mac5_d1" to 0.5762712f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6101695f, "mac6_d2" to 0.618644059f, "mac6_a1" to 0.65f, "mac6_a2" to 0.625f, "mac7_d1" to 0.5254237f, "mac7_d2" to 0.5423729f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 0.584745765f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Mixture", "macro2" to "Reeds", "macro3" to "Bourdon", "macro4" to "Quint", "macro5" to "Flutes", "macro6" to "Chiff", "macro7" to "Wind", "macro8" to "Strings"),
+        family = "church",
+        low = 36, high = 84)
+
+    private fun manual33() = Patch("Manual", "Full Organ",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 1f, "ua_513" to 1f, "ua_4" to 1f, "ua_223" to 1f, "ua_2" to 1f, "ua_135" to 1f, "ua_113" to 1f, "ua_1" to 1f, "pa_2" to 1f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.72f, "windresp" to 0.7807439f, "windnoise" to 0.22f, "string" to 0.6f, "reed" to 0.9f, "mixture" to 0.9f, "tracker" to 0.4f, "rotary" to 0f, "volume" to 0.165f, "attack" to 0.534019947f, "release" to 0.551070869f, "mac1_d1" to 0.593220353f, "mac1_a1" to 0.15f, "mac2_d1" to 0.601694942f, "mac2_a1" to 0.25f, "mac3_d1" to 0.09322034f, "mac3_a1" to 0f, "mac4_d1" to 0.5254237f, "mac4_a1" to 0.25f, "mac5_d1" to 0.584745765f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6101695f, "mac6_d2" to 0.618644059f, "mac6_a1" to 0.65f, "mac6_a2" to 0.625f, "mac7_d1" to 0.559322059f, "mac7_a1" to 0.625f, "mac8_d1" to 0.5762712f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "No Reeds", "macro2" to "Less Mix", "macro3" to "No 16'", "macro4" to "Steady", "macro5" to "Strings", "macro6" to "Chiff", "macro7" to "Trem", "macro8" to "Flutes"),
+        family = "church",
         low = 33, high = 88)
 
-    private fun manual31() = Patch("Manual", "Soft Flute",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_16" to 0.5f, "ua_4" to 0.625f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.3f, "windresp" to 0.898051739f, "windnoise" to 0.3f, "principal" to 0f, "flute" to 1f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.45f, "tracker" to 0.7f, "rotary" to 0f, "volume" to 0.665f, "attack" to 0.651414156f, "release" to 0.634363353f),
-        family = "pipe",
+    private fun manual34() = Patch("Manual", "Gedackt",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "pedal" to 0.95f, "ua_16" to 0.5f, "ua_4" to 0.625f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.3f, "windresp" to 0.898051739f, "windnoise" to 0.3f, "principal" to 0f, "flute" to 1f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.45f, "tracker" to 0.7f, "rotary" to 0f, "volume" to 0.665f, "attack" to 0.651414156f, "release" to 0.634363353f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.6875f, "mac2_d1" to 0.135593221f, "mac2_a1" to 0.75f, "mac3_d1" to 0.584745765f, "mac3_a1" to 0.675f, "mac4_d1" to 0.5677966f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6101695f, "mac5_d2" to 0.618644059f, "mac5_a1" to 0.65f, "mac5_a2" to 0.625f, "mac6_d1" to 0.5423729f, "mac6_a1" to 0.625f, "mac7_d1" to 0.559322059f, "mac7_a1" to 0.675f, "mac8_d1" to 0.8559322f, "mac8_a1" to 0.56f),
+        mapOf("macro1" to "4'", "macro2" to "2'", "macro3" to "Strings", "macro4" to "Principal", "macro5" to "Chiff", "macro6" to "Breath", "macro7" to "Trem", "macro8" to "Slow"),
+        family = "church",
         low = 48, high = 88)
 
-    private fun manual32() = Patch("Manual", "Pedal Reeds",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.433070868f, "pedal" to 1f, "pedsus" to 0.3f, "ua_16" to 0f, "ua_4" to 0.5f, "pa_2" to 1f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.45f, "windresp" to 0.7362099f, "principal" to 0.4f, "flute" to 0.7f, "string" to 0f, "reed" to 0.85f, "mixture" to 0.2f, "chiff" to 0.2f, "tracker" to 0.3f, "rotary" to 0f, "bass" to 0.6041667f, "volume" to 0.46f, "attack" to 0.534019947f, "release" to 0.551070869f),
-        family = "pipe",
-        low = 29, high = 79)
+    private fun manual35() = Patch("Manual", "Swell Organ",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0.5f, "ua_4" to 1f, "ua_2" to 0.5f, "pa_2" to 0.6f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.3f, "windresp" to 0.709560335f, "windnoise" to 0.08f, "flute" to 0.5f, "string" to 0.2f, "reed" to 0f, "mixture" to 0.2f, "chiff" to 0.2f, "rotary" to 0f, "volume" to 0.08f, "attack" to 0.534019947f, "release" to 0.5927171f, "express" to 1f, "swellbox" to 0.7f, "barglide" to 0.125f, "mac1_d1" to 0.601694942f, "mac1_d2" to 0.135593221f, "mac1_d3" to 0.593220353f, "mac1_a1" to 0.75f, "mac1_a2" to 0.75f, "mac1_a3" to 0.65f, "mac2_d1" to 0.5677966f, "mac2_d2" to 0.5762712f, "mac2_a1" to 0.199999988f, "mac2_a2" to 0.7f, "mac3_d1" to 0.584745765f, "mac3_d2" to 0.449152529f, "mac3_a1" to 0.8f, "mac3_a2" to 0.54f, "mac4_d1" to 0.593220353f, "mac4_a1" to 0.8f, "mac5_d1" to 0.9830508f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6101695f, "mac6_d2" to 0.618644059f, "mac6_a1" to 0.7f, "mac6_a2" to 0.625f, "mac7_d1" to 0.5254237f, "mac7_d2" to 0.5423729f, "mac7_a1" to 0.65f, "mac7_a2" to 0.575f, "mac8_d1" to 0.559322059f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Full", "macro2" to "Flutes", "macro3" to "Strings", "macro4" to "Reeds", "macro5" to "Shutters", "macro6" to "Chiff", "macro7" to "Wind", "macro8" to "Trem"),
+        family = "church",
+        low = 36, high = 84)
 
-    private fun manual33() = Patch("Manual", "Harmonium",
-        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0f, "ua_4" to 1f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.42f, "windresp" to 0.678795636f, "windnoise" to 0.12f, "tremrate" to 0.4085063f, "tremdepth" to 0.18f, "pressure" to 0.78f, "buzz" to 0.45f, "reedtrem" to 0.25f, "rotary" to 0f, "volume" to 0.875f, "attack" to 0.4600704f),
+    private fun manual36() = Patch("Manual", "Soft Tibia",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0f, "ua_4" to 0.4f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.2f, "windresp" to 0.597874761f, "tremrate" to 0.81816566f, "tremdepth" to 0.3f, "principal" to 0f, "flute" to 1f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.155f, "tracker" to 0.1f, "rotary" to 0f, "volume" to 0.2775f, "attack" to 0.56632334f, "release" to 0.6666667f, "express" to 1f, "swellbox" to 0.6f, "barglide" to 0.1f, "mac1_d1" to 0.559322059f, "mac1_a1" to 0.65f, "mac2_d1" to 0.5508475f, "mac2_a1" to 0.575f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.7f, "mac4_d1" to 0.593220353f, "mac4_d2" to 0.8305085f, "mac4_a1" to 0.7f, "mac4_a2" to 0.55f, "mac5_d1" to 0.584745765f, "mac5_d2" to 0.449152529f, "mac5_a1" to 0.7f, "mac5_a2" to 0.55f, "mac6_d1" to 0.09322034f, "mac6_a1" to 0.75f, "mac7_d1" to 0.135593221f, "mac7_d2" to 0.118644066f, "mac7_a1" to 0.7f, "mac7_a2" to 0.7f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Trem", "macro2" to "Trem Rate", "macro3" to "Shutters", "macro4" to "Kinura", "macro5" to "Strings", "macro6" to "Sub", "macro7" to "Top", "macro8" to "Glide"),
+        family = "theatre",
+        low = 41, high = 84)
+
+    private fun manual37() = Patch("Manual", "Tibia Trem",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0.6f, "ua_223" to 0.3f, "ua_2" to 0.4f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.2f, "windresp" to 0.597874761f, "tremrate" to 0.8404277f, "tremdepth" to 0.45f, "principal" to 0f, "flute" to 1f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.05f, "tracker" to 0.1f, "rotary" to 0f, "volume" to 0.1775f, "attack" to 0.534019947f, "release" to 0.625020444f, "express" to 1f, "swellbox" to 0.6f, "barglide" to 0.1f, "mac1_d1" to 0.559322059f, "mac1_a1" to 0.65f, "mac2_d1" to 0.5508475f, "mac2_a1" to 0.575f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.7f, "mac4_d1" to 0.593220353f, "mac4_d2" to 0.8305085f, "mac4_a1" to 0.75f, "mac4_a2" to 0.55f, "mac5_d1" to 0.584745765f, "mac5_d2" to 0.449152529f, "mac5_a1" to 0.75f, "mac5_a2" to 0.55f, "mac6_d1" to 0.09322034f, "mac6_a1" to 0.7f, "mac7_d1" to 0.135593221f, "mac7_d2" to 0.161016956f, "mac7_a1" to 0.7f, "mac7_a2" to 0.75f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Trem", "macro2" to "Trem Rate", "macro3" to "Shutters", "macro4" to "Kinura", "macro5" to "Strings", "macro6" to "Sub", "macro7" to "Top", "macro8" to "Glide"),
+        family = "theatre",
+        low = 41, high = 84)
+
+    private fun manual38() = Patch("Manual", "Kinura",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0f, "ua_4" to 0.6f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.2f, "windresp" to 0.597874761f, "tremrate" to 0.861297548f, "tremdepth" to 0.35f, "principal" to 0f, "flute" to 0.35f, "string" to 0f, "reed" to 1f, "mixture" to 0f, "chiff" to 0.05f, "tracker" to 0.15f, "rotary" to 0f, "mid" to 0.416666657f, "treble" to 0.625f, "volume" to 0.273f, "attack" to 0.492373765f, "release" to 0.5927171f, "express" to 1f, "swellbox" to 0.6f, "barglide" to 0.1f, "mac1_d1" to 0.559322059f, "mac1_a1" to 0.65f, "mac2_d1" to 0.5508475f, "mac2_a1" to 0.575f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.7f, "mac4_d1" to 0.5762712f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5762712f, "mac5_d2" to 0.8220339f, "mac5_a1" to 0.325f, "mac5_a2" to 0.55f, "mac6_d1" to 0.09322034f, "mac6_a1" to 0.75f, "mac7_d1" to 0.135593221f, "mac7_d2" to 0.127118647f, "mac7_a1" to 0.7f, "mac7_a2" to 0.7f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Trem", "macro2" to "Trem Rate", "macro3" to "Shutters", "macro4" to "Tibia", "macro5" to "Thin", "macro6" to "Sub", "macro7" to "Top", "macro8" to "Glide"),
+        family = "theatre",
+        low = 41, high = 84)
+
+    private fun manual39() = Patch("Manual", "Vox Humana",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0f, "ua_4" to 0.5f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.25f, "windresp" to 0.6424087f, "tremrate" to 0.781713963f, "tremdepth" to 0.55f, "principal" to 0f, "flute" to 0.3f, "string" to 0.2f, "reed" to 0.6f, "mixture" to 0f, "chiff" to 0f, "tracker" to 0.1f, "rotary" to 0f, "treble" to 0.291666657f, "volume" to 0.357f, "attack" to 0.634363353f, "release" to 0.69897f, "express" to 1f, "swellbox" to 0.7f, "barglide" to 0.1f, "mac1_d1" to 0.559322059f, "mac1_a1" to 0.625f, "mac2_d1" to 0.5508475f, "mac2_a1" to 0.575f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.65f, "mac4_d1" to 0.5762712f, "mac4_a1" to 0.65f, "mac5_d1" to 0.584745765f, "mac5_d2" to 0.449152529f, "mac5_a1" to 0.7f, "mac5_a2" to 0.55f, "mac6_d1" to 0.09322034f, "mac6_a1" to 0.75f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.575f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Trem", "macro2" to "Trem Rate", "macro3" to "Shutters", "macro4" to "Tibia", "macro5" to "Strings", "macro6" to "Sub", "macro7" to "Bright", "macro8" to "Glide"),
+        family = "theatre",
+        low = 41, high = 84)
+
+    private fun manual40() = Patch("Manual", "Tierce Tibia",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0f, "ua_4" to 1f, "ua_223" to 0.75f, "ua_2" to 0.6f, "ua_135" to 0.6f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.2f, "windresp" to 0.597874761f, "tremrate" to 0.8510257f, "tremdepth" to 0.45f, "principal" to 0f, "flute" to 1f, "string" to 0f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.05f, "tracker" to 0.1f, "rotary" to 0f, "volume" to 0.1845f, "attack" to 0.534019947f, "release" to 0.625020444f, "express" to 1f, "swellbox" to 0.6f, "barglide" to 0.1f, "mac1_d1" to 0.559322059f, "mac1_a1" to 0.65f, "mac2_d1" to 0.5508475f, "mac2_a1" to 0.575f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.7f, "mac4_d1" to 0.593220353f, "mac4_d2" to 0.8305085f, "mac4_a1" to 0.7f, "mac4_a2" to 0.55f, "mac5_d1" to 0.1440678f, "mac5_a1" to 0.199999988f, "mac6_d1" to 0.09322034f, "mac6_a1" to 0.75f, "mac7_d1" to 0.584745765f, "mac7_d2" to 0.449152529f, "mac7_a1" to 0.7f, "mac7_a2" to 0.55f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Trem", "macro2" to "Trem Rate", "macro3" to "Shutters", "macro4" to "Kinura", "macro5" to "No Tierce", "macro6" to "Sub", "macro7" to "Strings", "macro8" to "Glide"),
+        family = "theatre",
+        low = 41, high = 84)
+
+    private fun manual41() = Patch("Manual", "Grand Theatre",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_4" to 1f, "ua_223" to 0.5f, "ua_2" to 0.75f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.35f, "windresp" to 0.678795636f, "tremrate" to 0.8294822f, "tremdepth" to 0.4f, "principal" to 0.3f, "flute" to 1f, "string" to 0.6f, "reed" to 0.7f, "mixture" to 0f, "chiff" to 0.05f, "rotary" to 0f, "volume" to 0.0875f, "attack" to 0.534019947f, "release" to 0.625020444f, "express" to 1f, "swellbox" to 0.6f, "barglide" to 0.1f, "mac1_d1" to 0.559322059f, "mac1_a1" to 0.65f, "mac2_d1" to 0.559322059f, "mac2_a1" to 0.35f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.65f, "mac4_d1" to 0.593220353f, "mac4_a1" to 0.199999988f, "mac5_d1" to 0.584745765f, "mac5_a1" to 0.7f, "mac6_d1" to 0.135593221f, "mac6_d2" to 0.1440678f, "mac6_a1" to 0.625f, "mac6_a2" to 0.75f, "mac7_d1" to 0.5254237f, "mac7_d2" to 0.5423729f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Trem", "macro2" to "Steady", "macro3" to "Shutters", "macro4" to "No Reeds", "macro5" to "Strings", "macro6" to "Top", "macro7" to "Wind", "macro8" to "Glide"),
+        family = "theatre",
+        low = 36, high = 84)
+
+    private fun manual42() = Patch("Manual", "Deep Trem",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.2f, "windresp" to 0.597874761f, "tremrate" to 0.9457498f, "tremdepth" to 0.85f, "principal" to 0f, "flute" to 1f, "reed" to 0f, "mixture" to 0f, "chiff" to 0.05f, "tracker" to 0.1f, "rotary" to 0f, "volume" to 0.2205f, "attack" to 0.534019947f, "release" to 0.625020444f, "express" to 1f, "swellbox" to 0.6f, "barglide" to 0.1f, "mac1_d1" to 0.559322059f, "mac1_a1" to 0.25f, "mac2_d1" to 0.5508475f, "mac2_a1" to 0.375f, "mac3_d1" to 0.9830508f, "mac3_a1" to 0.7f, "mac4_d1" to 0.593220353f, "mac4_d2" to 0.8305085f, "mac4_a1" to 0.7f, "mac4_a2" to 0.55f, "mac5_d1" to 0.5254237f, "mac5_d2" to 0.5423729f, "mac5_a1" to 0.625f, "mac5_a2" to 0.575f, "mac6_d1" to 0.09322034f, "mac6_a1" to 0.75f, "mac7_d1" to 0.135593221f, "mac7_d2" to 0.127118647f, "mac7_a1" to 0.7f, "mac7_a2" to 0.7f, "mac8_d1" to 0.9915254f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Steady", "macro2" to "Slower", "macro3" to "Shutters", "macro4" to "Kinura", "macro5" to "Wind", "macro6" to "Sub", "macro7" to "Top", "macro8" to "Glide"),
+        family = "theatre",
+        low = 41, high = 84)
+
+    private fun manual43() = Patch("Manual", "Hand Pumped",
+        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0f, "ua_4" to 1f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.42f, "windresp" to 0.678795636f, "windnoise" to 0.12f, "tremrate" to 0.4085063f, "tremdepth" to 0.18f, "pressure" to 0.78f, "buzz" to 0.45f, "reedtrem" to 0.25f, "rotary" to 0f, "volume" to 0.875f, "attack" to 0.4600704f, "mac1_d1" to 0.694915235f, "mac1_a1" to 0.575f, "mac2_d1" to 0.7033898f, "mac2_a1" to 0.65f, "mac3_d1" to 0.09322034f, "mac3_a1" to 0.8f, "mac4_d1" to 0.135593221f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7118644f, "mac5_a1" to 0.625f, "mac6_d1" to 0.5254237f, "mac6_d2" to 0.5423729f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.449152529f, "mac7_a1" to 0.575f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Pressure", "macro2" to "Buzz", "macro3" to "16'", "macro4" to "2'", "macro5" to "Trem", "macro6" to "Wind", "macro7" to "Celeste", "macro8" to "Dark"),
         family = "reed",
         low = 41, high = 81)
 
-    private fun manual34() = Patch("Manual", "Musette",
-        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0f, "ua_4" to 0.625f, "pa_1" to 0.875f, "spray" to 0.55f, "sprayrate" to 0.5695119f, "spraywide" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.28f, "tremrate" to 0.794312f, "pressure" to 0.8f, "buzz" to 0.18f, "reedtrem" to 0f, "rotary" to 0f, "volume" to 1f, "attack" to 0.4600704f),
+    private fun manual44() = Patch("Manual", "Parlour Reed",
+        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0f, "ua_4" to 0f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.3f, "windresp" to 0.678795636f, "windnoise" to 0.1f, "tremrate" to 0.462756425f, "pressure" to 0.6f, "buzz" to 0.2f, "reedtrem" to 0.1f, "rotary" to 0f, "treble" to 0.375f, "volume" to 0.382f, "attack" to 0.4600704f, "express" to 1f, "swellbox" to 0.5f, "mac1_d1" to 0.694915235f, "mac1_a1" to 0.6f, "mac2_d1" to 0.7033898f, "mac2_a1" to 0.65f, "mac3_d1" to 0.118644066f, "mac3_a1" to 0.8f, "mac4_d1" to 0.09322034f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7118644f, "mac5_a1" to 0.625f, "mac6_d1" to 0.9830508f, "mac6_a1" to 0.7f, "mac7_d1" to 0.449152529f, "mac7_a1" to 0.575f, "mac8_d1" to 0.5254237f, "mac8_d2" to 0.5423729f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Pressure", "macro2" to "Buzz", "macro3" to "4'", "macro4" to "16'", "macro5" to "Trem", "macro6" to "Shutters", "macro7" to "Celeste", "macro8" to "Wind"),
+        family = "reed",
+        low = 41, high = 81)
+
+    private fun manual45() = Patch("Manual", "Shimmer Reeds",
+        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0f, "ua_4" to 0.625f, "pa_1" to 0.875f, "spray" to 0.55f, "sprayrate" to 0.5695119f, "spraywide" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.28f, "tremrate" to 0.794312f, "pressure" to 0.8f, "buzz" to 0.18f, "reedtrem" to 0f, "rotary" to 0f, "volume" to 1f, "attack" to 0.4600704f, "mac1_d1" to 0.449152529f, "mac1_a1" to 0.6f, "mac2_d1" to 0.7033898f, "mac2_a1" to 0.65f, "mac3_d1" to 0.694915235f, "mac3_a1" to 0.55f, "mac4_d1" to 0.118644066f, "mac4_a1" to 0.6875f, "mac5_d1" to 0.09322034f, "mac5_a1" to 0.75f, "mac6_d1" to 0.559322059f, "mac6_a1" to 0.65f, "mac7_d1" to 0.5254237f, "mac7_d2" to 0.5423729f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Beat", "macro2" to "Buzz", "macro3" to "Pressure", "macro4" to "4'", "macro5" to "16'", "macro6" to "Trem", "macro7" to "Wind", "macro8" to "Dark"),
         family = "reed",
         low = 45, high = 84)
 
-    private fun manual35() = Patch("Manual", "Melodeon",
-        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0f, "ua_4" to 0.5f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.35f, "windresp" to 0.616896331f, "windnoise" to 0.28f, "tremrate" to 0.7407883f, "tremdepth" to 0.35f, "pressure" to 0.92f, "buzz" to 0.3f, "reedtrem" to 0.45f, "rotary" to 0f, "volume" to 1f, "attack" to 0.4600704f),
+    private fun manual46() = Patch("Manual", "Melodeon",
+        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0f, "ua_4" to 0.5f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.35f, "windresp" to 0.616896331f, "windnoise" to 0.28f, "tremrate" to 0.7407883f, "tremdepth" to 0.35f, "pressure" to 0.92f, "buzz" to 0.3f, "reedtrem" to 0.45f, "rotary" to 0f, "volume" to 1f, "attack" to 0.4600704f, "mac1_d1" to 0.694915235f, "mac1_a1" to 0.54f, "mac2_d1" to 0.7033898f, "mac2_a1" to 0.65f, "mac3_d1" to 0.7118644f, "mac3_d2" to 0.559322059f, "mac3_a1" to 0.35f, "mac3_a2" to 0.375f, "mac4_d1" to 0.118644066f, "mac4_a1" to 0.75f, "mac5_d1" to 0.09322034f, "mac5_a1" to 0.75f, "mac6_d1" to 0.449152529f, "mac6_a1" to 0.575f, "mac7_d1" to 0.5254237f, "mac7_d2" to 0.5423729f, "mac7_a1" to 0.6f, "mac7_a2" to 0.6f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.56f),
+        mapOf("macro1" to "Pressure", "macro2" to "Buzz", "macro3" to "Steady", "macro4" to "4'", "macro5" to "16'", "macro6" to "Celeste", "macro7" to "Wind", "macro8" to "Bright"),
         family = "reed",
         low = 45, high = 81)
 
-    private fun manual36() = Patch("Manual", "Pump Organ",
-        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_4" to 0f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.95f, "windresp" to 0.8866443f, "windnoise" to 0.4f, "tremrate" to 0.6196475f, "tremdepth" to 0.12f, "pressure" to 0.9f, "buzz" to 0.5f, "rotary" to 0f, "bass" to 0.5833333f, "volume" to 0.68f, "attack" to 0.4600704f),
+    private fun manual47() = Patch("Manual", "Pump Organ",
+        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_4" to 0f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.95f, "windresp" to 0.8866443f, "windnoise" to 0.4f, "tremrate" to 0.6196475f, "tremdepth" to 0.12f, "pressure" to 0.9f, "buzz" to 0.5f, "rotary" to 0f, "bass" to 0.5833333f, "volume" to 0.68f, "attack" to 0.4600704f, "mac1_d1" to 0.5254237f, "mac1_a1" to 0.3f, "mac2_d1" to 0.7033898f, "mac2_a1" to 0.65f, "mac3_d1" to 0.118644066f, "mac3_a1" to 0.8f, "mac4_d1" to 0.135593221f, "mac4_a1" to 0.75f, "mac5_d1" to 0.694915235f, "mac5_a1" to 0.54f, "mac6_d1" to 0.559322059f, "mac6_a1" to 0.65f, "mac7_d1" to 0.449152529f, "mac7_a1" to 0.575f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Steady", "macro2" to "Buzz", "macro3" to "4'", "macro4" to "2'", "macro5" to "Pressure", "macro6" to "Trem", "macro7" to "Celeste", "macro8" to "Dark"),
         family = "reed",
         low = 38, high = 79)
 
-    private fun manual37() = Patch("Manual", "Big Reed",
-        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_4" to 1f, "ua_223" to 0.25f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.5f, "windresp" to 0.709560335f, "windnoise" to 0.15f, "tremrate" to 0.52361685f, "tremdepth" to 0.4f, "pressure" to 0.95f, "buzz" to 0.82f, "reedtrem" to 0.55f, "rotary" to 0f, "volume" to 0.75f, "attack" to 0.4600704f),
+    private fun manual48() = Patch("Manual", "Big Reed",
+        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_4" to 1f, "ua_223" to 0.25f, "pa_1" to 0.875f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.5f, "windresp" to 0.709560335f, "windnoise" to 0.15f, "tremrate" to 0.52361685f, "tremdepth" to 0.4f, "pressure" to 0.95f, "buzz" to 0.82f, "reedtrem" to 0.55f, "rotary" to 0f, "volume" to 0.75f, "attack" to 0.4600704f, "mac1_d1" to 0.7033898f, "mac1_a1" to 0.3f, "mac2_d1" to 0.135593221f, "mac2_a1" to 0.75f, "mac3_d1" to 0.7118644f, "mac3_d2" to 0.559322059f, "mac3_a1" to 0.35f, "mac3_a2" to 0.375f, "mac4_d1" to 0.5254237f, "mac4_a1" to 0.625f, "mac5_d1" to 0.449152529f, "mac5_a1" to 0.575f, "mac6_d1" to 0.8305085f, "mac6_a1" to 0.425f, "mac7_d1" to 0.09322034f, "mac7_a1" to 0.099999994f, "mac8_d1" to 0.5508475f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Clean", "macro2" to "2'", "macro3" to "Steady", "macro4" to "Wind", "macro5" to "Celeste", "macro6" to "Dark", "macro7" to "No 16'", "macro8" to "Faster Trem"),
         family = "reed",
         low = 36, high = 81)
 
-    private fun manual38() = Patch("Manual", "Drift",
-        mapOf("loweron" to 1f, "ua_8" to 0.75f, "ua_4" to 1f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 0.5f, "ub_4" to 0.75f, "ub_223" to 0.75f, "ub_2" to 0.75f, "ub_135" to 1f, "ub_113" to 0.25f, "ub_1" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_4" to 1f, "lb_223" to 0.5f, "lb_2" to 0.5f, "lb_135" to 0f, "lb_113" to 0f, "lb_1" to 0f, "morphsrc" to 0.642857134f, "spray" to 0.12f, "sprayrate" to 0.300690442f, "spraywide" to 0.8f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.515f, "lfo1wave" to 0.125f, "lfo1rate" to 0.200773031f, "lfo2rate" to 0.387380183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 0.95f, "m2_src" to 0.714285731f, "m2_dst" to 0.0833333358f, "m2_amt" to 0.725f),
-        family = "cabinet",
+    private fun manual49() = Patch("Manual", "Reed Choir",
+        mapOf("model" to 1f, "pedsplit" to 0.3464567f, "pedal" to 0.85f, "ua_16" to 0.75f, "ua_4" to 1f, "ua_2" to 0.5f, "pa_1" to 0.875f, "spray" to 0.25f, "sprayrate" to 0.48962f, "spraywide" to 0.8f, "spraypat" to 0.5f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.6f, "windresp" to 0.7362099f, "windnoise" to 0.15f, "tremrate" to 0.292238653f, "pressure" to 0.85f, "buzz" to 0.4f, "rotary" to 0f, "volume" to 0.658f, "attack" to 0.4600704f, "mac1_d1" to 0.449152529f, "mac1_a1" to 0.6f, "mac2_d1" to 0.449152529f, "mac2_a1" to 0.4f, "mac3_d1" to 0.7033898f, "mac3_a1" to 0.65f, "mac4_d1" to 0.694915235f, "mac4_a1" to 0.55f, "mac5_d1" to 0.7118644f, "mac5_a1" to 0.65f, "mac6_d1" to 0.5254237f, "mac6_a1" to 0.3f, "mac7_d1" to 0.09322034f, "mac7_a1" to 0.125f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Beat", "macro2" to "Tighten", "macro3" to "Buzz", "macro4" to "Pressure", "macro5" to "Trem", "macro6" to "Steady", "macro7" to "No 16'", "macro8" to "Dark"),
+        family = "reed",
+        low = 36, high = 81,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun manual50() = Patch("Manual", "Two Manuals",
+        mapOf("lower" to 0.75f, "pedal" to 0.95f, "loweron" to 1f, "pedsus" to 0.25f, "ua_513" to 1f, "ua_4" to 1f, "la_8" to 0.5f, "la_4" to 0.625f, "la_223" to 0.5f, "la_2" to 0.5f, "la_135" to 0.25f, "la_113" to 0.25f, "la_1" to 0.25f, "pa_2" to 0.75f, "perclvl" to 0.65f, "rotspeed" to 0.5f, "drive" to 0.3f, "volume" to 0.505f, "mac1_d1" to 0.135593221f, "mac1_d2" to 0.161016956f, "mac1_a1" to 0.8f, "mac1_a2" to 0.75f, "mac2_d1" to 0.06779661f, "mac2_a1" to 0.6f, "mac3_d1" to 0.406779647f, "mac3_a1" to 0.625f, "mac4_d1" to 0.0847457647f, "mac4_a1" to 0.65f, "mac5_d1" to 0.474576265f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.720339f, "mac7_d2" to 0.7372881f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Top", "macro2" to "Lower", "macro3" to "Pedal 8'", "macro4" to "Walk", "macro5" to "Perc", "macro6" to "Drive", "macro7" to "Rotor", "macro8" to "Click"),
+        family = "split",
+        low = 29, high = 84)
+
+    private fun manual51() = Patch("Manual", "Ballad Split",
+        mapOf("lower" to 0.7f, "loweron" to 1f, "pedsus" to 0.2f, "ua_16" to 0f, "ua_2" to 0.5f, "la_8" to 0.75f, "la_4" to 0.5f, "pa_1" to 0.875f, "pa_2" to 0.375f, "perc" to 0f, "vibtype" to 1f, "rotspeed" to 0.5f, "drive" to 0.1f, "volume" to 0.669f, "mac1_d1" to 0.161016956f, "mac1_d2" to 0.1440678f, "mac1_a1" to 0.75f, "mac1_a2" to 0.7f, "mac2_d1" to 0.06779661f, "mac2_a1" to 0.625f, "mac3_d1" to 0.271186441f, "mac3_a1" to 0.7f, "mac4_d1" to 0.0847457647f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5084746f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.720339f, "mac7_d2" to 0.7372881f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Top", "macro2" to "Lower", "macro3" to "Lower 4'", "macro4" to "Walk", "macro5" to "Vibrato", "macro6" to "Drive", "macro7" to "Rotor", "macro8" to "Click"),
+        family = "split",
+        low = 29, high = 84)
+
+    private fun manual52() = Patch("Manual", "Pedal Bass",
+        mapOf("split" to 0.503937f, "pedsplit" to 0.417322844f, "upper" to 0.7f, "lower" to 0.7f, "pedal" to 1f, "loweron" to 1f, "pedsus" to 0.45f, "ua_16" to 0f, "ua_8" to 0.5f, "la_16" to 1f, "la_8" to 0.75f, "la_4" to 0f, "pa_2" to 1f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.35f, "bass" to 0.625f, "volume" to 0.54f, "mac1_d1" to 0.0593220331f, "mac1_a1" to 0.65f, "mac2_d1" to 0.06779661f, "mac2_a1" to 0.65f, "mac3_d1" to 0.0847457647f, "mac3_a1" to 0.65f, "mac4_d1" to 0.406779647f, "mac4_a1" to 0.25f, "mac5_d1" to 0.135593221f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.720339f, "mac7_d2" to 0.7372881f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Upper", "macro2" to "Lower", "macro3" to "Walk", "macro4" to "Round", "macro5" to "Top", "macro6" to "Drive", "macro7" to "Rotor", "macro8" to "Click"),
+        family = "split",
+        low = 29, high = 79)
+
+    private fun manual53() = Patch("Manual", "Left Hand Bass",
+        mapOf("click" to 0.4f, "split" to 0.377952754f, "lower" to 1f, "loweron" to 1f, "pedalon" to 0f, "ua_513" to 1f, "ua_4" to 0.5f, "la_8" to 1f, "la_4" to 0.25f, "perclvl" to 0.55f, "percdec" to 0.4088883f, "rotspeed" to 0.5f, "drive" to 0.25f, "bass" to 0.5833333f, "volume" to 0.4455f, "mac1_d1" to 0.118644066f, "mac1_a1" to 0.7f, "mac2_d1" to 0.135593221f, "mac2_d2" to 0.161016956f, "mac2_a1" to 0.8f, "mac2_a2" to 0.75f, "mac3_d1" to 0.271186441f, "mac3_a1" to 0.7f, "mac4_d1" to 0.5084746f, "mac4_a1" to 0.65f, "mac5_d1" to 0.474576265f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.720339f, "mac7_d2" to 0.7372881f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Fill", "macro2" to "Top", "macro3" to "Bass 4'", "macro4" to "Vibrato", "macro5" to "Perc", "macro6" to "Drive", "macro7" to "Rotor", "macro8" to "Click"),
+        family = "split",
+        low = 29, high = 84)
+
+    private fun manual54() = Patch("Manual", "Combo Split",
+        mapOf("model" to 0.333333343f, "lower" to 1f, "loweron" to 1f, "la_16" to 1f, "la_513" to 1f, "la_8" to 0f, "la_4" to 0f, "perc" to 0f, "vibtype" to 0.2f, "vibdepth" to 0.5f, "combowave" to 0.5f, "tab16" to 0.5f, "tab2" to 0.35f, "tab2r" to 0.3f, "reedy" to 0.7f, "comboatk" to 0.07f, "rotary" to 0f, "drive" to 0.45f, "bass" to 0.6041667f, "volume" to 0.45f, "mac1_d1" to 0.652542353f, "mac1_a1" to 0.75f, "mac2_d1" to 0.661016941f, "mac2_d2" to 0.6694915f, "mac2_a1" to 0.7f, "mac2_a2" to 0.7f, "mac3_d1" to 0.6779661f, "mac3_a1" to 0.625f, "mac4_d1" to 0.06779661f, "mac4_a1" to 0.35f, "mac5_d1" to 0.5084746f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.8305085f, "mac7_a1" to 0.425f, "mac8_d1" to 0.627118647f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "2'", "macro2" to "Mixture", "macro3" to "Reedy", "macro4" to "Less Bass", "macro5" to "Vibrato", "macro6" to "Drive", "macro7" to "Dark", "macro8" to "16'"),
+        family = "split",
         low = 41, high = 84)
 
-    private fun manual39() = Patch("Manual", "Cabinet Mod",
-        mapOf("ua_513" to 1f, "ua_4" to 0.5f, "perc" to 0f, "rotspeed" to 0.5f, "micdist" to 0.55f, "micangle" to 0.85f, "rotwide" to 0.8f, "drive" to 0.22f, "volume" to 0.445f, "m1_src" to 0.785714269f, "m1_dst" to 0.5833333f, "m1_amt" to 0.58f, "m2_src" to 0.857142866f, "m2_dst" to 0.416666657f, "m2_amt" to 0.65f, "m3_src" to 0.785714269f, "m3_dst" to 0.125f, "m3_amt" to 0.55f),
-        family = "cabinet",
-        low = 48, high = 84)
+    private fun manual55() = Patch("Manual", "Pedal Reeds",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.433070868f, "pedal" to 1f, "pedsus" to 0.3f, "ua_16" to 0f, "ua_4" to 0.5f, "pa_2" to 1f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.45f, "windresp" to 0.7362099f, "principal" to 0.4f, "flute" to 0.7f, "string" to 0f, "reed" to 0.85f, "mixture" to 0.2f, "chiff" to 0.2f, "tracker" to 0.3f, "rotary" to 0f, "bass" to 0.6041667f, "volume" to 0.46f, "attack" to 0.534019947f, "release" to 0.551070869f, "mac1_d1" to 0.601694942f, "mac1_d2" to 0.161016956f, "mac1_a1" to 0.7f, "mac1_a2" to 0.7f, "mac2_d1" to 0.5677966f, "mac2_a1" to 0.7f, "mac3_d1" to 0.5762712f, "mac3_a1" to 0.65f, "mac4_d1" to 0.584745765f, "mac4_a1" to 0.7f, "mac5_d1" to 0.0847457647f, "mac5_a1" to 0.65f, "mac6_d1" to 0.0762711838f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6101695f, "mac7_d2" to 0.618644059f, "mac7_a1" to 0.65f, "mac7_a2" to 0.625f, "mac8_d1" to 0.5254237f, "mac8_d2" to 0.5423729f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Mixture", "macro2" to "Principal", "macro3" to "Flutes", "macro4" to "Strings", "macro5" to "Walk", "macro6" to "Light Feet", "macro7" to "Chiff", "macro8" to "Wind"),
+        family = "split",
+        low = 29, high = 79)
 
-    private fun manual40() = Patch("Manual", "Breath",
-        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_4" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.7f, "windresp" to 0.7807439f, "windnoise" to 0.25f, "principal" to 0.7f, "flute" to 0.9f, "string" to 0.35f, "reed" to 0.25f, "mixture" to 0f, "chiff" to 0.4f, "tracker" to 0.35f, "rotary" to 0f, "volume" to 0.275f, "attack" to 0.534019947f, "release" to 0.551070869f, "m1_src" to 1f, "m1_dst" to 0.5416667f, "m1_amt" to 0.515f, "m2_src" to 1f, "m2_dst" to 0.416666657f, "m2_amt" to 0.65f),
-        family = "cabinet",
+    private fun manual56() = Patch("Manual", "Pump Split",
+        mapOf("model" to 1f, "lower" to 0.7f, "pedal" to 1f, "loweron" to 1f, "pedsus" to 0.25f, "ua_16" to 0f, "la_8" to 1f, "la_4" to 0f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.5f, "windresp" to 0.709560335f, "windnoise" to 0.15f, "tremrate" to 0.462756425f, "pressure" to 0.8f, "buzz" to 0.4f, "rotary" to 0f, "volume" to 0.9665f, "attack" to 0.4600704f, "mac1_d1" to 0.694915235f, "mac1_a1" to 0.55f, "mac2_d1" to 0.7033898f, "mac2_a1" to 0.65f, "mac3_d1" to 0.118644066f, "mac3_d2" to 0.271186441f, "mac3_a1" to 0.625f, "mac3_a2" to 0.75f, "mac4_d1" to 0.06779661f, "mac4_a1" to 0.625f, "mac5_d1" to 0.0847457647f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7118644f, "mac6_a1" to 0.625f, "mac7_d1" to 0.5254237f, "mac7_a1" to 0.3f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Pressure", "macro2" to "Buzz", "macro3" to "4'", "macro4" to "Lower", "macro5" to "Walk", "macro6" to "Trem", "macro7" to "Steady", "macro8" to "Dark"),
+        family = "split",
+        low = 29, high = 81)
+
+    private fun manual57() = Patch("Manual", "Drawbar Morph",
+        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 1f, "ub_4" to 1f, "ub_223" to 1f, "ub_2" to 1f, "ub_135" to 1f, "ub_113" to 1f, "ub_1" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "lb_16" to 0f, "lb_513" to 0f, "lb_8" to 0.5f, "lb_4" to 0.75f, "lb_223" to 0.75f, "lb_2" to 0.75f, "lb_135" to 0.5f, "lb_113" to 0f, "lb_1" to 0f, "morph" to 0.4f, "morphsrc" to 0.642857134f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.25f, "volume" to 0.535f, "lfo1wave" to 0.125f, "lfo1rate" to 0.289074183f, "m1_src" to 0.642857134f, "m1_dst" to 0.0416666679f, "m1_amt" to 1f, "mac1_d1" to 0.440677971f, "mac1_d2" to 0.9491525f, "mac1_a1" to 0.199999988f, "mac1_a2" to 0.199999988f, "mac2_d1" to 0.940677941f, "mac2_a1" to 0.625f, "mac3_d1" to 0.432203382f, "mac3_a1" to 0.7f, "mac4_d1" to 0.7966102f, "mac4_a1" to 0.6f, "mac5_d1" to 0.720339f, "mac5_d2" to 0.7372881f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.449152529f, "mac6_a1" to 0.56f, "mac7_d1" to 0.0338983051f, "mac7_a1" to 0.65f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Settle", "macro2" to "Faster", "macro3" to "Lean B", "macro4" to "Drive", "macro5" to "Rotor", "macro6" to "Spray", "macro7" to "Click", "macro8" to "Dark"),
+        family = "odd",
+        low = 41, high = 84)
+
+    private fun manual58() = Patch("Manual", "Opening Bars",
+        mapOf("loweron" to 1f, "ua_16" to 0f, "ua_4" to 0f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.15f, "volume" to 0.661f, "eg2atk" to 0.813737631f, "m1_src" to 0.5714286f, "m1_dst" to 0.7916667f, "m1_amt" to 0.875f, "m2_src" to 0.5714286f, "m2_dst" to 0.875f, "m2_amt" to 0.875f, "m3_src" to 0.5714286f, "m3_dst" to 1f, "m3_amt" to 0.8f, "mac1_d1" to 0.906779647f, "mac1_a1" to 0.575f, "mac2_d1" to 0.9237288f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.09322034f, "mac3_a1" to 0.75f, "mac4_d1" to 0.118644066f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7966102f, "mac5_a1" to 0.6f, "mac6_d1" to 0.720339f, "mac6_d2" to 0.7372881f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.5084746f, "mac7_a1" to 0.65f, "mac8_d1" to 0.0338983051f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Slow Open", "macro2" to "Close Again", "macro3" to "Sub", "macro4" to "Fill", "macro5" to "Drive", "macro6" to "Rotor", "macro7" to "Vibrato", "macro8" to "Click"),
+        family = "odd",
+        low = 41, high = 84)
+
+    private fun manual59() = Patch("Manual", "Every Key",
+        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_4" to 0f, "ub_16" to 0f, "ub_513" to 0f, "ub_8" to 1f, "ub_4" to 1f, "ub_223" to 1f, "ub_2" to 1f, "ub_135" to 0f, "ub_113" to 0f, "ub_1" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "morph" to 0.2f, "morphsrc" to 0.428571433f, "morphamt" to 0.6f, "perc" to 0f, "rotspeed" to 0.5f, "drive" to 0.2f, "volume" to 0.5295f, "m1_src" to 0.428571433f, "m1_dst" to 0.0416666679f, "m1_amt" to 1f, "mac1_d1" to 0.440677971f, "mac1_a1" to 0.7f, "mac2_d1" to 0.432203382f, "mac2_a1" to 0.65f, "mac3_d1" to 0.9915254f, "mac3_a1" to 0.65f, "mac4_d1" to 0.7966102f, "mac4_a1" to 0.6f, "mac5_d1" to 0.720339f, "mac5_d2" to 0.7372881f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac6_d1" to 0.0338983051f, "mac6_a1" to 0.65f, "mac7_d1" to 0.5084746f, "mac7_a1" to 0.65f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Spread", "macro2" to "Lean B", "macro3" to "Glide", "macro4" to "Drive", "macro5" to "Rotor", "macro6" to "Click", "macro7" to "Vibrato", "macro8" to "Dark"),
+        family = "odd",
+        low = 41, high = 84)
+
+    private fun manual60() = Patch("Manual", "Tired Machine",
+        mapOf("age" to 0.9f, "leakage" to 0.62f, "hum" to 0.35f, "click" to 0.7f, "clickoff" to 0.5f, "contacts" to 0.8f, "loweron" to 1f, "ua_513" to 1f, "ua_8" to 0.75f, "ua_4" to 0.5f, "la_16" to 1f, "la_513" to 0.5f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.3f, "sprayrate" to 0.383417428f, "spraywide" to 0.6f, "perc" to 0f, "drive" to 0.3f, "volume" to 0.6f, "mac1_d1" to 0.008474576f, "mac1_d2" to 0.0169491526f, "mac1_d3" to 0.0254237279f, "mac1_a1" to 0.25f, "mac1_a2" to 0.3f, "mac1_a3" to 0.35f, "mac2_d1" to 0.0254237279f, "mac2_a1" to 0.65f, "mac3_d1" to 0.0169491526f, "mac3_a1" to 0.625f, "mac4_d1" to 0.449152529f, "mac4_a1" to 0.575f, "mac5_d1" to 0.0508474559f, "mac5_d2" to 0.0338983051f, "mac5_a1" to 0.6f, "mac5_a2" to 0.6f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.135593221f, "mac7_a1" to 0.75f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Restore", "macro2" to "Hum", "macro3" to "Leak", "macro4" to "Spray", "macro5" to "Scratchy", "macro6" to "Drive", "macro7" to "Top", "macro8" to "Dark"),
+        family = "odd",
+        low = 41, high = 79)
+
+    private fun manual61() = Patch("Manual", "Starved Wind",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_4" to 1f, "pa_2" to 0.75f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.7f, "windresp" to 0.7807439f, "windnoise" to 0.25f, "principal" to 0.7f, "flute" to 0.9f, "string" to 0.35f, "reed" to 0.25f, "mixture" to 0f, "chiff" to 0.4f, "tracker" to 0.35f, "rotary" to 0f, "volume" to 0.275f, "attack" to 0.534019947f, "release" to 0.551070869f, "m1_src" to 1f, "m1_dst" to 0.5416667f, "m1_amt" to 0.515f, "m2_src" to 1f, "m2_dst" to 0.416666657f, "m2_amt" to 0.65f, "mac1_d1" to 0.5254237f, "mac1_a1" to 0.6f, "mac2_d1" to 0.5423729f, "mac2_a1" to 0.65f, "mac3_d1" to 0.5338983f, "mac3_a1" to 0.6f, "mac4_d1" to 0.593220353f, "mac4_a1" to 0.725f, "mac5_d1" to 0.601694942f, "mac5_d2" to 0.161016956f, "mac5_a1" to 0.7f, "mac5_a2" to 0.7f, "mac6_d1" to 0.6101695f, "mac6_d2" to 0.618644059f, "mac6_a1" to 0.65f, "mac6_a2" to 0.625f, "mac7_d1" to 0.559322059f, "mac7_a1" to 0.65f, "mac8_d1" to 0.584745765f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Wind", "macro2" to "Breath", "macro3" to "Slow Wind", "macro4" to "Reeds", "macro5" to "Mixture", "macro6" to "Chiff", "macro7" to "Trem", "macro8" to "Strings"),
+        family = "odd",
         low = 36, high = 81)
 
-    private fun manual41() = Patch("Manual", "Sprayed",
-        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.85f, "sprayrate" to 0.419341654f, "spraywide" to 1f, "spraypat" to 1f, "perc" to 0f, "vibdepth" to 0.3f, "drive" to 0.2f, "volume" to 0.5f),
-        family = "cabinet",
+    private fun manual62() = Patch("Manual", "Ghost Pipes",
+        mapOf("model" to 0.6666667f, "pedsplit" to 0.3464567f, "ua_16" to 0f, "ua_4" to 1f, "ua_2" to 0.4f, "spray" to 0.5f, "sprayrate" to 0.273152083f, "spraywide" to 0.9f, "spraypat" to 0.5f, "perc" to 0f, "vibdepth" to 0f, "windsag" to 0.45f, "windresp" to 0.7807439f, "windnoise" to 0.35f, "tremrate" to 0.196207985f, "tremdepth" to 0.25f, "principal" to 0.2f, "flute" to 1f, "string" to 0.6f, "reed" to 0f, "mixture" to 0f, "tracker" to 0.4f, "rotary" to 0f, "volume" to 0.1375f, "attack" to 0.6930604f, "release" to 0.799313366f, "express" to 1f, "swellbox" to 0.5f, "mac1_d1" to 0.449152529f, "mac1_a1" to 0.6f, "mac2_d1" to 0.449152529f, "mac2_a1" to 0.35f, "mac3_d1" to 0.5423729f, "mac3_a1" to 0.625f, "mac4_d1" to 0.559322059f, "mac4_a1" to 0.65f, "mac5_d1" to 0.9830508f, "mac5_a1" to 0.65f, "mac6_d1" to 0.584745765f, "mac6_a1" to 0.7f, "mac7_d1" to 0.593220353f, "mac7_a1" to 0.725f, "mac8_d1" to 0.6101695f, "mac8_d2" to 0.618644059f, "mac8_a1" to 0.65f, "mac8_a2" to 0.625f),
+        mapOf("macro1" to "Spray", "macro2" to "Tighten", "macro3" to "Breath", "macro4" to "Trem", "macro5" to "Shutters", "macro6" to "Strings", "macro7" to "Reeds", "macro8" to "Chiff"),
+        family = "odd",
+        low = 41, high = 84,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun manual63() = Patch("Manual", "Sprayed",
+        mapOf("loweron" to 1f, "ua_513" to 1f, "ua_4" to 1f, "la_16" to 1f, "la_8" to 1f, "la_4" to 0f, "spray" to 0.85f, "sprayrate" to 0.419341654f, "spraywide" to 1f, "spraypat" to 1f, "perc" to 0f, "vibdepth" to 0.3f, "drive" to 0.2f, "volume" to 0.5f, "mac1_d1" to 0.449152529f, "mac1_a1" to 0.575f, "mac2_d1" to 0.449152529f, "mac2_a1" to 0.25f, "mac3_d1" to 0.457627118f, "mac3_a1" to 0.6f, "mac4_d1" to 0.4661017f, "mac4_a1" to 0.25f, "mac5_d1" to 0.135593221f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7966102f, "mac6_a1" to 0.6f, "mac7_d1" to 0.5084746f, "mac7_a1" to 0.65f, "mac8_d1" to 0.8305085f, "mac8_a1" to 0.425f),
+        mapOf("macro1" to "Spray", "macro2" to "Tighten", "macro3" to "Faster", "macro4" to "Narrow", "macro5" to "Top", "macro6" to "Drive", "macro7" to "Vibrato", "macro8" to "Dark"),
+        family = "odd",
         low = 41, high = 84)
 
-    private val manual: List<Patch> by lazy { listOf(manual0(), manual1(), manual2(), manual3(), manual4(), manual5(), manual6(), manual7(), manual8(), manual9(), manual10(), manual11(), manual12(), manual13(), manual14(), manual15(), manual16(), manual17(), manual18(), manual19(), manual20(), manual21(), manual22(), manual23(), manual24(), manual25(), manual26(), manual27(), manual28(), manual29(), manual30(), manual31(), manual32(), manual33(), manual34(), manual35(), manual36(), manual37(), manual38(), manual39(), manual40(), manual41()) }
+    private val manual: List<Patch> by lazy { listOf(manual0(), manual1(), manual2(), manual3(), manual4(), manual5(), manual6(), manual7(), manual8(), manual9(), manual10(), manual11(), manual12(), manual13(), manual14(), manual15(), manual16(), manual17(), manual18(), manual19(), manual20(), manual21(), manual22(), manual23(), manual24(), manual25(), manual26(), manual27(), manual28(), manual29(), manual30(), manual31(), manual32(), manual33(), manual34(), manual35(), manual36(), manual37(), manual38(), manual39(), manual40(), manual41(), manual42(), manual43(), manual44(), manual45(), manual46(), manual47(), manual48(), manual49(), manual50(), manual51(), manual52(), manual53(), manual54(), manual55(), manual56(), manual57(), manual58(), manual59(), manual60(), manual61(), manual62(), manual63()) }
 
     private fun cumulus0() = Patch("Cumulus", "Init", emptyMap(),
         family = "pad")

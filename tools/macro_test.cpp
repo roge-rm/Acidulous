@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber and Brazen move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen and Manual move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -18,6 +18,7 @@
 #include <engine/machine/formulate/Formulate.h>
 #include <engine/machine/genesis/Genesis.h>
 #include <engine/machine/hexbeat/Hexbeat.h>
+#include <engine/machine/manual/Manual.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
 #include <engine/machine/resonance/Resonance.h>
@@ -392,7 +393,7 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the pads' tune", buf);
     } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0 ||
-               std::strcmp(type, "Brazen") == 0) {
+               std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
         gUnits = {{"transpose", 12.0f}};
         const auto tuned = play(nullptr);
@@ -1094,6 +1095,206 @@ void brazenRoutes() {
        "Brazen: flutter has no steps in it", buf);
 }
 
+// Manual, played for [blocks] blocks with [units] set, and then [moves]
+// applied at their blocks: a param by name in its own units, or the mod
+// wheel when the name is "cc1" and the expression pedal when it is "cc11" (0..127).
+struct Move { int32_t block; std::string name; float value; };
+
+std::vector<float> manualPlay(const std::vector<std::pair<std::string, float>> &units,
+                              const std::vector<Move> &moves, int32_t blocks, uint8_t note = 60) {
+    Machine *m = MachineRegistry::create("Manual");
+    m->prepare(kRate);
+    ParamSet &p = m->params();
+    auto put = [&](const std::string &name, float value) {
+        if (name == "cc1" || name == "cc11") {
+            m->controlChange(name == "cc1" ? 1 : 11, static_cast<uint8_t>(value));
+            return;
+        }
+        const int32_t i = p.indexOf(name.c_str());
+        if (i < 0) { std::printf("  FAIL no parameter %s\n", name.c_str()); ++failures; return; }
+        p.set(i, p.def(i).unmap(value));
+    };
+    auto isCc = [](const std::string &name) { return name == "cc1" || name == "cc11"; };
+    for (const auto &[name, value] : units) if (!isCc(name)) put(name, value);
+    p.jumpAll();
+    m->allNotesOff();
+    m->reset();
+    for (const auto &[name, value] : units) if (isCc(name)) put(name, value);
+    m->noteOn(note, 100);
+    std::vector<float> out;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < blocks; ++b) {
+        for (const auto &mv : moves) if (mv.block == b) put(mv.name, mv.value);
+        m->onBlock(b * 4, b * 4 + 4, 120.0f);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+    }
+    delete m;
+    return out;
+}
+
+/** Brightness: the first difference's rms against the signal's, over [from, to). */
+double brightness(const std::vector<float> &v, size_t from, size_t to) {
+    double d = 0, a = 0;
+    for (size_t i = std::max<size_t>(from, 1); i < to; ++i) {
+        const double x = double(v[i]) - v[i - 1];
+        d += x * x;
+        a += double(v[i]) * v[i];
+    }
+    return a > 0 ? std::sqrt(d / a) : 0.0;
+}
+
+// Manual's swell box and bar glide. A route to either matches its knob; a
+// closed expression with the box up is darker and quieter than without it,
+// an open one sounds the same; opening the box moves without steps. The
+// bar glide moves a drawbar, a tab and a rank over its time instead of
+// jumping, and a macro route to a drawbar glides as the knob does.
+void manualRoutes() {
+    using Mn = acidulous::machine::Manual;
+    gType = "Manual";
+    gDests = Mn::MacroDestCount;
+    gNote = 60;
+    char buf[128];
+    auto same = [&](const char *what, const std::vector<float> &a, const std::vector<float> &b) {
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(a[i] - b[i])));
+            peak = std::max(peak, double(std::fabs(a[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-4, what, buf);
+    };
+    // Bright and still: every upper bar out, no cabinet, no vibrato, no click.
+    std::vector<std::pair<std::string, float>> organ = {
+        {"rotary", 0.0f}, {"vibdepth", 0.0f}, {"click", 0.0f}, {"perc", 0.0f}, {"spray", 0.0f},
+        {"ua_2", 1.0f}, {"ua_1", 1.0f}, {"ua_223", 1.0f}};
+    auto with = [&](std::initializer_list<std::pair<std::string, float>> more) {
+        auto u = organ;
+        for (const auto &x : more) u.push_back(x);
+        return u;
+    };
+
+    // Swell box: the knob and a route land on the same sound.
+    gUnits = with({{"swellbox", 0.6f}});
+    const auto boxKnob = play(nullptr);
+    gUnits = organ;
+    Route r{5, 3, Mn::McSwellBox, 0.6f, 1.0f};
+    same("Manual: a route to the swell box matches the knob", boxKnob, play(&r));
+    gUnits.clear();
+
+    // Closed (the mod wheel down): darker and quieter with the box up.
+    const int32_t n = 400;
+    const auto closedDry = manualPlay(organ, {}, n);
+    const auto closedBox = manualPlay(with({{"swellbox", 1.0f}}), {}, n);
+    const size_t from = 4800, to = n * kBlock;
+    const double bDry = brightness(closedDry, from, to), bBox = brightness(closedBox, from, to);
+    const double lDry = rmsRange(closedDry, from, to), lBox = rmsRange(closedBox, from, to);
+    std::snprintf(buf, sizeof(buf), "brightness %.3f against %.3f, level %.1f dB", bBox, bDry,
+                  20 * std::log10(lBox / lDry));
+    ok(bBox < bDry * 0.5 && lBox < lDry, "Manual: a closed swell box is darker and quieter", buf);
+    // Half the knob is between.
+    const auto halfBox = manualPlay(with({{"swellbox", 0.5f}}), {}, n);
+    const double bHalf = brightness(halfBox, from, to);
+    std::snprintf(buf, sizeof(buf), "brightness %.3f between %.3f and %.3f", bHalf, bBox, bDry);
+    ok(bHalf < bDry && bHalf > bBox, "Manual: half the swell box is between", buf);
+
+    // Open (the wheel up): the box makes no difference.
+    const auto openDry = manualPlay(with({{"cc1", 127.0f}}), {}, n);
+    const auto openBox = manualPlay(with({{"cc1", 127.0f}, {"swellbox", 1.0f}}), {}, n);
+    ok(openDry == openBox, "Manual: an open swell box sounds as the knob at 0", "");
+    // Expression off: the box makes no difference either.
+    const auto offDry = manualPlay(with({{"express", 0.0f}}), {}, n);
+    const auto offBox = manualPlay(with({{"express", 0.0f}, {"swellbox", 1.0f}}), {}, n);
+    ok(offDry == offBox, "Manual: with expression off the swell box does nothing", "");
+    // The pedal (CC11) starts open: with none sent it sounds as expression off.
+    const auto pedalOpen = manualPlay(with({{"express", 3.0f}, {"swellbox", 1.0f}}), {}, n);
+    ok(pedalOpen == offDry, "Manual: the pedal with no CC11 is open", "");
+    // CC11 at 0 closes it, as the wheel down does.
+    const auto pedalShut = manualPlay(with({{"express", 3.0f}, {"swellbox", 1.0f}, {"cc11", 0.0f}}), {}, n);
+    ok(pedalShut == closedBox, "Manual: the pedal at 0 closes as the wheel down", "");
+    std::snprintf(buf, sizeof(buf), "level %.1f dB under open", 20 * std::log10(rmsRange(offDry, from, to) /
+                                                                                 rmsRange(pedalShut, from, to)));
+    ok(rmsRange(pedalShut, from, to) < rmsRange(offDry, from, to) * 0.3, "Manual: the pedal at 0 is quieter", buf);
+
+    // Opening the box mid-note. The expression gain itself steps a block
+    // at a time, so the box is held against the same move without it.
+    std::vector<Move> open;
+    for (int32_t k = 0; k <= 32; ++k) open.push_back({150 + k * 4, "cc1", float(k * 4 > 127 ? 127 : k * 4)});
+    const auto movingDry = manualPlay(organ, open, n);
+    const auto movingBox = manualPlay(with({{"swellbox", 1.0f}}), open, n);
+    const double eDry = blockEdge(movingDry, 150 * kBlock, 290 * kBlock);
+    const double eBox = blockEdge(movingBox, 150 * kBlock, 290 * kBlock);
+    std::snprintf(buf, sizeof(buf), "block edge %.3f against %.3f", eBox, eDry);
+    ok(eBox <= std::max(1.4, eDry * 1.1), "Manual: the swell box opens without steps", buf);
+    std::snprintf(buf, sizeof(buf), "brightness open %.3f, closed %.3f",
+                  brightness(movingBox, 300 * kBlock, to), brightness(movingBox, from, 140 * kBlock));
+    ok(brightness(movingBox, 300 * kBlock, to) > brightness(movingBox, from, 140 * kBlock) * 1.5,
+       "Manual: opening the swell box brightens", buf);
+
+    // Bar glide: the knob and a route land on the same sound.
+    gUnits = with({{"barglide", 1.2f}});
+    const auto glideKnob = play(nullptr);
+    gUnits = organ;
+    Route g{6, 4, Mn::McBarGlide, 0.3f, 1.0f};
+    same("Manual: a route to the bar glide matches the knob", glideKnob, play(&g));
+    gUnits.clear();
+
+    // A stop drawn at block 100 from silence, on each model's own: the
+    // tonewheel's 8' drawbar, the combo's 8' tab and the pipe's flute rank.
+    struct Case { const char *what; std::vector<std::pair<std::string, float>> base; const char *knob; };
+    const std::vector<Case> cases = {
+        {"drawbar", {{"rotary", 0.0f}, {"spray", 0.0f}, {"vibdepth", 0.0f}, {"click", 0.0f}, {"perc", 0.0f}, {"ua_16", 0.0f},
+                     {"ua_8", 0.0f}, {"ua_4", 0.0f}}, "ua_8"},
+        {"tab", {{"model", 1.0f}, {"spray", 0.0f}, {"rotary", 0.0f}, {"vibdepth", 0.0f}, {"click", 0.0f}, {"perc", 0.0f},
+                 {"tab16", 0.0f}, {"tab8", 0.0f}, {"tab4", 0.0f}}, "tab8"},
+        {"rank", {{"model", 2.0f}, {"spray", 0.0f}, {"rotary", 0.0f}, {"vibdepth", 0.0f}, {"chiff", 0.0f}, {"tracker", 0.0f},
+                  {"perc", 0.0f}, {"ua_16", 0.0f}, {"ua_4", 0.0f}, {"principal", 0.0f}, {"string", 0.0f},
+                  {"reed", 0.0f}, {"mixture", 0.0f}, {"flute", 0.0f}}, "flute"},
+    };
+    const int32_t gn = 1200, at = 100;
+    for (const auto &c : cases) {
+        auto glide = c.base;
+        glide.push_back({"barglide", 1.0f});
+        const auto jump = manualPlay(c.base, {{at, c.knob, 1.0f}}, gn);
+        const auto slow = manualPlay(glide, {{at, c.knob, 1.0f}}, gn);
+        const auto before = manualPlay(c.base, {}, gn);
+        auto lv = [&](const std::vector<float> &v, double sec) {
+            const size_t s0 = at * kBlock + size_t(sec * kRate);
+            return rmsRange(v, s0, s0 + 960);
+        };
+        // The glide gets 95% of the way in its time, a one-pole, so a third
+        // of the way through it has gone about two thirds.
+        const double end = lv(jump, 1.05), early = lv(slow, 0.1), mid = lv(slow, 0.33), late = lv(slow, 1.05);
+        const double was = lv(before, 0.1);
+        std::snprintf(buf, sizeof(buf), "%.4f -> %.4f -> %.4f, from %.4f to %.4f", early, mid, late, was, end);
+        const std::string what = std::string("Manual: the bar glide moves a ") + c.what + " over its time";
+        const double part = (mid - was) / (end - was);
+        ok(early < was + (end - was) * 0.4 && part > 0.5 && part < 0.8 && late > was + (end - was) * 0.9 &&
+               late < end * 1.05,
+           what, buf);
+        const double eSlow = blockEdge(slow, at * kBlock, (at + 600) * kBlock);
+        const double eStill = blockEdge(before, at * kBlock, (at + 600) * kBlock);
+        std::snprintf(buf, sizeof(buf), "block edge %.3f against %.3f, largest step %.4f against %.4f", eSlow,
+                      eStill, largestStep(slow), largestStep(jump));
+        ok(eSlow <= std::max(1.4, eStill * 1.1) && largestStep(slow) <= largestStep(jump) * 1.05,
+           std::string("Manual: a gliding ") + c.what + " has no steps in it", buf);
+    }
+
+    // A macro route to the 8' glides as the knob does.
+    {
+        auto base = cases[0].base;
+        base.push_back({"barglide", 1.0f});
+        const auto knob = manualPlay(base, {{at, "ua_8", 1.0f}}, gn);
+        auto routed = base;
+        routed.push_back({"mac2_d1", float(Mn::McUpperA + 2)});
+        routed.push_back({"mac2_a1", 1.0f});
+        const auto mac = manualPlay(routed, {{at, "mac2", 1.0f}}, gn);
+        same("Manual: a macro on a drawbar glides as the knob does", knob, mac);
+    }
+}
+
 } // namespace
 
 int main() {
@@ -1145,6 +1346,12 @@ int main() {
     // Brazen's volume is Timber's, 0 to 1.5 from 0.8.
     basics("Brazen", Bz::MacroDestCount, Bz::McVolume, Bz::McPitch, Bz::McOff, Bz::kMacros, 0.05 / 0.8, 0.425 / 0.8);
     brazenRoutes();
+    gNote = 57;
+    using Mn = acidulous::machine::Manual;
+    // Manual's volume is 0 to 2 from 0.75, so -0.5 (a whole 1.0) leaves
+    // nothing and -0.25 leaves 0.25.
+    basics("Manual", Mn::MacroDestCount, Mn::McVolume, Mn::McPitch, Mn::McOff, Mn::kMacros, 0.0, 0.25 / 0.75);
+    manualRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;
