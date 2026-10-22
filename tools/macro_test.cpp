@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw and Fret move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine and Palm move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -22,6 +22,8 @@
 #include <engine/machine/genesis/Genesis.h>
 #include <engine/machine/hexbeat/Hexbeat.h>
 #include <engine/machine/manual/Manual.h>
+#include <engine/machine/palm/Palm.h>
+#include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
 #include <engine/machine/resonance/Resonance.h>
@@ -400,10 +402,12 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the pads' tune", buf);
     } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0 ||
                std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0 ||
-               std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0) {
+               std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
+               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
-        // Draw and Fret have no transpose, so an octave up.
-        const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0;
+        // Draw, Fret, Tine and Palm have no transpose, so an octave up.
+        const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
+                              std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0;
         gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -1504,6 +1508,138 @@ void drawRoutes() {
        "Draw: a route to the bass level matches the knob", buf);
 }
 
+// Ten-millisecond rms windows, for beats and onsets.
+std::vector<double> windows(const std::vector<float> &v, size_t width) {
+    std::vector<double> w;
+    for (size_t at = 0; at + width <= v.size(); at += width) w.push_back(rmsRange(v, at, at + width));
+    return w;
+}
+
+// Plays [note] on one machine twice, with a reset between, mid-ring the first
+// time: the second must be the first, so reset() clears the new state.
+bool sameAfterReset(const char *type, const std::vector<std::pair<std::string, float>> &units, uint8_t note) {
+    Machine *m = MachineRegistry::create(type);
+    m->prepare(kRate);
+    ParamSet &p = m->params();
+    for (const auto &[name, value] : units) p.set(p.indexOf(name.c_str()), p.def(p.indexOf(name.c_str())).unmap(value));
+    p.jumpAll();
+    std::vector<float> takes[2];
+    float L[kBlock], R[kBlock];
+    for (auto &out : takes) {
+        m->reset();
+        m->noteOn(note, 100);
+        for (int32_t b = 0; b < 200; ++b) {
+            // A second hit 10 ms before the end, so a flam or a pair is still going at the reset.
+            if (b == 192) m->noteOn(note, 90);
+            m->render(L, R, kBlock);
+            out.insert(out.end(), L, L + kBlock);
+        }
+    }
+    delete m;
+    return takes[0] == takes[1];
+}
+
+// Tine's pair: a route to it matches the knob, a paired note starts at the
+// note's level and beats, and a ringing note struck again with pair on goes
+// on without a step.
+void tineRoutes() {
+    using Tn = acidulous::machine::Tine;
+    char buf[128];
+    const int32_t blocks = 1500; // two seconds
+    // Vibes, no tube, so the bar alone rings.
+    const std::vector<std::pair<std::string, float>> vibes = {{"model", 1.0f}, {"tube", 0.0f}};
+    auto with = [&](std::vector<std::pair<std::string, float>> u, const char *name, float value) {
+        u.push_back({name, value});
+        return u;
+    };
+    const auto plain = playHeld("Tine", vibes, {69}, blocks);
+    const auto paired = playHeld("Tine", with(vibes, "pair", 20.0f), {69}, blocks);
+    // Pair is 0..50 cents, so a route of 0.4 is 20.
+    Route r{4, 2, Tn::McPair, 0.4f, 1.0f};
+    ok2(sameAs(paired, playHeld("Tine", vibes, {69}, blocks, &r, Tn::MacroDestCount), buf, sizeof(buf)),
+        "Tine: a route to pair matches the knob", buf);
+    std::snprintf(buf, sizeof(buf), "first 10 ms %.4f against %.4f", rmsRange(paired, 0, 480), rmsRange(plain, 0, 480));
+    ok(std::fabs(rmsRange(paired, 0, 480) / rmsRange(plain, 0, 480) - 1.0) < 0.05, "Tine: a paired note starts at the note's level", buf);
+    // 20 cents at 440 Hz beats about 5 times a second: the level rises again
+    // between beats, where a single bar only dies away.
+    auto rises = [](const std::vector<double> &w) {
+        int n = 0;
+        for (size_t i = 10; i + 1 < w.size(); ++i) n += w[i + 1] > w[i] * 1.1 ? 1 : 0;
+        return n;
+    };
+    const auto pw = windows(paired, 480), sw = windows(plain, 480);
+    std::snprintf(buf, sizeof(buf), "%d rising windows against %d", rises(pw), rises(sw));
+    ok(rises(pw) >= 8 && rises(sw) == 0, "Tine: a paired note beats", buf);
+
+    // Struck again half way, with pair turned on just before.
+    auto restruck = [&](bool pair) {
+        Machine *m = MachineRegistry::create("Tine");
+        m->prepare(kRate);
+        ParamSet &p = m->params();
+        for (const auto &[name, value] : vibes) p.set(p.indexOf(name.c_str()), p.def(p.indexOf(name.c_str())).unmap(value));
+        p.jumpAll();
+        m->reset();
+        m->noteOn(69, 100);
+        std::vector<float> out;
+        float L[kBlock], R[kBlock];
+        for (int32_t b = 0; b < 200; ++b) {
+            if (b == 100) {
+                if (pair) p.set(p.indexOf("pair"), 0.4f);
+                m->noteOn(69, 100);
+            }
+            std::memset(L, 0, sizeof(L));
+            std::memset(R, 0, sizeof(R));
+            m->render(L, R, kBlock);
+            for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+        }
+        delete m;
+        return out;
+    };
+    const auto again = restruck(false), againPaired = restruck(true);
+    std::snprintf(buf, sizeof(buf), "largest step %.5f against %.5f", largestStep(againPaired), largestStep(again));
+    ok(againPaired != again && largestStep(againPaired) <= largestStep(again) * 1.05,
+       "Tine: struck again with pair on, a note goes on without a step", buf);
+    ok(sameAfterReset("Tine", with(vibes, "pair", 20.0f), 69), "Tine: a paired note plays the same after a reset", "");
+}
+
+// Palm's flam: a route to it matches the knob, the grace stroke is softer,
+// the stroke lands when it says, and in a kit a route to a shared drum param
+// reaches every pad.
+void palmRoutes() {
+    using Pm = acidulous::machine::Palm;
+    char buf[128];
+    const int32_t blocks = 375; // half a second
+    const auto plain = playHeld("Palm", {}, {57}, blocks);
+    const auto flammed = playHeld("Palm", {{"flam", 30.0f}}, {57}, blocks);
+    // Flam is 0..60 ms, so a route of 0.5 is 30.
+    Route r{8, 4, Pm::McFlam, 0.5f, 1.0f};
+    ok2(sameAs(flammed, playHeld("Palm", {}, {57}, blocks, &r, Pm::MacroDestCount), buf, sizeof(buf)),
+        "Palm: a route to flam matches the knob", buf);
+    std::snprintf(buf, sizeof(buf), "grace %.4f against stroke %.4f", rmsRange(flammed, 0, 1440), rmsRange(plain, 0, 1440));
+    ok(rmsRange(flammed, 0, 1440) < rmsRange(plain, 0, 1440) * 0.8, "Palm: a flam's grace stroke is softer", buf);
+    // The biggest jump in 1 ms windows is the stroke, 30 ms in, and the 3 ms
+    // a re-struck head takes to settle before the stroke lands.
+    const auto w = windows(flammed, 48);
+    size_t at = 1;
+    for (size_t i = 1; i < w.size(); ++i)
+        if (w[i] - w[i - 1] > w[at] - w[at - 1]) at = i;
+    std::snprintf(buf, sizeof(buf), "at %zu ms", at);
+    ok(at >= 30 && at <= 34, "Palm: the stroke lands the flam's time after the grace", buf);
+    std::snprintf(buf, sizeof(buf), "after %.4f against %.4f", rmsRange(flammed, 4800, 9600), rmsRange(plain, 4800, 9600));
+    ok(rmsRange(flammed, 4800, 9600) > rmsRange(plain, 4800, 9600) * 0.5, "Palm: the flammed stroke is played whole", buf);
+
+    ok(sameAfterReset("Palm", {{"flam", 40.0f}}, 57), "Palm: a flammed hit plays the same after a reset", "");
+
+    // Kit mode: a route to decay reaches every pad, as the knob does.
+    for (uint8_t pad : {uint8_t(36), uint8_t(40), uint8_t(43)}) {
+        const auto knob = playHeld("Palm", {{"kit", 1.0f}, {"decay", 0.8f}}, {pad}, blocks);
+        Route d{1, 1, Pm::McDecay, 0.3f, 1.0f};
+        const auto routed = playHeld("Palm", {{"kit", 1.0f}}, {pad}, blocks, &d, Pm::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != playHeld("Palm", {{"kit", 1.0f}}, {pad}, blocks),
+            "Palm: in a kit a route to decay reaches pad " + std::to_string(pad - 35), buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1570,6 +1706,12 @@ int main() {
     using Ft = acidulous::machine::Fret;
     basics("Fret", Ft::MacroDestCount, Ft::McVolume, Ft::McPitch, Ft::McOff, Ft::kMacros);
     fretRoutes();
+    using Tn = acidulous::machine::Tine;
+    basics("Tine", Tn::MacroDestCount, Tn::McVolume, Tn::McPitch, Tn::McOff, Tn::kMacros);
+    tineRoutes();
+    using Pm = acidulous::machine::Palm;
+    basics("Palm", Pm::MacroDestCount, Pm::McVolume, Pm::McPitch, Pm::McOff, Pm::kMacros);
+    palmRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

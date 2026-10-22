@@ -1512,4 +1512,6 @@
     <string name="pw_prep_where">prép. où</string>
     <string name="pw_roll_strike">roulement</string>
     <string name="pw_trem_pan">trémolo pano</string>
+    <string name="pw_flam">fla</string>
+    <string name="pw_pair">paire</string>
 </resources>

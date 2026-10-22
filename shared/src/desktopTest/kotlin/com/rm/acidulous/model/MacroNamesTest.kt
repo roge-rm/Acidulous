@@ -106,4 +106,15 @@ class MacroNamesTest {
         assertEquals("swell", laneShortLabel(track("Fret", emptyMap()), laneKey("machine", "swell")))
         assertEquals("level", laneShortLabel(track("Draw", emptyMap()), laneKey("machine", "bass level")))
     }
+
+    @Test
+    fun tineAndPalmMacrosTakeThePatchNames() {
+        for (type in listOf("Tine", "Palm")) {
+            val t = track(type, mapOf("macro1" to "Ring"))
+            assertEquals("Ring", laneShortLabel(t, laneKey("machine", "mac1")))
+            assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        }
+        assertEquals("pair", laneShortLabel(track("Tine", emptyMap()), laneKey("machine", "pair")))
+        assertEquals("flam", laneShortLabel(track("Palm", emptyMap()), laneKey("machine", "flam")))
+    }
 }
