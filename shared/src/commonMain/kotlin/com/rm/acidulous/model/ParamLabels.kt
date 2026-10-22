@@ -72,6 +72,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Brazen:bite" to "lips|bite",
     "Brazen:brass" to "air|brassiness",
     "Brazen:breath" to "air|breath",
+    "Brazen:choke" to "tuning|choke",
     "Brazen:cutoff" to "filter|cutoff",
     "Brazen:decay" to "envelope|decay",
     "Brazen:drift" to "listening|drift",
@@ -83,6 +84,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Brazen:glide" to "tuning|glide",
     "Brazen:growl" to "growl",
     "Brazen:growlrate" to "growl|rate",
+    "Brazen:legato" to "tuning|legato",
     "Brazen:lipdamp" to "lips|damping",
     "Brazen:lock" to "listening|lock",
     "Brazen:loss" to "tube|loss",
@@ -650,6 +652,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Filament:eg2dec" to "eg 2|decay",
     "Filament:eg2rel" to "eg 2|release",
     "Filament:eg2sus" to "eg 2|sustain",
+    "Filament:evenness" to "body|evenness",
     "Filament:exciter" to "exciter|kind",
     "Filament:exciter out" to "out|exciter",
     "Filament:fine" to "tuning|fine",
@@ -816,12 +819,12 @@ private fun labels0(): Map<String, String> = mapOf(
     "Forage:p01_end" to "pad 2|sample|end",
     "Forage:p01_level" to "pad 2|amp|level",
     "Forage:p01_mode" to "pad 2|tone|mode",
-    "Forage:p01_pan" to "pad 2|amp|pan",
-    "Forage:p01_pdecay" to "pad 2|punch|decay",
-    "Forage:p01_penv" to "pad 2|punch|pitch env",
 )
 
 private fun labels1(): Map<String, String> = mapOf(
+    "Forage:p01_pan" to "pad 2|amp|pan",
+    "Forage:p01_pdecay" to "pad 2|punch|decay",
+    "Forage:p01_penv" to "pad 2|punch|pitch env",
     "Forage:p01_pitch" to "pad 2|sample|pitch",
     "Forage:p01_play" to "pad 2|sample|play",
     "Forage:p01_reso" to "pad 2|tone|reso",
@@ -1619,12 +1622,12 @@ private fun labels1(): Map<String, String> = mapOf(
     "Manual:vibwide" to "scanner|width",
     "Manual:volume" to "amp|volume",
     "Manual:windnoise" to "wind|noise",
-    "Manual:windresp" to "wind|response",
-    "Manual:windsag" to "wind|sag",
-    "Molt:ampattack" to "amp|att",
 )
 
 private fun labels2(): Map<String, String> = mapOf(
+    "Manual:windresp" to "wind|response",
+    "Manual:windsag" to "wind|sag",
+    "Molt:ampattack" to "amp|att",
     "Molt:ampdecay" to "amp|dec",
     "Molt:amprelease" to "amp|rel",
     "Molt:ampsustain" to "amp|sus",
@@ -2177,6 +2180,7 @@ private fun labels2(): Map<String, String> = mapOf(
     "Reflux:wave" to "osc|wave",
     "Resonance:accent" to "kit|accent",
     "Resonance:coupling" to "kit|coupling",
+    "Resonance:drivecouple" to "kit|drive heard",
     "Resonance:humanise" to "kit|humanise",
     "Resonance:mac1" to "macros|macro 1",
     "Resonance:mac1_a1" to "macro 1|by 1",
@@ -2395,6 +2399,7 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:body" to "pipe|lowest",
     "Timber:bore" to "pipe|shape",
     "Timber:breath" to "air|breath",
+    "Timber:choke" to "tuning|choke",
     "Timber:cutoff" to "filter|cutoff",
     "Timber:decay" to "envelope|decay",
     "Timber:drive" to "out|drive",
@@ -2410,6 +2415,7 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:jet" to "jet|crossing",
     "Timber:keys" to "keys|key noise",
     "Timber:lattice" to "lattice|cutoff",
+    "Timber:legato" to "tuning|legato",
     "Timber:loss" to "end|loss",
     "Timber:mac1" to "macros|macro 1",
     "Timber:mac1_a1" to "macro 1|by 1",
@@ -2419,15 +2425,15 @@ private fun labels2(): Map<String, String> = mapOf(
     "Timber:mac1_d1" to "macro 1|to 1",
     "Timber:mac1_d2" to "macro 1|to 2",
     "Timber:mac1_d3" to "macro 1|to 3",
+)
+
+private fun labels3(): Map<String, String> = mapOf(
     "Timber:mac1_d4" to "macro 1|to 4",
     "Timber:mac2" to "macros|macro 2",
     "Timber:mac2_a1" to "macro 2|by 1",
     "Timber:mac2_a2" to "macro 2|by 2",
     "Timber:mac2_a3" to "macro 2|by 3",
     "Timber:mac2_a4" to "macro 2|by 4",
-)
-
-private fun labels3(): Map<String, String> = mapOf(
     "Timber:mac2_d1" to "macro 2|to 1",
     "Timber:mac2_d2" to "macro 2|to 2",
     "Timber:mac2_d3" to "macro 2|to 3",
@@ -2826,6 +2832,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Brazen:bite" to "bite",
     "Brazen:brass" to "brassiness",
     "Brazen:breath" to "breath",
+    "Brazen:choke" to "choke",
     "Brazen:cutoff" to "cutoff",
     "Brazen:decay" to "decay",
     "Brazen:drift" to "drift",
@@ -2836,6 +2843,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Brazen:flutterrate" to "rate",
     "Brazen:glide" to "glide",
     "Brazen:growlrate" to "rate",
+    "Brazen:legato" to "legato",
     "Brazen:lipdamp" to "damping",
     "Brazen:lock" to "lock",
     "Brazen:loss" to "loss",
@@ -3373,6 +3381,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Filament:eg2dec" to "decay",
     "Filament:eg2rel" to "release",
     "Filament:eg2sus" to "sustain",
+    "Filament:evenness" to "evenness",
     "Filament:exciter" to "kind",
     "Filament:exciter out" to "exciter",
     "Filament:fine" to "fine",
@@ -3574,12 +3583,12 @@ private fun short0(): Map<String, String> = mapOf(
     "Forage:p03_penv" to "pitch env",
     "Forage:p03_pitch" to "pitch",
     "Forage:p03_play" to "play",
-    "Forage:p03_reso" to "reso",
-    "Forage:p03_reverse" to "reverse",
-    "Forage:p03_start" to "start",
 )
 
 private fun short1(): Map<String, String> = mapOf(
+    "Forage:p03_reso" to "reso",
+    "Forage:p03_reverse" to "reverse",
+    "Forage:p03_start" to "start",
     "Forage:p04_choke" to "choke",
     "Forage:p04_crush" to "crush",
     "Forage:p04_cutoff" to "cutoff",
@@ -4377,12 +4386,12 @@ private fun short1(): Map<String, String> = mapOf(
     "Mosaic:f_attack" to "attack",
     "Mosaic:f_decay" to "decay",
     "Mosaic:f_env" to "envmod",
-    "Mosaic:f_freq" to "freq",
-    "Mosaic:f_key" to "key",
-    "Mosaic:f_release" to "release",
 )
 
 private fun short2(): Map<String, String> = mapOf(
+    "Mosaic:f_freq" to "freq",
+    "Mosaic:f_key" to "key",
+    "Mosaic:f_release" to "release",
     "Mosaic:f_res" to "reso",
     "Mosaic:f_sustain" to "sustain",
     "Mosaic:f_type" to "type",
@@ -4889,6 +4898,7 @@ private fun short2(): Map<String, String> = mapOf(
     "Reflux:wave" to "wave",
     "Resonance:accent" to "accent",
     "Resonance:coupling" to "coupling",
+    "Resonance:drivecouple" to "drive heard",
     "Resonance:humanise" to "humanise",
     "Resonance:mac1" to "macro 1",
     "Resonance:mac1_a1" to "by 1",
@@ -5105,6 +5115,7 @@ private fun short2(): Map<String, String> = mapOf(
     "Timber:body" to "lowest",
     "Timber:bore" to "shape",
     "Timber:breath" to "breath",
+    "Timber:choke" to "choke",
     "Timber:cutoff" to "cutoff",
     "Timber:decay" to "decay",
     "Timber:drive" to "drive",
@@ -5120,6 +5131,7 @@ private fun short2(): Map<String, String> = mapOf(
     "Timber:jet" to "crossing",
     "Timber:keys" to "key noise",
     "Timber:lattice" to "cutoff",
+    "Timber:legato" to "legato",
     "Timber:loss" to "loss",
     "Timber:mac1" to "macro 1",
     "Timber:mac1_a1" to "by 1",
@@ -5177,15 +5189,15 @@ private fun short2(): Map<String, String> = mapOf(
     "Timber:mac6_d4" to "to 4",
     "Timber:mac7" to "macro 7",
     "Timber:mac7_a1" to "by 1",
+)
+
+private fun short3(): Map<String, String> = mapOf(
     "Timber:mac7_a2" to "by 2",
     "Timber:mac7_a3" to "by 3",
     "Timber:mac7_a4" to "by 4",
     "Timber:mac7_d1" to "to 1",
     "Timber:mac7_d2" to "to 2",
     "Timber:mac7_d3" to "to 3",
-)
-
-private fun short3(): Map<String, String> = mapOf(
     "Timber:mac7_d4" to "to 4",
     "Timber:mac8" to "macro 8",
     "Timber:mac8_a1" to "by 1",

@@ -30,8 +30,10 @@ on the end.
 ## Mono
 
 With **mono** on, a note played while the last one is still held is slurred
-onto it, sliding over the **glide** time. A note played after you let go is
-tongued, and the last one rings out under it.
+onto it, sliding over the **glide** time. Turn **legato** off and it's tongued
+instead, unless glide is up. A note played after you let go is tongued, and the
+last one rings out under it. With **choke** on it cuts that tail instead, and
+slides from it when glide is up.
 
 ## Swell and flutter
 

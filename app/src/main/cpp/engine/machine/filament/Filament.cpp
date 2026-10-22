@@ -45,12 +45,6 @@ constexpr float kBodyLevel = 1.4f;
 // How many of a string's harmonics bodyLevelAt reads. Their power is taken
 // to fall as 1/k, which measured closer than a sawtooth's 1/k^2.
 constexpr int kBodyHarmonics = 8;
-// How far each note is evened out against the body's resonances, as a power
-// of what the body does to it: 0 leaves the body's wolf notes as they fall
-// and 1 would take them all out. A string's spectrum isn't known ahead, so
-// all the way overshoots; a half took the per-note spread of a bowed string
-// at full body from 3.5..10.7 dB down to 1.7..5.5.
-constexpr float kBodyEven = 0.5f;
 } // namespace
 
 Filament::Filament() { initParams(); }
@@ -138,7 +132,9 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
         step(BodyOn, "body", 2, 1.0f);
         lin(BodySize, "size", 0.0f, 1.0f, 0.5f);
         lin(BodyMix, "bodymix", 0.0f, 1.0f, 0.35f);
-        lin(BodyDamp, "bodydamp", 0.0f, 1.0f, 0.5f);
+        // Past 1 the Q goes on down from 3 to 1 at the top, 29/27. A value in
+        // 0..1 comes back exactly from a round trip through that range.
+        lin(BodyDamp, "bodydamp", 0.0f, 29.0f / 27.0f, 0.5f);
 
         lin(Drive, "drive", 0.0f, 1.0f, 0.1f);
         // Goes up to 1.5 so quieter patches like Steel can reach the
@@ -198,6 +194,7 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
                 lin(b + 5 + r, n, -1.0f, 1.0f, 0.0f);
             }
         }
+        lin(Evenness, "evenness", 0.0f, 1.0f, 0.5f);
         built = true;
     }
     count = Count;
@@ -230,6 +227,7 @@ struct DestMap {
             {F::VelocityAmount, F::McVelocity}, {F::MpeTimbre, F::McMpeTimbre},
             {F::MpePressure, F::McMpePressure},
             {F::VibRate, F::McVibRate}, {F::VibDepth, F::McVibDepth}, {F::VibDelay, F::McVibDelay},
+            {F::Evenness, F::McEvenness},
         };
         for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
     }
@@ -279,7 +277,7 @@ void Filament::prepare(int32_t sr) {
     for (auto &s : sympathetic) s.prepare(sampleRate);
     for (auto &e : eg) e.setSampleRate(sampleRate);
     lastTuning = -1;
-    bodySizeAt = bodyDampAt = -1.0f; // the body's coefficients follow the rate
+    bodySizeAt = bodyDampAt = bodyEvenAt = -1.0f; // the body's coefficients follow the rate
     reset();
 }
 
@@ -641,7 +639,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             bodySizeAt = sizeNow;
             bodyDampAt = dampNow;
             const float size = std::pow(2.0f, (0.5f - sizeNow) * 2.2f);
-            const float q = 3.0f + (1.0f - dampNow) * 27.0f;
+            const float q = std::fmax(1.0f, 3.0f + (1.0f - dampNow) * 27.0f);
             // A wider resonance passes more of a string's partials, so the
             // modes are scaled to pass about the same energy at any width.
             bodyWet = std::sqrt(q / 16.5f);
@@ -653,6 +651,12 @@ bool Filament::render(float *L, float *R, int32_t frames) {
                 body[0][i].bandpass(bodyHz[0][i], q, sampleRate);
                 body[1][i].bandpass(bodyHz[1][i], q, sampleRate);
             }
+        }
+        // Each note's evening out is worked out again when the knob moves.
+        const float evenNow = paramOf(Evenness);
+        if (evenNow != bodyEvenAt) {
+            bodyEvenAt = evenNow;
+            ++bodyGen;
         }
     }
     for (int i = 0; i < kSympathetic; ++i) {
@@ -759,7 +763,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             // and on a real note change only.
                         const float bodyHz = v.target * pitchScale / std::pow(2.0f, bendSemis / 12.0f);
             if (bodyOn && (v.bodyGenAt != bodyGen || v.bodyHzAt < 0.0f || std::fabs(bodyHz - v.bodyHzAt) > v.bodyHzAt * 0.002f)) {
-                v.bodyGoal = std::pow(kBodyLevel * bodyLevelAt(bodyHz), -kBodyEven);
+                v.bodyGoal = std::pow(kBodyLevel * bodyLevelAt(bodyHz), -bodyEvenAt);
                 if (v.bodyHzAt < 0.0f) v.bodyG = v.bodyGoal;
                 v.bodyGenAt = bodyGen;
                 v.bodyHzAt = bodyHz;

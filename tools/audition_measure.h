@@ -97,7 +97,7 @@ struct Spectrum {
         if (!(hz > 0.0f)) return;
         const float span = hz * (std::pow(2.0f, cents / 1200.0f) - 1.0f);
         const int32_t lo = std::max(1, static_cast<int32_t>((hz - span) / binHz));
-        const int32_t hi = std::min(kBins - 2, static_cast<int32_t>((hz + span) / binHz) + 1);
+        const int32_t hi = std::min(static_cast<int32_t>(mag.size()) - 2, static_cast<int32_t>((hz + span) / binHz) + 1);
         int32_t best = -1;
         for (int32_t k = lo; k <= hi; ++k) {
             if (best < 0 || mag[static_cast<size_t>(k)] > mag[static_cast<size_t>(best)]) best = k;
@@ -119,15 +119,18 @@ struct Spectrum {
     float fractionBelow(float hz) const {
         if (totalSq <= 0.0) return 0.0f;
         double sum = 0.0;
-        const int32_t to = std::min(kBins, static_cast<int32_t>(hz / binHz) + 1);
+        const int32_t to = std::min(static_cast<int32_t>(mag.size()), static_cast<int32_t>(hz / binHz) + 1);
         for (int32_t k = 1; k < to; ++k) sum += static_cast<double>(mag[static_cast<size_t>(k)]) * mag[static_cast<size_t>(k)];
         return static_cast<float>(sum / totalSq);
     }
 };
 
-inline Spectrum spectrumAt(const std::vector<float> &mono, int32_t from) {
-    constexpr int32_t kN = Spectrum::kBins * 2;
-    static const dsp::Fft fft(kN);
+/** 8192 points, or 32768 when [longer], for a note the short one can't resolve. */
+inline Spectrum spectrumAt(const std::vector<float> &mono, int32_t from, bool longer = false) {
+    static const dsp::Fft shortFft(Spectrum::kBins * 2);
+    static const dsp::Fft longFft(Spectrum::kBins * 8);
+    const dsp::Fft &fft = longer ? longFft : shortFft;
+    const int32_t kN = longer ? Spectrum::kBins * 8 : Spectrum::kBins * 2;
     std::vector<float> re(static_cast<size_t>(kN), 0.0f), im(static_cast<size_t>(kN), 0.0f);
     for (int32_t i = 0; i < kN; ++i) {
         const size_t at = static_cast<size_t>(from) + static_cast<size_t>(i);
@@ -138,8 +141,8 @@ inline Spectrum spectrumAt(const std::vector<float> &mono, int32_t from) {
     fft.transform(re.data(), im.data(), false);
     Spectrum sp;
     sp.binHz = kSr / static_cast<float>(kN);
-    sp.mag.assign(static_cast<size_t>(Spectrum::kBins), 0.0f);
-    for (int32_t k = 0; k < Spectrum::kBins; ++k) {
+    sp.mag.assign(static_cast<size_t>(kN / 2), 0.0f);
+    for (int32_t k = 0; k < kN / 2; ++k) {
         const float m = std::sqrt(re[static_cast<size_t>(k)] * re[static_cast<size_t>(k)] +
                                   im[static_cast<size_t>(k)] * im[static_cast<size_t>(k)]);
         sp.mag[static_cast<size_t>(k)] = m;
@@ -575,6 +578,14 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
         // Tuning, from the low partials. A stiff string's upper partials run
         // sharp, so the low ones are weighted most. The upper ones help when
         // the fundamental is too quiet to read.
+        //
+        // A note too low for this transform to resolve gets one four times
+        // as long. Without its fundamental the tuning is read from the upper
+        // partials alone over the front of the note, where a reed or a lip
+        // still rings its own flat modes before it locks them to the note.
+        const bool low = want < 16.0f * sp.binHz;
+        const Spectrum longSp = low ? spectrumAt(mono, start, true) : Spectrum{};
+        const Spectrum &tsp = low ? longSp : sp;
         double num = 0.0, den = 0.0;
         for (int h = 1; h <= 6; ++h) {
             const float target = want * static_cast<float>(h);
@@ -582,9 +593,9 @@ inline Measured measure(const std::vector<float> &stereo, int64_t offAt, int not
             // Below about eight bins the transform can't resolve 60 cents (at
             // 65 Hz one bin is 80 cents), so skip those and rely on the upper
             // partials, which are off by the same amount.
-            if (target < 8.0f * sp.binHz) continue;
+            if (target < 8.0f * tsp.binHz) continue;
             float atHz = 0.0f, size = 0.0f;
-            sp.peakNear(target, 60.0f, atHz, size);
+            tsp.peakNear(target, 60.0f, atHz, size);
             if (atHz <= 0.0f) continue;
             const double weight = static_cast<double>(size) / std::sqrt(static_cast<double>(h));
             num += weight * 1200.0 * std::log2(static_cast<double>(atHz) / target);

@@ -27,8 +27,9 @@ fréquences, et jouer un pad le frappe. Rien n’est échantillonné.
 
 **couplage** règle à quel point les pads résonnent les uns dans les autres.
 Frappez-en un et les autres répondent doucement à leur propre hauteur, et un kit
-sonne comme des objets dans une même pièce. **humaniser** varie un peu chaque
-coup.
+sonne comme des objets dans une même pièce. Avec **satur. écoutée**, les autres
+entendent aussi le grain d’un pad saturé, sans que la boucle monte. **humaniser**
+varie un peu chaque coup.
 
 ## Macros
 

@@ -40,6 +40,14 @@ pression réglée, alors à 1 la note sort de rien. Baissez-la et le souffle par
 au-dessus de la pression et y redescend, un accent. **temps** règle sa durée.
 Une note liée continue le crescendo qu’elle a rejoint.
 
+## Mono
+
+Avec **mono**, une note jouée pendant que la précédente est encore tenue est
+liée à elle avec du **porta.**, et attaquée à la langue à 0. Allumez **legato**
+et elle est toujours liée, en sautant à 0. Une note jouée après avoir relâché
+est attaquée à la langue, et la précédente résonne en dessous. Avec
+**étouffe**, elle coupe plutôt cette queue, et glisse depuis elle avec du porta.
+
 ## Macros
 
 La page **jeu** a huit boutons macro. Un patch peut les nommer (Souffle,

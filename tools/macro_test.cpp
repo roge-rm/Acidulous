@@ -641,6 +641,9 @@ void filamentRoutes() {
     same("Filament: a route to vibrato rate matches the knob", fast, fastRouted);
 }
 
+double largestStep(const std::vector<float> &v);
+double blockEdge(const std::vector<float> &v, size_t from, size_t to);
+
 // A note at [first], held, and a second at 60 slurred onto it at [slurAt]
 // samples, from a fresh Timber with [units] set.
 // A negative [slurAt] holds [first] alone.
@@ -777,6 +780,25 @@ void timberRoutes() {
     }
     std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f", jumpFlutter, jumpStill);
     ok(jumpFlutter <= jumpStill * 1.05, "Timber: a jet's flutter has no steps in it", buf);
+
+    // Flutter on a reed: the tongue taps the reed shut at the flutter rate,
+    // read every sample like the jet's.
+    const std::vector<std::pair<std::string, float>> reed = {
+        {"family", 0.0f}, {"bore", 0.0f}, {"body", 146.8f}, {"pressure", 0.8f},
+        {"vibrato", 0.0f}, {"flutterrate", 25.0f}};
+    auto reedFlutter = reed;
+    reedFlutter.push_back({"flutter", 0.6f});
+    const auto reedStill = timberSlur(reed, -1, 50);
+    const auto reedFluttered = timberSlur(reedFlutter, -1, 50);
+    const double rStill = wobble(reedStill), rFlutter = wobble(reedFluttered);
+    std::snprintf(buf, sizeof(buf), "25 Hz movement %.3f against %.3f", rFlutter, rStill);
+    ok(rFlutter > 0.08 && rFlutter > rStill * 4, "Timber: flutter moves a reed", buf);
+    std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f, block edge %.3f against %.3f",
+                  largestStep(reedFluttered), largestStep(reedStill), blockEdge(reedFluttered, 2400, 30000),
+                  blockEdge(reedStill, 2400, 30000));
+    ok(largestStep(reedFluttered) <= largestStep(reedStill) * 1.05 &&
+           blockEdge(reedFluttered, 2400, 30000) <= blockEdge(reedStill, 2400, 30000) * 1.1,
+       "Timber: a reed's flutter has no steps in it", buf);
 }
 
 // One note event for timberEvents: at block [block], note [note] on (or off
@@ -894,9 +916,9 @@ void timberPlaying() {
 
 // A note at [first], held, and a second at 60 slurred onto it at [slurAt]
 // samples, from a fresh Brazen with [units] set. A negative [slurAt] holds
-// [first] alone.
+// [first] alone. [releaseAt], if not negative, lets go of [first] there.
 std::vector<float> brazenSlur(const std::vector<std::pair<std::string, float>> &units, int32_t slurAt,
-                              uint8_t first = 57) {
+                              uint8_t first = 57, int32_t releaseAt = -1) {
     Machine *m = MachineRegistry::create("Brazen");
     m->prepare(kRate);
     ParamSet &p = m->params();
@@ -911,6 +933,7 @@ std::vector<float> brazenSlur(const std::vector<std::pair<std::string, float>> &
     std::vector<float> out;
     float L[kBlock], R[kBlock];
     for (int32_t b = 0; b < kBlocks * (slurAt < 0 ? 4 : 2); ++b) {
+        if (b * kBlock == releaseAt) m->noteOff(first);
         if (b * kBlock == slurAt) m->noteOn(60, 100);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
@@ -1062,6 +1085,31 @@ void brazenRoutes() {
         std::snprintf(buf, sizeof(buf), "lowest 10 ms %.2f of the held note, join corner %.2fx", low,
                       stepJoin / std::max(stepHeld, 1e-12));
         ok(low > 0.85 && stepJoin < stepHeld * 2.0, "Brazen: a slur does not dip or click", buf);
+    }
+
+    // Mono without legato at glide 0 tongues a note over a held one, and
+    // choke tongues one onto a tail just let go. The old note fades out over
+    // 2 ms first, so the join has no corner bigger than the held note's or
+    // a fresh note's own onset.
+    {
+        auto corner = [](const std::vector<float> &v, size_t from, size_t to) {
+            double c = 0;
+            for (size_t i = std::max<size_t>(from, 2); i < to && i < v.size(); ++i)
+                c = std::max(c, std::fabs(double(v[i]) - 2.0 * v[i - 1] + v[i - 2]));
+            return c;
+        };
+        const auto alone = brazenSlur(with({{"cutoff", 1800.0f}, {"attack", 0.05f}}), -1, 60);
+        const double onset = corner(alone, 0, 4800);
+        for (int choke = 0; choke < 2; ++choke) {
+            auto u = with({{"mono", 1.0f}, {"legato", 0.0f}, {"glide", 0.0f}, {"cutoff", 1800.0f}, {"attack", 0.05f}});
+            if (choke) u.push_back({"choke", 1.0f});
+            const auto v = brazenSlur(u, slurAt, 57, choke ? slurAt - 6 * kBlock : -1);
+            const double held = corner(v, slurAt - 9600, slurAt - 6 * kBlock - 480);
+            const double join = corner(v, slurAt - 480, slurAt + 4800);
+            const double worst = std::max(held, onset);
+            std::snprintf(buf, sizeof(buf), "join corner %.2fx of the held note or a fresh onset", join / std::max(worst, 1e-12));
+            ok(join < worst * 1.5, choke ? "Brazen: a choke onto a tail does not click" : "Brazen: a tongued mono note does not click", buf);
+        }
     }
 
     // Flutter: the air chopped at its rate, so the level moves at that rate,

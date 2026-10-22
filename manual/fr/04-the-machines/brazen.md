@@ -32,8 +32,10 @@ l’embouchure.
 ## Mono
 
 Avec **mono**, une note jouée pendant que la précédente est encore tenue est
-liée à elle et glisse pendant le temps de **porta.**. Une note jouée après avoir
-relâché est attaquée à la langue, et la précédente résonne en dessous.
+liée à elle et glisse pendant le temps de **porta.**. Éteignez **legato** et
+elle est attaquée à la langue, sauf avec du porta. Une note jouée après avoir
+relâché est attaquée à la langue, et la précédente résonne en dessous. Avec
+**étouffe**, elle coupe plutôt cette queue, et glisse depuis elle avec du porta.
 
 ## Crescendo et flutter
 

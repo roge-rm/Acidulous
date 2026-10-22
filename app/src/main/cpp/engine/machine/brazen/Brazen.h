@@ -51,7 +51,13 @@ class Brazen final : public Machine {
         // is 24 semitones per unit.
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
-        Count = MacroBase + 8 * MacroParams
+        // Added after the macros. Mono only. Legato on slurs a note onto a
+        // held key, gliding over `glide` or jumping at 0; off tongues it,
+        // unless glide is on. Choke on makes a note after a release cut the
+        // old tail: it slurs from it with glide on, and is tongued on that
+        // voice at 0. Off lets the tail ring on its own voice.
+        Legato = MacroBase + 8 * MacroParams, Choke,
+        Count
     };
     // Where a macro route goes. Continuous params only: mute, players,
     // filter type, mono and the tuning steps are left out.
@@ -146,6 +152,13 @@ class Brazen final : public Machine {
         float swellFrom = 1.0f, swellPos = 1.0f, swellStep = 0.0f;
         // Where the flutter is in its cycle, 0..1, from the tongued note.
         float flutterPhase = 0.0f;
+        // A mono note tongued onto a voice that is still sounding waits for
+        // it to fade over kFadeFrames, then starts at the next block.
+        // pendingNote is -1 when nothing waits.
+        int32_t fadeLeft = 0;
+        int pendingNote = -1;
+        uint8_t pendingVel = 0;
+        bool pendingOff = false;
     };
 
     /** Param [p], smoothed, with the macros' routes to it added. */
@@ -160,6 +173,8 @@ class Brazen final : public Machine {
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
     Voice *allocate();
     void startVoice(Voice &v, uint8_t note, uint8_t velocity);
+    /** True when a note on [v] carries on the sound there instead of tonguing it. */
+    bool slursOnto(const Voice &v) const;
 
     float nextRandom() {
         rng = rng * 1664525u + 1013904223u;

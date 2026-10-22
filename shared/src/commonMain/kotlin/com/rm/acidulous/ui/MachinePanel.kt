@@ -3389,7 +3389,7 @@ private val RESONANCE_SHAPES = listOf("membrane", "bar", "plate", "tube", "bowl"
 val RESONANCE_DESTS = listOf(
     "off", "all decay", "all damping", "all stiffness", "all where", "all hardness", "all grit", "all drive", "pitch",
     "coupling", "humanise", "accent", "volume",
-) + (1..8).map { "tune $it" } + (1..8).map { "level $it" }
+) + (1..8).map { "tune $it" } + (1..8).map { "level $it" } + listOf("drive heard")
 
 /**
  * Resonance's panel: one object at a time, chosen with the pads, since eight
@@ -3448,6 +3448,7 @@ private fun ResonancePanel(b: ParamBinding, pad: Int, track: Track, trackIndex: 
             }
             2 -> Group("kit") {
                 PanelKnob(b, "coupling", "coupling", hot)
+                PanelKnob(b, "drivecouple", "drive heard", hot)
                 PanelStepKnob(b, "modes", listOf("4", "8", "12", "16", "20", "24"), "modes")
                 PanelKnob(b, "humanise", "humanise")
                 PanelKnob(b, "accent", "accent")
@@ -4053,7 +4054,7 @@ val FILAMENT_MACRO_DESTS = listOf(
     "lfo1 rate", "lfo1 depth", "lfo2 rate", "lfo2 depth",
     "velocity", "slide", "press",
     "vib rate", "vib depth", "vib delay",
-    "pitch",
+    "pitch", "evenness",
 )
 
 @Composable
@@ -4150,6 +4151,7 @@ private fun FilamentPanel(b: ParamBinding, track: Track, trackIndex: Int, editor
                     PanelKnob(b, "size", "size", PanelAmber)
                     PanelKnob(b, "bodymix", "mix", PanelAmber)
                     PanelKnob(b, "bodydamp", "damp")
+                    PanelKnob(b, "evenness", "evenness")
                 }
                 Group("tuning") {
                     PanelSwitch(b, "voicemode", listOf("poly", "mono", "leg"), "mode")
@@ -4332,6 +4334,8 @@ private fun BrazenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 }
                 Group("tuning") {
                     PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
+                    PanelOnOff(b, "legato", "legato")
+                    PanelOnOff(b, "choke", "choke")
                     PanelKnob(b, "glide", "glide")
                     PanelKnob(b, "bendrange", "bend")
                     PanelKnob(b, "octave", "octave")
@@ -5415,6 +5419,8 @@ private fun TimberPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 }
                 Group("tuning") {
                     PanelSwitch(b, "mono", listOf("poly", "mono"), "mode")
+                    PanelOnOff(b, "legato", "legato")
+                    PanelOnOff(b, "choke", "choke")
                     PanelKnob(b, "glide", "glide")
                     PanelKnob(b, "bendrange", "bend")
                     PanelKnob(b, "octave", "octave")

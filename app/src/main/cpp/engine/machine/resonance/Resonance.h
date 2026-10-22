@@ -36,14 +36,18 @@ class Resonance final : public Machine {
         // multiplies every pad's tune.
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
-        Count = MacroBase + 8 * MacroParams
+        // Added after the macros. How much of a driven pad's bend reaches the
+        // coupling bus, 0 the clean pad.
+        DriveCouple = MacroBase + 8 * MacroParams,
+        Count
     };
     enum Dest : int32_t {
         DstOff, DstDecay, DstDamp, DstInharm, DstHit, DstHard, DstNoise, DstDrive, DstPitch,
         DstCoupling, DstHumanise, DstAccent, DstVolume,
         DstTune, // DstTune + pad
         DstLevel = DstTune + kPads, // DstLevel + pad
-        DestCount = DstLevel + kPads
+        DstDriveCouple = DstLevel + kPads, // after the levels, so they keep their numbers
+        DestCount
     };
     static constexpr int kMacros = 8;
     static_assert(Count <= kMaxParams, "Resonance declares more parameters than a unit can hold");

@@ -280,6 +280,7 @@
     <string name="pw_drift">dérive</string>
     <string name="pw_drips">gouttes</string>
     <string name="pw_drive">satur.</string>
+    <string name="pw_drive_heard">satur. écoutée</string>
     <string name="pw_drone">bourdon</string>
     <string name="pw_drones">bourdons</string>
     <string name="pw_drop">omettre</string>
@@ -1301,6 +1302,7 @@
     <string name="pw_glass_170fd7">verre</string>
     <string name="pw_hollow_89f0ef">creux</string>
     <string name="pw_even">Pair</string>
+    <string name="pw_evenness">égalise</string>
     <string name="pw_round">Rond</string>
     <string name="pw_sync_6b387c">sync</string>
     <string name="pw_twin">Jumeau</string>

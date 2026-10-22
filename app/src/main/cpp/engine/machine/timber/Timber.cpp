@@ -118,6 +118,9 @@ const ParamDef *Timber::paramDefs(int32_t &count) const {
                 put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
             }
         }
+        // Legato is off by default, so a patch saved without it slurs only with glide on.
+        defs[Legato] = ParamDef{"legato", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""};
+        defs[Choke] = ParamDef{"choke", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""};
         built = true;
     }
     count = Count;
@@ -239,10 +242,17 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     // Mono slurs onto the note that is held, or takes the place of one
     // waiting to start. A note played after the last one let go is tongued
     // on a voice of its own, so the old tail rings out instead of being cut.
+    // With choke, it takes the last voice let go instead and cuts its tail.
     Voice *vp = nullptr;
-    if (steppedTargetOf(Mono) != 0) {
+    const bool mono = steppedTargetOf(Mono) != 0;
+    if (mono) {
         for (auto &w : voices) {
             if (w.used && (w.gate || w.pendingNote >= 0)) { vp = &w; break; }
+        }
+        if (vp == nullptr && steppedTargetOf(Choke) != 0) {
+            for (auto &w : voices) {
+                if (w.used && (vp == nullptr || w.age > vp->age)) vp = &w;
+            }
         }
     }
     if (vp == nullptr) vp = allocate();
@@ -262,7 +272,12 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
     const float glide = goalOf(Glide);
     // A slurred note arrives without the tongue and without restarting the
     // instrument. A tongued note is stopped and started again.
-    const bool slurred = glide > 0.001f && v.used && v.gate && v.pendingNote < 0;
+    // Legato slurs onto a held key at any glide, and choke onto the tail of
+    // a released one while glide is on.
+    const bool held = v.used && v.gate && v.pendingNote < 0;
+    const bool slurred = held ? glide > 0.001f || (mono && steppedTargetOf(Legato) != 0)
+                              : mono && v.used && steppedTargetOf(Choke) != 0 && glide > 0.001f &&
+                                    v.pendingNote < 0;
     if (!slurred && v.used && v.amp.value() > 0.0001f) {
         // Still sounding (usually its own release, since the patches are
         // mono). Cutting it now would click, so fade it over 2 ms and start
@@ -280,6 +295,7 @@ void Timber::noteOn(uint8_t note, uint8_t velocity) {
 
 void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) {
     updateMacros(true);
+    const bool wasHeld = v.gate;
     v.glideFrom = slurred ? v.freq : noteHz(static_cast<float>(note));
     v.glidePos = slurred ? 0.0f : 1.0f;
     if (!v.used) v.outGain = velocityGain(static_cast<float>(velocity) / 127.0f, goalOf(VelocityAmount));
@@ -316,6 +332,8 @@ void Timber::startVoice(Voice &v, uint8_t note, uint8_t velocity, bool slurred) 
         v.lift = true;
     } else {
         v.tongueLeft = 0.0f;
+        // A choke slurs onto a tail in its release, so the breath comes back.
+        if (!wasHeld) v.amp.trigger();
     }
 }
 
@@ -379,13 +397,14 @@ bool Timber::render(float *L, float *R, int32_t frames) {
     // octave register gives a twelfth (the third partial) instead.
     const int32_t mode = reg == Natural ? 1 : (reg == Octave ? (cylinder ? 3 : 2) : 3);
 
-    // On a jet the flutter is read every sample from where the block started,
-    // since it cuts the jet's own gain and a per-block value would step it.
-    const bool jetFlutter = family == timber::Pipe::Jet && flutter > 0.0f;
+    // The flutter is read every sample from where the block started, since
+    // it taps the reed shut or cuts the jet's gain and a per-block value
+    // would step it.
+    const bool fluttering = flutter > 0.0f;
+    const bool jetFlutter = family == timber::Pipe::Jet && fluttering;
     const float flutterFrom = flutterPhase, flutterStep = flutterRate * dt;
     flutterPhase += flutterRate * dt * static_cast<float>(frames);
     while (flutterPhase >= 1.0f) flutterPhase -= 1.0f;
-    const float flutterNow = flutter * 0.5f * (1.0f - std::cos(flutterPhase * kTwoPi));
 
     // How long the tongue takes to leave the reed, and how long a pad takes
     // to close. Both are smooth windows; see the sample loop.
@@ -480,7 +499,12 @@ bool Timber::render(float *L, float *R, int32_t frames) {
             // The tongue: on the reed at the start of a note, and again as
             // often as flutter asks for. It comes off with a raised cosine
             // rather than a hard gate, which would click.
-            float stop = flutterNow * tongueDepth;
+            float cut = 0.0f;
+            if (fluttering) {
+                const float ph = flutterFrom + flutterStep * static_cast<float>(i + 1);
+                cut = flutter * 0.5f * (1.0f - std::cos(ph * kTwoPi));
+            }
+            float stop = cut * tongueDepth;
             if (v.tongueLeft > 0.0f) {
                 v.tongueLeft -= 1.0f;
                 const float r = v.tongueLeft < tongueOff ? v.tongueLeft * tongueOffInv : 1.0f;
@@ -501,8 +525,6 @@ bool Timber::render(float *L, float *R, int32_t frames) {
             if (jetFlutter) {
                 // Flutter on a jet: the tongue breaks the air stream up, so
                 // the jet and the breath behind it both drop with it.
-                const float ph = flutterFrom + flutterStep * static_cast<float>(i + 1);
-                const float cut = flutter * 0.5f * (1.0f - std::cos(ph * kTwoPi));
                 v.pipe.setJetCut(cut);
                 breath *= 1.0f - kJetFlutterBreath * cut;
             }

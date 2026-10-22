@@ -27,7 +27,9 @@ the way a real one does.
 Six resonances stand in for the instrument's body, from the air in the box up
 through its plates. **size** moves them, from a big box down to a small one,
 **bodydamp** widens them and **bodymix** fades from the bare string to the
-string heard through the body. There are also **sympathetic strings** that ring
+string heard through the body. **evenness** evens out how loud each note comes
+through the body; at 0 the notes that land on a resonance stand out, wolf notes
+and all. There are also **sympathetic strings** that ring
 along with what you play.
 
 ## Modulation

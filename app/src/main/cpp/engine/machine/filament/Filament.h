@@ -79,7 +79,14 @@ class Filament final : public Machine {
         // is 24 semitones per unit.
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
-        Count = MacroBase + 8 * MacroParams
+        // Added after the macros. How far each note is evened out against
+        // the body's resonances, as a power of what the body does to it: 0
+        // leaves the wolf notes as they fall and 1 would take them all out,
+        // which overshoots since a string's spectrum isn't known ahead. The
+        // default 0.5 takes a bowed string's per-note spread at full body
+        // from 3.5..10.7 dB to 1.7..5.5.
+        Evenness = MacroBase + 8 * MacroParams,
+        Count
     };
     // Where a macro route goes. Continuous params only: the exciter, stages,
     // sympathy, symtune, body and voice mode switches are left out.
@@ -96,6 +103,8 @@ class Filament final : public Machine {
         McVelocity, McMpeTimbre, McMpePressure,
         McVibRate, McVibDepth, McVibDelay,
         McPitch,
+        // Added after pitch, so the ones before keep their numbers.
+        McEvenness,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
@@ -206,7 +215,7 @@ class Filament final : public Machine {
 
     /** The body's resonances, left and right a little apart. */
     dsp::Biquad body[2][kBodyModes];
-    float bodySizeAt = -1.0f, bodyDampAt = -1.0f, bodyWet = 1.0f;
+    float bodySizeAt = -1.0f, bodyDampAt = -1.0f, bodyEvenAt = -1.0f, bodyWet = 1.0f;
     float bodyMixAt = 0.0f, bodyDryGain = 1.0f, bodyWetGain = 0.0f;
     /** Counts changes to the body's resonances, so each voice knows to work out its gain again. */
     int32_t bodyGen = 0;
