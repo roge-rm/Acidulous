@@ -47,6 +47,12 @@ constexpr float kWallDepth = 0.35f;
  * reaches exactly one at the closing pressure, so it ends smoothly.
  */
 constexpr float kReedCurve = 3.0f;
+/**
+ * The DC blocker's pole, a corner at 22.9 Hz. Under 45 Hz (note 29.6) the
+ * corner moves down to half the note: close to the note its phase lead
+ * leaves the tube's next mode flat, near 1.87x, and helps it take the note.
+ */
+constexpr float kDcPole = 0.997f, kDcLowHz = 45.0f, kDcNoteRatio = 0.5f;
 
 using dsp::clampf;
 
@@ -265,6 +271,7 @@ class Pipe {
 
         const float period = sr / freq;
         const float w = 6.28318530718f * freq / sr;
+        dcPole = freq < kDcLowHz ? std::max(kDcPole, std::exp(-6.28318530718f * kDcNoteRatio * freq / sr)) : kDcPole;
 
         // The lattice. A forked fingering pulls the cutoff down, but never
         // below the note it has to reflect or the note wouldn't speak.
@@ -510,7 +517,7 @@ class Pipe {
         }
 
         in = dsp::fastTanh(in);
-        float hp = in - dcIn + 0.997f * dcOut;
+        float hp = in - dcIn + dcPole * dcOut;
         dcIn = in;
         dcOut = hp;
         if (ventCoeff > 0.0f) {
@@ -594,7 +601,7 @@ class Pipe {
     void dcBlock(float w, float &re, float &im) const {
         const float c1 = std::cos(w), s1 = std::sin(w);
         const float nr = 1.0f - c1, ni = s1;
-        const float dr = 1.0f - 0.997f * c1, di = 0.997f * s1;
+        const float dr = 1.0f - dcPole * c1, di = dcPole * s1;
         const float den = dr * dr + di * di + 1e-20f;
         re = (nr * dr + ni * di) / den;
         im = (ni * dr - nr * di) / den;
@@ -652,6 +659,7 @@ class Pipe {
     float bellLp = 0.0f, breathLp = 0.0f;
     float ventCoeff = 0.0f, ventLp = 0.0f;
     float wallCoeff = 1.0f, wallLp = 0.0f, wallDepth = kWallDepth;
+    float dcPole = kDcPole;
     float dcIn = 0.0f, dcOut = 0.0f;
     float radiated = 0.0f, loopMag = 0.0f;
     /** The attack's lift and how fast it lets go. See lift(). */

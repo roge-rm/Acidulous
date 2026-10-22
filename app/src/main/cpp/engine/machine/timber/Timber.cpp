@@ -408,8 +408,7 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
     // How long the tongue takes to leave the reed, and how long a pad takes
     // to close. Both are smooth windows; see the sample loop.
-    const float tongueOff = std::min(0.003f * sampleRate, paramOf(TongueTime) * sampleRate);
-    const float tongueOffInv = tongueOff > 1.0f ? 1.0f / tongueOff : 1.0f;
+    const float tongueTime = paramOf(TongueTime) * sampleRate;
     const float keyInv = 1.0f / (kKeyClick * sampleRate);
     const float breathRise = 1.0f - std::exp(-1.0f / (0.004f * sampleRate));
     const float breathFall = 1.0f - std::exp(-1.0f / (0.025f * sampleRate));
@@ -468,6 +467,12 @@ bool Timber::render(float *L, float *R, int32_t frames) {
 
         const float hz = v.freq * tuneMul * bendMul * noteBendMul(v) * std::pow(2.0f, vib / 1200.0f);
         v.pipe.setNote(hz);
+        // The tongue leaves the reed in 3 ms, or under 45 Hz over up to one
+        // period of the note. A 3 ms edge on a note that long kicks the
+        // cone's flat second mode (about 1.87x), which then takes the note.
+        const float lowNote = std::clamp(8.0f * (1.0f - hz / 45.0f), 0.0f, 1.0f);
+        const float tongueOff = std::min(std::max(0.003f * sampleRate, lowNote * sampleRate / hz), tongueTime);
+        const float tongueOffInv = tongueOff > 1.0f ? 1.0f / tongueOff : 1.0f;
         v.pipe.setShape(cylinder, mode);
         v.pipe.setTube(body);
         v.pipe.setLattice(lattice, fingering, holes);

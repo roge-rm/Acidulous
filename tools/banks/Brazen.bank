@@ -76,17 +76,16 @@
 # purpose. Width 0.7 is the most a section takes before it loses level
 # summed to mono.
 #
-# Nothing plays under note 31. Below it the tube's fundamental comes out a
-# semitone flat whatever the lips and bore, so the tubas, cimbasso,
-# sousaphone and Foghorn stop at G1.
+# Notes down to about 22 play their fundamental in tune. The tubas, cimbasso,
+# sousaphone and Foghorn still stop at G1 (31), the bottom of their ranges.
 #
 # The demo is `role tune`, a melody that stays inside each range. On a
 # range narrower than the tune its high answer is sung lower in the same
 # scale, so every note is still a note of the tune's key.
 #
-# Levelled on `loud` to -25.6 dB, the level Init lands at. `audition sweep
-# Brazen` plays every note of every range: none dead, none on the wrong
-# partial. What reads oddly on purpose: Foghorn's and Hornet's `hollow` (-30,
+# Levelled on `loud` to between -25.8 and -25.5 dB, the level Init lands at.
+# `audition sweep Brazen` plays every note of every range (1248): none dead,
+# none on the wrong partial. What reads oddly on purpose: Foghorn's and Hornet's `hollow` (-30,
 # the swell still rising and the flutter's sidebands), Air Leak's breath.
 #
 # Values are in each parameter's own units; `audition params Brazen` lists them.

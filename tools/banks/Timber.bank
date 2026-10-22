@@ -14,7 +14,7 @@
 #
 # **The range is the acceptance test, not the centre.** `audition sweep
 # Timber` plays every note of every range and says which ones are dead or on
-# the wrong partial. All two hundred and twenty pass. The centre alone never
+# the wrong partial. All 1095 pass. The centre alone never
 # saw the saxophone's bottom note come out an octave high or the oboe lose
 # the top five of its own.
 #
@@ -72,10 +72,12 @@
 # (+14 cents on Stopped Wood, -3 on the old tight oboe), and `fine` carries
 # it. Init sets nothing by rule and so reads 12 cents flat.
 #
-# Every centre is within 3 cents and every patch within half a decibel of
-# -22 dB RMS. Across a whole range the tuning is mostly within 10 cents with
-# the odd note at 20, which is the tube below the fingers pulling each
-# fingering differently, and 7-11 dB of loudness, which is a wind instrument.
+# Every patch sits between -25.0 and -25.4 dB RMS (Init -25.2), and every
+# centre is within 3 cents but Init (-18) and Contrabassoon (-11). Across a
+# whole range the tuning is mostly within 10 cents with the odd note at 20,
+# which is the tube below the fingers pulling each fingering differently
+# (Bassoon's worst note is 41 flat), and 3-14 dB of loudness, which is a wind
+# instrument.
 #
 # **What is still wrong.** The radiated fundamental sits 14 dB under its own
 # partials by construction (`arrive - 0.8 low`), which is backwards for a

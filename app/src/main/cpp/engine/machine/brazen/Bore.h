@@ -39,6 +39,13 @@ using dsp::clampf;
  * loop. Changing one without the other detunes the instrument.
  */
 constexpr float kDcPole = 0.997f;
+/**
+ * Under 45 Hz (note 29.6) the corner moves down to half the note. Close to
+ * the note the blocker's phase lead is large, so the line that tunes the
+ * fundamental leaves the bore's next mode flat, near 1.85x, and on the
+ * lowest notes that mode took over.
+ */
+constexpr float kDcLowHz = 45.0f, kDcNoteRatio = 0.5f;
 
 /** How far over the steady ceiling a tongue may lean. See tune(). */
 constexpr float kLiftCeiling = 3.0f;
@@ -265,9 +272,10 @@ class Bore {
         float den = dr * dr + di * di + 1e-20f;
         const float hr = (nr * dr + ni * di) / den, hi = (ni * dr - nr * di) / den;
 
-        // The DC blocker: (1 - z^-1) / (1 - 0.997 z^-1).
+        // The DC blocker: (1 - z^-1) / (1 - p z^-1).
+        dcPole = freq < kDcLowHz ? std::max(kDcPole, std::exp(-6.28318530718f * kDcNoteRatio * freq / sr)) : kDcPole;
         nr = 1.0f - c1; ni = s1;
-        dr = 1.0f - kDcPole * c1; di = kDcPole * s1;
+        dr = 1.0f - dcPole * c1; di = dcPole * s1;
         den = dr * dr + di * di + 1e-20f;
         const float br = (nr * dr + ni * di) / den, bi = (ni * dr - nr * di) / den;
 
@@ -413,7 +421,7 @@ class Bore {
         in = dsp::fastTanh(in);
 
         // A DC blocker, or the loop fills up with the steady breath pressure.
-        const float hp = in - dcIn + kDcPole * dcOut;
+        const float hp = in - dcIn + dcPole * dcOut;
         dcIn = in;
         dcOut = hp;
 
@@ -449,6 +457,7 @@ class Bore {
     float brass = 0.3f, loss = 0.995f, rest = 0.35f, bite = 0.0f, lipEnv = 0.0f;
     /** Rise and fall rates of the lip follower. See tune(). */
     float lipRise = 0.0006f, lipFall = 0.0006f;
+    float dcPole = kDcPole;
     float dcIn = 0.0f, dcOut = 0.0f, radiated = 0.0f, loopMag = 0.0f, lastArrive = 0.0f;
     /** The lowpassed breath noise. See kAirPole. */
     float noiseLp = 0.0f;
