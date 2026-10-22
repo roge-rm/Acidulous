@@ -42,16 +42,17 @@ struct Make {
     float stiffness;  // dispersion: a bass string's partials run sharp
     float neck, bridge;
     float level;
+    float span;       // bright multiplies the string's loss by up to this either way
 };
 constexpr Make kMakes[Fret::KindCount] = {
-    {40.0f, false, 6.0f, 0.93f, 0.0f, 0.25f, 0.07f, 1.0f},  // guitar
-    {40.0f, true, 6.0f, 0.93f, 0.0f, 0.25f, 0.07f, 0.75f},  // twelve-string
-    {35.0f, false, 7.0f, 0.9f, 0.08f, 0.22f, 0.065f, 1.0f},  // baritone
-    {28.0f, false, 9.0f, 0.8f, 0.12f, 0.2f, 0.09f, 1.15f},   // bass
-    {23.0f, false, 9.0f, 0.8f, 0.14f, 0.2f, 0.09f, 1.15f},   // five-string bass
-    {40.0f, false, 3.5f, 0.86f, 0.0f, 0.3f, 0.08f, 1.1f},    // hollowbody: an archtop, warm and shorter, flatwounds
-    {40.0f, false, 10.0f, 0.96f, 0.0f, 0.2f, 0.07f, 0.9f},   // steel: a lap or pedal steel, long and pure
-    {28.0f, false, 7.0f, 0.72f, 0.1f, 0.22f, 0.1f, 0.75f},   // fretless bass: no frets, a vocal swell
+    {40.0f, false, 6.0f, 0.93f, 0.0f, 0.25f, 0.07f, 1.0f, 2.0f},  // guitar
+    {40.0f, true, 6.0f, 0.93f, 0.0f, 0.25f, 0.07f, 0.75f, 2.0f},  // twelve-string
+    {35.0f, false, 7.0f, 0.9f, 0.08f, 0.22f, 0.065f, 1.0f, 2.0f},  // baritone
+    {28.0f, false, 9.0f, 0.8f, 0.12f, 0.2f, 0.09f, 1.15f, 2.0f},   // bass
+    {23.0f, false, 9.0f, 0.8f, 0.14f, 0.2f, 0.09f, 1.15f, 2.0f},   // five-string bass
+    {40.0f, false, 3.5f, 0.86f, 0.0f, 0.3f, 0.08f, 1.1f, 2.0f},    // hollowbody: an archtop, warm and shorter, flatwounds
+    {40.0f, false, 10.0f, 0.96f, 0.0f, 0.2f, 0.07f, 0.9f, 2.0f},   // steel: a lap or pedal steel, long and pure
+    {28.0f, false, 7.0f, 0.72f, 0.1f, 0.22f, 0.1f, 0.75f, 3.3f},   // fretless bass: no frets, a vocal swell
 };
 
 /**
@@ -296,7 +297,7 @@ void Fret::retune(Voice &v, float vibrato) {
     // The loop's one-pole: near 1 the string keeps its top for seconds; a
     // tenth lower and it's gone in a fraction of one. So the knob works in
     // the loss (1 - k), on a log scale.
-    float loss = (1.0f - k.bright) * std::pow(4.0f, 0.5f - paramOf(Bright)) * std::pow(2.0f, 0.7f - v.velocity);
+    float loss = (1.0f - k.bright) * std::pow(k.span * k.span, 0.5f - paramOf(Bright)) * std::pow(2.0f, 0.7f - v.velocity);
     if (v.harmonic > 0) loss *= 2.0f;
     loss = loss + (0.85f - loss) * mute;
     const float tone = clampf(1.0f - loss, 0.03f, 1.0f);
@@ -324,13 +325,22 @@ void Fret::shapeStroke(Voice &v) {
     case Slap: seconds = 0.0003f; grit = 0.5f; break;
     default: seconds = 0.0009f - 0.0007f * hard; grit = 0.25f * hard; break;
     }
+    // On a fretless, bright's top half also shortens the finger's push, to a
+    // quarter at the top: the mwah. The lift keeps the level, in dB as
+    // measured across the knob.
+    float lift = 1.0f;
+    if (steppedTargetOf(Model) == Fretless) {
+        const float b = std::fmax(clampf(goalOf(Bright), 0.0f, 1.0f) - 0.5f, 0.0f);
+        seconds *= std::pow(16.0f, -b);
+        lift = std::pow(10.0f, (10.0f * b + 18.0f * b * b) / 20.0f);
+    }
     const int len = std::max(4, static_cast<int>(seconds * sampleRate));
     const float period = sampleRate / hz(v, 0.0f);
     const int shift = std::max(1, static_cast<int>(std::lround(clampf(goalOf(Position), 0.04f, 0.5f) * period)));
     const int total = std::min(static_cast<int>(v.stroke.size()), len + shift);
     std::fill(v.stroke.begin(), v.stroke.begin() + total, 0.0f);
     // A slap is over in a fraction of a millisecond; it's struck harder to put in as much.
-    const float amp = stroke == Slap ? 1.1f : 0.6f;
+    const float amp = (stroke == Slap ? 1.1f : 0.6f) * lift;
     for (int i = 0; i < len && i < total; ++i) {
         const float shape = std::sin(3.14159265f * (static_cast<float>(i) + 0.5f) / static_cast<float>(len));
         v.stroke[static_cast<size_t>(i)] += amp * (shape + grit * white());

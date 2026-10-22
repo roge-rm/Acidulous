@@ -24,7 +24,7 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
 - **ton** : le bouton de tonalité de la guitare : la résonance de la bobine
   baisse quand vous le tournez vers le bas.
 - **maintien** : combien de temps les cordes résonnent.
-- **brillant** : combien de temps elles gardent leurs aigus.
+- **brillant** : combien de temps elles gardent leurs aigus. Sur la fretless, il va aussi d'un son sourd au « mwah ».
 - **résonance** : combien de temps une corde sonne encore une fois lâchée :
   à 0 les doigts l’arrêtent, tout en haut elle résonne comme une note tenue.
 

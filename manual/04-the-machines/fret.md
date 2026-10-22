@@ -24,7 +24,7 @@ hear the 4th harmonic at all.
 - **tone** - the guitar's tone knob: the coil's resonance falls as you turn
   it down.
 - **sustain** - how long the strings ring.
-- **bright** - how long they keep their top end.
+- **bright** - how long they keep their top end. On the fretless it also runs from a dark thump to the mwah.
 - **ring** - how long a string keeps sounding after you let go: at 0 your
   fingers stop it, all the way up it rings out like a held note.
 
