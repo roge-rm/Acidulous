@@ -20,8 +20,6 @@ constexpr int kRetuneEvery = 16;
 constexpr float kUnisonCents = 4.0f;
 /** How long a released string rings under the fingers, seconds. */
 constexpr float kReleaseT60 = 0.12f;
-/** Where a palm rests, as a fraction of the string from the bridge. */
-constexpr float kPalmAt = 0.035f;
 /** The second coil of a humbucker, this much further along the string. */
 constexpr float kSecondCoil = 0.03f;
 /** A fret starts to buzz when the string swings past this. */
@@ -286,7 +284,8 @@ void Fret::retune(Voice &v, float vibrato) {
     // (as the square root of the pitch), cut short by a palm or a lifted finger.
     const float lowHz = noteHz(k.lowest);
     float t60 = k.sustain * std::pow(4.0f, paramOf(Sustain) - 0.5f) * std::sqrt(lowHz / std::fmax(f, lowHz));
-    t60 *= 1.0f - 0.93f * mute;
+    // A palm takes every partial's ring away, the top fastest (the loss below).
+    t60 *= std::pow(0.03f, mute);
     if (!v.held) {
         // Let go, the fingers stop the string; ring moves that from their
         // short stop to the string's own time, on a log scale.
@@ -307,9 +306,6 @@ void Fret::retune(Voice &v, float vibrato) {
         w.setDcCorner(0.01f);
         w.setDispersion(k.stiffness, k.stiffness > 0.0f ? 2 : 0);
         w.setDamping(loop, tone);
-        // A palm by the bridge.
-        if (mute > 0.0f) w.setDamper(kPalmAt, mute * 0.6f);
-        else w.setDamper(0.5f, 0.0f);
     }
 }
 
@@ -382,9 +378,9 @@ void Fret::start(uint8_t note, uint8_t velocity) {
     // touch took away everything that doesn't share the node.
     v->harmonic = std::clamp(steppedTargetOf(Harmonic), 0, 3);
     v->pitch = v->aim = pitch + kHarmonicSemis[v->harmonic];
-    // A palm on the strings takes most of a note's ring away; some of the
+    // A palm on the strings takes most of a note's ring away; a little of the
     // level is made up, as a player digs in harder to be heard.
-    v->gain = kHouse * k.level * velocityGain(v->velocity, goalOf(VelocityAmount)) * (1.0f + 3.0f * clampf(goalOf(Mute), 0.0f, 1.0f));
+    v->gain = kHouse * k.level * velocityGain(v->velocity, goalOf(VelocityAmount)) * (1.0f + 0.5f * clampf(goalOf(Mute), 0.0f, 1.0f));
     if (!v->used) {
         v->string.clear();
         v->partner.clear();

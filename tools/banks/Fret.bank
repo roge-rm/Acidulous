@@ -33,10 +33,11 @@
 # #12 feedback, #14 volume, #15 ring, #16 swell, #17 pitch (one semitone is
 # 0.0417). Where a macro at full moves the level by more than 1.5 dB, a
 # volume route takes it back out, as far as the volume knob goes. Palm drops
-# 2-7 dB where the knob runs out or the pick's spike would pass -3 dBFS, and
-# a muted note reads 10-20 cents flat, as the muted patches do. Swell is left
-# quiet on purpose: the note arrives later. Howl only goes on patches driven
-# past 0.5, since feedback without drive just gets louder.
+# up to 3 dB where the knob runs out or a compressor sits after it; through
+# Chug's amp a volume route does nothing, so Tight and Open move it 2-4 dB,
+# as a note held longer is louder. Swell is left quiet on purpose: the note
+# arrives later. Howl only goes on patches driven past 0.5, since feedback
+# without drive just gets louder.
 #
 # `swell` fades each note in from silence over that many seconds, as a
 # volume knob rolled up after the pick. A note shorter than its swell never
@@ -112,6 +113,8 @@ patch "Clean Bridge" family=clean note=52 range=40..88
   mac3_a2  0.3
   mac4_d1  #4
   mac4_a1  0.35
+  mac4_d2  #14
+  mac4_a2  0.255
   mac5_d1  #5
   mac5_a1  0.35
   mac5_d2  #15
@@ -191,7 +194,7 @@ patch "Finger Style" family=clean note=52 range=40..84
   mac4_d1  #4
   mac4_a1  0.35
   mac4_d2  #14
-  mac4_a2  0.37
+  mac4_a2  0.177
   mac5_d1  #5
   mac5_a1  0.35
   mac5_d2  #15
@@ -323,6 +326,8 @@ patch Baritone family=clean note=47 range=35..80
   mac3_a2  0.15
   mac4_d1  #4
   mac4_a1  0.35
+  mac4_d2  #14
+  mac4_a2  0.15
   mac5_d1  #5
   mac5_a1  0.35
   mac5_d2  #15
@@ -363,6 +368,8 @@ patch "Baritone Twang" family=clean note=47 range=35..80
   mac3_a2  0.15
   mac4_d1  #4
   mac4_a1  0.35
+  mac4_d2  #14
+  mac4_a2  0.15
   mac5_d1  #5
   mac5_a1  0.35
   mac5_d2  #15
@@ -402,6 +409,8 @@ patch "Surf Baritone" family=clean note=52 range=35..84
   mac3_a2  0.3
   mac4_d1  #4
   mac4_a1  0.35
+  mac4_d2  #14
+  mac4_a2  0.289
   mac5_d1  #5
   mac5_a1  0.35
   mac5_d2  #15
@@ -588,45 +597,52 @@ patch "Power Chords" family=crunch note=40 range=36..64 role=chord
   pickup         #1
   position       0.22
 
-patch Chug family=crunch note=40 range=36..64 role=chord
-  # Palm-muted power chords through a driven amp.
+patch Chug family=crunch note=40 range=36..64 role=chug
+  # Palm-muted power chords on the low strings into a high-gain amp: a tight,
+  # thick thump with almost no ring.
   set macro1 "Gain"
   set macro2 "Dark"
-  set macro3 "Round"
+  set macro3 "Tight"
   set macro4 "Dig In"
-  set macro5 "Ring Out"
+  set macro5 "Open"
   set macro6 "Rattle"
-  set macro7 "Howl"
-  set macro8 "Vibrato"
+  set macro7 "Round"
+  set macro8 "Rake"
   mac1_d1  #11
-  mac1_a1  0.4
-  mac1_d2  #14
-  mac1_a2  -0.45
+  mac1_a1  0.3
   mac2_d1  #1
   mac2_a1  -0.4
   mac2_d2  #6
   mac2_a2  -0.25
-  mac3_d1  #3
-  mac3_a1  0.5
+  mac3_d1  #4
+  mac3_a1  0.15
   mac4_d1  #2
   mac4_a1  0.2
-  mac5_d1  #5
-  mac5_a1  0.35
-  mac5_d2  #15
-  mac5_a2  0.6
+  mac5_d1  #4
+  mac5_a1  -0.35
   mac6_d1  #7
   mac6_a1  0.6
-  mac7_d1  #12
-  mac7_a1  0.7
-  mac7_d2  #5
-  mac7_a2  0.2
-  mac8_d1  #10
-  mac8_a1  0.4
+  mac7_d1  #3
+  mac7_a1  0.5
+  mac8_d1  #8
+  mac8_a1  0.3
   coil           #1
-  mute           0.65
-  drive          0.6
+  mute           0.75
   hardness       0.8
   volume         1
+  insert Amp
+    drive        0.9
+    bass         0.9
+    mid          0.35
+    treble       0.6
+    stack        #1
+    presence     0.55
+    master       0.5
+    sag          0.1
+    size         0.8
+    cone         0.7
+    mic          0.2
+    gain         3.5 dB
 
 patch "Neck Grit" family=crunch note=50 range=40..84
   # The neck humbucker, driven: thick and woolly.
@@ -779,6 +795,8 @@ patch Garage family=crunch note=48 range=40..80 role=chord
   mac2_a2  -0.25
   mac3_d1  #4
   mac3_a1  0.35
+  mac3_d2  #14
+  mac3_a2  0.05
   mac4_d1  #2
   mac4_a1  0.2
   mac4_d2  #14
@@ -804,8 +822,9 @@ patch Garage family=crunch note=48 range=40..80 role=chord
   hardness       0.8
   volume         0.95
 
-patch Funk family=crunch note=55 range=45..84 role=chord
-  # The bridge single coil, half muted, quick strums.
+patch Funk family=crunch note=55 range=45..84 role=funk
+  # The bridge single coil, bright and clean into a compressor, with an
+  # envelope wah that quacks on the strokes you dig into.
   set macro1 "Gain"
   set macro2 "Dark"
   set macro3 "Round"
@@ -813,17 +832,13 @@ patch Funk family=crunch note=55 range=45..84 role=chord
   set macro5 "Ring Out"
   set macro6 "Rattle"
   set macro7 "Bright"
-  set macro8 "Vibrato"
+  set macro8 "Palm"
   mac1_d1  #11
   mac1_a1  0.4
-  mac1_d2  #14
-  mac1_a2  0.15
   mac2_d1  #1
   mac2_a1  -0.4
   mac2_d2  #6
   mac2_a2  -0.25
-  mac2_d3  #14
-  mac2_a3  0.15
   mac3_d1  #3
   mac3_a1  0.5
   mac4_d1  #2
@@ -834,17 +849,32 @@ patch Funk family=crunch note=55 range=45..84 role=chord
   mac5_a2  0.6
   mac6_d1  #7
   mac6_a1  0.6
+  mac6_d2  #14
+  mac6_a2  0.15
   mac7_d1  #6
   mac7_a1  0.35
   mac7_d2  #1
   mac7_a2  0.2
-  mac8_d1  #10
-  mac8_a1  0.4
-  mute           0.35
+  mac8_d1  #4
+  mac8_a1  0.3
+  mac8_d2  #14
+  mac8_a2  0.15
+  mute           0.15
   strum          6 ms
   direction      #2
-  bright         0.65
+  bright         0.8
+  hardness       0.85
   volume         0.85
+  insert Filter
+    cutoff       1100 Hz
+    reso         0.5
+    envdepth     0.7
+  insert Compressor
+    threshold    -24 dB
+    ratio        4
+    attack       2 ms
+    release      80 ms
+    makeup       6 dB
 
 patch "Fuzz Rhythm" family=crunch note=45 range=36..72 role=chord
   # A fuzz box in front of a clean amp: square and buzzing.
@@ -1380,7 +1410,7 @@ patch "Up Strokes" family=strum note=55 range=40..76 role=chord
   direction      #1
   mute           0.3
   bright         0.6
-  volume         0.85
+  volume         0.73
 
 patch "Slow Strum" family=strum note=52 range=40..76 role=chord
   # Wide, slow strums on the neck pickup.
@@ -1518,7 +1548,7 @@ patch "Twelve Ballad" family=strum note=57 range=40..76 role=chord
   mac2_d1  #4
   mac2_a1  0.35
   mac2_d2  #14
-  mac2_a2  -0.068
+  mac2_a2  0.086
   mac3_d1  #1
   mac3_a1  -0.4
   mac3_d2  #6
@@ -1589,8 +1619,8 @@ patch "Chorus Twelve" family=strum note=55 range=40..76 role=chord
     mix          0.4
   send reverb    0.1
 
-patch "Funk Muted" family=strum note=64 range=52..76 role=chord
-  # Palm-muted chops, bright and percussive, for funk.
+patch "Funk Muted" family=strum note=64 range=52..76 role=funk
+  # Palm-muted chops strummed both ways, bright and percussive, a little compressed.
   set macro1 "Spread"
   set macro2 "Round"
   set macro3 "Dark"
@@ -1623,11 +1653,19 @@ patch "Funk Muted" family=strum note=64 range=52..76 role=chord
   mac7_a1  0.4
   mac8_d1  #16
   mac8_a1  0.2
-  mute           0.6
+  mute           0.5
   pickup         #2
   bright         0.7
   hardness       0.8
-  volume         0.55
+  strum          6 ms
+  direction      #2
+  volume         1
+  insert Compressor
+    threshold      -16 dB
+    ratio          6
+    attack         0.5 ms
+    release        80 ms
+    makeup         6.5 dB
 
 patch "Jazz Box" family=jazz note=57 range=40..76
   # An archtop on the neck pickup, tone rolled off.
@@ -2336,6 +2374,7 @@ patch "Muted Bass" family=bass note=33 range=23..60 role=bass
   stroke         #1
   mute           0.6
   pickup         #0
+  volume         0.84
 
 patch "Dub Bass" family=bass note=33 range=23..52 role=bass
   # Fingers on the neck pickup, the tone off and the treble gone: deep and round.
@@ -2358,7 +2397,7 @@ patch "Dub Bass" family=bass note=33 range=23..52 role=bass
   mac3_d1  #4
   mac3_a1  0.35
   mac3_d2  #14
-  mac3_a2  0.233
+  mac3_a2  0.058
   mac4_d1  #5
   mac4_a1  0.3
   mac4_d2  #15
