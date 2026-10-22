@@ -101,11 +101,9 @@
 # (0.5) and Sax Section (0.48) have the embouchure that keeps one low note
 # from reading 40-odd cents flat; Alto Sax still has that note, 51 at -43.
 #
-# The low cones stop at note 31: below it every note of a cone comes out
-# about a semitone flat whatever the body, so Contrabassoon plays 32..53
-# rather than the instrument's bottom fifth. Contrabass Clarinet reads +33
-# at one note, and Jug and Bent Bamboo take 110 and 160 ms to speak, a
-# jug's puff and a breath swell.
+# Contrabassoon tunes down to its body, note 28, though it plays 32..53.
+# Jug and Bent Bamboo take 110 and 160 ms to speak, a jug's puff and a
+# breath swell.
 #
 # Values are in each parameter's own units; `audition params Timber` lists
 # them. A patch names only what it changes.
