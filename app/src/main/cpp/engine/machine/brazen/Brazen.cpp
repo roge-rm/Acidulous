@@ -20,6 +20,8 @@ constexpr float kHouse = 3.32f;
  * about 90 dB below full scale, low enough that cutting it doesn't tick.
  */
 constexpr float kSilent = 3.0e-5f;
+// How long a sounding voice fades before a tongued mono note restarts it, 2 ms.
+constexpr int32_t kFadeFrames = 96;
 
 namespace {
 constexpr float kTwoPi = 6.28318530718f;
@@ -198,6 +200,9 @@ void Brazen::reset() {
         v.swellFrom = v.swellPos = 1.0f;
         v.swellStep = 0.0f;
         v.flutterPhase = 0.0f;
+        v.fadeLeft = 0;
+        v.pendingNote = -1;
+        v.pendingOff = false;
     }
     for (auto &m : mac_) m = 0.0f;
     lastFlutter = 0.0f;
@@ -208,6 +213,7 @@ void Brazen::reset() {
 void Brazen::allNotesOff() {
     for (auto &v : voices) {
         if (!v.used) continue;
+        if (v.pendingNote >= 0) v.pendingOff = true;
         v.gate = false;
         v.amp.release();
     }
@@ -228,17 +234,20 @@ Brazen::Voice *Brazen::allocate() {
     return best;
 }
 
-void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
-    updateMacros(true); // a note reads where the knobs are going, so renders repeat
-    const float glide = goalOf(Glide);
+bool Brazen::slursOnto(const Voice &v) const {
     // Mono with legato slurs onto a held note, gliding over `glide` or
     // jumping at 0. Without legato, or onto a released voice with choke, it
     // slurs only while glide is on and is tongued otherwise. Poly glides
     // when it takes over a voice that is still sounding.
-    bool gliding;
-    if (steppedTargetOf(Mono) == 0) gliding = glide > 0.001f && v.used;
-    else if (v.used && v.gate) gliding = steppedTargetOf(Legato) != 0 || glide > 0.001f;
-    else gliding = v.used && steppedTargetOf(Choke) != 0 && glide > 0.001f;
+    const bool glide = goalOf(Glide) > 0.001f;
+    if (steppedTargetOf(Mono) == 0) return glide && v.used;
+    if (v.used && v.gate) return steppedTargetOf(Legato) != 0 || glide;
+    return v.used && steppedTargetOf(Choke) != 0 && glide;
+}
+
+void Brazen::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
+    updateMacros(true); // a note reads where the knobs are going, so renders repeat
+    const bool gliding = slursOnto(v);
     // A slur carries on the swell and flutter of the note it joined.
     // Anything else starts them again.
     if (!(gliding && v.gate)) {
@@ -312,14 +321,28 @@ void Brazen::noteOn(uint8_t note, uint8_t velocity) {
     // one let go is tongued on a voice of its own, so the old tail rings out
     // instead of being cut.
     // With choke, it takes the last voice let go instead and cuts its tail.
+    // A tongued note there fades the old one out first, so it doesn't stop
+    // dead with a click.
     Voice *v = nullptr;
     if (steppedTargetOf(Mono) != 0) {
         for (auto &w : voices) {
-            if (w.used && w.gate) { v = &w; break; }
+            if (w.used && (w.gate || w.pendingNote >= 0)) { v = &w; break; }
         }
         if (v == nullptr && steppedTargetOf(Choke) != 0) {
             for (auto &w : voices) {
                 if (w.used && (v == nullptr || w.age > v->age)) v = &w;
+            }
+        }
+        if (v != nullptr) {
+            updateMacros(true);
+            if (v->pendingNote >= 0 || !slursOnto(*v)) {
+                // Waiting already, this one takes its place and the fade
+                // goes on where it is. Otherwise start the fade.
+                if (v->pendingNote < 0) v->fadeLeft = kFadeFrames;
+                v->pendingNote = note;
+                v->pendingVel = velocity;
+                v->pendingOff = false;
+                return;
             }
         }
     }
@@ -330,6 +353,10 @@ void Brazen::noteOn(uint8_t note, uint8_t velocity) {
 
 void Brazen::noteOff(uint8_t note) {
     for (auto &v : voices) {
+        if (v.used && v.pendingNote == note) {
+            v.pendingOff = true; // let go before it started: start it, then release
+            continue;
+        }
         if (v.used && v.gate && v.note == note) {
             v.gate = false;
             v.amp.release();
@@ -415,6 +442,18 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
 
     for (auto &v : voices) {
         if (!v.used) continue;
+        if (v.pendingNote >= 0 && v.fadeLeft <= 0) {
+            // The old note has faded. Start the waiting one at the block's
+            // start, then put the block's macros back.
+            startVoice(v, static_cast<uint8_t>(v.pendingNote), v.pendingVel);
+            v.pendingNote = -1;
+            if (v.pendingOff) {
+                v.pendingOff = false;
+                v.gate = false;
+                v.amp.release();
+            }
+            updateMacros();
+        }
         v.amp.set(0.0f, paramOf(Attack), paramOf(Decay), paramOf(Sustain), paramOf(Release), false);
         v.filterL.set(paramOf(Cutoff), paramOf(Resonance), steppedOf(FilterType), dsp::MultiFilter::Clean, 0.0f);
         v.filterR.set(paramOf(Cutoff), paramOf(Resonance), steppedOf(FilterType), dsp::MultiFilter::Clean, 0.0f);
@@ -535,7 +574,7 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
             const float env = v.amp.next();
             // Free the voice once the player has stopped and the tube is
             // silent. See Voice::ring.
-            if (env <= 0.0000005f && !v.gate && v.ring < kSilent) { v.used = false; break; }
+            if (env <= 0.0000005f && !v.gate && v.ring < kSilent && v.pendingNote < 0) { v.used = false; break; }
             // The growl is a tremolo on the output, so it's worked out per
             // sample. Per block it would give audible steps.
             const float growlAmNow =
@@ -589,8 +628,14 @@ bool Brazen::render(float *L, float *R, int32_t frames) {
                 r = v.muteHpR * muteGain;
             }
             v.outGain += gainStep;
-            L[i] += v.filterL.process(l) * v.outGain;
-            R[i] += v.filterR.process(r) * v.outGain;
+            float fade = 1.0f;
+            if (v.pendingNote >= 0) {
+                // Fading, or faded and waiting for the next block.
+                fade = v.fadeLeft > 0 ? static_cast<float>(v.fadeLeft) / static_cast<float>(kFadeFrames) : 0.0f;
+                if (v.fadeLeft > 0) --v.fadeLeft;
+            }
+            L[i] += v.filterL.process(l) * v.outGain * fade;
+            R[i] += v.filterR.process(r) * v.outGain * fade;
         }
         v.outGain = gainTo;
     }
