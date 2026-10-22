@@ -489,13 +489,15 @@ void Manual::reset() {
     swellRunning = false;
 }
 
-int32_t Manual::wheelFor(int32_t note, int32_t bar) const {
-    const int32_t foot = kFootage[bar];
-    int32_t w = note + foot - WheelBank::kLowestNote;
-    // Fold back an octave when running out of wheels at either end.
+// Folds back an octave when running out of wheels at either end.
+static int32_t foldWheel(int32_t w) {
     while (w >= WheelBank::kWheels) w -= 12;
     while (w < 0) w += 12;
     return w;
+}
+
+int32_t Manual::wheelFor(int32_t note, int32_t bar) const {
+    return foldWheel(note + kFootage[bar] - WheelBank::kLowestNote);
 }
 
 void Manual::noteOn(uint8_t note, uint8_t velocity) {
@@ -535,7 +537,7 @@ void Manual::noteOn(uint8_t note, uint8_t velocity) {
     const int bars = manual == MPedal ? kPedalBars : kBars;
     for (int b = 0; b < kBars; ++b) {
         v->wheel[b] = manual == MPedal && b < kPedalBars
-                          ? (note + kPedalFootage[b] - WheelBank::kLowestNote + 120) % WheelBank::kWheels
+                          ? foldWheel(note + kPedalFootage[b] - WheelBank::kLowestNote)
                           : wheelFor(note, b);
         // The nine contacts under a key close a couple of milliseconds
         // apart, which is what makes the key click.
