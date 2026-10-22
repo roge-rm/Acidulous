@@ -935,6 +935,10 @@ class QuantMod final : public Module {
             const float d = std::fabs(within - static_cast<float>(def.intervals[i]));
             if (d < bestD) { bestD = d; best = static_cast<float>(def.intervals[i]); }
         }
+        // The root an octave up is a candidate too, so a value just under the
+        // root goes to the root and not the degree below it.
+        const float up = static_cast<float>(def.intervals[0]) + 12.0f;
+        if (std::fabs(within - up) < bestD) best = up;
         const float snapped = static_cast<float>(root) + static_cast<float>(octave) * 12.0f + best;
         out[0] = snapped / 127.0f;
         out[1] = std::fabs(snapped - last) > 0.01f ? 1.0f : 0.0f;

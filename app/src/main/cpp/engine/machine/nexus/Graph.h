@@ -19,8 +19,9 @@ struct Node {
     int32_t type = TBlank;
     bool poly = true;
     bool unknown = false;       // a type this build doesn't have, kept as a placeholder
-    // Its outputs are one note's controls (the voice and touch modules), so a
-    // mono module reads the lead voice's instead of a sum across voices.
+    // Its outputs are one note's controls (the voice and touch modules, and
+    // poly control blocks fed only by them), so a mono module reads the lead
+    // voice's instead of a sum across voices.
     bool perNote = false;
     int32_t outBase = 0;        // where this node's outputs start in the port row
     int32_t inCount = 0, outCount = 0;

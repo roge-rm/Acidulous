@@ -204,6 +204,33 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
     }
     g->prev.assign(static_cast<size_t>(kVoices + 1) * (g->delayedPorts.size() + 1), 0.0f);
 
+    // A poly control block (math, quant, env and the like) fed only by one
+    // note's controls and by mono sources puts out one note's control too,
+    // like a quantised pitch or an envelope on the note's gate, so a mono
+    // module follows its lead voice as well. Anything with a poly source
+    // that isn't per note, like an oscillator, is still summed. Walked in
+    // order so a chain of such blocks carries it through.
+    for (const int32_t ni : g->order) {
+        Node &n = g->nodes[static_cast<size_t>(ni)];
+        if (!n.poly || n.perNote) continue;
+        switch (n.type) {
+            case TMath: case TQuant: case TEnv: case TSlew: case TSnh:
+            case TLogic: case TProb: case TRand: break;
+            default: continue;
+        }
+        bool fromNote = false, mixed = false;
+        for (const auto &c : g->cables) {
+            if (c.dstNode != ni) continue;
+            for (const int32_t s : {c.srcNode, c.modNode}) {
+                if (s < 0) continue;
+                const Node &src = g->nodes[static_cast<size_t>(s)];
+                if (src.perNote) fromNote = true;
+                else if (src.poly) mixed = true;
+            }
+        }
+        n.perNote = fromNote && !mixed;
+    }
+
     // Group cables by destination so the inner loop walks a contiguous span.
     std::sort(g->cables.begin(), g->cables.end(),
               [](const Cable &a, const Cable &b) { return a.dstNode < b.dstNode; });

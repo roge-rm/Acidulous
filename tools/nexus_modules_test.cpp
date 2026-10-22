@@ -295,6 +295,22 @@ void knob(Module &m, int32_t type, int index, float value) {
     m.setKnobs(k);
 }
 
+// Quant picks the nearest scale degree, and the root an octave up counts.
+void quantSnapsToTheNearestDegree() {
+    auto q = make(TQuant);
+    const auto snap = [&](float note) {
+        Context c = context();
+        float ins[kPorts]{}, outs[kPorts]{};
+        ins[0] = note / 127.0f;
+        q->step(ins, outs, c);
+        return outs[0] * 127.0f;
+    };
+    ok("59.9999 in C major snaps up to C", std::fabs(snap(59.9999f) - 60.0f) < 0.01f, std::to_string(snap(59.9999f)));
+    ok("59.6 in C major snaps up to C", std::fabs(snap(59.6f) - 60.0f) < 0.01f, std::to_string(snap(59.6f)));
+    ok("58.4 in C major stays on B", std::fabs(snap(58.4f) - 59.0f) < 0.01f, std::to_string(snap(58.4f)));
+    ok("60.2 in C major stays on C", std::fabs(snap(60.2f) - 60.0f) < 0.01f, std::to_string(snap(60.2f)));
+}
+
 void blownInstrumentsSpeakAtTheirNote() {
     printf("- blown, at the note\n");
     const float a3 = 57.0f / 127.0f; // 220 Hz
@@ -570,6 +586,42 @@ void monoModulesFollowTheLeadVoice() {
         const double c = centsFrom(play(*m, 0.2f), 64.0f);
         ok("an overlapping note plays the guitar at its pitch", std::fabs(c) < 15.0, centsText(c));
     }
+
+    // A pitch through poly control blocks first is still one note's pitch.
+    // D and A, as they sit well inside a scale step; a slewed C settles a hair
+    // under the root, which quant now rounds up to C.
+    const std::string quant = "v|2\nm|0|voice\nm|3|quant|poly\nm|1|osc|mono\nm|2|out|mono\n"
+                              "c|0.0|3.0|1.0\nc|3.0|1.0|1.0\nc|1.0|2.0|1.0";
+    const std::string chain = "v|2\nm|0|voice\nm|4|slew|poly\nm|3|quant|poly\nm|1|osc|mono\nm|2|out|mono\n"
+                              "c|0.0|4.0|1.0\nc|4.0|3.0|1.0\nc|3.0|1.0|1.0\nc|1.0|2.0|1.0";
+    for (const auto &[name, patch] : {std::pair<std::string, std::string>{"quant", quant}, {"slew and quant", chain}}) {
+        auto m = nexusWith(patch);
+        m->noteOn(62, 40);
+        play(*m, 0.3f);
+        m->noteOn(69, 110);
+        play(*m, 0.3f);
+        const double up = centsFrom(play(*m, 0.2f), 69.0f);
+        ok("two held notes through a poly " + name + " play the newest", std::fabs(up) < 5.0, centsText(up));
+        m->noteOff(69);
+        play(*m, 0.3f);
+        const double back = centsFrom(play(*m, 0.2f), 62.0f);
+        ok("letting it go through the " + name + " returns to the held note", std::fabs(back) < 5.0, centsText(back));
+    }
+
+    // Audio from poly oscillators into a mono module is still a sum.
+    {
+        const std::string poly = "v|2\nm|0|voice\nm|1|osc|poly\nm|2|out|mono\nc|0.0|1.0|1.0\nc|1.0|2.0|1.0";
+        auto one = nexusWith(poly);
+        one->noteOn(60, 100);
+        play(*one, 0.1f);
+        const double r1 = rms(play(*one, 0.2f));
+        auto two = nexusWith(poly);
+        two->noteOn(60, 100);
+        two->noteOn(67, 100);
+        play(*two, 0.1f);
+        const double r2 = rms(play(*two, 0.2f));
+        ok("two poly saws into a mono out are both heard", r2 > r1 * 1.2, std::to_string(r2 / r1));
+    }
 }
 
 } // namespace
@@ -581,6 +633,7 @@ int main() {
     effectModulesAreTheEffects();
     theSecondInputMovesItsParameter();
     swellIsTheEffectsCompressor();
+    quantSnapsToTheNearestDegree();
     blownInstrumentsSpeakAtTheirNote();
     theJawHarpRingsWhenPlucked();
     thePianoPlaysFromAGate();
