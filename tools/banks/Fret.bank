@@ -33,10 +33,10 @@
 # #12 feedback, #14 volume, #15 ring, #16 swell, #17 pitch (one semitone is
 # 0.0417). Where a macro at full moves the level by more than 1.5 dB, a
 # volume route takes it back out, as far as the volume knob goes. Palm drops
-# up to 3 dB where the knob runs out or a compressor sits after it; through
-# Chug's amp a volume route does nothing, so Tight and Open move it 2-4 dB,
-# as a note held longer is louder. Swell is left quiet on purpose: the note
-# arrives later. Howl only goes on patches driven past 0.5, since feedback
+# up to 3 dB where the knob runs out or a compressor sits after it, so Funk's
+# Palm and Rattle also soften the pick. Through Chug's amp a volume route does
+# nothing, so Tight and Open trade mute against pick hardness instead.
+# Swell is left quiet on purpose: the note arrives later. Howl only goes on patches driven past 0.5, since feedback
 # without drive just gets louder.
 #
 # `swell` fades each note in from silence over that many seconds, as a
@@ -615,11 +615,15 @@ patch Chug family=crunch note=40 range=36..64 role=chug
   mac2_d2  #6
   mac2_a2  -0.25
   mac3_d1  #4
-  mac3_a1  0.15
+  mac3_a1  0.12
+  mac3_d2  #2
+  mac3_a2  -0.3
   mac4_d1  #2
   mac4_a1  0.2
   mac5_d1  #4
-  mac5_a1  -0.35
+  mac5_a1  -0.15
+  mac5_d2  #2
+  mac5_a2  0.2
   mac6_d1  #7
   mac6_a1  0.6
   mac7_d1  #3
@@ -851,14 +855,18 @@ patch Funk family=crunch note=55 range=45..84 role=funk
   mac6_a1  0.6
   mac6_d2  #14
   mac6_a2  0.15
+  mac6_d3  #2
+  mac6_a3  -0.2
   mac7_d1  #6
   mac7_a1  0.35
   mac7_d2  #1
   mac7_a2  0.2
   mac8_d1  #4
-  mac8_a1  0.3
+  mac8_a1  0.25
   mac8_d2  #14
   mac8_a2  0.15
+  mac8_d3  #2
+  mac8_a3  -0.3
   mute           0.15
   strum          6 ms
   direction      #2
@@ -1592,6 +1600,8 @@ patch "Chorus Twelve" family=strum note=55 range=40..76 role=chord
   mac3_a1  -0.4
   mac3_d2  #6
   mac3_a2  -0.25
+  mac3_d3  #14
+  mac3_a3  0.1
   mac4_d1  #2
   mac4_a1  0.4
   mac4_d2  #14
@@ -1612,6 +1622,7 @@ patch "Chorus Twelve" family=strum note=55 range=40..76 role=chord
   strum          22 ms
   pickup         #1
   bright         0.6
+  volume         0.53
   insert Chorus
     rate         #12
     depth        0.4

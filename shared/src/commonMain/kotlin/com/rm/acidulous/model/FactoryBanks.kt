@@ -9292,7 +9292,7 @@ internal object FactoryBanks {
         low = 36, high = 64)
 
     private fun fret14() = Patch("Fret", "Chug",
-        mapOf("coil" to 1f, "hardness" to 0.8f, "mute" to 0.75f, "volume" to 1f, "mac1_d1" to 0.647058845f, "mac1_a1" to 0.65f, "mac2_d1" to 0.05882353f, "mac2_d2" to 0.3529412f, "mac2_a1" to 0.3f, "mac2_a2" to 0.375f, "mac3_d1" to 0.235294119f, "mac3_a1" to 0.575f, "mac4_d1" to 0.117647059f, "mac4_a1" to 0.6f, "mac5_d1" to 0.235294119f, "mac5_a1" to 0.325f, "mac6_d1" to 0.4117647f, "mac6_a1" to 0.8f, "mac7_d1" to 0.1764706f, "mac7_a1" to 0.75f, "mac8_d1" to 0.470588237f, "mac8_a1" to 0.65f),
+        mapOf("coil" to 1f, "hardness" to 0.8f, "mute" to 0.75f, "volume" to 1f, "mac1_d1" to 0.647058845f, "mac1_a1" to 0.65f, "mac2_d1" to 0.05882353f, "mac2_d2" to 0.3529412f, "mac2_a1" to 0.3f, "mac2_a2" to 0.375f, "mac3_d1" to 0.235294119f, "mac3_d2" to 0.117647059f, "mac3_a1" to 0.56f, "mac3_a2" to 0.35f, "mac4_d1" to 0.117647059f, "mac4_a1" to 0.6f, "mac5_d1" to 0.235294119f, "mac5_d2" to 0.117647059f, "mac5_a1" to 0.425f, "mac5_a2" to 0.6f, "mac6_d1" to 0.4117647f, "mac6_a1" to 0.8f, "mac7_d1" to 0.1764706f, "mac7_a1" to 0.75f, "mac8_d1" to 0.470588237f, "mac8_a1" to 0.65f),
         mapOf("macro1" to "Gain", "macro2" to "Dark", "macro3" to "Tight", "macro4" to "Dig In", "macro5" to "Open", "macro6" to "Rattle", "macro7" to "Round", "macro8" to "Rake"),
         family = "crunch",
         low = 36, high = 64,
@@ -9325,7 +9325,7 @@ internal object FactoryBanks {
         low = 40, high = 80)
 
     private fun fret19() = Patch("Fret", "Funk",
-        mapOf("hardness" to 0.85f, "mute" to 0.15f, "bright" to 0.8f, "strum" to 0.075f, "direction" to 1f, "volume" to 0.85f, "mac1_d1" to 0.647058845f, "mac1_a1" to 0.7f, "mac2_d1" to 0.05882353f, "mac2_d2" to 0.3529412f, "mac2_a1" to 0.3f, "mac2_a2" to 0.375f, "mac3_d1" to 0.1764706f, "mac3_a1" to 0.75f, "mac4_d1" to 0.117647059f, "mac4_a1" to 0.7f, "mac5_d1" to 0.294117659f, "mac5_d2" to 0.882352948f, "mac5_a1" to 0.675f, "mac5_a2" to 0.8f, "mac6_d1" to 0.4117647f, "mac6_d2" to 0.8235294f, "mac6_a1" to 0.8f, "mac6_a2" to 0.575f, "mac7_d1" to 0.3529412f, "mac7_d2" to 0.05882353f, "mac7_a1" to 0.675f, "mac7_a2" to 0.6f, "mac8_d1" to 0.235294119f, "mac8_d2" to 0.8235294f, "mac8_a1" to 0.65f, "mac8_a2" to 0.575f),
+        mapOf("hardness" to 0.85f, "mute" to 0.15f, "bright" to 0.8f, "strum" to 0.075f, "direction" to 1f, "volume" to 0.85f, "mac1_d1" to 0.647058845f, "mac1_a1" to 0.7f, "mac2_d1" to 0.05882353f, "mac2_d2" to 0.3529412f, "mac2_a1" to 0.3f, "mac2_a2" to 0.375f, "mac3_d1" to 0.1764706f, "mac3_a1" to 0.75f, "mac4_d1" to 0.117647059f, "mac4_a1" to 0.7f, "mac5_d1" to 0.294117659f, "mac5_d2" to 0.882352948f, "mac5_a1" to 0.675f, "mac5_a2" to 0.8f, "mac6_d1" to 0.4117647f, "mac6_d2" to 0.8235294f, "mac6_d3" to 0.117647059f, "mac6_a1" to 0.8f, "mac6_a2" to 0.575f, "mac6_a3" to 0.4f, "mac7_d1" to 0.3529412f, "mac7_d2" to 0.05882353f, "mac7_a1" to 0.675f, "mac7_a2" to 0.6f, "mac8_d1" to 0.235294119f, "mac8_d2" to 0.8235294f, "mac8_d3" to 0.117647059f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.35f),
         mapOf("macro1" to "Gain", "macro2" to "Dark", "macro3" to "Round", "macro4" to "Dig In", "macro5" to "Ring Out", "macro6" to "Rattle", "macro7" to "Bright", "macro8" to "Palm"),
         family = "crunch",
         low = 45, high = 84,
@@ -9439,7 +9439,7 @@ internal object FactoryBanks {
         low = 40, high = 76)
 
     private fun fret37() = Patch("Fret", "Chorus Twelve",
-        mapOf("model" to 0.142857149f, "pickup" to 0.5f, "bright" to 0.6f, "strum" to 0.275f, "mac1_d1" to 0.470588237f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1764706f, "mac2_a1" to 0.75f, "mac3_d1" to 0.05882353f, "mac3_d2" to 0.3529412f, "mac3_a1" to 0.3f, "mac3_a2" to 0.375f, "mac4_d1" to 0.117647059f, "mac4_d2" to 0.8235294f, "mac4_a1" to 0.7f, "mac4_a2" to 0.622f, "mac5_d1" to 0.294117659f, "mac5_d2" to 0.882352948f, "mac5_a1" to 0.675f, "mac5_a2" to 0.8f, "mac6_d1" to 0.647058845f, "mac6_d2" to 0.8235294f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.5882353f, "mac7_a1" to 0.7f, "mac8_d1" to 0.9411765f, "mac8_a1" to 0.6f),
+        mapOf("model" to 0.142857149f, "pickup" to 0.5f, "bright" to 0.6f, "strum" to 0.275f, "volume" to 0.53f, "mac1_d1" to 0.470588237f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1764706f, "mac2_a1" to 0.75f, "mac3_d1" to 0.05882353f, "mac3_d2" to 0.3529412f, "mac3_d3" to 0.8235294f, "mac3_a1" to 0.3f, "mac3_a2" to 0.375f, "mac3_a3" to 0.55f, "mac4_d1" to 0.117647059f, "mac4_d2" to 0.8235294f, "mac4_a1" to 0.7f, "mac4_a2" to 0.622f, "mac5_d1" to 0.294117659f, "mac5_d2" to 0.882352948f, "mac5_a1" to 0.675f, "mac5_a2" to 0.8f, "mac6_d1" to 0.647058845f, "mac6_d2" to 0.8235294f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac7_d1" to 0.5882353f, "mac7_a1" to 0.7f, "mac8_d1" to 0.9411765f, "mac8_a1" to 0.6f),
         mapOf("macro1" to "Spread", "macro2" to "Round", "macro3" to "Dark", "macro4" to "Dig In", "macro5" to "Ring Out", "macro6" to "Grit", "macro7" to "Vibrato", "macro8" to "Swell"),
         family = "strum",
         low = 40, high = 76,
