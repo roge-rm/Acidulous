@@ -547,16 +547,13 @@ bool Fret::render(float *L, float *R, int32_t frames) {
             float in = 0.0f;
             if (v.strokeAt < v.strokeLength) in = v.stroke[static_cast<size_t>(v.strokeAt++)] * (0.5f + 0.5f * v.velocity);
             if (v.held && back != 0.0f) in += back;
-            float out = v.string.step(in);
             // The fret: a string swung past it slaps against it, and the buzz takes some of its swing.
             const float gap = kFretGap * (1.0f - 0.6f * buzz);
+            const float amount = buzz > 0.0f || v.slapLeft > 0 ? std::fmax(buzz, v.slapLeft > 0 ? 0.6f : 0.0f) : 0.0f;
+            v.string.setContact(gap, amount * 0.3f);
+            float out = v.string.step(in);
             const float over = std::fabs(out) - gap;
-            if ((buzz > 0.0f || v.slapLeft > 0) && over > 0.0f) {
-                const float amount = std::fmax(buzz, v.slapLeft > 0 ? 0.6f : 0.0f);
-                const float hit = (out > 0.0f ? over : -over) * amount;
-                v.string.excite(-hit * 0.3f);
-                out += white() * over * amount * 0.6f;
-            }
+            if (amount > 0.0f && over > 0.0f) out += white() * over * amount * 0.6f;
             if (v.slapLeft > 0) --v.slapLeft;
             float s = heard(v.string, out);
             if (v.hasPartner) {

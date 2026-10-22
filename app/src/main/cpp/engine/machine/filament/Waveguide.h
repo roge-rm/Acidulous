@@ -114,6 +114,17 @@ class Waveguide {
     void excite(float value) { pending += value; }
 
     /**
+     * A fret the string can strike: past [gap], [amount] (0..1) of the
+     * overshoot is taken off what goes back into the loop. It is applied to
+     * that sample itself, so it can only take energy away, whatever phase the
+     * dispersion gives the loop. 0 turns it off.
+     */
+    void setContact(float gap, float amount) {
+        contactGap = gap;
+        contactAmount = amount;
+    }
+
+    /**
      * The same, but scaled per turn round the string.
      *
      * A string is D samples round, so something added every sample goes in D
@@ -151,6 +162,10 @@ class Waveguide {
         }
         float next = fed + input + pending;
         pending = 0.0f;
+        if (contactAmount > 0.0f) {
+            const float over = std::fabs(next) - contactGap;
+            if (over > 0.0f) next -= (next > 0.0f ? over : -over) * contactAmount;
+        }
         // A DC blocker, since a string with fixed ends can't hold a steady
         // offset. The hammer and breath exciters both add DC, which would
         // otherwise keep going round, waste headroom and thump.
@@ -376,6 +391,7 @@ class Waveguide {
     float energy = 0.0f;
     float lastOut = 0.0f;
     float pending = 0.0f;
+    float contactGap = 0.0f, contactAmount = 0.0f;
 };
 
 } // namespace acidulous::machine
