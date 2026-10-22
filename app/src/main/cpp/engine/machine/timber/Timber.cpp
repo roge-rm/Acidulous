@@ -397,13 +397,14 @@ bool Timber::render(float *L, float *R, int32_t frames) {
     // octave register gives a twelfth (the third partial) instead.
     const int32_t mode = reg == Natural ? 1 : (reg == Octave ? (cylinder ? 3 : 2) : 3);
 
-    // On a jet the flutter is read every sample from where the block started,
-    // since it cuts the jet's own gain and a per-block value would step it.
-    const bool jetFlutter = family == timber::Pipe::Jet && flutter > 0.0f;
+    // The flutter is read every sample from where the block started, since
+    // it taps the reed shut or cuts the jet's gain and a per-block value
+    // would step it.
+    const bool fluttering = flutter > 0.0f;
+    const bool jetFlutter = family == timber::Pipe::Jet && fluttering;
     const float flutterFrom = flutterPhase, flutterStep = flutterRate * dt;
     flutterPhase += flutterRate * dt * static_cast<float>(frames);
     while (flutterPhase >= 1.0f) flutterPhase -= 1.0f;
-    const float flutterNow = flutter * 0.5f * (1.0f - std::cos(flutterPhase * kTwoPi));
 
     // How long the tongue takes to leave the reed, and how long a pad takes
     // to close. Both are smooth windows; see the sample loop.
@@ -498,7 +499,12 @@ bool Timber::render(float *L, float *R, int32_t frames) {
             // The tongue: on the reed at the start of a note, and again as
             // often as flutter asks for. It comes off with a raised cosine
             // rather than a hard gate, which would click.
-            float stop = flutterNow * tongueDepth;
+            float cut = 0.0f;
+            if (fluttering) {
+                const float ph = flutterFrom + flutterStep * static_cast<float>(i + 1);
+                cut = flutter * 0.5f * (1.0f - std::cos(ph * kTwoPi));
+            }
+            float stop = cut * tongueDepth;
             if (v.tongueLeft > 0.0f) {
                 v.tongueLeft -= 1.0f;
                 const float r = v.tongueLeft < tongueOff ? v.tongueLeft * tongueOffInv : 1.0f;
@@ -519,8 +525,6 @@ bool Timber::render(float *L, float *R, int32_t frames) {
             if (jetFlutter) {
                 // Flutter on a jet: the tongue breaks the air stream up, so
                 // the jet and the breath behind it both drop with it.
-                const float ph = flutterFrom + flutterStep * static_cast<float>(i + 1);
-                const float cut = flutter * 0.5f * (1.0f - std::cos(ph * kTwoPi));
                 v.pipe.setJetCut(cut);
                 breath *= 1.0f - kJetFlutterBreath * cut;
             }

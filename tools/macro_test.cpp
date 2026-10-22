@@ -640,6 +640,9 @@ void filamentRoutes() {
     same("Filament: a route to vibrato rate matches the knob", fast, fastRouted);
 }
 
+double largestStep(const std::vector<float> &v);
+double blockEdge(const std::vector<float> &v, size_t from, size_t to);
+
 // A note at [first], held, and a second at 60 slurred onto it at [slurAt]
 // samples, from a fresh Timber with [units] set.
 // A negative [slurAt] holds [first] alone.
@@ -776,6 +779,25 @@ void timberRoutes() {
     }
     std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f", jumpFlutter, jumpStill);
     ok(jumpFlutter <= jumpStill * 1.05, "Timber: a jet's flutter has no steps in it", buf);
+
+    // Flutter on a reed: the tongue taps the reed shut at the flutter rate,
+    // read every sample like the jet's.
+    const std::vector<std::pair<std::string, float>> reed = {
+        {"family", 0.0f}, {"bore", 0.0f}, {"body", 146.8f}, {"pressure", 0.8f},
+        {"vibrato", 0.0f}, {"flutterrate", 25.0f}};
+    auto reedFlutter = reed;
+    reedFlutter.push_back({"flutter", 0.6f});
+    const auto reedStill = timberSlur(reed, -1, 50);
+    const auto reedFluttered = timberSlur(reedFlutter, -1, 50);
+    const double rStill = wobble(reedStill), rFlutter = wobble(reedFluttered);
+    std::snprintf(buf, sizeof(buf), "25 Hz movement %.3f against %.3f", rFlutter, rStill);
+    ok(rFlutter > 0.08 && rFlutter > rStill * 4, "Timber: flutter moves a reed", buf);
+    std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f, block edge %.3f against %.3f",
+                  largestStep(reedFluttered), largestStep(reedStill), blockEdge(reedFluttered, 2400, 30000),
+                  blockEdge(reedStill, 2400, 30000));
+    ok(largestStep(reedFluttered) <= largestStep(reedStill) * 1.05 &&
+           blockEdge(reedFluttered, 2400, 30000) <= blockEdge(reedStill, 2400, 30000) * 1.1,
+       "Timber: a reed's flutter has no steps in it", buf);
 }
 
 // One note event for timberEvents: at block [block], note [note] on (or off
