@@ -225,6 +225,7 @@ struct DestMap {
             {F::VelocityAmount, F::McVelocity}, {F::MpeTimbre, F::McMpeTimbre},
             {F::MpePressure, F::McMpePressure},
             {F::VibRate, F::McVibRate}, {F::VibDepth, F::McVibDepth}, {F::VibDelay, F::McVibDelay},
+            {F::Evenness, F::McEvenness},
         };
         for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
     }

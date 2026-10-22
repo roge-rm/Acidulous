@@ -3324,7 +3324,7 @@ private val RESONANCE_SHAPES = listOf("membrane", "bar", "plate", "tube", "bowl"
 val RESONANCE_DESTS = listOf(
     "off", "all decay", "all damping", "all stiffness", "all where", "all hardness", "all grit", "all drive", "pitch",
     "coupling", "humanise", "accent", "volume",
-) + (1..8).map { "tune $it" } + (1..8).map { "level $it" }
+) + (1..8).map { "tune $it" } + (1..8).map { "level $it" } + listOf("drive heard")
 
 /**
  * Resonance's panel: one object at a time, chosen with the pads, since eight
@@ -3989,7 +3989,7 @@ val FILAMENT_MACRO_DESTS = listOf(
     "lfo1 rate", "lfo1 depth", "lfo2 rate", "lfo2 depth",
     "velocity", "slide", "press",
     "vib rate", "vib depth", "vib delay",
-    "pitch",
+    "pitch", "evenness",
 )
 
 @Composable

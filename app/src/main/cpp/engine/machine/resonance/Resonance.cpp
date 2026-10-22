@@ -135,6 +135,7 @@ struct DestMap {
         of[R::Humanise] = R::DstHumanise;
         of[R::Accent] = R::DstAccent;
         of[R::Volume] = R::DstVolume;
+        of[R::DriveCouple] = R::DstDriveCouple;
     }
 };
 const DestMap &destMap() {
@@ -344,7 +345,7 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
     const float coupling = val(Coupling);
     const float volume = val(Volume);
     const float masterPan = params_.get(MasterPan);
-    const float driveCouple = params_.get(DriveCouple);
+    const float driveCouple = val(DriveCouple);
     // Half the partials in lean mode, see `modesFor`. The ones dropped are the
     // quietest, since the series rolls off.
     const int32_t wantModes = modesFor(params_.get(Modes));

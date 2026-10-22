@@ -37,8 +37,7 @@ class Resonance final : public Machine {
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
         // Added after the macros. How much of a driven pad's bend reaches the
-        // coupling bus, 0 the clean pad. Not a macro destination, since adding
-        // one would move every saved destination.
+        // coupling bus, 0 the clean pad.
         DriveCouple = MacroBase + 8 * MacroParams,
         Count
     };
@@ -47,7 +46,8 @@ class Resonance final : public Machine {
         DstCoupling, DstHumanise, DstAccent, DstVolume,
         DstTune, // DstTune + pad
         DstLevel = DstTune + kPads, // DstLevel + pad
-        DestCount = DstLevel + kPads
+        DstDriveCouple = DstLevel + kPads, // after the levels, so they keep their numbers
+        DestCount
     };
     static constexpr int kMacros = 8;
     static_assert(Count <= kMaxParams, "Resonance declares more parameters than a unit can hold");

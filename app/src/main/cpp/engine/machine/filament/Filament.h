@@ -84,8 +84,7 @@ class Filament final : public Machine {
         // leaves the wolf notes as they fall and 1 would take them all out,
         // which overshoots since a string's spectrum isn't known ahead. The
         // default 0.5 takes a bowed string's per-note spread at full body
-        // from 3.5..10.7 dB to 1.7..5.5. Not a macro destination, since
-        // adding one would move every saved destination.
+        // from 3.5..10.7 dB to 1.7..5.5.
         Evenness = MacroBase + 8 * MacroParams,
         Count
     };
@@ -104,6 +103,8 @@ class Filament final : public Machine {
         McVelocity, McMpeTimbre, McMpePressure,
         McVibRate, McVibDepth, McVibDelay,
         McPitch,
+        // Added after pitch, so the ones before keep their numbers.
+        McEvenness,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
