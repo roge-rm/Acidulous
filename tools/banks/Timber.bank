@@ -101,7 +101,8 @@
 # note on a higher partial of a longer tube, though Flute's twelfth loses 82
 # and 84 to the tube's thirds. Baritone Sax (0.5) and Sax Section (0.48)
 # have the embouchure that keeps one low note from reading 40-odd cents
-# flat; Alto Sax still has that note, 51 at -43.
+# flat. On Alto Sax that note is 51, and a tongue over 0.7 lets the attack
+# ring a flat second mode louder than the note for 0.4 s.
 #
 # Contrabassoon tunes down to its body, note 28, though it plays 32..53.
 # Jug and Bent Bamboo take 110 and 160 ms to speak, a jug's puff and a
@@ -519,7 +520,7 @@ patch "Alto Sax" family=sax  note=60 range=50..74
   keys           0.3
   lattice        900 Hz
   pressure       0.95
-  tongue         0.75
+  tongue         0.7
   vibrato        9 cents
   volume         0.58
 
