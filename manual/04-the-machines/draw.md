@@ -42,6 +42,17 @@ Reeds never quite agree, so a note on two or three reeds beats, each
 harmonic at its own speed. That's most of what makes an accordion sound like
 one.
 
+## Left hand
+
+Keys below **below** in the **left hand** group play an accordion's bass
+buttons: each key sounds its bass note, low and on two reeds an octave apart,
+and its chord in the middle of the keyboard, on reeds of their own. Any key of
+the same name plays the same bass and chord, as on the buttons. **chord** is
+**major**, **minor**, **7th**, **dim** or **none**, the bass alone. **level**
+is the left hand against the right. At **off** every key plays the right hand.
+It works on the accordion, bandoneon, concertina, melodica and harmonium, not
+the harmonicas or the pipes.
+
 ## Harmonicas
 
 A harmonica hole has two reeds, one for blowing and one for drawing, with
@@ -120,3 +131,18 @@ own, makes that note louder and brighter.
 - **velocity** - how much playing harder blows harder.
 - **octave**, **bend** - the octave, and the pitch bend range in semitones.
 - **volume**.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Squeeze,
+Musette, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model,
+the register, the switches and stepped choices and the tuning can't be
+reached. A change to the attack, release or velocity is heard from the next
+note. Tap a macro's name to rename it.

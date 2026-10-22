@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen and Manual move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw and Fret move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -14,6 +14,9 @@
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/brazen/Brazen.h>
+#include <engine/machine/draw/Draw.h>
+#include <engine/machine/fret/Fret.h>
+#include <engine/machine/hammer/Hammer.h>
 #include <engine/machine/filament/Filament.h>
 #include <engine/machine/formulate/Formulate.h>
 #include <engine/machine/genesis/Genesis.h>
@@ -45,6 +48,9 @@ constexpr int32_t kBlocks = 128;
 
 int checks = 0, failures = 0;
 
+void ok(bool pass, const std::string &what, const std::string &detail);
+// [ok] for a [pass] that writes its own [detail]: the detail is read after it.
+void ok2(bool pass, const std::string &what, const char *detail) { ok(pass, what, detail); }
 void ok(bool pass, const std::string &what, const std::string &detail) {
     ++checks;
     if (!pass) ++failures;
@@ -393,9 +399,12 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the pads' tune", buf);
     } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0 ||
-               std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0) {
+               std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0 ||
+               std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
-        gUnits = {{"transpose", 12.0f}};
+        // Draw and Fret have no transpose, so an octave up.
+        const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0;
+        gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
         const auto routed = play(&up);
@@ -1345,6 +1354,156 @@ void manualRoutes() {
 
 } // namespace
 
+// [type] played from fresh with [units] set: [notes] struck at the start
+// and held for [blocks] blocks.
+std::vector<float> playHeld(const char *type, const std::vector<std::pair<std::string, float>> &units,
+                            const std::vector<uint8_t> &notes, int32_t blocks, const Route *r = nullptr,
+                            int dests = 0) {
+    Machine *m = MachineRegistry::create(type);
+    m->prepare(kRate);
+    ParamSet &p = m->params();
+    for (const auto &[name, value] : units) {
+        const int32_t i = p.indexOf(name.c_str());
+        if (i < 0) { std::printf("  FAIL no parameter %s\n", name.c_str()); ++failures; continue; }
+        p.set(i, p.def(i).unmap(value));
+    }
+    if (r != nullptr) {
+        const std::string k = "mac" + std::to_string(r->macro);
+        setNorm(p, k, r->knob);
+        setNorm(p, k + "_d" + std::to_string(r->route), r->dest / (dests - 1.0f));
+        setNorm(p, k + "_a" + std::to_string(r->route), (r->depth + 1.0f) * 0.5f);
+    }
+    p.jumpAll();
+    m->reset();
+    for (uint8_t n : notes) m->noteOn(n, 100);
+    std::vector<float> out;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < blocks; ++b) {
+        m->onBlock(b * 4, b * 4 + 4, 120.0f);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+    }
+    delete m;
+    return out;
+}
+
+/** The worst difference between [a] and [b] against [a]'s peak, and whether it is under [limit] of it. */
+bool sameAs(const std::vector<float> &a, const std::vector<float> &b, char *buf, size_t size, double limit = 1e-4) {
+    double worst = 0, peak = 0;
+    for (size_t i = 0; i < a.size() && i < b.size(); ++i) {
+        worst = std::max(worst, double(std::fabs(a[i] - b[i])));
+        peak = std::max(peak, double(std::fabs(a[i])));
+    }
+    std::snprintf(buf, size, "worst difference %.2g of peak %.2g", worst, peak);
+    return peak > 1e-4 && worst <= peak * limit;
+}
+
+// Fret's swell: a route to it matches the knob, a note starts quiet and
+// arrives, and it rises without steps.
+void fretRoutes() {
+    using Ft = acidulous::machine::Fret;
+    char buf[128];
+    const int32_t blocks = 750; // a second
+    const auto base = playHeld("Fret", {{"sustain", 1.0f}}, {57}, blocks);
+    const auto swelled = playHeld("Fret", {{"sustain", 1.0f}, {"swell", 0.4f}}, {57}, blocks);
+    // Swell is 0..4 s, so a route of 0.1 is 0.4 s.
+    Route r{2, 3, Ft::McSwell, 0.1f, 1.0f};
+    ok2(sameAs(swelled, playHeld("Fret", {{"sustain", 1.0f}}, {57}, blocks, &r, Ft::MacroDestCount), buf, sizeof(buf)),
+       "Fret: a route to swell matches the knob", buf);
+    std::snprintf(buf, sizeof(buf), "front %.4f against %.4f", rmsRange(swelled, 0, 2400), rmsRange(base, 0, 2400));
+    ok(rmsRange(swelled, 0, 2400) < rmsRange(base, 0, 2400) * 0.1, "Fret: a swelled note starts quiet", buf);
+    const size_t late = 24000;
+    std::snprintf(buf, sizeof(buf), "after %.4f against %.4f", rmsRange(swelled, late, late + 4800),
+                  rmsRange(base, late, late + 4800));
+    ok(std::fabs(rmsRange(swelled, late, late + 4800) / rmsRange(base, late, late + 4800) - 1.0) < 0.01,
+       "Fret: a swelled note arrives at its level", buf);
+    std::snprintf(buf, sizeof(buf), "largest step %.4f against %.4f", largestStep(swelled), largestStep(base));
+    ok(largestStep(swelled) <= largestStep(base) * 1.05, "Fret: the swell has no steps in it", buf);
+}
+
+// Hammer's roll and duplex: a route to either matches its knob, a roll
+// strikes a held note again (it keeps its level where one strike dies
+// away), and the duplex rings faintly with a treble note.
+void hammerRoutes() {
+    using Hm = acidulous::machine::Hammer;
+    char buf[128];
+    const int32_t blocks = 1500; // two seconds
+    const auto once = playHeld("Hammer", {{"model", 10.0f}}, {69}, blocks);
+    const auto rolled = playHeld("Hammer", {{"model", 10.0f}, {"roll", 12.0f}}, {69}, blocks);
+    // Roll is 0..24 Hz, so a route of 0.5 is 12.
+    Route r{5, 1, Hm::McRoll, 0.5f, 1.0f};
+    ok2(sameAs(rolled, playHeld("Hammer", {{"model", 10.0f}}, {69}, blocks, &r, Hm::MacroDestCount), buf, sizeof(buf)),
+       "Hammer: a route to roll matches the knob", buf);
+    const size_t end = once.size();
+    std::snprintf(buf, sizeof(buf), "last half second %.4f against %.4f", rmsRange(rolled, end - 24000, end),
+                  rmsRange(once, end - 24000, end));
+    ok(rmsRange(rolled, end - 24000, end) > rmsRange(once, end - 24000, end) * 2.0, "Hammer: a roll strikes a held note again", buf);
+    // Struck about 12 times a second: the level's rises, block by block.
+    int strikes = 0;
+    double was = 0;
+    for (size_t at = 4800; at + 480 <= end; at += 480) {
+        const double now = rmsRange(rolled, at, at + 480);
+        if (was > 0 && now > was * 1.15) ++strikes;
+        was = now;
+    }
+    std::snprintf(buf, sizeof(buf), "%d rises in 1.9 s", strikes);
+    ok(strikes >= 15 && strikes <= 30, "Hammer: a roll strikes about as often as it says", buf);
+
+    const auto dry = playHeld("Hammer", {}, {84}, blocks);
+    const auto duplexed = playHeld("Hammer", {{"duplex", 1.0f}}, {84}, blocks);
+    Route d{6, 4, Hm::McDuplex, 1.0f, 1.0f};
+    ok2(sameAs(duplexed, playHeld("Hammer", {}, {84}, blocks, &d, Hm::MacroDestCount), buf, sizeof(buf)),
+       "Hammer: a route to duplex matches the knob", buf);
+    std::vector<float> diff(end);
+    for (size_t i = 0; i < end; ++i) diff[i] = duplexed[i] - dry[i];
+    const double under = 20.0 * std::log10(rmsRange(diff, 0, end) / rmsRange(dry, 0, end));
+    std::snprintf(buf, sizeof(buf), "%.1f dB under the note", under);
+    ok(under > -40.0 && under < -6.0, "Hammer: the duplex rings faintly with a note", buf);
+    // A moving duplex knob ramps: half way through, from 0 to 1 at once.
+    Machine *m = MachineRegistry::create("Hammer");
+    m->prepare(kRate);
+    m->reset();
+    m->noteOn(84, 100);
+    std::vector<float> moved;
+    float L[kBlock], R[kBlock];
+    for (int32_t b = 0; b < blocks; ++b) {
+        if (b == blocks / 2) m->params().set(m->params().indexOf("duplex"), 1.0f);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) moved.push_back(L[i]);
+    }
+    delete m;
+    std::snprintf(buf, sizeof(buf), "largest step %.5f against %.5f", largestStep(moved), largestStep(dry));
+    ok(largestStep(moved) <= largestStep(dry) * 1.05, "Hammer: the duplex knob moves without steps", buf);
+}
+
+// Draw's left hand: below the split a key plays its bass and chord, every
+// key of a name the same; above it nothing changes; a route to its level
+// matches the knob.
+void drawRoutes() {
+    using Dr = acidulous::machine::Draw;
+    char buf[128];
+    const int32_t blocks = 375;
+    const auto right = playHeld("Draw", {}, {48}, blocks);
+    const auto left = playHeld("Draw", {{"bass", 60.0f}}, {48}, blocks);
+    std::snprintf(buf, sizeof(buf), "rms %.4f against %.4f", rmsRange(left, 0, left.size()), rmsRange(right, 0, right.size()));
+    ok(left != right && rmsRange(left, 0, left.size()) > 1e-3, "Draw: a key below the split plays the left hand", buf);
+    ok(playHeld("Draw", {{"bass", 60.0f}}, {36}, blocks) == left, "Draw: every key of a name plays the same button", "");
+    ok(playHeld("Draw", {{"bass", 60.0f}}, {72}, blocks) == playHeld("Draw", {}, {72}, blocks),
+       "Draw: a key above the split plays as before", "");
+    ok(playHeld("Draw", {{"bass", 60.0f}, {"bass chord", 0.0f}}, {48}, blocks) !=
+           playHeld("Draw", {{"bass", 60.0f}, {"bass chord", 1.0f}}, {48}, blocks),
+       "Draw: a minor chord is not the major", "");
+    const auto quiet = playHeld("Draw", {{"bass", 60.0f}, {"bass level", 0.5f}}, {48}, blocks);
+    // Bass level is 0..1.5 from 1, so a route of -1/3 is 0.5.
+    Route r{7, 2, Dr::McBassLevel, -1.0f / 3.0f, 1.0f};
+    ok2(sameAs(quiet, playHeld("Draw", {{"bass", 60.0f}}, {48}, blocks, &r, Dr::MacroDestCount), buf, sizeof(buf), 1e-3),
+       "Draw: a route to the bass level matches the knob", buf);
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1400,6 +1559,17 @@ int main() {
     // nothing and -0.25 leaves 0.25.
     basics("Manual", Mn::MacroDestCount, Mn::McVolume, Mn::McPitch, Mn::McOff, Mn::kMacros, 0.0, 0.25 / 0.75);
     manualRoutes();
+    gNote = 57;
+    using Hm = acidulous::machine::Hammer;
+    // Hammer's volume is 0 to 1.5 from 1, so -0.5 leaves 0.25 and -0.25 leaves 0.625.
+    basics("Hammer", Hm::MacroDestCount, Hm::McVolume, Hm::McPitch, Hm::McOff, Hm::kMacros, 0.25, 0.625);
+    hammerRoutes();
+    using Dr = acidulous::machine::Draw;
+    basics("Draw", Dr::MacroDestCount, Dr::McVolume, Dr::McPitch, Dr::McOff, Dr::kMacros);
+    drawRoutes();
+    using Ft = acidulous::machine::Fret;
+    basics("Fret", Ft::MacroDestCount, Ft::McVolume, Ft::McPitch, Ft::McOff, Ft::kMacros);
+    fretRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

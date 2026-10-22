@@ -48,6 +48,18 @@ Les anches ne s’accordent jamais tout à fait, alors une note sur deux ou troi
 anches bat, chaque harmonique à sa propre vitesse. C’est surtout ça qui fait
 qu’un accordéon sonne comme un accordéon.
 
+## Main gauche
+
+Les touches sous **sous** dans le groupe **main gauche** jouent les boutons de
+basse d’un accordéon : chaque touche sonne sa note de basse, grave et sur deux
+anches à une octave l’une de l’autre, et son accord au milieu du clavier, sur
+des anches à lui. Toute touche du même nom joue la même basse et le même
+accord, comme sur les boutons. **accord** est **majeur**, **mineur**, **7e**,
+**dim** ou **aucune**, la basse seule. **niveau** est la main gauche par
+rapport à la droite. À **off**, chaque touche joue la main droite. Cela marche
+sur l’accordéon, le bandonéon, le concertina, le mélodica et l’harmonium, pas
+sur les harmonicas ni les tuyaux.
+
 ## Harmonicas
 
 Un trou d’harmonica a deux anches, une pour souffler et une pour aspirer, avec
@@ -133,3 +145,18 @@ touche qui envoie la sienne, rend cette note plus forte et plus brillante.
 - **vélocité** - à quel point jouer plus fort souffle plus fort.
 - **octave**, **bend** - l’octave, et l’amplitude du pitch-bend en demi-tons.
 - **volume**.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Serrer, Musette,
+etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
+dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
+patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tout l’instrument, 24
+demi-tons à 1. Le modèle, le registre, les interrupteurs et les choix par pas, et l’accordage ne sont pas accessibles. Un changement d’attaque, de relâchement ou de vélocité s’entend à la note
+suivante. Touchez le nom d’une
+macro pour la renommer.

@@ -35,6 +35,9 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
 - **dureté** : un médiator ou un doigt doux ou dur.
 - **position** : où la corde est attaquée : près du chevalet c’est fin, plus
   loin c’est plus chaud.
+- **crescendo** : chaque note monte du silence en ce nombre de secondes, comme
+  un guitariste qui tourne le bouton de volume après avoir attaqué. À 0, elle
+  commence tout de suite.
 - **sourdine** : la paume posée sur les cordes près du chevalet. La molette
   de modulation fait de même, pour étouffer en jouant.
 - **harmonique** : un doigt qui effleure la **12**e, la **7**e ou la
@@ -57,6 +60,21 @@ quart de la longueur, il n’entend plus du tout le 4e harmonique.
   retour. Avec de la saturation, une note tenue se maintient et peut sauter
   à une harmonique.
 - **voix**, **vélocité**, **octave**, **bend** et **volume**.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Grain, Manche,
+etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
+dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
+patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tout l’instrument, 24
+demi-tons à 1. Le modèle, les interrupteurs et les choix par pas, et l’accordage ne sont pas accessibles. Un changement de dureté, de position, de grattage, de glissé, de vélocité ou de
+crescendo s’entend à la note suivante. Touchez le nom d’une
+macro pour la renommer.
 
 ## Astuces
 

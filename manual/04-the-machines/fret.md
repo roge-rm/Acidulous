@@ -35,6 +35,8 @@ hear the 4th harmonic at all.
 - **hardness** - a soft or hard pick or finger.
 - **position** - where along the string it's struck: near the bridge is
   thin, further out is warmer.
+- **swell** - each note fades in from silence over this many seconds, as a
+  player rolls the volume knob up after picking. At 0 it starts at once.
 - **mute** - the palm resting on the strings by the bridge. The mod wheel
   does the same, so you can mute as you play.
 - **harmonic** - a finger touching the **12**th, **7**th or **5**th fret,
@@ -55,6 +57,21 @@ hear the 4th harmonic at all.
 - **feedback** - how much the amp's sound shakes the strings back. With
   drive up, a held note sustains and can jump up to a harmonic.
 - **voices**, **velocity**, **octave**, **bend** and **volume**.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Grit, Neck,
+etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model,
+the switches and stepped choices and the tuning can't be reached. A change to
+the hardness, position, strum, slide, velocity or swell is heard from the next
+note. Tap a macro's name to rename it.
 
 ## Tips
 

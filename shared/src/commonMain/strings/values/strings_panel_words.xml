@@ -95,6 +95,7 @@
     <string name="pw_bars_organ">bars</string>
     <string name="pw_basic">basic</string>
     <string name="pw_bass">bass</string>
+    <string name="pw_bass_level">bass level</string>
     <string name="pw_bata">bata</string>
     <string name="pw_bayan">bayan</string>
     <string name="pw_beak">beak</string>
@@ -302,6 +303,7 @@
     <string name="pw_dice">dice</string>
     <string name="pw_digital">digital</string>
     <string name="pw_dilruba">dilruba</string>
+    <string name="pw_dim">dim</string>
     <string name="pw_diode">diode</string>
     <string name="pw_dir">dir</string>
     <string name="pw_direct">direct</string>
@@ -335,6 +337,7 @@
     <string name="pw_duck">duck</string>
     <string name="pw_dudy">dudy</string>
     <string name="pw_dulcimer">dulcimer</string>
+    <string name="pw_duplex">duplex</string>
     <string name="pw_dust">Dust</string>
     <string name="pw_duty">duty</string>
     <string name="pw_e_sitar">e-sitar</string>
@@ -527,6 +530,7 @@
     <string name="pw_hands">hands</string>
     <string name="pw_hann">hann</string>
     <string name="pw_hard">hard</string>
+    <string name="pw_hard_key">hard key</string>
     <string name="pw_hardanger">hardanger</string>
     <string name="pw_hardness">hardness</string>
     <string name="pw_hardware">hardware</string>
@@ -664,6 +668,7 @@
     <string name="pw_leakage">leakage</string>
     <string name="pw_learn">learn</string>
     <string name="pw_leaves">leaves</string>
+    <string name="pw_left_hand">left hand</string>
     <string name="pw_leg">leg</string>
     <string name="pw_legato">legato</string>
     <string name="pw_length">length</string>
@@ -954,6 +959,8 @@
     <string name="pw_position">position</string>
     <string name="pw_prairie">prairie</string>
     <string name="pw_predelay">predelay</string>
+    <string name="pw_prep_amount">prep amount</string>
+    <string name="pw_prep_where">prep where</string>
     <string name="pw_prepare">prepare</string>
     <string name="pw_prepared">prepared</string>
     <string name="pw_presence">presence</string>
@@ -1064,6 +1071,7 @@
     <string name="pw_roll">roll</string>
     <string name="pw_rolling">rolling</string>
     <string name="pw_rolls">rolls</string>
+    <string name="pw_roll_strike">roll</string>
     <string name="pw_room">room</string>
     <string name="pw_root">root</string>
     <string name="pw_rosin">rosin</string>
@@ -1353,6 +1361,7 @@
     <string name="pw_transpose">transpose</string>
     <string name="pw_treble">treble</string>
     <string name="pw_trem_depth">trem depth</string>
+    <string name="pw_trem_pan">trem pan</string>
     <string name="pw_trem_rate">trem rate</string>
     <string name="pw_tremolo">Tremolo</string>
     <string name="pw_tremolo_fa5f96">tremolo</string>

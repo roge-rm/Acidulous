@@ -27,7 +27,7 @@
 #   - The soft reed is purer than its recording above the 2nd harmonic.
 #   - The fortepiano, tangent, celesta, toy, dulcimer and cimbalom have no
 #     recording behind them, only the literature and an ear.
-#   - Three knobs do nothing yet: tension, clang and duplex.
+#   - Two knobs do nothing yet: tension and clang.
 
 machine Hammer
 role    piano

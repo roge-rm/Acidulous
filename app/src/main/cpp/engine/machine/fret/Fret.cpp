@@ -1,6 +1,7 @@
 #include "Fret.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
 
@@ -67,7 +68,7 @@ constexpr float kHighestPitch = 100.0f;
 Fret::Fret() { initParams(); }
 
 const ParamDef *Fret::paramDefs(int32_t &count) const {
-    static const ParamDef defs[Count] = {
+    static const ParamDef first[MacroBase] = {
         {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // guitar, 12-string, baritone, bass, 5-string, hollowbody, steel, fretless
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"pickup", 0.0f, 2.0f, 2.0f, Curve::Stepped, 3, ""}, // neck, both, bridge
@@ -97,9 +98,97 @@ const ParamDef *Fret::paramDefs(int32_t &count) const {
         {"volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
         // How long a released string keeps ringing: 0 the fingers stop it, 1 it rings out its sustain.
         {"ring", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"swell", 0.0f, 4.0f, 0.0f, Curve::Linear, 0, "s"},
     };
+    static ParamDef defs[Count];
+    static char names[kMacros * MacroParams][12];
+    static bool built = false;
+    if (!built) {
+        for (int32_t i = 0; i < MacroBase; ++i) defs[i] = first[i];
+        auto put = [&](int32_t i, const char *n, float mn, float mx, float df, Curve c, int32_t steps) {
+            char *name = names[i - MacroBase];
+            std::snprintf(name, 12, "%s", n);
+            defs[i] = ParamDef{name, mn, mx, df, c, steps, ""};
+        };
+        for (int k = 0; k < kMacros; ++k) {
+            char n[12];
+            const int32_t b = MacroBase + k * MacroParams;
+            std::snprintf(n, sizeof(n), "mac%d", k + 1);
+            put(b, n, 0.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            for (int r = 0; r < 4; ++r) {
+                std::snprintf(n, sizeof(n), "mac%d_d%d", k + 1, r + 1);
+                put(b + 1 + r, n, 0.0f, static_cast<float>(MacroDestCount - 1), 0.0f, Curve::Stepped, MacroDestCount);
+                std::snprintf(n, sizeof(n), "mac%d_a%d", k + 1, r + 1);
+                put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            }
+        }
+        built = true;
+    }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Fret::Count];
+    DestMap() {
+        using F = Fret;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {F::Tone, F::McTone}, {F::Hardness, F::McHardness}, {F::Position, F::McPosition},
+            {F::Mute, F::McMute}, {F::Sustain, F::McSustain}, {F::Bright, F::McBright}, {F::Buzz, F::McBuzz},
+            {F::Strum, F::McStrum}, {F::Slide, F::McSlide}, {F::Vibrato, F::McVibrato},
+            {F::Drive, F::McDrive}, {F::Feedback, F::McFeedback}, {F::VelocityAmount, F::McVelocity},
+            {F::Volume, F::McVolume}, {F::Ring, F::McRing}, {F::Swell, F::McSwell},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Fret::val(int32_t p, bool goal) const {
+    const float v = read(p, goal);
+    const int d = destMap().of[p];
+    const float off = d < 0 ? 0.0f : (goal ? macGoal_ : mac_)[d];
+    if (off == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + off);
+}
+
+void Fret::updateMacroGoals() {
+    for (float &m : macGoal_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = read(b, true);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            const int dest = static_cast<int>(read(b + 1 + r, true) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) macGoal_[dest] += knob * read(b + 5 + r, true);
+        }
+    }
+    // Two octaves either way.
+    macGoal_[McPitch] = std::clamp(macGoal_[McPitch], -1.0f, 1.0f);
+}
+
+void Fret::updateMacros() {
+    updateMacroGoals();
+    for (float &m : mac_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = read(b, false);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            // The routes' destinations are steps, so their targets.
+            const int dest = static_cast<int>(read(b + 1 + r, true) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * read(b + 5 + r, false);
+        }
+    }
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
 }
 
 void Fret::prepare(int32_t rate) {
@@ -128,7 +217,12 @@ void Fret::reset() {
         v.pressure = -1.0f;
         v.level = 0.0f;
         v.quietBlocks = 0;
+        v.swellPos = 1.0f;
+        v.swellStep = 0.0f;
+        v.macPitch = 0.0f;
     }
+    for (float &m : mac_) m = 0.0f;
+    for (float &m : macGoal_) m = 0.0f;
     waitingCount = 0;
     strumUp = false;
     bend = wheel = channelPressure_ = 0.0f;
@@ -177,6 +271,8 @@ float Fret::hz(const Voice &v, float vibrato) const {
     // time. Past about note 105 the string's loop is too short to lose its
     // energy, and it rings for ever.
     float p = v.pitch + bend * paramOf(BendRange) + v.noteBend + vibrato;
+    // Apart so a note with no pitch macro is worked out as before.
+    if (v.macPitch != 0.0f) p += v.macPitch * 24.0f;
     while (p > kHighestPitch) p -= 12.0f;
     return noteHz(p);
 }
@@ -221,7 +317,7 @@ void Fret::shapeStroke(Voice &v) {
     // the same push taken away a little later, which is where along the string
     // it was struck (a comb, as plucking near the bridge thins a note).
     const int stroke = std::clamp(steppedTargetOf(Stroke), 0, StrokeCount - 1);
-    const float hard = clampf(targetOf(Hardness), 0.0f, 1.0f);
+    const float hard = clampf(goalOf(Hardness), 0.0f, 1.0f);
     float seconds = 0.0f, grit = 0.0f;
     switch (stroke) {
     case Finger: seconds = 0.003f - 0.002f * hard; break;
@@ -230,7 +326,7 @@ void Fret::shapeStroke(Voice &v) {
     }
     const int len = std::max(4, static_cast<int>(seconds * sampleRate));
     const float period = sampleRate / hz(v, 0.0f);
-    const int shift = std::max(1, static_cast<int>(std::lround(clampf(targetOf(Position), 0.04f, 0.5f) * period)));
+    const int shift = std::max(1, static_cast<int>(std::lround(clampf(goalOf(Position), 0.04f, 0.5f) * period)));
     const int total = std::min(static_cast<int>(v.stroke.size()), len + shift);
     std::fill(v.stroke.begin(), v.stroke.begin() + total, 0.0f);
     // A slap is over in a fraction of a millisecond; it's struck harder to put in as much.
@@ -248,8 +344,8 @@ void Fret::shapeStroke(Voice &v) {
 void Fret::start(uint8_t note, uint8_t velocity) {
     const int kindIndex = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
     const Make &k = kMakes[kindIndex];
-    const float pitch = static_cast<float>(note) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
-    const float slide = targetOf(Slide);
+    const float pitch = static_cast<float>(note) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + goalOf(Tune) / 100.0f;
+    const float slide = goalOf(Slide);
     // With one voice, a held note slides to the new one: no new pick, just a
     // finger sliding along the fret, and a little of a hammer-on.
     if (steppedTargetOf(Voices) == 1 && slide > 0.0f && voices[0].used && voices[0].held) {
@@ -268,6 +364,7 @@ void Fret::start(uint8_t note, uint8_t velocity) {
     v->released = 0;
     v->noteBend = 0.0f;
     v->pressure = -1.0f;
+    v->macPitch = macGoal_[McPitch];
     // A twelve-string's low four courses have an octave string; the rest a unison a hair apart.
     v->hasPartner = kindIndex == Twelve;
     v->partnerAt = k.octaves && note < k.lowest + 17.0f ? 12.0f : kUnisonCents / 100.0f;
@@ -277,13 +374,17 @@ void Fret::start(uint8_t note, uint8_t velocity) {
     v->pitch = v->aim = pitch + kHarmonicSemis[v->harmonic];
     // A palm on the strings takes most of a note's ring away; some of the
     // level is made up, as a player digs in harder to be heard.
-    v->gain = kHouse * k.level * velocityGain(v->velocity, targetOf(VelocityAmount)) * (1.0f + 3.0f * clampf(targetOf(Mute), 0.0f, 1.0f));
+    v->gain = kHouse * k.level * velocityGain(v->velocity, goalOf(VelocityAmount)) * (1.0f + 3.0f * clampf(goalOf(Mute), 0.0f, 1.0f));
     if (!v->used) {
         v->string.clear();
         v->partner.clear();
     }
     retune(*v, 0.0f);
     shapeStroke(*v);
+    // The volume knob down at the pick, rolled up over the swell time.
+    const float swell = goalOf(Swell);
+    v->swellPos = swell > 0.0f ? 0.0f : 1.0f;
+    v->swellStep = swell > 0.0f ? 1.0f / (swell * sampleRate) : 0.0f;
     v->used = true;
     v->quietBlocks = 0;
     v->age = ++clock;
@@ -292,7 +393,8 @@ void Fret::start(uint8_t note, uint8_t velocity) {
 }
 
 void Fret::noteOn(uint8_t note, uint8_t velocity) {
-    if (targetOf(Strum) <= 0.0f) {
+    updateMacroGoals(); // a note reads where the knobs are going, so renders repeat
+    if (goalOf(Strum) <= 0.0f) {
         start(note, velocity);
         return;
     }
@@ -345,6 +447,7 @@ void Fret::notePressure(uint8_t note, uint8_t value) {
 
 bool Fret::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (asleep) return true;
 
@@ -362,7 +465,7 @@ bool Fret::render(float *L, float *R, int32_t frames) {
                 if (a.placed != b.placed) return a.placed;
                 return up ? a.note > b.note : a.note < b.note;
             });
-            const int32_t gap = static_cast<int32_t>(targetOf(Strum) * 0.001f * sampleRate);
+            const int32_t gap = static_cast<int32_t>(goalOf(Strum) * 0.001f * sampleRate);
             int rank = 0;
             for (int i = 0; i < waitingCount; ++i) {
                 if (waiting[i].placed) continue;
@@ -409,7 +512,7 @@ bool Fret::render(float *L, float *R, int32_t frames) {
     const float buzz = clampf(paramOf(Buzz), 0.0f, 1.0f);
     const float volume = paramOf(Volume);
     const float vibratoDepth = kVibratoDepth;
-    const float slideCoef = targetOf(Slide) > 0.0f ? 1.0f - std::exp(-static_cast<float>(kRetuneEvery) / (targetOf(Slide) * 0.001f * sampleRate / 3.0f)) : 1.0f;
+    const float slideCoef = goalOf(Slide) > 0.0f ? 1.0f - std::exp(-static_cast<float>(kRetuneEvery) / (goalOf(Slide) * 0.001f * sampleRate / 3.0f)) : 1.0f;
     const float dcPole = 1.0f - 6.2831853f * 15.0f / sampleRate;
     bool any = false;
 
@@ -425,6 +528,7 @@ bool Fret::render(float *L, float *R, int32_t frames) {
             for (Voice &v : voices) {
                 if (!v.used) continue;
                 v.pitch += (v.aim - v.pitch) * slideCoef;
+                v.macPitch = mac_[McPitch];
                 const float press = v.pressure >= 0.0f ? v.pressure : channelPressure_;
                 const float depth = clampf(paramOf(Vibrato) + press, 0.0f, 1.0f) * vibratoDepth;
                 retune(v, swing * depth);
@@ -460,6 +564,11 @@ bool Fret::render(float *L, float *R, int32_t frames) {
                 s += heard(v.partner, p);
             }
             s *= v.gain;
+            if (v.swellPos < 1.0f) {
+                // An S curve, so the fade leaves and arrives without a corner.
+                v.swellPos = std::min(1.0f, v.swellPos + v.swellStep);
+                s *= v.swellPos * v.swellPos * (3.0f - 2.0f * v.swellPos);
+            }
             v.level += (std::fabs(s) - v.level) * 0.001f;
             sum += s;
         }

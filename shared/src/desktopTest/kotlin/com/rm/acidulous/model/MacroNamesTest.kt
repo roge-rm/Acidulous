@@ -91,4 +91,19 @@ class MacroNamesTest {
         assertEquals(listOf("tonewheel", "cabinet", "combo", "church", "theatre", "reed", "split", "odd"), families)
         assertEquals("Init", FactoryBanks.of("Manual").first().name)
     }
+
+    @Test
+    fun hammerDrawAndFretMacrosTakeThePatchNames() {
+        for (type in listOf("Hammer", "Draw", "Fret")) {
+            val t = track(type, mapOf("macro1" to "Lid"))
+            assertEquals("Lid", laneShortLabel(t, laneKey("machine", "mac1")))
+            assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        }
+        // The new knobs' lanes take the panel's words.
+        // Roll carries its sense, "roll~strike", which the word lookup drops in English.
+        assertEquals("roll", laneShortLabel(track("Hammer", emptyMap()), laneKey("machine", "roll")) { it.substringBefore('~') })
+        assertEquals("duplex", laneShortLabel(track("Hammer", emptyMap()), laneKey("machine", "duplex")))
+        assertEquals("swell", laneShortLabel(track("Fret", emptyMap()), laneKey("machine", "swell")))
+        assertEquals("level", laneShortLabel(track("Draw", emptyMap()), laneKey("machine", "bass level")))
+    }
 }

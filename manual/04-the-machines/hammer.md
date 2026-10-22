@@ -55,6 +55,9 @@ the strings ring shorter and darker, and the keys drift out of tune.
   however softly you play. A tack piano.
 - **moderator** - a strip of felt between the hammers and the strings: soft
   and muffled.
+- **roll** - strikes a held note again and again, this many times a second,
+  never quite evenly: a dulcimer's or cimbalom's tremolo, or a mandolin-ish
+  one on the grand. At 0 a note is struck once.
 
 ## Strings
 
@@ -74,6 +77,10 @@ the strings ring shorter and darker, and the keys drift out of tune.
 - **couple** - how much the strings talk to each other through the bridge.
 - **across** - how much the strings move across the soundboard as well as into
   it, which keeps a note ringing after the first fast fade.
+- **duplex** - on the pianos, the short lengths of string past where the
+  hammer strikes and past the bridge are left free, tuned near the note's
+  harmonics. They ring faintly along with it, mostly in the treble, which adds
+  a shimmer. At 0 they're silent.
 
 ## Pedals
 
@@ -149,6 +156,23 @@ For the tine, reed and tangent models.
 **voices** is the most notes that ring at once. **detail** at **auto** follows
 the quality setting, so a slower phone plays a lighter piano; **full** always
 plays the whole model.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Lid, Felt,
+etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model,
+the switches and stepped choices and the tuning steps can't be reached. Most
+of a piano is set when a key is struck, so a change to the hammer, the strings
+or the dampers is heard from the next note; the board, the room, the amp, the
+tremolo, **duplex**, **roll**, volume and pan move at once. Tap a macro's name
+to rename it.
 
 ## Tips
 
