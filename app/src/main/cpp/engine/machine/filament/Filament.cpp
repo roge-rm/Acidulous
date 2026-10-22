@@ -132,7 +132,9 @@ const ParamDef *Filament::paramDefs(int32_t &count) const {
         step(BodyOn, "body", 2, 1.0f);
         lin(BodySize, "size", 0.0f, 1.0f, 0.5f);
         lin(BodyMix, "bodymix", 0.0f, 1.0f, 0.35f);
-        lin(BodyDamp, "bodydamp", 0.0f, 1.0f, 0.5f);
+        // Past 1 the Q goes on down from 3 to 1 at the top, 29/27. A value in
+        // 0..1 comes back exactly from a round trip through that range.
+        lin(BodyDamp, "bodydamp", 0.0f, 29.0f / 27.0f, 0.5f);
 
         lin(Drive, "drive", 0.0f, 1.0f, 0.1f);
         // Goes up to 1.5 so quieter patches like Steel can reach the
@@ -637,7 +639,7 @@ bool Filament::render(float *L, float *R, int32_t frames) {
             bodySizeAt = sizeNow;
             bodyDampAt = dampNow;
             const float size = std::pow(2.0f, (0.5f - sizeNow) * 2.2f);
-            const float q = 3.0f + (1.0f - dampNow) * 27.0f;
+            const float q = std::fmax(1.0f, 3.0f + (1.0f - dampNow) * 27.0f);
             // A wider resonance passes more of a string's partials, so the
             // modes are scaled to pass about the same energy at any width.
             bodyWet = std::sqrt(q / 16.5f);
