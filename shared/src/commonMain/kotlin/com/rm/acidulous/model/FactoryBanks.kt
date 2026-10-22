@@ -9680,342 +9680,612 @@ internal object FactoryBanks {
         family = "wood",
         low = 36, high = 96)
 
-    private fun tine1() = Patch("Tine", "Marimba",
-        mapOf("mallet" to 0.45f, "tube" to 0.7f),
+    private fun tine1() = Patch("Tine", "Rosewood Marimba",
+        mapOf("mallet" to 0.45f, "tube" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4345f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.438f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.308f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 36, high = 96)
 
     private fun tine2() = Patch("Tine", "Soft Marimba",
-        mapOf("mallet" to 0.1f, "position" to 0.15f, "tube" to 0.8f),
+        mapOf("mallet" to 0.1f, "position" to 0.15f, "tube" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.622f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.440999985f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.32950002f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 36, high = 90)
 
     private fun tine3() = Patch("Tine", "Bright Marimba",
-        mapOf("mallet" to 0.85f, "position" to 0.6f, "bright" to 0.65f, "tube" to 0.6f),
+        mapOf("mallet" to 0.85f, "position" to 0.6f, "bright" to 0.65f, "tube" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4345f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.431f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.378499985f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 36, high = 96)
 
     private fun tine4() = Patch("Tine", "Bass Marimba",
-        mapOf("mallet" to 0.2f, "decay" to 0.6f, "tube" to 0.9f),
+        mapOf("mallet" to 0.2f, "decay" to 0.6f, "tube" to 0.9f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.3335f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 28, high = 60)
 
     private fun tine5() = Patch("Tine", "Marimba Roll",
-        mapOf("mallet" to 0.2f, "tube" to 0.8f, "roll" to 0.5416667f, "volume" to 0.5f),
+        mapOf("mallet" to 0.2f, "tube" to 0.8f, "roll" to 0.5416667f, "volume" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.607f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.451f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 36, high = 90)
 
-    private fun tine6() = Patch("Tine", "Xylophone",
-        mapOf("model" to 0.111111112f, "mallet" to 0.8f, "tube" to 0.6f),
+    private fun tine6() = Patch("Tine", "Wide Marimba",
+        mapOf("mallet" to 0.4f, "tube" to 0.7f, "spread" to 0.8f, "pair" to 0.1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.440999985f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.440999985f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.31f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
+        family = "wood",
+        low = 36, high = 96,
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun tine7() = Patch("Tine", "Xylophone",
+        mapOf("model" to 0.111111112f, "mallet" to 0.8f, "tube" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6275f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4215f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.431f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.3275f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 53, high = 100)
 
-    private fun tine7() = Patch("Tine", "Soft Xylophone",
-        mapOf("model" to 0.111111112f, "mallet" to 0.35f, "tube" to 0.7f),
+    private fun tine8() = Patch("Tine", "Soft Xylophone",
+        mapOf("model" to 0.111111112f, "mallet" to 0.35f, "tube" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4215f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.301f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 53, high = 100)
 
-    private fun tine8() = Patch("Tine", "Dry Wood",
-        mapOf("mallet" to 0.7f, "decay" to 0.15f, "damp" to 0.6f, "tube" to 0f, "volume" to 1f),
+    private fun tine9() = Patch("Tine", "Xylophone Hard",
+        mapOf("model" to 0.111111112f, "mallet" to 0.9f, "bright" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.5755f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4215f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.428f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.34f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
+        family = "wood",
+        low = 60, high = 96)
+
+    private fun tine10() = Patch("Tine", "Dry Wood",
+        mapOf("mallet" to 0.7f, "decay" to 0.15f, "damp" to 0.6f, "tube" to 0f, "volume" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.397f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.36650002f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.2475f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 40, high = 90)
 
-    private fun tine9() = Patch("Tine", "Balafon",
-        mapOf("mallet" to 0.6f, "buzz" to 0.7f),
+    private fun tine11() = Patch("Tine", "Balafon",
+        mapOf("mallet" to 0.6f, "buzz" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.440999985f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.438f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.428f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.3635f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 48, high = 84)
 
-    private fun tine10() = Patch("Tine", "Xylophone Hard",
-        mapOf("model" to 0.111111112f, "mallet" to 0.9f, "bright" to 0.7f),
+    private fun tine12() = Patch("Tine", "Low Balafon",
+        mapOf("mallet" to 0.45f, "decay" to 0.6f, "tube" to 0.95f, "buzz" to 0.85f, "volume" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.599f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.4355f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
-        low = 60, high = 96)
+        low = 36, high = 72)
 
-    private fun tine11() = Patch("Tine", "Slit Drum",
-        mapOf("model" to 0.8333333f),
+    private fun tine13() = Patch("Tine", "Slit Drum",
+        mapOf("model" to 0.8333333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4215f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.431f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.3235f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 40, high = 60)
 
-    private fun tine12() = Patch("Tine", "Slit Drum Soft",
-        mapOf("model" to 0.8333333f, "mallet" to 0.2f, "decay" to 0.7f),
+    private fun tine14() = Patch("Tine", "Slit Drum Soft",
+        mapOf("model" to 0.8333333f, "mallet" to 0.2f, "decay" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.440999985f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4345f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.431f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.2975f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 36, high = 57)
 
-    private fun tine13() = Patch("Tine", "Log Drum Low",
-        mapOf("model" to 0.8333333f, "mallet" to 0.4f, "bright" to 0.3f),
+    private fun tine15() = Patch("Tine", "Log Drum Low",
+        mapOf("model" to 0.8333333f, "mallet" to 0.4f, "bright" to 0.3f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.65f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.425f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4345f, "mac6_d1" to 0.6875f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.296f, "mac7_d1" to 0.625f, "mac7_a1" to 0.8f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Tubes", "macro6" to "Roll", "macro7" to "Buzz", "macro8" to "Wide"),
         family = "wood",
         low = 31, high = 52)
 
-    private fun tine14() = Patch("Tine", "Vibraphone",
-        mapOf("model" to 0.055555556f, "damp" to 0.85f, "tube" to 0.7f),
-        family = "metal",
-        low = 53, high = 89)
-
-    private fun tine15() = Patch("Tine", "Vibes Motor",
-        mapOf("model" to 0.055555556f, "damp" to 0.85f, "tube" to 0.9f, "motor" to 0.55f, "depth" to 0.6f),
-        family = "metal",
-        low = 53, high = 89)
-
-    private fun tine16() = Patch("Tine", "Slow Motor",
-        mapOf("model" to 0.055555556f, "tube" to 0.9f, "motor" to 0.2f, "depth" to 0.7f),
-        family = "metal",
+    private fun tine16() = Patch("Tine", "Concert Vibes",
+        mapOf("model" to 0.055555556f, "damp" to 0.85f, "tube" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.431f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.07499999f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_d3" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.571f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.65f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3515f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Pedal", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
         low = 53, high = 89)
 
     private fun tine17() = Patch("Tine", "Soft Vibes",
-        mapOf("model" to 0.055555556f, "mallet" to 0.1f, "damp" to 0.7f, "tube" to 0.8f),
-        family = "metal",
+        mapOf("model" to 0.055555556f, "mallet" to 0.1f, "damp" to 0.7f, "tube" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.07499999f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_d3" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.571f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.65f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3445f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Pedal", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
         low = 53, high = 89)
 
     private fun tine18() = Patch("Tine", "Hard Vibes",
-        mapOf("model" to 0.055555556f, "mallet" to 0.85f, "position" to 0.6f, "damp" to 0.8f, "tube" to 0.6f),
-        family = "metal",
+        mapOf("model" to 0.055555556f, "mallet" to 0.85f, "position" to 0.6f, "damp" to 0.8f, "tube" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.07499999f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.380999982f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Pedal", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
         low = 53, high = 89)
 
-    private fun tine19() = Patch("Tine", "Vibes Roll",
-        mapOf("model" to 0.055555556f, "mallet" to 0.2f, "tube" to 0.9f, "motor" to 0.4f, "depth" to 0.4f, "roll" to 0.458333343f, "volume" to 0.45f),
-        family = "metal",
+    private fun tine19() = Patch("Tine", "Vibes Motor",
+        mapOf("model" to 0.055555556f, "damp" to 0.85f, "tube" to 0.9f, "motor" to 0.55f, "depth" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.431f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.07499999f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.65f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.349f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Pedal", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
         low = 53, high = 89)
 
-    private fun tine20() = Patch("Tine", "Long Vibes",
-        mapOf("model" to 0.055555556f, "mallet" to 0.15f, "decay" to 0.8f, "tube" to 0.9f),
-        family = "metal",
+    private fun tine20() = Patch("Tine", "Slow Motor",
+        mapOf("model" to 0.055555556f, "tube" to 0.9f, "motor" to 0.2f, "depth" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.438f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.925f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6275f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3445f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Damper", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
         low = 53, high = 89)
 
-    private fun tine21() = Patch("Tine", "Glockenspiel",
-        mapOf("model" to 0.166666672f, "mallet" to 0.85f, "tube" to 0f),
-        family = "metal",
+    private fun tine21() = Patch("Tine", "Grid Motor",
+        mapOf("model" to 0.055555556f, "decay" to 0.7f, "tube" to 1f, "motor" to 0.4f, "depth" to 0.9f, "volume" to 0.63f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.438f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.925f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.673f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.35799998f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Damper", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine22() = Patch("Tine", "Paired Vibes",
+        mapOf("model" to 0.055555556f, "mallet" to 0.3f, "damp" to 0.6f, "tube" to 0.8f, "spread" to 0.6f, "volume" to 0.62f, "pair" to 0.14f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.07499999f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_d3" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.567000031f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.329999983f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Pedal", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
+        low = 53, high = 89,
+        sendReverb = 0.12f, sendDelay = 0f)
+
+    private fun tine23() = Patch("Tine", "Night Vibes",
+        mapOf("model" to 0.055555556f, "mallet" to 0.15f, "decay" to 0.75f, "damp" to 0.5f, "tube" to 0.9f, "motor" to 0.15f, "volume" to 0.49f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.07499999f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.601f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4115f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Pedal", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
+        low = 53, high = 89,
+        inserts = listOf(UnitSlot("Delay", mapOf("feedback" to 0.3157895f, "mix" to 0.2f))),
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun tine24() = Patch("Tine", "Long Vibes",
+        mapOf("model" to 0.055555556f, "mallet" to 0.15f, "decay" to 0.8f, "tube" to 0.9f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.925f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_d3" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.5805f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.65f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3685f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Damper", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine25() = Patch("Tine", "Vibes Roll",
+        mapOf("model" to 0.055555556f, "mallet" to 0.2f, "tube" to 0.9f, "motor" to 0.4f, "depth" to 0.4f, "roll" to 0.458333343f, "volume" to 0.33f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.925f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.5575f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Damper", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine26() = Patch("Tine", "Bowed Vibes",
+        mapOf("model" to 0.055555556f, "mallet" to 0.05f, "decay" to 0.9f, "tube" to 0.9f, "roll" to 0.75f, "volume" to 0.27f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.925f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.5f, "mac4_d3" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.529f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.3125f, "mac5_a1" to 0.675f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.535f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Damper", "macro4" to "Motor", "macro5" to "Ring", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "vibes",
+        low = 53, high = 89)
+
+    private fun tine27() = Patch("Tine", "Orchestra Glock",
+        mapOf("model" to 0.166666672f, "mallet" to 0.85f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6275f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.875f, "mac5_a1" to 0.325f, "mac5_a2" to 0.5755f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3685f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 72, high = 108)
 
-    private fun tine22() = Patch("Tine", "Soft Glockenspiel",
-        mapOf("model" to 0.166666672f, "mallet" to 0.45f, "tube" to 0f),
-        family = "metal",
+    private fun tine28() = Patch("Tine", "Soft Glockenspiel",
+        mapOf("model" to 0.166666672f, "mallet" to 0.45f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.875f, "mac5_a1" to 0.325f, "mac5_a2" to 0.571f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6385f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3445f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 72, high = 108)
 
-    private fun tine23() = Patch("Tine", "Bell Bars",
-        mapOf("model" to 0.166666672f, "mallet" to 0.25f, "decay" to 0.4f, "damp" to 0.7f, "tube" to 0.6f),
-        family = "metal",
+    private fun tine29() = Patch("Tine", "Bell Bars",
+        mapOf("model" to 0.166666672f, "mallet" to 0.25f, "decay" to 0.4f, "damp" to 0.7f, "tube" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.875f, "mac5_a1" to 0.325f, "mac5_a2" to 0.571f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6385f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.336f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 60, high = 100)
 
-    private fun tine24() = Patch("Tine", "Tin Bells",
-        mapOf("model" to 0.166666672f, "mallet" to 1f, "position" to 0.8f, "decay" to 0.3f, "bright" to 0.75f, "tube" to 0f),
-        family = "metal",
+    private fun tine30() = Patch("Tine", "Tin Bells",
+        mapOf("model" to 0.166666672f, "mallet" to 1f, "position" to 0.8f, "decay" to 0.3f, "bright" to 0.75f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_d3" to 0.875f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac2_a3" to 0.6385f, "mac3_d1" to 0.125f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.438f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.875f, "mac5_a1" to 0.325f, "mac5_a2" to 0.571f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6385f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3335f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 67, high = 108)
 
-    private fun tine25() = Patch("Tine", "Chimes",
-        mapOf("model" to 0.5f, "tube" to 0f),
-        family = "metal",
+    private fun tine31() = Patch("Tine", "Chorus Glock",
+        mapOf("model" to 0.166666672f, "mallet" to 0.85f, "tube" to 0f, "spread" to 0.6f, "volume" to 1f, "pair" to 0.18f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.375f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2945f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
+        low = 72, high = 108,
+        inserts = listOf(UnitSlot("Chorus", mapOf("depth" to 0.3f, "mix" to 0.25f))))
+
+    private fun tine32() = Patch("Tine", "Concert Chimes",
+        mapOf("model" to 0.5f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.347f, "mac2_d1" to 0.25f, "mac2_d2" to 0.875f, "mac2_a1" to 0.375f, "mac2_a2" to 0.65f, "mac3_d1" to 0.125f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 60, high = 77)
 
-    private fun tine26() = Patch("Tine", "Chimes Soft",
-        mapOf("model" to 0.5f, "mallet" to 0.25f, "decay" to 0.7f, "tube" to 0f),
-        family = "metal",
+    private fun tine33() = Patch("Tine", "Chimes Soft",
+        mapOf("model" to 0.5f, "mallet" to 0.25f, "decay" to 0.7f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.3135f, "mac2_d1" to 0.25f, "mac2_d2" to 0.875f, "mac2_a1" to 0.375f, "mac2_a2" to 0.65f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.438f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4185f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 60, high = 77)
 
-    private fun tine27() = Patch("Tine", "Chimes Damped",
-        mapOf("model" to 0.5f, "decay" to 0.25f, "tube" to 0f),
-        family = "metal",
+    private fun tine34() = Patch("Tine", "Chimes Damped",
+        mapOf("model" to 0.5f, "decay" to 0.25f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.3445f, "mac2_d1" to 0.25f, "mac2_d2" to 0.875f, "mac2_a1" to 0.375f, "mac2_a2" to 0.65f, "mac3_d1" to 0.125f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.633f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 60, high = 77)
 
-    private fun tine28() = Patch("Tine", "Crotales",
-        mapOf("model" to 0.5555556f, "tube" to 0f),
-        family = "metal",
+    private fun tine35() = Patch("Tine", "Low Tubular Bells",
+        mapOf("model" to 0.5f, "mallet" to 0.4f, "decay" to 0.7f, "tube" to 0f, "volume" to 0.48f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4205f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_d3" to 0.875f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac2_a3" to 0.76f, "mac3_d1" to 0.125f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.607f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.426f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
+        low = 40, high = 64)
+
+    private fun tine36() = Patch("Tine", "Crotales",
+        mapOf("model" to 0.5555556f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.425f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6385f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3425f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 72, high = 96)
 
-    private fun tine29() = Patch("Tine", "Crotales Bowed",
-        mapOf("model" to 0.5555556f, "mallet" to 0.05f, "decay" to 0.9f, "tube" to 0f, "roll" to 0.75f, "volume" to 0.35f),
-        family = "metal",
+    private fun tine37() = Patch("Tine", "Crotales Bright",
+        mapOf("model" to 0.5555556f, "mallet" to 0.9f, "bright" to 0.8f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3895f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 72, high = 96)
 
-    private fun tine30() = Patch("Tine", "Crotales Bright",
-        mapOf("model" to 0.5555556f, "mallet" to 0.9f, "bright" to 0.8f, "tube" to 0f),
-        family = "metal",
+    private fun tine38() = Patch("Tine", "Crotales Hall",
+        mapOf("model" to 0.5555556f, "mallet" to 0.6f, "tube" to 0f, "volume" to 0.54f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.435f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.607f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.616f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.392499983f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
+        low = 72, high = 96,
+        sendReverb = 0.3f, sendDelay = 0f)
+
+    private fun tine39() = Patch("Tine", "Crotales Bowed",
+        mapOf("model" to 0.5555556f, "mallet" to 0.05f, "decay" to 0.9f, "tube" to 0f, "roll" to 0.75f, "volume" to 0.35f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.5665f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.569499969f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "bells",
         low = 72, high = 96)
 
-    private fun tine31() = Patch("Tine", "Saron",
-        mapOf("model" to 0.6111111f),
+    private fun tine40() = Patch("Tine", "Saron",
+        mapOf("model" to 0.6111111f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.425f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.6f, "mac3_a2" to 0.6385f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_d2" to 0.875f, "mac5_a1" to 0.325f, "mac5_a2" to 0.571f, "mac6_d1" to 0.375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.312f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Body", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
         low = 60, high = 79)
 
-    private fun tine32() = Patch("Tine", "Saron Damped",
-        mapOf("model" to 0.6111111f, "decay" to 0.2f),
+    private fun tine41() = Patch("Tine", "Saron Damped",
+        mapOf("model" to 0.6111111f, "decay" to 0.2f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.425f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.6f, "mac3_a2" to 0.6165f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.304499984f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Body", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
         low = 60, high = 79)
 
-    private fun tine33() = Patch("Tine", "Gender",
-        mapOf("model" to 0.6111111f, "mallet" to 0.2f, "decay" to 0.8f),
+    private fun tine42() = Patch("Tine", "Saron Pair",
+        mapOf("model" to 0.6111111f, "volume" to 0.8f, "pair" to 0.16f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.414f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.4035f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2745f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Body", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "gamelan",
+        low = 60, high = 79)
+
+    private fun tine43() = Patch("Tine", "Gender",
+        mapOf("model" to 0.6111111f, "mallet" to 0.2f, "decay" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.6f, "mac3_a2" to 0.6385f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.4155f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3445f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Body", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
         low = 48, high = 79)
 
-    private fun tine34() = Patch("Tine", "Bonang",
-        mapOf("model" to 0.6666667f),
+    private fun tine44() = Patch("Tine", "Gender Pair",
+        mapOf("model" to 0.6111111f, "mallet" to 0.2f, "decay" to 0.8f, "spread" to 0.4f, "volume" to 0.58f, "pair" to 0.1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.6f, "mac3_a2" to 0.5925f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.43f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.360499978f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Body", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "gamelan",
+        low = 48, high = 79)
+
+    private fun tine45() = Patch("Tine", "Bonang",
+        mapOf("model" to 0.6666667f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4215f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.6f, "mac3_a2" to 0.633f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3175f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Bloom", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
         low = 55, high = 74)
 
-    private fun tine35() = Patch("Tine", "Bonang Barung",
-        mapOf("model" to 0.6666667f, "mallet" to 0.4f, "decay" to 0.7f),
+    private fun tine46() = Patch("Tine", "Bonang Barung",
+        mapOf("model" to 0.6666667f, "mallet" to 0.4f, "decay" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.425f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.6f, "mac3_a2" to 0.5955f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3685f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Bloom", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
         low = 48, high = 67)
 
-    private fun tine36() = Patch("Tine", "Bonang Interlock",
-        mapOf("model" to 0.6666667f, "decay" to 0.4f, "roll" to 0.333333343f, "volume" to 0.4f),
+    private fun tine47() = Patch("Tine", "Bonang Pair",
+        mapOf("model" to 0.6666667f, "mallet" to 0.6f, "volume" to 0.87f, "pair" to 0.24f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.395f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2525f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Bloom", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
         low = 55, high = 74)
 
-    private fun tine37() = Patch("Tine", "Gong Ageng",
-        mapOf("model" to 0.7222222f, "tube" to 0f),
+    private fun tine48() = Patch("Tine", "Bonang Interlock",
+        mapOf("model" to 0.6666667f, "decay" to 0.4f, "roll" to 0.333333343f, "volume" to 0.4f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Bloom", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
-        low = 28, high = 48)
+        low = 55, high = 74)
 
-    private fun tine38() = Patch("Tine", "Gong Soft",
-        mapOf("model" to 0.7222222f, "mallet" to 0.15f, "tube" to 0f, "bloom" to 0.8f),
-        family = "gamelan",
-        low = 28, high = 48)
-
-    private fun tine39() = Patch("Tine", "Kempul",
-        mapOf("model" to 0.7222222f, "decay" to 0.4f, "tube" to 0f),
+    private fun tine49() = Patch("Tine", "Kempul",
+        mapOf("model" to 0.7222222f, "decay" to 0.4f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.376f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3635f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Bloom", "macro7" to "Roll", "macro8" to "Wide"),
         family = "gamelan",
         low = 40, high = 60)
 
-    private fun tine40() = Patch("Tine", "Music Box",
-        mapOf("model" to 0.2777778f, "tube" to 0.2f),
-        family = "thumb",
-        low = 60, high = 100)
+    private fun tine50() = Patch("Tine", "Gong Ageng",
+        mapOf("model" to 0.7222222f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.392f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_d3" to 0.875f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac2_a3" to 0.571f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4095f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Bloom", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "gamelan",
+        low = 28, high = 48)
 
-    private fun tine41() = Patch("Tine", "Slow Music Box",
-        mapOf("model" to 0.2777778f, "decay" to 0.75f, "bright" to 0.35f, "tube" to 0.3f),
-        family = "thumb",
-        low = 55, high = 96)
+    private fun tine51() = Patch("Tine", "Gong Soft",
+        mapOf("model" to 0.7222222f, "mallet" to 0.15f, "tube" to 0f, "bloom" to 0.8f, "volume" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.36650002f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.6f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.1875f, "mac5_a1" to 0.325f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Bloom", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "gamelan",
+        low = 28, high = 48)
 
-    private fun tine42() = Patch("Tine", "Thumb Piano",
-        mapOf("model" to 0.222222224f, "tube" to 0.4f),
-        family = "thumb",
-        low = 48, high = 88)
-
-    private fun tine43() = Patch("Tine", "Buzzing Thumb",
-        mapOf("model" to 0.222222224f, "tube" to 0.4f, "buzz" to 0.6f),
+    private fun tine52() = Patch("Tine", "Thumb Piano",
+        mapOf("model" to 0.222222224f, "tube" to 0.4f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.438f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4095f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6445f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.6165f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3235f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
         family = "thumb",
         low = 48, high = 88)
 
-    private fun tine44() = Patch("Tine", "Gourd Thumb",
-        mapOf("model" to 0.222222224f, "mallet" to 0.3f, "bright" to 0.35f, "tube" to 0.9f, "buzz" to 0.1f),
-        family = "thumb",
-        low = 43, high = 84)
-
-    private fun tine45() = Patch("Tine", "Bright Thumb",
-        mapOf("model" to 0.222222224f, "mallet" to 0.9f, "position" to 0.7f, "bright" to 0.65f, "tube" to 0.2f, "volume" to 0.95f),
+    private fun tine53() = Patch("Tine", "Bright Thumb",
+        mapOf("model" to 0.222222224f, "mallet" to 0.9f, "position" to 0.7f, "bright" to 0.65f, "tube" to 0.2f, "volume" to 0.95f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.3615f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.6f, "mac5_a2" to 0.525f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.575f, "mac7_a2" to 0.525f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.65f, "mac8_a2" to 0.3425f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
         family = "thumb",
         low = 52, high = 92)
 
-    private fun tine46() = Patch("Tine", "Music Box Slow",
-        mapOf("model" to 0.2777778f, "decay" to 0.7f, "tube" to 0.7f),
+    private fun tine54() = Patch("Tine", "Buzzing Thumb",
+        mapOf("model" to 0.222222224f, "tube" to 0.4f, "buzz" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4345f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4095f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6385f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.6165f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.301f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 48, high = 88)
+
+    private fun tine55() = Patch("Tine", "Gourd Thumb",
+        mapOf("model" to 0.222222224f, "mallet" to 0.3f, "bright" to 0.35f, "tube" to 0.9f, "buzz" to 0.1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6445f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.5955f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3275f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 43, high = 84)
+
+    private fun tine56() = Patch("Tine", "Calabash Thumb",
+        mapOf("model" to 0.222222224f, "mallet" to 0.35f, "decay" to 0.65f, "bright" to 0.4f, "tube" to 1f, "buzz" to 0.35f, "volume" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.199999988f, "mac4_a2" to 0.603f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.603f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.576f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.363f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Small", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 43, high = 79)
+
+    private fun tine57() = Patch("Tine", "Bass Thumb",
+        mapOf("model" to 0.222222224f, "mallet" to 0.4f, "decay" to 0.7f, "bright" to 0.4f, "tube" to 0.7f, "volume" to 0.54f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.616f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_a1" to 0.625f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3655f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 36, high = 60)
+
+    private fun tine58() = Patch("Tine", "Bottle Cap Thumb",
+        mapOf("model" to 0.222222224f, "mallet" to 0.7f, "bright" to 0.6f, "tube" to 0.3f, "buzz" to 1f, "volume" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.425f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.099999994f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.393f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.6f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.346499979f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Clean", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 48, high = 84)
+
+    private fun tine59() = Patch("Tine", "Steel Comb",
+        mapOf("model" to 0.2777778f, "tube" to 0.2f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4005f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6445f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_d3" to 0.875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac6_a3" to 0.431f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.6275f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.336f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 60, high = 100)
+
+    private fun tine60() = Patch("Tine", "Slow Music Box",
+        mapOf("model" to 0.2777778f, "decay" to 0.75f, "bright" to 0.35f, "tube" to 0.3f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.406499982f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6445f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.633f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.356f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 55, high = 96)
+
+    private fun tine61() = Patch("Tine", "Music Box Slow",
+        mapOf("model" to 0.2777778f, "decay" to 0.7f, "tube" to 0.7f, "volume" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.603f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.595f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3955f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
         family = "thumb",
         low = 60, high = 96)
 
-    private fun tine47() = Patch("Tine", "Steel Pan",
-        mapOf("model" to 0.333333343f, "tube" to 0f, "bloom" to 0.6f),
+    private fun tine62() = Patch("Tine", "Comb Echo",
+        mapOf("model" to 0.2777778f, "decay" to 0.4f, "bright" to 0.65f, "tube" to 0.2f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.440999985f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.625f, "mac3_a1" to 0.8f, "mac4_d1" to 0.375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.398f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6445f, "mac6_d1" to 0.1875f, "mac6_d2" to 0.3125f, "mac6_d3" to 0.875f, "mac6_a1" to 0.675f, "mac6_a2" to 0.199999988f, "mac6_a3" to 0.428f, "mac7_d1" to 0.9375f, "mac7_d2" to 0.875f, "mac7_a1" to 0.625f, "mac7_a2" to 0.6275f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3335f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Buzz", "macro4" to "Gourd", "macro5" to "Edge", "macro6" to "Ring", "macro7" to "Chorus", "macro8" to "Roll"),
+        family = "thumb",
+        low = 60, high = 100,
+        inserts = listOf(UnitSlot("Delay", mapOf("feedback" to 0.4736842f, "mix" to 0.3f))),
+        sendReverb = 0.15f, sendDelay = 0f)
+
+    private fun tine63() = Patch("Tine", "Lead Pan",
+        mapOf("model" to 0.333333343f, "tube" to 0f, "bloom" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.428f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.5625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.438f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4095f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.601f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3135f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Bloom", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
         family = "pans",
         low = 55, high = 88)
 
-    private fun tine48() = Patch("Tine", "Pan Roll",
-        mapOf("model" to 0.333333343f, "mallet" to 0.35f, "tube" to 0f, "roll" to 0.6666667f, "volume" to 0.55f),
-        family = "pans",
-        low = 55, high = 88)
-
-    private fun tine49() = Patch("Tine", "Bass Pan",
-        mapOf("model" to 0.333333343f, "mallet" to 0.25f, "decay" to 0.6f, "tube" to 0f, "bloom" to 0.8f),
-        family = "pans",
-        low = 31, high = 60)
-
-    private fun tine50() = Patch("Tine", "Handpan",
-        mapOf("model" to 0.3888889f, "tube" to 0.3f),
-        family = "pans",
-        low = 45, high = 77)
-
-    private fun tine51() = Patch("Tine", "Soft Handpan",
-        mapOf("model" to 0.3888889f, "mallet" to 0.1f, "decay" to 0.7f, "tube" to 0.3f, "bloom" to 0.4f, "spread" to 0.5f),
-        family = "pans",
-        low = 45, high = 77)
-
-    private fun tine52() = Patch("Tine", "Tongue Drum",
-        mapOf("model" to 0.444444448f),
+    private fun tine64() = Patch("Tine", "Double Pan",
+        mapOf("model" to 0.333333343f, "mallet" to 0.45f, "tube" to 0f, "spread" to 0.5f, "volume" to 0.88f, "pair" to 0.12f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4135f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.5625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.3825f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.268f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Bloom", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
         family = "pans",
         low = 48, high = 79)
 
-    private fun tine53() = Patch("Tine", "Deep Tongue",
-        mapOf("model" to 0.444444448f, "mallet" to 0.2f, "decay" to 0.7f, "tube" to 0.7f),
+    private fun tine65() = Patch("Tine", "Pan Roll",
+        mapOf("model" to 0.333333343f, "mallet" to 0.35f, "tube" to 0f, "roll" to 0.6666667f, "volume" to 0.55f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.5625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4265f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4535f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Bloom", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
         family = "pans",
-        low = 40, high = 67)
+        low = 55, high = 88)
 
-    private fun tine54() = Patch("Tine", "Singing Bowl",
-        mapOf("model" to 0.7777778f, "tube" to 0f),
+    private fun tine66() = Patch("Tine", "Bass Pan",
+        mapOf("model" to 0.333333343f, "mallet" to 0.25f, "decay" to 0.6f, "tube" to 0f, "bloom" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.5625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4185f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.336f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Bloom", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
         family = "pans",
-        low = 48, high = 72)
+        low = 31, high = 60)
 
-    private fun tine55() = Patch("Tine", "Bowl Rubbed",
-        mapOf("model" to 0.7777778f, "mallet" to 0.05f, "decay" to 0.9f, "tube" to 0f, "roll" to 0.8333333f),
+    private fun tine67() = Patch("Tine", "Handpan",
+        mapOf("model" to 0.3888889f, "tube" to 0.3f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.428f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.5625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4215f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3315f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Bloom", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
         family = "pans",
-        low = 48, high = 72)
+        low = 45, high = 77)
 
-    private fun tine56() = Patch("Tine", "Bowl Low",
-        mapOf("model" to 0.7777778f, "mallet" to 0.2f, "tube" to 0f),
-        family = "pans",
-        low = 36, high = 60)
-
-    private fun tine57() = Patch("Tine", "Handpan Soft",
-        mapOf("model" to 0.3888889f, "mallet" to 0.2f),
+    private fun tine68() = Patch("Tine", "Handpan Soft",
+        mapOf("model" to 0.3888889f, "mallet" to 0.2f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.5625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.428f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.65f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3425f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Bloom", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
         family = "pans",
         low = 50, high = 74)
 
-    private fun tine58() = Patch("Tine", "Tongue Drum Bright",
-        mapOf("model" to 0.444444448f, "mallet" to 0.8f),
+    private fun tine69() = Patch("Tine", "Soft Handpan",
+        mapOf("model" to 0.3888889f, "mallet" to 0.1f, "decay" to 0.7f, "tube" to 0.3f, "bloom" to 0.4f, "spread" to 0.5f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.5625f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4215f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6385f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.392f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Bloom", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 45, high = 77)
+
+    private fun tine70() = Patch("Tine", "Tongue Drum",
+        mapOf("model" to 0.444444448f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.438f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.428f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.633f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3315f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 48, high = 79)
+
+    private fun tine71() = Patch("Tine", "Tongue Drum Bright",
+        mapOf("model" to 0.444444448f, "mallet" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.440999985f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.428f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6275f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3315f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
         family = "pans",
         low = 55, high = 79)
 
-    private fun tine59() = Patch("Tine", "Temple Blocks",
-        mapOf("model" to 0.8888889f),
+    private fun tine72() = Patch("Tine", "Deep Tongue",
+        mapOf("model" to 0.444444448f, "mallet" to 0.2f, "decay" to 0.7f, "tube" to 0.7f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_a1" to 0.7f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.361f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 40, high = 67)
+
+    private fun tine73() = Patch("Tine", "Singing Bowl",
+        mapOf("model" to 0.7777778f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.438f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6385f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4005f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.65f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.338f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 48, high = 72)
+
+    private fun tine74() = Patch("Tine", "Bowl Low",
+        mapOf("model" to 0.7777778f, "mallet" to 0.2f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.406499982f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.5755f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3515f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 36, high = 60)
+
+    private fun tine75() = Patch("Tine", "Bowl Set",
+        mapOf("model" to 0.7777778f, "mallet" to 0.3f, "tube" to 0f, "spread" to 0.9f, "pair" to 0.06f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4005f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.371f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 43, high = 79,
+        sendReverb = 0.25f, sendDelay = 0f)
+
+    private fun tine76() = Patch("Tine", "Bowl Rubbed",
+        mapOf("model" to 0.7777778f, "mallet" to 0.05f, "decay" to 0.9f, "tube" to 0f, "roll" to 0.8333333f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.440999985f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6445f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4035f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Ring", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 48, high = 72)
+
+    private fun tine77() = Patch("Tine", "Growing Bowl",
+        mapOf("model" to 0.7777778f, "mallet" to 0.03f, "decay" to 1f, "tube" to 0f, "roll" to 0.375f, "volume" to 0.57f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4495f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_d3" to 0.875f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac2_a3" to 0.4265f, "mac3_d1" to 0.125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6175f, "mac4_d1" to 0.1875f, "mac4_a1" to 0.325f, "mac5_d1" to 0.375f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4215f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.625f, "mac6_a2" to 0.5655f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.417f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Edge", "macro4" to "Short", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "pans",
+        low = 43, high = 72)
+
+    private fun tine78() = Patch("Tine", "Temple Blocks",
+        mapOf("model" to 0.8888889f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.875f, "mac3_a1" to 0.325f, "mac3_a2" to 0.6165f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4155f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.6385f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.315500021f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
         low = 60, high = 76)
 
-    private fun tine60() = Patch("Tine", "Temple Blocks Hard",
-        mapOf("model" to 0.8888889f, "mallet" to 0.9f),
+    private fun tine79() = Patch("Tine", "Temple Blocks Hard",
+        mapOf("model" to 0.8888889f, "mallet" to 0.9f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.875f, "mac3_a1" to 0.325f, "mac3_a2" to 0.6115f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4155f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.633f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.308f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
         low = 64, high = 84)
 
-    private fun tine61() = Patch("Tine", "Wood Blocks",
-        mapOf("model" to 0.8888889f, "decay" to 0.3f, "bright" to 0.6f),
+    private fun tine80() = Patch("Tine", "Wood Blocks",
+        mapOf("model" to 0.8888889f, "decay" to 0.3f, "bright" to 0.6f, "volume" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.402f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.4f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.3835f, "mac5_d1" to 0.125f, "mac5_a1" to 0.6f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.226000011f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
         low = 72, high = 88)
 
-    private fun tine62() = Patch("Tine", "Cowbell",
-        mapOf("model" to 0.9444444f, "tube" to 0f),
+    private fun tine81() = Patch("Tine", "Clave Sticks",
+        mapOf("model" to 0.111111112f, "mallet" to 1f, "decay" to 0.3f, "bright" to 0.7f, "tube" to 0f, "volume" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.4f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.392499983f, "mac5_d1" to 0.125f, "mac5_a1" to 0.625f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.253499985f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "hits",
+        low = 76, high = 96)
+
+    private fun tine82() = Patch("Tine", "Low Log",
+        mapOf("model" to 0.8333333f, "mallet" to 0.6f, "decay" to 0.2f, "damp" to 0.8f, "volume" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.325f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.3835f, "mac5_d1" to 0.125f, "mac5_a1" to 0.6f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2015f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "hits",
+        low = 31, high = 52)
+
+    private fun tine83() = Patch("Tine", "Cowbell",
+        mapOf("model" to 0.9444444f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.875f, "mac3_a1" to 0.325f, "mac3_a2" to 0.5955f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.425f, "mac5_d1" to 0.125f, "mac5_a1" to 0.7f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.7f, "mac6_a2" to 0.571f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3175f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
         low = 60, high = 76)
 
-    private fun tine63() = Patch("Tine", "Agogo",
-        mapOf("model" to 0.9444444f, "mallet" to 0.7f, "decay" to 0.6f, "tube" to 0f),
+    private fun tine84() = Patch("Tine", "Cowbell Muted",
+        mapOf("model" to 0.9444444f, "decay" to 0.15f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.325f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.425f, "mac5_d1" to 0.125f, "mac5_a1" to 0.7f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3135f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "hits",
+        low = 60, high = 76)
+
+    private fun tine85() = Patch("Tine", "Agogo",
+        mapOf("model" to 0.9444444f, "mallet" to 0.7f, "decay" to 0.6f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.875f, "mac3_a1" to 0.325f, "mac3_a2" to 0.5955f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.425f, "mac5_d1" to 0.125f, "mac5_a1" to 0.7f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.7f, "mac6_a2" to 0.5905f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3195f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
         low = 64, high = 84)
 
-    private fun tine64() = Patch("Tine", "Cowbell Muted",
-        mapOf("model" to 0.9444444f, "decay" to 0.15f, "tube" to 0f),
+    private fun tine86() = Patch("Tine", "Double Agogo",
+        mapOf("model" to 0.9444444f, "tune" to 0.4f, "mallet" to 0.7f, "decay" to 0.6f, "tube" to 0f, "volume" to 0.92f, "pair" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_d2" to 0.875f, "mac3_a1" to 0.325f, "mac3_a2" to 0.54f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.875f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac4_a3" to 0.4095f, "mac5_d1" to 0.125f, "mac5_a1" to 0.7f, "mac6_d1" to 0.9375f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2625f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
-        low = 60, high = 76)
+        low = 64, high = 84)
 
-    private fun tine65() = Patch("Tine", "Triangle",
-        mapOf("model" to 1f, "tube" to 0f),
+    private fun tine87() = Patch("Tine", "Pipe Hit",
+        mapOf("model" to 0.5f, "mallet" to 0.9f, "decay" to 0.1f, "damp" to 0.9f, "tube" to 0f, "volume" to 0.51f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4275f, "mac2_d1" to 0.25f, "mac2_d2" to 0.875f, "mac2_a1" to 0.35f, "mac2_a2" to 0.687999964f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.325f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.125f, "mac5_a1" to 0.7f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.7f, "mac6_a2" to 0.6095f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
-        low = 76, high = 96)
+        low = 60, high = 84)
 
-    private fun tine66() = Patch("Tine", "Triangle Roll",
-        mapOf("model" to 1f, "tube" to 0f, "roll" to 0.6666667f),
-        family = "hits",
-        low = 76, high = 96)
-
-    private fun tine67() = Patch("Tine", "Triangle Muted",
-        mapOf("model" to 1f, "decay" to 0.15f, "tube" to 0f),
+    private fun tine88() = Patch("Tine", "Triangle",
+        mapOf("model" to 1f, "tube" to 0f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.338f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.325f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.5855f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.7f, "mac6_a2" to 0.6445f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3535f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
         family = "hits",
         low = 76, high = 96)
 
-    private val tine: List<Patch> by lazy { listOf(tine0(), tine1(), tine2(), tine3(), tine4(), tine5(), tine6(), tine7(), tine8(), tine9(), tine10(), tine11(), tine12(), tine13(), tine14(), tine15(), tine16(), tine17(), tine18(), tine19(), tine20(), tine21(), tine22(), tine23(), tine24(), tine25(), tine26(), tine27(), tine28(), tine29(), tine30(), tine31(), tine32(), tine33(), tine34(), tine35(), tine36(), tine37(), tine38(), tine39(), tine40(), tine41(), tine42(), tine43(), tine44(), tine45(), tine46(), tine47(), tine48(), tine49(), tine50(), tine51(), tine52(), tine53(), tine54(), tine55(), tine56(), tine57(), tine58(), tine59(), tine60(), tine61(), tine62(), tine63(), tine64(), tine65(), tine66(), tine67()) }
+    private fun tine89() = Patch("Tine", "Triangle Muted",
+        mapOf("model" to 1f, "decay" to 0.15f, "tube" to 0f, "volume" to 1f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.275f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.325f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.125f, "mac5_a1" to 0.625f, "mac6_d1" to 0.375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.8f, "mac6_a2" to 0.319f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2715f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Body", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "hits",
+        low = 76, high = 96)
+
+    private fun tine90() = Patch("Tine", "Triangle Roll",
+        mapOf("model" to 1f, "tube" to 0f, "roll" to 0.6666667f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.3685f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.1875f, "mac3_a1" to 0.325f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.7f, "mac5_a2" to 0.601f, "mac6_d1" to 0.9375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.7f, "mac6_a2" to 0.65f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.75f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Short", "macro4" to "Ring", "macro5" to "Edge", "macro6" to "Beat", "macro7" to "Roll", "macro8" to "Wide"),
+        family = "hits",
+        low = 76, high = 96)
+
+    private fun tine91() = Patch("Tine", "Bowl Keys",
+        mapOf("model" to 0.7777778f, "mallet" to 0.6f, "decay" to 0.2f, "damp" to 0.8f, "tube" to 0.7f, "volume" to 0.51f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4525f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.618000031f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.385f, "mac8_d1" to 0.375f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 48, high = 84)
+
+    private fun tine92() = Patch("Tine", "Gong Keys",
+        mapOf("model" to 0.7222222f, "mallet" to 0.6f, "decay" to 0.3f, "tube" to 0.4f, "volume" to 0.6f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.624f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4005f, "mac8_d1" to 0.375f, "mac8_d2" to 0.875f, "mac8_a1" to 0.7f, "mac8_a2" to 0.4385f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 55, high = 84)
+
+    private fun tine93() = Patch("Tine", "Bent Bars",
+        mapOf("model" to 0.166666672f, "mallet" to 0.4f, "tube" to 0.8f, "volume" to 0.38f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.578500032f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.437f, "mac8_d1" to 0.375f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 43, high = 79)
+
+    private fun tine94() = Patch("Tine", "Buzzing Marimba",
+        mapOf("tune" to 0.45f, "mallet" to 0.9f, "bright" to 0.8f, "tube" to 0.7f, "buzz" to 1f, "volume" to 0.75f, "pair" to 0.4f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.625f, "mac5_a1" to 0.099999994f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2965f, "mac8_d1" to 0.375f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Clean", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 36, high = 84)
+
+    private fun tine95() = Patch("Tine", "Rattle Pan",
+        mapOf("model" to 0.333333343f, "tube" to 0f, "bloom" to 0.8f, "buzz" to 0.8f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4345f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.6275f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3635f, "mac8_d1" to 0.375f, "mac8_d2" to 0.875f, "mac8_a1" to 0.7f, "mac8_a2" to 0.4155f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 48, high = 79)
+
+    private fun tine96() = Patch("Tine", "Sour Bells",
+        mapOf("model" to 0.166666672f, "tune" to 0.39f, "mallet" to 0.7f, "tube" to 0f, "spread" to 0.5f, "volume" to 1f, "pair" to 0.9f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_a1" to 0.75f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3705f, "mac8_d1" to 0.375f, "mac8_d2" to 0.875f, "mac8_a1" to 0.7f, "mac8_a2" to 0.3795f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 60, high = 96)
+
+    private fun tine97() = Patch("Tine", "Motor Gong",
+        mapOf("model" to 0.7222222f, "decay" to 0.7f, "tube" to 1f, "motor" to 0.3f, "depth" to 1f, "volume" to 0.55f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_d3" to 0.875f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac1_a3" to 0.4195f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.641000032f, "mac4_d1" to 0.1875f, "mac4_d2" to 0.3125f, "mac4_a1" to 0.675f, "mac4_a2" to 0.199999988f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.406499982f, "mac8_d1" to 0.4375f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Ring", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Speed"),
+        family = "odd",
+        low = 36, high = 60)
+
+    private fun tine98() = Patch("Tine", "Bowed Glass",
+        mapOf("model" to 0.166666672f, "mallet" to 0.02f, "decay" to 1f, "tube" to 0f, "roll" to 0.9166667f, "volume" to 0.3f, "pair" to 0.08f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.5645f, "mac4_d1" to 0.1875f, "mac4_a1" to 0.325f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_a1" to 0.75f, "mac8_d1" to 0.375f, "mac8_d2" to 0.875f, "mac8_a1" to 0.7f, "mac8_a2" to 0.4585f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Short", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 67, high = 96,
+        sendReverb = 0.2f, sendDelay = 0f)
+
+    private fun tine99() = Patch("Tine", "Endless Metal",
+        mapOf("model" to 0.5555556f, "mallet" to 0.3f, "decay" to 1f, "tube" to 0f, "bloom" to 1f, "volume" to 0.42f, "mac1_d1" to 0.0625f, "mac1_d2" to 0.25f, "mac1_a1" to 0.7f, "mac1_a2" to 0.575f, "mac2_d1" to 0.25f, "mac2_d2" to 0.0625f, "mac2_a1" to 0.3f, "mac2_a2" to 0.425f, "mac3_d1" to 0.9375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.604f, "mac4_d1" to 0.1875f, "mac4_a1" to 0.325f, "mac5_d1" to 0.625f, "mac5_a1" to 0.8f, "mac6_d1" to 0.75f, "mac6_a1" to 0.8f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.411f, "mac8_d1" to 0.375f, "mac8_d2" to 0.875f, "mac8_a1" to 0.7f, "mac8_a2" to 0.444f),
+        mapOf("macro1" to "Hard", "macro2" to "Dark", "macro3" to "Beat", "macro4" to "Short", "macro5" to "Buzz", "macro6" to "Wide", "macro7" to "Roll", "macro8" to "Tubes"),
+        family = "odd",
+        low = 36, high = 72,
+        sendReverb = 0.3f, sendDelay = 0f)
+
+    private val tine: List<Patch> by lazy { listOf(tine0(), tine1(), tine2(), tine3(), tine4(), tine5(), tine6(), tine7(), tine8(), tine9(), tine10(), tine11(), tine12(), tine13(), tine14(), tine15(), tine16(), tine17(), tine18(), tine19(), tine20(), tine21(), tine22(), tine23(), tine24(), tine25(), tine26(), tine27(), tine28(), tine29(), tine30(), tine31(), tine32(), tine33(), tine34(), tine35(), tine36(), tine37(), tine38(), tine39(), tine40(), tine41(), tine42(), tine43(), tine44(), tine45(), tine46(), tine47(), tine48(), tine49(), tine50(), tine51(), tine52(), tine53(), tine54(), tine55(), tine56(), tine57(), tine58(), tine59(), tine60(), tine61(), tine62(), tine63(), tine64(), tine65(), tine66(), tine67(), tine68(), tine69(), tine70(), tine71(), tine72(), tine73(), tine74(), tine75(), tine76(), tine77(), tine78(), tine79(), tine80(), tine81(), tine82(), tine83(), tine84(), tine85(), tine86(), tine87(), tine88(), tine89(), tine90(), tine91(), tine92(), tine93(), tine94(), tine95(), tine96(), tine97(), tine98(), tine99()) }
 
     private fun sympath0() = Patch("Sympath", "Init", emptyMap(),
         family = "sitar",
