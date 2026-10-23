@@ -374,13 +374,23 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
     }
 
     // These only change between blocks, so they're read once.
-    float vCouple[kPads], vNoise[kPads], vDrive[kPads], vLevel[kPads], vPan[kPads];
+    // The drive's gains, see below: into the curve, back out for the bus,
+    // and back out for the pad's own output.
+    float vCouple[kPads], vNoise[kPads], vDrive[kPads], vLevel[kPads], vCos[kPads], vSin[kPads];
+    float vDriveIn[kPads], vDriveBus[kPads], vDriveOut[kPads];
     for (int32_t pad = 0; pad < kPads; ++pad) {
         vCouple[pad] = padParam(pad, Couple);
         vNoise[pad] = padVal(pad, Noise);
         vDrive[pad] = padVal(pad, Drive);
         vLevel[pad] = padVal(pad, Level);
-        vPan[pad] = padParam(pad, Pan);
+        const float pan = std::clamp(padParam(pad, Pan), -1.0f, 1.0f);
+        const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
+        vCos[pad] = std::cos(angle);
+        vSin[pad] = std::sin(angle);
+        const float g = vDrive[pad] * kDriveGain;
+        vDriveIn[pad] = g / kDriveNominal;
+        vDriveBus[pad] = vDrive[pad] > 0.0001f ? kDriveNominal / g : 0.0f;
+        vDriveOut[pad] = vDrive[pad] > 0.0001f ? kDriveNominal / dsp::fastTanh(g) : 0.0f;
     }
 
     for (int32_t i = 0; i < frames; ++i) {
@@ -450,8 +460,7 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
             float toBus = sum;
             const float drive = vDrive[pad];
             if (driveCouple > 0.0f && drive > 0.0001f) {
-                const float g = drive * kDriveGain;
-                const float bent = dsp::fastTanh(modes * (g / kDriveNominal)) * (kDriveNominal / g) * vLevel[pad];
+                const float bent = dsp::fastTanh(modes * vDriveIn[pad]) * vDriveBus[pad] * vLevel[pad];
                 toBus = sum + (bent - sum) * driveCouple;
             }
             p.last = toBus;
@@ -474,15 +483,11 @@ bool Resonance::render(float *L, float *R, int32_t frames) {
             // passes at its own size and the knob adds grit and sustain
             // rather than cutting level.
             if (drive > 0.0001f) {
-                const float g = drive * kDriveGain;
-                sum = dsp::fastTanh(modes * (g / kDriveNominal)) *
-                      (kDriveNominal / dsp::fastTanh(g)) * vLevel[pad];
+                sum = dsp::fastTanh(modes * vDriveIn[pad]) * vDriveOut[pad] * vLevel[pad];
             }
 
-            const float pan = std::clamp(vPan[pad], -1.0f, 1.0f);
-            const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
-            mixL += sum * std::cos(angle) * 1.4142f;
-            mixR += sum * std::sin(angle) * 1.4142f;
+            mixL += sum * vCos[pad] * 1.4142f;
+            mixR += sum * vSin[pad] * 1.4142f;
         }
 
         // The buses, read one sample later. Each pad takes its share above.
