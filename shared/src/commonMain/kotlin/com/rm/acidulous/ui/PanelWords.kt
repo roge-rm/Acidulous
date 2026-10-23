@@ -1138,6 +1138,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "scoop" to Res.string.pw_scoop,
     "scrambled in time" to Res.string.pw_scrambled_in_time,
     "screw" to Res.string.pw_screw,
+    "sea" to Res.string.pw_sea,
     "section" to Res.string.pw_section,
     "seed" to Res.string.pw_seed,
     "semi" to Res.string.pw_semi,

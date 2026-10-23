@@ -11697,301 +11697,547 @@ internal object FactoryBanks {
         low = 36, high = 60)
 
     private fun fathom1() = Patch("Fathom", "Fish Tank",
-        mapOf("density" to 0.55f, "size" to 0.125f, "rise" to 0.5f),
+        mapOf("density" to 0.55f, "size" to 0.125f, "rise" to 0.5f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3235f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.431f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.431f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.397f, "mac8_a2" to 0.608f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
         family = "water",
         low = 43, high = 67)
 
-    private fun fathom2() = Patch("Fathom", "Big Bubbles",
-        mapOf("density" to 0.35f, "size" to 0.291666657f, "rise" to 0.3f, "decay" to 0.8f),
-        family = "water",
-        low = 24, high = 48)
-
-    private fun fathom3() = Patch("Fathom", "Boiling Pot",
-        mapOf("density" to 0.85f, "size" to 0.375f, "rise" to 0.6f, "volume" to 0.6f),
+    private fun fathom2() = Patch("Fathom", "Tap Drip",
+        mapOf("model" to 0.06666667f, "density" to 0.55f, "size" to 0.0416666679f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3915f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.438f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.3595f, "mac8_a2" to 0.6105f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
         family = "water",
         low = 36, high = 60)
 
-    private fun fathom4() = Patch("Fathom", "Bubble Notes",
-        mapOf("density" to 0f, "size" to 0f, "rise" to 0.2f, "decay" to 0.7f, "volume" to 1f),
+    private fun fathom3() = Patch("Fathom", "Cave Drips",
+        mapOf("model" to 0.06666667f, "density" to 0.45f, "size" to 0.166666672f, "decay" to 0.7f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.351f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.397f, "mac8_a2" to 0.5825f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "water",
+        low = 31, high = 55)
+
+    private fun fathom4() = Patch("Fathom", "Gutter",
+        mapOf("model" to 0.06666667f, "density" to 0.75f, "size" to 0.333333343f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3875f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.4345f, "mac8_a2" to 0.594f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "water",
+        low = 28, high = 52)
+
+    private fun fathom5() = Patch("Fathom", "Big Bubbles",
+        mapOf("density" to 0.35f, "size" to 0.291666657f, "rise" to 0.3f, "decay" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.338f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.6135f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "water",
+        low = 24, high = 48)
+
+    private fun fathom6() = Patch("Fathom", "Boiling Pot",
+        mapOf("density" to 0.85f, "size" to 0.375f, "rise" to 0.6f, "volume" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.4395f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.442f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.406000018f, "mac8_a2" to 0.672f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "water",
+        low = 36, high = 60)
+
+    private fun fathom7() = Patch("Fathom", "Submerged",
+        mapOf("model" to 0.933333337f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.342f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.425f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.3125f, "mac5_a2" to 0.6455f, "mac6_d1" to 0.3846154f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.566f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "Wash", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "water",
+        low = 24, high = 48)
+
+    private fun fathom8() = Patch("Fathom", "Deep Underwater",
+        mapOf("model" to 0.933333337f, "density" to 0.3f, "tone" to 0.2f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.304499984f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.375f, "mac5_a2" to 0.636000037f, "mac6_d1" to 0.3846154f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "Wash", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "water",
+        low = 24, high = 43)
+
+    private fun fathom9() = Patch("Fathom", "Diver",
+        mapOf("model" to 0.933333337f, "density" to 0.7f, "rise" to 0.8f, "volume" to 0.5f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.375f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.444f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.608f, "mac6_d1" to 0.3846154f, "mac6_a1" to 0.75f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.6655f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "Wash", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "water",
+        low = 28, high = 52)
+
+    private fun fathom10() = Patch("Fathom", "Bubble Notes",
+        mapOf("density" to 0f, "size" to 0f, "rise" to 0.2f, "decay" to 0.7f, "volume" to 1f, "mac1_d1" to 0.307692319f, "mac1_a1" to 0.7f, "mac2_d1" to 0.307692319f, "mac2_a1" to 0.3795f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.15384616f, "mac4_a1" to 0.55f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.35f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.7f, "mac8_a2" to 0.3015f),
+        mapOf("macro1" to "Ring", "macro2" to "Short", "macro3" to "Rise", "macro4" to "Drift", "macro5" to "Low", "macro6" to "High", "macro7" to "Wide", "macro8" to "Drops"),
         family = "water",
         low = 24, high = 72)
 
-    private fun fathom5() = Patch("Fathom", "Cave Drips",
-        mapOf("model" to 0.06666667f, "density" to 0.45f, "size" to 0.166666672f, "decay" to 0.7f),
-        family = "water",
-        low = 31, high = 55)
-
-    private fun fathom6() = Patch("Fathom", "Tap Drip",
-        mapOf("model" to 0.06666667f, "density" to 0.55f, "size" to 0.0416666679f),
-        family = "water",
-        low = 36, high = 60)
-
-    private fun fathom7() = Patch("Fathom", "Drip Notes",
-        mapOf("model" to 0.06666667f, "density" to 0f, "size" to 0f, "volume" to 1f),
+    private fun fathom11() = Patch("Fathom", "Drip Notes",
+        mapOf("model" to 0.06666667f, "density" to 0f, "size" to 0f, "volume" to 1f, "mac1_d1" to 0.307692319f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.36650002f, "mac2_d1" to 0.307692319f, "mac2_a1" to 0.4345f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.15384616f, "mac4_a1" to 0.55f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.3795f, "mac6_d1" to 1f, "mac6_a1" to 0.594f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.7f, "mac8_a2" to 0.2365f),
+        mapOf("macro1" to "Ring", "macro2" to "Short", "macro3" to "Rise", "macro4" to "Drift", "macro5" to "Low", "macro6" to "High", "macro7" to "Wide", "macro8" to "Drops"),
         family = "water",
         low = 24, high = 60)
 
-    private fun fathom8() = Patch("Fathom", "Gutter",
-        mapOf("model" to 0.06666667f, "density" to 0.75f, "size" to 0.333333343f),
+    private fun fathom12() = Patch("Fathom", "Bubble Melody",
+        mapOf("density" to 0f, "size" to 0f, "rise" to 0f, "decay" to 0.9f, "spread" to 0.2f, "volume" to 1f, "mac1_d1" to 0.307692319f, "mac1_a1" to 0.7f, "mac2_d1" to 0.307692319f, "mac2_a1" to 0.347f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.15384616f, "mac4_a1" to 0.55f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.3305f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.7f, "mac8_a2" to 0.354f),
+        mapOf("macro1" to "Ring", "macro2" to "Short", "macro3" to "Rise", "macro4" to "Drift", "macro5" to "Low", "macro6" to "High", "macro7" to "Wide", "macro8" to "Drops"),
         family = "water",
-        low = 28, high = 52)
+        low = 48, high = 84)
 
-    private fun fathom9() = Patch("Fathom", "Brook",
-        mapOf("model" to 0.2f, "density" to 0.4f, "size" to 0.333333343f),
-        family = "water",
+    private fun fathom13() = Patch("Fathom", "Trickle",
+        mapOf("model" to 0.2f, "density" to 0.2f, "size" to 0.25f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.378f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.406000018f, "mac8_a2" to 0.6245f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
+        low = 40, high = 64)
+
+    private fun fathom14() = Patch("Fathom", "Brook",
+        mapOf("model" to 0.2f, "density" to 0.4f, "size" to 0.333333343f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.315500021f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.431f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.397f, "mac8_a2" to 0.6185f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 36, high = 60)
 
-    private fun fathom10() = Patch("Fathom", "River",
-        mapOf("model" to 0.2f, "density" to 0.6f, "size" to 0.5f, "volume" to 0.4f),
-        family = "water",
+    private fun fathom15() = Patch("Fathom", "River",
+        mapOf("model" to 0.2f, "density" to 0.6f, "size" to 0.5f, "volume" to 0.4f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3865f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.447f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.652f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 24, high = 48)
 
-    private fun fathom11() = Patch("Fathom", "Fountain",
-        mapOf("model" to 0.2f, "density" to 0.75f, "volume" to 0.4f),
-        family = "water",
+    private fun fathom16() = Patch("Fathom", "Distant River",
+        mapOf("model" to 0.2f, "size" to 0.5f, "volume" to 0.298f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.424f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.473f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.6125f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
+        low = 24, high = 48,
+        sendReverb = 0.35f, sendDelay = 0f)
+
+    private fun fathom17() = Patch("Fathom", "Fountain",
+        mapOf("model" to 0.2f, "density" to 0.75f, "volume" to 0.4f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.4125f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.458f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.4595f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.6265f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 43, high = 67)
 
-    private fun fathom12() = Patch("Fathom", "Trickle",
-        mapOf("model" to 0.2f, "density" to 0.2f, "size" to 0.25f),
-        family = "water",
-        low = 40, high = 64)
-
-    private fun fathom13() = Patch("Fathom", "Surf",
-        mapOf("model" to 0.266666681f, "gust" to 0.8f),
-        family = "water",
+    private fun fathom18() = Patch("Fathom", "Little Falls",
+        mapOf("model" to 0.6f, "density" to 0.8f, "tone" to 0.7f, "volume" to 0.4f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.453f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.7f, "mac4_d1" to 1f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.25f, "mac4_a2" to 0.468f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.5645f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Ring", "macro4" to "Deep", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 36, high = 60)
 
-    private fun fathom14() = Patch("Fathom", "Slow Swell",
-        mapOf("model" to 0.266666681f, "gust" to 0.9f, "tone" to 0.3f, "swell" to 0.466666669f),
-        family = "water",
-        low = 36, high = 60)
-
-    private fun fathom15() = Patch("Fathom", "Shore",
-        mapOf("model" to 0.266666681f, "density" to 0.7f, "gust" to 0.6f, "tone" to 0.7f, "swell" to 0.06666667f),
-        family = "water",
-        low = 36, high = 60)
-
-    private fun fathom16() = Patch("Fathom", "Calm Sea",
-        mapOf("model" to 0.266666681f, "gust" to 0.3f, "tone" to 0.25f, "swell" to 1f),
-        family = "water",
-        low = 36, high = 60)
-
-    private fun fathom17() = Patch("Fathom", "Waterfall",
-        mapOf("model" to 0.6f),
-        family = "water",
+    private fun fathom19() = Patch("Fathom", "Waterfall",
+        mapOf("model" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.375f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.7f, "mac4_d1" to 1f, "mac4_a1" to 0.25f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.5885f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Ring", "macro4" to "Deep", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 31, high = 55)
 
-    private fun fathom18() = Patch("Fathom", "Waterfall Far",
-        mapOf("model" to 0.6f, "density" to 0.4f, "tone" to 0.2f),
-        family = "water",
+    private fun fathom20() = Patch("Fathom", "Waterfall Far",
+        mapOf("model" to 0.6f, "density" to 0.4f, "tone" to 0.2f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.355000019f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.7f, "mac4_d1" to 1f, "mac4_a1" to 0.25f, "mac5_d1" to 0.538461566f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4245f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.614f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Ring", "macro4" to "Deep", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 28, high = 48)
 
-    private fun fathom19() = Patch("Fathom", "Cascade",
-        mapOf("model" to 0.6f, "density" to 0.8f, "tone" to 0.7f, "volume" to 0.4f),
-        family = "water",
+    private fun fathom21() = Patch("Fathom", "Rapids",
+        mapOf("model" to 0.6f, "density" to 0.75f, "size" to 0.25f, "gust" to 0.9f, "tone" to 0.6f, "spread" to 1f, "volume" to 0.417f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.4335f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.7f, "mac4_d1" to 1f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.25f, "mac4_a2" to 0.465f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.35f, "mac8_a2" to 0.5685f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Ring", "macro4" to "Deep", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
+        low = 33, high = 57)
+
+    private fun fathom22() = Patch("Fathom", "Hand Splash",
+        mapOf("model" to 0.8666667f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3845f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4415f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.3595f, "mac8_a2" to 0.6015f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 36, high = 60)
 
-    private fun fathom20() = Patch("Fathom", "Splash",
-        mapOf("model" to 0.8666667f),
-        family = "water",
+    private fun fathom23() = Patch("Fathom", "Paddling",
+        mapOf("model" to 0.8666667f, "density" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.308f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_a1" to 0.35f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 36, high = 60)
 
-    private fun fathom21() = Patch("Fathom", "Paddling",
-        mapOf("model" to 0.8666667f, "density" to 0.6f),
-        family = "water",
-        low = 36, high = 60)
-
-    private fun fathom22() = Patch("Fathom", "Big Splash",
-        mapOf("model" to 0.8666667f, "size" to 0.5f),
-        family = "water",
+    private fun fathom24() = Patch("Fathom", "Big Splash",
+        mapOf("model" to 0.8666667f, "size" to 0.5f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.378499985f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.65f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4265f, "mac5_d1" to 1f, "mac5_a1" to 0.25f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.3595f, "mac8_a2" to 0.595f),
+        mapOf("macro1" to "More", "macro2" to "Bigger", "macro3" to "Rise", "macro4" to "Ring", "macro5" to "Deep", "macro6" to "High", "macro7" to "Wide", "macro8" to "Calm"),
+        family = "stream",
         low = 31, high = 52)
 
-    private fun fathom23() = Patch("Fathom", "Underwater",
-        mapOf("model" to 0.933333337f),
-        family = "water",
-        low = 24, high = 48)
+    private fun fathom25() = Patch("Fathom", "Calm Sea",
+        mapOf("model" to 0.266666681f, "gust" to 0.3f, "tone" to 0.25f, "swell" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4115f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.3645f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.4345f, "mac4_a2" to 0.638f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.4f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 36, high = 60)
 
-    private fun fathom24() = Patch("Fathom", "Deep Underwater",
-        mapOf("model" to 0.933333337f, "density" to 0.3f, "tone" to 0.2f),
-        family = "water",
-        low = 24, high = 43)
+    private fun fathom26() = Patch("Fathom", "Shore",
+        mapOf("model" to 0.266666681f, "density" to 0.7f, "gust" to 0.6f, "tone" to 0.7f, "swell" to 0.06666667f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.434000015f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.603f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.4f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_d3" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f, "mac8_a3" to 0.436f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 36, high = 60)
 
-    private fun fathom25() = Patch("Fathom", "Diver",
-        mapOf("model" to 0.933333337f, "density" to 0.7f, "rise" to 0.8f, "volume" to 0.5f),
-        family = "water",
-        low = 28, high = 52)
+    private fun fathom27() = Patch("Fathom", "Beach Surf",
+        mapOf("model" to 0.266666681f, "gust" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.439f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4115f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.3685f, "mac4_a2" to 0.6465f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.4f, "mac6_a2" to 0.634f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 36, high = 60)
 
-    private fun fathom26() = Patch("Fathom", "Light Rain",
-        mapOf("model" to 0.13333334f, "density" to 0.35f, "tone" to 0.4f, "volume" to 1f),
+    private fun fathom28() = Patch("Fathom", "Long Swell",
+        mapOf("model" to 0.266666681f, "gust" to 0.9f, "tone" to 0.3f, "swell" to 0.466666669f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.403999984f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.378499985f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.425f, "mac4_a2" to 0.628f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.4f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 36, high = 60)
+
+    private fun fathom29() = Patch("Fathom", "Harbour",
+        mapOf("model" to 0.266666681f, "size" to 0.333333343f, "decay" to 0.7f, "tone" to 0.3f, "swell" to 0.13333334f, "volume" to 0.759f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.394f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.3745f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.4345f, "mac4_a2" to 0.6025f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.4f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 31, high = 55)
+
+    private fun fathom30() = Patch("Fathom", "Near Surf",
+        mapOf("model" to 0.266666681f, "density" to 0.8f, "gust" to 0.9f, "tone" to 0.75f, "spread" to 1f, "volume" to 0.488f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.7f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.5575f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.4f, "mac6_a2" to 0.595f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 36, high = 60)
+
+    private fun fathom31() = Patch("Fathom", "Far Surf",
+        mapOf("model" to 0.266666681f, "density" to 0.3f, "gust" to 0.8f, "tone" to 0.2f, "swell" to 0.333333343f, "volume" to 0.681f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.435f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.352f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.444f, "mac4_a2" to 0.6395f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.4f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 31, high = 55,
+        sendReverb = 0.4f, sendDelay = 0f)
+
+    private fun fathom32() = Patch("Fathom", "Pebble Beach",
+        mapOf("model" to 0.266666681f, "density" to 1f, "size" to 0.5833333f, "decay" to 0.2f, "gust" to 0.7f, "tone" to 0.55f, "swell" to 0.13333334f, "volume" to 0.529f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.7f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.448f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.5755f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.4f, "mac6_a2" to 0.555500031f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 40, high = 64)
+
+    private fun fathom33() = Patch("Fathom", "Sea Cave",
+        mapOf("model" to 0.266666681f, "density" to 0.2f, "gust" to 1f, "tone" to 0.12f, "swell" to 0.466666669f, "volume" to 0.784f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.406000018f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.75f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.3005f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.472f, "mac4_a2" to 0.6f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.4f, "mac7_d1" to 0.15384616f, "mac7_a1" to 0.65f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.07692308f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Foam", "macro2" to "Waves", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Long", "macro6" to "Quick", "macro7" to "Bigger", "macro8" to "Still"),
+        family = "sea",
+        low = 24, high = 48,
+        sendReverb = 0.55f, sendDelay = 0f)
+
+    private fun fathom34() = Patch("Fathom", "Drizzle",
+        mapOf("model" to 0.13333334f, "density" to 0.2f, "tone" to 0.3f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.314f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.472f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.15384616f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.7f, "mac6_a2" to 0.417f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.25f, "mac7_a2" to 0.388f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Bigger", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
         family = "rain",
         low = 36, high = 60)
 
-    private fun fathom27() = Patch("Fathom", "Downpour",
-        mapOf("model" to 0.13333334f, "density" to 0.85f, "tone" to 0.6f, "volume" to 0.6f),
+    private fun fathom35() = Patch("Fathom", "Light Rain",
+        mapOf("model" to 0.13333334f, "density" to 0.35f, "tone" to 0.4f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.253000021f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.4155f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.15384616f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4165f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.25f, "mac7_a2" to 0.392499983f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Bigger", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
         family = "rain",
         low = 36, high = 60)
 
-    private fun fathom28() = Patch("Fathom", "Rain on Leaves",
-        mapOf("model" to 0.13333334f, "density" to 0.6f, "surface" to 0.333333343f),
+    private fun fathom36() = Patch("Fathom", "Downpour",
+        mapOf("model" to 0.13333334f, "density" to 0.85f, "tone" to 0.6f, "volume" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.412f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.3685f, "mac2_a2" to 0.685f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.15384616f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.25f, "mac7_a2" to 0.4445f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Bigger", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
         family = "rain",
         low = 36, high = 60)
 
-    private fun fathom29() = Patch("Fathom", "Tin Roof",
-        mapOf("model" to 0.13333334f, "density" to 0.55f, "surface" to 0.6666667f),
+    private fun fathom37() = Patch("Fathom", "Monsoon",
+        mapOf("model" to 0.13333334f, "density" to 1f, "size" to 0.416666657f, "tone" to 0.75f, "spread" to 1f, "volume" to 0.229f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.35f, "mac2_a2" to 0.6055f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.15384616f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.25f, "mac7_a2" to 0.479f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Bigger", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
         family = "rain",
         low = 36, high = 60)
 
-    private fun fathom30() = Patch("Fathom", "Window",
-        mapOf("model" to 0.13333334f, "surface" to 1f, "tone" to 0.3f, "volume" to 1f),
+    private fun fathom38() = Patch("Fathom", "Distant Rain",
+        mapOf("model" to 0.13333334f, "density" to 0.6f, "tone" to 0.15f, "volume" to 0.398f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.407f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.35f, "mac2_a2" to 0.657f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.15384616f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.7f, "mac6_a2" to 0.464f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.25f, "mac7_a2" to 0.4555f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Bigger", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "rain",
+        low = 31, high = 55,
+        sendReverb = 0.35f, sendDelay = 0f)
+
+    private fun fathom39() = Patch("Fathom", "Rain on Leaves",
+        mapOf("model" to 0.13333334f, "density" to 0.6f, "surface" to 0.333333343f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.314f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.4155f, "mac2_a2" to 0.6475f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.324f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.425f, "mac6_a2" to 0.425f, "mac6_a3" to 0.6465f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Heavy", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
         family = "rain",
         low = 36, high = 60)
 
-    private fun fathom31() = Patch("Fathom", "Hail",
-        mapOf("model" to 0.533333361f),
+    private fun fathom40() = Patch("Fathom", "Window",
+        mapOf("model" to 0.13333334f, "surface" to 1f, "tone" to 0.3f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.2335f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.4625f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.397f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.2315f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_a1" to 0.472f, "mac6_a2" to 0.472f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Heavy", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
         family = "rain",
         low = 36, high = 60)
 
-    private fun fathom32() = Patch("Fathom", "Hail on Tin",
-        mapOf("model" to 0.533333361f, "density" to 0.7f, "tone" to 0.8f),
+    private fun fathom41() = Patch("Fathom", "Tin Roof",
+        mapOf("model" to 0.13333334f, "density" to 0.55f, "surface" to 0.6666667f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3225f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.406000018f, "mac2_a2" to 0.63f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.332499981f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.406000018f, "mac6_a2" to 0.406000018f, "mac6_a3" to 0.641000032f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Heavy", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom42() = Patch("Fathom", "Light Hail",
+        mapOf("model" to 0.533333361f, "density" to 0.3f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.337f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.35f, "mac2_a2" to 0.6435f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 1f, "mac4_a1" to 0.25f, "mac5_d1" to 1f, "mac5_a1" to 0.625f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac6_a3" to 0.356f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Deep", "macro5" to "High", "macro6" to "Heavy", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom43() = Patch("Fathom", "Hail",
+        mapOf("model" to 0.533333361f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.342f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.397f, "mac2_a2" to 0.648f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 1f, "mac4_a1" to 0.25f, "mac5_d1" to 1f, "mac5_a1" to 0.625f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac6_a3" to 0.366f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Deep", "macro5" to "High", "macro6" to "Heavy", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom44() = Patch("Fathom", "Hail on Tin",
+        mapOf("model" to 0.533333361f, "density" to 0.7f, "tone" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.338f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.3875f, "mac2_a2" to 0.63f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 1f, "mac4_a1" to 0.25f, "mac5_d1" to 1f, "mac5_a1" to 0.625f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac6_a3" to 0.343999982f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Deep", "macro5" to "High", "macro6" to "Heavy", "macro7" to "Wide", "macro8" to "Slow"),
         family = "rain",
         low = 40, high = 64)
 
-    private fun fathom33() = Patch("Fathom", "Light Hail",
-        mapOf("model" to 0.533333361f, "density" to 0.3f),
-        family = "rain",
-        low = 36, high = 60)
-
-    private fun fathom34() = Patch("Fathom", "Rainstick",
-        mapOf("model" to 1f),
-        family = "rain",
-        low = 36, high = 60)
-
-    private fun fathom35() = Patch("Fathom", "Long Rainstick",
-        mapOf("model" to 1f, "decay" to 0.9f),
-        family = "rain",
-        low = 36, high = 60)
-
-    private fun fathom36() = Patch("Fathom", "Short Rainstick",
-        mapOf("model" to 1f, "density" to 0.8f, "decay" to 0.2f),
+    private fun fathom45() = Patch("Fathom", "Short Rainstick",
+        mapOf("model" to 1f, "density" to 0.8f, "decay" to 0.2f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.348f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.406000018f, "mac2_a2" to 0.586f, "mac3_d1" to 0.307692319f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.397f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.4015f, "mac4_a2" to 0.5775f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.307692319f, "mac5_a1" to 0.7f, "mac5_a2" to 0.35f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.25f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Long", "macro4" to "Short", "macro5" to "Pour", "macro6" to "Wide", "macro7" to "Narrow", "macro8" to "Slow"),
         family = "rain",
         low = 40, high = 64)
 
-    private fun fathom37() = Patch("Fathom", "Breeze",
-        mapOf("model" to 0.333333343f, "gust" to 0.6f, "tone" to 0.4f),
+    private fun fathom46() = Patch("Fathom", "Rainstick",
+        mapOf("model" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.355499983f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.4345f, "mac2_a2" to 0.626f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.3795f, "mac4_a2" to 0.575f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.307692319f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.7f, "mac5_a2" to 0.35f, "mac5_a3" to 0.4015f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.25f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Long", "macro4" to "Short", "macro5" to "Pour", "macro6" to "Wide", "macro7" to "Narrow", "macro8" to "Slow"),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom47() = Patch("Fathom", "Long Rainstick",
+        mapOf("model" to 1f, "decay" to 0.9f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.309499979f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.425f, "mac2_a2" to 0.6355f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.325f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.307692319f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.7f, "mac5_a2" to 0.35f, "mac5_a3" to 0.315500021f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.7f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.25f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Long", "macro4" to "Short", "macro5" to "Pour", "macro6" to "Wide", "macro7" to "Narrow", "macro8" to "Slow"),
+        family = "rain",
+        low = 36, high = 60)
+
+    private fun fathom48() = Patch("Fathom", "Breeze",
+        mapOf("model" to 0.333333343f, "gust" to 0.6f, "tone" to 0.4f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_a1" to 0.75f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4105f, "mac5_d1" to 0.538461566f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.3685f, "mac5_a2" to 0.646f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.3125f, "mac6_a2" to 0.6465f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.4325f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
         family = "weather",
         low = 24, high = 48)
 
-    private fun fathom38() = Patch("Fathom", "Gale",
-        mapOf("model" to 0.333333343f, "gust" to 1f, "tone" to 0.8f, "volume" to 0.85f),
+    private fun fathom49() = Patch("Fathom", "Hot Wind",
+        mapOf("model" to 0.333333343f, "gust" to 0.3f, "tone" to 0.75f, "fade" to 0.8362956f, "volume" to 0.359f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_a1" to 0.75f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.7f, "mac5_d1" to 0.538461566f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.35f, "mac5_a2" to 0.543f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.5945f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.466499984f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
         family = "weather",
         low = 31, high = 55)
 
-    private fun fathom39() = Patch("Fathom", "Whistling Wind",
-        mapOf("model" to 0.333333343f, "gust" to 0.7f, "whistle" to 0.8f, "volume" to 0.4f),
+    private fun fathom50() = Patch("Fathom", "Gale",
+        mapOf("model" to 0.333333343f, "gust" to 1f, "tone" to 0.8f, "volume" to 0.85f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_a1" to 0.672f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.7f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.3685f, "mac6_d1" to 1f, "mac6_a1" to 0.406000018f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.4205f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
         family = "weather",
-        low = 31, high = 60)
+        low = 31, high = 55)
 
-    private fun fathom40() = Patch("Fathom", "Moaning Wind",
-        mapOf("model" to 0.333333343f, "gust" to 0.8f, "whistle" to 0.6f, "tone" to 0.25f, "volume" to 1f),
+    private fun fathom51() = Patch("Fathom", "Storm Wind",
+        mapOf("model" to 0.333333343f, "gust" to 1f, "whistle" to 0.3f, "tone" to 0.65f, "volume" to 1f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_a1" to 0.75f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4195f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.378f, "mac6_d1" to 1f, "mac6_a1" to 0.406000018f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.407f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
+        family = "weather",
+        low = 28, high = 52)
+
+    private fun fathom52() = Patch("Fathom", "Chimney Wind",
+        mapOf("model" to 0.333333343f, "gust" to 0.9f, "whistle" to 0.5f, "tone" to 0.35f, "volume" to 1f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.75f, "mac3_a2" to 0.308f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4095f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.3685f, "mac6_d1" to 1f, "mac6_a1" to 0.406000018f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.3865f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
+        family = "weather",
+        low = 24, high = 48)
+
+    private fun fathom53() = Patch("Fathom", "Moaning Wind",
+        mapOf("model" to 0.333333343f, "gust" to 0.8f, "whistle" to 0.6f, "tone" to 0.25f, "volume" to 1f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.75f, "mac3_a2" to 0.297f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.7f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.406000018f, "mac6_d1" to 1f, "mac6_a1" to 0.453f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.3815f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
         family = "weather",
         low = 19, high = 43)
 
-    private fun fathom41() = Patch("Fathom", "Thunder",
-        mapOf("model" to 0.466666669f),
+    private fun fathom54() = Patch("Fathom", "Thunder",
+        mapOf("model" to 0.466666669f, "mac1_d1" to 0.307692319f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.75f, "mac1_a2" to 0.431f, "mac2_d1" to 0.307692319f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.325f, "mac2_a2" to 0.643f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.403999984f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.378f, "mac4_a2" to 0.645f, "mac5_d1" to 0.3846154f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.75f, "mac5_a2" to 0.597499967f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.4105f, "mac7_d1" to 0.538461566f, "mac7_d2" to 0.307692319f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Fade", "macro2" to "Short", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Roll", "macro6" to "Lull", "macro7" to "Near", "macro8" to "Slow"),
         family = "weather",
         low = 24, high = 48)
 
-    private fun fathom42() = Patch("Fathom", "Distant Thunder",
-        mapOf("model" to 0.466666669f, "tone" to 0.2f, "fade" to 0.8362956f),
-        family = "weather",
-        low = 24, high = 43)
-
-    private fun fathom43() = Patch("Fathom", "Thunder Clap",
-        mapOf("model" to 0.466666669f, "decay" to 0.3f, "tone" to 0.8f),
+    private fun fathom55() = Patch("Fathom", "Thunder Clap",
+        mapOf("model" to 0.466666669f, "decay" to 0.3f, "tone" to 0.8f, "mac1_d1" to 0.307692319f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.75f, "mac1_a2" to 0.4075f, "mac2_d1" to 0.307692319f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.3905f, "mac2_a2" to 0.6355f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.601f, "mac5_d1" to 0.3846154f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.75f, "mac5_a2" to 0.608999968f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.41f, "mac7_d1" to 0.538461566f, "mac7_d2" to 0.307692319f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Fade", "macro2" to "Short", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Roll", "macro6" to "Lull", "macro7" to "Near", "macro8" to "Slow"),
         family = "weather",
         low = 28, high = 52)
 
-    private fun fathom44() = Patch("Fathom", "Campfire",
-        mapOf("model" to 0.4f, "density" to 0.55f, "volume" to 1f),
+    private fun fathom56() = Patch("Fathom", "Distant Thunder",
+        mapOf("model" to 0.466666669f, "tone" to 0.2f, "fade" to 0.8362956f, "mac1_d1" to 0.307692319f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.75f, "mac1_a2" to 0.4285f, "mac2_d1" to 0.307692319f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.325f, "mac2_a2" to 0.6435f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.3495f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.444f, "mac4_a2" to 0.624f, "mac5_d1" to 0.3846154f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.75f, "mac5_a2" to 0.5855f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.41f, "mac7_d1" to 0.538461566f, "mac7_d2" to 0.307692319f, "mac7_d3" to 0.9230769f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4f, "mac7_a3" to 0.4055f, "mac8_d1" to 0.7692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.625f, "mac8_a2" to 0.573f),
+        mapOf("macro1" to "Fade", "macro2" to "Short", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Roll", "macro6" to "Lull", "macro7" to "Near", "macro8" to "Slow"),
+        family = "weather",
+        low = 24, high = 43)
+
+    private fun fathom57() = Patch("Fathom", "Rolling Thunder",
+        mapOf("model" to 0.466666669f, "decay" to 1f, "gust" to 1f, "tone" to 0.3f, "volume" to 0.549f, "mac1_d1" to 0.307692319f, "mac1_a1" to 0.75f, "mac2_d1" to 0.307692319f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.325f, "mac2_a2" to 0.5535f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.3995f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.3875f, "mac4_a2" to 0.6955f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.3846154f, "mac6_a1" to 0.25f, "mac7_d1" to 0.538461566f, "mac7_d2" to 0.307692319f, "mac7_d3" to 0.9230769f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4f, "mac7_a3" to 0.431999981f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Fade", "macro2" to "Short", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Roll", "macro6" to "Lull", "macro7" to "Near", "macro8" to "Slow"),
+        family = "weather",
+        low = 24, high = 43,
+        sendReverb = 0.3f, sendDelay = 0f)
+
+    private fun fathom58() = Patch("Fathom", "Whistling Wind",
+        mapOf("model" to 0.333333343f, "gust" to 0.7f, "whistle" to 0.8f, "volume" to 0.4f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.25f, "mac2_a2" to 0.462f, "mac3_d1" to 0.461538464f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4495f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.7f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.35f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.62f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.449f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
+        family = "weather",
+        low = 31, high = 60)
+
+    private fun fathom59() = Patch("Fathom", "Wind Whistle",
+        mapOf("model" to 0.333333343f, "gust" to 0.15f, "whistle" to 0.9f, "volume" to 0.104f, "mac1_d1" to 0.3846154f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.75f, "mac1_a2" to 0.514f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4905f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5105f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.35f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.526f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.4905f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
+        family = "weather",
+        low = 48, high = 79)
+
+    private fun fathom60() = Patch("Fathom", "Campfire",
+        mapOf("model" to 0.4f, "density" to 0.55f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.75f, "mac4_d1" to 0.3846154f, "mac4_d2" to 0.07692308f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Roar", "macro4" to "Smoulder", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Slow"),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom45() = Patch("Fathom", "Bonfire",
-        mapOf("model" to 0.4f, "density" to 0.8f, "gust" to 0.8f, "volume" to 1f),
+    private fun fathom61() = Patch("Fathom", "Hearth",
+        mapOf("model" to 0.4f, "gust" to 0.4f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.4165f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.75f, "mac4_d1" to 0.3846154f, "mac4_d2" to 0.07692308f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Roar", "macro4" to "Smoulder", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Slow"),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom46() = Patch("Fathom", "Embers",
-        mapOf("model" to 0.4f, "density" to 0.3f, "gust" to 0.2f, "tone" to 0.2f, "volume" to 1f),
+    private fun fathom62() = Patch("Fathom", "Wood Stove",
+        mapOf("model" to 0.4f, "density" to 0.4f, "gust" to 0.3f, "tone" to 0.2f, "volume" to 0.977f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.75f, "mac4_d1" to 0.3846154f, "mac4_d2" to 0.07692308f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Roar", "macro4" to "Smoulder", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Slow"),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom47() = Patch("Fathom", "Hearth",
-        mapOf("model" to 0.4f, "gust" to 0.4f, "volume" to 1f),
+    private fun fathom63() = Patch("Fathom", "Embers",
+        mapOf("model" to 0.4f, "density" to 0.3f, "gust" to 0.2f, "tone" to 0.2f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.75f, "mac4_d1" to 0.3846154f, "mac4_d2" to 0.07692308f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Roar", "macro4" to "Smoulder", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Slow"),
         family = "fire",
         low = 24, high = 48)
 
-    private fun fathom48() = Patch("Fathom", "Sizzle",
-        mapOf("model" to 0.6666667f),
+    private fun fathom64() = Patch("Fathom", "Bonfire",
+        mapOf("model" to 0.4f, "density" to 0.8f, "gust" to 0.8f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.403f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.75f, "mac4_d1" to 0.3846154f, "mac4_d2" to 0.07692308f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Roar", "macro4" to "Smoulder", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "fire",
+        low = 24, high = 48)
+
+    private fun fathom65() = Patch("Fathom", "Wildfire",
+        mapOf("model" to 0.4f, "density" to 1f, "gust" to 1f, "tone" to 0.9f, "spread" to 1f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.3685f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.75f, "mac4_d1" to 0.3846154f, "mac4_d2" to 0.07692308f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.7f, "mac6_d1" to 0.538461566f, "mac6_a1" to 0.35f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Roar", "macro4" to "Smoulder", "macro5" to "Bright", "macro6" to "Dark", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "fire",
+        low = 24, high = 48)
+
+    private fun fathom66() = Patch("Fathom", "Hot Pan",
+        mapOf("model" to 0.6666667f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.403999984f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.6325f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.3595f, "mac6_a2" to 0.3595f, "mac6_a3" to 0.6405f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Spit", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
         family = "fire",
         low = 48, high = 72)
 
-    private fun fathom49() = Patch("Fathom", "Steam",
-        mapOf("model" to 0.6666667f, "density" to 0.3f, "tone" to 0.8f),
+    private fun fathom67() = Patch("Fathom", "Frying",
+        mapOf("model" to 0.6666667f, "density" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4135f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.603f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.3685f, "mac6_a2" to 0.3685f, "mac6_a3" to 0.642f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Spit", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "fire",
+        low = 48, high = 72)
+
+    private fun fathom68() = Patch("Fathom", "Grill",
+        mapOf("model" to 0.6666667f, "tone" to 0.4f, "volume" to 0.501f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.427f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.6065f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.35f, "mac6_a2" to 0.35f, "mac6_a3" to 0.6315f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Spit", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "fire",
+        low = 48, high = 72)
+
+    private fun fathom69() = Patch("Fathom", "Steam",
+        mapOf("model" to 0.6666667f, "density" to 0.3f, "tone" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.35f, "mac4_a2" to 0.602f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.35f, "mac6_a2" to 0.35f, "mac6_a3" to 0.607f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Spit", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
         family = "fire",
         low = 52, high = 76)
 
-    private fun fathom50() = Patch("Fathom", "Frying",
-        mapOf("model" to 0.6666667f, "density" to 0.8f),
-        family = "fire",
-        low = 48, high = 72)
-
-    private fun fathom51() = Patch("Fathom", "Ice",
-        mapOf("model" to 0.733333349f),
+    private fun fathom70() = Patch("Fathom", "Snow Steps",
+        mapOf("model" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3775f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.406000018f, "mac2_a2" to 0.6105f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.380500019f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.406000018f, "mac6_a2" to 0.406000018f, "mac6_a3" to 0.5905f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Steps", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Heavy", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
         family = "winter",
         low = 36, high = 60)
 
-    private fun fathom52() = Patch("Fathom", "Ice Groans",
-        mapOf("model" to 0.733333349f, "density" to 0.3f, "decay" to 0.8f),
-        family = "winter",
-        low = 31, high = 52)
-
-    private fun fathom53() = Patch("Fathom", "Ice Shards",
-        mapOf("model" to 0.733333349f, "density" to 0.7f, "decay" to 0.3f),
-        family = "winter",
-        low = 48, high = 72)
-
-    private fun fathom54() = Patch("Fathom", "Snow Steps",
-        mapOf("model" to 0.8f),
+    private fun fathom71() = Patch("Fathom", "Snow Run",
+        mapOf("model" to 0.8f, "density" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.4165f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.406000018f, "mac2_a2" to 0.625499964f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.433f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.406000018f, "mac6_a2" to 0.406000018f, "mac6_a3" to 0.6075f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Steps", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Heavy", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
         family = "winter",
         low = 36, high = 60)
 
-    private fun fathom55() = Patch("Fathom", "Snow Run",
-        mapOf("model" to 0.8f, "density" to 0.8f),
-        family = "winter",
-        low = 36, high = 60)
-
-    private fun fathom56() = Patch("Fathom", "Packed Snow",
-        mapOf("model" to 0.8f, "tone" to 0.8f),
+    private fun fathom72() = Patch("Fathom", "Packed Snow",
+        mapOf("model" to 0.8f, "tone" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.378499985f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.406000018f, "mac2_a2" to 0.618000031f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.538461566f, "mac5_d3" to 0.9230769f, "mac5_a1" to 0.65f, "mac5_a2" to 0.65f, "mac5_a3" to 0.377f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.406000018f, "mac6_a2" to 0.406000018f, "mac6_a3" to 0.597499967f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Steps", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Heavy", "macro6" to "Hush", "macro7" to "Wide", "macro8" to "Slow"),
         family = "winter",
         low = 40, high = 64)
 
-    private fun fathom57() = Patch("Fathom", "Weather Kit",
-        mapOf("kit" to 1f),
+    private fun fathom73() = Patch("Fathom", "Sleet",
+        mapOf("model" to 0.533333361f, "density" to 0.7f, "size" to 0.125f, "volume" to 0.409f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.409f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.35f, "mac2_a2" to 0.6335f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 1f, "mac4_a1" to 0.25f, "mac5_d1" to 1f, "mac5_a1" to 0.625f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.538461566f, "mac6_d3" to 0.9230769f, "mac6_a1" to 0.65f, "mac6_a2" to 0.65f, "mac6_a3" to 0.4105f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Deep", "macro5" to "High", "macro6" to "Heavy", "macro7" to "Wide", "macro8" to "Slow"),
+        family = "winter",
+        low = 48, high = 72)
+
+    private fun fathom74() = Patch("Fathom", "Blizzard",
+        mapOf("model" to 0.333333343f, "gust" to 1f, "whistle" to 0.2f, "tone" to 0.85f, "volume" to 0.569f, "mac1_d1" to 0.3846154f, "mac1_a1" to 0.75f, "mac2_d1" to 0.3846154f, "mac2_a1" to 0.25f, "mac3_d1" to 0.461538464f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.75f, "mac3_a2" to 0.5655f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.7f, "mac5_d1" to 0.538461566f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.35f, "mac5_a2" to 0.555500031f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.643f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.625f, "mac7_a2" to 0.4445f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Gusts", "macro2" to "Lull", "macro3" to "Whistle", "macro4" to "Bright", "macro5" to "Dark", "macro6" to "Low", "macro7" to "High", "macro8" to "Slow"),
+        family = "winter",
+        low = 36, high = 60)
+
+    private fun fathom75() = Patch("Fathom", "Pond Ice",
+        mapOf("model" to 0.733333349f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.36f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.397f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.307692319f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.325f, "mac5_a2" to 0.595f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.431f, "mac7_d1" to 1f, "mac7_a1" to 0.625f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Deep", "macro7" to "High", "macro8" to "Wide"),
+        family = "winter",
+        low = 36, high = 60)
+
+    private fun fathom76() = Patch("Fathom", "Ice Shards",
+        mapOf("model" to 0.733333349f, "density" to 0.7f, "decay" to 0.3f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3315f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4285f, "mac5_d1" to 0.307692319f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.325f, "mac5_a2" to 0.5945f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.420000017f, "mac7_d1" to 1f, "mac7_a1" to 0.625f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Deep", "macro7" to "High", "macro8" to "Wide"),
+        family = "winter",
+        low = 48, high = 72)
+
+    private fun fathom77() = Patch("Fathom", "Icicles",
+        mapOf("model" to 0.733333349f, "decay" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3855f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.397f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.307692319f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.325f, "mac5_a2" to 0.574f, "mac6_d1" to 1f, "mac6_a1" to 0.25f, "mac7_d1" to 1f, "mac7_a1" to 0.625f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Deep", "macro7" to "High", "macro8" to "Wide"),
+        family = "winter",
+        low = 60, high = 84)
+
+    private fun fathom78() = Patch("Fathom", "Ice Groans",
+        mapOf("model" to 0.733333349f, "density" to 0.3f, "decay" to 0.8f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.378f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.65f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.307692319f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.325f, "mac5_a2" to 0.58f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.439f, "mac7_d1" to 1f, "mac7_a1" to 0.625f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Deep", "macro7" to "High", "macro8" to "Wide"),
+        family = "winter",
+        low = 31, high = 52)
+
+    private fun fathom79() = Patch("Fathom", "Frozen Lake",
+        mapOf("model" to 0.733333349f, "density" to 0.2f, "size" to 0.0833333358f, "decay" to 1f, "volume" to 0.437f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.318000019f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.35f, "mac2_a2" to 0.549f, "mac3_d1" to 0.15384616f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.65f, "mac3_a2" to 0.4405f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.307692319f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.325f, "mac5_a2" to 0.754f, "mac6_d1" to 1f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.25f, "mac6_a2" to 0.3595f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.539f, "mac7_a2" to 0.6115f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bigger", "macro4" to "Ring", "macro5" to "Short", "macro6" to "Deep", "macro7" to "High", "macro8" to "Wide"),
+        family = "winter",
+        low = 28, high = 48,
+        sendReverb = 0.4f, sendDelay = 0f)
+
+    private fun fathom80() = Patch("Fathom", "Weather Kit",
+        mapOf("kit" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.4385f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private fun fathom58() = Patch("Fathom", "Storm Kit",
-        mapOf("kit" to 1f, "p01_model" to 0.13333334f, "p01_density" to 0.4f, "p02_model" to 0.13333334f, "p02_note" to 0.333333343f, "p03_model" to 0.13333334f, "p03_note" to 0.430555552f, "p03_density" to 0.6f, "p04_model" to 0.533333361f, "p04_note" to 0.333333343f, "p04_density" to 0.5f, "p05_model" to 0.533333361f, "p05_note" to 0.3888889f, "p05_density" to 0.8f, "p06_model" to 0.333333343f, "p06_note" to 0.222222224f, "p06_density" to 0.4f, "p07_model" to 0.333333343f, "p07_note" to 0.333333343f, "p07_density" to 0.7f, "p08_model" to 0.333333343f, "p08_note" to 0.166666672f, "p08_density" to 0.9f, "p09_model" to 0.466666669f, "p09_note" to 0.166666672f, "p09_density" to 0.5f, "p10_model" to 0.466666669f, "p10_note" to 0.0972222239f, "p10_density" to 0.5f, "p11_model" to 0.466666669f, "p11_note" to 0.222222224f, "p11_density" to 0.5f, "p12_model" to 0.06666667f, "p12_density" to 0.3f, "p13_model" to 0.266666681f, "p13_note" to 0.0972222239f, "p13_density" to 0.6f, "p14_note" to 0.222222224f, "p14_density" to 0.5f, "p15_model" to 1f, "p15_note" to 0.333333343f, "p16_model" to 0.6f, "p16_note" to 0.222222224f, "p16_density" to 0.6f),
+    private fun fathom81() = Patch("Fathom", "Storm Kit",
+        mapOf("kit" to 1f, "p01_model" to 0.13333334f, "p01_density" to 0.4f, "p02_model" to 0.13333334f, "p02_note" to 0.333333343f, "p03_model" to 0.13333334f, "p03_note" to 0.430555552f, "p03_density" to 0.6f, "p04_model" to 0.533333361f, "p04_note" to 0.333333343f, "p04_density" to 0.5f, "p05_model" to 0.533333361f, "p05_note" to 0.3888889f, "p05_density" to 0.8f, "p06_model" to 0.333333343f, "p06_note" to 0.222222224f, "p06_density" to 0.4f, "p07_model" to 0.333333343f, "p07_note" to 0.333333343f, "p07_density" to 0.7f, "p08_model" to 0.333333343f, "p08_note" to 0.166666672f, "p08_density" to 0.9f, "p09_model" to 0.466666669f, "p09_note" to 0.166666672f, "p09_density" to 0.5f, "p10_model" to 0.466666669f, "p10_note" to 0.0972222239f, "p10_density" to 0.5f, "p11_model" to 0.466666669f, "p11_note" to 0.222222224f, "p11_density" to 0.5f, "p12_model" to 0.06666667f, "p12_density" to 0.3f, "p13_model" to 0.266666681f, "p13_note" to 0.0972222239f, "p13_density" to 0.6f, "p14_note" to 0.222222224f, "p14_density" to 0.5f, "p15_model" to 1f, "p15_note" to 0.333333343f, "p16_model" to 0.6f, "p16_note" to 0.222222224f, "p16_density" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3315f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.4155f, "mac2_a2" to 0.6445f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.25f, "mac7_a2" to 0.4375f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private fun fathom59() = Patch("Fathom", "Water Kit",
-        mapOf("kit" to 1f, "p01_model" to 0f, "p01_note" to 0.166666672f, "p01_density" to 0.4f, "p02_model" to 0f, "p02_note" to 0.333333343f, "p02_density" to 0.6f, "p03_model" to 0.06666667f, "p03_density" to 0.3f, "p04_model" to 0.06666667f, "p04_note" to 0.333333343f, "p04_density" to 0.5f, "p05_model" to 0.06666667f, "p05_note" to 0.430555552f, "p06_model" to 0.2f, "p06_note" to 0.222222224f, "p06_density" to 0.5f, "p07_model" to 0.2f, "p07_note" to 0.333333343f, "p07_density" to 0.7f, "p08_model" to 0.8666667f, "p08_note" to 0.333333343f, "p08_density" to 0.4f, "p09_model" to 0.8666667f, "p09_note" to 0.222222224f, "p09_density" to 0.6f, "p10_model" to 0.6f, "p10_note" to 0.222222224f, "p10_density" to 0.6f, "p11_model" to 0.6f, "p11_note" to 0.333333343f, "p11_density" to 0.8f, "p12_model" to 0.933333337f, "p12_note" to 0.166666672f, "p12_density" to 0.5f, "p13_model" to 0.933333337f, "p13_note" to 0.0972222239f, "p13_density" to 0.3f, "p14_model" to 0.266666681f, "p14_note" to 0.0972222239f, "p14_density" to 0.6f, "p15_note" to 0.166666672f, "p15_density" to 0.8f, "p16_model" to 0.13333334f, "p16_note" to 0.333333343f, "p16_density" to 0.4f),
+    private fun fathom82() = Patch("Fathom", "Water Kit",
+        mapOf("kit" to 1f, "p01_model" to 0f, "p01_note" to 0.166666672f, "p01_density" to 0.4f, "p02_model" to 0f, "p02_note" to 0.333333343f, "p02_density" to 0.6f, "p03_model" to 0.06666667f, "p03_density" to 0.3f, "p04_model" to 0.06666667f, "p04_note" to 0.333333343f, "p04_density" to 0.5f, "p05_model" to 0.06666667f, "p05_note" to 0.430555552f, "p06_model" to 0.2f, "p06_note" to 0.222222224f, "p06_density" to 0.5f, "p07_model" to 0.2f, "p07_note" to 0.333333343f, "p07_density" to 0.7f, "p08_model" to 0.8666667f, "p08_note" to 0.333333343f, "p08_density" to 0.4f, "p09_model" to 0.8666667f, "p09_note" to 0.222222224f, "p09_density" to 0.6f, "p10_model" to 0.6f, "p10_note" to 0.222222224f, "p10_density" to 0.6f, "p11_model" to 0.6f, "p11_note" to 0.333333343f, "p11_density" to 0.8f, "p12_model" to 0.933333337f, "p12_note" to 0.166666672f, "p12_density" to 0.5f, "p13_model" to 0.933333337f, "p13_note" to 0.0972222239f, "p13_density" to 0.3f, "p14_model" to 0.266666681f, "p14_note" to 0.0972222239f, "p14_density" to 0.6f, "p15_note" to 0.166666672f, "p15_density" to 0.8f, "p16_model" to 0.13333334f, "p16_note" to 0.333333343f, "p16_density" to 0.4f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3335f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.472f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.7f, "mac6_a2" to 0.444f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
         family = "kit",
         low = 36, high = 51)
 
-    private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29(), fathom30(), fathom31(), fathom32(), fathom33(), fathom34(), fathom35(), fathom36(), fathom37(), fathom38(), fathom39(), fathom40(), fathom41(), fathom42(), fathom43(), fathom44(), fathom45(), fathom46(), fathom47(), fathom48(), fathom49(), fathom50(), fathom51(), fathom52(), fathom53(), fathom54(), fathom55(), fathom56(), fathom57(), fathom58(), fathom59()) }
+    private fun fathom83() = Patch("Fathom", "Campfire Kit",
+        mapOf("volume" to 1f, "kit" to 1f, "p01_note" to 0.166666672f, "p01_density" to 0.4f, "p01_level" to 1f, "p02_level" to 0.923f, "p03_model" to 0.4f, "p03_note" to 0.166666672f, "p03_density" to 0.25f, "p03_level" to 0.823f, "p04_model" to 0.6666667f, "p04_note" to 0.5555556f, "p04_density" to 0.3f, "p04_level" to 0.355f, "p05_model" to 0.6666667f, "p05_note" to 0.5f, "p05_density" to 0.5f, "p05_level" to 0.335f, "p06_model" to 0f, "p06_note" to 0.333333343f, "p06_level" to 0.02f, "p07_model" to 0.2f, "p07_note" to 0.333333343f, "p07_density" to 0.3f, "p07_level" to 0.118f, "p08_model" to 0.2f, "p08_density" to 0.45f, "p08_level" to 0.02f, "p09_model" to 0.333333343f, "p09_note" to 0.166666672f, "p09_density" to 0.5f, "p09_level" to 0.563f, "p10_model" to 0.333333343f, "p10_note" to 0.333333343f, "p10_density" to 0.6f, "p10_level" to 0.372f, "p11_model" to 0.13333334f, "p11_note" to 0.333333343f, "p11_density" to 0.3f, "p11_level" to 0.913f, "p12_model" to 0.06666667f, "p12_density" to 0.4f, "p12_level" to 0.02f, "p13_model" to 0.8f, "p13_note" to 0.333333343f, "p13_density" to 0.4f, "p13_level" to 0.55f, "p14_model" to 0.466666669f, "p14_note" to 0.0972222239f, "p14_density" to 0.5f, "p14_level" to 0.254f, "p15_model" to 0.8666667f, "p15_note" to 0.333333343f, "p15_density" to 0.4f, "p15_level" to 0.458f, "p16_model" to 1f, "p16_note" to 0.333333343f, "p16_density" to 0.5f, "p16_level" to 0.137f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun fathom84() = Patch("Fathom", "Harbour Kit",
+        mapOf("tone" to 0.4f, "swell" to 0.13333334f, "volume" to 0.814f, "kit" to 1f, "p01_model" to 0.266666681f, "p01_note" to 0.2638889f, "p01_density" to 0.3f, "p01_level" to 0.569f, "p02_model" to 0.266666681f, "p02_note" to 0.333333343f, "p02_density" to 0.6f, "p02_level" to 0.55f, "p03_model" to 0.266666681f, "p03_note" to 0.3888889f, "p03_density" to 0.8f, "p03_level" to 0.506f, "p04_model" to 0f, "p04_note" to 0.222222224f, "p04_density" to 0.4f, "p04_level" to 0.093f, "p05_model" to 0f, "p05_note" to 0.333333343f, "p05_density" to 0.6f, "p05_level" to 0.066f, "p06_model" to 0.06666667f, "p06_note" to 0.333333343f, "p06_density" to 0.4f, "p06_level" to 0.044f, "p07_model" to 0.06666667f, "p07_note" to 0.430555552f, "p07_density" to 0.3f, "p07_level" to 0.966f, "p08_model" to 0.8666667f, "p08_note" to 0.333333343f, "p08_density" to 0.4f, "p08_level" to 0.645f, "p09_model" to 0.8666667f, "p09_note" to 0.222222224f, "p09_density" to 0.6f, "p09_level" to 0.716f, "p10_model" to 0.333333343f, "p10_note" to 0.222222224f, "p10_density" to 0.4f, "p10_level" to 0.653f, "p11_model" to 0.333333343f, "p11_note" to 0.333333343f, "p11_density" to 0.7f, "p11_level" to 0.495f, "p12_model" to 0.13333334f, "p12_density" to 0.4f, "p12_level" to 0.881f, "p13_model" to 0.13333334f, "p13_note" to 0.333333343f, "p13_density" to 0.8f, "p13_level" to 0.463f, "p14_model" to 0.933333337f, "p14_note" to 0.166666672f, "p14_density" to 0.5f, "p14_level" to 0.556f, "p15_model" to 0.2f, "p15_note" to 0.222222224f, "p15_density" to 0.4f, "p15_level" to 0.1f, "p16_model" to 0.466666669f, "p16_note" to 0.0972222239f, "p16_density" to 0.5f, "p16_level" to 0.347f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.380500019f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.4345f, "mac4_a2" to 0.5855f, "mac5_d1" to 0.3846154f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.75f, "mac5_a2" to 0.582f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun fathom85() = Patch("Fathom", "Winter Kit",
+        mapOf("volume" to 1f, "kit" to 1f, "p01_model" to 0.8f, "p01_level" to 0.323f, "p02_model" to 0.8f, "p02_note" to 0.333333343f, "p02_level" to 0.192f, "p03_model" to 0.8f, "p03_note" to 0.3888889f, "p03_density" to 0.3f, "p03_level" to 0.507f, "p04_model" to 0.733333349f, "p04_note" to 0.333333343f, "p04_density" to 0.5f, "p04_level" to 0.343f, "p05_model" to 0.733333349f, "p05_note" to 0.5f, "p05_density" to 0.7f, "p05_level" to 0.351f, "p06_model" to 0.733333349f, "p06_note" to 0.222222224f, "p06_density" to 0.3f, "p06_level" to 0.66f, "p07_model" to 0.333333343f, "p07_note" to 0.166666672f, "p07_density" to 0.4f, "p07_level" to 0.563f, "p08_model" to 0.333333343f, "p08_note" to 0.2638889f, "p08_density" to 0.7f, "p08_level" to 0.437f, "p09_model" to 0.333333343f, "p09_note" to 0.166666672f, "p09_density" to 0.95f, "p09_level" to 0.563f, "p10_model" to 0.533333361f, "p10_note" to 0.5f, "p10_density" to 0.6f, "p10_level" to 0.116f, "p11_model" to 0.533333361f, "p11_note" to 0.3888889f, "p11_density" to 0.3f, "p11_level" to 0.513f, "p12_model" to 0.06666667f, "p12_note" to 0.430555552f, "p12_density" to 0.3f, "p12_level" to 0.556f, "p13_note" to 0.333333343f, "p13_density" to 0.3f, "p13_level" to 0.029f, "p14_model" to 0.4f, "p14_note" to 0.166666672f, "p14_density" to 0.4f, "p14_level" to 1f, "p15_model" to 0.6666667f, "p15_note" to 0.5555556f, "p15_density" to 0.3f, "p15_level" to 0.355f, "p16_model" to 0.2f, "p16_note" to 0.222222224f, "p16_density" to 0.35f, "p16_level" to 0.026f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.3255f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.425f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun fathom86() = Patch("Fathom", "Kitchen Kit",
+        mapOf("surface" to 1f, "volume" to 1f, "kit" to 1f, "p01_model" to 0.6666667f, "p01_note" to 0.5f, "p01_density" to 0.8f, "p01_level" to 0.437f, "p02_model" to 0.6666667f, "p02_note" to 0.5f, "p02_density" to 0.5f, "p02_level" to 0.484f, "p03_model" to 0.6666667f, "p03_note" to 0.5555556f, "p03_density" to 0.3f, "p03_level" to 0.355f, "p04_model" to 0f, "p04_note" to 0.333333343f, "p04_level" to 0.036f, "p05_model" to 0f, "p05_note" to 0.2638889f, "p05_density" to 0.4f, "p05_level" to 0.192f, "p06_model" to 0.06666667f, "p06_note" to 0.333333343f, "p06_density" to 0.55f, "p06_level" to 0.254f, "p07_model" to 0.6f, "p07_note" to 0.3888889f, "p07_density" to 0.8f, "p07_level" to 0.078f, "p08_model" to 0.8666667f, "p08_note" to 0.3888889f, "p08_density" to 0.4f, "p08_level" to 0.457f, "p09_model" to 0.733333349f, "p09_note" to 0.5f, "p09_density" to 0.5f, "p09_level" to 0.367f, "p10_model" to 1f, "p10_note" to 0.333333343f, "p10_density" to 0.5f, "p10_level" to 0.397f, "p11_model" to 0.4f, "p12_note" to 0.430555552f, "p12_density" to 0.55f, "p12_level" to 0.074f, "p13_model" to 0.13333334f, "p13_note" to 0.333333343f, "p13_density" to 0.4f, "p13_level" to 0.881f, "p14_model" to 0.333333343f, "p14_note" to 0.222222224f, "p14_density" to 0.3f, "p14_level" to 0.343f, "p15_model" to 0.06666667f, "p15_note" to 0.5f, "p15_density" to 0.4f, "p15_level" to 0.27f, "p16_model" to 0.2f, "p16_note" to 0.430555552f, "p16_density" to 0.5f, "p16_level" to 0.02f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.420000017f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.386f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.3875f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun fathom87() = Patch("Fathom", "Forest Kit",
+        mapOf("surface" to 0.333333343f, "volume" to 1f, "kit" to 1f, "p01_model" to 0.333333343f, "p01_note" to 0.166666672f, "p01_level" to 0.563f, "p02_model" to 0.333333343f, "p02_note" to 0.333333343f, "p02_density" to 0.7f, "p02_level" to 0.372f, "p03_model" to 0.13333334f, "p03_note" to 0.333333343f, "p03_density" to 0.3f, "p03_level" to 1f, "p04_model" to 0.13333334f, "p04_note" to 0.333333343f, "p04_density" to 0.8f, "p04_level" to 0.717f, "p05_model" to 0.06666667f, "p05_note" to 0.333333343f, "p05_density" to 0.4f, "p05_level" to 0.02f, "p06_model" to 0.06666667f, "p06_note" to 0.222222224f, "p06_density" to 0.3f, "p06_level" to 0.063f, "p07_model" to 0.2f, "p07_note" to 0.333333343f, "p07_density" to 0.35f, "p07_level" to 0.02f, "p08_model" to 0.2f, "p08_note" to 0.166666672f, "p08_density" to 0.45f, "p08_level" to 0.02f, "p09_model" to 0.6f, "p09_note" to 0.166666672f, "p09_level" to 0.079f, "p10_model" to 0.4f, "p10_note" to 0.166666672f, "p10_density" to 0.5f, "p10_level" to 1f, "p11_model" to 0.8f, "p11_note" to 0.333333343f, "p11_level" to 0.55f, "p12_model" to 0.466666669f, "p12_note" to 0.0972222239f, "p12_density" to 0.5f, "p12_level" to 0.254f, "p13_model" to 0.466666669f, "p13_level" to 0.355f, "p14_model" to 0.533333361f, "p14_density" to 0.3f, "p14_level" to 0.512f, "p15_model" to 1f, "p15_note" to 0.333333343f, "p15_level" to 0.137f, "p16_model" to 0f, "p16_note" to 0.333333343f, "p16_density" to 0.4f, "p16_level" to 0.068f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.675f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.35f, "mac3_d1" to 0.538461566f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.7f, "mac3_a2" to 0.3845f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.4155f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.406000018f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun fathom88() = Patch("Fathom", "Cave Kit",
+        mapOf("decay" to 0.7f, "kit" to 1f, "p01_model" to 0.06666667f, "p01_note" to 0.2638889f, "p01_density" to 0.45f, "p01_level" to 0.135f, "p02_model" to 0.06666667f, "p02_note" to 0.430555552f, "p02_density" to 0.3f, "p02_level" to 0.882f, "p03_model" to 0.06666667f, "p03_note" to 0.333333343f, "p03_density" to 0.7f, "p03_level" to 0.19f, "p04_model" to 0.06666667f, "p04_note" to 0.166666672f, "p04_density" to 0.3f, "p04_level" to 0.181f, "p05_model" to 0f, "p05_density" to 0.35f, "p05_level" to 0.125f, "p06_model" to 0f, "p06_note" to 0.333333343f, "p06_density" to 0.5f, "p06_level" to 0.112f, "p07_model" to 0.933333337f, "p07_note" to 0.166666672f, "p07_density" to 0.5f, "p07_level" to 0.355f, "p08_model" to 0.933333337f, "p08_note" to 0.0972222239f, "p08_density" to 0.3f, "p08_level" to 0.804f, "p09_model" to 0.2f, "p09_note" to 0.222222224f, "p09_density" to 0.35f, "p09_level" to 0.02f, "p10_model" to 0.2f, "p10_note" to 0.3888889f, "p10_density" to 0.2f, "p10_level" to 0.134f, "p11_model" to 0.6f, "p11_note" to 0.222222224f, "p11_density" to 0.6f, "p11_level" to 0.057f, "p12_model" to 0.6f, "p12_note" to 0.166666672f, "p12_density" to 0.3f, "p12_level" to 0.118f, "p13_model" to 0.333333343f, "p13_note" to 0.0972222239f, "p13_density" to 0.6f, "p13_level" to 0.708f, "p14_model" to 0.8666667f, "p14_note" to 0.222222224f, "p14_density" to 0.4f, "p14_level" to 0.52f, "p15_model" to 0.466666669f, "p15_density" to 0.4f, "p15_level" to 0.248f, "p16_model" to 0.733333349f, "p16_note" to 0.333333343f, "p16_density" to 0.3f, "p16_level" to 0.625f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.355499983f, "mac2_d1" to 0.07692308f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.397f, "mac2_a2" to 0.5845f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51,
+        sendReverb = 0.4f, sendDelay = 0f)
+
+    private fun fathom89() = Patch("Fathom", "Garden Kit",
+        mapOf("surface" to 0.333333343f, "volume" to 1f, "kit" to 1f, "p01_model" to 0.13333334f, "p01_density" to 0.35f, "p01_level" to 1f, "p02_model" to 0.13333334f, "p02_note" to 0.333333343f, "p02_density" to 0.85f, "p02_level" to 0.646f, "p03_model" to 0.13333334f, "p03_note" to 0.430555552f, "p03_density" to 0.6f, "p03_level" to 0.989f, "p04_model" to 0.06666667f, "p04_note" to 0.222222224f, "p04_density" to 0.75f, "p04_level" to 0.099f, "p05_model" to 0.06666667f, "p05_note" to 0.333333343f, "p05_density" to 0.55f, "p05_level" to 0.254f, "p06_model" to 0.2f, "p06_note" to 0.430555552f, "p06_density" to 0.5f, "p06_level" to 0.02f, "p07_model" to 0.2f, "p07_note" to 0.3888889f, "p07_density" to 0.2f, "p07_level" to 0.186f, "p08_model" to 0.6f, "p08_note" to 0.3888889f, "p08_density" to 0.7f, "p08_level" to 0.135f, "p09_model" to 0.8666667f, "p09_level" to 0.458f, "p10_model" to 0.8666667f, "p10_note" to 0.333333343f, "p10_density" to 0.6f, "p10_level" to 0.463f, "p11_note" to 0.430555552f, "p11_density" to 0.5f, "p11_level" to 0.316f, "p12_model" to 0.333333343f, "p12_note" to 0.166666672f, "p12_density" to 0.5f, "p12_level" to 0.563f, "p13_model" to 0.333333343f, "p13_note" to 0.2638889f, "p13_density" to 0.7f, "p13_level" to 0.437f, "p14_model" to 0.4f, "p14_note" to 0.166666672f, "p14_density" to 0.5f, "p14_level" to 1f, "p15_model" to 0.6666667f, "p15_note" to 0.5f, "p15_level" to 0.335f, "p16_model" to 0.466666669f, "p16_note" to 0.0972222239f, "p16_density" to 0.5f, "p16_level" to 0.254f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.243999988f, "mac2_d1" to 0.07692308f, "mac2_a1" to 0.4625f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.7f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.35f, "mac5_d1" to 0.3846154f, "mac5_a1" to 0.75f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.6923077f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "More", "macro2" to "Calm", "macro3" to "Bright", "macro4" to "Dark", "macro5" to "Gusts", "macro6" to "Ring", "macro7" to "Deep", "macro8" to "Wide"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private val fathom: List<Patch> by lazy { listOf(fathom0(), fathom1(), fathom2(), fathom3(), fathom4(), fathom5(), fathom6(), fathom7(), fathom8(), fathom9(), fathom10(), fathom11(), fathom12(), fathom13(), fathom14(), fathom15(), fathom16(), fathom17(), fathom18(), fathom19(), fathom20(), fathom21(), fathom22(), fathom23(), fathom24(), fathom25(), fathom26(), fathom27(), fathom28(), fathom29(), fathom30(), fathom31(), fathom32(), fathom33(), fathom34(), fathom35(), fathom36(), fathom37(), fathom38(), fathom39(), fathom40(), fathom41(), fathom42(), fathom43(), fathom44(), fathom45(), fathom46(), fathom47(), fathom48(), fathom49(), fathom50(), fathom51(), fathom52(), fathom53(), fathom54(), fathom55(), fathom56(), fathom57(), fathom58(), fathom59(), fathom60(), fathom61(), fathom62(), fathom63(), fathom64(), fathom65(), fathom66(), fathom67(), fathom68(), fathom69(), fathom70(), fathom71(), fathom72(), fathom73(), fathom74(), fathom75(), fathom76(), fathom77(), fathom78(), fathom79(), fathom80(), fathom81(), fathom82(), fathom83(), fathom84(), fathom85(), fathom86(), fathom87(), fathom88(), fathom89()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")
