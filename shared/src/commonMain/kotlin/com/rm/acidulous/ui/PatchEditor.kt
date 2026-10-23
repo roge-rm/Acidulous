@@ -527,6 +527,10 @@ fun PatchScreen(
                 val s = selection as? Selection.Module ?: return@Inspector
                 write(patch.copy(texts = if (text.isBlank()) patch.texts - s.slot else patch.texts + (s.slot to text.trim())))
             },
+            onSetCable = { cable ->
+                val s = selection as? Selection.Cable ?: return@Inspector
+                write(patch.copy(cables = patch.cables.mapIndexed { i, c -> if (i == s.index) cable else c }))
+            },
         )
         }
         if (landscape) {
@@ -1057,6 +1061,8 @@ private fun Inspector(
     warning: String = "",
     /** Sets the selected module's text: a formula module's expression. */
     onSetText: (String) -> Unit = {},
+    /** Replaces the selected cable: its text depths, past the cables with parameters. */
+    onSetCable: (NexusCable) -> Unit = {},
 ) {
     val c = Acid.colors
     // Built from `GroupRow` and `Group` like the machine panels.
@@ -1110,7 +1116,11 @@ private fun Inspector(
                         if (selection.index < com.rm.acidulous.model.NEXUS_CABLES) {
                             PanelKnob(binding, nexusCableA(selection.index), "depth A", PanelAmber)
                             PanelKnob(binding, nexusCableB(selection.index), "depth B", PanelAmber)
-                        } else {
+                        } else if (c != null) {
+                            // Past the cables with parameters the depths are in the
+                            // patch text, so they can't be automated and a change rebuilds the patch.
+                            TextDepthKnob("depth A", c.depthA) { onSetCable(c.copy(depthA = it)) }
+                            TextDepthKnob("depth B", c.depthB) { onSetCable(c.copy(depthB = it)) }
                             Text(stringResource(Res.string.patch_beyond), color = Acid.colors.textDim, fontSize = 10.sp)
                         }
                     }
@@ -1141,6 +1151,23 @@ private fun Inspector(
         }
     }
     }
+}
+
+/**
+ * A depth kept in the patch text, -4 to 4 like the cable parameters. It's
+ * written when the turn ends, so the patch is rebuilt once a turn.
+ */
+@Composable
+private fun TextDepthKnob(label: String, depth: Float, onSet: (Float) -> Unit) {
+    var turning by remember { mutableStateOf<Float?>(null) }
+    val shown = turning ?: depth
+    Knob(
+        label = panelWord(label), value = (shown + 4f) / 8f, display = "%.2f".format(shown), accent = PanelAmber,
+        modifier = panelKnobWidth(),
+        onStart = { turning = depth },
+        onChange = { v -> turning = v.coerceIn(0f, 1f) * 8f - 4f },
+        onEnd = { turning?.let { if (it != depth) onSet(it) }; turning = null },
+    )
 }
 
 /**

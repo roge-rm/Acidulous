@@ -35,6 +35,11 @@ mêmes boutons sont sous le canevas quand le module est sélectionné. En mode
 d’assignation, touchez un bouton sur un panneau pour l’assigner et maintenez-le
 pour effacer l’assignation.
 
+Touchez un câble pour ses profondeurs, A et B, entre lesquelles tourne le
+bouton A→B. Les profondeurs des 24 premiers câbles sont des paramètres comme
+les boutons. Au-delà, elles sont gardées dans le patch, et elles ne peuvent pas
+être automatisées et le patch est reconstruit quand l’une d’elles change.
+
 ## Les effets en modules
 
 Les effets d’insertion sont aussi des modules, et un effet peut aller
