@@ -21,9 +21,10 @@ la note que siffle le vent; la vélocité, la quantité.
 ## Eau
 
 - **modèle** : **bulles**, **gouttes**, **pluie**, **ruisseau**,
-  **ressac**, **vent**, **feu**, **tonnerre** (un claquement et un grondement
-  qui roule), **grêle**, **cascade**, **grésillement** (vapeur et friture),
-  **glace** (une plaque gelée qui craque), **neige** (des pas), **éclabousse**,
+  **ressac**, **vent**, **feu**, **tonnerre** (un grondement qui roule, avec
+  un claquement quand le ton est clair et l’orage proche), **grêle**,
+  **cascade**, **grésillement** (vapeur et friture), **glace**
+  (une plaque gelée qui craque), **neige** (des pas), **éclabousse**,
   **sous l’eau** ou **bâton de pluie** (des cailloux qui tombent et
   s’éclaircissent au fil du déclin).
 - **accordage** : en cents.
@@ -33,8 +34,8 @@ la note que siffle le vent; la vélocité, la quantité.
   s’écarte de la note, en demi-tons.
 - **montée** : de combien monte une bulle en approchant de la surface.
 - **déclin** : combien de temps sonne chaque bulle.
-- **surface** : ce sur quoi tombe la pluie : **eau**, **feuilles**,
-  **tôle** ou **fenêtre**.
+- **surface** : ce sur quoi tombent la pluie ou la grêle : **eau**,
+  **feuilles**, **tôle** ou **fenêtre**.
 
 ## Temps
 

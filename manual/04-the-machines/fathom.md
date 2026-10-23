@@ -19,7 +19,8 @@ note the wind whistles; the velocity sets how much.
 ## Water
 
 - **model** - **bubbles**, **drips**, **rain**, **stream**, **surf**,
-  **wind**, **fire**, **thunder** (a crack and a rolling rumble), **hail**,
+  **wind**, **fire**, **thunder** (a rolling rumble, with a crack when the
+  tone is bright and it's close), **hail**,
   **waterfall**, **sizzle** (steam and frying), **ice** (cracks in a frozen
   sheet), **snow** (footsteps), **splash**, **underwater** or **rainstick**
   (pebbles falling, thinning out over the decay).
@@ -30,8 +31,8 @@ note the wind whistles; the velocity sets how much.
   the note, in semitones.
 - **rise** - how far a bubble's pitch climbs as it nears the surface.
 - **decay** - how long each bubble rings.
-- **surface** - what the rain falls on: **water**, **leaves**, **tin** or
-  a **window**.
+- **surface** - what the rain or hail falls on: **water**, **leaves**,
+  **tin** or a **window**.
 
 ## Weather
 

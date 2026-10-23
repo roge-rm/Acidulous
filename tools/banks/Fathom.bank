@@ -43,7 +43,8 @@
 # macro at full moves the level by more than 1.5 dB, a volume route takes it
 # back out, and where the volume is already near the top the macro goes less
 # far. Levels are read off a held note, since a 2 s note of sparse drops or
-# slow gusts can land anywhere.
+# slow gusts can land anywhere. Thunder Clap is levelled on its loudest
+# 400 ms instead, since the crack is the sound.
 
 machine Fathom
 role pad
@@ -1306,29 +1307,31 @@ patch Drizzle family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.372
+  mac1_a2  -0.383
   mac2_d1  #1
   mac2_a1  -0.056
   mac3_d1  #7
   mac3_a1  0.4
   mac4_d1  #7
   mac4_a1  -0.3
+  mac4_d2  #12
+  mac4_a2  0.215
   mac5_d1  #2
   mac5_a1  0.3
   mac6_d1  #4
   mac6_a1  0.4
   mac6_d2  #12
-  mac6_a2  -0.166
+  mac6_a2  -0.122
   mac7_d1  #13
   mac7_a1  -0.5
   mac7_d2  #12
-  mac7_a2  -0.224
+  mac7_a2  -0.042
   mac8_d1  #9
   mac8_a1  0.4
   model          #2
   density        0.2
   tone           0.3
-  volume         1
+  volume         0.738
 
 patch "Light Rain" family=rain note=48 range=36..60
   # A shower on water.
@@ -1343,29 +1346,33 @@ patch "Light Rain" family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.494
+  mac1_a2  -0.311
   mac2_d1  #1
   mac2_a1  -0.169
+  mac2_d2  #12
+  mac2_a2  0.283
   mac3_d1  #7
   mac3_a1  0.4
   mac4_d1  #7
   mac4_a1  -0.3
+  mac4_d2  #12
+  mac4_a2  0.127
   mac5_d1  #2
   mac5_a1  0.3
   mac6_d1  #4
   mac6_a1  0.4
   mac6_d2  #12
-  mac6_a2  -0.167
+  mac6_a2  -0.105
   mac7_d1  #13
   mac7_a1  -0.5
   mac7_d2  #12
-  mac7_a2  -0.215
+  mac7_a2  -0.026
   mac8_d1  #9
   mac8_a1  0.4
   model          #2
   density        0.35
   tone           0.4
-  volume         1
+  volume         0.629
 
 patch Downpour family=rain note=48 range=36..60
   # Heavy rain, the hiss up.
@@ -1380,11 +1387,11 @@ patch Downpour family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.176
+  mac1_a2  -0.091
   mac2_d1  #1
   mac2_a1  -0.263
   mac2_d2  #12
-  mac2_a2  0.37
+  mac2_a2  0.192
   mac3_d1  #7
   mac3_a1  0.4
   mac4_d1  #7
@@ -1395,14 +1402,12 @@ patch Downpour family=rain note=48 range=36..60
   mac6_a1  0.4
   mac7_d1  #13
   mac7_a1  -0.5
-  mac7_d2  #12
-  mac7_a2  -0.111
   mac8_d1  #9
   mac8_a1  0.4
   model          #2
   density        0.85
   tone           0.6
-  volume         0.6
+  volume         0.311
 
 patch Monsoon family=rain note=48 range=36..60
   # Heavy tropical rain on deep water.
@@ -1419,7 +1424,7 @@ patch Monsoon family=rain note=48 range=36..60
   mac2_d1  #1
   mac2_a1  -0.3
   mac2_d2  #12
-  mac2_a2  0.211
+  mac2_a2  0.108
   mac3_d1  #7
   mac3_a1  0.4
   mac4_d1  #7
@@ -1430,8 +1435,6 @@ patch Monsoon family=rain note=48 range=36..60
   mac6_a1  0.4
   mac7_d1  #13
   mac7_a1  -0.5
-  mac7_d2  #12
-  mac7_a2  -0.042
   mac8_d1  #9
   mac8_a1  0.4
   model          #2
@@ -1439,7 +1442,7 @@ patch Monsoon family=rain note=48 range=36..60
   tone           0.75
   size           10 st
   spread         1
-  volume         0.229
+  volume         0.118
 
 patch "Distant Rain" family=rain note=43 range=31..55
   # Rain across the valley, dark and wide.
@@ -1454,31 +1457,33 @@ patch "Distant Rain" family=rain note=43 range=31..55
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.186
+  mac1_a2  -0.144
   mac2_d1  #1
   mac2_a1  -0.3
   mac2_d2  #12
-  mac2_a2  0.314
+  mac2_a2  0.243
   mac3_d1  #7
   mac3_a1  0.4
+  mac3_d2  #12
+  mac3_a2  -0.057
   mac4_d1  #7
   mac4_a1  -0.3
+  mac4_d2  #12
+  mac4_a2  0.061
   mac5_d1  #2
   mac5_a1  0.3
   mac6_d1  #4
   mac6_a1  0.4
-  mac6_d2  #12
-  mac6_a2  -0.072
   mac7_d1  #13
   mac7_a1  -0.5
   mac7_d2  #12
-  mac7_a2  -0.089
+  mac7_a2  -0.01
   mac8_d1  #9
   mac8_a1  0.4
   model          #2
   density        0.6
   tone           0.15
-  volume         0.398
+  volume         0.309
   send reverb    0.35
 
 patch "Rain on Leaves" family=rain note=48 range=36..60
@@ -1494,11 +1499,11 @@ patch "Rain on Leaves" family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.372
+  mac1_a2  -0.397
   mac2_d1  #1
   mac2_a1  -0.169
   mac2_d2  #12
-  mac2_a2  0.295
+  mac2_a2  0.315
   mac3_d1  #7
   mac3_a1  0.4
   mac4_d1  #7
@@ -1508,13 +1513,13 @@ patch "Rain on Leaves" family=rain note=48 range=36..60
   mac5_d2  #7
   mac5_a2  0.3
   mac5_d3  #12
-  mac5_a3  -0.352
+  mac5_a3  -0.376
   mac6_d1  #1
   mac6_a1  -0.15
   mac6_d2  #7
   mac6_a2  -0.15
   mac6_d3  #12
-  mac6_a3  0.293
+  mac6_a3  0.313
   mac7_d1  #9
   mac7_a1  0.4
   mac8_d1  #10
@@ -1522,6 +1527,7 @@ patch "Rain on Leaves" family=rain note=48 range=36..60
   model          #2
   density        0.6
   surface        #1
+  volume         0.747
 
 patch Window family=rain note=48 range=36..60
   # Rain against glass, close.
@@ -1536,7 +1542,7 @@ patch Window family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.533
+  mac1_a2  -0.52
   mac2_d1  #1
   mac2_a1  -0.075
   mac3_d1  #7
@@ -1548,7 +1554,7 @@ patch Window family=rain note=48 range=36..60
   mac5_d2  #7
   mac5_a2  0.3
   mac5_d3  #12
-  mac5_a3  -0.537
+  mac5_a3  -0.524
   mac6_d1  #1
   mac6_a1  -0.056
   mac6_d2  #7
@@ -1561,7 +1567,7 @@ patch Window family=rain note=48 range=36..60
   density        0.5
   surface        #3
   tone           0.3
-  volume         1
+  volume         0.976
 
 patch "Tin Roof" family=rain note=48 range=36..60
   # Rain on a metal roof, ringing.
@@ -1576,11 +1582,11 @@ patch "Tin Roof" family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.355
+  mac1_a2  -0.413
   mac2_d1  #1
   mac2_a1  -0.188
   mac2_d2  #12
-  mac2_a2  0.26
+  mac2_a2  0.252
   mac3_d1  #7
   mac3_a1  0.4
   mac4_d1  #7
@@ -1590,13 +1596,13 @@ patch "Tin Roof" family=rain note=48 range=36..60
   mac5_d2  #7
   mac5_a2  0.3
   mac5_d3  #12
-  mac5_a3  -0.335
+  mac5_a3  -0.386
   mac6_d1  #1
   mac6_a1  -0.188
   mac6_d2  #7
   mac6_a2  -0.188
   mac6_d3  #12
-  mac6_a3  0.282
+  mac6_a3  0.272
   mac7_d1  #9
   mac7_a1  0.4
   mac8_d1  #10
@@ -1604,6 +1610,7 @@ patch "Tin Roof" family=rain note=48 range=36..60
   model          #2
   density        0.55
   surface        #2
+  volume         0.676
 
 patch "Light Hail" family=rain note=48 range=36..60
   # A few hailstones, scattered.
@@ -1618,11 +1625,11 @@ patch "Light Hail" family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.326
+  mac1_a2  -0.361
   mac2_d1  #1
-  mac2_a1  -0.3
+  mac2_a1  -0.17
   mac2_d2  #12
-  mac2_a2  0.287
+  mac2_a2  0.225
   mac3_d1  #2
   mac3_a1  0.3
   mac4_d1  #13
@@ -1634,13 +1641,14 @@ patch "Light Hail" family=rain note=48 range=36..60
   mac6_d2  #7
   mac6_a2  0.3
   mac6_d3  #12
-  mac6_a3  -0.288
+  mac6_a3  -0.319
   mac7_d1  #9
   mac7_a1  0.4
   mac8_d1  #10
   mac8_a1  0.25
   model          #8
   density        0.3
+  volume         0.775
 
 patch Hail family=rain note=48 range=36..60
   # Ice on a hard roof, bouncing.
@@ -1655,11 +1663,11 @@ patch Hail family=rain note=48 range=36..60
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.316
+  mac1_a2  -0.376
   mac2_d1  #1
   mac2_a1  -0.206
   mac2_d2  #12
-  mac2_a2  0.296
+  mac2_a2  0.352
   mac3_d1  #2
   mac3_a1  0.3
   mac4_d1  #13
@@ -1671,12 +1679,13 @@ patch Hail family=rain note=48 range=36..60
   mac6_d2  #7
   mac6_a2  0.3
   mac6_d3  #12
-  mac6_a3  -0.268
+  mac6_a3  -0.444
   mac7_d1  #9
   mac7_a1  0.4
   mac8_d1  #10
   mac8_a1  0.25
   model          #8
+  volume         0.832
 
 patch "Hail on Tin" family=rain note=52 range=40..64
   # Heavy hail on a tin roof, bright.
@@ -1691,11 +1700,11 @@ patch "Hail on Tin" family=rain note=52 range=40..64
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.324
+  mac1_a2  -0.23
   mac2_d1  #1
   mac2_a1  -0.225
   mac2_d2  #12
-  mac2_a2  0.26
+  mac2_a2  0.186
   mac3_d1  #2
   mac3_a1  0.3
   mac4_d1  #13
@@ -1707,14 +1716,16 @@ patch "Hail on Tin" family=rain note=52 range=40..64
   mac6_d2  #7
   mac6_a2  0.3
   mac6_d3  #12
-  mac6_a3  -0.312
+  mac6_a3  -0.223
   mac7_d1  #9
   mac7_a1  0.4
   mac8_d1  #10
   mac8_a1  0.25
   model          #8
+  surface        #2
   density        0.7
   tone           0.8
+  volume         0.499
 
 patch "Short Rainstick" family=rain note=52 range=40..64
   # A short stick turned quickly.
@@ -2065,34 +2076,37 @@ patch Thunder family=weather note=36 range=24..48
   mac1_d1  #4
   mac1_a1  0.5
   mac1_d2  #12
-  mac1_a2  -0.138
+  mac1_a2  -0.144
   mac2_d1  #4
   mac2_a1  -0.35
   mac2_d2  #12
-  mac2_a2  0.286
+  mac2_a2  0.299
   mac3_d1  #7
   mac3_a1  0.4
   mac3_d2  #12
-  mac3_a2  -0.192
+  mac3_a2  -0.201
   mac4_d1  #7
   mac4_a1  -0.244
   mac4_d2  #12
-  mac4_a2  0.29
+  mac4_a2  0.303
   mac5_d1  #5
   mac5_a1  0.5
   mac5_d2  #12
-  mac5_a2  0.195
+  mac5_a2  0.204
   mac6_d1  #5
   mac6_a1  -0.5
   mac6_d2  #12
-  mac6_a2  -0.179
+  mac6_a2  -0.187
   mac7_d1  #7
   mac7_a1  0.3
   mac7_d2  #4
   mac7_a2  -0.2
+  mac7_d3  #12
+  mac7_a3  0.268
   mac8_d1  #10
   mac8_a1  0.25
   model          #7
+  volume         0.732
 
 patch "Thunder Clap" family=weather note=40 range=28..52
   # Close: a loud crack and a short rumble.
@@ -2106,35 +2120,36 @@ patch "Thunder Clap" family=weather note=40 range=28..52
   set macro8 "Slow"
   mac1_d1  #4
   mac1_a1  0.5
-  mac1_d2  #12
-  mac1_a2  -0.185
   mac2_d1  #4
   mac2_a1  -0.219
-  mac2_d2  #12
-  mac2_a2  0.271
   mac3_d1  #7
   mac3_a1  0.4
+  mac3_d2  #12
+  mac3_a2  -0.062
   mac4_d1  #7
   mac4_a1  -0.3
   mac4_d2  #12
-  mac4_a2  0.202
+  mac4_a2  0.502
   mac5_d1  #5
   mac5_a1  0.5
   mac5_d2  #12
-  mac5_a2  0.218
+  mac5_a2  0.013
   mac6_d1  #5
   mac6_a1  -0.5
   mac6_d2  #12
-  mac6_a2  -0.18
+  mac6_a2  -0.016
   mac7_d1  #7
   mac7_a1  0.3
   mac7_d2  #4
   mac7_a2  -0.2
+  mac7_d3  #12
+  mac7_a3  -0.062
   mac8_d1  #10
   mac8_a1  0.25
   model          #7
   tone           0.8
   decay          0.3
+  volume         0.255
 
 patch "Distant Thunder" family=weather note=31 range=24..43
   # Far off: no crack to speak of, a low roll coming and going.
@@ -2149,40 +2164,39 @@ patch "Distant Thunder" family=weather note=31 range=24..43
   mac1_d1  #4
   mac1_a1  0.5
   mac1_d2  #12
-  mac1_a2  -0.143
+  mac1_a2  -0.138
   mac2_d1  #4
   mac2_a1  -0.35
   mac2_d2  #12
-  mac2_a2  0.287
+  mac2_a2  0.277
   mac3_d1  #7
   mac3_a1  0.4
   mac3_d2  #12
-  mac3_a2  -0.301
+  mac3_a2  -0.066
   mac4_d1  #7
   mac4_a1  -0.112
   mac4_d2  #12
-  mac4_a2  0.248
+  mac4_a2  0.239
   mac5_d1  #5
   mac5_a1  0.5
   mac5_d2  #12
-  mac5_a2  0.171
+  mac5_a2  -0.01
   mac6_d1  #5
   mac6_a1  -0.5
   mac6_d2  #12
-  mac6_a2  -0.18
+  mac6_a2  -0.032
   mac7_d1  #7
   mac7_a1  0.3
   mac7_d2  #4
   mac7_a2  -0.2
   mac7_d3  #12
-  mac7_a3  -0.189
+  mac7_a3  -0.091
   mac8_d1  #10
   mac8_a1  0.25
-  mac8_d2  #12
-  mac8_a2  0.146
   model          #7
   tone           0.2
   fade           1.5 s
+  volume         0.676
 
 patch "Rolling Thunder" family=weather note=31 range=24..43
   # Thunder going on and on round the hills.
@@ -2199,15 +2213,15 @@ patch "Rolling Thunder" family=weather note=31 range=24..43
   mac2_d1  #4
   mac2_a1  -0.35
   mac2_d2  #12
-  mac2_a2  0.107
+  mac2_a2  0.09
   mac3_d1  #7
   mac3_a1  0.4
   mac3_d2  #12
-  mac3_a2  -0.201
+  mac3_a2  0.09
   mac4_d1  #7
   mac4_a1  -0.225
   mac4_d2  #12
-  mac4_a2  0.391
+  mac4_a2  0.15
   mac5_d1  #5
   mac5_a1  0.5
   mac6_d1  #5
@@ -2217,14 +2231,14 @@ patch "Rolling Thunder" family=weather note=31 range=24..43
   mac7_d2  #4
   mac7_a2  -0.2
   mac7_d3  #12
-  mac7_a3  -0.136
+  mac7_a3  0.226
   mac8_d1  #10
   mac8_a1  0.25
   model          #7
   decay          1
   gust           1
   tone           0.3
-  volume         0.549
+  volume         0.461
   send reverb    0.3
 
 patch "Whistling Wind" family=weather note=48 range=31..60 role=tune
@@ -2809,11 +2823,11 @@ patch Sleet family=winter note=60 range=48..72
   mac1_d1  #1
   mac1_a1  0.35
   mac1_d2  #12
-  mac1_a2  -0.182
+  mac1_a2  -0.197
   mac2_d1  #1
   mac2_a1  -0.3
   mac2_d2  #12
-  mac2_a2  0.267
+  mac2_a2  0.288
   mac3_d1  #2
   mac3_a1  0.3
   mac4_d1  #13
@@ -2825,7 +2839,7 @@ patch Sleet family=winter note=60 range=48..72
   mac6_d2  #7
   mac6_a2  0.3
   mac6_d3  #12
-  mac6_a3  -0.179
+  mac6_a3  -0.193
   mac7_d1  #9
   mac7_a1  0.4
   mac8_d1  #10
@@ -2833,7 +2847,7 @@ patch Sleet family=winter note=60 range=48..72
   model          #8
   density        0.7
   size           3 st
-  volume         0.409
+  volume         0.442
 
 patch Blizzard family=winter note=48 range=36..60
   # Snow driven sideways on a hard wind.
@@ -3093,6 +3107,9 @@ patch "Weather Kit" family=kit note=36 range=36..51
   mac8_d1  #9
   mac8_a1  0.4
   kit            1
+  p05_level      0.407
+  p06_level      0.776
+  p07_level      0.822
 
 patch "Storm Kit" family=kit note=36 range=36..51
   # Sixteen pads for a storm: rain, heavy rain, hail, wind, gusts, thunder near and far.
@@ -3123,25 +3140,30 @@ patch "Storm Kit" family=kit note=36 range=36..51
   mac7_d1  #13
   mac7_a1  -0.5
   mac7_d2  #12
-  mac7_a2  -0.125
+  mac7_a2  -0.019
   mac8_d1  #9
   mac8_a1  0.4
   kit            1
   p01_model      #2
   p01_note       48
   p01_density    0.4
+  p01_level      0.447
   p02_model      #2
   p02_note       48
   p02_density    0.8
+  p02_level      0.589
   p03_model      #2
   p03_note       55
   p03_density    0.6
+  p03_level      0.413
   p04_model      #8
   p04_note       48
   p04_density    0.5
+  p04_level      0.821
   p05_model      #8
   p05_note       52
   p05_density    0.8
+  p05_level      0.717
   p06_model      #5
   p06_note       40
   p06_density    0.4
@@ -3154,12 +3176,15 @@ patch "Storm Kit" family=kit note=36 range=36..51
   p09_model      #7
   p09_note       36
   p09_density    0.5
+  p09_level      0.668
   p10_model      #7
   p10_note       31
   p10_density    0.5
+  p10_level      0.684
   p11_model      #7
   p11_note       40
   p11_density    0.5
+  p11_level      0.653
   p12_model      #1
   p12_note       48
   p12_density    0.3
@@ -3255,6 +3280,7 @@ patch "Water Kit" family=kit note=36 range=36..51
   p16_model      #2
   p16_note       48
   p16_density    0.4
+  p16_level      0.447
 
 patch "Campfire Kit" family=kit note=36 range=36..51
   # A night by the fire: the fire, a kettle, the stream, a breeze and far thunder.
@@ -3327,7 +3353,7 @@ patch "Campfire Kit" family=kit note=36 range=36..51
   p11_model      #2
   p11_note       48
   p11_density    0.3
-  p11_level      0.913
+  p11_level      0.412
   p12_model      #1
   p12_note       48
   p12_density    0.4
@@ -3339,7 +3365,7 @@ patch "Campfire Kit" family=kit note=36 range=36..51
   p14_model      #7
   p14_note       31
   p14_density    0.5
-  p14_level      0.254
+  p14_level      0.229
   p15_model      #13
   p15_note       48
   p15_density    0.4
@@ -3432,11 +3458,11 @@ patch "Harbour Kit" family=kit note=36 range=36..51
   p12_model      #2
   p12_note       48
   p12_density    0.4
-  p12_level      0.881
+  p12_level      0.525
   p13_model      #2
   p13_note       48
   p13_density    0.8
-  p13_level      0.463
+  p13_level      0.427
   p14_model      #14
   p14_note       36
   p14_density    0.5
@@ -3448,7 +3474,7 @@ patch "Harbour Kit" family=kit note=36 range=36..51
   p16_model      #7
   p16_note       31
   p16_density    0.5
-  p16_level      0.347
+  p16_level      0.417
 
 patch "Winter Kit" family=kit note=36 range=36..51
   # A winter walk: steps in snow, ice cracking, wind, sleet, a stream under the ice and a fire at home.
@@ -3519,11 +3545,11 @@ patch "Winter Kit" family=kit note=36 range=36..51
   p10_model      #8
   p10_note       60
   p10_density    0.6
-  p10_level      0.116
+  p10_level      0.282
   p11_model      #8
   p11_note       52
   p11_density    0.3
-  p11_level      0.513
+  p11_level      0.677
   p12_model      #1
   p12_note       55
   p12_density    0.3
@@ -3629,7 +3655,7 @@ patch "Kitchen Kit" family=kit note=36 range=36..51
   p13_model      #2
   p13_note       48
   p13_density    0.4
-  p13_level      0.881
+  p13_level      0.871
   p14_model      #5
   p14_note       40
   p14_density    0.3
@@ -3689,7 +3715,7 @@ patch "Forest Kit" family=kit note=36 range=36..51
   p04_model      #2
   p04_note       48
   p04_density    0.8
-  p04_level      0.717
+  p04_level      0.842
   p05_model      #1
   p05_note       48
   p05_density    0.4
@@ -3721,15 +3747,15 @@ patch "Forest Kit" family=kit note=36 range=36..51
   p12_model      #7
   p12_note       31
   p12_density    0.5
-  p12_level      0.254
+  p12_level      0.229
   p13_model      #7
   p13_note       40
   p13_density    0.5
-  p13_level      0.355
+  p13_level      0.309
   p14_model      #8
   p14_note       48
   p14_density    0.3
-  p14_level      0.512
+  p14_level      0.699
   p15_model      #15
   p15_note       48
   p15_density    0.5
@@ -3832,7 +3858,7 @@ patch "Cave Kit" family=kit note=36 range=36..51
   p15_model      #7
   p15_note       31
   p15_density    0.4
-  p15_level      0.248
+  p15_level      0.234
   p16_model      #11
   p16_note       48
   p16_density    0.3
@@ -3876,11 +3902,11 @@ patch "Garden Kit" family=kit note=36 range=36..51
   p02_model      #2
   p02_note       48
   p02_density    0.85
-  p02_level      0.646
+  p02_level      0.776
   p03_model      #2
   p03_note       55
   p03_density    0.6
-  p03_level      0.989
+  p03_level      1
   p04_model      #1
   p04_note       40
   p04_density    0.75
@@ -3932,4 +3958,4 @@ patch "Garden Kit" family=kit note=36 range=36..51
   p16_model      #7
   p16_note       31
   p16_density    0.5
-  p16_level      0.254
+  p16_level      0.229
