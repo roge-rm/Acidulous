@@ -125,4 +125,11 @@ class MacroNamesTest {
         assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
         assertEquals("waves", laneShortLabel(track("Fathom", emptyMap()), laneKey("machine", "swell")))
     }
+
+    @Test
+    fun aviaryMacrosTakeThePatchNames() {
+        val t = track("Aviary", mapOf("macro1" to "Harsh"))
+        assertEquals("Harsh", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+    }
 }

@@ -118,7 +118,7 @@ struct Birds {
 
 double cents(double a, double b) { return 1200.0 * std::log2(a / b); }
 
-enum { Whistle, Chirp, Trill, Warble, Call, Chorus };
+enum { Whistle, Chirp, Trill, Warble, Call, Chorus, Coo, Caw };
 
 void whistle() {
     std::printf("- whistle\n");
@@ -213,6 +213,34 @@ void syrinx() {
         const double first = g.level(hi, 0.0, 0.15), answer = g.level(lo, 0.25, 0.4);
         check(first > -50.0 && answer > -50.0, "a call, and an answer a third lower", fmt("%.1f then %.1f dB", first, answer));
     }
+    {
+        // A coo at 120 bpm, 4 a beat: notes 0.25 s apart, sung on the note
+        // first, then lower; the last held, then a rest before it starts again.
+        Birds g({{"pattern", Coo}, {"sweep", 4.0f}, {"space", 0.0f}});
+        g.f->noteOn(60, 100);
+        g.play(6.0);
+        const double firstHz = g.peak(noteHz(82), noteHz(86), 0.08, 0.16);
+        const double secondHz = g.peak(noteHz(80), noteHz(85), 0.31, 0.39);
+        check(std::fabs(cents(firstHz, noteHz(84))) < 60.0 && secondHz < firstHz * 0.97,
+              "a coo: each note lower than the one before", fmt("%.0f then %.0f Hz", firstHz, secondHz));
+        int quiet = 0;
+        for (double t = 0.0; t < 6.0; t += 0.05) quiet += g.rms(t, t + 0.05) < -80.0 ? 1 : 0;
+        check(quiet >= 10, "and rests between phrases", fmt("%d quiet 50 ms windows", quiet));
+    }
+    {
+        // A caw: harsh, the harmonics up against the fundamental, and gaps between calls.
+        Birds caw({{"pattern", Caw}, {"sweep", 0.0f}, {"rasp", 0.0f}, {"space", 0.0f}});
+        Birds chirp({{"pattern", Chirp}, {"sweep", 0.0f}, {"rasp", 0.0f}, {"space", 0.0f}});
+        for (Birds *g : {&caw, &chirp}) {
+            g->f->noteOn(60, 100);
+            g->play(1.0);
+        }
+        const double f0 = noteHz(84);
+        const double cawFourth = caw.harmonic(f0, 4, 0.05, 0.15) - caw.harmonic(f0, 1, 0.05, 0.15);
+        const double chirpFourth = chirp.harmonic(f0, 4, 0.05, 0.1) - chirp.harmonic(f0, 1, 0.05, 0.1);
+        check(cawFourth > chirpFourth + 20.0, "a caw is rasped even with the rasp knob at 0",
+              fmt("4th harmonic %.1f dB against %.1f", cawFourth, chirpFourth));
+    }
 }
 
 void lifecycle() {
@@ -228,7 +256,7 @@ void lifecycle() {
         check(g.rms(0.7, 0.8) < -100.0, "birds stop singing when the note's let go", fmt("%.1f dB", g.rms(0.7, 0.8)));
         check(g.f->activeVoices() == 0, "and free their voices", fmt("%d left", g.f->activeVoices()));
     }
-    for (int song = 0; song <= Chorus; ++song) {
+    for (int song = 0; song <= Caw; ++song) {
         Birds g({{"pattern", static_cast<float>(song)}, {"rate", 4.0f}, {"length", 1.0f}, {"sweep", 24.0f}, {"rasp", 1.0f}, {"two", 1.0f},
                  {"breath", 1.0f}, {"throat", 1.0f}, {"beak", 1.0f}, {"flock", 4.0f}, {"volume", 1.0f}});
         g.f->channelPressure(127);

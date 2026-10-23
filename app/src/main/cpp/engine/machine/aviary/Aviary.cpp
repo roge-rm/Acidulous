@@ -1,6 +1,7 @@
 #include "Aviary.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <iterator>
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
@@ -29,14 +30,18 @@ constexpr float kTracheaSeconds = 0.00025f, kTracheaEcho = -0.4f;
 constexpr float kRates[5] = {1.0f, 2.0f, 4.0f, 8.0f, 16.0f};
 /** A whistle's slide into its note, seconds. */
 constexpr float kWhistleGlide = 0.035f;
+/** A coo's or caw's swell in and fade out, as parts of the note sung. */
+constexpr float kCooIn = 0.25f, kCooOut = 0.4f, kCawIn = 0.04f, kCawOut = 0.25f;
+/** A caw's pitch shakes by this much, as a part of the note, at full rasp. */
+constexpr float kCawJitter = 0.025f;
 
 } // namespace
 
 Aviary::Aviary() { initParams(); }
 
 const ParamDef *Aviary::paramDefs(int32_t &count) const {
-    static const ParamDef defs[Count] = {
-        {"pattern", 0.0f, static_cast<float>(SongCount - 1), 1.0f, Curve::Stepped, SongCount, ""}, // whistle, chirp, trill, warble, call, chorus
+    static const ParamDef first[MacroBase] = {
+        {"pattern", 0.0f, static_cast<float>(SongCount - 1), 1.0f, Curve::Stepped, SongCount, ""}, // whistle, chirp, trill, warble, call, chorus, coo, caw
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"rate", 0.0f, 4.0f, 2.0f, Curve::Stepped, 5, ""}, // 1, 2, 4, 8, 16 a beat
         // How much of each syllable's slot it sings.
@@ -125,8 +130,94 @@ const ParamDef *Aviary::paramDefs(int32_t &count) const {
         {"p16_flock", 1.0f, static_cast<float>(kBirds), 1.0f, Curve::Stepped, kBirds, ""},
         {"p16_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
     };
+    static ParamDef defs[Count];
+    static char names[kMacros * MacroParams][12];
+    static bool built = false;
+    if (!built) {
+        for (int32_t i = 0; i < MacroBase; ++i) defs[i] = first[i];
+        auto put = [&](int32_t i, const char *n, float mn, float mx, float df, Curve c, int32_t steps) {
+            char *name = names[i - MacroBase];
+            std::snprintf(name, 12, "%s", n);
+            defs[i] = ParamDef{name, mn, mx, df, c, steps, ""};
+        };
+        for (int k = 0; k < kMacros; ++k) {
+            char n[12];
+            const int32_t b = MacroBase + k * MacroParams;
+            std::snprintf(n, sizeof(n), "mac%d", k + 1);
+            put(b, n, 0.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            for (int r = 0; r < 4; ++r) {
+                std::snprintf(n, sizeof(n), "mac%d_d%d", k + 1, r + 1);
+                put(b + 1 + r, n, 0.0f, static_cast<float>(MacroDestCount - 1), 0.0f, Curve::Stepped, MacroDestCount);
+                std::snprintf(n, sizeof(n), "mac%d_a%d", k + 1, r + 1);
+                put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            }
+        }
+        built = true;
+    }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Aviary::Count];
+    DestMap() {
+        using P = Aviary;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {P::Length, P::McLength}, {P::Sweep, P::McSweep}, {P::Rasp, P::McRasp}, {P::Two, P::McTwo},
+            {P::Interval, P::McInterval}, {P::Breath, P::McBreath}, {P::Throat, P::McThroat}, {P::Beak, P::McBeak},
+            {P::Spread, P::McSpread}, {P::Space, P::McSpace}, {P::VelocityAmount, P::McVelocity},
+            {P::Volume, P::McVolume},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Aviary::val(int32_t p, bool goal) const {
+    const float v = read(p, goal);
+    const int d = destMap().of[p];
+    const float off = d < 0 ? 0.0f : (goal ? macGoal_ : mac_)[d];
+    if (off == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + off);
+}
+
+void Aviary::updateMacroGoals() {
+    for (float &m : macGoal_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = read(b, true);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            const int dest = static_cast<int>(read(b + 1 + r, true) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) macGoal_[dest] += knob * read(b + 5 + r, true);
+        }
+    }
+    // Two octaves either way.
+    macGoal_[McPitch] = std::clamp(macGoal_[McPitch], -1.0f, 1.0f);
+}
+
+void Aviary::updateMacros() {
+    updateMacroGoals();
+    for (float &m : mac_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = read(b, false);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            // The routes' destinations are steps, so their targets.
+            const int dest = static_cast<int>(read(b + 1 + r, true) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * read(b + 5 + r, false);
+        }
+    }
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
 }
 
 void Aviary::prepare(int32_t rate) {
@@ -151,6 +242,11 @@ void Aviary::reset() {
             std::fill(std::begin(b.trachea), std::end(b.trachea), 0.0f);
             b.tracheaAt = 0;
             b.builtHz = -1.0f;
+            b.sung = 1.0f;
+            b.arch = 0.0f;
+            b.easeOut = false;
+            b.phraseAt = b.phraseLen = 0;
+            b.sub = 0.0f;
         }
         v.used = v.held = false;
         v.noteBend = 0.0f;
@@ -161,6 +257,8 @@ void Aviary::reset() {
     bpm = 120.0f;
     bend = wheel = channelPressure_ = 0.0f;
     spaceLp[0] = spaceLp[1] = 0.0f;
+    for (float &m : mac_) m = 0.0f;
+    for (float &m : macGoal_) m = 0.0f;
     noise = 0x1f123bb5u;
     clock = 0;
     quietSamples = 0;
@@ -192,7 +290,7 @@ Aviary::Voice *Aviary::voiceFor(uint8_t note) {
 void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
     const float perBeat = kRates[std::clamp(steppedTargetOf(Rate), 0, 4)];
     const float beat = 60.0f / bpm * sampleRate;
-    const float sweep = targetOf(Sweep) * (1.0f + wheel);
+    const float sweep = goalOf(Sweep) * (1.0f + wheel);
     const bool first = b.syllable == 0;
     ++b.syllable;
     b.singing = v.held;
@@ -228,6 +326,63 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
         }
         break;
     }
+    case Coo:
+    case Caw: {
+        // Coo: three to five slow notes, each lower than the last, the first
+        // scooping up into the note and the last held and falling; then a rest.
+        // Caw: two or three short harsh calls, each rising a little then
+        // falling and each a touch lower; then a longer rest.
+        const bool coo = b.song == Coo;
+        const float length = clampf(goalOf(Length), 0.05f, 1.0f);
+        const float fall = std::fabs(sweep);
+        const int32_t unit = static_cast<int32_t>(beat / perBeat * 2.0f * b.drift);
+        if (first) b.phraseAt = b.phraseLen = 0;
+        if (index > 0 && first) {
+            // The rest of the flock comes in a phrase later, one after another.
+            b.singing = false;
+            b.slot = unit * (coo ? 3 : 2) * index;
+            b.from = b.to = b.pitch;
+            b.arch = 0.0f;
+            break;
+        }
+        if (b.phraseLen == 0) {
+            b.phraseLen = coo ? 3 + static_cast<int>((rand(b.seed) + 1.0f) * 1.5f) % 3
+                              : 2 + static_cast<int>((rand(b.seed) + 1.0f)) % 2;
+        }
+        const int k = b.phraseAt++;
+        b.arch = 0.0f;
+        b.easeOut = false;
+        if (k >= b.phraseLen) {
+            // The rest between phrases.
+            b.singing = false;
+            b.slot = unit * (coo ? 2 : 3);
+            b.from = b.to = b.pitch;
+            b.phraseAt = b.phraseLen = 0;
+            break;
+        }
+        const bool last = k == b.phraseLen - 1;
+        if (coo) {
+            const float level = -0.25f * fall * static_cast<float>(k);
+            b.slot = last ? unit * 3 : unit;
+            b.sung = static_cast<float>(b.slot) * (last ? 0.6f + 0.35f * length : 0.45f + 0.5f * length);
+            if (k == 0) {
+                b.from = level - 0.3f * fall;
+                b.to = level;
+                b.easeOut = true;
+            } else {
+                b.from = level + 0.08f * fall;
+                b.to = level - (last ? 0.3f : 0.12f) * fall;
+            }
+        } else {
+            const float level = -0.5f * static_cast<float>(k);
+            b.slot = unit;
+            b.sung = static_cast<float>(b.slot) * (0.35f + 0.5f * length);
+            b.from = level;
+            b.to = level - 0.5f * sweep;
+            b.arch = 0.3f * sweep;
+        }
+        break;
+    }
     default: // Chirp
         b.slot = static_cast<int32_t>(beat / perBeat * b.drift);
         b.from = sweep;
@@ -254,7 +409,8 @@ void Aviary::noteOn(uint8_t note, uint8_t velocity) {
     v->played = kit ? static_cast<float>(steppedTargetOf(padParam(pad, PadNote))) : static_cast<float>(note);
     // A pad's level is 0.75 for as loud as the bird played on its own.
     v->padLevel = kit ? clampf(targetOf(padParam(pad, PadLevel)), 0.0f, 1.0f) / 0.75f : 1.0f;
-    const float spread = clampf(targetOf(Spread), 0.0f, 1.0f);
+    updateMacroGoals(); // a note reads where the knobs are going, so renders repeat
+    const float spread = clampf(goalOf(Spread), 0.0f, 1.0f);
     for (int i = 0; i < v->birdCount; ++i) {
         Bird &b = v->birds[i];
         b.seed = 0x9e3779b9u * static_cast<uint32_t>(i + 1) + note * 7919u + clock * 104729u;
@@ -277,6 +433,7 @@ void Aviary::noteOn(uint8_t note, uint8_t velocity) {
             std::fill(std::begin(b.trachea), std::end(b.trachea), 0.0f);
             b.builtHz = -1.0f;
             b.pitch = 0.0f;
+            b.sub = 0.0f;
         }
         b.syllable = 0;
         nextSyllable(*v, b, i);
@@ -328,6 +485,7 @@ void Aviary::notePressure(uint8_t note, uint8_t value) {
 
 bool Aviary::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (asleep) return true;
 
@@ -340,7 +498,9 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
     const float beakOpen = clampf(paramOf(Beak), 0.0f, 1.0f);
     const float volume = paramOf(Volume);
     const float space = clampf(paramOf(Space), 0.0f, 1.0f);
-    const float base = kAbove + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + paramOf(Tune) / 100.0f + bend * paramOf(BendRange);
+    // The pitch macro counts in octaves here, so a route of half matches the octave knob at +1.
+    const float base = kAbove + 12.0f * (static_cast<float>(steppedTargetOf(Octave)) + 2.0f * mac_[McPitch]) +
+                       paramOf(Tune) / 100.0f + bend * paramOf(BendRange);
     const float dt = 1.0f / sampleRate;
     const float whistleGlide = 1.0f - std::exp(-1.0f / (kWhistleGlide * sampleRate));
     const int32_t echo = std::clamp(static_cast<int32_t>(kTracheaSeconds * sampleRate), 1, 31);
@@ -356,13 +516,31 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
         for (int bi = 0; bi < v.birdCount; ++bi) {
             Bird &b = v.birds[bi];
             const float pl = std::sqrt(0.5f * (1.0f - b.pan)), pr = std::sqrt(0.5f * (1.0f + b.pan));
+            const bool coo = b.song == Coo, caw = b.song == Caw;
+            // A coo is sung with the beak shut and little rasp; a caw is forced harsh.
+            const float raspNow = caw ? 0.6f + 0.4f * rasp : coo ? 0.3f * rasp : rasp;
+            const float beakFrom = caw ? 3.0f : coo ? 1.0f : 1.5f, beakBy = caw ? 5.0f : coo ? 2.0f : 4.0f;
             float step0 = 0.0f, step1 = 0.0f, beakCoef = 0.5f;
             for (int32_t i = 0; i < frames; ++i) {
                 if (b.at >= b.slot) nextSyllable(v, b, bi);
-                const float active = b.song == Whistle ? static_cast<float>(b.slot) : length * static_cast<float>(b.slot);
+                const float active = b.song == Whistle ? static_cast<float>(b.slot)
+                                     : (coo || caw) ? b.sung
+                                                    : length * static_cast<float>(b.slot);
                 const bool on = v.held && b.singing && static_cast<float>(b.at) < active;
+                // How hard it blows, as a part of [blow]: a coo swells in and out, a caw bursts.
+                float swell = 1.0f;
                 if (b.song == Whistle) {
                     b.pitch += (b.to - b.pitch) * whistleGlide;
+                } else if (coo || caw) {
+                    if (on) {
+                        const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
+                        const float shape = b.easeOut ? 1.0f - (1.0f - p) * (1.0f - p) : p * p;
+                        b.pitch = b.from + (b.to - b.from) * shape + b.arch * 4.0f * p * (1.0f - p);
+                        const float in = coo ? kCooIn : kCawIn, out = coo ? kCooOut : kCawOut;
+                        swell = std::fmax(0.04f, std::fmin(1.0f, p / in) * std::fmin(1.0f, (1.0f - p) / out));
+                        // The folds' size goes as the root of the pressure, so a coo's is squared to swell evenly.
+                        if (coo) swell = std::fmax(0.04f, swell * swell);
+                    }
                 } else if (on) {
                     const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
                     const float shape = b.song == Warble ? p : 1.0f - (1.0f - p) * (1.0f - p);
@@ -371,20 +549,22 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
                 ++b.at;
                 if ((i & (kRetuneEvery - 1)) == 0) {
                     const float hz = noteHz(v.played + base + v.noteBend + b.offset + b.pitch);
-                    step0 = std::fmin(hz, sampleRate * 0.45f) / sampleRate;
-                    step1 = std::fmin(hz * twoRatio, sampleRate * 0.45f) / sampleRate;
+                    // A caw's pitch shakes, the folds never quite settling.
+                    const float shake = caw ? 1.0f + kCawJitter * raspNow * rand(b.seed) : 1.0f;
+                    step0 = std::fmin(hz * shake, sampleRate * 0.45f) / sampleRate;
+                    step1 = std::fmin(hz * shake * twoRatio, sampleRate * 0.45f) / sampleRate;
                     if (std::fabs(hz - b.builtHz) > b.builtHz * 0.002f) {
                         b.builtHz = hz;
                         // The throat is tuned to the note; the beak opens wider for higher notes.
                         b.throat.set(hz, 0.3f + 0.6f * throat);
                     }
-                    const float cutoff = std::fmin(hz * (1.5f + 4.0f * beakOpen), sampleRate * 0.45f);
+                    const float cutoff = std::fmin(hz * (beakFrom + beakBy * beakOpen), sampleRate * 0.45f);
                     beakCoef = 1.0f - std::exp(-kTwoPi * cutoff / sampleRate);
                 }
                 // The folds: past the threshold they swing up to a size set by the
                 // pressure; below it they come to rest.
-                const float mu0 = on ? blow : kRest;
-                const float mu1 = on && two > 0.0f ? blow * two : kRest;
+                const float mu0 = on ? blow * swell : kRest;
+                const float mu1 = on && two > 0.0f ? blow * swell * two : kRest;
                 Side &s0 = b.sides[0], &s1 = b.sides[1];
                 if (on && s0.size < 1e-3f) s0.size = 1e-3f;
                 if (mu1 > 0.0f && s1.size < 1e-3f) s1.size = 1e-3f;
@@ -396,10 +576,28 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
                 if (s1.phase >= 1.0f) s1.phase -= 1.0f;
                 if (s0.size < kSilent && s1.size < kSilent && !on) continue;
                 const float w0 = kTwoPi * s0.phase;
-                // Rasp: the folds slapping shut, an octave and a touch of noise on top.
-                float x = s0.size * (std::sin(w0) + rasp * (0.5f * std::sin(2.0f * w0) + 0.25f * std::sin(3.0f * w0)));
-                x += s1.size * std::sin(kTwoPi * s1.phase);
-                x += breath * 0.15f * (s0.size + s1.size) * rand(noise);
+                float x;
+                if (caw) {
+                    // The folds slap shut hard: a buzz of harmonics, every other
+                    // cycle weaker (the croak), and air let through as they open.
+                    const float s = std::sin(w0);
+                    float h = s;
+                    const float harm[5] = {0.5f, 0.4f, 0.3f, 0.22f, 0.15f};
+                    for (int n = 0; n < 5; ++n) {
+                        if (static_cast<float>(n + 2) * step0 < 0.45f) h += raspNow * harm[n] * std::sin(static_cast<float>(n + 2) * w0);
+                    }
+                    b.sub += 0.5f * step0;
+                    if (b.sub >= 1.0f) b.sub -= 1.0f;
+                    h *= 1.0f + 0.45f * raspNow * std::sin(kTwoPi * b.sub);
+                    x = s0.size * h;
+                    x += s1.size * std::sin(kTwoPi * s1.phase);
+                    x += (0.12f + 0.5f * breath) * (s0.size + s1.size) * rand(noise) * (0.6f + 0.4f * s);
+                } else {
+                    // Rasp: the folds slapping shut, an octave and a touch of noise on top.
+                    x = s0.size * (std::sin(w0) + raspNow * (0.5f * std::sin(2.0f * w0) + 0.25f * std::sin(3.0f * w0)));
+                    x += s1.size * std::sin(kTwoPi * s1.phase);
+                    x += breath * 0.15f * (s0.size + s1.size) * rand(noise);
+                }
                 // The trachea, the throat and the beak.
                 const float back = b.trachea[(b.tracheaAt - echo + 32) & 31];
                 const float y = x + kTracheaEcho * back;

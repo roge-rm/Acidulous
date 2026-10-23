@@ -13,20 +13,92 @@ package com.rm.acidulous.model
  * words, split at the bar. One string rather than a list of them, because
  * fifteen hundred lists is more than a class initialiser may hold.
  */
-val PANEL_LABELS: Map<String, String> = labels0() + labels1() + labels2() + labels3()
+val PANEL_LABELS: Map<String, String> = labels0() + labels1() + labels2() + labels3() + labels4()
 
 /** The same parameter without its section, for the strip's narrow gutter. */
-val PANEL_SHORT: Map<String, String> = short0() + short1() + short2() + short3()
+val PANEL_SHORT: Map<String, String> = short0() + short1() + short2() + short3() + short4()
 
 private fun labels0(): Map<String, String> = mapOf(
     "Aviary:beak" to "throat|beak",
-    "Aviary:bend" to "play|bend",
+    "Aviary:bend" to "player|bend",
     "Aviary:breath" to "syrinx|breath",
     "Aviary:flock" to "flock",
     "Aviary:interval" to "syrinx|interval",
     "Aviary:kit" to "kit",
     "Aviary:length" to "syllables|length",
-    "Aviary:octave" to "play|octave",
+    "Aviary:mac1" to "macros|macro 1",
+    "Aviary:mac1_a1" to "macro 1|by 1",
+    "Aviary:mac1_a2" to "macro 1|by 2",
+    "Aviary:mac1_a3" to "macro 1|by 3",
+    "Aviary:mac1_a4" to "macro 1|by 4",
+    "Aviary:mac1_d1" to "macro 1|to 1",
+    "Aviary:mac1_d2" to "macro 1|to 2",
+    "Aviary:mac1_d3" to "macro 1|to 3",
+    "Aviary:mac1_d4" to "macro 1|to 4",
+    "Aviary:mac2" to "macros|macro 2",
+    "Aviary:mac2_a1" to "macro 2|by 1",
+    "Aviary:mac2_a2" to "macro 2|by 2",
+    "Aviary:mac2_a3" to "macro 2|by 3",
+    "Aviary:mac2_a4" to "macro 2|by 4",
+    "Aviary:mac2_d1" to "macro 2|to 1",
+    "Aviary:mac2_d2" to "macro 2|to 2",
+    "Aviary:mac2_d3" to "macro 2|to 3",
+    "Aviary:mac2_d4" to "macro 2|to 4",
+    "Aviary:mac3" to "macros|macro 3",
+    "Aviary:mac3_a1" to "macro 3|by 1",
+    "Aviary:mac3_a2" to "macro 3|by 2",
+    "Aviary:mac3_a3" to "macro 3|by 3",
+    "Aviary:mac3_a4" to "macro 3|by 4",
+    "Aviary:mac3_d1" to "macro 3|to 1",
+    "Aviary:mac3_d2" to "macro 3|to 2",
+    "Aviary:mac3_d3" to "macro 3|to 3",
+    "Aviary:mac3_d4" to "macro 3|to 4",
+    "Aviary:mac4" to "macros|macro 4",
+    "Aviary:mac4_a1" to "macro 4|by 1",
+    "Aviary:mac4_a2" to "macro 4|by 2",
+    "Aviary:mac4_a3" to "macro 4|by 3",
+    "Aviary:mac4_a4" to "macro 4|by 4",
+    "Aviary:mac4_d1" to "macro 4|to 1",
+    "Aviary:mac4_d2" to "macro 4|to 2",
+    "Aviary:mac4_d3" to "macro 4|to 3",
+    "Aviary:mac4_d4" to "macro 4|to 4",
+    "Aviary:mac5" to "macros|macro 5",
+    "Aviary:mac5_a1" to "macro 5|by 1",
+    "Aviary:mac5_a2" to "macro 5|by 2",
+    "Aviary:mac5_a3" to "macro 5|by 3",
+    "Aviary:mac5_a4" to "macro 5|by 4",
+    "Aviary:mac5_d1" to "macro 5|to 1",
+    "Aviary:mac5_d2" to "macro 5|to 2",
+    "Aviary:mac5_d3" to "macro 5|to 3",
+    "Aviary:mac5_d4" to "macro 5|to 4",
+    "Aviary:mac6" to "macros|macro 6",
+    "Aviary:mac6_a1" to "macro 6|by 1",
+    "Aviary:mac6_a2" to "macro 6|by 2",
+    "Aviary:mac6_a3" to "macro 6|by 3",
+    "Aviary:mac6_a4" to "macro 6|by 4",
+    "Aviary:mac6_d1" to "macro 6|to 1",
+    "Aviary:mac6_d2" to "macro 6|to 2",
+    "Aviary:mac6_d3" to "macro 6|to 3",
+    "Aviary:mac6_d4" to "macro 6|to 4",
+    "Aviary:mac7" to "macros|macro 7",
+    "Aviary:mac7_a1" to "macro 7|by 1",
+    "Aviary:mac7_a2" to "macro 7|by 2",
+    "Aviary:mac7_a3" to "macro 7|by 3",
+    "Aviary:mac7_a4" to "macro 7|by 4",
+    "Aviary:mac7_d1" to "macro 7|to 1",
+    "Aviary:mac7_d2" to "macro 7|to 2",
+    "Aviary:mac7_d3" to "macro 7|to 3",
+    "Aviary:mac7_d4" to "macro 7|to 4",
+    "Aviary:mac8" to "macros|macro 8",
+    "Aviary:mac8_a1" to "macro 8|by 1",
+    "Aviary:mac8_a2" to "macro 8|by 2",
+    "Aviary:mac8_a3" to "macro 8|by 3",
+    "Aviary:mac8_a4" to "macro 8|by 4",
+    "Aviary:mac8_d1" to "macro 8|to 1",
+    "Aviary:mac8_d2" to "macro 8|to 2",
+    "Aviary:mac8_d3" to "macro 8|to 3",
+    "Aviary:mac8_d4" to "macro 8|to 4",
+    "Aviary:octave" to "player|octave",
     "Aviary:pattern" to "pattern",
     "Aviary:rasp" to "syrinx|rasp",
     "Aviary:rate" to "syllables|rate",
@@ -36,7 +108,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Aviary:throat" to "throat",
     "Aviary:tune" to "pattern|tune",
     "Aviary:two" to "syrinx|two",
-    "Aviary:velocity" to "play|velocity",
+    "Aviary:velocity" to "player|velocity",
     "Aviary:volume" to "out|volume",
     "Bias:bits" to "digital|bits",
     "Bias:bleed" to "noise|bleed",
@@ -747,6 +819,9 @@ private fun labels0(): Map<String, String> = mapOf(
     "Fathom:mac6_a2" to "macro 6|by 2",
     "Fathom:mac6_a3" to "macro 6|by 3",
     "Fathom:mac6_a4" to "macro 6|by 4",
+)
+
+private fun labels1(): Map<String, String> = mapOf(
     "Fathom:mac6_d1" to "macro 6|to 1",
     "Fathom:mac6_d2" to "macro 6|to 2",
     "Fathom:mac6_d3" to "macro 6|to 3",
@@ -819,9 +894,6 @@ private fun labels0(): Map<String, String> = mapOf(
     "Filament:m1_amt" to "mod 1|amount",
     "Filament:m1_dst" to "mod 1|to",
     "Filament:m1_src" to "mod 1|from",
-)
-
-private fun labels1(): Map<String, String> = mapOf(
     "Filament:m2_amt" to "mod 2|amount",
     "Filament:m2_dst" to "mod 2|to",
     "Filament:m2_src" to "mod 2|from",
@@ -1550,6 +1622,9 @@ private fun labels1(): Map<String, String> = mapOf(
     "Hammer:mac7_a3" to "macro 7|by 3",
     "Hammer:mac7_a4" to "macro 7|by 4",
     "Hammer:mac7_d1" to "macro 7|to 1",
+)
+
+private fun labels2(): Map<String, String> = mapOf(
     "Hammer:mac7_d2" to "macro 7|to 2",
     "Hammer:mac7_d3" to "macro 7|to 3",
     "Hammer:mac7_d4" to "macro 7|to 4",
@@ -1622,9 +1697,6 @@ private fun labels1(): Map<String, String> = mapOf(
     "Hexbeat:hat_level" to "hats|level",
     "Hexbeat:hat_open_decay" to "hats|open",
     "Hexbeat:hat_tone" to "hats|tone",
-)
-
-private fun labels2(): Map<String, String> = mapOf(
     "Hexbeat:hat_tune" to "hats|tune",
     "Hexbeat:kick_decay" to "kick|decay",
     "Hexbeat:kick_level" to "kick|level",
@@ -2353,6 +2425,9 @@ private fun labels2(): Map<String, String> = mapOf(
     "Ratio:mac8_a4" to "macro 8|by 4",
     "Ratio:mac8_d1" to "macro 8|to 1",
     "Ratio:mac8_d2" to "macro 8|to 2",
+)
+
+private fun labels3(): Map<String, String> = mapOf(
     "Ratio:mac8_d3" to "macro 8|to 3",
     "Ratio:mac8_d4" to "macro 8|to 4",
     "Ratio:morph" to "algorithm|morph",
@@ -2425,9 +2500,6 @@ private fun labels2(): Map<String, String> = mapOf(
     "Ratio:o5_pan" to "op 5|pan",
     "Ratio:o5_ratio" to "op 5|ratio",
     "Ratio:o5_release" to "op 5|release",
-)
-
-private fun labels3(): Map<String, String> = mapOf(
     "Ratio:o5_sustain" to "op 5|sustain",
     "Ratio:o5_vel" to "op 5|vel",
     "Ratio:o5_wave" to "op 5|wave",
@@ -3156,6 +3228,9 @@ private fun labels3(): Map<String, String> = mapOf(
     "Trinity:mac7_a4" to "macro 7|by 4",
     "Trinity:mac7_d1" to "macro 7|to 1",
     "Trinity:mac7_d2" to "macro 7|to 2",
+)
+
+private fun labels4(): Map<String, String> = mapOf(
     "Trinity:mac7_d3" to "macro 7|to 3",
     "Trinity:mac7_d4" to "macro 7|to 4",
     "Trinity:mac8" to "play|macro 8",
@@ -3228,6 +3303,78 @@ private fun short0(): Map<String, String> = mapOf(
     "Aviary:breath" to "breath",
     "Aviary:interval" to "interval",
     "Aviary:length" to "length",
+    "Aviary:mac1" to "macro 1",
+    "Aviary:mac1_a1" to "by 1",
+    "Aviary:mac1_a2" to "by 2",
+    "Aviary:mac1_a3" to "by 3",
+    "Aviary:mac1_a4" to "by 4",
+    "Aviary:mac1_d1" to "to 1",
+    "Aviary:mac1_d2" to "to 2",
+    "Aviary:mac1_d3" to "to 3",
+    "Aviary:mac1_d4" to "to 4",
+    "Aviary:mac2" to "macro 2",
+    "Aviary:mac2_a1" to "by 1",
+    "Aviary:mac2_a2" to "by 2",
+    "Aviary:mac2_a3" to "by 3",
+    "Aviary:mac2_a4" to "by 4",
+    "Aviary:mac2_d1" to "to 1",
+    "Aviary:mac2_d2" to "to 2",
+    "Aviary:mac2_d3" to "to 3",
+    "Aviary:mac2_d4" to "to 4",
+    "Aviary:mac3" to "macro 3",
+    "Aviary:mac3_a1" to "by 1",
+    "Aviary:mac3_a2" to "by 2",
+    "Aviary:mac3_a3" to "by 3",
+    "Aviary:mac3_a4" to "by 4",
+    "Aviary:mac3_d1" to "to 1",
+    "Aviary:mac3_d2" to "to 2",
+    "Aviary:mac3_d3" to "to 3",
+    "Aviary:mac3_d4" to "to 4",
+    "Aviary:mac4" to "macro 4",
+    "Aviary:mac4_a1" to "by 1",
+    "Aviary:mac4_a2" to "by 2",
+    "Aviary:mac4_a3" to "by 3",
+    "Aviary:mac4_a4" to "by 4",
+    "Aviary:mac4_d1" to "to 1",
+    "Aviary:mac4_d2" to "to 2",
+    "Aviary:mac4_d3" to "to 3",
+    "Aviary:mac4_d4" to "to 4",
+    "Aviary:mac5" to "macro 5",
+    "Aviary:mac5_a1" to "by 1",
+    "Aviary:mac5_a2" to "by 2",
+    "Aviary:mac5_a3" to "by 3",
+    "Aviary:mac5_a4" to "by 4",
+    "Aviary:mac5_d1" to "to 1",
+    "Aviary:mac5_d2" to "to 2",
+    "Aviary:mac5_d3" to "to 3",
+    "Aviary:mac5_d4" to "to 4",
+    "Aviary:mac6" to "macro 6",
+    "Aviary:mac6_a1" to "by 1",
+    "Aviary:mac6_a2" to "by 2",
+    "Aviary:mac6_a3" to "by 3",
+    "Aviary:mac6_a4" to "by 4",
+    "Aviary:mac6_d1" to "to 1",
+    "Aviary:mac6_d2" to "to 2",
+    "Aviary:mac6_d3" to "to 3",
+    "Aviary:mac6_d4" to "to 4",
+    "Aviary:mac7" to "macro 7",
+    "Aviary:mac7_a1" to "by 1",
+    "Aviary:mac7_a2" to "by 2",
+    "Aviary:mac7_a3" to "by 3",
+    "Aviary:mac7_a4" to "by 4",
+    "Aviary:mac7_d1" to "to 1",
+    "Aviary:mac7_d2" to "to 2",
+    "Aviary:mac7_d3" to "to 3",
+    "Aviary:mac7_d4" to "to 4",
+    "Aviary:mac8" to "macro 8",
+    "Aviary:mac8_a1" to "by 1",
+    "Aviary:mac8_a2" to "by 2",
+    "Aviary:mac8_a3" to "by 3",
+    "Aviary:mac8_a4" to "by 4",
+    "Aviary:mac8_d1" to "to 1",
+    "Aviary:mac8_d2" to "to 2",
+    "Aviary:mac8_d3" to "to 3",
+    "Aviary:mac8_d4" to "to 4",
     "Aviary:octave" to "octave",
     "Aviary:rasp" to "rasp",
     "Aviary:rate" to "rate",
@@ -3951,6 +4098,9 @@ private fun short0(): Map<String, String> = mapOf(
     "Fathom:velocity" to "velocity",
     "Fathom:volume" to "volume",
     "Fathom:whistle" to "whistle",
+)
+
+private fun short1(): Map<String, String> = mapOf(
     "Filament:bend" to "bend",
     "Filament:bodydamp" to "damp",
     "Filament:bodymix" to "mix",
@@ -4023,9 +4173,6 @@ private fun short0(): Map<String, String> = mapOf(
     "Filament:mac2_a2" to "by 2",
     "Filament:mac2_a3" to "by 3",
     "Filament:mac2_a4" to "by 4",
-)
-
-private fun short1(): Map<String, String> = mapOf(
     "Filament:mac2_d1" to "to 1",
     "Filament:mac2_d2" to "to 2",
     "Filament:mac2_d3" to "to 3",
@@ -4754,6 +4901,9 @@ private fun short1(): Map<String, String> = mapOf(
     "Hammer:sustainkey" to "by key",
     "Hammer:sympathy" to "sympathy",
     "Hammer:tacks" to "tacks",
+)
+
+private fun short2(): Map<String, String> = mapOf(
     "Hammer:tail" to "room",
     "Hammer:tone" to "tone",
     "Hammer:tonebar" to "tonebar",
@@ -4826,9 +4976,6 @@ private fun short1(): Map<String, String> = mapOf(
     "Hexbeat:mac4_d2" to "to 2",
     "Hexbeat:mac4_d3" to "to 3",
     "Hexbeat:mac4_d4" to "to 4",
-)
-
-private fun short2(): Map<String, String> = mapOf(
     "Hexbeat:mac5" to "macro 5",
     "Hexbeat:mac5_a1" to "by 1",
     "Hexbeat:mac5_a2" to "by 2",
@@ -5557,6 +5704,9 @@ private fun short2(): Map<String, String> = mapOf(
     "Ratio:o3_release" to "release",
     "Ratio:o3_sustain" to "sustain",
     "Ratio:o3_vel" to "vel",
+)
+
+private fun short3(): Map<String, String> = mapOf(
     "Ratio:o3_wave" to "wave",
     "Ratio:o4_attack" to "attack",
     "Ratio:o4_decay" to "decay",
@@ -5629,9 +5779,6 @@ private fun short2(): Map<String, String> = mapOf(
     "Reflux:mac1_d1" to "to 1",
     "Reflux:mac1_d2" to "to 2",
     "Reflux:mac1_d3" to "to 3",
-)
-
-private fun short3(): Map<String, String> = mapOf(
     "Reflux:mac1_d4" to "to 4",
     "Reflux:mac2" to "macro 2",
     "Reflux:mac2_a1" to "by 1",
@@ -6360,6 +6507,9 @@ private fun short3(): Map<String, String> = mapOf(
     "Trinity:octave" to "octave",
     "Trinity:pan" to "pan",
     "Trinity:ring12" to "1·2",
+)
+
+private fun short4(): Map<String, String> = mapOf(
     "Trinity:ring23" to "2·3",
     "Trinity:route" to "route",
     "Trinity:transpose" to "transpose",

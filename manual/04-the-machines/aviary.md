@@ -1,7 +1,8 @@
 # Aviary
 
 > Modelled birdsong: a syrinx with two voices, a throat and a beak, singing
-> whistles, chirps, trills, warbles and calls in time with the song.
+> whistles, chirps, trills, warbles, calls, coos and caws in time with the
+> song.
 
 Aviary doesn't play recordings. A bird sings from its syrinx, deep in its
 chest: two sources, one in each branch of its airway, each a pair of folds
@@ -19,13 +20,16 @@ the tempo. Let go and it stops.
 - **pattern** - **whistle** (one held note, sliding into it), **chirp**
   (a syllable that sweeps, then a gap), **trill** (fast short syllables),
   **warble** (wandering about the note), **call** (two notes a third apart,
-  the rest of the flock answering in the gaps) or **chorus** (each bird in
-  the flock singing its own song at its own pace).
+  the rest of the flock answering in the gaps), **chorus** (each bird in
+  the flock singing its own song at its own pace), **coo** (three to five
+  slow notes, each lower than the last, the last one held, then a rest) or
+  **caw** (short harsh calls in twos and threes, then a rest).
 - **tune** - in cents.
 - **rate** - syllables a beat: **1**, **2**, **4**, **8** or **16**.
 - **length** - how much of each syllable's slot is sung.
 - **sweep** - how far each syllable slides, in semitones: falling from above,
-  or rising from below when it's negative.
+  or rising from below when it's negative. In a coo it's how far the notes
+  fall, and in a caw how far each call rises and drops.
 
 ## Voice
 
@@ -53,9 +57,30 @@ Turn on **kit** and the keys from C2 up are sixteen pads, each its own bird, so 
 - The other knobs (rate, sweep, rasp and so on) work on every pad.
 - **Bird Kit** starts with whistles, chirps, trills, warbles, calls and choruses.
 
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Harsh,
+Far, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves every bird, 24 semitones at 1. The pattern, tune,
+rate, flock, octave, bend and a kit's pads can't be reached. In a kit the
+routes move the knobs every pad shares. A change to the sweep is heard from
+the next syllable and to the spread from the next note; the rest move at
+once. Tap a macro's name to rename it.
+
 ## Tips
 
 - The patterns follow the tempo, so a chirp at **4** a beat lands on the
   sixteenths.
 - **Call and Answer** needs at least two birds: one calls, the other
   answers.
+- A coo is sung with the beak shut and a caw with the rasp turned up, whatever
+  the rasp knob says. For a dove or an owl try **octave** -1 and the
+  **throat** up; for a crow, **octave** -1 and more **breath**.
+- With more than one bird, the others in a coo or caw come in a phrase
+  later, one after another.

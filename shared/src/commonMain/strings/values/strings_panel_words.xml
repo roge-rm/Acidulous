@@ -177,6 +177,7 @@
     <string name="pw_call">call</string>
     <string name="pw_carrier">carrier</string>
     <string name="pw_cassotto">cassotto</string>
+    <string name="pw_caw">caw</string>
     <string name="pw_ceiling">ceiling</string>
     <string name="pw_celesta">celesta</string>
     <string name="pw_central">central</string>
@@ -240,6 +241,7 @@
     <string name="pw_consonants">consonants</string>
     <string name="pw_contacts">contacts</string>
     <string name="pw_converge">converge</string>
+    <string name="pw_coo">coo</string>
     <string name="pw_copies">copies</string>
     <string name="pw_cornemuse">cornemuse</string>
     <string name="pw_count">count</string>

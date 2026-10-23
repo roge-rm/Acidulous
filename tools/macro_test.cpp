@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm and Fathom move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom and Aviary move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -24,6 +24,7 @@
 #include <engine/machine/manual/Manual.h>
 #include <engine/machine/palm/Palm.h>
 #include <engine/machine/fathom/Fathom.h>
+#include <engine/machine/aviary/Aviary.h>
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
@@ -404,12 +405,13 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
     } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0 ||
                std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0 ||
                std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
-               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 || std::strcmp(type, "Fathom") == 0) {
+               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 || std::strcmp(type, "Fathom") == 0 ||
+               std::strcmp(type, "Aviary") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
-        // Draw, Fret, Tine, Palm and Fathom have no transpose, so an octave up.
+        // Draw, Fret, Tine, Palm, Fathom and Aviary have no transpose, so an octave up.
         const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
                               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 ||
-                              std::strcmp(type, "Fathom") == 0;
+                              std::strcmp(type, "Fathom") == 0 || std::strcmp(type, "Aviary") == 0;
         gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -1726,6 +1728,44 @@ void fathomRoutes() {
     }
 }
 
+// Aviary: in a kit the routes reach every pad, as the shared knobs do; a
+// route to sweep is read at each syllable, and one to spread at the note.
+void aviaryRoutes() {
+    using Av = acidulous::machine::Aviary;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    // The default kit: a whistle on C2, a chirp on D2, a trill on E2.
+    for (uint8_t pad : {uint8_t(36), uint8_t(38), uint8_t(40)}) {
+        const auto plain = playHeld("Aviary", {{"kit", 1.0f}}, {pad}, blocks);
+        const auto knob = playHeld("Aviary", {{"kit", 1.0f}, {"throat", 0.75f}}, {pad}, blocks);
+        Route t{1, 1, Av::McThroat, 0.25f, 1.0f};
+        const auto routed = playHeld("Aviary", {{"kit", 1.0f}}, {pad}, blocks, &t, Av::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain,
+            "Aviary: in a kit a route to throat reaches pad " + std::to_string(pad - 35), buf);
+    }
+    // Sweep 7 by default; a route of 0.25 is the knob at 19 (of -24..24).
+    {
+        const auto knob = playHeld("Aviary", {{"sweep", 19.0f}}, {60}, blocks);
+        Route w{2, 3, Av::McSweep, 0.25f, 1.0f};
+        const auto routed = playHeld("Aviary", {}, {60}, blocks, &w, Av::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Aviary: a route to sweep matches the knob", buf);
+    }
+    // Two birds on a call, spread 0.5 by default: a route of 0.5 is spread 1.
+    {
+        const auto knob = playHeld("Aviary", {{"pattern", 4.0f}, {"flock", 2.0f}, {"spread", 1.0f}}, {60}, blocks);
+        Route d{5, 4, Av::McSpread, 0.5f, 1.0f};
+        const auto routed = playHeld("Aviary", {{"pattern", 4.0f}, {"flock", 2.0f}}, {60}, blocks, &d, Av::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Aviary: a route to spread matches the knob", buf);
+    }
+    // Caw: a route to rasp still moves it, from where the caw forces it.
+    {
+        const auto knob = playHeld("Aviary", {{"pattern", 7.0f}, {"rasp", 0.6f}}, {60}, blocks);
+        Route r{8, 1, Av::McRasp, 0.5f, 1.0f};
+        const auto routed = playHeld("Aviary", {{"pattern", 7.0f}}, {60}, blocks, &r, Av::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Aviary: a route to rasp moves a caw's rasp", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1801,6 +1841,9 @@ int main() {
     using Fa = acidulous::machine::Fathom;
     basics("Fathom", Fa::MacroDestCount, Fa::McVolume, Fa::McPitch, Fa::McOff, Fa::kMacros);
     fathomRoutes();
+    using Av = acidulous::machine::Aviary;
+    basics("Aviary", Av::MacroDestCount, Av::McVolume, Av::McPitch, Av::McOff, Av::kMacros);
+    aviaryRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

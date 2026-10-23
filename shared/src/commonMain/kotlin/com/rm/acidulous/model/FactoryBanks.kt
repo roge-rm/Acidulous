@@ -11606,82 +11606,82 @@ internal object FactoryBanks {
         low = 45, high = 69)
 
     private fun aviary9() = Patch("Aviary", "Fast Trill",
-        mapOf("pattern" to 0.4f, "length" to 0.578947365f, "sweep" to 0.5625f),
+        mapOf("pattern" to 0.2857143f, "length" to 0.578947365f, "sweep" to 0.5625f),
         family = "trill",
         low = 52, high = 76)
 
     private fun aviary10() = Patch("Aviary", "Rattling Trill",
-        mapOf("pattern" to 0.4f, "rate" to 0.75f, "sweep" to 0.5416667f, "rasp" to 0.6f),
+        mapOf("pattern" to 0.2857143f, "rate" to 0.75f, "sweep" to 0.5416667f, "rasp" to 0.6f),
         family = "trill",
         low = 48, high = 72)
 
     private fun aviary11() = Patch("Aviary", "Slow Trill",
-        mapOf("pattern" to 0.4f, "rate" to 0.25f, "length" to 0.684210539f, "sweep" to 0.6041667f),
+        mapOf("pattern" to 0.2857143f, "rate" to 0.25f, "length" to 0.684210539f, "sweep" to 0.6041667f),
         family = "trill",
         low = 48, high = 72)
 
     private fun aviary12() = Patch("Aviary", "Two-Note Trill",
-        mapOf("pattern" to 0.4f, "two" to 0.7f, "interval" to 0.7083333f),
+        mapOf("pattern" to 0.2857143f, "two" to 0.7f, "interval" to 0.7083333f),
         family = "trill",
         low = 48, high = 74)
 
     private fun aviary13() = Patch("Aviary", "Warbler",
-        mapOf("pattern" to 0.6f, "length" to 1f, "sweep" to 0.6875f),
+        mapOf("pattern" to 0.428571433f, "length" to 1f, "sweep" to 0.6875f),
         family = "warble",
         low = 48, high = 72)
 
     private fun aviary14() = Patch("Aviary", "Quick Warbler",
-        mapOf("pattern" to 0.6f, "rate" to 0.75f, "length" to 1f, "beak" to 0.7f),
+        mapOf("pattern" to 0.428571433f, "rate" to 0.75f, "length" to 1f, "beak" to 0.7f),
         family = "warble",
         low = 52, high = 76)
 
     private fun aviary15() = Patch("Aviary", "Raspy Warbler",
-        mapOf("pattern" to 0.6f, "length" to 0.8947368f, "sweep" to 0.75f, "rasp" to 0.5f),
+        mapOf("pattern" to 0.428571433f, "length" to 0.8947368f, "sweep" to 0.75f, "rasp" to 0.5f),
         family = "warble",
         low = 45, high = 69)
 
     private fun aviary16() = Patch("Aviary", "Twin Warblers",
-        mapOf("pattern" to 0.6f, "length" to 1f, "sweep" to 0.6875f, "flock" to 0.333333343f, "spread" to 0.8f),
+        mapOf("pattern" to 0.428571433f, "length" to 1f, "sweep" to 0.6875f, "flock" to 0.333333343f, "spread" to 0.8f),
         family = "warble",
         low = 48, high = 72)
 
     private fun aviary17() = Patch("Aviary", "Two-Note Call",
-        mapOf("pattern" to 0.8f, "rate" to 0.25f, "length" to 0.578947365f),
+        mapOf("pattern" to 0.5714286f, "rate" to 0.25f, "length" to 0.578947365f),
         family = "call",
         low = 48, high = 72)
 
     private fun aviary18() = Patch("Aviary", "Call and Answer",
-        mapOf("pattern" to 0.8f, "rate" to 0.25f, "length" to 0.578947365f, "flock" to 0.333333343f, "spread" to 1f),
+        mapOf("pattern" to 0.5714286f, "rate" to 0.25f, "length" to 0.578947365f, "flock" to 0.333333343f, "spread" to 1f),
         family = "call",
         low = 48, high = 72)
 
     private fun aviary19() = Patch("Aviary", "Distant Call",
-        mapOf("pattern" to 0.8f, "rate" to 0f, "space" to 0.8f, "volume" to 0.9f),
+        mapOf("pattern" to 0.5714286f, "rate" to 0f, "space" to 0.8f, "volume" to 0.9f),
         family = "call",
         low = 43, high = 67)
 
     private fun aviary20() = Patch("Aviary", "Hooting Call",
-        mapOf("pattern" to 0.8f, "rate" to 0f, "length" to 0.684210539f, "breath" to 0.25f, "throat" to 0.9f, "beak" to 0.1f),
+        mapOf("pattern" to 0.5714286f, "rate" to 0f, "length" to 0.684210539f, "breath" to 0.25f, "throat" to 0.9f, "beak" to 0.1f),
         family = "call",
         low = 40, high = 62)
 
     private fun aviary21() = Patch("Aviary", "Dawn Chorus",
-        mapOf("pattern" to 1f, "flock" to 1f, "spread" to 1f, "space" to 0.4f),
+        mapOf("pattern" to 0.714285731f, "flock" to 1f, "spread" to 1f, "space" to 0.4f),
         family = "chorus",
         low = 48, high = 72)
 
     private fun aviary22() = Patch("Aviary", "Garden Birds",
-        mapOf("pattern" to 1f, "flock" to 0.333333343f, "spread" to 0.7f),
+        mapOf("pattern" to 0.714285731f, "flock" to 0.333333343f, "spread" to 0.7f),
         family = "chorus",
         low = 52, high = 76)
 
     private fun aviary23() = Patch("Aviary", "Far Off Flock",
-        mapOf("pattern" to 1f, "flock" to 1f, "spread" to 1f, "space" to 0.85f, "volume" to 0.85f),
+        mapOf("pattern" to 0.714285731f, "flock" to 1f, "spread" to 1f, "space" to 0.85f, "volume" to 0.85f),
         family = "chorus",
         low = 48, high = 72)
 
     private fun aviary24() = Patch("Aviary", "Busy Hedge",
-        mapOf("pattern" to 1f, "rate" to 0.75f, "flock" to 1f, "spread" to 0.8f),
+        mapOf("pattern" to 0.714285731f, "rate" to 0.75f, "flock" to 1f, "spread" to 0.8f),
         family = "chorus",
         low = 48, high = 74)
 

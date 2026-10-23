@@ -153,6 +153,7 @@
     <string name="pw_call">appel</string>
     <string name="pw_carrier">porteuse</string>
     <string name="pw_cassotto">cassotto</string>
+    <string name="pw_caw">croassement</string>
     <string name="pw_ceiling">plafond</string>
     <string name="pw_celesta">célesta</string>
     <string name="pw_central">centre</string>
@@ -204,6 +205,7 @@
     <string name="pw_conga">conga</string>
     <string name="pw_consonants">consonnes</string>
     <string name="pw_converge">converge</string>
+    <string name="pw_coo">roucoulement</string>
     <string name="pw_copies">copies</string>
     <string name="pw_cornemuse">cornemuse</string>
     <string name="pw_count">nombre</string>

@@ -27,7 +27,7 @@
     - [Draw](04-the-machines/draw.md) - modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.
-    - [Aviary](04-the-machines/aviary.md) - modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles and calls in time with the song.
+    - [Aviary](04-the-machines/aviary.md) - modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles, calls, coos and caws in time with the song.
     - [Fathom](04-the-machines/fathom.md) - modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail, waterfalls, sizzling, ice, snow, splashes, the deep and a rainstick, played from the keys.
     - [Molt](04-the-machines/molt.md) - sing a take in, and the piano roll tunes it.
     - [Mosaic](04-the-machines/mosaic.md) - a multisample player: zones across the keyboard and velocity, plus grain clouds.

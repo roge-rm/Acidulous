@@ -1,7 +1,8 @@
 # Aviary
 
 > Chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec,
-> qui chantent sifflements, gazouillis, trilles, babils et appels en mesure.
+> qui chantent sifflements, gazouillis, trilles, babils, appels,
+> roucoulements et croassements en mesure.
 
 Aviary ne joue pas d’enregistrements. Un oiseau chante par son syrinx, au
 fond de la poitrine : deux sources, une dans chaque branche des voies
@@ -21,14 +22,18 @@ mesure. Lâchez-la et il s’arrête.
   **gazouillis** (une syllabe qui glisse, puis un silence), **trille** (des
   syllabes brèves et rapides), **babil** (qui erre autour de la note),
   **appel** (deux notes à la tierce, le reste de la volée répondant dans
-  les silences) ou **chœur** (chaque oiseau de la volée chante son propre
-  chant à son propre rythme).
+  les silences), **chœur** (chaque oiseau de la volée chante son propre
+  chant à son propre rythme), **roucoulement** (trois à cinq notes lentes,
+  chacune plus basse que la précédente, la dernière tenue, puis un silence)
+  ou **croassement** (des cris brefs et âpres par deux ou trois, puis un
+  silence).
 - **accordage** : en cents.
 - **vitesse** : syllabes par temps : **1**, **2**, **4**, **8** ou **16**.
 - **longueur** : la part de chaque syllabe qui est chantée.
 - **balayage** : de combien chaque syllabe glisse, en demi-tons : en
   descendant depuis le haut, ou en montant depuis le bas quand il est
-  négatif.
+  négatif. Dans un roucoulement, c’est de combien les notes descendent;
+  dans un croassement, de combien chaque cri monte et retombe.
 
 ## Voix
 
@@ -58,9 +63,32 @@ Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun so
 - Les autres boutons (vitesse, balayage, râpeux, etc.) agissent sur tous les pads.
 - **Bird Kit** commence avec sifflements, gazouillis, trilles, babils, appels et chœurs.
 
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Âpre,
+Loin, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tous les oiseaux, 24
+demi-tons à 1. Le motif, l’accordage, la vitesse, la volée, l’octave, le bend
+et les pads d’un kit ne sont pas accessibles. Dans un kit, les routes bougent
+les boutons que tous les pads partagent. Un changement de balayage s’entend à
+la syllabe suivante et d’écart à la note suivante; le reste bouge tout de
+suite. Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Les motifs suivent le tempo : un gazouillis à **4** par temps tombe sur
   les doubles croches.
 - **Call and Answer** demande au moins deux oiseaux : l’un appelle, l’autre
   répond.
+- Un roucoulement se chante bec fermé et un croassement toujours râpeux, quoi
+  que dise le bouton râpeux. Pour une tourterelle ou un hibou, essayez
+  **octave** -1 et la **gorge** plus haut; pour une corneille, **octave** -1
+  et plus de **souffle**.
+- Avec plusieurs oiseaux, dans un roucoulement ou un croassement, les autres
+  entrent une phrase plus tard, l’un après l’autre.

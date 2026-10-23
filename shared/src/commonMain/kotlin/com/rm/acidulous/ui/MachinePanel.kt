@@ -260,7 +260,7 @@ fun MachinePanel(
             "Sympath" -> SympathPanel(binding)
             "Palm" -> PalmPanel(binding, selectedPad, track, trackIndex, editor)
             "Chanter" -> ChanterPanel(binding)
-            "Aviary" -> AviaryPanel(binding, selectedPad)
+            "Aviary" -> AviaryPanel(binding, selectedPad, track, trackIndex, editor)
             "Fathom" -> FathomPanel(binding, selectedPad, track, trackIndex, editor)
             "Timber" -> TimberPanel(binding, track, trackIndex, editor)
             "Nexus" -> NexusPanel(binding, track, trackIndex, editor, onOpenPatch)
@@ -4922,16 +4922,46 @@ private fun ChanterPanel(b: ParamBinding) {
     }
 }
 
-private val AVIARY_PATTERNS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus")
+private val AVIARY_PATTERNS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus", "coo", "caw")
 private val AVIARY_RATES = listOf("1", "2", "4", "8", "16")
 
-/** Aviary: the song, the bird's voice, and the flock. */
+/** Where an Aviary macro route goes, in the engine's MacroDest order. */
+val AVIARY_MACRO_DESTS = listOf(
+    "off", "length", "sweep", "rasp", "two", "interval", "breath", "throat",
+    "beak", "spread", "space", "velocity", "volume",
+    "pitch",
+)
+
+/** Aviary: the macros, the song, the bird's voice, the flock, the kit. */
 @Composable
-private fun AviaryPanel(b: ParamBinding, pad: Int) {
+private fun AviaryPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("pattern", "voice", "flock", "kit"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "pattern", "voice", "flock", "kit", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            3 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", AVIARY_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", AVIARY_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", AVIARY_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", AVIARY_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            4 -> {
                 // In kit mode the keys from C2 are sixteen pads; the pad picked on
                 // the drum grid is the one these knobs set.
                 val p = pad.coerceIn(0, 15)
@@ -4947,7 +4977,7 @@ private fun AviaryPanel(b: ParamBinding, pad: Int) {
                     PanelKnob(b, n("level"), "level", hot)
                 }
             }
-            0 -> {
+            1 -> {
                 Group("pattern") {
                     PanelStepKnob(b, "pattern", AVIARY_PATTERNS, "pattern", PanelAmber)
                     PanelKnob(b, "tune", "tune")
@@ -4958,7 +4988,7 @@ private fun AviaryPanel(b: ParamBinding, pad: Int) {
                     PanelKnob(b, "sweep", "sweep", PanelPink)
                 }
             }
-            1 -> {
+            2 -> {
                 Group("syrinx") {
                     PanelKnob(b, "rasp", "rasp")
                     PanelKnob(b, "two", "two", PanelAmber)
@@ -4976,7 +5006,7 @@ private fun AviaryPanel(b: ParamBinding, pad: Int) {
                     PanelKnob(b, "spread", "spread")
                     PanelKnob(b, "space", "space")
                 }
-                Group("play") {
+                Group("player") {
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")
@@ -4987,6 +5017,14 @@ private fun AviaryPanel(b: ParamBinding, pad: Int) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val FATHOM_MODELS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire",

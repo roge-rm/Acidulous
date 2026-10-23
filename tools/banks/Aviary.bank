@@ -5,9 +5,10 @@
 # Above them the trachea, a throat tuned to the note, and the beak. A held
 # note sets a bird singing two octaves up, in time with the tempo.
 #
-# `pattern` is the song: a plain whistle, chirps, trills, a wandering
-# warble, a call answered in the gaps, or a chorus of birds each singing
-# its own. `rate` is syllables a beat, `length` how much of each it sings,
+# `pattern` is the song: a plain whistle (#0), chirps (#1), trills (#2), a
+# wandering warble (#3), a call answered in the gaps (#4), a chorus of birds
+# each singing its own (#5), slow falling coos with the last held (#6), or
+# harsh caws in twos and threes (#7). `rate` is syllables a beat, `length` how much of each it sings,
 # `sweep` how far each one slides (falling from above, or rising from below
 # when negative). `two` lets the syrinx's other side sing at `interval`,
 # `rasp` makes the folds slap, `breath` adds air, `throat` and `beak` shape

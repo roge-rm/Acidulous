@@ -27,7 +27,7 @@
     - [Draw](04-the-machines/draw.md) : des anches libres modélisées : harmonicas, accordéons, melodica, harmonium et les anches qui sonnent dans des tuyaux.
     - [Timber](04-the-machines/timber.md) : des bois modélisés : anches et flûtes.
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.
-    - [Aviary](04-the-machines/aviary.md) : chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils et appels en mesure.
+    - [Aviary](04-the-machines/aviary.md) : chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils, appels, roucoulements et croassements en mesure.
     - [Fathom](04-the-machines/fathom.md) : l’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements, glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.
     - [Molt](04-the-machines/molt.md) : chantez une prise, et la grille de notes l’accorde.
     - [Mosaic](04-the-machines/mosaic.md) : un lecteur multi-échantillons : des zones sur le clavier et la vélocité, plus des nuages de grains.

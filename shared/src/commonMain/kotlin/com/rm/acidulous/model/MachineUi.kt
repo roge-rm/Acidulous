@@ -64,7 +64,7 @@ object MachineUi {
         }
         else -> voicesOf(machine.type, machine.settings)
     }
-    private val AVIARY_SONGS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus")
+    private val AVIARY_SONGS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus", "coo", "caw")
     /** Aviary's default kit, as in the engine. */
     private val AVIARY_KIT = listOf(0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 1, 2, 0)
     private val FATHOM_SOUNDS = listOf("bubbles", "drips", "rain", "stream", "surf", "wind", "fire",

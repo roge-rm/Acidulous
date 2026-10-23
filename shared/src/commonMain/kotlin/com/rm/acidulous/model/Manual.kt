@@ -912,15 +912,15 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "For a sound that never stops, turn **breath** and **sustain** up."),
     ))
 
-    private fun en3_22() = ManualSection("Aviary", "Modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles and calls in time with the song.", listOf(
+    private fun en3_22() = ManualSection("Aviary", "Modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles, calls, coos and caws in time with the song.", listOf(
         ManualBlock(ManualKind.Para, "Aviary doesn't play recordings. A bird sings from its syrinx, deep in its chest: two sources, one in each branch of its airway, each a pair of folds that start to swing once the air pressure passes a threshold and settle at a size set by how far past it the pressure goes. The two can sing at once, so one bird can sing two notes. Above them are a short trachea, a throat the bird tunes to the note it's singing, and the beak, opened wider for higher notes."),
         ManualBlock(ManualKind.Para, "Hold a note and a bird sings a song around it, two octaves up, in time with the tempo. Let go and it stops."),
         ManualBlock(ManualKind.Heading, "Song"),
-        ManualBlock(ManualKind.Bullet, "**pattern** - **whistle** (one held note, sliding into it), **chirp** (a syllable that sweeps, then a gap), **trill** (fast short syllables), **warble** (wandering about the note), **call** (two notes a third apart, the rest of the flock answering in the gaps) or **chorus** (each bird in the flock singing its own song at its own pace)."),
+        ManualBlock(ManualKind.Bullet, "**pattern** - **whistle** (one held note, sliding into it), **chirp** (a syllable that sweeps, then a gap), **trill** (fast short syllables), **warble** (wandering about the note), **call** (two notes a third apart, the rest of the flock answering in the gaps), **chorus** (each bird in the flock singing its own song at its own pace), **coo** (three to five slow notes, each lower than the last, the last one held, then a rest) or **caw** (short harsh calls in twos and threes, then a rest)."),
         ManualBlock(ManualKind.Bullet, "**tune** - in cents."),
         ManualBlock(ManualKind.Bullet, "**rate** - syllables a beat: **1**, **2**, **4**, **8** or **16**."),
         ManualBlock(ManualKind.Bullet, "**length** - how much of each syllable's slot is sung."),
-        ManualBlock(ManualKind.Bullet, "**sweep** - how far each syllable slides, in semitones: falling from above, or rising from below when it's negative."),
+        ManualBlock(ManualKind.Bullet, "**sweep** - how far each syllable slides, in semitones: falling from above, or rising from below when it's negative. In a coo it's how far the notes fall, and in a caw how far each call rises and drops."),
         ManualBlock(ManualKind.Heading, "Voice"),
         ManualBlock(ManualKind.Bullet, "**rasp** - the folds slapping shut: harsher, with more overtones."),
         ManualBlock(ManualKind.Bullet, "**two** - the syrinx's other side singing at once."),
@@ -939,9 +939,14 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Tap a pad on the drum grid, then set it in the pad card: **pattern**, **pitch**, **birds** and **level**.", "Click a pad on the drum grid, then set it in the pad card: **pattern**, **pitch**, **birds** and **level**."),
         ManualBlock(ManualKind.Bullet, "The other knobs (rate, sweep, rasp and so on) work on every pad."),
         ManualBlock(ManualKind.Bullet, "**Bird Kit** starts with whistles, chirps, trills, warbles, calls and choruses."),
+        ManualBlock(ManualKind.Heading, "Macros"),
+        ManualBlock(ManualKind.Para, "The **play** page has eight macro knobs. A patch can name them (Harsh, Far, etc.) and the names show on the knobs, on automation lanes and in the controller mapping list. They sit at zero when a patch loads, which is the patch as it was made."),
+        ManualBlock(ManualKind.Para, "The **macros** page sets what each one does. A macro has four routes, a destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the knob moves the destination by knob times amount, across that control's whole range at 1. Pitch moves every bird, 24 semitones at 1. The pattern, tune, rate, flock, octave, bend and a kit's pads can't be reached. In a kit the routes move the knobs every pad shares. A change to the sweep is heard from the next syllable and to the spread from the next note; the rest move at once. Tap a macro's name to rename it.", "The **macros** page sets what each one does. A macro has four routes, a destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the knob moves the destination by knob times amount, across that control's whole range at 1. Pitch moves every bird, 24 semitones at 1. The pattern, tune, rate, flock, octave, bend and a kit's pads can't be reached. In a kit the routes move the knobs every pad shares. A change to the sweep is heard from the next syllable and to the spread from the next note; the rest move at once. Click a macro's name to rename it."),
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "The patterns follow the tempo, so a chirp at **4** a beat lands on the sixteenths."),
         ManualBlock(ManualKind.Bullet, "**Call and Answer** needs at least two birds: one calls, the other answers."),
+        ManualBlock(ManualKind.Bullet, "A coo is sung with the beak shut and a caw with the rasp turned up, whatever the rasp knob says. For a dove or an owl try **octave** -1 and the **throat** up; for a crow, **octave** -1 and more **breath**."),
+        ManualBlock(ManualKind.Bullet, "With more than one bird, the others in a coo or caw come in a phrase later, one after another."),
     ))
 
     private fun en3_23() = ManualSection("Fathom", "Modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail, waterfalls, sizzling, ice, snow, splashes, the deep and a rainstick, played from the keys.", listOf(
@@ -3020,15 +3025,15 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Pour un son qui ne s’arrête jamais, montez **souffle** et **maintien**."),
     ))
 
-    private fun fr3_22() = ManualSection("Aviary", "Chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils et appels en mesure.", listOf(
+    private fun fr3_22() = ManualSection("Aviary", "Chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils, appels, roucoulements et croassements en mesure.", listOf(
         ManualBlock(ManualKind.Para, "Aviary ne joue pas d’enregistrements. Un oiseau chante par son syrinx, au fond de la poitrine : deux sources, une dans chaque branche des voies respiratoires, chacune une paire de replis qui se mettent à vibrer quand la pression de l’air passe un seuil, et dont l’amplitude dépend de combien on le dépasse. Les deux peuvent chanter ensemble : un seul oiseau peut chanter deux notes. Au-dessus viennent une courte trachée, une gorge que l’oiseau accorde sur la note qu’il chante, et le bec, ouvert plus grand pour les notes aiguës."),
         ManualBlock(ManualKind.Para, "Tenez une note et un oiseau chante autour d’elle, deux octaves plus haut, en mesure. Lâchez-la et il s’arrête."),
         ManualBlock(ManualKind.Heading, "Chant"),
-        ManualBlock(ManualKind.Bullet, "**motif** : **sifflement** (une note tenue, rejointe en glissant), **gazouillis** (une syllabe qui glisse, puis un silence), **trille** (des syllabes brèves et rapides), **babil** (qui erre autour de la note), **appel** (deux notes à la tierce, le reste de la volée répondant dans les silences) ou **chœur** (chaque oiseau de la volée chante son propre chant à son propre rythme)."),
+        ManualBlock(ManualKind.Bullet, "**motif** : **sifflement** (une note tenue, rejointe en glissant), **gazouillis** (une syllabe qui glisse, puis un silence), **trille** (des syllabes brèves et rapides), **babil** (qui erre autour de la note), **appel** (deux notes à la tierce, le reste de la volée répondant dans les silences), **chœur** (chaque oiseau de la volée chante son propre chant à son propre rythme), **roucoulement** (trois à cinq notes lentes, chacune plus basse que la précédente, la dernière tenue, puis un silence) ou **croassement** (des cris brefs et âpres par deux ou trois, puis un silence)."),
         ManualBlock(ManualKind.Bullet, "**accordage** : en cents."),
         ManualBlock(ManualKind.Bullet, "**vitesse** : syllabes par temps : **1**, **2**, **4**, **8** ou **16**."),
         ManualBlock(ManualKind.Bullet, "**longueur** : la part de chaque syllabe qui est chantée."),
-        ManualBlock(ManualKind.Bullet, "**balayage** : de combien chaque syllabe glisse, en demi-tons : en descendant depuis le haut, ou en montant depuis le bas quand il est négatif."),
+        ManualBlock(ManualKind.Bullet, "**balayage** : de combien chaque syllabe glisse, en demi-tons : en descendant depuis le haut, ou en montant depuis le bas quand il est négatif. Dans un roucoulement, c’est de combien les notes descendent; dans un croassement, de combien chaque cri monte et retombe."),
         ManualBlock(ManualKind.Heading, "Voix"),
         ManualBlock(ManualKind.Bullet, "**râpeux** : les replis qui claquent : plus âpre, avec plus d’harmoniques."),
         ManualBlock(ManualKind.Bullet, "**deux** : l’autre côté du syrinx qui chante en même temps."),
@@ -3047,9 +3052,14 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**.", "Cliquez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **motif**, **hauteur**, **oiseaux** et **niveau**."),
         ManualBlock(ManualKind.Bullet, "Les autres boutons (vitesse, balayage, râpeux, etc.) agissent sur tous les pads."),
         ManualBlock(ManualKind.Bullet, "**Bird Kit** commence avec sifflements, gazouillis, trilles, babils, appels et chœurs."),
+        ManualBlock(ManualKind.Heading, "Macros"),
+        ManualBlock(ManualKind.Para, "La page **jeu** a huit boutons macro. Un patch peut les nommer (Âpre, Loin, etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un patch, ce qui donne le patch tel qu’il a été fait."),
+        ManualBlock(ManualKind.Para, "La page **macros** règle ce que fait chacune. Une macro a quatre routes, une destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune. Tourner le bouton déplace la destination de bouton fois quantité, sur toute la course de cette commande à 1. La hauteur déplace tous les oiseaux, 24 demi-tons à 1. Le motif, l’accordage, la vitesse, la volée, l’octave, le bend et les pads d’un kit ne sont pas accessibles. Dans un kit, les routes bougent les boutons que tous les pads partagent. Un changement de balayage s’entend à la syllabe suivante et d’écart à la note suivante; le reste bouge tout de suite. Touchez le nom d’une macro pour la renommer.", "La page **macros** règle ce que fait chacune. Une macro a quatre routes, une destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune. Tourner le bouton déplace la destination de bouton fois quantité, sur toute la course de cette commande à 1. La hauteur déplace tous les oiseaux, 24 demi-tons à 1. Le motif, l’accordage, la vitesse, la volée, l’octave, le bend et les pads d’un kit ne sont pas accessibles. Dans un kit, les routes bougent les boutons que tous les pads partagent. Un changement de balayage s’entend à la syllabe suivante et d’écart à la note suivante; le reste bouge tout de suite. Cliquez le nom d’une macro pour la renommer."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Les motifs suivent le tempo : un gazouillis à **4** par temps tombe sur les doubles croches."),
         ManualBlock(ManualKind.Bullet, "**Call and Answer** demande au moins deux oiseaux : l’un appelle, l’autre répond."),
+        ManualBlock(ManualKind.Bullet, "Un roucoulement se chante bec fermé et un croassement toujours râpeux, quoi que dise le bouton râpeux. Pour une tourterelle ou un hibou, essayez **octave** -1 et la **gorge** plus haut; pour une corneille, **octave** -1 et plus de **souffle**."),
+        ManualBlock(ManualKind.Bullet, "Avec plusieurs oiseaux, dans un roucoulement ou un croassement, les autres entrent une phrase plus tard, l’un après l’autre."),
     ))
 
     private fun fr3_23() = ManualSection("Fathom", "L’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements, glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.", listOf(
