@@ -128,6 +128,8 @@ class Aviary final : public Machine {
          *  kRetuneEvery samples, or on the next sample once [retune] is set. */
         float step0 = 0.0f, step1 = 0.0f, beakCoef = 0.5f;
         bool retune = true;
+        /** The bird's own breath noise. */
+        uint32_t noise = 0x1f123bb5u;
     };
     struct Voice {
         Bird birds[kBirds];
@@ -173,7 +175,6 @@ class Aviary final : public Machine {
     float bpm = 120.0f;
     float bend = 0.0f, wheel = 0.0f, channelPressure_ = 0.0f;
     float spaceLp[2] = {0.0f, 0.0f};
-    uint32_t noise = 0x1f123bb5u;
     uint32_t clock = 0;
     /** Samples rendered, for retuning on the same samples at any block size. */
     uint32_t retuneClock = 0;

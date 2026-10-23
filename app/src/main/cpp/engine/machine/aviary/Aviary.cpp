@@ -283,9 +283,11 @@ void Aviary::reset() {
     spaceLp[0] = spaceLp[1] = 0.0f;
     for (float &m : mac_) m = 0.0f;
     for (float &m : macGoal_) m = 0.0f;
-    noise = 0x1f123bb5u;
     clock = 0;
     retuneClock = 0;
+    for (int vi = 0; vi < kVoices; ++vi) {
+        for (int bi = 0; bi < kBirds; ++bi) voices[vi].birds[bi].noise = 0x1f123bb5u + 0x9e3779b9u * static_cast<uint32_t>(vi * kBirds + bi);
+    }
     quietSamples = 0;
     asleep = true;
 }
@@ -685,9 +687,6 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
     const int32_t echo = std::clamp(static_cast<int32_t>(kTracheaSeconds * sampleRate), 1, 31);
     bool any = false;
 
-    // Every bird of every voice moves one sample at a time, in the same order,
-    // so a flock bird reading the others (flockPause) and the shared noise
-    // come out the same at any block size.
     struct Pre {
         float pl, pr, raspNow, beakFrom, beakBy, farGain, farDull;
         bool coo, caw, warble;
@@ -722,120 +721,130 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
         }
     }
 
-    for (int32_t i = 0; i < frames; ++i, ++retuneClock) {
-        for (int vi = 0; vi < kVoices; ++vi) {
-            if (!live[vi]) continue;
-            Voice &v = voices[vi];
-            const float blow = blows[vi];
+    for (int vi = 0; vi < kVoices; ++vi) {
+        if (!live[vi]) continue;
+        Voice &v = voices[vi];
+        const float blow = blows[vi];
+        // A bird reads the others only as a syllable starts, so the birds run
+        // one at a time up to the next start and meet there, in order. Each
+        // has its own noise, so the same comes out at any block size.
+        for (int32_t from = 0; from < frames;) {
+            int32_t to = frames - 1;
+            for (int bi = 0; bi < v.birdCount; ++bi) to = std::min(to, from + std::max(0, v.birds[bi].slot - v.birds[bi].at));
             for (int bi = 0; bi < v.birdCount; ++bi) {
                 Bird &b = v.birds[bi];
                 const Pre &k = pres[vi][bi];
-                const float pl = k.pl, pr = k.pr, raspNow = k.raspNow, beakFrom = k.beakFrom, beakBy = k.beakBy;
-                const float farGain = k.farGain, farDull = k.farDull;
-                const bool coo = k.coo, caw = k.caw, warble = k.warble;
-                if (b.at >= b.slot) nextSyllable(v, b, bi);
-                const float active = b.song == Whistle ? static_cast<float>(b.slot)
-                                     : (coo || caw || warble) ? b.sung
-                                                              : length * static_cast<float>(b.slot);
-                const bool on = v.held && b.singing && static_cast<float>(b.at) < active;
-                // How hard it blows, as a part of [blow]: a coo swells in and out, a caw bursts.
-                float swell = 1.0f;
-                if (b.song == Whistle) {
-                    b.pitch += (b.to - b.pitch) * whistleGlide;
-                } else if (coo || caw) {
-                    if (on) {
+                for (int32_t i = from; i <= to; ++i) {
+                    const uint32_t clockNow = retuneClock + static_cast<uint32_t>(i);
+                    const float pl = k.pl, pr = k.pr, raspNow = k.raspNow, beakFrom = k.beakFrom, beakBy = k.beakBy;
+                    const float farGain = k.farGain, farDull = k.farDull;
+                    const bool coo = k.coo, caw = k.caw, warble = k.warble;
+                    if (b.at >= b.slot) nextSyllable(v, b, bi);
+                    const float active = b.song == Whistle ? static_cast<float>(b.slot)
+                                         : (coo || caw || warble) ? b.sung
+                                                                  : length * static_cast<float>(b.slot);
+                    const bool on = v.held && b.singing && static_cast<float>(b.at) < active;
+                    // How hard it blows, as a part of [blow]: a coo swells in and out, a caw bursts.
+                    float swell = 1.0f;
+                    if (b.song == Whistle) {
+                        b.pitch += (b.to - b.pitch) * whistleGlide;
+                    } else if (coo || caw) {
+                        if (on) {
+                            const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
+                            const float shape = b.easeOut ? 1.0f - (1.0f - p) * (1.0f - p) : p * p;
+                            b.pitch = b.from + (b.to - b.from) * shape + b.arch * 4.0f * p * (1.0f - p);
+                            const float in = coo ? kCooIn : kCawIn, out = coo ? kCooOut : kCawOut;
+                            swell = std::fmax(0.04f, std::fmin(1.0f, p / in) * std::fmin(1.0f, (1.0f - p) / out));
+                            // The folds' size goes as the root of the pressure, so a coo's is squared to swell evenly.
+                            if (coo) swell = std::fmax(0.04f, swell * swell);
+                        }
+                    } else if (warble) {
+                        if (on) {
+                            // A bird-shaped syllable: its curve, an arch, a buzz; a quick swell in and out.
+                            const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
+                            const float shape = b.curve == 1 ? 1.0f - (1.0f - p) * (1.0f - p)
+                                                : b.curve == 2 ? p * p
+                                                : b.curve == 3 ? p * p * (3.0f - 2.0f * p)
+                                                               : p;
+                            b.pitch = b.from + (b.to - b.from) * shape + b.arch * 4.0f * p * (1.0f - p);
+                            if (b.buzz > 0.0f) b.pitch += kBuzzDepth * std::sin(kTwoPi * b.buzz * static_cast<float>(b.at) * dt);
+                            swell = b.loud * std::fmax(0.04f, std::fmin(1.0f, p / 0.08f) * std::fmin(1.0f, (1.0f - p) / 0.2f));
+                        }
+                    } else if (on) {
                         const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
-                        const float shape = b.easeOut ? 1.0f - (1.0f - p) * (1.0f - p) : p * p;
-                        b.pitch = b.from + (b.to - b.from) * shape + b.arch * 4.0f * p * (1.0f - p);
-                        const float in = coo ? kCooIn : kCawIn, out = coo ? kCooOut : kCawOut;
-                        swell = std::fmax(0.04f, std::fmin(1.0f, p / in) * std::fmin(1.0f, (1.0f - p) / out));
-                        // The folds' size goes as the root of the pressure, so a coo's is squared to swell evenly.
-                        if (coo) swell = std::fmax(0.04f, swell * swell);
+                        const float shape = 1.0f - (1.0f - p) * (1.0f - p);
+                        b.pitch = b.from + (b.to - b.from) * shape;
                     }
-                } else if (warble) {
-                    if (on) {
-                        // A bird-shaped syllable: its curve, an arch, a buzz; a quick swell in and out.
-                        const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
-                        const float shape = b.curve == 1 ? 1.0f - (1.0f - p) * (1.0f - p)
-                                            : b.curve == 2 ? p * p
-                                            : b.curve == 3 ? p * p * (3.0f - 2.0f * p)
-                                                           : p;
-                        b.pitch = b.from + (b.to - b.from) * shape + b.arch * 4.0f * p * (1.0f - p);
-                        if (b.buzz > 0.0f) b.pitch += kBuzzDepth * std::sin(kTwoPi * b.buzz * static_cast<float>(b.at) * dt);
-                        swell = b.loud * std::fmax(0.04f, std::fmin(1.0f, p / 0.08f) * std::fmin(1.0f, (1.0f - p) / 0.2f));
+                    ++b.at;
+                    if ((clockNow & (kRetuneEvery - 1)) == 0 || b.retune) {
+                        b.retune = false;
+                        const float hz = noteHz(v.played + base + v.noteBend + b.offset + b.pitch);
+                        // A caw's pitch shakes, the folds never quite settling.
+                        const float shake = caw ? 1.0f + kCawJitter * raspNow * rand(b.seed) : 1.0f;
+                        b.step0 = std::fmin(hz * shake, sampleRate * 0.45f) / sampleRate;
+                        b.step1 = std::fmin(hz * shake * twoRatio, sampleRate * 0.45f) / sampleRate;
+                        if (std::fabs(hz - b.builtHz) > b.builtHz * 0.002f) {
+                            b.builtHz = hz;
+                            // The throat is tuned to the note; the beak opens wider for higher notes.
+                            b.throat.set(hz, 0.3f + 0.6f * throat);
+                        }
+                        const float cutoff = std::fmin(hz * (beakFrom + beakBy * beakOpen) * farDull, sampleRate * 0.45f);
+                        b.beakCoef = 1.0f - std::exp(-kTwoPi * cutoff / sampleRate);
                     }
-                } else if (on) {
-                    const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
-                    const float shape = 1.0f - (1.0f - p) * (1.0f - p);
-                    b.pitch = b.from + (b.to - b.from) * shape;
+                    // The folds: past the threshold they swing up to a size set by the
+                    // pressure; below it they come to rest.
+                    const float mu0 = on ? blow * swell : kRest;
+                    const float mu1 = on && two > 0.0f ? blow * swell * two : kRest;
+                    Side &s0 = b.sides[0], &s1 = b.sides[1];
+                    if (on && s0.size < 1e-3f) s0.size = 1e-3f;
+                    if (mu1 > 0.0f && s1.size < 1e-3f) s1.size = 1e-3f;
+                    s0.size = std::fmax(0.0f, s0.size + dt * kOnset * (mu0 - s0.size * s0.size) * s0.size);
+                    s1.size = std::fmax(0.0f, s1.size + dt * kOnset * (mu1 - s1.size * s1.size) * s1.size);
+                    s0.phase += b.step0;
+                    if (s0.phase >= 1.0f) s0.phase -= 1.0f;
+                    s1.phase += b.step1;
+                    if (s1.phase >= 1.0f) s1.phase -= 1.0f;
+                    if (s0.size < kSilent && s1.size < kSilent && !on) continue;
+                    const float w0 = kTwoPi * s0.phase;
+                    float x;
+                    if (caw) {
+                        // The folds slap shut hard: a buzz of harmonics, every other
+                        // cycle weaker (the croak), and air let through as they open.
+                        const float s = std::sin(w0);
+                        float h = s;
+                        const float harm[5] = {0.5f, 0.4f, 0.3f, 0.22f, 0.15f};
+                        for (int n = 0; n < 5; ++n) {
+                            if (static_cast<float>(n + 2) * b.step0 < 0.45f) h += raspNow * harm[n] * std::sin(static_cast<float>(n + 2) * w0);
+                        }
+                        b.sub += 0.5f * b.step0;
+                        if (b.sub >= 1.0f) b.sub -= 1.0f;
+                        h *= 1.0f + 0.45f * raspNow * std::sin(kTwoPi * b.sub);
+                        x = s0.size * h;
+                        x += s1.size * std::sin(kTwoPi * s1.phase);
+                        x += (0.12f + 0.5f * breath) * (s0.size + s1.size) * rand(b.noise) * (0.6f + 0.4f * s);
+                    } else {
+                        // Rasp: the folds slapping shut, an octave and a touch of noise on top.
+                        x = s0.size * (std::sin(w0) + raspNow * (0.5f * std::sin(2.0f * w0) + 0.25f * std::sin(3.0f * w0)));
+                        x += s1.size * std::sin(kTwoPi * s1.phase);
+                        x += breath * 0.15f * (s0.size + s1.size) * rand(b.noise);
+                    }
+                    // The trachea, the throat and the beak.
+                    const float back = b.trachea[(b.tracheaAt - echo + 32) & 31];
+                    const float y = x + kTracheaEcho * back;
+                    b.trachea[b.tracheaAt] = y;
+                    b.tracheaAt = (b.tracheaAt + 1) & 31;
+                    const float shaped = y * (1.0f - 0.7f * throat) + throat * b.throat.step(y).bp * b.throat.bandNorm();
+                    b.beak += (shaped - b.beak) * b.beakCoef;
+                    const float out = b.beak * gain * volume * farGain;
+                    L[i] += out * pl * v.padLevel;
+                    R[i] += out * pr * v.padLevel;
+                    peak[vi] = std::fmax(peak[vi], std::fabs(out));
                 }
-                ++b.at;
-                if ((retuneClock & (kRetuneEvery - 1)) == 0 || b.retune) {
-                    b.retune = false;
-                    const float hz = noteHz(v.played + base + v.noteBend + b.offset + b.pitch);
-                    // A caw's pitch shakes, the folds never quite settling.
-                    const float shake = caw ? 1.0f + kCawJitter * raspNow * rand(b.seed) : 1.0f;
-                    b.step0 = std::fmin(hz * shake, sampleRate * 0.45f) / sampleRate;
-                    b.step1 = std::fmin(hz * shake * twoRatio, sampleRate * 0.45f) / sampleRate;
-                    if (std::fabs(hz - b.builtHz) > b.builtHz * 0.002f) {
-                        b.builtHz = hz;
-                        // The throat is tuned to the note; the beak opens wider for higher notes.
-                        b.throat.set(hz, 0.3f + 0.6f * throat);
-                    }
-                    const float cutoff = std::fmin(hz * (beakFrom + beakBy * beakOpen) * farDull, sampleRate * 0.45f);
-                    b.beakCoef = 1.0f - std::exp(-kTwoPi * cutoff / sampleRate);
-                }
-                // The folds: past the threshold they swing up to a size set by the
-                // pressure; below it they come to rest.
-                const float mu0 = on ? blow * swell : kRest;
-                const float mu1 = on && two > 0.0f ? blow * swell * two : kRest;
-                Side &s0 = b.sides[0], &s1 = b.sides[1];
-                if (on && s0.size < 1e-3f) s0.size = 1e-3f;
-                if (mu1 > 0.0f && s1.size < 1e-3f) s1.size = 1e-3f;
-                s0.size = std::fmax(0.0f, s0.size + dt * kOnset * (mu0 - s0.size * s0.size) * s0.size);
-                s1.size = std::fmax(0.0f, s1.size + dt * kOnset * (mu1 - s1.size * s1.size) * s1.size);
-                s0.phase += b.step0;
-                if (s0.phase >= 1.0f) s0.phase -= 1.0f;
-                s1.phase += b.step1;
-                if (s1.phase >= 1.0f) s1.phase -= 1.0f;
-                if (s0.size < kSilent && s1.size < kSilent && !on) continue;
-                const float w0 = kTwoPi * s0.phase;
-                float x;
-                if (caw) {
-                    // The folds slap shut hard: a buzz of harmonics, every other
-                    // cycle weaker (the croak), and air let through as they open.
-                    const float s = std::sin(w0);
-                    float h = s;
-                    const float harm[5] = {0.5f, 0.4f, 0.3f, 0.22f, 0.15f};
-                    for (int n = 0; n < 5; ++n) {
-                        if (static_cast<float>(n + 2) * b.step0 < 0.45f) h += raspNow * harm[n] * std::sin(static_cast<float>(n + 2) * w0);
-                    }
-                    b.sub += 0.5f * b.step0;
-                    if (b.sub >= 1.0f) b.sub -= 1.0f;
-                    h *= 1.0f + 0.45f * raspNow * std::sin(kTwoPi * b.sub);
-                    x = s0.size * h;
-                    x += s1.size * std::sin(kTwoPi * s1.phase);
-                    x += (0.12f + 0.5f * breath) * (s0.size + s1.size) * rand(noise) * (0.6f + 0.4f * s);
-                } else {
-                    // Rasp: the folds slapping shut, an octave and a touch of noise on top.
-                    x = s0.size * (std::sin(w0) + raspNow * (0.5f * std::sin(2.0f * w0) + 0.25f * std::sin(3.0f * w0)));
-                    x += s1.size * std::sin(kTwoPi * s1.phase);
-                    x += breath * 0.15f * (s0.size + s1.size) * rand(noise);
-                }
-                // The trachea, the throat and the beak.
-                const float back = b.trachea[(b.tracheaAt - echo + 32) & 31];
-                const float y = x + kTracheaEcho * back;
-                b.trachea[b.tracheaAt] = y;
-                b.tracheaAt = (b.tracheaAt + 1) & 31;
-                const float shaped = y * (1.0f - 0.7f * throat) + throat * b.throat.step(y).bp * b.throat.bandNorm();
-                b.beak += (shaped - b.beak) * b.beakCoef;
-                const float out = b.beak * gain * volume * farGain;
-                L[i] += out * pl * v.padLevel;
-                R[i] += out * pr * v.padLevel;
-                peak[vi] = std::fmax(peak[vi], std::fabs(out));
             }
+            from = to + 1;
         }
     }
+    retuneClock += static_cast<uint32_t>(frames);
 
     for (int vi = 0; vi < kVoices; ++vi) {
         Voice &v = voices[vi];
