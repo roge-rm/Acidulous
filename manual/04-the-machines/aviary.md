@@ -19,11 +19,14 @@ the tempo. Let go and it stops.
 
 - **pattern** - **whistle** (one held note, sliding into it), **chirp**
   (a syllable that sweeps, then a gap), **trill** (fast short syllables),
-  **warble** (wandering about the note), **call** (two notes a third apart,
-  the rest of the flock answering in the gaps), **chorus** (each bird in
-  the flock singing its own song at its own pace), **coo** (three to five
-  slow notes, each lower than the last, the last one held, then a rest) or
-  **caw** (short harsh calls in twos and threes, then a rest).
+  **warble** (phrases of quick falls, rises, slurs, buzzes and short trills,
+  each sung once or a few times, then a pause), **call** (two notes a third
+  apart, the rest of the flock answering in the gaps), **chorus** (different
+  birds near and far, each with its own song, pitch and pace, mostly taking
+  turns), **coo** (three to five slow notes, each lower than the last, the
+  last one held, then a rest) or **caw** (short harsh calls in twos and
+  threes, then a rest; a flock of them calls at its own times, from near and
+  far).
 - **tune** - in cents.
 - **rate** - syllables a beat: **1**, **2**, **4**, **8** or **16**.
 - **length** - how much of each syllable's slot is sung.

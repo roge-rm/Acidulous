@@ -34,6 +34,20 @@ constexpr float kWhistleGlide = 0.035f;
 constexpr float kCooIn = 0.25f, kCooOut = 0.4f, kCawIn = 0.04f, kCawOut = 0.25f;
 /** A caw's pitch shakes by this much, as a part of the note, at full rasp. */
 constexpr float kCawJitter = 0.025f;
+/** A warble's syllable shapes: a fast fall, a fast rise, an arch, a short
+ *  held note, a trill (one quick fall, sung many times), a buzz and a slur
+ *  from one pitch to another. */
+enum WarbleShape { Fall = 0, Rise, Arch, Note, TrillNote, Buzz, Slur, ShapeCount };
+/** Each shape's length in syllable units: a trill note is short, a buzz long. */
+constexpr float kShapeLength[ShapeCount] = {0.6f, 0.6f, 1.0f, 1.2f, 0.3f, 1.5f, 0.9f};
+/** A buzz's pitch shakes this far, semitones, many times a second. */
+constexpr float kBuzzDepth = 0.7f;
+/** How much quieter and duller the furthest bird of a flock is. */
+constexpr float kFarLevel = 0.65f, kFarDull = 0.6f;
+/** A warble's syllables are short and swell in and out, so they're sung this much louder to sit with the other songs. */
+constexpr float kWarbleLift = 1.4f;
+/** A chorus's birds mostly take turns rather than sing over each other, so each is this much louder. */
+constexpr float kChorusLift = 1.6f;
 
 } // namespace
 
@@ -247,6 +261,11 @@ void Aviary::reset() {
             b.easeOut = false;
             b.phraseAt = b.phraseLen = 0;
             b.sub = 0.0f;
+            b.far = 0.0f;
+            b.shape = b.motifLeft = b.curve = 0;
+            b.centre = b.depth = b.buzz = 0.0f;
+            b.motifLen = b.loud = 1.0f;
+            b.inPhrase = b.shy = false;
         }
         v.used = v.held = false;
         v.noteBend = 0.0f;
@@ -302,15 +321,35 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
         b.to = 0.0f;
         break;
     case Trill:
+        if (b.shy) {
+            // In a chorus: a trill of eight to twenty notes, then a long pause.
+            if (first || b.phraseLen == 0) {
+                b.phraseLen = first && index > 0 ? 0 : 8 + static_cast<int>(rand01(b.seed) * 12.0f);
+                b.phraseAt = 0;
+            }
+            if (b.phraseAt >= b.phraseLen) {
+                b.singing = false;
+                b.inPhrase = false;
+                b.slot = first ? static_cast<int32_t>(beat * (0.5f + 3.0f * rand01(b.seed)))
+                               : flockPause(v, b, index, beat, 2.0f, 7.0f);
+                b.from = b.to = b.pitch;
+                b.phraseLen = 0;
+                break;
+            }
+            b.inPhrase = true;
+            ++b.phraseAt;
+            b.slot = std::max(static_cast<int32_t>(0.03f * sampleRate), static_cast<int32_t>(beat / (perBeat * 2.0f) * b.drift));
+            b.from = sweep * 0.3f;
+            b.to = 0.0f;
+            break;
+        }
         b.slot = std::max(static_cast<int32_t>(0.015f * sampleRate), static_cast<int32_t>(beat / (perBeat * 4.0f) * b.drift));
         b.from = sweep * 0.3f;
         b.to = 0.0f;
         break;
     case Warble:
-        // Wandering: each syllable heads for somewhere new near the note.
-        b.slot = static_cast<int32_t>(beat / perBeat * b.drift);
-        b.from = b.pitch;
-        b.to = rand(b.seed) * std::fabs(sweep) * 0.5f;
+        nextWarble(v, b, index, beat / perBeat * b.drift, sweep, first);
+        if (b.singing) b.singing = v.held;
         break;
     case Call: {
         // Two notes, the second a third lower; the rest of the flock answers in the gaps.
@@ -338,9 +377,11 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
         const int32_t unit = static_cast<int32_t>(beat / perBeat * 2.0f * b.drift);
         if (first) b.phraseAt = b.phraseLen = 0;
         if (index > 0 && first) {
-            // The rest of the flock comes in a phrase later, one after another.
+            // The rest of the flock comes in a phrase later, one after another;
+            // a flock of caws comes in when it likes.
             b.singing = false;
-            b.slot = unit * (coo ? 3 : 2) * index;
+            b.slot = b.shy ? static_cast<int32_t>(unit * (1.0f + 5.0f * rand01(b.seed)))
+                           : unit * (coo ? 3 : 2) * index;
             b.from = b.to = b.pitch;
             b.arch = 0.0f;
             break;
@@ -348,14 +389,16 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
         if (b.phraseLen == 0) {
             b.phraseLen = coo ? 3 + static_cast<int>((rand(b.seed) + 1.0f) * 1.5f) % 3
                               : 2 + static_cast<int>((rand(b.seed) + 1.0f)) % 2;
+            // A rook in a flock calls once to four times.
+            if (b.shy) b.phraseLen = 1 + static_cast<int>(rand01(b.seed) * 4.0f) % 4;
         }
         const int k = b.phraseAt++;
         b.arch = 0.0f;
         b.easeOut = false;
         if (k >= b.phraseLen) {
-            // The rest between phrases.
+            // The rest between phrases; in a flock each bird's is its own.
             b.singing = false;
-            b.slot = unit * (coo ? 2 : 3);
+            b.slot = b.shy ? flockPause(v, b, index, unit / 2.0f, 3.0f, 12.0f) : unit * (coo ? 2 : 3);
             b.from = b.to = b.pitch;
             b.phraseAt = b.phraseLen = 0;
             break;
@@ -375,7 +418,8 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
             }
         } else {
             const float level = -0.5f * static_cast<float>(k);
-            b.slot = unit;
+            // A caw in a flock comes when it likes, not on the beat.
+            b.slot = b.shy ? static_cast<int32_t>(static_cast<float>(unit) * (0.8f + 0.5f * rand01(b.seed))) : unit;
             b.sung = static_cast<float>(b.slot) * (0.35f + 0.5f * length);
             b.from = level;
             b.to = level - 0.5f * sweep;
@@ -384,6 +428,28 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
         break;
     }
     default: // Chirp
+        if (b.shy) {
+            // In a chorus: two to six chips, then a pause.
+            if (first || b.phraseLen == 0) {
+                b.phraseLen = first && index > 0 ? 0 : 2 + static_cast<int>(rand01(b.seed) * 5.0f);
+                b.phraseAt = 0;
+            }
+            if (b.phraseAt >= b.phraseLen) {
+                b.singing = false;
+                b.inPhrase = false;
+                b.slot = first ? static_cast<int32_t>(beat * (0.5f + 3.0f * rand01(b.seed)))
+                               : flockPause(v, b, index, beat, 1.5f, 5.0f);
+                b.from = b.to = b.pitch;
+                b.phraseLen = 0;
+                break;
+            }
+            b.inPhrase = true;
+            ++b.phraseAt;
+            b.slot = static_cast<int32_t>(beat / perBeat * 2.0f * b.drift * (0.8f + 0.5f * rand01(b.seed)));
+            b.from = sweep * (0.7f + 0.5f * rand01(b.seed));
+            b.to = 0.0f;
+            break;
+        }
         b.slot = static_cast<int32_t>(beat / perBeat * b.drift);
         b.from = sweep;
         b.to = 0.0f;
@@ -391,6 +457,88 @@ void Aviary::nextSyllable(Voice &v, Bird &b, int index) {
     }
     b.slot = std::max(b.slot, 16);
     b.at = 0;
+}
+
+int32_t Aviary::flockPause(const Voice &v, Bird &b, int index, float beat, float least, float most) {
+    float pause = beat * (least + (most - least) * rand01(b.seed));
+    // Birds mostly take turns: if another is mid-phrase, wait a little longer.
+    for (int j = 0; j < v.birdCount; ++j) {
+        if (j != index && v.birds[j].inPhrase && v.birds[j].singing) {
+            pause += beat * (0.5f + 1.5f * rand01(b.seed));
+            break;
+        }
+    }
+    return static_cast<int32_t>(pause);
+}
+
+void Aviary::nextWarble(Voice &v, Bird &b, int index, float unit, float sweep, bool first) {
+    const float length = clampf(goalOf(Length), 0.05f, 1.0f);
+    const float width = std::fmax(std::fabs(sweep), 1.0f);
+    b.buzz = 0.0f;
+    b.arch = 0.0f;
+    if (first) {
+        b.inPhrase = false;
+        b.phraseLen = b.motifLeft = 0;
+        if (index > 0) {
+            // The rest of the flock comes in when it likes.
+            b.singing = false;
+            b.slot = static_cast<int32_t>(unit * (2.0f + 10.0f * rand01(b.seed)));
+            b.from = b.to = b.pitch;
+            return;
+        }
+    }
+    if (b.inPhrase && b.motifLeft <= 0 && b.phraseLen <= 0) {
+        // The phrase is over: a pause, longer for a shorter length, and longer in a flock.
+        b.inPhrase = false;
+        b.singing = false;
+        const float pause = unit * (2.0f + 16.0f * (1.0f - length)) * (0.5f + rand01(b.seed));
+        b.slot = b.shy ? std::max(static_cast<int32_t>(pause), flockPause(v, b, index, 60.0f / bpm * sampleRate, 1.5f, 5.0f))
+                       : static_cast<int32_t>(pause);
+        b.from = b.to = b.pitch;
+        return;
+    }
+    if (!b.inPhrase) {
+        // A phrase of three to seven motifs.
+        b.inPhrase = true;
+        b.phraseLen = 3 + static_cast<int>(rand01(b.seed) * 5.0f);
+        b.motifLeft = 0;
+    }
+    if (b.motifLeft <= 0) {
+        // A new motif: a shape, where it sits and how deep, sung once or a few times.
+        b.shape = static_cast<int>(rand01(b.seed) * static_cast<float>(ShapeCount)) % ShapeCount;
+        // A slur leaves from where the last motif was; anything else jumps.
+        const float last = b.centre;
+        b.centre = width * 0.8f * rand(b.seed);
+        b.depth = width * (0.6f + 0.9f * rand01(b.seed));
+        b.motifLeft = b.shape == TrillNote ? 4 + static_cast<int>(rand01(b.seed) * 7.0f)
+                    : b.shape == Buzz || b.shape == Slur ? 1
+                    : 1 + static_cast<int>(rand01(b.seed) * 3.0f);
+        b.motifLen = kShapeLength[b.shape] * (0.7f + 0.6f * rand01(b.seed));
+        b.loud = 0.7f + 0.3f * rand01(b.seed);
+        if (b.shape == Slur) b.depth = last - b.centre;
+        if (b.shape == Buzz) b.buzz = 35.0f + 35.0f * rand01(b.seed);
+        --b.phraseLen;
+    }
+    --b.motifLeft;
+    if (b.shape == Buzz) b.buzz = std::fmax(b.buzz, 35.0f);
+    const float c = b.centre, d = b.depth;
+    switch (b.shape) {
+    case Fall: b.from = c + d; b.to = c - 0.3f * d; b.curve = 1; break;
+    case Rise: b.from = c - d; b.to = c + 0.3f * d; b.curve = 2; break;
+    case Arch: b.from = c - 0.4f * d; b.to = c - 0.6f * d; b.arch = d; b.curve = 0; break;
+    case Note: b.from = c + 0.15f; b.to = c - 0.25f; b.curve = 0; break;
+    case TrillNote: b.from = c + 0.5f * d; b.to = c - 0.2f * d; b.curve = 1; break;
+    case Buzz: b.from = c; b.to = c - 0.3f; b.curve = 0; break;
+    default: b.from = c + d; b.to = c; b.curve = 3; break; // Slur: from the last motif's pitch
+    }
+    b.singing = true;
+    const float jitter = 0.9f + 0.2f * rand01(b.seed);
+    // Syllables are quick; the rate sets them and the gaps between motifs together.
+    b.slot = static_cast<int32_t>(0.6f * unit * b.motifLen * jitter);
+    // Sung for most of the slot, with a gap after; a trill's notes are spaced evenly.
+    b.sung = static_cast<float>(b.slot) * (b.shape == TrillNote ? 0.6f : 0.5f + 0.35f * length);
+    // A longer gap after the last of a motif.
+    if (b.motifLeft == 0) b.slot += static_cast<int32_t>(unit * (0.2f + 0.6f * rand01(b.seed)));
 }
 
 void Aviary::noteOn(uint8_t note, uint8_t velocity) {
@@ -411,19 +559,43 @@ void Aviary::noteOn(uint8_t note, uint8_t velocity) {
     v->padLevel = kit ? clampf(targetOf(padParam(pad, PadLevel)), 0.0f, 1.0f) / 0.75f : 1.0f;
     updateMacroGoals(); // a note reads where the knobs are going, so renders repeat
     const float spread = clampf(goalOf(Spread), 0.0f, 1.0f);
+    // A chorus: different birds, each in its own register. Which comes first,
+    // and so which register each takes, is the voice's own.
+    uint32_t chorusSeed = 0x2545f491u + note * 7919u + clock * 104729u;
+    const int firstKind = static_cast<int>(rand01(chorusSeed) * 3.0f) % 3;
+    const bool flockOfCaws = song == Caw && v->birdCount > 1;
+    v->chorus = song == Chorus;
     for (int i = 0; i < v->birdCount; ++i) {
         Bird &b = v->birds[i];
         b.seed = 0x9e3779b9u * static_cast<uint32_t>(i + 1) + note * 7919u + clock * 104729u;
-        // A chorus: each bird its own song, pitch and pace.
+        b.far = 0.0f;
+        b.shy = false;
+        b.inPhrase = false;
+        b.centre = 0.0f;
+        b.motifLeft = 0;
         if (song == Chorus) {
-            const int songs[3] = {Chirp, Trill, Warble};
-            b.song = songs[static_cast<int>((rand(b.seed) + 1.0f) * 1.5f) % 3];
-            b.offset = std::round(rand(b.seed) * 5.0f);
-            b.drift = 1.0f + 0.25f * rand(b.seed);
+            // A songbird, a bird that chips and one that trills, then another
+            // songbird; each with its own pace and distance, in its own register
+            // and not in tune with the others. They sing in phrases with pauses.
+            const int songs[3] = {Warble, Chirp, Trill};
+            const float registers[4] = {0.0f, 5.0f, -4.0f, 9.0f};
+            b.song = songs[(firstKind + i) % 3];
+            b.offset = registers[(firstKind + i) % 4] + 1.2f * rand(b.seed);
+            b.drift = 0.75f + 0.6f * rand01(b.seed);
+            b.far = i == 0 ? 0.15f * rand01(b.seed) : 0.25f + 0.65f * rand01(b.seed);
+            b.shy = true;
+        } else if (flockOfCaws) {
+            // A flock of caws: each bird at its own pitch, pace and distance.
+            b.song = song;
+            b.offset = i == 0 ? 0.0f : 4.0f * rand(b.seed);
+            b.drift = i == 0 ? 1.0f : 1.0f + 0.15f * rand(b.seed);
+            b.far = i == 0 ? 0.0f : 0.2f + 0.7f * rand01(b.seed);
+            b.shy = true;
         } else {
             b.song = song;
             b.offset = i == 0 ? 0.0f : std::round(rand(b.seed) * 3.0f);
             b.drift = i == 0 ? 1.0f : 1.0f + 0.06f * rand(b.seed);
+            b.shy = song == Warble && v->birdCount > 1;
         }
         b.pan = v->birdCount > 1 ? spread * (-1.0f + 2.0f * static_cast<float>(i) / static_cast<float>(v->birdCount - 1)) : 0.0f;
         if (fresh || !b.singing) {
@@ -520,12 +692,15 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
             // A coo is sung with the beak shut and little rasp; a caw is forced harsh.
             const float raspNow = caw ? 0.6f + 0.4f * rasp : coo ? 0.3f * rasp : rasp;
             const float beakFrom = caw ? 3.0f : coo ? 1.0f : 1.5f, beakBy = caw ? 5.0f : coo ? 2.0f : 4.0f;
+            const bool warble = b.song == Warble;
+            // A far bird is quieter and has lost its top.
+            const float farGain = (1.0f - kFarLevel * b.far) * (v.chorus ? kChorusLift : 1.0f) * (warble ? kWarbleLift : 1.0f), farDull = 1.0f - kFarDull * b.far;
             float step0 = 0.0f, step1 = 0.0f, beakCoef = 0.5f;
             for (int32_t i = 0; i < frames; ++i) {
                 if (b.at >= b.slot) nextSyllable(v, b, bi);
                 const float active = b.song == Whistle ? static_cast<float>(b.slot)
-                                     : (coo || caw) ? b.sung
-                                                    : length * static_cast<float>(b.slot);
+                                     : (coo || caw || warble) ? b.sung
+                                                              : length * static_cast<float>(b.slot);
                 const bool on = v.held && b.singing && static_cast<float>(b.at) < active;
                 // How hard it blows, as a part of [blow]: a coo swells in and out, a caw bursts.
                 float swell = 1.0f;
@@ -541,9 +716,21 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
                         // The folds' size goes as the root of the pressure, so a coo's is squared to swell evenly.
                         if (coo) swell = std::fmax(0.04f, swell * swell);
                     }
+                } else if (warble) {
+                    if (on) {
+                        // A bird-shaped syllable: its curve, an arch, a buzz; a quick swell in and out.
+                        const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
+                        const float shape = b.curve == 1 ? 1.0f - (1.0f - p) * (1.0f - p)
+                                            : b.curve == 2 ? p * p
+                                            : b.curve == 3 ? p * p * (3.0f - 2.0f * p)
+                                                           : p;
+                        b.pitch = b.from + (b.to - b.from) * shape + b.arch * 4.0f * p * (1.0f - p);
+                        if (b.buzz > 0.0f) b.pitch += kBuzzDepth * std::sin(kTwoPi * b.buzz * static_cast<float>(b.at) * dt);
+                        swell = b.loud * std::fmax(0.04f, std::fmin(1.0f, p / 0.08f) * std::fmin(1.0f, (1.0f - p) / 0.2f));
+                    }
                 } else if (on) {
                     const float p = static_cast<float>(b.at) / std::fmax(active, 1.0f);
-                    const float shape = b.song == Warble ? p : 1.0f - (1.0f - p) * (1.0f - p);
+                    const float shape = 1.0f - (1.0f - p) * (1.0f - p);
                     b.pitch = b.from + (b.to - b.from) * shape;
                 }
                 ++b.at;
@@ -558,7 +745,7 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
                         // The throat is tuned to the note; the beak opens wider for higher notes.
                         b.throat.set(hz, 0.3f + 0.6f * throat);
                     }
-                    const float cutoff = std::fmin(hz * (beakFrom + beakBy * beakOpen), sampleRate * 0.45f);
+                    const float cutoff = std::fmin(hz * (beakFrom + beakBy * beakOpen) * farDull, sampleRate * 0.45f);
                     beakCoef = 1.0f - std::exp(-kTwoPi * cutoff / sampleRate);
                 }
                 // The folds: past the threshold they swing up to a size set by the
@@ -605,7 +792,7 @@ bool Aviary::render(float *L, float *R, int32_t frames) {
                 b.tracheaAt = (b.tracheaAt + 1) & 31;
                 const float shaped = y * (1.0f - 0.7f * throat) + throat * b.throat.step(y).bp * b.throat.bandNorm();
                 b.beak += (shaped - b.beak) * beakCoef;
-                const float out = b.beak * gain * volume;
+                const float out = b.beak * gain * volume * farGain;
                 L[i] += out * pl * v.padLevel;
                 R[i] += out * pr * v.padLevel;
                 peak = std::fmax(peak, std::fabs(out));

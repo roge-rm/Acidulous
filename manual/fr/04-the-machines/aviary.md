@@ -20,13 +20,16 @@ mesure. Lâchez-la et il s’arrête.
 
 - **motif** : **sifflement** (une note tenue, rejointe en glissant),
   **gazouillis** (une syllabe qui glisse, puis un silence), **trille** (des
-  syllabes brèves et rapides), **babil** (qui erre autour de la note),
-  **appel** (deux notes à la tierce, le reste de la volée répondant dans
-  les silences), **chœur** (chaque oiseau de la volée chante son propre
-  chant à son propre rythme), **roucoulement** (trois à cinq notes lentes,
-  chacune plus basse que la précédente, la dernière tenue, puis un silence)
-  ou **croassement** (des cris brefs et âpres par deux ou trois, puis un
-  silence).
+  syllabes brèves et rapides), **babil** (des phrases de chutes, de montées,
+  de liaisons, de bourdonnements et de courts trilles, chacun chanté une ou
+  quelques fois, puis une pause), **appel** (deux notes à la tierce, le reste
+  de la volée répondant dans les silences), **chœur** (des oiseaux
+  différents, proches ou lointains, chacun avec son chant, sa hauteur et son
+  rythme, qui chantent surtout chacun leur tour), **roucoulement** (trois à
+  cinq notes lentes, chacune plus basse que la précédente, la dernière tenue,
+  puis un silence) ou **croassement** (des cris brefs et âpres par deux ou
+  trois, puis un silence; une volée crie chacun à son heure, de près et de
+  loin).
 - **accordage** : en cents.
 - **vitesse** : syllabes par temps : **1**, **2**, **4**, **8** ou **16**.
 - **longueur** : la part de chaque syllabe qui est chantée.

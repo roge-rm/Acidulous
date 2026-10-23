@@ -17,8 +17,8 @@ namespace acidulous::machine {
  *
  * A held note sets a bird singing a song pattern around that pitch, two
  * octaves up, in time with the tempo: a plain whistle, chirps sweeping down
- * or up, fast trills, a wandering warble, a two-note call answered by
- * another bird, a dawn chorus of several birds each doing its own thing,
+ * or up, fast trills, a warbled song in phrases, a two-note call answered by
+ * another bird, a dawn chorus of different birds mostly taking turns,
  * slow falling coos, or harsh caws in twos and threes.
  */
 class Aviary final : public Machine {
@@ -107,6 +107,17 @@ class Aviary final : public Machine {
         float sub = 0.0f;
         /** A rate a little off the others', for a chorus. */
         float drift = 1.0f;
+        /** How far off it sits, 0 near to 1 far: quieter and duller. Flock birds only. */
+        float far = 0.0f;
+        /** A warble: the motif's shape (a WarbleShape), its centre and depth
+         *  (semitones), its length in syllable units, how many more times it's
+         *  sung, the pitch curve (0 linear, 1 easing out, 2 easing in, 3 both),
+         *  a buzz's rate (Hz, 0 for none) and the syllable's loudness. */
+        int shape = 0, motifLeft = 0, curve = 0;
+        float centre = 0.0f, depth = 0.0f, motifLen = 1.0f, buzz = 0.0f, loud = 1.0f;
+        /** Singing a phrase (rather than resting between them), and singing
+         *  them in a flock, so it waits for the others' phrases to end. */
+        bool inPhrase = false, shy = false;
         /** The throat and beak, and the trachea's echo. */
         dsp::Svf throat;
         float beak = 0.0f;
@@ -118,6 +129,8 @@ class Aviary final : public Machine {
         Bird birds[kBirds];
         int birdCount = 1;
         bool used = false, held = false;
+        /** Singing the chorus pattern. */
+        bool chorus = false;
         uint8_t note = 0;
         /** The pitch it sings around (the note, or its pad's), and its pad's level. */
         float played = 60.0f, padLevel = 1.0f;
@@ -141,6 +154,11 @@ class Aviary final : public Machine {
     Voice *voiceFor(uint8_t note);
     /** Starts a bird's next syllable. */
     void nextSyllable(Voice &v, Bird &b, int index);
+    /** A warble's next syllable: bird-shaped motifs, each sung a few times, in phrases with pauses. */
+    void nextWarble(Voice &v, Bird &b, int index, float unit, float sweep, bool first);
+    /** The pause after a flock bird's phrase, samples; longer if another is still singing. */
+    int32_t flockPause(const Voice &v, Bird &b, int index, float beat, float least, float most);
+    static float rand01(uint32_t &s) { return 0.5f * (rand(s) + 1.0f); }
     static float rand(uint32_t &s) {
         s = s * 1664525u + 1013904223u;
         return static_cast<float>(s >> 8) * (2.0f / 16777216.0f) - 1.0f;

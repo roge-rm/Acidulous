@@ -11566,131 +11566,294 @@ internal object FactoryBanks {
         low = 48, high = 72)
 
     private fun aviary1() = Patch("Aviary", "Pure Whistle",
-        mapOf("pattern" to 0f, "sweep" to 0.5833333f),
+        mapOf("pattern" to 0f, "sweep" to 0.5833333f, "mac1_d1" to 0.15384616f, "mac1_a1" to 0.575f, "mac2_d1" to 0.461538464f, "mac2_a1" to 0.675f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.675f, "mac4_d1" to 0.615384638f, "mac4_a1" to 0.675f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.307692319f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.8f, "mac6_a2" to 0.4055f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.63f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.639f),
+        mapOf("macro1" to "Slide", "macro2" to "Air", "macro3" to "Hollow", "macro4" to "Open", "macro5" to "Rasp", "macro6" to "Duet", "macro7" to "Far", "macro8" to "Low"),
         family = "whistle",
         low = 48, high = 72)
 
     private fun aviary2() = Patch("Aviary", "Two-Voiced Whistle",
-        mapOf("pattern" to 0f, "sweep" to 0.5625f, "two" to 0.8f),
+        mapOf("pattern" to 0f, "sweep" to 0.5625f, "two" to 0.8f, "mac1_d1" to 0.15384616f, "mac1_a1" to 0.575f, "mac2_d1" to 0.461538464f, "mac2_a1" to 0.675f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.675f, "mac4_d1" to 0.615384638f, "mac4_a1" to 0.675f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.307692319f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.199999988f, "mac6_a2" to 0.603f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.638f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Slide", "macro2" to "Air", "macro3" to "Hollow", "macro4" to "Open", "macro5" to "Rasp", "macro6" to "Solo", "macro7" to "Far", "macro8" to "Low"),
         family = "whistle",
         low = 48, high = 72)
 
     private fun aviary3() = Patch("Aviary", "Slow Whistle",
-        mapOf("pattern" to 0f, "sweep" to 0.75f, "breath" to 0.3f),
+        mapOf("pattern" to 0f, "sweep" to 0.75f, "breath" to 0.3f, "mac1_d1" to 0.15384616f, "mac1_a1" to 0.575f, "mac2_d1" to 0.461538464f, "mac2_a1" to 0.675f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.675f, "mac4_d1" to 0.615384638f, "mac4_a1" to 0.675f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.307692319f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.8f, "mac6_a2" to 0.4235f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.624f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.581f),
+        mapOf("macro1" to "Slide", "macro2" to "Air", "macro3" to "Hollow", "macro4" to "Open", "macro5" to "Rasp", "macro6" to "Duet", "macro7" to "Far", "macro8" to "Low"),
         family = "whistle",
         low = 43, high = 67)
 
     private fun aviary4() = Patch("Aviary", "Ringing Whistle",
-        mapOf("pattern" to 0f, "sweep" to 0.5416667f, "throat" to 0.9f, "beak" to 0.3f),
+        mapOf("pattern" to 0f, "sweep" to 0.5416667f, "throat" to 0.9f, "beak" to 0.3f, "mac1_d1" to 0.15384616f, "mac1_a1" to 0.575f, "mac2_d1" to 0.461538464f, "mac2_a1" to 0.675f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.325f, "mac4_d1" to 0.615384638f, "mac4_a1" to 0.675f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.8f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.633f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Slide", "macro2" to "Air", "macro3" to "Thin", "macro4" to "Open", "macro5" to "Rasp", "macro6" to "Duet", "macro7" to "Far", "macro8" to "Low"),
         family = "whistle",
         low = 48, high = 74)
 
-    private fun aviary5() = Patch("Aviary", "Down Chirps",
-        mapOf("length" to 0.368421048f, "sweep" to 0.6875f),
+    private fun aviary5() = Patch("Aviary", "Dove Coo",
+        mapOf("pattern" to 0.857142866f, "rate" to 0.25f, "length" to 0.684210539f, "sweep" to 0.6041667f, "breath" to 0.15f, "throat" to 0.7f, "beak" to 0.35f, "space" to 0.25f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.658f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.65f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.8f, "mac7_d1" to 0.7692308f, "mac7_a1" to 0.6105f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3735f),
+        mapOf("macro1" to "Longer", "macro2" to "Fall", "macro3" to "Hollow", "macro4" to "Air", "macro5" to "Rasp", "macro6" to "Duet", "macro7" to "Far", "macro8" to "High"),
+        family = "whistle",
+        low = 43, high = 62)
+
+    private fun aviary6() = Patch("Aviary", "Wood Pigeon",
+        mapOf("pattern" to 0.857142866f, "rate" to 0.25f, "length" to 0.842105269f, "sweep" to 0.5833333f, "rasp" to 0.2f, "breath" to 0.25f, "throat" to 0.8f, "beak" to 0.25f, "octave" to 0.25f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.3f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.325f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.8f, "mac7_d1" to 0.7692308f, "mac7_a1" to 0.6165f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Shorter", "macro2" to "Fall", "macro3" to "Thin", "macro4" to "Air", "macro5" to "Rasp", "macro6" to "Duet", "macro7" to "Far", "macro8" to "High"),
+        family = "whistle",
+        low = 45, high = 62)
+
+    private fun aviary7() = Patch("Aviary", "Owl Hoots",
+        mapOf("pattern" to 0.857142866f, "rate" to 0f, "length" to 0.8947368f, "sweep" to 0.5625f, "rasp" to 0f, "breath" to 0.35f, "throat" to 0.85f, "beak" to 0.2f, "space" to 0.35f, "octave" to 0.25f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.3f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.538461566f, "mac3_a1" to 0.325f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.230769232f, "mac5_a1" to 0.7f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.8f, "mac7_d1" to 0.7692308f, "mac7_a1" to 0.6045f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Shorter", "macro2" to "Fall", "macro3" to "Thin", "macro4" to "Air", "macro5" to "Rasp", "macro6" to "Duet", "macro7" to "Far", "macro8" to "High"),
+        family = "whistle",
+        low = 43, high = 60)
+
+    private fun aviary8() = Patch("Aviary", "Down Chirps",
+        mapOf("length" to 0.368421048f, "sweep" to 0.6875f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.395f, "mac2_d1" to 0.15384616f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.575f, "mac2_a2" to 0.4425f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4145f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.636000037f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "chirp",
         low = 48, high = 72)
 
-    private fun aviary6() = Patch("Aviary", "Up Chirps",
-        mapOf("length" to 0.368421048f, "sweep" to 0.3125f),
+    private fun aviary9() = Patch("Aviary", "Up Chirps",
+        mapOf("length" to 0.368421048f, "sweep" to 0.3125f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4075f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.425f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.414f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6275f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.616f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "chirp",
         low = 48, high = 72)
 
-    private fun aviary7() = Patch("Aviary", "Sparrow Chips",
-        mapOf("rate" to 0.75f, "length" to 0.2631579f, "sweep" to 0.6041667f, "rasp" to 0.5f),
+    private fun aviary10() = Patch("Aviary", "Sparrow Chips",
+        mapOf("rate" to 0.75f, "length" to 0.2631579f, "sweep" to 0.6041667f, "rasp" to 0.5f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.359f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4275f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6405f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "chirp",
         low = 52, high = 76)
 
-    private fun aviary8() = Patch("Aviary", "Swooping Chirps",
-        mapOf("rate" to 0.25f, "length" to 0.7894737f, "sweep" to 0.7916667f),
+    private fun aviary11() = Patch("Aviary", "Swooping Chirps",
+        mapOf("rate" to 0.25f, "length" to 0.7894737f, "sweep" to 0.7916667f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.631f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.424f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.639f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Shorter", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "chirp",
         low = 45, high = 69)
 
-    private fun aviary9() = Patch("Aviary", "Fast Trill",
-        mapOf("pattern" to 0.2857143f, "length" to 0.578947365f, "sweep" to 0.5625f),
+    private fun aviary12() = Patch("Aviary", "Parakeet Chatter",
+        mapOf("rate" to 0.75f, "sweep" to 0.625f, "rasp" to 0.45f, "two" to 0.5f, "interval" to 0.625f, "breath" to 0.15f, "beak" to 0.8f, "volume" to 0.645f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.401f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4365f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.325f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6285f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6775f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Closed", "macro7" to "Far", "macro8" to "Low"),
+        family = "chirp",
+        low = 50, high = 74)
+
+    private fun aviary13() = Patch("Aviary", "Plover Peeps",
+        mapOf("rate" to 0.25f, "length" to 0.315789461f, "sweep" to 0.395833343f, "breath" to 0.15f, "throat" to 0.75f, "beak" to 0.55f, "space" to 0.3f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.361f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.425f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4115f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_a1" to 0.598f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.245999992f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "High"),
+        family = "chirp",
+        low = 48, high = 72)
+
+    private fun aviary14() = Patch("Aviary", "Fast Trill",
+        mapOf("pattern" to 0.2857143f, "length" to 0.578947365f, "sweep" to 0.5625f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.3835f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4205f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6375f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "trill",
         low = 52, high = 76)
 
-    private fun aviary10() = Patch("Aviary", "Rattling Trill",
-        mapOf("pattern" to 0.2857143f, "rate" to 0.75f, "sweep" to 0.5416667f, "rasp" to 0.6f),
+    private fun aviary15() = Patch("Aviary", "Rattling Trill",
+        mapOf("pattern" to 0.2857143f, "rate" to 0.75f, "sweep" to 0.5416667f, "rasp" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.3265f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.8f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6345f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "trill",
         low = 48, high = 72)
 
-    private fun aviary11() = Patch("Aviary", "Slow Trill",
-        mapOf("pattern" to 0.2857143f, "rate" to 0.25f, "length" to 0.684210539f, "sweep" to 0.6041667f),
+    private fun aviary16() = Patch("Aviary", "Slow Trill",
+        mapOf("pattern" to 0.2857143f, "rate" to 0.25f, "length" to 0.684210539f, "sweep" to 0.6041667f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.658f, "mac1_a2" to 0.4275f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4095f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6305f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6455f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "trill",
         low = 48, high = 72)
 
-    private fun aviary12() = Patch("Aviary", "Two-Note Trill",
-        mapOf("pattern" to 0.2857143f, "two" to 0.7f, "interval" to 0.7083333f),
+    private fun aviary17() = Patch("Aviary", "Two-Note Trill",
+        mapOf("pattern" to 0.2857143f, "two" to 0.7f, "interval" to 0.7083333f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.360499978f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.199999988f, "mac4_a2" to 0.6195f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.639f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Solo", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "trill",
         low = 48, high = 74)
 
-    private fun aviary13() = Patch("Aviary", "Warbler",
-        mapOf("pattern" to 0.428571433f, "length" to 1f, "sweep" to 0.6875f),
+    private fun aviary18() = Patch("Aviary", "Nightjar Churr",
+        mapOf("pattern" to 0.2857143f, "rate" to 1f, "length" to 0.7368421f, "sweep" to 0.5208333f, "rasp" to 0.45f, "breath" to 0.25f, "throat" to 0.6f, "beak" to 0.45f, "space" to 0.25f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.6315f, "mac1_a2" to 0.3845f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.8f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_a1" to 0.6085f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3315f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "High"),
+        family = "trill",
+        low = 43, high = 62)
+
+    private fun aviary19() = Patch("Aviary", "Wren Trill",
+        mapOf("pattern" to 0.2857143f, "rate" to 0.75f, "length" to 0.5263158f, "sweep" to 0.5833333f, "throat" to 0.4f, "beak" to 0.85f, "volume" to 0.72f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.342f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.8f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.325f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.64f, "mac8_d1" to 0.538461566f, "mac8_a1" to 0.675f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Closed", "macro7" to "Far", "macro8" to "Hollow"),
+        family = "trill",
+        low = 60, high = 76)
+
+    private fun aviary20() = Patch("Aviary", "Reed Bed Trill",
+        mapOf("pattern" to 0.2857143f, "length" to 0.578947365f, "sweep" to 0.5625f, "rasp" to 0.35f, "two" to 0.4f, "interval" to 0.291666657f, "breath" to 0.2f, "space" to 0.25f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.3195f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.8f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_a1" to 0.604f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.255999982f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "High"),
+        family = "trill",
+        low = 48, high = 69)
+
+    private fun aviary21() = Patch("Aviary", "Warbler",
+        mapOf("pattern" to 0.428571433f, "length" to 1f, "sweep" to 0.6875f, "volume" to 0.733f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6105f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.401f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6335f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Shorter", "macro2" to "Wander", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "warble",
         low = 48, high = 72)
 
-    private fun aviary14() = Patch("Aviary", "Quick Warbler",
-        mapOf("pattern" to 0.428571433f, "rate" to 0.75f, "length" to 1f, "beak" to 0.7f),
+    private fun aviary22() = Patch("Aviary", "Quick Warbler",
+        mapOf("pattern" to 0.428571433f, "rate" to 0.75f, "length" to 1f, "beak" to 0.7f, "volume" to 0.891f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.626f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.417f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.65f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6405f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.268f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Shorter", "macro2" to "Wander", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "warble",
         low = 52, high = 76)
 
-    private fun aviary15() = Patch("Aviary", "Raspy Warbler",
-        mapOf("pattern" to 0.428571433f, "length" to 0.8947368f, "sweep" to 0.75f, "rasp" to 0.5f),
+    private fun aviary23() = Patch("Aviary", "Raspy Warbler",
+        mapOf("pattern" to 0.428571433f, "length" to 0.8947368f, "sweep" to 0.75f, "rasp" to 0.5f, "volume" to 0.669f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.62f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4125f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.633f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6455f),
+        mapOf("macro1" to "Shorter", "macro2" to "Wander", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "warble",
         low = 45, high = 69)
 
-    private fun aviary16() = Patch("Aviary", "Twin Warblers",
-        mapOf("pattern" to 0.428571433f, "length" to 1f, "sweep" to 0.6875f, "flock" to 0.333333343f, "spread" to 0.8f),
+    private fun aviary24() = Patch("Aviary", "Twin Warblers",
+        mapOf("pattern" to 0.428571433f, "length" to 1f, "sweep" to 0.6875f, "flock" to 0.333333343f, "spread" to 0.8f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.608f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4045f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.631999969f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Shorter", "macro2" to "Wander", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "warble",
         low = 48, high = 72)
 
-    private fun aviary17() = Patch("Aviary", "Two-Note Call",
-        mapOf("pattern" to 0.5714286f, "rate" to 0.25f, "length" to 0.578947365f),
+    private fun aviary25() = Patch("Aviary", "Skylark",
+        mapOf("pattern" to 0.428571433f, "rate" to 0.75f, "length" to 1f, "sweep" to 0.7083333f, "beak" to 0.75f, "space" to 0.45f, "volume" to 0.512f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.572f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.8f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.625f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6505f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.684f),
+        mapOf("macro1" to "Shorter", "macro2" to "Wander", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
+        family = "warble",
+        low = 60, high = 76)
+
+    private fun aviary26() = Patch("Aviary", "Lorikeet Warble",
+        mapOf("pattern" to 0.428571433f, "rate" to 0.75f, "length" to 0.842105269f, "sweep" to 0.6666667f, "rasp" to 0.4f, "two" to 0.6f, "interval" to 1f, "beak" to 0.8f, "flock" to 0.333333343f, "spread" to 0.7f, "volume" to 0.486f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.566f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.325f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.569f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.561f),
+        mapOf("macro1" to "Shorter", "macro2" to "Wander", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Closed", "macro7" to "Far", "macro8" to "Low"),
+        family = "warble",
+        low = 52, high = 76)
+
+    private fun aviary27() = Patch("Aviary", "Robin at Dusk",
+        mapOf("pattern" to 0.428571433f, "rate" to 0.25f, "length" to 0.8947368f, "breath" to 0.12f, "throat" to 0.65f, "space" to 0.5f, "volume" to 0.676f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.3f, "mac1_a2" to 0.5885f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.8f, "mac4_a2" to 0.43f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.677f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.677f),
+        mapOf("macro1" to "Shorter", "macro2" to "Wander", "macro3" to "Rasp", "macro4" to "Duet", "macro5" to "Air", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
+        family = "warble",
+        low = 50, high = 74)
+
+    private fun aviary28() = Patch("Aviary", "Two-Note Call",
+        mapOf("pattern" to 0.5714286f, "rate" to 0.25f, "length" to 0.578947365f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.7f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.7f, "mac3_d1" to 0.307692319f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.8f, "mac3_a2" to 0.4125f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.628f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6175f),
+        mapOf("macro1" to "Longer", "macro2" to "Rasp", "macro3" to "Duet", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "call",
         low = 48, high = 72)
 
-    private fun aviary18() = Patch("Aviary", "Call and Answer",
-        mapOf("pattern" to 0.5714286f, "rate" to 0.25f, "length" to 0.578947365f, "flock" to 0.333333343f, "spread" to 1f),
+    private fun aviary29() = Patch("Aviary", "Call and Answer",
+        mapOf("pattern" to 0.5714286f, "rate" to 0.25f, "length" to 0.578947365f, "flock" to 0.333333343f, "spread" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.7f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.7f, "mac3_d1" to 0.307692319f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.8f, "mac3_a2" to 0.4125f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.628f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6175f),
+        mapOf("macro1" to "Longer", "macro2" to "Rasp", "macro3" to "Duet", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
         family = "call",
         low = 48, high = 72)
 
-    private fun aviary19() = Patch("Aviary", "Distant Call",
-        mapOf("pattern" to 0.5714286f, "rate" to 0f, "space" to 0.8f, "volume" to 0.9f),
+    private fun aviary30() = Patch("Aviary", "Distant Call",
+        mapOf("pattern" to 0.5714286f, "rate" to 0f, "space" to 0.8f, "volume" to 0.9f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4115f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.7f, "mac3_d1" to 0.307692319f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.8f, "mac3_a2" to 0.407f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.275f, "mac7_a2" to 0.3675f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Longer", "macro2" to "Rasp", "macro3" to "Duet", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Near", "macro8" to "Low"),
         family = "call",
         low = 43, high = 67)
 
-    private fun aviary20() = Patch("Aviary", "Hooting Call",
-        mapOf("pattern" to 0.5714286f, "rate" to 0f, "length" to 0.684210539f, "breath" to 0.25f, "throat" to 0.9f, "beak" to 0.1f),
+    private fun aviary31() = Patch("Aviary", "Hooting Call",
+        mapOf("pattern" to 0.5714286f, "rate" to 0f, "length" to 0.684210539f, "breath" to 0.25f, "throat" to 0.9f, "beak" to 0.1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.658f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.7f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.8f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.325f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6195f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4015f),
+        mapOf("macro1" to "Longer", "macro2" to "Rasp", "macro3" to "Duet", "macro4" to "Air", "macro5" to "Thin", "macro6" to "Open", "macro7" to "Far", "macro8" to "High"),
         family = "call",
         low = 40, high = 62)
 
-    private fun aviary21() = Patch("Aviary", "Dawn Chorus",
-        mapOf("pattern" to 0.714285731f, "flock" to 1f, "spread" to 1f, "space" to 0.4f),
+    private fun aviary32() = Patch("Aviary", "Crow Caws",
+        mapOf("pattern" to 1f, "rate" to 0.25f, "sweep" to 0.5625f, "rasp" to 0.6f, "breath" to 0.2f, "throat" to 0.4f, "beak" to 0.6f, "volume" to 0.883f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.7f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.7f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.575f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.695f, "mac7_a2" to 0.5585f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3855f),
+        mapOf("macro1" to "Longer", "macro2" to "Harsh", "macro3" to "Arch", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Far", "macro8" to "High"),
+        family = "call",
+        low = 40, high = 60)
+
+    private fun aviary33() = Patch("Aviary", "Gull Cries",
+        mapOf("pattern" to 1f, "rate" to 0.25f, "length" to 0.684210539f, "sweep" to 0.7083333f, "rasp" to 0.25f, "two" to 0.25f, "breath" to 0.15f, "beak" to 0.7f, "space" to 0.3f, "volume" to 0.59f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.658f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.7f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.575f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.65f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.638f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6355f),
+        mapOf("macro1" to "Longer", "macro2" to "Harsh", "macro3" to "Arch", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
+        family = "call",
+        low = 50, high = 70)
+
+    private fun aviary34() = Patch("Aviary", "Jay Scold",
+        mapOf("pattern" to 1f, "length" to 0.368421048f, "sweep" to 0.5416667f, "rasp" to 1f, "breath" to 0.4f, "throat" to 0.3f, "beak" to 0.75f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.7f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.15384616f, "mac3_a1" to 0.575f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.625f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.648f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6035f),
+        mapOf("macro1" to "Longer", "macro2" to "Soft", "macro3" to "Arch", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Far", "macro8" to "Low"),
+        family = "call",
+        low = 48, high = 68)
+
+    private fun aviary35() = Patch("Aviary", "Dawn Chorus",
+        mapOf("pattern" to 0.714285731f, "flock" to 1f, "spread" to 1f, "space" to 0.4f, "volume" to 0.699f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.376f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.675f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.3f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Open", "macro6" to "Close", "macro7" to "Far", "macro8" to "Low"),
         family = "chorus",
         low = 48, high = 72)
 
-    private fun aviary22() = Patch("Aviary", "Garden Birds",
-        mapOf("pattern" to 0.714285731f, "flock" to 0.333333343f, "spread" to 0.7f),
+    private fun aviary36() = Patch("Aviary", "Garden Birds",
+        mapOf("pattern" to 0.714285731f, "flock" to 0.333333343f, "spread" to 0.7f, "volume" to 0.569f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.409f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.675f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.65f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.644f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.2855f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Open", "macro6" to "Wide", "macro7" to "Far", "macro8" to "Low"),
         family = "chorus",
         low = 52, high = 76)
 
-    private fun aviary23() = Patch("Aviary", "Far Off Flock",
-        mapOf("pattern" to 0.714285731f, "flock" to 1f, "spread" to 1f, "space" to 0.85f, "volume" to 0.85f),
+    private fun aviary37() = Patch("Aviary", "Far Off Flock",
+        mapOf("pattern" to 0.714285731f, "flock" to 1f, "spread" to 1f, "space" to 0.85f, "volume" to 0.881f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.35f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.675f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.3f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.275f, "mac7_a2" to 0.357500017f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.268f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Open", "macro6" to "Close", "macro7" to "Near", "macro8" to "Low"),
         family = "chorus",
         low = 48, high = 72)
 
-    private fun aviary24() = Patch("Aviary", "Busy Hedge",
-        mapOf("pattern" to 0.714285731f, "rate" to 0.75f, "flock" to 1f, "spread" to 0.8f),
+    private fun aviary38() = Patch("Aviary", "Busy Hedge",
+        mapOf("pattern" to 0.714285731f, "rate" to 0.75f, "flock" to 1f, "spread" to 0.8f, "volume" to 0.447f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.325f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.675f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.3f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.6335f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Open", "macro6" to "Close", "macro7" to "Far", "macro8" to "Low"),
         family = "chorus",
         low = 48, high = 74)
 
-    private fun aviary25() = Patch("Aviary", "Bird Kit",
-        mapOf("kit" to 1f),
+    private fun aviary39() = Patch("Aviary", "Rookery",
+        mapOf("pattern" to 1f, "rate" to 0.25f, "sweep" to 0.5625f, "rasp" to 0.6f, "breath" to 0.2f, "flock" to 1f, "spread" to 0.6f, "space" to 0.45f, "volume" to 0.898f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.7f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.675f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.7f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.659999967f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4095f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Open", "macro6" to "Wide", "macro7" to "Far", "macro8" to "High"),
+        family = "chorus",
+        low = 43, high = 62)
+
+    private fun aviary40() = Patch("Aviary", "Seabird Cliff",
+        mapOf("pattern" to 1f, "rate" to 0.25f, "length" to 0.6315789f, "sweep" to 0.6875f, "rasp" to 0.3f, "beak" to 0.7f, "flock" to 1f, "spread" to 1f, "space" to 0.55f, "volume" to 0.67f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.684f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.65f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.3f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.681f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.603f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Open", "macro6" to "Close", "macro7" to "Far", "macro8" to "Low"),
+        family = "chorus",
+        low = 52, high = 72)
+
+    private fun aviary41() = Patch("Aviary", "Rainforest Canopy",
+        mapOf("pattern" to 0.714285731f, "rate" to 0.75f, "sweep" to 0.7083333f, "rasp" to 0.2f, "two" to 0.5f, "interval" to 1f, "beak" to 0.8f, "flock" to 1f, "spread" to 0.75f, "space" to 0.5f, "volume" to 0.58f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4445f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.325f, "mac6_d1" to 0.6923077f, "mac6_a1" to 0.625f, "mac7_d1" to 0.7692308f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.725f, "mac7_a2" to 0.644f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5935f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Closed", "macro6" to "Wide", "macro7" to "Far", "macro8" to "Low"),
+        family = "chorus",
+        low = 52, high = 76)
+
+    private fun aviary42() = Patch("Aviary", "Bird Kit",
+        mapOf("kit" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.408f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.725f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Wide", "macro8" to "Far"),
         family = "kit",
         low = 36, high = 51)
 
-    private val aviary: List<Patch> by lazy { listOf(aviary0(), aviary1(), aviary2(), aviary3(), aviary4(), aviary5(), aviary6(), aviary7(), aviary8(), aviary9(), aviary10(), aviary11(), aviary12(), aviary13(), aviary14(), aviary15(), aviary16(), aviary17(), aviary18(), aviary19(), aviary20(), aviary21(), aviary22(), aviary23(), aviary24(), aviary25()) }
+    private fun aviary43() = Patch("Aviary", "Hedgerow Kit",
+        mapOf("spread" to 0.7f, "space" to 0.25f, "volume" to 0.993f, "kit" to 1f, "p01_song" to 0.142857149f, "p01_note" to 0.7222222f, "p01_level" to 0.582f, "p02_song" to 0.142857149f, "p02_note" to 0.6666667f, "p02_flock" to 0.333333343f, "p02_level" to 0.312f, "p03_song" to 0.2857143f, "p03_note" to 0.6944444f, "p03_level" to 0.509f, "p04_song" to 0.2857143f, "p04_note" to 0.5972222f, "p04_flock" to 0f, "p04_level" to 0.551f, "p05_song" to 0.428571433f, "p05_note" to 0.5555556f, "p05_level" to 0.528f, "p06_song" to 0.428571433f, "p06_note" to 0.458333343f, "p06_level" to 0.783f, "p07_song" to 0f, "p07_note" to 0.625f, "p07_level" to 0.281f, "p08_song" to 0.5714286f, "p08_note" to 0.5972222f, "p08_flock" to 0f, "p08_level" to 0.519f, "p09_note" to 0.5277778f, "p09_flock" to 0.333333343f, "p09_level" to 0.515f, "p10_song" to 0.857142866f, "p10_note" to 0.3611111f, "p10_level" to 0.951f, "p11_song" to 0.857142866f, "p11_note" to 0.291666657f, "p11_flock" to 0f, "p11_level" to 1f, "p12_song" to 1f, "p12_flock" to 0f, "p12_level" to 0.584f, "p13_song" to 1f, "p13_note" to 0.430555552f, "p13_flock" to 0.333333343f, "p13_level" to 0.625f, "p14_song" to 0.714285731f, "p14_note" to 0.5555556f, "p14_level" to 0.35f, "p15_song" to 0.714285731f, "p15_note" to 0.625f, "p15_flock" to 1f, "p15_level" to 0.211f, "p16_note" to 0.5f, "p16_level" to 0.509f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.392f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.65f, "mac8_d1" to 0.7692308f, "mac8_a1" to 0.375f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Wide", "macro8" to "Near"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun aviary44() = Patch("Aviary", "Dawn Wood Kit",
+        mapOf("breath" to 0.15f, "space" to 0.45f, "volume" to 1f, "kit" to 1f, "p01_note" to 0.5555556f, "p01_level" to 0.463f, "p02_note" to 0.6527778f, "p02_level" to 0.296f, "p03_note" to 0.625f, "p03_level" to 0.442f, "p04_note" to 0.6944444f, "p04_flock" to 0.6666667f, "p04_level" to 0.322f, "p05_note" to 0.6666667f, "p05_level" to 0.518f, "p06_note" to 0.5694444f, "p06_level" to 0.73f, "p07_note" to 0.5277778f, "p07_level" to 0.676f, "p08_note" to 0.5972222f, "p08_level" to 0.367f, "p09_level" to 1f, "p10_note" to 0.5f, "p10_flock" to 0.333333343f, "p10_level" to 0.634f, "p11_song" to 0.857142866f, "p11_note" to 0.319444448f, "p11_flock" to 0f, "p11_level" to 1f, "p12_song" to 0.857142866f, "p12_note" to 0.222222224f, "p12_flock" to 0f, "p12_level" to 1f, "p13_song" to 1f, "p13_note" to 0.3611111f, "p13_flock" to 0f, "p13_level" to 0.886f, "p14_song" to 0.714285731f, "p14_note" to 0.5f, "p14_flock" to 1f, "p14_level" to 0.413f, "p15_song" to 0.714285731f, "p15_note" to 0.5972222f, "p15_flock" to 1f, "p15_level" to 0.256f, "p16_song" to 0.714285731f, "p16_note" to 0.6666667f, "p16_flock" to 0.6666667f, "p16_level" to 0.284f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.3855f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.275f, "mac8_a2" to 0.376f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Wide", "macro8" to "Near"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun aviary45() = Patch("Aviary", "Marsh Kit",
+        mapOf("rasp" to 0.3f, "breath" to 0.2f, "space" to 0.5f, "volume" to 1f, "kit" to 1f, "p01_song" to 0.2857143f, "p01_note" to 0.458333343f, "p01_level" to 1f, "p02_song" to 0.2857143f, "p02_note" to 0.5555556f, "p02_flock" to 0.333333343f, "p02_level" to 0.529f, "p03_song" to 0.428571433f, "p03_note" to 0.5f, "p03_level" to 0.795f, "p04_song" to 0.428571433f, "p04_note" to 0.5972222f, "p04_flock" to 0f, "p04_level" to 0.499f, "p05_song" to 0f, "p05_level" to 0.536f, "p06_song" to 0f, "p06_note" to 0.430555552f, "p06_level" to 0.704f, "p07_song" to 0.142857149f, "p07_note" to 0.6666667f, "p07_level" to 0.496f, "p08_song" to 0.142857149f, "p08_note" to 0.5833333f, "p08_flock" to 0.6666667f, "p08_level" to 0.304f, "p09_note" to 0.3888889f, "p09_level" to 1f, "p10_note" to 0.4861111f, "p10_flock" to 0.333333343f, "p10_level" to 0.668f, "p11_song" to 0.857142866f, "p11_note" to 0.0972222239f, "p11_flock" to 0f, "p11_level" to 1f, "p12_song" to 0.857142866f, "p12_note" to 0.2638889f, "p12_flock" to 0f, "p12_level" to 1f, "p13_song" to 1f, "p13_note" to 0.222222224f, "p13_flock" to 0f, "p13_level" to 1f, "p14_song" to 1f, "p14_note" to 0.3888889f, "p14_flock" to 0f, "p14_level" to 0.84f, "p15_song" to 0.714285731f, "p15_note" to 0.5277778f, "p15_flock" to 1f, "p15_level" to 0.33f, "p16_song" to 0.714285731f, "p16_note" to 0.458333343f, "p16_flock" to 0.6666667f, "p16_level" to 0.494f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.3905f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.275f, "mac8_a2" to 0.3765f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Wide", "macro8" to "Near"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun aviary46() = Patch("Aviary", "Night Kit",
+        mapOf("breath" to 0.25f, "throat" to 0.65f, "space" to 0.55f, "volume" to 1f, "kit" to 1f, "p01_song" to 0.857142866f, "p01_note" to 0.194444448f, "p01_level" to 1f, "p02_song" to 0.857142866f, "p02_note" to 0.25f, "p02_level" to 1f, "p03_song" to 0.857142866f, "p03_note" to 0.305555552f, "p03_flock" to 0.333333343f, "p03_level" to 0.836f, "p04_song" to 1f, "p04_note" to 0.6388889f, "p04_flock" to 0f, "p04_level" to 0.406f, "p05_song" to 1f, "p05_note" to 0.5555556f, "p05_level" to 0.595f, "p06_note" to 0.3611111f, "p06_level" to 1f, "p07_song" to 0.2857143f, "p07_note" to 0.430555552f, "p07_level" to 1f, "p08_note" to 0.5972222f, "p08_flock" to 0f, "p08_level" to 0.508f, "p09_song" to 0.428571433f, "p09_note" to 0.6666667f, "p09_level" to 0.453f, "p10_song" to 0f, "p10_note" to 0.625f, "p10_level" to 0.338f, "p11_song" to 0f, "p11_flock" to 0f, "p11_level" to 0.597f, "p12_song" to 0.5714286f, "p12_note" to 0.458333343f, "p12_flock" to 0f, "p12_level" to 1f, "p13_song" to 0.5714286f, "p13_note" to 0.3888889f, "p13_flock" to 0.333333343f, "p13_level" to 0.792f, "p14_note" to 0.6944444f, "p14_flock" to 0f, "p14_level" to 0.6f, "p15_song" to 0.714285731f, "p15_note" to 0.5277778f, "p15_level" to 0.506f, "p16_song" to 0.714285731f, "p16_note" to 0.5972222f, "p16_flock" to 0.6666667f, "p16_level" to 0.301f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4025f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.275f, "mac8_a2" to 0.3685f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Wide", "macro8" to "Near"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun aviary47() = Patch("Aviary", "Seashore Kit",
+        mapOf("beak" to 0.6f, "spread" to 0.9f, "space" to 0.4f, "volume" to 1f, "kit" to 1f, "p01_song" to 1f, "p01_level" to 0.64f, "p02_song" to 1f, "p02_note" to 0.5555556f, "p02_flock" to 0.333333343f, "p02_level" to 0.392f, "p03_song" to 1f, "p03_note" to 0.5972222f, "p03_flock" to 0.6666667f, "p03_level" to 0.272f, "p04_song" to 1f, "p04_note" to 0.291666657f, "p04_flock" to 0f, "p04_level" to 0.908f, "p05_song" to 0.142857149f, "p05_note" to 0.6666667f, "p05_level" to 0.451f, "p06_song" to 0.142857149f, "p06_note" to 0.7222222f, "p06_flock" to 0.333333343f, "p06_level" to 0.414f, "p07_song" to 0.2857143f, "p07_note" to 0.6388889f, "p07_level" to 0.497f, "p08_song" to 0.2857143f, "p08_note" to 0.5555556f, "p08_level" to 0.541f, "p09_song" to 0f, "p09_note" to 0.5277778f, "p09_level" to 0.5f, "p10_song" to 0f, "p10_note" to 0.5972222f, "p10_level" to 0.357f, "p11_note" to 0.5555556f, "p11_flock" to 0f, "p11_level" to 0.691f, "p12_song" to 0.5714286f, "p12_note" to 0.458333343f, "p12_flock" to 0.333333343f, "p12_level" to 0.662f, "p13_song" to 0.857142866f, "p13_note" to 0.333333343f, "p13_flock" to 0f, "p13_level" to 1f, "p14_song" to 0.428571433f, "p14_note" to 0.625f, "p14_flock" to 0f, "p14_level" to 0.422f, "p15_song" to 0.714285731f, "p15_note" to 0.5277778f, "p15_flock" to 1f, "p15_level" to 0.305f, "p16_song" to 0.714285731f, "p16_note" to 0.5833333f, "p16_flock" to 1f, "p16_level" to 0.26f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.396f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.675f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.3f, "mac8_d1" to 0.7692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.3f, "mac8_a2" to 0.391f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Close", "macro8" to "Near"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private fun aviary48() = Patch("Aviary", "Rainforest Kit",
+        mapOf("two" to 0.35f, "interval" to 1f, "beak" to 0.75f, "space" to 0.35f, "volume" to 0.856f, "kit" to 1f, "p01_song" to 1f, "p01_note" to 0.5277778f, "p01_level" to 0.529f, "p02_song" to 1f, "p02_note" to 0.430555552f, "p02_level" to 0.621f, "p03_song" to 1f, "p03_note" to 0.5833333f, "p03_flock" to 0.6666667f, "p03_level" to 0.303f, "p04_song" to 0.428571433f, "p04_note" to 0.6944444f, "p04_flock" to 0.6666667f, "p04_level" to 0.292f, "p05_song" to 0.428571433f, "p05_note" to 0.5972222f, "p05_level" to 0.508f, "p06_song" to 0f, "p06_note" to 0.6666667f, "p06_level" to 0.31f, "p07_song" to 0f, "p07_note" to 0.5555556f, "p07_level" to 0.449f, "p08_song" to 0.2857143f, "p08_note" to 0.6944444f, "p08_flock" to 0f, "p08_level" to 0.624f, "p09_song" to 0.2857143f, "p09_note" to 0.5972222f, "p09_level" to 0.668f, "p10_song" to 0.142857149f, "p10_note" to 0.7222222f, "p10_flock" to 0.333333343f, "p10_level" to 0.448f, "p11_song" to 0.142857149f, "p11_note" to 0.625f, "p11_flock" to 0f, "p11_level" to 0.463f, "p12_song" to 0.5714286f, "p12_note" to 0.5555556f, "p12_flock" to 0f, "p12_level" to 0.672f, "p13_song" to 0.5714286f, "p13_note" to 0.458333343f, "p13_flock" to 0.333333343f, "p13_level" to 0.589f, "p14_song" to 0.857142866f, "p14_note" to 0.3888889f, "p14_flock" to 0f, "p14_level" to 1f, "p15_song" to 0.714285731f, "p15_note" to 0.5972222f, "p15_flock" to 1f, "p15_level" to 0.264f, "p16_song" to 0.714285731f, "p16_note" to 0.6666667f, "p16_flock" to 1f, "p16_level" to 0.25f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4055f, "mac2_d1" to 0.15384616f, "mac2_a1" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.7f, "mac4_d1" to 0.461538464f, "mac4_a1" to 0.675f, "mac5_d1" to 0.538461566f, "mac5_a1" to 0.675f, "mac6_d1" to 0.615384638f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.7692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.325f, "mac8_a2" to 0.4145f),
+        mapOf("macro1" to "Longer", "macro2" to "Sweep", "macro3" to "Rasp", "macro4" to "Air", "macro5" to "Hollow", "macro6" to "Open", "macro7" to "Wide", "macro8" to "Near"),
+        family = "kit",
+        low = 36, high = 51)
+
+    private val aviary: List<Patch> by lazy { listOf(aviary0(), aviary1(), aviary2(), aviary3(), aviary4(), aviary5(), aviary6(), aviary7(), aviary8(), aviary9(), aviary10(), aviary11(), aviary12(), aviary13(), aviary14(), aviary15(), aviary16(), aviary17(), aviary18(), aviary19(), aviary20(), aviary21(), aviary22(), aviary23(), aviary24(), aviary25(), aviary26(), aviary27(), aviary28(), aviary29(), aviary30(), aviary31(), aviary32(), aviary33(), aviary34(), aviary35(), aviary36(), aviary37(), aviary38(), aviary39(), aviary40(), aviary41(), aviary42(), aviary43(), aviary44(), aviary45(), aviary46(), aviary47(), aviary48()) }
 
     private fun fathom0() = Patch("Fathom", "Init", emptyMap(),
         family = "water",

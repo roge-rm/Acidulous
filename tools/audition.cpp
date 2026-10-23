@@ -151,6 +151,11 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
     } else if (kind == "hold") {
         p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(4.0f);
+    } else if (kind == "scene") {
+        // One note held twenty seconds, for a patch that is a whole scene on
+        // one key (a flock of birds), where a chord would be several scenes.
+        p.lastOff = hit(p, 0.0f, 20.0f, note, velocity);
+        p.frames = p.lastOff + secondsToFrames(4.0f);
     } else if (kind == "bass") {
         // Two bars of eighths. Two overlap to show glide and mono voice
         // stealing, and a few are accented.
@@ -2196,7 +2201,7 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|jaw|harmonics\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|scene|jaw|harmonics\n"
         "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
         "          |chug|funk\n"
         "          |velocity|beat|voices\n"
