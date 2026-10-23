@@ -11751,7 +11751,7 @@ internal object FactoryBanks {
         low = 28, high = 52)
 
     private fun fathom10() = Patch("Fathom", "Bubble Notes",
-        mapOf("density" to 0f, "size" to 0f, "rise" to 0.2f, "decay" to 0.7f, "volume" to 1f, "mac1_d1" to 0.307692319f, "mac1_a1" to 0.7f, "mac2_d1" to 0.307692319f, "mac2_a1" to 0.3795f, "mac3_d1" to 0.230769232f, "mac3_a1" to 0.75f, "mac4_d1" to 0.15384616f, "mac4_a1" to 0.55f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.35f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.7f, "mac8_a2" to 0.3015f),
+        mapOf("density" to 0f, "size" to 0f, "rise" to 0f, "decay" to 0.7f, "volume" to 0.8f, "mac1_d1" to 0.307692319f, "mac1_a1" to 0.7f, "mac2_d1" to 0.307692319f, "mac2_d2" to 0.9230769f, "mac2_a1" to 0.3795f, "mac2_a2" to 0.575f, "mac3_d1" to 0.230769232f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.75f, "mac3_a2" to 0.6f, "mac4_d1" to 0.15384616f, "mac4_a1" to 0.55f, "mac5_d1" to 1f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.25f, "mac5_a2" to 0.4375f, "mac6_d1" to 1f, "mac6_a1" to 0.625f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 0.07692308f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.7f, "mac8_a2" to 0.4225f),
         mapOf("macro1" to "Ring", "macro2" to "Short", "macro3" to "Rise", "macro4" to "Drift", "macro5" to "Low", "macro6" to "High", "macro7" to "Wide", "macro8" to "Drops"),
         family = "water",
         low = 24, high = 72)
