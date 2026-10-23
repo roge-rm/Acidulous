@@ -1,5 +1,5 @@
 #!/bin/bash
-# Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom and Aviary move what they name.
+# Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary and Tongue move what they name.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

@@ -1240,6 +1240,8 @@
     <string name="pw_vowel_f2d494">voyelle</string>
     <string name="pw_vspread">écart vél.</string>
     <string name="pw_w">w</string>
+    <string name="pw_wah">wah-wah</string>
+    <string name="pw_wah_rate">vitesse du wah-wah</string>
     <string name="pw_walk">marche</string>
     <string name="pw_warble">babil</string>
     <string name="pw_warm">chaud</string>

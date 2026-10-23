@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom and Aviary move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary and Tongue move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -25,6 +25,7 @@
 #include <engine/machine/palm/Palm.h>
 #include <engine/machine/fathom/Fathom.h>
 #include <engine/machine/aviary/Aviary.h>
+#include <engine/machine/tongue/Tongue.h>
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
@@ -406,12 +407,13 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
                std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0 ||
                std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
                std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 || std::strcmp(type, "Fathom") == 0 ||
-               std::strcmp(type, "Aviary") == 0) {
+               std::strcmp(type, "Aviary") == 0 || std::strcmp(type, "Tongue") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
-        // Draw, Fret, Tine, Palm, Fathom and Aviary have no transpose, so an octave up.
+        // Draw, Fret, Tine, Palm, Fathom, Aviary and Tongue have no transpose, so an octave up.
         const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
                               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 ||
-                              std::strcmp(type, "Fathom") == 0 || std::strcmp(type, "Aviary") == 0;
+                              std::strcmp(type, "Fathom") == 0 || std::strcmp(type, "Aviary") == 0 ||
+                              std::strcmp(type, "Tongue") == 0;
         gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -1766,6 +1768,35 @@ void aviaryRoutes() {
     }
 }
 
+// Tongue: routes to the mouth, the wah and its rate match their knobs.
+void tongueRoutes() {
+    using To = acidulous::machine::Tongue;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    // Mouth 0.5 by default: a route of 0.25 is the knob at 0.75.
+    {
+        const auto knob = playHeld("Tongue", {{"mouth", 0.75f}}, {55}, blocks);
+        Route m{1, 2, To::McMouth, 0.25f, 1.0f};
+        const auto routed = playHeld("Tongue", {}, {55}, blocks, &m, To::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Tongue: a route to mouth matches the knob", buf);
+    }
+    // Wah 0 by default: a route of 0.5 is the knob at 0.5.
+    {
+        const auto plain = playHeld("Tongue", {}, {55}, blocks);
+        const auto knob = playHeld("Tongue", {{"wah", 0.5f}}, {55}, blocks);
+        Route w{3, 1, To::McWah, 0.5f, 1.0f};
+        const auto routed = playHeld("Tongue", {}, {55}, blocks, &w, To::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Tongue: a route to wah matches the knob", buf);
+    }
+    // Wah rate 1/8 (3 of 0..5) by default: a route of 0.4 is 1/16.
+    {
+        const auto knob = playHeld("Tongue", {{"wah", 0.5f}, {"wahrate", 5.0f}}, {55}, blocks);
+        Route r{6, 4, To::McWahRate, 0.4f, 1.0f};
+        const auto routed = playHeld("Tongue", {{"wah", 0.5f}}, {55}, blocks, &r, To::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Tongue: a route to wah rate matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1844,6 +1875,9 @@ int main() {
     using Av = acidulous::machine::Aviary;
     basics("Aviary", Av::MacroDestCount, Av::McVolume, Av::McPitch, Av::McOff, Av::kMacros);
     aviaryRoutes();
+    using To = acidulous::machine::Tongue;
+    basics("Tongue", To::MacroDestCount, To::McVolume, To::McPitch, To::McOff, To::kMacros);
+    tongueRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

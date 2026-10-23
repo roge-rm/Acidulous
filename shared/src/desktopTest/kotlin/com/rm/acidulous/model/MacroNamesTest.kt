@@ -132,4 +132,12 @@ class MacroNamesTest {
         assertEquals("Harsh", laneShortLabel(t, laneKey("machine", "mac1")))
         assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
     }
+
+    @Test
+    fun tongueMacrosTakeThePatchNames() {
+        val t = track("Tongue", mapOf("macro1" to "Wah"))
+        assertEquals("Wah", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("wah rate", laneShortLabel(t, laneKey("machine", "wahrate")))
+    }
 }

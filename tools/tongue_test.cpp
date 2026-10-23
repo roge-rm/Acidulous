@@ -1,6 +1,6 @@
 // Tongue, the jaw harp: in tune, its reeds on their chord, the mouth picking
 // the harmonic a key asks for, legato keys leaving the harp alone, and
-// patterns plucking on the grid.
+// patterns plucking on the grid, the words moving the mouth and the wah.
 //
 //   tongue_test.sh
 #include <engine/core/Constants.h>
@@ -374,6 +374,99 @@ void words() {
 
 } // namespace
 
+/** The rms of what's played over [from, to) seconds, dB. */
+double rmsDb(const std::vector<float> &x, double from, double to) {
+    const auto a = static_cast<size_t>(from * kRate), b = static_cast<size_t>(to * kRate);
+    double sum = 0.0;
+    size_t n = 0;
+    for (size_t i = a; i < b && i < x.size(); ++i, ++n) sum += static_cast<double>(x[i]) * x[i];
+    return 10.0 * std::log10(sum / std::fmax(1.0, static_cast<double>(n)) + 1e-20);
+}
+
+/** The biggest step from one sample to the next over [from, to) seconds. */
+double worstStep(const std::vector<float> &x, double from, double to) {
+    double worst = 0.0;
+    for (size_t i = static_cast<size_t>(from * kRate) + 1; i < static_cast<size_t>(to * kRate) && i < x.size(); ++i) {
+        worst = std::fmax(worst, std::fabs(static_cast<double>(x[i]) - x[i - 1]));
+    }
+    return worst;
+}
+
+void wah() {
+    std::printf("wah\n");
+    // Mouth at oo, the wah opening it to ah on every other eighth: at 120 a step is a quarter second.
+    const std::initializer_list<std::pair<const char *, float>> held = {
+        {"mouth", 0.0f}, {"sustain", 1.0f}, {"breath", 0.6f}, {"glide", 20.0f}};
+    Harp w(held);
+    w.set("wah", 0.5f);
+    w.set("wahrate", 3.0f);
+    w.t->noteOn(50, 100);
+    float shut[4], open[4];
+    for (int s = 0; s < 4; ++s) {
+        w.play(0.2);
+        shut[s] = w.t->formantTarget(0);
+        w.play(0.25);
+        open[s] = w.t->formantTarget(0);
+        w.play(0.05);
+    }
+    bool moves = true;
+    for (int s = 0; s < 4; ++s) moves = moves && shut[s] < 400.0f && open[s] > 1500.0f;
+    check(moves, "wah opens the mouth on every other eighth", fmt("F1 %.0f then %.0f Hz", shut[0], open[0]));
+
+    // The level holds as the mouth opens and shuts: the open and shut steps
+    // no further apart than the mouth knob at those two vowels.
+    Harp still(held);
+    still.t->noteOn(50, 100);
+    still.play(2.0);
+    Harp wide(held);
+    wide.set("mouth", 0.5f);
+    wide.t->noteOn(50, 100);
+    wide.play(2.0);
+    double worst = 0.0;
+    for (int s = 2; s < 8; ++s) {
+        // The shut steps sit at oo, the open ones at ah.
+        const Harp &knob = s % 2 == 0 ? still : wide;
+        const double from = 0.25 * s + 0.05, to = 0.25 * (s + 1);
+        worst = std::fmax(worst, std::fabs(rmsDb(w.out, from, to) - rmsDb(knob.out, from, to)));
+    }
+    check(worst < 1.0, "the wah doesn't pump", fmt("worst step %.2f dB off the knob at its vowel", worst));
+    // No click where it steps: no sample jumps further than the steady drone's.
+    const double steady = std::fmax(worstStep(still.out, 1.0, 2.0), worstStep(wide.out, 1.0, 2.0));
+    const double stepping = worstStep(w.out, 1.0, 2.0);
+    check(stepping < 1.25 * steady, "the wah steps without a click", fmt("worst step %.4f, steady %.4f", stepping, steady));
+
+    // Wah 0 leaves the sound alone, whatever its rate.
+    Harp a(held), b(held);
+    b.set("wahrate", 0.0f);
+    a.t->noteOn(50, 100);
+    b.t->noteOn(50, 100);
+    a.play(1.0);
+    b.play(1.0);
+    check(a.out == b.out, "wah 0 leaves the sound alone");
+
+    // Reset starts the wah again on its shut step: two harps reset at
+    // different places in it play the same afterwards.
+    Harp late(held), early(held);
+    for (Harp *h : {&late, &early}) {
+        h->set("wah", 0.5f);
+        h->t->noteOn(50, 100);
+    }
+    late.play(1.3);
+    early.play(0.2);
+    for (Harp *h : {&late, &early}) {
+        h->t->allNotesOff();
+        h->t->reset();
+        h->out.clear();
+        h->tick = 0.0;
+    }
+    const float afterReset = late.t->formantTarget(0);
+    for (Harp *h : {&late, &early}) {
+        h->t->noteOn(50, 100);
+        h->play(1.0);
+    }
+    check(afterReset < 400.0f && late.out == early.out, "reset starts the wah again", fmt("F1 %.0f Hz after reset", afterReset));
+}
+
 int main() {
     _mm_setcsr(_mm_getcsr() | 0x8040);
     std::printf("tongue_test: the jaw harp\n\n");
@@ -383,6 +476,7 @@ int main() {
     patterns();
     follow();
     words();
+    wah();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

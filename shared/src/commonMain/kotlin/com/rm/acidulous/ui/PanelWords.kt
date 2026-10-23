@@ -1459,6 +1459,8 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "vowel" to Res.string.pw_vowel_f2d494,
     "vspread" to Res.string.pw_vspread,
     "w" to Res.string.pw_w,
+    "wah" to Res.string.pw_wah,
+    "wah rate" to Res.string.pw_wah_rate,
     "walk" to Res.string.pw_walk,
     "warble" to Res.string.pw_warble,
     "warm" to Res.string.pw_warm,
