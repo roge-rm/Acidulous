@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine and Palm move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm and Fathom move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -23,6 +23,7 @@
 #include <engine/machine/hexbeat/Hexbeat.h>
 #include <engine/machine/manual/Manual.h>
 #include <engine/machine/palm/Palm.h>
+#include <engine/machine/fathom/Fathom.h>
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
@@ -403,11 +404,12 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
     } else if (std::strcmp(type, "Filament") == 0 || std::strcmp(type, "Timber") == 0 ||
                std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0 ||
                std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
-               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0) {
+               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 || std::strcmp(type, "Fathom") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
-        // Draw, Fret, Tine and Palm have no transpose, so an octave up.
+        // Draw, Fret, Tine, Palm and Fathom have no transpose, so an octave up.
         const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
-                              std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0;
+                              std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 ||
+                              std::strcmp(type, "Fathom") == 0;
         gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -1657,6 +1659,73 @@ void palmRoutes() {
     }
 }
 
+// Fathom: in a kit the routes reach every pad, as the shared knobs do, and
+// a route to density moves each pad's own density.
+void fathomRoutes() {
+    using Fa = acidulous::machine::Fathom;
+    const int32_t blocks = 375; // half a second
+    char buf[96];
+    // The default kit: fire on C2, wind on D2, rain on E2.
+    for (uint8_t pad : {uint8_t(36), uint8_t(38), uint8_t(40)}) {
+        const auto plain = playHeld("Fathom", {{"kit", 1.0f}}, {pad}, blocks);
+        const auto knob = playHeld("Fathom", {{"kit", 1.0f}, {"tone", 0.75f}, {"gust", 0.75f}}, {pad}, blocks);
+        Route t{1, 1, Fa::McTone, 0.25f, 1.0f};
+        Route g{2, 1, Fa::McGust, 0.25f, 1.0f};
+        const auto routed = [&] {
+            // Two routes at once: set the second by hand after the first.
+            Machine *m = MachineRegistry::create("Fathom");
+            m->prepare(kRate);
+            ParamSet &p = m->params();
+            setNorm(p, "kit", 1.0f);
+            for (const Route *r : {&t, &g}) {
+                const std::string k = "mac" + std::to_string(r->macro);
+                setNorm(p, k, r->knob);
+                setNorm(p, k + "_d" + std::to_string(r->route), r->dest / (Fa::MacroDestCount - 1.0f));
+                setNorm(p, k + "_a" + std::to_string(r->route), (r->depth + 1.0f) * 0.5f);
+            }
+            p.jumpAll();
+            m->reset();
+            m->noteOn(pad, 100);
+            std::vector<float> out;
+            float L[kBlock], R[kBlock];
+            for (int32_t b = 0; b < blocks; ++b) {
+                m->onBlock(b * 4, b * 4 + 4, 120.0f);
+                std::memset(L, 0, sizeof(L));
+                std::memset(R, 0, sizeof(R));
+                m->render(L, R, kBlock);
+                for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+            }
+            delete m;
+            return out;
+        }();
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain,
+            "Fathom: in a kit routes to tone and gust reach pad " + std::to_string(pad - 35), buf);
+    }
+    // Pad 1 is fire at density 0.5: a route of 0.25 is the pad's knob at 0.75.
+    {
+        const std::string pd = "p01_density";
+        const auto knob = playHeld("Fathom", {{"kit", 1.0f}, {pd, 0.75f}}, {36}, blocks);
+        Route d{1, 1, Fa::McDensity, 0.25f, 1.0f};
+        const auto routed = playHeld("Fathom", {{"kit", 1.0f}}, {36}, blocks, &d, Fa::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != playHeld("Fathom", {{"kit", 1.0f}}, {36}, blocks),
+            "Fathom: in a kit a route to density moves the pad's density", buf);
+    }
+    // Out of a kit: a route to density matches the density knob, on rain.
+    {
+        const auto knob = playHeld("Fathom", {{"model", 2.0f}, {"density", 0.75f}}, {60}, blocks);
+        Route d{4, 2, Fa::McDensity, 0.25f, 1.0f};
+        const auto routed = playHeld("Fathom", {{"model", 2.0f}}, {60}, blocks, &d, Fa::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Fathom: a route to density matches the knob", buf);
+    }
+    // Waves: a full route takes surf's swell to the top of its range.
+    {
+        const auto knob = playHeld("Fathom", {{"model", 4.0f}, {"swell", 16.0f}}, {60}, blocks);
+        Route w{5, 3, Fa::McSwell, 1.0f, 1.0f};
+        const auto routed = playHeld("Fathom", {{"model", 4.0f}}, {60}, blocks, &w, Fa::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3), "Fathom: a route to waves matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1729,6 +1798,9 @@ int main() {
     using Pm = acidulous::machine::Palm;
     basics("Palm", Pm::MacroDestCount, Pm::McVolume, Pm::McPitch, Pm::McOff, Pm::kMacros);
     palmRoutes();
+    using Fa = acidulous::machine::Fathom;
+    basics("Fathom", Fa::MacroDestCount, Fa::McVolume, Fa::McPitch, Fa::McOff, Fa::kMacros);
+    fathomRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

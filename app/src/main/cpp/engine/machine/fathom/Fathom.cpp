@@ -1,6 +1,7 @@
 #include "Fathom.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
 
@@ -29,7 +30,7 @@ constexpr float kTinRing = 0.35f, kGlassRing = 0.08f;
 Fathom::Fathom() { initParams(); }
 
 const ParamDef *Fathom::paramDefs(int32_t &count) const {
-    static const ParamDef defs[Count] = {
+    static const ParamDef first[MacroBase] = {
         {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // bubbles, drips, rain, stream, surf, wind, fire
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"density", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
@@ -120,8 +121,81 @@ const ParamDef *Fathom::paramDefs(int32_t &count) const {
         {"p16_density", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
         {"p16_level", 0.0f, 1.0f, 0.75f, Curve::Linear, 0, ""},
     };
+    static ParamDef defs[Count];
+    static char names[kMacros * MacroParams][12];
+    static bool built = false;
+    if (!built) {
+        for (int32_t i = 0; i < MacroBase; ++i) defs[i] = first[i];
+        auto put = [&](int32_t i, const char *n, float mn, float mx, float df, Curve c, int32_t steps) {
+            char *name = names[i - MacroBase];
+            std::snprintf(name, 12, "%s", n);
+            defs[i] = ParamDef{name, mn, mx, df, c, steps, ""};
+        };
+        for (int k = 0; k < kMacros; ++k) {
+            char n[12];
+            const int32_t b = MacroBase + k * MacroParams;
+            std::snprintf(n, sizeof(n), "mac%d", k + 1);
+            put(b, n, 0.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            for (int r = 0; r < 4; ++r) {
+                std::snprintf(n, sizeof(n), "mac%d_d%d", k + 1, r + 1);
+                put(b + 1 + r, n, 0.0f, static_cast<float>(MacroDestCount - 1), 0.0f, Curve::Stepped, MacroDestCount);
+                std::snprintf(n, sizeof(n), "mac%d_a%d", k + 1, r + 1);
+                put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            }
+        }
+        built = true;
+    }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Fathom::Count];
+    DestMap() {
+        using P = Fathom;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {P::Density, P::McDensity}, {P::Size, P::McSize}, {P::Rise, P::McRise}, {P::Decay, P::McDecay},
+            {P::Gust, P::McGust}, {P::Whistle, P::McWhistle}, {P::Tone, P::McTone}, {P::Swell, P::McSwell},
+            {P::Spread, P::McSpread}, {P::Fade, P::McFade}, {P::VelocityAmount, P::McVelocity},
+            {P::Volume, P::McVolume},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+        // The density route moves every pad's own density as well.
+        for (int pad = 0; pad < P::kPads; ++pad) of[P::padParam(pad, P::PadDensity)] = static_cast<int8_t>(P::McDensity);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Fathom::paramOf(int32_t p) const {
+    const float v = params_.get(p);
+    const int d = destMap().of[p];
+    const float off = d < 0 ? 0.0f : mac_[d];
+    if (off == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + off);
+}
+
+void Fathom::updateMacros() {
+    for (float &m : mac_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = params_.get(b);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            // The routes' destinations are steps, so their targets.
+            const int dest = static_cast<int>(params_.target(b + 1 + r) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * params_.get(b + 5 + r);
+        }
+    }
+    // Two octaves either way.
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
 }
 
 void Fathom::prepare(int32_t rate) {
@@ -151,6 +225,7 @@ void Fathom::reset() {
     }
     for (Grain &g : grains) g.used = false;
     for (SurfaceMode &m : surface) m.y1 = m.y2 = 0.0f;
+    for (float &m : mac_) m = 0.0f;
     builtSurface = -1;
     surfaceIn = 0.0f;
     bpm = 120.0f;
@@ -398,6 +473,7 @@ void Fathom::notePressure(uint8_t note, uint8_t value) {
 
 bool Fathom::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (asleep) return true;
 
@@ -438,7 +514,8 @@ bool Fathom::render(float *L, float *R, int32_t frames) {
         const float press = std::fmax(v.held ? (v.pressure >= 0.0f ? v.pressure : channelPressure_) : 0.0f, wheel);
         const float played = v.pad >= 0 ? static_cast<float>(steppedTargetOf(padParam(v.pad, PadNote))) : static_cast<float>(v.note);
         const float hz = noteHz(played + 12.0f * static_cast<float>(steppedTargetOf(Octave)) +
-                                paramOf(Tune) / 100.0f + bend * paramOf(BendRange) + v.noteBend);
+                                paramOf(Tune) / 100.0f + bend * paramOf(BendRange) + v.noteBend +
+                                (mac_[McPitch] != 0.0f ? mac_[McPitch] * 24.0f : 0.0f));
         const float aim = v.held ? padLevel * velocityGain(v.velocity, paramOf(VelocityAmount)) * (1.0f + 0.5f * press) : 0.0f;
         const float rate = kRates[kind] * voiceScale * (1.0f + press);
         // The beds: what each texture is besides its grains.

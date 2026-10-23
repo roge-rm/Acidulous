@@ -261,7 +261,7 @@ fun MachinePanel(
             "Palm" -> PalmPanel(binding, selectedPad, track, trackIndex, editor)
             "Chanter" -> ChanterPanel(binding)
             "Aviary" -> AviaryPanel(binding, selectedPad)
-            "Fathom" -> FathomPanel(binding, selectedPad)
+            "Fathom" -> FathomPanel(binding, selectedPad, track, trackIndex, editor)
             "Timber" -> TimberPanel(binding, track, trackIndex, editor)
             "Nexus" -> NexusPanel(binding, track, trackIndex, editor, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -4993,13 +4993,43 @@ private val FATHOM_MODELS = listOf("bubbles", "drips", "rain", "stream", "surf",
         "thunder", "hail", "waterfall", "sizzle", "ice", "snow", "splash", "underwater", "rainstick")
 private val FATHOM_SURFACES = listOf("water", "leaves", "tin", "window")
 
-/** Fathom: the water, the weather, and the player. */
+/** Where a Fathom macro route goes, in the engine's MacroDest order. */
+val FATHOM_MACRO_DESTS = listOf(
+    "off", "density", "size", "rise", "decay", "gust", "whistle", "tone",
+    "waves", "spread", "fade", "velocity", "volume",
+    "pitch",
+)
+
+/** Fathom: the macros, the water, the weather, the player and the kit. */
 @Composable
-private fun FathomPanel(b: ParamBinding, pad: Int) {
+private fun FathomPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("water", "weather", "play", "kit"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "water", "weather", "player", "kit", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            3 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", FATHOM_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", FATHOM_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", FATHOM_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", FATHOM_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            4 -> {
                 // In kit mode the keys from C2 are sixteen pads; the pad picked on
                 // the drum grid is the one these knobs set.
                 val p = pad.coerceIn(0, 15)
@@ -5015,7 +5045,7 @@ private fun FathomPanel(b: ParamBinding, pad: Int) {
                     PanelKnob(b, n("level"), "level", hot)
                 }
             }
-            0 -> {
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", FATHOM_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
@@ -5030,7 +5060,7 @@ private fun FathomPanel(b: ParamBinding, pad: Int) {
                     PanelStepKnob(b, "surface", FATHOM_SURFACES, "surface")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("weather") {
                     PanelKnob(b, "gust", "gust", PanelAmber)
                     PanelKnob(b, "whistle", "whistle")
@@ -5052,6 +5082,14 @@ private fun FathomPanel(b: ParamBinding, pad: Int) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 /** Tongue: the harp, its reeds, the mouth that picks its harmonics with the breath, and the rest. */

@@ -117,4 +117,12 @@ class MacroNamesTest {
         assertEquals("pair", laneShortLabel(track("Tine", emptyMap()), laneKey("machine", "pair")))
         assertEquals("flam", laneShortLabel(track("Palm", emptyMap()), laneKey("machine", "flam")))
     }
+
+    @Test
+    fun fathomMacrosTakeThePatchNames() {
+        val t = track("Fathom", mapOf("macro1" to "Storm"))
+        assertEquals("Storm", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("waves", laneShortLabel(track("Fathom", emptyMap()), laneKey("machine", "swell")))
+    }
 }

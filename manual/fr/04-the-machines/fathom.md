@@ -43,6 +43,9 @@ la note que siffle le vent; la vélocité, la quantité.
 - **ton** : plus sombre ou plus brillant.
 - **houle** : combien de temps d’une vague à la suivante. Elle suit le
   tempo.
+
+## Joueur
+
 - **écart** : l’écartement des bulles et des gouttes, de gauche à droite.
 - **fondu** : le temps qu’il faut pour arriver quand une note est tenue, et
   pour s’éteindre quand on la lâche.
@@ -57,6 +60,24 @@ Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun so
 - Touchez un pad dans la grille de batterie, puis réglez-le dans la carte du pad : **son**, **hauteur**, **densité** et **niveau**.
 - Les autres boutons (taille, montée, ton, etc.) agissent sur tous les pads.
 - **Weather Kit** commence avec feu, vent, pluie, gouttes, bulles, ruisseau et ressac, **Storm Kit** avec pluie, grêle, vent, rafales et tonnerre proche et lointain, et **Water Kit** avec bulles, gouttes, ruisseau, éclaboussures, cascade et profondeurs.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Orage,
+Proche, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace tous les sons, 24 demi-tons
+à 1. Le modèle, l’accordage, la surface, l’octave, le bend et le son, la
+hauteur et le niveau des pads d’un kit ne sont pas accessibles. Dans un kit,
+les routes bougent les boutons que tous les pads partagent, et la densité
+bouge aussi la densité de chaque pad. Un changement de taille, de montée, de
+déclin ou d’écart s’entend à la bulle, à la goutte ou au crépitement suivant;
+le reste bouge tout de suite. Touchez le nom d’une macro pour la renommer.
 
 ## Astuces
 

@@ -28,8 +28,24 @@ class Fathom final : public Machine {
         // Kit mode: each key from kBaseNote is a pad with its own sound, pitch
         // (a MIDI note), density and level, kPadParams values each from PadFirst.
         Kit, PadFirst,
-        Count = PadFirst + 16 * 4
+        // Eight macro knobs, each with four routes: a destination (a
+        // MacroDest) and a depth. A macro's knob times a route's depth is
+        // added to the destination, in its own 0..1 range. Block rate. Pitch
+        // is 24 semitones per unit. The routes reach the params every pad of
+        // a kit shares, and density reaches each pad's own density too.
+        MacroBase = PadFirst + 16 * 4,
+        MacroParams = 9, // knob, 4 destinations, 4 depths
+        Count = MacroBase + 8 * MacroParams
     };
+    // Where a macro route goes. Continuous params only: the model, tune,
+    // surface, bend range, octave and the pads are left out.
+    enum MacroDest : int32_t {
+        McOff, McDensity, McSize, McRise, McDecay, McGust, McWhistle, McTone,
+        McSwell, McSpread, McFade, McVelocity, McVolume,
+        McPitch,
+        MacroDestCount
+    };
+    static constexpr int kMacros = 8;
     static constexpr int kPads = 16, kPadParams = 4;
     enum PadParam : int32_t { PadModel = 0, PadNote, PadDensity, PadLevel };
     static constexpr int32_t padParam(int pad, int which) { return PadFirst + pad * kPadParams + which; }
@@ -99,7 +115,10 @@ class Fathom final : public Machine {
         uint32_t age = 0;
     };
 
-    float paramOf(int32_t i) const { return params_.get(i); }
+    /** Param [p], smoothed, with the macros' routes to it added. */
+    float paramOf(int32_t p) const;
+    /** Fills [mac_] from the smoothed macro knobs and their routes. */
+    void updateMacros();
     Voice *voiceFor(uint8_t note);
     void spawn(Voice &v, int kind, float hz, float amp, float decaySeconds, float rise);
     /** The voice's events: what kind, and the next one's grains. */
@@ -126,6 +145,7 @@ class Fathom final : public Machine {
     uint32_t clock = 0, started = 0;
     int32_t quietSamples = 0;
     bool asleep = true;
+    float mac_[MacroDestCount]{};
 };
 
 } // namespace acidulous::machine

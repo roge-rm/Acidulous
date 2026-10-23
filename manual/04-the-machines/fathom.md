@@ -40,6 +40,9 @@ note the wind whistles; the velocity sets how much.
 - **tone** - darker or brighter.
 - **waves** - how many beats from one wave to the next. It follows the
   tempo.
+
+## Player
+
 - **spread** - how far apart the bubbles and drops land, left to right.
 - **fade** - how long it takes to come in when a note's held, and to die
   away when it's let go.
@@ -54,6 +57,23 @@ Turn on **kit** and the keys from C2 up are sixteen pads, each its own sound, so
 - Tap a pad on the drum grid, then set it in the pad card: **sound**, **pitch**, **density** and **level**.
 - The other knobs (size, rise, tone and so on) work on every pad.
 - **Weather Kit** starts with fire, wind, rain, drips, bubbles, a stream and surf, **Storm Kit** with rain, hail, wind, gusts and thunder near and far, and **Water Kit** with bubbles, drips, a stream, splashes, a waterfall and the deep.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Storm,
+Near, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves every sound, 24 semitones at 1. The model, tune,
+surface, octave, bend and a kit's pad sound, pitch and level can't be
+reached. In a kit the routes move the knobs every pad shares, and density
+moves each pad's own density. A change to the size, rise, decay or spread is
+heard from the next bubble, drop or crackle; the rest move at once. Tap a
+macro's name to rename it.
 
 ## Tips
 
