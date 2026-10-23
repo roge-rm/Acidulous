@@ -909,6 +909,12 @@ fun EditScreen(
         // cards are on the right with the roll between, so each is placed
         // separately. The fx slots and the mixer have their own headers and are
         // all body.
+        //
+        // A desktop window reads the header across, at the left of the
+        // keyboard's strip, instead of turned down the left edge. A tape has no
+        // strip, so it keeps the column.
+        val barInStrip = com.rm.acidulous.AppHost.current.onDesktop && landscape &&
+            panel == 0 && kind != MachineKind.Audio
         val panelSlot: @Composable (bar: Boolean, body: Boolean) -> Unit = { bar, body ->
         androidx.compose.runtime.CompositionLocalProvider(LocalPatchWindow provides patchWindow) {
         // The machine panel (knobs go to the engine as gestures and into the document as undo
@@ -962,8 +968,10 @@ fun EditScreen(
             onOpenPatch = onOpenPatch,
             sceneId = sceneId,
             bar = bar, body = body, vertical = landscape,
-            modifier = Modifier.fillMaxWidth()
-                .then(if (landscape) Modifier.fillMaxHeight() else Modifier.padding(top = 4.dp)),
+            barInRow = barInStrip && !body,
+            modifier = if (barInStrip && !body) Modifier.fillMaxHeight()
+                else Modifier.fillMaxWidth()
+                    .then(if (landscape) Modifier.fillMaxHeight() else Modifier.padding(top = 4.dp)),
         )
         }
         }
@@ -981,6 +989,7 @@ fun EditScreen(
         // handle. Empty in landscape, where there's no divider.
         val keysSlot: @Composable (Dp, Modifier) -> Unit = { height, grip ->
         val keysFolded = UiPrefs.keysFolded
+        val padsGrip = if (barInStrip) KeysStripH else PadsGrip
         // A tape has no instrument and no performance row, so the lanes get the
         // whole screen.
         if (kind == MachineKind.Audio) Unit
@@ -995,9 +1004,12 @@ fun EditScreen(
             // It also holds the fold mark at the right-hand end, like the
             // keyboard's row.
             Box(
-                Modifier.fillMaxWidth().height(PadsGrip).then(grip),
+                Modifier.fillMaxWidth().height(padsGrip).then(grip),
                 contentAlignment = Alignment.CenterEnd,
-            ) { FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) } }
+            ) {
+                if (barInStrip) Box(Modifier.fillMaxSize().padding(start = 6.dp), contentAlignment = Alignment.CenterStart) { panelSlot(true, false) }
+                FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
+            }
             if (!keysFolded) DrumPads(
                 trackIndex, voices, selectedPad, { selectedPad = it },
                 Modifier.fillMaxWidth().weight(1f),
@@ -1011,7 +1023,7 @@ fun EditScreen(
             // in it win where they are: the wheel and stepper consume at the
             // slop and cancel this, and a chip's tap detector never sees a
             // drag. See keysGrip.
-            BoxWithConstraints(Modifier.fillMaxWidth().height(26.dp).then(grip)) {
+            BoxWithConstraints(Modifier.fillMaxWidth().height(KeysStripH).then(grip)) {
             // The chip labels switch to glyphs when the row gets too narrow
             // (see PerfWideMin). At larger interface scales the chips at their
             // fixed widths squeezed the pressure wheel and octave stepper to
@@ -1028,10 +1040,14 @@ fun EditScreen(
                 //
                 // The wheel is weighted for position and capped for size
                 // (PressureW), so it doesn't grow to fill a landscape row.
-                Box(
+                Row(
                     Modifier.weight(1f).fillMaxHeight().then(grip),
-                    contentAlignment = Alignment.CenterStart,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    // The machine and patch on a desktop, see barInStrip. It
+                    // gives way before the wheel does.
+                    if (barInStrip) Box(Modifier.weight(1f, fill = false).padding(start = 6.dp)) { panelSlot(true, false) }
                     if (touchable) TouchWheel(
                         value = pressure, accent = Acid.colors.pink, vertical = false,
                         // No label, the ridges and its place in the row say
@@ -1148,7 +1164,7 @@ fun EditScreen(
                 // Folded, it's just its control row, the share doesn't apply
                 // and there's no grip.
                 val keysFolded = UiPrefs.keysFolded
-                val foldedH = if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H
+                val foldedH = if (kind == MachineKind.Drums) (if (barInStrip) KeysStripH else PADS_FOLDED_H) else KEYS_FOLDED_H
                 // No instrument means the lanes get its height. On a tablet the
                 // share is capped at an instrument's height, otherwise a third
                 // of a landscape tablet is a huge keyboard and the roll runs
@@ -1170,7 +1186,7 @@ fun EditScreen(
                         // the mixer carry their own and are all body. It's
                         // never folded itself and holds the mark that folds the
                         // cards.
-                        if (panel == 0) Column(
+                        if (panel == 0 && !barInStrip) Column(
                             Modifier.width(PATCH_W).fillMaxHeight(),
                         ) { panelSlot(true, false) }
                         Box(Modifier.weight(1f).fillMaxHeight()) {
@@ -1422,6 +1438,8 @@ private fun keysGrip(onDrag: (Dp) -> Unit, onEnd: () -> Unit): Modifier {
  * performance row instead.
  */
 private val PadsGrip = 18.dp
+/** The keyboard's strip of chips, and the pads' grip when it holds the patch. */
+private val KeysStripH = 26.dp
 
 /**
  * What's left at the bottom when the instrument is folded: its control row

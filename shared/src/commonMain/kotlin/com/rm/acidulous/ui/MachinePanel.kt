@@ -156,6 +156,11 @@ fun MachinePanel(
     body: Boolean = true,
     /** The header reads downwards and the cards stack. */
     vertical: Boolean = false,
+    /**
+     * The header is drawn across, inside another row, with no background or
+     * padding of its own. The desktop puts it in the keyboard's strip.
+     */
+    barInRow: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
@@ -167,7 +172,7 @@ fun MachinePanel(
     val binding = rememberParamBinding(trackIndex, type, info, editor)
 
     androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides vertical) {
-    Column(modifier.background(Acid.colors.panel).padding(6.dp)) {
+    Column(if (barInRow) modifier else modifier.background(Acid.colors.panel).padding(6.dp)) {
         val loadPatch: (String) -> Unit = { name ->
             onLoadPatch(name)?.let { patch ->
                 // What this machine keeps across a patch change, see
@@ -234,7 +239,8 @@ fun MachinePanel(
             current = track.machine.settings[kPatchName],
             edited = stamp != null && stamp != nowStamp,
             minimized = minimized, onToggleMinimized = { UiPrefs.foldPanel(!minimized) },
-            vertical = vertical,
+            vertical = vertical && !barInRow,
+            inRow = barInRow,
         )
         if (body && !minimized) when (type) {
             "Reflux" -> RefluxPanel(binding, track, trackIndex, editor)
@@ -489,6 +495,11 @@ private fun PatchBar(
     minimized: Boolean, onToggleMinimized: () -> Unit,
     /** Down the left edge instead of across the top. */
     vertical: Boolean = false,
+    /**
+     * Across, in someone else's row: as wide as it needs, the patch name may
+     * be longer, and the fold points sideways at the cards.
+     */
+    inRow: Boolean = false,
 ) {
     /**
      * Step one patch through the list without opening it.
@@ -577,21 +588,27 @@ private fun PatchBar(
         }
         return
     }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(if (inRow) Modifier else Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Row(
-            Modifier.weight(1f),
+            if (inRow) Modifier.weight(1f, fill = false) else Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(type, color = Acid.colors.text, fontSize = 13.sp, maxLines = 1)
-            PatchPicker(type, patchNames, { onSave(it, true) }, onLoad, factoryPatches, userNames, onDelete, current, edited, onSaveWithEffects = onSave)
+            PatchPicker(
+                type, patchNames, { onSave(it, true) }, onLoad, factoryPatches, userNames, onDelete, current, edited,
+                onSaveWithEffects = onSave, labelMax = if (inRow) 240.dp else 120.dp,
+            )
         }
         BarIcon("\u2039", Acid.colors.accent, said = stringResource(Res.string.a11y_prev_patch)) { step(-1) }
         BarIcon("\u203A", Acid.colors.accent, said = stringResource(Res.string.a11y_next_patch)) { step(1) }
         // A gap before the fold since it isn't part of the step arrows, which
         // do something very different.
-        Spacer(Modifier.width(18.dp))
-        BarIcon(if (minimized) "▴" else "▾", Acid.colors.textMid, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) { onToggleMinimized() }
+        Spacer(Modifier.width(if (inRow) 8.dp else 18.dp))
+        // In a row the cards are off to the right of the roll, so the fold
+        // points that way like the landscape column's.
+        val fold = if (inRow) (if (minimized) "\u25C2" else "\u25B8") else if (minimized) "▴" else "▾"
+        BarIcon(fold, Acid.colors.textMid, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) { onToggleMinimized() }
     }
 }
 
@@ -649,6 +666,8 @@ internal fun PatchPicker(
     onSaveWithEffects: ((String, Boolean) -> Unit)? = null,
     /** Which picker this is on the screen, so an open window finds its picker again. */
     owner: String = key,
+    /** How wide the name can get across. */
+    labelMax: Dp = 120.dp,
 ) {
     var menu by remember { mutableStateOf(false) }
     // Held by the screen when it gives a place to, so a window stays open
@@ -685,7 +704,7 @@ internal fun PatchPicker(
                 stringResource(Res.string.machine_patch_menu, label),
                 color = Acid.colors.accent, fontSize = 11.sp, maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 120.dp),
+                modifier = Modifier.widthIn(max = labelMax),
             )
         }
     }
