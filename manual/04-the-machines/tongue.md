@@ -83,10 +83,14 @@ go instead, and **pluck** sets how quickly.
   0 it's off.
 - **wah rate** - how long each step is: **1/4**, **1/8.**, **1/4T**, **1/8**,
   **1/8T** or **1/16**.
+- **wah shape** - **step** jumps to each step's vowel. **smooth** opens and
+  shuts the mouth along a curve, once every two steps, still shut on the
+  beat.
 
 The mouth keeps the level steady, so moving it changes the colour and not the
 loudness. With a short **glide** the wah steps from one vowel to the other;
 with a long one it sweeps, never taking more than half a step to get there.
+On **smooth** the glide only takes the corners off.
 
 ## Words and following
 

@@ -435,6 +435,41 @@ void wah() {
     const double stepping = worstStep(w.out, 1.0, 2.0);
     check(stepping < 1.25 * steady, "the wah steps without a click", fmt("worst step %.4f, steady %.4f", stepping, steady));
 
+    // Smooth: the mouth moves along a curve, shut on the beat and open
+    // halfway through each pair of steps, never jumping.
+    Harp sm(held);
+    sm.set("wah", 0.5f);
+    sm.set("wahrate", 3.0f);
+    sm.set("wahshape", 1.0f);
+    sm.t->noteOn(50, 100);
+    sm.play(1.0);
+    float f1[40];
+    for (int k = 0; k < 40; ++k) {
+        sm.play(0.0125);
+        f1[k] = sm.t->formantTarget(0);
+    }
+    float biggest = 0.0f, lowF = 1e9f, highF = 0.0f;
+    int between = 0;
+    for (int k = 0; k < 40; ++k) {
+        if (k > 0) biggest = std::fmax(biggest, std::fabs(f1[k] - f1[k - 1]));
+        lowF = std::fmin(lowF, f1[k]);
+        highF = std::fmax(highF, f1[k]);
+        between += f1[k] > 450.0f && f1[k] < 1550.0f ? 1 : 0;
+    }
+    check(lowF < 400.0f && highF > 1550.0f && between >= 16 && biggest < 200.0f, "smooth wah moves the mouth along a curve",
+          fmt("F1 %.0f to %.0f Hz, %d of 40 between, biggest move %.0f Hz", lowF, highF, between, biggest));
+    sm.play(0.5);
+    double smWorst = 0.0;
+    for (int k = 0; k < 4; ++k) {
+        // Each eighth's level stays between the two vowels', or near them.
+        const double from = 1.0 + 0.25 * k, to = from + 0.25;
+        const double l = rmsDb(sm.out, from, to), a1 = rmsDb(still.out, from, to), a2 = rmsDb(wide.out, from, to);
+        smWorst = std::fmax(smWorst, std::fmax(std::fmin(a1, a2) - l, l - std::fmax(a1, a2)));
+    }
+    check(smWorst < 1.0, "smooth wah doesn't pump", fmt("%.2f dB outside the two vowels' levels", smWorst));
+    const double smStep = worstStep(sm.out, 1.0, 2.0);
+    check(smStep < 1.25 * steady, "smooth wah moves without a click", fmt("worst step %.4f, steady %.4f", smStep, steady));
+
     // Wah 0 leaves the sound alone, whatever its rate.
     Harp a(held), b(held);
     b.set("wahrate", 0.0f);

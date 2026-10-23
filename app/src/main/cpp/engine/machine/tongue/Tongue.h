@@ -41,8 +41,9 @@ class Tongue final : public Machine {
         Play, Drone, Repluck, Pattern, Accent, Ratchet,
         Sidechain, Words,
         // The wah: the mouth opens by [Wah] on every other step of the song's
-        // grid and shuts on the rest, [WahRate] a step.
-        Wah, WahRate,
+        // grid and shuts on the rest, [WahRate] a step; [WahShape] steps
+        // there or moves along a smooth curve.
+        Wah, WahRate, WahShape,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate, but
@@ -80,6 +81,8 @@ class Tongue final : public Machine {
     enum PatternKind : int32_t { NoPattern = 0, Eighths, Sixteenths, Gallop, Triplets, Runs, Groupings, kPatterns };
     /** The wah's steps, in quarter notes, for `wahrate`: 1/4, dotted 1/8, 1/4 triplet, 1/8, 1/8 triplet, 1/16. */
     static constexpr int kWahRates = 6;
+    /** How the wah moves, for `wahshape`. */
+    enum WahShapeKind : int32_t { WahStep = 0, WahSmooth, kWahShapes };
     static constexpr float kWahBeats[kWahRates] = {1.0f, 0.75f, 2.0f / 3.0f, 0.5f, 1.0f / 3.0f, 0.25f};
 
     Tongue();
@@ -225,8 +228,8 @@ class Tongue final : public Machine {
     void updateMacroGoals();
     /** Fills [mac_] from the smoothed macro knobs, and the goals too. */
     void updateMacros();
-    /** The wah's move along the vowel control at the song's tick [tick], and its step in seconds. */
-    float wahAt(double tick, bool goal, float &stepSeconds) const;
+    /** The wah's move along the vowel control at the song's tick [tick], its step in seconds, and whether it's smooth. */
+    float wahAt(double tick, bool goal, float &stepSeconds, bool &smooth) const;
     Voice *voiceFor(uint8_t note);
     void retune(Voice &v);
     /** Plucks a sounding harp again, all its reeds as the order says. */

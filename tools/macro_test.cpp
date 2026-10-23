@@ -1788,6 +1788,13 @@ void tongueRoutes() {
         const auto routed = playHeld("Tongue", {}, {55}, blocks, &w, To::MacroDestCount);
         ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Tongue: a route to wah matches the knob", buf);
     }
+    // Smooth wah: a route to wah still matches the knob.
+    {
+        const auto knob = playHeld("Tongue", {{"wah", 0.5f}, {"wahshape", 1.0f}}, {55}, blocks);
+        Route w{4, 2, To::McWah, 0.5f, 1.0f};
+        const auto routed = playHeld("Tongue", {{"wahshape", 1.0f}}, {55}, blocks, &w, To::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Tongue: a route to a smooth wah matches the knob", buf);
+    }
     // Wah rate 1/8 (3 of 0..5) by default: a route of 0.4 is 1/16.
     {
         const auto knob = playHeld("Tongue", {{"wah", 0.5f}, {"wahrate", 5.0f}}, {55}, blocks);

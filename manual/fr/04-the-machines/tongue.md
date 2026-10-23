@@ -96,11 +96,14 @@ tirés puis relâchés, et **pincer** règle à quelle vitesse.
   ainsi de suite. À 0, c’est éteint.
 - **vitesse du wah-wah** - la durée de chaque pas : **1/4**, **1/8.**,
   **1/4T**, **1/8**, **1/8T** ou **1/16**.
+- **forme du wah-wah** - **pas** passe d’un coup à la voyelle de chaque pas.
+  **lisse** ouvre et ferme la bouche le long d’une courbe, une fois tous les
+  deux pas, toujours fermée sur le temps.
 
 La bouche garde le niveau stable : la bouger change la couleur, pas le volume.
 Avec un **porta.** court, le wah-wah passe d’une voyelle à l’autre d’un coup;
 avec un long, il glisse, sans jamais prendre plus d’un demi-pas pour y
-arriver.
+arriver. En **lisse**, le porta. ne fait qu’adoucir les angles.
 
 ## Les paroles et le suivi
 

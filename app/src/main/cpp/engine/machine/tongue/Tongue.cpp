@@ -151,6 +151,8 @@ const ParamDef *Tongue::paramDefs(int32_t &count) const {
         {"wah", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         // The wah's step on the song's grid: 1/4, 1/8., 1/4T, 1/8, 1/8T, 1/16.
         {"wahrate", 0.0f, static_cast<float>(kWahRates - 1), 3.0f, Curve::Stepped, kWahRates, ""},
+        // Step jumps to each step's vowel; smooth opens and shuts along a raised cosine.
+        {"wahshape", 0.0f, static_cast<float>(kWahShapes - 1), 0.0f, Curve::Stepped, kWahShapes, ""},
     };
     static ParamDef defs[Count];
     static char names[kMacros * MacroParams][12];
@@ -244,15 +246,23 @@ void Tongue::updateMacros() {
     mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
 }
 
-float Tongue::wahAt(double tick, bool goal, float &stepSeconds) const {
+float Tongue::wahAt(double tick, bool goal, float &stepSeconds, bool &smooth) const {
     stepSeconds = 0.0f;
+    smooth = false;
     const float wah = clampf(val(Wah, goal), 0.0f, 1.0f);
     if (wah <= 0.0f) return 0.0f;
     const int rate = std::clamp(static_cast<int>(val(WahRate, true) + 0.5f), 0, kWahRates - 1);
     const double step = static_cast<double>(kWahBeats[rate]) * kPPQN;
     stepSeconds = static_cast<float>(step * samplesPerTick / static_cast<double>(sampleRate));
+    const double at = std::fmax(tick, 0.0) / step;
+    if (steppedTargetOf(WahShape) == WahSmooth) {
+        // One open and shut every two steps, shut on the beat: a raised cosine.
+        smooth = true;
+        const double cycle = at * 0.5 - std::floor(at * 0.5);
+        return wah * static_cast<float>(0.5 - 0.5 * std::cos(6.283185307179586 * cycle));
+    }
     // Shut on the beat, open on the step after.
-    const auto n = static_cast<int64_t>(std::floor(std::fmax(tick, 0.0) / step + 1e-9));
+    const auto n = static_cast<int64_t>(std::floor(at + 1e-9));
     return (n & 1) != 0 ? wah : 0.0f;
 }
 
@@ -751,7 +761,8 @@ void Tongue::moveMouth(bool jump) {
     const auto knob = [&](int32_t p) { return jump ? goalOf(p) : paramOf(p); };
     // The vowel: oo oh ah eh ee along the control, the mod wheel and the wah on top.
     float wahStep = 0.0f;
-    const float wah = wahAt(mouthTick, jump, wahStep);
+    bool wahSmooth = false;
+    const float wah = wahAt(mouthTick, jump, wahStep, wahSmooth);
     float vowel = knob(Mouth) + wheel;
     if (wah > 0.0f) vowel += wah;
     const float m = clampf(vowel, 0.0f, 1.0f) * 4.0f;
@@ -767,7 +778,8 @@ void Tongue::moveMouth(bool jump) {
     for (int k = 0; k < 3; ++k) mouthGoal[k] = target[k];
     float seconds = saying && words > 0.0f ? kSayGlide : knob(Glide) * 0.001f;
     // The wah's glide is at most half its step, so a long glide sweeps rather than stopping it.
-    if (wahStep > 0.0f) seconds = std::fmin(seconds, 0.5f * wahStep);
+    // Smooth, the curve does the moving and the glide only takes off the corners.
+    if (wahStep > 0.0f) seconds = std::fmin(seconds, (wahSmooth ? 0.125f : 0.5f) * wahStep);
     const float follow = jump ? 1.0f : 1.0f - std::exp(-static_cast<float>(kControl) / (seconds * sampleRate));
     for (int k = 0; k < 3; ++k) formants[k] += (target[k] - formants[k]) * follow;
     if (pickOn) pickAt += (pickHz - pickAt) * follow;

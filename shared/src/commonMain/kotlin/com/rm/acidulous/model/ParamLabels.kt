@@ -3148,6 +3148,7 @@ private fun labels3(): Map<String, String> = mapOf(
     "Tongue:volume" to "out|volume",
     "Tongue:wah" to "mouth|wah",
     "Tongue:wahrate" to "mouth|wah rate",
+    "Tongue:wahshape" to "mouth|wah shape",
     "Tongue:words" to "mouth|words",
     "Trinity:balance" to "routing|balance",
     "Trinity:bend" to "voice|bend",
@@ -3227,10 +3228,10 @@ private fun labels3(): Map<String, String> = mapOf(
     "Trinity:m08_src2" to "mod 8|× from",
     "Trinity:m09_depth" to "mod 9|depth",
     "Trinity:m09_dest" to "mod 9|to",
-    "Trinity:m09_src" to "mod 9|from",
 )
 
 private fun labels4(): Map<String, String> = mapOf(
+    "Trinity:m09_src" to "mod 9|from",
     "Trinity:m09_src2" to "mod 9|× from",
     "Trinity:m10_depth" to "mod 10|depth",
     "Trinity:m10_dest" to "mod 10|to",
@@ -6447,6 +6448,7 @@ private fun short3(): Map<String, String> = mapOf(
     "Tongue:volume" to "volume",
     "Tongue:wah" to "wah",
     "Tongue:wahrate" to "wah rate",
+    "Tongue:wahshape" to "wah shape",
     "Tongue:words" to "words",
     "Trinity:balance" to "balance",
     "Trinity:bend" to "bend",
@@ -6580,10 +6582,10 @@ private fun short3(): Map<String, String> = mapOf(
     "Trinity:mac5_a1" to "by 1",
     "Trinity:mac5_a2" to "by 2",
     "Trinity:mac5_a3" to "by 3",
-    "Trinity:mac5_a4" to "by 4",
 )
 
 private fun short4(): Map<String, String> = mapOf(
+    "Trinity:mac5_a4" to "by 4",
     "Trinity:mac5_d1" to "to 1",
     "Trinity:mac5_d2" to "to 2",
     "Trinity:mac5_d3" to "to 3",

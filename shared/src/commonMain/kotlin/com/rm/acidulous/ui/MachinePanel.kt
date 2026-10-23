@@ -5131,6 +5131,7 @@ private fun FathomPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int
 }
 
 private val TONGUE_WAH_RATES = listOf("1/4", "1/8.", "1/4T", "1/8", "1/8T", "1/16")
+private val TONGUE_WAH_SHAPES = listOf("step", "smooth")
 
 /** Where a Tongue macro route goes, in the engine's MacroDest order. */
 val TONGUE_MACRO_DESTS = listOf(
@@ -5202,6 +5203,7 @@ private fun TonguePanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "words", "words")
                     PanelKnob(b, "wah", "wah", PanelPink)
                     PanelStepKnob(b, "wahrate", TONGUE_WAH_RATES, "wah rate")
+                    PanelStepKnob(b, "wahshape", TONGUE_WAH_SHAPES, "wah shape")
                 }
                 Group("breath") {
                     PanelKnob(b, "breath", "breath", PanelAmber)
