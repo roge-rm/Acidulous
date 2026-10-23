@@ -125,6 +125,9 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
     int32_t cableIndex = 0;
     for (const auto &line : lines) {
         if (line.empty() || line[0] != 'c') continue;
+        // Cables are numbered by their place in the text, skipped ones too,
+        // so the editor's cable list and the cNN parameters agree.
+        const int32_t index = cableIndex++;
         const auto f = split(line, '|');
         if (f.size() < 4) continue;
         Cable c;
@@ -144,8 +147,7 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
         if (f.size() >= 7) c.modAmount = toFloat(f[6], 0.0f);
         // The first kCables cables get a pair of depth parameters, so they
         // can be changed and automated without rebuilding the graph.
-        c.paramIndex = cableIndex < kCables ? cableIndex : -1;
-        ++cableIndex;
+        c.paramIndex = index < kCables ? index : -1;
         g->cables.push_back(c);
     }
 

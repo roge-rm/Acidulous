@@ -626,6 +626,27 @@ void monoModulesFollowTheLeadVoice() {
 
 } // namespace
 
+void cablesAreNumberedByTheirPlace() {
+    printf("- cable numbers\n");
+    // The second cable names a slot with no module and is skipped; the third
+    // is still cable 2, as the editor lists it.
+    const std::string patch = "v|2\nm|0|voice\nm|1|osc|mono\nm|2|out|mono\n"
+                              "c|0.0|1.0|1.0\nc|7.0|2.0|1.0\nc|1.0|2.0|1.0";
+    auto loudness = [&](const char *a, const char *b) {
+        auto m = nexusWith(patch);
+        ParamSet &p = m->params();
+        for (const char *name : {a, b}) {
+            const int i = p.indexOf(name);
+            p.jump(i, p.def(i).unmap(0.0f));
+        }
+        m->noteOn(60, 100);
+        return peak(play(*m, 0.2f));
+    };
+    const double two = loudness("c02_a", "c02_b"), one = loudness("c01_a", "c01_b");
+    ok("cable 2 at depth 0 silences the third cable", two < 1e-6, std::to_string(two));
+    ok("cable 1, the skipped one, changes nothing", one > 0.05, std::to_string(one));
+}
+
 int main() {
     printf("nexus modules\n");
     everyModuleBehaves();
@@ -642,6 +663,7 @@ int main() {
     formulasRunFromTheirText();
     theFollowerHearsThePitch();
     monoModulesFollowTheLeadVoice();
+    cablesAreNumberedByTheirPlace();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
