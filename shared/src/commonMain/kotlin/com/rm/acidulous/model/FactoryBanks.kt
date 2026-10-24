@@ -10895,7 +10895,7 @@ internal object FactoryBanks {
         low = 43, high = 57)
 
     private fun palm19() = Patch("Palm", "Talking By Touch",
-        mapOf("model" to 0.2777778f, "stroke" to 1f, "hand" to 0.65f, "squeeze" to 0.5833333f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.440999985f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.309499979f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
+        mapOf("model" to 0.2777778f, "stroke" to 1f, "position" to 0.25f, "hand" to 0.65f, "decay" to 0.35f, "drop" to 0.7f, "squeeze" to 0.5833333f, "mac1_d1" to 0.0714285746f, "mac1_d2" to 0.857142866f, "mac1_a1" to 0.25f, "mac1_a2" to 0.475f, "mac2_d1" to 0.142857149f, "mac2_a1" to 0.7f, "mac3_d1" to 0.214285716f, "mac3_d2" to 0.857142866f, "mac3_a1" to 0.675f, "mac3_a2" to 0.425f, "mac4_d1" to 0.2857143f, "mac4_d2" to 0.857142866f, "mac4_a1" to 0.8f, "mac4_a2" to 0.65f, "mac5_d1" to 0.357142866f, "mac5_a1" to 0.85f, "mac6_d1" to 0.9285714f, "mac6_a1" to 0.7f, "mac7_d1" to 0.642857134f, "mac7_d2" to 0.857142866f, "mac7_a1" to 0.75f, "mac7_a2" to 0.309499979f, "mac8_d1" to 1f, "mac8_a1" to 0.55f),
         mapOf("macro1" to "Middle", "macro2" to "Quick", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Drop", "macro6" to "Flam", "macro7" to "Roll", "macro8" to "Tight"),
         family = "africa",
         low = 45, high = 67)

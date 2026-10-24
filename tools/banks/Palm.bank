@@ -761,7 +761,9 @@ patch "Ashiko By Touch" family=africa note=50 range=43..57
   hand           0.6
 
 patch "Talking By Touch" family=africa note=55 range=45..67 role=jaw
-  # Soft notes muted, hard ones slapped, the cords squeezed between strokes: press, or use the mod wheel.
+  # Played by the fingers nearer the middle, short, going sharp when struck
+  # hard. Soft notes muted, hard ones slapped, the cords squeezed between
+  # strokes: press, or use the mod wheel.
   set macro1 "Middle"
   set macro2 "Quick"
   set macro3 "Ring"
@@ -773,7 +775,7 @@ patch "Talking By Touch" family=africa note=55 range=45..67 role=jaw
   mac1_d1  #1
   mac1_a1  -0.5
   mac1_d2  #12
-  mac1_a2  -0.118
+  mac1_a2  -0.05
   mac2_d1  #2
   mac2_a1  0.4
   mac3_d1  #3
@@ -798,6 +800,9 @@ patch "Talking By Touch" family=africa note=55 range=45..67 role=jaw
   stroke         #5
   squeeze        7
   hand           0.65
+  position       0.25
+  drop           0.7
+  decay          0.35
 
 patch "Djembe Roll" family=africa note=55 range=45..67 role=pad
   # Held notes rolled on the tone, quick fingers.
