@@ -969,7 +969,7 @@ fun EditScreen(
             sceneId = sceneId,
             bar = bar, body = body, vertical = landscape,
             barInRow = barInStrip && !body,
-            modifier = if (barInStrip && !body) Modifier.fillMaxHeight()
+            modifier = if (barInStrip && !body) Modifier
                 else Modifier.fillMaxWidth()
                     .then(if (landscape) Modifier.fillMaxHeight() else Modifier.padding(top = 4.dp)),
         )
@@ -1007,8 +1007,13 @@ fun EditScreen(
                 Modifier.fillMaxWidth().height(padsGrip).then(grip),
                 contentAlignment = Alignment.CenterEnd,
             ) {
-                if (barInStrip) Box(Modifier.fillMaxSize().padding(start = 6.dp), contentAlignment = Alignment.CenterStart) { panelSlot(true, false) }
-                FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
+                if (barInStrip) Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                    // The bar gives way to the fold mark, and a bare stretch
+                    // before the mark is always left to drag by.
+                    Box(Modifier.weight(1f, fill = false).padding(start = 6.dp)) { panelSlot(true, false) }
+                    Spacer(Modifier.weight(1f).widthIn(min = PadsGrabMin))
+                    FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
+                } else FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
             }
             if (!keysFolded) DrumPads(
                 trackIndex, voices, selectedPad, { selectedPad = it },
@@ -1028,7 +1033,8 @@ fun EditScreen(
             // (see PerfWideMin). At larger interface scales the chips at their
             // fixed widths squeezed the pressure wheel and octave stepper to
             // nothing. Glyphs give about 120 dp back to them.
-            val icons = maxWidth < PerfWideMin
+            // The patch bar on a desktop takes its share first.
+            val icons = maxWidth < PerfWideMin + (if (barInStrip) StripBarW else 0.dp)
             Row(
                 Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -1047,7 +1053,7 @@ fun EditScreen(
                 ) {
                     // The machine and patch on a desktop, see barInStrip. It
                     // gives way before the wheel does.
-                    if (barInStrip) Box(Modifier.weight(1f, fill = false).padding(start = 6.dp)) { panelSlot(true, false) }
+                    if (barInStrip) Box(Modifier.weight(1f, fill = false).padding(start = 6.dp), contentAlignment = Alignment.CenterStart) { panelSlot(true, false) }
                     if (touchable) TouchWheel(
                         value = pressure, accent = Acid.colors.pink, vertical = false,
                         // No label, the ridges and its place in the row say
@@ -1440,6 +1446,10 @@ private fun keysGrip(onDrag: (Dp) -> Unit, onEnd: () -> Unit): Modifier {
 private val PadsGrip = 18.dp
 /** The keyboard's strip of chips, and the pads' grip when it holds the patch. */
 private val KeysStripH = 26.dp
+/** About what the patch bar takes in the strip with a typical name, see [PerfWideMin]. */
+private val StripBarW = 300.dp
+/** The bare part of the pads' grip left to drag by when it holds the patch bar. */
+private val PadsGrabMin = 48.dp
 
 /**
  * What's left at the bottom when the instrument is folded: its control row
