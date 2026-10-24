@@ -429,6 +429,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "felt" to Res.string.pw_felt,
     "fenv" to Res.string.pw_fenv,
     "fewer bits with a" to Res.string.pw_fewer_bits_with_a,
+    "fiddle" to Res.string.pw_fiddle,
     "fifths" to Res.string.pw_fifths,
     "file" to Res.string.pw_file,
     "file mod" to Res.string.pw_file_mod,
