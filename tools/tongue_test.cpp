@@ -531,6 +531,34 @@ void catches() {
         }
     }
     check(worst < 1.5f * own, "a pluck on a ringing reed doesn't tick", fmt("worst %.3f at a pluck, %.3f elsewhere", worst, own));
+
+    // Plucks closer than a quarter period (240 samples at 50 Hz) land while
+    // the last catch is still fading; each keeps its own fade.
+    float quickWorst = 0.0f, quickOwn = 0.0f;
+    for (int gap : {120, 60, 30}) {
+        machine::tongue::Reed r;
+        r.prepare(kRate);
+        r.tune(50.0f, 2.0f, 0.3f, 0.5f);
+        r.pluck(1.0f, 0.0013f, 0.5f);
+        std::vector<float> a;
+        std::vector<bool> near(24000, false);
+        int plucks = 0;
+        for (int i = 0; i < 24000; ++i) {
+            if (i >= 4800 && (i - 4800) % gap == 0 && plucks < 8) {
+                r.pluck(1.0f, 0.0013f, 0.5f);
+                ++plucks;
+                for (int k = i - 2; k <= i + 2; ++k) near[static_cast<size_t>(k)] = true;
+            }
+            a.push_back(r.step(0.0f));
+        }
+        for (size_t i = 2000; i + 1 < a.size(); ++i) {
+            const float off = std::fabs(a[i] - 0.5f * (a[i - 1] + a[i + 1]));
+            if (near[i]) quickWorst = std::fmax(quickWorst, off);
+            else quickOwn = std::fmax(quickOwn, off);
+        }
+    }
+    check(quickWorst < 1.5f * quickOwn, "plucks closer than a quarter period don't tick",
+          fmt("worst %.5f at a pluck, %.5f elsewhere", quickWorst, quickOwn));
 }
 
 int main() {
