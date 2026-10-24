@@ -434,12 +434,13 @@ void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing, bool ramping) 
     stretching = nullptr; // a new clip starts a new cycle, so the stretcher re-seeks
 }
 
-void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing) {
+void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing, bool rolling) {
     if (machine == nullptr) return;
     // The clip is set per rack per scene, so the mute is right in both modes
     // (same as updateFrozen).
     const seq::Clip *clip = clipPlayer.clip();
     machine->onScene(sceneId, cycleTick, playing, clip != nullptr && clip->mute);
+    machine->onTransport(rolling);
 }
 
 void Rack::syncFrozen(int64_t tickInIteration, float bpm) {

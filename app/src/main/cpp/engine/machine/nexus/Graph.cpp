@@ -306,6 +306,10 @@ void Graph::adoptFrom(Graph &old) {
     }
 }
 
+void Graph::restartClocks() {
+    for (auto &n : nodes) for (auto &i : n.inst) if (i) i->restart();
+}
+
 void Graph::reset() {
     for (auto &n : nodes) for (auto &i : n.inst) if (i) i->reset();
     for (auto &v : port) v = 0.0f;

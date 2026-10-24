@@ -1183,7 +1183,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "Keep patches small and name your macros."),
         ManualBlock(ManualKind.Bullet, "Wire **morph** to the two or three things that change the patch the most."),
-        ManualBlock(ManualKind.Bullet, "Some patches in the **generative** and **texture** families play themselves while the song plays, with no key held. The **morph** patches are built around the **A→B** knob."),
+        ManualBlock(ManualKind.Bullet, "Some patches in the **generative** and **texture** families play themselves while the song plays, with no key held. The **clock** module runs in time with the song from where play starts and stops with it. Stopped, it runs only while you hold a key. The **morph** patches are built around the **A→B** knob."),
         ManualBlock(ManualKind.Bullet, "Nexus isn't the easiest place to start. The other machines do most things more directly, and Nexus is for combinations they don't cover."),
     ))
 
@@ -3307,7 +3307,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Gardez les patchs petits et nommez vos macros."),
         ManualBlock(ManualKind.Bullet, "Reliez **morph** aux deux ou trois choses qui changent le plus le patch."),
-        ManualBlock(ManualKind.Bullet, "Certains sons des familles **generative** et **texture** jouent tout seuls pendant que la chanson joue, sans touche enfoncée. Les sons **morph** sont faits autour du bouton **A→B**."),
+        ManualBlock(ManualKind.Bullet, "Certains sons des familles **generative** et **texture** jouent tout seuls pendant que la chanson joue, sans touche enfoncée. Le module **horloge** suit la chanson depuis l’endroit où la lecture part et s’arrête avec elle. À l’arrêt, il ne tourne que si vous tenez une touche. Les sons **morph** sont faits autour du bouton **A→B**."),
         ManualBlock(ManualKind.Bullet, "Nexus n’est pas l’endroit le plus facile pour commencer. Les autres machines font la plupart des choses plus directement, et Nexus sert aux combinaisons qu’elles ne couvrent pas."),
     ))
 

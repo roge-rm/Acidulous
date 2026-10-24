@@ -541,6 +541,65 @@ std::string centsText(double c) {
     return buf;
 }
 
+/** [seconds] in 64-frame blocks at 120 bpm with the transport given, from [tick]. */
+std::vector<float> playMoving(Machine &m, float seconds, bool rolling, double &tick) {
+    const size_t n = static_cast<size_t>(seconds * kRate);
+    std::vector<float> out;
+    float L[64], R[64];
+    while (out.size() < n) {
+        const double next = tick + 64.0 / 100.0; // 100 frames a tick at 120 bpm
+        m.onTransport(rolling);
+        m.onBlock(static_cast<int64_t>(tick), static_cast<int64_t>(next), 120.0f);
+        m.render(L, R, 64);
+        out.insert(out.end(), L, L + 64);
+        tick = next;
+    }
+    out.resize(n);
+    return out;
+}
+
+void theClockFollowsTheTransport() {
+    printf("- the clock follows the transport\n");
+    // A clock opening a saw: nothing but the clock makes it sound.
+    const std::string self = "v|2\nm|0|clock|mono\nm|1|osc|mono\nm|2|vca|mono\nm|3|out|mono\n"
+                             "c|1.0|2.0|1\nc|0.0|2.1|1\nc|2.0|3.0|1";
+    {
+        auto m = nexusWith(self);
+        double tick = 1370.0;
+        const double stopped = peak(playMoving(*m, 1.0f, false, tick));
+        ok("stopped, a self-playing patch is silent", stopped < 1e-6, std::to_string(stopped));
+        // Play starts off the clock's beat; the clock counts from there.
+        const auto first = playMoving(*m, 0.01f, true, tick);
+        ok("play starts the clock on its first beat", peak(first) > 0.05, std::to_string(peak(first)));
+        const double rolling = peak(playMoving(*m, 1.0f, true, tick));
+        ok("playing, it sounds", rolling > 0.05, std::to_string(rolling));
+        playMoving(*m, 0.01f, false, tick);
+        const double after = peak(playMoving(*m, 0.5f, false, tick));
+        ok("stop silences it", after < 1e-6, std::to_string(after));
+    }
+    // The key gates the clock: played while stopped, it still plays.
+    const std::string keyed = "v|2\nm|0|voice\nm|1|clock|mono\nm|2|logic|mono\nm|3|osc|mono\nm|4|vca|mono\nm|5|out|mono\n"
+                              "c|0.1|2.0|1\nc|1.0|2.1|1\nc|0.0|3.0|1\nc|3.0|4.0|1\nc|2.0|4.1|1\nc|4.0|5.0|1";
+    {
+        auto m = nexusWith(keyed);
+        double tick = 1370.0;
+        const double idle = peak(playMoving(*m, 0.5f, false, tick));
+        ok("stopped with no key, a key-gated clock is silent", idle < 1e-6, std::to_string(idle));
+        m->noteOn(60, 100);
+        const auto held = playMoving(*m, 1.0f, false, tick);
+        ok("stopped, a held key runs its clock", peak(held) > 0.05, std::to_string(peak(held)));
+        // Quarters at 120 bpm: on for the first quarter second, off for the next.
+        const std::vector<float> on(held.begin() + 1000, held.begin() + 11000);
+        const std::vector<float> off(held.begin() + 13000, held.begin() + 23000);
+        ok("from the key down, in quarters", peak(on) > 0.05 && peak(off) < 1e-6,
+           std::to_string(peak(on)) + " " + std::to_string(peak(off)));
+        m->noteOff(60);
+        playMoving(*m, 0.05f, false, tick);
+        const double after = peak(playMoving(*m, 0.5f, false, tick));
+        ok("letting the key go stops it", after < 1e-6, std::to_string(after));
+    }
+}
+
 void monoModulesFollowTheLeadVoice() {
     printf("- poly voices into a mono module\n");
     // The keys into a mono saw: its pitch is one note's, at any velocity.
@@ -686,6 +745,7 @@ int main() {
     formulasRunFromTheirText();
     theFollowerHearsThePitch();
     monoModulesFollowTheLeadVoice();
+    theClockFollowsTheTransport();
     cablesAreNumberedByTheirPlace();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;

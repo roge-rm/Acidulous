@@ -79,6 +79,8 @@ void Nexus::reset() {
         gateOf[i] = 0.0f; triggerOf[i] = 0.0f;
         pressureOf[i] = timbreOf[i] = -1.0f;
     }
+    heldTick = 0.0;
+    clockWasRunning = false;
     if (graph != nullptr) graph->reset();
 }
 
@@ -130,6 +132,11 @@ void Nexus::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
     ctx.bpm = bpm > 1.0f ? bpm : 120.0f;
     tickCursor = static_cast<double>(tickStart);
     tickStep = static_cast<double>(tickEnd - tickStart);
+    // The clock counts from where play started, so it's in time with the song.
+    if (songRolling && !wasRolling) rollOrigin = tickStart;
+    if (!songRolling && wasRolling) heldTick = 0.0;
+    wasRolling = songRolling;
+    if (songRolling) clockCursor = static_cast<double>(tickStart - rollOrigin);
 }
 
 void Nexus::noteBend(uint8_t note, float semitones) {
@@ -205,6 +212,20 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
     g->leadVoice = lead;
     ctx.tickInc = frames > 0 ? tickStep / static_cast<double>(frames) : 0.0;
     ctx.tick = tickCursor;
+    // The clock runs while the song plays. Stopped, it runs only while a key
+    // is held, from the first key down, so a patch whose key gates its clock
+    // still plays.
+    bool anyHeld = false;
+    for (const auto &v : voices) anyHeld = anyHeld || (v.used && v.gate);
+    const bool clockRunning = songRolling || anyHeld;
+    if (!songRolling) {
+        if (!anyHeld) heldTick = 0.0;
+        clockCursor = heldTick;
+    }
+    if (clockRunning && !clockWasRunning) g->restartClocks();
+    clockWasRunning = clockRunning;
+    ctx.clockRunning = clockRunning;
+    ctx.clockTick = clockCursor;
 
     const float volume = paramOf(Volume) * kHouse;
     const float pan = paramOf(Pan);
@@ -220,6 +241,7 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
         g->step(ctx, active, activeCount, outL, outR);
         g->advanceCables();
         ctx.tick += ctx.tickInc;
+        ctx.clockTick += ctx.tickInc;
 
         if (drive > 0.0f) {
             outL = std::tanh(outL * (1.0f + drive * 8.0f));
@@ -247,6 +269,7 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
         if (v.used && !v.gate && v.quiet > 0.032f) { v.used = false; v.quiet = 0.0f; }
     }
     tickCursor += tickStep;
+    if (!songRolling && anyHeld) heldTick += tickStep;
     return true;
 }
 

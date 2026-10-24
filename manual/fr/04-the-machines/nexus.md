@@ -106,7 +106,9 @@ passer par un patch.
 - Gardez les patchs petits et nommez vos macros.
 - Reliez **morph** aux deux ou trois choses qui changent le plus le patch.
 - Certains sons des familles **generative** et **texture** jouent tout seuls
-  pendant que la chanson joue, sans touche enfoncée. Les sons **morph** sont
+  pendant que la chanson joue, sans touche enfoncée. Le module **horloge** suit
+  la chanson depuis l’endroit où la lecture part et s’arrête avec elle. À
+  l’arrêt, il ne tourne que si vous tenez une touche. Les sons **morph** sont
   faits autour du bouton **A→B**.
 - Nexus n’est pas l’endroit le plus facile pour commencer. Les autres machines
   font la plupart des choses plus directement, et Nexus sert aux combinaisons
