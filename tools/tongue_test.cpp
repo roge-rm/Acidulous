@@ -502,6 +502,37 @@ void wah() {
     check(afterReset < 400.0f && late.out == early.out, "reset starts the wah again", fmt("F1 %.0f Hz after reset", afterReset));
 }
 
+/**
+ * Plucking a reed that's still ringing takes most of its swing out. Taken out
+ * at once, where the reed is and how fast it goes jump, and the slot's air,
+ * which follows the speed, has a one-sample tick in it at every pluck.
+ */
+void catches() {
+    std::printf("plucking a ringing reed\n");
+    float worst = 0.0f, own = 0.0f;
+    for (float kind : {0.0f, 1.0f, 3.0f}) {
+        // Low, quick and dry, where the tick was worst; no overtones, whose
+        // ping is the pluck's own corner.
+        Harp h({{"model", kind}, {"pattern", 4}, {"ratchet", 1}, {"overtones", 0}, {"depth", 0}});
+        h.t->noteOn(38, 100);
+        h.play(3.0);
+        // A tick is one sample off the line through its neighbours.
+        const auto &a = h.out;
+        std::vector<bool> near(a.size(), false);
+        for (int s = 0; s < std::min(64, h.t->strikes()); ++s) {
+            const int64_t at = h.t->strikeTime(s);
+            for (int64_t i = at - 2; i <= at + 2; ++i)
+                if (i >= 0 && i < static_cast<int64_t>(a.size())) near[static_cast<size_t>(i)] = true;
+        }
+        for (size_t i = 1; i + 1 < a.size(); ++i) {
+            const float off = std::fabs(a[i] - 0.5f * (a[i - 1] + a[i + 1]));
+            if (near[i]) worst = std::fmax(worst, off);
+            else own = std::fmax(own, off);
+        }
+    }
+    check(worst < 1.5f * own, "a pluck on a ringing reed doesn't tick", fmt("worst %.3f at a pluck, %.3f elsewhere", worst, own));
+}
+
 int main() {
     _mm_setcsr(_mm_getcsr() | 0x8040);
     std::printf("tongue_test: the jaw harp\n\n");
@@ -509,6 +540,7 @@ int main() {
     chords();
     mouth();
     patterns();
+    catches();
     follow();
     words();
     wah();
