@@ -33,6 +33,31 @@ bool parseJack(const std::string &s, int32_t &slot, int32_t &port) {
     port = toInt(s.substr(dot + 1));
     return slot >= 0 && port >= 0 && port < kPorts;
 }
+/** A whole number with an optional sign and nothing else, as the editor reads one. */
+bool wholeInt(const std::string &s, int32_t &out) {
+    size_t i = 0;
+    if (!s.empty() && (s[0] == '+' || s[0] == '-')) i = 1;
+    if (i >= s.size()) return false;
+    for (size_t k = i; k < s.size(); ++k) if (s[k] < '0' || s[k] > '9') return false;
+    try { out = static_cast<int32_t>(std::stol(s)); } catch (...) { return false; }
+    return true;
+}
+/** A number that is the whole field, else [fallback], as the editor reads a depth. */
+float wholeFloat(const std::string &s, float fallback) {
+    try {
+        size_t used = 0;
+        const float v = std::stof(s, &used);
+        return used == s.size() ? v : fallback;
+    } catch (...) { return fallback; }
+}
+/** A jack as the editor keeps it: "slot.port", both whole numbers; anything after a second point is ignored. */
+bool jackShape(const std::string &s, int32_t &slot, int32_t &port) {
+    const size_t dot = s.find('.');
+    if (dot == std::string::npos) return false;
+    const size_t end = s.find('.', dot + 1);
+    return wholeInt(s.substr(0, dot), slot) &&
+           wholeInt(s.substr(dot + 1, end == std::string::npos ? std::string::npos : end - dot - 1), port);
+}
 } // namespace
 
 Graph *Graph::parse(const std::string &text, float sampleRate, std::string &error) {
@@ -124,19 +149,27 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
     // Pass two: cables.
     int32_t cableIndex = 0;
     for (const auto &line : lines) {
-        if (line.empty() || line[0] != 'c') continue;
         const auto f = split(line, '|');
-        if (f.size() < 4) continue;
+        // A cable line is one the editor keeps: `c`, then two jacks that read
+        // as slot.port. Those are numbered by their place, the ones wired to
+        // nothing too, so the editor's cable list and the cNN parameters agree.
+        if (f.size() < 3 || f[0] != "c") continue;
+        int32_t fromSlot = 0, fromPort = 0, toSlot = 0, toPort = 0;
+        if (!jackShape(f[1], fromSlot, fromPort) || !jackShape(f[2], toSlot, toPort)) continue;
+        const int32_t index = cableIndex++;
+        auto wired = [&](int32_t slot, int32_t port) {
+            return slot >= 0 && slot < kSlots && port >= 0 && port < kPorts && slotToNode[static_cast<size_t>(slot)] >= 0;
+        };
+        if (!wired(fromSlot, fromPort) || !wired(toSlot, toPort)) continue;
         Cable c;
+        c.srcNode = slotToNode[static_cast<size_t>(fromSlot)];
+        c.srcPort = fromPort;
+        c.dstNode = slotToNode[static_cast<size_t>(toSlot)];
+        c.dstPort = toPort;
+        // A missing depth is 1 and a missing B is the A, as the editor reads them.
+        c.depthA = f.size() >= 4 ? wholeFloat(f[3], 1.0f) : 1.0f;
+        c.depthB = f.size() >= 5 ? wholeFloat(f[4], c.depthA) : c.depthA;
         int32_t slot = 0, p = 0;
-        if (!parseJack(f[1], slot, p) || slot >= kSlots || slotToNode[static_cast<size_t>(slot)] < 0) continue;
-        c.srcNode = slotToNode[static_cast<size_t>(slot)];
-        c.srcPort = p;
-        if (!parseJack(f[2], slot, p) || slot >= kSlots || slotToNode[static_cast<size_t>(slot)] < 0) continue;
-        c.dstNode = slotToNode[static_cast<size_t>(slot)];
-        c.dstPort = p;
-        c.depthA = c.depthB = toFloat(f[3], 1.0f);
-        if (f.size() >= 5) c.depthB = toFloat(f[4], c.depthA);
         if (f.size() >= 6 && parseJack(f[5], slot, p) && slot < kSlots && slotToNode[static_cast<size_t>(slot)] >= 0) {
             c.modNode = slotToNode[static_cast<size_t>(slot)];
             c.modPort = p;
@@ -144,8 +177,7 @@ Graph *Graph::parse(const std::string &text, float sampleRate, std::string &erro
         if (f.size() >= 7) c.modAmount = toFloat(f[6], 0.0f);
         // The first kCables cables get a pair of depth parameters, so they
         // can be changed and automated without rebuilding the graph.
-        c.paramIndex = cableIndex < kCables ? cableIndex : -1;
-        ++cableIndex;
+        c.paramIndex = index < kCables ? index : -1;
         g->cables.push_back(c);
     }
 

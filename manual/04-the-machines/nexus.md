@@ -34,6 +34,11 @@ twice to put it back. The same knobs are under the canvas when the module is
 selected. In mapping mode, tap a knob on a panel to map it and hold it to clear
 the mapping.
 
+Tap a cable for its depths, A and B, which the A→B knob turns between. The
+first 24 cables' depths are parameters like the knobs. Past that they're kept
+in the patch, so they can't be automated and the patch is rebuilt when one
+changes.
+
 ## Effects as modules
 
 The insert effects are modules too, so an effect can go anywhere in a patch

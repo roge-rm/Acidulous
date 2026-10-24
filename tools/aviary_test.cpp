@@ -74,6 +74,19 @@ struct Birds {
             out.insert(out.end(), L, L + kBlock);
         }
     }
+    /** Plays in blocks of uneven sizes, up to [kBlock]. */
+    void playUneven(double seconds) {
+        float L[kBlock], R[kBlock];
+        const auto total = static_cast<size_t>(seconds * kRate);
+        uint32_t seed = 12345u;
+        while (out.size() < total) {
+            seed = seed * 1664525u + 1013904223u;
+            const auto n = static_cast<int32_t>(std::min<size_t>(1 + (seed >> 8) % kBlock, total - out.size()));
+            f->onBlock(0, 0, bpm);
+            f->render(L, R, n);
+            out.insert(out.end(), L, L + n);
+        }
+    }
     double level(double hz, double from, double to) const {
         const auto a = static_cast<size_t>(from * kRate), b = static_cast<size_t>(to * kRate);
         double re = 0.0, im = 0.0, wsum = 0.0;
@@ -269,6 +282,25 @@ void lifecycle() {
     }
 }
 
+void blockSize() {
+    std::printf("- block size\n");
+    // A chorus and a flock read each other's phrases and share the noise, so
+    // two notes of each must come out the same at any block size.
+    for (int song : {static_cast<int>(Chorus), static_cast<int>(Warble), static_cast<int>(Caw)}) {
+        Birds a({{"pattern", static_cast<float>(song)}, {"flock", 4.0f}, {"breath", 0.6f}, {"rate", 4.0f}});
+        Birds b({{"pattern", static_cast<float>(song)}, {"flock", 4.0f}, {"breath", 0.6f}, {"rate", 4.0f}});
+        for (Birds *g : {&a, &b}) {
+            g->f->noteOn(60, 100);
+            g->f->noteOn(67, 90);
+        }
+        a.play(6.0);
+        b.playUneven(6.0);
+        double worst = 0.0;
+        for (size_t i = 0; i < a.out.size() && i < b.out.size(); ++i) worst = std::max(worst, double(std::fabs(a.out[i] - b.out[i])));
+        check(worst == 0.0, fmt("song %d sings the same at any block size", song).c_str(), fmt("worst %.2g", worst));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -276,6 +308,7 @@ int main() {
     chirps();
     syrinx();
     lifecycle();
+    blockSize();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

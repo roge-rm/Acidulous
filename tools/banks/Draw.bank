@@ -63,9 +63,8 @@
 #   - The top hole (C7) is too bright.
 #   - The accordion's 3rd and 4th harmonics are about 10 dB strong; the
 #     melodica's middle harmonics weak.
-#   - The harmonium's bottom octave speaks weakly and flat, and its odd
-#     harmonics don't arrive late as a real one's do; its patches slow the
-#     bellows instead. Its even harmonics are 5 dB over the odd, not 8.
+#   - The harmonium's odd harmonics don't arrive late as a real one's do;
+#     its patches slow the bellows instead. Its even harmonics are 5 dB over the odd, not 8.
 #   - Low reeds blown up slowly speak flat: a 16' rank under A2 with an
 #     attack over about 150 ms reads 50-100 cents low, so the slow
 #     bandoneon and the drone box keep their attacks near 110-120 ms.

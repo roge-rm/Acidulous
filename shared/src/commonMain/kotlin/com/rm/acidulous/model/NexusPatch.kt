@@ -1,6 +1,7 @@
 package com.rm.acidulous.model
 
 import com.rm.acidulous.util.format
+import com.rm.acidulous.util.javaFormat
 
 import com.rm.acidulous.engine.NativeEngine
 
@@ -33,7 +34,15 @@ data class NexusCable(
     val fromSlot: Int, val fromPort: Int,
     val toSlot: Int, val toPort: Int,
     val modSlot: Int = -1, val modPort: Int = 0, val modAmount: Float = 0f,
+    /**
+     * The depths written in the text. The first [NEXUS_CABLES] cables play
+     * their cNN_a/cNN_b parameters instead; the rest play these.
+     */
+    val depthA: Float = 1f, val depthB: Float = 1f,
 )
+
+/** A text depth as written: every digit it has, with a point in any language, and 1 as `1.0`. */
+private fun depthText(d: Float): String = d.toString()
 
 data class NexusPatch(
     val modules: List<NexusModule> = emptyList(),
@@ -54,9 +63,10 @@ data class NexusPatch(
             append("m|%02d|%s|%s\n".format(it.slot, it.type, if (it.poly) "poly" else "mono"))
         }
         cables.forEach {
-            append("c|%02d.%d|%02d.%d|1.0|1.0|%02d.%d|%.4f\n".format(
-                it.fromSlot, it.fromPort, it.toSlot, it.toPort,
-                if (it.modSlot < 0) 99 else it.modSlot, it.modPort, it.modAmount))
+            // With a point in any language: the engine reads numbers the C way.
+            append(javaFormat("c|%02d.%d|%02d.%d|%s|%s|%02d.%d|%.4f\n", arrayOf<Any?>(
+                it.fromSlot, it.fromPort, it.toSlot, it.toPort, depthText(it.depthA), depthText(it.depthB),
+                if (it.modSlot < 0) 99 else it.modSlot, it.modPort, it.modAmount)))
         }
         // Everything after the slot is the text, `|` and all, since a formula
         // can use it. Older builds skip the line.
@@ -95,11 +105,14 @@ data class NexusPatch(
                             val to = f[2].split('.')
                             val mod = f.getOrNull(5)?.split('.')
                             val modSlot = mod?.getOrNull(0)?.toIntOrNull() ?: -1
+                            // A missing B depth is the A depth, as the engine reads it.
+                            val depthA = f.getOrNull(3)?.toFloatOrNull() ?: 1f
                             cables += NexusCable(
                                 from[0].toInt(), from[1].toInt(), to[0].toInt(), to[1].toInt(),
                                 if (modSlot >= NEXUS_SLOTS) -1 else modSlot,
                                 mod?.getOrNull(1)?.toIntOrNull() ?: 0,
                                 f.getOrNull(6)?.toFloatOrNull() ?: 0f,
+                                depthA, f.getOrNull(4)?.toFloatOrNull() ?: depthA,
                             )
                         }
                         "p" -> positions[f[1].toInt()] = f[2].toFloat() to f[3].toFloat()
