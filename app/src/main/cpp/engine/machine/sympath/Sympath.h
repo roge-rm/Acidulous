@@ -92,6 +92,8 @@ class Sympath final : public Machine {
         bool sounding = false;
         /** The bow's steady push, taken out so only its waves reach the string. */
         float bowDc = 0.0f;
+        /** The bow's last push, averaged with the next so nothing goes in at the top of the band. */
+        float bowLast = 0.0f;
         /** Samples since the bow touched the string, for its gentle start. */
         int32_t bowAt = 0;
     };
@@ -140,7 +142,7 @@ class Sympath final : public Machine {
     /** Shapes a pluck for a string at [hz] into [stroke]. */
     int32_t shapePluck(std::vector<float> &stroke, float hz, float velocity, float amount);
     void pluck(Voice &v, int s);
-    void tuneString(Waveguide &w, float hz, float t60, float tone, bool bowed = false);
+    void tuneString(Waveguide &w, float hz, float t60, float tone);
     float stringT60(float hz, bool held) const;
     float stringTone(float velocity) const;
     /** Tunes the sympathetic and drone strings to the tonic and scale. */

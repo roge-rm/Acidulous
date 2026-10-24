@@ -268,6 +268,7 @@ void Sympath::reset() {
             s.strokeLength = s.strokeAt = 0;
             s.sounding = false;
             s.bowDc = 0.0f;
+            s.bowLast = 0.0f;
             s.bowAt = 0;
         }
         v.used = v.held = false;
@@ -357,19 +358,28 @@ float Sympath::stringTone(float velocity) const {
     return clampf(1.0f - loss, 0.03f, 1.0f);
 }
 
-/** The highest a string is tuned, about note 100; see tuneString. */
+namespace {
+/** The highest a string is tuned, about note 100; see foldHz. */
 constexpr float kHighestHz = 2637.0f;
-
-void Sympath::tuneString(Waveguide &w, float hz, float t60, float tone, bool bowed) {
-    // Nothing above a string's reach: higher fold down an octave at a time.
-    // Past about note 105 the loop is too short to lose its energy, and with
-    // the bridge buzzing it rings for ever.
+/**
+ * Nothing above a string's reach: higher fold down an octave at a time.
+ * Past about note 105 the loop is too short to lose its energy, and with the
+ * bridge buzzing it rings for ever.
+ */
+float foldHz(float hz) {
     while (hz > kHighestHz) hz *= 0.5f;
+    return hz;
+}
+} // namespace
+
+void Sympath::tuneString(Waveguide &w, float hz, float t60, float tone) {
+    hz = foldHz(hz);
     const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
     w.setFrequency(hz);
-    // A bow pushes the string aside for as long as it plays, so a bowed string
-    // lets go of that offset within a few turns; a plucked one can sit far lower.
-    w.setDcCorner(bowed ? 0.1f : 0.01f);
+    // The loop is trimmed for its DC blocker at the note, so the partials
+    // above run flat by about 2.8 cents per hundredth of the note it sits at.
+    // A bow's slow wander is taken out after the string, by bowCut.
+    w.setDcCorner(0.01f);
     w.setDispersion(k.stiffness, k.stiffness > 0.0f ? 2 : 0);
     w.setDamping(std::pow(10.0f, -3.0f / (std::fmax(t60, 0.01f) * hz)), tone);
 }
@@ -479,15 +489,16 @@ void Sympath::start(uint8_t note, uint8_t velocity) {
     const float tone = stringTone(v->velocity);
     for (int s = 0; s < v->stringCount; ++s) {
         const float hz = noteHz(pitch + v->strings[s].offset);
-        tuneString(v->strings[s].wave, hz, stringT60(hz, true), tone, k.bowed > 0.0f);
+        tuneString(v->strings[s].wave, hz, stringT60(hz, true), tone);
         v->strings[s].strokeLength = v->strings[s].strokeAt = 0;
     }
-    if (k.bowed > 0.0f) v->bowCut.set(0.5f * noteHz(pitch), 0.3f);
+    if (k.bowed > 0.0f) v->bowCut.set(0.5f * foldHz(noteHz(pitch)), 0.3f);
     v->cycleAt = 0.0;
     v->nextString = 0;
     // A bowed string isn't plucked: the bow starts it, below.
     if (kind != Tanpura && kMakes[kind].bowed <= 0.0f) pluck(*v, 0);
     v->strings[0].bowAt = 0;
+    v->strings[0].bowLast = 0.0f;
     // The drone strings, struck with the note.
     tuneFree();
     const float chikari = clampf(goalOf(Chikari), 0.0f, 1.0f);
@@ -585,11 +596,11 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
                 const float press = v.held ? (v.pressure >= 0.0f ? v.pressure : channelPressure_) : 0.0f;
                 v.pull += (press - v.pull) * 0.05f;
                 const float base = v.pitch + bend * paramOf(BendRange) + v.noteBend + shake + v.pull * kPullSemis;
-                if (k.bowed > 0.0f) v.bowCut.set(0.5f * noteHz(base), 0.3f);
+                if (k.bowed > 0.0f) v.bowCut.set(0.5f * foldHz(noteHz(base)), 0.3f);
                 const float tone = stringTone(v.velocity);
                 for (int s = 0; s < v.stringCount; ++s) {
                     const float hz = noteHz(base + v.strings[s].offset);
-                    tuneString(v.strings[s].wave, hz, stringT60(hz, v.held || kind == Tanpura), tone, k.bowed > 0.0f);
+                    tuneString(v.strings[s].wave, hz, stringT60(hz, v.held || kind == Tanpura), tone);
                 }
             }
         }
@@ -625,7 +636,11 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
                     const float onset = std::fmin(1.0f, static_cast<float>(st.bowAt++) / (0.04f * sampleRate));
                     float excite = (force * 0.65f + white() * 0.02f) * kBowGain * k.bowed * onset;
                     st.bowDc += (excite - st.bowDc) * 0.004f;
-                    in += excite - st.bowDc;
+                    excite -= st.bowDc;
+                    // Two samples averaged: a hard bow can't drive the string
+                    // at the top of the band, where it would squeal.
+                    in += 0.5f * (excite + st.bowLast);
+                    st.bowLast = excite;
                 }
                 const float y = st.wave.step(in);
                 out += k.bowed > 0.0f && s == 0 ? v.bowCut.highpass(y) * kBowedHeard : y;
