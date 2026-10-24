@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue and Sympath move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath and Chanter move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -27,6 +27,7 @@
 #include <engine/machine/aviary/Aviary.h>
 #include <engine/machine/tongue/Tongue.h>
 #include <engine/machine/sympath/Sympath.h>
+#include <engine/machine/chanter/Chanter.h>
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
@@ -408,13 +409,15 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
                std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0 ||
                std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
                std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 || std::strcmp(type, "Fathom") == 0 ||
-               std::strcmp(type, "Aviary") == 0 || std::strcmp(type, "Tongue") == 0 || std::strcmp(type, "Sympath") == 0) {
+               std::strcmp(type, "Aviary") == 0 || std::strcmp(type, "Tongue") == 0 || std::strcmp(type, "Sympath") == 0 ||
+               std::strcmp(type, "Chanter") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
-        // Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue and Sympath have no transpose, so an octave up.
+        // Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath and Chanter have no transpose, so an octave up.
         const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
                               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 ||
                               std::strcmp(type, "Fathom") == 0 || std::strcmp(type, "Aviary") == 0 ||
-                              std::strcmp(type, "Tongue") == 0 || std::strcmp(type, "Sympath") == 0;
+                              std::strcmp(type, "Tongue") == 0 || std::strcmp(type, "Sympath") == 0 ||
+                              std::strcmp(type, "Chanter") == 0;
         gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -1834,6 +1837,39 @@ void sympathRoutes() {
     }
 }
 
+// Chanter: routes to the drones, the grace notes, the crank and the dog match their knobs.
+void chanterRoutes() {
+    using Ch = acidulous::machine::Chanter;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    // Drones 0.7 by default: a route of 0.2 is the knob at 0.9.
+    {
+        const auto knob = playHeld("Chanter", {{"drones", 0.9f}}, {69}, blocks);
+        Route d{1, 2, Ch::McDrones, 0.2f, 1.0f};
+        const auto routed = playHeld("Chanter", {}, {69}, blocks, &d, Ch::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Chanter: a route to drones matches the knob", buf);
+    }
+    // Grace 0 by default, read at the note: a route of 0.5 is the knob at 30 ms.
+    {
+        const auto plain = playHeld("Chanter", {}, {69}, blocks);
+        const auto knob = playHeld("Chanter", {{"grace", 30.0f}}, {69}, blocks);
+        Route g{4, 3, Ch::McGrace, 0.5f, 1.0f};
+        const auto routed = playHeld("Chanter", {}, {69}, blocks, &g, Ch::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Chanter: a route to grace matches the knob", buf);
+    }
+    // On the hurdy-gurdy, crank 0.5 by default: a route of 0.3 is the knob at 0.8, and the dog's 0.5 plus 0.4 is 0.9.
+    {
+        const auto knob = playHeld("Chanter", {{"model", 3.0f}, {"wheel", 0.8f}}, {67}, blocks);
+        Route w{6, 1, Ch::McWheel, 0.3f, 1.0f};
+        const auto routed = playHeld("Chanter", {{"model", 3.0f}}, {67}, blocks, &w, Ch::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Chanter: a route to the crank matches the knob", buf);
+        const auto dogKnob = playHeld("Chanter", {{"model", 3.0f}, {"wheel", 0.9f}, {"dog", 0.9f}}, {67}, blocks);
+        Route g{8, 4, Ch::McDog, 0.4f, 1.0f};
+        const auto dogRouted = playHeld("Chanter", {{"model", 3.0f}, {"wheel", 0.9f}}, {67}, blocks, &g, Ch::MacroDestCount);
+        ok2(sameAs(dogKnob, dogRouted, buf, sizeof(buf)), "Chanter: a route to the dog matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1918,6 +1954,9 @@ int main() {
     using Sy = acidulous::machine::Sympath;
     basics("Sympath", Sy::MacroDestCount, Sy::McVolume, Sy::McPitch, Sy::McOff, Sy::kMacros);
     sympathRoutes();
+    using Ch = acidulous::machine::Chanter;
+    basics("Chanter", Ch::MacroDestCount, Ch::McVolume, Ch::McPitch, Ch::McOff, Ch::kMacros);
+    chanterRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

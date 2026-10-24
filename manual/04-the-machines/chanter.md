@@ -47,10 +47,28 @@ the wheel on the beat to make it buzz in rhythm.
 - **threshold** - how fast the wheel must turn before the dog buzzes.
 - **coup** - pushes the wheel **1**, **2** or **4** times a beat, in time
   with the song, so the dog buzzes in rhythm. **off** for none.
+
+## Player
+
 - **velocity**, **octave**, **bend** and **volume**.
 
 Pressure, or the mod wheel, squeezes the bag (a little louder and sharper)
 or pushes the hurdy-gurdy's wheel, so you can make the dog buzz by hand.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Drones,
+Squeeze, etc.) and the names show on the knobs, on automation lanes and in
+the controller mapping list. They sit at zero when a patch loads, which is
+the patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
+the knob moves the destination by knob times amount, across that control's
+whole range at 1. Pitch moves the notes played after it, 24 semitones at 1.
+The model, tune, tonic, coup, octave and bend can't be reached. A change to
+the grace or velocity is heard from the next note; the rest move at once.
+Tap a macro's name to rename it.
 
 ## Tips
 

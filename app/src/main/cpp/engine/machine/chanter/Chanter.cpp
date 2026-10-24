@@ -1,6 +1,7 @@
 #include "Chanter.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
 
@@ -97,7 +98,7 @@ constexpr float kCoupsPerBeat[4] = {0.0f, 1.0f, 2.0f, 4.0f};
 Chanter::Chanter() { initParams(); }
 
 const ParamDef *Chanter::paramDefs(int32_t &count) const {
-    static const ParamDef defs[Count] = {
+    static const ParamDef first[MacroBase] = {
         {"model", 0.0f, static_cast<float>(KindCount - 1), 0.0f, Curve::Stepped, KindCount, ""}, // highland, smallpipes, gaita, hurdy-gurdy, uilleann, gaida, cornemuse, musette, säckpipa, dudy, zampogna, tulum, launeddas
         {"tune", -100.0f, 100.0f, 0.0f, Curve::Linear, 0, "cents"},
         // The key the drones are tuned to, C to B.
@@ -122,8 +123,99 @@ const ParamDef *Chanter::paramDefs(int32_t &count) const {
         {"octave", -2.0f, 2.0f, 0.0f, Curve::Stepped, 5, ""},
         {"volume", 0.0f, 1.0f, 0.7f, Curve::Linear, 0, ""},
     };
+    static ParamDef defs[Count];
+    static char names[kMacros * MacroParams][12];
+    static bool built = false;
+    if (!built) {
+        for (int32_t i = 0; i < MacroBase; ++i) defs[i] = first[i];
+        auto put = [&](int32_t i, const char *n, float mn, float mx, float df, acidulous::Curve c, int32_t steps) {
+            char *name = names[i - MacroBase];
+            std::snprintf(name, 12, "%s", n);
+            defs[i] = ParamDef{name, mn, mx, df, c, steps, ""};
+        };
+        for (int k = 0; k < kMacros; ++k) {
+            char n[12];
+            const int32_t b = MacroBase + k * MacroParams;
+            std::snprintf(n, sizeof(n), "mac%d", k + 1);
+            put(b, n, 0.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            for (int r = 0; r < 4; ++r) {
+                std::snprintf(n, sizeof(n), "mac%d_d%d", k + 1, r + 1);
+                put(b + 1 + r, n, 0.0f, static_cast<float>(MacroDestCount - 1), 0.0f, Curve::Stepped, MacroDestCount);
+                std::snprintf(n, sizeof(n), "mac%d_a%d", k + 1, r + 1);
+                put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            }
+        }
+        built = true;
+    }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Chanter::Count];
+    DestMap() {
+        using P = Chanter;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {P::Drones, P::McDrones}, {P::Bag, P::McBag}, {P::Reed, P::McReed}, {P::Grace, P::McGrace},
+            {P::Drift, P::McDrift}, {P::Air, P::McAir}, {P::Wheel, P::McWheel}, {P::Rosin, P::McRosin},
+            {P::Dog, P::McDog}, {P::Threshold, P::McThreshold}, {P::VelocityAmount, P::McVelocity}, {P::Volume, P::McVolume},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Chanter::val(int32_t p, bool goal) const {
+    const float v = read(p, goal);
+    const int d = destMap().of[p];
+    const float off = d < 0 ? 0.0f : (goal ? macGoal_ : mac_)[d];
+    if (off == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + off);
+}
+
+void Chanter::updateMacroGoals() {
+    for (float &m : macGoal_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = read(b, true);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            const int dest = static_cast<int>(read(b + 1 + r, true) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) macGoal_[dest] += knob * read(b + 5 + r, true);
+        }
+    }
+    // Two octaves either way.
+    macGoal_[McPitch] = std::clamp(macGoal_[McPitch], -1.0f, 1.0f);
+}
+
+void Chanter::updateMacros() {
+    updateMacroGoals();
+    for (float &m : mac_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = read(b, false);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            // The routes' destinations are steps, so their targets.
+            const int dest = static_cast<int>(read(b + 1 + r, true) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * read(b + 5 + r, false);
+        }
+    }
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
+}
+
+float Chanter::notePitch(int note) const {
+    // The pitch macro counts in octaves here, so a route of half matches the octave knob at +1.
+    return static_cast<float>(note) + 12.0f * (static_cast<float>(steppedTargetOf(Octave)) + 2.0f * macGoal_[McPitch]) +
+           targetOf(Tune) / 100.0f;
 }
 
 void Chanter::prepare(int32_t rate) {
@@ -168,6 +260,7 @@ void Chanter::reset() {
     notePress = -1.0f;
     noteBend_ = 0.0f;
     retuneCountdown = 0;
+    updateMacros();
     dogTone.reset();
     dogLast = 0.0f;
     box.reset();
@@ -182,13 +275,13 @@ void Chanter::onBlock(int64_t, int64_t, float tempo) { bpm = tempo > 1.0f ? temp
 void Chanter::startNote(int note, float vel, bool legato) {
     const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
     const float keyNote = 57.0f + static_cast<float>(std::clamp(steppedTargetOf(Key), 0, 11) - 9);
-    pitch = static_cast<float>(note) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
+    pitch = notePitch(note);
     velocity = vel;
     noteBend_ = 0.0f;
     notePress = -1.0f;
     // There's no tonguing a bagpipe: notes are set apart by a grace note, a
     // quick high G (for A) before each, or a step above for the top notes.
-    const float grace = targetOf(Grace);
+    const float grace = goalOf(Grace);
     if (grace > 0.0f && kind != Gurdy) {
         const float highG = keyNote + 22.0f;
         gracePitch = pitch < highG - 0.5f ? highG : pitch + 2.0f;
@@ -221,6 +314,7 @@ void Chanter::noteOn(uint8_t note, uint8_t vel) {
         --heldCount;
     }
     held[heldCount++] = note;
+    updateMacroGoals(); // a note reads where the knobs are going, so renders repeat
     startNote(note, static_cast<float>(vel) / 127.0f, legato);
     asleep = false;
     quietSamples = 0;
@@ -240,7 +334,7 @@ void Chanter::noteOff(uint8_t note) {
         graceLeft = 0;
     } else if (heldNote() != before) {
         // Back to a key still held, without a grace note.
-        pitch = static_cast<float>(heldNote()) + 12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
+        pitch = notePitch(heldNote());
         graceLeft = 0;
     }
 }
@@ -294,6 +388,7 @@ float Chanter::bow(Bowed &s, float speed, float grip) {
 
 bool Chanter::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (asleep) return true;
 
@@ -324,7 +419,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
     const float drift = clampf(paramOf(Drift), 0.0f, 1.0f) * driftNow;
 
     const float melodyPitch = pitch + bend * paramOf(BendRange) + noteBend_;
-    const float level = velocityGain(velocity, targetOf(VelocityAmount));
+    const float level = velocityGain(velocity, goalOf(VelocityAmount));
     bool any = bag > 0.0f || playing;
 
     if (kind != Gurdy) {
@@ -361,8 +456,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         // The other hand: the key held before the last, on the second chanter.
         const bool secondOn = chanterOn && k.second > 0.0f && heldCount >= 2;
         if (k.second > 0.0f) {
-            const float other = static_cast<float>(held[std::max(heldCount - 2, 0)]) +
-                                12.0f * static_cast<float>(steppedTargetOf(Octave)) + targetOf(Tune) / 100.0f;
+            const float other = notePitch(held[std::max(heldCount - 2, 0)]);
             second.setTongue(0.0f);
             second.setNote(noteHz(other + bend * paramOf(BendRange) + (cents + kPipeTrim) * 0.01f));
             second.setShape(k.cylinder, 1);

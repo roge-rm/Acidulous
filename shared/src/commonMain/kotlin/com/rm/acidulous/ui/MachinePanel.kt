@@ -265,7 +265,7 @@ fun MachinePanel(
             "Tine" -> TinePanel(binding, track, trackIndex, editor)
             "Sympath" -> SympathPanel(binding, track, trackIndex, editor)
             "Palm" -> PalmPanel(binding, selectedPad, track, trackIndex, editor)
-            "Chanter" -> ChanterPanel(binding)
+            "Chanter" -> ChanterPanel(binding, track, trackIndex, editor)
             "Aviary" -> AviaryPanel(binding, selectedPad, track, trackIndex, editor)
             "Fathom" -> FathomPanel(binding, selectedPad, track, trackIndex, editor)
             "Timber" -> TimberPanel(binding, track, trackIndex, editor)
@@ -4931,13 +4931,43 @@ private fun PalmPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, 
 private val CHANTER_MODELS = listOf("highland", "smallpipes", "gaita", "hurdy-gurdy", "uilleann", "gaida", "cornemuse", "musette", "säckpipa", "dudy", "zampogna", "tulum", "launeddas")
 private val CHANTER_COUPS = listOf("off", "1", "2", "4")
 
-/** Chanter: the pipes and the bag, the hurdy-gurdy's wheel, and the player. */
+/** Where a Chanter macro route goes, in the engine's MacroDest order. */
+val CHANTER_MACRO_DESTS = listOf(
+    "off", "drones", "bag", "reed", "grace", "drift", "air",
+    "crank", "rosin", "dog", "threshold", "velocity", "volume",
+    "pitch",
+)
+
+/** Chanter: the macros, the pipes and the bag, the hurdy-gurdy's wheel, and the player. */
 @Composable
-private fun ChanterPanel(b: ParamBinding) {
+private fun ChanterPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("pipes", "hurdy-gurdy", "play"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "pipes", "hurdy-gurdy", "player", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", CHANTER_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", CHANTER_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", CHANTER_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", CHANTER_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", CHANTER_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
@@ -4954,7 +4984,7 @@ private fun ChanterPanel(b: ParamBinding) {
                     PanelKnob(b, "air", "air")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("crank") {
                     PanelKnob(b, "wheel", "crank", PanelAmber)
                     PanelKnob(b, "rosin", "rosin")
@@ -4965,8 +4995,8 @@ private fun ChanterPanel(b: ParamBinding) {
                     PanelStepKnob(b, "coup", CHANTER_COUPS, "coup")
                 }
             }
-            else -> {
-                Group("play") {
+            3 -> {
+                Group("player") {
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")
@@ -4977,6 +5007,14 @@ private fun ChanterPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val AVIARY_PATTERNS = listOf("whistle", "chirp", "trill", "warble", "call", "chorus", "coo", "caw")
