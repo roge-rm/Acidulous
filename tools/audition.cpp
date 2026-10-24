@@ -1250,7 +1250,7 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
         std::vector<Hit> bass;
         const int line[16] = {33, 33, 45, 33, 36, 33, 43, 33, 29, 29, 41, 29, 31, 31, 43, 38};
         for (int i = 0; i < 16; ++i) bass.push_back({i * 0.5f, 0.4f, line[i], i % 2 == 0 ? 110 : 80});
-        add(renderPart("Hexbeat", "Straight", drums, bpm, frames), 0.8f);
+        add(renderPart("Hexbeat", "Squared", drums, bpm, frames), 0.8f);
         add(renderPart("Reflux", "Classic", bass, bpm, frames), 0.8f);
         add(renderPart("Trinity", "Electric Piano", {
             {0.0f, 1.5f, 57, 90}, {0.0f, 1.5f, 60, 90}, {0.0f, 1.5f, 64, 90}, {0.0f, 1.5f, 67, 90},

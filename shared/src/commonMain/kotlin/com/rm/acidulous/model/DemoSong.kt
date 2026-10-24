@@ -315,7 +315,7 @@ object DemoSong {
                 ),
                 Track(
                     id = "t-perc", name = "Perc",
-                    machine = machine("Hexbeat", "Tight"),
+                    machine = machine("Hexbeat", "Snug"),
                     clips = mapOf(
                         groove.id to clip(2, percussion(2)) { copy(freeRoll = true) },
                         drop.id to clip(2, percussion(2)) { copy(freeRoll = true) },

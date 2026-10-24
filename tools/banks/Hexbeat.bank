@@ -38,7 +38,7 @@ role    beat
 
 patch Init family=classic
 
-patch Straight family=classic
+patch Squared family=classic
   # The workhorse: the defaults pulled into focus. A kick with enough sweep
   # to speak on a small speaker, a snare that is half noise, hats short
   # enough to sit under a sixteenth pattern.
@@ -118,7 +118,7 @@ patch Straight family=classic
   mac8_d4  #26
   mac8_a4  0.3
 
-patch Tight family=classic
+patch Snug family=classic
   # Everything short. The kit for a busy pattern, where anything that rings
   # is in the way of the next hit.
   set macro1 "Looser"
@@ -677,7 +677,7 @@ patch Boomy family=classic
   mac8_d4  #10
   mac8_a4  0.2
 
-patch Deep family=classic
+patch Sunken family=classic
   # Everything a fourth or so down, and given room. Not longer than Boomy -
   # lower, which is a different thing and the reason both are here.
   set macro1 "Tighter"
@@ -1446,7 +1446,7 @@ patch Tabletop family=dry
   mac8_d3  #26
   mac8_a3  0.2
 
-patch Hall family=room
+patch Ballroom family=room
   # Nothing short anywhere. The metal is what carries a room, so the open hat
   # and both cymbals are long and the closed hat is kept out of the way.
   set macro1 "Dry Up"
@@ -1531,7 +1531,7 @@ patch Hall family=room
   mac8_a4  0.2
   send reverb    0.3
 
-patch Plate family=room
+patch Cloister family=room
   # The snare is the patch: long, bright and mostly noise, the way a plate
   # reverb returns one. Everything else is kept short so it stays the subject.
   set macro1 "Dry Up"
@@ -1614,7 +1614,7 @@ patch Plate family=room
   mac8_a3  0.3
   send reverb    0.3
 
-patch Distant family=room
+patch Faraway family=room
   # The kit heard from the other end of the building: the attacks down, the
   # tails long, and the top rolled off so nothing is close.
   set macro1 "Dry Up"
@@ -2868,7 +2868,7 @@ patch Polished family=metal
   mac8_d2  #32
   mac8_a2  0.2
 
-patch Splash family=metal
+patch Spatter family=metal
   # Cymbals at their shortest and their brightest: a splash rather than a
   # crash, and a ride that stops. Everything else stays out of the way.
   set macro1 "Length"
@@ -3568,7 +3568,7 @@ patch Circuitry family=electro
   mac8_d2  #32
   mac8_a2  0.1
 
-patch Rubber family=electro
+patch Elastic family=electro
   # A low kick with all its sweep and no click to speak of, toms to match, and
   # the noise voices pulled well back. Everything bounces rather than hits.
   set macro1 "Stretch"
@@ -4024,7 +4024,7 @@ patch Bleep family=electro
   mac8_d2  #32
   mac8_a2  0.05
 
-patch Handclap family=perc
+patch Clappers family=perc
   # Built around the clap and committed to it: long, dark and at the top, with
   # the snare most of the way out so the two do not double each other, and the
   # metal down so there is room.
@@ -4691,7 +4691,7 @@ patch Chordal family=odd
   mac8_d2  #32
   mac8_a2  0.1
 
-patch Gamelan family=odd
+patch Bronzework family=odd
   # The cowbell is the instrument: two squares, tuned high and rung long, with
   # the clave above it and everything percussive underneath kept dark and
   # short. Nothing here is trying to be a drum kit.
