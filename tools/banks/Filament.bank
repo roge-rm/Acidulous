@@ -17,7 +17,7 @@
 #   - **Coupling was a gain.** Two strings over one bridge were each handed
 #     the other's whole output every sample: over a 145-sample turn at
 #     `couple` 0.8 that added two and a third to a loop gain already at
-#     0.999. The Wire patch was fourteen decibels louder with coupling on
+#     0.999. The Picked Wire patch was fourteen decibels louder with coupling on
 #     than off and its note-on read *fifty-four thousand times* the edge of
 #     its own tone. A bridge shares rather than makes, so each string now
 #     gets a fraction of the *difference*, and the fraction is of a turn.
@@ -62,7 +62,7 @@
 #     motion below its own fundamental. The bow reads +4 cents.
 #   - **A pick was noise times an alternating plus and minus one** - a square
 #     wave at Nyquist, which does not brighten a spectrum, it inverts it, and
-#     puts the whole burst where no string has a partial. Wire started twelve
+#     puts the whole burst where no string has a partial. Picked Wire started twelve
 #     times brighter than it continued and nothing on the string could reach
 #     it, because none of it was on the string. A pick is a harder, narrower
 #     contact, so it is a first-order tilt now.
@@ -71,7 +71,7 @@
 #     own share every turn and nothing counted it. The string works out what
 #     to ask its feedback for so that a whole turn comes to what the caller
 #     said - the same reason the brass and the woodwinds solve their loops.
-#     Measured on the fundamental alone: Nylon 1.72 s against 2 asked, Wire
+#     Measured on the fundamental alone: Nylon String 1.72 s against 2 asked, Picked Wire
 #     4.2 against 5. A stiff or tension-modulated string comes in shorter
 #     still, which is what dispersion and a bending pitch do.
 #
@@ -88,16 +88,16 @@
 # than the string at the played one - `harm` read 0.00 to 0.10 and taking
 # `bodymix` to zero brought the note straight back. The damper is halfway
 # along now, where it nulls the odd harmonics instead and every note returns.
-# The tenth was Blown at note 84, in tune and on the right partial but nine
+# The tenth was Blown String at note 84, in tune and on the right partial but nine
 # parts jet noise to one part note, so its range stops at 82. All 379 notes
 # of this bank now pass.
 #
-# **The spike in front of the note was a pulse train.** Nylon put one
+# **The spike in front of the note was a pulse train.** Nylon String put one
 # millisecond of excitation into a six millisecond loop, so what came out was
 # two milliseconds of sound and four of near silence, over and over, at the
 # right pitch - thirty decibels between the loud part and the quiet part of
 # every single period. A pluck displaces the *whole* string, and a
-# waveguide's string is one period long, so a pluck fills the loop. Nylon's
+# waveguide's string is one period long, so a pluck fills the loop. Nylon String's
 # note-on went from five times the corner of its own tone to one, its loudest
 # partial from the octave to the fundamental, and the note carries seven
 # decibels more of its own energy.
@@ -113,7 +113,7 @@
 #
 # **What is still wrong.** `Spoken To` is played by the audio input and so
 # measures as silence here, which is correct and means it cannot be
-# auditioned without one. Steel is three decibels under the rest of the bank
+# auditioned without one. Steel String is three decibels under the rest of the bank
 # at full volume, because its energy sits in high partials rather than at the
 # note. And `chiff` reads 1.0 whenever a patch's tail is under a twentieth of
 # its peak, which means "not measured" rather than "no chiff" - do not read
@@ -134,11 +134,11 @@
 # string for the whole note rather than acting at a point and leaving.
 # The four patches that set it had values chosen while it did nothing, so
 # they are chosen again. The harness's `pitch` is unreliable for a string
-# picked near its bridge - Steel's fundamental sits eleven decibels under its
+# picked near its bridge - Steel String's fundamental sits eleven decibels under its
 # own fifth harmonic, and a direct look at the spectrum says the note is
 # eight cents flat where the column says a hundred and ninety-six. Scoring a
 # whole harmonic series instead of walking down from the loudest peak was
-# tried and is worse; the column is wrong for Steel and Wire and the machine
+# tried and is worse; the column is wrong for Steel String and Picked Wire and the machine
 # is not. And `edge` says a plucked string is twenty times brighter at its
 # attack than in its tail, which is true and is not a click.
 #
@@ -186,7 +186,7 @@
 # slides the string in both. Letting go of the newest key goes back to the
 # one still held, without plucking again. Poly ignores glide.
 #
-# **Wire's lowest note was a string picked so near the bridge** that its
+# **Picked Wire's lowest note was a string picked so near the bridge** that its
 # fundamental sat 32 dB under the eighth harmonic. Its range starts a
 # semitone higher.
 #
@@ -221,7 +221,7 @@ role    tune
 
 patch Init family=plucked
 
-patch Nylon family=plucked  note=52 range=40..76
+patch "Nylon String" family=plucked  note=52 range=40..76
   set macro1 "Bridge"
   set macro2 "Brighter"
   set macro3 "Ring"
@@ -736,7 +736,7 @@ patch "Tin Comb" family=plucked  note=79 range=60..96
   volume         0.94
   send reverb    0.2
 
-patch Steel family=picked  note=52 range=40..79
+patch "Steel String" family=picked  note=52 range=40..79
   set macro1 "Bridge"
   set macro2 "Brighter"
   set macro3 "Ring"
@@ -1039,7 +1039,7 @@ patch Bottleneck family=picked  note=55 range=40..76
   volume         1.00
   send reverb    0.15
 
-patch Wire family=picked  note=64 range=53..88
+patch "Picked Wire" family=picked  note=64 range=53..88
   set macro1 "Softer"
   set macro2 "Stiffer"
   set macro3 "Ring"
@@ -1924,7 +1924,7 @@ patch "Col Legno" family=bowed  note=57 range=40..79
 # struck is nine parts jet noise to one part note, and 84 measured 0.11 on
 # the harmonic series with the right pitch underneath it.
 
-patch Blown family=blown  note=67 range=48..82
+patch "Blown String" family=blown  note=67 range=48..82
   vibrate        4.8 Hz
   vibdepth       10 c
   vibdelay       0.6 s
@@ -2159,7 +2159,7 @@ patch "Aeolian Harp" family=blown  note=55 range=40..76
   volume         0.263
   send reverb    0.25
 
-patch Sympathy family=sympathetic  note=60 range=45..81
+patch "Sympathetic Strings" family=sympathetic  note=60 range=45..81
   set macro1 "More Halo"
   set macro2 "Longer Halo"
   set macro3 "Bridge"
