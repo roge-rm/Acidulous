@@ -140,4 +140,12 @@ class MacroNamesTest {
         assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
         assertEquals("wah rate", laneShortLabel(t, laneKey("machine", "wahrate")))
     }
+
+    @Test
+    fun tongueBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Tongue")
+        assertEquals(62, bank.size)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("steel", "northern", "southern", "bamboo", "reeds", "rhythm", "strange"), families)
+    }
 }
