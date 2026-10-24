@@ -186,8 +186,9 @@ const ParamDef *Manual::paramDefs(int32_t &count) const {
         lin(Mid, "mid", -12.0f, 12.0f, 0.0f, "dB");
         lin(Treble, "treble", -12.0f, 12.0f, 0.0f, "dB");
         // Goes up to 2.0 because a single soft stop is much quieter than full
-        // organ and needs the extra range to reach the bank's level.
-        lin(Volume, "volume", 0.0f, 2.0f, 0.75f);
+        // organ and needs the extra range to reach the bank's level. Init is
+        // on the mod wheel and plays open, so its default sits low.
+        lin(Volume, "volume", 0.0f, 2.0f, 0.1875f);
         lin(Pan, "pan", -1.0f, 1.0f, 0.0f);
 
         exp_(AmpAttack, "attack", 0.0005f, 0.5f, 0.004f, "s");
@@ -815,9 +816,10 @@ bool Manual::render(float *L, float *R, int32_t frames) {
     const float volume = clampf(paramOf(Volume) + blockMod[DstVolume], 0.0f, 2.5f);
     const float pan = clampf(paramOf(Pan) + blockMod[DstPan], -1.0f, 1.0f);
     const int32_t expr = steppedOf(Expression);
-    // The pedal reads CC11, open until one arrives.
+    // The pedal reads CC11, open until one arrives. The mod wheel is the
+    // other way round: down is open and raising it closes the box.
     const float exprGain = expr == 0   ? 1.0f
-                           : expr == 1 ? 0.25f + 0.75f * modWheel
+                           : expr == 1 ? 1.0f - 0.75f * modWheel
                            : expr == 2 ? 0.25f + 0.75f * pressure
                                        : 0.25f + 0.75f * expression;
     const float upperGain = paramOf(UpperLevel), lowerGain = paramOf(LowerLevel), pedalGain = paramOf(PedalLevel);

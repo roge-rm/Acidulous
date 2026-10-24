@@ -823,12 +823,18 @@ class ClockMod final : public Module {
   public:
     void prepare(float, int32_t) override {}
     void reset() override { last = -1.0; }
+    void restart() override { last = -1.0; }
     void setKnobs(const float *k) override { division = stepOf(k[0], 9); pulseWidth = clampf(k[1], 0.05f, 0.95f); }
     void step(const float *, float *out, const Context &c) override {
+        if (!c.clockRunning) {
+            out[0] = out[1] = out[2] = 0.0f;
+            last = -1.0;
+            return;
+        }
         // 240 ticks to the quarter note; the divisions are note values.
         static const double ticks[9] = {960, 480, 240, 120, 80, 60, 40, 30, 15};
         const double period = ticks[division];
-        const double pos = std::fmod(c.tick, period) / period;
+        const double pos = std::fmod(c.clockTick, period) / period;
         out[0] = pos < pulseWidth ? 1.0f : 0.0f;
         out[1] = static_cast<float>(pos);
         out[2] = (last >= 0.0 && pos < last) ? 1.0f : 0.0f; // one-sample restart
@@ -845,6 +851,7 @@ class EuclidMod final : public Module {
   public:
     void prepare(float, int32_t) override {}
     void reset() override { step_ = 0; wasHigh = false; }
+    void restart() override { reset(); }
     void setKnobs(const float *k) override {
         steps = 1 + stepOf(k[0], 16);
         pulses = stepOf(k[1], 17);

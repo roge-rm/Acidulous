@@ -20,6 +20,8 @@
 #include <engine/rack/Engine.h>
 #include <sequencer/Song.h>
 
+#include "audition_settings.h"
+
 using namespace acidulous;
 using namespace acidulous::seq;
 
@@ -1168,6 +1170,58 @@ void aTrackCanBeTuned() {
     ok("a hundred cents up is a semitone up", largestDifference(tuned, higher) < 0.02f, std::to_string(largestDifference(tuned, higher)));
 }
 
+/**
+ * A Nexus patch that plays itself: a clock opening a saw. Its own notes run
+ * only while the song plays, from where it starts, and stop with it.
+ */
+std::vector<float> renderSelfPlaying(int32_t stoppedBlocks, int32_t playBlocks, int32_t afterBlocks) {
+    Fixture f;
+    // Only the Nexus: rack 0's Reflux would play its clip too.
+    delete f.engine.racks[0].swapEffect(0, nullptr);
+    delete f.engine.racks[0].swapMachine(nullptr);
+    Machine *nexus = MachineRegistry::create("Nexus");
+    nexus->prepare(kSampleRate);
+    std::unique_ptr<machine::nexus::Graph> unused;
+    audition::mountNexusGraph(nexus, "v|2\nm|0|clock|mono\nm|1|osc|mono\nm|2|vca|mono\nm|3|out|mono\n"
+                                     "c|1.0|2.0|1\nc|0.0|2.1|1\nc|2.0|3.0|1",
+                              kSampleRate, {}, unused);
+    nexus->params().jumpAll();
+    delete f.engine.racks[1].swapMachine(nexus);
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    std::vector<float> out(static_cast<size_t>(stoppedBlocks + playBlocks + afterBlocks) * kBlockFrames * 2);
+    for (int32_t b = 0; b < stoppedBlocks + playBlocks + afterBlocks; ++b) {
+        if (b == stoppedBlocks) f.engine.transport.requestPlay(0);
+        if (b == stoppedBlocks + playBlocks) f.engine.transport.requestStop();
+        f.engine.renderBlock(nullptr, out.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+    }
+    return out;
+}
+
+float peakOf(const std::vector<float> &x, int32_t fromBlock, int32_t toBlock) {
+    float p = 0.0f;
+    for (size_t i = static_cast<size_t>(fromBlock) * kBlockFrames * 2; i < static_cast<size_t>(toBlock) * kBlockFrames * 2; ++i)
+        p = std::max(p, std::fabs(x[i]));
+    return p;
+}
+
+void aSelfPlayingPatchFollowsTheTransport() {
+    printf("- a self-playing Nexus patch\n");
+    // Stopped for 777 blocks, off any beat, then a bar of play (1500 blocks
+    // at 120), then stopped again.
+    const auto out = renderSelfPlaying(777, 1500, 500);
+    ok("silent while stopped", peakOf(out, 0, 777) == 0.0f, std::to_string(peakOf(out, 0, 777)));
+    // The clock's first quarter is on from the top of the song.
+    ok("sounds from the first block of play", peakOf(out, 778, 780) > 0.01f, std::to_string(peakOf(out, 778, 780)));
+    // Quarters at 120 are 375 blocks, on for the first half of each.
+    const float on = peakOf(out, 790, 950), off = peakOf(out, 980, 1130);
+    ok("in time with the song", on > 0.01f && off == 0.0f, std::to_string(on) + " " + std::to_string(off));
+    // Stopped in the second half of a quarter would be silent anyway, so
+    // stop on the beat: 1500 blocks is four whole quarters.
+    ok("silent once stopped", peakOf(out, 777 + 1500 + 20, 777 + 1500 + 500) == 0.0f,
+       std::to_string(peakOf(out, 777 + 1500 + 20, 777 + 1500 + 500)));
+    ok("and the render repeats", firstDifference(out, renderSelfPlaying(777, 1500, 500)) == out.size());
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -1187,6 +1241,7 @@ int main() {
     aTransposeLetsGoOfWhatItStarted();
     thePedalsHoldWhatTheyShould();
     theOrganCanBeTuned();
+    aSelfPlayingPatchFollowsTheTransport();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

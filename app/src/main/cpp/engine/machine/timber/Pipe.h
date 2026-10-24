@@ -362,7 +362,11 @@ class Pipe {
             // the peak of the comb and the octave in a trough. Blowing
             // harder shortens the crossing and brings the octave up, which
             // is how a flute overblows. Solve for g.
-            jetDelay = clampf(jetRatio * period / (0.75f + pressure * 0.35f),
+            // On a cone's twelfth the jet crosses in three of the note's
+            // periods, so the tube's thirds either side of the note fall in
+            // troughs.
+            const float cross = !cylinder && useMode == 3 ? 3.0f : 1.0f;
+            jetDelay = clampf(jetRatio * period * cross / (0.75f + pressure * 0.35f),
                               1.0f, static_cast<float>(jetLine.size() - 3));
             const float ph = -w * jetDelay;
             const float cp = std::cos(ph), sp = std::sin(ph);

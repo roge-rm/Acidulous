@@ -70,6 +70,8 @@ class Graph {
     /** Audio thread, at hand-over: carry over state from the old graph. */
     void adoptFrom(Graph &old);
     void reset();
+    /** The clock starts again (see Module::restart). */
+    void restartClocks();
 
     int32_t nodeCount() const { return static_cast<int32_t>(nodes.size()); }
     const Node &nodeAt(int32_t i) const { return nodes[static_cast<size_t>(i)]; }

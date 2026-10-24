@@ -56,8 +56,9 @@ once.
 
 **swell** in the **touch** group on the **out** page picks what works the swell
 pedal: off, the mod wheel, pressure or **ped**, an expression pedal on CC 11.
-**ped** starts open until the pedal sends something. Closed, the organ plays at
-a quarter of its level. Turn up **shutters** and closing it also makes the sound darker, like
+With the mod wheel, down is open and raising it closes the pedal. **ped** starts
+open until the pedal sends something. Closed, the organ plays at a quarter of
+its level. Turn up **shutters** and closing it also makes the sound darker, like
 the shutters of a pipe organ's swell box. At 0 the pedal only changes the
 level.
 

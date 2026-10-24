@@ -103,7 +103,9 @@ through a patch.
 - Keep patches small and name your macros.
 - Wire **morph** to the two or three things that change the patch the most.
 - Some patches in the **generative** and **texture** families play themselves
-  while the song plays, with no key held. The **morph** patches are built
-  around the **A→B** knob.
+  while the song plays, with no key held. The **clock** module runs in time
+  with the song from where play starts and stops with it. Stopped, it runs
+  only while you hold a key. The **morph** patches are built around the
+  **A→B** knob.
 - Nexus isn't the easiest place to start. The other machines do most things
   more directly, and Nexus is for combinations they don't cover.

@@ -60,7 +60,8 @@ clavier à la fois.
 
 **crescendo** dans le groupe **toucher** de la page **sortie** choisit ce qui
 actionne la pédale d’expression : rien, la molette de modulation, la pression
-ou **péd**, une pédale d’expression sur le CC 11. **péd** reste ouverte tant que
+ou **péd**, une pédale d’expression sur le CC 11. Avec la molette, en bas c’est
+ouvert et la monter ferme la pédale. **péd** reste ouverte tant que
 la pédale n’a rien envoyé. Fermée, l’orgue joue au quart de son niveau. Montez **jalousies** et
 la fermer rend aussi le son plus sombre, comme les jalousies de la boîte
 expressive d’un orgue à tuyaux. À 0, la pédale ne change que le niveau.

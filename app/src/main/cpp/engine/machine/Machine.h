@@ -37,6 +37,13 @@ class Machine {
     virtual void onScene(int64_t /*sceneId*/, int64_t /*cycleTick*/, bool /*playing*/,
                          bool /*clipMuted*/) {}
     /**
+     * Once per block before onBlock(), frozen or not: whether the song is
+     * moving, which is playing and past any count-in or wait for a Link
+     * downbeat, and the block's first tick. For a machine that makes its own
+     * notes in time with the song (Nexus's clock).
+     */
+    virtual void onTransport(bool /*rolling*/, int64_t /*tickStart*/) {}
+    /**
      * The track's tuning: each MIDI note's ratio to equal temperament, or
      * null for equal temperament. The rack sets it before every block, and
      * machines read it through [noteHz].

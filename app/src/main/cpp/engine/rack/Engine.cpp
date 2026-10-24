@@ -261,13 +261,18 @@ void Engine::renderBlock(const float *in, float *out) {
     // Does any rack play frozen audio? Decided before the scheduler fires,
     // since a frozen rack gets no notes.
     {
+        // The song is moving: not counting in and not waiting on Link's
+        // downbeat. A start found by followTimebase() above is taken at the
+        // top of the next block, so it rolls from there with the scheduler.
+        const bool rolling = playing && countInFrames <= 0.0 && !linkWaiting && !startPending;
         // Per rack, because in clip mode racks can be on different scenes
         // and frozen audio is stored per track and scene.
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].updateFrozen(scheduler.rackSceneId(r), clock.bpm(), playing, clock.isRamping());
             // And tell the machine, for machines that play the arrangement
             // rather than notes.
-            racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing);
+            racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing, rolling,
+                                  clock.blockStart());
         }
     }
 
