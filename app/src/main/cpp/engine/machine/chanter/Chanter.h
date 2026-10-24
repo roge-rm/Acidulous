@@ -35,7 +35,10 @@ class Chanter final : public Machine {
         // per unit and moves the notes played after it.
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
-        Count = MacroBase + 8 * MacroParams
+        // Added after the macros. Which beats the coups fall on: every beat,
+        // or only the second and fourth, counted from the first note.
+        CoupBeats = MacroBase + 8 * MacroParams,
+        Count
     };
     // Where a macro route goes. The model, tune, key, coup, bend range and
     // octave are left out.

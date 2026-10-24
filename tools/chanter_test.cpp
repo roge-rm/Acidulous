@@ -269,6 +269,17 @@ void dog() {
         const double with = onOff(*play(0.5f, 0.6f, 0, 1.0f, 1.0f)), without = onOff(*play(0.5f, 0.6f, 0, 0.0f, 1.0f));
         check(with > without + 8.0, "coups set it buzzing on the beat", fmt("%+.1f dB on the beat, %+.1f without the dog", with, without));
     }
+    {
+        // On 2 and 4: beats 2 and 4 (0.5 s and 1.5 s) buzz, 3 and 5 (1 s and 2 s) don't.
+        auto g = std::make_unique<Pipes>(std::initializer_list<std::pair<const char *, float>>{
+            {"model", Gurdy}, {"wheel", 0.5f}, {"threshold", 0.6f}, {"dog", 1.0f}, {"coup", 1.0f},
+            {"coupbeats", 1.0f}, {"drift", 0.0f}});
+        g->f->noteOn(69, 100);
+        g->play(3.0);
+        auto at = [&](double t) { return band(*g, 1800.0, 2600.0, t + 0.005, t + 0.05); };
+        const double on = (at(0.5) + at(1.5)) / 2.0, off = (at(1.0) + at(2.0)) / 2.0;
+        check(on > off + 8.0, "on 2 and 4, coups skip the other beats", fmt("%+.1f dB on 2 and 4, %+.1f on 1 and 3", on, off));
+    }
 }
 
 void lifecycle() {

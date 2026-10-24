@@ -4930,6 +4930,7 @@ private fun PalmPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, 
 
 private val CHANTER_MODELS = listOf("highland", "smallpipes", "gaita", "hurdy-gurdy", "uilleann", "gaida", "cornemuse", "musette", "säckpipa", "dudy", "zampogna", "tulum", "launeddas")
 private val CHANTER_COUPS = listOf("off", "1", "2", "4")
+private val CHANTER_COUP_BEATS = listOf("every", "2 & 4")
 
 /** Where a Chanter macro route goes, in the engine's MacroDest order. */
 val CHANTER_MACRO_DESTS = listOf(
@@ -4993,6 +4994,7 @@ private fun ChanterPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelKnob(b, "dog", "dog", PanelPink)
                     PanelKnob(b, "threshold", "threshold")
                     PanelStepKnob(b, "coup", CHANTER_COUPS, "coup")
+                    PanelStepKnob(b, "coupbeats", CHANTER_COUP_BEATS, "beats")
                 }
             }
             3 -> {

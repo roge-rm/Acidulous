@@ -183,6 +183,7 @@ const ParamDef *Chanter::paramDefs(int32_t &count) const {
                 put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
             }
         }
+        defs[CoupBeats] = ParamDef{"coupbeats", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""}; // every beat, 2 and 4
         built = true;
     }
     count = Count;
@@ -589,7 +590,10 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         const float perBeat = kCoupsPerBeat[std::clamp(steppedTargetOf(Coup), 0, 3)];
         const double before = beatAt;
         beatAt += static_cast<double>(dt * bpm / 60.0f);
-        if (perBeat > 0.0f && bag > 0.0f && std::floor(beatAt * perBeat) != std::floor(before * perBeat)) coupNow = kCoupPush;
+        // On 2 and 4, a coup counts only in the odd beats, the first note's beat being 0.
+        const bool onBeat = steppedTargetOf(CoupBeats) == 0 || (static_cast<int64_t>(std::floor(beatAt)) & 1) == 1;
+        if (perBeat > 0.0f && bag > 0.0f && onBeat && std::floor(beatAt * perBeat) != std::floor(before * perBeat))
+            coupNow = kCoupPush;
         if (!playing && bag <= 0.0f) beatAt = 0.0;
         coupNow *= std::exp(-dt / kCoupFalls);
         const float turning = clampf(paramOf(Wheel), 0.0f, 1.0f) * bag;

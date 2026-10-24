@@ -2153,10 +2153,11 @@ patch "Gurdy Slow Air" family=gurdy note=67 range=60..84 role=tune
   mac8_a2  0.117
 
 patch "Gurdy Bourrée" family=gurdy note=67 range=60..84 role=tune
-  # A dance: the wheel pushed on every beat, the dog buzzing on each.
+  # A dance: the wheel pushed on 2 and 4, the dog buzzing on each.
   model          #3
   key            #7
   coup           #1
+  coupbeats      #1
   wheel          0.55
   dog            0.65
   threshold      0.55

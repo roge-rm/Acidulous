@@ -260,6 +260,7 @@ private fun labels0(): Map<String, String> = mapOf(
     "Chanter:bag" to "drones|bag",
     "Chanter:bend" to "player|bend",
     "Chanter:coup" to "dog|coup",
+    "Chanter:coupbeats" to "dog|beats",
     "Chanter:dog" to "dog",
     "Chanter:drift" to "chanter|drift",
     "Chanter:drones" to "drones",
@@ -818,10 +819,10 @@ private fun labels0(): Map<String, String> = mapOf(
     "Draw:mac8_d2" to "macro 8|to 2",
     "Draw:mac8_d3" to "macro 8|to 3",
     "Draw:mac8_d4" to "macro 8|to 4",
-    "Draw:model" to "instrument|model",
 )
 
 private fun labels1(): Map<String, String> = mapOf(
+    "Draw:model" to "instrument|model",
     "Draw:octave" to "play|octave",
     "Draw:playing" to "harp|playing",
     "Draw:pressure" to "breath|pressure",
@@ -1621,10 +1622,10 @@ private fun labels1(): Map<String, String> = mapOf(
     "Genesis:tommidtune" to "toms|mid",
     "Genesis:volume" to "out|volume",
     "Hammer:age" to "instrument|age",
-    "Hammer:bendrange" to "tuning|bend",
 )
 
 private fun labels2(): Map<String, String> = mapOf(
+    "Hammer:bendrange" to "tuning|bend",
     "Hammer:board" to "board",
     "Hammer:couple" to "unison|couple",
     "Hammer:damp time" to "dampers|time",
@@ -2424,10 +2425,10 @@ private fun labels2(): Map<String, String> = mapOf(
     "Ratio:m09_src" to "mod 9|from",
     "Ratio:m09_src2" to "mod 9|× from",
     "Ratio:m10_depth" to "mod 10|depth",
-    "Ratio:m10_dest" to "mod 10|to",
 )
 
 private fun labels3(): Map<String, String> = mapOf(
+    "Ratio:m10_dest" to "mod 10|to",
     "Ratio:m10_src" to "mod 10|from",
     "Ratio:m10_src2" to "mod 10|× from",
     "Ratio:mac1" to "play|macro 1",
@@ -3227,10 +3228,10 @@ private fun labels3(): Map<String, String> = mapOf(
     "Tongue:mac4" to "macros|macro 4",
     "Tongue:mac4_a1" to "macro 4|by 1",
     "Tongue:mac4_a2" to "macro 4|by 2",
-    "Tongue:mac4_a3" to "macro 4|by 3",
 )
 
 private fun labels4(): Map<String, String> = mapOf(
+    "Tongue:mac4_a3" to "macro 4|by 3",
     "Tongue:mac4_a4" to "macro 4|by 4",
     "Tongue:mac4_d1" to "macro 4|to 1",
     "Tongue:mac4_d2" to "macro 4|to 2",
@@ -3753,6 +3754,7 @@ private fun short0(): Map<String, String> = mapOf(
     "Chanter:bag" to "bag",
     "Chanter:bend" to "bend",
     "Chanter:coup" to "coup",
+    "Chanter:coupbeats" to "beats",
     "Chanter:drift" to "drift",
     "Chanter:grace" to "grace",
     "Chanter:key" to "tonic",
@@ -4316,10 +4318,10 @@ private fun short0(): Map<String, String> = mapOf(
     "Fathom:mac1_d4" to "to 4",
     "Fathom:mac2" to "macro 2",
     "Fathom:mac2_a1" to "by 1",
-    "Fathom:mac2_a2" to "by 2",
 )
 
 private fun short1(): Map<String, String> = mapOf(
+    "Fathom:mac2_a2" to "by 2",
     "Fathom:mac2_a3" to "by 3",
     "Fathom:mac2_a4" to "by 4",
     "Fathom:mac2_d1" to "to 1",
@@ -5119,10 +5121,10 @@ private fun short1(): Map<String, String> = mapOf(
     "Hammer:mac3_a4" to "by 4",
     "Hammer:mac3_d1" to "to 1",
     "Hammer:mac3_d2" to "to 2",
-    "Hammer:mac3_d3" to "to 3",
 )
 
 private fun short2(): Map<String, String> = mapOf(
+    "Hammer:mac3_d3" to "to 3",
     "Hammer:mac3_d4" to "to 4",
     "Hammer:mac4" to "macro 4",
     "Hammer:mac4_a1" to "by 1",
@@ -5922,10 +5924,10 @@ private fun short2(): Map<String, String> = mapOf(
     "Ratio:mac5_a4" to "by 4",
     "Ratio:mac5_d1" to "to 1",
     "Ratio:mac5_d2" to "to 2",
-    "Ratio:mac5_d3" to "to 3",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Ratio:mac5_d3" to "to 3",
     "Ratio:mac5_d4" to "to 4",
     "Ratio:mac6" to "macro 6",
     "Ratio:mac6_a1" to "by 1",
@@ -6725,10 +6727,10 @@ private fun short3(): Map<String, String> = mapOf(
     "Tongue:ratchet" to "ratchet",
     "Tongue:repluck" to "repluck",
     "Tongue:ring" to "ring~strings",
-    "Tongue:set" to "set",
 )
 
 private fun short4(): Map<String, String> = mapOf(
+    "Tongue:set" to "set",
     "Tongue:sidechain" to "follow",
     "Tongue:stop" to "stop",
     "Tongue:strum" to "strum",

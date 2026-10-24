@@ -12055,7 +12055,7 @@ internal object FactoryBanks {
         low = 60, high = 84)
 
     private fun chanter58() = Patch("Chanter", "Gurdy Bourrée",
-        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.55f, "dog" to 0.65f, "threshold" to 0.55f, "coup" to 0.333333343f, "volume" to 0.52f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.447f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.623f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5485f),
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.55f, "dog" to 0.65f, "threshold" to 0.55f, "coup" to 0.333333343f, "volume" to 0.52f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.447f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.623f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5485f, "coupbeats" to 1f),
         mapOf("macro1" to "Crank", "macro2" to "Quiet Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 60, high = 84)
