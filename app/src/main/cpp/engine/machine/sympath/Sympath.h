@@ -110,6 +110,8 @@ class Sympath final : public Machine {
         /** The bridge ringing where the strings strike it, and how hard they struck it last. */
         dsp::Svf zing;
         float contactLast = 0.0f;
+        /** Under a bowed note: the slow wander a bow leaves, taken out an octave below the note. */
+        dsp::Svf bowCut;
         /** Samples since a string was last plucked. */
         int32_t sincePluck = 0;
         float level = 0.0f;
@@ -138,7 +140,7 @@ class Sympath final : public Machine {
     /** Shapes a pluck for a string at [hz] into [stroke]. */
     int32_t shapePluck(std::vector<float> &stroke, float hz, float velocity, float amount);
     void pluck(Voice &v, int s);
-    void tuneString(Waveguide &w, float hz, float t60, float tone);
+    void tuneString(Waveguide &w, float hz, float t60, float tone, bool bowed = false);
     float stringT60(float hz, bool held) const;
     float stringTone(float velocity) const;
     /** Tunes the sympathetic and drone strings to the tonic and scale. */

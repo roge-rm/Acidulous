@@ -32,7 +32,7 @@ constexpr float kContactRound = 0.01f;
  * How hard a bow drives a string, as the hurdy-gurdy's wheel, and how much
  * louder a bowed string is heard: it swings far less than a plucked one.
  */
-constexpr float kBowGain = 0.12f, kBowedHeard = 28.0f;
+constexpr float kBowGain = 0.12f, kBowedHeard = 45.0f;
 constexpr float kZing = 50.0f, kZingMost = 0.35f;
 
 /**
@@ -251,7 +251,10 @@ void Sympath::prepare(int32_t rate) {
         f.stroke.assign(strokeSize, 0.0f);
     }
     body.setSampleRate(sampleRate);
-    for (Voice &v : voices) v.zing.setSampleRate(sampleRate);
+    for (Voice &v : voices) {
+        v.zing.setSampleRate(sampleRate);
+        v.bowCut.setSampleRate(sampleRate);
+    }
     tarbZing.setSampleRate(sampleRate);
     skinTone.setSampleRate(sampleRate);
     skinTone.set(1400.0f, 0.3f);
@@ -298,6 +301,7 @@ void Sympath::reset() {
     bodyBuiltFor = -1.0f;
     for (Voice &v : voices) {
         v.zing.reset();
+        v.bowCut.reset();
         v.contactLast = 0.0f;
     }
     tarbZing.reset();
@@ -356,14 +360,16 @@ float Sympath::stringTone(float velocity) const {
 /** The highest a string is tuned, about note 100; see tuneString. */
 constexpr float kHighestHz = 2637.0f;
 
-void Sympath::tuneString(Waveguide &w, float hz, float t60, float tone) {
+void Sympath::tuneString(Waveguide &w, float hz, float t60, float tone, bool bowed) {
     // Nothing above a string's reach: higher fold down an octave at a time.
     // Past about note 105 the loop is too short to lose its energy, and with
     // the bridge buzzing it rings for ever.
     while (hz > kHighestHz) hz *= 0.5f;
     const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
     w.setFrequency(hz);
-    w.setDcCorner(0.01f);
+    // A bow pushes the string aside for as long as it plays, so a bowed string
+    // lets go of that offset within a few turns; a plucked one can sit far lower.
+    w.setDcCorner(bowed ? 0.1f : 0.01f);
     w.setDispersion(k.stiffness, k.stiffness > 0.0f ? 2 : 0);
     w.setDamping(std::pow(10.0f, -3.0f / (std::fmax(t60, 0.01f) * hz)), tone);
 }
@@ -467,14 +473,16 @@ void Sympath::start(uint8_t note, uint8_t velocity) {
     if (!v->used) {
         for (String &s : v->strings) s.wave.clear();
         v->zing.reset();
+        v->bowCut.reset();
         v->contactLast = 0.0f;
     }
     const float tone = stringTone(v->velocity);
     for (int s = 0; s < v->stringCount; ++s) {
         const float hz = noteHz(pitch + v->strings[s].offset);
-        tuneString(v->strings[s].wave, hz, stringT60(hz, true), tone);
+        tuneString(v->strings[s].wave, hz, stringT60(hz, true), tone, k.bowed > 0.0f);
         v->strings[s].strokeLength = v->strings[s].strokeAt = 0;
     }
+    if (k.bowed > 0.0f) v->bowCut.set(0.5f * noteHz(pitch), 0.3f);
     v->cycleAt = 0.0;
     v->nextString = 0;
     // A bowed string isn't plucked: the bow starts it, below.
@@ -577,10 +585,11 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
                 const float press = v.held ? (v.pressure >= 0.0f ? v.pressure : channelPressure_) : 0.0f;
                 v.pull += (press - v.pull) * 0.05f;
                 const float base = v.pitch + bend * paramOf(BendRange) + v.noteBend + shake + v.pull * kPullSemis;
+                if (k.bowed > 0.0f) v.bowCut.set(0.5f * noteHz(base), 0.3f);
                 const float tone = stringTone(v.velocity);
                 for (int s = 0; s < v.stringCount; ++s) {
                     const float hz = noteHz(base + v.strings[s].offset);
-                    tuneString(v.strings[s].wave, hz, stringT60(hz, v.held || kind == Tanpura), tone);
+                    tuneString(v.strings[s].wave, hz, stringT60(hz, v.held || kind == Tanpura), tone, k.bowed > 0.0f);
                 }
             }
         }
@@ -615,11 +624,11 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
                     // Set down gently, the push coming in over the bow's first 40 ms.
                     const float onset = std::fmin(1.0f, static_cast<float>(st.bowAt++) / (0.04f * sampleRate));
                     float excite = (force * 0.65f + white() * 0.02f) * kBowGain * k.bowed * onset;
-                    st.bowDc += (excite - st.bowDc) * 0.002f;
+                    st.bowDc += (excite - st.bowDc) * 0.004f;
                     in += excite - st.bowDc;
                 }
                 const float y = st.wave.step(in);
-                out += k.bowed > 0.0f && s == 0 ? y * kBowedHeard : y;
+                out += k.bowed > 0.0f && s == 0 ? v.bowCut.highpass(y) * kBowedHeard : y;
                 // The bridge: once the string swings past its height it
                 // strikes it, harder the further past.
                 const float past = y - curve;
