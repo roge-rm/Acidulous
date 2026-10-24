@@ -19,6 +19,12 @@ constexpr int kRetuneEvery = 16;
 constexpr float kSympathy = 1.5f;
 /** How long the sympathetic and drone strings ring, seconds. */
 constexpr float kTarbT60 = 5.0f, kDroneT60 = 3.5f;
+/**
+ * The sympathetic strings spread across the stereo field, lowest left. One
+ * that rings on alone after the played string has died sits this far over,
+ * so at 0.45 it's never more than 8.4 dB louder in one channel.
+ */
+constexpr float kTarbSpread = 0.45f;
 /** Gamak at full, semitones, and its rate. */
 constexpr float kGamakDepth = 0.6f, kGamakHz = 6.0f;
 /** A finger pulling the string sideways at full pressure, semitones. */
@@ -404,7 +410,7 @@ void Sympath::tuneFree() {
         if (kind != Shamisen) note = saNote + 12.0f + static_cast<float>(kScaleSteps[scale][i % 7] + 12 * (i / 7));
         Free &f = tarbs[i];
         f.hz = noteHz(note);
-        f.pan = tarbCount > 1 ? -0.7f + 1.4f * static_cast<float>(i) / static_cast<float>(tarbCount - 1) : 0.0f;
+        f.pan = tarbCount > 1 ? kTarbSpread * (2.0f * static_cast<float>(i) / static_cast<float>(tarbCount - 1) - 1.0f) : 0.0f;
         tuneString(f.wave, f.hz, kTarbT60, 0.97f);
     }
     droneCount = k.drones;

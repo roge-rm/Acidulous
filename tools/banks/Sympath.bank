@@ -242,6 +242,7 @@ patch "Sitar Kafi" family=sitar note=61 range=48..84 role=lead
   meend          140 ms
   scale          #2
   tarbs          0.8
+  volume         0.661
 
 patch "Sitar Bhairav" family=sitar note=61 range=48..84 role=lead
   # Flat second and sixth in the sympathetic strings.
@@ -3607,7 +3608,7 @@ patch "Shadow Strings" family=bridge note=61 range=48..84 role=pad
   sustain        0.1
   tarbs          1
   scale          #9
-  volume         0.582
+  volume         0.537
 
 patch "Rudra Buzz Bass" family=bridge note=36 range=24..52 role=bass
   # The rudra veena's lowest string, the bridge as loud as it goes.
@@ -3682,7 +3683,7 @@ patch "Touch Buzz" family=bridge note=55 range=40..84 role=tune
   bridge         1
   curve          1
   velocity       1
-  volume         0.912
+  volume         0.891
 
 patch "Drone Cloud" family=bridge note=49 range=36..60 role=pad
   # Tanpuras stacked in chords, quick cycles blurring into a buzzing cloud.
