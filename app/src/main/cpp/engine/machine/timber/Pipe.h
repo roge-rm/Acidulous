@@ -101,9 +101,7 @@ class Pipe {
 
     void prepare(float sampleRate) {
         sr = sampleRate;
-        // Long enough for a vent on the third partial of a 30 Hz note, the
-        // lowest body, with half a period over for the tuning.
-        upper.assign(static_cast<size_t>(3.5f * sr / 30.0f) + 8, 0.0f);
+        upper.assign(static_cast<size_t>(sr / 22.0f) + 8, 0.0f);
         lower.assign(static_cast<size_t>(sr / 22.0f) + 8, 0.0f);
         jetLine.assign(1024, 0.0f);
         clear();
@@ -296,21 +294,16 @@ class Pipe {
         // worked out from the note and the size of the instrument.
         const float base = cylinder ? 0.5f : 1.0f;
         const float whole = base * (sr / lowest);
-        // A vent puts the note on a higher partial of a longer tube, which
-        // may be longer than the instrument: the vent works on every note. If
-        // the line can't hold that tube, drop to a lower register. Otherwise
-        // the note lands between modes and plays badly out of tune.
-        const float room = static_cast<float>(upper.size() - 3);
+        // A vent puts the note on a higher partial of a longer tube. If the
+        // instrument isn't long enough, drop to a lower register, like a
+        // player would. Otherwise the note lands between modes and plays
+        // badly out of tune.
         int32_t useMode = regMode;
-        while (useMode > 1 && (base * static_cast<float>(useMode) + 0.5f) * period > room) {
+        while (useMode > 1 && base * static_cast<float>(useMode) * period > whole * 1.02f) {
             useMode = cylinder ? (useMode > 3 ? 3 : 1) : useMode - 1;
         }
         sounding = useMode;
         const float nominal = base * static_cast<float>(useMode) * period;
-        // Past the instrument's end the vented tube stands in for it, as the
-        // lowest note the vent and the wall loss are scaled to.
-        const bool past = nominal > whole * 1.02f;
-        const float body = past ? freq / static_cast<float>(useMode) : lowest;
 
         // The register vent, as a high pass on the loop. It stops the
         // partials below the one wanted, cornered between the tube's
@@ -320,7 +313,7 @@ class Pipe {
         // 0.3 x the lowest note and 0.25 x the note. Without it a cone (and
         // the long tube below the holes on high notes) rings a spurious low
         // mode that can take over the note.
-        float ventHz = std::max(body * 0.3f, freq * 0.25f);
+        float ventHz = std::max(lowest * 0.3f, freq * 0.25f);
         if (useMode > 1) ventHz = std::max(ventHz, (freq / static_cast<float>(useMode)) * 1.5f);
         ventCoeff = 1.0f - std::exp(-6.28318530718f * ventHz / sr);
         float below = (whole - nominal) * (1.0f + finger * 0.4f) * belowScale;
@@ -345,8 +338,8 @@ class Pipe {
         // the tube's resonance multiplies any loss and a lowpass dulls the
         // tone a lot. See kWallDepth.
         const float tubeHz = freq / static_cast<float>(useMode);
-        wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(past ? freq : tubeHz, 30.0f, sr * 0.45f) / sr);
-        wallDepth = clampf(kWallDepth * std::sqrt(body / std::max(tubeHz, 1.0f)), 0.0f, 0.6f);
+        wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(tubeHz, 30.0f, sr * 0.45f) / sr);
+        wallDepth = clampf(kWallDepth * std::sqrt(lowest / std::max(tubeHz, 1.0f)), 0.0f, 0.6f);
         {
             float wr, wi;
             wallAt(w, wr, wi);
