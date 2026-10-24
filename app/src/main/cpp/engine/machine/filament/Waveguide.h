@@ -37,6 +37,16 @@ class Waveguide {
         // The bow and breath push against the last output sample, so reset it
         // too or a new note starts from the old one.
         lastOut = 0.0f;
+        delayNow = 0.0f;
+    }
+
+    /**
+     * Lets the loop's length follow a new note over about [seconds] rather
+     * than jump, which clicks when a sounding string changes note. 0 jumps.
+     * A cleared string starts at its note's length.
+     */
+    void setLengthGlide(float seconds) {
+        delayGlide = seconds > 0.0f ? 1.0f - std::exp(-1.0f / (seconds * sr)) : 0.0f;
     }
 
     /**
@@ -142,7 +152,13 @@ class Waveguide {
         // its own phase delay, and `loopTrim` takes it off so the string
         // doesn't play flat. See refreshLoop().
         const float wanted = baseDelay * (1.0f - tension * 0.02f * energy) - loopTrim;
-        const float delay = clampf(wanted, 2.0f, static_cast<float>(buffer.size() - 2));
+        float delay = clampf(wanted, 2.0f, static_cast<float>(buffer.size() - 2));
+        if (delayGlide > 0.0f && delayNow > 0.0f) {
+            delayNow += (delay - delayNow) * delayGlide;
+            delay = delayNow;
+        } else {
+            delayNow = delay;
+        }
         float out = read(delay);
         if (damperPressure > 0.0f) {
             // A damper can only take energy away. Subtracting a tap makes a
@@ -384,6 +400,8 @@ class Waveguide {
     // Whether refreshLoop has run, so the first setFrequency solves the loop
     // even when it asks for the default baseDelay.
     bool solved = false;
+    /** The loop's length now, gliding to the note's; see setLengthGlide(). */
+    float delayNow = 0.0f, delayGlide = 0.0f;
     static constexpr float kUnderUnity = 0.9999f;
     float tension = 0.0f;
     float damperPos = 0.5f;

@@ -158,11 +158,29 @@ class MacroNamesTest {
     }
 
     @Test
+    fun chanterMacrosTakeThePatchNames() {
+        val t = track("Chanter", mapOf("macro1" to "Drones"))
+        assertEquals("Drones", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("dog", laneShortLabel(t, laneKey("machine", "dog")))
+    }
+
+    @Test
     fun sympathBankHasItsFamiliesInOrder() {
         val bank = FactoryBanks.of("Sympath")
         assertEquals(96, bank.size)
         assertEquals("Init", bank.first().name)
         val families = bank.map { it.family }.distinct()
         assertEquals(listOf("sitar", "sarod", "veena", "drone", "east", "bowed", "fiddle", "bridge"), families)
+    }
+
+    @Test
+    fun chanterBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Chanter")
+        assertEquals(80, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("isles", "west", "east", "double", "gurdy", "drones", "odd"), families)
+        assertEquals(listOf(15, 12, 12, 11, 12, 9, 9), families.map { f -> bank.count { it.family == f } })
     }
 }

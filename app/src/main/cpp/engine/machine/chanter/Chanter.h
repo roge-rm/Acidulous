@@ -28,8 +28,24 @@ class Chanter final : public Machine {
         Model = 0, Tune, Key, Drones, Bag, Reed, Grace, Drift, Air,
         Wheel, Rosin, Dog, Threshold, Coup,
         VelocityAmount, BendRange, Octave, Volume,
-        Count
+        // Eight macro knobs, each with four routes: a destination (a
+        // MacroDest) and a depth. A macro's knob times a route's depth is
+        // added to the destination, in its own 0..1 range. Block rate, but
+        // grace and velocity are taken at the note. Pitch is 24 semitones
+        // per unit and moves the notes played after it.
+        MacroBase,
+        MacroParams = 9, // knob, 4 destinations, 4 depths
+        Count = MacroBase + 8 * MacroParams
     };
+    // Where a macro route goes. The model, tune, key, coup, bend range and
+    // octave are left out.
+    enum MacroDest : int32_t {
+        McOff, McDrones, McBag, McReed, McGrace, McDrift, McAir,
+        McWheel, McRosin, McDog, McThreshold, McVelocity, McVolume,
+        McPitch,
+        MacroDestCount
+    };
+    static constexpr int kMacros = 8;
     static_assert(Count <= kMaxParams, "too many parameters");
 
     enum Kind : int32_t { Highland = 0, Smallpipes, Gaita, Gurdy,
@@ -69,7 +85,18 @@ class Chanter final : public Machine {
         int kickLeft = 0, kickLength = 1;
     };
 
-    float paramOf(int32_t i) const { return params_.get(i); }
+    float read(int32_t p, bool goal) const { return goal ? params_.target(p) : params_.get(p); }
+    /** Param [p], smoothed, with the macros' routes to it added. */
+    float paramOf(int32_t p) const { return val(p, false); }
+    /** Param [p]'s target with the macros' targets added, for a note's start. */
+    float goalOf(int32_t p) const { return val(p, true); }
+    float val(int32_t p, bool goal) const;
+    /** Fills [macGoal_] from the macro knobs' targets and their routes. */
+    void updateMacroGoals();
+    /** Fills [mac_] from the smoothed macro knobs, and the goals too. */
+    void updateMacros();
+    /** The pitch of [note] on the chanter or the melody strings, before bends. */
+    float notePitch(int note) const;
     /** The note the chanter or the melody strings play now: the last key still held. */
     int heldNote() const { return heldCount > 0 ? held[heldCount - 1] : -1; }
     void startNote(int note, float velocity, bool legato);
@@ -84,14 +111,20 @@ class Chanter final : public Machine {
     /** The second chanter, for the other hand: the key held before the last. */
     timber::Pipe second;
     bool secondLifted = false;
+    /** Each chanter's blowing pressure as it glides to where the note wants it. */
+    float chanterPushNow = 0.0f, secondPushNow = 0.0f;
     timber::Pipe drones[kDrones];
     Bowed melody[2];
     Bowed gurdyDrones[2];
     Bowed trompette;
     /** The keys held, oldest first. */
     uint8_t held[kHeld] = {};
+    /** Each held key's pitch, taken when it was pressed. */
+    float heldPitch[kHeld] = {};
     int heldCount = 0;
     float velocity = 0.8f;
+    /** The note's level from its velocity, taken at its start. */
+    float noteLevel = 1.0f;
     /** The melody note, as a MIDI pitch, and a grace note still to play first: samples left. */
     float pitch = 60.0f;
     float gracePitch = 60.0f;
@@ -113,6 +146,7 @@ class Chanter final : public Machine {
     float dogNow = 0.0f;
     float bend = 0.0f, wheel = 0.0f, channelPressure_ = 0.0f, notePress = -1.0f, noteBend_ = 0.0f;
     int retuneCountdown = 0;
+    float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
     /** The trompette's dog, ringing where it strikes the soundboard. */
     dsp::Svf dogTone;
     float dogLast = 0.0f;

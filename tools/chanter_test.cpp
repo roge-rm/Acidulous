@@ -110,6 +110,13 @@ struct Pipes {
         for (size_t i = a; i < b; ++i) s += double(out[i]) * out[i];
         return 10.0 * std::log10(s / std::max<size_t>(1, b - a) + 1e-20);
     }
+    /** The sharpest corner between [from] and [to]: the largest second difference. A click is a corner. */
+    double corner(double from, double to) const {
+        const auto a = static_cast<size_t>(std::max(2.0, from * kRate)), b = std::min(out.size(), static_cast<size_t>(to * kRate));
+        double c = 0.0;
+        for (size_t i = a; i < b; ++i) c = std::max(c, std::fabs(double(out[i]) - 2.0 * out[i - 1] + out[i - 2]));
+        return c;
+    }
     double peakAbs() const {
         double p = 0.0;
         for (float v : out) p = std::max(p, double(std::fabs(v)));
@@ -150,6 +157,41 @@ void tuning() {
         check(std::fabs(cents(got, want)) < 12.0, "the drones are on the key", fmt("%+.1f cents from A3", cents(got, want)));
         check(g.level(noteHz(45), 0.4, 0.95) > g.level(noteHz(45) * 1.06, 0.4, 0.95) + 15.0, "with the bass drone an octave down",
               fmt("%.1f dB", g.level(noteHz(45), 0.4, 0.95)));
+    }
+}
+
+/** How far out the note is, cents, from its first six partials weighted by their energy. */
+double fineCents(const Pipes &g, double want, double from, double to) {
+    double num = 0.0, den = 0.0;
+    for (int n = 1; n <= 6; ++n) {
+        const double h = want * n;
+        const double got = g.peak(h * 0.98, h * 1.02, from, to);
+        const double e = std::pow(10.0, g.level(got, from, to) / 10.0);
+        num += e * cents(got, h);
+        den += e;
+    }
+    return num / den;
+}
+
+void inTune() {
+    std::printf("- every chanter in tune, bottom to top\n");
+    // Each kind in its usual key, at the bottom, the middle and the top of where it's played.
+    const struct { const char *what; float model; float key; int low; } cases[] = {
+        {"highland", 0, 9, 67}, {"smallpipes", 1, 7, 65}, {"gaita", 2, 0, 70}, {"uilleann", 4, 2, 62},
+        {"gaida", 5, 7, 67}, {"cornemuse", 6, 7, 67}, {"musette", 7, 7, 67}, {"säckpipa", 8, 9, 69},
+        {"dudy", 9, 3, 63}, {"zampogna", 10, 7, 55}, {"tulum", 11, 2, 57}, {"launeddas", 12, 0, 55},
+    };
+    for (const auto &c : cases) {
+        double worst = 0.0;
+        int at = 0;
+        for (int step : {0, 7, 12}) {
+            Pipes g({{"model", c.model}, {"key", c.key}, {"drones", 0.0f}, {"drift", 0.0f}, {"air", 0.0f}});
+            g.f->noteOn(static_cast<uint8_t>(c.low + step), 100);
+            g.play(1.2);
+            const double off = fineCents(g, noteHz(c.low + step), 0.4, 1.2);
+            if (std::fabs(off) > std::fabs(worst)) { worst = off; at = c.low + step; }
+        }
+        check(std::fabs(worst) < 12.0, fmt("%s within 12 cents", c.what).c_str(), fmt("worst %+.1f cents at %d", worst, at));
     }
 }
 
@@ -230,6 +272,63 @@ void dog() {
 }
 
 void lifecycle() {
+    std::printf("- a note after the first\n");
+    // A pipe or a string played again must start as it did the first time:
+    // nothing kept from the last note (a bow's push, a reed's state) may thump.
+    for (float kind : {static_cast<float>(Highland), static_cast<float>(Smallpipes), static_cast<float>(Gurdy)}) {
+        for (double gap : {0.08, 3.0}) {
+            Pipes g({{"model", kind}, {"bag", 0.0f}, {"drift", 0.0f}, {"air", 0.0f}});
+            g.f->noteOn(67, 100);
+            g.play(1.0);
+            g.f->noteOff(67);
+            g.play(gap);
+            g.f->noteOn(67, 100);
+            g.play(1.0);
+            double first = -200.0, again = -200.0;
+            for (double t = 0.0; t < 0.15; t += 0.005) {
+                first = std::max(first, g.rms(t, t + 0.005));
+                again = std::max(again, g.rms(1.0 + gap + t, 1.0 + gap + t + 0.005));
+            }
+            check(again < first + 1.5, fmt("kind %d after %.2f s starts as the first did", static_cast<int>(kind), gap).c_str(),
+                  fmt("%.1f vs %.1f dB", again, first));
+        }
+    }
+    std::printf("- onsets\n");
+    // A note starts and stops without a click: the first 5 ms of a note, on
+    // its own or after a gap or from the note before, and the 30 ms after one
+    // is let go, have no corner much sharper than the held note's own. The drones are off so only the chanter or strings speak.
+    for (int kind = 0; kind < Chanter::KindCount; ++kind) {
+        Pipes g({{"model", static_cast<float>(kind)}, {"drones", 0.0f}, {"grace", 0.0f}, {"drift", 0.0f}, {"air", 0.0f}, {"bag", 1.0f}});
+        g.f->noteOn(67, 100);
+        g.play(0.5);
+        g.f->noteOff(67);
+        g.play(0.1);
+        g.f->noteOn(69, 100);
+        g.play(0.5);
+        g.f->noteOn(72, 100);
+        g.f->noteOff(69);
+        g.play(0.5);
+        const double held = std::max({g.corner(0.25, 0.45), g.corner(0.85, 1.05), g.corner(1.35, 1.55)});
+        const double start = std::max({g.corner(0.0, 0.005), g.corner(0.6, 0.605), g.corner(1.1, 1.105)});
+        check(start < 2.0 * held, fmt("kind %d starts its notes without a click", kind).c_str(),
+              fmt("corner %.4f against %.4f held", start, held));
+        // Let go with the knobs where a patch leaves them, breath and all.
+        // Six notes, let go at different points in the waveform.
+        Pipes h({{"model", static_cast<float>(kind)}, {"drones", 0.0f}, {"bag", 1.0f}});
+        double stop = 0.0, still = 0.0;
+        for (int n = 0; n < 6; ++n) {
+            const double at = static_cast<double>(h.out.size()) / kRate, hold = 0.3 + 0.0371 * n;
+            h.f->noteOn(static_cast<uint8_t>(60 + n), 100);
+            h.play(hold);
+            const double off = static_cast<double>(h.out.size()) / kRate;
+            h.f->noteOff(static_cast<uint8_t>(60 + n));
+            h.play(0.15);
+            still = std::max(still, h.corner(at + 0.15, off));
+            stop = std::max(stop, h.corner(off, off + 0.03));
+        }
+        check(stop < 2.0 * still, fmt("kind %d lets a note go without a click", kind).c_str(),
+              fmt("corner %.4f against %.4f held", stop, still));
+    }
     std::printf("- extremes\n");
     for (int kind = 0; kind <= Gurdy; ++kind) {
         Pipes g({{"model", static_cast<float>(kind)}, {"reed", 1.0f}, {"grace", 60.0f}, {"drift", 1.0f}, {"air", 1.0f},
@@ -250,6 +349,7 @@ void lifecycle() {
 
 int main() {
     tuning();
+    inTune();
     bag();
     fingers();
     dog();
