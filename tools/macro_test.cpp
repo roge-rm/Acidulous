@@ -71,6 +71,8 @@ const char *gExtra = nullptr;
 float gExtraNorm = 0.0f;
 // More params to set in play(), by name and in their own units.
 std::vector<std::pair<std::string, float>> gUnits;
+// The mod wheel sent after the reset, 0..127, or -1 for none.
+int32_t gModWheel = -1;
 // The note to play: 57 for the pitched machines, the kick for Hexbeat.
 int gNote = 57;
 
@@ -104,6 +106,7 @@ std::vector<float> play(const Route *r) {
         m->swapObject(0, acidulous::machine::cumulus::buildCloud(static_cast<acidulous::machine::Cumulus *>(m)->spec(), kRate).release());
     m->allNotesOff();
     m->reset();
+    if (gModWheel >= 0) m->controlChange(1, static_cast<uint8_t>(gModWheel));
     m->noteOn(gNote, 100);
     std::vector<float> out;
     float L[kBlock], R[kBlock];
@@ -415,9 +418,10 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
                               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 ||
                               std::strcmp(type, "Fathom") == 0 || std::strcmp(type, "Aviary") == 0 ||
                               std::strcmp(type, "Tongue") == 0 || std::strcmp(type, "Sympath") == 0;
-        gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
+        const auto kept = gUnits;
+        gUnits.push_back({byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f});
         const auto tuned = play(nullptr);
-        gUnits.clear();
+        gUnits = kept;
         const auto routed = play(&up);
         double worst = 0, peak = 0;
         for (size_t i = 0; i < tuned.size(); ++i) {
@@ -1244,18 +1248,21 @@ void manualRoutes() {
         return u;
     };
 
-    // Swell box: the knob and a route land on the same sound.
+    // Swell box: the knob and a route land on the same sound, with the box
+    // closed (the mod wheel up).
+    gModWheel = 127;
     gUnits = with({{"swellbox", 0.6f}});
     const auto boxKnob = play(nullptr);
     gUnits = organ;
     Route r{5, 3, Mn::McSwellBox, 0.6f, 1.0f};
     same("Manual: a route to the swell box matches the knob", boxKnob, play(&r));
     gUnits.clear();
+    gModWheel = -1;
 
-    // Closed (the mod wheel down): darker and quieter with the box up.
+    // Closed (the mod wheel up): darker and quieter with the box up.
     const int32_t n = 400;
-    const auto closedDry = manualPlay(organ, {}, n);
-    const auto closedBox = manualPlay(with({{"swellbox", 1.0f}}), {}, n);
+    const auto closedDry = manualPlay(with({{"cc1", 127.0f}}), {}, n);
+    const auto closedBox = manualPlay(with({{"cc1", 127.0f}, {"swellbox", 1.0f}}), {}, n);
     const size_t from = 4800, to = n * kBlock;
     const double bDry = brightness(closedDry, from, to), bBox = brightness(closedBox, from, to);
     const double lDry = rmsRange(closedDry, from, to), lBox = rmsRange(closedBox, from, to);
@@ -1263,35 +1270,38 @@ void manualRoutes() {
                   20 * std::log10(lBox / lDry));
     ok(bBox < bDry * 0.5 && lBox < lDry, "Manual: a closed swell box is darker and quieter", buf);
     // Half the knob is between.
-    const auto halfBox = manualPlay(with({{"swellbox", 0.5f}}), {}, n);
+    const auto halfBox = manualPlay(with({{"cc1", 127.0f}, {"swellbox", 0.5f}}), {}, n);
     const double bHalf = brightness(halfBox, from, to);
     std::snprintf(buf, sizeof(buf), "brightness %.3f between %.3f and %.3f", bHalf, bBox, bDry);
     ok(bHalf < bDry && bHalf > bBox, "Manual: half the swell box is between", buf);
 
-    // Open (the wheel up): the box makes no difference.
-    const auto openDry = manualPlay(with({{"cc1", 127.0f}}), {}, n);
-    const auto openBox = manualPlay(with({{"cc1", 127.0f}, {"swellbox", 1.0f}}), {}, n);
+    // Open (the wheel down): the box makes no difference, and it's as loud
+    // as expression off.
+    const auto openDry = manualPlay(organ, {}, n);
+    const auto openBox = manualPlay(with({{"swellbox", 1.0f}}), {}, n);
     ok(openDry == openBox, "Manual: an open swell box sounds as the knob at 0", "");
     // Expression off: the box makes no difference either.
     const auto offDry = manualPlay(with({{"express", 0.0f}}), {}, n);
     const auto offBox = manualPlay(with({{"express", 0.0f}, {"swellbox", 1.0f}}), {}, n);
     ok(offDry == offBox, "Manual: with expression off the swell box does nothing", "");
+    ok(openDry == offDry, "Manual: the mod wheel down is open", "");
     // The pedal (CC11) starts open: with none sent it sounds as expression off.
     const auto pedalOpen = manualPlay(with({{"express", 3.0f}, {"swellbox", 1.0f}}), {}, n);
     ok(pedalOpen == offDry, "Manual: the pedal with no CC11 is open", "");
-    // CC11 at 0 closes it, as the wheel down does.
+    // CC11 at 0 closes it, as the wheel up does.
     const auto pedalShut = manualPlay(with({{"express", 3.0f}, {"swellbox", 1.0f}, {"cc11", 0.0f}}), {}, n);
-    ok(pedalShut == closedBox, "Manual: the pedal at 0 closes as the wheel down", "");
+    ok(pedalShut == closedBox, "Manual: the pedal at 0 closes as the wheel up", "");
     std::snprintf(buf, sizeof(buf), "level %.1f dB under open", 20 * std::log10(rmsRange(offDry, from, to) /
                                                                                  rmsRange(pedalShut, from, to)));
     ok(rmsRange(pedalShut, from, to) < rmsRange(offDry, from, to) * 0.3, "Manual: the pedal at 0 is quieter", buf);
 
-    // Opening the box mid-note. The expression gain itself steps a block
-    // at a time, so the box is held against the same move without it.
+    // Opening the box mid-note, the wheel coming down. The expression gain
+    // itself steps a block at a time, so the box is held against the same
+    // move without it.
     std::vector<Move> open;
-    for (int32_t k = 0; k <= 32; ++k) open.push_back({150 + k * 4, "cc1", float(k * 4 > 127 ? 127 : k * 4)});
-    const auto movingDry = manualPlay(organ, open, n);
-    const auto movingBox = manualPlay(with({{"swellbox", 1.0f}}), open, n);
+    for (int32_t k = 0; k <= 32; ++k) open.push_back({150 + k * 4, "cc1", float(k * 4 > 127 ? 0 : 127 - k * 4)});
+    const auto movingDry = manualPlay(with({{"cc1", 127.0f}}), open, n);
+    const auto movingBox = manualPlay(with({{"cc1", 127.0f}, {"swellbox", 1.0f}}), open, n);
     const double eDry = blockEdge(movingDry, 150 * kBlock, 290 * kBlock);
     const double eBox = blockEdge(movingBox, 150 * kBlock, 290 * kBlock);
     std::snprintf(buf, sizeof(buf), "block edge %.3f against %.3f", eBox, eDry);
@@ -1885,9 +1895,11 @@ int main() {
     brazenRoutes();
     gNote = 57;
     using Mn = acidulous::machine::Manual;
-    // Manual's volume is 0 to 2 from 0.75, so -0.5 (a whole 1.0) leaves
-    // nothing and -0.25 leaves 0.25.
+    // Manual's volume is 0 to 2, set to 0.75 here, so -0.5 (a whole 1.0)
+    // leaves nothing and -0.25 leaves 0.25.
+    gUnits = {{"volume", 0.75f}};
     basics("Manual", Mn::MacroDestCount, Mn::McVolume, Mn::McPitch, Mn::McOff, Mn::kMacros, 0.0, 0.25 / 0.75);
+    gUnits.clear();
     manualRoutes();
     gNote = 57;
     using Hm = acidulous::machine::Hammer;
