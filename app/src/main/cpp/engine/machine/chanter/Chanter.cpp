@@ -131,6 +131,32 @@ float chanterTrim(int kind, float note, float reed) {
 
 constexpr float kCoupsPerBeat[4] = {0.0f, 1.0f, 2.0f, 4.0f};
 
+/**
+ * What the hurdy-gurdy's strings need added to speak in tune, cents, by the
+ * crank (rows, 0 to 1 by 0.2) and the rosin (columns, 0 to 1 by 0.05). A
+ * string held longer on the wheel each swing runs flat, the more as the rosin
+ * grips harder and the slower the wheel turns, down to about 25 cents.
+ */
+constexpr int kRosinCranks = 6, kRosinSteps = 21;
+constexpr float kRosinTrim[kRosinCranks][kRosinSteps] = {
+    {1.3f, 1.4f, 1.4f, 1.3f, 1.2f, 1.1f, 0.8f, -0.7f, -0.1f, 0.5f, 1.8f, 5.6f, 10.5f, 16.4f, 22.3f, 23.1f, 23.6f, 23.9f, 24.4f, 25.2f, 25.9f}, // crank 0.0
+    {-0.1f, 0.8f, 0.5f, 0.5f, 0.0f, 0.3f, 0.6f, 0.5f, 1.2f, 1.6f, 4.2f, 5.1f, 7.9f, 11.7f, 16.1f, 19.3f, 21.7f, 23.1f, 23.7f, 24.6f, 25.3f}, // crank 0.2
+    {0.2f, 0.9f, 0.5f, 0.4f, 0.0f, 0.2f, 1.1f, 1.0f, 0.9f, 1.9f, 2.9f, 4.2f, 5.7f, 8.5f, 11.5f, 14.6f, 18.8f, 21.5f, 22.8f, 23.9f, 24.7f}, // crank 0.4
+    {0.8f, 1.6f, 0.9f, 0.6f, 0.0f, 0.1f, 0.9f, 0.7f, 0.4f, 1.2f, 1.6f, 4.1f, 4.5f, 6.6f, 8.4f, 11.9f, 14.9f, 18.9f, 21.4f, 23.0f, 24.2f}, // crank 0.6
+    {1.6f, 1.9f, 1.3f, 1.2f, 0.7f, 0.1f, 0.2f, 1.0f, 0.8f, 0.6f, 1.4f, 1.8f, 4.4f, 5.1f, 7.0f, 9.4f, 12.1f, 16.0f, 19.6f, 21.9f, 23.6f}, // crank 0.8
+    {1.8f, 2.1f, 2.3f, 1.8f, 1.7f, 1.0f, 0.8f, 1.0f, 1.1f, 0.9f, 0.7f, 1.6f, 2.1f, 4.3f, 5.1f, 7.1f, 10.7f, 13.6f, 17.7f, 20.7f, 22.9f}, // crank 1.0
+};
+
+float rosinTrim(float rosin, float crank) {
+    const float x = clampf(rosin, 0.0f, 1.0f) * static_cast<float>(kRosinSteps - 1);
+    const float y = clampf(crank, 0.0f, 1.0f) * static_cast<float>(kRosinCranks - 1);
+    const int i = std::min(static_cast<int>(x), kRosinSteps - 2), j = std::min(static_cast<int>(y), kRosinCranks - 2);
+    const float fx = x - static_cast<float>(i), fy = y - static_cast<float>(j);
+    const float a = kRosinTrim[j][i] + (kRosinTrim[j][i + 1] - kRosinTrim[j][i]) * fx;
+    const float b = kRosinTrim[j + 1][i] + (kRosinTrim[j + 1][i + 1] - kRosinTrim[j + 1][i]) * fx;
+    return a + (b - a) * fy;
+}
+
 } // namespace
 
 Chanter::Chanter() { initParams(); }
@@ -608,9 +634,10 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         // it's below where the rosin lets go, the strings stop speaking.
         const float bowSpeed = (1.2f + 2.0f * clampf(paramOf(Wheel), 0.0f, 1.0f) * (1.0f + coupNow + press)) * bag;
         const float tone = 0.55f + 0.3f * grip;
+        const float rosinCents = rosinTrim(grip, clampf(paramOf(Wheel), 0.0f, 1.0f));
         auto tuneString = [&](Bowed &s, float note, bool bowing) {
             s.hz = noteHz(note + drift * kDriftCents * 0.002f);
-            s.wave.setFrequency(s.hz);
+            s.wave.setFrequency(noteHz(note + (drift * kDriftCents * 0.2f + rosinCents) * 0.01f));
             const float t60 = bowing ? kStringT60 : kStoppedT60;
             s.wave.setDamping(std::pow(10.0f, -3.0f / (t60 * s.hz)), tone);
         };

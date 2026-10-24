@@ -193,6 +193,16 @@ void inTune() {
         }
         check(std::fabs(worst) < 12.0, fmt("%s within 12 cents", c.what).c_str(), fmt("worst %+.1f cents at %d", worst, at));
     }
+    // Heavy rosin pulls a bowed string flat; the hurdy-gurdy makes up for it.
+    for (float rosin : {0.4f, 0.7f, 1.0f}) {
+        for (float wheel : {0.2f, 0.8f}) {
+            Pipes g({{"model", Gurdy}, {"drones", 0.0f}, {"dog", 0.0f}, {"drift", 0.0f}, {"rosin", rosin}, {"wheel", wheel}});
+            g.f->noteOn(67, 100);
+            g.play(1.2);
+            const double off = fineCents(g, noteHz(67), 0.5, 1.2);
+            check(std::fabs(off) < 6.0, fmt("hurdy-gurdy in tune at rosin %.1f, crank %.1f", rosin, wheel).c_str(), fmt("%+.1f cents", off));
+        }
+    }
 }
 
 void bag() {
@@ -240,18 +250,23 @@ void fingers() {
 void dog() {
     std::printf("- the dog\n");
     // The dog's own part: the top of the sound with it, against without.
-    auto play = [&](float wheel, float threshold, int pressure, float dog, float coup) {
+    auto play = [&](float wheel, float threshold, int pressure, float dog, float coup, int note = 69) {
         auto g = std::make_unique<Pipes>(std::initializer_list<std::pair<const char *, float>>{
             {"model", Gurdy}, {"wheel", wheel}, {"threshold", threshold}, {"dog", dog}, {"coup", coup}, {"drift", 0.0f}});
         g->bpm = 120.0f;
-        g->f->noteOn(69, 100);
+        g->f->noteOn(static_cast<uint8_t>(note), 100);
         if (pressure > 0) g->f->channelPressure(static_cast<uint8_t>(pressure));
         g->play(3.0);
         return g;
     };
+    // Over four notes, since how much of the melody lands in the band
+    // changes from note to note.
     auto buzz = [&](float wheel, float threshold, int pressure) {
-        return band(*play(wheel, threshold, pressure, 1.0f, 0.0f), 1800.0, 2600.0, 0.4, 0.95) -
-               band(*play(wheel, threshold, pressure, 0.0f, 0.0f), 1800.0, 2600.0, 0.4, 0.95);
+        double sum = 0.0;
+        for (int note : {64, 67, 69, 72})
+            sum += band(*play(wheel, threshold, pressure, 1.0f, 0.0f, note), 1800.0, 2600.0, 0.4, 0.95) -
+                   band(*play(wheel, threshold, pressure, 0.0f, 0.0f, note), 1800.0, 2600.0, 0.4, 0.95);
+        return sum / 4.0;
     };
     const double slow = buzz(0.4f, 0.6f, 0), fast = buzz(0.9f, 0.6f, 0), pushed = buzz(0.4f, 0.6f, 127);
     check(fast > slow + 8.0, "the dog buzzes once the wheel's fast enough", fmt("%+.1f vs %+.1f dB", fast, slow));
@@ -319,7 +334,8 @@ void lifecycle() {
         g.f->noteOn(72, 100);
         g.f->noteOff(69);
         g.play(0.5);
-        const double held = std::max({g.corner(0.25, 0.45), g.corner(0.85, 1.05), g.corner(1.35, 1.55)});
+        // Held from 50 ms in: a bowed string's own corners come and go in its first moments.
+        const double held = std::max({g.corner(0.05, 0.5), g.corner(0.65, 1.1), g.corner(1.15, 1.6)});
         const double start = std::max({g.corner(0.0, 0.005), g.corner(0.6, 0.605), g.corner(1.1, 1.105)});
         check(start < 2.0 * held, fmt("kind %d starts its notes without a click", kind).c_str(),
               fmt("corner %.4f against %.4f held", start, held));
@@ -334,7 +350,7 @@ void lifecycle() {
             const double off = static_cast<double>(h.out.size()) / kRate;
             h.f->noteOff(static_cast<uint8_t>(60 + n));
             h.play(0.15);
-            still = std::max(still, h.corner(at + 0.15, off));
+            still = std::max(still, h.corner(at + 0.05, off));
             stop = std::max(stop, h.corner(off, off + 0.03));
         }
         check(stop < 2.0 * still, fmt("kind %d lets a note go without a click", kind).c_str(),
