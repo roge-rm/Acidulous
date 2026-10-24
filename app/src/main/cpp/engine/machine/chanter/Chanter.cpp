@@ -118,10 +118,46 @@ constexpr float kChanterTrim[Chanter::KindCount][kTrimPoints] = {
     {-2.7f, 1.8f, 7.4f, 10.7f, 10.3f, 8.3f, 4.0f, -4.6f, -10.7f, -19.6f, -29.9f, -27.5f}, // tulum
     {-2.9f, 1.5f, 6.8f, 9.6f, 8.4f, 5.5f, 0.5f, -8.5f, -15.1f, -22.8f, -34.3f, -30.6f}, // launeddas
 };
+/**
+ * Above note 92 the trim goes by the semitone, from 92 to 108: the top notes
+ * are uneven from one to the next, so the coarse table can't follow them.
+ * Its first column is the coarse table's value at 92.
+ */
+constexpr int kTopPoints = 17;
+constexpr float kTopFrom = 92.0f;
+constexpr float kTopTrim[Chanter::KindCount][kTopPoints] = {
+    {-18.0f, -20.9f, -21.6f, -22.0f, -22.9f, -23.3f, -23.8f, -24.9f, -24.8f, -25.2f, -26.4f, -26.7f, -28.0f, -27.0f, -28.4f, -31.0f, -30.2f}, // highland
+    {-41.0f, -35.9f, -37.3f, -38.8f, -40.1f, -40.4f, -40.2f, -43.5f, -46.7f, -46.9f, -48.8f, -51.4f, -51.5f, -53.9f, -53.5f, -53.0f, 7.7f}, // smallpipes
+    {-22.2f, -23.7f, -24.3f, -25.0f, -26.6f, -26.7f, -27.4f, -29.1f, -28.6f, -29.0f, -31.0f, -30.7f, -32.6f, -32.5f, -33.8f, -33.3f, -29.1f}, // gaita
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // hurdy-gurdy
+    {-24.7f, -26.1f, -26.7f, -27.8f, -29.9f, -29.7f, -30.7f, -32.9f, -32.3f, -32.9f, -35.3f, -34.9f, -34.4f, -31.1f, -29.2f, -28.4f, -23.0f}, // uilleann
+    {-25.7f, -24.4f, -25.5f, -27.6f, -29.1f, -29.3f, -30.3f, -31.3f, -33.3f, -33.8f, -34.4f, -36.8f, -36.8f, -38.9f, -41.1f, -44.8f, -7.2f}, // gaida
+    {-21.0f, -22.7f, -23.3f, -23.9f, -25.2f, -25.4f, -26.0f, -27.4f, -27.2f, -27.6f, -29.2f, -29.1f, -30.8f, -30.3f, -31.8f, -34.5f, -31.1f}, // cornemuse
+    {-39.1f, -42.7f, -44.5f, -47.0f, -48.4f, -48.8f, -47.9f, -53.0f, -57.8f, -58.3f, -58.5f, -57.0f, -50.3f, -45.0f, -41.5f, -41.0f, 10.9f}, // musette
+    {-41.0f, -35.9f, -37.3f, -38.8f, -40.1f, -40.4f, -40.2f, -43.5f, -46.7f, -46.9f, -48.8f, -51.4f, -51.5f, -53.9f, -53.5f, -53.0f, 7.7f}, // säckpipa
+    {-35.4f, -31.0f, -32.7f, -33.4f, -34.8f, -34.9f, -35.1f, -37.3f, -40.2f, -40.0f, -41.5f, -43.7f, -43.6f, -46.2f, -49.2f, -55.2f, -5.3f}, // dudy
+    {-20.0f, -21.9f, -22.4f, -22.9f, -24.0f, -24.3f, -24.8f, -26.0f, -25.9f, -26.3f, -27.7f, -27.7f, -29.3f, -28.5f, -29.9f, -33.0f, -31.8f}, // zampogna
+    {-29.9f, -27.3f, -28.9f, -29.6f, -31.2f, -30.9f, -31.6f, -33.0f, -35.3f, -35.5f, -36.4f, -38.8f, -38.7f, -41.2f, -43.9f, -47.7f, -6.6f}, // tulum
+    {-34.3f, -30.9f, -32.7f, -33.4f, -34.8f, -34.9f, -35.1f, -37.3f, -40.2f, -40.0f, -41.5f, -43.7f, -43.6f, -46.2f, -49.2f, -55.2f, -5.3f}, // launeddas
+};
+/**
+ * The bell's share of the wave sent back up the bore, by the note. It fades
+ * out over the four semitones above 92: with nearly every hole open the bore
+ * below them hardly answers, and its echo pulled each top note sharp or flat
+ * by where it fell against the tube, so by key as well as by note.
+ */
+float bellBack(float note) { return 0.9f * clampf((kTopFrom + 4.0f - note) / 4.0f, 0.0f, 1.0f); }
 /** A harder reed plays flatter: cents added per unit of the reed knob past the middle. */
 constexpr float kReedTrim[Chanter::KindCount] = {8.1f, 17.8f, 11.1f, 0, 17.4f, 9.1f, 10.0f, 23.0f, 16.7f, 11.0f, 8.6f, 10.9f, 13.8f};
 
 float chanterTrim(int kind, float note, float reed) {
+    if (note > kTopFrom) {
+        const float t = clampf(note - kTopFrom, 0.0f, static_cast<float>(kTopPoints - 1));
+        const int i = std::min(static_cast<int>(t), kTopPoints - 2);
+        const float f = t - static_cast<float>(i);
+        const float *row = kTopTrim[kind];
+        return row[i] + (row[i + 1] - row[i]) * f + kReedTrim[kind] * (reed - 0.5f);
+    }
     const float at = clampf((note - kTrimFrom) / kTrimStep, 0.0f, static_cast<float>(kTrimPoints - 1));
     const int i = std::min(static_cast<int>(at), kTrimPoints - 2);
     const float f = at - static_cast<float>(i);
@@ -528,7 +564,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         chanter.setBelow(1.0f);
         chanter.setFork(0.2f);
         chanter.setReed(k.cylinder ? 0 : 1, clampf(k.reed + (paramOf(Reed) - 0.5f) * 0.6f, 0.05f, 1.0f), 0.45f);
-        chanter.setBell(0.9f, 0.4f);
+        chanter.setBell(bellBack(now), 0.4f);
         chanter.setLoss(0.999f);
         // The reed is solved for the bag's pressure even between notes: solving it
         // for none steps its table as a note ends, which clicks.
@@ -554,7 +590,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
             second.setBelow(1.0f);
             second.setFork(0.2f);
             second.setReed(k.cylinder ? 0 : 1, clampf(k.reed + (paramOf(Reed) - 0.5f) * 0.6f, 0.05f, 1.0f), 0.45f);
-            second.setBell(0.9f, 0.4f);
+            second.setBell(bellBack(otherNow), 0.4f);
             second.setLoss(0.999f);
             second.setPressure(kChanterPush * push);
             second.setDrive(1.0f);
