@@ -111,6 +111,8 @@ class Chanter final : public Machine {
     /** The second chanter, for the other hand: the key held before the last. */
     timber::Pipe second;
     bool secondLifted = false;
+    /** Each chanter's blowing pressure as it glides to where the note wants it. */
+    float chanterPushNow = 0.0f, secondPushNow = 0.0f;
     timber::Pipe drones[kDrones];
     Bowed melody[2];
     Bowed gurdyDrones[2];

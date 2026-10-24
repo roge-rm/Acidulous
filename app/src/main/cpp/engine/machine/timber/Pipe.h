@@ -119,7 +119,8 @@ class Pipe {
         // Reset the tube length too. tune() rewrites it before step() reads
         // it, but a cleared pipe shouldn't hold the last note's length. It
         // isn't glided like the brass, since that detunes the jet line.
-        upperDelay = 0.0f;
+        upperDelay = upperNow = 0.0f;
+        tongueNow = tongue;
         onsetBoost = 1.0f;
         onsetFall = 0.0f;
         // Reset the pressure (setPressure ignores tiny changes, so an old
@@ -228,7 +229,21 @@ class Pipe {
     void setLoss(float amount) { loss = clampf(amount, 0.8f, 1.0f); }
 
     /** The tongue on the reed. 1 holds it shut. */
+    /**
+     * Lets the tube's length follow a new note over about [seconds] rather
+     * than jump, which clicks when a sounding pipe changes note. 0 jumps. A
+     * cleared or lifted pipe starts at its note's length.
+     */
+    void setLengthGlide(float seconds) {
+        lengthGlide = seconds > 0.0f ? 1.0f - std::exp(-1.0f / (seconds * sr)) : 0.0f;
+    }
+
     void setTongue(float amount) { tongue = clampf(amount, 0.0f, 1.0f); }
+
+    /** Lets the tongue land and lift over about [seconds] rather than at once, which clicks. 0 is at once. */
+    void setTongueGlide(float seconds) {
+        tongueGlide = seconds > 0.0f ? 1.0f - std::exp(-1.0f / (seconds * sr)) : 0.0f;
+    }
 
     /** The tongue across the air jet, for flutter. 1 stops the jet. */
     void setJetCut(float amount) { jetCut = clampf(amount, 0.0f, 1.0f); }
@@ -249,6 +264,7 @@ class Pipe {
         constexpr float kGrowth = 6.9f; // ln(1000): silence to a sounding note
         onsetBoost = clampf(std::exp(kGrowth / (freq * seconds)) / kSettled, 1.0f, 4.0f);
         onsetFall = std::exp(-64.0f / (seconds * sr));
+        upperNow = 0.0f; // a new note starts at its own length
         dirty = true;
     }
 
@@ -458,7 +474,9 @@ class Pipe {
      * most of a woodwind's sound leaves through the holes.
      */
     float step(float mouth, float noise) {
-        const float arrive = read(upper, wUpper, upperDelay);
+        if (lengthGlide > 0.0f && upperNow > 0.0f) upperNow += (upperDelay - upperNow) * lengthGlide;
+        else upperNow = upperDelay;
+        const float arrive = read(upper, wUpper, upperNow);
 
         // The lattice splits the wave: the low end reflects, the high end
         // carries on down the rest of the instrument.
@@ -512,7 +530,9 @@ class Pipe {
             const float a = clampf(inertia * reedScale, -1.0f, 1.0f);
             const float cube = a * a * a;
             const float rFree = offset + (cube >= 0.0f ? 1.0f - offset : 1.0f + offset) * cube;
-            const float r = rFree + (1.0f - rFree) * tongue;
+            if (tongueGlide > 0.0f) tongueNow += (tongue - tongueNow) * tongueGlide;
+            else tongueNow = tongue;
+            const float r = rFree + (1.0f - rFree) * tongueNow;
             in = breath + pd * r;
         }
 
@@ -643,6 +663,10 @@ class Pipe {
     int32_t regMode = 1, excite = Single;
 
     float upperDelay = 100.0f, lowerDelay = 1.0f;
+    /** The length the tube is read at now, gliding to upperDelay; see setLengthGlide(). */
+    float upperNow = 0.0f;
+    float tongueGlide = 0.0f, tongueNow = 0.0f;
+    float lengthGlide = 0.0f;
     int32_t sounding = 1;
     float latticeHz = 1500.0f, finger = 0.0f, holeDepth = 0.4f, latticeCut = 1500.0f;
     Section hole1, hole2;

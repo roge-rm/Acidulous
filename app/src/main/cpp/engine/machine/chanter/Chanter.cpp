@@ -20,6 +20,10 @@ constexpr float kChanterPush = 0.95f, kDronePush = 0.85f;
 constexpr float kFills = 0.03f, kEmpties = 0.3f;
 /** A closed chanter's gap between notes, seconds. */
 constexpr float kShut = 0.012f;
+/** How fast a chanter's blowing pressure rises at a note's start and falls at its end, seconds. A step clicks. */
+constexpr float kPushRise = 0.002f, kPushFall = 0.012f;
+/** How long a sounding chanter's tube takes to move to a new fingering, seconds. A jump clicks. */
+constexpr float kFingerGlide = 0.003f;
 /** A coup: how much it pushes the wheel, and how quickly that passes, seconds. */
 constexpr float kCoupPush = 0.8f, kCoupFalls = 0.06f;
 /** How long the strings ring once the wheel stops bowing them, seconds. */
@@ -256,8 +260,15 @@ void Chanter::prepare(int32_t rate) {
     sampleRate = static_cast<float>(rate);
     chanter.prepare(sampleRate);
     second.prepare(sampleRate);
+    chanter.setLengthGlide(kFingerGlide);
+    second.setLengthGlide(kFingerGlide);
+    chanter.setTongueGlide(kFingerGlide);
+    second.setTongueGlide(kFingerGlide);
     for (timber::Pipe &d : drones) d.prepare(sampleRate);
-    for (Bowed &b : melody) b.wave.prepare(sampleRate);
+    for (Bowed &b : melody) {
+        b.wave.prepare(sampleRate);
+        b.wave.setLengthGlide(kFingerGlide);
+    }
     for (Bowed &b : gurdyDrones) b.wave.prepare(sampleRate);
     trompette.wave.prepare(sampleRate);
     dogTone.setSampleRate(sampleRate);
@@ -271,6 +282,7 @@ void Chanter::reset() {
     chanter.clear();
     second.clear();
     secondLifted = false;
+    chanterPushNow = secondPushNow = 0.0f;
     for (timber::Pipe &d : drones) d.clear();
     for (Bowed *b : {&melody[0], &melody[1], &gurdyDrones[0], &gurdyDrones[1], &trompette}) {
         b->wave.clear();
@@ -491,7 +503,9 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         chanter.setReed(k.cylinder ? 0 : 1, clampf(k.reed + (paramOf(Reed) - 0.5f) * 0.6f, 0.05f, 1.0f), 0.45f);
         chanter.setBell(0.9f, 0.4f);
         chanter.setLoss(0.999f);
-        chanter.setPressure(chanterOn ? kChanterPush * push : 0.0f);
+        // The reed is solved for the bag's pressure even between notes: solving it
+        // for none steps its table as a note ends, which clicks.
+        chanter.setPressure(kChanterPush * push);
         chanter.setDrive(1.0f);
         chanter.tune();
         if (chanterOn && !lifted) {
@@ -515,7 +529,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
             second.setReed(k.cylinder ? 0 : 1, clampf(k.reed + (paramOf(Reed) - 0.5f) * 0.6f, 0.05f, 1.0f), 0.45f);
             second.setBell(0.9f, 0.4f);
             second.setLoss(0.999f);
-            second.setPressure(secondOn ? kChanterPush * push : 0.0f);
+            second.setPressure(kChanterPush * push);
             second.setDrive(1.0f);
             second.tune();
             if (secondOn && !secondLifted) {
@@ -550,9 +564,13 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         }
         sounding = bag > 0.05f;
         const float chanterPush = chanterOn ? kChanterPush * push : 0.0f;
+        const float rise = 1.0f - std::exp(-1.0f / (kPushRise * sampleRate));
+        const float fall = 1.0f - std::exp(-1.0f / (kPushFall * sampleRate));
         for (int32_t i = 0; i < frames; ++i) {
-            float y = chanter.step(chanterPush, white() * air * 0.35f * chanterPush) * k.level * level;
-            if (k.second > 0.0f) y += second.step(secondPush, white() * air * 0.35f * secondPush) * secondGain;
+            chanterPushNow += (chanterPush - chanterPushNow) * (chanterPush > chanterPushNow ? rise : fall);
+            secondPushNow += (secondPush - secondPushNow) * (secondPush > secondPushNow ? rise : fall);
+            float y = chanter.step(chanterPushNow, white() * air * 0.35f * chanterPushNow) * k.level * level;
+            if (k.second > 0.0f) y += second.step(secondPushNow, white() * air * 0.35f * secondPushNow) * secondGain;
             float drone = 0.0f;
             for (int d = 0; d < k.drones; ++d) {
                 const float dp = kDronePush * push;
