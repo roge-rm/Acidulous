@@ -529,12 +529,14 @@ fun MainScreen(
         // axis is fitted separately between the base size and three times it,
         // and neither may outgrow the other by more than [FitAspectMax] so a
         // clip stays a tile. A pinch takes over from wherever this left the
-        // width. Big screens have a higher ceiling, see [CellMaxWLarge].
+        // width. Big screens have a higher ceiling, see [CellMaxWLarge]. A
+        // desktop window fits to [DesktopFitMax] at most, or an empty song
+        // fills a monitor with four tiles.
         val large = largeScreen()
         val cellMax = if (large) CellMaxWLarge else CellMaxW
         val fit: Pair<Float, Float>? = if (!large || gridZoom > 0f || gridW <= 0 || gridH <= 0) null else {
             with(LocalDensity.current) {
-                val top = cellMax / CELL_W
+                val top = if (com.rm.acidulous.AppHost.current.onDesktop) DesktopFitMax else cellMax / CELL_W
                 var zx = (gridW.toDp() * FitSlack / (TRACK_W + CELL_W * (song.scenes.size + 1))).coerceIn(1f, top)
                 var zy = (gridH.toDp() * FitSlack / (SCENE_H + CELL_H * (song.tracks.size + 1))).coerceIn(1f, top)
                 zx = zx.coerceAtMost(zy * FitAspectMax)
@@ -1514,6 +1516,8 @@ private val SCENE_H = 54.dp
  * the interface setting.
  */
 private val CellMinW = 48.dp
+/** How far the fit can grow a cell in a desktop window, as a multiple of the base size. */
+private const val DesktopFitMax = 1.5f
 /** How much wider than tall a tablet's fitted cell can get, and the reverse. */
 private const val FitAspectMax = 1.6f
 /**
