@@ -5773,7 +5773,7 @@ internal object FactoryBanks {
     private fun filament0() = Patch("Filament", "Init", emptyMap(),
         family = "plucked")
 
-    private fun filament1() = Patch("Filament", "Nylon",
+    private fun filament1() = Patch("Filament", "Nylon String",
         mapOf("position" to 0.5416667f, "grit" to 0.6f, "length" to 0.120000787f, "sustain" to 0.727f, "tone" to 0.4f, "detune" to 0.1f, "couple" to 0.3f, "size" to 0.55f, "bodymix" to 0.45f, "volume" to 0.713333368f, "mac1_d1" to 0.02f, "mac1_d2" to 0.2f, "mac1_d3" to 0.1f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac1_a3" to 0.6f, "mac2_d1" to 0.2f, "mac2_d2" to 0.1f, "mac2_a1" to 0.7f, "mac2_a2" to 0.65f, "mac3_d1" to 0.16f, "mac3_d2" to 0.18f, "mac3_a1" to 0.6f, "mac3_a2" to 0.35f, "mac4_d1" to 0.3f, "mac4_d2" to 0.16f, "mac4_d3" to 0.2f, "mac4_a1" to 0.625f, "mac4_a2" to 0.325f, "mac4_a3" to 0.45f, "mac5_d1" to 0.48f, "mac5_d2" to 0.46f, "mac5_d3" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.65f, "mac5_a3" to 0.35f, "mac6_d1" to 0.36f, "mac6_d2" to 0.4f, "mac6_d3" to 0.38f, "mac6_a1" to 0.6f, "mac6_a2" to 0.65f, "mac6_a3" to 0.7f, "mac7_d1" to 0.94f, "mac7_a1" to 0.6f, "mac8_d1" to 0.32f, "mac8_d2" to 0.34f, "mac8_d3" to 0.52f, "mac8_a1" to 0.7f, "mac8_a2" to 0.425f, "mac8_a3" to 0.6f),
         mapOf("macro1" to "Bridge", "macro2" to "Brighter", "macro3" to "Ring", "macro4" to "Mute", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Vibrato", "macro8" to "Buzz"),
         family = "plucked",
@@ -5832,7 +5832,7 @@ internal object FactoryBanks {
         low = 60, high = 96,
         sendReverb = 0.2f, sendDelay = 0f)
 
-    private fun filament10() = Patch("Filament", "Steel",
+    private fun filament10() = Patch("Filament", "Steel String",
         mapOf("exciter" to 0.2f, "position" to 0.25000003f, "sustain" to 0.807f, "tone" to 0.5f, "stiffness" to 0.18f, "detune" to 0.12f, "couple" to 0.4f, "size" to 0.4f, "bodymix" to 0.4f, "drive" to 0.12f, "volume" to 0.8866667f, "mac1_d1" to 0.02f, "mac1_d2" to 0.2f, "mac1_a1" to 0.375f, "mac1_a2" to 0.55f, "mac2_d1" to 0.2f, "mac2_d2" to 0.1f, "mac2_a1" to 0.65f, "mac2_a2" to 0.65f, "mac3_d1" to 0.16f, "mac3_a1" to 0.575f, "mac4_d1" to 0.3f, "mac4_d2" to 0.16f, "mac4_d3" to 0.2f, "mac4_a1" to 0.65f, "mac4_a2" to 0.3f, "mac4_a3" to 0.425f, "mac5_d1" to 0.48f, "mac5_d2" to 0.46f, "mac5_d3" to 0.5f, "mac5_d4" to 0.2f, "mac5_a1" to 0.725f, "mac5_a2" to 0.675f, "mac5_a3" to 0.3f, "mac5_a4" to 0.44f, "mac6_d1" to 0.36f, "mac6_d2" to 0.4f, "mac6_d3" to 0.38f, "mac6_a1" to 0.6f, "mac6_a2" to 0.6f, "mac6_a3" to 0.7f, "mac7_d1" to 0.94f, "mac7_a1" to 0.6f, "mac8_d1" to 0.52f, "mac8_d2" to 0.32f, "mac8_d3" to 0.34f, "mac8_a1" to 0.85f, "mac8_a2" to 0.65f, "mac8_a3" to 0.4f),
         mapOf("macro1" to "Bridge", "macro2" to "Brighter", "macro3" to "Ring", "macro4" to "Palm Mute", "macro5" to "Body", "macro6" to "Chorus", "macro7" to "Vibrato", "macro8" to "Drive"),
         family = "picked",
@@ -5865,7 +5865,7 @@ internal object FactoryBanks {
         low = 40, high = 76,
         sendReverb = 0.15f, sendDelay = 0f)
 
-    private fun filament15() = Patch("Filament", "Wire",
+    private fun filament15() = Patch("Filament", "Picked Wire",
         mapOf("exciter" to 0.2f, "position" to 0.05f, "sustain" to 0.907f, "tone" to 0.85f, "stiffness" to 0.85f, "stages" to 1f, "tension" to 0.8f, "rattle" to 0.3f, "detune" to 0.6f, "couple" to 0.8f, "drive" to 0.3f, "volume" to 0.5733333f, "mac1_d1" to 0.2f, "mac1_d2" to 0.1f, "mac1_a1" to 0.35f, "mac1_a2" to 0.35f, "mac2_d1" to 0.24f, "mac2_a1" to 0.575f, "mac3_d1" to 0.16f, "mac3_a1" to 0.54f, "mac4_d1" to 0.36f, "mac4_d2" to 0.4f, "mac4_a1" to 0.35f, "mac4_a2" to 0.35f, "mac5_d1" to 0.26f, "mac5_a1" to 0.6f, "mac6_d1" to 0.32f, "mac6_d2" to 0.34f, "mac6_a1" to 0.8f, "mac6_a2" to 0.35f, "mac7_d1" to 0.48f, "mac7_d2" to 0.46f, "mac7_d3" to 0.5f, "mac7_d4" to 0.2f, "mac7_a1" to 0.725f, "mac7_a2" to 0.675f, "mac7_a3" to 0.3f, "mac7_a4" to 0.44f, "mac8_d1" to 0.3f, "mac8_d2" to 0.16f, "mac8_a1" to 0.65f, "mac8_a2" to 0.3f),
         mapOf("macro1" to "Softer", "macro2" to "Stiffer", "macro3" to "Ring", "macro4" to "Courses", "macro5" to "Twang", "macro6" to "Rattle", "macro7" to "Body", "macro8" to "Mute"),
         family = "picked",
@@ -5962,7 +5962,7 @@ internal object FactoryBanks {
         family = "bowed",
         low = 40, high = 79)
 
-    private fun filament30() = Patch("Filament", "Blown",
+    private fun filament30() = Patch("Filament", "Blown String",
         mapOf("exciter" to 0.8f, "pressure" to 0.6f, "grit" to 0.7f, "sustain" to 0.41f, "tone" to 0.3f, "stiffness" to 0.1f, "size" to 0.7f, "bodymix" to 0.5f, "volume" to 0.401333332f, "vibrate" to 0.754995048f, "vibdepth" to 0.1f, "vibdelay" to 0.3f, "mac1_d1" to 0.06f, "mac1_a1" to 0.65f, "mac2_d1" to 0.1f, "mac2_d2" to 0.58f, "mac2_a1" to 0.625f, "mac2_a2" to 0.55f, "mac3_d1" to 0.94f, "mac3_a1" to 0.625f, "mac4_d1" to 0.2f, "mac4_a1" to 0.65f, "mac5_d1" to 0.48f, "mac5_d2" to 0.46f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4f, "mac6_d1" to 0.16f, "mac6_a1" to 0.625f, "mac7_d1" to 0.24f, "mac7_a1" to 0.65f, "mac8_d1" to 0.92f, "mac8_d2" to 0.94f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
         mapOf("macro1" to "Blow Harder", "macro2" to "Breathy", "macro3" to "Vibrato", "macro4" to "Brighter", "macro5" to "Body", "macro6" to "Ring", "macro7" to "Stiff", "macro8" to "Flutter"),
         family = "blown",
@@ -5994,7 +5994,7 @@ internal object FactoryBanks {
         low = 40, high = 76,
         sendReverb = 0.25f, sendDelay = 0f)
 
-    private fun filament35() = Patch("Filament", "Sympathy",
+    private fun filament35() = Patch("Filament", "Sympathetic Strings",
         mapOf("tone" to 0.5f, "sympathy" to 1f, "symtune" to 0.8f, "symlevel" to 0.7f, "symsustain" to 0.786f, "symwide" to 0.8f, "volume" to 0.453333348f, "on release" to 0f, "mac1_d1" to 0.42f, "mac1_a1" to 0.65f, "mac2_d1" to 0.44f, "mac2_a1" to 0.6f, "mac3_d1" to 0.02f, "mac3_d2" to 0.2f, "mac3_a1" to 0.325f, "mac3_a2" to 0.575f, "mac4_d1" to 0.2f, "mac4_d2" to 0.1f, "mac4_a1" to 0.65f, "mac4_a2" to 0.65f, "mac5_d1" to 0.16f, "mac5_a1" to 0.6f, "mac6_d1" to 0.3f, "mac6_d2" to 0.16f, "mac6_a1" to 0.65f, "mac6_a2" to 0.35f, "mac7_d1" to 0.48f, "mac7_d2" to 0.46f, "mac7_d3" to 0.5f, "mac7_a1" to 0.675f, "mac7_a2" to 0.375f, "mac7_a3" to 0.35f, "mac8_d1" to 0.2f, "mac8_a1" to 0.375f),
         mapOf("macro1" to "More Halo", "macro2" to "Longer Halo", "macro3" to "Bridge", "macro4" to "Brighter", "macro5" to "Ring", "macro6" to "Mute", "macro7" to "Body", "macro8" to "Darker"),
         family = "sympathetic",

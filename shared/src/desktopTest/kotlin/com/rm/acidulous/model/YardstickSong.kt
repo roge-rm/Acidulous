@@ -66,7 +66,7 @@ class YardstickSong {
                 ),
                 Track(
                     id = "t-strings", name = "Strings",
-                    machine = machine("Filament", "Steel"),
+                    machine = machine("Filament", "Steel String"),
                     clips = everyScene(strings()),
                     mixer = Mixer(volume = 0.30f, pan = 0.3f, sendDelay = 0.15f),
                 ),
