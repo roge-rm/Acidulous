@@ -148,4 +148,21 @@ class MacroNamesTest {
         val families = bank.map { it.family }.distinct()
         assertEquals(listOf("steel", "northern", "southern", "bamboo", "reeds", "rhythm", "strange"), families)
     }
+
+    @Test
+    fun sympathMacrosTakeThePatchNames() {
+        val t = track("Sympath", mapOf("macro1" to "Buzz"))
+        assertEquals("Buzz", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("tarbs", laneShortLabel(t, laneKey("machine", "tarbs")))
+    }
+
+    @Test
+    fun sympathBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Sympath")
+        assertEquals(96, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("sitar", "sarod", "veena", "drone", "east", "bowed", "fiddle", "bridge"), families)
+    }
 }
