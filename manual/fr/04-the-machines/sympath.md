@@ -77,7 +77,8 @@ course de cette commande à 1. La hauteur déplace les notes jouées ensuite, 24
 demi-tons à 1. Le modèle, l’accordage, le sa, la gamme, la première corde, le
 cycle, les voix, l’octave et le bend ne sont pas accessibles. Un changement de
 pincement, de position, de chikari ou de vélocité s’entend à la note suivante ;
-le reste bouge tout de suite. Touchez le nom d’une macro pour la renommer.
+le reste bouge tout de suite, comme le pincement sur un instrument frotté.
+Touchez le nom d’une macro pour la renommer.
 
 ## Astuces
 

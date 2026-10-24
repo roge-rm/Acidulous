@@ -69,7 +69,8 @@ knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves the notes played after it, 24 semitones at 1. The
 model, tune, sa, scale, first, cycle, voices, octave and bend can't be reached.
 A change to the pluck, position, chikari or velocity is heard from the next
-note; the rest move at once. Tap a macro's name to rename it.
+note; the rest move at once, and so does the pluck on a bowed one. Tap a
+macro's name to rename it.
 
 ## Tips
 
