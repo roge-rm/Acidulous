@@ -91,6 +91,40 @@ constexpr Make kMakes[Chanter::KindCount] = {
     {1, {-12.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.5f, true, 2800.0f, 0.6f, false, 0.9f, 0.8f},
 };
 
+/**
+ * What a chanter needs added to speak in tune, cents, by kind and by the
+ * note, from E3 (52) every 4 semitones, measured across keys. The reed and
+ * the holes pull the pitch: flat at the bottom, sharp at the top. The
+ * hurdy-gurdy has none.
+ */
+constexpr int kTrimPoints = 12;
+constexpr float kTrimFrom = 52.0f, kTrimStep = 4.0f;
+constexpr float kChanterTrim[Chanter::KindCount][kTrimPoints] = {
+    {-3.2f, 1.5f, 6.2f, 7.0f, 6.6f, 2.9f, -0.1f, -2.6f, -8.5f, -13.9f, -18.0f, -22.3f}, // highland
+    {-3.4f, 0.8f, 5.6f, 7.3f, 4.2f, -0.5f, -7.5f, -16.2f, -23.3f, -28.1f, -41.0f, -34.8f}, // smallpipes
+    {-3.6f, 0.8f, 4.9f, 4.2f, 2.6f, -2.2f, -6.1f, -8.8f, -16.7f, -23.3f, -22.2f, -25.6f}, // gaita
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // hurdy-gurdy
+    {-3.9f, 0.4f, 4.2f, 3.7f, 1.8f, -2.9f, -7.2f, -10.2f, -17.7f, -24.1f, -24.7f, -28.7f}, // uilleann
+    {-2.5f, 2.2f, 7.7f, 11.5f, 11.9f, 10.5f, 7.2f, -0.6f, -5.5f, -15.9f, -25.7f, -26.1f}, // gaida
+    {-3.4f, 1.1f, 5.4f, 5.3f, 4.1f, -0.5f, -4.2f, -6.8f, -14.1f, -20.4f, -21.0f, -24.5f}, // cornemuse
+    {-4.0f, -0.3f, 3.9f, 4.3f, -0.9f, -7.4f, -15.7f, -22.6f, -30.5f, -32.6f, -39.1f, -41.3f}, // musette
+    {-3.4f, 0.6f, 5.4f, 6.8f, 3.0f, -2.3f, -9.9f, -17.9f, -24.8f, -28.3f, -41.0f, -34.8f}, // säckpipa
+    {-3.0f, 1.3f, 5.9f, 7.1f, 3.1f, -2.5f, -10.2f, -17.4f, -23.4f, -25.4f, -35.4f, -30.6f}, // dudy
+    {-3.3f, 1.4f, 5.8f, 5.9f, 5.1f, 0.9f, -2.4f, -4.8f, -11.8f, -17.7f, -20.0f, -23.4f}, // zampogna
+    {-2.7f, 1.8f, 7.4f, 10.7f, 10.3f, 8.3f, 4.0f, -4.6f, -10.7f, -19.6f, -29.9f, -27.5f}, // tulum
+    {-2.9f, 1.5f, 6.8f, 9.6f, 8.4f, 5.5f, 0.5f, -8.5f, -15.1f, -22.8f, -34.3f, -30.6f}, // launeddas
+};
+/** A harder reed plays flatter: cents added per unit of the reed knob past the middle. */
+constexpr float kReedTrim[Chanter::KindCount] = {8.1f, 17.8f, 11.1f, 0, 17.4f, 9.1f, 10.0f, 23.0f, 16.7f, 11.0f, 8.6f, 10.9f, 13.8f};
+
+float chanterTrim(int kind, float note, float reed) {
+    const float at = clampf((note - kTrimFrom) / kTrimStep, 0.0f, static_cast<float>(kTrimPoints - 1));
+    const int i = std::min(static_cast<int>(at), kTrimPoints - 2);
+    const float f = at - static_cast<float>(i);
+    const float *row = kChanterTrim[kind];
+    return row[i] + (row[i + 1] - row[i]) * f + kReedTrim[kind] * (reed - 0.5f);
+}
+
 constexpr float kCoupsPerBeat[4] = {0.0f, 1.0f, 2.0f, 4.0f};
 
 } // namespace
@@ -435,7 +469,8 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         }
         const float now = graceLeft > 0 ? gracePitch : melodyPitch;
         if (graceLeft > 0) graceLeft -= frames;
-        chanter.setNote(noteHz(now + (cents + kPipeTrim) * 0.01f));
+        const float reedKnob = paramOf(Reed);
+        chanter.setNote(noteHz(now + (cents + kPipeTrim + chanterTrim(kind, now, reedKnob)) * 0.01f));
         chanter.setShape(k.cylinder, 1);
         chanter.setTube(noteHz(keyNote + 10.0f));
         chanter.setLattice(k.lattice, 0.0f, 0.4f);
@@ -458,7 +493,8 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         if (k.second > 0.0f) {
             const float other = notePitch(held[std::max(heldCount - 2, 0)]);
             second.setTongue(0.0f);
-            second.setNote(noteHz(other + bend * paramOf(BendRange) + (cents + kPipeTrim) * 0.01f));
+            const float otherNow = other + bend * paramOf(BendRange);
+            second.setNote(noteHz(otherNow + (cents + kPipeTrim + chanterTrim(kind, otherNow, reedKnob)) * 0.01f));
             second.setShape(k.cylinder, 1);
             second.setTube(noteHz(keyNote + 10.0f));
             second.setLattice(k.lattice, 0.0f, 0.4f);
