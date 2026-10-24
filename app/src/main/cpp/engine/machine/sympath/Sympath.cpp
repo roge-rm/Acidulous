@@ -497,8 +497,11 @@ void Sympath::start(uint8_t note, uint8_t velocity) {
     v->nextString = 0;
     // A bowed string isn't plucked: the bow starts it, below.
     if (kind != Tanpura && kMakes[kind].bowed <= 0.0f) pluck(*v, 0);
+    // The bow starts from nothing: the last note's force left in bowDc would
+    // kick the string like a pluck.
     v->strings[0].bowAt = 0;
     v->strings[0].bowLast = 0.0f;
+    v->strings[0].bowDc = 0.0f;
     // The drone strings, struck with the note.
     tuneFree();
     const float chikari = clampf(goalOf(Chikari), 0.0f, 1.0f);

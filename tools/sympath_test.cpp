@@ -235,6 +235,20 @@ void hands() {
         check(g.rms(0.3, 0.32) < g.rms(0.0, 0.02) - 3.0, "without a new pluck", fmt("%.1f vs %.1f dB", g.rms(0.3, 0.32), g.rms(0.0, 0.02)));
     }
     {
+        // Sarangi, one voice: the second note is bowed on a string still ringing from the first.
+        Strings g({{"model", 11.0f}, {"voices", 1.0f}});
+        g.f->noteOn(62, 100);
+        g.play(1.0);
+        g.f->noteOff(62);
+        g.play(0.08);
+        g.f->noteOn(62, 100);
+        g.play(0.6);
+        double front = -200.0;
+        for (double t = 1.08; t < 1.2; t += 0.01) front = std::max(front, g.rms(t, t + 0.01));
+        const double held = g.rms(1.4, 1.6);
+        check(front < held + 4.0, "a bowed note starts from the bow, with no thump", fmt("%.1f vs %.1f dB", front, held));
+    }
+    {
         Strings g({{"tarbs", 0.0f}, {"bridge", 0.0f}});
         g.f->noteOn(60, 100);
         g.f->channelPressure(127);
