@@ -28,8 +28,8 @@ class Reed {
     }
 
     void clear() {
-        for (int m = 0; m < kModes; ++m) y1[m] = y2[m] = 0.0f;
-        pulseLeft = snapLeft = pullLeft = 0;
+        for (int m = 0; m < kModes; ++m) y1[m] = y2[m] = c1[m] = c2[m] = 0.0f;
+        pulseLeft = snapLeft = pullLeft = catchLeft = 0;
         x = xBefore = v = 0.0f;
     }
 
@@ -50,6 +50,8 @@ class Reed {
             if (was > 0.0f && was != w[m]) {
                 const float c = (y1[m] * std::cos(was) - y2[m]) / std::sin(was);
                 y2[m] = y1[m] * std::cos(w[m]) - c * std::sin(w[m]);
+                const float cc = (c1[m] * std::cos(was) - c2[m]) / std::sin(was);
+                c2[m] = c1[m] * std::cos(w[m]) - cc * std::sin(w[m]);
             }
             // The finger's push reaches the note; the overtones are set going
             // by the snap as it leaves (pluck()), [overtones] of the note's
@@ -140,6 +142,30 @@ class Reed {
             y1[m] = y;
             out += y;
         }
+        if (catchLeft > 0) {
+            // The swing being caught rings on beside the new pluck, fading.
+            // The fade is on its level, not in its loop: a changed loop
+            // would be a changed pitch, and at a low note even a small one
+            // reads the same two samples as a much bigger swing. It starts
+            // and ends flat, so the reed's speed doesn't jump either: the
+            // sound is the slot's air, which follows the speed.
+            const float f = static_cast<float>(catchLength - catchLeft + 1) / static_cast<float>(catchLength);
+            caught = 1.0f - (1.0f - kCaught) * f * f * f * (f * (6.0f * f - 15.0f) + 10.0f);
+            for (int m = 0; m < kModes; ++m) {
+                const float c = a1[m] * c1[m] + a2[m] * c2[m];
+                c2[m] = c1[m];
+                c1[m] = c;
+                out += c * caught;
+            }
+            // Caught: what's left of it is the reed's again.
+            if (--catchLeft == 0) {
+                for (int m = 0; m < kModes; ++m) {
+                    y1[m] += c1[m] * caught;
+                    y2[m] += c2[m] * caught;
+                    c1[m] = c2[m] = 0.0f;
+                }
+            }
+        }
         xBefore = x;
         x = out;
         // Velocity in the swing's units a radian of the note: a reed swinging
@@ -154,14 +180,21 @@ class Reed {
     float hz() const { return note; }
 
   private:
-    /** The finger meets a ringing reed: most of its swing is taken out. */
+    /**
+     * The finger meets a ringing reed: most of its swing is taken out, over
+     * a quarter of the note's period. Taken out at once, the jump in where
+     * the reed is, or in how fast it's going, is a one-sample tick in the sound. The ringing moves
+     * to its own state and fades there, so the new pluck isn't damped too.
+     */
     void catchIt() {
+        catchLength = std::max(2, static_cast<int>(0.25f * sr / note));
         for (int m = 0; m < kModes; ++m) {
-            y1[m] *= kCaught;
-            y2[m] *= kCaught;
+            c1[m] = c1[m] * caught + y1[m];
+            c2[m] = c2[m] * caught + y2[m];
+            y1[m] = y2[m] = 0.0f;
         }
-        x *= kCaught;
-        xBefore *= kCaught;
+        caught = 1.0f;
+        catchLeft = catchLength;
     }
 
     /**
@@ -192,6 +225,10 @@ class Reed {
     int snapLeft = 0, snapLength = 2;
     float snapLevel[kModes] = {}, snapScale[kModes] = {};
     float x = 0.0f, xBefore = 0.0f, v = 0.0f;
+    // A swing being caught (catchIt), [catchLeft] samples to go.
+    float c1[kModes] = {}, c2[kModes] = {};
+    int catchLeft = 0, catchLength = 2;
+    float caught = 1.0f;
 };
 
 /**

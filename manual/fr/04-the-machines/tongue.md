@@ -91,8 +91,19 @@ tirés puis relâchés, et **pincer** règle à quelle vitesse.
   en ms.
 - **paroles** - à quel point les paroles d’un clip bougent la bouche. Voyez
   plus bas.
+- **wah-wah** - la bouche s’ouvre et se ferme toute seule, en mesure : fermée
+  sur le temps, ouverte d’autant le long des voyelles au pas suivant, et
+  ainsi de suite. À 0, c’est éteint.
+- **vitesse du wah-wah** - la durée de chaque pas : **1/4**, **1/8.**,
+  **1/4T**, **1/8**, **1/8T** ou **1/16**.
+- **forme du wah-wah** - **pas** passe d’un coup à la voyelle de chaque pas.
+  **lisse** ouvre et ferme la bouche le long d’une courbe, une fois tous les
+  deux pas, toujours fermée sur le temps.
 
 La bouche garde le niveau stable : la bouger change la couleur, pas le volume.
+Avec un **porta.** court, le wah-wah passe d’une voyelle à l’autre d’un coup;
+avec un long, il glisse, sans jamais prendre plus d’un demi-pas pour y
+arriver. En **lisse**, le porta. ne fait qu’adoucir les angles.
 
 ## Les paroles et le suivi
 
@@ -159,6 +170,23 @@ mélodie.
 - **octave**, **bend** - l’octave, et l’étendue du pitch-bend en demi-tons.
 - **volume**.
 
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Wah, Clair,
+etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
+dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
+patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace les notes pincées ensuite, 24
+demi-tons à 1. Le modèle, l’accordage, les lames, l’accord, l’ordre, le jeu,
+le bourdon, le repincement, le motif, le suivi, les voix, l’octave, le bend et
+la forme du wah-wah ne sont pas accessibles. Un changement de pincement, d’harmoniques, de
+résonance, d’arrêt, de grattage ou de vélocité s’entend à la note suivante; le
+reste bouge tout de suite. Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Commencez par le **modèle**. Les genres diffèrent plus que n’importe quel
@@ -168,6 +196,8 @@ mélodie.
   jouez la mélodie au clavier.
 - Un **motif** sur une note tenue, c’est l’essentiel du jeu de guimbarde.
   Essayez **galop**.
+- Pour un wah-wah sur une note tenue, mettez **voyelle** sur oo, **wah-wah**
+  vers 0,5 et un **motif** pour la pincer.
 - Les bourdons graves parlent le mieux : vers D3 et plus bas, les harmoniques
   que choisit la bouche sont proches et la mélodie passe clairement.
 - Pour un son qui ne s’arrête jamais, montez **souffle** et **maintien**.

@@ -1454,6 +1454,9 @@
     <string name="pw_vowel_f2d494">vowel</string>
     <string name="pw_vspread">vspread</string>
     <string name="pw_w">w</string>
+    <string name="pw_wah">wah</string>
+    <string name="pw_wah_rate">wah rate</string>
+    <string name="pw_wah_shape">wah shape</string>
     <string name="pw_walk">walk</string>
     <string name="pw_warble">warble</string>
     <string name="pw_warm">warm</string>

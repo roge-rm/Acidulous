@@ -78,9 +78,19 @@ go instead, and **pluck** sets how quickly.
 - **depth** - how much of the sound goes through the mouth.
 - **glide** - how long the mouth takes to move to a new vowel, in ms.
 - **words** - how far a clip's words move the mouth. See below.
+- **wah** - the mouth opens and shuts by itself, in time with the song: shut
+  on the beat, open this far along the vowels on the next step, and so on. At
+  0 it's off.
+- **wah rate** - how long each step is: **1/4**, **1/8.**, **1/4T**, **1/8**,
+  **1/8T** or **1/16**.
+- **wah shape** - **step** jumps to each step's vowel. **smooth** opens and
+  shuts the mouth along a curve, once every two steps, still shut on the
+  beat.
 
 The mouth keeps the level steady, so moving it changes the colour and not the
-loudness.
+loudness. With a short **glide** the wah steps from one vowel to the other;
+with a long one it sweeps, never taking more than half a step to get there.
+On **smooth** the glide only takes the corners off.
 
 ## Words and following
 
@@ -140,12 +150,30 @@ In mouth mode the pattern plucks the drone while the keys play the tune.
 - **octave**, **bend** - the octave, and the pitch bend range in semitones.
 - **volume**.
 
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Wah, Bright,
+etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves the notes plucked after it, 24 semitones at 1. The
+model, tune, reeds, chord, order, play, drone, repluck, pattern, follow,
+voices, octave, bend and wah shape can't be reached. A change to the pluck, overtones,
+ring, stop, strum or velocity is heard from the next note; the rest move at
+once. Tap a macro's name to rename it.
+
 ## Tips
 
 - Start with the **model**. The kinds differ more than any knob moves them.
 - The tune is in the mouth. Leave **play** on **drone**, hold a note, and move
   the mod wheel, or put **play** on **mouth** and play the tune on the keys.
 - A **pattern** on one held note is most of jaw harp playing. Try **gallop**.
+- For a wah-wah on one held note, put **vowel** on oo, **wah** at about 0.5
+  and a **pattern** on to pluck it.
 - Low drones talk best: around D3 and below, the harmonics the mouth picks
   are close together and the tune comes through clearly.
 - For a sound that never stops, turn **breath** and **sustain** up.

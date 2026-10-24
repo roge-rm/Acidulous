@@ -1,6 +1,6 @@
 // Tongue, the jaw harp: in tune, its reeds on their chord, the mouth picking
 // the harmonic a key asks for, legato keys leaving the harp alone, and
-// patterns plucking on the grid.
+// patterns plucking on the grid, the words moving the mouth and the wah.
 //
 //   tongue_test.sh
 #include <engine/core/Constants.h>
@@ -374,6 +374,165 @@ void words() {
 
 } // namespace
 
+/** The rms of what's played over [from, to) seconds, dB. */
+double rmsDb(const std::vector<float> &x, double from, double to) {
+    const auto a = static_cast<size_t>(from * kRate), b = static_cast<size_t>(to * kRate);
+    double sum = 0.0;
+    size_t n = 0;
+    for (size_t i = a; i < b && i < x.size(); ++i, ++n) sum += static_cast<double>(x[i]) * x[i];
+    return 10.0 * std::log10(sum / std::fmax(1.0, static_cast<double>(n)) + 1e-20);
+}
+
+/** The biggest step from one sample to the next over [from, to) seconds. */
+double worstStep(const std::vector<float> &x, double from, double to) {
+    double worst = 0.0;
+    for (size_t i = static_cast<size_t>(from * kRate) + 1; i < static_cast<size_t>(to * kRate) && i < x.size(); ++i) {
+        worst = std::fmax(worst, std::fabs(static_cast<double>(x[i]) - x[i - 1]));
+    }
+    return worst;
+}
+
+void wah() {
+    std::printf("wah\n");
+    // Mouth at oo, the wah opening it to ah on every other eighth: at 120 a step is a quarter second.
+    const std::initializer_list<std::pair<const char *, float>> held = {
+        {"mouth", 0.0f}, {"sustain", 1.0f}, {"breath", 0.6f}, {"glide", 20.0f}};
+    Harp w(held);
+    w.set("wah", 0.5f);
+    w.set("wahrate", 3.0f);
+    w.t->noteOn(50, 100);
+    float shut[4], open[4];
+    for (int s = 0; s < 4; ++s) {
+        w.play(0.2);
+        shut[s] = w.t->formantTarget(0);
+        w.play(0.25);
+        open[s] = w.t->formantTarget(0);
+        w.play(0.05);
+    }
+    bool moves = true;
+    for (int s = 0; s < 4; ++s) moves = moves && shut[s] < 400.0f && open[s] > 1500.0f;
+    check(moves, "wah opens the mouth on every other eighth", fmt("F1 %.0f then %.0f Hz", shut[0], open[0]));
+
+    // The level holds as the mouth opens and shuts: the open and shut steps
+    // no further apart than the mouth knob at those two vowels.
+    Harp still(held);
+    still.t->noteOn(50, 100);
+    still.play(2.0);
+    Harp wide(held);
+    wide.set("mouth", 0.5f);
+    wide.t->noteOn(50, 100);
+    wide.play(2.0);
+    double worst = 0.0;
+    for (int s = 2; s < 8; ++s) {
+        // The shut steps sit at oo, the open ones at ah.
+        const Harp &knob = s % 2 == 0 ? still : wide;
+        const double from = 0.25 * s + 0.05, to = 0.25 * (s + 1);
+        worst = std::fmax(worst, std::fabs(rmsDb(w.out, from, to) - rmsDb(knob.out, from, to)));
+    }
+    check(worst < 1.0, "the wah doesn't pump", fmt("worst step %.2f dB off the knob at its vowel", worst));
+    // No click where it steps: no sample jumps further than the steady drone's.
+    const double steady = std::fmax(worstStep(still.out, 1.0, 2.0), worstStep(wide.out, 1.0, 2.0));
+    const double stepping = worstStep(w.out, 1.0, 2.0);
+    check(stepping < 1.25 * steady, "the wah steps without a click", fmt("worst step %.4f, steady %.4f", stepping, steady));
+
+    // Smooth: the mouth moves along a curve, shut on the beat and open
+    // halfway through each pair of steps, never jumping.
+    Harp sm(held);
+    sm.set("wah", 0.5f);
+    sm.set("wahrate", 3.0f);
+    sm.set("wahshape", 1.0f);
+    sm.t->noteOn(50, 100);
+    sm.play(1.0);
+    float f1[40];
+    for (int k = 0; k < 40; ++k) {
+        sm.play(0.0125);
+        f1[k] = sm.t->formantTarget(0);
+    }
+    float biggest = 0.0f, lowF = 1e9f, highF = 0.0f;
+    int between = 0;
+    for (int k = 0; k < 40; ++k) {
+        if (k > 0) biggest = std::fmax(biggest, std::fabs(f1[k] - f1[k - 1]));
+        lowF = std::fmin(lowF, f1[k]);
+        highF = std::fmax(highF, f1[k]);
+        between += f1[k] > 450.0f && f1[k] < 1550.0f ? 1 : 0;
+    }
+    check(lowF < 400.0f && highF > 1550.0f && between >= 16 && biggest < 200.0f, "smooth wah moves the mouth along a curve",
+          fmt("F1 %.0f to %.0f Hz, %d of 40 between, biggest move %.0f Hz", lowF, highF, between, biggest));
+    sm.play(0.5);
+    double smWorst = 0.0;
+    for (int k = 0; k < 4; ++k) {
+        // Each eighth's level stays between the two vowels', or near them.
+        const double from = 1.0 + 0.25 * k, to = from + 0.25;
+        const double l = rmsDb(sm.out, from, to), a1 = rmsDb(still.out, from, to), a2 = rmsDb(wide.out, from, to);
+        smWorst = std::fmax(smWorst, std::fmax(std::fmin(a1, a2) - l, l - std::fmax(a1, a2)));
+    }
+    check(smWorst < 1.0, "smooth wah doesn't pump", fmt("%.2f dB outside the two vowels' levels", smWorst));
+    const double smStep = worstStep(sm.out, 1.0, 2.0);
+    check(smStep < 1.25 * steady, "smooth wah moves without a click", fmt("worst step %.4f, steady %.4f", smStep, steady));
+
+    // Wah 0 leaves the sound alone, whatever its rate.
+    Harp a(held), b(held);
+    b.set("wahrate", 0.0f);
+    a.t->noteOn(50, 100);
+    b.t->noteOn(50, 100);
+    a.play(1.0);
+    b.play(1.0);
+    check(a.out == b.out, "wah 0 leaves the sound alone");
+
+    // Reset starts the wah again on its shut step: two harps reset at
+    // different places in it play the same afterwards.
+    Harp late(held), early(held);
+    for (Harp *h : {&late, &early}) {
+        h->set("wah", 0.5f);
+        h->t->noteOn(50, 100);
+    }
+    late.play(1.3);
+    early.play(0.2);
+    for (Harp *h : {&late, &early}) {
+        h->t->allNotesOff();
+        h->t->reset();
+        h->out.clear();
+        h->tick = 0.0;
+    }
+    const float afterReset = late.t->formantTarget(0);
+    for (Harp *h : {&late, &early}) {
+        h->t->noteOn(50, 100);
+        h->play(1.0);
+    }
+    check(afterReset < 400.0f && late.out == early.out, "reset starts the wah again", fmt("F1 %.0f Hz after reset", afterReset));
+}
+
+/**
+ * Plucking a reed that's still ringing takes most of its swing out. Taken out
+ * at once, where the reed is and how fast it goes jump, and the slot's air,
+ * which follows the speed, has a one-sample tick in it at every pluck.
+ */
+void catches() {
+    std::printf("plucking a ringing reed\n");
+    float worst = 0.0f, own = 0.0f;
+    for (float kind : {0.0f, 1.0f, 3.0f}) {
+        // Low, quick and dry, where the tick was worst; no overtones, whose
+        // ping is the pluck's own corner.
+        Harp h({{"model", kind}, {"pattern", 4}, {"ratchet", 1}, {"overtones", 0}, {"depth", 0}});
+        h.t->noteOn(38, 100);
+        h.play(3.0);
+        // A tick is one sample off the line through its neighbours.
+        const auto &a = h.out;
+        std::vector<bool> near(a.size(), false);
+        for (int s = 0; s < std::min(64, h.t->strikes()); ++s) {
+            const int64_t at = h.t->strikeTime(s);
+            for (int64_t i = at - 2; i <= at + 2; ++i)
+                if (i >= 0 && i < static_cast<int64_t>(a.size())) near[static_cast<size_t>(i)] = true;
+        }
+        for (size_t i = 1; i + 1 < a.size(); ++i) {
+            const float off = std::fabs(a[i] - 0.5f * (a[i - 1] + a[i + 1]));
+            if (near[i]) worst = std::fmax(worst, off);
+            else own = std::fmax(own, off);
+        }
+    }
+    check(worst < 1.5f * own, "a pluck on a ringing reed doesn't tick", fmt("worst %.3f at a pluck, %.3f elsewhere", worst, own));
+}
+
 int main() {
     _mm_setcsr(_mm_getcsr() | 0x8040);
     std::printf("tongue_test: the jaw harp\n\n");
@@ -381,8 +540,10 @@ int main() {
     chords();
     mouth();
     patterns();
+    catches();
     follow();
     words();
+    wah();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

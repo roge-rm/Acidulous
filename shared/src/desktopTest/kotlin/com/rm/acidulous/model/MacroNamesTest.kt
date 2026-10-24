@@ -132,4 +132,20 @@ class MacroNamesTest {
         assertEquals("Harsh", laneShortLabel(t, laneKey("machine", "mac1")))
         assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
     }
+
+    @Test
+    fun tongueMacrosTakeThePatchNames() {
+        val t = track("Tongue", mapOf("macro1" to "Wah"))
+        assertEquals("Wah", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("wah rate", laneShortLabel(t, laneKey("machine", "wahrate")))
+    }
+
+    @Test
+    fun tongueBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Tongue")
+        assertEquals(62, bank.size)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("steel", "northern", "southern", "bamboo", "reeds", "rhythm", "strange"), families)
+    }
 }

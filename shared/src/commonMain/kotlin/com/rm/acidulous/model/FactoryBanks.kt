@@ -8602,208 +8602,372 @@ internal object FactoryBanks {
         low = 48, high = 67)
 
     private fun tongue1() = Patch("Tongue", "Bright Steel",
-        mapOf("edge" to 0.85f, "pluck" to 0.9f, "focus" to 0.85f, "volume" to 0.75f),
+        mapOf("edge" to 0.85f, "pluck" to 0.9f, "focus" to 0.85f, "volume" to 0.75f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.35f, "mac1_a2" to 0.375f, "mac1_a3" to 0.6025f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.43f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.423f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.3f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Dark", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Soft", "macro8" to "Low"),
         family = "steel",
         low = 48, high = 67)
 
     private fun tongue2() = Patch("Tongue", "Soft Steel",
-        mapOf("edge" to 0.35f, "ring" to 0.76577574f, "pluck" to 0.2f, "mouth" to 0.2f, "depth" to 0.6f, "volume" to 0.97f),
+        mapOf("edge" to 0.35f, "ring" to 0.76577574f, "pluck" to 0.2f, "mouth" to 0.2f, "depth" to 0.6f, "volume" to 0.97f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.414f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.3585f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.423f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "High"),
         family = "steel",
         low = 48, high = 67)
 
-    private fun tongue3() = Patch("Tongue", "Breathing Steel",
-        mapOf("breath" to 0.5f, "air" to 0.5f, "sustain" to 0.6f, "volume" to 0.53f),
+    private fun tongue3() = Patch("Tongue", "Hollow Steel",
+        mapOf("edge" to 0.3f, "volume" to 0.67f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.4405f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.4375f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.4405f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.45f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5585f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low", "0" to ""),
         family = "steel",
         low = 48, high = 67)
 
-    private fun tongue4() = Patch("Tongue", "Low Steel",
-        mapOf("ring" to 0.942959547f, "depth" to 0.65f, "glide" to 0.6901056f, "volume" to 0.83f),
+    private fun tongue4() = Patch("Tongue", "Breathing Steel",
+        mapOf("breath" to 0.5f, "air" to 0.5f, "sustain" to 0.6f, "volume" to 0.53f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.56f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.954545438f, "mac5_a1" to 0.25f, "mac5_a2" to 0.199999988f, "mac5_a3" to 0.5885f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6135f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Dry", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
+        family = "steel",
+        low = 48, high = 67)
+
+    private fun tongue5() = Patch("Tongue", "Low Steel",
+        mapOf("ring" to 0.942959547f, "depth" to 0.65f, "glide" to 0.6901056f, "volume" to 0.83f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.389f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.585f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4425f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.585f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "steel",
         low = 36, high = 52)
 
-    private fun tongue5() = Patch("Tongue", "Paired Steel",
-        mapOf("reeds" to 0.4f, "chord" to 0.166666672f, "strum" to 0.0533333346f),
+    private fun tongue6() = Patch("Tongue", "Deep Steel",
+        mapOf("ring" to 0.9730675f, "focus" to 0.7f, "depth" to 0.7f, "stop" to 0f, "volume" to 0.62f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.407f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.5805f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.55f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.46f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.687000036f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
+        family = "steel",
+        low = 31, high = 45)
+
+    private fun tongue7() = Patch("Tongue", "Paired Steel",
+        mapOf("reeds" to 0.4f, "chord" to 0.166666672f, "strum" to 0.0533333346f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.431f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.4125f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6165f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "steel",
         low = 48, high = 62)
 
-    private fun tongue6() = Patch("Tongue", "Munnharpe",
-        mapOf("model" to 0.111111112f),
+    private fun tongue8() = Patch("Tongue", "Steel Tunes",
+        mapOf("focus" to 0.8f, "volume" to 0.55f, "play" to 1f, "drone" to 0.333333343f, "repluck" to 0f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.462f, "mac3_d1" to 0.363636374f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.65f, "mac3_a2" to 0.4565f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.459f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.4090909f, "mac7_a1" to 0.675f, "mac8_d1" to 0.181818187f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Deep", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Slide", "macro8" to "Hard"),
+        family = "steel",
+        low = 48, high = 84)
+
+    private fun tongue9() = Patch("Tongue", "Munnharpe",
+        mapOf("model" to 0.111111112f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.398f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.431f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.406499982f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.4515f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.440999985f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.571f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "northern",
         low = 40, high = 55)
 
-    private fun tongue7() = Patch("Tongue", "Khomus",
-        mapOf("model" to 0.222222224f, "breath" to 0.25f, "air" to 0.5f),
+    private fun tongue10() = Patch("Tongue", "Khomus",
+        mapOf("model" to 0.222222224f, "breath" to 0.25f, "air" to 0.5f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.4345f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.3895f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.606f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "northern",
         low = 48, high = 62)
 
-    private fun tongue8() = Patch("Tongue", "Temir Komuz",
-        mapOf("model" to 0.444444448f),
+    private fun tongue11() = Patch("Tongue", "Temir Komuz",
+        mapOf("model" to 0.444444448f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.431f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.438f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.425f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.438f, "mac8_d1" to 1f, "mac8_d2" to 0.181818187f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "northern",
         low = 50, high = 64)
 
-    private fun tongue9() = Patch("Tongue", "Breathing Khomus",
-        mapOf("model" to 0.222222224f, "breath" to 0.55f, "air" to 0.6f, "sustain" to 0.75f, "volume" to 0.51f),
+    private fun tongue12() = Patch("Tongue", "Breathing Khomus",
+        mapOf("model" to 0.222222224f, "breath" to 0.55f, "air" to 0.6f, "sustain" to 0.75f, "volume" to 0.51f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.56f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.954545438f, "mac5_a1" to 0.225f, "mac5_a2" to 0.125f, "mac5_a3" to 0.601f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.605f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Dry", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "northern",
         low = 48, high = 62)
 
-    private fun tongue10() = Patch("Tongue", "Sweet Munnharpe",
-        mapOf("model" to 0.111111112f, "pluck" to 0.35f, "mouth" to 0.3f, "focus" to 0.85f, "depth" to 0.75f),
+    private fun tongue13() = Patch("Tongue", "Sweet Munnharpe",
+        mapOf("model" to 0.111111112f, "pluck" to 0.35f, "mouth" to 0.3f, "focus" to 0.85f, "depth" to 0.75f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.4215f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.431f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.431f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.431f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5905f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "northern",
         low = 40, high = 55)
 
-    private fun tongue11() = Patch("Tongue", "Temir Pair",
-        mapOf("model" to 0.444444448f, "reeds" to 0.4f, "chord" to 0.166666672f, "strum" to 0.08f),
+    private fun tongue14() = Patch("Tongue", "Temir Pair",
+        mapOf("model" to 0.444444448f, "reeds" to 0.4f, "chord" to 0.166666672f, "strum" to 0.08f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.4765f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.438f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.4215f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "northern",
         low = 50, high = 64)
 
-    private fun tongue12() = Patch("Tongue", "Morsing",
-        mapOf("model" to 0.333333343f),
+    private fun tongue15() = Patch("Tongue", "Low Munnharpe",
+        mapOf("model" to 0.111111112f, "ring" to 0.942959547f, "depth" to 0.7f, "volume" to 0.4f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.4535f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.552f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.5665f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.65f, "mac4_a2" to 0.5405f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4685f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.753f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
+        family = "northern",
+        low = 33, high = 48)
+
+    private fun tongue16() = Patch("Tongue", "Khomus Tunes",
+        mapOf("model" to 0.222222224f, "focus" to 0.8f, "breath" to 0.3f, "sustain" to 0.4f, "volume" to 0.66f, "play" to 1f, "drone" to 0.25f, "repluck" to 1f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.56f, "mac3_d1" to 0.363636374f, "mac3_a1" to 0.65f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.454f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.4090909f, "mac7_a1" to 0.675f, "mac8_d1" to 0.181818187f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Deep", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Slide", "macro8" to "Hard"),
+        family = "northern",
+        low = 45, high = 81)
+
+    private fun tongue17() = Patch("Tongue", "Khomus In And Out",
+        mapOf("model" to 0.222222224f, "glide" to 0.7385606f, "breath" to 0.6f, "air" to 0.6f, "sustain" to 0.7f, "volume" to 0.58f, "wah" to 0.5f, "wahrate" to 0f, "wahshape" to 1f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.56f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.954545438f, "mac5_a1" to 0.199999988f, "mac5_a2" to 0.15f, "mac5_a3" to 0.6105f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.25f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.547f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Dry", "macro6" to "Still", "macro7" to "Hard", "macro8" to "Low"),
+        family = "northern",
+        low = 45, high = 60)
+
+    private fun tongue18() = Patch("Tongue", "Morsing",
+        mapOf("model" to 0.333333343f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.425f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.431f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4445f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "southern",
         low = 44, high = 56)
 
-    private fun tongue13() = Patch("Tongue", "Brass Harp",
-        mapOf("model" to 0.5555556f),
+    private fun tongue19() = Patch("Tongue", "Brass Harp",
+        mapOf("model" to 0.5555556f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.431f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.448f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4515f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.65f, "mac4_a2" to 0.448f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.4345f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "southern",
         low = 45, high = 60)
 
-    private fun tongue14() = Patch("Tongue", "Brass Whisper",
-        mapOf("model" to 0.5555556f, "pluck" to 0.3f, "depth" to 0.85f, "breath" to 0.25f, "air" to 0.75f, "volume" to 0.79f),
+    private fun tongue20() = Patch("Tongue", "Brass Whisper",
+        mapOf("model" to 0.5555556f, "pluck" to 0.3f, "depth" to 0.85f, "breath" to 0.25f, "air" to 0.75f, "volume" to 0.79f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.56f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4225f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.65f, "mac4_a2" to 0.4375f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.327000022f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.388f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "southern",
         low = 45, high = 60)
 
-    private fun tongue15() = Patch("Tongue", "Bright Brass",
-        mapOf("model" to 0.5555556f, "edge" to 0.85f, "focus" to 0.9f),
+    private fun tongue21() = Patch("Tongue", "Bright Brass",
+        mapOf("model" to 0.5555556f, "edge" to 0.85f, "focus" to 0.9f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.35f, "mac1_a2" to 0.375f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.448f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4655f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.35f, "mac4_a2" to 0.5565f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.4345f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.428f),
+        mapOf("macro1" to "Dark", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "southern",
         low = 45, high = 62)
 
-    private fun tongue16() = Patch("Tongue", "Ringing Morsing",
-        mapOf("model" to 0.333333343f, "ring" to 0.9730675f, "stop" to 0f, "volume" to 0.56f),
+    private fun tongue22() = Patch("Tongue", "Ringing Morsing",
+        mapOf("model" to 0.333333343f, "ring" to 0.9730675f, "stop" to 0f, "volume" to 0.56f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.44f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.5685f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4425f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "southern",
         low = 44, high = 56)
 
-    private fun tongue17() = Patch("Tongue", "Bamboo Harp",
-        mapOf("model" to 0.6666667f),
+    private fun tongue23() = Patch("Tongue", "Low Morsing",
+        mapOf("model" to 0.333333343f, "ring" to 0.908826f, "depth" to 0.65f, "volume" to 0.33f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.538f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.5765f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.65f, "mac4_a2" to 0.5475f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.769f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
+        family = "southern",
+        low = 36, high = 48)
+
+    private fun tongue24() = Patch("Tongue", "Humming Brass",
+        mapOf("model" to 0.5555556f, "depth" to 0.7f, "breath" to 0.55f, "air" to 0.4f, "sustain" to 0.7f, "volume" to 0.77f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.407f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.56f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.431500018f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.65f, "mac4_a2" to 0.435f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.954545438f, "mac5_a1" to 0.225f, "mac5_a2" to 0.15f, "mac5_a3" to 0.557f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.3875f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Dry", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
+        family = "southern",
+        low = 45, high = 60)
+
+    private fun tongue25() = Patch("Tongue", "Morsing Tunes",
+        mapOf("model" to 0.333333343f, "ring" to 0.942959547f, "focus" to 0.8f, "volume" to 0.29f, "play" to 1f, "drone" to 0.222222224f, "repluck" to 0f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.5235f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.5315f, "mac3_d1" to 0.363636374f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.65f, "mac3_a2" to 0.47f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.4090909f, "mac7_a1" to 0.675f, "mac8_d1" to 0.181818187f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Deep", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Slide", "macro8" to "Hard"),
+        family = "southern",
+        low = 44, high = 80)
+
+    private fun tongue26() = Patch("Tongue", "Bamboo Harp",
+        mapOf("model" to 0.6666667f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.425f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.425f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.428f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4515f, "mac8_d1" to 1f, "mac8_d2" to 0.09090909f, "mac8_d3" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.625f, "mac8_a3" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "bamboo",
         low = 50, high = 64)
 
-    private fun tongue18() = Patch("Tongue", "Mukkuri",
-        mapOf("model" to 0.7777778f),
+    private fun tongue27() = Patch("Tongue", "Mukkuri",
+        mapOf("model" to 0.7777778f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.440999985f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.4215f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.428f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.606f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "bamboo",
         low = 45, high = 60)
 
-    private fun tongue19() = Patch("Tongue", "Genggong",
-        mapOf("model" to 0.8888889f),
+    private fun tongue28() = Patch("Tongue", "Genggong",
+        mapOf("model" to 0.8888889f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.6f, "mac1_a2" to 0.575f, "mac1_a3" to 0.473f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.448f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.448f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4125f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6115f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "bamboo",
         low = 48, high = 62)
 
-    private fun tongue20() = Patch("Tongue", "Kouxian",
-        mapOf("model" to 1f, "strum" to 0.4f),
+    private fun tongue29() = Patch("Tongue", "Kouxian",
+        mapOf("model" to 1f, "strum" to 0.4f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.5955f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.431f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.4005f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "bamboo",
         low = 52, high = 67)
 
-    private fun tongue21() = Patch("Tongue", "Bamboo Whisper",
-        mapOf("model" to 0.6666667f, "pluck" to 0.2f, "depth" to 0.8f, "breath" to 0.35f, "air" to 0.85f, "volume" to 0.62f),
+    private fun tongue30() = Patch("Tongue", "Bamboo Whisper",
+        mapOf("model" to 0.6666667f, "pluck" to 0.2f, "depth" to 0.8f, "breath" to 0.35f, "air" to 0.85f, "volume" to 0.62f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.445f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.3645f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.69f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "bamboo",
         low = 50, high = 64)
 
-    private fun tongue22() = Patch("Tongue", "Slow Mukkuri",
-        mapOf("model" to 0.7777778f, "pluck" to 0.15f, "mouth" to 0.2f, "depth" to 0.9f, "volume" to 0.96f),
+    private fun tongue31() = Patch("Tongue", "Slow Mukkuri",
+        mapOf("model" to 0.7777778f, "pluck" to 0.15f, "mouth" to 0.2f, "depth" to 0.9f, "volume" to 0.96f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.38f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.392499983f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.4015f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "bamboo",
         low = 45, high = 60)
 
-    private fun tongue23() = Patch("Tongue", "Fifths",
-        mapOf("volume" to 0.8f, "reeds" to 0.4f, "chord" to 0.5f),
+    private fun tongue32() = Patch("Tongue", "Low Bamboo",
+        mapOf("model" to 0.6666667f, "edge" to 0.6f, "ring" to 0.9730675f, "pluck" to 0.5f, "depth" to 0.65f, "volume" to 0.86f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.351f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.46f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.396f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.3885f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
+        family = "bamboo",
+        low = 40, high = 52)
+
+    private fun tongue33() = Patch("Tongue", "Breathing Genggong",
+        mapOf("model" to 0.8888889f, "breath" to 0.55f, "air" to 0.7f, "sustain" to 0.6f, "volume" to 0.53f, "wah" to 0.45f, "wahrate" to 0f, "wahshape" to 1f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.4765f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.448f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.65f, "mac4_a2" to 0.5395f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.954545438f, "mac5_a1" to 0.225f, "mac5_a2" to 0.199999988f, "mac5_a3" to 0.601f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.275f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.436f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6095f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Dry", "macro6" to "Still", "macro7" to "Hard", "macro8" to "Low"),
+        family = "bamboo",
+        low = 48, high = 62)
+
+    private fun tongue34() = Patch("Tongue", "Mukkuri Tunes",
+        mapOf("model" to 0.7777778f, "ring" to 0.9730675f, "focus" to 0.8f, "volume" to 0.62f, "play" to 1f, "drone" to 0.25f, "repluck" to 0f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.576f, "mac3_d1" to 0.363636374f, "mac3_a1" to 0.65f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.448f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.4090909f, "mac7_a1" to 0.675f, "mac8_d1" to 0.181818187f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Deep", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Slide", "macro8" to "Hard"),
+        family = "bamboo",
+        low = 45, high = 81)
+
+    private fun tongue35() = Patch("Tongue", "Fifths",
+        mapOf("volume" to 0.8f, "reeds" to 0.4f, "chord" to 0.5f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.429f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.4f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "reeds",
         low = 45, high = 60)
 
-    private fun tongue24() = Patch("Tongue", "Strummed Major",
-        mapOf("reeds" to 0.8f, "chord" to 0.6666667f, "strum" to 0.3f, "order" to 0.333333343f),
+    private fun tongue36() = Patch("Tongue", "Strummed Major",
+        mapOf("reeds" to 0.8f, "chord" to 0.6666667f, "strum" to 0.3f, "order" to 0.333333343f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.4445f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.398f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.561f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "reeds",
         low = 48, high = 62)
 
-    private fun tongue25() = Patch("Tongue", "Reeds In Turn",
-        mapOf("model" to 0.6666667f, "reeds" to 1f, "chord" to 1f, "order" to 0.6666667f),
+    private fun tongue37() = Patch("Tongue", "Reeds In Turn",
+        mapOf("model" to 0.6666667f, "reeds" to 1f, "chord" to 1f, "order" to 0.6666667f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.425f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.428f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "reeds",
         low = 48, high = 62)
 
-    private fun tongue26() = Patch("Tongue", "Octave Harp",
-        mapOf("volume" to 0.79f, "reeds" to 0.4f, "chord" to 0.333333343f),
+    private fun tongue38() = Patch("Tongue", "Octave Harp",
+        mapOf("volume" to 0.79f, "reeds" to 0.4f, "chord" to 0.333333343f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.426f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.391f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5855f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "reeds",
         low = 40, high = 60)
 
-    private fun tongue27() = Patch("Tongue", "Minor Strum",
-        mapOf("reeds" to 0.8f, "chord" to 0.8333333f, "strum" to 0.466666669f),
+    private fun tongue39() = Patch("Tongue", "Minor Strum",
+        mapOf("reeds" to 0.8f, "chord" to 0.8333333f, "strum" to 0.466666669f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.448f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.392f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5755f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "reeds",
         low = 48, high = 62)
 
-    private fun tongue28() = Patch("Tongue", "Scattered Kouxian",
-        mapOf("model" to 1f, "volume" to 0.79f, "reeds" to 1f, "strum" to 0.266666681f, "order" to 1f),
+    private fun tongue40() = Patch("Tongue", "Scattered Kouxian",
+        mapOf("model" to 1f, "volume" to 0.79f, "reeds" to 1f, "strum" to 0.266666681f, "order" to 1f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.591f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.43f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.363f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "reeds",
         low = 52, high = 67)
 
-    private fun tongue29() = Patch("Tongue", "Mouth Tunes",
-        mapOf("focus" to 0.8f, "volume" to 0.47f, "play" to 1f, "repluck" to 1f, "pattern" to 0.5f),
+    private fun tongue41() = Patch("Tongue", "Breathed Fifths",
+        mapOf("ring" to 0.9730675f, "breath" to 0.45f, "sustain" to 0.65f, "volume" to 0.57f, "reeds" to 0.4f, "chord" to 0.5f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.424f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.44f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_a1" to 0.275f, "mac6_a2" to 0.175000012f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5865f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Dry", "macro7" to "Wah", "macro8" to "Low"),
+        family = "reeds",
+        low = 31, high = 45)
+
+    private fun tongue42() = Patch("Tongue", "Steel Arpeggio",
+        mapOf("ring" to 0.942959547f, "volume" to 0.68f, "reeds" to 0.8f, "chord" to 0.6666667f, "order" to 0.6666667f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.481f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.578500032f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.443f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
+        family = "reeds",
+        low = 45, high = 60)
+
+    private fun tongue43() = Patch("Tongue", "Wah Chord",
+        mapOf("volume" to 0.79f, "reeds" to 0.8f, "chord" to 0.8333333f, "strum" to 0.233333334f, "wah" to 0.6f, "wahrate" to 0f, "wahshape" to 1f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.426f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.369000018f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.199999988f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Still", "macro8" to "Low"),
+        family = "reeds",
+        low = 45, high = 60)
+
+    private fun tongue44() = Patch("Tongue", "Mouth Tunes",
+        mapOf("focus" to 0.8f, "volume" to 0.47f, "play" to 1f, "repluck" to 1f, "pattern" to 0.5f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.6818182f, "mac2_a1" to 0.675f, "mac3_d1" to 0.363636374f, "mac3_a1" to 0.65f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.4090909f, "mac7_a1" to 0.675f, "mac8_d1" to 0.181818187f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Accent", "macro3" to "Deep", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Slide", "macro8" to "Hard"),
         family = "rhythm",
         low = 50, high = 86)
 
-    private fun tongue30() = Patch("Tongue", "Khomus Gallop",
-        mapOf("model" to 0.222222224f, "breath" to 0.2f, "volume" to 0.5f, "pattern" to 0.5f, "accent" to 0.7f),
+    private fun tongue45() = Patch("Tongue", "Khomus Gallop",
+        mapOf("model" to 0.222222224f, "breath" to 0.2f, "volume" to 0.5f, "pattern" to 0.5f, "accent" to 0.7f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.272727281f, "mac2_a1" to 0.725f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.325f, "mac5_d1" to 0.727272749f, "mac5_a1" to 0.725f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.458f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6415f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Even", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "rhythm",
         low = 48, high = 62)
 
-    private fun tongue31() = Patch("Tongue", "Genggong Runs",
-        mapOf("model" to 0.8888889f, "volume" to 0.45f, "pattern" to 0.8333333f, "accent" to 0.6f),
+    private fun tongue46() = Patch("Tongue", "Genggong Runs",
+        mapOf("model" to 0.8888889f, "volume" to 0.45f, "pattern" to 0.8333333f, "accent" to 0.6f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.272727281f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.725f, "mac2_a2" to 0.5395f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.675f, "mac5_d1" to 0.727272749f, "mac5_d2" to 0.954545438f, "mac5_a1" to 0.725f, "mac5_a2" to 0.4645f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.568f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Accent", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "rhythm",
         low = 48, high = 62)
 
-    private fun tongue32() = Patch("Tongue", "Morsing Groupings",
-        mapOf("model" to 0.333333343f, "volume" to 0.54f, "pattern" to 1f, "accent" to 0.8f, "ratchet" to 0.15f),
+    private fun tongue47() = Patch("Tongue", "Morsing Groupings",
+        mapOf("model" to 0.333333343f, "volume" to 0.54f, "pattern" to 1f, "accent" to 0.8f, "ratchet" to 0.15f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.4395f, "mac2_d1" to 0.272727281f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.725f, "mac2_a2" to 0.4105f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.325f, "mac5_d1" to 0.727272749f, "mac5_d2" to 0.954545438f, "mac5_a1" to 0.725f, "mac5_a2" to 0.457f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac7_d1" to 0.8181818f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.8f, "mac7_a2" to 0.4325f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Even", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "rhythm",
         low = 44, high = 56)
 
-    private fun tongue33() = Patch("Tongue", "Talking Steel",
-        mapOf("focus" to 0.4f, "depth" to 0.8f, "stop" to 0f, "volume" to 0.8f),
+    private fun tongue48() = Patch("Tongue", "Talking Steel",
+        mapOf("focus" to 0.4f, "depth" to 0.8f, "stop" to 0f, "volume" to 0.8f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.4525f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.429f, "mac3_d1" to 0.772727251f, "mac3_a1" to 0.15f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_d4" to 0.954545438f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac5_a4" to 0.414f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Mumble", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low"),
         family = "rhythm",
         low = 45, high = 60)
 
-    private fun tongue34() = Patch("Tongue", "Follow Track 1",
-        mapOf("focus" to 0.8f, "volume" to 0.6f, "pattern" to 0.5f, "sidechain" to 0.0625f),
+    private fun tongue49() = Patch("Tongue", "Follow Track 1",
+        mapOf("focus" to 0.8f, "volume" to 0.6f, "pattern" to 0.5f, "sidechain" to 0.0625f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.272727281f, "mac2_a1" to 0.725f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.35f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.675f, "mac5_d1" to 0.727272749f, "mac5_d2" to 0.954545438f, "mac5_a1" to 0.725f, "mac5_a2" to 0.4355f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Wide", "macro4" to "Accent", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "rhythm",
         low = 45, high = 60)
 
-    private fun tongue35() = Patch("Tongue", "Steel Triplets",
-        mapOf("pattern" to 0.6666667f, "accent" to 0.6f),
+    private fun tongue50() = Patch("Tongue", "Steel Triplets",
+        mapOf("pattern" to 0.6666667f, "accent" to 0.6f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.272727281f, "mac2_a1" to 0.725f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.675f, "mac5_d1" to 0.727272749f, "mac5_d2" to 0.954545438f, "mac5_a1" to 0.725f, "mac5_a2" to 0.4345f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.4515f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.552f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Accent", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
         family = "rhythm",
         low = 48, high = 62)
 
-    private fun tongue36() = Patch("Tongue", "Glass Harp",
-        mapOf("model" to 0.444444448f, "edge" to 1f, "ring" to 1f, "pluck" to 1f, "overtones" to 1f, "focus" to 1f, "depth" to 1f, "stop" to 0f, "volume" to 0.31f),
+    private fun tongue51() = Patch("Tongue", "Triplet Gallop",
+        mapOf("model" to 0.111111112f, "volume" to 0.44f, "pattern" to 0.6666667f, "accent" to 0.9f, "wah" to 0.5f, "wahrate" to 0.8f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.454999983f, "mac2_d1" to 0.272727281f, "mac2_a1" to 0.725f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.325f, "mac5_d1" to 0.727272749f, "mac5_a1" to 0.725f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.25f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Even", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Still", "macro8" to "Low"),
+        family = "rhythm",
+        low = 45, high = 57)
+
+    private fun tongue52() = Patch("Tongue", "Rattling Steel",
+        mapOf("pluck" to 0.45f, "volume" to 0.47f, "pattern" to 0.333333343f, "accent" to 0.7f, "ratchet" to 0.55f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.272727281f, "mac2_a1" to 0.725f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.325f, "mac5_d1" to 0.727272749f, "mac5_a1" to 0.725f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Even", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
+        family = "rhythm",
+        low = 45, high = 60)
+
+    private fun tongue53() = Patch("Tongue", "Groove Bass",
+        mapOf("edge" to 0.9f, "ring" to 0.6922378f, "pluck" to 0.4f, "depth" to 1f, "stop" to 0.6f, "volume" to 1f, "pattern" to 0.166666672f, "accent" to 0.6f, "wah" to 0.6f, "mac1_d1" to 0.227272734f, "mac1_a1" to 0.3f, "mac2_d1" to 0.272727281f, "mac2_a1" to 0.725f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.675f, "mac5_d1" to 0.727272749f, "mac5_a1" to 0.725f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.3705f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.199999988f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4305f),
+        mapOf("macro1" to "Dark", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Accent", "macro5" to "Ratchet", "macro6" to "Breath", "macro7" to "Still", "macro8" to "Low"),
+        family = "rhythm",
+        low = 31, high = 43)
+
+    private fun tongue54() = Patch("Tongue", "Glass Harp",
+        mapOf("model" to 0.444444448f, "edge" to 1f, "ring" to 1f, "pluck" to 1f, "overtones" to 1f, "focus" to 1f, "depth" to 1f, "stop" to 0f, "volume" to 0.31f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.35f, "mac1_a2" to 0.375f, "mac1_a3" to 0.538f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.521f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.35f, "mac4_a2" to 0.5565f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.3f, "mac7_a2" to 0.527f, "mac8_d1" to 1f, "mac8_d2" to 0.181818187f, "mac8_a1" to 0.25f, "mac8_a2" to 0.3f),
+        mapOf("macro1" to "Dark", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Soft", "macro8" to "Low"),
         family = "strange",
         low = 52, high = 72)
 
-    private fun tongue37() = Patch("Tongue", "Sub Harp",
-        mapOf("edge" to 0.3f, "ring" to 1f, "depth" to 0.7f, "volume" to 0.84f),
-        mapOf("0.5" to ""),
+    private fun tongue55() = Patch("Tongue", "Sub Harp",
+        mapOf("edge" to 0.3f, "ring" to 1f, "depth" to 0.7f, "volume" to 0.84f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.308f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.58f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.406000018f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.41f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Hard", "macro8" to "Low", "0.5" to ""),
         family = "strange",
         low = 28, high = 43)
 
-    private fun tongue38() = Patch("Tongue", "Buzz Choir",
-        mapOf("breath" to 0.6f, "air" to 0.4f, "sustain" to 0.8f, "volume" to 0.45f, "reeds" to 1f, "chord" to 0.166666672f),
+    private fun tongue56() = Patch("Tongue", "Buzz Choir",
+        mapOf("breath" to 0.6f, "air" to 0.4f, "sustain" to 0.8f, "volume" to 0.45f, "reeds" to 1f, "chord" to 0.166666672f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.6f, "mac1_a2" to 0.575f, "mac1_a3" to 0.462f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.56f, "mac3_d1" to 0.272727281f, "mac3_a1" to 0.725f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.954545438f, "mac6_a1" to 0.199999988f, "mac6_a2" to 0.099999994f, "mac6_a3" to 0.6f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5105f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Dry", "macro7" to "Wah", "macro8" to "Low"),
         family = "strange",
         low = 45, high = 60)
 
-    private fun tongue39() = Patch("Tongue", "Robot Words",
-        mapOf("focus" to 1f, "depth" to 1f, "glide" to 0f, "volume" to 0.28f, "play" to 1f, "pattern" to 0.333333343f, "ratchet" to 0.3f),
+    private fun tongue57() = Patch("Tongue", "Robot Words",
+        mapOf("focus" to 1f, "depth" to 1f, "glide" to 0f, "volume" to 0.28f, "play" to 1f, "pattern" to 0.333333343f, "ratchet" to 0.3f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.5405f, "mac2_d1" to 0.6818182f, "mac2_a1" to 0.675f, "mac3_d1" to 0.363636374f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.35f, "mac3_a2" to 0.5225f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.35f, "mac4_a2" to 0.532f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_d3" to 0.5f, "mac5_a1" to 0.75f, "mac5_a2" to 0.7f, "mac5_a3" to 0.575f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.8f, "mac7_d1" to 0.4090909f, "mac7_a1" to 0.675f, "mac8_d1" to 0.181818187f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Bright", "macro2" to "Accent", "macro3" to "Shallow", "macro4" to "Wide", "macro5" to "Breath", "macro6" to "Wah", "macro7" to "Slide", "macro8" to "Hard"),
         family = "strange",
         low = 50, high = 86)
 
-    private fun tongue40() = Patch("Tongue", "Broken Gallop",
-        mapOf("model" to 0.8888889f, "volume" to 0.38f, "pattern" to 1f, "accent" to 1f, "ratchet" to 0.6f),
-        mapOf("-0.6" to ""),
+    private fun tongue58() = Patch("Tongue", "Broken Gallop",
+        mapOf("model" to 0.8888889f, "volume" to 0.38f, "pattern" to 1f, "accent" to 1f, "ratchet" to 0.6f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac2_d1" to 0.272727281f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.725f, "mac2_a2" to 0.536f, "mac3_d1" to 0.3181818f, "mac3_a1" to 0.65f, "mac4_d1" to 0.6818182f, "mac4_a1" to 0.325f, "mac5_d1" to 0.727272749f, "mac5_a1" to 0.275f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.597499967f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Narrow", "macro4" to "Even", "macro5" to "Steady", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low", "-0.6" to ""),
         family = "strange",
         low = 48, high = 62)
 
-    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19(), tongue20(), tongue21(), tongue22(), tongue23(), tongue24(), tongue25(), tongue26(), tongue27(), tongue28(), tongue29(), tongue30(), tongue31(), tongue32(), tongue33(), tongue34(), tongue35(), tongue36(), tongue37(), tongue38(), tongue39(), tongue40()) }
+    private fun tongue59() = Patch("Tongue", "Bent Bells",
+        mapOf("model" to 1f, "edge" to 0.9f, "ring" to 1f, "pluck" to 1f, "overtones" to 1f, "stop" to 0f, "volume" to 0.5f, "reeds" to 0.6f, "chord" to 0.5f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.35f, "mac1_a2" to 0.375f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.44f, "mac2_a2" to 0.5645f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4755f, "mac4_d1" to 0.3181818f, "mac4_d2" to 0.954545438f, "mac4_a1" to 0.65f, "mac4_a2" to 0.463f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.458f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.458f),
+        mapOf("macro1" to "Dark", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low"),
+        family = "strange",
+        low = 52, high = 72)
+
+    private fun tongue60() = Patch("Tongue", "Clanging Bamboo",
+        mapOf("model" to 0.6666667f, "pluck" to 0.85f, "overtones" to 1f, "depth" to 0.8f, "volume" to 0.31f, "reeds" to 0.4f, "chord" to 0.333333343f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_a1" to 0.6f, "mac1_a2" to 0.55f, "mac2_d1" to 0.13636364f, "mac2_d2" to 0.954545438f, "mac2_a1" to 0.56f, "mac2_a2" to 0.471000016f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.4895f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.65f, "mac5_d1" to 0.6363636f, "mac5_a1" to 0.65f, "mac6_d1" to 0.454545468f, "mac6_d2" to 0.545454562f, "mac6_d3" to 0.5f, "mac6_d4" to 0.954545438f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.575f, "mac6_a4" to 0.4865f, "mac7_d1" to 0.8181818f, "mac7_a1" to 0.8f, "mac8_d1" to 1f, "mac8_d2" to 0.181818187f, "mac8_d3" to 0.954545438f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f, "mac8_a3" to 0.696f),
+        mapOf("macro1" to "Bright", "macro2" to "Longer", "macro3" to "Vowel", "macro4" to "Narrow", "macro5" to "Strum", "macro6" to "Breath", "macro7" to "Wah", "macro8" to "Low", "-1" to ""),
+        family = "strange",
+        low = 40, high = 60)
+
+    private fun tongue61() = Patch("Tongue", "Wobble Drone",
+        mapOf("ring" to 1f, "focus" to 0.9f, "depth" to 0.9f, "breath" to 0.6f, "sustain" to 0.8f, "volume" to 0.69f, "wah" to 0.9f, "wahrate" to 0.8f, "wahshape" to 1f, "mac1_d1" to 0.09090909f, "mac1_d2" to 0.227272734f, "mac1_d3" to 0.954545438f, "mac1_a1" to 0.65f, "mac1_a2" to 0.625f, "mac1_a3" to 0.3425f, "mac2_d1" to 0.13636364f, "mac2_a1" to 0.44f, "mac3_d1" to 0.272727281f, "mac3_d2" to 0.954545438f, "mac3_a1" to 0.725f, "mac3_a2" to 0.452f, "mac4_d1" to 0.3181818f, "mac4_a1" to 0.35f, "mac5_d1" to 0.454545468f, "mac5_d2" to 0.545454562f, "mac5_a1" to 0.199999988f, "mac5_a2" to 0.099999994f, "mac6_d1" to 0.8181818f, "mac6_a1" to 0.0500000119f, "mac7_d1" to 0.181818187f, "mac7_d2" to 0.954545438f, "mac7_a1" to 0.65f, "mac7_a2" to 0.4385f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Shorter", "macro3" to "Vowel", "macro4" to "Wide", "macro5" to "Dry", "macro6" to "Still", "macro7" to "Hard", "macro8" to "Low"),
+        family = "strange",
+        low = 26, high = 38)
+
+    private val tongue: List<Patch> by lazy { listOf(tongue0(), tongue1(), tongue2(), tongue3(), tongue4(), tongue5(), tongue6(), tongue7(), tongue8(), tongue9(), tongue10(), tongue11(), tongue12(), tongue13(), tongue14(), tongue15(), tongue16(), tongue17(), tongue18(), tongue19(), tongue20(), tongue21(), tongue22(), tongue23(), tongue24(), tongue25(), tongue26(), tongue27(), tongue28(), tongue29(), tongue30(), tongue31(), tongue32(), tongue33(), tongue34(), tongue35(), tongue36(), tongue37(), tongue38(), tongue39(), tongue40(), tongue41(), tongue42(), tongue43(), tongue44(), tongue45(), tongue46(), tongue47(), tongue48(), tongue49(), tongue50(), tongue51(), tongue52(), tongue53(), tongue54(), tongue55(), tongue56(), tongue57(), tongue58(), tongue59(), tongue60(), tongue61()) }
 
     private fun draw0() = Patch("Draw", "Init", emptyMap(),
         family = "accordion",
