@@ -162,7 +162,7 @@ destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
 knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves the notes plucked after it, 24 semitones at 1. The
 model, tune, reeds, chord, order, play, drone, repluck, pattern, follow,
-voices, octave and bend can't be reached. A change to the pluck, overtones,
+voices, octave, bend and wah shape can't be reached. A change to the pluck, overtones,
 ring, stop, strum or velocity is heard from the next note; the rest move at
 once. Tap a macro's name to rename it.
 

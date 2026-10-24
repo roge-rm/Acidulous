@@ -54,7 +54,8 @@ class Tongue final : public Machine {
         Count = MacroBase + 8 * MacroParams
     };
     // Where a macro route goes. The kind, tune, voices, bend range, octave,
-    // reeds, chord, order, play, drone, repluck, pattern and follow are left out.
+    // reeds, chord, order, play, drone, repluck, pattern, follow and wah shape
+    // are left out.
     enum MacroDest : int32_t {
         McOff, McSet, McEdge, McRing, McPluck, McOvertones, McMouth, McFocus, McDepth, McGlide,
         McBreath, McAir, McSustain, McStop, McStrum, McAccent, McRatchet, McWords,

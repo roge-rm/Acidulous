@@ -182,8 +182,8 @@ destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace les notes pincées ensuite, 24
 demi-tons à 1. Le modèle, l’accordage, les lames, l’accord, l’ordre, le jeu,
-le bourdon, le repincement, le motif, le suivi, les voix, l’octave et le bend
-ne sont pas accessibles. Un changement de pincement, d’harmoniques, de
+le bourdon, le repincement, le motif, le suivi, les voix, l’octave, le bend et
+la forme du wah-wah ne sont pas accessibles. Un changement de pincement, d’harmoniques, de
 résonance, d’arrêt, de grattage ou de vélocité s’entend à la note suivante; le
 reste bouge tout de suite. Touchez le nom d’une macro pour la renommer.
 
