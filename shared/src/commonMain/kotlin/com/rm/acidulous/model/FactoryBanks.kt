@@ -10492,7 +10492,7 @@ internal object FactoryBanks {
         low = 48, high = 84)
 
     private fun sympath7() = Patch("Sympath", "Sitar Chords",
-        mapOf("sustain" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_d3" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac1_a3" to 0.428f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.725f, "mac4_a2" to 0.440999985f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.8f, "mac5_a2" to 0.448f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.725f, "mac6_a2" to 0.5565f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.7f, "mac7_a2" to 0.5565f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.622f),
+        mapOf("sustain" to 0.6f, "volume" to 0.596f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_d3" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac1_a3" to 0.4385f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4555f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.725f, "mac6_a2" to 0.548f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.7f, "mac7_a2" to 0.548f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.604f),
         mapOf("macro1" to "Buzz", "macro2" to "Bright", "macro3" to "Longer", "macro4" to "Tarbs", "macro5" to "Chikari", "macro6" to "Gamak", "macro7" to "Hard", "macro8" to "Low"),
         family = "sitar",
         low = 48, high = 84)
@@ -10590,7 +10590,7 @@ internal object FactoryBanks {
         low = 36, high = 79)
 
     private fun sympath23() = Patch("Sympath", "Veena Tala",
-        mapOf("model" to 0.13333334f, "chikari" to 0.6f, "meend" to 0.25f, "voices" to 0f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.6f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.199999988f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("model" to 0.13333334f, "chikari" to 0.6f, "meend" to 0.25f, "voices" to 0f, "volume" to 0.519f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.6f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.199999988f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.6923077f, "mac7_a1" to 0.7f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Buzz", "macro2" to "Bright", "macro3" to "Longer", "macro4" to "Mid String", "macro5" to "No Chikari", "macro6" to "Gamak", "macro7" to "Slide", "macro8" to "High"),
         family = "veena",
         low = 36, high = 79)
@@ -10608,7 +10608,7 @@ internal object FactoryBanks {
         low = 31, high = 67)
 
     private fun sympath26() = Patch("Sympath", "Veena Chords",
-        mapOf("model" to 0.13333334f, "pluck" to 0.35f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.6f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.8f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.7f, "mac7_a2" to 0.5955f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("model" to 0.13333334f, "pluck" to 0.35f, "volume" to 0.603f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.6f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.8f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.7f, "mac7_a2" to 0.582f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Buzz", "macro2" to "Bright", "macro3" to "Longer", "macro4" to "Mid String", "macro5" to "Chikari", "macro6" to "Gamak", "macro7" to "Hard", "macro8" to "High"),
         family = "veena",
         low = 36, high = 79)
@@ -10674,7 +10674,7 @@ internal object FactoryBanks {
         low = 36, high = 60)
 
     private fun sympath37() = Patch("Sympath", "Quick Tanpura",
-        mapOf("model" to 0.06666667f, "sustain" to 0.4f, "cycle" to 0f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.7f, "mac1_a2" to 0.425f, "mac2_d1" to 0.461538464f, "mac2_a1" to 0.675f, "mac3_d1" to 0.3846154f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.675f, "mac3_a2" to 0.448f, "mac4_d1" to 0.230769232f, "mac4_a1" to 0.7f, "mac5_d1" to 0.15384616f, "mac5_a1" to 0.725f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.56f, "mac7_d1" to 0.307692319f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.6f, "mac7_a2" to 0.4345f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.65f),
+        mapOf("model" to 0.06666667f, "sustain" to 0.4f, "cycle" to 0f, "volume" to 0.58f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.7f, "mac1_a2" to 0.425f, "mac2_d1" to 0.461538464f, "mac2_a1" to 0.675f, "mac3_d1" to 0.3846154f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.675f, "mac3_a2" to 0.457f, "mac4_d1" to 0.230769232f, "mac4_a1" to 0.7f, "mac5_d1" to 0.15384616f, "mac5_a1" to 0.725f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.56f, "mac7_d1" to 0.307692319f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.6f, "mac7_a2" to 0.445500016f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.75f, "mac8_a2" to 0.71f),
         mapOf("macro1" to "Jawari", "macro2" to "Bright", "macro3" to "Longer", "macro4" to "Hard", "macro5" to "Round", "macro6" to "Waver", "macro7" to "Mid String", "macro8" to "High"),
         family = "drone",
         low = 36, high = 60)
@@ -10981,7 +10981,7 @@ internal object FactoryBanks {
         low = 36, high = 79)
 
     private fun sympath88() = Patch("Sympath", "Sympathy Only",
-        mapOf("scale" to 0.6666667f, "sustain" to 0.15f, "tarbs" to 1f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_d3" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac1_a3" to 0.4215f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.675f, "mac3_a2" to 0.454999983f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.275f, "mac4_a2" to 0.561f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4445f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.725f, "mac6_a2" to 0.606f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.7f, "mac7_a2" to 0.561f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6115f),
+        mapOf("scale" to 0.6666667f, "sustain" to 0.15f, "tarbs" to 1f, "volume" to 0.479f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_d3" to 0.9230769f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4f, "mac1_a3" to 0.4465f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_d2" to 0.9230769f, "mac3_a1" to 0.675f, "mac3_a2" to 0.469f, "mac4_d1" to 0.538461566f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.275f, "mac4_a2" to 0.5415f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.8f, "mac5_a2" to 0.462f, "mac6_d1" to 0.7692308f, "mac6_d2" to 0.9230769f, "mac6_a1" to 0.725f, "mac6_a2" to 0.5725f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.7f, "mac7_a2" to 0.5415f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5765f),
         mapOf("macro1" to "Buzz", "macro2" to "Bright", "macro3" to "Longer", "macro4" to "Dry", "macro5" to "Chikari", "macro6" to "Gamak", "macro7" to "Hard", "macro8" to "Low"),
         family = "bridge",
         low = 48, high = 84)
@@ -11000,7 +11000,7 @@ internal object FactoryBanks {
         inserts = listOf(UnitSlot("Compressor", mapOf("threshold" to 0.6f, "ratio" to 0.3667258f, "attack" to 0.6666667f, "release" to 0.588045657f, "gain" to 0.5833333f))))
 
     private fun sympath91() = Patch("Sympath", "Swarmandal Cluster",
-        mapOf("model" to 0.4f, "pluck" to 0.6f, "sustain" to 0.9f, "volume" to 0.891f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.5545f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_d3" to 0.9230769f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac2_a3" to 0.5545f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.325f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4425f, "mac5_d1" to 0.230769232f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.7f, "mac5_a2" to 0.5545f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.461538464f, "mac7_a1" to 0.4f, "mac7_a2" to 0.4f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("model" to 0.4f, "pluck" to 0.6f, "sustain" to 0.9f, "volume" to 0.891f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.675f, "mac1_a2" to 0.5545f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_d3" to 0.9230769f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac2_a3" to 0.5545f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.325f, "mac4_d1" to 0.307692319f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4425f, "mac5_d1" to 0.230769232f, "mac5_d2" to 0.9230769f, "mac5_a1" to 0.65f, "mac5_a2" to 0.5545f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.461538464f, "mac7_a1" to 0.4f, "mac7_a2" to 0.4f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
         mapOf("macro1" to "Touch", "macro2" to "Bright", "macro3" to "Shorter", "macro4" to "Mid String", "macro5" to "Hard", "macro6" to "Gamak", "macro7" to "Dull", "macro8" to "Low"),
         family = "bridge",
         low = 60, high = 96)
@@ -11018,7 +11018,7 @@ internal object FactoryBanks {
         low = 24, high = 52)
 
     private fun sympath94() = Patch("Sympath", "Touch Buzz",
-        mapOf("bridge" to 1f, "curve" to 1f, "velocity" to 1f, "volume" to 0.912f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.725f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.8f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.7f, "mac7_a2" to 0.544f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
+        mapOf("bridge" to 1f, "curve" to 1f, "velocity" to 1f, "volume" to 0.912f, "mac1_d1" to 0.07692308f, "mac1_d2" to 0.15384616f, "mac1_a1" to 0.3f, "mac1_a2" to 0.6f, "mac2_d1" to 0.461538464f, "mac2_d2" to 0.307692319f, "mac2_a1" to 0.675f, "mac2_a2" to 0.46f, "mac3_d1" to 0.3846154f, "mac3_a1" to 0.675f, "mac4_d1" to 0.538461566f, "mac4_a1" to 0.725f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.8f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.725f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.9230769f, "mac7_a1" to 0.65f, "mac7_a2" to 0.544f, "mac8_d1" to 1f, "mac8_a1" to 0.75f),
         mapOf("macro1" to "Clean", "macro2" to "Bright", "macro3" to "Longer", "macro4" to "Tarbs", "macro5" to "Chikari", "macro6" to "Gamak", "macro7" to "Hard", "macro8" to "High"),
         family = "bridge",
         low = 40, high = 84)

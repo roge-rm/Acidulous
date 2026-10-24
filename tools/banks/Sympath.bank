@@ -303,7 +303,7 @@ patch "Sitar Chords" family=sitar note=61 range=48..84 role=chord
   mac1_d2  #2
   mac1_a2  -0.2
   mac1_d3  #12
-  mac1_a3  -0.144
+  mac1_a3  -0.123
   mac2_d1  #6
   mac2_a1  0.35
   mac2_d2  #4
@@ -313,25 +313,26 @@ patch "Sitar Chords" family=sitar note=61 range=48..84 role=chord
   mac4_d1  #7
   mac4_a1  0.45
   mac4_d2  #12
-  mac4_a2  -0.118
+  mac4_a2  -0.100
   mac5_d1  #8
   mac5_a1  0.6
   mac5_d2  #12
-  mac5_a2  -0.104
+  mac5_a2  -0.089
   mac6_d1  #10
   mac6_a1  0.45
   mac6_d2  #12
-  mac6_a2  0.113
+  mac6_a2  0.096
   mac7_d1  #3
   mac7_a1  0.4
   mac7_d2  #12
-  mac7_a2  0.113
+  mac7_a2  0.096
   mac8_d1  #13
   mac8_a1  -0.5
   mac8_d2  #12
-  mac8_a2  0.244
+  mac8_a2  0.208
   tarbs          0.5
   sustain        0.6
+  volume         0.596
 
 patch "Electric Sitar" family=sitar note=64 range=52..88
   # A guitar with a buzzing bridge, the sixties sound.
@@ -961,6 +962,7 @@ patch "Veena Tala" family=veena note=50 range=36..79 role=lead
   voices         #0
   meend          150 ms
   chikari        0.6
+  volume         0.519
 
 patch "Veena Gamak" family=veena note=50 range=36..79 role=lead
   # Deep, slow shakes of the note.
@@ -1064,11 +1066,12 @@ patch "Veena Chords" family=veena note=50 range=36..79 role=chord
   mac7_d1  #3
   mac7_a1  0.4
   mac7_d2  #12
-  mac7_a2  0.191
+  mac7_a2  0.164
   mac8_d1  #13
   mac8_a1  0.5
   model          #2
   pluck          0.35
+  volume         0.603
 
 patch "Rudra Veena" family=veena note=48 range=36..72 role=lead
   # Deep and slow, the two gourds ringing.
@@ -1458,7 +1461,7 @@ patch "Quick Tanpura" family=drone note=49 range=36..60 role=drone
   mac3_d1  #5
   mac3_a1  0.35
   mac3_d2  #12
-  mac3_a2  -0.104
+  mac3_a2  -0.086
   mac4_d1  #3
   mac4_a1  0.4
   mac5_d1  #2
@@ -1468,14 +1471,15 @@ patch "Quick Tanpura" family=drone note=49 range=36..60 role=drone
   mac7_d1  #4
   mac7_a1  0.2
   mac7_d2  #12
-  mac7_a2  -0.131
+  mac7_a2  -0.109
   mac8_d1  #13
   mac8_a1  0.5
   mac8_d2  #12
-  mac8_a2  0.3
+  mac8_a2  0.42
   model          #1
   cycle          #0
   sustain        0.4
+  volume         0.58
 
 patch "High Tanpura" family=drone note=61 range=48..72 role=drone
   # A smaller tanpura, an octave up.
@@ -3397,7 +3401,7 @@ patch "Sympathy Only" family=bridge note=61 range=48..84 role=pad
   mac1_d2  #2
   mac1_a2  -0.2
   mac1_d3  #12
-  mac1_a3  -0.157
+  mac1_a3  -0.107
   mac2_d1  #6
   mac2_a1  0.35
   mac2_d2  #4
@@ -3405,30 +3409,31 @@ patch "Sympathy Only" family=bridge note=61 range=48..84 role=pad
   mac3_d1  #5
   mac3_a1  0.35
   mac3_d2  #12
-  mac3_a2  -0.09
+  mac3_a2  -0.062
   mac4_d1  #7
   mac4_a1  -0.45
   mac4_d2  #12
-  mac4_a2  0.122
+  mac4_a2  0.083
   mac5_d1  #8
   mac5_a1  0.6
   mac5_d2  #12
-  mac5_a2  -0.111
+  mac5_a2  -0.076
   mac6_d1  #10
   mac6_a1  0.45
   mac6_d2  #12
-  mac6_a2  0.212
+  mac6_a2  0.145
   mac7_d1  #3
   mac7_a1  0.4
   mac7_d2  #12
-  mac7_a2  0.122
+  mac7_a2  0.083
   mac8_d1  #13
   mac8_a1  -0.5
   mac8_d2  #12
-  mac8_a2  0.223
+  mac8_a2  0.153
   sustain        0.15
   tarbs          1
   scale          #6
+  volume         0.479
 
 patch "Buzz Bass" family=bridge note=37 range=28..55 role=bass
   # A low string, the bridge buzzing hard.
@@ -3539,7 +3544,7 @@ patch "Swarmandal Cluster" family=bridge note=72 range=60..96 role=chord
   mac4_d2  #12
   mac4_a2  -0.115
   mac5_d1  #3
-  mac5_a1  0.4
+  mac5_a1  0.3
   mac5_d2  #12
   mac5_a2  0.109
   mac6_d1  #10
@@ -3669,7 +3674,7 @@ patch "Touch Buzz" family=bridge note=55 range=40..84 role=tune
   mac6_d1  #10
   mac6_a1  0.45
   mac7_d1  #3
-  mac7_a1  0.4
+  mac7_a1  0.3
   mac7_d2  #12
   mac7_a2  0.088
   mac8_d1  #13
