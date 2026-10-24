@@ -179,7 +179,7 @@ class Rack {
      * Pass the rack's place in the arrangement to a machine that wants it,
      * and whether the song is moving (see Machine::onTransport).
      */
-    void updateScene(int64_t sceneId, int64_t cycleTick, bool playing, bool rolling);
+    void updateScene(int64_t sceneId, int64_t cycleTick, bool playing, bool rolling, int64_t tickStart);
     bool frozenActive() const { return frozenNow != nullptr; }
     /** Where in the frozen clip this block starts. Called before render(). */
     void syncFrozen(int64_t tickInIteration, float bpm);

@@ -128,14 +128,19 @@ void Nexus::controlChange(uint8_t cc, uint8_t value) {
 void Nexus::channelPressure(uint8_t value) { ctx.pressure = static_cast<float>(value) / 127.0f; }
 void Nexus::pitchBend(int16_t value14) { bendSemis = static_cast<float>(value14) / 8192.0f; }
 
+void Nexus::onTransport(bool rolling, int64_t tickStart) {
+    // Here rather than in onBlock(), which a frozen track doesn't get. The
+    // clock counts from where play started, so it's in time with the song.
+    transportMoved = rolling != songRolling;
+    if (rolling && !songRolling) rollOrigin = tickStart;
+    if (!rolling && songRolling) heldTick = 0.0;
+    songRolling = rolling;
+}
+
 void Nexus::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
     ctx.bpm = bpm > 1.0f ? bpm : 120.0f;
     tickCursor = static_cast<double>(tickStart);
     tickStep = static_cast<double>(tickEnd - tickStart);
-    // The clock counts from where play started, so it's in time with the song.
-    if (songRolling && !wasRolling) rollOrigin = tickStart;
-    if (!songRolling && wasRolling) heldTick = 0.0;
-    wasRolling = songRolling;
     if (songRolling) clockCursor = static_cast<double>(tickStart - rollOrigin);
 }
 
@@ -222,7 +227,10 @@ bool Nexus::render(float *L, float *R, int32_t frames) {
         if (!anyHeld) heldTick = 0.0;
         clockCursor = heldTick;
     }
-    if (clockRunning && !clockWasRunning) g->restartClocks();
+    // Play and stop restart the clocks even with a key holding them running,
+    // so a pattern starts from its first step in time with the song.
+    if ((clockRunning && !clockWasRunning) || transportMoved) g->restartClocks();
+    transportMoved = false;
     clockWasRunning = clockRunning;
     ctx.clockRunning = clockRunning;
     ctx.clockTick = clockCursor;

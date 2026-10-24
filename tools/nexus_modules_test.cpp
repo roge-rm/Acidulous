@@ -548,7 +548,7 @@ std::vector<float> playMoving(Machine &m, float seconds, bool rolling, double &t
     float L[64], R[64];
     while (out.size() < n) {
         const double next = tick + 64.0 / 100.0; // 100 frames a tick at 120 bpm
-        m.onTransport(rolling);
+        m.onTransport(rolling, static_cast<int64_t>(tick));
         m.onBlock(static_cast<int64_t>(tick), static_cast<int64_t>(next), 120.0f);
         m.render(L, R, 64);
         out.insert(out.end(), L, L + 64);
@@ -597,6 +597,28 @@ void theClockFollowsTheTransport() {
         playMoving(*m, 0.05f, false, tick);
         const double after = peak(playMoving(*m, 0.5f, false, tick));
         ok("letting the key go stops it", after < 1e-6, std::to_string(after));
+    }
+    // A clock into a euclid pattern into a saw. A key held before play runs
+    // the clock, but play still starts the pattern from its first step.
+    const std::string pattern = "v|2\nm|0|clock|mono\nm|1|euclid|mono\nm|2|osc|mono\nm|3|vca|mono\nm|4|out|mono\n"
+                                "c|0.0|1.0|1\nc|2.0|3.0|1\nc|1.0|3.1|1\nc|3.0|4.0|1";
+    {
+        // Block counts are whole: 0.5 s, 0.368 s and 0.868 s are 375, 276 and 651 blocks.
+        auto held = nexusWith(pattern);
+        double tick = 1370.0;
+        playMoving(*held, 0.5f, false, tick);
+        held->noteOn(60, 100);
+        playMoving(*held, 0.368f, false, tick);
+        const auto fromHeld = playMoving(*held, 3.0f, true, tick);
+        auto fresh = nexusWith(pattern);
+        tick = 1370.0;
+        playMoving(*fresh, 0.868f, false, tick);
+        fresh->noteOn(60, 100);
+        const auto fromFresh = playMoving(*fresh, 3.0f, true, tick);
+        float worst = 0.0f;
+        for (size_t i = 0; i < fromHeld.size(); ++i) worst = std::max(worst, std::fabs(fromHeld[i] - fromFresh[i]));
+        ok("play starts the pattern from its first step with a key held", peak(fromHeld) > 0.05 && worst < 1e-6,
+           std::to_string(worst));
     }
 }
 
