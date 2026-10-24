@@ -11713,266 +11713,480 @@ internal object FactoryBanks {
         low = 67, high = 81)
 
     private fun chanter1() = Patch("Chanter", "Highland Pipes",
-        mapOf("drones" to 0.8f, "grace" to 0.416666657f),
+        mapOf("drones" to 0.8f, "grace" to 0.416666657f, "volume" to 0.624f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.3335f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Fewer Graces", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 67, high = 81)
 
     private fun chanter2() = Patch("Chanter", "Pipes Ungraced",
-        mapOf("drift" to 0.35f),
+        mapOf("drift" to 0.35f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.325f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 67, high = 81)
 
     private fun chanter3() = Patch("Chanter", "Pipe Band",
-        mapOf("drones" to 0.9f, "grace" to 0.333333343f, "drift" to 0.5f, "air" to 0.3f),
+        mapOf("drones" to 0.9f, "grace" to 0.333333343f, "drift" to 0.5f, "air" to 0.3f, "volume" to 0.617f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.25f, "mac8_a2" to 0.35f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 67, high = 81)
 
     private fun chanter4() = Patch("Chanter", "Practice Chanter",
-        mapOf("drones" to 0f, "reed" to 0.3f, "grace" to 0.333333343f),
+        mapOf("drones" to 0f, "reed" to 0.3f, "grace" to 0.333333343f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.8f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones In", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 67, high = 81)
 
     private fun chanter5() = Patch("Chanter", "Bright Chanter",
-        mapOf("reed" to 0.9f, "grace" to 0.25f),
+        mapOf("reed" to 0.9f, "grace" to 0.25f, "volume" to 0.624f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.55f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 67, high = 81)
 
     private fun chanter6() = Patch("Chanter", "Smallpipes",
-        mapOf("model" to 0.0833333358f, "key" to 0.6363636f),
+        mapOf("model" to 0.0833333358f, "key" to 0.6363636f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 65, high = 79)
 
     private fun chanter7() = Patch("Chanter", "Smallpipes Graced",
-        mapOf("model" to 0.0833333358f, "key" to 0.6363636f, "grace" to 0.333333343f, "air" to 0.25f),
+        mapOf("model" to 0.0833333358f, "key" to 0.6363636f, "grace" to 0.333333343f, "air" to 0.25f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.375f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 65, high = 79)
 
     private fun chanter8() = Patch("Chanter", "Soft Smallpipes",
-        mapOf("model" to 0.0833333358f, "key" to 0.6363636f, "drones" to 0.4f, "reed" to 0.25f),
+        mapOf("model" to 0.0833333358f, "key" to 0.6363636f, "drones" to 0.4f, "reed" to 0.25f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 65, high = 79)
 
     private fun chanter9() = Patch("Chanter", "Smallpipes in D",
-        mapOf("model" to 0.0833333358f, "key" to 0.181818187f),
+        mapOf("model" to 0.0833333358f, "key" to 0.181818187f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 60, high = 74)
 
     private fun chanter10() = Patch("Chanter", "Uilleann Pipes",
-        mapOf("model" to 0.333333343f, "key" to 0.181818187f),
+        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "volume" to 0.973f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 62, high = 86)
 
     private fun chanter11() = Patch("Chanter", "Uilleann Slow Air",
-        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 0.5f, "drift" to 0.3f),
+        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 0.5f, "drift" to 0.3f, "volume" to 0.983f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.35f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 62, high = 86)
 
     private fun chanter12() = Patch("Chanter", "Uilleann Regulators",
-        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 0.5f),
+        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 0.5f, "volume" to 0.984f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "isles",
         low = 50, high = 86)
 
-    private fun chanter13() = Patch("Chanter", "Gaita",
-        mapOf("model" to 0.166666672f, "key" to 0f),
-        family = "europe",
+    private fun chanter13() = Patch("Chanter", "Border Pipes",
+        mapOf("drones" to 0.55f, "reed" to 0.3f, "grace" to 0.2f, "drift" to 0.1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.45f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "isles",
+        low = 67, high = 81)
+
+    private fun chanter14() = Patch("Chanter", "Uilleann Reel",
+        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 0.45f, "reed" to 0.6f, "grace" to 0.233333334f, "volume" to 0.982f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "isles",
+        low = 62, high = 86)
+
+    private fun chanter15() = Patch("Chanter", "Gaita",
+        mapOf("model" to 0.166666672f, "key" to 0f, "volume" to 0.418f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 70, high = 86)
 
-    private fun chanter14() = Patch("Chanter", "Gaita Bright",
-        mapOf("model" to 0.166666672f, "key" to 0f, "reed" to 0.85f),
-        family = "europe",
+    private fun chanter16() = Patch("Chanter", "Gaita Bright",
+        mapOf("model" to 0.166666672f, "key" to 0f, "reed" to 0.85f, "volume" to 0.414f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.575f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 70, high = 86)
 
-    private fun chanter15() = Patch("Chanter", "Gaita Breath",
-        mapOf("model" to 0.166666672f, "key" to 0f, "drift" to 0.5f, "air" to 0.45f),
-        family = "europe",
+    private fun chanter17() = Patch("Chanter", "Gaita Breath",
+        mapOf("model" to 0.166666672f, "key" to 0f, "drift" to 0.5f, "air" to 0.45f, "volume" to 0.417f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.25f, "mac8_a2" to 0.275f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 70, high = 86)
 
-    private fun chanter16() = Patch("Chanter", "Gaita Graced",
-        mapOf("model" to 0.166666672f, "key" to 0f, "drones" to 0.75f, "grace" to 0.3f),
-        family = "europe",
+    private fun chanter18() = Patch("Chanter", "Gaita Graced",
+        mapOf("model" to 0.166666672f, "key" to 0f, "drones" to 0.75f, "grace" to 0.3f, "volume" to 0.417f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 70, high = 86)
-
-    private fun chanter17() = Patch("Chanter", "Gaida",
-        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "grace" to 0.25f),
-        family = "europe",
-        low = 67, high = 79)
-
-    private fun chanter18() = Patch("Chanter", "Gaida Trill",
-        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "grace" to 0.5f, "air" to 0.25f),
-        family = "europe",
-        low = 67, high = 79)
 
     private fun chanter19() = Patch("Chanter", "Cornemuse",
-        mapOf("model" to 0.5f, "key" to 0.6363636f),
-        family = "europe",
+        mapOf("model" to 0.5f, "key" to 0.6363636f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 67, high = 81)
 
     private fun chanter20() = Patch("Chanter", "Cornemuse Bourrée",
-        mapOf("model" to 0.5f, "key" to 0.6363636f, "reed" to 0.7f, "grace" to 0.2f),
-        family = "europe",
+        mapOf("model" to 0.5f, "key" to 0.6363636f, "reed" to 0.7f, "grace" to 0.2f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 67, high = 81)
 
     private fun chanter21() = Patch("Chanter", "Musette de Cour",
-        mapOf("model" to 0.5833333f, "key" to 0.6363636f),
-        family = "europe",
+        mapOf("model" to 0.5833333f, "key" to 0.6363636f, "volume" to 0.817f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 67, high = 81)
 
     private fun chanter22() = Patch("Chanter", "Musette Pastorale",
-        mapOf("model" to 0.5833333f, "key" to 0.6363636f, "drones" to 0.5f, "reed" to 0.3f),
-        family = "europe",
+        mapOf("model" to 0.5833333f, "key" to 0.6363636f, "drones" to 0.5f, "reed" to 0.3f, "volume" to 0.83f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
         low = 67, high = 81)
 
-    private fun chanter23() = Patch("Chanter", "Sackpipa",
-        mapOf("model" to 0.6666667f),
-        family = "europe",
-        low = 69, high = 81)
+    private fun chanter23() = Patch("Chanter", "Cornemuse Douce",
+        mapOf("model" to 0.5f, "key" to 0.6363636f, "drones" to 0.5f, "reed" to 0.35f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
+        low = 67, high = 81)
 
-    private fun chanter24() = Patch("Chanter", "Sackpipa Polska",
-        mapOf("model" to 0.6666667f, "grace" to 0.3f),
-        family = "europe",
-        low = 69, high = 81)
+    private fun chanter24() = Patch("Chanter", "Musette Bal",
+        mapOf("model" to 0.5833333f, "key" to 0.6363636f, "reed" to 0.6f, "grace" to 0.166666672f, "volume" to 0.814f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
+        low = 67, high = 81)
 
-    private fun chanter25() = Patch("Chanter", "Dudy",
-        mapOf("model" to 0.75f, "key" to 0.272727281f),
-        family = "europe",
-        low = 63, high = 75)
+    private fun chanter25() = Patch("Chanter", "Gaita Muiñeira",
+        mapOf("model" to 0.166666672f, "key" to 0f, "drones" to 0.8f, "reed" to 0.7f, "grace" to 0.266666681f, "volume" to 0.416f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
+        low = 70, high = 86)
 
-    private fun chanter26() = Patch("Chanter", "Dudy Village",
-        mapOf("model" to 0.75f, "key" to 0.272727281f, "drift" to 0.4f, "air" to 0.25f),
-        family = "europe",
-        low = 63, high = 75)
+    private fun chanter26() = Patch("Chanter", "Cornemuse du Centre",
+        mapOf("model" to 0.5f, "key" to 0f, "drones" to 0.85f, "reed" to 0.65f, "grace" to 0.13333334f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "west",
+        low = 67, high = 81)
 
-    private fun chanter27() = Patch("Chanter", "Gaida Kaba",
-        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "reed" to 0.85f, "drift" to 0.35f),
-        family = "europe",
+    private fun chanter27() = Patch("Chanter", "Gaida",
+        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "grace" to 0.25f, "volume" to 0.917f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
         low = 67, high = 79)
 
-    private fun chanter28() = Patch("Chanter", "Cornemuse Douce",
-        mapOf("model" to 0.5f, "key" to 0.6363636f, "drones" to 0.5f, "reed" to 0.35f),
-        family = "europe",
-        low = 67, high = 81)
+    private fun chanter28() = Patch("Chanter", "Gaida Trill",
+        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "grace" to 0.5f, "air" to 0.25f, "volume" to 0.919f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.3f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.375f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Fewer Graces", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 67, high = 79)
 
-    private fun chanter29() = Patch("Chanter", "Musette Bal",
-        mapOf("model" to 0.5833333f, "key" to 0.6363636f, "reed" to 0.6f, "grace" to 0.166666672f),
-        family = "europe",
-        low = 67, high = 81)
-
-    private fun chanter30() = Patch("Chanter", "Sackpipa Drone",
-        mapOf("model" to 0.6666667f, "drones" to 1f, "bag" to 0.5f),
-        family = "europe",
+    private fun chanter29() = Patch("Chanter", "Sackpipa",
+        mapOf("model" to 0.6666667f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
         low = 69, high = 81)
 
-    private fun chanter31() = Patch("Chanter", "Dudy Polka",
-        mapOf("model" to 0.75f, "key" to 0.272727281f, "reed" to 0.75f, "grace" to 0.233333334f),
-        family = "europe",
+    private fun chanter30() = Patch("Chanter", "Sackpipa Polska",
+        mapOf("model" to 0.6666667f, "grace" to 0.3f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 69, high = 81)
+
+    private fun chanter31() = Patch("Chanter", "Dudy",
+        mapOf("model" to 0.75f, "key" to 0.272727281f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
         low = 63, high = 75)
 
-    private fun chanter32() = Patch("Chanter", "Zampogna",
-        mapOf("model" to 0.8333333f, "key" to 0.6363636f),
+    private fun chanter32() = Patch("Chanter", "Dudy Village",
+        mapOf("model" to 0.75f, "key" to 0.272727281f, "drift" to 0.4f, "air" to 0.25f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.3f, "mac8_a2" to 0.375f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 63, high = 75)
+
+    private fun chanter33() = Patch("Chanter", "Gaida Kaba",
+        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "reed" to 0.85f, "drift" to 0.35f, "volume" to 0.913f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.575f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.325f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 67, high = 79)
+
+    private fun chanter34() = Patch("Chanter", "Sackpipa Drone",
+        mapOf("model" to 0.6666667f, "drones" to 1f, "bag" to 0.5f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 69, high = 81)
+
+    private fun chanter35() = Patch("Chanter", "Dudy Polka",
+        mapOf("model" to 0.75f, "key" to 0.272727281f, "reed" to 0.75f, "grace" to 0.233333334f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.625f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 63, high = 75)
+
+    private fun chanter36() = Patch("Chanter", "Gaida Horo",
+        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "reed" to 0.75f, "grace" to 0.366666675f, "air" to 0.2f, "volume" to 0.917f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.3535f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.625f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.4f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Fewer Graces", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 67, high = 79)
+
+    private fun chanter37() = Patch("Chanter", "Sackpipa Walking Tune",
+        mapOf("model" to 0.6666667f, "key" to 0.363636374f, "reed" to 0.35f, "grace" to 0.166666672f, "drift" to 0.1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.45f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 69, high = 81)
+
+    private fun chanter38() = Patch("Chanter", "Dudy Lament",
+        mapOf("model" to 0.75f, "key" to 0.272727281f, "drones" to 0.6f, "bag" to 0.375f, "reed" to 0.3f, "drift" to 0.25f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.375f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "east",
+        low = 63, high = 75)
+
+    private fun chanter39() = Patch("Chanter", "Zampogna",
+        mapOf("model" to 0.8333333f, "key" to 0.6363636f, "volume" to 0.81f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 55, high = 79)
 
-    private fun chanter33() = Patch("Chanter", "Zampogna Natale",
-        mapOf("model" to 0.8333333f, "key" to 0.6363636f, "grace" to 0.166666672f, "drift" to 0.3f),
+    private fun chanter40() = Patch("Chanter", "Zampogna Natale",
+        mapOf("model" to 0.8333333f, "key" to 0.6363636f, "grace" to 0.166666672f, "drift" to 0.3f, "volume" to 0.809f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.35f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 55, high = 79)
 
-    private fun chanter34() = Patch("Chanter", "Tulum",
-        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "grace" to 0.2f),
+    private fun chanter41() = Patch("Chanter", "Tulum",
+        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "grace" to 0.2f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 57, high = 74)
 
-    private fun chanter35() = Patch("Chanter", "Tulum Horon",
-        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "reed" to 0.8f, "grace" to 0.416666657f),
+    private fun chanter42() = Patch("Chanter", "Tulum Horon",
+        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "reed" to 0.8f, "grace" to 0.416666657f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.3335f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.6f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Fewer Graces", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 57, high = 74)
 
-    private fun chanter36() = Patch("Chanter", "Launeddas",
-        mapOf("model" to 1f, "key" to 0f),
+    private fun chanter43() = Patch("Chanter", "Launeddas",
+        mapOf("model" to 1f, "key" to 0f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 55, high = 76)
 
-    private fun chanter37() = Patch("Chanter", "Launeddas Ballo",
-        mapOf("model" to 1f, "key" to 0f, "grace" to 0.13333334f, "air" to 0.25f),
+    private fun chanter44() = Patch("Chanter", "Launeddas Ballo",
+        mapOf("model" to 1f, "key" to 0f, "grace" to 0.13333334f, "air" to 0.25f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.375f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 55, high = 76)
 
-    private fun chanter38() = Patch("Chanter", "Zampogna Pastorale",
-        mapOf("model" to 0.8333333f, "key" to 0.6363636f, "drones" to 0.6f, "reed" to 0.45f),
+    private fun chanter45() = Patch("Chanter", "Zampogna Pastorale",
+        mapOf("model" to 0.8333333f, "key" to 0.6363636f, "drones" to 0.6f, "reed" to 0.45f, "volume" to 0.815f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 55, high = 79)
 
-    private fun chanter39() = Patch("Chanter", "Tulum Soft",
-        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "reed" to 0.45f),
+    private fun chanter46() = Patch("Chanter", "Tulum Soft",
+        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "reed" to 0.45f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 57, high = 74)
 
-    private fun chanter40() = Patch("Chanter", "Launeddas Drone",
-        mapOf("model" to 1f, "key" to 0f, "drones" to 1f, "bag" to 0.375f),
+    private fun chanter47() = Patch("Chanter", "Launeddas Drone",
+        mapOf("model" to 1f, "key" to 0f, "drones" to 1f, "bag" to 0.375f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "double",
         low = 55, high = 76)
 
-    private fun chanter41() = Patch("Chanter", "Hurdy-Gurdy",
-        mapOf("model" to 0.25f, "key" to 0.6363636f),
+    private fun chanter48() = Patch("Chanter", "Zampogna Lullaby",
+        mapOf("model" to 0.8333333f, "key" to 0.6363636f, "drones" to 0.5f, "bag" to 0.375f, "reed" to 0.3f, "drift" to 0.15f, "volume" to 0.824f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.425f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "double",
+        low = 55, high = 79)
+
+    private fun chanter49() = Patch("Chanter", "Tulum Wedding",
+        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "reed" to 0.85f, "grace" to 0.333333343f, "air" to 0.25f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.575f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.375f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "double",
+        low = 57, high = 74)
+
+    private fun chanter50() = Patch("Chanter", "Hurdy-Gurdy",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "volume" to 0.576f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4395f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.653f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5395f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 60, high = 84)
 
-    private fun chanter42() = Patch("Chanter", "Gurdy Coups",
-        mapOf("model" to 0.25f, "key" to 0.6363636f, "coup" to 0.333333343f),
+    private fun chanter51() = Patch("Chanter", "Gurdy Coups",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "coup" to 0.333333343f, "volume" to 0.551f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.442f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.6725f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.548f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 60, high = 84)
 
-    private fun chanter43() = Patch("Chanter", "Gurdy Eighths",
-        mapOf("model" to 0.25f, "key" to 0.6363636f, "coup" to 0.6666667f),
+    private fun chanter52() = Patch("Chanter", "Gurdy Eighths",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "coup" to 0.6666667f, "volume" to 0.526f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.446f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.661f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.548f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 60, high = 84)
 
-    private fun chanter44() = Patch("Chanter", "Gurdy Sixteenths",
-        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.45f, "coup" to 1f),
+    private fun chanter53() = Patch("Chanter", "Gurdy Sixteenths",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.45f, "coup" to 1f, "volume" to 0.529f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4425f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.6435f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5465f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 60, high = 84)
 
-    private fun chanter45() = Patch("Chanter", "Gurdy Buzzing",
-        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.85f, "threshold" to 0.5f),
+    private fun chanter54() = Patch("Chanter", "Gurdy Buzzing",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.85f, "threshold" to 0.5f, "volume" to 0.425f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.35f, "mac1_a2" to 0.5615f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.5675f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.539f),
+        mapOf("macro1" to "Slower", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 60, high = 84)
 
-    private fun chanter46() = Patch("Chanter", "Gurdy Gentle",
-        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.25f, "dog" to 0f),
+    private fun chanter55() = Patch("Chanter", "Gurdy Gentle",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.25f, "dog" to 0f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4105f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.626f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.564f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 60, high = 84)
 
-    private fun chanter47() = Patch("Chanter", "Gurdy in D",
-        mapOf("model" to 0.25f, "key" to 0.181818187f, "coup" to 0.333333343f),
+    private fun chanter56() = Patch("Chanter", "Gurdy in D",
+        mapOf("model" to 0.25f, "key" to 0.181818187f, "coup" to 0.333333343f, "volume" to 0.564f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4415f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_a1" to 0.675f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.596f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "gurdy",
         low = 55, high = 79)
 
-    private fun chanter48() = Patch("Chanter", "Pipe Drones",
-        mapOf("drones" to 1f, "bag" to 1f),
+    private fun chanter57() = Patch("Chanter", "Gurdy Slow Air",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "drones" to 0.5f, "bag" to 0.25f, "wheel" to 0.4f, "rosin" to 0.45f, "dog" to 0f, "volume" to 0.612f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4275f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_a1" to 0.675f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5585f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter58() = Patch("Chanter", "Gurdy Bourrée",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.55f, "dog" to 0.65f, "threshold" to 0.55f, "coup" to 0.333333343f, "volume" to 0.52f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.447f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.623f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5485f),
+        mapOf("macro1" to "Crank", "macro2" to "Quiet Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter59() = Patch("Chanter", "Trompette Alone",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "drones" to 0.6f, "bag" to 0.75f, "wheel" to 0.7f, "dog" to 0.8f, "threshold" to 0.45f, "coup" to 0.6666667f, "volume" to 0.42f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.472f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.543f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.199999988f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5505f),
+        mapOf("macro1" to "Crank", "macro2" to "Quiet Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Short Run", "macro7" to "Wander", "macro8" to "Low"),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter60() = Patch("Chanter", "Gurdy in C",
+        mapOf("model" to 0.25f, "key" to 0f, "coup" to 0.333333343f, "volume" to 0.612f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.446f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.639f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter61() = Patch("Chanter", "Gurdy Rosin",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "wheel" to 0.7f, "rosin" to 0.7f, "dog" to 0.3f, "volume" to 0.518f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4695f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.3f, "mac4_a2" to 0.4575f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.625f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.541f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Smooth", "macro5" to "Drones", "macro6" to "Long Run", "macro7" to "Wander", "macro8" to "Low"),
+        family = "gurdy",
+        low = 60, high = 84)
+
+    private fun chanter62() = Patch("Chanter", "Pipe Drones",
+        mapOf("drones" to 1f, "bag" to 1f, "volume" to 0.603f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "drones",
         low = 67, high = 81)
 
-    private fun chanter49() = Patch("Chanter", "Gurdy Drones",
-        mapOf("model" to 0.25f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f, "dog" to 0f),
+    private fun chanter63() = Patch("Chanter", "Gurdy Drones",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f, "dog" to 0f, "volume" to 0.566f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4485f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.7f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.631999969f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.275f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Crank", "macro2" to "Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones Back", "macro6" to "Short Run", "macro7" to "Wander", "macro8" to "Low"),
         family = "drones",
         low = 60, high = 84)
 
-    private fun chanter50() = Patch("Chanter", "Smallpipe Drones",
-        mapOf("model" to 0.0833333358f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f),
+    private fun chanter64() = Patch("Chanter", "Smallpipe Drones",
+        mapOf("model" to 0.0833333358f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f, "volume" to 0.62f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "drones",
         low = 65, high = 79)
 
-    private fun chanter51() = Patch("Chanter", "Gaita Drone",
-        mapOf("model" to 0.166666672f, "key" to 0f, "drones" to 1f, "bag" to 1f),
+    private fun chanter65() = Patch("Chanter", "Gaita Drone",
+        mapOf("model" to 0.166666672f, "key" to 0f, "drones" to 1f, "bag" to 1f, "volume" to 0.417f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "drones",
         low = 70, high = 86)
 
-    private fun chanter52() = Patch("Chanter", "Uilleann Drones",
-        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 1f, "bag" to 1f),
+    private fun chanter66() = Patch("Chanter", "Uilleann Drones",
+        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 1f, "bag" to 1f, "volume" to 0.95f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
         family = "drones",
         low = 62, high = 86)
 
-    private val chanter: List<Patch> by lazy { listOf(chanter0(), chanter1(), chanter2(), chanter3(), chanter4(), chanter5(), chanter6(), chanter7(), chanter8(), chanter9(), chanter10(), chanter11(), chanter12(), chanter13(), chanter14(), chanter15(), chanter16(), chanter17(), chanter18(), chanter19(), chanter20(), chanter21(), chanter22(), chanter23(), chanter24(), chanter25(), chanter26(), chanter27(), chanter28(), chanter29(), chanter30(), chanter31(), chanter32(), chanter33(), chanter34(), chanter35(), chanter36(), chanter37(), chanter38(), chanter39(), chanter40(), chanter41(), chanter42(), chanter43(), chanter44(), chanter45(), chanter46(), chanter47(), chanter48(), chanter49(), chanter50(), chanter51(), chanter52()) }
+    private fun chanter67() = Patch("Chanter", "Pipe Drones in C",
+        mapOf("key" to 0f, "drones" to 1f, "bag" to 1f, "volume" to 0.793f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "drones",
+        low = 60, high = 74)
+
+    private fun chanter68() = Patch("Chanter", "Pipe Drones in B",
+        mapOf("key" to 1f, "drones" to 1f, "bag" to 1f, "volume" to 0.572f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "drones",
+        low = 71, high = 83)
+
+    private fun chanter69() = Patch("Chanter", "Fifth Over Drones",
+        mapOf("model" to 0.8333333f, "key" to 0.6363636f, "drones" to 0.9f, "bag" to 1f, "reed" to 0.4f, "volume" to 0.802f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "drones",
+        low = 55, high = 79)
+
+    private fun chanter70() = Patch("Chanter", "Deep Gaida Drone",
+        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f, "volume" to 0.914f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Short Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "drones",
+        low = 67, high = 79)
+
+    private fun chanter71() = Patch("Chanter", "No Bag",
+        mapOf("drones" to 0f, "bag" to 0f, "reed" to 0.4f, "drift" to 0.45f, "air" to 0.45f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.8f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.275f, "mac8_a2" to 0.275f),
+        mapOf("macro1" to "Drones In", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "odd",
+        low = 67, high = 81)
+
+    private fun chanter72() = Patch("Chanter", "Wild Reed",
+        mapOf("model" to 0.416666657f, "key" to 0.6363636f, "reed" to 1f, "drift" to 0.5f, "air" to 0.35f, "volume" to 0.907f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.25f, "mac8_a2" to 0.325f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "odd",
+        low = 67, high = 79)
+
+    private fun chanter73() = Patch("Chanter", "Shrill Reed",
+        mapOf("model" to 0.5833333f, "key" to 0.6363636f, "drones" to 0.4f, "reed" to 1f, "grace" to 0.1f, "volume" to 0.819f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "odd",
+        low = 67, high = 81)
+
+    private fun chanter74() = Patch("Chanter", "Seasick Pipes",
+        mapOf("drones" to 0.8f, "drift" to 1f, "air" to 0.25f, "volume" to 0.622f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.275f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0f, "mac8_a2" to 0.375f),
+        mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "odd",
+        low = 67, high = 81)
+
+    private fun chanter75() = Patch("Chanter", "Dog on a Drone",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "drones" to 1f, "bag" to 1f, "wheel" to 0.8f, "dog" to 0.8f, "threshold" to 0.35f, "volume" to 0.419f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.35f, "mac1_a2" to 0.557999969f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.5415f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.275f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.099999994f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.532f),
+        mapOf("macro1" to "Slower", "macro2" to "Quiet Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones Back", "macro6" to "Short Run", "macro7" to "Wander", "macro8" to "Low"),
+        family = "odd",
+        low = 60, high = 84)
+
+    private fun chanter76() = Patch("Chanter", "Coup Drone",
+        mapOf("model" to 0.25f, "key" to 0.6363636f, "drones" to 0.8f, "bag" to 0.75f, "dog" to 0.9f, "coup" to 1f, "volume" to 0.487f, "mac1_d1" to 0.538461566f, "mac1_d2" to 0.9230769f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4475f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.199999988f, "mac3_d1" to 0.7692308f, "mac3_a1" to 0.35f, "mac4_d1" to 0.615384638f, "mac4_d2" to 0.9230769f, "mac4_a1" to 0.675f, "mac4_a2" to 0.605f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.275f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.199999988f, "mac7_d1" to 0.3846154f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_d2" to 0.9230769f, "mac8_a1" to 0.25f, "mac8_a2" to 0.545f),
+        mapOf("macro1" to "Crank", "macro2" to "Quiet Dog", "macro3" to "Easy Buzz", "macro4" to "Rosin", "macro5" to "Drones Back", "macro6" to "Short Run", "macro7" to "Wander", "macro8" to "Low"),
+        family = "odd",
+        low = 60, high = 84)
+
+    private fun chanter77() = Patch("Chanter", "Twin Squeal",
+        mapOf("model" to 0.9166667f, "key" to 0.181818187f, "reed" to 1f, "grace" to 0.6666667f, "drift" to 0.4f, "volume" to 1f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.2335f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.3f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Fewer Graces", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "odd",
+        low = 57, high = 74)
+
+    private fun chanter78() = Patch("Chanter", "Breath Ghost",
+        mapOf("model" to 0.333333343f, "key" to 0.181818187f, "drones" to 0.3f, "reed" to 0.1f, "air" to 1f, "volume" to 0.967f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.675f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0f),
+        mapOf("macro1" to "Drones", "macro2" to "Hard Reed", "macro3" to "Grace", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "odd",
+        low = 62, high = 86)
+
+    private fun chanter79() = Patch("Chanter", "Hiccup Pipes",
+        mapOf("drones" to 0.6f, "reed" to 0.65f, "grace" to 1f, "volume" to 0.569f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.230769232f, "mac2_a1" to 0.3f, "mac3_d1" to 0.307692319f, "mac3_a1" to 0.099999994f, "mac4_d1" to 0.3846154f, "mac4_a1" to 0.75f, "mac5_d1" to 0.461538464f, "mac5_a1" to 0.675f, "mac6_d1" to 0.15384616f, "mac6_a1" to 0.75f, "mac7_d1" to 0.230769232f, "mac7_d2" to 0.3846154f, "mac7_d3" to 0.461538464f, "mac7_a1" to 0.65f, "mac7_a2" to 0.65f, "mac7_a3" to 0.575f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.461538464f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f),
+        mapOf("macro1" to "Drones", "macro2" to "Soft Reed", "macro3" to "Fewer Graces", "macro4" to "Squeeze", "macro5" to "Breath", "macro6" to "Long Bag", "macro7" to "Wild", "macro8" to "Steady"),
+        family = "odd",
+        low = 67, high = 81)
+
+    private val chanter: List<Patch> by lazy { listOf(chanter0(), chanter1(), chanter2(), chanter3(), chanter4(), chanter5(), chanter6(), chanter7(), chanter8(), chanter9(), chanter10(), chanter11(), chanter12(), chanter13(), chanter14(), chanter15(), chanter16(), chanter17(), chanter18(), chanter19(), chanter20(), chanter21(), chanter22(), chanter23(), chanter24(), chanter25(), chanter26(), chanter27(), chanter28(), chanter29(), chanter30(), chanter31(), chanter32(), chanter33(), chanter34(), chanter35(), chanter36(), chanter37(), chanter38(), chanter39(), chanter40(), chanter41(), chanter42(), chanter43(), chanter44(), chanter45(), chanter46(), chanter47(), chanter48(), chanter49(), chanter50(), chanter51(), chanter52(), chanter53(), chanter54(), chanter55(), chanter56(), chanter57(), chanter58(), chanter59(), chanter60(), chanter61(), chanter62(), chanter63(), chanter64(), chanter65(), chanter66(), chanter67(), chanter68(), chanter69(), chanter70(), chanter71(), chanter72(), chanter73(), chanter74(), chanter75(), chanter76(), chanter77(), chanter78(), chanter79()) }
 
     private fun aviary0() = Patch("Aviary", "Init", emptyMap(),
         family = "chirp",

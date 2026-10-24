@@ -341,7 +341,6 @@
     <string name="pw_envmod">mod env</string>
     <string name="pw_eq">Eq</string>
     <string name="pw_esraj">esraj</string>
-    <string name="pw_europe">europe</string>
     <string name="pw_every">chaque</string>
     <string name="pw_excite">exciter</string>
     <string name="pw_exciter">excitateur</string>
@@ -1257,6 +1256,7 @@
     <string name="pw_waves">houle</string>
     <string name="pw_weather">temps</string>
     <string name="pw_weight">poids</string>
+    <string name="pw_west">occident</string>
     <string name="pw_wet">traité</string>
     <string name="pw_wet_mix">traité</string>
     <string name="pw_what">quoi</string>

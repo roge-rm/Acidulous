@@ -148,6 +148,12 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             }
         }
         p.frames = p.lastOff + secondsToFrames(2.0f);
+    } else if (kind == "tap") {
+        // A key tapped and let go, twice: for a hurdy-gurdy whose wheel turns
+        // on after the key, so the drones and the trompette play alone.
+        p.lastOff = hit(p, 0.0f, 0.15f, note, velocity);
+        p.lastOff = hit(p, 6.0f, 0.15f, note, velocity);
+        p.frames = p.lastOff + secondsToFrames(9.0f);
     } else if (kind == "hold") {
         p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(4.0f);
@@ -2203,7 +2209,7 @@ void usage() {
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|scene|jaw|harmonics\n"
         "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
-        "          |chug|funk\n"
+        "          |chug|funk|tap\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"

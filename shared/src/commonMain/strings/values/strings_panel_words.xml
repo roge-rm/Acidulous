@@ -396,7 +396,6 @@
     <string name="pw_envmod">envmod</string>
     <string name="pw_eq">Eq</string>
     <string name="pw_esraj">esraj</string>
-    <string name="pw_europe">europe</string>
     <string name="pw_even">Even</string>
     <string name="pw_evenness">evenness</string>
     <string name="pw_every">every</string>
@@ -1471,6 +1470,7 @@
     <string name="pw_waves">waves</string>
     <string name="pw_weather">weather</string>
     <string name="pw_weight">weight</string>
+    <string name="pw_west">west</string>
     <string name="pw_wet">wet</string>
     <string name="pw_wet_mix">wet mix</string>
     <string name="pw_what">what</string>

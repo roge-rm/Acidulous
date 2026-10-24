@@ -173,4 +173,14 @@ class MacroNamesTest {
         val families = bank.map { it.family }.distinct()
         assertEquals(listOf("sitar", "sarod", "veena", "drone", "east", "bowed", "fiddle", "bridge"), families)
     }
+
+    @Test
+    fun chanterBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Chanter")
+        assertEquals(80, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("isles", "west", "east", "double", "gurdy", "drones", "odd"), families)
+        assertEquals(listOf(15, 12, 12, 11, 12, 9, 9), families.map { f -> bank.count { it.family == f } })
+    }
 }
