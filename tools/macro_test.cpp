@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary and Tongue move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue and Sympath move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -26,6 +26,7 @@
 #include <engine/machine/fathom/Fathom.h>
 #include <engine/machine/aviary/Aviary.h>
 #include <engine/machine/tongue/Tongue.h>
+#include <engine/machine/sympath/Sympath.h>
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
@@ -407,13 +408,13 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
                std::strcmp(type, "Brazen") == 0 || std::strcmp(type, "Manual") == 0 ||
                std::strcmp(type, "Hammer") == 0 || std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
                std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 || std::strcmp(type, "Fathom") == 0 ||
-               std::strcmp(type, "Aviary") == 0 || std::strcmp(type, "Tongue") == 0) {
+               std::strcmp(type, "Aviary") == 0 || std::strcmp(type, "Tongue") == 0 || std::strcmp(type, "Sympath") == 0) {
         // A plucked string's (or a reed's or lips' onset's) zero crossings wander, so the route must match the transpose knob.
-        // Draw, Fret, Tine, Palm, Fathom, Aviary and Tongue have no transpose, so an octave up.
+        // Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue and Sympath have no transpose, so an octave up.
         const bool byOctave = std::strcmp(type, "Draw") == 0 || std::strcmp(type, "Fret") == 0 ||
                               std::strcmp(type, "Tine") == 0 || std::strcmp(type, "Palm") == 0 ||
                               std::strcmp(type, "Fathom") == 0 || std::strcmp(type, "Aviary") == 0 ||
-                              std::strcmp(type, "Tongue") == 0;
+                              std::strcmp(type, "Tongue") == 0 || std::strcmp(type, "Sympath") == 0;
         gUnits = {{byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -1804,6 +1805,35 @@ void tongueRoutes() {
     }
 }
 
+// Sympath: routes to the sympathetic strings, the pluck and the drone strings match their knobs.
+void sympathRoutes() {
+    using Sy = acidulous::machine::Sympath;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    // Tarbs 0.5 by default: a route of 0.25 is the knob at 0.75.
+    {
+        const auto knob = playHeld("Sympath", {{"tarbs", 0.75f}}, {61}, blocks);
+        Route t{1, 2, Sy::McTarbs, 0.25f, 1.0f};
+        const auto routed = playHeld("Sympath", {}, {61}, blocks, &t, Sy::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Sympath: a route to tarbs matches the knob", buf);
+    }
+    // Pluck 0.5 by default, read at the pluck: a route of 0.3 is the knob at 0.8.
+    {
+        const auto knob = playHeld("Sympath", {{"pluck", 0.8f}}, {61}, blocks);
+        Route p{4, 3, Sy::McPluck, 0.3f, 1.0f};
+        const auto routed = playHeld("Sympath", {}, {61}, blocks, &p, Sy::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Sympath: a route to pluck matches the knob", buf);
+    }
+    // Chikari 0 by default: a route of 0.6 strikes the drone strings as the knob does.
+    {
+        const auto plain = playHeld("Sympath", {}, {61}, blocks);
+        const auto knob = playHeld("Sympath", {{"chikari", 0.6f}}, {61}, blocks);
+        Route c{7, 4, Sy::McChikari, 0.6f, 1.0f};
+        const auto routed = playHeld("Sympath", {}, {61}, blocks, &c, Sy::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Sympath: a route to chikari matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1885,6 +1915,9 @@ int main() {
     using To = acidulous::machine::Tongue;
     basics("Tongue", To::MacroDestCount, To::McVolume, To::McPitch, To::McOff, To::kMacros);
     tongueRoutes();
+    using Sy = acidulous::machine::Sympath;
+    basics("Sympath", Sy::MacroDestCount, Sy::McVolume, Sy::McPitch, Sy::McOff, Sy::kMacros);
+    sympathRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

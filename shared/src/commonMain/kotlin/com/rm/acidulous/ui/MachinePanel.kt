@@ -263,7 +263,7 @@ fun MachinePanel(
             "Draw" -> DrawPanel(binding, track, trackIndex, editor)
             "Fret" -> FretPanel(binding, track, trackIndex, editor)
             "Tine" -> TinePanel(binding, track, trackIndex, editor)
-            "Sympath" -> SympathPanel(binding)
+            "Sympath" -> SympathPanel(binding, track, trackIndex, editor)
             "Palm" -> PalmPanel(binding, selectedPad, track, trackIndex, editor)
             "Chanter" -> ChanterPanel(binding)
             "Aviary" -> AviaryPanel(binding, selectedPad, track, trackIndex, editor)
@@ -4727,13 +4727,43 @@ private val SYMPATH_SCALES = listOf("bilawal", "khamaj", "kafi", "asavari", "bha
 private val SYMPATH_FIRSTS = listOf("pa", "ma", "ni", "sa")
 private val SYMPATH_CYCLES = listOf("2", "4", "6", "8")
 
-/** Sympath: the strings and their bridge, the drone and sympathetic strings, and the hands. */
+/** Where a Sympath macro route goes, in the engine's MacroDest order. */
+val SYMPATH_MACRO_DESTS = listOf(
+    "off", "bridge", "curve", "pluck", "position", "sustain", "bright",
+    "tarbs", "chikari", "meend", "gamak", "velocity", "volume",
+    "pitch",
+)
+
+/** Sympath: the macros, the strings and their bridge, the drone and sympathetic strings, and the hands. */
 @Composable
-private fun SympathPanel(b: ParamBinding) {
+private fun SympathPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("strings", "drones", "hands"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "strings", "drones", "hands", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", SYMPATH_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", SYMPATH_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", SYMPATH_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", SYMPATH_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("instrument") {
                     PanelStepKnob(b, "model", SYMPATH_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
@@ -4749,7 +4779,7 @@ private fun SympathPanel(b: ParamBinding) {
                     PanelKnob(b, "bright", "bright")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("tuning") {
                     PanelStepKnob(b, "sa", KEY_NAMES, "sa", PanelAmber)
                     PanelStepKnob(b, "scale", SYMPATH_SCALES, "scale")
@@ -4763,7 +4793,7 @@ private fun SympathPanel(b: ParamBinding) {
                     PanelStepKnob(b, "cycle", SYMPATH_CYCLES, "cycle")
                 }
             }
-            else -> {
+            3 -> {
                 Group("hands") {
                     PanelKnob(b, "meend", "meend", PanelAmber)
                     PanelKnob(b, "gamak", "gamak")
@@ -4780,6 +4810,14 @@ private fun SympathPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val PALM_MODELS = listOf("tabla", "bayan", "djembe", "cajon", "frame drum", "talking", "conga", "bongo", "darbuka", "riq", "tar", "bendir", "kanjira", "bata", "mridangam", "dholak", "ashiko", "udu", "cuica")

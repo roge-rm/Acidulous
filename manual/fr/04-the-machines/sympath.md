@@ -63,6 +63,22 @@ sur l’une d’elles la fait sonner, et elle sonne encore après la note.
 La pression (du clavier, ou de chaque note avec le MPE) tire la corde de
 côté et monte la note jusqu’à un ton entier.
 
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Buzz, Tarbs,
+etc.) et les noms s’affichent sur les boutons, dans les lanes d’automation et
+dans la liste de mappage du contrôleur. Ils sont à zéro au chargement d’un
+patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace les notes jouées ensuite, 24
+demi-tons à 1. Le modèle, l’accordage, le sa, la gamme, la première corde, le
+cycle, les voix, l’octave et le bend ne sont pas accessibles. Un changement de
+pincement, de position, de chikari ou de vélocité s’entend à la note suivante ;
+le reste bouge tout de suite. Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Réglez **sa** sur la tonalité du morceau et **gamme** sur sa gamme : les

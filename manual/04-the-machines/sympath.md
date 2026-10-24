@@ -56,6 +56,21 @@ theirs sets it ringing, and it rings on after the note has gone.
 Pressure (from the keyboard or each note's own, with MPE) pulls the string
 sideways, bending the note up by as much as a whole tone.
 
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Buzz, Tarbs,
+etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
+knob moves the destination by knob times amount, across that control's whole
+range at 1. Pitch moves the notes played after it, 24 semitones at 1. The
+model, tune, sa, scale, first, cycle, voices, octave and bend can't be reached.
+A change to the pluck, position, chikari or velocity is heard from the next
+note; the rest move at once. Tap a macro's name to rename it.
+
 ## Tips
 
 - Set **sa** to the key of the song and **scale** to its scale, and the
