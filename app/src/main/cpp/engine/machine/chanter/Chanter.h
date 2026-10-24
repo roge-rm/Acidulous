@@ -117,8 +117,12 @@ class Chanter final : public Machine {
     Bowed trompette;
     /** The keys held, oldest first. */
     uint8_t held[kHeld] = {};
+    /** Each held key's pitch, taken when it was pressed. */
+    float heldPitch[kHeld] = {};
     int heldCount = 0;
     float velocity = 0.8f;
+    /** The note's level from its velocity, taken at its start. */
+    float noteLevel = 1.0f;
     /** The melody note, as a MIDI pitch, and a grace note still to play first: samples left. */
     float pitch = 60.0f;
     float gracePitch = 60.0f;

@@ -295,6 +295,7 @@ void Chanter::reset() {
     noteBend_ = 0.0f;
     retuneCountdown = 0;
     updateMacros();
+    noteLevel = velocityGain(velocity, goalOf(VelocityAmount));
     dogTone.reset();
     dogLast = 0.0f;
     box.reset();
@@ -311,6 +312,7 @@ void Chanter::startNote(int note, float vel, bool legato) {
     const float keyNote = 57.0f + static_cast<float>(std::clamp(steppedTargetOf(Key), 0, 11) - 9);
     pitch = notePitch(note);
     velocity = vel;
+    noteLevel = velocityGain(vel, goalOf(VelocityAmount));
     noteBend_ = 0.0f;
     notePress = -1.0f;
     // There's no tonguing a bagpipe: notes are set apart by a grace note, a
@@ -338,17 +340,24 @@ void Chanter::noteOn(uint8_t note, uint8_t vel) {
     const bool legato = heldCount > 0;
     for (int i = 0; i < heldCount; ++i) {
         if (held[i] == note) {
-            for (int j = i; j + 1 < heldCount; ++j) held[j] = held[j + 1];
+            for (int j = i; j + 1 < heldCount; ++j) {
+                held[j] = held[j + 1];
+                heldPitch[j] = heldPitch[j + 1];
+            }
             --heldCount;
             break;
         }
     }
     if (heldCount >= kHeld) {
-        for (int j = 0; j + 1 < heldCount; ++j) held[j] = held[j + 1];
+        for (int j = 0; j + 1 < heldCount; ++j) {
+            held[j] = held[j + 1];
+            heldPitch[j] = heldPitch[j + 1];
+        }
         --heldCount;
     }
-    held[heldCount++] = note;
+    held[heldCount] = note;
     updateMacroGoals(); // a note reads where the knobs are going, so renders repeat
+    heldPitch[heldCount++] = notePitch(note);
     startNote(note, static_cast<float>(vel) / 127.0f, legato);
     asleep = false;
     quietSamples = 0;
@@ -358,7 +367,10 @@ void Chanter::noteOff(uint8_t note) {
     const int before = heldNote();
     for (int i = 0; i < heldCount; ++i) {
         if (held[i] == note) {
-            for (int j = i; j + 1 < heldCount; ++j) held[j] = held[j + 1];
+            for (int j = i; j + 1 < heldCount; ++j) {
+                held[j] = held[j + 1];
+                heldPitch[j] = heldPitch[j + 1];
+            }
             --heldCount;
             break;
         }
@@ -368,7 +380,7 @@ void Chanter::noteOff(uint8_t note) {
         graceLeft = 0;
     } else if (heldNote() != before) {
         // Back to a key still held, without a grace note.
-        pitch = notePitch(heldNote());
+        pitch = heldPitch[heldCount - 1];
         graceLeft = 0;
     }
 }
@@ -453,7 +465,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
     const float drift = clampf(paramOf(Drift), 0.0f, 1.0f) * driftNow;
 
     const float melodyPitch = pitch + bend * paramOf(BendRange) + noteBend_;
-    const float level = velocityGain(velocity, goalOf(VelocityAmount));
+    const float level = noteLevel;
     bool any = bag > 0.0f || playing;
 
     if (kind != Gurdy) {
@@ -491,7 +503,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         // The other hand: the key held before the last, on the second chanter.
         const bool secondOn = chanterOn && k.second > 0.0f && heldCount >= 2;
         if (k.second > 0.0f) {
-            const float other = notePitch(held[std::max(heldCount - 2, 0)]);
+            const float other = heldPitch[std::max(heldCount - 2, 0)];
             second.setTongue(0.0f);
             const float otherNow = other + bend * paramOf(BendRange);
             second.setNote(noteHz(otherNow + (cents + kPipeTrim + chanterTrim(kind, otherNow, reedKnob)) * 0.01f));
