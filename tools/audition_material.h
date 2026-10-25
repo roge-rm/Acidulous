@@ -717,4 +717,43 @@ inline std::unique_ptr<SampleMap> zoneMap() {
     return map;
 }
 
+/**
+ * The zone map with the faults a real multisample has, for a check pass:
+ *
+ *   - the bottom zones open with 25 ms of near-silence before the hammer,
+ *     as a sample cut loosely does, so `start` near 0 lands in nothing;
+ *   - the top zones are 8 dB down, so a patch that only plays up there is
+ *     heard quiet rather than assumed level;
+ *   - the middle zones loop a few frames short of a whole period, so a held
+ *     note has a small step at the seam;
+ *   - a little hum under everything, which a high-pass patch shows up.
+ */
+inline std::unique_ptr<SampleMap> roughMap() {
+    auto map = zoneMap();
+    map->name = "rough";
+    Rng rng(0x77e1a2u);
+    const auto lead = static_cast<int32_t>(kMatSr * 0.025f);
+    for (MapZone &z : map->zones) {
+        SampleData &s = map->samples[static_cast<size_t>(z.sample)];
+        if (z.rootKey == 36) {
+            std::vector<float> pad(static_cast<size_t>(lead));
+            for (float &v : pad) v = rng.next() * 0.0005f;
+            s.left.insert(s.left.begin(), pad.begin(), pad.end());
+            s.frames += lead;
+            s.loopStart += lead;
+            s.loopEnd += lead;
+        } else if (z.rootKey == 84) {
+            for (float &v : s.left) v *= 0.4f;
+        } else {
+            s.loopEnd -= 7;
+        }
+        for (int32_t i = 0; i < s.frames; ++i)
+            s.left[static_cast<size_t>(i)] += 0.004f * std::sin(2.0f * static_cast<float>(M_PI) * 60.0f *
+                                                                static_cast<float>(i) / kMatSr);
+        z.loopStart = s.loopStart;
+        z.loopEnd = s.loopEnd;
+    }
+    return map;
+}
+
 } // namespace acidulous::audition
