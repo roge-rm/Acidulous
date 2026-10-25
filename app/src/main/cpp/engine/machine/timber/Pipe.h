@@ -211,7 +211,7 @@ class Pipe {
     }
 
     void setBell(float reflection, float cutoff01) {
-        const float r = clampf(reflection, 0.3f, 0.995f), c = clampf(cutoff01, 0.02f, 0.95f);
+        const float r = clampf(reflection, 0.0f, 0.995f), c = clampf(cutoff01, 0.02f, 0.95f);
         if (r != bellGain || c != bellCoeff) { bellGain = r; bellCoeff = c; dirty = true; }
     }
 
