@@ -221,6 +221,49 @@ void inTune() {
     }
 }
 
+/** How far out the note is, cents, from its first three partials, each found within 50 cents. Quick enough for the top notes. */
+double quickCents(const Pipes &g, double want, double from, double to) {
+    double num = 0.0, den = 0.0;
+    for (int n = 1; n <= 3; ++n) {
+        const double h = want * n;
+        double best = 0.0, bestLevel = -1e9;
+        for (double c = -50.0; c <= 50.0; c += 2.0) {
+            const double l = g.level(h * std::pow(2.0, c / 1200.0), from, to);
+            if (l > bestLevel) { bestLevel = l; best = c; }
+        }
+        const double coarse = best;
+        for (double c = coarse - 2.0; c <= coarse + 2.0; c += 0.2) {
+            const double l = g.level(h * std::pow(2.0, c / 1200.0), from, to);
+            if (l > bestLevel) { bestLevel = l; best = c; }
+        }
+        const double e = std::pow(10.0, bestLevel / 10.0);
+        num += e * best;
+        den += e;
+    }
+    return num / den;
+}
+
+void topNotes() {
+    std::printf("- the top notes agree from key to key\n");
+    // The bore below the holes once pulled these 30 to 40 cents apart by key.
+    const struct { const char *what; float model; } cases[] = {{"smallpipes", 1}, {"musette", 7}};
+    for (const auto &c : cases) {
+        for (int note : {89, 91, 93, 100}) {
+            double lo = 1e9, hi = -1e9;
+            for (int key : {0, 1, 2, 4, 6, 9}) {
+                Pipes g({{"model", c.model}, {"key", static_cast<float>(key)}, {"drones", 0.0f}, {"drift", 0.0f}, {"air", 0.0f}});
+                g.f->noteOn(static_cast<uint8_t>(note), 100);
+                g.play(0.6);
+                const double off = quickCents(g, noteHz(note), 0.3, 0.6);
+                lo = std::min(lo, off);
+                hi = std::max(hi, off);
+            }
+            check(hi - lo < 15.0 && std::fabs(lo) < 15.0 && std::fabs(hi) < 15.0,
+                  fmt("%s note %d in tune in every key", c.what, note).c_str(), fmt("%+.1f..%+.1f cents", lo, hi));
+        }
+    }
+}
+
 void bag() {
     std::printf("- the bag\n");
     for (float model : {static_cast<float>(Highland), static_cast<float>(Gurdy)}) {
@@ -406,6 +449,7 @@ void lifecycle() {
 int main() {
     tuning();
     inTune();
+    topNotes();
     bag();
     fingers();
     dog();

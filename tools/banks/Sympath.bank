@@ -1224,7 +1224,7 @@ patch "Veena Tanam" family=veena note=50 range=36..79 role=lead
   meend          60 ms
   pluck          0.7
   chikari        0.45
-  volume         0.61
+  volume         0.59
 
 patch "Rudra Veena Alap" family=veena note=43 range=31..67 role=lead
   # Very slow, every note slid into, the gourds ringing long.
@@ -2395,7 +2395,7 @@ patch "Bright Sanxian" family=east note=62 range=45..76
     ratio        3
     attack       15 ms
     release      400 ms
-    gain         3 dB
+    gain         2.2 dB
 
 patch "Sarangi" family=bowed note=62 range=48..84 role=lead
   # Bowed, the nail sliding the string, a forest of sympathetics.
@@ -3504,6 +3504,7 @@ patch "Buzz Bass" family=bridge note=37 range=28..55 role=bass
   mac8_a2  -0.157
   model          #2
   bridge         0.9
+  volume         0.66
 
 patch "Buzzed Guitar" family=bridge note=52 range=40..79 role=tune
   # The electric sitar with a low, gentle bridge: a guitar with a bit of buzz.
