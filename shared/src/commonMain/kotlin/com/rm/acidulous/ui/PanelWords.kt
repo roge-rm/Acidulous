@@ -104,6 +104,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "bata" to Res.string.pw_bata,
     "bayan" to Res.string.pw_bayan,
     "beak" to Res.string.pw_beak,
+    "beats" to Res.string.pw_beats,
     "Bell" to Res.string.pw_bell,
     "bell" to Res.string.pw_bell_04bf88,
     "bell / clave" to Res.string.pw_bell_clave,

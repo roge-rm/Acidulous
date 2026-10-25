@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
+#include <sequencer/Swing.h>
 
 namespace acidulous::machine {
 
@@ -118,10 +119,46 @@ constexpr float kChanterTrim[Chanter::KindCount][kTrimPoints] = {
     {-2.7f, 1.8f, 7.4f, 10.7f, 10.3f, 8.3f, 4.0f, -4.6f, -10.7f, -19.6f, -29.9f, -27.5f}, // tulum
     {-2.9f, 1.5f, 6.8f, 9.6f, 8.4f, 5.5f, 0.5f, -8.5f, -15.1f, -22.8f, -34.3f, -30.6f}, // launeddas
 };
+/**
+ * Above note 92 the trim goes by the semitone, from 92 to 108: the top notes
+ * are uneven from one to the next, so the coarse table can't follow them.
+ * Its first column is the coarse table's value at 92.
+ */
+constexpr int kTopPoints = 17;
+constexpr float kTopFrom = 92.0f;
+constexpr float kTopTrim[Chanter::KindCount][kTopPoints] = {
+    {-18.0f, -20.9f, -21.6f, -22.0f, -22.9f, -23.3f, -23.8f, -24.9f, -24.8f, -25.2f, -26.4f, -26.7f, -28.0f, -27.0f, -28.4f, -31.0f, -30.2f}, // highland
+    {-41.0f, -35.9f, -37.3f, -38.8f, -40.1f, -40.4f, -40.2f, -43.5f, -46.7f, -46.9f, -48.8f, -51.4f, -51.5f, -53.9f, -53.5f, -53.0f, 7.7f}, // smallpipes
+    {-22.2f, -23.7f, -24.3f, -25.0f, -26.6f, -26.7f, -27.4f, -29.1f, -28.6f, -29.0f, -31.0f, -30.7f, -32.6f, -32.5f, -33.8f, -33.3f, -29.1f}, // gaita
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // hurdy-gurdy
+    {-24.7f, -26.1f, -26.7f, -27.8f, -29.9f, -29.7f, -30.7f, -32.9f, -32.3f, -32.9f, -35.3f, -34.9f, -34.4f, -31.1f, -29.2f, -28.4f, -23.0f}, // uilleann
+    {-25.7f, -24.4f, -25.5f, -27.6f, -29.1f, -29.3f, -30.3f, -31.3f, -33.3f, -33.8f, -34.4f, -36.8f, -36.8f, -38.9f, -41.1f, -44.8f, -7.2f}, // gaida
+    {-21.0f, -22.7f, -23.3f, -23.9f, -25.2f, -25.4f, -26.0f, -27.4f, -27.2f, -27.6f, -29.2f, -29.1f, -30.8f, -30.3f, -31.8f, -34.5f, -31.1f}, // cornemuse
+    {-39.1f, -42.7f, -44.5f, -47.0f, -48.4f, -48.8f, -47.9f, -53.0f, -57.8f, -58.3f, -58.5f, -57.0f, -50.3f, -45.0f, -41.5f, -41.0f, 10.9f}, // musette
+    {-41.0f, -35.9f, -37.3f, -38.8f, -40.1f, -40.4f, -40.2f, -43.5f, -46.7f, -46.9f, -48.8f, -51.4f, -51.5f, -53.9f, -53.5f, -53.0f, 7.7f}, // säckpipa
+    {-35.4f, -31.0f, -32.7f, -33.4f, -34.8f, -34.9f, -35.1f, -37.3f, -40.2f, -40.0f, -41.5f, -43.7f, -43.6f, -46.2f, -49.2f, -55.2f, -5.3f}, // dudy
+    {-20.0f, -21.9f, -22.4f, -22.9f, -24.0f, -24.3f, -24.8f, -26.0f, -25.9f, -26.3f, -27.7f, -27.7f, -29.3f, -28.5f, -29.9f, -33.0f, -31.8f}, // zampogna
+    {-29.9f, -27.3f, -28.9f, -29.6f, -31.2f, -30.9f, -31.6f, -33.0f, -35.3f, -35.5f, -36.4f, -38.8f, -38.7f, -41.2f, -43.9f, -47.7f, -6.6f}, // tulum
+    {-34.3f, -30.9f, -32.7f, -33.4f, -34.8f, -34.9f, -35.1f, -37.3f, -40.2f, -40.0f, -41.5f, -43.7f, -43.6f, -46.2f, -49.2f, -55.2f, -5.3f}, // launeddas
+};
+/**
+ * The bell's share of the wave sent back up the bore, by the note. It fades
+ * out over the four semitones above 92: with nearly every hole open the bore
+ * below them hardly answers, and its echo pulled each top note sharp or flat
+ * by where it fell against the tube, so by key as well as by note.
+ */
+float bellBack(float note) { return 0.9f * clampf((kTopFrom + 4.0f - note) / 4.0f, 0.0f, 1.0f); }
 /** A harder reed plays flatter: cents added per unit of the reed knob past the middle. */
 constexpr float kReedTrim[Chanter::KindCount] = {8.1f, 17.8f, 11.1f, 0, 17.4f, 9.1f, 10.0f, 23.0f, 16.7f, 11.0f, 8.6f, 10.9f, 13.8f};
 
 float chanterTrim(int kind, float note, float reed) {
+    if (note > kTopFrom) {
+        const float t = clampf(note - kTopFrom, 0.0f, static_cast<float>(kTopPoints - 1));
+        const int i = std::min(static_cast<int>(t), kTopPoints - 2);
+        const float f = t - static_cast<float>(i);
+        const float *row = kTopTrim[kind];
+        return row[i] + (row[i + 1] - row[i]) * f + kReedTrim[kind] * (reed - 0.5f);
+    }
     const float at = clampf((note - kTrimFrom) / kTrimStep, 0.0f, static_cast<float>(kTrimPoints - 1));
     const int i = std::min(static_cast<int>(at), kTrimPoints - 2);
     const float f = at - static_cast<float>(i);
@@ -130,6 +167,32 @@ float chanterTrim(int kind, float note, float reed) {
 }
 
 constexpr float kCoupsPerBeat[4] = {0.0f, 1.0f, 2.0f, 4.0f};
+
+/**
+ * What the hurdy-gurdy's strings need added to speak in tune, cents, by the
+ * crank (rows, 0 to 1 by 0.2) and the rosin (columns, 0 to 1 by 0.05). A
+ * string held longer on the wheel each swing runs flat, the more as the rosin
+ * grips harder and the slower the wheel turns, down to about 25 cents.
+ */
+constexpr int kRosinCranks = 6, kRosinSteps = 21;
+constexpr float kRosinTrim[kRosinCranks][kRosinSteps] = {
+    {1.3f, 1.4f, 1.4f, 1.3f, 1.2f, 1.1f, 0.8f, -0.7f, -0.1f, 0.5f, 1.8f, 5.6f, 10.5f, 16.4f, 22.3f, 23.1f, 23.6f, 23.9f, 24.4f, 25.2f, 25.9f}, // crank 0.0
+    {-0.1f, 0.8f, 0.5f, 0.5f, 0.0f, 0.3f, 0.6f, 0.5f, 1.2f, 1.6f, 4.2f, 5.1f, 7.9f, 11.7f, 16.1f, 19.3f, 21.7f, 23.1f, 23.7f, 24.6f, 25.3f}, // crank 0.2
+    {0.2f, 0.9f, 0.5f, 0.4f, 0.0f, 0.2f, 1.1f, 1.0f, 0.9f, 1.9f, 2.9f, 4.2f, 5.7f, 8.5f, 11.5f, 14.6f, 18.8f, 21.5f, 22.8f, 23.9f, 24.7f}, // crank 0.4
+    {0.8f, 1.6f, 0.9f, 0.6f, 0.0f, 0.1f, 0.9f, 0.7f, 0.4f, 1.2f, 1.6f, 4.1f, 4.5f, 6.6f, 8.4f, 11.9f, 14.9f, 18.9f, 21.4f, 23.0f, 24.2f}, // crank 0.6
+    {1.6f, 1.9f, 1.3f, 1.2f, 0.7f, 0.1f, 0.2f, 1.0f, 0.8f, 0.6f, 1.4f, 1.8f, 4.4f, 5.1f, 7.0f, 9.4f, 12.1f, 16.0f, 19.6f, 21.9f, 23.6f}, // crank 0.8
+    {1.8f, 2.1f, 2.3f, 1.8f, 1.7f, 1.0f, 0.8f, 1.0f, 1.1f, 0.9f, 0.7f, 1.6f, 2.1f, 4.3f, 5.1f, 7.1f, 10.7f, 13.6f, 17.7f, 20.7f, 22.9f}, // crank 1.0
+};
+
+float rosinTrim(float rosin, float crank) {
+    const float x = clampf(rosin, 0.0f, 1.0f) * static_cast<float>(kRosinSteps - 1);
+    const float y = clampf(crank, 0.0f, 1.0f) * static_cast<float>(kRosinCranks - 1);
+    const int i = std::min(static_cast<int>(x), kRosinSteps - 2), j = std::min(static_cast<int>(y), kRosinCranks - 2);
+    const float fx = x - static_cast<float>(i), fy = y - static_cast<float>(j);
+    const float a = kRosinTrim[j][i] + (kRosinTrim[j][i + 1] - kRosinTrim[j][i]) * fx;
+    const float b = kRosinTrim[j + 1][i] + (kRosinTrim[j + 1][i + 1] - kRosinTrim[j + 1][i]) * fx;
+    return a + (b - a) * fy;
+}
 
 } // namespace
 
@@ -183,6 +246,7 @@ const ParamDef *Chanter::paramDefs(int32_t &count) const {
                 put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
             }
         }
+        defs[CoupBeats] = ParamDef{"coupbeats", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""}; // every beat, 2 and 4
         built = true;
     }
     count = Count;
@@ -301,6 +365,7 @@ void Chanter::reset() {
     driftLeft = 0;
     bpm = 120.0f;
     beatAt = 0.0;
+    emptyFor = 1e9f;
     coupNow = dogNow = 0.0f;
     bend = wheel = channelPressure_ = 0.0f;
     notePress = -1.0f;
@@ -317,7 +382,17 @@ void Chanter::reset() {
     asleep = true;
 }
 
-void Chanter::onBlock(int64_t, int64_t, float tempo) { bpm = tempo > 1.0f ? tempo : 120.0f; }
+void Chanter::onBlock(int64_t tickStart, int64_t tickEnd, float tempo) {
+    bpm = tempo > 1.0f ? tempo : 120.0f;
+    blockTicks = std::max<int64_t>(0, tickEnd - tickStart);
+}
+
+void Chanter::onBar(int64_t tickInBar, int32_t ticksPerBar, float swing, int64_t swingPair) {
+    barTick = tickInBar;
+    barTicks = ticksPerBar;
+    swingPercent = swing;
+    swingPairTicks = swingPair;
+}
 
 void Chanter::startNote(int note, float vel, bool legato) {
     const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
@@ -501,7 +576,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         chanter.setBelow(1.0f);
         chanter.setFork(0.2f);
         chanter.setReed(k.cylinder ? 0 : 1, clampf(k.reed + (paramOf(Reed) - 0.5f) * 0.6f, 0.05f, 1.0f), 0.45f);
-        chanter.setBell(0.9f, 0.4f);
+        chanter.setBell(bellBack(now), 0.4f);
         chanter.setLoss(0.999f);
         // The reed is solved for the bag's pressure even between notes: solving it
         // for none steps its table as a note ends, which clicks.
@@ -527,7 +602,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
             second.setBelow(1.0f);
             second.setFork(0.2f);
             second.setReed(k.cylinder ? 0 : 1, clampf(k.reed + (paramOf(Reed) - 0.5f) * 0.6f, 0.05f, 1.0f), 0.45f);
-            second.setBell(0.9f, 0.4f);
+            second.setBell(bellBack(otherNow), 0.4f);
             second.setLoss(0.999f);
             second.setPressure(kChanterPush * push);
             second.setDrive(1.0f);
@@ -586,11 +661,36 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
     } else {
         // --- hurdy-gurdy --------------------------------------------------
         // Coups: the wheel pushed on the beat, so the dog buzzes in time.
-        const float perBeat = kCoupsPerBeat[std::clamp(steppedTargetOf(Coup), 0, 3)];
-        const double before = beatAt;
-        beatAt += static_cast<double>(dt * bpm / 60.0f);
-        if (perBeat > 0.0f && bag > 0.0f && std::floor(beatAt * perBeat) != std::floor(before * perBeat)) coupNow = kCoupPush;
-        if (!playing && bag <= 0.0f) beatAt = 0.0;
+        const int perBeat = static_cast<int>(kCoupsPerBeat[std::clamp(steppedTargetOf(Coup), 0, 3)]);
+        // On 2 and 4, only the coups in the bar's even beats: 2 and 4 in 4/4,
+        // 2 in 3/4.
+        const bool evenOnly = steppedTargetOf(CoupBeats) == 1;
+        if (songRolling && barTicks > 0) {
+            // From the song: a coup where its tick, swung like the track's
+            // notes, falls in this block. Swing pairs fit inside a beat, so
+            // the beats themselves don't move.
+            const int64_t step = kPPQN / std::max(1, perBeat);
+            const int64_t from = barTick, to = barTick + blockTicks;
+            if (perBeat > 0 && bag > 0.0f && to > from) {
+                for (int64_t c = std::max<int64_t>(0, (from - kPPQN) / step * step); c < to + kPPQN; c += step) {
+                    const int64_t at = seq::Swing::at(c, swingPercent, swingPairTicks);
+                    const bool even = ((c % barTicks) / kPPQN & 1) == 1;
+                    if (at >= from && at < to && (!evenOnly || even)) coupNow = kCoupPush;
+                }
+            }
+            beatAt = 0.0;
+        } else {
+            // Stopped: beats counted from the first note, carried across gaps
+            // shorter than a beat so short notes don't each start at beat 1.
+            const double before = beatAt;
+            beatAt += static_cast<double>(dt * bpm / 60.0f);
+            const bool even = (static_cast<int64_t>(std::floor(beatAt)) & 1) == 1;
+            if (perBeat > 0 && bag > 0.0f && (!evenOnly || even) &&
+                std::floor(beatAt * perBeat) != std::floor(before * perBeat))
+                coupNow = kCoupPush;
+        }
+        emptyFor = !playing && bag <= 0.0f ? emptyFor + dt : 0.0f;
+        if (emptyFor > 60.0f / bpm) beatAt = 0.0;
         coupNow *= std::exp(-dt / kCoupFalls);
         const float turning = clampf(paramOf(Wheel), 0.0f, 1.0f) * bag;
         const float speed = turning * (1.0f + coupNow + press);
@@ -604,9 +704,10 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         // it's below where the rosin lets go, the strings stop speaking.
         const float bowSpeed = (1.2f + 2.0f * clampf(paramOf(Wheel), 0.0f, 1.0f) * (1.0f + coupNow + press)) * bag;
         const float tone = 0.55f + 0.3f * grip;
+        const float rosinCents = rosinTrim(grip, clampf(paramOf(Wheel), 0.0f, 1.0f));
         auto tuneString = [&](Bowed &s, float note, bool bowing) {
             s.hz = noteHz(note + drift * kDriftCents * 0.002f);
-            s.wave.setFrequency(s.hz);
+            s.wave.setFrequency(noteHz(note + (drift * kDriftCents * 0.2f + rosinCents) * 0.01f));
             const float t60 = bowing ? kStringT60 : kStoppedT60;
             s.wave.setDamping(std::pow(10.0f, -3.0f / (t60 * s.hz)), tone);
         };

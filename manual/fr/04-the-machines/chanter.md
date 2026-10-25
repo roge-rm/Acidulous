@@ -55,6 +55,9 @@ grésiller en rythme.
   grésille.
 - **coup** : pousse la roue **1**, **2** ou **4** fois par temps, en
   mesure, pour que le chien grésille en rythme. **non** pour aucun.
+- **temps** : à **chaque** temps, ou seulement sur **2 & 4** de la mesure
+  (les temps pairs dans les autres mesures). Morceau arrêté, le compte part de
+  la première note.
 
 ## Joueur
 
@@ -74,8 +77,8 @@ La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace les notes jouées ensuite, 24
-demi-tons à 1. Le modèle, l’accordage, la tonique, le coup, l’octave et le
-bend ne sont pas accessibles. Un changement d’agrément ou de vélocité
+demi-tons à 1. Le modèle, l’accordage, la tonique, le coup, les temps, l’octave
+et le bend ne sont pas accessibles. Un changement d’agrément ou de vélocité
 s’entend à la note suivante ; le reste bouge tout de suite. Touchez le nom
 d’une macro pour la renommer.
 

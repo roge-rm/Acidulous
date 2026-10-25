@@ -96,6 +96,8 @@ class Sympath final : public Machine {
         float bowLast = 0.0f;
         /** Samples since the bow touched the string, for its gentle start. */
         int32_t bowAt = 0;
+        /** Half the note's period, samples: how long the bow's first push lasts. */
+        int32_t kickLength = 2;
     };
     struct Voice {
         String strings[kStrings];

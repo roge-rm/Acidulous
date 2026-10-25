@@ -47,6 +47,9 @@ the wheel on the beat to make it buzz in rhythm.
 - **threshold** - how fast the wheel must turn before the dog buzzes.
 - **coup** - pushes the wheel **1**, **2** or **4** times a beat, in time
   with the song, so the dog buzzes in rhythm. **off** for none.
+- **beats** - **every** beat, or only on **2 & 4** of the bar (the even
+  beats in other signatures). With the song stopped it counts from the first
+  note.
 
 ## Player
 
@@ -66,7 +69,7 @@ The **macros** page sets what each one does. A macro has four routes, a
 destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
 the knob moves the destination by knob times amount, across that control's
 whole range at 1. Pitch moves the notes played after it, 24 semitones at 1.
-The model, tune, tonic, coup, octave and bend can't be reached. A change to
+The model, tune, tonic, coup, beats, octave and bend can't be reached. A change to
 the grace or velocity is heard from the next note; the rest move at once.
 Tap a macro's name to rename it.
 

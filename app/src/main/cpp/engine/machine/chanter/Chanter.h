@@ -35,7 +35,10 @@ class Chanter final : public Machine {
         // per unit and moves the notes played after it.
         MacroBase,
         MacroParams = 9, // knob, 4 destinations, 4 depths
-        Count = MacroBase + 8 * MacroParams
+        // Added after the macros. Which beats the coups fall on: every beat,
+        // or only the second and fourth, counted from the first note.
+        CoupBeats = MacroBase + 8 * MacroParams,
+        Count
     };
     // Where a macro route goes. The model, tune, key, coup, bend range and
     // octave are left out.
@@ -61,6 +64,8 @@ class Chanter final : public Machine {
     void prepare(int32_t sampleRate) override;
     void reset() override;
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
+    void onTransport(bool rolling, int64_t tickStart) override { songRolling = rolling; }
+    void onBar(int64_t tickInBar, int32_t ticksPerBar, float swing, int64_t swingPair) override;
     void noteOn(uint8_t note, uint8_t velocity) override;
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
@@ -141,7 +146,16 @@ class Chanter final : public Machine {
     int32_t driftLeft = 0;
     float sampleRate = 48000.0f;
     float bpm = 120.0f;
+    /** Beats counted from the first note, for coups while the song is stopped. */
     double beatAt = 0.0;
+    /** How long the bag has been empty, seconds: the count starts over after a beat of it. */
+    float emptyFor = 1e9f;
+    /** The song's position, for coups while it rolls (see Machine::onBar). */
+    bool songRolling = false;
+    int64_t barTick = 0, blockTicks = 0;
+    int32_t barTicks = 0;
+    float swingPercent = 50.0f;
+    int64_t swingPairTicks = 0;
     float coupNow = 0.0f;
     float dogNow = 0.0f;
     float bend = 0.0f, wheel = 0.0f, channelPressure_ = 0.0f, notePress = -1.0f, noteBend_ = 0.0f;
