@@ -460,6 +460,40 @@ inline std::unique_ptr<audio::Take> musicSeed() {
     return take;
 }
 
+/**
+ * The music seed with the dirt a real recording has: 400 ms of room tone
+ * before the music, a 32 Hz hum and low-passed rumble at the music's own
+ * level, and hard clipping at 0.6. For checking that a granular patch still
+ * works on a file like that, not for levels.
+ */
+inline std::unique_ptr<audio::Take> dirtySeed() {
+    std::unique_ptr<audio::Take> clean = musicSeed();
+    const auto n = static_cast<size_t>(clean->frames);
+    double sum = 0.0;
+    for (float v : clean->left) sum += static_cast<double>(v) * v;
+    const auto rms = static_cast<float>(std::sqrt(sum / static_cast<double>(std::max<size_t>(1, n))));
+    Rng rng(0xd127u);
+    const auto room = static_cast<size_t>(kMatSr * 0.4f);
+    auto take = std::make_unique<audio::Take>();
+    take->name = "dirty seed";
+    take->frames = static_cast<int32_t>(room + n);
+    take->left.assign(room + n, 0.0f);
+    take->right.assign(room + n, 0.0f);
+    float lp = 0.0f;
+    for (size_t i = 0; i < room + n; ++i) {
+        const float t = static_cast<float>(i) / kMatSr;
+        lp += (rng.next() - lp) * 0.002f;
+        const float dirt = rms * (std::sin(2.0f * static_cast<float>(M_PI) * 32.0f * t) * 0.5f + lp * 6.0f) +
+                           rms * 0.025f * rng.next();
+        const float l = i < room ? 0.0f : clean->left[i - room];
+        const float r = i < room ? 0.0f : clean->right[i - room];
+        take->left[i] = std::clamp(l + dirt, -0.6f, 0.6f);
+        take->right[i] = std::clamp(r + dirt, -0.6f, 0.6f);
+    }
+    take->detect(kMatSr);
+    return take;
+}
+
 /** The voice phrase as a Take, for Pollen's file path. */
 inline std::unique_ptr<audio::Take> voiceTake() {
     auto take = std::make_unique<audio::Take>();
