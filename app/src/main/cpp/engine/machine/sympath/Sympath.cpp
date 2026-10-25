@@ -15,8 +15,11 @@ namespace {
 constexpr float kHouse = 1.0f;
 constexpr float kSilent = 2e-5f;
 constexpr int kRetuneEvery = 16;
-/** How hard the played strings shake the sympathetic ones. */
-constexpr float kSympathy = 1.5f;
+/**
+ * How hard the played strings shake the sympathetic ones. A bowed note keeps
+ * feeding them, so it shakes them half as hard to stay in front.
+ */
+constexpr float kSympathy = 1.5f, kBowedSympathy = 0.75f;
 /** How long the sympathetic and drone strings ring, seconds. */
 constexpr float kTarbT60 = 5.0f, kDroneT60 = 3.5f;
 /**
@@ -35,10 +38,10 @@ constexpr float kCurveSpan = 0.25f;
 constexpr float kContactRound = 0.01f;
 /** How loud the bridge rings when struck, at full, and the most it can ring. */
 /**
- * How hard a bow drives a string, as the hurdy-gurdy's wheel, and how much
- * louder a bowed string is heard: it swings far less than a plucked one.
+ * How hard a bow drives a string, how loud a bowed string is heard against a
+ * plucked one, and the push as the bow first catches it.
  */
-constexpr float kBowGain = 0.12f, kBowedHeard = 45.0f;
+constexpr float kBowGain = 0.36f, kBowedHeard = 0.16f, kBowKick = 0.2f;
 constexpr float kZing = 50.0f, kZingMost = 0.35f;
 
 /**
@@ -508,6 +511,7 @@ void Sympath::start(uint8_t note, uint8_t velocity) {
     v->strings[0].bowAt = 0;
     v->strings[0].bowLast = 0.0f;
     v->strings[0].bowDc = 0.0f;
+    v->strings[0].kickLength = std::max(2, static_cast<int>(0.5f * sampleRate / foldHz(noteHz(pitch))));
     // The drone strings, struck with the note.
     tuneFree();
     const float chikari = clampf(goalOf(Chikari), 0.0f, 1.0f);
@@ -573,6 +577,12 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
     const Make &k = kMakes[kind];
     // The pluck knob, bowed: how hard the bow presses, from airy to gripping.
     const float pluckKnob = clampf(paramOf(Pluck), 0.0f, 1.0f);
+    // Where the rosin lets go: a firmer grip, a narrower curve. The string
+    // swings in proportion, so the push scales with it to keep the bow as
+    // lively, and what's heard is scaled most of the way back.
+    const float bowWidth = 0.05f + 0.2f * (1.0f - pluckKnob);
+    const float bowScale = bowWidth / 0.25f;
+    const float bowHeard = kBowedHeard * std::pow(bowScale, -0.8f);
     tuneFree();
     const float bridge = clampf(paramOf(Bridge) * k.bridge, 0.0f, 1.0f);
     const float curve = clampf(paramOf(Curve), 0.0f, 1.0f) * kCurveSpan;
@@ -637,22 +647,31 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
                 // Bowed: rosin's friction, as Filament's and the hurdy-gurdy's, on the
                 // played string while the key is held. Harder playing, a faster bow.
                 if (k.bowed > 0.0f && s == 0 && v.held) {
-                    const float speed = 0.4f + 0.6f * v.velocity;
-                    const float width = 0.05f + 0.2f * (1.0f - pluckKnob);
-                    const float relative = width * speed - st.wave.velocity();
-                    const float force = relative / (width + relative * relative / width);
+                    // The bow moves just past where the rosin lets go, where
+                    // the string's own swing makes it grip and slip once a
+                    // turn. Slower and the friction only damps the string.
+                    const float speed = 1.2f + 0.8f * v.velocity;
+                    const float relative = bowWidth * speed - st.wave.velocity();
+                    const float force = relative / (bowWidth + relative * relative / bowWidth);
                     // Set down gently, the push coming in over the bow's first 40 ms.
                     const float onset = std::fmin(1.0f, static_cast<float>(st.bowAt++) / (0.04f * sampleRate));
-                    float excite = (force * 0.65f + white() * 0.02f) * kBowGain * k.bowed * onset;
+                    // Low strings take a harder push to speak quickly.
+                    const float drive = 1.0f + clampf((72.0f - v.pitch) / 24.0f, 0.0f, 1.0f);
+                    float excite = (force * 0.65f * drive + white() * 0.02f) * bowScale * kBowGain * k.bowed * onset;
                     st.bowDc += (excite - st.bowDc) * 0.004f;
                     excite -= st.bowDc;
                     // Two samples averaged: a hard bow can't drive the string
                     // at the top of the band, where it would squeal.
                     in += 0.5f * (excite + st.bowLast);
                     st.bowLast = excite;
+                    // Half a period's push as the bow catches the string, so
+                    // the note speaks at once.
+                    if (st.bowAt <= st.kickLength) {
+                        in += kBowKick * bowScale * std::sin(3.14159265f * static_cast<float>(st.bowAt) / static_cast<float>(st.kickLength + 1));
+                    }
                 }
                 const float y = st.wave.step(in);
-                out += k.bowed > 0.0f && s == 0 ? v.bowCut.highpass(y) * kBowedHeard : y;
+                out += k.bowed > 0.0f && s == 0 ? v.bowCut.highpass(y) * bowHeard : y;
                 // The bridge: once the string swings past its height it
                 // strikes it, harder the further past.
                 const float past = y - curve;
@@ -666,10 +685,11 @@ bool Sympath::render(float *L, float *R, int32_t frames) {
             peaks[vi] = std::fmax(peaks[vi], std::fabs(out));
         }
         // The sympathetic strings, shaken by everything played.
+        const float shakeBy = k.bowed > 0.0f ? kBowedSympathy : kSympathy;
         float sympathy = 0.0f, sl = 0.0f, sr = 0.0f;
         for (int t = 0; t < tarbCount; ++t) {
             Free &f = tarbs[t];
-            f.wave.exciteOverTurn(played * kSympathy);
+            f.wave.exciteOverTurn(played * shakeBy);
             float y = f.wave.step(0.0f);
             // The shamisen's low string lies on the neck: sawari.
             if (kind == Shamisen) {
