@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
+#include <sequencer/Swing.h>
 
 namespace acidulous::machine {
 
@@ -364,6 +365,7 @@ void Chanter::reset() {
     driftLeft = 0;
     bpm = 120.0f;
     beatAt = 0.0;
+    emptyFor = 1e9f;
     coupNow = dogNow = 0.0f;
     bend = wheel = channelPressure_ = 0.0f;
     notePress = -1.0f;
@@ -380,7 +382,17 @@ void Chanter::reset() {
     asleep = true;
 }
 
-void Chanter::onBlock(int64_t, int64_t, float tempo) { bpm = tempo > 1.0f ? tempo : 120.0f; }
+void Chanter::onBlock(int64_t tickStart, int64_t tickEnd, float tempo) {
+    bpm = tempo > 1.0f ? tempo : 120.0f;
+    blockTicks = std::max<int64_t>(0, tickEnd - tickStart);
+}
+
+void Chanter::onBar(int64_t tickInBar, int32_t ticksPerBar, float swing, int64_t swingPair) {
+    barTick = tickInBar;
+    barTicks = ticksPerBar;
+    swingPercent = swing;
+    swingPairTicks = swingPair;
+}
 
 void Chanter::startNote(int note, float vel, bool legato) {
     const int kind = std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
@@ -649,14 +661,36 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
     } else {
         // --- hurdy-gurdy --------------------------------------------------
         // Coups: the wheel pushed on the beat, so the dog buzzes in time.
-        const float perBeat = kCoupsPerBeat[std::clamp(steppedTargetOf(Coup), 0, 3)];
-        const double before = beatAt;
-        beatAt += static_cast<double>(dt * bpm / 60.0f);
-        // On 2 and 4, a coup counts only in the odd beats, the first note's beat being 0.
-        const bool onBeat = steppedTargetOf(CoupBeats) == 0 || (static_cast<int64_t>(std::floor(beatAt)) & 1) == 1;
-        if (perBeat > 0.0f && bag > 0.0f && onBeat && std::floor(beatAt * perBeat) != std::floor(before * perBeat))
-            coupNow = kCoupPush;
-        if (!playing && bag <= 0.0f) beatAt = 0.0;
+        const int perBeat = static_cast<int>(kCoupsPerBeat[std::clamp(steppedTargetOf(Coup), 0, 3)]);
+        // On 2 and 4, only the coups in the bar's even beats: 2 and 4 in 4/4,
+        // 2 in 3/4.
+        const bool evenOnly = steppedTargetOf(CoupBeats) == 1;
+        if (songRolling && barTicks > 0) {
+            // From the song: a coup where its tick, swung like the track's
+            // notes, falls in this block. Swing pairs fit inside a beat, so
+            // the beats themselves don't move.
+            const int64_t step = kPPQN / std::max(1, perBeat);
+            const int64_t from = barTick, to = barTick + blockTicks;
+            if (perBeat > 0 && bag > 0.0f && to > from) {
+                for (int64_t c = std::max<int64_t>(0, (from - kPPQN) / step * step); c < to + kPPQN; c += step) {
+                    const int64_t at = seq::Swing::at(c, swingPercent, swingPairTicks);
+                    const bool even = ((c % barTicks) / kPPQN & 1) == 1;
+                    if (at >= from && at < to && (!evenOnly || even)) coupNow = kCoupPush;
+                }
+            }
+            beatAt = 0.0;
+        } else {
+            // Stopped: beats counted from the first note, carried across gaps
+            // shorter than a beat so short notes don't each start at beat 1.
+            const double before = beatAt;
+            beatAt += static_cast<double>(dt * bpm / 60.0f);
+            const bool even = (static_cast<int64_t>(std::floor(beatAt)) & 1) == 1;
+            if (perBeat > 0 && bag > 0.0f && (!evenOnly || even) &&
+                std::floor(beatAt * perBeat) != std::floor(before * perBeat))
+                coupNow = kCoupPush;
+        }
+        emptyFor = !playing && bag <= 0.0f ? emptyFor + dt : 0.0f;
+        if (emptyFor > 60.0f / bpm) beatAt = 0.0;
         coupNow *= std::exp(-dt / kCoupFalls);
         const float turning = clampf(paramOf(Wheel), 0.0f, 1.0f) * bag;
         const float speed = turning * (1.0f + coupNow + press);

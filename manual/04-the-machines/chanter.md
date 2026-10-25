@@ -47,8 +47,9 @@ the wheel on the beat to make it buzz in rhythm.
 - **threshold** - how fast the wheel must turn before the dog buzzes.
 - **coup** - pushes the wheel **1**, **2** or **4** times a beat, in time
   with the song, so the dog buzzes in rhythm. **off** for none.
-- **beats** - **every** beat, or only on **2 & 4**, counting the first note
-  as beat 1.
+- **beats** - **every** beat, or only on **2 & 4** of the bar (the even
+  beats in other signatures). With the song stopped it counts from the first
+  note.
 
 ## Player
 

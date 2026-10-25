@@ -55,8 +55,9 @@ grésiller en rythme.
   grésille.
 - **coup** : pousse la roue **1**, **2** ou **4** fois par temps, en
   mesure, pour que le chien grésille en rythme. **non** pour aucun.
-- **temps** : à **chaque** temps, ou seulement sur **2 & 4**, la première
-  note comptant pour le temps 1.
+- **temps** : à **chaque** temps, ou seulement sur **2 & 4** de la mesure
+  (les temps pairs dans les autres mesures). Morceau arrêté, le compte part de
+  la première note.
 
 ## Joueur
 

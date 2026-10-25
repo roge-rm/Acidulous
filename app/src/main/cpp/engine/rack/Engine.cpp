@@ -265,6 +265,13 @@ void Engine::renderBlock(const float *in, float *out) {
         // downbeat. A start found by followTimebase() above is taken at the
         // top of the next block, so it rolls from there with the scheduler.
         const bool rolling = playing && countInFrames <= 0.0 && !linkWaiting && !startPending;
+        // Where this block starts in the bar, as the metronome counts it: from
+        // the transport's zero in clip mode, from the scene's start otherwise.
+        const bool launching = scheduler.launcherActive();
+        const int32_t ticksPerBar = std::max<int32_t>(1, launching ? scheduler.songTicksPerBar() : scheduler.barTicks());
+        const int64_t barFrom = launching ? clock.blockStart() : scheduler.currentTickInIteration();
+        const int64_t tickInBar = ((barFrom % ticksPerBar) + ticksPerBar) % ticksPerBar;
+        const int64_t pair = swingPair.load(std::memory_order_relaxed);
         // Per rack, because in clip mode racks can be on different scenes
         // and frozen audio is stored per track and scene.
         for (int32_t r = 0; r < kRackCount; ++r) {
@@ -272,7 +279,7 @@ void Engine::renderBlock(const float *in, float *out) {
             // And tell the machine, for machines that play the arrangement
             // rather than notes.
             racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing, rolling,
-                                  clock.blockStart());
+                                  clock.blockStart(), tickInBar, ticksPerBar, pair);
         }
     }
 

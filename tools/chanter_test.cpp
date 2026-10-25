@@ -4,6 +4,7 @@
 // dog buzzing only when the wheel turns fast enough or is pushed on the beat.
 //
 //   chanter_test.sh
+#include <engine/core/Constants.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/chanter/Chanter.h>
 
@@ -71,6 +72,21 @@ struct Pipes {
         const int blocks = static_cast<int>(seconds * kRate / kBlock);
         for (int b = 0; b < blocks; ++b) {
             f->onBlock(0, 0, bpm);
+            f->render(L, R, kBlock);
+            out.insert(out.end(), L, L + kBlock);
+        }
+    }
+    /** As play(), with the song rolling from [tick] in a bar of [barTicks], ticks counted like the engine's clock. */
+    void roll(double seconds, int64_t tick, int32_t barTicks) {
+        float L[kBlock], R[kBlock];
+        const int blocks = static_cast<int>(seconds * kRate / kBlock);
+        const double perFrame = bpm / 60.0 * kPPQN / kRate;
+        for (int b = 0; b < blocks; ++b) {
+            const int64_t from = tick + static_cast<int64_t>(b * kBlock * perFrame);
+            const int64_t to = tick + static_cast<int64_t>((b + 1) * kBlock * perFrame);
+            f->onTransport(true, from);
+            f->onBar(from % barTicks, barTicks, 50.0f, kPPQN / 2);
+            f->onBlock(from, to, bpm);
             f->render(L, R, kBlock);
             out.insert(out.end(), L, L + kBlock);
         }
@@ -294,6 +310,19 @@ void dog() {
         auto at = [&](double t) { return band(*g, 1800.0, 2600.0, t + 0.005, t + 0.05); };
         const double on = (at(0.5) + at(1.5)) / 2.0, off = (at(1.0) + at(2.0)) / 2.0;
         check(on > off + 8.0, "on 2 and 4, coups skip the other beats", fmt("%+.1f dB on 2 and 4, %+.1f on 1 and 3", on, off));
+    }
+    {
+        // The song started a beat and a half into the bar: beat 3 is at 0.25 s,
+        // then 4 at 0.75, 1 at 1.25, 2 at 1.75, 3 at 2.25. The coups go by the bar.
+        auto g = std::make_unique<Pipes>(std::initializer_list<std::pair<const char *, float>>{
+            {"model", Gurdy}, {"wheel", 0.5f}, {"threshold", 0.6f}, {"dog", 1.0f}, {"coup", 1.0f},
+            {"coupbeats", 1.0f}, {"drift", 0.0f}});
+        g->f->noteOn(69, 100);
+        g->roll(3.0, kPPQN * 3 / 2, 4 * kPPQN);
+        auto at = [&](double t) { return band(*g, 1800.0, 2600.0, t + 0.005, t + 0.05); };
+        const double on = (at(0.75) + at(1.75)) / 2.0, off = (at(1.25) + at(2.25)) / 2.0;
+        check(on > off + 8.0, "started mid-bar, coups still fall on 2 and 4 of the bar",
+              fmt("%+.1f dB on 2 and 4, %+.1f on 1 and 3", on, off));
     }
 }
 
