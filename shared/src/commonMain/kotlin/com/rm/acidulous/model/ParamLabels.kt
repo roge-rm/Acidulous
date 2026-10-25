@@ -714,6 +714,78 @@ private fun labels0(): Map<String, String> = mapOf(
     "Diction:glide" to "singer|glide",
     "Diction:growl" to "tone|growl",
     "Diction:harmony" to "choir|harmony",
+    "Diction:mac1" to "macros|macro 1",
+    "Diction:mac1_a1" to "macro 1|by 1",
+    "Diction:mac1_a2" to "macro 1|by 2",
+    "Diction:mac1_a3" to "macro 1|by 3",
+    "Diction:mac1_a4" to "macro 1|by 4",
+    "Diction:mac1_d1" to "macro 1|to 1",
+    "Diction:mac1_d2" to "macro 1|to 2",
+    "Diction:mac1_d3" to "macro 1|to 3",
+    "Diction:mac1_d4" to "macro 1|to 4",
+    "Diction:mac2" to "macros|macro 2",
+    "Diction:mac2_a1" to "macro 2|by 1",
+    "Diction:mac2_a2" to "macro 2|by 2",
+    "Diction:mac2_a3" to "macro 2|by 3",
+    "Diction:mac2_a4" to "macro 2|by 4",
+    "Diction:mac2_d1" to "macro 2|to 1",
+    "Diction:mac2_d2" to "macro 2|to 2",
+    "Diction:mac2_d3" to "macro 2|to 3",
+    "Diction:mac2_d4" to "macro 2|to 4",
+    "Diction:mac3" to "macros|macro 3",
+    "Diction:mac3_a1" to "macro 3|by 1",
+    "Diction:mac3_a2" to "macro 3|by 2",
+    "Diction:mac3_a3" to "macro 3|by 3",
+    "Diction:mac3_a4" to "macro 3|by 4",
+    "Diction:mac3_d1" to "macro 3|to 1",
+    "Diction:mac3_d2" to "macro 3|to 2",
+    "Diction:mac3_d3" to "macro 3|to 3",
+    "Diction:mac3_d4" to "macro 3|to 4",
+    "Diction:mac4" to "macros|macro 4",
+    "Diction:mac4_a1" to "macro 4|by 1",
+    "Diction:mac4_a2" to "macro 4|by 2",
+    "Diction:mac4_a3" to "macro 4|by 3",
+    "Diction:mac4_a4" to "macro 4|by 4",
+    "Diction:mac4_d1" to "macro 4|to 1",
+    "Diction:mac4_d2" to "macro 4|to 2",
+    "Diction:mac4_d3" to "macro 4|to 3",
+    "Diction:mac4_d4" to "macro 4|to 4",
+    "Diction:mac5" to "macros|macro 5",
+    "Diction:mac5_a1" to "macro 5|by 1",
+    "Diction:mac5_a2" to "macro 5|by 2",
+    "Diction:mac5_a3" to "macro 5|by 3",
+    "Diction:mac5_a4" to "macro 5|by 4",
+    "Diction:mac5_d1" to "macro 5|to 1",
+    "Diction:mac5_d2" to "macro 5|to 2",
+    "Diction:mac5_d3" to "macro 5|to 3",
+    "Diction:mac5_d4" to "macro 5|to 4",
+    "Diction:mac6" to "macros|macro 6",
+    "Diction:mac6_a1" to "macro 6|by 1",
+    "Diction:mac6_a2" to "macro 6|by 2",
+    "Diction:mac6_a3" to "macro 6|by 3",
+    "Diction:mac6_a4" to "macro 6|by 4",
+    "Diction:mac6_d1" to "macro 6|to 1",
+    "Diction:mac6_d2" to "macro 6|to 2",
+    "Diction:mac6_d3" to "macro 6|to 3",
+    "Diction:mac6_d4" to "macro 6|to 4",
+    "Diction:mac7" to "macros|macro 7",
+    "Diction:mac7_a1" to "macro 7|by 1",
+    "Diction:mac7_a2" to "macro 7|by 2",
+    "Diction:mac7_a3" to "macro 7|by 3",
+    "Diction:mac7_a4" to "macro 7|by 4",
+    "Diction:mac7_d1" to "macro 7|to 1",
+    "Diction:mac7_d2" to "macro 7|to 2",
+    "Diction:mac7_d3" to "macro 7|to 3",
+    "Diction:mac7_d4" to "macro 7|to 4",
+    "Diction:mac8" to "macros|macro 8",
+    "Diction:mac8_a1" to "macro 8|by 1",
+    "Diction:mac8_a2" to "macro 8|by 2",
+    "Diction:mac8_a3" to "macro 8|by 3",
+    "Diction:mac8_a4" to "macro 8|by 4",
+    "Diction:mac8_d1" to "macro 8|to 1",
+    "Diction:mac8_d2" to "macro 8|to 2",
+    "Diction:mac8_d3" to "macro 8|to 3",
+    "Diction:mac8_d4" to "macro 8|to 4",
     "Diction:morph" to "morph",
     "Diction:octave" to "tuning|octave",
     "Diction:pan" to "out|pan",
@@ -747,6 +819,9 @@ private fun labels0(): Map<String, String> = mapOf(
     "Draw:harp key" to "harp|key~music",
     "Draw:high rank" to "ranks|high",
     "Draw:low rank" to "ranks|low",
+)
+
+private fun labels1(): Map<String, String> = mapOf(
     "Draw:mac1" to "macros|macro 1",
     "Draw:mac1_a1" to "macro 1|by 1",
     "Draw:mac1_a2" to "macro 1|by 2",
@@ -819,9 +894,6 @@ private fun labels0(): Map<String, String> = mapOf(
     "Draw:mac8_d2" to "macro 8|to 2",
     "Draw:mac8_d3" to "macro 8|to 3",
     "Draw:mac8_d4" to "macro 8|to 4",
-)
-
-private fun labels1(): Map<String, String> = mapOf(
     "Draw:model" to "instrument|model",
     "Draw:octave" to "play|octave",
     "Draw:playing" to "harp|playing",
@@ -1550,6 +1622,9 @@ private fun labels1(): Map<String, String> = mapOf(
     "Genesis:mac3" to "macros|macro 3",
     "Genesis:mac3_a1" to "macro 3|by 1",
     "Genesis:mac3_a2" to "macro 3|by 2",
+)
+
+private fun labels2(): Map<String, String> = mapOf(
     "Genesis:mac3_a3" to "macro 3|by 3",
     "Genesis:mac3_a4" to "macro 3|by 4",
     "Genesis:mac3_d1" to "macro 3|to 1",
@@ -1622,9 +1697,6 @@ private fun labels1(): Map<String, String> = mapOf(
     "Genesis:tommidtune" to "toms|mid",
     "Genesis:volume" to "out|volume",
     "Hammer:age" to "instrument|age",
-)
-
-private fun labels2(): Map<String, String> = mapOf(
     "Hammer:bendrange" to "tuning|bend",
     "Hammer:board" to "board",
     "Hammer:clang" to "over the felt|clang",
@@ -2353,6 +2425,9 @@ private fun labels2(): Map<String, String> = mapOf(
     "Palm:mac8_a3" to "macro 8|by 3",
     "Palm:mac8_a4" to "macro 8|by 4",
     "Palm:mac8_d1" to "macro 8|to 1",
+)
+
+private fun labels3(): Map<String, String> = mapOf(
     "Palm:mac8_d2" to "macro 8|to 2",
     "Palm:mac8_d3" to "macro 8|to 3",
     "Palm:mac8_d4" to "macro 8|to 4",
@@ -2425,9 +2500,6 @@ private fun labels2(): Map<String, String> = mapOf(
     "Pollen:mac4_a3" to "macro 4|by 3",
     "Pollen:mac4_a4" to "macro 4|by 4",
     "Pollen:mac4_d1" to "macro 4|to 1",
-)
-
-private fun labels3(): Map<String, String> = mapOf(
     "Pollen:mac4_d2" to "macro 4|to 2",
     "Pollen:mac4_d3" to "macro 4|to 3",
     "Pollen:mac4_d4" to "macro 4|to 4",
@@ -3156,6 +3228,9 @@ private fun labels3(): Map<String, String> = mapOf(
     "Timber:mac1_a3" to "macro 1|by 3",
     "Timber:mac1_a4" to "macro 1|by 4",
     "Timber:mac1_d1" to "macro 1|to 1",
+)
+
+private fun labels4(): Map<String, String> = mapOf(
     "Timber:mac1_d2" to "macro 1|to 2",
     "Timber:mac1_d3" to "macro 1|to 3",
     "Timber:mac1_d4" to "macro 1|to 4",
@@ -3228,9 +3303,6 @@ private fun labels3(): Map<String, String> = mapOf(
     "Timber:pan" to "out|pan",
     "Timber:pressure" to "air|pressure",
     "Timber:reed" to "reed|stiffness",
-)
-
-private fun labels4(): Map<String, String> = mapOf(
     "Timber:register" to "lattice|vent",
     "Timber:release" to "envelope|release",
     "Timber:resonance" to "filter|reso",
@@ -4327,6 +4399,78 @@ private fun short0(): Map<String, String> = mapOf(
     "Diction:glide" to "glide",
     "Diction:growl" to "growl",
     "Diction:harmony" to "harmony",
+    "Diction:mac1" to "macro 1",
+    "Diction:mac1_a1" to "by 1",
+    "Diction:mac1_a2" to "by 2",
+    "Diction:mac1_a3" to "by 3",
+    "Diction:mac1_a4" to "by 4",
+    "Diction:mac1_d1" to "to 1",
+    "Diction:mac1_d2" to "to 2",
+    "Diction:mac1_d3" to "to 3",
+    "Diction:mac1_d4" to "to 4",
+    "Diction:mac2" to "macro 2",
+    "Diction:mac2_a1" to "by 1",
+    "Diction:mac2_a2" to "by 2",
+    "Diction:mac2_a3" to "by 3",
+    "Diction:mac2_a4" to "by 4",
+    "Diction:mac2_d1" to "to 1",
+    "Diction:mac2_d2" to "to 2",
+    "Diction:mac2_d3" to "to 3",
+    "Diction:mac2_d4" to "to 4",
+    "Diction:mac3" to "macro 3",
+    "Diction:mac3_a1" to "by 1",
+    "Diction:mac3_a2" to "by 2",
+    "Diction:mac3_a3" to "by 3",
+    "Diction:mac3_a4" to "by 4",
+    "Diction:mac3_d1" to "to 1",
+    "Diction:mac3_d2" to "to 2",
+    "Diction:mac3_d3" to "to 3",
+    "Diction:mac3_d4" to "to 4",
+    "Diction:mac4" to "macro 4",
+    "Diction:mac4_a1" to "by 1",
+    "Diction:mac4_a2" to "by 2",
+    "Diction:mac4_a3" to "by 3",
+    "Diction:mac4_a4" to "by 4",
+    "Diction:mac4_d1" to "to 1",
+    "Diction:mac4_d2" to "to 2",
+    "Diction:mac4_d3" to "to 3",
+    "Diction:mac4_d4" to "to 4",
+    "Diction:mac5" to "macro 5",
+    "Diction:mac5_a1" to "by 1",
+    "Diction:mac5_a2" to "by 2",
+    "Diction:mac5_a3" to "by 3",
+    "Diction:mac5_a4" to "by 4",
+    "Diction:mac5_d1" to "to 1",
+    "Diction:mac5_d2" to "to 2",
+    "Diction:mac5_d3" to "to 3",
+    "Diction:mac5_d4" to "to 4",
+    "Diction:mac6" to "macro 6",
+    "Diction:mac6_a1" to "by 1",
+    "Diction:mac6_a2" to "by 2",
+    "Diction:mac6_a3" to "by 3",
+    "Diction:mac6_a4" to "by 4",
+    "Diction:mac6_d1" to "to 1",
+    "Diction:mac6_d2" to "to 2",
+    "Diction:mac6_d3" to "to 3",
+    "Diction:mac6_d4" to "to 4",
+    "Diction:mac7" to "macro 7",
+    "Diction:mac7_a1" to "by 1",
+    "Diction:mac7_a2" to "by 2",
+    "Diction:mac7_a3" to "by 3",
+    "Diction:mac7_a4" to "by 4",
+    "Diction:mac7_d1" to "to 1",
+    "Diction:mac7_d2" to "to 2",
+    "Diction:mac7_d3" to "to 3",
+    "Diction:mac7_d4" to "to 4",
+    "Diction:mac8" to "macro 8",
+    "Diction:mac8_a1" to "by 1",
+    "Diction:mac8_a2" to "by 2",
+    "Diction:mac8_a3" to "by 3",
+    "Diction:mac8_a4" to "by 4",
+    "Diction:mac8_d1" to "to 1",
+    "Diction:mac8_d2" to "to 2",
+    "Diction:mac8_d3" to "to 3",
+    "Diction:mac8_d4" to "to 4",
     "Diction:octave" to "octave",
     "Diction:pan" to "pan",
     "Diction:rasp" to "rasp",
@@ -4392,6 +4536,9 @@ private fun short0(): Map<String, String> = mapOf(
     "Draw:mac4_a3" to "by 3",
     "Draw:mac4_a4" to "by 4",
     "Draw:mac4_d1" to "to 1",
+)
+
+private fun short1(): Map<String, String> = mapOf(
     "Draw:mac4_d2" to "to 2",
     "Draw:mac4_d3" to "to 3",
     "Draw:mac4_d4" to "to 4",
@@ -4464,9 +4611,6 @@ private fun short0(): Map<String, String> = mapOf(
     "Fathom:mac1_d4" to "to 4",
     "Fathom:mac2" to "macro 2",
     "Fathom:mac2_a1" to "by 1",
-)
-
-private fun short1(): Map<String, String> = mapOf(
     "Fathom:mac2_a2" to "by 2",
     "Fathom:mac2_a3" to "by 3",
     "Fathom:mac2_a4" to "by 4",
@@ -5195,6 +5339,9 @@ private fun short1(): Map<String, String> = mapOf(
     "Genesis:mac7" to "macro 7",
     "Genesis:mac7_a1" to "by 1",
     "Genesis:mac7_a2" to "by 2",
+)
+
+private fun short2(): Map<String, String> = mapOf(
     "Genesis:mac7_a3" to "by 3",
     "Genesis:mac7_a4" to "by 4",
     "Genesis:mac7_d1" to "to 1",
@@ -5267,9 +5414,6 @@ private fun short1(): Map<String, String> = mapOf(
     "Hammer:mac3_a3" to "by 3",
     "Hammer:mac3_a4" to "by 4",
     "Hammer:mac3_d1" to "to 1",
-)
-
-private fun short2(): Map<String, String> = mapOf(
     "Hammer:mac3_d2" to "to 2",
     "Hammer:mac3_d3" to "to 3",
     "Hammer:mac3_d4" to "to 4",
@@ -5998,6 +6142,9 @@ private fun short2(): Map<String, String> = mapOf(
     "Pollen:mac1_a3" to "by 3",
     "Pollen:mac1_a4" to "by 4",
     "Pollen:mac1_d1" to "to 1",
+)
+
+private fun short3(): Map<String, String> = mapOf(
     "Pollen:mac1_d2" to "to 2",
     "Pollen:mac1_d3" to "to 3",
     "Pollen:mac1_d4" to "to 4",
@@ -6070,9 +6217,6 @@ private fun short2(): Map<String, String> = mapOf(
     "Pollen:pan" to "pan",
     "Pollen:panspread" to "spread",
     "Pollen:position" to "position",
-)
-
-private fun short3(): Map<String, String> = mapOf(
     "Pollen:resonance" to "reso",
     "Pollen:reverse" to "reverse",
     "Pollen:scale" to "scale",
@@ -6801,6 +6945,9 @@ private fun short3(): Map<String, String> = mapOf(
     "Timber:mac6_d2" to "to 2",
     "Timber:mac6_d3" to "to 3",
     "Timber:mac6_d4" to "to 4",
+)
+
+private fun short4(): Map<String, String> = mapOf(
     "Timber:mac7" to "macro 7",
     "Timber:mac7_a1" to "by 1",
     "Timber:mac7_a2" to "by 2",
@@ -6873,9 +7020,6 @@ private fun short3(): Map<String, String> = mapOf(
     "Tine:mac3_d3" to "to 3",
     "Tine:mac3_d4" to "to 4",
     "Tine:mac4" to "macro 4",
-)
-
-private fun short4(): Map<String, String> = mapOf(
     "Tine:mac4_a1" to "by 1",
     "Tine:mac4_a2" to "by 2",
     "Tine:mac4_a3" to "by 3",

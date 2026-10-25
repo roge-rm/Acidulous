@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen and Mosaic move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic and Diction move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -30,6 +30,7 @@
 #include <engine/machine/chanter/Chanter.h>
 #include <engine/machine/pollen/Pollen.h>
 #include <engine/machine/mosaic/Mosaic.h>
+#include <engine/machine/diction/Diction.h>
 #include "audition_material.h"
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
@@ -439,9 +440,10 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         }
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the transpose knob", buf);
-    } else if (std::strcmp(type, "Pollen") == 0 || std::strcmp(type, "Mosaic") == 0) {
-        // A cloud's zero crossings say nothing, and a sample's are its own,
-        // so the route must match the transpose knob.
+    } else if (std::strcmp(type, "Pollen") == 0 || std::strcmp(type, "Mosaic") == 0 ||
+               std::strcmp(type, "Diction") == 0) {
+        // A cloud's zero crossings say nothing, a sample's are its own and a
+        // voice wavers, so the route must match the transpose knob.
         gUnits = {{"transpose", 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
@@ -1987,6 +1989,37 @@ void mosaicRoutes() {
     }
 }
 
+// Diction: routes to formant, effort and velocity (read when the note
+// starts) match their knobs.
+void dictionRoutes() {
+    using Di = acidulous::machine::Diction;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    // Formant 0 of -12..12: a route of 0.25 is +6 st.
+    {
+        const auto plain = playHeld("Diction", {}, {60}, blocks);
+        const auto knob = playHeld("Diction", {{"formant", 6.0f}}, {60}, blocks);
+        Route r{4, 2, Di::McFormant, 0.25f, 1.0f};
+        const auto routed = playHeld("Diction", {}, {60}, blocks, &r, Di::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Diction: a route to formant matches the knob", buf);
+    }
+    // Effort 0 of -1..1: a route of 0.25 is 0.5.
+    {
+        const auto knob = playHeld("Diction", {{"effort", 0.5f}}, {60}, blocks);
+        Route r{6, 4, Di::McEffort, 0.25f, 1.0f};
+        const auto routed = playHeld("Diction", {}, {60}, blocks, &r, Di::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Diction: a route to effort matches the knob", buf);
+    }
+    // Velocity 0.6: a route of -0.4 is 0.2.
+    {
+        const auto plain = playHeld("Diction", {}, {60}, blocks);
+        const auto knob = playHeld("Diction", {{"velocity", 0.2f}}, {60}, blocks);
+        Route r{1, 1, Di::McVelocity, -0.4f, 1.0f};
+        const auto routed = playHeld("Diction", {}, {60}, blocks, &r, Di::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Diction: a route to velocity matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -2084,6 +2117,10 @@ int main() {
     // Volume 0.8 of 1.5, as Pollen.
     basics("Mosaic", Mo::MacroDestCount, Mo::McVolume, Mo::McPitch, Mo::McOff, Mo::kMacros, 0.05 / 0.8, 0.425 / 0.8);
     mosaicRoutes();
+    using Di = acidulous::machine::Diction;
+    // Volume 0.8 of 1.5, as Pollen.
+    basics("Diction", Di::MacroDestCount, Di::McVolume, Di::McPitch, Di::McOff, Di::kMacros, 0.05 / 0.8, 0.425 / 0.8);
+    dictionRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

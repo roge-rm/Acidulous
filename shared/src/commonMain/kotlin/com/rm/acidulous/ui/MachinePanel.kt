@@ -5697,14 +5697,46 @@ private fun DictionVoiceKnob(
     )
 }
 
+/** Where a Diction macro route goes, in the engine's MacroDest order. */
+val DICTION_MACRO_DESTS = listOf(
+    "off", "vowel", "formant", "breath", "consonants",
+    "vib depth", "vib rate", "vib delay", "drift",
+    "glide", "attack", "release", "velocity", "volume",
+    "consonant level", "clean", "effort", "rasp", "growl", "whisper", "scoop", "track",
+    "spread", "source", "throat", "morph", "pitch",
+)
+
 @Composable
 private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
     var forming by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     if (forming) DictionConsonantsWindow(b) { forming = false }
-    PanelSections(listOf("voice", "character", "expression", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("play", "voice", "character", "expression", "out", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", DICTION_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", DICTION_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", DICTION_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", DICTION_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("voice") {
                     DictionVoiceKnob(track, trackIndex, editor)
                     PanelVowelKnob(b, "vowel", "vowel")
@@ -5732,7 +5764,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelActions(Triple(stringResource(Res.string.diction_from), PanelAmber) { forming = true })
                 }
             }
-            1 -> {
+            2 -> {
                 Group("air") {
                     PanelKnob(b, "breath", "breath")
                     PanelKnob(b, "clean", "clean", PanelPink)
@@ -5749,7 +5781,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelOnOff(b, "harmony", "harmony")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("vibrato") {
                     PanelKnob(b, "vibrato", "depth", PanelAmber)
                     PanelKnob(b, "vibratorate", "rate")
@@ -5779,6 +5811,14 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val TIMBER_FAMILY = listOf("reed", "double", "air")

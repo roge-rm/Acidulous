@@ -245,6 +245,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "concertina" to Res.string.pw_concertina,
     "cone" to Res.string.pw_cone,
     "conga" to Res.string.pw_conga,
+    "consonant level" to Res.string.pw_consonant_level,
     "consonants" to Res.string.pw_consonants,
     "contacts" to Res.string.pw_contacts,
     "converge" to Res.string.pw_converge,
