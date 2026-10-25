@@ -316,9 +316,7 @@ void Hammer::reset() {
         v.damp = v.dampTarget = 0.0f;
         v.gain = v.gainTarget = 0.0f;
         v.force = 0.0f;
-        for (int c = 0; c < Voice::kClang; ++c) v.clangY1[c] = v.clangY2[c] = 0.0f;
-        v.clangDrive = 0.0f;
-        v.clangLeft = 0;
+        clearClang(v);
         std::fill(std::begin(v.knockLine), std::end(v.knockLine), 0.0f);
         v.knockAt = v.knockLive = 0;
         v.age = 0;
@@ -700,9 +698,18 @@ void Hammer::designSections() {
     }
 }
 
+void Hammer::clearClang(Voice &v) {
+    for (int c = 0; c < Voice::kClang; ++c) v.clangY1[c] = v.clangY2[c] = 0.0f;
+    v.clangDrive = 0.0f;
+    v.clangLeft = v.clangAt = v.clangLen = 0;
+}
+
 void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
     const int model = modelNow();
     const hammer::KeySpec &k = keys[model][key];
+    // A clang still ringing on this key's strings rings on; anything else
+    // the voice held (a freed voice, another key, a bar) goes.
+    if (!v.used || v.key != key || isBar(v.model) || v.retiring) clearClang(v);
     v.spec = &k;
     v.model = model;
     const bool full = fullDetail();
@@ -713,7 +720,6 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
         if (!v.used || v.key != key) {
             v.course.clear();
             for (int i = 0; i < Voice::kDuplex; ++i) v.dupY1[i] = v.dupY2[i] = 0.0f;
-            for (int c = 0; c < Voice::kClang; ++c) v.clangY1[c] = v.clangY2[c] = 0.0f;
         }
         v.course.tune(d);
         v.design = d;
@@ -826,6 +832,7 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
 
 void Hammer::strikeBar(Voice &v, int model, int key, float hz, float velocity01) {
     const hammer::KeySpec &k = keys[model][key];
+    clearClang(v);
     if (!v.used || v.key != key) {
         v.bar.clear();
         v.barX = 0.0f;

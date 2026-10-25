@@ -185,6 +185,8 @@ class Hammer final : public Machine {
 
     /** The key's strike: the course designed for it (if it changed) and the hammer thrown. */
     void strike(Voice &v, int key, float hz, float velocity01);
+    /** Silences [v]'s clang and stops it running. */
+    static void clearClang(Voice &v);
     /** Bends a voice's strings or bar by the wheel's and its finger's bend, and the pitch macro's since the strike. */
     void bendVoice(Voice &v);
     /** Strikes a held note again, for a roll. */
