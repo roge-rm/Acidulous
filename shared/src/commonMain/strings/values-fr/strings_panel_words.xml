@@ -775,6 +775,7 @@
     <string name="pw_pad_n">Pad %d</string>
     <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pan">pano</string>
+    <string name="pw_pan_spread">écart pano</string>
     <string name="pw_pans">tambours d’acier</string>
     <string name="pw_panel">panneau</string>
     <string name="pw_paper">papier</string>
@@ -1015,6 +1016,7 @@
     <string name="pw_sitar">sitar</string>
     <string name="pw_sixteenths">doubles croches</string>
     <string name="pw_size">taille</string>
+    <string name="pw_size_spread">écart taille</string>
     <string name="pw_sizzle">grésillement</string>
     <string name="pw_skew">biais</string>
     <string name="pw_skip">sauter</string>

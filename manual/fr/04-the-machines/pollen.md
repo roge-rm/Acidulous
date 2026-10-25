@@ -33,6 +33,24 @@ position et une hauteur voisines, jusqu’à la profondeur choisie. Un peu épai
 le son, et beaucoup fait d’une note une texture changeante. **dérive** et
 **muter** règlent jusqu’où les nouveaux grains s’éloignent.
 
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Plus dense,
+Dispersion, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur déplace les grains nés ensuite, 24
+demi-tons à 1. La source, le tampon, le gel, la capture, la fenêtre, le choix
+de dispersion, la gamme, la tonique, la profondeur, le type de filtre, les voix
+et l’accordage ne sont pas accessibles. La taille, la place, la hauteur et le
+panoramique d’un grain sont fixés à sa naissance, donc ils changent à mesure
+que de nouveaux grains arrivent ; le reste bouge tout de suite. Touchez le nom
+d’une macro pour la renommer.
+
 ## Astuces
 
 - La densité et la taille s’opposent. De longs grains à forte densité font un

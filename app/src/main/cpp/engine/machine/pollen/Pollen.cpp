@@ -3,6 +3,7 @@
 #include <engine/machine/Voices.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <engine/core/InputBus.h>
 #include <engine/dsp/Math.h>
 #include <engine/inputmod/Scales.h>
@@ -28,7 +29,7 @@ constexpr float kTwoPi = 6.28318530718f;
 Pollen::Pollen() { initParams(); }
 
 const ParamDef *Pollen::paramDefs(int32_t &count) const {
-    static const ParamDef defs[Count] = {
+    static const ParamDef first[MacroBase] = {
         {"source", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""}, // sample, live
         {"ingain", 0.0f, 4.0f, 1.0f, Curve::Linear, 0, ""},
         {"buffer", 0.25f, 8.0f, 4.0f, Curve::Exponential, 0, "s"},
@@ -87,8 +88,82 @@ const ParamDef *Pollen::paramDefs(int32_t &count) const {
         {"volume", 0.0f, 1.5f, 0.8f, Curve::Linear, 0, ""},
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
+    static ParamDef defs[Count];
+    static char names[kMacros * MacroParams][12];
+    static bool built = false;
+    if (!built) {
+        for (int32_t i = 0; i < MacroBase; ++i) defs[i] = first[i];
+        auto put = [&](int32_t i, const char *n, float mn, float mx, float df, Curve c, int32_t steps) {
+            char *name = names[i - MacroBase];
+            std::snprintf(name, 12, "%s", n);
+            defs[i] = ParamDef{name, mn, mx, df, c, steps, ""};
+        };
+        for (int k = 0; k < kMacros; ++k) {
+            char n[12];
+            const int32_t b = MacroBase + k * MacroParams;
+            std::snprintf(n, sizeof(n), "mac%d", k + 1);
+            put(b, n, 0.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            for (int r = 0; r < 4; ++r) {
+                std::snprintf(n, sizeof(n), "mac%d_d%d", k + 1, r + 1);
+                put(b + 1 + r, n, 0.0f, static_cast<float>(MacroDestCount - 1), 0.0f, Curve::Stepped, MacroDestCount);
+                std::snprintf(n, sizeof(n), "mac%d_a%d", k + 1, r + 1);
+                put(b + 5 + r, n, -1.0f, 1.0f, 0.0f, Curve::Linear, 0);
+            }
+        }
+        built = true;
+    }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Pollen::Count];
+    DestMap() {
+        using P = Pollen;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {P::Position, P::McPosition}, {P::Scan, P::McScan}, {P::Spray, P::McSpray}, {P::Snap, P::McSnap},
+            {P::ReverseProb, P::McReverse}, {P::Size, P::McSize}, {P::SizeSpread, P::McSizeSpread},
+            {P::Density, P::McDensity}, {P::Jitter, P::McJitter}, {P::Skew, P::McSkew}, {P::Spread, P::McSpread},
+            {P::Bloom, P::McBloom}, {P::Drift, P::McDrift}, {P::Mutate, P::McMutate}, {P::PanSpread, P::McPanSpread},
+            {P::Width, P::McWidth}, {P::Bits, P::McBits}, {P::Crush, P::McCrush}, {P::Wobble, P::McWobble},
+            {P::Cutoff, P::McCutoff}, {P::Resonance, P::McResonance}, {P::AmpAttack, P::McAttack},
+            {P::AmpRelease, P::McRelease}, {P::Drive, P::McDrive}, {P::Feedback, P::McFeedback}, {P::Dry, P::McDry},
+            {P::VelocityAmount, P::McVelocity}, {P::Volume, P::McVolume},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Pollen::paramOf(int32_t p) const {
+    const float v = params_.get(p);
+    const int d = destMap().of[p];
+    if (d < 0 || mac_[d] == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + mac_[d]);
+}
+
+void Pollen::updateMacros() {
+    for (float &m : mac_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = params_.get(b);
+        if (knob == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            // The routes' destinations are steps, so their targets.
+            const int dest = static_cast<int>(params_.target(b + 1 + r) + 0.5f);
+            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * params_.get(b + 5 + r);
+        }
+    }
+    // Two octaves either way.
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
 }
 
 float Pollen::rawOf(int32_t p) const {
@@ -148,6 +223,7 @@ void Pollen::reset() {
     liveOnsetCount = liveOnsetNext = 0;
     captureLeft = 0;
     finder.reset(sampleRate);
+    updateMacros();
 }
 
 void *Pollen::swapObject(int32_t slot, void *object) {
@@ -343,7 +419,7 @@ void Pollen::spawn(Voice &v, int32_t voiceIndex, const View &view, float env) {
     }
 
     const float semis = paramOf(Pitch) + paramOf(Fine) * 0.01f + paramOf(Transpose) + 12.0f * paramOf(Octave) +
-                        bend * paramOf(BendRange) + v.bend;
+                        bend * paramOf(BendRange) + v.bend + 24.0f * mac_[McPitch];
     uint32_t state = rng;
     const float scatter = scatterSemis(paramOf(Spread), state);
     rng = state;
@@ -420,6 +496,7 @@ void Pollen::pollinate(const Grain &parent, const View &view) {
 
 bool Pollen::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
 
     const int32_t mode = steppedOf(SourceMode);

@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath and Chanter move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter and Pollen move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -28,6 +28,8 @@
 #include <engine/machine/tongue/Tongue.h>
 #include <engine/machine/sympath/Sympath.h>
 #include <engine/machine/chanter/Chanter.h>
+#include <engine/machine/pollen/Pollen.h>
+#include "audition_material.h"
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
 #include <engine/machine/reflux/Reflux.h>
@@ -105,6 +107,8 @@ std::vector<float> play(const Route *r) {
     // Cumulus plays nothing without a table.
     if (std::strcmp(gType, "Cumulus") == 0)
         m->swapObject(0, acidulous::machine::cumulus::buildCloud(static_cast<acidulous::machine::Cumulus *>(m)->spec(), kRate).release());
+    // Pollen plays nothing without a buffer.
+    if (std::strcmp(gType, "Pollen") == 0) m->swapObject(0, acidulous::audition::breakLoop().release());
     m->allNotesOff();
     m->reset();
     if (gModWheel >= 0) m->controlChange(1, static_cast<uint8_t>(gModWheel));
@@ -425,6 +429,19 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         gUnits.push_back({byOctave ? "octave" : "transpose", byOctave ? 1.0f : 12.0f});
         const auto tuned = play(nullptr);
         gUnits = kept;
+        const auto routed = play(&up);
+        double worst = 0, peak = 0;
+        for (size_t i = 0; i < tuned.size(); ++i) {
+            worst = std::max(worst, double(std::fabs(tuned[i] - routed[i])));
+            peak = std::max(peak, double(std::fabs(tuned[i])));
+        }
+        std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
+        ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the transpose knob", buf);
+    } else if (std::strcmp(type, "Pollen") == 0) {
+        // A cloud's zero crossings say nothing, so the route must match the transpose knob.
+        gUnits = {{"transpose", 12.0f}};
+        const auto tuned = play(nullptr);
+        gUnits.clear();
         const auto routed = play(&up);
         double worst = 0, peak = 0;
         for (size_t i = 0; i < tuned.size(); ++i) {
@@ -1398,6 +1415,7 @@ std::vector<float> playHeld(const char *type, const std::vector<std::pair<std::s
         setNorm(p, k + "_a" + std::to_string(r->route), (r->depth + 1.0f) * 0.5f);
     }
     p.jumpAll();
+    if (std::strcmp(type, "Pollen") == 0) m->swapObject(0, acidulous::audition::breakLoop().release());
     m->reset();
     for (uint8_t n : notes) m->noteOn(n, 100);
     std::vector<float> out;
@@ -1892,6 +1910,39 @@ void chanterRoutes() {
     }
 }
 
+// Pollen: routes to density, size, cutoff and bits match their knobs.
+void pollenRoutes() {
+    using Po = acidulous::machine::Pollen;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    // Density 45 a second by default: a route of 0.25 is the knob a quarter of its range up.
+    {
+        const ParamDef &d = MachineRegistry::create("Pollen")->params().def(Po::Density);
+        const float to = d.map(d.unmap(45.0f) + 0.25f);
+        const auto knob = playHeld("Pollen", {{"density", to}}, {60}, blocks);
+        Route r{1, 2, Po::McDensity, 0.25f, 1.0f};
+        const auto routed = playHeld("Pollen", {}, {60}, blocks, &r, Po::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Pollen: a route to density matches the knob", buf);
+    }
+    // Cutoff 18 kHz by default: a route of -0.5 is the knob halfway down its range.
+    {
+        const ParamDef &d = MachineRegistry::create("Pollen")->params().def(Po::Cutoff);
+        const float to = d.map(d.unmap(18000.0f) - 0.5f);
+        const auto knob = playHeld("Pollen", {{"cutoff", to}}, {60}, blocks);
+        Route r{5, 4, Po::McCutoff, -0.5f, 1.0f};
+        const auto routed = playHeld("Pollen", {}, {60}, blocks, &r, Po::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)), "Pollen: a route to cutoff matches the knob", buf);
+    }
+    // Bits 16 by default: a route of -0.6 is 7 bits.
+    {
+        const auto plain = playHeld("Pollen", {}, {60}, blocks);
+        const auto knob = playHeld("Pollen", {{"bits", 7.0f}}, {60}, blocks);
+        Route r{8, 1, Po::McBits, -0.6f, 1.0f};
+        const auto routed = playHeld("Pollen", {}, {60}, blocks, &r, Po::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Pollen: a route to bits matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -1981,6 +2032,10 @@ int main() {
     using Ch = acidulous::machine::Chanter;
     basics("Chanter", Ch::MacroDestCount, Ch::McVolume, Ch::McPitch, Ch::McOff, Ch::kMacros);
     chanterRoutes();
+    using Po = acidulous::machine::Pollen;
+    // Volume 0.8 of 1.5: a route of -0.5 leaves 0.05, and half of it 0.425.
+    basics("Pollen", Po::MacroDestCount, Po::McVolume, Po::McPitch, Po::McOff, Po::kMacros, 0.05 / 0.8, 0.425 / 0.8);
+    pollenRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

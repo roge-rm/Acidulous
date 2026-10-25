@@ -45,8 +45,28 @@ class Pollen final : public Machine {
         AmpAttack, AmpDecay, AmpSustain, AmpRelease,
         Mono, Glide, BendRange, Octave, Transpose, VelocityAmount,
         Drive, Dry, Volume, Pan,
-        Count
+        // Eight macro knobs, each with four routes: a destination (a
+        // MacroDest) and a depth. A macro's knob times a route's depth is
+        // added to the destination, in its own 0..1 range. Block rate, and
+        // a grain takes its values when it's born. Pitch is 24 semitones per
+        // unit.
+        MacroBase,
+        MacroParams = 9, // knob, 4 destinations, 4 depths
+        Count = MacroBase + 8 * MacroParams
     };
+    // Where a macro route goes. The source, the live switches, the stepped
+    // choices, fine, key track, the tuning knobs and pan are left out.
+    enum MacroDest : int32_t {
+        McOff, McPosition, McScan, McSpray, McSnap, McReverse,
+        McSize, McSizeSpread, McDensity, McJitter, McSkew,
+        McPitch, McSpread, McBloom, McDrift, McMutate,
+        McPanSpread, McWidth, McBits, McCrush, McWobble,
+        McCutoff, McResonance, McAttack, McRelease,
+        McDrive, McFeedback, McDry, McVelocity, McVolume,
+        MacroDestCount
+    };
+    static constexpr int kMacros = 8;
+    static_assert(Count <= kMaxParams, "too many parameters");
 
     Pollen();
 
@@ -105,7 +125,10 @@ class Pollen final : public Machine {
         float bend = 0.0f;
     };
 
-    float paramOf(int32_t p) const { return params_.get(p); }
+    /** Param [p], smoothed, with the macros' routes to it added. */
+    float paramOf(int32_t p) const;
+    /** Fills [mac_] from the smoothed macro knobs and their routes. */
+    void updateMacros();
     /** The target rather than the smoothed value, for momentary and switch controls. */
     float rawOf(int32_t p) const;
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
@@ -153,6 +176,7 @@ class Pollen final : public Machine {
     float dcInL = 0.0f, dcOutL = 0.0f, dcInR = 0.0f, dcOutR = 0.0f;
     static constexpr uint32_t kRngSeed = 0x51ed270bu;
     uint32_t rng = kRngSeed;
+    float mac_[MacroDestCount]{};
 };
 
 } // namespace acidulous::machine

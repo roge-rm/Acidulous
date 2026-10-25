@@ -895,6 +895,7 @@
     <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pair">pair</string>
     <string name="pw_pan">pan</string>
+    <string name="pw_pan_spread">pan spread</string>
     <string name="pw_panel">panel</string>
     <string name="pw_pans">pans</string>
     <string name="pw_paper">paper</string>
@@ -1168,6 +1169,7 @@
     <string name="pw_sitar">sitar</string>
     <string name="pw_sixteenths">sixteenths</string>
     <string name="pw_size">size</string>
+    <string name="pw_size_spread">size spread</string>
     <string name="pw_sizzle">sizzle</string>
     <string name="pw_skew">skew</string>
     <string name="pw_skip">skip</string>
