@@ -6016,6 +6016,17 @@ val MOSAIC_DESTS = listOf(
     "f.freq", "f.res", "amp", "pan", "l1rate", "l2rate",
 )
 
+/** Where a Mosaic macro route goes, in the engine's MacroDest order. */
+val MOSAIC_MACRO_DESTS = listOf(
+    "off", "scan", "scan amount", "start",
+    "grain position", "grain rate", "grain size", "grain density", "grain spray", "grain pitch",
+    "attack", "decay", "sustain", "release",
+    "cutoff", "reso", "envmod", "filter decay",
+    "pitch", "glide", "lfo 1 rate", "lfo 2 rate",
+    "velocity", "vel to filter", "volume",
+    "mod 1", "mod 2", "mod 3", "mod 4", "mod 5", "mod 6", "mod 7", "mod 8",
+)
+
 @Composable
 private fun MosaicPanel(
     b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor,
@@ -6025,6 +6036,8 @@ private fun MosaicPanel(
     var selectedZone by rememberSaveable(trackIndex) { mutableStateOf(0) }
     var editing by remember { mutableStateOf(false) }
     var pickingZone by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val zones = remember(track.machine.settings["zones"]) { Zones.decode(track.machine.settings["zones"]) }
     val sf2 = track.machine.settings["sf2"].orEmpty()
     var info by remember(trackIndex) { mutableStateOf("") }
@@ -6051,7 +6064,7 @@ private fun MosaicPanel(
         editor.edit(trackIndex) { t -> t.withSetting("zones", if (list.isEmpty()) null else Zones.encode(list)) }
 
     PanelSections(
-        listOf("map", "sample", "grain", "filter", "env", "lfo", "mod", "voice"), section, { section = it },
+        listOf("map", "play", "sample", "grain", "filter", "env", "lfo", "mod", "voice", "macros"), section, { section = it },
         above = { sec ->
             if (sec == 0) {
                 if (sf2.isEmpty()) {
@@ -6122,7 +6135,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "scanamt", "amount", PanelAmber)
                 }
             }
-            1 -> {
+            2 -> {
                 Group("playback") {
                     PanelKnob(b, "start", "start", PanelAmber)
                     PanelSwitch(b, "loop", MOSAIC_LOOP, "loop")
@@ -6137,7 +6150,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "transpose", "transpose")
                 }
             }
-            2 -> Group("grains") {
+            3 -> Group("grains") {
                 PanelOnOff(b, "grain", "cloud")
                 PanelKnob(b, "gpos", "position", PanelAmber)
                 PanelKnob(b, "grate", "rate", PanelAmber)
@@ -6146,7 +6159,7 @@ private fun MosaicPanel(
                 PanelKnob(b, "gspray", "spray", PanelAmber)
                 PanelKnob(b, "gpitch", "pitch", PanelAmber)
             }
-            3 -> {
+            4 -> {
                 Group("filter") {
                     PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
                     PanelKnob(b, "f_freq", "freq", PanelAmber)
@@ -6162,7 +6175,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "f_release", "release")
                 }
             }
-            4 -> {
+            5 -> {
                 Group("amp env") {
                     PanelKnob(b, "a_attack", "attack", PanelAmber)
                     PanelKnob(b, "a_decay", "decay", PanelAmber)
@@ -6176,7 +6189,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "e${e}_release", "release")
                 } }
             }
-            5 -> for (l in 1..2) key(l) { Group("lfo $l") {
+            6 -> for (l in 1..2) key(l) { Group("lfo $l") {
                 val p = "l${l}_"
                 PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                 PanelKnob(b, p + "rate", "rate", PanelAmber)
@@ -6185,12 +6198,33 @@ private fun MosaicPanel(
                 PanelKnob(b, p + "phase", "phase")
                 PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
             } }
-            6 -> for (m in 1..8) key(m) { Group("mod $m") {
+            7 -> for (m in 1..8) key(m) { Group("mod $m") {
                 val p = "m%02d_".format(m)
                 PanelStepKnob(b, p + "src", MOSAIC_SOURCES, "from", PanelAmber)
                 PanelStepKnob(b, p + "src2", MOSAIC_SOURCES, "× from")
                 PanelStepKnob(b, p + "dest", MOSAIC_DESTS, "to", PanelAmber)
                 PanelKnob(b, p + "depth", "depth", PanelAmber)
+            } }
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            9 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", MOSAIC_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", MOSAIC_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", MOSAIC_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", MOSAIC_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
             } }
             else -> {
                 Group("voice") {
@@ -6204,6 +6238,14 @@ private fun MosaicPanel(
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
     if (editing && selectedZone in zones.indices) {
         ZoneDialog(
             zone = zones[selectedZone],

@@ -1525,4 +1525,23 @@
     <string name="pw_trem_pan">trémolo pano</string>
     <string name="pw_flam">fla</string>
     <string name="pw_pair">paire</string>
+    <string name="pw_filter_decay">déclin filtre</string>
+    <string name="pw_grain_density">densité grains</string>
+    <string name="pw_grain_pitch">hauteur grains</string>
+    <string name="pw_grain_position">position grains</string>
+    <string name="pw_grain_rate">vitesse grains</string>
+    <string name="pw_grain_size">taille grains</string>
+    <string name="pw_grain_spray">dispers. grains</string>
+    <string name="pw_lfo_1_rate">vitesse lfo 1</string>
+    <string name="pw_lfo_2_rate">vitesse lfo 2</string>
+    <string name="pw_mod_1">mod 1</string>
+    <string name="pw_mod_2">mod 2</string>
+    <string name="pw_mod_3">mod 3</string>
+    <string name="pw_mod_4">mod 4</string>
+    <string name="pw_mod_5">mod 5</string>
+    <string name="pw_mod_6">mod 6</string>
+    <string name="pw_mod_7">mod 7</string>
+    <string name="pw_mod_8">mod 8</string>
+    <string name="pw_scan_amount">intensité balayage</string>
+    <string name="pw_vel_to_filter">vél. vers filtre</string>
 </resources>

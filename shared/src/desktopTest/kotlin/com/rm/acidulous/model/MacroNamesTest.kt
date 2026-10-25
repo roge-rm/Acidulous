@@ -23,7 +23,7 @@ class MacroNamesTest {
         val t = track("Cumulus", mapOf("macro3" to "Bloom"))
         assertEquals("Bloom", laneShortLabel(t, laneKey("machine", "mac3")))
         // Only Nexus's knobs are called macro1..macro8.
-        assertEquals(null, track("Mosaic", mapOf("macro1" to "x")).let { m ->
+        assertEquals(null, track("Bias", mapOf("macro1" to "x")).let { m ->
             laneShortLabel(m, laneKey("machine", "macro1")).takeIf { it == "x" }
         })
     }
