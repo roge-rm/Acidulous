@@ -65,6 +65,9 @@ désaccordent. **graine** choisit dans quel sens dérive chaque touche.
   dure et brillante, si doucement que vous jouiez. Un piano à punaises.
 - **modérateur** - une bande de feutre entre les marteaux et les cordes : doux
   et étouffé.
+- **tintement** - un bref tintement de métal, brillant, quand le marteau
+  frappe, surtout sur les notes fortes. Un vieux piano droit ou un piano à
+  punaises. À 0, il n’y en a pas.
 - **roulement** - refrappe une note tenue encore et encore, ce nombre de fois
   par seconde, jamais tout à fait régulièrement : le trémolo d’un dulcimer ou
   d’un cymbalum, ou un trémolo de mandoline sur le piano à queue. À 0, une note
@@ -81,6 +84,11 @@ désaccordent. **graine** choisit dans quel sens dérive chaque touche.
   partiels aigus un peu trop haut, et c’est surtout ce qui fait qu’un piano
   sonne comme un piano. **étirer** est à quel point l’accordage suit cela,
   comme un accordeur étire les octaves.
+- **tension** - rend les cordes du médium et de l’aigu encore plus raides :
+  leurs partiels aigus montent encore, comme les cordes courtes d’un petit
+  piano droit. Dans l’aigu, ça sonne métallique. Les basses restent comme
+  elles sont et chaque note reste juste. À 0, les cordes sont celles de
+  l’instrument.
 - **cordes** - combien de cordes a chaque touche. **auto** est celui d’un piano
   à queue : une dans les notes les plus graves, puis deux, puis trois.
 - **unisson** - à quel point les cordes d’une touche sont désaccordées entre

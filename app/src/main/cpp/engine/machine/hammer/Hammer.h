@@ -52,7 +52,7 @@ class Hammer final : public Machine {
     };
     // Where a macro route goes. Continuous params only: the model, seed,
     // strings, mic, pickups, sync, preparation, detail, voices and the tuning
-    // are left out, and tension and clang, which do nothing.
+    // are left out. Tension and clang came last, so they're at the end.
     enum MacroDest : int32_t {
         McOff, McSize, McAge,
         McHardness, McHardKey, McWeight, McPosition, McFeltSoft, McTacks, McVelocity,
@@ -63,6 +63,7 @@ class Hammer final : public Machine {
         McPrepAt, McPrepAmt,
         McVolume, McPan, McRoll,
         McPitch,
+        McTension, McClang,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
@@ -138,8 +139,17 @@ class Hammer final : public Machine {
         /** The output gain for the velocity law, and where it's ramping to. */
         float gain = 0.0f, gainTarget = 0.0f;
         float panL = 0.7071f, panR = 0.7071f;
-        /** The phantom partials' high-pass. */
-        float phantomIn = 0.0f, phantomOut = 0.0f;
+        /**
+         * The clang: a few bright, inharmonic modes rung by a short pulse
+         * at the blow, gone in a few tens of milliseconds. [clangAt] runs
+         * through the pulse's [clangLen] samples; [clangLeft] counts the
+         * samples until the modes are cleared.
+         */
+        static constexpr int kClang = 3;
+        float clangA1[kClang] = {}, clangA2[kClang] = {}, clangIn[kClang] = {};
+        float clangY1[kClang] = {}, clangY2[kClang] = {};
+        float clangDrive = 0.0f;
+        int clangLeft = 0, clangAt = 0, clangLen = 0;
         /** The blow's force last sample, N: the knock is its change. */
         float force = 0.0f;
         /** This blow's knock against the note's level. */
@@ -261,6 +271,8 @@ class Hammer final : public Machine {
     int quietBlocks = 0;
     bool asleep = true;
     float busL[kBlockFrames] = {}, busR[kBlockFrames] = {}, knockBus[kBlockFrames] = {};
+    /** The clang, into the board with the strings but not into the sympathetic strings. */
+    float clangL[kBlockFrames] = {}, clangR[kBlockFrames] = {};
     /** The bass keys' own bus, for the bass bridge's way across the board. */
     float lowL[kBlockFrames] = {}, lowR[kBlockFrames] = {};
     /** The electric pianos' bus, into the amp. */

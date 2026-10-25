@@ -5371,6 +5371,7 @@ val HAMMER_MACRO_DESTS = listOf(
     "prep where", "prep amount",
     "volume", "pan", "roll",
     "pitch",
+    "tension", "clang",
 )
 
 @Composable
@@ -5422,6 +5423,7 @@ private fun HammerPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 Group("over the felt") {
                     PanelKnob(b, "tacks", "tacks")
                     PanelKnob(b, "felt", "moderator")
+                    PanelKnob(b, "clang", "clang")
                 }
                 Group("touch") {
                     PanelKnob(b, "velocity", "velocity", PanelAmber)
@@ -5438,6 +5440,7 @@ private fun HammerPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 Group("strings") {
                     PanelKnob(b, "stiffness", "stiffness", PanelPink)
                     PanelKnob(b, "stretch", "stretch")
+                    PanelKnob(b, "tension", "tension")
                     PanelStepKnob(b, "strings", HAMMER_STRINGS, "strings")
                     PanelKnob(b, "duplex", "duplex")
                 }

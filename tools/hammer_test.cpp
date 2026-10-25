@@ -5,8 +5,9 @@
 // in tune, with the stretch and without; the strings settle and hold no DC;
 // dampers stop what they should and not what they shouldn't; the level
 // follows the house velocity law; a blow takes as long as a felt hammer's
-// does; nothing blows up at the ends of every knob; a reset plays back the
-// same; lean stays in tune with full; the voice cap holds.
+// does; tension stretches the partials and clang rings only at the blow;
+// nothing blows up at the ends of every knob; a reset plays back the same;
+// lean stays in tune with full; the voice cap holds.
 #include <engine/core/Messages.h>
 #include <engine/core/Settings.h>
 #include <engine/machine/MachineRegistry.h>
@@ -582,6 +583,73 @@ int main() {
             }
         }
         check(finite && peak < 1.0, "every preparation on every key stays put", fmt("peak %.2f at key %.0f", peak, at));
+    }
+
+    std::printf("tension and clang\n");
+    {
+        // Tension stretches the upper partials sharp and leaves the first
+        // where it was; below C2 it leaves the strings alone.
+        auto partials = [&](int key, float tension, int n, double &first, double &nth) {
+            auto m = piano({{"tension", tension}, {"unison", 0.0f}, {"polar", 0.0f}, {"board", 0.0f}, {"tail", 0.0f}});
+            const auto x = strike(*m, static_cast<uint8_t>(key), 90, 1.6f);
+            const machine::hammer::KeySpec &k = m->keySpec(key);
+            const double hz = 440.0 * std::exp2((key - 69) / 12.0) * std::exp2(k.stretchCents / 1200.0);
+            const double B = k.B * (1.0 + 3.0 * tension);
+            first = peakNear(x, kSr / 10, kSr, hz * std::sqrt(1.0 + k.B));
+            nth = peakNear(x, kSr / 10, kSr / 2, n * hz * std::sqrt(1.0 + B * n * n), 40.0);
+        };
+        double f0, n0, f1, n1;
+        partials(72, 0.0f, 8, f0, n0);
+        partials(72, 1.0f, 8, f1, n1);
+        const double moved = 1200.0 * std::log2(f1 / f0);
+        const double stretched = 1200.0 * std::log2((n1 / f1) / (n0 / f0));
+        check(stretched > 15.0 && std::fabs(moved) < 0.5, "tension stretches C5's 8th partial, not its 1st",
+              fmt("8th %+.1f c, 1st %+.2f c", stretched, moved));
+        double worst = 0.0;
+        int at = 0;
+        for (int key = 36; key <= 108; key += 4) {
+            double a, b, c, d;
+            partials(key, 0.0f, 2, a, b);
+            partials(key, 1.0f, 2, c, d);
+            const double cents = 1200.0 * std::log2(c / a);
+            if (std::fabs(cents) > std::fabs(worst)) { worst = cents; at = key; }
+        }
+        check(std::fabs(worst) < 1.0, "every key's 1st partial stays put at full tension", fmt("worst %+.2f c at key %.0f", worst, at));
+        auto low0 = piano({{"tension", 0.0f}}), low1 = piano({{"tension", 1.0f}});
+        check(strike(*low0, 33, 90, 1.0f) == strike(*low1, 33, 90, 1.0f), "tension leaves A1 alone");
+
+        // The clang: high-band energy in the first 30 ms, gone after.
+        auto highBand = [](const std::vector<float> &x) {
+            // Two first-order high-passes at about 2 kHz.
+            std::vector<float> y(x.size());
+            const float a = std::exp(-2.0f * static_cast<float>(M_PI) * 2000.0f / kSr);
+            float x1 = 0.0f, y1 = 0.0f, z1 = 0.0f, w1 = 0.0f;
+            for (size_t i = 0; i < x.size(); ++i) {
+                const float h = a * (y1 + x[i] - x1);
+                x1 = x[i];
+                y1 = h;
+                const float g = a * (w1 + h - z1);
+                z1 = h;
+                w1 = g;
+                y[i] = g;
+            }
+            return y;
+        };
+        // An upright's middle C, rung soft and hard, with no room to hold it.
+        auto clangAt = [&](uint8_t vel, double &early, double &late) {
+            auto plain = piano({{"model", 1.0f}, {"tail", 0.0f}}), rung = piano({{"model", 1.0f}, {"tail", 0.0f}, {"clang", 1.0f}});
+            const auto a = highBand(strike(*plain, 60, vel, 0.6f));
+            const auto b = highBand(strike(*rung, 60, vel, 0.6f));
+            const size_t ms30 = kSr * 3 / 100, ms60 = kSr * 6 / 100, ms300 = kSr * 3 / 10;
+            early = dB(rms(b, 0, ms30)) - dB(rms(a, 0, ms30));
+            late = dB(rms(b, ms60, ms300)) - dB(rms(a, ms60, ms300));
+        };
+        double loudEarly, loudLate, softEarly, softLate;
+        clangAt(120, loudEarly, loudLate);
+        clangAt(40, softEarly, softLate);
+        check(loudEarly > 6.0 && loudLate < 0.5, "clang brightens the first 30 ms, and is gone by 60",
+              fmt("over 2 kHz %+.1f dB, then %+.2f dB", loudEarly, loudLate));
+        check(softEarly < loudEarly - 4.0, "clang is mostly in the hard blows", fmt("velocity 40 %+.1f dB, 120 %+.1f dB", softEarly, loudEarly));
     }
 
     std::printf("reset and extremes\n");

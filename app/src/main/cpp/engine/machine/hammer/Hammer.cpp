@@ -30,9 +30,26 @@ constexpr float kSympathyDrive = 0.0027f;
 constexpr float kPedalThump = 0.002f;
 /** How long a voice made to give way takes to fade out, seconds. */
 constexpr float kRetireTime = 0.01f;
-/** The phantom partials' level at the default tension, and their high-pass (below them, only the difference tones). */
-constexpr float kPhantom = 0.0f;
-constexpr float kPhantomPole = 0.98f;
+/**
+ * Tension at 1 makes the strings this many times stiffer than the
+ * instrument's own above C4, less down to C2 and none below, where the
+ * long strings are stiff already.
+ */
+constexpr float kTension = 3.0f;
+/** The stiffest the dispersion table reaches (Dispersion.h), a little under. */
+constexpr float kMostB = 0.05f;
+/**
+ * The clang at 1 against the note's level, at middle C: a short pulse into
+ * a few modes. Their frequencies against the key's base, their levels and
+ * their T60s, seconds; how long the pulse is, seconds.
+ */
+constexpr float kClangLevel = 3.5f;
+constexpr float kClangRatio[3] = {1.0f, 1.53f, 2.37f};
+constexpr float kClangGain[3] = {1.0f, 0.8f, 0.6f};
+constexpr float kClangT60[3] = {0.045f, 0.035f, 0.025f};
+constexpr float kClangPulse = 0.00017f;
+/** How long the clang runs after a blow before it's cleared, seconds: 0.25 s is over 150 dB down. */
+constexpr float kClangRun = 0.25f;
 /** The knock's level against the note's, before each key's own (Keys.h). */
 constexpr float kKnock = 0.1f;
 /**
@@ -101,8 +118,10 @@ const ParamDef *Hammer::paramDefs(int32_t &count) const {
         {"strings", 0.0f, 3.0f, 0.0f, Curve::Stepped, 4, ""},
         {"couple", 0.0f, 2.0f, 1.0f, Curve::Linear, 0, ""},
         {"polar", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
-        {"tension", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
-        {"clang", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
+        // How much stiffer the middle and top strings are than the
+        // instrument's own (kTension); the bright ring of the blow.
+        {"tension", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"clang", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
 
         {"dampers", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"damp time", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -204,6 +223,7 @@ struct DestMap {
             {H::TremWide, H::McTremWide},
             {H::PrepAt, H::McPrepAt}, {H::PrepAmt, H::McPrepAmt},
             {H::Volume, H::McVolume}, {H::Pan, H::McPan}, {H::Roll, H::McRoll},
+            {H::Tension, H::McTension}, {H::Clang, H::McClang},
         };
         for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
     }
@@ -296,7 +316,9 @@ void Hammer::reset() {
         v.damp = v.dampTarget = 0.0f;
         v.gain = v.gainTarget = 0.0f;
         v.force = 0.0f;
-        v.phantomIn = v.phantomOut = 0.0f;
+        for (int c = 0; c < Voice::kClang; ++c) v.clangY1[c] = v.clangY2[c] = 0.0f;
+        v.clangDrive = 0.0f;
+        v.clangLeft = 0;
         std::fill(std::begin(v.knockLine), std::end(v.knockLine), 0.0f);
         v.knockAt = v.knockLive = 0;
         v.age = 0;
@@ -630,11 +652,16 @@ hammer::Course::Design Hammer::designFor(int key, float hz, bool full) {
         d.detune[lanes] = keyOff;
     }
     d.couple = goalOf(Couple);
-    d.B = k.B * goalOf(Stiffness) * (1.0f + 3.0f * smaller * bass * bass);
+    const float B = k.B * goalOf(Stiffness) * (1.0f + 3.0f * smaller * bass * bass);
+    // Tension: stiffer strings from C2 up, all of it from C4. The bass
+    // keys' sections are kept for the instrument's own B, so it leaves them be.
+    const float tension = goalOf(Tension) * clampf((static_cast<float>(key) - 36.0f) / 24.0f, 0.0f, 1.0f);
+    d.B = tension > 0.0f ? std::fmin(B * (1.0f + kTension * tension), std::fmax(B, kMostB)) : B;
     d.bend = k.bend;
     // The stretch is the string's own f0, as measured; its first partial sits
-    // a little above that.
-    d.hz = hz * std::sqrt(1.0f + d.B);
+    // a little above that. Tension stretches the partials above it and
+    // leaves the first where it was.
+    d.hz = hz * std::sqrt(1.0f + B);
     // Stiffness stages: the long bass strings need the most to follow.
     d.stages = key < 40 ? 16 : (key < 60 ? 8 : (key < 76 ? 4 : 2));
     if (!full) d.stages = std::max(1, d.stages / 2);
@@ -686,6 +713,7 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
         if (!v.used || v.key != key) {
             v.course.clear();
             for (int i = 0; i < Voice::kDuplex; ++i) v.dupY1[i] = v.dupY2[i] = 0.0f;
+            for (int c = 0; c < Voice::kClang; ++c) v.clangY1[c] = v.clangY2[c] = 0.0f;
         }
         v.course.tune(d);
         v.design = d;
@@ -759,6 +787,35 @@ void Hammer::strike(Voice &v, int key, float hz, float velocity01) {
     // recordings' by 9x), so it's taken back out of the board's thump.
     v.knock = k.knock * std::sqrt(2.0f / speed) / k.level * (1.0f + 1.5f * tacks) * (1.0f + age);
     v.knockDelay = std::clamp(static_cast<int>(v.course.strikeToBridge()), 0, kKnockLine - 1);
+    // The clang: a few bright modes the blow rings, higher up the keyboard,
+    // each key a little its own way. It follows the note's level, and
+    // grows faster than it with the blow. Not a tangent's: its pickups
+    // don't hear it.
+    const float clang = model == hammer::Tangent ? 0.0f : goalOf(Clang);
+    if (clang > 0.0f) {
+        uint32_t h = static_cast<uint32_t>(key) * 2246822519u + 374761393u;
+        h = h * 1664525u + 1013904223u;
+        const float base = 2400.0f * std::exp2((static_cast<float>(key) - 60.0f) / 48.0f) *
+                           (0.94f + 0.12f * static_cast<float>(h >> 8) / 16777216.0f);
+        for (int c = 0; c < Voice::kClang; ++c) {
+            const float f = base * kClangRatio[c];
+            const float r = std::exp(-6.9078f / (kClangT60[c] * sampleRate));
+            const bool fits = f < 0.4f * sampleRate;
+            v.clangA1[c] = 2.0f * r * std::cos(6.28318530718f * f / sampleRate);
+            v.clangA2[c] = r * r;
+            v.clangIn[c] = fits ? kClangGain[c] * (1.0f - r) : 0.0f;
+        }
+        // The note's level, without what the physics divided out of it.
+        const float level = v.gainTarget * speed * k.impedance * static_cast<float>(d.lanes);
+        const float hard = clampf(velocity01, 0.0f, 1.0f);
+        v.clangDrive = clang * kClangLevel * level * hard * hard * hard *
+                       std::exp2((static_cast<float>(key) - 60.0f) / 24.0f);
+        v.clangLeft = static_cast<int>(kClangRun * sampleRate);
+        v.clangLen = std::max(2, static_cast<int>(kClangPulse * sampleRate + 0.5f));
+        v.clangAt = 0;
+    } else {
+        v.clangDrive = 0.0f;
+    }
     const float pan = clampf(k.pan * goalOf(Width) / 0.7f * kMicPan[std::clamp(steppedTargetOf(Mic), 0, 3)], -1.0f, 1.0f);
     v.panL = std::cos((pan + 1.0f) * 0.785398f);
     v.panR = std::sin((pan + 1.0f) * 0.785398f);
@@ -1078,13 +1135,12 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
         for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
         return true;
     }
-    for (int32_t i = 0; i < frames; ++i) busL[i] = busR[i] = lowL[i] = lowR[i] = knockBus[i] = elecL[i] = elecR[i] = 0.0f;
+    for (int32_t i = 0; i < frames; ++i) busL[i] = busR[i] = lowL[i] = lowR[i] = knockBus[i] = elecL[i] = elecR[i] = clangL[i] = clangR[i] = 0.0f;
     bool electric = false, acoustic = false;
     const int pickups = steppedTargetOf(Pickups);
     // The board's share of each blow: the knock under the note.
     const float knockLevel = kKnock * paramOf(BoardLevel) / 0.7f;
     const float ramp = 1.0f / (kGainRamp * sampleRate);
-    const float phantom = kPhantom * paramOf(Tension) / 0.2f;
     const float damperStep = static_cast<float>(frames) / (kDamperTime * sampleRate);
     bool any = false;
     // The duplex, its level ramped across the block so a moving knob can't
@@ -1145,7 +1201,7 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
         float *busOutL = tangent ? elecL : (v.spec->zone == 0 ? lowL : busL);
         float *busOutR = tangent ? elecR : (v.spec->zone == 0 ? lowR : busR);
         (tangent ? electric : acoustic) = true;
-        if (!v.felt.touching() && v.force == 0.0f && v.knockLive == 0 && phantom == 0.0f && !v.retiring) {
+        if (!v.felt.touching() && v.force == 0.0f && v.knockLive == 0 && v.clangLeft == 0 && !v.retiring) {
             // Only ringing: the strings, the gain and the pan.
             for (int32_t i = from; i < to; ++i) {
                 const float s = heard();
@@ -1171,16 +1227,32 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
             const float s = heard();
             if (v.retiring) v.gain = std::fmax(0.0f, v.gain - v.fade);
             else v.gain += clampf(v.gainTarget - v.gain, -ramp * v.gainTarget, ramp * v.gainTarget);
-            // The strings stretch as they swing, and their tension follows
-            // the square of the motion: tones at the sums of the partials,
-            // the bright metallic half of a bass note (1.4 to 2.8 kHz was
-            // 10 to 16 dB short without them), growing faster than the note.
-            const float sq = s * s * phantom;
-            v.phantomOut = sq - v.phantomIn + kPhantomPole * v.phantomOut;
-            v.phantomIn = sq;
-            const float out = ((dup ? duplex(s, i) : s) + v.phantomOut) * v.gain * impedance;
+            const float out = (dup ? duplex(s, i) : s) * v.gain * impedance;
             busOutL[i] += out * v.panL;
             busOutR[i] += out * v.panR;
+            if (v.clangLeft > 0) {
+                // The blow, as a raised cosine a sixth of a millisecond
+                // long: flat to well past the modes, and no corner.
+                float x = 0.0f;
+                if (v.clangAt < v.clangLen) {
+                    ++v.clangAt;
+                    x = v.clangDrive * (1.0f - std::cos(6.28318530718f * static_cast<float>(v.clangAt) / static_cast<float>(v.clangLen + 1)));
+                }
+                float y = 0.0f;
+                for (int c = 0; c < Voice::kClang; ++c) {
+                    const float n = v.clangA1[c] * v.clangY1[c] - v.clangA2[c] * v.clangY2[c] + v.clangIn[c] * x;
+                    v.clangY2[c] = v.clangY1[c];
+                    v.clangY1[c] = n;
+                    y += n;
+                }
+                // A voice giving way takes its clang with it, as it fades.
+                if (v.retiring) y *= v.fade > 0.0f ? v.gain / (v.fade * kRetireTime * sampleRate) : 0.0f;
+                clangL[i] += y * v.panL;
+                clangR[i] += y * v.panR;
+                if (--v.clangLeft == 0) {
+                    for (int c = 0; c < Voice::kClang; ++c) v.clangY1[c] = v.clangY2[c] = 0.0f;
+                }
+            }
         }
     };
     for (Voice &v : voices) {
@@ -1303,7 +1375,7 @@ bool Hammer::render(float *L, float *R, int32_t frames) {
             float l, r;
             float bl = lowL[i], br = lowR[i];
             board.spreadBass(bl, br);
-            board.step(busL[i] + bl, busR[i] + br, knockBus[i], l, r);
+            board.step(busL[i] + bl + clangL[i], busR[i] + br + clangR[i], knockBus[i], l, r);
             L[i] = l * volume * gl;
             R[i] = r * volume * gr;
         }

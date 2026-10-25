@@ -211,6 +211,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "church" to Res.string.pw_church,
     "cimbalom" to Res.string.pw_cimbalom,
     "circuit" to Res.string.pw_circuit,
+    "clang" to Res.string.pw_clang,
     "Clap" to Res.string.pw_clap,
     "clap" to Res.string.pw_clap_c19ab8,
     "clap decay" to Res.string.pw_clap_decay,
