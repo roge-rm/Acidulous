@@ -306,6 +306,7 @@ void Mosaic::noteOn(uint8_t note, uint8_t velocity) {
     const int32_t n = map->select(note, static_cast<int>(effectiveVel + 0.5f), goalOf(KeyFade), goalOf(VelFade),
                                   zones, gains, kZonesPerVoice);
     v.layerCount = n;
+    v.tailEnv = retrigger && wasSounding ? v.amp.value() : -1.0f;
     const float startAt = clampf(goalOf(Start) + v.mod[DstStart], 0.0f, 0.999f);
     const bool reversed = goalOf(Reverse) >= 0.5f;
     for (int32_t i = 0; i < n; ++i) {
@@ -559,6 +560,8 @@ void Mosaic::cacheLayer(Layer &L, float panBase) {
 void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
     // A 2 ms fade, as a step per frame.
     const float endFadeStep = 1.0f / (0.002f * sampleRate);
+    // A retaken layer's old content fades over 3 ms.
+    const float retakeStep = 1.0f / (0.003f * sampleRate);
     const float bendSemis = bend * paramOf(BendRange) + v.bend;
     const float semis = paramOf(Coarse) + paramOf(Fine) * 0.01f + paramOf(Transpose) + 12.0f * paramOf(Octave) +
                         bendSemis + v.mod[DstPitch] * 24.0f + 24.0f * mac_[McPitch];
@@ -686,11 +689,15 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                 Layer &L = v.layer[z];
                 if (L.sample == nullptr || L.finished || L.sample->frames < 2) continue;
                 const double inc = rateOf(L);
-                const float s = readSample(*L.sample, L.pos) * L.gain * L.modGain * L.fade * L.fadeIn;
+                float s = readSample(*L.sample, L.pos) * L.gain * L.modGain * L.fadeIn;
                 if (L.pendingPos >= 0.0) {
-                    // Waiting to move: fade out here, then jump and fade back
-                    // in. About 4 ms in total.
-                    L.fade -= endFadeStep;
+                    // Waiting to move: fade out here on an S curve, then jump
+                    // and fade back in. About 5 ms in total. After a retake
+                    // the old content stays at the level it had, rather than
+                    // following the new attack.
+                    s *= L.fade * L.fade * (3.0f - 2.0f * L.fade);
+                    if (v.tailEnv >= 0.0f) s *= std::min(1.0f, v.tailEnv / std::max(env, 1e-6f));
+                    L.fade -= retakeStep;
                     if (L.fade <= 0.0f) {
                         L.pos = L.pendingPos;
                         if (L.pendingSample != nullptr) {
@@ -706,8 +713,9 @@ void Mosaic::renderVoice(Voice &v, int32_t frames, float *outL, float *outR) {
                         L.fade = 1.0f;
                         L.fadeIn = 0.0f;
                     }
-                } else if (L.fadeIn < 1.0f) {
-                    L.fadeIn = std::min(1.0f, L.fadeIn + endFadeStep);
+                } else {
+                    s *= L.fade;
+                    if (L.fadeIn < 1.0f) L.fadeIn = std::min(1.0f, L.fadeIn + endFadeStep);
                 }
                 l += s * L.panC * 1.4142f;
                 r += s * L.panS * 1.4142f;

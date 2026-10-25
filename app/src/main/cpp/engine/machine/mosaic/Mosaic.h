@@ -195,6 +195,12 @@ class Mosaic final : public Machine {
         Layer layer[kZonesPerVoice];
         int32_t layerCount = 0;
         Grain grain[kGrains];
+        /**
+         * The amp envelope's level when a sounding voice was retaken, or -1.
+         * The old content fades out at this level, since the new note's
+         * attack would otherwise swell it up as it goes.
+         */
+        float tailEnv = -1.0f;
         double grainOffset = 0.0;
         float grainTimer = 0.0f;
         dsp::Adsr amp, filterEg, modEg[kModEgs];
