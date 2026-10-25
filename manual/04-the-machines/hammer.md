@@ -55,6 +55,8 @@ the strings ring shorter and darker, and the keys drift out of tune.
   however softly you play. A tack piano.
 - **moderator** - a strip of felt between the hammers and the strings: soft
   and muffled.
+- **clang** - a short, bright metal ring as the hammer hits, mostly on loud
+  notes. An old upright or a tack piano. At 0 there's none.
 - **roll** - strikes a held note again and again, this many times a second,
   never quite evenly: a dulcimer's or cimbalom's tremolo, or a mandolin-ish
   one on the grand. At 0 a note is struck once.
@@ -70,6 +72,10 @@ the strings ring shorter and darker, and the keys drift out of tune.
   partials a little sharp, which is most of what makes a piano sound like a
   piano. **stretch** is how far the tuning follows that, as a piano tuner
   stretches the octaves.
+- **tension** - makes the middle and top strings stiffer still, so their
+  upper partials go sharper, like the short strings of a small upright. Up
+  high it sounds metallic. The bass is left as it is and each note stays in
+  tune. At 0 the strings are the instrument's own.
 - **strings** - how many strings each key has. **auto** is a grand's: one in
   the lowest notes, then two, then three.
 - **unison** - how far apart the strings of one key are tuned. A little gives

@@ -24,7 +24,11 @@
 # piano, the felt, where you listen from, how old it is, what's been put on
 # its strings. `roll` strikes a held note again and again, as a dulcimer or
 # cimbalom player does; `duplex` lets the strings' free ends ring along
-# faintly, and is up on the brighter grands and uprights.
+# faintly, and is up on the brighter grands and uprights. `clang` is the
+# metal ring of a hard blow, up on the honky-tonks, the tack piano and the
+# bright uprights, where Bright brings more of it. `tension` stiffens the
+# middle and top strings: the baby grand, the tack piano and bright
+# upright a little, Gamelan Keys and Stiff Wire more.
 #
 # Each patch plays the `piano` phrase (the pedal changed every bar, then
 # three notes alone) or, for the bells, the `bell` phrase, inside its own
@@ -41,7 +45,7 @@
 # #16 unison, #19 dampers, #24 sympathy, #25 duplex, #27 board, #28 lid,
 # #29 tail, #30 width, #31 pickup, #32 offset, #33 tonebar, #34 mute,
 # #35 drive, #36 tremolo, #37 tremrate, #38 tremwide, #39 prep at,
-# #40 prepamt, #41 volume, #43 roll. Where a macro at full moves the level
+# #40 prepamt, #41 volume, #43 roll, #45 tension, #46 clang. Where a macro at full moves the level
 # by more than 1.5 dB, a volume route takes it back out, as far as the
 # volume knob goes: Tremolo on Tine Autopan and Phase Tine stays 2-3 dB
 # down and Short on Wind-Up Celesta and Broken Toy 2 dB down, as their
@@ -55,7 +59,6 @@
 #   - The soft reed is purer than its recording above the 2nd harmonic.
 #   - The fortepiano, tangent, celesta, toy, dulcimer and cimbalom have no
 #     recording behind them, only the literature and an ear.
-#   - Two knobs do nothing yet: tension and clang.
 
 machine Hammer
 role    piano
@@ -236,7 +239,8 @@ patch "Baby Grand" family=grand note=60 range=21..108
   mac8_a1  0.4
   size           0
   hardness       0.1
-  volume         0.86
+  tension        0.35
+  volume         0.79
 
 patch "Salon Grand" family=grand note=60 range=21..108
   # A middle-sized grand with the lid on the short stick, from the room.
@@ -728,6 +732,8 @@ patch Honky-Tonk family=upright note=60 range=21..108
   mac2_a2  0.15
   mac2_d3  #12
   mac2_a3  0.15
+  mac2_d4  #46
+  mac2_a4  0.3
   mac3_d1  #28
   mac3_a1  -0.7
   mac4_d1  #10
@@ -749,6 +755,7 @@ patch Honky-Tonk family=upright note=60 range=21..108
   mac8_d2  #41
   mac8_a2  -0.112
   model          2      # honky-tonk
+  clang          0.3
 
 patch "Tack Piano" family=upright note=60 range=21..108
   # Tacks in the hammers: every note hard and bright, however soft.
@@ -770,6 +777,8 @@ patch "Tack Piano" family=upright note=60 range=21..108
   mac2_a2  0.15
   mac2_d3  #12
   mac2_a3  0.15
+  mac2_d4  #46
+  mac2_a4  0.2
   mac3_d1  #28
   mac3_a1  -0.7
   mac4_d1  #10
@@ -795,6 +804,8 @@ patch "Tack Piano" family=upright note=60 range=21..108
   model          2
   tacks          0.85
   unison         0.6
+  clang          0.8
+  tension        0.3
 
 patch Saloon family=upright note=60 range=21..108
   # Out of tune, worn, loud.
@@ -816,6 +827,8 @@ patch Saloon family=upright note=60 range=21..108
   mac2_a2  0.15
   mac2_d3  #12
   mac2_a3  0.15
+  mac2_d4  #46
+  mac2_a4  0.3
   mac3_d1  #28
   mac3_a1  -0.7
   mac4_d1  #10
@@ -841,6 +854,7 @@ patch Saloon family=upright note=60 range=21..108
   unison         1.6
   hardness       0.3
   seed           5
+  clang          0.5
   volume         0.88
 
 patch "Bright Upright" family=upright note=60 range=21..108
@@ -863,6 +877,8 @@ patch "Bright Upright" family=upright note=60 range=21..108
   mac2_a2  0.15
   mac2_d3  #12
   mac2_a3  0.15
+  mac2_d4  #46
+  mac2_a4  0.3
   mac3_d1  #28
   mac3_a1  -0.7
   mac4_d1  #10
@@ -892,7 +908,9 @@ patch "Bright Upright" family=upright note=60 range=21..108
   hardkey        0.2
   duplex         0.5
   mic            2
-  volume         0.92
+  clang          0.4
+  tension        0.3
+  volume         1.01
 
 patch "School Upright" family=upright note=60 range=21..108
   # An old hall's upright, far out of tune, heard from the back.
@@ -968,6 +986,8 @@ patch Barrelhouse family=upright note=60 range=21..108
   mac2_a2  0.15
   mac2_d3  #12
   mac2_a3  0.15
+  mac2_d4  #46
+  mac2_a4  0.3
   mac3_d1  #28
   mac3_a1  -0.7
   mac4_d1  #10
@@ -995,6 +1015,7 @@ patch Barrelhouse family=upright note=60 range=21..108
   unison         1.3
   seed           1
   sustain       -0.2
+  clang          0.6
   volume         0.89
 
 # --- electric ----------------------------------------------------------------
@@ -2952,7 +2973,8 @@ patch "Gamelan Keys" family=strange note=61 range=36..96
   prepkeys       2
   prepamt        0.8
   "prep at"      0.25
-  volume         0.69
+  tension        0.5
+  volume         0.64
 
 patch "Stiff Wire" family=strange note=48 range=21..96
   # Strings twice as stiff and the tuning stretched to match: metallic.
@@ -2978,6 +3000,10 @@ patch "Stiff Wire" family=strange note=48 range=21..96
   mac3_a1  -0.25
   mac3_d2  #15
   mac3_a2  -0.25
+  mac3_d3  #45
+  mac3_a3  -0.5
+  mac3_d4  #41
+  mac3_a4  0.06
   mac4_d1  #10
   mac4_a1  0.25
   mac4_d2  #24
@@ -2997,7 +3023,8 @@ patch "Stiff Wire" family=strange note=48 range=21..96
   stiffness      2
   stretch        2
   hardness       0.3
-  volume         0.75
+  tension        0.6
+  volume         0.66
 
 patch "Ghost Strings" family=strange note=60 range=21..108
   # Soft felt, every string ringing along, a long room.

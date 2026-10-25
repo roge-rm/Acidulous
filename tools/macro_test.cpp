@@ -1475,6 +1475,18 @@ void hammerRoutes() {
     std::snprintf(buf, sizeof(buf), "%d rises in 1.9 s", strikes);
     ok(strikes >= 15 && strikes <= 30, "Hammer: a roll strikes about as often as it says", buf);
 
+    // Tension and clang, routed: the same as their knobs, and not the same as without.
+    const auto tense = playHeld("Hammer", {{"tension", 1.0f}}, {72}, 400);
+    Route t{7, 2, Hm::McTension, 1.0f, 1.0f};
+    ok2(sameAs(tense, playHeld("Hammer", {}, {72}, 400, &t, Hm::MacroDestCount), buf, sizeof(buf)),
+       "Hammer: a route to tension matches the knob", buf);
+    ok2(!sameAs(tense, playHeld("Hammer", {}, {72}, 400), buf, sizeof(buf)), "Hammer: tension changes the note", buf);
+    const auto rung = playHeld("Hammer", {{"model", 1.0f}, {"clang", 1.0f}}, {60}, 400);
+    Route c{8, 3, Hm::McClang, 1.0f, 1.0f};
+    ok2(sameAs(rung, playHeld("Hammer", {{"model", 1.0f}}, {60}, 400, &c, Hm::MacroDestCount), buf, sizeof(buf)),
+       "Hammer: a route to clang matches the knob", buf);
+    ok2(!sameAs(rung, playHeld("Hammer", {{"model", 1.0f}}, {60}, 400), buf, sizeof(buf)), "Hammer: clang changes the note", buf);
+
     const auto dry = playHeld("Hammer", {}, {84}, blocks);
     const auto duplexed = playHeld("Hammer", {{"duplex", 1.0f}}, {84}, blocks);
     Route d{6, 4, Hm::McDuplex, 1.0f, 1.0f};
