@@ -219,4 +219,22 @@ class MacroNamesTest {
         assertEquals(listOf("keys", "pad", "lead", "bass", "grain", "motion", "texture"), families)
         assertEquals(listOf(10, 9, 8, 6, 9, 8, 6), families.map { f -> bank.count { it.family == f } })
     }
+
+    @Test
+    fun dictionMacrosTakeThePatchNames() {
+        val t = track("Diction", mapOf("macro1" to "Bigger"))
+        assertEquals("Bigger", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("formant", laneShortLabel(t, laneKey("machine", "formant")))
+    }
+
+    @Test
+    fun dictionBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Diction")
+        assertEquals(45, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("voices", "colour", "style", "choir", "harmony", "strange"), families)
+        assertEquals(listOf(8, 8, 9, 8, 5, 7), families.map { f -> bank.count { it.family == f } })
+    }
 }

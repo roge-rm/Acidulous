@@ -8237,122 +8237,226 @@ internal object FactoryBanks {
         family = "voices")
 
     private fun diction1() = Patch("Diction", "Deep",
-        mapOf("formant" to 0.25f, "vibrato" to 0.22f, "vibratorate" to 0.333333343f, "effort" to 0.4f),
+        mapOf("formant" to 0.25f, "vibrato" to 0.22f, "vibratorate" to 0.333333343f, "effort" to 0.4f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4425f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction2() = Patch("Diction", "High",
-        mapOf("formant" to 0.6666667f, "vibrato" to 0.28f, "effort" to 0.6f),
+        mapOf("formant" to 0.6666667f, "vibrato" to 0.28f, "effort" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.387f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction3() = Patch("Diction", "Child",
-        mapOf("formant" to 0.7916667f, "breath" to 0.25f, "vibrato" to 0.15f, "track" to 0.65f),
+        mapOf("formant" to 0.7916667f, "breath" to 0.25f, "vibrato" to 0.15f, "track" to 0.65f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.3995f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.463f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction4() = Patch("Diction", "Neither",
-        mapOf("formant" to 0.5416667f, "breath" to 0.3f, "vibrato" to 0.15f, "drift" to 0.2f),
+        mapOf("formant" to 0.5416667f, "breath" to 0.3f, "vibrato" to 0.15f, "drift" to 0.2f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4115f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4655f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction5() = Patch("Diction", "Giant",
-        mapOf("formant" to 0.0833333358f, "vibrato" to 0.1f, "effort" to 0.65f, "growl" to 0.2f, "track" to 0.35f),
+        mapOf("formant" to 0.0833333358f, "vibrato" to 0.1f, "effort" to 0.65f, "growl" to 0.2f, "track" to 0.35f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.675f, "mac2_a2" to 0.429f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4655f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Smaller", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
-    private fun diction6() = Patch("Diction", "Soft",
-        mapOf("breath" to 0.5f, "vibrato" to 0.15f, "attack" to 0.599823236f, "effort" to 0.099999994f),
+    private fun diction6() = Patch("Diction", "Tenor",
+        mapOf("formant" to 0.416666657f, "volume" to 0.50333333f, "effort" to 0.65f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.675f, "mac2_a2" to 0.4145f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
+        family = "voices")
+
+    private fun diction7() = Patch("Diction", "Alto",
+        mapOf("formant" to 0.5833333f, "breath" to 0.2f, "vibrato" to 0.22f, "volume" to 0.558666646f, "effort" to 0.45f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4075f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
+        family = "voices")
+
+    private fun diction8() = Patch("Diction", "Soft",
+        mapOf("breath" to 0.5f, "vibrato" to 0.15f, "attack" to 0.599823236f, "effort" to 0.099999994f, "mac1_d1" to 0.615384638f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.429f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4035f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.543f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.454999983f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction7() = Patch("Diction", "Belter",
-        mapOf("vibrato" to 0.45f, "vibratodelay" to 0.25f, "effort" to 1f, "rasp" to 0.1f, "scoop" to 0.65f),
+    private fun diction9() = Patch("Diction", "Belter",
+        mapOf("vibrato" to 0.45f, "vibratodelay" to 0.25f, "effort" to 1f, "rasp" to 0.1f, "scoop" to 0.65f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.3f, "mac1_a2" to 0.671f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.536f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5465f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.628f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.554f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.5615f),
+        mapOf("macro1" to "Hush", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction8() = Patch("Diction", "Rasp",
-        mapOf("drift" to 0.5f, "effort" to 0.7f, "rasp" to 0.55f),
+    private fun diction10() = Patch("Diction", "Rasp",
+        mapOf("drift" to 0.5f, "effort" to 0.7f, "rasp" to 0.55f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4115f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5465f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.5395f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.5395f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction9() = Patch("Diction", "Growl",
-        mapOf("formant" to 0.416666657f, "effort" to 0.8f, "growl" to 0.7f, "scoop" to 0.6f),
+    private fun diction11() = Patch("Diction", "Growl",
+        mapOf("formant" to 0.416666657f, "effort" to 0.8f, "growl" to 0.7f, "scoop" to 0.6f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.3f, "mac1_a2" to 0.593f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4685f, "mac6_d1" to 0.07692308f, "mac6_a1" to 0.375f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Hush", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction10() = Patch("Diction", "Whisper",
-        mapOf("vibrato" to 0f, "attack" to 0.523296058f, "volume" to 0.766666651f, "whisper" to 1f),
+    private fun diction12() = Patch("Diction", "Whisper",
+        mapOf("vibrato" to 0f, "attack" to 0.523296058f, "volume" to 0.766666651f, "whisper" to 1f, "mac1_d1" to 0.615384638f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.3975f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.199999988f, "mac5_a2" to 0.6165f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.6165f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.382f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Voiced", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction11() = Patch("Diction", "Pure",
-        mapOf("breath" to 0f, "vibrato" to 0.12f, "drift" to 0.1f, "clean" to 1f),
+    private fun diction13() = Patch("Diction", "Pure",
+        mapOf("breath" to 0f, "vibrato" to 0.12f, "drift" to 0.1f, "clean" to 1f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4075f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5505f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.543f, "mac6_d1" to 0.07692308f, "mac6_a1" to 0.375f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction12() = Patch("Diction", "Chant",
-        mapOf("vowel" to 0.25f, "vibrato" to 0f, "drift" to 0.05f, "glide" to 0.05f),
+    private fun diction14() = Patch("Diction", "Breathy",
+        mapOf("breath" to 0.7f, "vibrato" to 0.18f, "attack" to 0.523296058f, "volume" to 0.491999984f, "effort" to 0.25f, "mac1_d1" to 0.615384638f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.65f, "mac2_a2" to 0.4495f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4145f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.5675f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.445f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
+        family = "colour")
+
+    private fun diction15() = Patch("Diction", "Edge",
+        mapOf("vowel" to 0.75f, "formant" to 0.5416667f, "volume" to 0.423333317f, "effort" to 0.85f, "rasp" to 0.05f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.3f, "mac1_a2" to 0.564f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.546f, "mac5_d1" to 0.7307692f, "mac5_a1" to 0.8f, "mac6_d1" to 0.07692308f, "mac6_a1" to 0.375f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.625f, "mac8_a2" to 0.546f),
+        mapOf("macro1" to "Hush", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
+        family = "colour")
+
+    private fun diction16() = Patch("Diction", "Chant",
+        mapOf("vowel" to 0.25f, "vibrato" to 0f, "drift" to 0.05f, "glide" to 0.05f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4335f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction13() = Patch("Diction", "Ballad",
-        mapOf("breath" to 0.3f, "vibrato" to 0.25f, "vibratodelay" to 0.3f, "drift" to 0.55f, "glide" to 0.12f, "effort" to 0.35f, "scoop" to 0.625f),
+    private fun diction17() = Patch("Diction", "Ballad",
+        mapOf("breath" to 0.3f, "vibrato" to 0.25f, "vibratodelay" to 0.3f, "drift" to 0.55f, "glide" to 0.12f, "effort" to 0.35f, "scoop" to 0.625f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4405f, "mac6_d1" to 0.115384616f, "mac6_d2" to 0.5f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4475f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction14() = Patch("Diction", "Opera",
-        mapOf("formant" to 0.458333343f, "breath" to 0.04f, "vibrato" to 0.7f, "vibratorate" to 0.5f, "vibratodelay" to 0.1f, "effort" to 0.75f),
+    private fun diction18() = Patch("Diction", "Opera",
+        mapOf("formant" to 0.458333343f, "breath" to 0.04f, "vibrato" to 0.7f, "vibratorate" to 0.5f, "vibratodelay" to 0.1f, "effort" to 0.75f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.65f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.625f, "mac5_a2" to 0.4245f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction15() = Patch("Diction", "Crooner",
-        mapOf("formant" to 0.416666657f, "vibrato" to 0.25f, "vibratodelay" to 0.35f, "glide" to 0.15f, "effort" to 0.3f, "scoop" to 0.75f),
+    private fun diction19() = Patch("Diction", "Crooner",
+        mapOf("formant" to 0.416666657f, "vibrato" to 0.25f, "vibratodelay" to 0.35f, "glide" to 0.15f, "effort" to 0.3f, "scoop" to 0.75f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.445f, "mac6_d1" to 0.115384616f, "mac6_d2" to 0.5f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4685f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction16() = Patch("Diction", "Lullaby",
-        mapOf("vowel" to 0.25f, "breath" to 0.35f, "vibrato" to 0.15f, "vibratodelay" to 0.45f, "glide" to 0.15f, "attack" to 0.738351941f, "effort" to 0.25f),
+    private fun diction20() = Patch("Diction", "Lullaby",
+        mapOf("vowel" to 0.25f, "breath" to 0.35f, "vibrato" to 0.15f, "vibratodelay" to 0.45f, "glide" to 0.15f, "attack" to 0.738351941f, "effort" to 0.25f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.115384616f, "mac6_d2" to 0.5f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4405f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction17() = Patch("Diction", "Swoop",
-        mapOf("drift" to 0.6f, "glide" to 0.25f, "scoop" to 0.875f),
+    private fun diction21() = Patch("Diction", "Swoop",
+        mapOf("drift" to 0.6f, "glide" to 0.25f, "scoop" to 0.875f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.5625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction18() = Patch("Diction", "Robot",
-        mapOf("vibrato" to 0f, "drift" to 0f, "glide" to 0f, "volume" to 0.333333343f, "clean" to 1f, "effort" to 0.65f, "source" to 1f),
+    private fun diction22() = Patch("Diction", "Robot",
+        mapOf("vibrato" to 0f, "drift" to 0f, "glide" to 0f, "volume" to 0.333333343f, "clean" to 1f, "effort" to 0.65f, "source" to 1f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.4395f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction19() = Patch("Diction", "Duo",
-        mapOf("singers" to 0.2f, "spread" to 0.3f),
+    private fun diction23() = Patch("Diction", "Folk",
+        mapOf("vibrato" to 0.12f, "vibratodelay" to 0.4f, "drift" to 0.3f, "glide" to 0.06f, "volume" to 0.521333337f, "effort" to 0.55f, "scoop" to 0.575f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4055f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
+        family = "style")
+
+    private fun diction24() = Patch("Diction", "Soul",
+        mapOf("vibrato" to 0.35f, "vibratorate" to 0.5f, "vibratodelay" to 0.2f, "drift" to 0.5f, "glide" to 0.18f, "volume" to 0.443333358f, "effort" to 0.7f, "rasp" to 0.08f, "scoop" to 0.8f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.6f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.65f, "mac5_a2" to 0.428f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_d2" to 0.5f, "mac7_a1" to 0.375f, "mac7_a2" to 0.53f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
+        family = "style")
+
+    private fun diction25() = Patch("Diction", "Duo",
+        mapOf("singers" to 0.2f, "spread" to 0.3f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction20() = Patch("Diction", "Choir",
-        mapOf("vibrato" to 0.2f, "attack" to 0.565412f, "release" to 0.696236f, "singers" to 1f),
+    private fun diction26() = Patch("Diction", "Choir",
+        mapOf("vibrato" to 0.2f, "attack" to 0.565412f, "release" to 0.696236f, "singers" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.5465f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4115f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.589f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction21() = Patch("Diction", "Chamber",
-        mapOf("vibrato" to 0.18f, "clean" to 0.5f, "singers" to 0.6f, "spread" to 0.25f),
+    private fun diction27() = Patch("Diction", "Chamber",
+        mapOf("vibrato" to 0.18f, "clean" to 0.5f, "singers" to 0.6f, "spread" to 0.25f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.554f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.543f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4095f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction22() = Patch("Diction", "Crowd",
-        mapOf("drift" to 0.6f, "rasp" to 0.2f, "singers" to 1f, "spread" to 1f),
+    private fun diction28() = Patch("Diction", "Crowd",
+        mapOf("drift" to 0.6f, "rasp" to 0.2f, "singers" to 1f, "spread" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.3f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.536f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4135f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.5395f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Together", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction23() = Patch("Diction", "Chorale",
-        mapOf("vibrato" to 0.15f, "attack" to 0.599823236f, "release" to 0.738351941f, "singers" to 0.4f, "spread" to 0.4f, "harmony" to 1f),
+    private fun diction29() = Patch("Diction", "Chorale",
+        mapOf("vibrato" to 0.15f, "attack" to 0.599823236f, "release" to 0.738351941f, "singers" to 0.4f, "spread" to 0.4f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4115f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.577f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction24() = Patch("Diction", "Harmony",
-        mapOf("singers" to 0.2f, "spread" to 0.2f, "harmony" to 1f),
+    private fun diction30() = Patch("Diction", "Harmony",
+        mapOf("singers" to 0.2f, "spread" to 0.2f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction25() = Patch("Diction", "Chipmunk",
-        mapOf("formant" to 0.625f, "track" to 1f),
+    private fun diction31() = Patch("Diction", "Unison",
+        mapOf("vibrato" to 0.15f, "volume" to 0.486666679f, "singers" to 0.4f, "spread" to 0.15f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.5425f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.536f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4175f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
+        family = "choir")
+
+    private fun diction32() = Patch("Diction", "Far Choir",
+        mapOf("breath" to 0.35f, "attack" to 0.7727632f, "release" to 0.827060044f, "volume" to 0.6933333f, "effort" to 0.3f, "singers" to 1f, "spread" to 0.7f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.65f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.431999981f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.6135f, "mac6_a2" to 0.575f, "mac6_a3" to 0.57f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.4385f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
+        family = "choir")
+
+    private fun diction33() = Patch("Diction", "Close Harmony",
+        mapOf("vibrato" to 0.2f, "volume" to 0.54399997f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction34() = Patch("Diction", "Barbershop",
+        mapOf("vibrato" to 0.1f, "drift" to 0.1f, "glide" to 0.05f, "volume" to 0.481333345f, "effort" to 0.65f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.413f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction35() = Patch("Diction", "Gospel",
+        mapOf("volume" to 0.368666649f, "effort" to 0.75f, "scoop" to 0.7f, "singers" to 0.4f, "spread" to 0.35f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.5375f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.625f, "mac5_a2" to 0.446f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction36() = Patch("Diction", "Pad Voices",
+        mapOf("vowel" to 0.25f, "breath" to 0.3f, "vibrato" to 0.12f, "attack" to 0.827060044f, "release" to 0.869176f, "volume" to 0.656f, "singers" to 0.2f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.421f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.5865f, "mac6_a2" to 0.5655f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction37() = Patch("Diction", "Hymn",
+        mapOf("vibrato" to 0.08f, "drift" to 0.1f, "attack" to 0.641939163f, "release" to 0.7727632f, "volume" to 0.5093333f, "effort" to 0.4f, "singers" to 0.6f, "spread" to 0.3f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.5625f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.43f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.5625f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction38() = Patch("Diction", "Chipmunk",
+        mapOf("formant" to 0.625f, "track" to 1f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.35f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.5575f, "mac3_d1" to 0.7307692f, "mac3_a1" to 0.8f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Against", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction26() = Patch("Diction", "Undertow",
-        mapOf("formant" to 0.333333343f, "glide" to 0.3f, "growl" to 0.4f, "track" to 0f),
+    private fun diction39() = Patch("Diction", "Undertow",
+        mapOf("formant" to 0.333333343f, "glide" to 0.3f, "growl" to 0.4f, "track" to 0f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.536f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.445f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_d2" to 0.5f, "mac7_a1" to 0.25f, "mac7_a2" to 0.4685f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction27() = Patch("Diction", "Fry",
-        mapOf("formant" to 0.375f, "effort" to 0.35f, "growl" to 1f),
+    private fun diction40() = Patch("Diction", "Fry",
+        mapOf("formant" to 0.375f, "effort" to 0.35f, "growl" to 1f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.25f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.431f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.5465f),
+        mapOf("macro1" to "Follow", "macro2" to "Smooth", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction28() = Patch("Diction", "Ghosts",
-        mapOf("release" to 0.827060044f, "volume" to 0.933333337f, "whisper" to 0.7f, "singers" to 0.6f, "spread" to 1f),
+    private fun diction41() = Patch("Diction", "Ghosts",
+        mapOf("release" to 0.827060044f, "volume" to 0.933333337f, "whisper" to 0.7f, "singers" to 0.6f, "spread" to 1f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.75f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.65f, "mac3_a2" to 0.3795f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.5f, "mac5_a1" to 0.375f, "mac5_a2" to 0.5335f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.371500015f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction29() = Patch("Diction", "Buzz",
-        mapOf("formant" to 0.5833333f, "volume" to 0.333333343f, "effort" to 0.9f, "rasp" to 0.15f, "source" to 1f, "throat" to 0.5f),
+    private fun diction42() = Patch("Diction", "Buzz",
+        mapOf("formant" to 0.5833333f, "volume" to 0.333333343f, "effort" to 0.9f, "rasp" to 0.15f, "source" to 1f, "throat" to 0.5f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.5335f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.6035f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.5f, "mac5_a1" to 0.375f, "mac5_a2" to 0.527f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.541f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private val diction: List<Patch> by lazy { listOf(diction0(), diction1(), diction2(), diction3(), diction4(), diction5(), diction6(), diction7(), diction8(), diction9(), diction10(), diction11(), diction12(), diction13(), diction14(), diction15(), diction16(), diction17(), diction18(), diction19(), diction20(), diction21(), diction22(), diction23(), diction24(), diction25(), diction26(), diction27(), diction28(), diction29()) }
+    private fun diction43() = Patch("Diction", "Helium",
+        mapOf("formant" to 0.9166667f, "vibrato" to 0.4f, "vibratorate" to 0.75f, "volume" to 0.454f, "effort" to 0.6f, "track" to 0.75f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.625f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.549f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.569f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.5335f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
+        family = "strange")
+
+    private fun diction44() = Patch("Diction", "Monster",
+        mapOf("formant" to 0f, "octave" to 0.333333343f, "volume" to 0.578f, "effort" to 0.75f, "growl" to 0.8f, "track" to 0.25f, "mac1_d1" to 0.8076923f, "mac1_d2" to 0.5f, "mac1_a1" to 0.65f, "mac1_a2" to 0.543f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.25f, "mac3_d1" to 0.7307692f, "mac3_a1" to 0.8f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.5f, "mac5_a1" to 0.625f, "mac5_a2" to 0.4655f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_d2" to 0.5f, "mac7_a1" to 0.75f, "mac7_a2" to 0.5505f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Follow", "macro2" to "Smooth", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Smaller", "macro6" to "Scoop", "macro7" to "Octave Up", "macro8" to "Brighter"),
+        family = "strange")
+
+    private val diction: List<Patch> by lazy { listOf(diction0(), diction1(), diction2(), diction3(), diction4(), diction5(), diction6(), diction7(), diction8(), diction9(), diction10(), diction11(), diction12(), diction13(), diction14(), diction15(), diction16(), diction17(), diction18(), diction19(), diction20(), diction21(), diction22(), diction23(), diction24(), diction25(), diction26(), diction27(), diction28(), diction29(), diction30(), diction31(), diction32(), diction33(), diction34(), diction35(), diction36(), diction37(), diction38(), diction39(), diction40(), diction41(), diction42(), diction43(), diction44()) }
 
     private fun bias0() = Patch("Bias", "Init", emptyMap(),
         family = "clean")
