@@ -200,6 +200,7 @@ void Pollen::prepare(int32_t sr) {
             window[shape][static_cast<size_t>(i)] = w;
         }
     }
+    stealFrames = std::max(1, static_cast<int32_t>(0.0025f * sampleRate));
     filterL.setSampleRate(sampleRate);
     filterR.setSampleRate(sampleRate);
     finder.reset(sampleRate);
@@ -308,12 +309,11 @@ void Pollen::controlChange(uint8_t cc, uint8_t value) {
 void Pollen::pitchBend(int16_t value14) { bend = static_cast<float>(value14) / 8192.0f; }
 void Pollen::onBlock(int64_t, int64_t, float) {}
 
-float Pollen::windowAt(int32_t shape, float phase, float skew, float skewK) const {
-    // Skew bends time inside the window: negative puts the peak early,
-    // positive late. The power (skewK) is worked out once when the grain is
-    // born.
+float Pollen::windowAt(int32_t shape, float phase, float middle) const {
+    // Skew moves the window's middle to [middle] with two straight-line
+    // warps of time, one either side, so both edges keep a finite slope.
     float t = std::clamp(phase, 0.0f, 1.0f);
-    if (skew > 0.001f || skew < -0.001f) t = std::pow(t, skewK);
+    if (middle != 0.5f) t = t < middle ? 0.5f * t / middle : 0.5f + 0.5f * (t - middle) / (1.0f - middle);
     const float x = t * kWindowSize;
     const int32_t i = std::min(static_cast<int32_t>(x), kWindowSize - 1);
     const float f = x - static_cast<float>(i);
@@ -378,29 +378,56 @@ View Pollen::resolveView(int32_t mode, int32_t liveLen) const {
     return v;
 }
 
-int32_t Pollen::takeGrain() {
+int32_t Pollen::takeGrain(bool force) {
+    int32_t alive = 0, free = -1;
     for (int32_t i = 0; i < kGrains; ++i) {
         const int32_t at = (grainCursor + i) % kGrains;
-        if (!grains[at].active) {
-            grainCursor = (at + 1) % kGrains;
-            return at;
-        }
+        if (grains[at].active) ++alive;
+        else if (free < 0) free = at;
     }
-    // Nothing free: take the grain furthest through its window, which is the
-    // least audible to cut.
+    // Lean mode only lets the cloud use part of the pool. A forced grain may
+    // still use a free slot past it.
+    if (free >= 0 && (alive < grainPool || force)) {
+        grainCursor = (free + 1) % kGrains;
+        return free;
+    }
+    if (!force) return -1;
+    // Full, and a voice needs its first grain: steal the grain furthest
+    // through its window. It moves to a spare slot and fades out over
+    // stealFrames there, since cutting it mid-window pops.
     int32_t oldest = 0;
     float most = -1.0f;
     for (int32_t i = 0; i < kGrains; ++i) {
         const float t = static_cast<float>(grains[i].age) / static_cast<float>(std::max(1, grains[i].length));
         if (t > most) { most = t; oldest = i; }
     }
-    if (grains[oldest].voice >= 0 && voices[grains[oldest].voice].living > 0) --voices[grains[oldest].voice].living;
+    Grain &old = grains[oldest];
+    int32_t spare = kGrains;
+    for (int32_t i = kGrains; i < kGrains + kSpare; ++i) {
+        if (!grains[i].active) { spare = i; break; }
+        // All spares busy: reuse the one nearest the end of its fade.
+        if (grains[i].fade < grains[spare].fade) spare = i;
+    }
+    Grain &f = grains[spare];
+    f = old;
+    if (old.voice >= 0) {
+        // Detached, so the voice's count and a new note on it don't touch it.
+        Voice &v = voices[old.voice];
+        if (v.living > 0) --v.living;
+        f.gainL *= v.envNow;
+        f.gainR *= v.envNow;
+        f.voice = -1;
+    }
+    f.fade = stealFrames;
+    old.active = false;
     return oldest;
 }
 
 void Pollen::spawn(Voice &v, int32_t voiceIndex, const View &view, float env) {
     if (!view.usable()) return;
-    const int32_t slot = takeGrain();
+    // When the pool is full, only a voice's first grain gets a slot.
+    const int32_t slot = takeGrain(v.living == 0);
+    if (slot < 0) return;
     Grain &g = grains[slot];
     const bool live = steppedOf(SourceMode) == FromLive;
 
@@ -445,9 +472,11 @@ void Pollen::spawn(Voice &v, int32_t voiceIndex, const View &view, float env) {
     g.inc = nextRandom() < paramOf(ReverseProb) ? -inc : inc;
     g.age = 0;
     g.length = length;
-    g.skew = paramOf(Skew);
-    g.skewK = std::pow(2.0f, -g.skew * 2.0f);
+    // Skew 1 puts the window's middle 90% of the way through the grain, -1
+    // 10%.
+    g.middle = 0.5f + 0.4f * std::clamp(paramOf(Skew), -1.0f, 1.0f);
     g.generation = 0;
+    g.fade = 0;
     const float pan = (nextRandom() * 2.0f - 1.0f) * paramOf(PanSpread);
     const float angle = (std::clamp(pan, -1.0f, 1.0f) + 1.0f) * 0.25f * 3.14159265f;
     // Velocity only. The envelope isn't baked in here, since grains read it
@@ -470,7 +499,8 @@ void Pollen::pollinate(const Grain &parent, const View &view) {
     for (const auto &g : grains) if (!g.active) ++free;
     if (free - (kGrains - grainPool) <= 8) return;
 
-    const int32_t slot = takeGrain();
+    const int32_t slot = takeGrain(false);
+    if (slot < 0) return;
     Grain &g = grains[slot];
     const float span = static_cast<float>(view.frames);
     const float drift = paramOf(Drift), mutate = paramOf(Mutate);
@@ -641,7 +671,12 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
             for (auto &g : grains) {
                 if (!g.active) continue;
                 const float phase = static_cast<float>(g.age) / static_cast<float>(g.length);
-                const float w = windowAt(shape, phase, g.skew, g.skewK);
+                float w = windowAt(shape, phase, g.middle);
+                if (g.fade > 0) {
+                    // A stolen grain on its way out.
+                    w *= static_cast<float>(g.fade) / static_cast<float>(stealFrames);
+                    if (--g.fade <= 0) g.active = false;
+                }
                 double p = g.pos;
                 if (p < 0.0) p += span;
                 if (p >= span) p -= span;
@@ -654,10 +689,11 @@ bool Pollen::render(float *L, float *R, int32_t frames) {
                 l += sl * w * g.gainL * ge;
                 r += sr * w * g.gainR * ge;
                 g.pos = p + g.inc * wobble;
+                if (!g.active) continue; // a stolen grain's fade just ended
                 if (++g.age >= g.length) {
                     g.active = false;
                     if (g.voice >= 0 && voices[g.voice].living > 0) --voices[g.voice].living;
-                    if (bloom > 0.0001f) pollinate(g, view);
+                    if (bloom > 0.0001f && &g < grains + kGrains) pollinate(g, view);
                 }
             }
         }

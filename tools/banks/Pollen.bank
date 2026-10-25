@@ -2230,7 +2230,7 @@ patch "Swell Grains" family=texture
   panspread      0.7
   ampattack      0.4 s
   amprelease     2.5 s
-  volume         0.768
+  volume         0.661
   set macro1 "Crush"
   mac1_d1  #18
   mac1_a1  -0.5
@@ -2244,7 +2244,7 @@ patch "Swell Grains" family=texture
   mac4_d1  #25
   mac4_a1  0.6
   mac4_d2  #29
-  mac4_a2  -0.207
+  mac4_a2  -0.178
   set macro5 "Dark"
   mac5_d1  #21
   mac5_a1  -0.4
@@ -2257,12 +2257,12 @@ patch "Swell Grains" family=texture
   mac7_d1  #3
   mac7_a1  0.4
   mac7_d2  #29
-  mac7_a2  -0.124
+  mac7_a2  -0.107
   set macro8 "Thicker"
   mac8_d1  #8
   mac8_a1  0.25
   mac8_d2  #29
-  mac8_a2  -0.243
+  mac8_a2  -0.209
 
 patch "Thin Air" family=texture
   # Grains through a high-pass with a little ring: the file with its body

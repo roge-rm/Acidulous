@@ -25,6 +25,8 @@ class Pollen final : public Machine {
   public:
     static constexpr int kVoices = 8;
     static constexpr int kGrains = 96;
+    /** Extra slots that only hold stolen grains while they fade out. */
+    static constexpr int kSpare = 8;
     static constexpr int kWindowSize = 1024;
     static constexpr int kLiveSeconds = 8;
     static constexpr int kLiveOnsets = 64;
@@ -102,10 +104,11 @@ class Pollen final : public Machine {
         double pos = 0.0, inc = 1.0;
         int32_t age = 0, length = 1;
         float gainL = 0.5f, gainR = 0.5f;
-        float skew = 0.0f;
-        /** `2^(-2 skew)`, the power the window's time is raised to, fixed at birth. */
-        float skewK = 1.0f;
+        /** Where the window's middle falls in the grain, 0.5 unskewed, fixed at birth. */
+        float middle = 0.5f;
         int32_t generation = 0;
+        /** Frames left of a stolen grain's fade out, 0 for a grain playing normally. */
+        int32_t fade = 0;
     };
     struct Voice {
         bool used = false, gate = false;
@@ -134,10 +137,11 @@ class Pollen final : public Machine {
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
 
     Voice *allocate();
-    int32_t takeGrain();
+    /** A free slot, or -1 when the pool is full. [force] steals one instead. */
+    int32_t takeGrain(bool force);
     void spawn(Voice &v, int32_t voiceIndex, const audio::View &view, float env);
     void pollinate(const Grain &parent, const audio::View &view);
-    float windowAt(int32_t shape, float phase, float skew, float skewK) const;
+    float windowAt(int32_t shape, float phase, float middle) const;
     float scatterSemis(float amount, uint32_t &state) const;
     audio::View resolveView(int32_t mode, int32_t liveLen) const;
 
@@ -159,7 +163,10 @@ class Pollen final : public Machine {
     int32_t liveOnsetCount = 0, liveOnsetNext = 0;
 
     std::vector<float> window[WindowCount];
-    Grain grains[kGrains];
+    /** kGrains to play, then kSpare holding stolen grains as they fade. */
+    Grain grains[kGrains + kSpare];
+    /** A stolen grain's fade out, in frames (2.5 ms). */
+    int32_t stealFrames = 120;
     /** How many grains the cloud may use this block: all, or half in lean mode. */
     int32_t grainPool = kGrains;
     Voice voices[kVoices];
