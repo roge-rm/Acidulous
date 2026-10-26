@@ -8136,102 +8136,191 @@ internal object FactoryBanks {
         family = "tune")
 
     private fun molt1() = Patch("Molt", "Natural",
-        mapOf("tune" to 0f, "volume" to 0.5f),
+        mapOf("tune" to 0f, "volume" to 0.5f, "mac1_d1" to 0.125f, "mac1_d2" to 0.875f, "mac1_a1" to 0.775f, "mac1_a2" to 0.554f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.875f, "mac3_a1" to 0.4f, "mac3_a2" to 0.591f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3905f, "mac6_d1" to 0.3125f, "mac6_a1" to 0.8f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.5835f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5505f),
+        mapOf("macro1" to "Pull", "macro2" to "Slower", "macro3" to "Bigger", "macro4" to "Darker", "macro5" to "Grit", "macro6" to "Horn", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "tune")
 
-    private fun molt2() = Patch("Molt", "Correct",
-        mapOf("tune" to 0.78f, "rate" to 0.15f, "volume" to 0.599999964f),
+    private fun molt2() = Patch("Molt", "Nudge",
+        mapOf("tune" to 0.45f, "rate" to 0.3f, "volume" to 0.5933333f, "mac1_d1" to 0.125f, "mac1_a1" to 0.775f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_a1" to 0.4f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.357f, "mac6_d1" to 0.3125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.8f, "mac6_a2" to 0.406000018f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.599f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.459f),
+        mapOf("macro1" to "Pull", "macro2" to "Slower", "macro3" to "Bigger", "macro4" to "Darker", "macro5" to "Grit", "macro6" to "Horn", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "tune")
 
-    private fun molt3() = Patch("Molt", "Hard",
-        mapOf("rate" to 0f, "cutoff" to 0.845404565f, "drive" to 0.3f, "volume" to 0.393333316f),
+    private fun molt3() = Patch("Molt", "Correct",
+        mapOf("tune" to 0.78f, "rate" to 0.15f, "volume" to 0.599999964f, "mac1_d1" to 0.125f, "mac1_d2" to 0.875f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4585f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_a1" to 0.4f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.352f, "mac6_d1" to 0.3125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.8f, "mac6_a2" to 0.4005f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6335f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4525f),
+        mapOf("macro1" to "Looser", "macro2" to "Slower", "macro3" to "Bigger", "macro4" to "Darker", "macro5" to "Grit", "macro6" to "Horn", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "tune")
 
-    private fun molt4() = Patch("Molt", "Catch Up",
-        mapOf("tune" to 0.95f, "rate" to 0.625f, "volume" to 0.62f),
+    private fun molt4() = Patch("Molt", "Hard",
+        mapOf("rate" to 0f, "cutoff" to 0.845404565f, "drive" to 0.3f, "volume" to 0.393333316f, "mac1_d1" to 0.125f, "mac1_a1" to 0.25f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.25f, "mac3_d2" to 0.875f, "mac3_a1" to 0.4f, "mac3_a2" to 0.4825f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.469f, "mac6_d1" to 0.3125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.8f, "mac6_a2" to 0.4475f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.5595f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4785f),
+        mapOf("macro1" to "Looser", "macro2" to "Slower", "macro3" to "Bigger", "macro4" to "Darker", "macro5" to "Grit", "macro6" to "Horn", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "tune")
 
-    private fun molt5() = Patch("Molt", "Robot",
-        mapOf("robot" to 1f, "volume" to 0.6066667f),
+    private fun molt5() = Patch("Molt", "Catch Up",
+        mapOf("tune" to 0.95f, "rate" to 0.625f, "volume" to 0.62f, "mac1_d1" to 0.125f, "mac1_a1" to 0.25f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.25f, "mac3_d1" to 0.25f, "mac3_a1" to 0.4f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3455f, "mac6_d1" to 0.3125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.8f, "mac6_a2" to 0.412f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.618000031f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.445f),
+        mapOf("macro1" to "Looser", "macro2" to "Quicker", "macro3" to "Bigger", "macro4" to "Darker", "macro5" to "Grit", "macro6" to "Horn", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "tune")
+
+    private fun molt6() = Patch("Molt", "Drag",
+        mapOf("tune" to 0.97f, "rate" to 1f, "volume" to 0.62f, "mac1_d1" to 0.125f, "mac1_a1" to 0.25f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.25f, "mac3_d1" to 0.25f, "mac3_a1" to 0.4f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.349f, "mac6_d1" to 0.3125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.8f, "mac6_a2" to 0.4145f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.628f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.454f),
+        mapOf("macro1" to "Looser", "macro2" to "Quicker", "macro3" to "Bigger", "macro4" to "Darker", "macro5" to "Grit", "macro6" to "Horn", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "tune")
+
+    private fun molt7() = Patch("Molt", "Robot",
+        mapOf("robot" to 1f, "volume" to 0.6066667f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.4735f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.875f, "mac2_a1" to 0.8f, "mac2_a2" to 0.406499982f, "mac3_d1" to 0.375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3485f, "mac6_d1" to 0.6875f, "mac6_a1" to 0.65f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6105f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.452f),
+        mapOf("macro1" to "Bigger", "macro2" to "Horn", "macro3" to "Darker", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Longer", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "robot")
 
-    private fun molt6() = Patch("Molt", "Choir",
-        mapOf("robot" to 1f, "amprelease" to 0.7223811f, "glide" to 0.06f, "volume" to 0.6066667f),
+    private fun molt8() = Patch("Molt", "Choir",
+        mapOf("robot" to 1f, "amprelease" to 0.7223811f, "glide" to 0.06f, "volume" to 0.6066667f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.4735f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.875f, "mac2_a1" to 0.8f, "mac2_a2" to 0.406499982f, "mac3_d1" to 0.375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3485f, "mac6_d1" to 0.6875f, "mac6_a1" to 0.65f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6105f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.452f),
+        mapOf("macro1" to "Bigger", "macro2" to "Horn", "macro3" to "Darker", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Longer", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "robot")
 
-    private fun molt7() = Patch("Molt", "Talkbox",
-        mapOf("robot" to 1f, "cutoff" to 0.5567293f, "resonance" to 0.62f, "filtertype" to 0.727272749f, "volume" to 1f),
+    private fun molt9() = Patch("Molt", "Tin Voice",
+        mapOf("robot" to 1f, "formant" to 0.5833333f, "mega" to 0.35f, "cutoff" to 0.7903287f, "drive" to 0.2f, "volume" to 0.313333333f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.5405f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.875f, "mac2_a1" to 0.8f, "mac2_a2" to 0.458f, "mac3_d1" to 0.375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.375f, "mac3_a2" to 0.649f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.483f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.465f, "mac6_d1" to 0.6875f, "mac6_a1" to 0.65f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6185f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Horn", "macro3" to "Darker", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Longer", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "robot")
 
-    private fun molt8() = Patch("Molt", "Monk",
-        mapOf("robot" to 1f, "formant" to 0.375f, "amprelease" to 0.820153654f, "octave" to 0.333333343f, "volume" to 0.599999964f),
+    private fun molt10() = Patch("Molt", "Talkbox",
+        mapOf("robot" to 1f, "cutoff" to 0.5567293f, "resonance" to 0.62f, "filtertype" to 0.727272749f, "volume" to 1f, "mac1_d1" to 0.25f, "mac1_a1" to 0.46f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.875f, "mac2_a1" to 0.8f, "mac2_a2" to 0.242000014f, "mac3_d1" to 0.375f, "mac3_a1" to 0.5435f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.3f, "mac4_a2" to 0.4205f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.231f, "mac6_d1" to 0.6875f, "mac6_a1" to 0.65f, "mac7_d1" to 0.5f, "mac7_a1" to 0.675f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.411f),
+        mapOf("macro1" to "Bigger", "macro2" to "Horn", "macro3" to "Brighter", "macro4" to "Smooth", "macro5" to "Grit", "macro6" to "Longer", "macro7" to "Slow In", "macro8" to "Octave Down"),
         family = "robot")
 
-    private fun molt9() = Patch("Molt", "Giant",
-        mapOf("formant" to 0.166666672f, "volume" to 0.813333333f),
+    private fun molt11() = Patch("Molt", "Monk",
+        mapOf("robot" to 1f, "formant" to 0.375f, "amprelease" to 0.820153654f, "octave" to 0.333333343f, "volume" to 0.599999964f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.569f, "mac2_d1" to 0.3125f, "mac2_a1" to 0.8f, "mac3_d1" to 0.375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3685f, "mac6_d1" to 0.6875f, "mac6_a1" to 0.65f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.75f, "mac8_a2" to 0.591f),
+        mapOf("macro1" to "Bigger", "macro2" to "Horn", "macro3" to "Darker", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Longer", "macro7" to "Later", "macro8" to "Octave Up"),
+        family = "robot")
+
+    private fun molt12() = Patch("Molt", "Mantra",
+        mapOf("loop" to 1f, "robot" to 1f, "formant" to 0.416666657f, "cutoff" to 0.706713557f, "ampattack" to 0.7264218f, "amprelease" to 0.903725266f, "volume" to 0.6333333f, "mac1_d1" to 0.25f, "mac1_a1" to 0.4f, "mac2_d1" to 0.3125f, "mac2_a1" to 0.8f, "mac3_d1" to 0.375f, "mac3_d2" to 0.875f, "mac3_a1" to 0.375f, "mac3_a2" to 0.555500031f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3475f, "mac6_d1" to 0.6875f, "mac6_a1" to 0.35f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.625499964f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.453f),
+        mapOf("macro1" to "Bigger", "macro2" to "Horn", "macro3" to "Darker", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Shorter", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "robot")
+
+    private fun molt13() = Patch("Molt", "Grown Up",
+        mapOf("formant" to 0.416666657f, "volume" to 0.5933333f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.5285f, "mac2_d1" to 0.375f, "mac2_a1" to 0.375f, "mac3_d1" to 0.3125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.8f, "mac3_a2" to 0.456f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.357f, "mac6_d1" to 0.125f, "mac6_a1" to 0.25f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.5945f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.453f),
+        mapOf("macro1" to "Bigger", "macro2" to "Darker", "macro3" to "Horn", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "size")
 
-    private fun molt10() = Patch("Molt", "Child",
-        mapOf("formant" to 0.7916667f, "cutoff" to 0.8865413f, "volume" to 0.4466667f),
+    private fun molt14() = Patch("Molt", "Giant",
+        mapOf("formant" to 0.166666672f, "volume" to 0.813333333f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.6f, "mac1_a2" to 0.395f, "mac2_d1" to 0.375f, "mac2_a1" to 0.375f, "mac3_d1" to 0.3125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.8f, "mac3_a2" to 0.4165f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.290000021f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.3915f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.590000033f, "mac7_a2" to 0.5655f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.3915f),
+        mapOf("macro1" to "Smaller", "macro2" to "Darker", "macro3" to "Horn", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "size")
 
-    private fun molt11() = Patch("Molt", "Chest",
-        mapOf("formant" to 0.333333343f, "cutoff" to 0.670188f, "volume" to 0.5933333f),
+    private fun molt15() = Patch("Molt", "Child",
+        mapOf("formant" to 0.7916667f, "cutoff" to 0.8865413f, "volume" to 0.4466667f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.585f, "mac2_d1" to 0.375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.375f, "mac2_a2" to 0.5215f, "mac3_d1" to 0.3125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.8f, "mac3_a2" to 0.4825f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.405f, "mac6_d1" to 0.125f, "mac6_a1" to 0.25f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.603f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5815f),
+        mapOf("macro1" to "Bigger", "macro2" to "Darker", "macro3" to "Horn", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "size")
 
-    private fun molt12() = Patch("Molt", "Megaphone",
-        mapOf("mega" to 0.8f, "cutoff" to 0.593254864f, "resonance" to 0.3f, "filtertype" to 0.727272749f, "volume" to 0.6066667f),
+    private fun molt16() = Patch("Molt", "Small Voice",
+        mapOf("formant" to 1f, "cutoff" to 0.845404565f, "volume" to 0.486666679f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.4685f, "mac2_d1" to 0.375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.375f, "mac2_a2" to 0.549f, "mac3_d1" to 0.3125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.8f, "mac3_a2" to 0.4545f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4735f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3875f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.5235f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.5885f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5885f),
+        mapOf("macro1" to "Bigger", "macro2" to "Darker", "macro3" to "Horn", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "size")
 
-    private fun molt13() = Patch("Molt", "Telephone",
-        mapOf("cutoff" to 0.5424868f, "resonance" to 0.35f, "filtertype" to 0.8181818f, "drive" to 0.18f, "volume" to 0.686666667f),
+    private fun molt17() = Patch("Molt", "Chest",
+        mapOf("formant" to 0.333333343f, "cutoff" to 0.670188f, "volume" to 0.5933333f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.6845f, "mac2_d1" to 0.375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.375f, "mac2_a2" to 0.544f, "mac3_d1" to 0.3125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.8f, "mac3_a2" to 0.56f, "mac4_d1" to 0.4375f, "mac4_a1" to 0.75f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.357f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.536f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.631999969f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4475f),
+        mapOf("macro1" to "Bigger", "macro2" to "Darker", "macro3" to "Horn", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "size")
+
+    private fun molt18() = Patch("Molt", "Megaphone",
+        mapOf("mega" to 0.8f, "cutoff" to 0.593254864f, "resonance" to 0.3f, "filtertype" to 0.727272749f, "volume" to 0.6066667f, "mac1_d1" to 0.25f, "mac1_d2" to 0.875f, "mac1_a1" to 0.4f, "mac1_a2" to 0.6455f, "mac2_d1" to 0.375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.5625f, "mac2_a2" to 0.631999969f, "mac3_d1" to 0.3125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.199999988f, "mac3_a2" to 0.6965f, "mac4_d1" to 0.4375f, "mac4_d2" to 0.875f, "mac4_a1" to 0.75f, "mac4_a2" to 0.549f, "mac5_d1" to 0.8125f, "mac5_d2" to 0.875f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3505f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.464f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6965f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Brighter", "macro3" to "Less Horn", "macro4" to "Resonant", "macro5" to "Grit", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "size")
+
+    private fun molt19() = Patch("Molt", "Warm Voice",
+        mapOf("cutoff" to 0.6954203f, "drive" to 0.08f, "volume" to 0.5f, "mac1_d1" to 0.375f, "mac1_d2" to 0.875f, "mac1_a1" to 0.375f, "mac1_a2" to 0.554f, "mac2_d1" to 0.4375f, "mac2_a1" to 0.75f, "mac3_d1" to 0.8125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4095f, "mac4_d1" to 0.3125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.8f, "mac4_a2" to 0.465f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.4705f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.478f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.591f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.47f),
+        mapOf("macro1" to "Darker", "macro2" to "Resonant", "macro3" to "Grit", "macro4" to "Horn", "macro5" to "Bigger", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "tone")
 
-    private fun molt14() = Patch("Molt", "Dark Room",
-        mapOf("cutoff" to 0.50963974f, "resonance" to 0.12f, "filtertype" to 0.272727281f, "volume" to 0.793333352f),
+    private fun molt20() = Patch("Molt", "Telephone",
+        mapOf("cutoff" to 0.5424868f, "resonance" to 0.35f, "filtertype" to 0.8181818f, "drive" to 0.18f, "volume" to 0.686666667f, "mac1_d1" to 0.375f, "mac1_d2" to 0.875f, "mac1_a1" to 0.5625f, "mac1_a2" to 0.577f, "mac2_d1" to 0.4375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.75f, "mac2_a2" to 0.6565f, "mac3_d1" to 0.8125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.394f, "mac4_d1" to 0.3125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.8f, "mac4_a2" to 0.334999979f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.62f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.466f, "mac7_d1" to 0.5f, "mac7_a1" to 0.675f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4355f),
+        mapOf("macro1" to "Brighter", "macro2" to "Resonant", "macro3" to "Grit", "macro4" to "Horn", "macro5" to "Bigger", "macro6" to "Looser", "macro7" to "Slow In", "macro8" to "Octave Down"),
         family = "tone")
 
-    private fun molt15() = Patch("Molt", "Air",
-        mapOf("formant" to 0.5833333f, "cutoff" to 0.368505567f, "filtertype" to 0.363636374f, "volume" to 0.72f),
+    private fun molt21() = Patch("Molt", "Honk",
+        mapOf("cutoff" to 0.5268858f, "resonance" to 0.7f, "filtertype" to 1f, "volume" to 0.353333324f, "mac1_d1" to 0.375f, "mac1_d2" to 0.875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.597f, "mac2_d1" to 0.4375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.3f, "mac2_a2" to 0.5875f, "mac3_d1" to 0.8125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4275f, "mac4_d1" to 0.3125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.8f, "mac4_a2" to 0.425f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.526f, "mac6_d1" to 0.125f, "mac6_a1" to 0.25f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6035f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4705f),
+        mapOf("macro1" to "Brighter", "macro2" to "Smooth", "macro3" to "Grit", "macro4" to "Horn", "macro5" to "Bigger", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "tone")
 
-    private fun molt16() = Patch("Molt", "Driven",
-        mapOf("cutoff" to 0.7903287f, "drive" to 0.62f, "volume" to 0.36f),
+    private fun molt22() = Patch("Molt", "Dark Room",
+        mapOf("cutoff" to 0.50963974f, "resonance" to 0.12f, "filtertype" to 0.272727281f, "volume" to 0.793333352f, "mac1_d1" to 0.375f, "mac1_d2" to 0.875f, "mac1_a1" to 0.625f, "mac1_a2" to 0.429499984f, "mac2_d1" to 0.4375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.75f, "mac2_a2" to 0.453f, "mac3_d1" to 0.8125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.292999983f, "mac4_d1" to 0.3125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.62f, "mac4_a2" to 0.6035f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.426f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.465f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6035f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4335f),
+        mapOf("macro1" to "Brighter", "macro2" to "Resonant", "macro3" to "Grit", "macro4" to "Horn", "macro5" to "Bigger", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "tone")
 
-    private fun molt17() = Patch("Molt", "Swell",
-        mapOf("ampattack" to 0.8949457f, "ampdecay" to 0.854839f, "ampsustain" to 0.9f, "amprelease" to 0.789853036f, "volume" to 0.6933333f),
+    private fun molt23() = Patch("Molt", "Air",
+        mapOf("formant" to 0.5833333f, "cutoff" to 0.368505567f, "filtertype" to 0.363636374f, "volume" to 0.72f, "mac1_d1" to 0.375f, "mac1_d2" to 0.875f, "mac1_a1" to 0.5875f, "mac1_a2" to 0.6285f, "mac2_d1" to 0.4375f, "mac2_a1" to 0.75f, "mac3_d1" to 0.8125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.3125f, "mac4_d1" to 0.3125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.8f, "mac4_a2" to 0.3425f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.593f, "mac6_d1" to 0.125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.25f, "mac6_a2" to 0.45f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.64f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4685f),
+        mapOf("macro1" to "Brighter", "macro2" to "Resonant", "macro3" to "Grit", "macro4" to "Horn", "macro5" to "Bigger", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "tone")
+
+    private fun molt24() = Patch("Molt", "Driven",
+        mapOf("cutoff" to 0.7903287f, "drive" to 0.62f, "volume" to 0.36f, "mac1_d1" to 0.375f, "mac1_d2" to 0.875f, "mac1_a1" to 0.375f, "mac1_a2" to 0.5175f, "mac2_d1" to 0.4375f, "mac2_a1" to 0.75f, "mac3_d1" to 0.8125f, "mac3_d2" to 0.875f, "mac3_a1" to 0.25f, "mac3_a2" to 0.58f, "mac4_d1" to 0.3125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4565f, "mac5_d1" to 0.25f, "mac5_a1" to 0.4f, "mac6_d1" to 0.125f, "mac6_a1" to 0.25f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.5465f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Darker", "macro2" to "Resonant", "macro3" to "Clean", "macro4" to "Horn", "macro5" to "Bigger", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "tone")
+
+    private fun molt25() = Patch("Molt", "Fried",
+        mapOf("mega" to 0.25f, "cutoff" to 0.7538032f, "drive" to 1f, "volume" to 0.286666662f, "mac1_d1" to 0.375f, "mac1_d2" to 0.875f, "mac1_a1" to 0.375f, "mac1_a2" to 0.566f, "mac2_d1" to 0.4375f, "mac2_d2" to 0.875f, "mac2_a1" to 0.75f, "mac2_a2" to 0.4875f, "mac3_d1" to 0.8125f, "mac3_a1" to 0.25f, "mac4_d1" to 0.3125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.8f, "mac4_a2" to 0.469f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.527f, "mac6_d1" to 0.125f, "mac6_a1" to 0.25f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.559f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Darker", "macro2" to "Resonant", "macro3" to "Clean", "macro4" to "Horn", "macro5" to "Bigger", "macro6" to "Looser", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "tone")
+
+    private fun molt26() = Patch("Molt", "Soft Start",
+        mapOf("ampattack" to 0.6298583f, "amprelease" to 0.687695742f, "volume" to 0.62f, "mac1_d1" to 0.5f, "mac1_a1" to 0.675f, "mac2_d1" to 0.6875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.25f, "mac3_a2" to 0.69f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.4695f, "mac6_d1" to 0.8125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.3455f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.648499966f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.451f),
+        mapOf("macro1" to "Slow In", "macro2" to "Longer", "macro3" to "Less Hold", "macro4" to "Darker", "macro5" to "Bigger", "macro6" to "Grit", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "shape")
 
-    private fun molt18() = Patch("Molt", "Pluck",
-        mapOf("ampattack" to 0.182385489f, "ampdecay" to 0.687695742f, "ampsustain" to 0.34f, "amprelease" to 0.5772201f, "volume" to 1f),
+    private fun molt27() = Patch("Molt", "Swell",
+        mapOf("ampattack" to 0.8949457f, "ampdecay" to 0.854839f, "ampsustain" to 0.9f, "amprelease" to 0.789853036f, "volume" to 0.6933333f, "mac1_d1" to 0.5f, "mac1_a1" to 0.325f, "mac2_d1" to 0.6875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.25f, "mac3_a2" to 0.6535f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.5335f, "mac6_d1" to 0.8125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.323f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.590000033f, "mac7_a2" to 0.615f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.445f),
+        mapOf("macro1" to "Quick In", "macro2" to "Longer", "macro3" to "Less Hold", "macro4" to "Darker", "macro5" to "Bigger", "macro6" to "Grit", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "shape")
 
-    private fun molt19() = Patch("Molt", "Gated",
-        mapOf("ampattack" to 0.0911927447f, "ampdecay" to 0.471666247f, "ampsustain" to 0.75f, "amprelease" to 0.361190528f, "volume" to 0.826666653f),
+    private fun molt28() = Patch("Molt", "Pluck",
+        mapOf("ampattack" to 0.182385489f, "ampdecay" to 0.687695742f, "ampsustain" to 0.34f, "amprelease" to 0.5772201f, "volume" to 1f, "mac1_d1" to 0.5f, "mac1_a1" to 0.675f, "mac2_d1" to 0.6875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.2365f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.456f, "mac6_d1" to 0.8125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.226000011f, "mac7_d1" to 0.0625f, "mac7_a1" to 0.65f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4255f),
+        mapOf("macro1" to "Slow In", "macro2" to "Longer", "macro3" to "More Hold", "macro4" to "Darker", "macro5" to "Bigger", "macro6" to "Grit", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "shape")
 
-    private fun molt20() = Patch("Molt", "Held",
-        mapOf("loop" to 1f, "ampattack" to 0.5386656f, "amprelease" to 0.8895244f, "volume" to 0.62f),
+    private fun molt29() = Patch("Molt", "Fall Away",
+        mapOf("ampattack" to 0.144537091f, "ampdecay" to 0.9433325f, "ampsustain" to 0f, "amprelease" to 0.7223811f, "volume" to 0.82f, "mac1_d1" to 0.5f, "mac1_a1" to 0.675f, "mac2_d1" to 0.6875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.75f, "mac3_a2" to 0.447f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.4595f, "mac6_d1" to 0.8125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.2885f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.590000033f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.439f),
+        mapOf("macro1" to "Slow In", "macro2" to "Longer", "macro3" to "More Hold", "macro4" to "Darker", "macro5" to "Bigger", "macro6" to "Grit", "macro7" to "Later", "macro8" to "Octave Down"),
         family = "shape")
 
-    private fun molt21() = Patch("Molt", "Glide",
-        mapOf("tune" to 0.9f, "rate" to 0.075f, "glide" to 0.15f, "volume" to 0.62f),
+    private fun molt30() = Patch("Molt", "Gated",
+        mapOf("ampattack" to 0.0911927447f, "ampdecay" to 0.471666247f, "ampsustain" to 0.75f, "amprelease" to 0.361190528f, "volume" to 0.826666653f, "mac1_d1" to 0.5f, "mac1_a1" to 0.675f, "mac2_d1" to 0.6875f, "mac2_a1" to 0.65f, "mac3_d1" to 0.625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.4f, "mac3_a2" to 0.5865f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.4595f, "mac6_d1" to 0.8125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.2845f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.5865f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4345f),
+        mapOf("macro1" to "Slow In", "macro2" to "Longer", "macro3" to "Less Hold", "macro4" to "Darker", "macro5" to "Bigger", "macro6" to "Grit", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "shape")
+
+    private fun molt31() = Patch("Molt", "Held",
+        mapOf("loop" to 1f, "ampattack" to 0.5386656f, "amprelease" to 0.8895244f, "volume" to 0.62f, "mac1_d1" to 0.5f, "mac1_a1" to 0.675f, "mac2_d1" to 0.6875f, "mac2_a1" to 0.35f, "mac3_d1" to 0.625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.3f, "mac3_a2" to 0.69f, "mac4_d1" to 0.375f, "mac4_a1" to 0.375f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.4f, "mac5_a2" to 0.4695f, "mac6_d1" to 0.8125f, "mac6_d2" to 0.875f, "mac6_a1" to 0.75f, "mac6_a2" to 0.3455f, "mac7_d1" to 0.0625f, "mac7_d2" to 0.875f, "mac7_a1" to 0.65f, "mac7_a2" to 0.633f, "mac8_d1" to 1f, "mac8_d2" to 0.875f, "mac8_a1" to 0.25f, "mac8_a2" to 0.451f),
+        mapOf("macro1" to "Slow In", "macro2" to "Shorter", "macro3" to "Less Hold", "macro4" to "Darker", "macro5" to "Bigger", "macro6" to "Grit", "macro7" to "Later", "macro8" to "Octave Down"),
+        family = "shape")
+
+    private fun molt32() = Patch("Molt", "Glide",
+        mapOf("tune" to 0.9f, "rate" to 0.075f, "glide" to 0.15f, "volume" to 0.62f, "mac1_d1" to 1f, "mac1_d2" to 0.875f, "mac1_a1" to 0.25f, "mac1_a2" to 0.448f, "mac2_d1" to 1f, "mac2_a1" to 0.646f, "mac3_d1" to 0.0625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.608f, "mac4_d1" to 0.125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.25f, "mac4_a2" to 0.46f, "mac5_d1" to 0.25f, "mac5_a1" to 0.4f, "mac6_d1" to 0.375f, "mac6_a1" to 0.375f, "mac7_d1" to 0.8125f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3455f, "mac8_d1" to 0.6875f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Octave Down", "macro2" to "Fifth Up", "macro3" to "Later", "macro4" to "Looser", "macro5" to "Bigger", "macro6" to "Darker", "macro7" to "Grit", "macro8" to "Longer"),
         family = "play")
 
-    private fun molt22() = Patch("Molt", "Octave Down",
-        mapOf("formant" to 0.6666667f, "octave" to 0.333333343f, "volume" to 0.5266667f),
+    private fun molt33() = Patch("Molt", "Octave Down",
+        mapOf("formant" to 0.6666667f, "octave" to 0.333333343f, "volume" to 0.5266667f, "mac1_d1" to 1f, "mac1_a1" to 0.75f, "mac2_d1" to 1f, "mac2_d2" to 0.875f, "mac2_a1" to 0.646f, "mac2_a2" to 0.446f, "mac3_d1" to 0.0625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.588f, "mac4_d1" to 0.125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.25f, "mac4_a2" to 0.522f, "mac5_d1" to 0.25f, "mac5_a1" to 0.4f, "mac6_d1" to 0.375f, "mac6_a1" to 0.375f, "mac7_d1" to 0.8125f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3795f, "mac8_d1" to 0.6875f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Octave Up", "macro2" to "Fifth Up", "macro3" to "Later", "macro4" to "Looser", "macro5" to "Bigger", "macro6" to "Darker", "macro7" to "Grit", "macro8" to "Longer"),
         family = "play")
 
-    private fun molt23() = Patch("Molt", "Wide Bend",
-        mapOf("tune" to 0.85f, "rate" to 0.125f, "bendrange" to 0.5f, "volume" to 0.599999964f),
+    private fun molt34() = Patch("Molt", "Up High",
+        mapOf("formant" to 0.416666657f, "octave" to 0.6666667f, "volume" to 0.960000038f, "mac1_d1" to 1f, "mac1_d2" to 0.875f, "mac1_a1" to 0.25f, "mac1_a2" to 0.3195f, "mac2_d1" to 1f, "mac2_d2" to 0.875f, "mac2_a1" to 0.646f, "mac2_a2" to 0.52f, "mac3_d1" to 0.0625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.575f, "mac3_a2" to 0.52f, "mac4_d1" to 0.125f, "mac4_a1" to 0.25f, "mac5_d1" to 0.25f, "mac5_d2" to 0.875f, "mac5_a1" to 0.445f, "mac5_a2" to 0.52f, "mac6_d1" to 0.375f, "mac6_a1" to 0.375f, "mac7_d1" to 0.8125f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.2525f, "mac8_d1" to 0.6875f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Octave Down", "macro2" to "Fifth Up", "macro3" to "Later", "macro4" to "Looser", "macro5" to "Bigger", "macro6" to "Darker", "macro7" to "Grit", "macro8" to "Longer"),
         family = "play")
 
-    private fun molt24() = Patch("Molt", "Whisper",
-        mapOf("start" to 0.18f, "cutoff" to 0.82017225f, "velocity" to 0.9f, "drive" to 0.1f, "volume" to 0.7f),
+    private fun molt35() = Patch("Molt", "Wide Bend",
+        mapOf("tune" to 0.85f, "rate" to 0.125f, "bendrange" to 0.5f, "volume" to 0.599999964f, "mac1_d1" to 1f, "mac1_d2" to 0.875f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4525f, "mac2_d1" to 1f, "mac2_a1" to 0.646f, "mac3_d1" to 0.0625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.624f, "mac4_d1" to 0.125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4645f, "mac5_d1" to 0.25f, "mac5_a1" to 0.4f, "mac6_d1" to 0.375f, "mac6_a1" to 0.375f, "mac7_d1" to 0.8125f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.354f, "mac8_d1" to 0.6875f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Octave Down", "macro2" to "Fifth Up", "macro3" to "Later", "macro4" to "Looser", "macro5" to "Bigger", "macro6" to "Darker", "macro7" to "Grit", "macro8" to "Longer"),
         family = "play")
 
-    private val molt: List<Patch> by lazy { listOf(molt0(), molt1(), molt2(), molt3(), molt4(), molt5(), molt6(), molt7(), molt8(), molt9(), molt10(), molt11(), molt12(), molt13(), molt14(), molt15(), molt16(), molt17(), molt18(), molt19(), molt20(), molt21(), molt22(), molt23(), molt24()) }
+    private fun molt36() = Patch("Molt", "Whisper",
+        mapOf("start" to 0.18f, "cutoff" to 0.82017225f, "velocity" to 0.9f, "drive" to 0.1f, "volume" to 0.7f, "mac1_d1" to 1f, "mac1_d2" to 0.875f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4445f, "mac2_d1" to 1f, "mac2_d2" to 0.875f, "mac2_a1" to 0.646f, "mac2_a2" to 0.5475f, "mac3_d1" to 0.0625f, "mac3_d2" to 0.875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.65f, "mac4_d1" to 0.125f, "mac4_a1" to 0.25f, "mac5_d1" to 0.25f, "mac5_a1" to 0.4f, "mac6_d1" to 0.375f, "mac6_d2" to 0.875f, "mac6_a1" to 0.375f, "mac6_a2" to 0.5425f, "mac7_d1" to 0.8125f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.3685f, "mac8_d1" to 0.6875f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Octave Down", "macro2" to "Fifth Up", "macro3" to "Later", "macro4" to "Looser", "macro5" to "Bigger", "macro6" to "Darker", "macro7" to "Grit", "macro8" to "Longer"),
+        family = "play")
+
+    private fun molt37() = Patch("Molt", "Run Round",
+        mapOf("start" to 0.3f, "loop" to 1f, "tune" to 0.9f, "rate" to 0.075f, "volume" to 0.846666634f, "mac1_d1" to 1f, "mac1_d2" to 0.875f, "mac1_a1" to 0.25f, "mac1_a2" to 0.4245f, "mac2_d1" to 1f, "mac2_a1" to 0.646f, "mac3_d1" to 0.0625f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_d2" to 0.875f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4585f, "mac5_d1" to 0.25f, "mac5_a1" to 0.4f, "mac6_d1" to 0.375f, "mac6_a1" to 0.375f, "mac7_d1" to 0.8125f, "mac7_d2" to 0.875f, "mac7_a1" to 0.75f, "mac7_a2" to 0.277f, "mac8_d1" to 0.6875f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Octave Down", "macro2" to "Fifth Up", "macro3" to "Later", "macro4" to "Looser", "macro5" to "Bigger", "macro6" to "Darker", "macro7" to "Grit", "macro8" to "Longer"),
+        family = "play")
+
+    private val molt: List<Patch> by lazy { listOf(molt0(), molt1(), molt2(), molt3(), molt4(), molt5(), molt6(), molt7(), molt8(), molt9(), molt10(), molt11(), molt12(), molt13(), molt14(), molt15(), molt16(), molt17(), molt18(), molt19(), molt20(), molt21(), molt22(), molt23(), molt24(), molt25(), molt26(), molt27(), molt28(), molt29(), molt30(), molt31(), molt32(), molt33(), molt34(), molt35(), molt36(), molt37()) }
 
     private fun diction0() = Patch("Diction", "Init", emptyMap(),
         family = "voices")

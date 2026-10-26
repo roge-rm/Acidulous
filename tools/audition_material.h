@@ -569,12 +569,63 @@ inline std::vector<float> fileMono(const char *path, std::string &error) {
  * onto the written notes, so on a take with a fixed pitch `tune` would only
  * shift it and `rate` would have nothing to do.
  */
+inline std::unique_ptr<audio::Utterance> utteranceOf(std::vector<float> mono, const char *name);
+
 inline std::unique_ptr<audio::Utterance> voiceUtterance() {
-    auto u = std::make_unique<audio::Utterance>();
-    u->name = "voice";
     std::string ignored;
-    u->mono = fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
-    if (u->mono.empty()) u->mono = speechPhrase();
+    std::vector<float> mono = fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
+    if (mono.empty()) mono = speechPhrase();
+    return utteranceOf(std::move(mono), "voice");
+}
+
+/**
+ * The same voice with the dirt a phone in a room adds, as molt_test's
+ * dirtyVowel: 400 ms of room tone first, a 32 Hz hum and low-passed rumble at
+ * three times the voice's level under all of it, and hard clipping at the level only the
+ * loudest 0.3% of the result reaches. For checking that a patch still sings
+ * on a take like that, not for levels.
+ */
+inline std::unique_ptr<audio::Utterance> dirtyVoiceUtterance() {
+    std::string ignored;
+    std::vector<float> clean = fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
+    if (clean.empty()) clean = speechPhrase();
+    const size_t n = clean.size();
+    double sum = 0.0;
+    for (float v : clean) sum += static_cast<double>(v) * v;
+    const auto rms = static_cast<float>(std::sqrt(sum / static_cast<double>(std::max<size_t>(1, n))));
+    Rng rng(0xBEEFu);
+    const auto room = static_cast<size_t>(kMatSr * 0.4f);
+    const size_t total = room + n;
+    std::vector<float> out(total, 0.0f);
+    float lp = 0.0f;
+    // The hum and rumble run under the room tone too, as they would in a
+    // real room, and fade in and out over 50 ms so a looped read doesn't
+    // land on a step.
+    const auto edge = static_cast<size_t>(kMatSr * 0.05f);
+    for (size_t i = 0; i < total; ++i) {
+        const float t = static_cast<float>(i) / kMatSr;
+        lp += (rng.next() - lp) * 0.002f;
+        const float ends = static_cast<float>(std::min({i, total - 1 - i, edge})) / static_cast<float>(edge);
+        const float dirt = ends * rms * (3.0f * (std::sin(2.0f * static_cast<float>(M_PI) * 32.0f * t) * 0.5f + lp * 6.0f) +
+                                         0.025f * rng.next());
+        const float voice = i < room ? 0.0f : clean[i - room];
+        out[i] = voice + dirt;
+    }
+    // Clipped where only the loudest 0.3% of it reaches, as on the phone.
+    std::vector<float> mags(total);
+    for (size_t i = 0; i < total; ++i) mags[i] = std::fabs(out[i]);
+    const size_t at = total - std::max<size_t>(1, total * 3 / 1000);
+    std::nth_element(mags.begin(), mags.begin() + static_cast<std::ptrdiff_t>(at), mags.end());
+    const float clip = std::max(mags[at], 1e-3f);
+    for (float &v : out) v = std::clamp(v, -clip, clip);
+    return utteranceOf(std::move(out), "dirty voice");
+}
+
+/** Analyses [mono] as a Molt take and sets its level. */
+inline std::unique_ptr<audio::Utterance> utteranceOf(std::vector<float> mono, const char *name) {
+    auto u = std::make_unique<audio::Utterance>();
+    u->name = name;
+    u->mono = std::move(mono);
     u->frames = static_cast<int32_t>(u->mono.size());
     // Finds the marks and removes rumble. This has to happen before the
     // level is set, since removing rumble can change the peaks a lot.

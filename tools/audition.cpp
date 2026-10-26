@@ -806,6 +806,9 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
     } else if (kind == "voice") {
         mat.utterance = voiceUtterance();
         m->swapObject(0, mat.utterance.release());
+    } else if (kind == "dirtyvoice") {
+        mat.utterance = dirtyVoiceUtterance();
+        m->swapObject(0, mat.utterance.release());
     } else if (kind == "map") {
         mat.map = zoneMap();
         m->swapObject(0, mat.map.release());
@@ -2219,7 +2222,7 @@ void usage() {
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
-        "  --material kit|break|seed|dirtyseed|voice|voicetake|map|roughmap|none   --input voice|noise|break|none\n"
+        "  --material kit|break|seed|dirtyseed|voice|dirtyvoice|voicetake|map|roughmap|none   --input voice|noise|break|none\n"
         "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
         "\n"
