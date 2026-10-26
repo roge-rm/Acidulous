@@ -240,6 +240,7 @@
     <string name="pw_concertina">concertina</string>
     <string name="pw_cone">cone</string>
     <string name="pw_conga">conga</string>
+    <string name="pw_consonant_level">consonant level</string>
     <string name="pw_consonants">consonants</string>
     <string name="pw_contacts">contacts</string>
     <string name="pw_converge">converge</string>
@@ -433,6 +434,7 @@
     <string name="pw_filter">Filter</string>
     <string name="pw_filter_4bb4ca">filter</string>
     <string name="pw_filter_n">filter %d</string>
+    <string name="pw_filter_decay">filter decay</string>
     <string name="pw_filter_drive">filter drive</string>
     <string name="pw_filter_env">filter env</string>
     <string name="pw_filtfm">filtFM</string>
@@ -512,6 +514,12 @@
     <string name="pw_grace">grace</string>
     <string name="pw_grain">Grain</string>
     <string name="pw_grain_ee4ddd">grain</string>
+    <string name="pw_grain_density">grain density</string>
+    <string name="pw_grain_pitch">grain pitch</string>
+    <string name="pw_grain_position">grain position</string>
+    <string name="pw_grain_rate">grain rate</string>
+    <string name="pw_grain_size">grain size</string>
+    <string name="pw_grain_spray">grain spray</string>
     <string name="pw_grains">grains</string>
     <string name="pw_grand">grand</string>
     <string name="pw_grid">grid</string>
@@ -684,7 +692,9 @@
     <string name="pw_lfo_2d699f">lfo</string>
     <string name="pw_lfo_n">lfo %d</string>
     <string name="pw_lfo_1">lfo 1</string>
+    <string name="pw_lfo_1_rate">lfo 1 rate</string>
     <string name="pw_lfo_2">lfo 2</string>
+    <string name="pw_lfo_2_rate">lfo 2 rate</string>
     <string name="pw_lfo_cut">lfo cut</string>
     <string name="pw_lfo_pitch">lfo pitch</string>
     <string name="pw_lfo_pw">lfo pw</string>
@@ -802,6 +812,14 @@
     <string name="pw_mixture">mixture</string>
     <string name="pw_mod">mod</string>
     <string name="pw_mod_n">mod %d</string>
+    <string name="pw_mod_1">mod 1</string>
+    <string name="pw_mod_2">mod 2</string>
+    <string name="pw_mod_3">mod 3</string>
+    <string name="pw_mod_4">mod 4</string>
+    <string name="pw_mod_5">mod 5</string>
+    <string name="pw_mod_6">mod 6</string>
+    <string name="pw_mod_7">mod 7</string>
+    <string name="pw_mod_8">mod 8</string>
     <string name="pw_modn">mod%d</string>
     <string name="pw_mode">mode</string>
     <string name="pw_model">model</string>
@@ -895,6 +913,7 @@
     <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pair">pair</string>
     <string name="pw_pan">pan</string>
+    <string name="pw_pan_spread">pan spread</string>
     <string name="pw_panel">panel</string>
     <string name="pw_pans">pans</string>
     <string name="pw_paper">paper</string>
@@ -1132,6 +1151,7 @@
     <string name="pw_scale_60020d">scale</string>
     <string name="pw_scallop">scallop</string>
     <string name="pw_scan">scan</string>
+    <string name="pw_scan_amount">scan amount</string>
     <string name="pw_scanner">scanner</string>
     <string name="pw_scatter">scatter</string>
     <string name="pw_scoop">scoop</string>
@@ -1168,6 +1188,7 @@
     <string name="pw_sitar">sitar</string>
     <string name="pw_sixteenths">sixteenths</string>
     <string name="pw_size">size</string>
+    <string name="pw_size_spread">size spread</string>
     <string name="pw_sizzle">sizzle</string>
     <string name="pw_skew">skew</string>
     <string name="pw_skip">skip</string>
@@ -1435,6 +1456,7 @@
     <string name="pw_valve">valve</string>
     <string name="pw_veena">veena</string>
     <string name="pw_vel">vel</string>
+    <string name="pw_vel_to_filter">vel to filter</string>
     <string name="pw_vel_xf">vel xf</string>
     <string name="pw_velmode">velmode</string>
     <string name="pw_velocity">velocity</string>

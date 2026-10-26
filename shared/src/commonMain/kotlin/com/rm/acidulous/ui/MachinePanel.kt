@@ -3764,6 +3764,16 @@ private val POLLEN_SCATTER = listOf("free", "8ve", "5ths", "triad", "scale")
 private val POLLEN_SCALES = com.rm.acidulous.model.Scales.names
 private val POLLEN_KEYS = com.rm.acidulous.model.Scales.keyNames
 
+/** Where a Pollen macro route goes, in the engine's MacroDest order. */
+val POLLEN_MACRO_DESTS = listOf(
+    "off", "position", "scan", "spray", "onset snap", "reverse",
+    "size", "size spread", "density", "jitter", "skew",
+    "pitch", "scatter", "bloom", "drift", "mutate",
+    "pan spread", "width", "bits", "rate", "wobble",
+    "cutoff", "reso", "attack", "release",
+    "drive", "feedback", "thru", "velocity", "volume",
+)
+
 /**
  * Pollen's panel. The source section decides the machine (a file or the
  * microphone) and everything else shapes the cloud.
@@ -3775,11 +3785,34 @@ private val POLLEN_KEYS = com.rm.acidulous.model.Scales.keyNames
 private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, onImport: () -> Unit) {
     var section by rememberSaveable { mutableStateOf(0) }
     var picking by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val c = Acid.colors
     val sample = track.machine.settings["sample"].orEmpty()
     val live = (b.value("source") ?: 0f) >= 0.5f
-    PanelSections(listOf("source", "cloud", "spray", "pollen", "tone", "voice"), section, { section = it }) { sec ->
+    PanelSections(listOf("source", "play", "cloud", "spray", "pollen", "tone", "voice", "macros"), section, { section = it }) { sec ->
         when (sec) {
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", POLLEN_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", POLLEN_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", POLLEN_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", POLLEN_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             0 -> {
                 Group("buffer") {
                     PanelSwitch(b, "source", POLLEN_SOURCES, "read from")
@@ -3814,7 +3847,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "dry", "thru")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("grains") {
                     PanelKnob(b, "size", "size", PanelAmber)
                     PanelKnob(b, "sizespread", "· spread")
@@ -3831,7 +3864,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "width", "width")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("where") {
                     PanelKnob(b, "position", "position", PanelAmber)
                     PanelKnob(b, "scan", "scan", PanelAmber)
@@ -3850,7 +3883,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelStepKnob(b, "key", POLLEN_KEYS, "key~music")
                 }
             }
-            3 -> {
+            4 -> {
                 Group("pollination") {
                     PanelKnob(b, "bloom", "bloom", PanelAmber)
                     PanelStepKnob(b, "generations", (1..6).map { "$it" }, "depth", PanelAmber)
@@ -3860,7 +3893,7 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "mutate", "mutate", PanelAmber)
                 }
             }
-            4 -> {
+            5 -> {
                 Group("filter") {
                     PanelKnob(b, "cutoff", "cutoff", PanelAmber)
                     PanelKnob(b, "resonance", "reso", PanelAmber)
@@ -3907,6 +3940,14 @@ private fun PollenPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
             editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
         },
         onDismiss = { picking = false },
+    )
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
     )
 }
 
@@ -5656,14 +5697,46 @@ private fun DictionVoiceKnob(
     )
 }
 
+/** Where a Diction macro route goes, in the engine's MacroDest order. */
+val DICTION_MACRO_DESTS = listOf(
+    "off", "vowel", "formant", "breath", "consonants",
+    "vib depth", "vib rate", "vib delay", "drift",
+    "glide", "attack", "release", "velocity", "volume",
+    "consonant level", "clean", "effort", "rasp", "growl", "whisper", "scoop", "track",
+    "spread", "source", "throat", "morph", "pitch",
+)
+
 @Composable
 private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
     var forming by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     if (forming) DictionConsonantsWindow(b) { forming = false }
-    PanelSections(listOf("voice", "character", "expression", "out"), section, { section = it }) { sec ->
+    PanelSections(listOf("play", "voice", "character", "expression", "out", "macros"), section, { section = it }) { sec ->
         when (sec) {
-            0 -> {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", DICTION_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", DICTION_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", DICTION_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", DICTION_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
                 Group("voice") {
                     DictionVoiceKnob(track, trackIndex, editor)
                     PanelVowelKnob(b, "vowel", "vowel")
@@ -5691,7 +5764,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelActions(Triple(stringResource(Res.string.diction_from), PanelAmber) { forming = true })
                 }
             }
-            1 -> {
+            2 -> {
                 Group("air") {
                     PanelKnob(b, "breath", "breath")
                     PanelKnob(b, "clean", "clean", PanelPink)
@@ -5708,7 +5781,7 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                     PanelOnOff(b, "harmony", "harmony")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("vibrato") {
                     PanelKnob(b, "vibrato", "depth", PanelAmber)
                     PanelKnob(b, "vibratorate", "rate")
@@ -5738,6 +5811,14 @@ private fun DictionPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 private val TIMBER_FAMILY = listOf("reed", "double", "air")
@@ -5975,6 +6056,17 @@ val MOSAIC_DESTS = listOf(
     "f.freq", "f.res", "amp", "pan", "l1rate", "l2rate",
 )
 
+/** Where a Mosaic macro route goes, in the engine's MacroDest order. */
+val MOSAIC_MACRO_DESTS = listOf(
+    "off", "scan", "scan amount", "start",
+    "grain position", "grain rate", "grain size", "grain density", "grain spray", "grain pitch",
+    "attack", "decay", "sustain", "release",
+    "cutoff", "reso", "envmod", "filter decay",
+    "pitch", "glide", "lfo 1 rate", "lfo 2 rate",
+    "velocity", "vel to filter", "volume",
+    "mod 1", "mod 2", "mod 3", "mod 4", "mod 5", "mod 6", "mod 7", "mod 8",
+)
+
 @Composable
 private fun MosaicPanel(
     b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor,
@@ -5984,6 +6076,8 @@ private fun MosaicPanel(
     var selectedZone by rememberSaveable(trackIndex) { mutableStateOf(0) }
     var editing by remember { mutableStateOf(false) }
     var pickingZone by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val zones = remember(track.machine.settings["zones"]) { Zones.decode(track.machine.settings["zones"]) }
     val sf2 = track.machine.settings["sf2"].orEmpty()
     var info by remember(trackIndex) { mutableStateOf("") }
@@ -6010,7 +6104,7 @@ private fun MosaicPanel(
         editor.edit(trackIndex) { t -> t.withSetting("zones", if (list.isEmpty()) null else Zones.encode(list)) }
 
     PanelSections(
-        listOf("map", "sample", "grain", "filter", "env", "lfo", "mod", "voice"), section, { section = it },
+        listOf("map", "play", "sample", "grain", "filter", "env", "lfo", "mod", "voice", "macros"), section, { section = it },
         above = { sec ->
             if (sec == 0) {
                 if (sf2.isEmpty()) {
@@ -6081,7 +6175,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "scanamt", "amount", PanelAmber)
                 }
             }
-            1 -> {
+            2 -> {
                 Group("playback") {
                     PanelKnob(b, "start", "start", PanelAmber)
                     PanelSwitch(b, "loop", MOSAIC_LOOP, "loop")
@@ -6096,7 +6190,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "transpose", "transpose")
                 }
             }
-            2 -> Group("grains") {
+            3 -> Group("grains") {
                 PanelOnOff(b, "grain", "cloud")
                 PanelKnob(b, "gpos", "position", PanelAmber)
                 PanelKnob(b, "grate", "rate", PanelAmber)
@@ -6105,7 +6199,7 @@ private fun MosaicPanel(
                 PanelKnob(b, "gspray", "spray", PanelAmber)
                 PanelKnob(b, "gpitch", "pitch", PanelAmber)
             }
-            3 -> {
+            4 -> {
                 Group("filter") {
                     PanelStepKnob(b, "f_type", TRINITY_FILTERS, "type", PanelAmber)
                     PanelKnob(b, "f_freq", "freq", PanelAmber)
@@ -6121,7 +6215,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "f_release", "release")
                 }
             }
-            4 -> {
+            5 -> {
                 Group("amp env") {
                     PanelKnob(b, "a_attack", "attack", PanelAmber)
                     PanelKnob(b, "a_decay", "decay", PanelAmber)
@@ -6135,7 +6229,7 @@ private fun MosaicPanel(
                     PanelKnob(b, "e${e}_release", "release")
                 } }
             }
-            5 -> for (l in 1..2) key(l) { Group("lfo $l") {
+            6 -> for (l in 1..2) key(l) { Group("lfo $l") {
                 val p = "l${l}_"
                 PanelStepKnob(b, p + "wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                 PanelKnob(b, p + "rate", "rate", PanelAmber)
@@ -6144,12 +6238,33 @@ private fun MosaicPanel(
                 PanelKnob(b, p + "phase", "phase")
                 PanelSwitch(b, p + "keysync", listOf("free", "key"), "trig")
             } }
-            6 -> for (m in 1..8) key(m) { Group("mod $m") {
+            7 -> for (m in 1..8) key(m) { Group("mod $m") {
                 val p = "m%02d_".format(m)
                 PanelStepKnob(b, p + "src", MOSAIC_SOURCES, "from", PanelAmber)
                 PanelStepKnob(b, p + "src2", MOSAIC_SOURCES, "× from")
                 PanelStepKnob(b, p + "dest", MOSAIC_DESTS, "to", PanelAmber)
                 PanelKnob(b, p + "depth", "depth", PanelAmber)
+            } }
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            9 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", MOSAIC_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", MOSAIC_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", MOSAIC_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", MOSAIC_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
             } }
             else -> {
                 Group("voice") {
@@ -6163,6 +6278,14 @@ private fun MosaicPanel(
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
     if (editing && selectedZone in zones.indices) {
         ZoneDialog(
             zone = zones[selectedZone],

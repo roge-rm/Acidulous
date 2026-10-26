@@ -205,6 +205,7 @@
     <string name="pw_concertina">concertina</string>
     <string name="pw_cone">cône</string>
     <string name="pw_conga">conga</string>
+    <string name="pw_consonant_level">niveau consonnes</string>
     <string name="pw_consonants">consonnes</string>
     <string name="pw_converge">converge</string>
     <string name="pw_coo">roucoulement</string>
@@ -775,6 +776,7 @@
     <string name="pw_pad_n">Pad %d</string>
     <string name="pw_pad_n_bf5aa1">pad %d</string>
     <string name="pw_pan">pano</string>
+    <string name="pw_pan_spread">écart pano</string>
     <string name="pw_pans">tambours d’acier</string>
     <string name="pw_panel">panneau</string>
     <string name="pw_paper">papier</string>
@@ -1015,6 +1017,7 @@
     <string name="pw_sitar">sitar</string>
     <string name="pw_sixteenths">doubles croches</string>
     <string name="pw_size">taille</string>
+    <string name="pw_size_spread">écart taille</string>
     <string name="pw_sizzle">grésillement</string>
     <string name="pw_skew">biais</string>
     <string name="pw_skip">sauter</string>
@@ -1523,4 +1526,23 @@
     <string name="pw_trem_pan">trémolo pano</string>
     <string name="pw_flam">fla</string>
     <string name="pw_pair">paire</string>
+    <string name="pw_filter_decay">déclin filtre</string>
+    <string name="pw_grain_density">densité grains</string>
+    <string name="pw_grain_pitch">hauteur grains</string>
+    <string name="pw_grain_position">position grains</string>
+    <string name="pw_grain_rate">vitesse grains</string>
+    <string name="pw_grain_size">taille grains</string>
+    <string name="pw_grain_spray">dispers. grains</string>
+    <string name="pw_lfo_1_rate">vitesse lfo 1</string>
+    <string name="pw_lfo_2_rate">vitesse lfo 2</string>
+    <string name="pw_mod_1">mod 1</string>
+    <string name="pw_mod_2">mod 2</string>
+    <string name="pw_mod_3">mod 3</string>
+    <string name="pw_mod_4">mod 4</string>
+    <string name="pw_mod_5">mod 5</string>
+    <string name="pw_mod_6">mod 6</string>
+    <string name="pw_mod_7">mod 7</string>
+    <string name="pw_mod_8">mod 8</string>
+    <string name="pw_scan_amount">intensité balayage</string>
+    <string name="pw_vel_to_filter">vél. vers filtre</string>
 </resources>

@@ -28,6 +28,23 @@ two envelopes, two LFOs, glide and voice modes.
 **grain** plays the map as a grain cloud instead, with **gsize**, **gdensity**,
 **gpos**, **gspray**, **gpitch** and **grate**.
 
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Brighter,
+Swell, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
+the knob moves the destination by knob times amount, across that control's
+whole range at 1. Pitch is 24 semitones at 1. **mod 1** to **mod 8** are the
+depths of the mod page's rows, so a macro can bring in a row a patch has set
+up at zero. Scan, start and the envelopes are read when a note starts, so
+they change from the next note; the rest move at once. The switches, loop,
+filter type, voice mode, tuning, pan, the mod envelopes and the LFO shapes
+can't be reached. Tap a macro's name to rename it.
+
 ## Tips
 
 - Set the crossfades before judging how a map sounds.
