@@ -11,6 +11,11 @@ chose de différent arrive sur chacune. C’est bon pour les breaks.
 des divisions égales jusqu’aux coups de la boucle elle-même. Chaque tranche a
 ses propres **niveau**, **pano**, **hauteur**, **déclin** et **jeu**.
 
+Les divisions égales partagent les mesures de la boucle, donc le silence
+avant le premier coup est sauté et les coupes tombent sur les temps. La
+dernière tranche résonne dans ce qui reste après la dernière mesure, sauf si
+elle est jouée à l’envers, bégayée ou écourtée.
+
 ## Les dés
 
 Cinq chances, tirées sur chaque tranche :

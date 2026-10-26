@@ -11,6 +11,10 @@ different happening on each one. It's good for breaks.
 divisions to the loop's own hits. Each slice has its own **level**, **pan**,
 **pitch**, **decay** and **dir**.
 
+Even divisions split the loop's bars, so quiet before the first hit is skipped
+and the cuts land on the beats. The last slice rings on into anything left
+past the last bar, unless it's played backwards, stuttered or gated.
+
 ## The dice
 
 Five chances, rolled on every slice:

@@ -221,13 +221,19 @@ void Dice::recut() {
             bounds[i] = take->onsets[static_cast<size_t>(static_cast<int64_t>(i) * found / n)];
         }
         slices = n;
+        bounds[slices] = take->frames;
     } else {
+        // The grid divides the loop's bars, so room before the first hit is
+        // skipped and the cuts land on the beats. The last slice may ring on
+        // past the bars to the end of the file (see noteOn).
+        const int32_t from = std::clamp(take->barsStart, 0, take->frames - 1);
+        const int32_t len = std::clamp(barsFrames(), 1, take->frames - from);
         for (int32_t i = 0; i < want; ++i) {
-            bounds[i] = static_cast<int32_t>(static_cast<int64_t>(i) * take->frames / want);
+            bounds[i] = from + static_cast<int32_t>(static_cast<int64_t>(i) * len / want);
         }
         slices = want;
+        bounds[slices] = from + len;
     }
-    bounds[slices] = take->frames;
     builtMode = mode;
     builtCount = want;
     builtFrames = take->frames;
@@ -391,6 +397,11 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->start = bounds[slice];
     v->end = bounds[slice + 1];
     if (v->end <= v->start) v->end = std::min(take->frames, v->start + 64);
+    // A grid's last slice ends with the bars, but played forwards and whole
+    // it rings on into whatever follows them in the file, so a cymbal left
+    // ringing past the bar isn't cut off. The gate still measures the slice.
+    int32_t ring = 0;
+    if (slice == slices - 1 && !reversed && repeats == 0) ring = std::max(0, take->frames - v->end);
     // When following, the tempo ratio sets the speed and the pitch knob only
     // the pitch. The stretcher only reads forwards, so a reversed slice just
     // plays faster or slower like tape, which shifts its pitch a little.
@@ -402,16 +413,19 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->repeatLen = repeats > 0 ? std::max(64, span / repeats) : span;
     v->repeats = repeats;
     v->follows = follow && !reversed;
+    int32_t ringLeft = 0;
     if (v->follows) {
         v->timeRate = std::max(0.05f, tempo * goalOf(Rate));
         v->pitch = pitch;
         v->stretchRate = v->timeRate / pitch;
         v->left = static_cast<int32_t>(v->repeatLen / v->timeRate);
+        ringLeft = static_cast<int32_t>((v->repeatLen + ring) / v->timeRate);
         startStretch(*v);
     } else {
         v->inc = pitch * goalOf(Rate) * tempo * (reversed ? -1.0 : 1.0);
         v->pos = reversed ? v->end - 1 : v->start;
         v->left = static_cast<int32_t>(v->repeatLen / std::max(0.05, std::fabs(v->inc)));
+        ringLeft = static_cast<int32_t>((v->repeatLen + ring) / std::max(0.05, std::fabs(v->inc)));
     }
 
     const float accent = goalOf(Accent);
@@ -431,7 +445,8 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     const float gate = std::clamp(goalOf(Gate), 0.0f, 1.0f);
     const int32_t piece = v->left;
     if (gate >= 0.999f) {
-        v->pieceOpen = piece + 1;
+        if (ring > 0) v->left = ringLeft;
+        v->pieceOpen = v->left + 1;
         v->gateFade = 0;
     } else {
         const auto shortest = static_cast<int32_t>(kGateMin * sampleRate);

@@ -230,6 +230,65 @@ int main(int argc, char **argv) {
         check(std::abs(rolled - (slice * 3 / 4 + slice / 16)) < 64, "and on a stutter, each stroke gated", detail);
     }
 
+    std::printf("-- grid\n");
+    {
+        // The swing loop's beats are 150 ms in, 60/92 s apart. A grid cut
+        // divides the bars from there, so every cut lands on a beat (8) or an
+        // eighth (16), which aren't swung.
+        auto gridOf = [&](const char *kind, int slices) {
+            auto d = std::make_unique<Dice>();
+            d->prepare(static_cast<int32_t>(kSr));
+            int32_t count = 0;
+            const ParamDef *defs = d->paramDefs(count);
+            auto set = [&](const char *name, float v) {
+                const int32_t i = d->params().indexOf(name);
+                d->params().set(i, defs[i].unmap(v));
+            };
+            set("cut", 1.0f);
+            set("slices", static_cast<float>(slices));
+            d->params().jumpAll();
+            d->swapObject(0, material(kind).release());
+            float L[kBlock], R[kBlock];
+            d->render(L, R, kBlock);
+            return d;
+        };
+        const float beat = 60.0f / 92.0f;
+        for (int slices : {8, 16}) {
+            auto d = gridOf("swing", slices);
+            float worst = 0.0f;
+            for (int32_t i = 0; i < d->sliceCount(); ++i) {
+                const float want = 0.15f + static_cast<float>(i) * beat * 8.0f / static_cast<float>(slices);
+                worst = std::max(worst, std::fabs(static_cast<float>(d->sliceStart(i)) / kSr - want));
+            }
+            char detail[48];
+            std::snprintf(detail, sizeof(detail), "(worst %.1f ms off)", worst * 1000.0f);
+            check(d->sliceCount() == slices && worst < 0.004f,
+                  (std::to_string(slices) + " grid slices land on the swing loop's beats").c_str(), detail);
+        }
+        {
+            // A loop with no room or tail cuts the whole file evenly.
+            auto d = gridOf("break", 8);
+            const int32_t frames = d->loopFrames();
+            bool even = d->sliceCount() == 8;
+            for (int32_t i = 0; i < 8; ++i) even = even && d->sliceStart(i) == static_cast<int32_t>(static_cast<int64_t>(i) * frames / 8);
+            check(even, "the break's grid cuts the whole file evenly");
+        }
+        {
+            // The last slice rings on into the cymbal past the bar.
+            auto d = gridOf("swing", 8);
+            float L[kBlock], R[kBlock];
+            d->noteOn(Dice::kBaseNote + 7, 100);
+            int32_t last = 0;
+            for (int32_t at = 0; at < static_cast<int32_t>(kSr * 2.0f); at += kBlock) {
+                d->render(L, R, kBlock);
+                for (int32_t i = 0; i < kBlock; ++i) if (std::fabs(L[i]) > 1e-3f) last = at + i + 1;
+            }
+            char detail[48];
+            std::snprintf(detail, sizeof(detail), "(%.0f ms, a beat is %.0f)", last / kSr * 1000.0f, beat * 1000.0f);
+            check(last > static_cast<int32_t>(kSr * (beat + 0.2f)), "the last slice rings past the bar", detail);
+        }
+    }
+
     std::printf("-- drive\n");
     for (const char *kind : {"break", "swing"}) {
         // The loudest 400 ms, as audition's loud column but unweighted.

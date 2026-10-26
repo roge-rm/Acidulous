@@ -1,6 +1,7 @@
 #include "Take.h"
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace acidulous::audio {
 
@@ -192,22 +193,42 @@ void Take::guessShape(float sampleRate) {
 
     // Fits the grid to the hits on it, so the tempo isn't the edge of the
     // range of lengths that score the same. The finder reports a hit at the
-    // end of a 256-frame hop, so each is moved back to its attack first.
-    const double step = trimmedLength / (trimmedBars * 16.0);
-    double n = 0.0, sk = 0.0, st = 0.0, skk = 0.0, skt = 0.0;
+    // end of a 256-frame hop, so each is moved back to its attack first. A
+    // second pass fits again to the hits near the first line, one per
+    // sixteenth, so a hit just off the grid (swing, or a hit found twice)
+    // doesn't pull it.
+    std::vector<double> attacks;
     for (const int32_t at : onsets) {
-        if (at < trimmedStart) continue;
-        const double t = attackNear(at) - trimmedStart;
-        const double k = std::round(t / step);
-        if (std::fabs(t - k * step) >= step * 0.2) continue;
-        n += 1.0;
-        sk += k;
-        st += t;
-        skk += k * k;
-        skt += k * t;
+        if (at >= trimmedStart) attacks.push_back(attackNear(at) - trimmedStart);
     }
-    const double spread = n * skk - sk * sk;
-    const double fitted = spread > 0.0 ? (n * skt - sk * st) / spread * trimmedBars * 16.0 : trimmedLength;
+    double step = trimmedLength / (trimmedBars * 16.0), origin = 0.0, fitted = trimmedLength;
+    for (int pass = 0; pass < 2; ++pass) {
+        const double reach = step * (pass == 0 ? 0.2 : 0.1);
+        std::vector<std::pair<double, double>> nearest; // (k, t), the closest hit to each line
+        for (const double t : attacks) {
+            const double k = std::round((t - origin) / step);
+            const double off = std::fabs(t - origin - k * step);
+            if (off >= reach) continue;
+            if (!nearest.empty() && nearest.back().first == k) {
+                if (off < std::fabs(nearest.back().second - origin - k * step)) nearest.back().second = t;
+            } else {
+                nearest.emplace_back(k, t);
+            }
+        }
+        double n = 0.0, sk = 0.0, st = 0.0, skk = 0.0, skt = 0.0;
+        for (const auto &[k, t] : nearest) {
+            n += 1.0;
+            sk += k;
+            st += t;
+            skk += k * k;
+            skt += k * t;
+        }
+        const double spread = n * skk - sk * sk;
+        if (spread <= 0.0) break;
+        step = (n * skt - sk * st) / spread;
+        origin = (st - step * sk) / n;
+        fitted = step * trimmedBars * 16.0;
+    }
     bars = trimmedBars;
     barsStart = trimmedStart;
     barsFrames = static_cast<int32_t>(std::min(static_cast<double>(frames - trimmedStart), std::round(fitted)));
