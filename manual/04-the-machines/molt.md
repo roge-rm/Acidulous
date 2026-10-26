@@ -26,6 +26,21 @@ onto those notes.
 
 Then a filter, an amp envelope and drive.
 
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Bigger,
+Pull, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
+the knob moves the destination by knob times amount, across that control's
+whole range at 1. Pitch is 24 semitones at 1. Start and velocity are read
+when a note starts, so they change from the next note; the rest move at once.
+Robot, loop, glide, the filter type, bend, octave and semitones can't be
+reached. Tap a macro's name to rename it.
+
 ## Tips
 
 - Keep low rumble out of the recording. Handling noise from holding the phone

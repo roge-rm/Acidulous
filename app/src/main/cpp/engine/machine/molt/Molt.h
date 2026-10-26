@@ -38,8 +38,25 @@ class Molt final : public Machine {
         AmpAttack, AmpDecay, AmpSustain, AmpRelease,
         Glide, BendRange, Octave, Transpose, VelocityAmount,
         Drive, Volume, Pan,
-        Count
+        // Eight macro knobs, each with four routes: a destination (a
+        // MacroDest) and a depth. A macro's knob times a route's depth is
+        // added to the destination, in its own 0..1 range. Block rate; what
+        // a note reads when it starts takes the knobs' targets. Pitch is 24
+        // semitones per unit.
+        MacroBase,
+        MacroParams = 9, // knob, 4 destinations, 4 depths
+        Count = MacroBase + 8 * MacroParams
     };
+    // Where a macro route goes. The switches, the stepped choices and glide
+    // are left out.
+    enum MacroDest : int32_t {
+        McOff, McStart, McTune, McRate, McFormant, McMega,
+        McCutoff, McResonance, McAttack, McDecay, McSustain, McRelease,
+        McVelocity, McDrive, McVolume, McPan, McPitch,
+        MacroDestCount
+    };
+    static constexpr int kMacros = 8;
+    static_assert(Count <= kMaxParams, "too many parameters");
 
     Molt();
 
@@ -90,7 +107,14 @@ class Molt final : public Machine {
      */
     float layGrain(Voice &v, float formantRatio, float tune, float rateSec, bool robot);
 
-    float paramOf(int32_t i) const { return params_.get(i); }
+    /** Param [p], smoothed, with the macros' routes to it added. */
+    float paramOf(int32_t p) const { return withMacros(p, params_.get(p), mac_); }
+    /** Param [p]'s target, with the macro knobs' targets added: for what a note reads when it starts. */
+    float goalOf(int32_t p) const { return withMacros(p, params_.target(p), macGoal_); }
+    float withMacros(int32_t p, float v, const float *mac) const;
+    /** Fills [mac_] from the smoothed macro knobs and [macGoal_] from their targets. */
+    void updateMacros();
+    float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
     /**
      * The target rather than the smoothed value, for switches, since
      * smoothing would turn an edge into a ramp.
