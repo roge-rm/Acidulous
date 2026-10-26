@@ -1,4 +1,5 @@
-// Checks Dice's factory patches play their loop without steps in the audio.
+// Checks Dice's factory patches play their loop without steps in the audio,
+// and what the gate does.
 //
 // Every patch plays the break and the swing loop straight through, each slice
 // where the machine cut it, as audition's demo does. A step is one frame's
@@ -119,6 +120,44 @@ Render playLoop(const Bank &bank, const BankPatch &patch, const std::string &kin
     (void)bank;
     return out;
 }
+
+/** Two seconds of a steady tone, cut into [slices] on a grid, with [native] values set. */
+std::unique_ptr<Dice> toneDice(int slices, const std::vector<std::pair<const char *, float>> &values) {
+    auto d = std::make_unique<Dice>();
+    d->prepare(static_cast<int32_t>(kSr));
+    auto t = std::make_unique<audio::Take>();
+    t->frames = static_cast<int32_t>(kSr * 2.0f);
+    t->left.resize(static_cast<size_t>(t->frames));
+    for (int32_t i = 0; i < t->frames; ++i) t->left[static_cast<size_t>(i)] = 0.5f * std::sin(6.2831853f * 220.0f * static_cast<float>(i) / kSr);
+    t->right = t->left;
+    t->detect(kSr);
+    d->swapObject(0, t.release());
+    int32_t count = 0;
+    const ParamDef *defs = d->paramDefs(count);
+    auto set = [&](const char *name, float v) {
+        const int32_t i = d->params().indexOf(name);
+        d->params().set(i, defs[i].unmap(v));
+    };
+    set("cut", 1.0f);
+    set("slices", static_cast<float>(slices));
+    set("follow", 0.0f);
+    for (const auto &kv : values) set(kv.first, kv.second);
+    d->params().jumpAll();
+    return d;
+}
+
+/** Slice 1 struck; how long it sounds, in frames. */
+int32_t sounds(Dice &d) {
+    float L[kBlock], R[kBlock];
+    d.render(L, R, kBlock);
+    d.noteOn(Dice::kBaseNote + 1, 100);
+    int32_t last = 0;
+    for (int32_t at = 0; at < static_cast<int32_t>(kSr); at += kBlock) {
+        d.render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) if (std::fabs(L[i]) > 1e-4f) last = at + i + 1;
+    }
+    return last;
+}
 } // namespace
 
 int main(int argc, char **argv) {
@@ -158,6 +197,32 @@ int main(int argc, char **argv) {
         }
         std::snprintf(detail, sizeof(detail), "(%d in all, worst %d on %s)", total, worst, worstName.c_str());
         check(total == 0, (std::string("no patch steps on the ") + kind).c_str(), detail);
+    }
+
+    std::printf("-- gate\n");
+    {
+        // Eight slices of two seconds: 250 ms each.
+        const int32_t slice = static_cast<int32_t>(kSr * 0.25f);
+        char detail[64];
+        auto at = [&](float gate, std::vector<std::pair<const char *, float>> more = {}) {
+            more.emplace_back("gate", gate);
+            auto d = toneDice(8, more);
+            return sounds(*d);
+        };
+        const int32_t full = at(1.0f), half = at(0.5f), low = at(0.2f), none = at(0.0f);
+        std::snprintf(detail, sizeof(detail), "(%.1f ms of %.1f)", full / kSr * 1000.0f, slice / kSr * 1000.0f);
+        check(std::abs(full - slice) < 64, "at 1 a slice plays to its end", detail);
+        std::snprintf(detail, sizeof(detail), "(%.1f ms)", half / kSr * 1000.0f);
+        check(std::abs(half - slice / 4) < 64, "at a half, a quarter of it", detail);
+        std::snprintf(detail, sizeof(detail), "(%.1f ms)", low / kSr * 1000.0f);
+        check(std::abs(low - slice / 25) < 64, "at 0.2, a twenty-fifth", detail);
+        std::snprintf(detail, sizeof(detail), "(%.1f ms)", none / kSr * 1000.0f);
+        check(none > 0 && none <= static_cast<int32_t>(kSr * 0.003f), "at 0, a stab under 3 ms", detail);
+        // A four-stroke stutter at a half: each stroke a quarter of its own
+        // length, so the last one ends a quarter of a stroke after it starts.
+        const int32_t rolled = at(0.5f, {{"stutter", 1.0f}, {"stutterdiv", 4.0f}});
+        std::snprintf(detail, sizeof(detail), "(%.1f ms)", rolled / kSr * 1000.0f);
+        check(std::abs(rolled - (slice * 3 / 4 + slice / 16)) < 64, "and on a stutter, each stroke gated", detail);
     }
 
     std::printf("%d checks, %d failures\n", gChecks, gFails);

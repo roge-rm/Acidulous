@@ -28,7 +28,9 @@ hear something you like, then hold it.
 
 The slices sit on the grid like drum sounds, so you can reorder the loop by
 writing a pattern. **rate**, **gate**, **pitch**, **fine** and **accent** control
-playback, followed by a filter and drive.
+playback, followed by a filter and drive. **gate** shortens each slice (each stroke of a
+stutter), from a stab a few milliseconds long at the bottom to the whole slice
+at the top, at any tempo.
 
 ## Tempo
 

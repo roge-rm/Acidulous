@@ -118,6 +118,15 @@ class Dice final : public Machine {
         int64_t started = 0;
         // Fading out to make way for a newer slice.
         bool leaving = false;
+        // The fade at the end: over the last [fadeLen] frames of [left], from
+        // [fadeTop] down. Cutting a voice short starts a new fade from where
+        // the old one had got to.
+        int32_t fadeLen = 96;
+        float fadeTop = 1.0f;
+        // The gate: frames until it closes in this piece (a slice, or one
+        // stroke of a stutter), what it opens to at each stroke, and the fade
+        // before it closes. gateFade 0 is a gate that never closes.
+        int32_t open = 0, pieceOpen = 0, gateFade = 0;
         uint8_t note = 0;
         // Following the song: the slice comes out of `stretch` at
         // [stretchRate] into `held`, which is read at [pitch]. So the stretch
@@ -147,6 +156,8 @@ class Dice final : public Machine {
     void startStretch(Voice &v) const;
     bool pullStretch(Voice &v, const float *left, const float *right) const;
     Voice *allocate();
+    /** Ends [v] in [frames], fading from where its fade has got to. */
+    static void shorten(Voice &v, int32_t frames);
     uint32_t rollFor(int32_t slice);
 
     float sampleRate = 48000.0f;

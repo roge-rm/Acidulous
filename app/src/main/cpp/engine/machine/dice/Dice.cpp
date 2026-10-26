@@ -22,6 +22,8 @@ constexpr float kDecayOff = 4.0f;
 // kick's attack, long enough not to click.
 constexpr int32_t kFadeIn = 24;   // half a millisecond
 constexpr int32_t kFadeOut = 96;  // two milliseconds
+// The shortest a gate leaves a slice, in seconds.
+constexpr float kGateMin = 0.0025f;
 // A following voice's buffer of stretched audio, and how much is pulled from
 // the stretcher at a time. The margin keeps enough audio that when the loop
 // runs out mid-slice there's enough left to fade out (four times the fade at
@@ -169,6 +171,9 @@ void Dice::reset() {
         v.leaving = false;
         v.age = 0;
         v.started = 0;
+        v.fadeLen = kFadeOut;
+        v.fadeTop = 1.0f;
+        v.open = v.pieceOpen = v.gateFade = 0;
         v.env = 1.0f;
         v.heldHave = 0;
         v.heldPos = 0.0;
@@ -307,12 +312,20 @@ Dice::Voice *Dice::allocate() {
     if (busy >= kVoices - kSpare && oldest != nullptr) {
         oldest->leaving = true;
         oldest->repeats = 0;
-        oldest->left = std::min(oldest->left, kFadeOut);
+        shorten(*oldest, kFadeOut);
     }
     if (freeOne != nullptr) return freeOne;
     Voice *nearest = &voices[0];
     for (auto &v : voices) if (v.left < nearest->left) nearest = &v;
     return nearest;
+}
+
+void Dice::shorten(Voice &v, int32_t frames) {
+    if (frames >= v.left) return;
+    const float now = v.left < v.fadeLen ? v.fadeTop * static_cast<float>(v.left) / static_cast<float>(v.fadeLen) : v.fadeTop;
+    v.fadeTop = now;
+    v.fadeLen = std::max(1, frames);
+    v.left = frames;
 }
 
 /**
@@ -408,11 +421,26 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->gainL = std::cos(angle) * level * 1.4142f;
     v->gainR = std::sin(angle) * level * 1.4142f;
     v->env = 1.0f;
-    // Gate at 1 lets a slice run to its end. Lower values shorten it.
-    //
+    v->fadeLen = kFadeOut;
+    v->fadeTop = 1.0f;
+    // Gate at 1 lets a slice run to its end. Below that it stays open for
+    // gate squared of the slice (of each stroke, on a stutter), so the
+    // bottom of the knob is a stab a few milliseconds long and the top
+    // most of the slice, at any tempo. The last quarter of that is a fade.
+    const float gate = std::clamp(goalOf(Gate), 0.0f, 1.0f);
+    const int32_t piece = v->left;
+    if (gate >= 0.999f) {
+        v->pieceOpen = piece + 1;
+        v->gateFade = 0;
+    } else {
+        const auto shortest = static_cast<int32_t>(kGateMin * sampleRate);
+        v->pieceOpen = std::max(std::min(piece, shortest), static_cast<int32_t>(static_cast<float>(piece) * gate * gate));
+        v->gateFade = std::min(v->pieceOpen, std::max(kFadeOut, v->pieceOpen / 4));
+    }
+    v->open = v->pieceOpen;
     // The decay is the time to fall 60 dB. The top of the range means no
     // decay, so a loop played straight doesn't fade every slice.
-    const float decay = sliceParam(slice, Decay) * std::max(0.02f, goalOf(Gate));
+    const float decay = sliceParam(slice, Decay);
     v->envCoeff = decay >= kDecayOff ? 0.0f
                                      : 1.0f - std::exp(-kLn1000 / (decay * sampleRate));
 }
@@ -450,7 +478,7 @@ bool Dice::render(float *L, float *R, int32_t frames) {
                     // The loop ends under this slice: fade out on what is left.
                     const int32_t remain = static_cast<int32_t>((v.heldHave - 2 - v.heldPos) / v.pitch);
                     if (remain < v.left) {
-                        v.left = remain;
+                        shorten(v, remain);
                         v.repeats = 0;
                     }
                     if (v.left <= 0) { v.used = false; break; }
@@ -474,10 +502,15 @@ bool Dice::render(float *L, float *R, int32_t frames) {
             const float rampIn = v.age < kFadeIn
                                      ? static_cast<float>(v.age) / static_cast<float>(kFadeIn)
                                      : 1.0f;
-            const float rampOut = v.left < kFadeOut
-                                      ? static_cast<float>(v.left) / static_cast<float>(kFadeOut)
-                                      : 1.0f;
-            const float e = v.env * rampIn * rampOut;
+            const float rampOut = v.left < v.fadeLen
+                                      ? v.fadeTop * static_cast<float>(v.left) / static_cast<float>(v.fadeLen)
+                                      : v.fadeTop;
+            float e = v.env * rampIn * rampOut;
+            if (v.gateFade > 0) {
+                if (v.open <= 0) e = 0.0f;
+                else if (v.open < v.gateFade) e *= static_cast<float>(v.open) / static_cast<float>(v.gateFade);
+                --v.open;
+            }
             ++v.age;
             v.env -= v.env * v.envCoeff;
             L[i] += sl * e * v.gainL;
@@ -496,9 +529,12 @@ bool Dice::render(float *L, float *R, int32_t frames) {
                         v.left = static_cast<int32_t>(v.repeatLen / std::max(0.05, std::fabs(v.inc)));
                     }
                     v.age = 0; // a repeat starts over and needs the same fade in
+                    v.open = v.pieceOpen;
                 } else {
                     v.used = false;
                 }
+            } else if (v.gateFade > 0 && v.open <= 0 && v.repeats <= 1) {
+                v.used = false; // the gate has closed on the last stroke
             }
             if (v.env < 1e-4f) v.used = false;
         }

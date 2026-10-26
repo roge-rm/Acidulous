@@ -29,7 +29,9 @@ entendre quelque chose qui vous plaît, puis figez-le.
 Les tranches sont sur la grille comme des sons de batterie, alors vous pouvez
 réordonner la boucle en écrivant un motif. **vitesse**, **gate**, **hauteur**,
 **précis** et **accent** règlent la lecture, suivis d’un filtre et d’une
-saturation.
+saturation. **gate** raccourcit chaque tranche (chaque coup d’un
+bégaiement), d’une attaque de quelques millisecondes en bas à la tranche
+entière en haut, à n’importe quel tempo.
 
 ## Tempo
 
