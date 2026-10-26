@@ -1402,12 +1402,14 @@ fun EditScreen(
     }
     // Guarded, since the notes can change under the window (a recording, an undo).
     wordsFrom?.takeIf { sings && it in clip.notes.indices }?.let { from ->
+        // Opened from a note that's selected with others: the line goes
+        // over the selection. From any other note, just its syllable.
+        val over = selection.takeIf { from in it && it.size > 1 && it.all { i -> i in clip.notes.indices } }.orEmpty()
         WordsDialog(
             clip = clip,
             from = from,
-            // Opened from a note that's selected with others: the line goes
-            // over the selection.
-            only = selection.takeIf { from in it && it.size > 1 && it.all { i -> i in clip.notes.indices } }.orEmpty(),
+            only = over,
+            single = over.isEmpty(),
             accent = com.rm.acidulous.model.lyrics.Accent.of(com.rm.acidulous.model.MachineUi.wordsAccent(track.machine.type, track.machine.params)),
             onDismiss = { wordsFrom = null },
             onApply = { notes ->
