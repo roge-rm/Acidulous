@@ -23,38 +23,23 @@ import org.jetbrains.compose.resources.stringResource
  * note, "hel-lo" for a word over two. Under it, the sounds each note will
  * sing, so a word said wrongly can be put right in brackets. With [only],
  * the selected notes, the line goes over just those, in the order they're
- * sung, and the others keep their words.
+ * sung, and the others keep their words. With [single], the field holds
+ * just the tapped note's syllable; more than one carries on over the notes
+ * after it.
  */
 @Composable
-fun WordsDialog(clip: Clip, from: Int, accent: Accent, onDismiss: () -> Unit, onApply: (List<Note>) -> Unit, only: Set<Int> = emptySet()) {
-    val order = remember(clip, from, only) {
-        // A chord is one place in the line, whichever of its notes was tapped or selected.
-        fun start(i: Int) = clip.notes[i].tick + clip.notes[i].nudge
-        Lyrics.sungOrder(clip.notes).let { o ->
-            if (only.isNotEmpty()) {
-                val chosen = only.filter { it in clip.notes.indices }.map { start(it) }.toSet()
-                o.filter { start(it) in chosen }
-            } else {
-                val at = if (from in clip.notes.indices) start(from) else Int.MIN_VALUE
-                o.filter { start(it) >= at }
-            }
-        }
+fun WordsDialog(clip: Clip, from: Int, accent: Accent, onDismiss: () -> Unit, onApply: (List<Note>) -> Unit, only: Set<Int> = emptySet(), single: Boolean = false) {
+    val order = remember(clip, from, only, single) {
+        val o = Lyrics.lineOrder(clip.notes, from, only)
+        if (single) o.take(1) else o
     }
     var line by remember(clip, from) { mutableStateOf(Lyrics.gather(order.map { clip.notes[it].lyric })) }
 
-    // The notes with the line applied, from which both the readout and the
-    // result come. A chord's other notes sing no words of their own.
-    fun applied(): List<Note> {
-        val pieces = Lyrics.spread(line.replace('\n', ' '))
-        val notes = clip.notes.toMutableList()
-        order.forEachIndexed { k, i -> notes[i] = notes[i].copy(lyric = pieces.getOrElse(k) { "" }) }
-        val starts = order.map { clip.notes[it].tick + clip.notes[it].nudge }.toSet()
-        val sung = order.toSet()
-        notes.indices.forEach { i ->
-            if (i !in sung && notes[i].tick + notes[i].nudge in starts) notes[i] = notes[i].copy(lyric = "")
-        }
-        return notes
-    }
+    // The notes the line goes over, and the notes with it applied, from which
+    // both the readout and the result come. One syllable on one note leaves
+    // the rest alone; more carry on over the notes after it.
+    fun overOrder() = if (single) Lyrics.editOrder(clip.notes, from, line) else order
+    fun applied(): List<Note> = Lyrics.place(clip.notes, overOrder(), line)
 
     PlainDialog(
         title = stringResource(Res.string.words_title),
@@ -70,7 +55,7 @@ fun WordsDialog(clip: Clip, from: Int, accent: Accent, onDismiss: () -> Unit, on
         val notes = applied()
         val sounds = Lyrics.forNotes(notes, accent, Lexicon.dictionary)
         if (sounds != null) {
-            val shown = order.map { sounds[it] }
+            val shown = overOrder().map { sounds[it] }
             val upTo = shown.indexOfLast { it.isNotEmpty() } + 1
             Readout(shown.take(upTo).joinToString("  ·  ") { it.lowercase().ifEmpty { "_" } })
         }

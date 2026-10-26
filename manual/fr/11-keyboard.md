@@ -66,6 +66,7 @@ Dans l’éditeur :
 - quantifier - **Q**, ou **Alt+U**
 - replier le panneau - **P**, ou **Alt+V**
 - replier le clavier - **B**, ou **Alt+J**
+- copier / couper / coller / dupliquer des notes - **Ctrl+C**, **Ctrl+X**, **Ctrl+V**, **Ctrl+D**, ou **Alt+C**, **Alt+X**, **Alt+W**, **Alt+E**
 
 La première touche est pour un clavier complet et la deuxième pour un petit.
 Les touches sans Alt ni Ctrl ne servent de raccourcis que lorsque le mode jeu

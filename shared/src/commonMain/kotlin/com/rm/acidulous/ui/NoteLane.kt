@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -46,6 +50,7 @@ import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.Note
 import com.rm.acidulous.model.PPQN
 import com.rm.acidulous.model.Trig
+import com.rm.acidulous.model.lyrics.Lyrics
 import com.rm.acidulous.ui.theme.Acid
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -327,7 +332,9 @@ fun NoteLane(
                         if (what == NoteProp.Words) {
                             // A tap opens the note's words; there's nothing to sweep.
                             down.consume()
-                            val at = stackAt(down.position.x).firstOrNull()
+                            val at = wordBoxes(here.notes, ::shown).let { boxes ->
+                                wordTarget(boxes, from + (down.position.x / w) * span, here.grid)
+                            }
                             if (waitForUpOrCancellation() != null && at != null) wordsState(at)
                             return@awaitEachGesture
                         }
@@ -391,14 +398,14 @@ fun NoteLane(
                 // Clamped in dp so the width follows screen density and UI scale.
                 val wide = (clip.grid.coerceAtLeast(1) * pxPerTick * 0.7f)
                     .coerceIn(2.dp.toPx(), 7.dp.toPx())
-                for (n in clip.notes) {
+                if (prop == NoteProp.Words) drawWordBoxes(wordBoxes(clip.notes, ::shown), clip, from, pxPerTick, textMeasurer, c)
+                else for (n in clip.notes) {
                     // Drawn at the note's tick without its nudge, so the bar
                     // doesn't slide sideways while you change the nudge.
                     if (!shown(n)) continue
                     val mid = centreTick(n)
                     if (mid < from - clip.grid || mid > from + span) continue
-                    if (prop == NoteProp.Words) drawWords(n, xOf(mid), textMeasurer, c)
-                    else drawMark(n, prop, xOf(mid), wide, c)
+                    drawMark(n, prop, xOf(mid), wide, c)
                 }
                 if (keyFocused) {
                     drawRect(c.accent, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
@@ -420,29 +427,101 @@ fun NoteLane(
                     }
                 }
             }
+            if (prop == NoteProp.Words && !collapsed) {
+                // One speakable box a note, laid over the drawn ones, for TalkBack.
+                androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().fillMaxHeight()) {
+                    val perTick = maxWidth / span
+                    for (b in wordBoxes(clip.notes, ::shown)) {
+                        val n = clip.notes[b.index]
+                        val said = if (n.lyric.isBlank()) stringResource(Res.string.a11y_words_box_empty, pitchName(n.pitch))
+                        else stringResource(Res.string.a11y_words_box, pitchName(n.pitch), n.lyric)
+                        Box(
+                            Modifier
+                                .offset(x = perTick * (b.start - from))
+                                .width(perTick * (b.end - b.start))
+                                .fillMaxHeight()
+                                .clearAndSetSemantics {
+                                    contentDescription = said
+                                    onClick { wordsState(b.index); true }
+                                },
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
+/** One note's box in the words lane: its index and the ticks it covers. */
+internal data class WordBox(val index: Int, val start: Int, val end: Int)
+
 /**
- * A note's words, written sideways up the lane so neighbours don't run into
- * each other. A note with none gets a dot.
+ * The words lane's boxes: one a chord, from its start to its end or the next
+ * box, whichever comes first. A chord's box holds the words of its top shown
+ * note that has any, else of its top shown note.
  */
-private fun DrawScope.drawWords(
-    n: Note, x: Float, measurer: androidx.compose.ui.text.TextMeasurer, c: com.rm.acidulous.ui.theme.AcidColors,
-) {
-    if (n.lyric.isBlank()) {
-        drawCircle(c.teal.copy(alpha = 0.5f), 2f, Offset(x, size.height - 4f))
-        return
+internal fun wordBoxes(notes: List<Note>, shown: (Note) -> Boolean): List<WordBox> {
+    val order = notes.indices.filter { shown(notes[it]) }
+        .sortedWith(compareBy({ notes[it].tick + notes[it].nudge }, { -notes[it].pitch }))
+    val sung = ArrayList<Int>()
+    var i = 0
+    while (i < order.size) {
+        val start = notes[order[i]].tick + notes[order[i]].nudge
+        var j = i
+        while (j < order.size && notes[order[j]].tick + notes[order[j]].nudge == start) j++
+        val chord = order.subList(i, j)
+        sung += chord.firstOrNull { notes[it].lyric.isNotBlank() } ?: chord[0]
+        i = j
     }
-    val layout = measurer.measure(
-        n.lyric,
-        androidx.compose.ui.text.TextStyle(color = c.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace),
-        maxLines = 1,
-        constraints = androidx.compose.ui.unit.Constraints(maxWidth = (size.height - 4f).toInt().coerceAtLeast(1)),
-    )
-    rotate(-90f, Offset(x, size.height - 2f)) {
-        drawText(layout, topLeft = Offset(x, size.height - 2f - layout.size.height / 2f))
+    sung.sortBy { notes[it].tick }
+    return sung.mapIndexed { k, i ->
+        val n = notes[i]
+        val next = sung.getOrNull(k + 1)?.let { notes[it].tick } ?: Int.MAX_VALUE
+        WordBox(i, n.tick, minOf(n.tick + maxOf(1, n.length), next).coerceAtLeast(n.tick + 1))
+    }
+}
+
+/**
+ * The note a tap at [tick] means: the box it's in, else the nearest box
+ * within a grid step. Null on empty space.
+ */
+internal fun wordTarget(boxes: List<WordBox>, tick: Float, grid: Int): Int? {
+    boxes.lastOrNull { tick >= it.start && tick < it.end }?.let { return it.index }
+    val near = boxes.minByOrNull { abs((it.start + it.end) / 2f - tick) } ?: return null
+    return near.index.takeIf { abs((near.start + near.end) / 2f - tick) <= grid.coerceAtLeast(1) }
+}
+
+/**
+ * Each note's words in a box under the note, as wide as the note. A box too
+ * narrow for text is left empty; the tap still finds it.
+ */
+private fun DrawScope.drawWordBoxes(
+    boxes: List<WordBox>, clip: Clip, from: Int, pxPerTick: Float,
+    measurer: androidx.compose.ui.text.TextMeasurer, c: com.rm.acidulous.ui.theme.AcidColors,
+) {
+    val pad = 1.5.dp.toPx()
+    val top = 3.dp.toPx()
+    val boxH = size.height - top * 2f
+    for (b in boxes) {
+        val x0 = (b.start - from) * pxPerTick + pad
+        val x1 = (b.end - from) * pxPerTick - pad
+        if (x1 < 0f || x0 > size.width || x1 <= x0) continue
+        val lyric = clip.notes[b.index].lyric
+        drawRect(c.sunken, Offset(x0, top), Size(x1 - x0, boxH))
+        drawRect(
+            if (lyric.isBlank()) c.line else c.teal.copy(alpha = 0.6f), Offset(x0, top), Size(x1 - x0, boxH),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()),
+        )
+        val room = (x1 - x0 - 4.dp.toPx()).toInt()
+        if (lyric.isBlank() || room < 6.dp.toPx()) continue
+        val layout = measurer.measure(
+            lyric,
+            androidx.compose.ui.text.TextStyle(color = c.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace),
+            maxLines = 1, softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Clip,
+            constraints = androidx.compose.ui.unit.Constraints(maxWidth = room),
+        )
+        drawText(layout, topLeft = Offset(x0 + 2.dp.toPx(), top + (boxH - layout.size.height) / 2f))
     }
 }
 

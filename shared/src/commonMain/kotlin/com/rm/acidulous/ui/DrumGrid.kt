@@ -24,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.drawscope.translate
@@ -82,6 +83,8 @@ fun DrumGrid(
     /** Steps with a parameter lock, marked in the corner. */
     lockedTicks: Set<Int> = emptySet(),
     onSelectStep: (Int) -> Unit = {},
+    /** The bar next to the chosen steps. Null has none. */
+    actions: SelectionActions? = null,
     modifier: Modifier = Modifier,
 ) {
     val grid = clip.grid.coerceAtLeast(1)
@@ -91,6 +94,9 @@ fun DrumGrid(
     // sized to fill the height this is given. After a pinch the pinched height
     // is used, and it survives a rotation.
     var pinched by rememberSaveable { mutableStateOf(0f) }
+    // Where a tap in lock mode chose to paste: tick, voice note and step.
+    var spot by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
+    LaunchedEffect(lockMode) { if (!lockMode) spot = null }
 
     // The height available, from the constraints as the first frame is laid
     // out. Measured afterwards instead, the first frame drew rows at a
@@ -210,7 +216,10 @@ fun DrumGrid(
                 fun press(s: Int) {
                     val tick = tickOf(s)
                     val hit = hits[s]
-                    if (lockMode) { if (hit != null) onSelectStep(tick) }
+                    if (lockMode) {
+                        if (hit != null) onSelectStep(tick)
+                        if (actions?.canPaste == true) spot = Triple(tick, voice.note, s)
+                    }
                     else onSetHit(tick, voice.note, if (hit == null) Note(tick, 30, voice.note, 90) else null)
                 }
                 fun hold(s: Int) {
@@ -307,6 +316,42 @@ fun DrumGrid(
                     }
                 }
             }
+        }
+    }
+    // The bar next to the steps chosen in lock mode, over the span of their
+    // hits and following the scroll, or paste alone at the step last tapped.
+    if (actions != null && lockMode) {
+        val rowPx = with(density) { rowHeight.dp.toPx() }
+        val gapPx = with(density) { RowGap.dp.toPx() }
+        val padPx = with(density) { GridPadding.toPx() }
+        val chosen = voices.indices.flatMap { v ->
+            selectedTicks.filter { t -> t >= firstTick && (t - firstTick) / grid < steps && clip.notes.any { it.pitch == voices[v].note && it.tick == t } }
+                .map { t -> v to (t - firstTick) / grid }
+        }
+        val at = spot
+        val paste = SelectionActions(
+            actions.onDelete, actions.onCopy, actions.onDuplicate, actions.canPaste,
+        ) { t, p -> spot = null; actions.onPaste(t, p) }
+        if (chosen.isNotEmpty()) {
+            SelectionBar(
+                paste, hasNotes = true, pasteTick = at?.first, pastePitch = at?.second,
+                modifier = Modifier.anchoredTo { size ->
+                    val cell = (size.width - gutterPx) / steps
+                    val top = padPx + chosen.minOf { it.first } * (rowPx + gapPx) - scroll.value
+                    val bottom = padPx + chosen.maxOf { it.first } * (rowPx + gapPx) + rowPx - scroll.value
+                    Rect(gutterPx + chosen.minOf { it.second } * cell, top, gutterPx + (chosen.maxOf { it.second } + 1) * cell, bottom)
+                },
+            )
+        } else if (at != null && actions.canPaste) {
+            val row = voices.indexOfFirst { it.note == at.second }
+            SelectionBar(
+                paste, hasNotes = false, pasteTick = at.first, pastePitch = at.second,
+                modifier = Modifier.anchoredTo { size ->
+                    val cell = (size.width - gutterPx) / steps
+                    val top = padPx + row * (rowPx + gapPx) - scroll.value
+                    Rect(gutterPx + at.third * cell, top, gutterPx + (at.third + 1) * cell, top + rowPx)
+                },
+            )
         }
     }
     }

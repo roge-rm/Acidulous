@@ -33,7 +33,9 @@
     <string name="note_prop_words_short">words</string>
     <string name="note_prop_words">words</string>
     <string name="words_title">words</string>
-    <string name="a11y_words_field">the words from this note on, a syllable a note</string>
+    <string name="a11y_words_field">this note's words, carrying on to the following notes</string>
+    <string name="a11y_words_box">note %1$s, %2$s</string>
+    <string name="a11y_words_box_empty">note %1$s, no words</string>
 
     <!-- ui/PianoKeys.kt: the scale chip and window. Scale names are names and aren't translated. -->
     <string name="scale_chip">scale</string>
@@ -58,6 +60,7 @@
     <string name="roll_scale_chromatic">chr</string>
     <string name="roll_scale_dim">dim</string>
     <string name="roll_scale_fit">fit</string>
+    <string name="roll_scale_used">used</string>
 
     <!-- ui/AutomationStrip.kt -->
     <!-- The lane strip with no lane chosen. -->

@@ -114,6 +114,41 @@ object Lyrics {
         return List(notes.size) { Pronounce.forSinger(sounds[it]).joinToString(" ") }
     }
 
+    /** The notes a line goes over: the sung notes from [from] on, or just those starting where [only] do. */
+    fun lineOrder(notes: List<Note>, from: Int, only: Set<Int> = emptySet()): List<Int> {
+        fun start(i: Int) = notes[i].tick + notes[i].nudge
+        val o = sungOrder(notes)
+        if (only.isNotEmpty()) {
+            val chosen = only.filter { it in notes.indices }.map { start(it) }.toSet()
+            return o.filter { start(it) in chosen }
+        }
+        val at = if (from in notes.indices) start(from) else Int.MIN_VALUE
+        return o.filter { start(it) >= at }
+    }
+
+    /**
+     * The notes one tapped note's text goes over: that note, and as many
+     * after it as the text has syllables.
+     */
+    fun editOrder(notes: List<Note>, from: Int, line: String): List<Int> =
+        lineOrder(notes, from).take(spread(line.replace('\n', ' ')).size.coerceAtLeast(1))
+
+    /**
+     * [notes] with [line] put over [order]. A chord's other notes sing no
+     * words of their own. Notes of [order] past the end of the line are cleared.
+     */
+    fun place(notes: List<Note>, order: List<Int>, line: String): List<Note> {
+        val pieces = spread(line.replace('\n', ' '))
+        val out = notes.toMutableList()
+        order.forEachIndexed { k, i -> out[i] = out[i].copy(lyric = pieces.getOrElse(k) { "" }) }
+        val starts = order.map { notes[it].tick + notes[it].nudge }.toSet()
+        val sung = order.toSet()
+        out.indices.forEach { i ->
+            if (i !in sung && out[i].tick + out[i].nudge in starts) out[i] = out[i].copy(lyric = "")
+        }
+        return out
+    }
+
     /**
      * A typed line cut into one piece a note: words at the spaces, syllables
      * at the hyphens ("hel-lo" is "hel-" and "lo"), sounds in brackets whole,

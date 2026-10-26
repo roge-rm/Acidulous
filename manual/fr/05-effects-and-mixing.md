@@ -270,8 +270,10 @@ mixage placée derrière.
 
 Touchez le tempo dans l’en-tête du morceau pour ouvrir les réglages du morceau.
 
-- **bpm** : tapez un nombre ou utilisez les boutons de chaque côté. **taper**
-  le règle à partir de quatre touchers.
+- **bpm** : tapez un nombre ou utilisez les boutons de chaque côté. Gardez
+  un bouton enfoncé et le tempo continue de changer, de plus en plus vite.
+  Glissez sur le nombre pour le changer, plus vite si vous glissez plus vite.
+  **taper** le règle à partir de quatre touchers.
 - **mesure** : le chiffrage, de 4/4 à 7/8. Une scène peut avoir le sien.
 - **swing** : le retard des contretemps. **triolet** est le shuffle classique.
   **swing sur** choisit s’il fait swinguer les doubles croches ou les croches.

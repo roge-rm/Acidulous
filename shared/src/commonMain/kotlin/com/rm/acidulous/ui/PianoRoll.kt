@@ -1,6 +1,7 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
@@ -53,12 +54,27 @@ import com.rm.acidulous.res.*
 
 enum class EditMode { Draw, Select }
 
+/** Where a tap chose to paste: the step and pitch, and the spot on screen. */
+class PasteSpot(val tick: Int, val pitch: Int, val at: Offset)
+
 /**
  * How the roll treats a scale. Chromatic ignores it, Dim greys the rows a
  * Scale modifier would move, and Fold drops those rows entirely so only
- * playable notes have a lane. The corner of the roll cycles them.
+ * playable notes have a lane. Used keeps only the pitches the clip has notes
+ * on, scale or not. The corner of the roll cycles them.
  */
-enum class ScaleView { Chromatic, Dim, Fold }
+enum class ScaleView { Chromatic, Dim, Fold, Used }
+
+/**
+ * The rows of the Used view, top first. [used] is the sorted pitches to show.
+ * Up to [rows] of them all show, more than that and the window starts at the
+ * first one at or above [lowest].
+ */
+internal fun usedRowPitches(used: List<Int>, lowest: Int, rows: Int): IntArray {
+    if (used.size <= rows) return IntArray(used.size) { used[used.size - 1 - it] }
+    val start = used.indexOfFirst { it >= lowest }.let { if (it < 0) used.size else it }.coerceAtMost(used.size - rows)
+    return IntArray(rows) { used[start + rows - 1 - it] }
+}
 
 /**
  * The clip editor: one Canvas, with notes drawn and hit tested by hand. A
@@ -87,6 +103,8 @@ fun PianoRoll(
     noteSpelling: Map<Int, String> = emptyMap(),
     scaleView: ScaleView,
     onCycleScaleView: () -> Unit,
+    /** Names the clip, so the Used view forgets its pitches when the clip changes. */
+    clipKey: Any = Unit,
     /** The window this page shows, in ticks from the start of the clip. */
     firstTick: Int,
     visibleTicks: Int,
@@ -117,18 +135,26 @@ fun PianoRoll(
     onZoom: (pitchScale: Float, timeScale: Float) -> Unit = { _, _ -> },
     /** A singer's roll: each note shows its syllable. */
     lyrics: Boolean = false,
+    /** Delete or Backspace with notes selected removes them all. */
+    onDeleteSelection: () -> Unit = {},
+    /** The keyboard cursor's tick while editing by keys, else null; paste goes there. */
+    onCursor: (tick: Int?, pitch: Int?) -> Unit = { _, _ -> },
+    /** The bar next to the selection, in select mode. Null has none. */
+    actions: SelectionActions? = null,
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
     val scaleWords = listOf(
         stringResource(Res.string.roll_scale_none), stringResource(Res.string.roll_scale_chromatic),
         stringResource(Res.string.roll_scale_dim), stringResource(Res.string.roll_scale_fit),
+        stringResource(Res.string.roll_scale_used),
     )
     // The pointer handler must survive the clip changing mid-drag (every
     // updateGesture commits a new clip), so it reads through these.
     val clipState by rememberUpdatedState(clip)
     val modeState by rememberUpdatedState(mode)
     val selectionState by rememberUpdatedState(selection)
+    val deleteState by rememberUpdatedState(onDeleteSelection)
     val lowestState by rememberUpdatedState(lowestPitch)
     val rowsState by rememberUpdatedState(rows)
     val cb by rememberUpdatedState(
@@ -137,9 +163,20 @@ fun PianoRoll(
     )
     // The pitch of each row. Chromatic and Dim step by semitone; Fold keeps
     // only the scale's notes, so every row is playable.
-    val scale = scalePitchClasses?.takeIf { it.isNotEmpty() && scaleView != ScaleView.Chromatic }
-    val rowPitches = remember(lowestPitch, rows, scale, scaleView) {
-        if (scale == null || scaleView != ScaleView.Fold) {
+    // Used shows the pitches the clip has notes on. A pitch stays once seen,
+    // until the view or the clip changes, so deleting its last note doesn't
+    // drop the row under the finger.
+    val seenPitches = remember(scaleView, clipKey) { HashSet<Int>() }
+    val usedSorted: List<Int> = if (scaleView == ScaleView.Used) {
+        clip.notes.forEach { seenPitches += it.pitch }
+        seenPitches.sorted()
+    } else emptyList()
+    val usedActive = scaleView == ScaleView.Used && usedSorted.isNotEmpty()
+    val scale = scalePitchClasses?.takeIf { it.isNotEmpty() && scaleView != ScaleView.Chromatic && scaleView != ScaleView.Used }
+    val rowPitches = remember(lowestPitch, rows, scale, scaleView, usedSorted) {
+        if (usedActive) {
+            usedRowPitches(usedSorted, lowestPitch, rows)
+        } else if (scale == null || scaleView != ScaleView.Fold) {
             IntArray(rows) { lowestPitch + rows - 1 - it }
         } else {
             val kept = ArrayList<Int>(rows)
@@ -153,6 +190,10 @@ fun PianoRoll(
         }
     }
     val rowsState2 by rememberUpdatedState(rowPitches)
+    // Rows on screen: fewer than asked for when the Used view has few pitches.
+    val shownRows = rowPitches.size.coerceAtLeast(1)
+    val shownRowsState by rememberUpdatedState(shownRows)
+    val usedState by rememberUpdatedState(if (usedActive) usedSorted else null)
 
     // Read here because the Canvas draw lambda isn't composition and can't
     // read the theme itself.
@@ -160,6 +201,11 @@ fun PianoRoll(
 
     var rubberBand by remember { mutableStateOf<Rect?>(null) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
+    // True while a finger moves or boxes notes, so the bar stays out of the way.
+    var busy by remember { mutableStateOf(false) }
+    // Where an empty tap in select mode chose to paste: the tick and the spot.
+    var pasteSpot by remember { mutableStateOf<PasteSpot?>(null) }
+    val actionsState by rememberUpdatedState(actions)
 
     // TalkBack gets a summary, since one picture can't be walked note by
     // note. Notes go in by playing the keys while recording.
@@ -182,6 +228,8 @@ fun PianoRoll(
     var keyEditing by remember { mutableStateOf(false) }
     var curTick by remember { mutableIntStateOf(firstTick) }
     var curPitch by remember { mutableIntStateOf(lowestPitch + rows / 2) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { onCursor(null, null) } }
+    androidx.compose.runtime.LaunchedEffect(keyEditing, curTick, curPitch) { if (keyEditing) onCursor(curTick, curPitch) else onCursor(null, null) }
     val firstState by rememberUpdatedState(firstTick)
     val visibleState by rememberUpdatedState(visibleTicks)
     val keyMod = Modifier
@@ -194,12 +242,17 @@ fun PianoRoll(
             val enter = code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER ||
                 code == KeyCodes.KEYCODE_DPAD_CENTER
             if (!keyEditing) {
+                val del = code == KeyCodes.KEYCODE_DEL || code == KeyCodes.KEYCODE_FORWARD_DEL
+                if (del && selectionState.isNotEmpty()) { deleteState(); return@onKeyEvent true }
                 if (!enter) return@onKeyEvent false
                 keyEditing = true
                 // Start where the user is looking.
                 val lo = lowestState
                 if (curTick !in firstState until firstState + visibleState) curTick = firstState
-                if (curPitch !in lo until lo + rowsState) curPitch = lo + rowsState / 2
+                val u = usedState
+                if (u != null) {
+                    if (curPitch !in rowsState2) curPitch = rowsState2[rowsState2.size / 2]
+                } else if (curPitch !in lo until lo + rowsState) curPitch = lo + rowsState / 2
                 return@onKeyEvent true
             }
             val c = clipState
@@ -212,7 +265,12 @@ fun PianoRoll(
                 if (curTick < first) cb.onScrollTime((curTick - first).toFloat())
                 else if (curTick + grid > first + visible) cb.onScrollTime((curTick + grid - first - visible).toFloat())
                 val lo = lowestState
-                if (curPitch < lo) cb.onScrollPitch(curPitch - lo)
+                val u = usedState
+                if (u != null) {
+                    val i = u.indexOf(curPitch)
+                    if (curPitch < lo) cb.onScrollPitch(curPitch - lo)
+                    else if (i >= 0 && curPitch > rowsState2.first()) cb.onScrollPitch(u[(i - rowsState + 1).coerceAtLeast(0)] - lo)
+                } else if (curPitch < lo) cb.onScrollPitch(curPitch - lo)
                 else if (curPitch > lo + rowsState - 1) cb.onScrollPitch(curPitch - (lo + rowsState - 1))
             }
             fun step(dTick: Int, dPitch: Int) {
@@ -221,7 +279,13 @@ fun PianoRoll(
                     cb.onGestureBegin(); cb.onMove(setOf(under), dTick, dPitch); cb.onGestureEnd()
                 }
                 curTick = (curTick + dTick).coerceIn(0, total - grid)
-                curPitch = (curPitch + dPitch).coerceIn(0, 127)
+                val u = usedState
+                if (u != null && !e.isAltPressed && dPitch != 0) {
+                    // Over the shown pitches only, a page being four of them.
+                    val at = u.indexOf(curPitch).let { if (it < 0) u.indexOfLast { p -> p < curPitch } else it }
+                    val n = if (dPitch > 0) (if (dPitch > 1) 4 else 1) else (if (dPitch < -1) -4 else -1)
+                    curPitch = u[(at + n).coerceIn(0, u.size - 1)]
+                } else curPitch = (curPitch + dPitch).coerceIn(0, 127)
                 keepInView()
             }
             when (code) {
@@ -232,7 +296,8 @@ fun PianoRoll(
                     true
                 }
                 KeyCodes.KEYCODE_DEL, KeyCodes.KEYCODE_FORWARD_DEL -> {
-                    if (under >= 0) cb.onTapNote(under)
+                    if (selectionState.isNotEmpty()) deleteState()
+                    else if (under >= 0) cb.onTapNote(under)
                     true
                 }
                 KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT -> {
@@ -270,13 +335,16 @@ fun PianoRoll(
         }
         true
     }
+    androidx.compose.foundation.layout.Box(modifier.clipToBounds()) {
     Canvas(
         // Clipped, or notes just above the window draw over the header.
-        modifier = modifier.clipToBounds().semantics { contentDescription = summary }.then(keyMod).then(wheel).pointerInput(Unit) {
+        modifier = Modifier.fillMaxSize().semantics { contentDescription = summary }.then(keyMod).then(wheel).pointerInput(Unit) {
             awaitEachGesture {
+              try {
                 val down = awaitFirstDown()
+                pasteSpot = null
                 val geo = Geometry(
-                    canvasSize, clipState, ticksPerBar, rowsState,
+                    canvasSize, clipState, ticksPerBar, shownRowsState,
                     GutterWidth.toPx(), RulerHeight.toPx(), rowsState2, firstTick, visibleTicks,
                 )
                 val press = down.position
@@ -285,6 +353,7 @@ fun PianoRoll(
                 // a pinch's fingers land a few milliseconds apart and whatever the
                 // first one hit must not act in the meantime.
                 if (currentEvent.changes.count { it.pressed } >= 2) {
+                    busy = true
                     twoFingers(geo, cb)
                     return@awaitEachGesture
                 }
@@ -335,10 +404,12 @@ fun PianoRoll(
 
                 val gate = slopOrSecondFinger(down.id, viewConfiguration.touchSlop, press)
                 if (gate.second) {
+                    busy = true
                     twoFingers(geo, cb)
                     return@awaitEachGesture
                 }
                 val slop = gate.past
+                if (slop != null) busy = true
                 if (slop == null) {
                     // Released before moving: a tap.
                     val released = currentEvent.changes.none { it.pressed }
@@ -348,12 +419,16 @@ fun PianoRoll(
                             cb.onTapEmpty(geo.tickAt(press.x, snap = true), geo.pitchAt(press.y))
                         } else {
                             cb.onSelectionChange(emptySet())
+                            if (actionsState?.canPaste == true) pasteSpot = PasteSpot(geo.tickAt(press.x, snap = true), geo.pitchAt(press.y), press)
                         }
                         else -> if (modeState == EditMode.Draw) {
                             cb.onTapNote(hit.index)
                         } else {
                             val sel = selectionState
                             cb.onSelectionChange(if (hit.index in sel) sel - hit.index else sel + hit.index)
+                            // Paste lands on this note.
+                            val n = clipState.notes[hit.index]
+                            if (actionsState?.canPaste == true) pasteSpot = PasteSpot(n.tick, n.pitch, press)
                         }
                     }
                     return@awaitEachGesture
@@ -410,16 +485,17 @@ fun PianoRoll(
                         rubberBand = null
                     }
                 }
+              } finally { busy = false }
             }
         },
     ) {
         canvasSize = size
-        val geo = Geometry(size, clip, ticksPerBar, rows, GutterWidth.toPx(), RulerHeight.toPx(), rowPitches,
+        val geo = Geometry(size, clip, ticksPerBar, shownRows, GutterWidth.toPx(), RulerHeight.toPx(), rowPitches,
             firstTick, visibleTicks)
 
         // Rows: black keys darker, C rows marked, and rows the scale would
         // move pushed further back in Dim.
-        for (r in 0 until rows) {
+        for (r in 0 until shownRows) {
             val pitch = geo.pitchOfRow(r)
             val inScale = scale?.contains(((pitch % 12) + 12) % 12) ?: true
             drawRect(
@@ -537,6 +613,34 @@ fun PianoRoll(
         drawPitchPosition(geo, c)
         drawBarRuler(geo, size, textMeasurer, playheadTick(), c)
         drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c, scaleWords)
+    }
+    // The bar next to the chosen notes, or at the spot a tap chose for a paste.
+    // Gone while a finger is down on the notes.
+    val act = actions
+    androidx.compose.runtime.LaunchedEffect(act == null) { if (act == null) pasteSpot = null }
+    androidx.compose.runtime.LaunchedEffect(clipKey) { pasteSpot = null }
+    val gutterPx = with(androidx.compose.ui.platform.LocalDensity.current) { GutterWidth.toPx() }
+    val rulerPx = with(androidx.compose.ui.platform.LocalDensity.current) { RulerHeight.toPx() }
+    if (act != null && !busy) {
+        val chosen = selection.filter { it in clip.notes.indices }
+        val spot = pasteSpot
+        if (chosen.isNotEmpty()) {
+            SelectionBar(
+                act, hasNotes = true, pasteTick = spot?.tick, pastePitch = spot?.pitch,
+                modifier = Modifier.anchoredTo { size ->
+                    val geo = Geometry(size, clip, ticksPerBar, shownRows, gutterPx, rulerPx, rowPitches, firstTick, visibleTicks)
+                    chosen.map { geo.noteRect(clip.notes[it]) }
+                        .filter { it.right > geo.originX && it.left < size.width && it.bottom > geo.originY && it.top < size.height }
+                        .reduceOrNull { a, b -> Rect(min(a.left, b.left), min(a.top, b.top), max(a.right, b.right), max(a.bottom, b.bottom)) }
+                },
+            )
+        } else if (spot != null && act.canPaste) {
+            SelectionBar(
+                act, hasNotes = false, pasteTick = spot.tick, pastePitch = spot.pitch,
+                modifier = Modifier.anchoredTo { Rect(spot.at.x, spot.at.y, spot.at.x, spot.at.y) },
+            )
+        }
+    }
     }
 }
 
@@ -833,7 +937,7 @@ private class Hit(val index: Int, val onEdge: Boolean)
  */
 private fun DrawScope.drawScaleCorner(
     geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView, c: AcidColors,
-    /** The corner's labels: no scale, then [ScaleView]'s three, in order. */
+    /** The corner's labels: no scale, then [ScaleView]'s four, in order. */
     words: List<String>,
 ) {
     drawRect(c.bg, Offset.Zero, Size(geo.originX, geo.originY))
@@ -845,17 +949,19 @@ private fun DrawScope.drawScaleCorner(
         androidx.compose.ui.geometry.CornerRadius(3f, 3f),
     )
     drawRoundRect(
-        if (hasScale && view != ScaleView.Chromatic) c.accent else c.textFaint,
+        if ((hasScale && view != ScaleView.Chromatic) || view == ScaleView.Used) c.accent else c.textFaint,
         Offset(pad, pad), Size(geo.originX - pad * 2f, geo.originY - pad * 2f),
         androidx.compose.ui.geometry.CornerRadius(3f, 3f),
         style = Stroke(width = 1f),
     )
-    val label = if (!hasScale) words[0] else when (view) {
+    val label = if (view == ScaleView.Used) words[4] else if (!hasScale) words[0] else when (view) {
         ScaleView.Chromatic -> words[1]
         ScaleView.Dim -> words[2]
         ScaleView.Fold -> words[3]
+        ScaleView.Used -> words[4]
     }
     val colour = when {
+        view == ScaleView.Used -> c.accent
         !hasScale -> c.textDim
         view == ScaleView.Chromatic -> c.textHi
         else -> c.accent

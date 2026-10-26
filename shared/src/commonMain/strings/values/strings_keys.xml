@@ -35,6 +35,10 @@
     <string name="keys_generate">generate notes</string>
     <string name="keys_quantise">quantise</string>
     <string name="keys_fold_panel">fold the panel</string>
+    <string name="keys_copy">copy notes</string>
+    <string name="keys_cut">cut notes</string>
+    <string name="keys_paste">paste notes</string>
+    <string name="keys_duplicate">duplicate notes</string>
     <string name="keys_fold_keys">fold the keyboard</string>
 
     <!-- The list of keys a question mark opens. -->

@@ -14,10 +14,46 @@ verticale et le temps à l’horizontale.
 - Glissez à **deux doigts** pour défiler et pincez pour zoomer. Un doigt
   dessine toujours.
 - Le coin **gam** change l’affichage de la gamme du morceau : toutes les notes,
-  notes de la gamme en surbrillance ou seulement les notes de la gamme.
+  notes de la gamme en surbrillance, seulement les notes de la gamme ou **util**,
+  seulement les hauteurs que le clip utilise (une hauteur reste jusqu’à ce que
+  vous quittiez cette vue).
 
 Pour une boîte à rythmes, c’est une grille de pas avec une rangée par son.
 Touchez pour ajouter un coup.
+
+## Mode sélection
+
+Le bouton crayon de la barre du bas passe au carré pointillé, le mode
+sélection. Glissez sur le vide pour entourer des notes, et touchez une note
+pour l’ajouter à la sélection ou l’en retirer. Glissez une note choisie pour
+les déplacer toutes.
+
+Quand des notes sont choisies, une petite barre s’affiche près d’elles, au-dessus
+ou en dessous s’il n’y a pas de place. Elle suit les notes quand vous défilez
+ou zoomez, et se cache pendant que vous glissez.
+
+- **Supprimer** les retire toutes.
+- **Copier** les garde, avec leur position, leur longueur, leur vélocité et
+  l’expression qu’elles portent. Les copies restent quand vous ouvrez un autre
+  clip.
+- **Dupliquer** place une copie juste après la sélection, au pas de grille qui
+  suit sa fin.
+- **Coller** s’affiche dès que quelque chose est copié. Touchez le vide, ou
+  une note, en mode sélection et la barre propose coller : la première note
+  copiée va sur le pas et la rangée touchés, et les autres gardent leur écart
+  de temps et de hauteur avec elle. Les notes qui sortiraient de la plage de
+  hauteurs sont omises, de même que celles au-delà de la fin du clip (ou elles
+  sont raccourcies). Une note collée remplace toute note de même hauteur
+  qu’elle chevauche. Sans toucher, elles vont là où elles étaient, ou au pas et
+  à la hauteur du curseur du clavier si vous éditez aux touches. Sur une grille
+  de pas, les rangées sont les sons.
+
+Dupliquer et coller laissent les nouvelles notes sélectionnées, pour les
+glisser tout de suite. Chacun est une seule étape d’annulation. Au clavier,
+**Ctrl+C**, **Ctrl+X** (couper), **Ctrl+V** et **Ctrl+D**, et Suppr ou
+Retour arrière retire la sélection. La grille de pas d’une boîte à rythmes n’a
+pas de mode sélection : activez le verrouillage des pas, choisissez des pas, et
+la même barre s’affiche près des coups qui s’y trouvent.
 
 ## Générer
 
