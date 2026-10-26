@@ -7,9 +7,10 @@
 
 namespace acidulous::machine {
 
-// The level a sliced loop reaches before the output stage, used as the drive
-// stage's nominal level.
-constexpr float kNominal = 0.3f;
+// The level a sliced loop reaches before the volume, used as the drive
+// stage's nominal level. A drum loop's peaks sit well above it, so it's set
+// where the loop's loudness holds as the drive turns up.
+constexpr float kNominal = 0.1f;
 // Output gain that puts Init (the defaults) at the same level as the other
 // patches, leaving room on the volume knob for quieter patches like Dust.
 constexpr float kHouse = 0.82f;
@@ -543,14 +544,18 @@ bool Dice::render(float *L, float *R, int32_t frames) {
     filterL.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
     filterR.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
     for (int32_t i = 0; i < frames; ++i) {
-        float l = filterL.process(L[i]) * volume * kHouse, r = filterR.process(R[i]) * volume * kHouse;
+        float l, r;
         if (drive > 0.0001f) {
-            // Normalised on the nominal level so the drive knob changes the
-            // character and not the level.
+            // Before the volume and normalised on the level a loop reaches
+            // there, so the knob changes the character and not the level, and
+            // the volume knob doesn't change how hard it drives.
             const float k = 1.0f + drive * 10.0f;
             const float norm = kNominal / dsp::fastTanh(kNominal * k);
-            l = dsp::fastTanh(l * k) * norm;
-            r = dsp::fastTanh(r * k) * norm;
+            l = dsp::fastTanh(filterL.process(L[i]) * kHouse * k) * norm * volume;
+            r = dsp::fastTanh(filterR.process(R[i]) * kHouse * k) * norm * volume;
+        } else {
+            l = filterL.process(L[i]) * volume * kHouse;
+            r = filterR.process(R[i]) * volume * kHouse;
         }
         L[i] = l * panL * 1.4142f;
         R[i] = r * panR * 1.4142f;

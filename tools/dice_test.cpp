@@ -1,5 +1,5 @@
 // Checks Dice's factory patches play their loop without steps in the audio,
-// and what the gate does.
+// what the gate does, and that the drive holds the level.
 //
 // Every patch plays the break and the swing loop straight through, each slice
 // where the machine cut it, as audition's demo does. A step is one frame's
@@ -72,13 +72,18 @@ struct Render {
  * [patch] on [kind], the loop played straight through for about eight
  * seconds at 120 bpm: each slice struck where the machine cut it.
  */
-Render playLoop(const Bank &bank, const BankPatch &patch, const std::string &kind) {
+Render playLoop(const Bank &bank, const BankPatch &patch, const std::string &kind,
+                const std::vector<std::pair<const char *, float>> &values = {}) {
     Dice d;
     d.prepare(static_cast<int32_t>(kSr));
     int32_t count = 0;
     const ParamDef *defs = d.paramDefs(count);
     const Resolved res = resolve(patch, defs, count);
     for (int32_t i = 0; i < count; ++i) d.params().set(i, res.norm[static_cast<size_t>(i)]);
+    for (const auto &kv : values) {
+        const int32_t i = d.params().indexOf(kv.first);
+        d.params().set(i, defs[i].unmap(kv.second));
+    }
     d.params().jumpAll();
     d.swapObject(0, material(kind).release());
     float L[kBlock], R[kBlock];
@@ -223,6 +228,31 @@ int main(int argc, char **argv) {
         const int32_t rolled = at(0.5f, {{"stutter", 1.0f}, {"stutterdiv", 4.0f}});
         std::snprintf(detail, sizeof(detail), "(%.1f ms)", rolled / kSr * 1000.0f);
         check(std::abs(rolled - (slice * 3 / 4 + slice / 16)) < 64, "and on a stutter, each stroke gated", detail);
+    }
+
+    std::printf("-- drive\n");
+    for (const char *kind : {"break", "swing"}) {
+        // The loudest 400 ms, as audition's loud column but unweighted.
+        auto loud = [](const Render &r) {
+            const auto win = static_cast<size_t>(kSr * 0.4f), hop = static_cast<size_t>(kSr * 0.05f);
+            double best = 0.0;
+            for (size_t at = 0; at + win <= r.l.size(); at += hop) {
+                double e = 0.0;
+                for (size_t i = at; i < at + win; ++i) e += static_cast<double>(r.l[i]) * r.l[i] + static_cast<double>(r.r[i]) * r.r[i];
+                best = std::max(best, e);
+            }
+            return 10.0 * std::log10(best / (2.0 * static_cast<double>(win)) + 1e-20);
+        };
+        const BankPatch &init = bank.patches.front();
+        const double dry = loud(playLoop(bank, init, kind));
+        double worst = 0.0;
+        for (float drive : {0.2f, 0.5f, 0.7f, 1.0f}) {
+            const double d = loud(playLoop(bank, init, kind, {{"drive", drive}})) - dry;
+            if (std::fabs(d) > std::fabs(worst)) worst = d;
+        }
+        char detail[48];
+        std::snprintf(detail, sizeof(detail), "(worst %+.1f dB)", worst);
+        check(std::fabs(worst) < 1.0, (std::string("drive holds the level on the ") + kind).c_str(), detail);
     }
 
     std::printf("%d checks, %d failures\n", gChecks, gFails);
