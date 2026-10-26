@@ -17,6 +17,9 @@ la prise est tirée vers ces notes.
 - **vitesse** - à quelle vitesse la note est atteinte. Lent sonne comme un
   glissé naturel, rapide sonne par paliers.
 - **robot** - aplatit complètement la hauteur sur la note.
+- **porta.** - le temps que met une note pour glisser depuis la note la plus
+  proche qui sonne encore. Les notes d’un accord ne glissent pas l’une vers
+  l’autre.
 
 ## La voix
 

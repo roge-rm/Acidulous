@@ -93,6 +93,12 @@ class Molt final : public Machine {
         /** The pitch it is being pulled to, in log2 Hz, glided by `rate`. */
         float logPitch = 0.0f;
         bool primed = false;
+        /** The written note as it's glided, in log2 Hz, from the last pitched grain. */
+        float notePitch = 0.0f;
+        /** A glide goes from here (log2 Hz) to the note; [glideDone] runs 0 to 1. */
+        float glideFrom = 0.0f, glideDone = 1.0f;
+        /** Frames since the note started, up to a second. */
+        int32_t sinceOn = 0;
         /** Frames until the next grain is laid down. */
         float untilGrain = 0.0f;
         dsp::Adsr amp;

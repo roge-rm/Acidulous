@@ -16,6 +16,8 @@ onto those notes.
 - **rate** - how fast it gets there. Slow sounds like a natural slide, fast
   sounds stepped.
 - **robot** - flattens the pitch completely onto the note.
+- **glide** - how long a note takes to slide over from the nearest note still
+  sounding. The notes of a chord don't slide into each other.
 
 ## The voice
 

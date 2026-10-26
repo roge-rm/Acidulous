@@ -178,6 +178,10 @@ void Molt::reset() {
         v.pressure = 0.0f;
         v.logPitch = 0.0f;
         v.primed = false;
+        v.notePitch = 0.0f;
+        v.glideFrom = 0.0f;
+        v.glideDone = 1.0f;
+        v.sinceOn = 0;
         v.untilGrain = 0.0f;
         v.accHead = 0;
         std::fill(v.acc.begin(), v.acc.end(), 0.0f);
@@ -205,6 +209,26 @@ void Molt::noteOn(uint8_t note, uint8_t velocity) {
             if (c.amp.value() < v->amp.value()) v = &c;
         }
     }
+    // With glide up, the note slides over from the nearest note still
+    // sounding, so a line is sung as one and a chord moves voice by voice.
+    // From silence there's nothing to glide from. A note held down within
+    // 50 ms of another one held is part of a chord, so it only glides from
+    // notes let go.
+    const Voice *from = nullptr;
+    if (goalOf(Glide) > 0.0005f) {
+        const auto chord = static_cast<int32_t>(sampleRate * 0.05f);
+        bool inChord = false;
+        for (const auto &c : voices) inChord |= c.used && c.gate && c.sinceOn < chord;
+        int best = 1000;
+        for (const auto &c : voices) {
+            if (!c.used || !c.primed || (c.gate && inChord)) continue;
+            const int d = std::abs(static_cast<int>(c.note) - static_cast<int>(note));
+            if (d < best) { best = d; from = &c; }
+        }
+    }
+    v->glideFrom = from != nullptr ? from->notePitch : 0.0f;
+    v->glideDone = from != nullptr ? 0.0f : 1.0f;
+    v->sinceOn = 0;
     v->used = true;
     v->gate = true;
     v->note = note;
@@ -305,7 +329,13 @@ float Molt::layGrain(Voice &v, float formantRatio, float tune, float rateSec, bo
                                   static_cast<float>(steppedOf(Transpose)) +
                                   12.0f * static_cast<float>(steppedOf(Octave)) + v.bend +
                                   24.0f * mac_[McPitch]);
-        const float logNote = std::log2(pitchHz);
+        float logNote = std::log2(pitchHz);
+        if (v.glideDone < 1.0f) {
+            // Eased at both ends, and it arrives in the glide time.
+            const float t = v.glideDone;
+            logNote = v.glideFrom + (logNote - v.glideFrom) * (t * t * (3.0f - 2.0f * t));
+        }
+        v.notePitch = logNote;
         float want = logNote;
         if (!robot && u->rootHz > 0.0f && e.voiced) {
             // Keep part of this moment's distance from the take's root. At
@@ -387,8 +417,13 @@ bool Molt::render(float *L, float *R, int32_t frames) {
     const bool robot = rawOf(Robot) >= 0.5f;
     const bool loop = rawOf(Loop) >= 0.5f;
     const float startFrame = haveTake ? paramOf(Start) * static_cast<float>(u->frames) : 0.0f;
+    // How far a glide gets per frame. It moves once a grain, by the frames
+    // until the next one, since that's when the pitch is next laid down.
+    const float glideStep = 1.0f / (std::max(0.001f, paramOf(Glide)) * sampleRate);
 
+    const auto second = static_cast<int32_t>(sampleRate);
     for (auto &v : voices) {
+        if (v.used) v.sinceOn = std::min(second, v.sinceOn + frames);
         v.amp.set(0.0f, paramOf(AmpAttack), paramOf(AmpDecay), paramOf(AmpSustain),
                   paramOf(AmpRelease), false);
     }
@@ -422,7 +457,9 @@ bool Molt::render(float *L, float *R, int32_t frames) {
             if (!v.used) continue;
             if (running && haveTake) {
                 while (v.untilGrain <= 0.0f) {
-                    v.untilGrain += layGrain(v, formantRatio, tune, rateSec, robot);
+                    const float spacing = layGrain(v, formantRatio, tune, rateSec, robot);
+                    v.untilGrain += spacing;
+                    if (v.glideDone < 1.0f) v.glideDone = std::min(1.0f, v.glideDone + spacing * glideStep);
                 }
                 v.untilGrain -= 1.0f;
             }

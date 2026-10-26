@@ -421,6 +421,83 @@ int main() {
               "a dirty take still sings the note written", detail);
     }
 
+    // --- glide ---------------------------------------------------------------
+    std::printf("\nglide slides from one note to the next\n");
+    {
+        // C4 for half a second, then G4 joined to it; the pitch 40 to 120 ms
+        // into the G, and 400 to 600 ms in.
+        auto run = [&](float glide) {
+            machine::Molt m;
+            m.prepare(static_cast<int32_t>(kSr));
+            int32_t count = 0;
+            const ParamDef *defs = m.paramDefs(count);
+            auto setp = [&](int32_t p, float value) { m.params().set(p, defs[p].unmap(value)); };
+            setp(machine::Molt::AmpAttack, 0.001f);
+            setp(machine::Molt::Tune, 1.0f);
+            setp(machine::Molt::Rate, 0.0f);
+            setp(machine::Molt::Glide, glide);
+            m.params().jumpAll();
+            m.swapObject(0, new audio::Utterance(take));
+            constexpr int32_t kBlock = 64;
+            const int32_t second = static_cast<int32_t>(kSr * 0.5f) / kBlock * kBlock;
+            std::vector<float> out;
+            float L[kBlock], R[kBlock];
+            m.noteOn(60, 100);
+            for (int32_t at = 0; at < static_cast<int32_t>(kSr * 1.2f); at += kBlock) {
+                if (at == second) { m.noteOn(67, 100); m.noteOff(60); }
+                for (int32_t i = 0; i < kBlock; ++i) { L[i] = 0.0f; R[i] = 0.0f; }
+                m.render(L, R, kBlock);
+                for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
+            }
+            auto pitchIn = [&](float from, float to) {
+                const auto a = static_cast<size_t>(static_cast<float>(second) + kSr * from);
+                const auto b = static_cast<size_t>(static_cast<float>(second) + kSr * to);
+                const std::vector<float> part(out.begin() + static_cast<long>(a), out.begin() + static_cast<long>(b));
+                PitchTrack t;
+                t.find(part, static_cast<int32_t>(part.size()), kSr);
+                return medianVoiced(t);
+            };
+            return std::make_pair(pitchIn(0.04f, 0.12f), pitchIn(0.4f, 0.6f));
+        };
+        const float g = 440.0f * std::exp2((67.0f - 69.0f) / 12.0f);
+        const auto off = run(0.0f), on = run(0.3f);
+        char detail[128];
+        std::snprintf(detail, sizeof(detail), "(%+.0f cents from G early)",
+                      static_cast<double>(cents(off.first, g)));
+        check(std::abs(cents(off.first, g)) < 25.0f, "at 0 the next note starts on its own pitch", detail);
+        std::snprintf(detail, sizeof(detail), "(%+.0f cents from G early, %+.0f by 0.4 s)",
+                      static_cast<double>(cents(on.first, g)), static_cast<double>(cents(on.second, g)));
+        check(cents(on.first, g) < -150.0f && cents(on.first, g) > -700.0f,
+              "at 0.3 s it's still on the way up early on", detail);
+        check(std::abs(cents(on.second, g)) < 25.0f, "and gets there in the glide time", detail);
+
+        // A chord rolled 20 ms a note doesn't glide from note to note.
+        auto rolled = [&](float glide) {
+            machine::Molt m;
+            m.prepare(static_cast<int32_t>(kSr));
+            int32_t count = 0;
+            const ParamDef *defs = m.paramDefs(count);
+            m.params().set(machine::Molt::Glide, defs[machine::Molt::Glide].unmap(glide));
+            m.params().jumpAll();
+            m.swapObject(0, new audio::Utterance(take));
+            constexpr int32_t kBlock = 64;
+            const int notes[] = {60, 64, 67, 71};
+            std::vector<float> out;
+            float L[kBlock], R[kBlock];
+            for (int32_t at = 0; at < static_cast<int32_t>(kSr * 0.5f); at += kBlock) {
+                for (int k = 0; k < 4; ++k) {
+                    if (at == static_cast<int32_t>(kSr * 0.02f * static_cast<float>(k)) / kBlock * kBlock)
+                        m.noteOn(static_cast<uint8_t>(notes[k]), 100);
+                }
+                for (int32_t i = 0; i < kBlock; ++i) { L[i] = 0.0f; R[i] = 0.0f; }
+                m.render(L, R, kBlock);
+                out.insert(out.end(), L, L + kBlock);
+            }
+            return out;
+        };
+        check(rolled(0.0f) == rolled(0.3f), "a rolled chord doesn't glide inside itself");
+    }
+
     // --- hum under the room tone, as audition's dirtyvoice has it ----------
     //
     // dirtyVowel's room is quiet. Here the hum runs under the room too, and
