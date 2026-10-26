@@ -55,6 +55,10 @@ import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.Action
 import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.audioLaneCount
+import com.rm.acidulous.model.NoteClipboard
+import com.rm.acidulous.model.withDuplicated
+import com.rm.acidulous.model.withPasted
+import com.rm.acidulous.model.withoutNotes
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.Scales
 import com.rm.acidulous.model.MODIFIER_SLOTS
@@ -190,6 +194,58 @@ fun EditScreen(
     var scaleDialog by remember { mutableStateOf(false) }
     var generateDialog by remember { mutableStateOf(false) }
     var quantiseDialog by remember { mutableStateOf(false) }
+    // Select mode's copy, paste and delete work on this: the roll's selection,
+    // or on the drum grid the notes on the steps chosen in lock mode.
+    val onGrid = steps && kind == MachineKind.Drums
+    val picked: Set<Int> = when {
+        kind == MachineKind.Audio -> emptySet()
+        onGrid -> if (lockMode) clip.notes.indices.filter { clip.notes[it].tick in lockTicks }.toSet() else emptySet()
+        steps -> emptySet()
+        else -> selection.filter { it in clip.notes.indices }.toSet()
+    }
+    val selecting = kind != MachineKind.Audio && (if (onGrid) lockMode else !steps && (mode == EditMode.Select || lockMode))
+    // Where the keyboard cursor is in the roll, which paste follows.
+    var cursorTick by remember { mutableStateOf<Int?>(null) }
+    val deleteNotes = {
+        if (picked.isNotEmpty()) {
+            editor.editClip(trackIndex, sceneId) { it.withoutNotes(picked) }
+            selection = emptySet()
+            lockTicks = emptySet()
+        }
+    }
+    val copyNotes = { NoteClipboard.copy(clip, picked) }
+    val cutNotes = { if (picked.isNotEmpty()) { NoteClipboard.copy(clip, picked); deleteNotes() } }
+    // The pasted notes end up selected, so they can be dragged.
+    val pasteNotes = { at: Int? ->
+        if (NoteClipboard.has && kind != MachineKind.Audio && (onGrid || !steps)) {
+            var added = emptySet<Int>()
+            var ticks = emptySet<Int>()
+            editor.editClip(trackIndex, sceneId) { c ->
+                val (next, idx) = c.withPasted(NoteClipboard.notes, NoteClipboard.origin, at ?: cursorTick ?: NoteClipboard.origin, clipLen)
+                added = idx
+                ticks = idx.mapNotNull { next.notes.getOrNull(it)?.tick }.toSet()
+                next
+            }
+            if (onGrid) { if (ticks.isNotEmpty()) lockTicks = ticks } else selection = added
+        }
+    }
+    val duplicateNotes = {
+        if (picked.isNotEmpty()) {
+            var added = emptySet<Int>()
+            var made = emptySet<Int>()
+            editor.editClip(trackIndex, sceneId) { c ->
+                val (next, idx) = c.withDuplicated(picked, clipLen)
+                added = idx
+                made = idx.mapNotNull { next.notes.getOrNull(it)?.tick }.toSet()
+                next
+            }
+            if (onGrid) lockTicks = made.ifEmpty { lockTicks } else selection = added
+        }
+    }
+    val barActions = if (selecting) SelectionActions(
+        onDelete = { deleteNotes() }, onCopy = { copyNotes() }, onDuplicate = { duplicateNotes() },
+        canPaste = NoteClipboard.has, onPaste = { pasteNotes(it) },
+    ) else null
     // What the knobs lock onto: a grid step on drums and Reflux, a note's own
     // length in the roll.
     val lockSpans: List<IntRange> = when {
@@ -393,6 +449,10 @@ fun EditScreen(
         KeyAction.LockSteps to {
             if (kind != MachineKind.Audio) { lockMode = !lockMode; lockTicks = emptySet(); selection = emptySet() }
         },
+        KeyAction.Copy to { copyNotes() },
+        KeyAction.Cut to { cutNotes() },
+        KeyAction.Paste to { pasteNotes(null) },
+        KeyAction.Duplicate to { duplicateNotes() },
         KeyAction.Generate to { if (kind != MachineKind.Audio) generateDialog = true },
         KeyAction.Quantise to { if (kind != MachineKind.Audio) quantiseDialog = true },
         KeyAction.FoldPanel to { UiPrefs.foldPanel(!UiPrefs.panelFolded) },
@@ -684,6 +744,7 @@ fun EditScreen(
             selectedTicks = lockTicks,
             lockedTicks = lockedTicks,
             onSelectStep = { t -> lockTicks = if (t in lockTicks) lockTicks - t else lockTicks + t },
+            actions = barActions,
             modifier = Modifier.fillMaxWidth().weight(1f).then(lockEdge),
         ) else if (steps) StepEditor(
             clip = clip,
@@ -716,6 +777,9 @@ fun EditScreen(
             lowestPitch = lowestPitch,
             rows = rows,
             lyrics = sings,
+            onDeleteSelection = { deleteNotes() },
+            onCursor = { cursorTick = it },
+            actions = barActions,
             scalePitchClasses = Scales.activeFor(song, track),
             noteSpelling = Scales.spellingFor(song, track),
             scaleView = scaleView,

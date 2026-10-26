@@ -19,6 +19,36 @@ verticale et le temps à l’horizontale.
 Pour une boîte à rythmes, c’est une grille de pas avec une rangée par son.
 Touchez pour ajouter un coup.
 
+## Mode sélection
+
+Le bouton crayon de la barre du bas passe au carré pointillé, le mode
+sélection. Glissez sur le vide pour entourer des notes, et touchez une note
+pour l’ajouter à la sélection ou l’en retirer. Glissez une note choisie pour
+les déplacer toutes.
+
+Quand des notes sont choisies, une petite barre s’affiche près d’elles, au-dessus
+ou en dessous s’il n’y a pas de place. Elle suit les notes quand vous défilez
+ou zoomez, et se cache pendant que vous glissez.
+
+- **Supprimer** les retire toutes.
+- **Copier** les garde, avec leur position, leur longueur, leur vélocité et
+  l’expression qu’elles portent. Les copies restent quand vous ouvrez un autre
+  clip.
+- **Dupliquer** place une copie juste après la sélection, au pas de grille qui
+  suit sa fin.
+- **Coller** s’affiche dès que quelque chose est copié. Sans sélection, touchez
+  le vide en mode sélection et la barre n’affiche que coller : les notes
+  copiées vont au pas touché, à la hauteur d’origine. Avec des notes choisies,
+  elles vont là où elles étaient, ou au curseur du clavier si vous éditez aux
+  touches. Les notes au-delà de la fin du clip sont omises ou raccourcies.
+
+Dupliquer et coller laissent les nouvelles notes sélectionnées, pour les
+glisser tout de suite. Chacun est une seule étape d’annulation. Au clavier,
+**Ctrl+C**, **Ctrl+X** (couper), **Ctrl+V** et **Ctrl+D**, et Suppr ou
+Retour arrière retire la sélection. La grille de pas d’une boîte à rythmes n’a
+pas de mode sélection : activez le verrouillage des pas, choisissez des pas, et
+la même barre s’affiche près des coups qui s’y trouvent.
+
 ## Générer
 
 Le bouton du dé en haut de l’éditeur écrit des notes pour vous. Le clip change

@@ -39,6 +39,10 @@
     <string name="a11y_back">Back</string>
     <string name="a11y_generate">Generate notes</string>
     <string name="a11y_quantise">Quantise notes</string>
+    <string name="a11y_delete_notes">Delete selected notes</string>
+    <string name="a11y_copy_notes">Copy selected notes</string>
+    <string name="a11y_paste_notes">Paste notes</string>
+    <string name="a11y_duplicate_notes">Duplicate selected notes</string>
     <string name="a11y_lock">Lock steps</string>
     <string name="a11y_prev_page">Previous page</string>
     <string name="a11y_next_page">Next page</string>

@@ -61,6 +61,10 @@ enum class KeyAction(val label: StringResource, val group: KeyGroup) {
     Quantise(Res.string.keys_quantise, KeyGroup.Editor),
     FoldPanel(Res.string.keys_fold_panel, KeyGroup.Editor),
     FoldKeys(Res.string.keys_fold_keys, KeyGroup.Editor),
+    Copy(Res.string.keys_copy, KeyGroup.Editor),
+    Cut(Res.string.keys_cut, KeyGroup.Editor),
+    Paste(Res.string.keys_paste, KeyGroup.Editor),
+    Duplicate(Res.string.keys_duplicate, KeyGroup.Editor),
 }
 
 enum class KeyGroup(val label: StringResource) {
@@ -170,6 +174,10 @@ val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
         KeyAction.Quantise to listOf(k(KeyCodes.KEYCODE_Q), alt(KeyCodes.KEYCODE_U)),
         KeyAction.FoldPanel to listOf(k(KeyCodes.KEYCODE_P), alt(KeyCodes.KEYCODE_V)),
         KeyAction.FoldKeys to listOf(k(KeyCodes.KEYCODE_B), alt(KeyCodes.KEYCODE_J)),
+        KeyAction.Copy to listOf(k(KeyCodes.KEYCODE_C, ctrl = true), alt(KeyCodes.KEYCODE_C)),
+        KeyAction.Cut to listOf(k(KeyCodes.KEYCODE_X, ctrl = true), alt(KeyCodes.KEYCODE_X)),
+        KeyAction.Paste to listOf(k(KeyCodes.KEYCODE_V, ctrl = true), alt(KeyCodes.KEYCODE_W)),
+        KeyAction.Duplicate to listOf(k(KeyCodes.KEYCODE_D, ctrl = true), alt(KeyCodes.KEYCODE_E)),
     )
 }
 

@@ -35,6 +35,10 @@
     <string name="keys_generate">générer des notes</string>
     <string name="keys_quantise">quantifier</string>
     <string name="keys_fold_panel">replier le panneau</string>
+    <string name="keys_copy">copier les notes</string>
+    <string name="keys_cut">couper les notes</string>
+    <string name="keys_paste">coller les notes</string>
+    <string name="keys_duplicate">dupliquer les notes</string>
     <string name="keys_fold_keys">replier le clavier</string>
 
     <!-- The list of keys a question mark opens. -->
