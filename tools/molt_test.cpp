@@ -421,6 +421,48 @@ int main() {
               "a dirty take still sings the note written", detail);
     }
 
+    // --- hum under the room tone, as audition's dirtyvoice has it ----------
+    //
+    // dirtyVowel's room is quiet. Here the hum runs under the room too, and
+    // clipped, so its harmonics stay after the rumble filter and the room
+    // sits within 20 dB of the voice. The take still has to speak when the
+    // clean one does.
+    std::printf("\nhum and rumble under the room tone too\n");
+    {
+        setenv("ACIDULOUS_INPUT_FILE", "", 1);
+        // The clean take gets the same 400 ms in front, in silence.
+        audio::Utterance clean;
+        clean.mono.assign(static_cast<size_t>(kSr * 0.4f), 0.0f);
+        const std::vector<float> phrase = audition::speechPhrase();
+        clean.mono.insert(clean.mono.end(), phrase.begin(), phrase.end());
+        clean.analyse(kSr);
+        audio::Utterance dirty;
+        dirty.mono = audition::dirtyVoiceMono();
+        dirty.analyse(kSr);
+        // When a held note first gets within 12 dB of its own level, in 1 ms steps.
+        auto speaks = [&](audio::Utterance &u) {
+            const std::vector<float> out = play(u, 1.0f, {48});
+            double sum = 0.0;
+            for (float v : out) sum += static_cast<double>(v) * v;
+            const double floor = sum / static_cast<double>(out.size()) * 0.063;
+            const auto step = static_cast<int32_t>(kSr * 0.001f), win = static_cast<int32_t>(kSr * 0.01f);
+            for (int32_t at = 0; at + win < static_cast<int32_t>(out.size()); at += step) {
+                double w = 0.0;
+                for (int32_t i = at; i < at + win; ++i) w += static_cast<double>(out[static_cast<size_t>(i)]) * out[static_cast<size_t>(i)];
+                if (w / win >= floor) return static_cast<float>(at) / kSr;
+            }
+            return 1.0f;
+        };
+        const float a = speaks(clean), b = speaks(dirty);
+        char detail[112];
+        std::snprintf(detail, sizeof(detail), "(clean at %.0f ms, dirty at %.0f ms)",
+                      static_cast<double>(a * 1000.0f), static_cast<double>(b * 1000.0f));
+        check(std::abs(b - a) <= 0.025f, "the dirty take speaks within 20 ms of the clean", detail);
+        std::snprintf(detail, sizeof(detail), "(root %.1f Hz clean, %.1f Hz dirty)",
+                      static_cast<double>(clean.rootHz), static_cast<double>(dirty.rootHz));
+        check(std::abs(cents(dirty.rootHz, clean.rootHz)) < 20.0f, "and finds the same root", detail);
+    }
+
     std::printf("\n%s\n", failures == 0 ? "all ok" : "FAILURES");
     return failures == 0 ? 0 : 1;
 }
