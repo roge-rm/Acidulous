@@ -2787,9 +2787,8 @@ private fun CipherPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "pw", "width")
                     PanelKnob(b, "sub", "sub")
                     PanelKnob(b, "noise", "noise")
-                    // How much of the carrier is replaced by noise when the
-                    // modulator is unvoiced, which turns a sung vowel into a
-                    // whisper.
+                    // How much of the carrier is replaced by noise while the
+                    // modulator is unvoiced (an "s", "f" or breath).
                     PanelKnob(b, "unvoiced", "unvoiced", PanelAmber)
                     PanelKnob(b, "cardrive", "drive", PanelPink)
                 }

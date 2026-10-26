@@ -28,7 +28,13 @@ bright sounds come out dark, spread it wider, **freeze** the current shape
 while the carrier keeps playing, or **smear** neighbouring bands together.
 
 **role**, **dry** and **wet** set which side is which and how much of each you
-hear. **unvoiced** handles consonants so the words stay clear.
+hear.
+
+Two controls keep the consonants. **unvoiced** turns the carrier into noise
+while the voice is on an "s", an "f" or a breath, so the bands have hiss to
+shape and the words stay clear. The **consonants** group adds a hiss of its
+own on top whenever the top of the voice gets loud: **detect** sets how
+easily, **above** where, **level** how loud.
 
 **attack**, **release** and **smear** set how quickly each band follows. Fast
 is clear but can chatter, and slow is smooth but can slur.

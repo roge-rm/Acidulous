@@ -29,8 +29,14 @@ large, figez la forme actuelle avec **figer** pendant que la porteuse joue,
 ou fondez les bandes voisines ensemble avec **flou**.
 
 **l’entrée**, **sec** et **traité** règlent quel côté est lequel et combien
-vous entendez de chacun. **sourdes** s’occupe des consonnes pour que les mots
-restent clairs.
+vous entendez de chacun.
+
+Deux réglages gardent les consonnes. **sourdes** change la porteuse en bruit
+pendant que la voix est sur un « s », un « f » ou un souffle, pour que les
+bandes aient du souffle à façonner et que les mots restent clairs. Le groupe
+**consonnes** ajoute son propre souffle par-dessus dès que le haut de la voix
+devient fort : **détecter** règle la facilité, **au-dessus** où, **niveau**
+le volume.
 
 **attaque**, **relâche** et **flou** règlent la vitesse à laquelle chaque bande
 suit. Rapide est clair mais peut crépiter, et lent est doux mais peut

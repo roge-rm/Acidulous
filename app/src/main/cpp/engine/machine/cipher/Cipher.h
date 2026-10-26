@@ -179,11 +179,21 @@ class Cipher final : public Machine {
     dsp::Svf sibilanceShaper;
     float feedbackSample = 0.0f;
     float feedbackLp = 0.0f;
+    // The unvoiced detector: the modulator's energy above and below the
+    // voice's formants, followed. Their ratio is high on an "s", "f" or a
+    // breath and low on a vowel. Only run while `unvoiced` is up.
+    dsp::Svf unvoicedHigh, unvoicedLow;
+    float unvoicedHighEnv = 0.0f, unvoicedLowEnv = 0.0f, unvoicedMix = 0.0f;
+    float unvoicedAttack = 0.0f, unvoicedRelease = 0.0f, unvoicedGlide = 0.0f;
 
     float bendSemis = 0.0f, modWheel = 0.0f, pressure = 0.0f;
     float bpm = 120.0f;
     static constexpr uint32_t kRngSeed = 0x2f6e1cu;
     uint32_t rngState = kRngSeed;
+    // The unvoiced path's own noise, so turning it up doesn't move the noise
+    // and sibilance paths' sequence.
+    static constexpr uint32_t kUnvoicedSeed = 0x9e3779b9u;
+    uint32_t unvoicedRng = kUnvoicedSeed;
     int32_t shuffleMap[kMaxBands] = {};
     int32_t shuffleSeed = -1;
 };

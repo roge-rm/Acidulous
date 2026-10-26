@@ -17,6 +17,13 @@ constexpr float kCarrierNominal = 0.5f;
 // The level of the consonant (sibilance) path. It should sit under the
 // vocoded signal, not over it.
 constexpr float kSibilanceMakeup = 2.0f;
+// The unvoiced detector's split: above the high corner is hiss, below the
+// low one is the voice's fundamental and first formant.
+constexpr float kUnvoicedHighHz = 2500.0f;
+constexpr float kUnvoicedLowHz = 800.0f;
+// Where the share of hiss counts as unvoiced: none at the first, all at the
+// second. A vowel sits under 0.2 and an "s" over 0.8.
+constexpr float kUnvoicedFrom = 0.3f, kUnvoicedTo = 0.7f;
 // Output gain that puts Init at the same level as other machines.
 constexpr float kHouse = 0.94f;
 // The volume knob's maximum, shared by the knob and the clamp in render.
@@ -217,6 +224,15 @@ void Cipher::prepare(int32_t sr) {
     }
     sibilanceFilter.setSampleRate(sampleRate);
     sibilanceShaper.setSampleRate(sampleRate);
+    unvoicedHigh.setSampleRate(sampleRate);
+    unvoicedLow.setSampleRate(sampleRate);
+    unvoicedHigh.set(kUnvoicedHighHz, 0.3f);
+    unvoicedLow.set(kUnvoicedLowHz, 0.3f);
+    // 2 ms up and 20 ms down for the followers, and 5 ms for the mix, so the
+    // switch to noise doesn't click.
+    unvoicedAttack = 1.0f - std::exp(-1.0f / (0.002f * sampleRate));
+    unvoicedRelease = 1.0f - std::exp(-1.0f / (0.02f * sampleRate));
+    unvoicedGlide = 1.0f - std::exp(-1.0f / (0.005f * sampleRate));
     for (auto &v : voices) v.amp.setSampleRate(sampleRate);
     for (auto &e : eg) e.setSampleRate(sampleRate);
     lastCount = -1;
@@ -293,6 +309,10 @@ void Cipher::reset() {
     zeroPrev = 0.0f;
     zeroCount = zeroWindow = 0;
     sibilanceEnv = 0.0f;
+    unvoicedHigh.reset();
+    unvoicedLow.reset();
+    unvoicedHighEnv = unvoicedLowEnv = unvoicedMix = 0.0f;
+    unvoicedRng = kUnvoicedSeed;
     rngState = kRngSeed;
     quietBlocks = 0;
     asleep = false;
@@ -518,6 +538,9 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const float glideK = glideSeconds <= 0.002f ? 1.0f
                                                 : clampf(invSampleRate / glideSeconds, 0.0f, 1.0f);
     const float noiseLevel = clampf(paramOf(NoiseLevel) + mod[DstNoise], 0.0f, 1.0f);
+    // Only with the input as the modulator: swapped, the input is what's
+    // heard and the oscillators are what's measured.
+    const float unvoiced = role == InputIsModulator ? paramOf(Unvoiced) : 0.0f;
     const float carrierDrive = paramOf(CarrierDrive);
     const float dry = paramOf(Dry), wet = paramOf(Wet);
     const float drive = clampf(paramOf(Drive) + mod[DstDrive], 0.0f, 1.0f);
@@ -599,6 +622,9 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             sibilanceFilter.reset();
             sibilanceShaper.reset();
             sibilanceEnv = feedbackLp = feedbackSample = 0.0f;
+            unvoicedHigh.reset();
+            unvoicedLow.reset();
+            unvoicedHighEnv = unvoicedLowEnv = unvoicedMix = 0.0f;
             loudness = brightness = 0.0f;
             asleep = true;
         }
@@ -627,7 +653,26 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             }
             carrier += carrierSample(v, glideK, detuneMul, pitchScale, waveA, waveB, mix, pw, sub) *
                        env * v.velGain;
-            ampSum += env;
+            ampSum += env * v.velGain;
+        }
+        // Unvoiced: while the modulator is on a consonant or a breath, the
+        // carrier gives way to noise at the level the notes are playing, so
+        // the bands have hiss to shape where the oscillators have little.
+        if (unvoiced > 0.0f) {
+            const float hi = std::fabs(unvoicedHigh.highpass(external));
+            const float lo = std::fabs(unvoicedLow.lowpass(external));
+            unvoicedHighEnv += (hi - unvoicedHighEnv) * (hi > unvoicedHighEnv ? unvoicedAttack : unvoicedRelease);
+            unvoicedLowEnv += (lo - unvoicedLowEnv) * (lo > unvoicedLowEnv ? unvoicedAttack : unvoicedRelease);
+            const float share = unvoicedHighEnv / (unvoicedHighEnv + unvoicedLowEnv + 1e-9f);
+            const float u = clampf((share - kUnvoicedFrom) / (kUnvoicedTo - kUnvoicedFrom), 0.0f, 1.0f);
+            unvoicedMix += (u * u * (3.0f - 2.0f * u) * unvoiced - unvoicedMix) * unvoicedGlide;
+            // Settled at none rather than decaying into denormals.
+            if (unvoicedMix < 1e-6f) unvoicedMix = 0.0f;
+            if (unvoicedMix > 0.0f) {
+                unvoicedRng = unvoicedRng * 1664525u + 1013904223u;
+                const float noise = (static_cast<float>((unvoicedRng >> 9) & 0xffff) / 32768.0f) - 1.0f;
+                carrier += (noise * std::fmin(1.0f, ampSum) - carrier) * unvoicedMix;
+            }
         }
         if (noiseLevel > 0.0f) {
             rngState = rngState * 1664525u + 1013904223u;
