@@ -263,19 +263,37 @@ float Cipher::bandResonance(float q) const {
     return clampf((2.0f - 1.0f / wanted) / 1.96f, 0.0f, 0.995f);
 }
 
+// Everything that carries state goes back to how prepare() left it, so a
+// render after a panic doesn't depend on what was played before.
 void Cipher::reset() {
-    for (auto &v : voices) { v.used = false; v.gate = false; v.amp.kill(); }
+    for (auto &v : voices) {
+        v = Voice();
+        v.amp.setSampleRate(sampleRate);
+    }
     for (int i = 0; i < kMaxBands; ++i) {
         bands[i].analysis1.reset(); bands[i].analysis2.reset();
         bands[i].synthesis1.reset(); bands[i].synthesis2.reset();
         bands[i].envelope = 0.0f;
         bands[i].held = 0.0f;
     }
+    // The band layout and coefficients are solved again on the next block,
+    // since the edges hold on to small changes.
+    lastCount = -1;
+    lastLow = lastHigh = lastQ = -1.0f;
+    for (auto &k : lastBandKey) k = NAN;
+    shuffleSeed = -1;
     sibilanceFilter.reset();
     sibilanceShaper.reset();
     for (auto &e : eg) e.reset();
-    feedbackSample = 0.0f;
-    loudness = brightness = 0.0f;
+    for (auto &l : lfo) l = LfoGen();
+    lfoValue[0] = lfoValue[1] = 0.0f;
+    for (float &m : mod) m = 0.0f;
+    feedbackSample = feedbackLp = 0.0f;
+    loudness = brightness = trackedHz = trackedNote = 0.0f;
+    zeroPrev = 0.0f;
+    zeroCount = zeroWindow = 0;
+    sibilanceEnv = 0.0f;
+    rngState = kRngSeed;
     quietBlocks = 0;
     asleep = false;
     updateMacros();
