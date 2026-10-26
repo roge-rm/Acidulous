@@ -14,7 +14,7 @@ in the scale, so you get more range on a small screen and can't hit a wrong
 note. MIDI notes outside the scale move to the nearest one that fits.
 
 The **scl** corner of the piano roll chooses how the scale is shown: all notes,
-scale notes highlighted or only scale notes. On a track without its own scale,
+scale notes highlighted, only scale notes or only the notes the clip uses. On a track without its own scale,
 the roll uses the song's key (set behind the tempo button).
 
 ## Chord

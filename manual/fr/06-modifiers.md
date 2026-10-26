@@ -16,8 +16,8 @@ petit écran et empêche les fausses notes. Les notes MIDI hors de la gamme vont
 à la plus proche qui convient.
 
 Le coin **gam** de la grille de notes choisit l’affichage de la gamme : toutes
-les notes, notes de la gamme en surbrillance ou seulement les notes de la
-gamme. Sur une piste sans gamme propre, la grille utilise la tonalité du
+les notes, notes de la gamme en surbrillance, seulement les notes de la
+gamme ou seulement les notes que le clip utilise. Sur une piste sans gamme propre, la grille utilise la tonalité du
 morceau (réglée derrière le bouton du tempo).
 
 ## Accord

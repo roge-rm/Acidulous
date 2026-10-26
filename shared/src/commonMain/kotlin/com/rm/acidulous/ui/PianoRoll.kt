@@ -56,9 +56,21 @@ enum class EditMode { Draw, Select }
 /**
  * How the roll treats a scale. Chromatic ignores it, Dim greys the rows a
  * Scale modifier would move, and Fold drops those rows entirely so only
- * playable notes have a lane. The corner of the roll cycles them.
+ * playable notes have a lane. Used keeps only the pitches the clip has notes
+ * on, scale or not. The corner of the roll cycles them.
  */
-enum class ScaleView { Chromatic, Dim, Fold }
+enum class ScaleView { Chromatic, Dim, Fold, Used }
+
+/**
+ * The rows of the Used view, top first. [used] is the sorted pitches to show.
+ * Up to [rows] of them all show, more than that and the window starts at the
+ * first one at or above [lowest].
+ */
+internal fun usedRowPitches(used: List<Int>, lowest: Int, rows: Int): IntArray {
+    if (used.size <= rows) return IntArray(used.size) { used[used.size - 1 - it] }
+    val start = used.indexOfFirst { it >= lowest }.let { if (it < 0) used.size else it }.coerceAtMost(used.size - rows)
+    return IntArray(rows) { used[start + rows - 1 - it] }
+}
 
 /**
  * The clip editor: one Canvas, with notes drawn and hit tested by hand. A
@@ -87,6 +99,8 @@ fun PianoRoll(
     noteSpelling: Map<Int, String> = emptyMap(),
     scaleView: ScaleView,
     onCycleScaleView: () -> Unit,
+    /** Names the clip, so the Used view forgets its pitches when the clip changes. */
+    clipKey: Any = Unit,
     /** The window this page shows, in ticks from the start of the clip. */
     firstTick: Int,
     visibleTicks: Int,
@@ -123,6 +137,7 @@ fun PianoRoll(
     val scaleWords = listOf(
         stringResource(Res.string.roll_scale_none), stringResource(Res.string.roll_scale_chromatic),
         stringResource(Res.string.roll_scale_dim), stringResource(Res.string.roll_scale_fit),
+        stringResource(Res.string.roll_scale_used),
     )
     // The pointer handler must survive the clip changing mid-drag (every
     // updateGesture commits a new clip), so it reads through these.
@@ -137,9 +152,20 @@ fun PianoRoll(
     )
     // The pitch of each row. Chromatic and Dim step by semitone; Fold keeps
     // only the scale's notes, so every row is playable.
-    val scale = scalePitchClasses?.takeIf { it.isNotEmpty() && scaleView != ScaleView.Chromatic }
-    val rowPitches = remember(lowestPitch, rows, scale, scaleView) {
-        if (scale == null || scaleView != ScaleView.Fold) {
+    // Used shows the pitches the clip has notes on. A pitch stays once seen,
+    // until the view or the clip changes, so deleting its last note doesn't
+    // drop the row under the finger.
+    val seenPitches = remember(scaleView, clipKey) { HashSet<Int>() }
+    val usedSorted: List<Int> = if (scaleView == ScaleView.Used) {
+        clip.notes.forEach { seenPitches += it.pitch }
+        seenPitches.sorted()
+    } else emptyList()
+    val usedActive = scaleView == ScaleView.Used && usedSorted.isNotEmpty()
+    val scale = scalePitchClasses?.takeIf { it.isNotEmpty() && scaleView != ScaleView.Chromatic && scaleView != ScaleView.Used }
+    val rowPitches = remember(lowestPitch, rows, scale, scaleView, usedSorted) {
+        if (usedActive) {
+            usedRowPitches(usedSorted, lowestPitch, rows)
+        } else if (scale == null || scaleView != ScaleView.Fold) {
             IntArray(rows) { lowestPitch + rows - 1 - it }
         } else {
             val kept = ArrayList<Int>(rows)
@@ -153,6 +179,10 @@ fun PianoRoll(
         }
     }
     val rowsState2 by rememberUpdatedState(rowPitches)
+    // Rows on screen: fewer than asked for when the Used view has few pitches.
+    val shownRows = rowPitches.size.coerceAtLeast(1)
+    val shownRowsState by rememberUpdatedState(shownRows)
+    val usedState by rememberUpdatedState(if (usedActive) usedSorted else null)
 
     // Read here because the Canvas draw lambda isn't composition and can't
     // read the theme itself.
@@ -199,7 +229,10 @@ fun PianoRoll(
                 // Start where the user is looking.
                 val lo = lowestState
                 if (curTick !in firstState until firstState + visibleState) curTick = firstState
-                if (curPitch !in lo until lo + rowsState) curPitch = lo + rowsState / 2
+                val u = usedState
+                if (u != null) {
+                    if (curPitch !in rowsState2) curPitch = rowsState2[rowsState2.size / 2]
+                } else if (curPitch !in lo until lo + rowsState) curPitch = lo + rowsState / 2
                 return@onKeyEvent true
             }
             val c = clipState
@@ -212,7 +245,12 @@ fun PianoRoll(
                 if (curTick < first) cb.onScrollTime((curTick - first).toFloat())
                 else if (curTick + grid > first + visible) cb.onScrollTime((curTick + grid - first - visible).toFloat())
                 val lo = lowestState
-                if (curPitch < lo) cb.onScrollPitch(curPitch - lo)
+                val u = usedState
+                if (u != null) {
+                    val i = u.indexOf(curPitch)
+                    if (curPitch < lo) cb.onScrollPitch(curPitch - lo)
+                    else if (i >= 0 && curPitch > rowsState2.first()) cb.onScrollPitch(u[(i - rowsState + 1).coerceAtLeast(0)] - lo)
+                } else if (curPitch < lo) cb.onScrollPitch(curPitch - lo)
                 else if (curPitch > lo + rowsState - 1) cb.onScrollPitch(curPitch - (lo + rowsState - 1))
             }
             fun step(dTick: Int, dPitch: Int) {
@@ -221,7 +259,13 @@ fun PianoRoll(
                     cb.onGestureBegin(); cb.onMove(setOf(under), dTick, dPitch); cb.onGestureEnd()
                 }
                 curTick = (curTick + dTick).coerceIn(0, total - grid)
-                curPitch = (curPitch + dPitch).coerceIn(0, 127)
+                val u = usedState
+                if (u != null && !e.isAltPressed && dPitch != 0) {
+                    // Over the shown pitches only, a page being four of them.
+                    val at = u.indexOf(curPitch).let { if (it < 0) u.indexOfLast { p -> p < curPitch } else it }
+                    val n = if (dPitch > 0) (if (dPitch > 1) 4 else 1) else (if (dPitch < -1) -4 else -1)
+                    curPitch = u[(at + n).coerceIn(0, u.size - 1)]
+                } else curPitch = (curPitch + dPitch).coerceIn(0, 127)
                 keepInView()
             }
             when (code) {
@@ -276,7 +320,7 @@ fun PianoRoll(
             awaitEachGesture {
                 val down = awaitFirstDown()
                 val geo = Geometry(
-                    canvasSize, clipState, ticksPerBar, rowsState,
+                    canvasSize, clipState, ticksPerBar, shownRowsState,
                     GutterWidth.toPx(), RulerHeight.toPx(), rowsState2, firstTick, visibleTicks,
                 )
                 val press = down.position
@@ -414,12 +458,12 @@ fun PianoRoll(
         },
     ) {
         canvasSize = size
-        val geo = Geometry(size, clip, ticksPerBar, rows, GutterWidth.toPx(), RulerHeight.toPx(), rowPitches,
+        val geo = Geometry(size, clip, ticksPerBar, shownRows, GutterWidth.toPx(), RulerHeight.toPx(), rowPitches,
             firstTick, visibleTicks)
 
         // Rows: black keys darker, C rows marked, and rows the scale would
         // move pushed further back in Dim.
-        for (r in 0 until rows) {
+        for (r in 0 until shownRows) {
             val pitch = geo.pitchOfRow(r)
             val inScale = scale?.contains(((pitch % 12) + 12) % 12) ?: true
             drawRect(
@@ -833,7 +877,7 @@ private class Hit(val index: Int, val onEdge: Boolean)
  */
 private fun DrawScope.drawScaleCorner(
     geo: Geometry, measurer: TextMeasurer, hasScale: Boolean, view: ScaleView, c: AcidColors,
-    /** The corner's labels: no scale, then [ScaleView]'s three, in order. */
+    /** The corner's labels: no scale, then [ScaleView]'s four, in order. */
     words: List<String>,
 ) {
     drawRect(c.bg, Offset.Zero, Size(geo.originX, geo.originY))
@@ -845,17 +889,19 @@ private fun DrawScope.drawScaleCorner(
         androidx.compose.ui.geometry.CornerRadius(3f, 3f),
     )
     drawRoundRect(
-        if (hasScale && view != ScaleView.Chromatic) c.accent else c.textFaint,
+        if ((hasScale && view != ScaleView.Chromatic) || view == ScaleView.Used) c.accent else c.textFaint,
         Offset(pad, pad), Size(geo.originX - pad * 2f, geo.originY - pad * 2f),
         androidx.compose.ui.geometry.CornerRadius(3f, 3f),
         style = Stroke(width = 1f),
     )
-    val label = if (!hasScale) words[0] else when (view) {
+    val label = if (view == ScaleView.Used) words[4] else if (!hasScale) words[0] else when (view) {
         ScaleView.Chromatic -> words[1]
         ScaleView.Dim -> words[2]
         ScaleView.Fold -> words[3]
+        ScaleView.Used -> words[4]
     }
     val colour = when {
+        view == ScaleView.Used -> c.accent
         !hasScale -> c.textDim
         view == ScaleView.Chromatic -> c.textHi
         else -> c.accent
