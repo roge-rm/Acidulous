@@ -253,7 +253,7 @@ fun MachinePanel(
             "Trinity" -> TrinityPanel(binding, track, trackIndex, editor)
             "Ratio" -> RatioPanel(binding, track, trackIndex, editor)
             "Manual" -> ManualPanel(binding, track, trackIndex, editor)
-            "Cipher" -> CipherPanel(binding)
+            "Cipher" -> CipherPanel(binding, track, trackIndex, editor)
             "Cumulus" -> CumulusPanel(binding, track, trackIndex, editor)
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding, track, trackIndex, editor)
@@ -2665,6 +2665,14 @@ private val CIPHER_DESTS = listOf(
 )
 private val CIPHER_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
 
+/** Where a Cipher macro route goes, in the engine's MacroDest order. */
+val CIPHER_MACRO_DESTS = listOf(
+    "off", "low", "high", "width", "attack", "release", "smear", "gate",
+    "shift", "stretch", "remap", "morph", "detect", "track", "feedback", "fb tone",
+    "mix", "detune", "pw", "sub", "noise", "car drive",
+    "dry", "wet", "drive", "volume", "pan", "amp atk", "amp rel", "pitch",
+)
+
 /**
  * The microphone control, for machines that listen. A vocoder or an input
  * exciter with nothing coming in is silent, so the panel has the switch instead
@@ -2699,10 +2707,33 @@ private fun InputListen() {
 }
 
 @Composable
-private fun CipherPanel(b: ParamBinding) {
+private fun CipherPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("bank", "map", "carrier", "voice", "mod", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("bank", "play", "map", "carrier", "voice", "mod", "out", "macros"), section, { section = it }) { sec ->
         when (sec) {
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", CIPHER_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", CIPHER_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", CIPHER_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", CIPHER_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             0 -> {
                 Group("listen") { InputListen() }
                 Group("bank") {
@@ -2727,7 +2758,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "siblevel", "level")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("remap") {
                     PanelStepKnob(b, "remap", CIPHER_REMAP, "order", PanelAmber)
                     PanelKnob(b, "remapamt", "amount", PanelAmber)
@@ -2747,7 +2778,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "fbtone", "tone")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("carrier") {
                     PanelStepKnob(b, "wave a", CIPHER_WAVES, "wave a", PanelAmber)
                     PanelStepKnob(b, "wave b", CIPHER_WAVES, "wave b", PanelAmber)
@@ -2767,7 +2798,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "ampsus", "sustain"); PanelKnob(b, "amprel", "release")
                 }
             }
-            3 -> {
+            4 -> {
                 Group("roles") {
                     PanelStepKnob(b, "role", CIPHER_ROLE, "input is", PanelAmber)
                     PanelKnob(b, "dry", "dry")
@@ -2787,7 +2818,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "vel", "velocity")
                 }
             }
-            4 -> {
+            5 -> {
                 Group("lfo 1") {
                     PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                     PanelKnob(b, "lfo1rate", "rate", PanelAmber)
@@ -2814,7 +2845,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
                 } }
             }
-            else -> {
+            6 -> {
                 Group("out") {
                     PanelKnob(b, "drive", "drive", PanelPink)
                     PanelKnob(b, "volume", "volume")
@@ -2823,6 +2854,14 @@ private fun CipherPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Cumulus ---------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction and Molt move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction, Molt and Cipher move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -32,6 +32,8 @@
 #include <engine/machine/mosaic/Mosaic.h>
 #include <engine/machine/diction/Diction.h>
 #include <engine/machine/molt/Molt.h>
+#include <engine/machine/cipher/Cipher.h>
+#include <engine/core/InputBus.h>
 #include "audition_material.h"
 #include <engine/machine/tine/Tine.h>
 #include <engine/machine/ratio/Ratio.h>
@@ -84,6 +86,20 @@ int gNote = 57;
 
 struct Route { int macro, route, dest; float depth; float knob; };
 
+// Cipher vocodes the input bus, so it hears synthetic speech, looped, one
+// block before each render. Other machines get nothing on the bus.
+void feedInput(const char *type, int32_t block) {
+    if (std::strcmp(type, "Cipher") != 0) return;
+    static const std::vector<float> speech = acidulous::audition::speechPhrase();
+    static std::vector<float> buf(static_cast<size_t>(kBlock) * 2);
+    for (int32_t i = 0; i < kBlock; ++i) {
+        const float x = speech[(static_cast<size_t>(block) * kBlock + i) % speech.size()];
+        buf[static_cast<size_t>(i) * 2] = buf[static_cast<size_t>(i) * 2 + 1] = x;
+    }
+    acidulous::InputBus::get().publish(buf.data(), kBlock);
+}
+void endInput() { acidulous::InputBus::get().publish(nullptr, 0); }
+
 void setNorm(ParamSet &p, const std::string &name, float v) {
     const int32_t i = p.indexOf(name.c_str());
     if (i < 0) { std::printf("  FAIL no parameter %s\n", name.c_str()); ++failures; return; }
@@ -125,9 +141,11 @@ std::vector<float> play(const Route *r) {
         m->onBlock(b * 4, b * 4 + 4, 120.0f);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
+        feedInput(gType, b);
         m->render(L, R, kBlock);
         for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
     }
+    endInput();
     delete m;
     return out;
 }
@@ -444,7 +462,8 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         std::snprintf(buf, sizeof(buf), "worst difference %.2g of peak %.2g", worst, peak);
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the transpose knob", buf);
     } else if (std::strcmp(type, "Pollen") == 0 || std::strcmp(type, "Mosaic") == 0 ||
-               std::strcmp(type, "Diction") == 0 || std::strcmp(type, "Molt") == 0) {
+               std::strcmp(type, "Diction") == 0 || std::strcmp(type, "Molt") == 0 ||
+               std::strcmp(type, "Cipher") == 0) {
         // A cloud's zero crossings say nothing, a sample's are its own and a
         // voice wavers, so the route must match the transpose knob.
         gUnits = {{"transpose", 12.0f}};
@@ -1433,9 +1452,11 @@ std::vector<float> playHeld(const char *type, const std::vector<std::pair<std::s
         m->onBlock(b * 4, b * 4 + 4, 120.0f);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
+        feedInput(type, b);
         m->render(L, R, kBlock);
         for (int32_t i = 0; i < kBlock; ++i) out.push_back(L[i]);
     }
+    endInput();
     delete m;
     return out;
 }
@@ -2056,6 +2077,42 @@ void moltRoutes() {
     }
 }
 
+// Cipher: routes to shift, the bottom band edge and the amp attack (read
+// when the note starts) match their knobs.
+void cipherRoutes() {
+    using Ci = acidulous::machine::Cipher;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    // Shift 0 of -12..12: a route of 0.25 is +6.
+    {
+        const auto plain = playHeld("Cipher", {}, {60}, blocks);
+        const auto knob = playHeld("Cipher", {{"shift", 6.0f}}, {60}, blocks);
+        Route r{4, 2, Ci::McShift, 0.25f, 1.0f};
+        const auto routed = playHeld("Cipher", {}, {60}, blocks, &r, Ci::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Cipher: a route to shift matches the knob", buf);
+    }
+    // Low 80 Hz of 40..600 (exponential): a route of +0.2 is 40 * 15^(unmap + 0.2).
+    {
+        const auto def = Ci().params().def(Ci::LowHz);
+        const float want = def.map(def.unmap(80.0f) + 0.2f);
+        const auto plain = playHeld("Cipher", {}, {60}, blocks);
+        const auto knob = playHeld("Cipher", {{"low", want}}, {60}, blocks);
+        Route r{6, 4, Ci::McLow, 0.2f, 1.0f};
+        const auto routed = playHeld("Cipher", {}, {60}, blocks, &r, Ci::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3) && routed != plain, "Cipher: a route to low matches the knob", buf);
+    }
+    // Amp attack: a route of +0.5 from 0.01 s.
+    {
+        const auto def = Ci().params().def(Ci::AmpAttack);
+        const float want = def.map(def.unmap(0.01f) + 0.5f);
+        const auto plain = playHeld("Cipher", {}, {60}, blocks);
+        const auto knob = playHeld("Cipher", {{"ampatk", want}}, {60}, blocks);
+        Route r{1, 1, Ci::McAmpAttack, 0.5f, 1.0f};
+        const auto routed = playHeld("Cipher", {}, {60}, blocks, &r, Ci::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3) && routed != plain, "Cipher: a route to amp attack matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -2161,6 +2218,10 @@ int main() {
     // Volume 0.8 of 1.5, as Pollen.
     basics("Molt", Mt::MacroDestCount, Mt::McVolume, Mt::McPitch, Mt::McOff, Mt::kMacros, 0.05 / 0.8, 0.425 / 0.8);
     moltRoutes();
+    using Ci = acidulous::machine::Cipher;
+    // Volume 0.8 of 2: half of -0.5 leaves 0.3, all of it leaves nothing.
+    basics("Cipher", Ci::MacroDestCount, Ci::McVolume, Ci::McPitch, Ci::McOff, Ci::kMacros, 0.0, 0.3 / 0.8);
+    cipherRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

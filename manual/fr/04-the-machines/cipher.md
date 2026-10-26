@@ -50,6 +50,22 @@ Les destinations sont les commandes de la carte (**décalage**, **étirer**,
 **réassign.**, **figer**, **flou**, **q** et les bords des bandes), plus la
 hauteur et le mélange de la porteuse.
 
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Décalage,
+Flou, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur fait 24 demi-tons à 1. L’attaque et
+le relâchement de l’ampli sont lus au début d’une note, donc ils changent à la
+note suivante ; le reste bouge tout de suite. Les interrupteurs, le nombre de
+bandes, l’ordre, les ondes, la matrice et ses enveloppes et LFO ne sont pas
+accessibles. Touchez le nom d’une macro pour la renommer.
+
 ## Astuces
 
 - Montez **sourdes** jusqu’à ce que les mots soient clairs, puis redescendez

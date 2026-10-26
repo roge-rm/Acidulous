@@ -60,7 +60,9 @@
     <string name="pw_amount">amount</string>
     <string name="pw_amp">Amp</string>
     <string name="pw_amp_65f59e">amp</string>
+    <string name="pw_amp_atk">amp atk</string>
     <string name="pw_amp_env">amp env</string>
+    <string name="pw_amp_rel">amp rel</string>
     <string name="pw_angle">angle</string>
     <string name="pw_answers">answers</string>
     <string name="pw_apart">apart</string>
@@ -176,6 +178,7 @@
     <string name="pw_cable_n">cable %d</string>
     <string name="pw_cajon">cajon</string>
     <string name="pw_call">call</string>
+    <string name="pw_car_drive">car drive</string>
     <string name="pw_carrier">carrier</string>
     <string name="pw_cassotto">cassotto</string>
     <string name="pw_caw">caw</string>
@@ -420,6 +423,7 @@
     <string name="pw_fan_3_3">fan 3 / 3</string>
     <string name="pw_fast">fast</string>
     <string name="pw_fb">fb</string>
+    <string name="pw_fb_tone">fb tone</string>
     <string name="pw_feedback">feedback</string>
     <string name="pw_feel">feel</string>
     <string name="pw_feg">feg</string>

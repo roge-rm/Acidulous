@@ -132,10 +132,76 @@ const ParamDef *Cipher::paramDefs(int32_t &count) const {
         lin(Transpose, "transpose", -12.0f, 12.0f, 0.0f);
         lin(Fine, "fine", -50.0f, 50.0f, 0.0f, "c");
         lin(VelocityAmount, "vel", 0.0f, 1.0f, 1.0f);
+        for (int k = 0; k < kMacros; ++k) {
+            char n[12];
+            const int32_t b = MacroBase + k * MacroParams;
+            std::snprintf(n, sizeof(n), "mac%d", k + 1);
+            lin(b, n, 0.0f, 1.0f, 0.0f);
+            for (int r = 0; r < 4; ++r) {
+                std::snprintf(n, sizeof(n), "mac%d_d%d", k + 1, r + 1);
+                step(b + 1 + r, n, MacroDestCount, 0.0f);
+                std::snprintf(n, sizeof(n), "mac%d_a%d", k + 1, r + 1);
+                lin(b + 5 + r, n, -1.0f, 1.0f, 0.0f);
+            }
+        }
         built = true;
     }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Cipher::Count];
+    DestMap() {
+        using P = Cipher;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {P::LowHz, P::McLow}, {P::HighHz, P::McHigh}, {P::BandQ, P::McQ},
+            {P::Attack, P::McAttack}, {P::Release, P::McRelease}, {P::Smear, P::McSmear},
+            {P::Gate, P::McGate}, {P::Shift, P::McShift}, {P::Stretch, P::McStretch},
+            {P::RemapAmount, P::McRemap}, {P::FreezeMorph, P::McMorph}, {P::Sibilance, P::McSibilance},
+            {P::TrackAmount, P::McTrack}, {P::Feedback, P::McFeedback}, {P::FeedbackTone, P::McFbTone},
+            {P::CarrierMix, P::McMix}, {P::Detune, P::McDetune}, {P::PulseWidth, P::McPulseWidth},
+            {P::SubLevel, P::McSub}, {P::NoiseLevel, P::McNoise}, {P::CarrierDrive, P::McCarrierDrive},
+            {P::Dry, P::McDry}, {P::Wet, P::McWet}, {P::Drive, P::McDrive}, {P::Volume, P::McVolume},
+            {P::Pan, P::McPan}, {P::AmpAttack, P::McAmpAttack}, {P::AmpRelease, P::McAmpRelease},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Cipher::withMacros(int32_t p, float v, const float *mac) const {
+    const int d = destMap().of[p];
+    if (d < 0 || mac[d] == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + mac[d]);
+}
+
+void Cipher::updateMacros() {
+    for (float &m : mac_) m = 0.0f;
+    for (float &m : macGoal_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = params_.get(b), goal = params_.target(b);
+        if (knob == 0.0f && goal == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            // The routes' destinations are steps, so their targets.
+            const int dest = static_cast<int>(params_.target(b + 1 + r) + 0.5f);
+            if (dest <= McOff || dest >= MacroDestCount) continue;
+            mac_[dest] += knob * params_.get(b + 5 + r);
+            macGoal_[dest] += goal * params_.target(b + 5 + r);
+        }
+    }
+    // Two octaves either way.
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
+    macGoal_[McPitch] = std::clamp(macGoal_[McPitch], -1.0f, 1.0f);
 }
 
 int32_t Cipher::steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
@@ -212,12 +278,15 @@ void Cipher::reset() {
     loudness = brightness = 0.0f;
     quietBlocks = 0;
     asleep = false;
+    updateMacros();
 }
 
 void Cipher::noteOn(uint8_t note, uint8_t velocity) {
     // The two mod envelopes belong to the machine, not a voice, so the first
     // note of a phrase starts them and notes added to a held chord don't.
     // tools/modsource_test.sh checks they run.
+    // A knob set in this block, before render, still counts.
+    updateMacros();
     bool held = false;
     for (const auto &cand : voices) if (cand.used && cand.gate) { held = true; break; }
     if (!held) for (auto &e : eg) e.retrigger();
@@ -234,11 +303,11 @@ void Cipher::noteOn(uint8_t note, uint8_t velocity) {
     v->note = note;
     v->bend = 0.0f;
     v->velocity = static_cast<float>(velocity) / 127.0f;
-    v->velGain = velocityGain(v->velocity, targetOf(VelocityAmount));
+    v->velGain = velocityGain(v->velocity, goalOf(VelocityAmount));
     v->key01 = clampf((static_cast<float>(note) - 24.0f) / 72.0f, 0.0f, 1.0f);
     v->target = noteHz(static_cast<float>(note));
     if (wasIdle) v->freq = v->target;
-    v->amp.set(0.0f, targetOf(AmpAttack), targetOf(AmpDecay), targetOf(AmpSustain), targetOf(AmpRelease), false);
+    v->amp.set(0.0f, goalOf(AmpAttack), goalOf(AmpDecay), goalOf(AmpSustain), goalOf(AmpRelease), false);
     v->amp.retrigger();
 }
 
@@ -364,6 +433,7 @@ float Cipher::carrierSample(Voice &v, float glideK, float detuneMul, float pitch
 
 bool Cipher::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
     applyMatrix(); // first, since the band edges can be modulated
     rebuildBands();
 
@@ -447,7 +517,8 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
     const bool track = steppedOf(PitchTrack) != 0;
     const float trackAmount = paramOf(TrackAmount);
     const float pitchScale = std::pow(2.0f, (bendSemis + paramOf(Octave) * 12.0f + paramOf(Transpose) +
-                                             paramOf(Fine) * 0.01f + mod[DstCarrierPitch] * 12.0f) / 12.0f);
+                                             paramOf(Fine) * 0.01f + mod[DstCarrierPitch] * 12.0f +
+                                             24.0f * mac_[McPitch]) / 12.0f);
 
     sibilanceFilter.set(paramOf(SibilanceHz), 0.4f);
     sibilanceShaper.set(paramOf(SibilanceHz), 0.25f);

@@ -409,6 +409,78 @@ private fun labels0(): Map<String, String> = mapOf(
     "Cipher:m8_amt" to "mod 8|amount",
     "Cipher:m8_dst" to "mod 8|to",
     "Cipher:m8_src" to "mod 8|from",
+    "Cipher:mac1" to "macros|macro 1",
+    "Cipher:mac1_a1" to "macro 1|by 1",
+    "Cipher:mac1_a2" to "macro 1|by 2",
+    "Cipher:mac1_a3" to "macro 1|by 3",
+    "Cipher:mac1_a4" to "macro 1|by 4",
+    "Cipher:mac1_d1" to "macro 1|to 1",
+    "Cipher:mac1_d2" to "macro 1|to 2",
+    "Cipher:mac1_d3" to "macro 1|to 3",
+    "Cipher:mac1_d4" to "macro 1|to 4",
+    "Cipher:mac2" to "macros|macro 2",
+    "Cipher:mac2_a1" to "macro 2|by 1",
+    "Cipher:mac2_a2" to "macro 2|by 2",
+    "Cipher:mac2_a3" to "macro 2|by 3",
+    "Cipher:mac2_a4" to "macro 2|by 4",
+    "Cipher:mac2_d1" to "macro 2|to 1",
+    "Cipher:mac2_d2" to "macro 2|to 2",
+    "Cipher:mac2_d3" to "macro 2|to 3",
+    "Cipher:mac2_d4" to "macro 2|to 4",
+    "Cipher:mac3" to "macros|macro 3",
+    "Cipher:mac3_a1" to "macro 3|by 1",
+    "Cipher:mac3_a2" to "macro 3|by 2",
+    "Cipher:mac3_a3" to "macro 3|by 3",
+    "Cipher:mac3_a4" to "macro 3|by 4",
+    "Cipher:mac3_d1" to "macro 3|to 1",
+    "Cipher:mac3_d2" to "macro 3|to 2",
+    "Cipher:mac3_d3" to "macro 3|to 3",
+    "Cipher:mac3_d4" to "macro 3|to 4",
+    "Cipher:mac4" to "macros|macro 4",
+    "Cipher:mac4_a1" to "macro 4|by 1",
+    "Cipher:mac4_a2" to "macro 4|by 2",
+    "Cipher:mac4_a3" to "macro 4|by 3",
+    "Cipher:mac4_a4" to "macro 4|by 4",
+    "Cipher:mac4_d1" to "macro 4|to 1",
+    "Cipher:mac4_d2" to "macro 4|to 2",
+    "Cipher:mac4_d3" to "macro 4|to 3",
+    "Cipher:mac4_d4" to "macro 4|to 4",
+    "Cipher:mac5" to "macros|macro 5",
+    "Cipher:mac5_a1" to "macro 5|by 1",
+    "Cipher:mac5_a2" to "macro 5|by 2",
+    "Cipher:mac5_a3" to "macro 5|by 3",
+    "Cipher:mac5_a4" to "macro 5|by 4",
+    "Cipher:mac5_d1" to "macro 5|to 1",
+    "Cipher:mac5_d2" to "macro 5|to 2",
+    "Cipher:mac5_d3" to "macro 5|to 3",
+    "Cipher:mac5_d4" to "macro 5|to 4",
+    "Cipher:mac6" to "macros|macro 6",
+    "Cipher:mac6_a1" to "macro 6|by 1",
+    "Cipher:mac6_a2" to "macro 6|by 2",
+    "Cipher:mac6_a3" to "macro 6|by 3",
+    "Cipher:mac6_a4" to "macro 6|by 4",
+    "Cipher:mac6_d1" to "macro 6|to 1",
+    "Cipher:mac6_d2" to "macro 6|to 2",
+    "Cipher:mac6_d3" to "macro 6|to 3",
+    "Cipher:mac6_d4" to "macro 6|to 4",
+    "Cipher:mac7" to "macros|macro 7",
+    "Cipher:mac7_a1" to "macro 7|by 1",
+    "Cipher:mac7_a2" to "macro 7|by 2",
+    "Cipher:mac7_a3" to "macro 7|by 3",
+    "Cipher:mac7_a4" to "macro 7|by 4",
+    "Cipher:mac7_d1" to "macro 7|to 1",
+    "Cipher:mac7_d2" to "macro 7|to 2",
+    "Cipher:mac7_d3" to "macro 7|to 3",
+    "Cipher:mac7_d4" to "macro 7|to 4",
+    "Cipher:mac8" to "macros|macro 8",
+    "Cipher:mac8_a1" to "macro 8|by 1",
+    "Cipher:mac8_a2" to "macro 8|by 2",
+    "Cipher:mac8_a3" to "macro 8|by 3",
+    "Cipher:mac8_a4" to "macro 8|by 4",
+    "Cipher:mac8_d1" to "macro 8|to 1",
+    "Cipher:mac8_d2" to "macro 8|to 2",
+    "Cipher:mac8_d3" to "macro 8|to 3",
+    "Cipher:mac8_d4" to "macro 8|to 4",
     "Cipher:mix" to "carrier|mix",
     "Cipher:noise" to "carrier|noise",
     "Cipher:octave" to "keys|octave",
@@ -747,6 +819,9 @@ private fun labels0(): Map<String, String> = mapOf(
     "Diction:mac4_a3" to "macro 4|by 3",
     "Diction:mac4_a4" to "macro 4|by 4",
     "Diction:mac4_d1" to "macro 4|to 1",
+)
+
+private fun labels1(): Map<String, String> = mapOf(
     "Diction:mac4_d2" to "macro 4|to 2",
     "Diction:mac4_d3" to "macro 4|to 3",
     "Diction:mac4_d4" to "macro 4|to 4",
@@ -819,9 +894,6 @@ private fun labels0(): Map<String, String> = mapOf(
     "Draw:harp key" to "harp|key~music",
     "Draw:high rank" to "ranks|high",
     "Draw:low rank" to "ranks|low",
-)
-
-private fun labels1(): Map<String, String> = mapOf(
     "Draw:mac1" to "macros|macro 1",
     "Draw:mac1_a1" to "macro 1|by 1",
     "Draw:mac1_a2" to "macro 1|by 2",
@@ -1550,6 +1622,9 @@ private fun labels1(): Map<String, String> = mapOf(
     "Fret:mac8_a1" to "macro 8|by 1",
     "Fret:mac8_a2" to "macro 8|by 2",
     "Fret:mac8_a3" to "macro 8|by 3",
+)
+
+private fun labels2(): Map<String, String> = mapOf(
     "Fret:mac8_a4" to "macro 8|by 4",
     "Fret:mac8_d1" to "macro 8|to 1",
     "Fret:mac8_d2" to "macro 8|to 2",
@@ -1622,9 +1697,6 @@ private fun labels1(): Map<String, String> = mapOf(
     "Genesis:mac3" to "macros|macro 3",
     "Genesis:mac3_a1" to "macro 3|by 1",
     "Genesis:mac3_a2" to "macro 3|by 2",
-)
-
-private fun labels2(): Map<String, String> = mapOf(
     "Genesis:mac3_a3" to "macro 3|by 3",
     "Genesis:mac3_a4" to "macro 3|by 4",
     "Genesis:mac3_d1" to "macro 3|to 1",
@@ -2353,6 +2425,9 @@ private fun labels2(): Map<String, String> = mapOf(
     "Mosaic:mac4_d4" to "macro 4|to 4",
     "Mosaic:mac5" to "macros|macro 5",
     "Mosaic:mac5_a1" to "macro 5|by 1",
+)
+
+private fun labels3(): Map<String, String> = mapOf(
     "Mosaic:mac5_a2" to "macro 5|by 2",
     "Mosaic:mac5_a3" to "macro 5|by 3",
     "Mosaic:mac5_a4" to "macro 5|by 4",
@@ -2425,9 +2500,6 @@ private fun labels2(): Map<String, String> = mapOf(
     "Palm:damp" to "head|damp",
     "Palm:decay" to "head|decay",
     "Palm:drop" to "head|pitch drop",
-)
-
-private fun labels3(): Map<String, String> = mapOf(
     "Palm:flam" to "hands|flam",
     "Palm:hand" to "hand",
     "Palm:kit" to "kit",
@@ -3156,6 +3228,9 @@ private fun labels3(): Map<String, String> = mapOf(
     "Resonance:p06_kind" to "pad 7|object|shape",
     "Resonance:p06_level" to "pad 7|out|level",
     "Resonance:p06_noise" to "pad 7|strike|grit",
+)
+
+private fun labels4(): Map<String, String> = mapOf(
     "Resonance:p06_pan" to "pad 7|out|pan",
     "Resonance:p06_tune" to "pad 7|object|tune",
     "Resonance:p07_bend" to "pad 8|bend|amount",
@@ -3228,9 +3303,6 @@ private fun labels3(): Map<String, String> = mapOf(
     "Sympath:mac5_d3" to "macro 5|to 3",
     "Sympath:mac5_d4" to "macro 5|to 4",
     "Sympath:mac6" to "macros|macro 6",
-)
-
-private fun labels4(): Map<String, String> = mapOf(
     "Sympath:mac6_a1" to "macro 6|by 1",
     "Sympath:mac6_a2" to "macro 6|by 2",
     "Sympath:mac6_a3" to "macro 6|by 3",
@@ -4190,6 +4262,78 @@ private fun short0(): Map<String, String> = mapOf(
     "Cipher:m8_amt" to "amount",
     "Cipher:m8_dst" to "to",
     "Cipher:m8_src" to "from",
+    "Cipher:mac1" to "macro 1",
+    "Cipher:mac1_a1" to "by 1",
+    "Cipher:mac1_a2" to "by 2",
+    "Cipher:mac1_a3" to "by 3",
+    "Cipher:mac1_a4" to "by 4",
+    "Cipher:mac1_d1" to "to 1",
+    "Cipher:mac1_d2" to "to 2",
+    "Cipher:mac1_d3" to "to 3",
+    "Cipher:mac1_d4" to "to 4",
+    "Cipher:mac2" to "macro 2",
+    "Cipher:mac2_a1" to "by 1",
+    "Cipher:mac2_a2" to "by 2",
+    "Cipher:mac2_a3" to "by 3",
+    "Cipher:mac2_a4" to "by 4",
+    "Cipher:mac2_d1" to "to 1",
+    "Cipher:mac2_d2" to "to 2",
+    "Cipher:mac2_d3" to "to 3",
+    "Cipher:mac2_d4" to "to 4",
+    "Cipher:mac3" to "macro 3",
+    "Cipher:mac3_a1" to "by 1",
+    "Cipher:mac3_a2" to "by 2",
+    "Cipher:mac3_a3" to "by 3",
+    "Cipher:mac3_a4" to "by 4",
+    "Cipher:mac3_d1" to "to 1",
+    "Cipher:mac3_d2" to "to 2",
+    "Cipher:mac3_d3" to "to 3",
+    "Cipher:mac3_d4" to "to 4",
+    "Cipher:mac4" to "macro 4",
+    "Cipher:mac4_a1" to "by 1",
+    "Cipher:mac4_a2" to "by 2",
+    "Cipher:mac4_a3" to "by 3",
+    "Cipher:mac4_a4" to "by 4",
+    "Cipher:mac4_d1" to "to 1",
+    "Cipher:mac4_d2" to "to 2",
+    "Cipher:mac4_d3" to "to 3",
+    "Cipher:mac4_d4" to "to 4",
+    "Cipher:mac5" to "macro 5",
+    "Cipher:mac5_a1" to "by 1",
+    "Cipher:mac5_a2" to "by 2",
+    "Cipher:mac5_a3" to "by 3",
+    "Cipher:mac5_a4" to "by 4",
+    "Cipher:mac5_d1" to "to 1",
+    "Cipher:mac5_d2" to "to 2",
+    "Cipher:mac5_d3" to "to 3",
+    "Cipher:mac5_d4" to "to 4",
+    "Cipher:mac6" to "macro 6",
+    "Cipher:mac6_a1" to "by 1",
+    "Cipher:mac6_a2" to "by 2",
+    "Cipher:mac6_a3" to "by 3",
+    "Cipher:mac6_a4" to "by 4",
+    "Cipher:mac6_d1" to "to 1",
+    "Cipher:mac6_d2" to "to 2",
+    "Cipher:mac6_d3" to "to 3",
+    "Cipher:mac6_d4" to "to 4",
+    "Cipher:mac7" to "macro 7",
+    "Cipher:mac7_a1" to "by 1",
+    "Cipher:mac7_a2" to "by 2",
+    "Cipher:mac7_a3" to "by 3",
+    "Cipher:mac7_a4" to "by 4",
+    "Cipher:mac7_d1" to "to 1",
+    "Cipher:mac7_d2" to "to 2",
+    "Cipher:mac7_d3" to "to 3",
+    "Cipher:mac7_d4" to "to 4",
+    "Cipher:mac8" to "macro 8",
+    "Cipher:mac8_a1" to "by 1",
+    "Cipher:mac8_a2" to "by 2",
+    "Cipher:mac8_a3" to "by 3",
+    "Cipher:mac8_a4" to "by 4",
+    "Cipher:mac8_d1" to "to 1",
+    "Cipher:mac8_d2" to "to 2",
+    "Cipher:mac8_d3" to "to 3",
+    "Cipher:mac8_d4" to "to 4",
     "Cipher:mix" to "mix",
     "Cipher:noise" to "noise",
     "Cipher:octave" to "octave",
@@ -4536,6 +4680,9 @@ private fun short0(): Map<String, String> = mapOf(
     "Diction:mac7_d4" to "to 4",
     "Diction:mac8" to "macro 8",
     "Diction:mac8_a1" to "by 1",
+)
+
+private fun short1(): Map<String, String> = mapOf(
     "Diction:mac8_a2" to "by 2",
     "Diction:mac8_a3" to "by 3",
     "Diction:mac8_a4" to "by 4",
@@ -4608,9 +4755,6 @@ private fun short0(): Map<String, String> = mapOf(
     "Draw:mac4_a3" to "by 3",
     "Draw:mac4_a4" to "by 4",
     "Draw:mac4_d1" to "to 1",
-)
-
-private fun short1(): Map<String, String> = mapOf(
     "Draw:mac4_d2" to "to 2",
     "Draw:mac4_d3" to "to 3",
     "Draw:mac4_d4" to "to 4",
@@ -5339,6 +5483,9 @@ private fun short1(): Map<String, String> = mapOf(
     "Genesis:crashdecay" to "decay",
     "Genesis:crashlevel" to "level",
     "Genesis:crashtone" to "tone",
+)
+
+private fun short2(): Map<String, String> = mapOf(
     "Genesis:drift" to "drift",
     "Genesis:drive" to "drive",
     "Genesis:duck" to "kick ducks",
@@ -5411,9 +5558,6 @@ private fun short1(): Map<String, String> = mapOf(
     "Genesis:mac7" to "macro 7",
     "Genesis:mac7_a1" to "by 1",
     "Genesis:mac7_a2" to "by 2",
-)
-
-private fun short2(): Map<String, String> = mapOf(
     "Genesis:mac7_a3" to "by 3",
     "Genesis:mac7_a4" to "by 4",
     "Genesis:mac7_d1" to "to 1",
@@ -6142,6 +6286,9 @@ private fun short2(): Map<String, String> = mapOf(
     "Mosaic:scan" to "scan",
     "Mosaic:scanamt" to "amount",
     "Mosaic:start" to "start",
+)
+
+private fun short3(): Map<String, String> = mapOf(
     "Mosaic:transpose" to "transpose",
     "Mosaic:velamt" to "vel",
     "Mosaic:velfade" to "vel xf",
@@ -6214,9 +6361,6 @@ private fun short2(): Map<String, String> = mapOf(
     "Palm:mac5_a3" to "by 3",
     "Palm:mac5_a4" to "by 4",
     "Palm:mac5_d1" to "to 1",
-)
-
-private fun short3(): Map<String, String> = mapOf(
     "Palm:mac5_d2" to "to 2",
     "Palm:mac5_d3" to "to 3",
     "Palm:mac5_d4" to "to 4",
@@ -6945,6 +7089,9 @@ private fun short3(): Map<String, String> = mapOf(
     "Sympath:mac3" to "macro 3",
     "Sympath:mac3_a1" to "by 1",
     "Sympath:mac3_a2" to "by 2",
+)
+
+private fun short4(): Map<String, String> = mapOf(
     "Sympath:mac3_a3" to "by 3",
     "Sympath:mac3_a4" to "by 4",
     "Sympath:mac3_d1" to "to 1",
@@ -7017,9 +7164,6 @@ private fun short3(): Map<String, String> = mapOf(
     "Timber:body" to "lowest",
     "Timber:bore" to "shape",
     "Timber:breath" to "breath",
-)
-
-private fun short4(): Map<String, String> = mapOf(
     "Timber:choke" to "choke",
     "Timber:cutoff" to "cutoff",
     "Timber:decay" to "decay",

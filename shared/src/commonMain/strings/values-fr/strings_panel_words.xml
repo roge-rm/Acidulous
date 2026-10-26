@@ -54,6 +54,8 @@
     <string name="pw_amp">Amp</string>
     <string name="pw_amp_65f59e">ampli</string>
     <string name="pw_amp_env">env ampli</string>
+    <string name="pw_amp_atk">att. ampli</string>
+    <string name="pw_amp_rel">rel. ampli</string>
     <string name="pw_angle">angle</string>
     <string name="pw_answers">réponses</string>
     <string name="pw_apart">écart</string>
@@ -153,6 +155,7 @@
     <string name="pw_cajon">cajón</string>
     <string name="pw_call">appel</string>
     <string name="pw_carrier">porteuse</string>
+    <string name="pw_car_drive">sat. port.</string>
     <string name="pw_cassotto">cassotto</string>
     <string name="pw_caw">croassement</string>
     <string name="pw_ceiling">plafond</string>
@@ -362,6 +365,7 @@
     <string name="pw_fan_3_3">éventail 3 / 3</string>
     <string name="pw_fast">rapide</string>
     <string name="pw_fb">réinj.</string>
+    <string name="pw_fb_tone">ton réinj.</string>
     <string name="pw_feedback">réinjection</string>
     <string name="pw_feel">toucher</string>
     <string name="pw_feg">env f</string>

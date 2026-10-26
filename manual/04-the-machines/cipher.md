@@ -45,6 +45,21 @@ The destinations are the map controls (**shift**, **stretch**, **remap**,
 **freeze**, **smear**, **q** and the band edges) plus the carrier's pitch and
 mix.
 
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Shift,
+Smear, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
+the knob moves the destination by knob times amount, across that control's
+whole range at 1. Pitch is 24 semitones at 1. The amp attack and release are
+read when a note starts, so they change from the next note; the rest move at
+once. The switches, the band count, the order, the waves, the matrix and its
+envelopes and LFOs can't be reached. Tap a macro's name to rename it.
+
 ## Tips
 
 - Turn **unvoiced** up until the words are clear, then back off until it stops
