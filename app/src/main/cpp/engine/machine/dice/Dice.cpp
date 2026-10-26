@@ -78,10 +78,76 @@ const ParamDef *Dice::paramDefs(int32_t &count) const {
         defs[Accent] = {"accent", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""};
         defs[Follow] = {"follow", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""};
         defs[Bars] = {"bars", 0.0f, 6.0f, 0.0f, Curve::Stepped, 7, ""}; // auto, 1/2, 1, 2, 4, 8, 16
+        static char macNames[kMacros * MacroParams][12];
+        for (int k = 0; k < kMacros; ++k) {
+            const int32_t b = MacroBase + k * MacroParams;
+            char *n = macNames[k * MacroParams];
+            std::snprintf(n, 12, "mac%d", k + 1);
+            defs[b] = {n, 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
+            for (int r = 0; r < 4; ++r) {
+                char *d = macNames[k * MacroParams + 1 + r];
+                std::snprintf(d, 12, "mac%d_d%d", k + 1, r + 1);
+                defs[b + 1 + r] = {d, 0.0f, static_cast<float>(MacroDestCount - 1), 0.0f, Curve::Stepped, MacroDestCount, ""};
+                char *a = macNames[k * MacroParams + 5 + r];
+                std::snprintf(a, 12, "mac%d_a%d", k + 1, r + 1);
+                defs[b + 5 + r] = {a, -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""};
+            }
+        }
         built = true;
     }
     count = Count;
     return defs;
+}
+
+namespace {
+// The macro destination each param answers to, or -1 for none.
+struct DestMap {
+    int8_t of[Dice::Count];
+    DestMap() {
+        using P = Dice;
+        for (auto &d : of) d = -1;
+        const int32_t pairs[][2] = {
+            {P::Swap, P::McSwap}, {P::Reverse, P::McReverse}, {P::Stutter, P::McStutter},
+            {P::Drop, P::McDrop}, {P::Jump, P::McJump}, {P::StutterDiv, P::McRolls},
+            {P::JumpRange, P::McJumpRange}, {P::Seed, P::McSeed}, {P::SliceCount, P::McSlices},
+            {P::Gate, P::McGate}, {P::Rate, P::McRate}, {P::Cutoff, P::McCutoff},
+            {P::Resonance, P::McResonance}, {P::Drive, P::McDrive}, {P::Volume, P::McVolume},
+            {P::MasterPan, P::McPan}, {P::Accent, P::McAccent},
+        };
+        for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
+    }
+};
+const DestMap &destMap() {
+    static const DestMap m;
+    return m;
+}
+} // namespace
+
+float Dice::withMacros(int32_t p, float v, const float *mac) const {
+    const int d = destMap().of[p];
+    if (d < 0 || mac[d] == 0.0f) return v;
+    const ParamDef &def = params_.def(p);
+    return def.map(def.unmap(v) + mac[d]);
+}
+
+void Dice::updateMacros() {
+    for (float &m : mac_) m = 0.0f;
+    for (float &m : macGoal_) m = 0.0f;
+    for (int k = 0; k < kMacros; ++k) {
+        const int32_t b = MacroBase + k * MacroParams;
+        const float knob = params_.get(b), goal = params_.target(b);
+        if (knob == 0.0f && goal == 0.0f) continue;
+        for (int r = 0; r < 4; ++r) {
+            // The routes' destinations are steps, so their targets.
+            const int dest = static_cast<int>(params_.target(b + 1 + r) + 0.5f);
+            if (dest <= McOff || dest >= MacroDestCount) continue;
+            mac_[dest] += knob * params_.get(b + 5 + r);
+            macGoal_[dest] += goal * params_.target(b + 5 + r);
+        }
+    }
+    // Two octaves either way.
+    mac_[McPitch] = std::clamp(mac_[McPitch], -1.0f, 1.0f);
+    macGoal_[McPitch] = std::clamp(macGoal_[McPitch], -1.0f, 1.0f);
 }
 
 void Dice::prepare(int32_t sr) {
@@ -109,6 +175,7 @@ void Dice::reset() {
     }
     rng = kRngSeed;
     triggers = 0;
+    updateMacros();
 }
 
 void Dice::allNotesOff() {
@@ -227,7 +294,7 @@ Dice::Voice *Dice::allocate() {
  */
 uint32_t Dice::rollFor(int32_t slice) {
     if (steppedOf(Hold) != 0) {
-        uint32_t h = static_cast<uint32_t>(steppedOf(Seed)) * 2654435761u + static_cast<uint32_t>(slice) * 40503u + 1u;
+        uint32_t h = static_cast<uint32_t>(steppedGoalOf(Seed)) * 2654435761u + static_cast<uint32_t>(slice) * 40503u + 1u;
         h ^= h >> 13;
         h *= 0x5bd1e995u;
         h ^= h >> 15;
@@ -239,6 +306,8 @@ uint32_t Dice::rollFor(int32_t slice) {
 
 void Dice::noteOn(uint8_t note, uint8_t velocity) {
     if (take == nullptr || slices <= 0) return;
+    // A knob set in this block, before render, still counts.
+    updateMacros();
     const int32_t asked = note - kBaseNote;
     if (asked < 0 || asked >= slices) return;
 
@@ -253,22 +322,22 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     };
 
     ++triggers;
-    if (chance(targetOf(Drop))) return; // dropped
+    if (chance(goalOf(Drop))) return; // dropped
 
     int32_t slice = asked;
-    if (chance(targetOf(Swap))) slice = static_cast<int32_t>(uniform() * slices) % slices;
+    if (chance(goalOf(Swap))) slice = static_cast<int32_t>(uniform() * slices) % slices;
 
     const bool sliceReversed = static_cast<int32_t>(sliceParam(slice, Direction) + 0.5f) != 0;
-    const bool reversed = sliceReversed != chance(targetOf(Reverse));
+    const bool reversed = sliceReversed != chance(goalOf(Reverse));
 
-    float semis = targetOf(RootPitch) + targetOf(Fine) * 0.01f + sliceParam(slice, Pitch);
-    if (chance(targetOf(Jump))) {
-        const float range = targetOf(JumpRange);
+    float semis = goalOf(RootPitch) + goalOf(Fine) * 0.01f + sliceParam(slice, Pitch) + 24.0f * macGoal_[McPitch];
+    if (chance(goalOf(Jump))) {
+        const float range = goalOf(JumpRange);
         semis += (uniform() < 0.5f ? -1.0f : 1.0f) * std::round(uniform() * range);
     }
 
     int32_t repeats = 0;
-    if (chance(targetOf(Stutter))) repeats = steppedTargetOf(StutterDiv);
+    if (chance(goalOf(Stutter))) repeats = steppedGoalOf(StutterDiv);
 
     Voice *v = allocate();
     v->used = true;
@@ -289,18 +358,18 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     v->repeats = repeats;
     v->follows = follow && !reversed;
     if (v->follows) {
-        v->timeRate = std::max(0.05f, tempo * targetOf(Rate));
+        v->timeRate = std::max(0.05f, tempo * goalOf(Rate));
         v->pitch = pitch;
         v->stretchRate = v->timeRate / pitch;
         v->left = static_cast<int32_t>(v->repeatLen / v->timeRate);
         startStretch(*v);
     } else {
-        v->inc = pitch * targetOf(Rate) * tempo * (reversed ? -1.0 : 1.0);
+        v->inc = pitch * goalOf(Rate) * tempo * (reversed ? -1.0 : 1.0);
         v->pos = reversed ? v->end - 1 : v->start;
         v->left = static_cast<int32_t>(v->repeatLen / std::max(0.05, std::fabs(v->inc)));
     }
 
-    const float accent = targetOf(Accent);
+    const float accent = goalOf(Accent);
     const float vel = velocityGain(static_cast<float>(velocity) / 127.0f, accent);
     const float pan = std::clamp(sliceParam(slice, Pan), -1.0f, 1.0f);
     const float angle = (pan + 1.0f) * 0.25f * 3.14159265f;
@@ -312,7 +381,7 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     //
     // The decay is the time to fall 60 dB. The top of the range means no
     // decay, so a loop played straight doesn't fade every slice.
-    const float decay = sliceParam(slice, Decay) * std::max(0.02f, targetOf(Gate));
+    const float decay = sliceParam(slice, Decay) * std::max(0.02f, goalOf(Gate));
     v->envCoeff = decay >= kDecayOff ? 0.0f
                                      : 1.0f - std::exp(-kLn1000 / (decay * sampleRate));
     v->filter.reset();
@@ -323,6 +392,7 @@ void Dice::noteOff(uint8_t) {} // a slice plays its full length
 
 bool Dice::render(float *L, float *R, int32_t frames) {
     params_.tick();
+    updateMacros();
     for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
     if (take == nullptr || take->frames <= 1) return true;
 

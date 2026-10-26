@@ -17,9 +17,9 @@ Five chances, rolled on every slice:
 
 - **swap** - play a different slice.
 - **reverse** - play it backwards.
-- **stutter**, with **stutterdiv** - repeat part of it.
+- **stutter**, with **times** - repeat its start that many times in its own length.
 - **drop** - play nothing.
-- **jump**, with **jumprange** - skip to somewhere else in the loop and carry on.
+- **jump**, with **up to** - play it up or down by as many semitones.
 
 **seed** decides the rolls and **hold** freezes them. Turn the dice up until you
 hear something you like, then hold it.
@@ -46,6 +46,23 @@ that's wrong, set it yourself.
 A slice played backwards isn't stretched. It's sped up or slowed down like
 tape, so it goes a little out of tune when the song is far from the loop's
 tempo.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Chaos,
+Stutter, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
+the knob moves the destination by knob times amount, across that control's
+whole range at 1. Pitch is 24 semitones at 1. The five dice, times, up to,
+seed and slices are all there, so one knob can take a loop from straight to
+wild, or step through held patterns. Everything but the filter, drive, volume
+and pan is read when a slice starts, so it changes from the next slice. The
+per-slice settings, cut, hold, plays at, bars and the filter type can't be
+reached. Tap a macro's name to rename it.
 
 ## Tips
 

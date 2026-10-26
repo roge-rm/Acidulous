@@ -1206,6 +1206,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "slice" to Res.string.pw_slice,
     "Slice %d" to Res.string.pw_slice_n,
     "Slicer" to Res.string.pw_slicer,
+    "slices" to Res.string.pw_slices,
     "slide" to Res.string.pw_slide,
     "slit drum" to Res.string.pw_slit_drum,
     "slope" to Res.string.pw_slope,

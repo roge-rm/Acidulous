@@ -1029,6 +1029,7 @@
     <string name="pw_slew">lissage</string>
     <string name="pw_slice">tranche</string>
     <string name="pw_slice_n">Tranche %d</string>
+    <string name="pw_slices">tranches</string>
     <string name="pw_slicer">Slicer</string>
     <string name="pw_slide">glissé</string>
     <string name="pw_slit_drum">tambour à fente</string>

@@ -47,8 +47,24 @@ class Dice final : public Machine {
          * 1/2, 1, 2, 4, 8 or 16 bars.
          */
         Bars,
-        Count
+        // Eight macro knobs, each with four routes: a destination (a
+        // MacroDest) and a depth. A macro's knob times a route's depth is
+        // added to the destination, in its own 0..1 range. Block rate; what
+        // a trigger reads when it starts takes the knobs' targets. Pitch is
+        // 24 semitones per unit.
+        MacroBase,
+        MacroParams = 9, // knob, 4 destinations, 4 depths
+        Count = MacroBase + 8 * MacroParams
     };
+    // Where a macro route goes. The five dice first. The per-slice settings,
+    // cut, hold, follow, bars and the filter type are left out.
+    enum MacroDest : int32_t {
+        McOff, McSwap, McReverse, McStutter, McDrop, McJump,
+        McRolls, McJumpRange, McSeed, McSlices,
+        McGate, McRate, McCutoff, McResonance, McDrive, McVolume, McPan, McAccent, McPitch,
+        MacroDestCount
+    };
+    static constexpr int kMacros = 8;
     static_assert(Count <= kMaxParams, "Dice declares more parameters than a unit can hold");
 
     Dice();
@@ -105,8 +121,16 @@ class Dice final : public Machine {
     float sliceParam(int32_t slice, int32_t which) const {
         return params_.get(SliceBase + slice * SliceParamCount + which);
     }
-    float paramOf(int32_t p) const { return params_.get(p); }
+    /** Param [p], smoothed, with the macros' routes to it added. */
+    float paramOf(int32_t p) const { return withMacros(p, params_.get(p), mac_); }
     int32_t steppedOf(int32_t p) const { return static_cast<int32_t>(paramOf(p) + 0.5f); }
+    /** Param [p]'s target, with the macro knobs' targets added: for what a trigger reads when it starts. */
+    float goalOf(int32_t p) const { return withMacros(p, params_.target(p), macGoal_); }
+    int32_t steppedGoalOf(int32_t p) const { return static_cast<int32_t>(goalOf(p) + 0.5f); }
+    float withMacros(int32_t p, float v, const float *mac) const;
+    /** Fills [mac_] from the smoothed macro knobs and [macGoal_] from their targets. */
+    void updateMacros();
+    float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
     void recut();
     void startStretch(Voice &v) const;
     bool pullStretch(Voice &v, const float *left, const float *right) const;

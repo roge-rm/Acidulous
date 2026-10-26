@@ -1201,6 +1201,7 @@
     <string name="pw_slice">slice</string>
     <string name="pw_slice_n">Slice %d</string>
     <string name="pw_slicer">Slicer</string>
+    <string name="pw_slices">slices</string>
     <string name="pw_slide">slide</string>
     <string name="pw_slit_drum">slit drum</string>
     <string name="pw_slope">slope</string>

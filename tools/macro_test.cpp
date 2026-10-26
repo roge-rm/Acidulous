@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction, Molt and Cipher move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction, Molt, Cipher and Dice move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -33,6 +33,7 @@
 #include <engine/machine/diction/Diction.h>
 #include <engine/machine/molt/Molt.h>
 #include <engine/machine/cipher/Cipher.h>
+#include <engine/machine/dice/Dice.h>
 #include <engine/core/InputBus.h>
 #include "audition_material.h"
 #include <engine/machine/tine/Tine.h>
@@ -100,6 +101,15 @@ void feedInput(const char *type, int32_t block) {
 }
 void endInput() { acidulous::InputBus::get().publish(nullptr, 0); }
 
+// Dice slices the break, and cuts it on its first render, as the app does
+// before any note. Without one block first, the first note finds no slices.
+void primeDice(const char *type, Machine *m) {
+    if (std::strcmp(type, "Dice") != 0) return;
+    m->swapObject(0, acidulous::audition::breakLoop().release());
+    float L[kBlock], R[kBlock];
+    m->render(L, R, kBlock);
+}
+
 void setNorm(ParamSet &p, const std::string &name, float v) {
     const int32_t i = p.indexOf(name.c_str());
     if (i < 0) { std::printf("  FAIL no parameter %s\n", name.c_str()); ++failures; return; }
@@ -131,6 +141,7 @@ std::vector<float> play(const Route *r) {
     if (std::strcmp(gType, "Mosaic") == 0) m->swapObject(0, acidulous::audition::zoneMap().release());
     // Molt sings nothing without a take.
     if (std::strcmp(gType, "Molt") == 0) m->swapObject(0, acidulous::audition::voiceUtterance().release());
+    primeDice(gType, m);
     m->allNotesOff();
     m->reset();
     if (gModWheel >= 0) m->controlChange(1, static_cast<uint8_t>(gModWheel));
@@ -463,10 +474,11 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the transpose knob", buf);
     } else if (std::strcmp(type, "Pollen") == 0 || std::strcmp(type, "Mosaic") == 0 ||
                std::strcmp(type, "Diction") == 0 || std::strcmp(type, "Molt") == 0 ||
-               std::strcmp(type, "Cipher") == 0) {
+               std::strcmp(type, "Cipher") == 0 || std::strcmp(type, "Dice") == 0) {
         // A cloud's zero crossings say nothing, a sample's are its own and a
-        // voice wavers, so the route must match the transpose knob.
-        gUnits = {{"transpose", 12.0f}};
+        // voice wavers, so the route must match the transpose knob. Dice's
+        // is called pitch.
+        gUnits = {{std::strcmp(type, "Dice") == 0 ? "pitch" : "transpose", 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
         const auto routed = play(&up);
@@ -1444,6 +1456,7 @@ std::vector<float> playHeld(const char *type, const std::vector<std::pair<std::s
     if (std::strcmp(type, "Pollen") == 0) m->swapObject(0, acidulous::audition::breakLoop().release());
     if (std::strcmp(type, "Mosaic") == 0) m->swapObject(0, acidulous::audition::zoneMap().release());
     if (std::strcmp(type, "Molt") == 0) m->swapObject(0, acidulous::audition::voiceUtterance().release());
+    primeDice(type, m);
     m->reset();
     for (uint8_t n : notes) m->noteOn(n, 100);
     std::vector<float> out;
@@ -2113,6 +2126,50 @@ void cipherRoutes() {
     }
 }
 
+// Dice: routes to drop, rate, slices and seed match their knobs. Slice 1 of
+// the break, so a note at 36.
+void diceRoutes() {
+    using Dc = acidulous::machine::Dice;
+    const int32_t blocks = 375; // half a second
+    char buf[96];
+    // Drop at certainty: nothing plays.
+    {
+        const auto plain = playHeld("Dice", {}, {36}, blocks);
+        Route r{2, 3, Dc::McDrop, 1.0f, 1.0f};
+        const auto routed = playHeld("Dice", {}, {36}, blocks, &r, Dc::MacroDestCount);
+        std::snprintf(buf, sizeof(buf), "rms %.3g from %.3g", rms(routed, 0), rms(plain, 0));
+        ok(rms(plain, 0) > 1e-3 && rms(routed, 0) == 0.0, "Dice: a route to drop drops the slice", buf);
+    }
+    // Rate 1 of 0.25..4 (exponential): a route of +0.25 is 0.25 * 16^(0.5 + 0.25) = 2.
+    {
+        const auto plain = playHeld("Dice", {}, {36}, blocks);
+        const auto knob = playHeld("Dice", {{"rate", 2.0f}}, {36}, blocks);
+        Route r{5, 1, Dc::McRate, 0.25f, 1.0f};
+        const auto routed = playHeld("Dice", {}, {36}, blocks, &r, Dc::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3) && routed != plain, "Dice: a route to rate matches the knob", buf);
+    }
+    // Slices 8 of 2..16: a route of +4/14 is 12, and pad 9 then sounds.
+    {
+        const auto plain = playHeld("Dice", {}, {44}, blocks);
+        const auto knob = playHeld("Dice", {{"slices", 12.0f}}, {44}, blocks);
+        Route r{7, 2, Dc::McSlices, 4.0f / 14.0f, 1.0f};
+        const auto routed = playHeld("Dice", {}, {44}, blocks, &r, Dc::MacroDestCount);
+        ok2(rms(plain, 0) == 0.0 && sameAs(knob, routed, buf, sizeof(buf)), "Dice: a route to slices matches the knob", buf);
+    }
+    // Seed 1 of 0..63, held, with swap and reverse even: a route of +10/63 is seed 11.
+    {
+        const std::vector<std::pair<std::string, float>> held = {{"hold", 1.0f}, {"swap", 0.5f}, {"reverse", 0.5f}};
+        auto eleven = held;
+        eleven.push_back({"seed", 11.0f});
+        const std::vector<uint8_t> pads = {36, 37, 38, 39, 40, 41, 42, 43};
+        const auto plain = playHeld("Dice", held, pads, blocks);
+        const auto knob = playHeld("Dice", eleven, pads, blocks);
+        Route r{8, 4, Dc::McSeed, 10.0f / 63.0f, 1.0f};
+        const auto routed = playHeld("Dice", held, pads, blocks, &r, Dc::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Dice: a route to seed matches the knob", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -2222,6 +2279,12 @@ int main() {
     // Volume 0.8 of 2: half of -0.5 leaves 0.3, all of it leaves nothing.
     basics("Cipher", Ci::MacroDestCount, Ci::McVolume, Ci::McPitch, Ci::McOff, Ci::kMacros, 0.0, 0.3 / 0.8);
     cipherRoutes();
+    using Dc = acidulous::machine::Dice;
+    // Volume 0.9 of 1.5: all of -0.5 leaves 0.15, half of it 0.525.
+    gNote = 36;
+    basics("Dice", Dc::MacroDestCount, Dc::McVolume, Dc::McPitch, Dc::McOff, Dc::kMacros, 0.15 / 0.9, 0.525 / 0.9);
+    gNote = 57;
+    diceRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

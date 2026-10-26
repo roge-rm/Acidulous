@@ -3546,6 +3546,13 @@ private fun ResonancePanel(b: ParamBinding, pad: Int, track: Track, trackIndex: 
 
 private val DICE_CUTS = listOf("onsets", "grid")
 
+/** Where a Dice macro route goes, in the engine's MacroDest order. */
+val DICE_MACRO_DESTS = listOf(
+    "off", "swap", "reverse", "stutter", "drop", "jump",
+    "times", "up to", "seed", "slices",
+    "gate", "rate", "cutoff", "reso", "drive", "volume", "pan", "accent", "pitch",
+)
+
 /** Where a Molt macro route goes, in the engine's MacroDest order. */
 val MOLT_MACRO_DESTS = listOf(
     "off", "start", "tune", "rate", "formant", "mega",
@@ -3701,9 +3708,11 @@ private fun DicePanel(
 ) {
     var section by rememberSaveable { mutableStateOf(0) }
     var picking by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val c = Acid.colors
-    val p = pad.coerceIn(0, 15)
-    fun n(name: String) = "s%02d_%s".format(p, name)
+    val slot = pad.coerceIn(0, 15)
+    fun n(name: String) = "s%02d_%s".format(slot, name)
     val sample = track.machine.settings["sample"].orEmpty()
     // What the loop is to the song: the engine's guess at its bars (the bars
     // knob can override it) and its length, and so its tempo.
@@ -3716,11 +3725,11 @@ private fun DicePanel(
     val loopBars = if (barsAt == 0) shape?.first ?: 0f else DICE_BARS.getOrElse(barsAt - 1) { 0f }
     val loopBpm = shape?.second?.takeIf { it > 0f && loopBars > 0f }?.let { loopBars * 4f * 60f / it }
     PanelSections(
-        listOf("loop", "dice", "slice", "tone"), section, { section = it },
+        listOf("loop", "play", "dice", "slice", "tone", "macros"), section, { section = it },
         above = { sec ->
-            if (sec == 2) {
+            if (sec == 3) {
                 Text(
-                    stringResource(Res.string.dice_slice, p + 1),
+                    stringResource(Res.string.dice_slice, slot + 1),
                     color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(bottom = 2.dp),
                 )
@@ -3728,6 +3737,27 @@ private fun DicePanel(
         },
     ) { sec ->
         when (sec) {
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", DICE_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", DICE_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", DICE_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", DICE_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             0 -> {
                 Group("loop") {
                     Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
@@ -3773,7 +3803,7 @@ private fun DicePanel(
                     PanelKnob(b, "accent", "accent")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("the odds") {
                     PanelKnob(b, "swap", "swap", PanelAmber)
                     PanelKnob(b, "reverse", "reverse", PanelAmber)
@@ -3792,7 +3822,7 @@ private fun DicePanel(
                     PanelStepKnob(b, "seed", (0..63).map { "$it" }, "seed")
                 }
             }
-            2 -> {
+            3 -> {
                 // The group title is used in the lane list, so it stays
                 // constant. The selected slice is shown above.
                 Group("slice") {
@@ -3803,7 +3833,7 @@ private fun DicePanel(
                     PanelSwitch(b, n("dir"), listOf("fwd", "rev"), "play")
                 }
             }
-            else -> {
+            4 -> {
                 Group("filter") {
                     PanelKnob(b, "cutoff", "cutoff", PanelAmber)
                     PanelKnob(b, "resonance", "reso", PanelAmber)
@@ -3817,6 +3847,14 @@ private fun DicePanel(
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
     if (picking) RecorderDialog(
         editor = editor,
         startOn = RecorderPage.Library,
