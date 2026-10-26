@@ -496,7 +496,7 @@ void Pollen::pollinate(const Grain &parent, const View &view) {
     // Children only take a slot when there's room to spare, so a bloom never
     // starves a new note.
     int32_t free = 0;
-    for (const auto &g : grains) if (!g.active) ++free;
+    for (int32_t i = 0; i < kGrains; ++i) if (!grains[i].active) ++free;
     if (free - (kGrains - grainPool) <= 8) return;
 
     const int32_t slot = takeGrain(false);
