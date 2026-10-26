@@ -57,6 +57,7 @@ import com.rm.acidulous.model.MachineKind
 import com.rm.acidulous.model.audioLaneCount
 import com.rm.acidulous.model.NoteClipboard
 import com.rm.acidulous.model.withDuplicated
+import com.rm.acidulous.model.drumPasteMap
 import com.rm.acidulous.model.withPasted
 import com.rm.acidulous.model.withoutNotes
 import com.rm.acidulous.model.MachineUi
@@ -224,12 +225,7 @@ fun EditScreen(
             editor.editClip(trackIndex, sceneId) { c ->
                 val pitch = atPitch ?: cursorPitch ?: NoteClipboard.originPitch
                 // On the grid the rows are the voices, so the pitch moves by rows.
-                val from = voices.indexOfFirst { it.note == NoteClipboard.originPitch }
-                val to = voices.indexOfFirst { it.note == pitch }
-                val rows = if (onGrid && from >= 0 && to >= 0) { p: Int ->
-                    val r = voices.indexOfFirst { it.note == p }
-                    if (r < 0) null else voices.getOrNull(r + to - from)?.note
-                } else null
+                val rows = if (onGrid) drumPasteMap(voices.map { it.note }, NoteClipboard.notes, NoteClipboard.originPitch, pitch) else null
                 val (next, idx) = c.withPasted(
                     NoteClipboard.notes, NoteClipboard.origin, at ?: cursorTick ?: NoteClipboard.origin, clipLen,
                     NoteClipboard.originPitch, pitch, rows,

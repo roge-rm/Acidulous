@@ -618,6 +618,7 @@ fun PianoRoll(
     // Gone while a finger is down on the notes.
     val act = actions
     androidx.compose.runtime.LaunchedEffect(act == null) { if (act == null) pasteSpot = null }
+    androidx.compose.runtime.LaunchedEffect(clipKey) { pasteSpot = null }
     val gutterPx = with(androidx.compose.ui.platform.LocalDensity.current) { GutterWidth.toPx() }
     val rulerPx = with(androidx.compose.ui.platform.LocalDensity.current) { RulerHeight.toPx() }
     if (act != null && !busy) {
@@ -627,7 +628,7 @@ fun PianoRoll(
             SelectionBar(
                 act, hasNotes = true, pasteTick = spot?.tick, pastePitch = spot?.pitch,
                 modifier = Modifier.anchoredTo { size ->
-                    val geo = Geometry(size, clip, ticksPerBar, rows, gutterPx, rulerPx, rowPitches, firstTick, visibleTicks)
+                    val geo = Geometry(size, clip, ticksPerBar, shownRows, gutterPx, rulerPx, rowPitches, firstTick, visibleTicks)
                     chosen.map { geo.noteRect(clip.notes[it]) }
                         .filter { it.right > geo.originX && it.left < size.width && it.bottom > geo.originY && it.top < size.height }
                         .reduceOrNull { a, b -> Rect(min(a.left, b.left), min(a.top, b.top), max(a.right, b.right), max(a.bottom, b.bottom)) }

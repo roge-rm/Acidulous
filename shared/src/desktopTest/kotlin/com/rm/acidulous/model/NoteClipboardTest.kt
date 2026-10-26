@@ -98,4 +98,25 @@ class NoteClipboardTest {
         assertEquals(2, NoteClipboard.notes.size)
         NoteClipboard.clear()
     }
+
+    private val kit = listOf(36, 38, 42, 46)
+
+    @Test fun drumPasteMovesByKitRows() {
+        val copied = listOf(Note(0, 24, 36, 100), Note(0, 24, 42, 100))
+        val m = drumPasteMap(kit, copied, 36, 38)
+        assertEquals(38, m(36))
+        assertEquals(46, m(42))
+        assertEquals(null, drumPasteMap(kit, copied, 36, 42)(42))
+    }
+
+    @Test fun drumPasteFromARollKeepsPitchOrderAndNeverLeavesTheKit() {
+        val copied = listOf(Note(0, 24, 60, 100), Note(0, 24, 64, 100), Note(0, 24, 67, 100))
+        val m = drumPasteMap(kit, copied, 60, 38)
+        assertEquals(38, m(60))
+        assertEquals(42, m(64))
+        assertEquals(46, m(67))
+        val (c, _) = clip.withPasted(copied, 0, 0, len, 60, 38, drumPasteMap(kit, copied, 60, 42))
+        assertEquals(true, c.notes.filter { it.pitch in kit }.size == 2 && c.notes.none { it.pitch in 61..127 && it.pitch != 64 && it.pitch != 67 })
+        assertEquals(false, c.notes.any { it.pitch == 62 || it.pitch == 66 })
+    }
 }

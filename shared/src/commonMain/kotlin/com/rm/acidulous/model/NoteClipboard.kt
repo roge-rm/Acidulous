@@ -78,6 +78,26 @@ fun Clip.withPasted(
 }
 
 /**
+ * The pitch map for pasting onto a drum grid whose rows are [kit] (pitches in
+ * row order). The first copied note, at [originPitch], lands on the row of
+ * [atPitch] (the first row if that isn't in the kit) and the others keep their
+ * row offset from it. Offsets come from the kit's rows when every copied
+ * pitch is a kit sound, else from the pitch order of the copied notes. Null
+ * where the row falls outside the kit, so no note lands on a pitch without a row.
+ */
+fun drumPasteMap(kit: List<Int>, copied: List<Note>, originPitch: Int, atPitch: Int): (Int) -> Int? {
+    val pitches = copied.map { it.pitch }.distinct().sorted()
+    val inKit = pitches.all { it in kit }
+    val rowOf = { p: Int -> if (inKit) kit.indexOf(p) else pitches.indexOf(p) }
+    val to = kit.indexOf(atPitch).coerceAtLeast(0)
+    val base = rowOf(originPitch)
+    return { p ->
+        val r = rowOf(p)
+        if (r < 0 || base < 0) null else kit.getOrNull(r - base + to)
+    }
+}
+
+/**
  * Copies the notes at [indices] to just after the selection: the span from its
  * first start to its last end, rounded up to the grid.
  */

@@ -456,11 +456,24 @@ fun NoteLane(
 internal data class WordBox(val index: Int, val start: Int, val end: Int)
 
 /**
- * The words lane's boxes: one a sung note (the top of a chord), from its
- * start to its end or the next box, whichever comes first.
+ * The words lane's boxes: one a chord, from its start to its end or the next
+ * box, whichever comes first. A chord's box holds the words of its top shown
+ * note that has any, else of its top shown note.
  */
 internal fun wordBoxes(notes: List<Note>, shown: (Note) -> Boolean): List<WordBox> {
-    val sung = Lyrics.sungOrder(notes).filter { shown(notes[it]) }.sortedBy { notes[it].tick }
+    val order = notes.indices.filter { shown(notes[it]) }
+        .sortedWith(compareBy({ notes[it].tick + notes[it].nudge }, { -notes[it].pitch }))
+    val sung = ArrayList<Int>()
+    var i = 0
+    while (i < order.size) {
+        val start = notes[order[i]].tick + notes[order[i]].nudge
+        var j = i
+        while (j < order.size && notes[order[j]].tick + notes[order[j]].nudge == start) j++
+        val chord = order.subList(i, j)
+        sung += chord.firstOrNull { notes[it].lyric.isNotBlank() } ?: chord[0]
+        i = j
+    }
+    sung.sortBy { notes[it].tick }
     return sung.mapIndexed { k, i ->
         val n = notes[i]
         val next = sung.getOrNull(k + 1)?.let { notes[it].tick } ?: Int.MAX_VALUE

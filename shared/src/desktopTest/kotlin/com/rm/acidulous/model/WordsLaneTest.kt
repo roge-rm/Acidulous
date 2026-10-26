@@ -75,4 +75,15 @@ class WordsLaneTest {
         assertEquals(1, wordTarget(boxes, 125f, 24))
         assertNull(wordTarget(boxes, 300f, 24))
     }
+
+    @Test
+    fun aChordBoxHoldsTheWordsOfALowerNote() {
+        val n = listOf(
+            Note(tick = 0, length = 96, pitch = 60, velocity = 100, lyric = "lo"),
+            Note(tick = 0, length = 96, pitch = 67, velocity = 100),
+        )
+        assertEquals(listOf(0), wordBoxes(n) { true }.map { it.index })
+        assertEquals(listOf(0), wordBoxes(n) { it.pitch == 60 }.map { it.index })
+        assertEquals(listOf(1), wordBoxes(n.map { it.copy(lyric = "") }) { true }.map { it.index })
+    }
 }
