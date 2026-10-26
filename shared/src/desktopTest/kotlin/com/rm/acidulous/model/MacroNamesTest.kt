@@ -272,4 +272,21 @@ class MacroNamesTest {
         assertEquals(listOf("classic", "remap", "formant", "hold", "carrier", "extreme"), families)
         assertEquals(listOf(7, 7, 6, 6, 7, 7), families.map { f -> bank.count { it.family == f } })
     }
+
+    @Test
+    fun diceMacrosTakeThePatchNames() {
+        val t = track("Dice", mapOf("macro1" to "Swap"))
+        assertEquals("Swap", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+    }
+
+    @Test
+    fun diceBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Dice")
+        assertEquals(26, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("straight", "dice", "perform", "tone", "slice"), families)
+        assertEquals(listOf(6, 6, 6, 5, 3), families.map { f -> bank.count { it.family == f } })
+    }
 }

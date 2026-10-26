@@ -373,6 +373,73 @@ inline std::unique_ptr<audio::Take> breakLoop(float bpm = 120.0f) {
 }
 
 /**
+ * Two bars at 92 bpm with the sixteenths swung, cut the way a loop off a
+ * record often is: 150 ms of room tone before the first hit and the last
+ * cymbal left ringing 600 ms past the second bar. Ghost snares sit between
+ * the backbeats and the hats lean right, so it isn't mono. For a slicer, so
+ * cutting at onsets has to find the first hit, a grid cut lands off it, and
+ * following the song meets a loop whose length isn't whole bars.
+ */
+inline std::unique_ptr<audio::Take> swingLoop() {
+    constexpr float bpm = 92.0f;
+    const float beat = 60.0f / bpm;
+    const auto lead = static_cast<size_t>(kMatSr * 0.15f);
+    const auto body = static_cast<size_t>(kMatSr * beat * 8.0f);
+    const auto tail = static_cast<size_t>(kMatSr * 0.6f);
+    const size_t frames = lead + body + tail;
+    auto take = std::make_unique<audio::Take>();
+    take->name = "swing";
+    take->frames = static_cast<int32_t>(frames);
+    take->left.assign(frames, 0.0f);
+    take->right.assign(frames, 0.0f);
+
+    struct Hit { Piece piece; int sixteenth; float gain; float pan; };
+    // pan -1 left .. 1 right
+    static const Hit kPattern[] = {
+        {Piece::Kick, 0, 1.0f, 0.0f},      {Piece::HatClosed, 0, 0.35f, 0.4f},
+        {Piece::HatClosed, 2, 0.3f, 0.4f}, {Piece::Kick, 3, 0.55f, 0.0f},
+        {Piece::Snare, 4, 0.9f, -0.1f},    {Piece::HatClosed, 4, 0.3f, 0.4f},
+        {Piece::Snare, 7, 0.22f, -0.1f},   {Piece::HatClosed, 6, 0.3f, 0.4f},
+        {Piece::Kick, 8, 0.85f, 0.0f},     {Piece::HatClosed, 8, 0.35f, 0.4f},
+        {Piece::Kick, 10, 0.7f, 0.0f},     {Piece::Snare, 11, 0.2f, -0.1f},
+        {Piece::Snare, 12, 0.9f, -0.1f},   {Piece::HatOpen, 14, 0.4f, 0.4f},
+        {Piece::Snare, 15, 0.25f, -0.1f},
+        {Piece::Kick, 16, 1.0f, 0.0f},     {Piece::HatClosed, 16, 0.35f, 0.4f},
+        {Piece::HatClosed, 18, 0.3f, 0.4f}, {Piece::Kick, 19, 0.5f, 0.0f},
+        {Piece::Snare, 20, 0.9f, -0.1f},   {Piece::HatClosed, 22, 0.3f, 0.4f},
+        {Piece::Kick, 22, 0.6f, 0.0f},     {Piece::Snare, 23, 0.22f, -0.1f},
+        {Piece::Kick, 24, 0.8f, 0.0f},     {Piece::TomLo, 26, 0.55f, -0.3f},
+        {Piece::TomLo, 27, 0.45f, -0.3f},  {Piece::Snare, 28, 0.9f, -0.1f},
+        {Piece::Cymbal, 30, 0.5f, 0.2f},
+    };
+    for (const Hit &h : kPattern) {
+        const std::vector<float> d = drum(h.piece);
+        // The off sixteenths come late: 62 % of the eighth instead of 50.
+        const float swung = static_cast<float>(h.sixteenth / 2) * 2.0f + (h.sixteenth % 2 != 0 ? 1.24f : 0.0f);
+        const size_t at = lead + static_cast<size_t>(kMatSr * beat * swung / 4.0f);
+        const float gl = std::cos((h.pan + 1.0f) * 0.25f * static_cast<float>(M_PI)) * 1.4142f * h.gain;
+        const float gr = std::sin((h.pan + 1.0f) * 0.25f * static_cast<float>(M_PI)) * 1.4142f * h.gain;
+        for (size_t i = 0; i < d.size() && at + i < frames; ++i) {
+            take->left[at + i] += d[i] * gl;
+            take->right[at + i] += d[i] * gr;
+        }
+    }
+    float peak = 1e-9f;
+    for (size_t i = 0; i < frames; ++i) peak = std::max({peak, std::abs(take->left[i]), std::abs(take->right[i])});
+    // Room tone 56 dB under the peak, all the way through.
+    Rng rng(0x5917u);
+    float lp = 0.0f;
+    for (size_t i = 0; i < frames; ++i) {
+        lp += (rng.next() - lp) * 0.05f;
+        const float room = 0.0016f * (lp * 4.0f + 0.3f * rng.next());
+        take->left[i] = take->left[i] * 0.85f / peak + room;
+        take->right[i] = take->right[i] * 0.85f / peak + room;
+    }
+    take->detect(kMatSr);
+    return take;
+}
+
+/**
  * Eight seconds of music for machines that granulate a buffer. A drum break
  * only tests onset snap, not the clouds and pitch sprays that make up most of
  * Pollen's bank.

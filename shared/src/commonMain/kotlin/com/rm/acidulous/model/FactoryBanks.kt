@@ -7874,74 +7874,131 @@ internal object FactoryBanks {
         family = "straight")
 
     private fun dice1() = Patch("Dice", "Straight",
-        mapOf("slices" to 1f, "volume" to 0.673333347f),
+        mapOf("slices" to 1f, "volume" to 0.673333347f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.46f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.396f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.579f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.5555556f, "mac6_d2" to 0.8333333f, "mac6_a1" to 0.125f, "mac6_a2" to 0.6635f, "mac7_d1" to 0.6666667f, "mac7_d2" to 0.7222222f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.275f, "mac7_a2" to 0.575f, "mac7_a3" to 0.5415f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.329999983f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Tighter", "macro7" to "Darker", "macro8" to "Dirt"),
         family = "straight")
 
     private fun dice2() = Patch("Dice", "Grid",
-        mapOf("cut" to 1f, "slices" to 1f, "volume" to 0.72f),
+        mapOf("cut" to 1f, "slices" to 1f, "volume" to 0.72f, "mac1_d1" to 0.055555556f, "mac1_a1" to 1f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.371999979f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.8f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.5555556f, "mac6_d2" to 0.8333333f, "mac6_a1" to 0.125f, "mac6_a2" to 0.64f, "mac7_d1" to 0.6666667f, "mac7_d2" to 0.7222222f, "mac7_a1" to 0.275f, "mac7_a2" to 0.575f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.329999983f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Tighter", "macro7" to "Darker", "macro8" to "Dirt"),
         family = "straight")
 
     private fun dice3() = Patch("Dice", "Half Time",
-        mapOf("rate" to 0.25f, "volume" to 0.533333361f),
+        mapOf("rate" to 0.25f, "volume" to 0.533333361f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.465f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 1f, "mac2_a2" to 0.5205f, "mac3_d1" to 0.166666672f, "mac3_a1" to 1f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.538f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.5555556f, "mac6_d2" to 0.8333333f, "mac6_a1" to 0.125f, "mac6_a2" to 0.7335f, "mac7_d1" to 0.6666667f, "mac7_d2" to 0.7222222f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.275f, "mac7_a2" to 0.575f, "mac7_a3" to 0.5375f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.373f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Tighter", "macro7" to "Darker", "macro8" to "Dirt"),
         family = "straight")
 
     private fun dice4() = Patch("Dice", "Double Time",
-        mapOf("slices" to 1f, "gate" to 0.9f, "rate" to 0.75f, "volume" to 1f),
+        mapOf("slices" to 1f, "gate" to 0.9f, "rate" to 0.75f, "volume" to 1f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.4545f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.346000016f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.8f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.5555556f, "mac6_a1" to 0.175000012f, "mac7_d1" to 0.6666667f, "mac7_d2" to 0.7222222f, "mac7_a1" to 0.275f, "mac7_a2" to 0.575f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.269f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Tighter", "macro7" to "Darker", "macro8" to "Dirt"),
         family = "straight")
 
-    private fun dice5() = Patch("Dice", "Swap",
-        mapOf("slices" to 1f, "swap" to 1f, "volume" to 0.673333347f),
+    private fun dice5() = Patch("Dice", "Back to Front",
+        mapOf("slices" to 1f, "reverse" to 1f, "volume" to 0.686666667f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.467f, "mac2_d1" to 0.111111112f, "mac2_a1" to 0f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.5505f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5805f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.5555556f, "mac6_d2" to 0.8333333f, "mac6_a1" to 0.25f, "mac6_a2" to 0.6565f, "mac7_d1" to 0.6666667f, "mac7_d2" to 0.7222222f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.275f, "mac7_a2" to 0.575f, "mac7_a3" to 0.554f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.3255f),
+        mapOf("macro1" to "Swap", "macro2" to "Forwards", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Tighter", "macro7" to "Darker", "macro8" to "Dirt"),
+        family = "straight")
+
+    private fun dice6() = Patch("Dice", "Swap",
+        mapOf("slices" to 1f, "swap" to 1f, "volume" to 0.673333347f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 0f, "mac1_a2" to 0.5455f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.3985f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5275f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.408f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.378f, "mac8_d1" to 0.5555556f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.125f, "mac8_a2" to 0.6635f),
+        mapOf("macro1" to "Settle", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Tighter"),
         family = "dice")
 
-    private fun dice6() = Patch("Dice", "Reverse",
-        mapOf("slices" to 1f, "reverse" to 0.5f, "volume" to 0.673333347f),
+    private fun dice7() = Patch("Dice", "Reverse",
+        mapOf("slices" to 1f, "reverse" to 0.5f, "volume" to 0.673333347f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.476f, "mac2_d1" to 0.111111112f, "mac2_a1" to 0.75f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.4015f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.588f, "mac5_d1" to 0.2777778f, "mac5_d2" to 0.8333333f, "mac5_a1" to 1f, "mac5_a2" to 0.526f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.3895f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.375f, "mac8_d1" to 0.5555556f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.125f, "mac8_a2" to 0.6635f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Tighter"),
         family = "dice")
 
-    private fun dice7() = Patch("Dice", "Stutter",
-        mapOf("slices" to 1f, "stutter" to 0.55f, "volume" to 0.453333348f),
+    private fun dice8() = Patch("Dice", "Stutter",
+        mapOf("slices" to 1f, "stutter" to 0.55f, "volume" to 0.453333348f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.4805f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 1f, "mac2_a2" to 0.608f, "mac3_d1" to 0.166666672f, "mac3_a1" to 0.725f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.557f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.4745f, "mac8_d1" to 0.5555556f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.125f, "mac8_a2" to 0.662f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Tighter"),
         family = "dice")
 
-    private fun dice8() = Patch("Dice", "Drop",
-        mapOf("slices" to 1f, "drop" to 0.5f, "volume" to 0.673333347f),
+    private fun dice9() = Patch("Dice", "Drop",
+        mapOf("slices" to 1f, "drop" to 0.5f, "volume" to 0.673333347f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.420000017f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.392499983f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.625f, "mac4_a2" to 0.539f, "mac5_d1" to 0.2777778f, "mac5_d2" to 0.8333333f, "mac5_a1" to 1f, "mac5_a2" to 0.476f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.3955f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.3955f, "mac8_d1" to 0.5555556f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.125f, "mac8_a2" to 0.6635f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Tighter"),
         family = "dice")
 
-    private fun dice9() = Patch("Dice", "Jump",
-        mapOf("slices" to 1f, "jump" to 0.5f, "volume" to 0.68f),
+    private fun dice10() = Patch("Dice", "Off Pitch",
+        mapOf("slices" to 1f, "jump" to 0.6f, "jumprange" to 0.09090909f, "volume" to 0.68f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.4575f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.3935f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5845f, "mac5_d1" to 0.2777778f, "mac5_d2" to 0.8333333f, "mac5_a1" to 0.7f, "mac5_a2" to 0.5265f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.377f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.368f, "mac8_d1" to 0.5555556f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.125f, "mac8_a2" to 0.659999967f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Tighter"),
         family = "dice")
 
-    private fun dice10() = Patch("Dice", "Fill",
-        mapOf("slices" to 1f, "gate" to 0.45f, "swap" to 0.6f, "stutter" to 0.5f, "stutterdiv" to 0.6666667f, "jump" to 0.3f, "jumprange" to 0.545454562f, "drive" to 0.2f, "volume" to 0.5266667f),
+    private fun dice11() = Patch("Dice", "Jump",
+        mapOf("slices" to 1f, "jump" to 0.5f, "volume" to 0.68f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.472f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.4035f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.604f, "mac5_d1" to 0.2777778f, "mac5_a1" to 0.75f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.39f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.385f, "mac8_d1" to 0.5555556f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.125f, "mac8_a2" to 0.659999967f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Tighter"),
+        family = "dice")
+
+    private fun dice12() = Patch("Dice", "Fill",
+        mapOf("slices" to 1f, "gate" to 0.45f, "swap" to 0.6f, "stutter" to 0.5f, "stutterdiv" to 0.6666667f, "jump" to 0.3f, "jumprange" to 0.545454562f, "drive" to 0.2f, "volume" to 0.5266667f, "mac1_d1" to 0.055555556f, "mac1_a1" to 0.7f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 0.8f, "mac2_a2" to 0.545f, "mac3_d1" to 0.166666672f, "mac3_a1" to 0.75f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.8f, "mac5_d1" to 0.2777778f, "mac5_d2" to 0.8333333f, "mac5_a1" to 0.85f, "mac5_a2" to 0.547f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.5215f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac8_d1" to 0.6111111f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.625f, "mac8_a2" to 0.5285f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Faster"),
         family = "perform")
 
-    private fun dice11() = Patch("Dice", "Roll",
-        mapOf("gate" to 0.3f, "stutter" to 1f, "stutterdiv" to 1f, "drive" to 0.15f, "volume" to 0.673333347f),
+    private fun dice13() = Patch("Dice", "Roll",
+        mapOf("gate" to 0.3f, "stutter" to 1f, "stutterdiv" to 1f, "drive" to 0.15f, "volume" to 0.673333347f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.4715f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 0.8f, "mac2_a2" to 0.555f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 0f, "mac3_a2" to 0.5895f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.572f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac8_d1" to 0.6111111f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Smooth", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Faster"),
         family = "perform")
 
-    private fun dice12() = Patch("Dice", "Ghost",
-        mapOf("slices" to 1f, "gate" to 0.18f, "drop" to 0.2f, "volume" to 1f),
+    private fun dice14() = Patch("Dice", "Ghost",
+        mapOf("slices" to 1f, "gate" to 0.18f, "drop" to 0.2f, "volume" to 1f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.3895f, "mac2_d1" to 0.111111112f, "mac2_a1" to 0.8f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.434000015f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.7f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.435f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac8_d1" to 0.6111111f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Faster"),
         family = "perform")
 
-    private fun dice13() = Patch("Dice", "Held",
-        mapOf("slices" to 1f, "gate" to 0.8f, "swap" to 0.45f, "reverse" to 0.25f, "stutter" to 0.3f, "hold" to 1f, "seed" to 0.174603179f, "volume" to 0.74666667f),
+    private fun dice15() = Patch("Dice", "Held",
+        mapOf("slices" to 1f, "gate" to 0.8f, "swap" to 0.45f, "reverse" to 0.25f, "stutter" to 0.3f, "hold" to 1f, "seed" to 0.174603179f, "volume" to 0.74666667f, "mac1_d1" to 0.055555556f, "mac1_a1" to 0.775f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 0.675f, "mac2_a2" to 0.5425f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 0.85f, "mac3_a2" to 0.4275f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5355f, "mac5_d1" to 0.2777778f, "mac5_d2" to 0.8333333f, "mac5_a1" to 1f, "mac5_a2" to 0.4585f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.431999981f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.406000018f, "mac8_d1" to 0.6111111f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.625f, "mac8_a2" to 0.5735f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Faster"),
         family = "perform")
 
-    private fun dice14() = Patch("Dice", "Dust",
-        mapOf("cut" to 1f, "slices" to 0.857142866f, "gate" to 0.45f, "swap" to 0.35f, "reverse" to 0.2f, "drop" to 0.3f, "cutoff" to 0.6559455f, "resonance" to 0.15f, "volume" to 1f),
+    private fun dice16() = Patch("Dice", "Triplet Feel",
+        mapOf("cut" to 1f, "stutter" to 1f, "stutterdiv" to 0.166666672f, "volume" to 0.49333334f, "mac1_d1" to 0.055555556f, "mac1_a1" to 1f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 1f, "mac2_a2" to 0.639f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 0f, "mac3_a2" to 0.578f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.8f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.4465f, "mac8_d1" to 0.6111111f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.625f, "mac8_a2" to 0.5495f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Smooth", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Faster"),
+        family = "perform")
+
+    private fun dice17() = Patch("Dice", "Scratch",
+        mapOf("slices" to 1f, "gate" to 0.2f, "reverse" to 0.5f, "stutter" to 0.25f, "stutterdiv" to 0f, "jump" to 0.5f, "jumprange" to 0.181818187f, "drive" to 0.15f, "volume" to 0.9066667f, "mac1_d1" to 0.055555556f, "mac1_a1" to 1f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 0.6f, "mac2_a2" to 0.5465f, "mac3_d1" to 0.166666672f, "mac3_a1" to 0.875f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5465f, "mac5_d1" to 0.2777778f, "mac5_a1" to 0.75f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.457f, "mac7_d1" to 0.166666672f, "mac7_d2" to 0.333333343f, "mac7_d3" to 0.8333333f, "mac7_a1" to 0.7f, "mac7_a2" to 0.835000038f, "mac7_a3" to 0.4345f, "mac8_d1" to 0.6111111f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.625f, "mac8_a2" to 0.537f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Rolls", "macro8" to "Faster"),
+        family = "perform")
+
+    private fun dice18() = Patch("Dice", "Dust",
+        mapOf("cut" to 1f, "slices" to 0.857142866f, "gate" to 0.45f, "swap" to 0.35f, "reverse" to 0.2f, "drop" to 0.3f, "cutoff" to 0.6559455f, "resonance" to 0.15f, "volume" to 1f, "mac1_d1" to 0.055555556f, "mac1_a1" to 0.825f, "mac2_d1" to 0.111111112f, "mac2_a1" to 0.7f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.3845f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.65f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.6666667f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7222222f, "mac7_a1" to 0.75f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.34f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Darker", "macro7" to "Peak", "macro8" to "Dirt"),
         family = "tone")
 
-    private fun dice15() = Patch("Dice", "Driven",
-        mapOf("slices" to 1f, "cutoff" to 0.8865413f, "drive" to 0.7f, "volume" to 0.386666656f),
+    private fun dice19() = Patch("Dice", "Driven",
+        mapOf("slices" to 1f, "cutoff" to 0.8865413f, "drive" to 0.7f, "volume" to 0.386666656f, "mac1_d1" to 0.055555556f, "mac1_a1" to 1f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.4445f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.53f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.6666667f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7222222f, "mac7_d2" to 0.8333333f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4755f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.65f, "mac8_a2" to 0.457f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Darker", "macro7" to "Peak", "macro8" to "Dirt"),
         family = "tone")
 
-    private fun dice16() = Patch("Dice", "Pitched",
-        mapOf("slices" to 1f, "pitch" to 0.395833343f, "fine" to 0.42f, "volume" to 0.686666667f),
+    private fun dice20() = Patch("Dice", "Pitched",
+        mapOf("slices" to 1f, "pitch" to 0.395833343f, "fine" to 0.42f, "volume" to 0.686666667f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.4655f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 1f, "mac2_a2" to 0.466f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.385f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5825f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.6666667f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7222222f, "mac7_a1" to 0.75f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.327000022f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Darker", "macro7" to "Peak", "macro8" to "Dirt"),
         family = "tone")
 
-    private fun dice17() = Patch("Dice", "Scattered",
-        mapOf("s00_pan" to 0.099999994f, "s01_pan" to 0.9f, "s02_pan" to 0.25f, "s03_pan" to 0.75f, "s03_pitch" to 0.6458333f, "s04_pan" to 0.099999994f, "s05_pan" to 0.9f, "s05_pitch" to 0.395833343f, "s06_pan" to 0.25f, "s07_pan" to 0.75f, "volume" to 0.653333366f),
+    private fun dice21() = Patch("Dice", "Small Speaker",
+        mapOf("slices" to 1f, "cutoff" to 0.623098433f, "resonance" to 0.25f, "filtertype" to 0.727272749f, "drive" to 0.5f, "volume" to 0.75333333f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.467f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.4285f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.6235f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.6666667f, "mac6_d2" to 0.8333333f, "mac6_a1" to 0.35f, "mac6_a2" to 0.447f, "mac7_d1" to 0.7222222f, "mac7_d2" to 0.8333333f, "mac7_a1" to 0.65f, "mac7_a2" to 0.593f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.75f, "mac8_a2" to 0.3475f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Darker", "macro7" to "Peak", "macro8" to "Dirt"),
+        family = "tone")
+
+    private fun dice22() = Patch("Dice", "Tops Only",
+        mapOf("slices" to 1f, "cutoff" to 0.443270653f, "resonance" to 0.1f, "filtertype" to 0.6363636f, "volume" to 0.6666667f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.4515f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.376f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5495f, "mac5_d1" to 0.2777778f, "mac5_d2" to 0.8333333f, "mac5_a1" to 1f, "mac5_a2" to 0.5455f, "mac6_d1" to 0.6666667f, "mac6_a1" to 0.35f, "mac7_d1" to 0.7222222f, "mac7_a1" to 0.75f, "mac8_d1" to 0.7777778f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.8f, "mac8_a2" to 0.338f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Darker", "macro7" to "Peak", "macro8" to "Dirt"),
+        family = "tone")
+
+    private fun dice23() = Patch("Dice", "Scattered",
+        mapOf("s00_pan" to 0.099999994f, "s01_pan" to 0.9f, "s02_pan" to 0.25f, "s03_pan" to 0.75f, "s03_pitch" to 0.6458333f, "s04_pan" to 0.099999994f, "s05_pan" to 0.9f, "s05_pitch" to 0.395833343f, "s06_pan" to 0.25f, "s07_pan" to 0.75f, "volume" to 0.653333366f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.4485f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 1f, "mac2_a2" to 0.477f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.4415f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.5655f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.4165f, "mac7_d1" to 0.5555556f, "mac7_d2" to 0.8333333f, "mac7_a1" to 0.125f, "mac7_a2" to 0.6735f, "mac8_d1" to 1f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5275f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Tighter", "macro8" to "Lower"),
         family = "slice")
 
-    private val dice: List<Patch> by lazy { listOf(dice0(), dice1(), dice2(), dice3(), dice4(), dice5(), dice6(), dice7(), dice8(), dice9(), dice10(), dice11(), dice12(), dice13(), dice14(), dice15(), dice16(), dice17()) }
+    private fun dice24() = Patch("Dice", "Tuned Slices",
+        mapOf("s01_pitch" to 0.5625f, "s02_pitch" to 0.6041667f, "s03_pitch" to 0.6458333f, "s04_pitch" to 0.7083333f, "s05_pitch" to 0.6458333f, "s06_pitch" to 0.6041667f, "s07_pitch" to 0.458333343f, "mac1_d1" to 0.055555556f, "mac1_d2" to 0.8333333f, "mac1_a1" to 1f, "mac1_a2" to 0.46f, "mac2_d1" to 0.111111112f, "mac2_d2" to 0.8333333f, "mac2_a1" to 1f, "mac2_a2" to 0.5235f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.4f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.8f, "mac5_d1" to 0.2777778f, "mac5_a1" to 1f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.3975f, "mac7_d1" to 0.5555556f, "mac7_d2" to 0.8333333f, "mac7_a1" to 0.125f, "mac7_a2" to 0.6565f, "mac8_d1" to 1f, "mac8_d2" to 0.8333333f, "mac8_a1" to 0.25f, "mac8_a2" to 0.554f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Tighter", "macro8" to "Lower"),
+        family = "slice")
+
+    private fun dice25() = Patch("Dice", "Backspin",
+        mapOf("s06_dir" to 1f, "s07_dir" to 1f, "mac1_d1" to 0.055555556f, "mac1_a1" to 1f, "mac2_d1" to 0.111111112f, "mac2_a1" to 1f, "mac3_d1" to 0.166666672f, "mac3_d2" to 0.8333333f, "mac3_a1" to 1f, "mac3_a2" to 0.429f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.8333333f, "mac4_a1" to 0.8f, "mac4_a2" to 0.557f, "mac5_d1" to 0.2777778f, "mac5_d2" to 0.8333333f, "mac5_a1" to 1f, "mac5_a2" to 0.542f, "mac6_d1" to 0.055555556f, "mac6_d2" to 0.166666672f, "mac6_d3" to 0.2777778f, "mac6_d4" to 0.8333333f, "mac6_a1" to 0.75f, "mac6_a2" to 0.7f, "mac6_a3" to 0.7f, "mac6_a4" to 0.423f, "mac7_d1" to 0.5555556f, "mac7_d2" to 0.8333333f, "mac7_a1" to 0.125f, "mac7_a2" to 0.7f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Swap", "macro2" to "Reverse", "macro3" to "Stutter", "macro4" to "Drop", "macro5" to "Jump", "macro6" to "Chaos", "macro7" to "Tighter", "macro8" to "Lower"),
+        family = "slice")
+
+    private val dice: List<Patch> by lazy { listOf(dice0(), dice1(), dice2(), dice3(), dice4(), dice5(), dice6(), dice7(), dice8(), dice9(), dice10(), dice11(), dice12(), dice13(), dice14(), dice15(), dice16(), dice17(), dice18(), dice19(), dice20(), dice21(), dice22(), dice23(), dice24(), dice25()) }
 
     private fun mosaic0() = Patch("Mosaic", "Init", emptyMap(),
         family = "keys")

@@ -88,6 +88,8 @@ class Dice final : public Machine {
     /** Where the cuts fall, for the panel to draw. Not audio-thread state. */
     int32_t sliceCount() const { return slices; }
     int32_t sliceStart(int32_t i) const { return i >= 0 && i < slices ? bounds[i] : 0; }
+    /** The loop's length in frames, or 0 with no loop. */
+    int32_t loopFrames() const { return take != nullptr ? take->frames : 0; }
 
   private:
     struct Voice {
