@@ -205,6 +205,13 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
         static const std::unique_ptr<audio::Utterance> voice = audition::voiceUtterance();
         delete static_cast<audio::Utterance *>(m->swapObject(0, new audio::Utterance(*voice)));
     }
+    // Dice slices the two-bar break. The app renders all the time, so the cut
+    // is made before the first note; one block here does the same.
+    if (std::strcmp(name, "Dice") == 0) {
+        delete static_cast<audio::Take *>(m->swapObject(0, audition::breakLoop().release()));
+        float L[kBlock], R[kBlock];
+        m->render(L, R, kBlock);
+    }
     if (std::strcmp(name, "Cumulus") == 0) {
         auto *cumulus = static_cast<machine::Cumulus *>(m);
         d.cloud = machine::cumulus::buildCloud(cumulus->spec(), kRate);
@@ -380,10 +387,11 @@ int registryIsComplete() {
  *
  * Skipped: machines whose sound is a file or a graph, since their patches
  * only mean something with it mounted. Their state is covered above. Molt
- * and Cipher run, with the voice mounted or on the input.
+ * and Cipher run, with the voice mounted or on the input, and Dice with the
+ * break.
  */
 int everyPatch(const std::string &banks) {
-    static const char *const kNeedsMore[] = {"Forage", "Mosaic", "Pollen", "Dice", "Bias", "Nexus"};
+    static const char *const kNeedsMore[] = {"Forage", "Mosaic", "Pollen", "Bias", "Nexus"};
     int checked = 0, failed = 0;
     const auto skip = [](const std::string &unit) {
         for (const char *n : kNeedsMore) if (unit == n) return true;

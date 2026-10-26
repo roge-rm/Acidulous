@@ -96,10 +96,18 @@ void Dice::prepare(int32_t sr) {
 }
 
 void Dice::reset() {
+    // Field by field, since the stretcher and the held buffers were sized in
+    // prepare().
     for (auto &v : voices) {
         v.used = false;
+        v.age = 0;
+        v.env = 1.0f;
+        v.heldHave = 0;
+        v.heldPos = 0.0;
         v.filter.reset();
+        v.filterR.reset();
     }
+    rng = kRngSeed;
     triggers = 0;
 }
 
