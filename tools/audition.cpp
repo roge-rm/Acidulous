@@ -896,6 +896,8 @@ void loadInput(const std::string &kind, Material &mat) {
         mat.input = t->left;
     } else if (kind == "speech") {
         mat.input = speechPhrase();
+    } else if (kind == "dirtyvoice") {
+        mat.input = dirtyVoiceInput();
     } else if (kind.rfind("file:", 0) == 0) {
         mat.input = fileInput(kind.substr(5), 14.0f);
     }
@@ -2222,7 +2224,7 @@ void usage() {
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
-        "  --material kit|break|seed|dirtyseed|voice|dirtyvoice|voicetake|map|roughmap|none   --input voice|noise|break|none\n"
+        "  --material kit|break|seed|dirtyseed|voice|dirtyvoice|voicetake|map|roughmap|none   --input voice|dirtyvoice|speech|noise|break|none\n"
         "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
         "\n"

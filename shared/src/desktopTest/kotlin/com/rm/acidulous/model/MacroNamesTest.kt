@@ -255,4 +255,21 @@ class MacroNamesTest {
         assertEquals(listOf("tune", "robot", "size", "tone", "shape", "play"), families)
         assertEquals(listOf(7, 6, 6, 7, 6, 6), families.map { f -> bank.count { it.family == f } })
     }
+
+    @Test
+    fun cipherMacrosTakeThePatchNames() {
+        val t = track("Cipher", mapOf("macro1" to "Untangle"))
+        assertEquals("Untangle", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+    }
+
+    @Test
+    fun cipherBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Cipher")
+        assertEquals(40, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("classic", "remap", "formant", "hold", "carrier", "extreme"), families)
+        assertEquals(listOf(7, 7, 6, 6, 7, 7), families.map { f -> bank.count { it.family == f } })
+    }
 }

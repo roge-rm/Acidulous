@@ -5790,110 +5790,201 @@ internal object FactoryBanks {
         family = "classic")
 
     private fun cipher1() = Patch("Cipher", "Classic",
-        mapOf("bands" to 0.5555556f, "q" to 0.6f, "attack" to 0.231378213f, "release" to 0.347067326f, "sibilance" to 0.5f, "mix" to 0.25f, "detune" to 0.16f, "volume" to 0.595f),
+        mapOf("bands" to 0.5555556f, "q" to 0.6f, "attack" to 0.231378213f, "release" to 0.347067326f, "sibilance" to 0.5f, "mix" to 0.25f, "detune" to 0.16f, "volume" to 0.595f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.6f, "mac1_a2" to 0.394500017f, "mac2_d1" to 0.1724138f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.65f, "mac2_a2" to 0.406000018f, "mac3_d1" to 0.103448279f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.675f, "mac3_a2" to 0.56f, "mac4_d1" to 0.5862069f, "mac4_d2" to 0.6551724f, "mac4_d3" to 0.862068951f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.474f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.355000019f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.447f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.548f),
+        mapOf("macro1" to "Higher", "macro2" to "Smoother", "macro3" to "Sharper", "macro4" to "Thicker", "macro5" to "Hiss", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "classic")
 
-    private fun cipher2() = Patch("Cipher", "Choir",
-        mapOf("bands" to 0.7777778f, "q" to 0.45f, "attack" to 0.615689039f, "release" to 0.6833629f, "mix" to 0.55f, "detune" to 0.6f, "sub" to 0.1f, "volume" to 0.83f, "ampatk" to 0.528333843f, "amprel" to 0.6489087f),
+    private fun cipher2() = Patch("Cipher", "Fine Grain",
+        mapOf("bands" to 1f, "q" to 0.7f, "attack" to 0.1833629f, "release" to 0.324780375f, "sibilance" to 0.5f, "mix" to 0.3f, "detune" to 0.2f, "volume" to 0.675f, "mac1_d1" to 0.275862068f, "mac1_a1" to 0.6f, "mac2_d1" to 0.1724138f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.65f, "mac2_a2" to 0.380500019f, "mac3_d1" to 0.103448279f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.675f, "mac3_a2" to 0.5325f, "mac4_d1" to 0.5862069f, "mac4_d2" to 0.6551724f, "mac4_d3" to 0.862068951f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.597499967f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.348f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5455f, "mac8_d1" to 1f, "mac8_d2" to 0.103448279f, "mac8_d3" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.375f, "mac8_a3" to 0.6625f),
+        mapOf("macro1" to "Higher", "macro2" to "Smoother", "macro3" to "Sharper", "macro4" to "Thicker", "macro5" to "Hiss", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "classic")
 
-    private fun cipher3() = Patch("Cipher", "Ensemble",
-        mapOf("bands" to 0.6666667f, "release" to 0.598104f, "mix" to 0.6f, "detune" to 0.9f, "sub" to 0.45f, "volume" to 0.545f),
+    private fun cipher3() = Patch("Cipher", "Choir",
+        mapOf("bands" to 0.7777778f, "q" to 0.45f, "attack" to 0.615689039f, "release" to 0.6833629f, "mix" to 0.55f, "detune" to 0.6f, "sub" to 0.1f, "volume" to 0.83f, "ampatk" to 0.528333843f, "amprel" to 0.6489087f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.6f, "mac1_a2" to 0.347f, "mac2_d1" to 0.1724138f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.65f, "mac2_a2" to 0.3855f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.675f, "mac4_d1" to 0.5862069f, "mac4_d2" to 0.6551724f, "mac4_d3" to 0.862068951f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.389f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.258000016f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.4635f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Higher", "macro2" to "Smoother", "macro3" to "Sharper", "macro4" to "Thicker", "macro5" to "Hiss", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "classic")
 
-    private fun cipher4() = Patch("Cipher", "Narrow",
-        mapOf("bands" to 0.222222224f, "low" to 0.5943161f, "high" to 0.4349665f, "q" to 0.65f, "attack" to 0.231378213f, "release" to 0.3843109f, "sibilance" to 0.6f, "volume" to 0.955f),
+    private fun cipher4() = Patch("Cipher", "Ensemble",
+        mapOf("bands" to 0.6666667f, "release" to 0.598104f, "mix" to 0.6f, "detune" to 0.9f, "sub" to 0.45f, "volume" to 0.545f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.6f, "mac1_a2" to 0.479f, "mac2_d1" to 0.1724138f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.65f, "mac2_a2" to 0.4075f, "mac3_d1" to 0.103448279f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.675f, "mac3_a2" to 0.591f, "mac4_d1" to 0.5862069f, "mac4_d2" to 0.6551724f, "mac4_d3" to 0.862068951f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.4365f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.388f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5705f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5265f),
+        mapOf("macro1" to "Higher", "macro2" to "Smoother", "macro3" to "Sharper", "macro4" to "Thicker", "macro5" to "Hiss", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "classic")
 
-    private fun cipher5() = Patch("Cipher", "Backwards",
-        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.2f, "mix" to 0.5f, "sub" to 0.25f, "volume" to 0.9f),
+    private fun cipher5() = Patch("Cipher", "Narrow",
+        mapOf("bands" to 0.222222224f, "low" to 0.5943161f, "high" to 0.4349665f, "q" to 0.65f, "attack" to 0.231378213f, "release" to 0.3843109f, "sibilance" to 0.6f, "volume" to 0.955f, "mac1_d1" to 0.275862068f, "mac1_a1" to 0.6f, "mac2_d1" to 0.1724138f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.65f, "mac2_a2" to 0.264500022f, "mac3_d1" to 0.103448279f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.675f, "mac3_a2" to 0.5225f, "mac4_d1" to 0.5862069f, "mac4_d2" to 0.6551724f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.294f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.4145f, "mac7_a2" to 0.5225f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Higher", "macro2" to "Smoother", "macro3" to "Sharper", "macro4" to "Thicker", "macro5" to "Hiss", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "classic")
+
+    private fun cipher6() = Patch("Cipher", "Pocket",
+        mapOf("bands" to 0.055555556f, "low" to 0.488083959f, "high" to 0.5086227f, "slope" to 0f, "attack" to 0.299052f, "release" to 0.3843109f, "sibilance" to 0.5f, "volume" to 0.145f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.6f, "mac1_a2" to 0.5135f, "mac2_d1" to 0.1724138f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.65f, "mac2_a2" to 0.481f, "mac3_d1" to 0.103448279f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.675f, "mac3_a2" to 0.51f, "mac4_d1" to 0.5862069f, "mac4_d2" to 0.6551724f, "mac4_d3" to 0.862068951f, "mac4_a1" to 0.75f, "mac4_a2" to 0.65f, "mac4_a3" to 0.52f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.507f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5385f),
+        mapOf("macro1" to "Higher", "macro2" to "Smoother", "macro3" to "Sharper", "macro4" to "Thicker", "macro5" to "Hiss", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "classic")
+
+    private fun cipher7() = Patch("Cipher", "Half Turn",
+        mapOf("bands" to 0.5555556f, "release" to 0.4404695f, "remap" to 0.2f, "remapamt" to 0.5f, "volume" to 0.85f, "mac1_d1" to 0.3448276f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0f, "mac1_a2" to 0.369000018f, "mac2_d1" to 0.206896558f, "mac2_a1" to 0.8f, "mac3_d1" to 0.1724138f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.65f, "mac3_a2" to 0.3655f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4205f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.575f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.278500021f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Untangle", "macro2" to "Smear", "macro3" to "Smoother", "macro4" to "Higher", "macro5" to "Sharper", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "remap")
 
-    private fun cipher6() = Patch("Cipher", "Mirror",
-        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.4f, "volume" to 0.49f),
+    private fun cipher8() = Patch("Cipher", "Backwards",
+        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.2f, "mix" to 0.5f, "sub" to 0.25f, "volume" to 0.9f, "mac1_d1" to 0.3448276f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0f, "mac1_a2" to 0.3915f, "mac2_d1" to 0.206896558f, "mac2_a1" to 0.8f, "mac3_d1" to 0.1724138f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.65f, "mac3_a2" to 0.376f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.5435f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.55f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.258000016f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.4375f, "mac8_d1" to 1f, "mac8_d2" to 0.103448279f, "mac8_d3" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.375f, "mac8_a3" to 0.5435f),
+        mapOf("macro1" to "Untangle", "macro2" to "Smear", "macro3" to "Smoother", "macro4" to "Higher", "macro5" to "Sharper", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "remap")
 
-    private fun cipher7() = Patch("Cipher", "Folded",
-        mapOf("bands" to 0.5555556f, "q" to 0.5f, "release" to 0.5f, "remap" to 1f, "volume" to 0.5f),
+    private fun cipher9() = Patch("Cipher", "Mirror",
+        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.4f, "volume" to 0.49f, "mac1_d1" to 0.3448276f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0f, "mac1_a2" to 0.543f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.8f, "mac2_a2" to 0.553f, "mac3_d1" to 0.1724138f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.65f, "mac3_a2" to 0.4225f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4305f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.608999968f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.394500017f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.710999966f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5855f),
+        mapOf("macro1" to "Untangle", "macro2" to "Smear", "macro3" to "Smoother", "macro4" to "Higher", "macro5" to "Sharper", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "remap")
 
-    private fun cipher8() = Patch("Cipher", "Comb",
-        mapOf("bands" to 0.8333333f, "q" to 0.5f, "release" to 0.4404695f, "remap" to 0.6f, "volume" to 0.88f),
+    private fun cipher10() = Patch("Cipher", "Folded",
+        mapOf("bands" to 0.5555556f, "q" to 0.5f, "release" to 0.5f, "remap" to 1f, "volume" to 0.5f, "mac1_d1" to 0.3448276f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0f, "mac1_a2" to 0.5275f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.8f, "mac2_a2" to 0.534f, "mac3_d1" to 0.1724138f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.65f, "mac3_a2" to 0.425f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.423f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.554f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.386f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.4805f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Untangle", "macro2" to "Smear", "macro3" to "Smoother", "macro4" to "Higher", "macro5" to "Sharper", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "remap")
 
-    private fun cipher9() = Patch("Cipher", "Shuffled",
-        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.8f, "seed" to 0.225806445f, "volume" to 0.49f),
+    private fun cipher11() = Patch("Cipher", "Comb",
+        mapOf("bands" to 0.8333333f, "q" to 0.5f, "release" to 0.4404695f, "remap" to 0.6f, "volume" to 0.88f, "mac1_d1" to 0.3448276f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0f, "mac1_a2" to 0.4015f, "mac2_d1" to 0.206896558f, "mac2_a1" to 0.8f, "mac3_d1" to 0.1724138f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.65f, "mac3_a2" to 0.371500015f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.439f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.56f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.278f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.56f),
+        mapOf("macro1" to "Untangle", "macro2" to "Smear", "macro3" to "Smoother", "macro4" to "Higher", "macro5" to "Sharper", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "remap")
 
-    private fun cipher10() = Patch("Cipher", "Chipmunk",
-        mapOf("bands" to 0.5555556f, "release" to 0.4404695f, "shift" to 0.7916667f, "volume" to 0.325f),
+    private fun cipher12() = Patch("Cipher", "Shuffled",
+        mapOf("bands" to 0.5555556f, "release" to 0.462756425f, "remap" to 0.8f, "seed" to 0.225806445f, "volume" to 0.49f, "mac1_d1" to 0.3448276f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0f, "mac1_a2" to 0.546f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.8f, "mac2_a2" to 0.543f, "mac3_d1" to 0.1724138f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.65f, "mac3_a2" to 0.4095f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4305f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.601f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.391f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6175f),
+        mapOf("macro1" to "Untangle", "macro2" to "Smear", "macro3" to "Smoother", "macro4" to "Higher", "macro5" to "Sharper", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "remap")
+
+    private fun cipher13() = Patch("Cipher", "Crossed Wires",
+        mapOf("bands" to 1f, "q" to 0.45f, "remap" to 0.8f, "seed" to 0.612903237f, "volume" to 0.94f, "mac1_d1" to 0.3448276f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0f, "mac1_a2" to 0.3745f, "mac2_d1" to 0.206896558f, "mac2_a1" to 0.8f, "mac3_d1" to 0.1724138f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.65f, "mac3_a2" to 0.355000019f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4535f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.5855f, "mac5_a2" to 0.53f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.2655f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.32f, "mac8_d1" to 1f, "mac8_d2" to 0.103448279f, "mac8_d3" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.375f, "mac8_a3" to 0.449f),
+        mapOf("macro1" to "Untangle", "macro2" to "Smear", "macro3" to "Smoother", "macro4" to "Higher", "macro5" to "Sharper", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "remap")
+
+    private fun cipher14() = Patch("Cipher", "Lifted",
+        mapOf("bands" to 0.6666667f, "release" to 0.4404695f, "shift" to 0.625f, "volume" to 0.465f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.6f, "mac1_a2" to 0.3855f, "mac2_d1" to 0.275862068f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.4375f, "mac2_a2" to 0.544f, "mac3_d1" to 0.310344815f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1724138f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.65f, "mac4_a2" to 0.403f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.675f, "mac6_d1" to 0.5862069f, "mac6_d2" to 0.6551724f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.75f, "mac6_a2" to 0.65f, "mac6_a3" to 0.5535f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.6625f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5885f),
+        mapOf("macro1" to "Further", "macro2" to "Natural", "macro3" to "Stretch", "macro4" to "Smoother", "macro5" to "Sharper", "macro6" to "Thicker", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "formant")
 
-    private fun cipher11() = Patch("Cipher", "Giant",
-        mapOf("bands" to 0.5555556f, "release" to 0.4824149f, "shift" to 0.208333328f, "sub" to 0.3f, "volume" to 0.415f),
+    private fun cipher15() = Patch("Cipher", "Chipmunk",
+        mapOf("bands" to 0.5555556f, "release" to 0.4404695f, "shift" to 0.7916667f, "volume" to 0.325f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.6f, "mac1_a2" to 0.604f, "mac2_d1" to 0.275862068f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.354f, "mac2_a2" to 0.6365f, "mac3_d1" to 0.310344815f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.7f, "mac3_a2" to 0.6365f, "mac4_d1" to 0.1724138f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.65f, "mac4_a2" to 0.458f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.5285f, "mac6_d1" to 0.5862069f, "mac6_d2" to 0.6551724f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.75f, "mac6_a2" to 0.65f, "mac6_a3" to 0.5515f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.578f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6545f),
+        mapOf("macro1" to "Further", "macro2" to "Natural", "macro3" to "Stretch", "macro4" to "Smoother", "macro5" to "Sharper", "macro6" to "Thicker", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "formant")
 
-    private fun cipher12() = Patch("Cipher", "Stretched",
-        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "stretch" to 0.75f, "volume" to 0.675f),
+    private fun cipher16() = Patch("Cipher", "Giant",
+        mapOf("bands" to 0.5555556f, "release" to 0.4824149f, "shift" to 0.208333328f, "sub" to 0.3f, "volume" to 0.415f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.4f, "mac1_a2" to 0.636999965f, "mac2_d1" to 0.275862068f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.646f, "mac2_a2" to 0.579f, "mac3_d1" to 0.310344815f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1724138f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.65f, "mac4_a2" to 0.436f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.5535f, "mac6_d1" to 0.5862069f, "mac6_d2" to 0.6551724f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.75f, "mac6_a2" to 0.65f, "mac6_a3" to 0.459f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.557f),
+        mapOf("macro1" to "Further", "macro2" to "Natural", "macro3" to "Stretch", "macro4" to "Smoother", "macro5" to "Sharper", "macro6" to "Thicker", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "formant")
 
-    private fun cipher13() = Patch("Cipher", "Squashed",
-        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "stretch" to 0.25f, "sibilance" to 0.55f, "volume" to 0.37f),
+    private fun cipher17() = Patch("Cipher", "Stretched",
+        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "stretch" to 0.75f, "volume" to 0.675f, "mac1_d1" to 0.310344815f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4125f, "mac2_d1" to 0.310344815f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.375f, "mac2_a2" to 0.4215f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.6f, "mac3_a2" to 0.3355f, "mac4_d1" to 0.1724138f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.65f, "mac4_a2" to 0.352500021f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.5455f, "mac6_d1" to 0.5862069f, "mac6_d2" to 0.6551724f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.75f, "mac6_a2" to 0.65f, "mac6_a3" to 0.403999984f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.4245f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Further", "macro2" to "Natural", "macro3" to "Shift", "macro4" to "Smoother", "macro5" to "Sharper", "macro6" to "Thicker", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "formant")
 
-    private fun cipher14() = Patch("Cipher", "Held Vowel",
-        mapOf("bands" to 0.6666667f, "release" to 0.7313782f, "freeze" to 1f, "frzmorph" to 0f, "volume" to 0.33f, "ampatk" to 0.6041241f, "amprel" to 0.773105f),
+    private fun cipher18() = Patch("Cipher", "Squashed",
+        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "stretch" to 0.25f, "sibilance" to 0.55f, "volume" to 0.37f, "mac1_d1" to 0.310344815f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.3f, "mac1_a2" to 0.4655f, "mac2_d1" to 0.310344815f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.625f, "mac2_a2" to 0.5825f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.6f, "mac3_a2" to 0.482f, "mac4_d1" to 0.1724138f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.65f, "mac4_a2" to 0.4475f, "mac5_d1" to 0.103448279f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.675f, "mac5_a2" to 0.5425f, "mac6_d1" to 0.5862069f, "mac6_d2" to 0.6551724f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.75f, "mac6_a2" to 0.65f, "mac6_a3" to 0.5375f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5795f),
+        mapOf("macro1" to "Further", "macro2" to "Natural", "macro3" to "Shift", "macro4" to "Smoother", "macro5" to "Sharper", "macro6" to "Thicker", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "formant")
+
+    private fun cipher19() = Patch("Cipher", "Low Throat",
+        mapOf("bands" to 0.6666667f, "release" to 0.4824149f, "shift" to 0.333333343f, "stretch" to 0.8f, "sub" to 0.3f, "volume" to 0.5175f, "mac1_d1" to 0.275862068f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.4f, "mac1_a2" to 0.4225f, "mac2_d1" to 0.275862068f, "mac2_d2" to 0.310344815f, "mac2_a1" to 0.5835f, "mac2_a2" to 0.35f, "mac3_d1" to 0.310344815f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.7f, "mac3_a2" to 0.5595f, "mac4_d1" to 0.1724138f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.65f, "mac4_a2" to 0.392f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.675f, "mac6_d1" to 0.5862069f, "mac6_d2" to 0.6551724f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.75f, "mac6_a2" to 0.65f, "mac6_a3" to 0.4205f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5985f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.44f),
+        mapOf("macro1" to "Further", "macro2" to "Natural", "macro3" to "Stretch", "macro4" to "Smoother", "macro5" to "Sharper", "macro6" to "Thicker", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "formant")
+
+    private fun cipher20() = Patch("Cipher", "Long Tail",
+        mapOf("bands" to 0.6666667f, "q" to 0.5f, "attack" to 0.49999997f, "release" to 0.9147411f, "volume" to 0.33f, "amprel" to 0.6879018f, "mac1_d1" to 0.1724138f, "mac1_a1" to 0.625f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.75f, "mac2_a2" to 0.5245f, "mac3_d1" to 0.9310345f, "mac3_a1" to 0.675f, "mac4_d1" to 0.9655172f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5862069f, "mac5_d2" to 0.6551724f, "mac5_a1" to 0.75f, "mac5_a2" to 0.65f, "mac6_d1" to 0.103448279f, "mac6_a1" to 0.675f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5845f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5575f),
+        mapOf("macro1" to "Longer", "macro2" to "Smear", "macro3" to "Swell", "macro4" to "Tail", "macro5" to "Thicker", "macro6" to "Sharper", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "hold")
 
-    private fun cipher15() = Patch("Cipher", "Morph",
-        mapOf("bands" to 0.6666667f, "release" to 0.6156891f, "freeze" to 1f, "frzmorph" to 0.5f, "frzdecay" to 0.7484046f, "volume" to 0.41f),
+    private fun cipher21() = Patch("Cipher", "Held Vowel",
+        mapOf("bands" to 0.6666667f, "release" to 0.7313782f, "freeze" to 1f, "frzmorph" to 0f, "volume" to 0.33f, "ampatk" to 0.6041241f, "amprel" to 0.773105f, "mac1_d1" to 0.1724138f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4675f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.75f, "mac2_a2" to 0.5525f, "mac3_d1" to 0.9310345f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.675f, "mac3_a2" to 0.5335f, "mac4_d1" to 0.9655172f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5862069f, "mac5_d2" to 0.6551724f, "mac5_d3" to 0.862068951f, "mac5_a1" to 0.75f, "mac5_a2" to 0.65f, "mac5_a3" to 0.5265f, "mac6_d1" to 0.103448279f, "mac6_a1" to 0.675f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.615f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5905f),
+        mapOf("macro1" to "Longer", "macro2" to "Smear", "macro3" to "Swell", "macro4" to "Tail", "macro5" to "Thicker", "macro6" to "Sharper", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "hold")
 
-    private fun cipher16() = Patch("Cipher", "Trail Up",
-        mapOf("bands" to 0.7777778f, "q" to 0.5f, "release" to 0.7686218f, "smear" to 0.9f, "volume" to 0.495f),
+    private fun cipher22() = Patch("Cipher", "Morph",
+        mapOf("bands" to 0.6666667f, "release" to 0.6156891f, "freeze" to 1f, "frzmorph" to 0.5f, "frzdecay" to 0.7484046f, "volume" to 0.41f, "mac1_d1" to 0.1724138f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4675f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.75f, "mac2_a2" to 0.533f, "mac3_d1" to 0.9310345f, "mac3_a1" to 0.675f, "mac4_d1" to 0.9655172f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5862069f, "mac5_d2" to 0.6551724f, "mac5_d3" to 0.862068951f, "mac5_a1" to 0.75f, "mac5_a2" to 0.65f, "mac5_a3" to 0.52f, "mac6_d1" to 0.103448279f, "mac6_a1" to 0.675f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.6275f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.598f),
+        mapOf("macro1" to "Longer", "macro2" to "Smear", "macro3" to "Swell", "macro4" to "Tail", "macro5" to "Thicker", "macro6" to "Sharper", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "hold")
 
-    private fun cipher17() = Patch("Cipher", "Trail Down",
-        mapOf("bands" to 0.7777778f, "release" to 0.7686218f, "smear" to 0.099999994f, "volume" to 0.35f),
+    private fun cipher23() = Patch("Cipher", "Fading Hold",
+        mapOf("bands" to 0.6666667f, "release" to 0.6156891f, "freeze" to 1f, "frzmorph" to 0f, "frzdecay" to 0.531692147f, "volume" to 0.41f, "mac1_d1" to 0.1724138f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.625f, "mac1_a2" to 0.437f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.75f, "mac2_a2" to 0.556f, "mac3_d1" to 0.9310345f, "mac3_a1" to 0.675f, "mac4_d1" to 0.9655172f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5862069f, "mac5_d2" to 0.6551724f, "mac5_d3" to 0.862068951f, "mac5_a1" to 0.75f, "mac5_a2" to 0.65f, "mac5_a3" to 0.5275f, "mac6_d1" to 0.103448279f, "mac6_a1" to 0.675f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.6055f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.598f),
+        mapOf("macro1" to "Longer", "macro2" to "Smear", "macro3" to "Swell", "macro4" to "Tail", "macro5" to "Thicker", "macro6" to "Sharper", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "hold")
 
-    private fun cipher18() = Patch("Cipher", "Pulse",
-        mapOf("bands" to 0.5555556f, "wave a" to 0.25f, "wave b" to 0.25f, "mix" to 0f, "pw" to 0.07777777f, "volume" to 0.775f),
+    private fun cipher24() = Patch("Cipher", "Trail Up",
+        mapOf("bands" to 0.7777778f, "q" to 0.5f, "release" to 0.7686218f, "smear" to 0.9f, "volume" to 0.495f, "mac1_d1" to 0.1724138f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.625f, "mac1_a2" to 0.434000015f, "mac2_d1" to 0.206896558f, "mac2_a1" to 0.55f, "mac3_d1" to 0.9310345f, "mac3_a1" to 0.675f, "mac4_d1" to 0.9655172f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5862069f, "mac5_d2" to 0.6551724f, "mac5_d3" to 0.862068951f, "mac5_a1" to 0.75f, "mac5_a2" to 0.65f, "mac5_a3" to 0.53f, "mac6_d1" to 0.103448279f, "mac6_a1" to 0.675f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.473f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6145f),
+        mapOf("macro1" to "Longer", "macro2" to "Smear", "macro3" to "Swell", "macro4" to "Tail", "macro5" to "Thicker", "macro6" to "Sharper", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "hold")
+
+    private fun cipher25() = Patch("Cipher", "Trail Down",
+        mapOf("bands" to 0.7777778f, "release" to 0.7686218f, "smear" to 0.099999994f, "volume" to 0.35f, "mac1_d1" to 0.1724138f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.625f, "mac1_a2" to 0.483f, "mac2_d1" to 0.206896558f, "mac2_a1" to 0.45f, "mac3_d1" to 0.9310345f, "mac3_a1" to 0.675f, "mac4_d1" to 0.9655172f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5862069f, "mac5_d2" to 0.6551724f, "mac5_d3" to 0.862068951f, "mac5_a1" to 0.75f, "mac5_a2" to 0.65f, "mac5_a3" to 0.5145f, "mac6_d1" to 0.103448279f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.675f, "mac6_a2" to 0.517f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.581f),
+        mapOf("macro1" to "Longer", "macro2" to "Smear", "macro3" to "Swell", "macro4" to "Tail", "macro5" to "Thicker", "macro6" to "Sharper", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "hold")
+
+    private fun cipher26() = Patch("Cipher", "Pulse",
+        mapOf("bands" to 0.5555556f, "wave a" to 0.25f, "wave b" to 0.25f, "mix" to 0f, "pw" to 0.07777777f, "volume" to 0.775f, "mac1_d1" to 0.551724136f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.7f, "mac1_a2" to 0.6125f, "mac2_d1" to 0.5862069f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6551724f, "mac3_a1" to 0.75f, "mac4_d1" to 0.6896552f, "mac4_a1" to 0.7f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.85f, "mac6_d1" to 0.1724138f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.65f, "mac6_a2" to 0.328f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.47f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.4135f),
+        mapOf("macro1" to "Blend", "macro2" to "Detune", "macro3" to "Sub", "macro4" to "Noise", "macro5" to "Drive", "macro6" to "Smoother", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "carrier")
 
-    private fun cipher19() = Patch("Cipher", "Sub Heavy",
-        mapOf("bands" to 0.5555556f, "low" to 0.206648976f, "release" to 0.5f, "mix" to 0.3f, "sub" to 0.8f, "volume" to 0.29f),
+    private fun cipher27() = Patch("Cipher", "Thick Stack",
+        mapOf("bands" to 0.6666667f, "release" to 0.5f, "wave a" to 0.5f, "mix" to 0.5f, "sub" to 0.45f, "volume" to 0.595f, "mac1_d1" to 0.551724136f, "mac1_a1" to 0.7f, "mac2_d1" to 0.5862069f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6551724f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.75f, "mac3_a2" to 0.406000018f, "mac4_d1" to 0.6896552f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.7f, "mac4_a2" to 0.56f, "mac5_d1" to 0.7241379f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.85f, "mac5_a2" to 0.436f, "mac6_d1" to 0.1724138f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.65f, "mac6_a2" to 0.4105f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.586f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.474f),
+        mapOf("macro1" to "Blend", "macro2" to "Detune", "macro3" to "Sub", "macro4" to "Noise", "macro5" to "Drive", "macro6" to "Smoother", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "carrier")
 
-    private fun cipher20() = Patch("Cipher", "Breath",
-        mapOf("bands" to 0.7777778f, "release" to 0.5304302f, "sibilance" to 0.7f, "wave a" to 0.75f, "wave b" to 0.75f, "mix" to 0.7f, "noise" to 0.8f, "unvoiced" to 0.5f, "volume" to 1f),
+    private fun cipher28() = Patch("Cipher", "Sub Heavy",
+        mapOf("bands" to 0.5555556f, "low" to 0.206648976f, "release" to 0.5f, "mix" to 0.3f, "sub" to 0.8f, "volume" to 0.29f, "mac1_d1" to 0.551724136f, "mac1_a1" to 0.7f, "mac2_d1" to 0.5862069f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6551724f, "mac3_a1" to 0.75f, "mac4_d1" to 0.6896552f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5175f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.85f, "mac6_d1" to 0.1724138f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.65f, "mac6_a2" to 0.453f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5275f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6545f),
+        mapOf("macro1" to "Blend", "macro2" to "Detune", "macro3" to "Sub", "macro4" to "Noise", "macro5" to "Drive", "macro6" to "Smoother", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "carrier")
 
-    private fun cipher21() = Patch("Cipher", "Ring",
-        mapOf("bands" to 0.5555556f, "release" to 0.4404695f, "wave a" to 1f, "wave b" to 1f, "mix" to 0.5f, "detune" to 0.5f, "volume" to 0.735f),
+    private fun cipher29() = Patch("Cipher", "Breath",
+        mapOf("bands" to 0.7777778f, "release" to 0.5304302f, "sibilance" to 0.7f, "wave a" to 0.75f, "wave b" to 0.75f, "mix" to 0.7f, "noise" to 0.8f, "unvoiced" to 0.5f, "volume" to 1f, "mac1_d1" to 0.551724136f, "mac1_a1" to 0.3f, "mac2_d1" to 0.5862069f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6551724f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.75f, "mac3_a2" to 0.3795f, "mac4_d1" to 0.6896552f, "mac4_a1" to 0.7f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.85f, "mac6_d1" to 0.1724138f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.65f, "mac6_a2" to 0.342f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.3775f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Blend", "macro2" to "Detune", "macro3" to "Sub", "macro4" to "Noise", "macro5" to "Drive", "macro6" to "Smoother", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "carrier")
 
-    private fun cipher22() = Patch("Cipher", "Talkbox",
-        mapOf("bands" to 0.444444448f, "q" to 0.85f, "attack" to 0.231378213f, "release" to 0.3843109f, "sibilance" to 0.55f, "track" to 1f, "trackglide" to 0.4820468f),
+    private fun cipher30() = Patch("Cipher", "Murmur",
+        mapOf("bands" to 0.444444448f, "q" to 0.3f, "attack" to 0.231378213f, "sibilance" to 0.6f, "wave a" to 0.75f, "wave b" to 0.75f, "sub" to 0f, "noise" to 0.5f, "volume" to 0.795f, "mac1_d1" to 0.551724136f, "mac1_a1" to 0.7f, "mac2_d1" to 0.5862069f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6551724f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.75f, "mac3_a2" to 0.274f, "mac4_d1" to 0.6896552f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4445f, "mac5_d1" to 0.7241379f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.85f, "mac5_a2" to 0.4525f, "mac6_d1" to 0.1724138f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.65f, "mac6_a2" to 0.3905f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5535f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Blend", "macro2" to "Detune", "macro3" to "Sub", "macro4" to "Noise", "macro5" to "Drive", "macro6" to "Smoother", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "carrier")
+
+    private fun cipher31() = Patch("Cipher", "Ring",
+        mapOf("bands" to 0.5555556f, "release" to 0.4404695f, "wave a" to 1f, "wave b" to 1f, "mix" to 0.5f, "detune" to 0.5f, "volume" to 0.735f, "mac1_d1" to 0.551724136f, "mac1_a1" to 0.7f, "mac2_d1" to 0.5862069f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6551724f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.75f, "mac3_a2" to 0.339f, "mac4_d1" to 0.6896552f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5595f, "mac5_d1" to 0.7241379f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.85f, "mac5_a2" to 0.405f, "mac6_d1" to 0.1724138f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.65f, "mac6_a2" to 0.37f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5595f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Blend", "macro2" to "Detune", "macro3" to "Sub", "macro4" to "Noise", "macro5" to "Drive", "macro6" to "Smoother", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "carrier")
+
+    private fun cipher32() = Patch("Cipher", "Steel Throat",
+        mapOf("bands" to 0.5555556f, "wave a" to 1f, "wave b" to 0.25f, "mix" to 0.4f, "pw" to 0.222222239f, "cardrive" to 0.7f, "volume" to 0.525f, "mac1_d1" to 0.551724136f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.7f, "mac1_a2" to 0.456f, "mac2_d1" to 0.5862069f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6551724f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.75f, "mac3_a2" to 0.469f, "mac4_d1" to 0.6896552f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.7f, "mac4_a2" to 0.5605f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.85f, "mac6_d1" to 0.1724138f, "mac6_d2" to 0.862068951f, "mac6_a1" to 0.65f, "mac6_a2" to 0.419f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Blend", "macro2" to "Detune", "macro3" to "Sub", "macro4" to "Noise", "macro5" to "Drive", "macro6" to "Smoother", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "carrier")
+
+    private fun cipher33() = Patch("Cipher", "Talkbox",
+        mapOf("bands" to 0.444444448f, "q" to 0.85f, "attack" to 0.231378213f, "release" to 0.3843109f, "sibilance" to 0.55f, "track" to 1f, "trackglide" to 0.4820468f, "mac1_d1" to 0.4827586f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2413793f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.675f, "mac2_a2" to 0.5195f, "mac3_d1" to 0.206896558f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.8f, "mac3_a2" to 0.5195f, "mac4_d1" to 0.275862068f, "mac4_a1" to 0.6f, "mac5_d1" to 0.1724138f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.65f, "mac5_a2" to 0.445f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.429f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5635f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.459f),
+        mapOf("macro1" to "Feedback", "macro2" to "Gate", "macro3" to "Smear", "macro4" to "Higher", "macro5" to "Smoother", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "extreme")
 
-    private fun cipher23() = Patch("Cipher", "Tracked",
-        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "track" to 1f, "trackglide" to 0.6588259f, "trackamt" to 0.8f, "mix" to 0.45f, "volume" to 0.545f),
+    private fun cipher34() = Patch("Cipher", "Tracked",
+        mapOf("bands" to 0.6666667f, "release" to 0.462756425f, "track" to 1f, "trackglide" to 0.6588259f, "trackamt" to 0.8f, "mix" to 0.45f, "volume" to 0.545f, "mac1_d1" to 0.4827586f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2413793f, "mac2_a1" to 0.675f, "mac3_d1" to 0.206896558f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.8f, "mac3_a2" to 0.544f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4705f, "mac5_d1" to 0.1724138f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4225f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.379f, "mac7_d1" to 0.06896552f, "mac7_a1" to 0.325f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.439f),
+        mapOf("macro1" to "Feedback", "macro2" to "Gate", "macro3" to "Smear", "macro4" to "Higher", "macro5" to "Smoother", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "extreme")
 
-    private fun cipher24() = Patch("Cipher", "Runaway",
-        mapOf("bands" to 0.5555556f, "q" to 0.6f, "release" to 0.6529327f, "feedback" to 0.3368421f, "fbtone" to 0.6f, "volume" to 0.485f),
+    private fun cipher35() = Patch("Cipher", "Runaway",
+        mapOf("bands" to 0.5555556f, "q" to 0.6f, "release" to 0.6529327f, "feedback" to 0.3368421f, "fbtone" to 0.6f, "volume" to 0.485f, "mac1_d1" to 0.4827586f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2413793f, "mac2_a1" to 0.675f, "mac3_d1" to 0.206896558f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.8f, "mac3_a2" to 0.5425f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.414f, "mac5_d1" to 0.1724138f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.65f, "mac5_a2" to 0.4215f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.394f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.414f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5265f),
+        mapOf("macro1" to "Feedback", "macro2" to "Gate", "macro3" to "Smear", "macro4" to "Higher", "macro5" to "Smoother", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "extreme")
 
-    private fun cipher25() = Patch("Cipher", "Swapped",
-        mapOf("bands" to 0.5555556f, "role" to 1f, "attack" to 0.299052f, "release" to 0.3843109f, "mix" to 0.5f, "volume" to 0.605f),
+    private fun cipher36() = Patch("Cipher", "Howl",
+        mapOf("bands" to 0.6666667f, "q" to 0.65f, "release" to 0.7313782f, "feedback" to 0.631579f, "fbtone" to 0.8f, "volume" to 0.1225f, "mac1_d1" to 0.4827586f, "mac1_d2" to 0.862068951f, "mac1_a1" to 0.575f, "mac1_a2" to 0.4905f, "mac2_d1" to 0.2413793f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.675f, "mac2_a2" to 0.4945f, "mac3_d1" to 0.206896558f, "mac3_a1" to 0.8f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.5945f, "mac5_d1" to 0.1724138f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.65f, "mac5_a2" to 0.5115f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.5115f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.7155f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.7185f),
+        mapOf("macro1" to "Feedback", "macro2" to "Gate", "macro3" to "Smear", "macro4" to "Higher", "macro5" to "Smoother", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "extreme")
 
-    private fun cipher26() = Patch("Cipher", "Gated",
-        mapOf("bands" to 0.6666667f, "attack" to 0.115689106f, "release" to 0.299052f, "gate" to 0.45f, "sibilance" to 0.6f, "volume" to 0.665f),
+    private fun cipher37() = Patch("Cipher", "Swapped",
+        mapOf("bands" to 0.5555556f, "role" to 1f, "attack" to 0.299052f, "release" to 0.3843109f, "mix" to 0.5f, "volume" to 0.605f, "mac1_d1" to 0.4827586f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2413793f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.6225f, "mac2_a2" to 0.6975f, "mac3_d1" to 0.206896558f, "mac3_a1" to 0.8f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4405f, "mac5_d1" to 0.1724138f, "mac5_a1" to 0.65f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.3405f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.458f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.615f),
+        mapOf("macro1" to "Feedback", "macro2" to "Gate", "macro3" to "Smear", "macro4" to "Higher", "macro5" to "Smoother", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
         family = "extreme")
 
-    private val cipher: List<Patch> by lazy { listOf(cipher0(), cipher1(), cipher2(), cipher3(), cipher4(), cipher5(), cipher6(), cipher7(), cipher8(), cipher9(), cipher10(), cipher11(), cipher12(), cipher13(), cipher14(), cipher15(), cipher16(), cipher17(), cipher18(), cipher19(), cipher20(), cipher21(), cipher22(), cipher23(), cipher24(), cipher25(), cipher26()) }
+    private fun cipher38() = Patch("Cipher", "Gated",
+        mapOf("bands" to 0.6666667f, "attack" to 0.115689106f, "release" to 0.299052f, "gate" to 0.45f, "sibilance" to 0.6f, "volume" to 0.665f, "mac1_d1" to 0.4827586f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2413793f, "mac2_d2" to 0.862068951f, "mac2_a1" to 0.6f, "mac2_a2" to 0.596f, "mac3_d1" to 0.206896558f, "mac3_a1" to 0.8f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.438f, "mac5_d1" to 0.1724138f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.65f, "mac5_a2" to 0.3795f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.392499983f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.3775f, "mac7_a2" to 0.5645f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.6265f),
+        mapOf("macro1" to "Feedback", "macro2" to "Gate", "macro3" to "Smear", "macro4" to "Higher", "macro5" to "Smoother", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "extreme")
+
+    private fun cipher39() = Patch("Cipher", "Wobble Mouth",
+        mapOf("bands" to 0.6666667f, "volume" to 0.42f, "lfo1sync" to 0.8f, "m1_src" to 0.6666667f, "m1_dst" to 0.0625f, "m1_amt" to 0.75f, "mac1_d1" to 0.4827586f, "mac1_a1" to 0.65f, "mac2_d1" to 0.2413793f, "mac2_a1" to 0.675f, "mac3_d1" to 0.206896558f, "mac3_d2" to 0.862068951f, "mac3_a1" to 0.8f, "mac3_a2" to 0.523f, "mac4_d1" to 0.275862068f, "mac4_d2" to 0.862068951f, "mac4_a1" to 0.6f, "mac4_a2" to 0.4645f, "mac5_d1" to 0.1724138f, "mac5_d2" to 0.862068951f, "mac5_a1" to 0.65f, "mac5_a2" to 0.445500016f, "mac6_d1" to 0.827586234f, "mac6_d2" to 0.7241379f, "mac6_d3" to 0.862068951f, "mac6_a1" to 0.8f, "mac6_a2" to 0.75f, "mac6_a3" to 0.421f, "mac7_d1" to 0.06896552f, "mac7_d2" to 0.862068951f, "mac7_a1" to 0.325f, "mac7_a2" to 0.5285f, "mac8_d1" to 1f, "mac8_d2" to 0.862068951f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5395f),
+        mapOf("macro1" to "Feedback", "macro2" to "Gate", "macro3" to "Smear", "macro4" to "Higher", "macro5" to "Smoother", "macro6" to "Grit", "macro7" to "Darker", "macro8" to "Octave Down"),
+        family = "extreme")
+
+    private val cipher: List<Patch> by lazy { listOf(cipher0(), cipher1(), cipher2(), cipher3(), cipher4(), cipher5(), cipher6(), cipher7(), cipher8(), cipher9(), cipher10(), cipher11(), cipher12(), cipher13(), cipher14(), cipher15(), cipher16(), cipher17(), cipher18(), cipher19(), cipher20(), cipher21(), cipher22(), cipher23(), cipher24(), cipher25(), cipher26(), cipher27(), cipher28(), cipher29(), cipher30(), cipher31(), cipher32(), cipher33(), cipher34(), cipher35(), cipher36(), cipher37(), cipher38(), cipher39()) }
 
     private fun filament0() = Patch("Filament", "Init", emptyMap(),
         family = "plucked")

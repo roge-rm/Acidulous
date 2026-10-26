@@ -585,7 +585,44 @@ inline std::unique_ptr<audio::Utterance> voiceUtterance() {
  * loudest 0.3% of the result reaches. For checking that a patch still sings
  * on a take like that, not for levels.
  */
+inline std::vector<float> dirtyVoiceMono();
 inline std::unique_ptr<audio::Utterance> dirtyVoiceUtterance() {
+    return utteranceOf(dirtyVoiceMono(), "dirty voice");
+}
+
+/**
+ * The dirty voice as Cipher's input: dirtyVoiceMono with plosive pops on
+ * top, the thump of breath on a phone's microphone. Eight 25 ms bursts of a
+ * falling 90..40 Hz sweep at ten times the voice's rms, spread over the
+ * voice. For checking that a patch still speaks on input like that, not for
+ * levels.
+ */
+inline std::vector<float> dirtyVoiceInput() {
+    std::vector<float> out = dirtyVoiceMono();
+    double sum = 0.0;
+    for (float v : out) sum += static_cast<double>(v) * v;
+    const auto rms = static_cast<float>(std::sqrt(sum / static_cast<double>(std::max<size_t>(1, out.size()))));
+    const auto room = static_cast<size_t>(kMatSr * 0.4f);
+    const auto len = static_cast<size_t>(kMatSr * 0.025f);
+    if (out.size() < room + 2 * len) return out;
+    Rng rng(0x50Bu);
+    for (int k = 0; k < 8; ++k) {
+        const float r = rng.next() * 0.5f + 0.5f;
+        const size_t at = room + static_cast<size_t>((static_cast<float>(k) + r) / 8.0f *
+                                                     static_cast<float>(out.size() - room - len - 1));
+        float phase = 0.0f;
+        for (size_t i = 0; i < len && at + i < out.size(); ++i) {
+            const float t = static_cast<float>(i) / static_cast<float>(len);
+            phase += (90.0f - 50.0f * t) / kMatSr;
+            const float env = std::min(1.0f, t * 20.0f) * (1.0f - t) * (1.0f - t);
+            out[at + i] += 10.0f * rms * env * std::sin(2.0f * static_cast<float>(M_PI) * phase);
+        }
+    }
+    return out;
+}
+
+/** dirtyVoiceUtterance's samples, before Molt's analysis. */
+inline std::vector<float> dirtyVoiceMono() {
     std::string ignored;
     std::vector<float> clean = fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
     if (clean.empty()) clean = speechPhrase();
@@ -618,7 +655,7 @@ inline std::unique_ptr<audio::Utterance> dirtyVoiceUtterance() {
     std::nth_element(mags.begin(), mags.begin() + static_cast<std::ptrdiff_t>(at), mags.end());
     const float clip = std::max(mags[at], 1e-3f);
     for (float &v : out) v = std::clamp(v, -clip, clip);
-    return utteranceOf(std::move(out), "dirty voice");
+    return out;
 }
 
 /** Analyses [mono] as a Molt take and sets its level. */
