@@ -419,9 +419,13 @@ inline std::unique_ptr<audio::Take> swingLoop() {
         const size_t at = lead + static_cast<size_t>(kMatSr * beat * swung / 4.0f);
         const float gl = std::cos((h.pan + 1.0f) * 0.25f * static_cast<float>(M_PI)) * 1.4142f * h.gain;
         const float gr = std::sin((h.pan + 1.0f) * 0.25f * static_cast<float>(M_PI)) * 1.4142f * h.gain;
+        // Each hit eased in over half a millisecond and out over two, as a
+        // recording's would be: some of the pieces start or stop on a step,
+        // and a step in the loop would read as one in what Dice makes of it.
         for (size_t i = 0; i < d.size() && at + i < frames; ++i) {
-            take->left[at + i] += d[i] * gl;
-            take->right[at + i] += d[i] * gr;
+            const float edge = std::min({1.0f, static_cast<float>(i) / 24.0f, static_cast<float>(d.size() - i) / 96.0f});
+            take->left[at + i] += d[i] * gl * edge;
+            take->right[at + i] += d[i] * gr * edge;
         }
     }
     float peak = 1e-9f;

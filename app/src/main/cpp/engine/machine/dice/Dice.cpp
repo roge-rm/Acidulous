@@ -152,9 +152,9 @@ void Dice::updateMacros() {
 
 void Dice::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
+    filterL.setSampleRate(sampleRate);
+    filterR.setSampleRate(sampleRate);
     for (auto &v : voices) {
-        v.filter.setSampleRate(sampleRate);
-        v.filterR.setSampleRate(sampleRate);
         v.stretch.prepare();
         for (auto &h : v.held) h.assign(static_cast<size_t>(kHeld), 0.0f);
     }
@@ -166,13 +166,15 @@ void Dice::reset() {
     // prepare().
     for (auto &v : voices) {
         v.used = false;
+        v.leaving = false;
         v.age = 0;
+        v.started = 0;
         v.env = 1.0f;
         v.heldHave = 0;
         v.heldPos = 0.0;
-        v.filter.reset();
-        v.filterR.reset();
     }
+    filterL.reset();
+    filterR.reset();
     rng = kRngSeed;
     triggers = 0;
     updateMacros();
@@ -278,13 +280,34 @@ bool Dice::pullStretch(Voice &v, const float *left, const float *right) const {
     return made > 0;
 }
 
+/**
+ * A voice for a new slice. Once all but the spare voices are busy, the oldest
+ * note fades out over the fade-out time to make way, so a free voice is there
+ * for the next one. Only when every voice is busy (many triggers inside one
+ * fade) is one cut: the one nearest its end.
+ */
 Dice::Voice *Dice::allocate() {
-    for (auto &v : voices) if (!v.used) return &v;
-    // Always steal a voice, and steal the oldest one. It's nearest its end,
-    // so it's the least missed and the quietest place to cut.
-    Voice *oldest = &voices[0];
-    for (auto &v : voices) if (v.age > oldest->age) oldest = &v;
-    return oldest;
+    Voice *freeOne = nullptr;
+    int busy = 0;
+    Voice *oldest = nullptr;
+    for (auto &v : voices) {
+        if (!v.used) {
+            if (freeOne == nullptr) freeOne = &v;
+            continue;
+        }
+        if (v.leaving) continue;
+        ++busy;
+        if (oldest == nullptr || v.started < oldest->started) oldest = &v;
+    }
+    if (busy >= kVoices - kSpare && oldest != nullptr) {
+        oldest->leaving = true;
+        oldest->repeats = 0;
+        oldest->left = std::min(oldest->left, kFadeOut);
+    }
+    if (freeOne != nullptr) return freeOne;
+    Voice *nearest = &voices[0];
+    for (auto &v : voices) if (v.left < nearest->left) nearest = &v;
+    return nearest;
 }
 
 /**
@@ -341,6 +364,9 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
 
     Voice *v = allocate();
     v->used = true;
+    v->leaving = false;
+    v->age = 0;
+    v->started = triggers;
     v->note = note;
     v->slice = slice;
     v->start = bounds[slice];
@@ -384,8 +410,6 @@ void Dice::noteOn(uint8_t note, uint8_t velocity) {
     const float decay = sliceParam(slice, Decay) * std::max(0.02f, goalOf(Gate));
     v->envCoeff = decay >= kDecayOff ? 0.0f
                                      : 1.0f - std::exp(-kLn1000 / (decay * sampleRate));
-    v->filter.reset();
-    v->filterR.reset();
 }
 
 void Dice::noteOff(uint8_t) {} // a slice plays its full length
@@ -413,8 +437,6 @@ bool Dice::render(float *L, float *R, int32_t frames) {
 
     for (auto &v : voices) {
         if (!v.used) continue;
-        v.filter.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
-        v.filterR.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
         for (int32_t i = 0; i < frames; ++i) {
             if (!v.used) break;
             float sl, sr;
@@ -453,8 +475,8 @@ bool Dice::render(float *L, float *R, int32_t frames) {
             const float e = v.env * rampIn * rampOut;
             ++v.age;
             v.env -= v.env * v.envCoeff;
-            L[i] += v.filter.process(sl * e) * v.gainL;
-            R[i] += v.filterR.process(sr * e) * v.gainR;
+            L[i] += sl * e * v.gainL;
+            R[i] += sr * e * v.gainR;
             if (v.follows) v.heldPos += v.pitch;
             else v.pos += v.inc;
             if (--v.left <= 0) {
@@ -477,8 +499,10 @@ bool Dice::render(float *L, float *R, int32_t frames) {
         }
     }
 
+    filterL.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
+    filterR.set(cutoff, reso, ftype, dsp::MultiFilter::Clean, 0.0f);
     for (int32_t i = 0; i < frames; ++i) {
-        float l = L[i] * volume * kHouse, r = R[i] * volume * kHouse;
+        float l = filterL.process(L[i]) * volume * kHouse, r = filterR.process(R[i]) * volume * kHouse;
         if (drive > 0.0001f) {
             // Normalised on the nominal level so the drive knob changes the
             // character and not the level.

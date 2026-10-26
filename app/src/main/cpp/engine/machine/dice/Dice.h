@@ -20,9 +20,11 @@ namespace acidulous::machine {
 class Dice final : public Machine {
   public:
     static constexpr int kSlices = 16;
-    // One per pad, so every slice of a 16-slice loop can sound at once
-    // without stealing, which would cut audio mid-slice.
-    static constexpr int kVoices = 16;
+    // One per pad, so every slice of a 16-slice loop can sound at once, and
+    // four more so a voice that has to make way can fade out while the new
+    // slice starts in a free one.
+    static constexpr int kVoices = 20;
+    static constexpr int kSpare = 4;
     static constexpr uint8_t kBaseNote = 36;
 
     enum SliceP : int32_t { Level = 0, Pan, Pitch, Decay, Direction, SliceParamCount };
@@ -106,6 +108,10 @@ class Dice final : public Machine {
         // in. On an onset cut a slice ends on the next transient, so both
         // ends need a short fade or they click.
         int32_t age = 0;
+        // Which trigger started this voice, so stealing takes the oldest note.
+        int64_t started = 0;
+        // Fading out to make way for a newer slice.
+        bool leaving = false;
         uint8_t note = 0;
         // Following the song: the slice comes out of `stretch` at
         // [stretchRate] into `held`, which is read at [pitch]. So the stretch
@@ -116,8 +122,6 @@ class Dice final : public Machine {
         std::vector<float> held[2];
         int32_t heldHave = 0;
         double heldPos = 0.0;
-        // One filter per channel, so both sides get filtered.
-        dsp::MultiFilter filter, filterR;
     };
 
     float sliceParam(int32_t slice, int32_t which) const {
@@ -146,6 +150,10 @@ class Dice final : public Machine {
     int32_t slices = 0;
     int32_t builtMode = -1, builtCount = -1, builtFrames = -1;
     Voice voices[kVoices];
+    // One filter per side on the sum of the voices. The filter is linear, so
+    // this is the same as one per voice, except that a voice's filter tail
+    // goes on ringing after the voice ends instead of being cut off.
+    dsp::MultiFilter filterL, filterR;
     static constexpr uint32_t kRngSeed = 0x5bd1e995u;
     uint32_t rng = kRngSeed;
     int64_t triggers = 0;
