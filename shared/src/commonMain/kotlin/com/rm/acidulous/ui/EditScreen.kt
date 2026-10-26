@@ -795,16 +795,20 @@ fun EditScreen(
             scalePitchClasses = Scales.activeFor(song, track),
             noteSpelling = Scales.spellingFor(song, track),
             scaleView = scaleView,
+            clipKey = trackIndex to sceneId,
             firstTick = firstTick,
             visibleTicks = visibleTicks,
             onCycleScaleView = {
-                // Dim and fit need a scale, so without one this opens the scale
-                // dialog.
-                if (Scales.activeFor(song, track) == null) scaleDialog = true
-                else scaleView = when (scaleView) {
+                // Dim and fit need a scale, so without one this goes between all
+                // notes and used notes, and opens the scale dialog after used.
+                if (Scales.activeFor(song, track) == null) {
+                    if (scaleView == ScaleView.Used) { scaleView = ScaleView.Dim; scaleDialog = true }
+                    else scaleView = ScaleView.Used
+                } else scaleView = when (scaleView) {
                     ScaleView.Chromatic -> ScaleView.Dim
                     ScaleView.Dim -> ScaleView.Fold
-                    ScaleView.Fold -> ScaleView.Chromatic
+                    ScaleView.Fold -> ScaleView.Used
+                    ScaleView.Used -> ScaleView.Chromatic
                 }
             },
             onTapEmpty = { tick, pitch ->

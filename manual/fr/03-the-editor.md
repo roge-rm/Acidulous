@@ -14,7 +14,9 @@ verticale et le temps à l’horizontale.
 - Glissez à **deux doigts** pour défiler et pincez pour zoomer. Un doigt
   dessine toujours.
 - Le coin **gam** change l’affichage de la gamme du morceau : toutes les notes,
-  notes de la gamme en surbrillance ou seulement les notes de la gamme.
+  notes de la gamme en surbrillance, seulement les notes de la gamme ou **util**,
+  seulement les hauteurs que le clip utilise (une hauteur reste jusqu’à ce que
+  vous quittiez cette vue).
 
 Pour une boîte à rythmes, c’est une grille de pas avec une rangée par son.
 Touchez pour ajouter un coup.

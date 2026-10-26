@@ -60,6 +60,7 @@
     <string name="roll_scale_chromatic">chr</string>
     <string name="roll_scale_dim">dim</string>
     <string name="roll_scale_fit">fit</string>
+    <string name="roll_scale_used">used</string>
 
     <!-- ui/AutomationStrip.kt -->
     <!-- The lane strip with no lane chosen. -->

@@ -12,7 +12,8 @@ across.
 - Drag with **two fingers** to scroll and pinch to zoom. One finger always
   draws.
 - The **scl** corner changes how the song's scale is shown: all notes, scale
-  notes highlighted or only the scale notes.
+  notes highlighted, only the scale notes or **used**, only the pitches the clip
+  has notes on (a pitch stays until you leave that view).
 
 For a drum machine it's a step grid with one row per sound. Tap to add a hit.
 
