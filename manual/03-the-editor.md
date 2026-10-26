@@ -31,11 +31,14 @@ while you drag.
   they carry. The copies stay when you open another clip.
 - **Duplicate** puts a copy just after the selection, one grid step past its
   end.
-- **Paste** shows whenever something is copied. With nothing selected, tap
-  empty space in select mode and the bar shows paste alone: the copied notes go
-  at the step you tapped, at the pitch they were copied from. With notes
-  selected it puts them where they were, or at the keyboard cursor if you are
-  editing by keys. Notes past the end of the clip are left out or shortened.
+- **Paste** shows whenever something is copied. Tap empty space, or a note, in
+  select mode and the bar offers paste: the first copied note goes on the step
+  and row you tapped, and the others keep their spacing in time and pitch from
+  it. Notes that would fall off the pitch range are left out, and so are ones
+  past the end of the clip (or they are shortened). A pasted note replaces any
+  note of the same pitch it overlaps. Without a tap it puts them where they
+  were, or at the keyboard cursor's step and pitch if you are editing by keys.
+  On a drum grid the rows are the sounds.
 
 Duplicate and paste leave the new notes selected, so you can drag them
 straight away. Each one is a single undo step. On a keyboard, **Ctrl+C**,

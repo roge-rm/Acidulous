@@ -36,11 +36,15 @@ ou zoomez, et se cache pendant que vous glissez.
   clip.
 - **Dupliquer** place une copie juste après la sélection, au pas de grille qui
   suit sa fin.
-- **Coller** s’affiche dès que quelque chose est copié. Sans sélection, touchez
-  le vide en mode sélection et la barre n’affiche que coller : les notes
-  copiées vont au pas touché, à la hauteur d’origine. Avec des notes choisies,
-  elles vont là où elles étaient, ou au curseur du clavier si vous éditez aux
-  touches. Les notes au-delà de la fin du clip sont omises ou raccourcies.
+- **Coller** s’affiche dès que quelque chose est copié. Touchez le vide, ou
+  une note, en mode sélection et la barre propose coller : la première note
+  copiée va sur le pas et la rangée touchés, et les autres gardent leur écart
+  de temps et de hauteur avec elle. Les notes qui sortiraient de la plage de
+  hauteurs sont omises, de même que celles au-delà de la fin du clip (ou elles
+  sont raccourcies). Une note collée remplace toute note de même hauteur
+  qu’elle chevauche. Sans toucher, elles vont là où elles étaient, ou au pas et
+  à la hauteur du curseur du clavier si vous éditez aux touches. Sur une grille
+  de pas, les rangées sont les sons.
 
 Dupliquer et coller laissent les nouvelles notes sélectionnées, pour les
 glisser tout de suite. Chacun est une seule étape d’annulation. Au clavier,

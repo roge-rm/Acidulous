@@ -54,6 +54,9 @@ import com.rm.acidulous.res.*
 
 enum class EditMode { Draw, Select }
 
+/** Where a tap chose to paste: the step and pitch, and the spot on screen. */
+class PasteSpot(val tick: Int, val pitch: Int, val at: Offset)
+
 /**
  * How the roll treats a scale. Chromatic ignores it, Dim greys the rows a
  * Scale modifier would move, and Fold drops those rows entirely so only
@@ -121,7 +124,7 @@ fun PianoRoll(
     /** Delete or Backspace with notes selected removes them all. */
     onDeleteSelection: () -> Unit = {},
     /** The keyboard cursor's tick while editing by keys, else null; paste goes there. */
-    onCursor: (Int?) -> Unit = {},
+    onCursor: (tick: Int?, pitch: Int?) -> Unit = { _, _ -> },
     /** The bar next to the selection, in select mode. Null has none. */
     actions: SelectionActions? = null,
     modifier: Modifier = Modifier,
@@ -171,7 +174,7 @@ fun PianoRoll(
     // True while a finger moves or boxes notes, so the bar stays out of the way.
     var busy by remember { mutableStateOf(false) }
     // Where an empty tap in select mode chose to paste: the tick and the spot.
-    var pasteSpot by remember { mutableStateOf<Pair<Int, Offset>?>(null) }
+    var pasteSpot by remember { mutableStateOf<PasteSpot?>(null) }
     val actionsState by rememberUpdatedState(actions)
 
     // TalkBack gets a summary, since one picture can't be walked note by
@@ -195,8 +198,8 @@ fun PianoRoll(
     var keyEditing by remember { mutableStateOf(false) }
     var curTick by remember { mutableIntStateOf(firstTick) }
     var curPitch by remember { mutableIntStateOf(lowestPitch + rows / 2) }
-    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { onCursor(null) } }
-    androidx.compose.runtime.LaunchedEffect(keyEditing, curTick) { onCursor(if (keyEditing) curTick else null) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { onCursor(null, null) } }
+    androidx.compose.runtime.LaunchedEffect(keyEditing, curTick, curPitch) { if (keyEditing) onCursor(curTick, curPitch) else onCursor(null, null) }
     val firstState by rememberUpdatedState(firstTick)
     val visibleState by rememberUpdatedState(visibleTicks)
     val keyMod = Modifier
@@ -372,13 +375,16 @@ fun PianoRoll(
                             cb.onTapEmpty(geo.tickAt(press.x, snap = true), geo.pitchAt(press.y))
                         } else {
                             cb.onSelectionChange(emptySet())
-                            if (actionsState?.canPaste == true) pasteSpot = geo.tickAt(press.x, snap = true) to press
+                            if (actionsState?.canPaste == true) pasteSpot = PasteSpot(geo.tickAt(press.x, snap = true), geo.pitchAt(press.y), press)
                         }
                         else -> if (modeState == EditMode.Draw) {
                             cb.onTapNote(hit.index)
                         } else {
                             val sel = selectionState
                             cb.onSelectionChange(if (hit.index in sel) sel - hit.index else sel + hit.index)
+                            // Paste lands on this note.
+                            val n = clipState.notes[hit.index]
+                            if (actionsState?.canPaste == true) pasteSpot = PasteSpot(n.tick, n.pitch, press)
                         }
                     }
                     return@awaitEachGesture
@@ -575,7 +581,7 @@ fun PianoRoll(
         val spot = pasteSpot
         if (chosen.isNotEmpty()) {
             SelectionBar(
-                act, hasNotes = true,
+                act, hasNotes = true, pasteTick = spot?.tick, pastePitch = spot?.pitch,
                 modifier = Modifier.anchoredTo { size ->
                     val geo = Geometry(size, clip, ticksPerBar, rows, gutterPx, rulerPx, rowPitches, firstTick, visibleTicks)
                     chosen.map { geo.noteRect(clip.notes[it]) }
@@ -585,8 +591,8 @@ fun PianoRoll(
             )
         } else if (spot != null && act.canPaste) {
             SelectionBar(
-                act, hasNotes = false, pasteTick = spot.first,
-                modifier = Modifier.anchoredTo { Rect(spot.second.x, spot.second.y, spot.second.x, spot.second.y) },
+                act, hasNotes = false, pasteTick = spot.tick, pastePitch = spot.pitch,
+                modifier = Modifier.anchoredTo { Rect(spot.at.x, spot.at.y, spot.at.x, spot.at.y) },
             )
         }
     }
