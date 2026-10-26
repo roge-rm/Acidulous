@@ -23,7 +23,7 @@ class MacroNamesTest {
         val t = track("Cumulus", mapOf("macro3" to "Bloom"))
         assertEquals("Bloom", laneShortLabel(t, laneKey("machine", "mac3")))
         // Only Nexus's knobs are called macro1..macro8.
-        assertEquals(null, track("Mosaic", mapOf("macro1" to "x")).let { m ->
+        assertEquals(null, track("Bias", mapOf("macro1" to "x")).let { m ->
             laneShortLabel(m, laneKey("machine", "macro1")).takeIf { it == "x" }
         })
     }
@@ -182,5 +182,59 @@ class MacroNamesTest {
         val families = bank.map { it.family }.distinct()
         assertEquals(listOf("isles", "west", "east", "double", "gurdy", "drones", "odd"), families)
         assertEquals(listOf(15, 12, 12, 11, 12, 9, 9), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun pollenMacrosTakeThePatchNames() {
+        val t = track("Pollen", mapOf("macro1" to "Thicker"))
+        assertEquals("Thicker", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("density", laneShortLabel(t, laneKey("machine", "density")))
+    }
+
+    @Test
+    fun pollenBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Pollen")
+        assertEquals(54, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("cloud", "pitch", "stretch", "bloom", "rhythm", "texture", "live"), families)
+        assertEquals(listOf(8, 9, 6, 8, 8, 8, 7), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun mosaicMacrosTakeThePatchNames() {
+        val t = track("Mosaic", mapOf("macro1" to "Brighter"))
+        assertEquals("Brighter", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("freq", laneShortLabel(t, laneKey("machine", "f_freq")))
+    }
+
+    @Test
+    fun mosaicBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Mosaic")
+        assertEquals(56, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("keys", "pad", "lead", "bass", "grain", "motion", "texture"), families)
+        assertEquals(listOf(10, 9, 8, 6, 9, 8, 6), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun dictionMacrosTakeThePatchNames() {
+        val t = track("Diction", mapOf("macro1" to "Bigger"))
+        assertEquals("Bigger", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("formant", laneShortLabel(t, laneKey("machine", "formant")))
+    }
+
+    @Test
+    fun dictionBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Diction")
+        assertEquals(45, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("voices", "colour", "style", "choir", "harmony", "strange"), families)
+        assertEquals(listOf(8, 8, 9, 8, 5, 7), families.map { f -> bank.count { it.family == f } })
     }
 }

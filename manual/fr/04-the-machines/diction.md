@@ -121,6 +121,23 @@ reste de l’accord la chante aussi.
 Ensuite viennent **attaque**, **relâche** et **vélocité**, l’accord et le
 niveau.
 
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Plus grand,
+À pleine voix, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur fait 24 demi-tons à 1. La vélocité,
+le portamento, le scoop et la durée des consonnes sont lus au début d’une
+note, donc ils changent à la note suivante ; le reste bouge tout de suite. La
+voix, l’accent, les chanteurs, l’harmonie, l’accordage, le panoramique, les
+prises des consonnes et **parler** ne sont pas accessibles. Touchez le nom
+d’une macro pour la renommer.
+
 ## Astuces
 
 - Tenez une note pendant que vous jouez la suivante et il y glisse sans

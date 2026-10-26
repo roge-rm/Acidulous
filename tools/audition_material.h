@@ -417,7 +417,7 @@ inline std::unique_ptr<audio::Take> musicSeed() {
             for (int ch = 0; ch < 2; ++ch) {
                 std::vector<float> &out = ch == 0 ? take->left : take->right;
                 const float det = ch == 0 ? 1.0f : 1.0006f;  // a little width
-                float lp = 0.0f;
+                float lp = 0.0f, lp2 = 0.0f;
                 for (size_t i = 0; at + i < static_cast<size_t>(frames); ++i) {
                     const float t = static_cast<float>(i) / kMatSr;
                     // Notes aren't cut off. The exponential decay ends them,
@@ -430,10 +430,13 @@ inline std::unique_ptr<audio::Take> musicSeed() {
                         v += std::sin(2.0f * static_cast<float>(M_PI) * hz * det * static_cast<float>(h) * t) *
                              std::exp(-t / tau) / static_cast<float>(h);
                     }
-                    // The pluck: a short burst of filtered noise on the attack.
+                    // The pluck: a short burst of noise on the attack, through
+                    // two poles near 1.5 kHz so it's no brighter than a real
+                    // pick against a body with nothing above 2.5 kHz.
                     const float hit = std::exp(-t / 0.004f);
-                    lp += (rng.next() - lp) * 0.25f;
-                    v += lp * hit * 0.8f;
+                    lp += (rng.next() - lp) * 0.18f;
+                    lp2 += (lp - lp2) * 0.18f;
+                    v += lp2 * hit * 0.8f;
                     out[at + i] += v * amp;
                 }
             }
@@ -455,6 +458,46 @@ inline std::unique_ptr<audio::Take> musicSeed() {
         if (fromEnd < fadeOut) g *= static_cast<float>(fromEnd) / static_cast<float>(fadeOut);
         take->left[static_cast<size_t>(i)] *= g;
         take->right[static_cast<size_t>(i)] *= g;
+    }
+    take->detect(kMatSr);
+    return take;
+}
+
+/**
+ * The music seed with the dirt a real recording has: 400 ms of room tone
+ * before the music, a 32 Hz hum and low-passed rumble at the music's own
+ * level, and hard clipping at 0.6. For checking that a granular patch still
+ * works on a file like that, not for levels.
+ */
+inline std::unique_ptr<audio::Take> dirtySeed() {
+    std::unique_ptr<audio::Take> clean = musicSeed();
+    const auto n = static_cast<size_t>(clean->frames);
+    double sum = 0.0;
+    for (float v : clean->left) sum += static_cast<double>(v) * v;
+    const auto rms = static_cast<float>(std::sqrt(sum / static_cast<double>(std::max<size_t>(1, n))));
+    Rng rng(0xd127u);
+    const auto room = static_cast<size_t>(kMatSr * 0.4f);
+    auto take = std::make_unique<audio::Take>();
+    take->name = "dirty seed";
+    take->frames = static_cast<int32_t>(room + n);
+    take->left.assign(room + n, 0.0f);
+    take->right.assign(room + n, 0.0f);
+    float lp = 0.0f;
+    // The hum and rumble fade in and out over 50 ms, so a read that wraps
+    // from the end to the start doesn't land on a step. A real file's ends
+    // are trimmed to something quiet too.
+    const auto edge = static_cast<size_t>(kMatSr * 0.05f);
+    for (size_t i = 0; i < room + n; ++i) {
+        const float t = static_cast<float>(i) / kMatSr;
+        lp += (rng.next() - lp) * 0.002f;
+        const size_t fromEnd = room + n - 1 - i;
+        const float ends = static_cast<float>(std::min({i, fromEnd, edge})) / static_cast<float>(edge);
+        const float dirt = ends * (rms * (std::sin(2.0f * static_cast<float>(M_PI) * 32.0f * t) * 0.5f + lp * 6.0f) +
+                                   rms * 0.025f * rng.next());
+        const float l = i < room ? 0.0f : clean->left[i - room];
+        const float r = i < room ? 0.0f : clean->right[i - room];
+        take->left[i] = std::clamp(l + dirt, -0.6f, 0.6f);
+        take->right[i] = std::clamp(r + dirt, -0.6f, 0.6f);
     }
     take->detect(kMatSr);
     return take;
@@ -616,7 +659,12 @@ inline std::unique_ptr<SampleMap> zoneMap() {
         // one loop, and the step back up each time round buzzes.
         const int32_t sustainAt = period * ((static_cast<int32_t>(kMatSr * 2.1f)) / period);
         s.left.assign(static_cast<size_t>(n), 0.0f);
-        float lp = 0.0f;
+        // The hammer's noise goes through two poles at half the top
+        // partial's frequency (300 Hz to 6 kHz), so a dark low zone doesn't
+        // open on a burst of top end it never has again.
+        const float hammerHz = std::clamp(hz * static_cast<float>(l.partials) * 0.5f, 300.0f, 6000.0f);
+        const float hammerA = 1.0f - std::exp(-2.0f * static_cast<float>(M_PI) * hammerHz / kMatSr);
+        float lp = 0.0f, lp2 = 0.0f;
         for (int32_t i = 0; i < n; ++i) {
             const float t = static_cast<float>(i) / kMatSr;
             float v = 0.0f;
@@ -643,17 +691,16 @@ inline std::unique_ptr<SampleMap> zoneMap() {
             // The transient: a short low-passed noise burst, so it sounds like
             // a hammer rather than a click. It's gone before the loop starts.
             const float hit = std::exp(-t / 0.012f);
-            // Filtered fairly dark. A brighter burst sounds like a tick of
-            // noise on every note.
-            lp += (rng.next() - lp) * 0.20f;
+            lp += (rng.next() - lp) * hammerA;
+            lp2 += (lp - lp2) * hammerA;
             // Kept moderate. A louder hammer gives a sustained sound a huge
             // crest factor and pushes patches near full scale.
-            v += lp * hit * 1.0f;
+            v += lp2 * hit * 1.0f;
             // A little noise through the body, like a real instrument, which
             // is most of what survives a high-pass. It dies away before the
             // loop starts, since noise isn't periodic and would click at the
             // loop seam.
-            v += lp * 0.012f * std::exp(-t / 0.35f);
+            v += lp2 * 0.012f * std::exp(-t / 0.35f);
             // A 4 ms raised-cosine fade in. Without it every partial starts at
             // full level on the first frame and clicks, whatever the amp
             // attack is. 4 ms is still short enough for a lead to speak at
@@ -679,6 +726,45 @@ inline std::unique_ptr<SampleMap> zoneMap() {
         z.loopStart = map->samples.back().loopStart;
         z.loopEnd = map->samples.back().loopEnd;
         map->zones.push_back(z);
+    }
+    return map;
+}
+
+/**
+ * The zone map with the faults a real multisample has, for a check pass:
+ *
+ *   - the bottom zones open with 25 ms of near-silence before the hammer,
+ *     as a sample cut loosely does, so `start` near 0 lands in nothing;
+ *   - the top zones are 8 dB down, so a patch that only plays up there is
+ *     heard quiet rather than assumed level;
+ *   - the middle zones loop a few frames short of a whole period, so a held
+ *     note has a small step at the seam;
+ *   - a little hum under everything, which a high-pass patch shows up.
+ */
+inline std::unique_ptr<SampleMap> roughMap() {
+    auto map = zoneMap();
+    map->name = "rough";
+    Rng rng(0x77e1a2u);
+    const auto lead = static_cast<int32_t>(kMatSr * 0.025f);
+    for (MapZone &z : map->zones) {
+        SampleData &s = map->samples[static_cast<size_t>(z.sample)];
+        if (z.rootKey == 36) {
+            std::vector<float> pad(static_cast<size_t>(lead));
+            for (float &v : pad) v = rng.next() * 0.0005f;
+            s.left.insert(s.left.begin(), pad.begin(), pad.end());
+            s.frames += lead;
+            s.loopStart += lead;
+            s.loopEnd += lead;
+        } else if (z.rootKey == 84) {
+            for (float &v : s.left) v *= 0.4f;
+        } else {
+            s.loopEnd -= 7;
+        }
+        for (int32_t i = 0; i < s.frames; ++i)
+            s.left[static_cast<size_t>(i)] += 0.004f * std::sin(2.0f * static_cast<float>(M_PI) * 60.0f *
+                                                                static_cast<float>(i) / kMatSr);
+        z.loopStart = s.loopStart;
+        z.loopEnd = s.loopEnd;
     }
     return map;
 }

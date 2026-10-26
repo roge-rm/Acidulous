@@ -4903,146 +4903,271 @@ internal object FactoryBanks {
         family = "cloud")
 
     private fun pollen1() = Patch("Pollen", "Drift",
-        mapOf("scan" to 0.505f, "spray" to 0.25f, "size" to 0.8062673f, "density" to 0.7686218f, "jitter" to 0.35f, "panspread" to 0.7f, "ampattack" to 0.7117825f, "amprelease" to 0.7984619f, "volume" to 0.440000027f),
+        mapOf("scan" to 0.505f, "spray" to 0.25f, "size" to 0.8062673f, "density" to 0.7686218f, "jitter" to 0.35f, "panspread" to 0.7f, "ampattack" to 0.7117825f, "amprelease" to 0.7984619f, "volume" to 0.440000027f, "mac1_d1" to 0.275862068f, "mac1_d2" to 1f, "mac1_a1" to 0.6155f, "mac1_a2" to 0.3995f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.597f, "mac2_a2" to 0.425f, "mac2_a3" to 0.431999981f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.7f, "mac3_a2" to 0.474f, "mac4_d1" to 0.06896552f, "mac4_a1" to 0.525f, "mac5_d1" to 0.551724136f, "mac5_a1" to 0.65f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.85f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.598f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Wander", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Swell"),
         family = "cloud")
 
     private fun pollen2() = Patch("Pollen", "Mist",
-        mapOf("spray" to 0.5f, "size" to 0.6125346f, "sizespread" to 0.4f, "density" to 1f, "jitter" to 0.5f, "panspread" to 0.9f, "ampattack" to 0.7437927f, "amprelease" to 0.8218869f, "volume" to 0.426666647f),
+        mapOf("spray" to 0.5f, "size" to 0.6125346f, "sizespread" to 0.4f, "density" to 1f, "jitter" to 0.5f, "panspread" to 0.9f, "ampattack" to 0.7437927f, "amprelease" to 0.8218869f, "volume" to 0.426666647f, "mac1_d1" to 0.275862068f, "mac1_d2" to 1f, "mac1_a1" to 0.375f, "mac1_a2" to 0.6885f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.6f, "mac2_a2" to 0.425f, "mac2_a3" to 0.4505f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.06896552f, "mac4_a1" to 0.525f, "mac5_d1" to 0.551724136f, "mac5_d2" to 0.5862069f, "mac5_a1" to 0.25f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.85f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.621f),
+        mapOf("macro1" to "Thinner", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Wander", "macro5" to "Narrow", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Swell"),
         family = "cloud")
 
     private fun pollen3() = Patch("Pollen", "Boulders",
-        mapOf("spray" to 0.03f, "size" to 0.955840051f, "sizespread" to 0.15f, "density" to 0.4147411f, "window" to 0.333333343f, "ampattack" to 0.5895406f, "amprelease" to 0.76979214f, "volume" to 0.406666666f),
+        mapOf("spray" to 0.03f, "size" to 0.955840051f, "sizespread" to 0.15f, "density" to 0.4147411f, "window" to 0.333333343f, "ampattack" to 0.5895406f, "amprelease" to 0.76979214f, "volume" to 0.406666666f, "mac1_d1" to 0.275862068f, "mac1_d2" to 1f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4035f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac2_a3" to 0.6265f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.06896552f, "mac4_a1" to 0.525f, "mac5_d1" to 0.551724136f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.85f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Thicker", "macro2" to "Shorter", "macro3" to "Spray", "macro4" to "Wander", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Swell"),
         family = "cloud")
 
     private fun pollen4() = Patch("Pollen", "Shiver",
-        mapOf("spray" to 0.15f, "size" to 0.6125346f, "sizespread" to 0.6f, "density" to 0.9914389f, "jitter" to 0.65f, "panspread" to 0.8f, "amprelease" to 0.7041605f, "volume" to 0.473333329f),
+        mapOf("spray" to 0.15f, "size" to 0.6125346f, "sizespread" to 0.6f, "density" to 0.9914389f, "jitter" to 0.65f, "panspread" to 0.8f, "amprelease" to 0.7041605f, "volume" to 0.473333329f, "mac1_d1" to 0.275862068f, "mac1_d2" to 1f, "mac1_a1" to 0.375f, "mac1_a2" to 0.656f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.6f, "mac2_a2" to 0.425f, "mac2_a3" to 0.439f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.06896552f, "mac4_a1" to 0.525f, "mac5_d1" to 0.551724136f, "mac5_d2" to 0.5862069f, "mac5_a1" to 0.25f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.85f, "mac7_a2" to 0.445f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Thinner", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Wander", "macro5" to "Narrow", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Swell"),
         family = "cloud")
 
     private fun pollen5() = Patch("Pollen", "Stillness",
-        mapOf("position" to 0.34f, "spray" to 0.02f, "size" to 0.955840051f, "density" to 0.462756425f, "jitter" to 0.1f, "window" to 0.333333343f, "ampattack" to 0.7889086f, "amprelease" to 0.8588487f, "volume" to 0.6466667f),
+        mapOf("position" to 0.34f, "spray" to 0.02f, "size" to 0.955840051f, "density" to 0.462756425f, "jitter" to 0.1f, "window" to 0.333333343f, "ampattack" to 0.7889086f, "amprelease" to 0.8588487f, "volume" to 0.6466667f, "mac1_d1" to 0.275862068f, "mac1_d2" to 1f, "mac1_a1" to 0.625f, "mac1_a2" to 0.3425f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac2_a3" to 0.5835f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4135f, "mac4_d1" to 0.06896552f, "mac4_d2" to 1f, "mac4_a1" to 0.525f, "mac4_a2" to 0.5435f, "mac5_d1" to 0.551724136f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.85f, "mac7_a2" to 0.403f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.6055f, "mac8_a2" to 0.5705f, "mac8_a3" to 0.676499963f),
+        mapOf("macro1" to "Thicker", "macro2" to "Shorter", "macro3" to "Spray", "macro4" to "Wander", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Swell"),
         family = "cloud")
 
-    private fun pollen6() = Patch("Pollen", "Chord Dust",
-        mapOf("spray" to 0.3f, "size" to 0.7832408f, "density" to 0.799052f, "jitter" to 0.4f, "spread" to 0.5833333f, "scatter" to 0.75f, "panspread" to 0.8f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.453333348f),
+    private fun pollen6() = Patch("Pollen", "Narrow Haze",
+        mapOf("scan" to 0.505f, "spray" to 0.2f, "size" to 0.816652238f, "density" to 0.784529448f, "jitter" to 0.4f, "panspread" to 0f, "width" to 0f, "ampattack" to 0.6914957f, "amprelease" to 0.7984619f, "volume" to 0.378666669f, "mac1_d1" to 0.275862068f, "mac1_d2" to 1f, "mac1_a1" to 0.6075f, "mac1_a2" to 0.43f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.5915f, "mac2_a2" to 0.425f, "mac2_a3" to 0.47f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.06896552f, "mac4_a1" to 0.525f, "mac5_d1" to 0.551724136f, "mac5_d2" to 0.5862069f, "mac5_a1" to 0.75f, "mac5_a2" to 0.8f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.85f, "mac7_a2" to 0.4755f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.5845f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Wander", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Swell"),
+        family = "cloud")
+
+    private fun pollen7() = Patch("Pollen", "Droplets",
+        mapOf("spray" to 0.6f, "size" to 0.644824743f, "sizespread" to 0.5f, "density" to 0.709091246f, "jitter" to 0.9f, "panspread" to 1f, "amprelease" to 0.76979214f, "volume" to 0.6306667f, "mac1_d1" to 0.275862068f, "mac1_d2" to 1f, "mac1_a1" to 0.625f, "mac1_a2" to 0.393f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.6f, "mac2_a2" to 0.425f, "mac2_a3" to 0.453f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.06896552f, "mac4_a1" to 0.525f, "mac5_d1" to 0.551724136f, "mac5_d2" to 0.5862069f, "mac5_a1" to 0.25f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.85f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.564f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Wander", "macro5" to "Narrow", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Swell"),
+        family = "cloud")
+
+    private fun pollen8() = Patch("Pollen", "Chord Dust",
+        mapOf("spray" to 0.3f, "size" to 0.7832408f, "density" to 0.799052f, "jitter" to 0.4f, "spread" to 0.5833333f, "scatter" to 0.75f, "panspread" to 0.8f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.453333348f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.7f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.6005f, "mac2_a2" to 0.4195f, "mac3_d1" to 0.37931034f, "mac3_d2" to 1f, "mac3_a1" to 0.75f, "mac3_a2" to 0.464f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.445500016f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.6f, "mac7_a2" to 0.398f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Scatter", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
         family = "pitch")
 
-    private fun pollen7() = Patch("Pollen", "Octaves",
-        mapOf("spray" to 0.3f, "size" to 0.8062673f, "density" to 0.784529448f, "spread" to 1f, "scatter" to 0.25f, "panspread" to 0.85f, "ampattack" to 0.6914957f, "amprelease" to 0.8218869f, "volume" to 0.52f),
+    private fun pollen9() = Patch("Pollen", "Octaves",
+        mapOf("spray" to 0.3f, "size" to 0.8062673f, "density" to 0.784529448f, "spread" to 1f, "scatter" to 0.25f, "panspread" to 0.85f, "ampattack" to 0.6914957f, "amprelease" to 0.8218869f, "volume" to 0.52f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.3f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.6075f, "mac2_a2" to 0.393f, "mac3_d1" to 0.37931034f, "mac3_a1" to 0.75f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.416f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.597f, "mac7_a2" to 0.3765f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.5905f),
+        mapOf("macro1" to "Gather", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
         family = "pitch")
 
-    private fun pollen8() = Patch("Pollen", "Fifths",
-        mapOf("spray" to 0.28f, "density" to 0.857185841f, "spread" to 0.7916667f, "scatter" to 0.5f, "panspread" to 0.8f, "ampattack" to 0.6797723f, "amprelease" to 0.813022554f, "volume" to 0.453333348f),
+    private fun pollen10() = Patch("Pollen", "Fifths",
+        mapOf("spray" to 0.28f, "density" to 0.857185841f, "spread" to 0.7916667f, "scatter" to 0.5f, "panspread" to 0.8f, "ampattack" to 0.6797723f, "amprelease" to 0.813022554f, "volume" to 0.453333348f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.604f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.5715f, "mac2_a2" to 0.4375f, "mac3_d1" to 0.37931034f, "mac3_d2" to 1f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4685f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4515f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.6f, "mac7_a2" to 0.398f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.549f),
+        mapOf("macro1" to "Scatter", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
         family = "pitch")
 
-    private fun pollen9() = Patch("Pollen", "Dorian Spray",
-        mapOf("spray" to 0.35f, "density" to 0.8124115f, "jitter" to 0.45f, "spread" to 0.8333333f, "scatter" to 1f, "scale" to 0.03125f, "panspread" to 0.85f, "ampattack" to 0.6914957f, "amprelease" to 0.8218869f),
+    private fun pollen11() = Patch("Pollen", "Dorian Spray",
+        mapOf("spray" to 0.35f, "density" to 0.8124115f, "jitter" to 0.45f, "spread" to 0.8333333f, "scatter" to 1f, "scale" to 0.03125f, "panspread" to 0.85f, "ampattack" to 0.6914957f, "amprelease" to 0.8218869f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.3f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.594f, "mac2_a2" to 0.4075f, "mac3_d1" to 0.37931034f, "mac3_d2" to 1f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4575f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4405f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.6f, "mac7_a2" to 0.3835f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.581f),
+        mapOf("macro1" to "Gather", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
         family = "pitch")
 
-    private fun pollen10() = Patch("Pollen", "Descent",
-        mapOf("scan" to 0.5875f, "spray" to 0.2f, "size" to 0.826407433f, "density" to 0.7686218f, "pitch" to 0.354166657f, "spread" to 0.208333328f, "scatter" to 0.25f, "ampattack" to 0.6346564f, "amprelease" to 0.793217063f, "volume" to 0.46f),
+    private fun pollen12() = Patch("Pollen", "Descent",
+        mapOf("scan" to 0.5875f, "spray" to 0.2f, "size" to 0.826407433f, "density" to 0.7686218f, "pitch" to 0.354166657f, "spread" to 0.208333328f, "scatter" to 0.25f, "ampattack" to 0.6346564f, "amprelease" to 0.793217063f, "volume" to 0.46f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.7f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.6155f, "mac2_a2" to 0.4025f, "mac3_d1" to 0.37931034f, "mac3_d2" to 1f, "mac3_a1" to 0.75f, "mac3_a2" to 0.433f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.454999983f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.587f, "mac7_a2" to 0.412f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Scatter", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
         family = "pitch")
 
-    private fun pollen11() = Patch("Pollen", "Choir",
-        mapOf("spray" to 0.4f, "size" to 0.867895067f, "density" to 0.799052f, "jitter" to 0.6f, "spread" to 0.166666672f, "scatter" to 1f, "scale" to 0.03125f, "panspread" to 1f, "cutoff" to 0.7730826f, "ampattack" to 0.806060851f, "amprelease" to 0.8588487f, "volume" to 0.413333327f),
+    private fun pollen13() = Patch("Pollen", "Choir",
+        mapOf("spray" to 0.4f, "size" to 0.867895067f, "density" to 0.799052f, "jitter" to 0.6f, "spread" to 0.166666672f, "scatter" to 1f, "scale" to 0.03125f, "panspread" to 1f, "cutoff" to 0.7730826f, "ampattack" to 0.806060851f, "amprelease" to 0.8588487f, "volume" to 0.413333327f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.7f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.6005f, "mac2_a2" to 0.4195f, "mac3_d1" to 0.37931034f, "mac3_d2" to 1f, "mac3_a1" to 0.75f, "mac3_a2" to 0.45f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.452f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.566f, "mac7_a2" to 0.431500018f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.597f, "mac8_a2" to 0.5705f, "mac8_a3" to 0.6445f),
+        mapOf("macro1" to "Scatter", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
         family = "pitch")
 
-    private fun pollen12() = Patch("Pollen", "Pollinate",
-        mapOf("spray" to 0.2f, "size" to 0.795165539f, "bloom" to 0.8f, "mutate" to 0.35f, "generations" to 0.6f, "panspread" to 0.7f, "ampattack" to 0.6666667f, "amprelease" to 0.8218869f, "volume" to 0.406666666f),
+    private fun pollen14() = Patch("Pollen", "Under Octave",
+        mapOf("spray" to 0.2f, "size" to 0.852558553f, "density" to 0.7686218f, "pitch" to 0.25f, "panspread" to 0.6f, "cutoff" to 0.7319459f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.580666661f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.7f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.6155f, "mac2_a2" to 0.364f, "mac3_d1" to 0.37931034f, "mac3_d2" to 1f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4105f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4485f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.5735f, "mac7_a2" to 0.380500019f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Scatter", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
+        family = "pitch")
+
+    private fun pollen15() = Patch("Pollen", "Untuned",
+        mapOf("spray" to 0.3f, "size" to 0.867895067f, "density" to 0.739521444f, "keytrack" to 0f, "panspread" to 0.8f, "ampattack" to 0.7437927f, "amprelease" to 0.8218869f, "volume" to 0.308f, "mac1_d1" to 0.413793117f, "mac1_d2" to 1f, "mac1_a1" to 0.7f, "mac1_a2" to 0.531f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.625f, "mac2_a2" to 0.431500018f, "mac3_d1" to 0.37931034f, "mac3_a1" to 0.75f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.4815f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.566f, "mac7_a2" to 0.4685f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.5985f),
+        mapOf("macro1" to "Scatter", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
+        family = "pitch")
+
+    private fun pollen16() = Patch("Pollen", "Pentatonic",
+        mapOf("spray" to 0.3f, "size" to 0.7563599f, "density" to 0.824780345f, "jitter" to 0.5f, "spread" to 1f, "scatter" to 1f, "scale" to 0.28125f, "panspread" to 0.9f, "ampattack" to 0.6666667f, "amprelease" to 0.8218869f, "volume" to 0.548000038f, "mac1_d1" to 0.413793117f, "mac1_a1" to 0.3f, "mac2_d1" to 0.275862068f, "mac2_d2" to 1f, "mac2_a1" to 0.5875f, "mac2_a2" to 0.399f, "mac3_d1" to 0.37931034f, "mac3_d2" to 1f, "mac3_a1" to 0.75f, "mac3_a2" to 0.4485f, "mac4_d1" to 0.103448279f, "mac4_d2" to 1f, "mac4_a1" to 0.7f, "mac4_a2" to 0.422f, "mac5_d1" to 0.6896552f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.206896558f, "mac7_d2" to 1f, "mac7_a1" to 0.6f, "mac7_a2" to 0.38f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Gather", "macro2" to "Thicker", "macro3" to "Octave Up", "macro4" to "Spray", "macro5" to "Wobble", "macro6" to "Dark", "macro7" to "Longer", "macro8" to "Swell"),
+        family = "pitch")
+
+    private fun pollen17() = Patch("Pollen", "Half Speed",
+        mapOf("scan" to 0.625f, "spray" to 0.01f, "size" to 0.816652238f, "density" to 0.784529448f, "jitter" to 0.2f, "window" to 0.333333343f, "panspread" to 0.4f, "amprelease" to 0.7328303f, "volume" to 0.210666671f, "mac1_d1" to 0.06896552f, "mac1_a1" to 0.55f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.2413793f, "mac2_d3" to 1f, "mac2_a1" to 0.5915f, "mac2_a2" to 0.7f, "mac2_a3" to 0.451f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.65f, "mac3_a2" to 0.514f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.6075f, "mac4_a2" to 0.4595f, "mac5_d1" to 0.551724136f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.8f, "mac7_a2" to 0.4755f, "mac8_d1" to 0.1724138f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Faster", "macro2" to "Smear", "macro3" to "Spray", "macro4" to "Thicker", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Backwards"),
+        family = "stretch")
+
+    private fun pollen18() = Patch("Pollen", "Quarter Speed",
+        mapOf("scan" to 0.5625f, "spray" to 0.01f, "size" to 0.881896138f, "density" to 0.7313782f, "jitter" to 0.25f, "window" to 0.333333343f, "ampattack" to 0.5124145f, "amprelease" to 0.652065754f, "volume" to 0.171333328f, "mac1_d1" to 0.06896552f, "mac1_a1" to 0.55f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.2413793f, "mac2_d3" to 1f, "mac2_a1" to 0.559f, "mac2_a2" to 0.7f, "mac2_a3" to 0.471000016f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.65f, "mac3_a2" to 0.572f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.625f, "mac4_a2" to 0.454999983f, "mac5_d1" to 0.551724136f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.8f, "mac8_d1" to 0.1724138f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Faster", "macro2" to "Smear", "macro3" to "Spray", "macro4" to "Thicker", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Backwards"),
+        family = "stretch")
+
+    private fun pollen19() = Patch("Pollen", "Glacier",
+        mapOf("position" to 0.08f, "scan" to 0.5125f, "spray" to 0.02f, "size" to 0.9830463f, "sizespread" to 0.3f, "density" to 0.5561586f, "panspread" to 0.8f, "ampattack" to 0.813737631f, "amprelease" to 0.8875185f, "volume" to 0.450000018f, "mac1_d1" to 0.06896552f, "mac1_a1" to 0.55f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.2413793f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.35f, "mac2_a3" to 0.745f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.65f, "mac3_a2" to 0.442f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.625f, "mac4_a2" to 0.396f, "mac5_d1" to 0.551724136f, "mac5_d2" to 0.5862069f, "mac5_a1" to 0.25f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.8f, "mac8_d1" to 0.1724138f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Faster", "macro2" to "Sharpen", "macro3" to "Spray", "macro4" to "Thicker", "macro5" to "Narrow", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Backwards"),
+        family = "stretch")
+
+    private fun pollen20() = Patch("Pollen", "Rewind",
+        mapOf("position" to 0.8f, "scan" to 0.375f, "spray" to 0.01f, "size" to 0.8062673f, "density" to 0.784529448f, "jitter" to 0.2f, "window" to 0.333333343f, "panspread" to 0.4f, "amprelease" to 0.7328303f, "volume" to 0.41533336f, "mac1_d1" to 0.06896552f, "mac1_d2" to 1f, "mac1_a1" to 0.55f, "mac1_a2" to 0.6615f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.2413793f, "mac2_d3" to 1f, "mac2_a1" to 0.597f, "mac2_a2" to 0.7f, "mac2_a3" to 0.431f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.65f, "mac3_a2" to 0.4555f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.6075f, "mac4_a2" to 0.395f, "mac5_d1" to 0.551724136f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.8f, "mac7_a2" to 0.461f, "mac8_d1" to 0.1724138f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Faster", "macro2" to "Smear", "macro3" to "Spray", "macro4" to "Thicker", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Backwards"),
+        family = "stretch")
+
+    private fun pollen21() = Patch("Pollen", "True Speed",
+        mapOf("scan" to 0.75f, "spray" to 0.003f, "size" to 0.7051171f, "sizespread" to 0.1f, "density" to 0.824780345f, "jitter" to 0.1f, "window" to 0.333333343f, "panspread" to 0.2f, "ampattack" to 0.256207228f, "amprelease" to 0.652065754f, "volume" to 0.265333325f, "mac1_d1" to 0.06896552f, "mac1_d2" to 1f, "mac1_a1" to 0.55f, "mac1_a2" to 0.474f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.2413793f, "mac2_d3" to 1f, "mac2_a1" to 0.6f, "mac2_a2" to 0.7f, "mac2_a3" to 0.440999985f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.65f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.5875f, "mac4_a2" to 0.4475f, "mac5_d1" to 0.551724136f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.8f, "mac8_d1" to 0.1724138f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Faster", "macro2" to "Smear", "macro3" to "Spray", "macro4" to "Thicker", "macro5" to "Wide", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Backwards"),
+        family = "stretch")
+
+    private fun pollen22() = Patch("Pollen", "Slow Blur",
+        mapOf("scan" to 0.5375f, "spray" to 0.08f, "size" to 1f, "sizespread" to 0.5f, "density" to 0.6156891f, "jitter" to 0.4f, "panspread" to 0.85f, "ampattack" to 0.7437927f, "amprelease" to 0.8588487f, "volume" to 0.271333337f, "mac1_d1" to 0.06896552f, "mac1_d2" to 1f, "mac1_a1" to 0.55f, "mac1_a2" to 0.533f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.2413793f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.3f, "mac2_a3" to 0.648f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.65f, "mac3_a2" to 0.556f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.625f, "mac4_a2" to 0.43f, "mac5_d1" to 0.551724136f, "mac5_d2" to 0.5862069f, "mac5_a1" to 0.25f, "mac5_a2" to 0.199999988f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.8f, "mac8_d1" to 0.1724138f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Faster", "macro2" to "Sharpen", "macro3" to "Spray", "macro4" to "Thicker", "macro5" to "Narrow", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Backwards"),
+        family = "stretch")
+
+    private fun pollen23() = Patch("Pollen", "Pollinate",
+        mapOf("spray" to 0.2f, "size" to 0.795165539f, "bloom" to 0.8f, "mutate" to 0.35f, "generations" to 0.6f, "panspread" to 0.7f, "ampattack" to 0.6666667f, "amprelease" to 0.8218869f, "volume" to 0.406666666f, "mac1_d1" to 0.448275864f, "mac1_d2" to 1f, "mac1_a1" to 0.25f, "mac1_a2" to 0.555500031f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.7f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.7f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.6245f, "mac4_a2" to 0.3895f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.7f, "mac6_d1" to 0.551724136f, "mac6_a1" to 0.65f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.555500031f),
+        mapOf("macro1" to "Bare", "macro2" to "Mutate", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Wide", "macro7" to "Dark", "macro8" to "Swell"),
         family = "bloom")
 
-    private fun pollen13() = Patch("Pollen", "Cascade",
-        mapOf("spray" to 0.15f, "size" to 0.8062673f, "density" to 0.7313782f, "bloom" to 0.95f, "mutate" to 0.8f, "generations" to 1f, "panspread" to 0.95f, "ampattack" to 0.7117825f, "amprelease" to 0.8588487f, "volume" to 0.326666683f),
+    private fun pollen24() = Patch("Pollen", "Cascade",
+        mapOf("spray" to 0.15f, "size" to 0.8062673f, "density" to 0.7313782f, "bloom" to 0.95f, "mutate" to 0.8f, "generations" to 1f, "panspread" to 0.95f, "ampattack" to 0.7117825f, "amprelease" to 0.8588487f, "volume" to 0.326666683f, "mac1_d1" to 0.448275864f, "mac1_d2" to 1f, "mac1_a1" to 0.25f, "mac1_a2" to 0.54f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.3f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.7f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.625f, "mac4_a2" to 0.446f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.7f, "mac6_d1" to 0.551724136f, "mac6_d2" to 0.5862069f, "mac6_a1" to 0.25f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.5705f, "mac8_a3" to 0.6075f),
+        mapOf("macro1" to "Bare", "macro2" to "Stable", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Narrow", "macro7" to "Dark", "macro8" to "Swell"),
         family = "bloom")
 
-    private fun pollen14() = Patch("Pollen", "Seedling",
-        mapOf("spray" to 0.12f, "size" to 0.816652238f, "bloom" to 0.3f, "mutate" to 0.15f, "generations" to 0f, "ampattack" to 0.614369631f, "amprelease" to 0.76979214f, "volume" to 0.413333327f),
+    private fun pollen25() = Patch("Pollen", "Seedling",
+        mapOf("spray" to 0.12f, "size" to 0.816652238f, "bloom" to 0.3f, "mutate" to 0.15f, "generations" to 0f, "ampattack" to 0.614369631f, "amprelease" to 0.76979214f, "volume" to 0.413333327f, "mac1_d1" to 0.448275864f, "mac1_d2" to 1f, "mac1_a1" to 0.75f, "mac1_a2" to 0.4715f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.7f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.7f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.6245f, "mac4_a2" to 0.3995f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.7f, "mac6_d1" to 0.551724136f, "mac6_a1" to 0.75f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Bloom", "macro2" to "Mutate", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Wide", "macro7" to "Dark", "macro8" to "Swell"),
         family = "bloom")
 
-    private fun pollen15() = Patch("Pollen", "Spore",
-        mapOf("spray" to 0.55f, "size" to 0.7563599f, "density" to 0.784529448f, "bloom" to 0.85f, "mutate" to 1f, "generations" to 0.8f, "panspread" to 1f, "ampattack" to 0.6914957f, "amprelease" to 0.8416923f, "volume" to 0.4f),
+    private fun pollen26() = Patch("Pollen", "Spore",
+        mapOf("spray" to 0.55f, "size" to 0.7563599f, "density" to 0.784529448f, "bloom" to 0.85f, "mutate" to 1f, "generations" to 0.8f, "panspread" to 1f, "ampattack" to 0.6914957f, "amprelease" to 0.8416923f, "volume" to 0.4f, "mac1_d1" to 0.448275864f, "mac1_d2" to 1f, "mac1_a1" to 0.25f, "mac1_a2" to 0.5545f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.3f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.7f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.6075f, "mac4_a2" to 0.4205f, "mac5_d1" to 0.103448279f, "mac5_d2" to 1f, "mac5_a1" to 0.7f, "mac5_a2" to 0.474f, "mac6_d1" to 0.551724136f, "mac6_d2" to 0.5862069f, "mac6_a1" to 0.25f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.549f),
+        mapOf("macro1" to "Bare", "macro2" to "Stable", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Narrow", "macro7" to "Dark", "macro8" to "Swell"),
         family = "bloom")
 
-    private fun pollen16() = Patch("Pollen", "Thicket",
-        mapOf("spray" to 0.45f, "size" to 0.6588259f, "density" to 0.8667258f, "jitter" to 0.7f, "bloom" to 1f, "mutate" to 0.5f, "generations" to 1f, "panspread" to 0.9f, "ampattack" to 0.6346564f, "amprelease" to 0.7984619f, "volume" to 0.406666666f),
+    private fun pollen27() = Patch("Pollen", "Thicket",
+        mapOf("spray" to 0.45f, "size" to 0.6588259f, "density" to 0.8667258f, "jitter" to 0.7f, "bloom" to 1f, "mutate" to 0.5f, "generations" to 1f, "panspread" to 0.9f, "ampattack" to 0.6346564f, "amprelease" to 0.7984619f, "volume" to 0.406666666f, "mac1_d1" to 0.448275864f, "mac1_d2" to 1f, "mac1_a1" to 0.25f, "mac1_a2" to 0.541f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.7f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.7f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.5665f, "mac4_a2" to 0.4355f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.7f, "mac6_d1" to 0.551724136f, "mac6_d2" to 0.5862069f, "mac6_a1" to 0.25f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Bare", "macro2" to "Mutate", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Narrow", "macro7" to "Dark", "macro8" to "Swell"),
         family = "bloom")
 
-    private fun pollen17() = Patch("Pollen", "Settle",
-        mapOf("spray" to 0.25f, "size" to 0.8062673f, "density" to 0.739521444f, "bloom" to 0.9f, "mutate" to 0.4f, "generations" to 0.8f, "ampattack" to 0.256207228f, "ampdecay" to 0.7818527f, "ampsustain" to 0.15f, "amprelease" to 0.8218869f, "volume" to 0.599999964f),
+    private fun pollen28() = Patch("Pollen", "Settle",
+        mapOf("spray" to 0.25f, "size" to 0.8062673f, "density" to 0.739521444f, "bloom" to 0.9f, "mutate" to 0.4f, "generations" to 0.8f, "ampattack" to 0.256207228f, "ampdecay" to 0.7818527f, "ampsustain" to 0.15f, "amprelease" to 0.8218869f, "volume" to 0.599999964f, "mac1_d1" to 0.448275864f, "mac1_d2" to 1f, "mac1_a1" to 0.25f, "mac1_a2" to 0.5605f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.7f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.7f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.625f, "mac4_a2" to 0.357500017f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.7f, "mac6_d1" to 0.551724136f, "mac6_a1" to 0.75f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Bare", "macro2" to "Mutate", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Wide", "macro7" to "Dark", "macro8" to "Swell"),
         family = "bloom")
 
-    private fun pollen18() = Patch("Pollen", "Slicer",
-        mapOf("spray" to 0.05f, "snap" to 1f, "density" to 0.578445554f, "jitter" to 0.15f, "window" to 0.6666667f, "ampattack" to 0.256207228f, "amprelease" to 0.6807356f, "volume" to 1f),
+    private fun pollen29() = Patch("Pollen", "Overgrowth",
+        mapOf("spray" to 0.15f, "size" to 0.7832408f, "density" to 0.7313782f, "bloom" to 1f, "drift" to 0.7f, "mutate" to 0.12f, "generations" to 1f, "panspread" to 0.9f, "ampattack" to 0.6914957f, "amprelease" to 0.8416923f, "volume" to 0.4f, "mac1_d1" to 0.448275864f, "mac1_d2" to 1f, "mac1_a1" to 0.25f, "mac1_a2" to 0.5405f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.7f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.65f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.625f, "mac4_a2" to 0.406000018f, "mac5_d1" to 0.103448279f, "mac5_a1" to 0.7f, "mac6_d1" to 0.551724136f, "mac6_d2" to 0.5862069f, "mac6_a1" to 0.25f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_d3" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f, "mac8_a3" to 0.586f),
+        mapOf("macro1" to "Bare", "macro2" to "Mutate", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Narrow", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "bloom")
+
+    private fun pollen30() = Patch("Pollen", "Wildflower",
+        mapOf("spray" to 0.2f, "size" to 0.795165539f, "spread" to 0.5f, "scatter" to 0.25f, "bloom" to 0.75f, "mutate" to 0.25f, "panspread" to 0.8f, "ampattack" to 0.6666667f, "amprelease" to 0.8218869f, "volume" to 0.440000027f, "mac1_d1" to 0.448275864f, "mac1_a1" to 0.625f, "mac2_d1" to 0.517241359f, "mac2_a1" to 0.7f, "mac3_d1" to 0.4827586f, "mac3_a1" to 0.7f, "mac4_d1" to 0.275862068f, "mac4_d2" to 1f, "mac4_a1" to 0.6245f, "mac4_a2" to 0.3905f, "mac5_d1" to 0.103448279f, "mac5_d2" to 1f, "mac5_a1" to 0.7f, "mac5_a2" to 0.474f, "mac6_d1" to 0.551724136f, "mac6_d2" to 0.5862069f, "mac6_a1" to 0.25f, "mac6_a2" to 0.199999988f, "mac7_d1" to 0.7241379f, "mac7_a1" to 0.3f, "mac8_d1" to 0.793103456f, "mac8_d2" to 0.827586234f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Bloom", "macro2" to "Mutate", "macro3" to "Drift", "macro4" to "Thicker", "macro5" to "Spray", "macro6" to "Narrow", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "bloom")
+
+    private fun pollen31() = Patch("Pollen", "Slicer",
+        mapOf("spray" to 0.05f, "snap" to 1f, "density" to 0.578445554f, "jitter" to 0.15f, "window" to 0.6666667f, "ampattack" to 0.256207228f, "amprelease" to 0.6807356f, "volume" to 1f, "mac1_d1" to 0.137931034f, "mac1_a1" to 0.099999994f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac3_a3" to 0.4255f, "mac4_d1" to 0.1724138f, "mac4_a1" to 0.85f, "mac5_d1" to 0.310344815f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.35f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_d3" to 1f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Loose", "macro2" to "Shorter", "macro3" to "Faster", "macro4" to "Backwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
         family = "rhythm")
 
-    private fun pollen19() = Patch("Pollen", "Stutter",
-        mapOf("spray" to 0.03f, "snap" to 1f, "size" to 0.593582f, "jitter" to 0.05f, "window" to 0.6666667f, "ampattack" to 0.179081187f, "amprelease" to 0.5630092f, "volume" to 1f),
+    private fun pollen32() = Patch("Pollen", "Stutter",
+        mapOf("spray" to 0.03f, "snap" to 1f, "size" to 0.593582f, "jitter" to 0.05f, "window" to 0.6666667f, "ampattack" to 0.179081187f, "amprelease" to 0.5630092f, "volume" to 1f, "mac1_d1" to 0.137931034f, "mac1_a1" to 0.099999994f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac3_a3" to 0.3705f, "mac4_d1" to 0.1724138f, "mac4_d2" to 1f, "mac4_a1" to 0.85f, "mac4_a2" to 0.402f, "mac5_d1" to 0.310344815f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.35f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Loose", "macro2" to "Shorter", "macro3" to "Faster", "macro4" to "Backwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
         family = "rhythm")
 
-    private fun pollen20() = Patch("Pollen", "Scan Up",
-        mapOf("scan" to 0.725f, "size" to 0.7832408f, "density" to 0.784529448f, "amprelease" to 0.7328303f, "volume" to 0.386666656f),
+    private fun pollen33() = Patch("Pollen", "Scan Up",
+        mapOf("scan" to 0.725f, "size" to 0.7832408f, "density" to 0.784529448f, "amprelease" to 0.7328303f, "volume" to 0.386666656f, "mac1_d1" to 0.137931034f, "mac1_a1" to 0.9f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac2_a3" to 0.6545f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac3_a3" to 0.4205f, "mac4_d1" to 0.1724138f, "mac4_a1" to 0.85f, "mac5_d1" to 0.310344815f, "mac5_d2" to 1f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4675f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.35f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_d2" to 1f, "mac8_a1" to 0.6f, "mac8_a2" to 0.473f),
+        mapOf("macro1" to "Snap", "macro2" to "Shorter", "macro3" to "Faster", "macro4" to "Backwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
         family = "rhythm")
 
-    private fun pollen21() = Patch("Pollen", "Scan Down",
-        mapOf("position" to 1f, "scan" to 0.275f, "size" to 0.7832408f, "density" to 0.784529448f, "amprelease" to 0.7328303f, "volume" to 0.5266667f),
+    private fun pollen34() = Patch("Pollen", "Scan Down",
+        mapOf("position" to 1f, "scan" to 0.275f, "size" to 0.7832408f, "density" to 0.784529448f, "amprelease" to 0.7328303f, "volume" to 0.5266667f, "mac1_d1" to 0.137931034f, "mac1_d2" to 1f, "mac1_a1" to 0.9f, "mac1_a2" to 0.431999981f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac2_a3" to 0.6685f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac3_a3" to 0.3915f, "mac4_d1" to 0.1724138f, "mac4_a1" to 0.85f, "mac5_d1" to 0.310344815f, "mac5_d2" to 1f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4685f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.35f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Snap", "macro2" to "Shorter", "macro3" to "Faster", "macro4" to "Backwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
         family = "rhythm")
 
-    private fun pollen22() = Patch("Pollen", "Ratchet",
-        mapOf("spray" to 0.02f, "snap" to 1f, "size" to 0.644824743f, "density" to 0.694134653f, "jitter" to 0f, "window" to 0.6666667f, "ampattack" to 0.07712607f, "amprelease" to 0.526047349f, "volume" to 1f),
+    private fun pollen35() = Patch("Pollen", "Ratchet",
+        mapOf("spray" to 0.02f, "snap" to 1f, "size" to 0.644824743f, "density" to 0.694134653f, "jitter" to 0f, "window" to 0.6666667f, "ampattack" to 0.07712607f, "amprelease" to 0.526047349f, "volume" to 1f, "mac1_d1" to 0.137931034f, "mac1_a1" to 0.099999994f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac3_a3" to 0.35799998f, "mac4_d1" to 0.1724138f, "mac4_d2" to 1f, "mac4_a1" to 0.85f, "mac4_a2" to 0.411f, "mac5_d1" to 0.310344815f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.35f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Loose", "macro2" to "Shorter", "macro3" to "Faster", "macro4" to "Backwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
         family = "rhythm")
 
-    private fun pollen23() = Patch("Pollen", "Backwards Roll",
-        mapOf("spray" to 0.4f, "snap" to 0.85f, "reverse" to 1f, "size" to 0.8356049f, "jitter" to 0.2f, "window" to 1f, "ampattack" to 0.3333333f, "amprelease" to 0.723966f, "volume" to 1f),
+    private fun pollen36() = Patch("Pollen", "Backwards Roll",
+        mapOf("spray" to 0.4f, "snap" to 0.85f, "reverse" to 1f, "size" to 0.8356049f, "jitter" to 0.2f, "window" to 1f, "ampattack" to 0.3333333f, "amprelease" to 0.723966f, "volume" to 1f, "mac1_d1" to 0.137931034f, "mac1_d2" to 1f, "mac1_a1" to 0.099999994f, "mac1_a2" to 0.35799998f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac3_a3" to 0.2715f, "mac4_d1" to 0.1724138f, "mac4_d2" to 1f, "mac4_a1" to 0.15f, "mac4_a2" to 0.402f, "mac5_d1" to 0.310344815f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.35f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_d3" to 1f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Loose", "macro2" to "Shorter", "macro3" to "Faster", "macro4" to "Forwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
         family = "rhythm")
 
-    private fun pollen24() = Patch("Pollen", "Crushed",
-        mapOf("spray" to 0.3f, "size" to 0.7832408f, "density" to 0.784529448f, "bits" to 0.2f, "cutoff" to 0.845404565f, "ampattack" to 0.5124145f, "amprelease" to 0.7411223f, "volume" to 0.566666663f),
+    private fun pollen37() = Patch("Pollen", "Grain Pluck",
+        mapOf("position" to 0.1f, "spray" to 0.05f, "size" to 0.6588259f, "density" to 0.9147411f, "window" to 0.333333343f, "ampattack" to 0.122241929f, "ampdecay" to 0.6489087f, "ampsustain" to 0f, "amprelease" to 0.526047349f, "volume" to 0.793333352f, "mac1_d1" to 0.137931034f, "mac1_a1" to 0.9f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_d3" to 1f, "mac2_a1" to 0.4f, "mac2_a2" to 0.54265f, "mac2_a3" to 0.6035f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.4f, "mac3_a2" to 0.55f, "mac3_a3" to 0.6035f, "mac4_d1" to 0.1724138f, "mac4_a1" to 0.85f, "mac5_d1" to 0.310344815f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.35f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Snap", "macro2" to "Shorter", "macro3" to "Slower", "macro4" to "Backwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
+        family = "rhythm")
+
+    private fun pollen38() = Patch("Pollen", "Pulse Train",
+        mapOf("snap" to 0.5f, "density" to 0.462756425f, "jitter" to 0f, "window" to 0.333333343f, "ampattack" to 0.179081187f, "volume" to 0.933333337f, "mac1_d1" to 0.137931034f, "mac1_a1" to 0.75f, "mac2_d1" to 0.206896558f, "mac2_d2" to 0.275862068f, "mac2_a1" to 0.4f, "mac2_a2" to 0.575f, "mac3_d1" to 0.275862068f, "mac3_d2" to 0.206896558f, "mac3_d3" to 1f, "mac3_a1" to 0.6f, "mac3_a2" to 0.45f, "mac3_a3" to 0.3755f, "mac4_d1" to 0.1724138f, "mac4_a1" to 0.85f, "mac5_d1" to 0.310344815f, "mac5_a1" to 0.75f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.35f, "mac6_a2" to 0.5335f, "mac7_d1" to 0.620689631f, "mac7_d2" to 0.6551724f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.625f, "mac8_d1" to 0.827586234f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Snap", "macro2" to "Shorter", "macro3" to "Faster", "macro4" to "Backwards", "macro5" to "Jitter", "macro6" to "Dark", "macro7" to "Crush", "macro8" to "Tail"),
+        family = "rhythm")
+
+    private fun pollen39() = Patch("Pollen", "Crushed",
+        mapOf("spray" to 0.3f, "size" to 0.7832408f, "density" to 0.784529448f, "bits" to 0.2f, "cutoff" to 0.845404565f, "ampattack" to 0.5124145f, "amprelease" to 0.7411223f, "volume" to 0.566666663f, "mac1_d1" to 0.620689631f, "mac1_a1" to 0.75f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.75f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.8f, "mac4_a2" to 0.3895f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.3f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_a1" to 0.75f, "mac6_a2" to 0.425f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.4415f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.6075f, "mac8_a2" to 0.366999984f),
+        mapOf("macro1" to "Clean", "macro2" to "Rate", "macro3" to "Wobble", "macro4" to "Drive", "macro5" to "Dark", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thicker"),
         family = "texture")
 
-    private fun pollen25() = Patch("Pollen", "Downsampled",
-        mapOf("spray" to 0.3f, "size" to 0.8062673f, "density" to 0.7686218f, "crush" to 0.8643856f, "ampattack" to 0.5124145f, "amprelease" to 0.7411223f, "volume" to 0.486666679f),
+    private fun pollen40() = Patch("Pollen", "Downsampled",
+        mapOf("spray" to 0.3f, "size" to 0.8062673f, "density" to 0.7686218f, "crush" to 0.8643856f, "ampattack" to 0.5124145f, "amprelease" to 0.7411223f, "volume" to 0.486666679f, "mac1_d1" to 0.620689631f, "mac1_a1" to 0.25f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.25f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.75f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.8f, "mac4_a2" to 0.412f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.3f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_a1" to 0.75f, "mac6_a2" to 0.425f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.445500016f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.6155f, "mac8_a2" to 0.3815f),
+        mapOf("macro1" to "Crush", "macro2" to "Smooth", "macro3" to "Wobble", "macro4" to "Drive", "macro5" to "Dark", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thicker"),
         family = "texture")
 
-    private fun pollen26() = Patch("Pollen", "Wobbler",
-        mapOf("spray" to 0.25f, "size" to 0.852558553f, "panspread" to 0.7f, "wobble" to 0.7f, "wobblerate" to 0.43752113f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.480000019f),
+    private fun pollen41() = Patch("Pollen", "Wobbler",
+        mapOf("spray" to 0.25f, "size" to 0.852558553f, "panspread" to 0.7f, "wobble" to 0.7f, "wobblerate" to 0.43752113f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.480000019f, "mac1_d1" to 0.620689631f, "mac1_a1" to 0.25f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.65f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.8f, "mac4_a2" to 0.4115f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.3f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_a1" to 0.75f, "mac6_a2" to 0.425f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.438f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.6245f, "mac8_a2" to 0.355499983f),
+        mapOf("macro1" to "Crush", "macro2" to "Rate", "macro3" to "Wobble", "macro4" to "Drive", "macro5" to "Dark", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thicker"),
         family = "texture")
 
-    private fun pollen27() = Patch("Pollen", "Underwater",
-        mapOf("spray" to 0.35f, "size" to 0.8356049f, "density" to 0.7686218f, "cutoff" to 0.384887874f, "resonance" to 0.55f, "filtertype" to 0.272727281f, "ampattack" to 0.7117825f, "amprelease" to 0.8218869f, "volume" to 0.52f),
+    private fun pollen42() = Patch("Pollen", "Underwater",
+        mapOf("spray" to 0.35f, "size" to 0.8356049f, "density" to 0.7686218f, "cutoff" to 0.384887874f, "resonance" to 0.55f, "filtertype" to 0.272727281f, "ampattack" to 0.7117825f, "amprelease" to 0.8218869f, "volume" to 0.52f, "mac1_d1" to 0.620689631f, "mac1_a1" to 0.25f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.75f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.8f, "mac4_a2" to 0.402f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.6f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_d3" to 1f, "mac6_a1" to 0.725f, "mac6_a2" to 0.4325f, "mac6_a3" to 0.393f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.420000017f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.6155f, "mac8_a2" to 0.366f),
+        mapOf("macro1" to "Crush", "macro2" to "Rate", "macro3" to "Wobble", "macro4" to "Drive", "macro5" to "Bright", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thicker"),
         family = "texture")
 
-    private fun pollen28() = Patch("Pollen", "Driven",
-        mapOf("spray" to 0.3f, "density" to 0.799052f, "cutoff" to 0.82017225f, "ampattack" to 0.5575304f, "amprelease" to 0.756255269f, "drive" to 0.8f, "volume" to 0.286666662f),
+    private fun pollen43() = Patch("Pollen", "Driven",
+        mapOf("spray" to 0.3f, "density" to 0.799052f, "cutoff" to 0.82017225f, "ampattack" to 0.5575304f, "amprelease" to 0.756255269f, "drive" to 0.8f, "volume" to 0.286666662f, "mac1_d1" to 0.620689631f, "mac1_d2" to 1f, "mac1_a1" to 0.25f, "mac1_a2" to 0.529f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.75f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.35f, "mac4_a2" to 0.597499967f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.3f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_a1" to 0.75f, "mac6_a2" to 0.425f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.483f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.6005f, "mac8_a2" to 0.472f),
+        mapOf("macro1" to "Crush", "macro2" to "Rate", "macro3" to "Wobble", "macro4" to "Gentle", "macro5" to "Dark", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thicker"),
         family = "texture")
 
-    private fun pollen29() = Patch("Pollen", "Telephone",
-        mapOf("spray" to 0.3f, "size" to 0.7563599f, "density" to 0.799052f, "bits" to 0.333333343f, "cutoff" to 0.468503028f, "resonance" to 0.35f, "filtertype" to 0.727272749f, "ampattack" to 0.487585485f, "amprelease" to 0.7041605f, "drive" to 0.75f, "volume" to 1f),
+    private fun pollen44() = Patch("Pollen", "Telephone",
+        mapOf("spray" to 0.3f, "size" to 0.7563599f, "density" to 0.799052f, "bits" to 0.333333343f, "cutoff" to 0.468503028f, "resonance" to 0.35f, "filtertype" to 0.727272749f, "ampattack" to 0.487585485f, "amprelease" to 0.7041605f, "drive" to 0.75f, "volume" to 1f, "mac1_d1" to 0.620689631f, "mac1_d2" to 1f, "mac1_a1" to 0.3335f, "mac1_a2" to 0.338f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.75f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.35f, "mac5_d1" to 0.7241379f, "mac5_d2" to 1f, "mac5_a1" to 0.3905f, "mac5_a2" to 0.2035f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_a1" to 0.75f, "mac6_a2" to 0.425f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.218499988f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.6005f, "mac8_a2" to 0.2565f),
+        mapOf("macro1" to "Crush", "macro2" to "Rate", "macro3" to "Wobble", "macro4" to "Gentle", "macro5" to "Dark", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thicker"),
         family = "texture")
 
-    private fun pollen30() = Patch("Pollen", "Live Hold",
-        mapOf("source" to 1f, "buffer" to 0.9169925f, "capture" to 1f, "spray" to 0.3f, "size" to 0.8062673f, "density" to 0.784529448f, "panspread" to 0.8f, "ampattack" to 0.6346564f, "amprelease" to 0.7984619f, "volume" to 0.75333333f),
+    private fun pollen45() = Patch("Pollen", "Swell Grains",
+        mapOf("spray" to 0.3f, "reverse" to 0.3f, "size" to 0.867895067f, "density" to 0.7313782f, "skew" to 0.9f, "panspread" to 0.7f, "ampattack" to 0.6666667f, "amprelease" to 0.7984619f, "volume" to 0.440666676f, "mac1_d1" to 0.620689631f, "mac1_a1" to 0.25f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.75f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.8f, "mac4_a2" to 0.411f, "mac5_d1" to 0.7241379f, "mac5_a1" to 0.3f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_a1" to 0.75f, "mac6_a2" to 0.425f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.4465f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.625f, "mac8_a2" to 0.3955f),
+        mapOf("macro1" to "Crush", "macro2" to "Rate", "macro3" to "Wobble", "macro4" to "Drive", "macro5" to "Dark", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thicker"),
+        family = "texture")
+
+    private fun pollen46() = Patch("Pollen", "Thin Air",
+        mapOf("spray" to 0.4f, "size" to 0.852558553f, "density" to 0.900218546f, "jitter" to 0.5f, "window" to 0.333333343f, "panspread" to 1f, "cutoff" to 0.299968451f, "resonance" to 0.3f, "filtertype" to 0.454545468f, "ampattack" to 0.6346564f, "amprelease" to 0.76979214f, "volume" to 0.72f, "mac1_d1" to 0.620689631f, "mac1_a1" to 0.25f, "mac2_d1" to 0.6551724f, "mac2_a1" to 0.75f, "mac3_d1" to 0.6896552f, "mac3_a1" to 0.75f, "mac4_d1" to 0.862068951f, "mac4_d2" to 1f, "mac4_a1" to 0.8f, "mac4_a2" to 0.3455f, "mac5_d1" to 0.7241379f, "mac5_d2" to 1f, "mac5_a1" to 0.35f, "mac5_a2" to 0.2865f, "mac6_d1" to 0.7586207f, "mac6_d2" to 0.7241379f, "mac6_d3" to 1f, "mac6_a1" to 0.75f, "mac6_a2" to 0.425f, "mac6_a3" to 0.225499988f, "mac7_d1" to 0.103448279f, "mac7_d2" to 1f, "mac7_a1" to 0.7f, "mac7_a2" to 0.4225f, "mac8_d1" to 0.275862068f, "mac8_d2" to 1f, "mac8_a1" to 0.375f, "mac8_a2" to 0.64f),
+        mapOf("macro1" to "Crush", "macro2" to "Rate", "macro3" to "Wobble", "macro4" to "Drive", "macro5" to "Body", "macro6" to "Ring", "macro7" to "Spray", "macro8" to "Thinner"),
+        family = "texture")
+
+    private fun pollen47() = Patch("Pollen", "Live Hold",
+        mapOf("source" to 1f, "buffer" to 0.9169925f, "capture" to 1f, "spray" to 0.3f, "size" to 0.8062673f, "density" to 0.784529448f, "panspread" to 0.8f, "ampattack" to 0.6346564f, "amprelease" to 0.7984619f, "volume" to 0.75333333f, "mac1_d1" to 0.8965517f, "mac1_a1" to 0.7f, "mac2_d1" to 0.03448276f, "mac2_d2" to 1f, "mac2_a1" to 0.7f, "mac2_a2" to 0.6235f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.206896558f, "mac4_d2" to 1f, "mac4_a1" to 0.597f, "mac4_a2" to 0.286f, "mac5_d1" to 0.413793117f, "mac5_d2" to 1f, "mac5_a1" to 0.7f, "mac5_a2" to 0.551f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.3f, "mac6_a2" to 0.5865f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.8f, "mac7_a2" to 0.393f, "mac8_d1" to 0.551724136f, "mac8_d2" to 0.5862069f, "mac8_a1" to 0.25f, "mac8_a2" to 0.199999988f),
+        mapOf("macro1" to "Feedback", "macro2" to "Further Back", "macro3" to "Spray", "macro4" to "Longer", "macro5" to "Scatter", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Narrow"),
         family = "live")
 
-    private fun pollen31() = Patch("Pollen", "Eat Itself",
-        mapOf("source" to 1f, "capture" to 1f, "feedback" to 0.757894754f, "spray" to 0.35f, "size" to 0.795165539f, "density" to 0.7751679f, "panspread" to 0.85f, "cutoff" to 0.82017225f, "ampattack" to 0.6346564f, "amprelease" to 0.8416923f, "volume" to 0.813333333f),
+    private fun pollen48() = Patch("Pollen", "Eat Itself",
+        mapOf("source" to 1f, "capture" to 1f, "feedback" to 0.757894754f, "spray" to 0.35f, "size" to 0.795165539f, "density" to 0.7751679f, "panspread" to 0.85f, "cutoff" to 0.82017225f, "ampattack" to 0.6346564f, "amprelease" to 0.8416923f, "volume" to 0.813333333f, "mac1_d1" to 0.8965517f, "mac1_a1" to 0.621f, "mac2_d1" to 0.03448276f, "mac2_a1" to 0.7f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.7f, "mac3_a2" to 0.571f, "mac4_d1" to 0.206896558f, "mac4_d2" to 1f, "mac4_a1" to 0.6f, "mac4_a2" to 0.288f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.3f, "mac6_a2" to 0.56f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.8f, "mac7_a2" to 0.4435f, "mac8_d1" to 0.551724136f, "mac8_d2" to 0.5862069f, "mac8_a1" to 0.25f, "mac8_a2" to 0.199999988f),
+        mapOf("macro1" to "Feedback", "macro2" to "Further Back", "macro3" to "Spray", "macro4" to "Longer", "macro5" to "Scatter", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Narrow"),
         family = "live")
 
-    private fun pollen32() = Patch("Pollen", "Feedback Bloom",
-        mapOf("source" to 1f, "capture" to 1f, "feedback" to 0.631579f, "spray" to 0.3f, "density" to 0.7686218f, "bloom" to 0.8f, "mutate" to 0.45f, "generations" to 0.6f, "panspread" to 0.9f, "ampattack" to 0.6666667f, "amprelease" to 0.8588487f, "volume" to 0.5133333f),
+    private fun pollen49() = Patch("Pollen", "Feedback Bloom",
+        mapOf("source" to 1f, "capture" to 1f, "feedback" to 0.631579f, "spray" to 0.3f, "density" to 0.7686218f, "bloom" to 0.8f, "mutate" to 0.45f, "generations" to 0.6f, "panspread" to 0.9f, "ampattack" to 0.6666667f, "amprelease" to 0.8588487f, "volume" to 0.5133333f, "mac1_d1" to 0.8965517f, "mac1_a1" to 0.684f, "mac2_d1" to 0.03448276f, "mac2_d2" to 1f, "mac2_a1" to 0.7f, "mac2_a2" to 0.61f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.206896558f, "mac4_d2" to 1f, "mac4_a1" to 0.6f, "mac4_a2" to 0.3795f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.3f, "mac6_a2" to 0.6185f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.623f, "mac8_d1" to 0.551724136f, "mac8_d2" to 0.5862069f, "mac8_a1" to 0.25f, "mac8_a2" to 0.199999988f),
+        mapOf("macro1" to "Feedback", "macro2" to "Further Back", "macro3" to "Spray", "macro4" to "Longer", "macro5" to "Scatter", "macro6" to "Dark", "macro7" to "Bare", "macro8" to "Narrow"),
         family = "live")
 
-    private fun pollen33() = Patch("Pollen", "Ring Scan",
-        mapOf("source" to 1f, "capture" to 1f, "scan" to 0.625f, "spray" to 0.12f, "size" to 0.795165539f, "density" to 0.784529448f, "panspread" to 0.75f, "ampattack" to 0.5895406f, "amprelease" to 0.76979214f, "volume" to 0.75333333f),
+    private fun pollen50() = Patch("Pollen", "Ring Scan",
+        mapOf("source" to 1f, "capture" to 1f, "scan" to 0.625f, "spray" to 0.12f, "size" to 0.795165539f, "density" to 0.784529448f, "panspread" to 0.75f, "ampattack" to 0.5895406f, "amprelease" to 0.76979214f, "volume" to 0.75333333f, "mac1_d1" to 0.8965517f, "mac1_a1" to 0.7f, "mac2_d1" to 0.03448276f, "mac2_d2" to 1f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4025f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.7f, "mac3_a2" to 0.614f, "mac4_d1" to 0.206896558f, "mac4_d2" to 1f, "mac4_a1" to 0.6f, "mac4_a2" to 0.328f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.3f, "mac6_a2" to 0.5865f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.8f, "mac7_a2" to 0.556f, "mac8_d1" to 0.551724136f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Feedback", "macro2" to "Further Back", "macro3" to "Spray", "macro4" to "Longer", "macro5" to "Scatter", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Wide"),
         family = "live")
 
-    private fun pollen34() = Patch("Pollen", "Capture",
-        mapOf("source" to 1f, "buffer" to 0.6f, "capture" to 1f, "spray" to 0.45f, "size" to 0.7410234f, "density" to 0.824780345f, "jitter" to 0.4f, "panspread" to 0.8f, "ampattack" to 0.5124145f, "amprelease" to 0.756255269f, "volume" to 0.5133333f),
+    private fun pollen51() = Patch("Pollen", "Capture",
+        mapOf("source" to 1f, "buffer" to 0.6f, "capture" to 1f, "spray" to 0.45f, "size" to 0.7410234f, "density" to 0.824780345f, "jitter" to 0.4f, "panspread" to 0.8f, "ampattack" to 0.5124145f, "amprelease" to 0.756255269f, "volume" to 0.5133333f, "mac1_d1" to 0.8965517f, "mac1_a1" to 0.7f, "mac2_d1" to 0.03448276f, "mac2_d2" to 1f, "mac2_a1" to 0.7f, "mac2_a2" to 0.597499967f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.7f, "mac3_a2" to 0.5485f, "mac4_d1" to 0.206896558f, "mac4_d2" to 1f, "mac4_a1" to 0.6f, "mac4_a2" to 0.411f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_a1" to 0.3f, "mac7_d1" to 0.448275864f, "mac7_a1" to 0.8f, "mac8_d1" to 0.551724136f, "mac8_d2" to 0.5862069f, "mac8_a1" to 0.25f, "mac8_a2" to 0.199999988f),
+        mapOf("macro1" to "Feedback", "macro2" to "Further Back", "macro3" to "Spray", "macro4" to "Longer", "macro5" to "Scatter", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Narrow"),
         family = "live")
 
-    private fun pollen35() = Patch("Pollen", "Infinite",
-        mapOf("source" to 1f, "buffer" to 0.9169925f, "capture" to 1f, "feedback" to 0.9263158f, "spray" to 0.25f, "size" to 0.852558553f, "panspread" to 0.9f, "cutoff" to 0.7903287f, "ampattack" to 0.7686218f, "amprelease" to 0.910943449f, "volume" to 0.75333333f),
+    private fun pollen52() = Patch("Pollen", "Infinite",
+        mapOf("source" to 1f, "buffer" to 0.9169925f, "capture" to 1f, "feedback" to 0.9263158f, "spray" to 0.25f, "size" to 0.852558553f, "panspread" to 0.9f, "cutoff" to 0.7903287f, "ampattack" to 0.7686218f, "amprelease" to 0.910943449f, "volume" to 0.75333333f, "mac1_d1" to 0.8965517f, "mac1_a1" to 0.3f, "mac2_d1" to 0.03448276f, "mac2_a1" to 0.7f, "mac3_d1" to 0.103448279f, "mac3_a1" to 0.7f, "mac4_d1" to 0.206896558f, "mac4_d2" to 1f, "mac4_a1" to 0.5735f, "mac4_a2" to 0.361f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.3f, "mac6_a2" to 0.566f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.8f, "mac7_a2" to 0.4025f, "mac8_d1" to 0.551724136f, "mac8_d2" to 0.5862069f, "mac8_a1" to 0.25f, "mac8_a2" to 0.199999988f),
+        mapOf("macro1" to "Less Feedback", "macro2" to "Further Back", "macro3" to "Spray", "macro4" to "Longer", "macro5" to "Scatter", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Narrow"),
         family = "live")
 
-    private val pollen: List<Patch> by lazy { listOf(pollen0(), pollen1(), pollen2(), pollen3(), pollen4(), pollen5(), pollen6(), pollen7(), pollen8(), pollen9(), pollen10(), pollen11(), pollen12(), pollen13(), pollen14(), pollen15(), pollen16(), pollen17(), pollen18(), pollen19(), pollen20(), pollen21(), pollen22(), pollen23(), pollen24(), pollen25(), pollen26(), pollen27(), pollen28(), pollen29(), pollen30(), pollen31(), pollen32(), pollen33(), pollen34(), pollen35()) }
+    private fun pollen53() = Patch("Pollen", "Short Echo",
+        mapOf("source" to 1f, "buffer" to 0.2f, "capture" to 1f, "feedback" to 0.5263158f, "position" to 0.4f, "spray" to 0.2f, "size" to 0.7051171f, "density" to 0.7313782f, "panspread" to 0.7f, "amprelease" to 0.76979214f, "volume" to 0.68f, "mac1_d1" to 0.8965517f, "mac1_a1" to 0.7f, "mac2_d1" to 0.03448276f, "mac2_d2" to 1f, "mac2_a1" to 0.7f, "mac2_a2" to 0.569f, "mac3_d1" to 0.103448279f, "mac3_d2" to 1f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4525f, "mac4_d1" to 0.206896558f, "mac4_d2" to 1f, "mac4_a1" to 0.6f, "mac4_a2" to 0.3535f, "mac5_d1" to 0.413793117f, "mac5_a1" to 0.7f, "mac6_d1" to 0.7241379f, "mac6_d2" to 1f, "mac6_a1" to 0.3f, "mac6_a2" to 0.659999967f, "mac7_d1" to 0.448275864f, "mac7_d2" to 1f, "mac7_a1" to 0.8f, "mac7_a2" to 0.4365f, "mac8_d1" to 0.551724136f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Feedback", "macro2" to "Further Back", "macro3" to "Spray", "macro4" to "Longer", "macro5" to "Scatter", "macro6" to "Dark", "macro7" to "Bloom", "macro8" to "Wide"),
+        family = "live")
+
+    private val pollen: List<Patch> by lazy { listOf(pollen0(), pollen1(), pollen2(), pollen3(), pollen4(), pollen5(), pollen6(), pollen7(), pollen8(), pollen9(), pollen10(), pollen11(), pollen12(), pollen13(), pollen14(), pollen15(), pollen16(), pollen17(), pollen18(), pollen19(), pollen20(), pollen21(), pollen22(), pollen23(), pollen24(), pollen25(), pollen26(), pollen27(), pollen28(), pollen29(), pollen30(), pollen31(), pollen32(), pollen33(), pollen34(), pollen35(), pollen36(), pollen37(), pollen38(), pollen39(), pollen40(), pollen41(), pollen42(), pollen43(), pollen44(), pollen45(), pollen46(), pollen47(), pollen48(), pollen49(), pollen50(), pollen51(), pollen52(), pollen53()) }
 
     private fun brazen0() = Patch("Brazen", "Init", emptyMap(),
         family = "high")
@@ -7731,150 +7856,281 @@ internal object FactoryBanks {
         family = "keys")
 
     private fun mosaic1() = Patch("Mosaic", "Felt",
-        mapOf("keyfade" to 0.25f, "velfade" to 0.375f, "start" to 0.004f, "a_decay" to 0.7848632f, "a_sustain" to 0.45f, "a_release" to 0.618813455f, "f_freq" to 0.5801209f, "f_key" to 0.3f, "f_decay" to 0.716931f, "f_sustain" to 0.3f, "volume" to 0.6666667f, "veltofilter" to 0.2f),
+        mapOf("keyfade" to 0.25f, "velfade" to 0.375f, "start" to 0.004f, "a_decay" to 0.7848632f, "a_sustain" to 0.45f, "a_release" to 0.618813455f, "f_freq" to 0.5801209f, "f_key" to 0.3f, "f_decay" to 0.716931f, "f_sustain" to 0.3f, "volume" to 0.6666667f, "veltofilter" to 0.2f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.4375f, "mac1_a2" to 0.5825f, "mac2_d1" to 0.5f, "mac2_d2" to 0.71875f, "mac2_d3" to 0.75f, "mac2_a1" to 0.65f, "mac2_a2" to 0.7f, "mac2_a3" to 0.457f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.575f, "mac3_a2" to 0.575f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.6665f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_d3" to 0.75f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac5_a3" to 0.545f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4165f, "mac8_d1" to 0.5625f, "mac8_d2" to 0.75f, "mac8_a1" to 0.75f, "mac8_a2" to 0.5585f),
+        mapOf("macro1" to "Dark", "macro2" to "Harder", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
         family = "keys")
 
     private fun mosaic2() = Patch("Mosaic", "Mallets",
-        mapOf("keyfade" to 0.125f, "loop" to 0.5f, "a_decay" to 0.656523347f, "a_sustain" to 0f, "a_release" to 0.5411295f, "f_type" to 0.09090909f, "f_freq" to 0.8257071f, "f_key" to 0.6f, "volume" to 0.366666675f, "veltofilter" to 0.5f),
+        mapOf("keyfade" to 0.125f, "loop" to 0.5f, "a_decay" to 0.656523347f, "a_sustain" to 0f, "a_release" to 0.5411295f, "f_type" to 0.09090909f, "f_freq" to 0.8257071f, "f_key" to 0.6f, "volume" to 0.366666675f, "veltofilter" to 0.5f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.376f, "mac2_d1" to 0.5f, "mac2_d2" to 0.71875f, "mac2_a1" to 0.65f, "mac2_a2" to 0.7f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_d3" to 0.75f, "mac3_a1" to 0.575f, "mac3_a2" to 0.575f, "mac3_a3" to 0.442f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.55f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.454f, "mac8_d1" to 0.5625f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Dark", "macro2" to "Harder", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
         family = "keys")
 
     private fun mosaic3() = Patch("Mosaic", "Electric",
-        mapOf("a_decay" to 0.762373149f, "a_sustain" to 0.3f, "a_release" to 0.593804836f, "f_type" to 0.181818187f, "f_freq" to 0.774073064f, "f_env" to 0.65f, "f_decay" to 0.6846892f, "f_sustain" to 0.25f, "volume" to 0.686666667f, "veltofilter" to 0.45f, "l1_rate" to 0.754013956f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.61f),
+        mapOf("a_decay" to 0.762373149f, "a_sustain" to 0.3f, "a_release" to 0.593804836f, "f_type" to 0.181818187f, "f_freq" to 0.774073064f, "f_env" to 0.65f, "f_decay" to 0.6846892f, "f_sustain" to 0.25f, "volume" to 0.686666667f, "veltofilter" to 0.45f, "l1_rate" to 0.754013956f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.61f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.389f, "mac2_d1" to 0.5f, "mac2_d2" to 0.71875f, "mac2_a1" to 0.65f, "mac2_a2" to 0.7f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_d3" to 0.75f, "mac3_a1" to 0.575f, "mac3_a2" to 0.575f, "mac3_a3" to 0.459f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.555500031f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.417f, "mac8_d1" to 0.5625f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Dark", "macro2" to "Harder", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
         family = "keys")
 
     private fun mosaic4() = Patch("Mosaic", "Clav",
-        mapOf("start" to 0.008f, "loop" to 0.5f, "a_decay" to 0.639247f, "a_sustain" to 0f, "a_release" to 0.4588705f, "f_type" to 1f, "f_freq" to 0.5265945f, "f_res" to 0.45f, "f_env" to 0.75f, "f_attack" to 0f, "f_decay" to 0.5411295f, "f_sustain" to 0.3f, "volume" to 0.66f, "veltofilter" to 0.45f),
+        mapOf("start" to 0.008f, "loop" to 0.5f, "a_decay" to 0.639247f, "a_sustain" to 0f, "a_release" to 0.4588705f, "f_type" to 1f, "f_freq" to 0.5265945f, "f_res" to 0.45f, "f_env" to 0.75f, "f_attack" to 0f, "f_decay" to 0.5411295f, "f_sustain" to 0.3f, "volume" to 0.66f, "veltofilter" to 0.45f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.45085f, "mac2_d1" to 0.5f, "mac2_d2" to 0.71875f, "mac2_a1" to 0.625f, "mac2_a2" to 0.7f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_d3" to 0.75f, "mac3_a1" to 0.575f, "mac3_a2" to 0.575f, "mac3_a3" to 0.380500019f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.549f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_d3" to 0.75f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45085f, "mac6_a3" to 0.401f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4175f, "mac8_d1" to 0.5625f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Dark", "macro2" to "Harder", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
         family = "keys")
 
     private fun mosaic5() = Patch("Mosaic", "Bell Keys",
-        mapOf("keyfade" to 0.333333343f, "velfade" to 0.46875f, "a_decay" to 0.8518653f, "a_sustain" to 0.25f, "a_release" to 0.7848632f, "f_type" to 0.454545468f, "f_freq" to 0.492373765f, "octave" to 0.6666667f, "volume" to 0.5933333f),
+        mapOf("keyfade" to 0.333333343f, "velfade" to 0.46875f, "a_decay" to 0.8518653f, "a_sustain" to 0.25f, "a_release" to 0.7848632f, "f_type" to 0.454545468f, "f_freq" to 0.492373765f, "octave" to 0.6666667f, "volume" to 0.5933333f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.375f, "mac1_a2" to 0.347f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.575f, "mac2_a2" to 0.55f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.574f, "mac3_a2" to 0.575f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.703500032f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_d3" to 0.75f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac5_a3" to 0.56f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_d3" to 0.75f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac6_a3" to 0.3535f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.426f, "mac8_d1" to 0.5625f, "mac8_d2" to 0.75f, "mac8_a1" to 0.75f, "mac8_a2" to 0.416f),
+        mapOf("macro1" to "Body", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
         family = "keys")
 
     private fun mosaic6() = Patch("Mosaic", "Undertow",
-        mapOf("keyfade" to 0.416666657f, "a_attack" to 0.3692803f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.716931f, "f_freq" to 0.551070869f, "f_res" to 0.2f, "f_key" to 0.4f, "octave" to 0.166666672f, "volume" to 0.50666666f),
+        mapOf("keyfade" to 0.416666657f, "a_attack" to 0.3692803f, "a_decay" to 0.8768739f, "a_sustain" to 0.6f, "a_release" to 0.716931f, "f_freq" to 0.551070869f, "f_res" to 0.2f, "f_key" to 0.4f, "octave" to 0.166666672f, "volume" to 0.50666666f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.4445f, "mac1_a2" to 0.5215f, "mac2_d1" to 0.5f, "mac2_d2" to 0.71875f, "mac2_a1" to 0.65f, "mac2_a2" to 0.7f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.5615f, "mac3_a2" to 0.575f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.6085f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4365f, "mac8_d1" to 0.5625f, "mac8_d2" to 0.75f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4365f),
+        mapOf("macro1" to "Dark", "macro2" to "Harder", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
         family = "keys")
 
-    private fun mosaic7() = Patch("Mosaic", "Soft Pad",
-        mapOf("keyfade" to 0.25f, "velfade" to 0.3125f, "start" to 0.06f, "loop" to 1f, "a_attack" to 0.6945378f, "a_decay" to 0.81962353f, "a_sustain" to 0.9f, "a_release" to 0.762373149f, "f_freq" to 0.747679353f, "f_env" to 0.6f, "f_decay" to 0.774181366f, "f_sustain" to 0.6f, "volume" to 0.66f),
+    private fun mosaic7() = Patch("Mosaic", "Plain Keys",
+        mapOf("a_decay" to 0.897307456f, "a_sustain" to 0.6f, "a_release" to 0.5411295f, "volume" to 0.552f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.375f, "mac2_d1" to 0.5f, "mac2_d2" to 0.71875f, "mac2_a1" to 0.65f, "mac2_a2" to 0.7f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.5515f, "mac3_a2" to 0.575f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.5445f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4335f, "mac8_d1" to 0.5625f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Dark", "macro2" to "Harder", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
+        family = "keys")
+
+    private fun mosaic8() = Patch("Mosaic", "Hard Hammer",
+        mapOf("a_decay" to 0.8768739f, "a_sustain" to 0.5f, "a_release" to 0.578839362f, "f_freq" to 0.6150327f, "f_env" to 0.75f, "f_decay" to 0.593804836f, "f_sustain" to 0.2f, "volume" to 0.5646667f, "veltofilter" to 0.8f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.4285f, "mac2_d1" to 0.5f, "mac2_d2" to 0.71875f, "mac2_a1" to 0.625f, "mac2_a2" to 0.6f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.5615f, "mac3_a2" to 0.575f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.542f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.429499984f, "mac8_d1" to 0.5625f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Dark", "macro2" to "Harder", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
+        family = "keys")
+
+    private fun mosaic9() = Patch("Mosaic", "Music Box",
+        mapOf("loop" to 0.5f, "a_decay" to 0.7342073f, "a_sustain" to 0f, "a_release" to 0.671488762f, "f_type" to 0.454545468f, "f_freq" to 0.46598f, "octave" to 0.8333333f, "volume" to 0.713333368f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.375f, "mac1_a2" to 0.393f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.575f, "mac2_a2" to 0.55f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_d3" to 0.75f, "mac3_a1" to 0.575f, "mac3_a2" to 0.575f, "mac3_a3" to 0.43f, "mac4_d1" to 0.09375f, "mac4_d2" to 0.3125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.54f, "mac4_a2" to 0.54f, "mac4_a3" to 0.553f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_d3" to 0.75f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac6_a3" to 0.379f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.411f, "mac8_d1" to 0.5625f, "mac8_d2" to 0.75f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4235f),
+        mapOf("macro1" to "Body", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Bowed", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Even", "macro8" to "Octave Up"),
+        family = "keys")
+
+    private fun mosaic10() = Patch("Mosaic", "Soft Pad",
+        mapOf("keyfade" to 0.25f, "velfade" to 0.3125f, "start" to 0.06f, "loop" to 1f, "a_attack" to 0.6945378f, "a_decay" to 0.81962353f, "a_sustain" to 0.9f, "a_release" to 0.762373149f, "f_freq" to 0.747679353f, "f_env" to 0.6f, "f_decay" to 0.774181366f, "f_sustain" to 0.6f, "volume" to 0.66f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.3955f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.56f, "mac3_a2" to 0.4035f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.55f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5625f, "mac7_d2" to 0.75f, "mac7_a1" to 0.75f, "mac7_a2" to 0.438f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.4175f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Even"),
         family = "pad")
 
-    private fun mosaic8() = Patch("Mosaic", "Warm Wash",
-        mapOf("keyfade" to 0.333333343f, "start" to 0.08f, "loop" to 1f, "a_attack" to 0.7697953f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "f_type" to 0.181818187f, "f_freq" to 0.6930604f, "f_res" to 0.25f, "volume" to 0.480000019f, "l1_rate" to 0.2649158f, "l1_keysync" to 0f, "l2_wave" to 0.75f, "l2_rate" to 0.318186849f, "l2_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.6666667f, "m01_depth" to 0.7f, "m02_src" to 1f, "m02_dest" to 0.6666667f, "m02_depth" to 0.61f),
+    private fun mosaic11() = Patch("Mosaic", "Warm Wash",
+        mapOf("keyfade" to 0.333333343f, "start" to 0.08f, "loop" to 1f, "a_attack" to 0.7697953f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.81962353f, "f_type" to 0.181818187f, "f_freq" to 0.6930604f, "f_res" to 0.25f, "volume" to 0.480000019f, "l1_rate" to 0.2649158f, "l1_keysync" to 0f, "l2_wave" to 0.75f, "l2_rate" to 0.318186849f, "l2_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.6666667f, "m01_depth" to 0.7f, "m02_src" to 1f, "m02_dest" to 0.6666667f, "m02_depth" to 0.61f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.409f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.56f, "mac3_a2" to 0.615f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.55f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.78125f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Deeper"),
         family = "pad")
 
-    private fun mosaic9() = Patch("Mosaic", "Glass Pad",
-        mapOf("keyfade" to 0.5f, "velfade" to 0.625f, "start" to 0.05f, "loop" to 1f, "a_attack" to 0.7385606f, "a_decay" to 0.8768739f, "a_sustain" to 0.8f, "a_release" to 0.8035856f, "f_type" to 0.363636374f, "f_freq" to 0.410149634f, "f_res" to 0.3f, "f_env" to 0.6f, "f_decay" to 0.8518653f, "f_sustain" to 0.4f, "octave" to 0.6666667f, "volume" to 0.566666663f),
+    private fun mosaic12() = Patch("Mosaic", "Glass Pad",
+        mapOf("keyfade" to 0.5f, "velfade" to 0.625f, "start" to 0.05f, "loop" to 1f, "a_attack" to 0.7385606f, "a_decay" to 0.8768739f, "a_sustain" to 0.8f, "a_release" to 0.8035856f, "f_type" to 0.363636374f, "f_freq" to 0.410149634f, "f_res" to 0.3f, "f_env" to 0.6f, "f_decay" to 0.8518653f, "f_sustain" to 0.4f, "octave" to 0.6666667f, "volume" to 0.566666663f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.375f, "mac1_a2" to 0.3995f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_a1" to 0.56f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.55f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_d3" to 0.75f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac6_a3" to 0.434000015f, "mac7_d1" to 0.5625f, "mac7_d2" to 0.75f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4175f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.429f),
+        mapOf("macro1" to "Body", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Even"),
         family = "pad")
 
-    private fun mosaic10() = Patch("Mosaic", "Slow Swell",
-        mapOf("keyfade" to 0.25f, "start" to 0.07f, "loop" to 1f, "a_attack" to 0.8138181f, "a_decay" to 0.929549158f, "a_sustain" to 0.7f, "a_release" to 0.8518653f, "f_freq" to 0.5801209f, "volume" to 0.5466667f, "e1_attack" to 0.8450528f, "e1_decay" to 0.897307456f, "e1_sustain" to 0.8f, "e1_release" to 0.81962353f, "m01_src" to 0.75f, "m01_dest" to 0.6666667f, "m01_depth" to 0.775f),
+    private fun mosaic13() = Patch("Mosaic", "Slow Swell",
+        mapOf("keyfade" to 0.25f, "start" to 0.07f, "loop" to 1f, "a_attack" to 0.8138181f, "a_decay" to 0.929549158f, "a_sustain" to 0.7f, "a_release" to 0.8518653f, "f_freq" to 0.5801209f, "volume" to 0.5466667f, "e1_attack" to 0.8450528f, "e1_decay" to 0.897307456f, "e1_sustain" to 0.8f, "e1_release" to 0.81962353f, "m01_src" to 0.75f, "m01_dest" to 0.6666667f, "m01_depth" to 0.775f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.4375f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.56f, "mac3_a2" to 0.555500031f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.53525f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.78125f, "mac8_a1" to 0.6125f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Deeper"),
         family = "pad")
 
-    private fun mosaic11() = Patch("Mosaic", "Dark Pad",
-        mapOf("keyfade" to 0.25f, "grain" to 1f, "gpos" to 0.75f, "grate" to 0.6f, "gsize" to 0.858001649f, "gdensity" to 0.5512401f, "gspray" to 0.12f, "a_attack" to 0.7257725f, "a_release" to 0.7946149f, "f_freq" to 0.634363353f, "f_res" to 0.15f, "volume" to 0.713333368f),
+    private fun mosaic14() = Patch("Mosaic", "Dark Pad",
+        mapOf("keyfade" to 0.25f, "grain" to 1f, "gpos" to 0.75f, "grate" to 0.6f, "gsize" to 0.858001649f, "gdensity" to 0.5512401f, "gspray" to 0.12f, "a_attack" to 0.7257725f, "a_release" to 0.7946149f, "f_freq" to 0.634363353f, "f_res" to 0.15f, "volume" to 0.713333368f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.424f, "mac1_a2" to 0.55f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_a1" to 0.56f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_d3" to 0.75f, "mac4_a1" to 0.25f, "mac4_a2" to 0.55f, "mac4_a3" to 0.597499967f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.411f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Even"),
         family = "pad")
 
-    private fun mosaic12() = Patch("Mosaic", "Choir Fade",
-        mapOf("keyfade" to 0.5833333f, "velfade" to 0.4375f, "start" to 0.09f, "loop" to 1f, "a_attack" to 0.80103f, "a_decay" to 0.9145838f, "a_sustain" to 0.9f, "a_release" to 0.833651066f, "f_type" to 0.09090909f, "f_freq" to 0.774073064f, "volume" to 0.306666672f, "velamt" to 0.5f, "veltofilter" to 0.2f),
+    private fun mosaic15() = Patch("Mosaic", "Choir Fade",
+        mapOf("keyfade" to 0.5833333f, "velfade" to 0.4375f, "start" to 0.09f, "loop" to 1f, "a_attack" to 0.80103f, "a_decay" to 0.9145838f, "a_sustain" to 0.9f, "a_release" to 0.833651066f, "f_type" to 0.09090909f, "f_freq" to 0.774073064f, "volume" to 0.306666672f, "velamt" to 0.5f, "veltofilter" to 0.2f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.389f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_d3" to 0.75f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac2_a3" to 0.551f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.56f, "mac3_a2" to 0.6745f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.5427f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_d3" to 0.75f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac5_a3" to 0.533f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5625f, "mac7_d2" to 0.75f, "mac7_a1" to 0.75f, "mac7_a2" to 0.5375f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.25f, "mac8_a2" to 0.467f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Even"),
         family = "pad")
 
-    private fun mosaic13() = Patch("Mosaic", "Cloud",
-        mapOf("grain" to 1f, "gpos" to 0.1f, "grate" to 0.5375f, "gsize" to 0.7781513f, "gdensity" to 0.6037341f, "gspray" to 0.25f, "gpitch" to 0.008333334f, "a_attack" to 0.636016965f, "a_release" to 0.79919f, "volume" to 0.453333348f, "m01_src" to 0.166666672f, "m01_dest" to 0.266666681f, "m01_depth" to 0.8f),
-        family = "grain")
+    private fun mosaic16() = Patch("Mosaic", "Bowed Swell",
+        mapOf("start" to 0.12f, "a_attack" to 0.7385606f, "a_release" to 0.7491727f, "f_freq" to 0.8257071f, "volume" to 0.733333349f, "l1_rate" to 0.749285161f, "l1_delay" to 0.16f, "m01_src" to 0.9166667f, "m01_dest" to 0.06666667f, "m01_depth" to 0.503f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.376f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_a1" to 0.56f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.55f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.78125f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Deeper"),
+        family = "pad")
 
-    private fun mosaic14() = Patch("Mosaic", "Shimmer",
-        mapOf("grain" to 1f, "gpos" to 0.07f, "grate" to 0.51f, "gsize" to 0.3406206f, "gdensity" to 0.901826739f, "gspray" to 0.08f, "gpitch" to 0.0125f, "a_attack" to 0.5752575f, "a_release" to 0.81962353f, "volume" to 0.8066667f, "l1_rate" to 0.361190557f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.266666681f, "m01_depth" to 0.625f, "m02_src" to 0.25f, "m02_dest" to 0.6f, "m02_depth" to 0.75f),
-        family = "grain")
+    private fun mosaic17() = Patch("Mosaic", "Velvet",
+        mapOf("start" to 0.03f, "a_attack" to 0.636016965f, "a_release" to 0.774181366f, "f_type" to 0.09090909f, "f_freq" to 0.634363353f, "volume" to 0.612666667f, "veltofilter" to 0.3f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.424f, "mac1_a2" to 0.5415f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.56f, "mac3_a2" to 0.5535f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.55f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.4235f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Even"),
+        family = "pad")
 
-    private fun mosaic15() = Patch("Mosaic", "Freeze",
-        mapOf("grain" to 1f, "gpos" to 0.45f, "grate" to 0.5f, "gsize" to 0.6901056f, "gdensity" to 0.770524442f, "gspray" to 0.03f, "a_attack" to 0.599485f, "a_decay" to 0.954557836f, "a_release" to 0.7491727f, "f_type" to 0.09090909f, "f_freq" to 0.84802264f),
-        family = "grain")
+    private fun mosaic18() = Patch("Mosaic", "Far Away",
+        mapOf("start" to 0.05f, "a_attack" to 0.6945378f, "a_release" to 0.79919f, "f_type" to 0.09090909f, "f_freq" to 0.5146893f, "volume" to 0.72f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.45385f, "mac1_a2" to 0.5465f, "mac2_d1" to 0.3125f, "mac2_d2" to 0.40625f, "mac2_a1" to 0.54f, "mac2_a2" to 0.56f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.56f, "mac3_a2" to 0.5535f, "mac4_d1" to 0.375f, "mac4_d2" to 0.34375f, "mac4_a1" to 0.25f, "mac4_a2" to 0.55f, "mac5_d1" to 0.0625f, "mac5_d2" to 0.03125f, "mac5_a1" to 0.85f, "mac5_a2" to 0.675f, "mac6_d1" to 0.46875f, "mac6_d2" to 0.4375f, "mac6_a1" to 0.725f, "mac6_a2" to 0.45385f, "mac7_d1" to 0.5625f, "mac7_d2" to 0.75f, "mac7_a1" to 0.75f, "mac7_a2" to 0.573f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.413f),
+        mapOf("macro1" to "Dark", "macro2" to "Slower", "macro3" to "Bowed", "macro4" to "Fade", "macro5" to "Hard Layer", "macro6" to "Ring", "macro7" to "Octave Up", "macro8" to "Even"),
+        family = "pad")
 
-    private fun mosaic16() = Patch("Mosaic", "Stutter",
-        mapOf("grain" to 1f, "gpos" to 0.3f, "grate" to 0.65f, "gsize" to 0.477121264f, "gdensity" to 0.7104341f, "gspray" to 0f, "a_attack" to 0.17474249f, "a_release" to 0.5615631f, "f_type" to 1f, "f_freq" to 0.551070869f, "f_res" to 0.4f, "volume" to 0.673333347f, "l1_wave" to 1f, "l1_rate" to 0.789853036f, "m01_src" to 0.9166667f, "m01_dest" to 0.266666681f, "m01_depth" to 0.675f),
-        family = "grain")
-
-    private fun mosaic17() = Patch("Mosaic", "Dust",
-        mapOf("grain" to 1f, "gpos" to 0.35f, "grate" to 0.55f, "gsize" to 0.349485f, "gdensity" to 0.6456497f, "gspray" to 0.85f, "gpitch" to 0.0416666679f, "a_attack" to 0.6945378f, "a_decay" to 0.9427497f, "a_sustain" to 0.8f, "a_release" to 0.81962353f, "f_type" to 0f, "f_freq" to 0.8844042f, "volume" to 0.553333342f, "l1_wave" to 0.75f, "l1_rate" to 0.8443482f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.466666669f, "m01_depth" to 0.875f),
-        family = "grain")
-
-    private fun mosaic18() = Patch("Mosaic", "Smear",
-        mapOf("grain" to 1f, "grate" to 0.6875f, "gsize" to 1f, "gdensity" to 0.7104341f, "gspray" to 0.08f, "a_attack" to 0.650515f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.8118912f, "f_freq" to 0.799313366f, "volume" to 0.38f),
-        family = "grain")
-
-    private fun mosaic19() = Patch("Mosaic", "Scatter",
-        mapOf("grain" to 1f, "gpos" to 0.4f, "grate" to 0.575f, "gsize" to 0.627636254f, "gdensity" to 0.6638244f, "gspray" to 0.5f, "gpitch" to 0.020833334f, "a_attack" to 0.5440228f, "a_release" to 0.762373149f, "m01_src" to 0.5f, "m01_dest" to 0.266666681f, "m01_depth" to 0.9f),
-        family = "grain")
-
-    private fun mosaic20() = Patch("Mosaic", "Tremolo",
-        mapOf("start" to 0.025f, "a_decay" to 0.8518653f, "a_sustain" to 0.8f, "a_release" to 0.639247f, "f_freq" to 0.8844042f, "volume" to 0.42f, "l1_wave" to 0.5f, "l1_rate" to 0.780918f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.75f),
-        family = "motion")
-
-    private fun mosaic21() = Patch("Mosaic", "Wah",
-        mapOf("a_decay" to 0.8768739f, "a_sustain" to 0.85f, "a_release" to 0.671488762f, "f_freq" to 0.5927171f, "f_res" to 0.55f, "volume" to 0.5733333f, "l1_wave" to 0.125f, "l1_rate" to 0.595805764f, "l1_delay" to 0.1f, "m01_src" to 0.9166667f, "m01_dest" to 0.6666667f, "m01_depth" to 0.875f),
-        family = "motion")
-
-    private fun mosaic22() = Patch("Mosaic", "Autopan",
-        mapOf("start" to 0.025f, "loop" to 1f, "a_attack" to 0.5752575f, "a_decay" to 0.897307456f, "a_sustain" to 0.9f, "a_release" to 0.7342073f, "volume" to 0.62f, "l1_rate" to 0.401758462f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8666667f, "m01_depth" to 0.95f),
-        family = "motion")
-
-    private fun mosaic23() = Patch("Mosaic", "Scan Sweep",
-        mapOf("scan" to 0f, "scanamt" to 1f, "keyfade" to 0.25f, "velfade" to 1f, "start" to 0.025f, "a_attack" to 0.5f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.7491727f, "volume" to 0.49333334f, "e1_attack" to 0.8138181f, "e1_decay" to 0.81962353f, "e1_sustain" to 0.9f, "e1_release" to 0.716931f, "m01_src" to 0.75f, "m01_dest" to 0.13333334f, "m01_depth" to 1f),
-        family = "motion")
-
-    private fun mosaic24() = Patch("Mosaic", "Pulse",
-        mapOf("grain" to 1f, "gpos" to 0.25f, "grate" to 0.55f, "gsize" to 0.573064f, "gdensity" to 0.9153074f, "a_attack" to 0.5f, "a_release" to 0.716931f, "f_type" to 1f, "f_freq" to 0.56632334f, "f_res" to 0.35f, "volume" to 0.326666683f, "l1_wave" to 0.875f, "l1_rate" to 0.695477068f, "m01_src" to 0.9166667f, "m01_dest" to 0.466666669f, "m01_depth" to 0.65f),
-        family = "motion")
-
-    private fun mosaic25() = Patch("Mosaic", "Wobble",
-        mapOf("start" to 0.025f, "a_decay" to 0.8518653f, "a_sustain" to 0.7f, "a_release" to 0.6846892f, "f_freq" to 0.8673533f, "volume" to 0.586666644f, "l1_wave" to 0.75f, "l1_rate" to 0.670442343f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.06666667f, "m01_depth" to 0.53f, "m02_src" to 0.5f, "m02_dest" to 0.2f, "m02_depth" to 0.56f),
-        family = "motion")
-
-    private fun mosaic26() = Patch("Mosaic", "Mono Lead",
-        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.7f, "a_release" to 0.5161209f, "f_freq" to 0.651414156f, "f_res" to 0.4f, "f_env" to 0.8f, "f_decay" to 0.618813455f, "f_sustain" to 0.35f, "voicemode" to 0.5f, "volume" to 0.68f, "veltofilter" to 0.6f),
+    private fun mosaic19() = Patch("Mosaic", "Mono Lead",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.15051499f, "a_decay" to 0.716931f, "a_sustain" to 0.7f, "a_release" to 0.5161209f, "f_freq" to 0.651414156f, "f_res" to 0.4f, "f_env" to 0.8f, "f_decay" to 0.618813455f, "f_sustain" to 0.35f, "voicemode" to 0.5f, "volume" to 0.68f, "veltofilter" to 0.6f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.4195f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.6f, "mac3_a2" to 0.7f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.5625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_d3" to 0.75f, "mac6_a1" to 0.425f, "mac6_a2" to 0.45f, "mac6_a3" to 0.5505f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_d3" to 0.75f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac7_a3" to 0.5505f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Shorter", "macro7" to "Bowed", "macro8" to "Swell"),
         family = "lead")
 
-    private fun mosaic27() = Patch("Mosaic", "Glide Lead",
-        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.32525748f, "a_decay" to 0.774181366f, "a_sustain" to 0.8f, "a_release" to 0.5615631f, "f_type" to 0.181818187f, "f_freq" to 0.7046478f, "f_res" to 0.3f, "f_env" to 0.675f, "glide" to 0.08f, "glidemode" to 1f, "voicemode" to 1f, "volume" to 0.5733333f),
+    private fun mosaic20() = Patch("Mosaic", "Glide Lead",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.32525748f, "a_decay" to 0.774181366f, "a_sustain" to 0.8f, "a_release" to 0.5615631f, "f_type" to 0.181818187f, "f_freq" to 0.7046478f, "f_res" to 0.3f, "f_env" to 0.675f, "glide" to 0.08f, "glidemode" to 1f, "voicemode" to 1f, "volume" to 0.5733333f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.406499982f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.7f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.5625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_a1" to 0.425f, "mac6_a2" to 0.45f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_d3" to 0.75f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac7_a3" to 0.5465f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Shorter", "macro7" to "Bowed", "macro8" to "Swell"),
         family = "lead")
 
-    private fun mosaic28() = Patch("Mosaic", "Bright Lead",
-        mapOf("start" to 0.02f, "loop" to 1f, "a_attack" to 0.2257725f, "a_decay" to 0.7419396f, "a_sustain" to 0.75f, "a_release" to 0.5411295f, "f_type" to 1f, "f_freq" to 0.743482947f, "f_res" to 0.6f, "f_env" to 0.7f, "f_decay" to 0.639247f, "octave" to 0.6666667f, "voicemode" to 0.5f, "volume" to 0.613333344f),
+    private fun mosaic21() = Patch("Mosaic", "Bright Lead",
+        mapOf("start" to 0.02f, "loop" to 1f, "a_attack" to 0.2257725f, "a_decay" to 0.7419396f, "a_sustain" to 0.75f, "a_release" to 0.5411295f, "f_type" to 1f, "f_freq" to 0.743482947f, "f_res" to 0.6f, "f_env" to 0.7f, "f_decay" to 0.639247f, "octave" to 0.6666667f, "voicemode" to 0.5f, "volume" to 0.613333344f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.3965f, "mac1_a2" to 0.4425f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.7f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_d3" to 0.75f, "mac4_a1" to 0.7f, "mac4_a2" to 0.45f, "mac4_a3" to 0.301f, "mac5_d1" to 0.5625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_a1" to 0.425f, "mac6_a2" to 0.45f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_d3" to 0.75f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac7_a3" to 0.5415f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Shorter", "macro7" to "Bowed", "macro8" to "Swell"),
         family = "lead")
 
-    private fun mosaic29() = Patch("Mosaic", "Reed",
-        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.4757725f, "a_decay" to 0.81962353f, "a_sustain" to 0.85f, "a_release" to 0.5615631f, "f_type" to 1f, "f_freq" to 0.551070869f, "f_res" to 0.3f, "glide" to 0.025f, "voicemode" to 1f, "volume" to 0.52f, "l1_rate" to 0.733872533f, "l1_delay" to 0.0899999961f, "m01_src" to 0.9166667f, "m01_dest" to 0.06666667f, "m01_depth" to 0.525f),
+    private fun mosaic22() = Patch("Mosaic", "Reed",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.4757725f, "a_decay" to 0.81962353f, "a_sustain" to 0.85f, "a_release" to 0.5615631f, "f_type" to 1f, "f_freq" to 0.551070869f, "f_res" to 0.3f, "glide" to 0.025f, "voicemode" to 1f, "volume" to 0.52f, "l1_rate" to 0.733872533f, "l1_delay" to 0.0899999961f, "m01_src" to 0.9166667f, "m01_dest" to 0.06666667f, "m01_depth" to 0.525f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.4445f, "mac1_a2" to 0.459f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.7f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_d3" to 0.75f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac4_a3" to 0.414f, "mac5_d1" to 0.5625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_a1" to 0.425f, "mac6_a2" to 0.45f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_d3" to 0.75f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac7_a3" to 0.5455f, "mac8_d1" to 0.78125f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Shorter", "macro7" to "Bowed", "macro8" to "Deeper"),
         family = "lead")
 
-    private fun mosaic30() = Patch("Mosaic", "Grind",
-        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.119280316f, "a_sustain" to 0.6f, "a_release" to 0.5043127f, "f_freq" to 0.793403745f, "f_res" to 0.7f, "f_env" to 0.15f, "f_attack" to 0.15051499f, "f_decay" to 0.656523347f, "f_sustain" to 0.2f, "coarse" to 0.25f, "voicemode" to 0.5f, "volume" to 0.880000055f, "veltofilter" to 0.7f),
+    private fun mosaic23() = Patch("Mosaic", "Grind",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_attack" to 0.119280316f, "a_sustain" to 0.6f, "a_release" to 0.5043127f, "f_freq" to 0.793403745f, "f_res" to 0.7f, "f_env" to 0.15f, "f_attack" to 0.15051499f, "f_decay" to 0.656523347f, "f_sustain" to 0.2f, "coarse" to 0.25f, "voicemode" to 0.5f, "volume" to 0.880000055f, "veltofilter" to 0.7f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.384f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.65f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45f, "mac5_d1" to 0.5625f, "mac5_d2" to 0.75f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4475f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_d3" to 0.75f, "mac6_a1" to 0.425f, "mac6_a2" to 0.45f, "mac6_a3" to 0.56f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_d3" to 0.75f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac7_a3" to 0.56f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Shorter", "macro7" to "Bowed", "macro8" to "Swell"),
         family = "lead")
 
-    private fun mosaic31() = Patch("Mosaic", "Backwards",
-        mapOf("loop" to 0.5f, "reverse" to 1f, "a_attack" to 0.24999997f, "a_decay" to 0.897307456f, "a_release" to 0.618813455f, "f_freq" to 0.913454235f, "volume" to 0.92f),
+    private fun mosaic24() = Patch("Mosaic", "Legato Lead",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_sustain" to 0.85f, "a_release" to 0.5161209f, "f_freq" to 0.725363731f, "f_res" to 0.2f, "glide" to 0.04f, "glidemode" to 1f, "voicemode" to 1f, "volume" to 0.598666668f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.401f, "mac1_a2" to 0.5565f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.7f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.5625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_a1" to 0.425f, "mac6_a2" to 0.45f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_d3" to 0.75f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac7_a3" to 0.5405f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Shorter", "macro7" to "Bowed", "macro8" to "Swell"),
+        family = "lead")
+
+    private fun mosaic25() = Patch("Mosaic", "Wheel Vibrato",
+        mapOf("start" to 0.008f, "loop" to 1f, "a_sustain" to 0.8f, "a_release" to 0.5161209f, "f_freq" to 0.6930604f, "voicemode" to 0.5f, "volume" to 0.6193333f, "l1_rate" to 0.7607766f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_src2" to 0.166666672f, "m01_dest" to 0.06666667f, "m01_depth" to 0.51f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.409f, "mac1_a2" to 0.546f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.65f, "mac3_a2" to 0.7f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.5625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_a1" to 0.425f, "mac6_a2" to 0.45f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_d3" to 0.75f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac7_a3" to 0.542f, "mac8_d1" to 0.78125f, "mac8_a1" to 0.625f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Shorter", "macro7" to "Bowed", "macro8" to "Deeper"),
+        family = "lead")
+
+    private fun mosaic26() = Patch("Mosaic", "Staccato",
+        mapOf("start" to 0.008f, "a_decay" to 0.5615631f, "a_sustain" to 0.1f, "a_release" to 0.4134283f, "f_freq" to 0.5927171f, "f_env" to 0.75f, "f_decay" to 0.4588705f, "f_sustain" to 0f, "voicemode" to 0.5f, "volume" to 0.94f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.4345f, "mac1_a2" to 0.53f, "mac2_d1" to 0.59375f, "mac2_a1" to 0.55f, "mac3_d1" to 0.5f, "mac3_d2" to 0.71875f, "mac3_a1" to 0.625f, "mac3_a2" to 0.7f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.5625f, "mac5_a1" to 0.75f, "mac6_d1" to 0.34375f, "mac6_d2" to 0.40625f, "mac6_d3" to 0.75f, "mac6_a1" to 0.575f, "mac6_a2" to 0.55f, "mac6_a3" to 0.311f, "mac7_d1" to 0.09375f, "mac7_d2" to 0.3125f, "mac7_a1" to 0.54f, "mac7_a2" to 0.54f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Dark", "macro2" to "Glide", "macro3" to "Harder", "macro4" to "Ring", "macro5" to "Octave Up", "macro6" to "Longer", "macro7" to "Bowed", "macro8" to "Swell"),
+        family = "lead")
+
+    private fun mosaic27() = Patch("Mosaic", "Round Bass",
+        mapOf("a_sustain" to 0.8f, "a_release" to 0.4588705f, "f_freq" to 0.551070869f, "octave" to 0.333333343f, "voicemode" to 0.5f, "volume" to 0.578f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.4445f, "mac1_a2" to 0.5315f, "mac2_d1" to 0.5f, "mac2_d2" to 0.53125f, "mac2_a1" to 0.65f, "mac2_a2" to 0.45f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.425f, "mac3_a2" to 0.45f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.59375f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.6055f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4275f, "mac8_d1" to 0.09375f, "mac8_d2" to 0.3125f, "mac8_d3" to 0.75f, "mac8_a1" to 0.54f, "mac8_a2" to 0.54f, "mac8_a3" to 0.539f),
+        mapOf("macro1" to "Dark", "macro2" to "Punch", "macro3" to "Shorter", "macro4" to "Ring", "macro5" to "Glide", "macro6" to "Octave Down", "macro7" to "Even", "macro8" to "Bowed"),
+        family = "bass")
+
+    private fun mosaic28() = Patch("Mosaic", "Pluck Bass",
+        mapOf("a_decay" to 0.656523347f, "a_sustain" to 0.25f, "a_release" to 0.438436955f, "f_freq" to 0.414346f, "f_env" to 0.8f, "f_decay" to 0.5411295f, "f_sustain" to 0f, "octave" to 0.333333343f, "voicemode" to 0.5f, "volume" to 0.82f, "veltofilter" to 0.4f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.5625f, "mac2_d1" to 0.5f, "mac2_d2" to 0.53125f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_d3" to 0.75f, "mac3_a1" to 0.575f, "mac3_a2" to 0.55f, "mac3_a3" to 0.395f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.478900015f, "mac5_d1" to 0.59375f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.590000033f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.3975f, "mac8_d1" to 0.09375f, "mac8_d2" to 0.3125f, "mac8_a1" to 0.54f, "mac8_a2" to 0.54f),
+        mapOf("macro1" to "Bright", "macro2" to "Punch", "macro3" to "Longer", "macro4" to "Ring", "macro5" to "Glide", "macro6" to "Octave Down", "macro7" to "Even", "macro8" to "Bowed"),
+        family = "bass")
+
+    private fun mosaic29() = Patch("Mosaic", "Sub",
+        mapOf("start" to 0.03f, "loop" to 1f, "a_attack" to 0.194537818f, "a_release" to 0.438436955f, "f_freq" to 0.382042676f, "octave" to 0.166666672f, "voicemode" to 0.5f, "volume" to 0.8866667f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.5625f, "mac1_a2" to 0.4475f, "mac2_d1" to 0.5f, "mac2_d2" to 0.53125f, "mac2_d3" to 0.75f, "mac2_a1" to 0.65f, "mac2_a2" to 0.45f, "mac2_a3" to 0.443f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.425f, "mac3_a2" to 0.45f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.487f, "mac5_d1" to 0.59375f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.75f, "mac6_a2" to 0.3905f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.389f, "mac8_d1" to 0.09375f, "mac8_d2" to 0.3125f, "mac8_d3" to 0.75f, "mac8_a1" to 0.54f, "mac8_a2" to 0.54f, "mac8_a3" to 0.5565f),
+        mapOf("macro1" to "Bright", "macro2" to "Punch", "macro3" to "Shorter", "macro4" to "Ring", "macro5" to "Glide", "macro6" to "Octave Up", "macro7" to "Even", "macro8" to "Bowed"),
+        family = "bass")
+
+    private fun mosaic30() = Patch("Mosaic", "Slide Bass",
+        mapOf("loop" to 1f, "a_sustain" to 0.8f, "a_release" to 0.438436955f, "f_freq" to 0.5146893f, "f_res" to 0.35f, "f_env" to 0.65f, "f_decay" to 0.5615631f, "f_sustain" to 0.3f, "glide" to 0.035f, "glidemode" to 1f, "octave" to 0.333333343f, "voicemode" to 1f, "volume" to 0.558666646f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.45385f, "mac1_a2" to 0.5415f, "mac2_d1" to 0.5f, "mac2_d2" to 0.53125f, "mac2_a1" to 0.65f, "mac2_a2" to 0.45f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.425f, "mac3_a2" to 0.45f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45385f, "mac5_d1" to 0.59375f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.602f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.43f, "mac8_d1" to 0.09375f, "mac8_d2" to 0.3125f, "mac8_d3" to 0.75f, "mac8_a1" to 0.54f, "mac8_a2" to 0.54f, "mac8_a3" to 0.5415f),
+        mapOf("macro1" to "Dark", "macro2" to "Punch", "macro3" to "Shorter", "macro4" to "Ring", "macro5" to "Glide", "macro6" to "Octave Down", "macro7" to "Even", "macro8" to "Bowed"),
+        family = "bass")
+
+    private fun mosaic31() = Patch("Mosaic", "Wobble Bass",
+        mapOf("loop" to 1f, "a_release" to 0.438436955f, "f_freq" to 0.46598f, "f_res" to 0.45f, "octave" to 0.333333343f, "voicemode" to 0.5f, "volume" to 0.546f, "l1_sync" to 0.3529412f, "m01_src" to 0.9166667f, "m01_dest" to 0.6666667f, "m01_depth" to 0.7f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.466f, "mac1_a2" to 0.5405f, "mac2_d1" to 0.5f, "mac2_d2" to 0.53125f, "mac2_a1" to 0.65f, "mac2_a2" to 0.45f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_a1" to 0.425f, "mac3_a2" to 0.45f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_d3" to 0.75f, "mac4_a1" to 0.725f, "mac4_a2" to 0.466f, "mac4_a3" to 0.4415f, "mac5_d1" to 0.59375f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.5995f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.431500018f, "mac8_d1" to 0.09375f, "mac8_d2" to 0.3125f, "mac8_d3" to 0.75f, "mac8_a1" to 0.54f, "mac8_a2" to 0.54f, "mac8_a3" to 0.537f),
+        mapOf("macro1" to "Dark", "macro2" to "Punch", "macro3" to "Shorter", "macro4" to "Ring", "macro5" to "Glide", "macro6" to "Octave Down", "macro7" to "Even", "macro8" to "Bowed"),
+        family = "bass")
+
+    private fun mosaic32() = Patch("Mosaic", "Reso Bass",
+        mapOf("a_sustain" to 0.5f, "a_release" to 0.438436955f, "f_freq" to 0.392030418f, "f_res" to 0.65f, "f_env" to 0.775f, "f_decay" to 0.5615631f, "f_sustain" to 0.1f, "octave" to 0.333333343f, "voicemode" to 0.5f, "volume" to 0.6193333f, "veltofilter" to 0.5f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.5625f, "mac2_d1" to 0.5f, "mac2_d2" to 0.53125f, "mac2_a1" to 0.6125f, "mac2_a2" to 0.45f, "mac3_d1" to 0.34375f, "mac3_d2" to 0.40625f, "mac3_d3" to 0.75f, "mac3_a1" to 0.425f, "mac3_a2" to 0.45f, "mac3_a3" to 0.594f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_d3" to 0.75f, "mac4_a1" to 0.675f, "mac4_a2" to 0.4845f, "mac4_a3" to 0.445f, "mac5_d1" to 0.59375f, "mac5_a1" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.6225f, "mac7_d1" to 0.6875f, "mac7_d2" to 0.75f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4225f, "mac8_d1" to 0.09375f, "mac8_d2" to 0.3125f, "mac8_d3" to 0.75f, "mac8_a1" to 0.54f, "mac8_a2" to 0.54f, "mac8_a3" to 0.546f),
+        mapOf("macro1" to "Bright", "macro2" to "Punch", "macro3" to "Shorter", "macro4" to "Ring", "macro5" to "Glide", "macro6" to "Octave Down", "macro7" to "Even", "macro8" to "Bowed"),
+        family = "bass")
+
+    private fun mosaic33() = Patch("Mosaic", "Cloud",
+        mapOf("grain" to 1f, "gpos" to 0.1f, "grate" to 0.5375f, "gsize" to 0.7781513f, "gdensity" to 0.6037341f, "gspray" to 0.25f, "gpitch" to 0.008333334f, "a_attack" to 0.636016965f, "a_release" to 0.79919f, "volume" to 0.453333348f, "m01_src" to 0.166666672f, "m01_dest" to 0.266666681f, "m01_depth" to 0.8f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4395f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_d2" to 0.75f, "mac3_a1" to 0.65f, "mac3_a2" to 0.562f, "mac4_d1" to 0.125f, "mac4_d2" to 0.75f, "mac4_a1" to 0.65f, "mac4_a2" to 0.5825f, "mac5_d1" to 0.15625f, "mac5_d2" to 0.75f, "mac5_a1" to 0.575f, "mac5_a2" to 0.5335f, "mac6_d1" to 0.28125f, "mac6_d2" to 0.75f, "mac6_a1" to 0.65f, "mac6_a2" to 0.5365f, "mac7_d1" to 0.4375f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic34() = Patch("Mosaic", "Shimmer",
+        mapOf("grain" to 1f, "gpos" to 0.07f, "grate" to 0.51f, "gsize" to 0.3406206f, "gdensity" to 0.901826739f, "gspray" to 0.08f, "gpitch" to 0.0125f, "a_attack" to 0.5752575f, "a_release" to 0.81962353f, "volume" to 0.8066667f, "l1_rate" to 0.361190557f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.266666681f, "m01_depth" to 0.625f, "m02_src" to 0.25f, "m02_dest" to 0.6f, "m02_depth" to 0.75f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.375f, "mac1_a2" to 0.5965f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_d3" to 0.75f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac2_a3" to 0.399f, "mac3_d1" to 0.25f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_d2" to 0.75f, "mac4_a1" to 0.65f, "mac4_a2" to 0.5965f, "mac5_d1" to 0.15625f, "mac5_a1" to 0.575f, "mac6_d1" to 0.28125f, "mac6_a1" to 0.65f, "mac7_d1" to 0.4375f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thinner", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic35() = Patch("Mosaic", "Freeze",
+        mapOf("grain" to 1f, "gpos" to 0.45f, "grate" to 0.5f, "gsize" to 0.6901056f, "gdensity" to 0.770524442f, "gspray" to 0.03f, "a_attack" to 0.599485f, "a_decay" to 0.954557836f, "a_release" to 0.7491727f, "f_type" to 0.09090909f, "f_freq" to 0.84802264f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.6145f, "mac1_a2" to 0.4575f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_d3" to 0.75f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac2_a3" to 0.4155f, "mac3_d1" to 0.25f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_a1" to 0.65f, "mac5_d1" to 0.15625f, "mac5_a1" to 0.575f, "mac6_d1" to 0.28125f, "mac6_d2" to 0.75f, "mac6_a1" to 0.65f, "mac6_a2" to 0.536f, "mac7_d1" to 0.4375f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic36() = Patch("Mosaic", "Stutter",
+        mapOf("grain" to 1f, "gpos" to 0.3f, "grate" to 0.65f, "gsize" to 0.477121264f, "gdensity" to 0.7104341f, "gspray" to 0f, "a_attack" to 0.17474249f, "a_release" to 0.5615631f, "f_type" to 1f, "f_freq" to 0.551070869f, "f_res" to 0.4f, "volume" to 0.673333347f, "l1_wave" to 1f, "l1_rate" to 0.789853036f, "m01_src" to 0.9166667f, "m01_dest" to 0.266666681f, "m01_depth" to 0.675f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.312f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_d3" to 0.75f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac2_a3" to 0.431f, "mac3_d1" to 0.25f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_a1" to 0.65f, "mac5_d1" to 0.15625f, "mac5_a1" to 0.575f, "mac6_d1" to 0.28125f, "mac6_a1" to 0.65f, "mac7_d1" to 0.4375f, "mac7_d2" to 0.75f, "mac7_a1" to 0.4445f, "mac7_a2" to 0.4735f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic37() = Patch("Mosaic", "Dust",
+        mapOf("grain" to 1f, "gpos" to 0.35f, "grate" to 0.55f, "gsize" to 0.349485f, "gdensity" to 0.6456497f, "gspray" to 0.85f, "gpitch" to 0.0416666679f, "a_attack" to 0.6945378f, "a_decay" to 0.9427497f, "a_sustain" to 0.8f, "a_release" to 0.81962353f, "f_type" to 0f, "f_freq" to 0.8844042f, "volume" to 0.553333342f, "l1_wave" to 0.75f, "l1_rate" to 0.8443482f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.466666669f, "m01_depth" to 0.875f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.37f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_d3" to 0.75f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac2_a3" to 0.4615f, "mac3_d1" to 0.25f, "mac3_a1" to 0.575f, "mac4_d1" to 0.125f, "mac4_a1" to 0.65f, "mac5_d1" to 0.15625f, "mac5_d2" to 0.75f, "mac5_a1" to 0.575f, "mac5_a2" to 0.5375f, "mac6_d1" to 0.28125f, "mac6_a1" to 0.65f, "mac7_d1" to 0.4375f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic38() = Patch("Mosaic", "Smear",
+        mapOf("grain" to 1f, "grate" to 0.6875f, "gsize" to 1f, "gdensity" to 0.7104341f, "gspray" to 0.08f, "a_attack" to 0.650515f, "a_decay" to 0.929549158f, "a_sustain" to 0.9f, "a_release" to 0.8118912f, "f_freq" to 0.799313366f, "volume" to 0.38f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4755f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_a1" to 0.4f, "mac2_a2" to 0.55f, "mac3_d1" to 0.25f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_d2" to 0.75f, "mac4_a1" to 0.65f, "mac4_a2" to 0.552f, "mac5_d1" to 0.15625f, "mac5_d2" to 0.75f, "mac5_a1" to 0.575f, "mac5_a2" to 0.426f, "mac6_d1" to 0.28125f, "mac6_d2" to 0.75f, "mac6_a1" to 0.65f, "mac6_a2" to 0.4755f, "mac7_d1" to 0.4375f, "mac7_d2" to 0.75f, "mac7_a1" to 0.3825f, "mac7_a2" to 0.528f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Shorter", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic39() = Patch("Mosaic", "Scatter",
+        mapOf("grain" to 1f, "gpos" to 0.4f, "grate" to 0.575f, "gsize" to 0.627636254f, "gdensity" to 0.6638244f, "gspray" to 0.5f, "gpitch" to 0.020833334f, "a_attack" to 0.5440228f, "a_release" to 0.762373149f, "m01_src" to 0.5f, "m01_dest" to 0.266666681f, "m01_depth" to 0.9f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.3765f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_d3" to 0.75f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac2_a3" to 0.4405f, "mac3_d1" to 0.25f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_a1" to 0.65f, "mac5_d1" to 0.15625f, "mac5_a1" to 0.575f, "mac6_d1" to 0.28125f, "mac6_a1" to 0.65f, "mac7_d1" to 0.4375f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic40() = Patch("Mosaic", "Hold Point",
+        mapOf("grain" to 1f, "gpos" to 0.75f, "grate" to 0.5f, "gsize" to 0.6901056f, "gdensity" to 0.7104341f, "gspray" to 0.02f, "a_attack" to 0.4757725f, "a_release" to 0.69649744f, "volume" to 0.6933333f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.3825f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac3_d1" to 0.25f, "mac3_a1" to 0.65f, "mac4_d1" to 0.125f, "mac4_d2" to 0.75f, "mac4_a1" to 0.625f, "mac4_a2" to 0.385f, "mac5_d1" to 0.15625f, "mac5_a1" to 0.575f, "mac6_d1" to 0.28125f, "mac6_a1" to 0.65f, "mac7_d1" to 0.4375f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic41() = Patch("Mosaic", "Rising Grains",
+        mapOf("grain" to 1f, "gpos" to 0.2f, "grate" to 0.575f, "gsize" to 0.627636254f, "gdensity" to 0.696023047f, "gspray" to 0.1f, "a_attack" to 0.5f, "a_release" to 0.7419396f, "volume" to 0.68f, "e1_attack" to 0.849485f, "e1_sustain" to 1f, "e1_release" to 0.69649744f, "m01_src" to 0.75f, "m01_dest" to 0.6f, "m01_depth" to 0.7f, "mac1_d1" to 0.21875f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.351f, "mac2_d1" to 0.1875f, "mac2_d2" to 0.21875f, "mac2_d3" to 0.75f, "mac2_a1" to 0.6f, "mac2_a2" to 0.45f, "mac2_a3" to 0.4495f, "mac3_d1" to 0.25f, "mac3_d2" to 0.75f, "mac3_a1" to 0.65f, "mac3_a2" to 0.4595f, "mac4_d1" to 0.125f, "mac4_d2" to 0.75f, "mac4_a1" to 0.65f, "mac4_a2" to 0.588f, "mac5_d1" to 0.15625f, "mac5_a1" to 0.575f, "mac6_d1" to 0.28125f, "mac6_a1" to 0.65f, "mac7_d1" to 0.4375f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.40625f, "mac8_a1" to 0.575f, "mac8_a2" to 0.55f),
+        mapOf("macro1" to "Thicker", "macro2" to "Longer", "macro3" to "Spray", "macro4" to "Further In", "macro5" to "Faster", "macro6" to "Scatter", "macro7" to "Dark", "macro8" to "Swell"),
+        family = "grain")
+
+    private fun mosaic42() = Patch("Mosaic", "Tremolo",
+        mapOf("start" to 0.025f, "a_decay" to 0.8518653f, "a_sustain" to 0.8f, "a_release" to 0.639247f, "f_freq" to 0.8844042f, "volume" to 0.42f, "l1_wave" to 0.5f, "l1_rate" to 0.780918f, "m01_src" to 0.9166667f, "m01_dest" to 0.8f, "m01_depth" to 0.75f, "mac1_d1" to 0.78125f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.3755f, "mac2_d1" to 0.625f, "mac2_a1" to 0.575f, "mac3_d1" to 0.4375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.03125f, "mac6_a1" to 0.85f, "mac6_a2" to 0.675f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Deeper", "macro2" to "Faster", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Hard Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic43() = Patch("Mosaic", "Wah",
+        mapOf("a_decay" to 0.8768739f, "a_sustain" to 0.85f, "a_release" to 0.671488762f, "f_freq" to 0.5927171f, "f_res" to 0.55f, "volume" to 0.5733333f, "l1_wave" to 0.125f, "l1_rate" to 0.595805764f, "l1_delay" to 0.1f, "m01_src" to 0.9166667f, "m01_dest" to 0.6666667f, "m01_depth" to 0.875f, "mac1_d1" to 0.78125f, "mac1_a1" to 0.5625f, "mac2_d1" to 0.625f, "mac2_a1" to 0.575f, "mac3_d1" to 0.4375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.4345f, "mac3_a2" to 0.524f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_d3" to 0.75f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac4_a3" to 0.4385f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.03125f, "mac6_a1" to 0.85f, "mac6_a2" to 0.675f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Deeper", "macro2" to "Faster", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Hard Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic44() = Patch("Mosaic", "Autopan",
+        mapOf("start" to 0.025f, "loop" to 1f, "a_attack" to 0.5752575f, "a_decay" to 0.897307456f, "a_sustain" to 0.9f, "a_release" to 0.7342073f, "volume" to 0.62f, "l1_rate" to 0.401758462f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.8666667f, "m01_depth" to 0.95f, "mac1_d1" to 0.78125f, "mac1_a1" to 0.375f, "mac2_d1" to 0.625f, "mac2_a1" to 0.575f, "mac3_d1" to 0.4375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_d3" to 0.75f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac5_a3" to 0.5715f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.03125f, "mac6_a1" to 0.85f, "mac6_a2" to 0.675f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Shallower", "macro2" to "Faster", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Hard Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic45() = Patch("Mosaic", "Scan Sweep",
+        mapOf("scan" to 0f, "scanamt" to 1f, "keyfade" to 0.25f, "velfade" to 1f, "start" to 0.025f, "a_attack" to 0.5f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.7491727f, "volume" to 0.49333334f, "e1_attack" to 0.8138181f, "e1_decay" to 0.81962353f, "e1_sustain" to 0.9f, "e1_release" to 0.716931f, "m01_src" to 0.75f, "m01_dest" to 0.13333334f, "m01_depth" to 1f, "mac1_d1" to 0.78125f, "mac1_a1" to 0.375f, "mac2_d1" to 0.09375f, "mac2_d2" to 0.3125f, "mac2_a1" to 0.54f, "mac2_a2" to 0.54f, "mac3_d1" to 0.4375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.15f, "mac6_a2" to 0.3905f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Shallower", "macro2" to "Bowed", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Soft Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic46() = Patch("Mosaic", "Pulse",
+        mapOf("grain" to 1f, "gpos" to 0.25f, "grate" to 0.55f, "gsize" to 0.573064f, "gdensity" to 0.9153074f, "a_attack" to 0.5f, "a_release" to 0.716931f, "f_type" to 1f, "f_freq" to 0.56632334f, "f_res" to 0.35f, "volume" to 0.326666683f, "l1_wave" to 0.875f, "l1_rate" to 0.695477068f, "m01_src" to 0.9166667f, "m01_dest" to 0.466666669f, "m01_depth" to 0.65f, "mac1_d1" to 0.78125f, "mac1_d2" to 0.75f, "mac1_a1" to 0.625f, "mac1_a2" to 0.4755f, "mac2_d1" to 0.625f, "mac2_a1" to 0.575f, "mac3_d1" to 0.4375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.440999985f, "mac3_a2" to 0.489f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_d3" to 0.75f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac4_a3" to 0.446f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.03125f, "mac6_a1" to 0.85f, "mac6_a2" to 0.675f, "mac7_d1" to 0.5625f, "mac7_d2" to 0.75f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4725f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Deeper", "macro2" to "Faster", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Hard Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic47() = Patch("Mosaic", "Wobble",
+        mapOf("start" to 0.025f, "a_decay" to 0.8518653f, "a_sustain" to 0.7f, "a_release" to 0.6846892f, "f_freq" to 0.8673533f, "volume" to 0.586666644f, "l1_wave" to 0.75f, "l1_rate" to 0.670442343f, "l1_keysync" to 0f, "m01_src" to 0.9166667f, "m01_dest" to 0.06666667f, "m01_depth" to 0.53f, "m02_src" to 0.5f, "m02_dest" to 0.2f, "m02_depth" to 0.56f, "mac1_d1" to 0.78125f, "mac1_a1" to 0.625f, "mac2_d1" to 0.625f, "mac2_a1" to 0.575f, "mac3_d1" to 0.4375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.03125f, "mac6_a1" to 0.85f, "mac6_a2" to 0.675f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Deeper", "macro2" to "Faster", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Hard Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic48() = Patch("Mosaic", "Pan Scatter",
+        mapOf("start" to 0.01f, "a_decay" to 0.8518653f, "a_sustain" to 0.7f, "a_release" to 0.639247f, "volume" to 0.6193333f, "m01_src" to 0.5f, "m01_dest" to 0.8666667f, "m01_depth" to 0.9f, "mac1_d1" to 0.78125f, "mac1_a1" to 0.375f, "mac2_d1" to 0.09375f, "mac2_d2" to 0.3125f, "mac2_d3" to 0.75f, "mac2_a1" to 0.54f, "mac2_a2" to 0.54f, "mac2_a3" to 0.546f, "mac3_d1" to 0.4375f, "mac3_a1" to 0.375f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.03125f, "mac6_a1" to 0.85f, "mac6_a2" to 0.675f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Shallower", "macro2" to "Bowed", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Hard Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic49() = Patch("Mosaic", "Slow Filter",
+        mapOf("start" to 0.02f, "a_release" to 0.69649744f, "f_freq" to 0.625020444f, "f_res" to 0.25f, "volume" to 0.578f, "l2_sync" to 0.882352948f, "l2_keysync" to 0f, "m01_src" to 1f, "m01_dest" to 0.6666667f, "m01_depth" to 0.675f, "mac1_d1" to 0.78125f, "mac1_a1" to 0.625f, "mac2_d1" to 0.09375f, "mac2_d2" to 0.3125f, "mac2_d3" to 0.75f, "mac2_a1" to 0.54f, "mac2_a2" to 0.54f, "mac2_a3" to 0.539f, "mac3_d1" to 0.4375f, "mac3_d2" to 0.75f, "mac3_a1" to 0.426f, "mac3_a2" to 0.5505f, "mac4_d1" to 0.46875f, "mac4_d2" to 0.4375f, "mac4_a1" to 0.725f, "mac4_a2" to 0.45f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.0625f, "mac6_d2" to 0.03125f, "mac6_a1" to 0.85f, "mac6_a2" to 0.675f, "mac7_d1" to 0.5625f, "mac7_a1" to 0.75f, "mac8_d1" to 0.40625f, "mac8_a1" to 0.6f),
+        mapOf("macro1" to "Deeper", "macro2" to "Bowed", "macro3" to "Dark", "macro4" to "Ring", "macro5" to "Swell", "macro6" to "Hard Layer", "macro7" to "Octave Up", "macro8" to "Longer"),
+        family = "motion")
+
+    private fun mosaic50() = Patch("Mosaic", "Backwards",
+        mapOf("loop" to 0.5f, "reverse" to 1f, "a_attack" to 0.24999997f, "a_decay" to 0.897307456f, "a_release" to 0.618813455f, "f_freq" to 0.913454235f, "volume" to 0.92f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.375f, "mac2_d1" to 0.46875f, "mac2_d2" to 0.4375f, "mac2_a1" to 0.725f, "mac2_a2" to 0.45f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.54f, "mac3_a2" to 0.54f, "mac4_d1" to 0.0625f, "mac4_d2" to 0.03125f, "mac4_a1" to 0.85f, "mac4_a2" to 0.675f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.54f, "mac7_d1" to 0.34375f, "mac7_d2" to 0.40625f, "mac7_a1" to 0.5515f, "mac7_a2" to 0.575f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.385f),
+        mapOf("macro1" to "Dark", "macro2" to "Ring", "macro3" to "Bowed", "macro4" to "Hard Layer", "macro5" to "Swell", "macro6" to "Octave Down", "macro7" to "Longer", "macro8" to "Even"),
         family = "texture")
 
-    private fun mosaic32() = Patch("Mosaic", "Scan Layers",
-        mapOf("scan" to 0.2f, "scanamt" to 1f, "keyfade" to 0.166666672f, "velfade" to 0.25f, "start" to 0.025f, "a_release" to 0.618813455f, "volume" to 0.486666679f, "m01_src" to 0.166666672f, "m01_dest" to 0.13333334f, "m01_depth" to 0.9f),
+    private fun mosaic51() = Patch("Mosaic", "Scan Layers",
+        mapOf("scan" to 0.2f, "scanamt" to 1f, "keyfade" to 0.166666672f, "velfade" to 0.25f, "start" to 0.025f, "a_release" to 0.618813455f, "volume" to 0.486666679f, "m01_src" to 0.166666672f, "m01_dest" to 0.13333334f, "m01_depth" to 0.9f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.375f, "mac2_d1" to 0.46875f, "mac2_d2" to 0.4375f, "mac2_a1" to 0.725f, "mac2_a2" to 0.45f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.54f, "mac3_a2" to 0.54f, "mac4_d1" to 0.0625f, "mac4_d2" to 0.03125f, "mac4_d3" to 0.75f, "mac4_a1" to 0.15f, "mac4_a2" to 0.4f, "mac4_a3" to 0.437f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.25f, "mac7_d1" to 0.34375f, "mac7_d2" to 0.40625f, "mac7_a1" to 0.575f, "mac7_a2" to 0.575f, "mac8_d1" to 0.78125f, "mac8_a1" to 0.375f),
+        mapOf("macro1" to "Dark", "macro2" to "Ring", "macro3" to "Bowed", "macro4" to "Soft Layer", "macro5" to "Swell", "macro6" to "Octave Down", "macro7" to "Longer", "macro8" to "Shallower"),
         family = "texture")
 
-    private fun mosaic33() = Patch("Mosaic", "Late Start",
-        mapOf("keyfade" to 0.25f, "start" to 0.9f, "loop" to 1f, "a_attack" to 0.599485f, "a_decay" to 0.929549158f, "a_sustain" to 0.95f, "a_release" to 0.774181366f, "f_type" to 0.09090909f, "f_freq" to 0.799313366f, "volume" to 0.68f),
+    private fun mosaic52() = Patch("Mosaic", "Late Start",
+        mapOf("keyfade" to 0.25f, "start" to 0.9f, "loop" to 1f, "a_attack" to 0.599485f, "a_decay" to 0.929549158f, "a_sustain" to 0.95f, "a_release" to 0.774181366f, "f_type" to 0.09090909f, "f_freq" to 0.799313366f, "volume" to 0.68f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.3825f, "mac2_d1" to 0.46875f, "mac2_d2" to 0.4375f, "mac2_a1" to 0.725f, "mac2_a2" to 0.45f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.3125f, "mac3_d3" to 0.75f, "mac3_a1" to 0.54f, "mac3_a2" to 0.54f, "mac3_a3" to 0.578500032f, "mac4_d1" to 0.0625f, "mac4_d2" to 0.03125f, "mac4_a1" to 0.85f, "mac4_a2" to 0.675f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_d3" to 0.75f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac5_a3" to 0.555f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.546f, "mac7_d1" to 0.34375f, "mac7_d2" to 0.40625f, "mac7_a1" to 0.425f, "mac7_a2" to 0.425f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.415f),
+        mapOf("macro1" to "Dark", "macro2" to "Ring", "macro3" to "Bowed", "macro4" to "Hard Layer", "macro5" to "Swell", "macro6" to "Octave Down", "macro7" to "Shorter", "macro8" to "Even"),
         family = "texture")
 
-    private fun mosaic34() = Patch("Mosaic", "Broken Loop",
-        mapOf("start" to 0.55f, "loop" to 0.5f, "a_attack" to 0.194537818f, "a_release" to 0.593804836f, "f_freq" to 0.8844042f, "volume" to 0.9533333f),
+    private fun mosaic53() = Patch("Mosaic", "Broken Loop",
+        mapOf("start" to 0.55f, "loop" to 0.5f, "a_attack" to 0.194537818f, "a_release" to 0.593804836f, "f_freq" to 0.8844042f, "volume" to 0.9533333f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.375f, "mac2_d1" to 0.46875f, "mac2_d2" to 0.4375f, "mac2_a1" to 0.725f, "mac2_a2" to 0.45f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.54f, "mac3_a2" to 0.54f, "mac4_d1" to 0.0625f, "mac4_d2" to 0.03125f, "mac4_a1" to 0.85f, "mac4_a2" to 0.675f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.5625f, "mac6_d2" to 0.75f, "mac6_a1" to 0.25f, "mac6_a2" to 0.5235f, "mac7_d1" to 0.34375f, "mac7_d2" to 0.40625f, "mac7_a1" to 0.575f, "mac7_a2" to 0.575f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.380999982f),
+        mapOf("macro1" to "Dark", "macro2" to "Ring", "macro3" to "Bowed", "macro4" to "Hard Layer", "macro5" to "Swell", "macro6" to "Octave Down", "macro7" to "Longer", "macro8" to "Even"),
         family = "texture")
 
-    private fun mosaic35() = Patch("Mosaic", "Metal Sheet",
-        mapOf("grain" to 1f, "gpos" to 0.55f, "grate" to 0.5f, "gsize" to 0.80103f, "gdensity" to 0.406457126f, "gspray" to 0.1f, "gpitch" to 0.0125f, "a_attack" to 0.5f, "a_decay" to 0.9145838f, "a_sustain" to 0.85f, "a_release" to 0.7848632f, "f_type" to 0.909090936f, "f_freq" to 0.725363731f, "f_res" to 0.5f, "octave" to 0.8333333f, "volume" to 1f),
+    private fun mosaic54() = Patch("Mosaic", "Metal Sheet",
+        mapOf("grain" to 1f, "gpos" to 0.55f, "grate" to 0.5f, "gsize" to 0.80103f, "gdensity" to 0.406457126f, "gspray" to 0.1f, "gpitch" to 0.0125f, "a_attack" to 0.5f, "a_decay" to 0.9145838f, "a_sustain" to 0.85f, "a_release" to 0.7848632f, "f_type" to 0.909090936f, "f_freq" to 0.725363731f, "f_res" to 0.5f, "octave" to 0.8333333f, "volume" to 1f, "mac1_d1" to 0.4375f, "mac1_d2" to 0.75f, "mac1_a1" to 0.401f, "mac2_d1" to 0.46875f, "mac2_d2" to 0.4375f, "mac2_a1" to 0.725f, "mac2_a2" to 0.45f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.3125f, "mac3_a1" to 0.54f, "mac3_a2" to 0.54f, "mac4_d1" to 0.0625f, "mac4_d2" to 0.03125f, "mac4_a1" to 0.85f, "mac4_a2" to 0.675f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.25f, "mac7_d1" to 0.34375f, "mac7_d2" to 0.40625f, "mac7_a1" to 0.5427f, "mac7_a2" to 0.575f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.375f),
+        mapOf("macro1" to "Dark", "macro2" to "Ring", "macro3" to "Bowed", "macro4" to "Hard Layer", "macro5" to "Swell", "macro6" to "Octave Down", "macro7" to "Longer", "macro8" to "Even"),
         family = "texture")
 
-    private fun mosaic36() = Patch("Mosaic", "Detuned",
-        mapOf("keyfade" to 1f, "velfade" to 0.75f, "loop" to 1f, "a_attack" to 0.619280338f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.762373149f, "f_type" to 0.09090909f, "f_freq" to 0.76701f, "fine" to 0.06f, "volume" to 0.206666663f),
+    private fun mosaic55() = Patch("Mosaic", "Detuned",
+        mapOf("keyfade" to 1f, "velfade" to 0.75f, "loop" to 1f, "a_attack" to 0.619280338f, "a_decay" to 0.897307456f, "a_sustain" to 0.85f, "a_release" to 0.762373149f, "f_type" to 0.09090909f, "f_freq" to 0.76701f, "fine" to 0.06f, "volume" to 0.206666663f, "mac1_d1" to 0.4375f, "mac1_a1" to 0.3905f, "mac2_d1" to 0.46875f, "mac2_d2" to 0.4375f, "mac2_a1" to 0.725f, "mac2_a2" to 0.45f, "mac3_d1" to 0.09375f, "mac3_d2" to 0.3125f, "mac3_d3" to 0.75f, "mac3_a1" to 0.54f, "mac3_a2" to 0.54f, "mac3_a3" to 0.5345f, "mac4_d1" to 0.0625f, "mac4_d2" to 0.03125f, "mac4_a1" to 0.85f, "mac4_a2" to 0.675f, "mac5_d1" to 0.3125f, "mac5_d2" to 0.40625f, "mac5_d3" to 0.75f, "mac5_a1" to 0.575f, "mac5_a2" to 0.55f, "mac5_a3" to 0.521f, "mac6_d1" to 0.5625f, "mac6_a1" to 0.25f, "mac7_d1" to 0.34375f, "mac7_d2" to 0.40625f, "mac7_a1" to 0.5515f, "mac7_a2" to 0.575f, "mac8_d1" to 0.6875f, "mac8_d2" to 0.75f, "mac8_a1" to 0.199999988f, "mac8_a2" to 0.474f),
+        mapOf("macro1" to "Dark", "macro2" to "Ring", "macro3" to "Bowed", "macro4" to "Hard Layer", "macro5" to "Swell", "macro6" to "Octave Down", "macro7" to "Longer", "macro8" to "Even"),
         family = "texture")
 
-    private val mosaic: List<Patch> by lazy { listOf(mosaic0(), mosaic1(), mosaic2(), mosaic3(), mosaic4(), mosaic5(), mosaic6(), mosaic7(), mosaic8(), mosaic9(), mosaic10(), mosaic11(), mosaic12(), mosaic13(), mosaic14(), mosaic15(), mosaic16(), mosaic17(), mosaic18(), mosaic19(), mosaic20(), mosaic21(), mosaic22(), mosaic23(), mosaic24(), mosaic25(), mosaic26(), mosaic27(), mosaic28(), mosaic29(), mosaic30(), mosaic31(), mosaic32(), mosaic33(), mosaic34(), mosaic35(), mosaic36()) }
+    private val mosaic: List<Patch> by lazy { listOf(mosaic0(), mosaic1(), mosaic2(), mosaic3(), mosaic4(), mosaic5(), mosaic6(), mosaic7(), mosaic8(), mosaic9(), mosaic10(), mosaic11(), mosaic12(), mosaic13(), mosaic14(), mosaic15(), mosaic16(), mosaic17(), mosaic18(), mosaic19(), mosaic20(), mosaic21(), mosaic22(), mosaic23(), mosaic24(), mosaic25(), mosaic26(), mosaic27(), mosaic28(), mosaic29(), mosaic30(), mosaic31(), mosaic32(), mosaic33(), mosaic34(), mosaic35(), mosaic36(), mosaic37(), mosaic38(), mosaic39(), mosaic40(), mosaic41(), mosaic42(), mosaic43(), mosaic44(), mosaic45(), mosaic46(), mosaic47(), mosaic48(), mosaic49(), mosaic50(), mosaic51(), mosaic52(), mosaic53(), mosaic54(), mosaic55()) }
 
     private fun molt0() = Patch("Molt", "Init", emptyMap(),
         family = "tune")
@@ -7981,122 +8237,226 @@ internal object FactoryBanks {
         family = "voices")
 
     private fun diction1() = Patch("Diction", "Deep",
-        mapOf("formant" to 0.25f, "vibrato" to 0.22f, "vibratorate" to 0.333333343f, "effort" to 0.4f),
+        mapOf("formant" to 0.25f, "vibrato" to 0.22f, "vibratorate" to 0.333333343f, "effort" to 0.4f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4425f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction2() = Patch("Diction", "High",
-        mapOf("formant" to 0.6666667f, "vibrato" to 0.28f, "effort" to 0.6f),
+        mapOf("formant" to 0.6666667f, "vibrato" to 0.28f, "effort" to 0.6f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.387f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction3() = Patch("Diction", "Child",
-        mapOf("formant" to 0.7916667f, "breath" to 0.25f, "vibrato" to 0.15f, "track" to 0.65f),
+        mapOf("formant" to 0.7916667f, "breath" to 0.25f, "vibrato" to 0.15f, "track" to 0.65f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.3995f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.463f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction4() = Patch("Diction", "Neither",
-        mapOf("formant" to 0.5416667f, "breath" to 0.3f, "vibrato" to 0.15f, "drift" to 0.2f),
+        mapOf("formant" to 0.5416667f, "breath" to 0.3f, "vibrato" to 0.15f, "drift" to 0.2f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4115f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4655f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
     private fun diction5() = Patch("Diction", "Giant",
-        mapOf("formant" to 0.0833333358f, "vibrato" to 0.1f, "effort" to 0.65f, "growl" to 0.2f, "track" to 0.35f),
+        mapOf("formant" to 0.0833333358f, "vibrato" to 0.1f, "effort" to 0.65f, "growl" to 0.2f, "track" to 0.35f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.625f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.675f, "mac2_a2" to 0.429f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.4655f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Smaller", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
         family = "voices")
 
-    private fun diction6() = Patch("Diction", "Soft",
-        mapOf("breath" to 0.5f, "vibrato" to 0.15f, "attack" to 0.599823236f, "effort" to 0.099999994f),
+    private fun diction6() = Patch("Diction", "Tenor",
+        mapOf("formant" to 0.416666657f, "volume" to 0.50333333f, "effort" to 0.65f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.675f, "mac2_a2" to 0.4145f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
+        family = "voices")
+
+    private fun diction7() = Patch("Diction", "Alto",
+        mapOf("formant" to 0.5833333f, "breath" to 0.2f, "vibrato" to 0.22f, "volume" to 0.558666646f, "effort" to 0.45f, "mac1_d1" to 0.07692308f, "mac1_a1" to 0.375f, "mac2_d1" to 0.615384638f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.4075f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.1923077f, "mac4_d2" to 0.269230783f, "mac4_a1" to 0.675f, "mac4_a2" to 0.45f, "mac5_d1" to 0.03846154f, "mac5_a1" to 0.65f, "mac6_d1" to 0.307692319f, "mac6_a1" to 0.7f, "mac7_d1" to 0.3846154f, "mac7_d2" to 0.423076928f, "mac7_a1" to 0.625f, "mac7_a2" to 0.575f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bigger", "macro2" to "Belt", "macro3" to "Air", "macro4" to "Vibrato", "macro5" to "Brighter", "macro6" to "Wander", "macro7" to "Slower", "macro8" to "Octave Down"),
+        family = "voices")
+
+    private fun diction8() = Patch("Diction", "Soft",
+        mapOf("breath" to 0.5f, "vibrato" to 0.15f, "attack" to 0.599823236f, "effort" to 0.099999994f, "mac1_d1" to 0.615384638f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.429f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4035f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.543f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.454999983f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction7() = Patch("Diction", "Belter",
-        mapOf("vibrato" to 0.45f, "vibratodelay" to 0.25f, "effort" to 1f, "rasp" to 0.1f, "scoop" to 0.65f),
+    private fun diction9() = Patch("Diction", "Belter",
+        mapOf("vibrato" to 0.45f, "vibratodelay" to 0.25f, "effort" to 1f, "rasp" to 0.1f, "scoop" to 0.65f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.3f, "mac1_a2" to 0.671f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.536f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5465f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.628f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.554f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.5615f),
+        mapOf("macro1" to "Hush", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction8() = Patch("Diction", "Rasp",
-        mapOf("drift" to 0.5f, "effort" to 0.7f, "rasp" to 0.55f),
+    private fun diction10() = Patch("Diction", "Rasp",
+        mapOf("drift" to 0.5f, "effort" to 0.7f, "rasp" to 0.55f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4115f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5465f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.5395f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.5395f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction9() = Patch("Diction", "Growl",
-        mapOf("formant" to 0.416666657f, "effort" to 0.8f, "growl" to 0.7f, "scoop" to 0.6f),
+    private fun diction11() = Patch("Diction", "Growl",
+        mapOf("formant" to 0.416666657f, "effort" to 0.8f, "growl" to 0.7f, "scoop" to 0.6f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.3f, "mac1_a2" to 0.593f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.65f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4685f, "mac6_d1" to 0.07692308f, "mac6_a1" to 0.375f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Hush", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction10() = Patch("Diction", "Whisper",
-        mapOf("vibrato" to 0f, "attack" to 0.523296058f, "volume" to 0.766666651f, "whisper" to 1f),
+    private fun diction12() = Patch("Diction", "Whisper",
+        mapOf("vibrato" to 0f, "attack" to 0.523296058f, "volume" to 0.766666651f, "whisper" to 1f, "mac1_d1" to 0.615384638f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.3975f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.199999988f, "mac5_a2" to 0.6165f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.6165f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.382f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Voiced", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction11() = Patch("Diction", "Pure",
-        mapOf("breath" to 0f, "vibrato" to 0.12f, "drift" to 0.1f, "clean" to 1f),
+    private fun diction13() = Patch("Diction", "Pure",
+        mapOf("breath" to 0f, "vibrato" to 0.12f, "drift" to 0.1f, "clean" to 1f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.4075f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5505f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.543f, "mac6_d1" to 0.07692308f, "mac6_a1" to 0.375f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
         family = "colour")
 
-    private fun diction12() = Patch("Diction", "Chant",
-        mapOf("vowel" to 0.25f, "vibrato" to 0f, "drift" to 0.05f, "glide" to 0.05f),
+    private fun diction14() = Patch("Diction", "Breathy",
+        mapOf("breath" to 0.7f, "vibrato" to 0.18f, "attack" to 0.523296058f, "volume" to 0.491999984f, "effort" to 0.25f, "mac1_d1" to 0.615384638f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.65f, "mac2_a2" to 0.4495f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_a1" to 0.75f, "mac5_d1" to 0.7307692f, "mac5_d2" to 0.5f, "mac5_a1" to 0.8f, "mac5_a2" to 0.4145f, "mac6_d1" to 0.07692308f, "mac6_d2" to 0.5f, "mac6_a1" to 0.375f, "mac6_a2" to 0.5675f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.445f),
+        mapOf("macro1" to "Belt", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
+        family = "colour")
+
+    private fun diction15() = Patch("Diction", "Edge",
+        mapOf("vowel" to 0.75f, "formant" to 0.5416667f, "volume" to 0.423333317f, "effort" to 0.85f, "rasp" to 0.05f, "mac1_d1" to 0.615384638f, "mac1_d2" to 0.5f, "mac1_a1" to 0.3f, "mac1_a2" to 0.564f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.653846145f, "mac3_a1" to 0.7f, "mac4_d1" to 0.6923077f, "mac4_d2" to 0.5f, "mac4_a1" to 0.75f, "mac4_a2" to 0.546f, "mac5_d1" to 0.7307692f, "mac5_a1" to 0.8f, "mac6_d1" to 0.07692308f, "mac6_a1" to 0.375f, "mac7_d1" to 0.1923077f, "mac7_d2" to 0.269230783f, "mac7_a1" to 0.675f, "mac7_a2" to 0.45f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.625f, "mac8_a2" to 0.546f),
+        mapOf("macro1" to "Hush", "macro2" to "Air", "macro3" to "Rasp", "macro4" to "Growl", "macro5" to "Whisper", "macro6" to "Bigger", "macro7" to "Vibrato", "macro8" to "Brighter"),
+        family = "colour")
+
+    private fun diction16() = Patch("Diction", "Chant",
+        mapOf("vowel" to 0.25f, "vibrato" to 0f, "drift" to 0.05f, "glide" to 0.05f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4335f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction13() = Patch("Diction", "Ballad",
-        mapOf("breath" to 0.3f, "vibrato" to 0.25f, "vibratodelay" to 0.3f, "drift" to 0.55f, "glide" to 0.12f, "effort" to 0.35f, "scoop" to 0.625f),
+    private fun diction17() = Patch("Diction", "Ballad",
+        mapOf("breath" to 0.3f, "vibrato" to 0.25f, "vibratodelay" to 0.3f, "drift" to 0.55f, "glide" to 0.12f, "effort" to 0.35f, "scoop" to 0.625f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4405f, "mac6_d1" to 0.115384616f, "mac6_d2" to 0.5f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4475f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction14() = Patch("Diction", "Opera",
-        mapOf("formant" to 0.458333343f, "breath" to 0.04f, "vibrato" to 0.7f, "vibratorate" to 0.5f, "vibratodelay" to 0.1f, "effort" to 0.75f),
+    private fun diction18() = Patch("Diction", "Opera",
+        mapOf("formant" to 0.458333343f, "breath" to 0.04f, "vibrato" to 0.7f, "vibratorate" to 0.5f, "vibratodelay" to 0.1f, "effort" to 0.75f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.65f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.625f, "mac5_a2" to 0.4245f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction15() = Patch("Diction", "Crooner",
-        mapOf("formant" to 0.416666657f, "vibrato" to 0.25f, "vibratodelay" to 0.35f, "glide" to 0.15f, "effort" to 0.3f, "scoop" to 0.75f),
+    private fun diction19() = Patch("Diction", "Crooner",
+        mapOf("formant" to 0.416666657f, "vibrato" to 0.25f, "vibratodelay" to 0.35f, "glide" to 0.15f, "effort" to 0.3f, "scoop" to 0.75f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.445f, "mac6_d1" to 0.115384616f, "mac6_d2" to 0.5f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4685f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction16() = Patch("Diction", "Lullaby",
-        mapOf("vowel" to 0.25f, "breath" to 0.35f, "vibrato" to 0.15f, "vibratodelay" to 0.45f, "glide" to 0.15f, "attack" to 0.738351941f, "effort" to 0.25f),
+    private fun diction20() = Patch("Diction", "Lullaby",
+        mapOf("vowel" to 0.25f, "breath" to 0.35f, "vibrato" to 0.15f, "vibratodelay" to 0.45f, "glide" to 0.15f, "attack" to 0.738351941f, "effort" to 0.25f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_a1" to 0.7f, "mac6_d1" to 0.115384616f, "mac6_d2" to 0.5f, "mac6_a1" to 0.7f, "mac6_a2" to 0.4405f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction17() = Patch("Diction", "Swoop",
-        mapOf("drift" to 0.6f, "glide" to 0.25f, "scoop" to 0.875f),
+    private fun diction21() = Patch("Diction", "Swoop",
+        mapOf("drift" to 0.6f, "glide" to 0.25f, "scoop" to 0.875f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.5625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction18() = Patch("Diction", "Robot",
-        mapOf("vibrato" to 0f, "drift" to 0f, "glide" to 0f, "volume" to 0.333333343f, "clean" to 1f, "effort" to 0.65f, "source" to 1f),
+    private fun diction22() = Patch("Diction", "Robot",
+        mapOf("vibrato" to 0f, "drift" to 0f, "glide" to 0f, "volume" to 0.333333343f, "clean" to 1f, "effort" to 0.65f, "source" to 1f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.4395f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
         family = "style")
 
-    private fun diction19() = Patch("Diction", "Duo",
-        mapOf("singers" to 0.2f, "spread" to 0.3f),
+    private fun diction23() = Patch("Diction", "Folk",
+        mapOf("vibrato" to 0.12f, "vibratodelay" to 0.4f, "drift" to 0.3f, "glide" to 0.06f, "volume" to 0.521333337f, "effort" to 0.55f, "scoop" to 0.575f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.625f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4055f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_a1" to 0.375f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
+        family = "style")
+
+    private fun diction24() = Patch("Diction", "Soul",
+        mapOf("vibrato" to 0.35f, "vibratorate" to 0.5f, "vibratodelay" to 0.2f, "drift" to 0.5f, "glide" to 0.18f, "volume" to 0.443333358f, "effort" to 0.7f, "rasp" to 0.08f, "scoop" to 0.8f, "mac1_d1" to 0.1923077f, "mac1_d2" to 0.269230783f, "mac1_a1" to 0.675f, "mac1_a2" to 0.45f, "mac2_d1" to 0.7692308f, "mac2_a1" to 0.6f, "mac3_d1" to 0.346153855f, "mac3_a1" to 0.6f, "mac4_d1" to 0.307692319f, "mac4_a1" to 0.7f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.65f, "mac5_a2" to 0.428f, "mac6_d1" to 0.115384616f, "mac6_a1" to 0.7f, "mac7_d1" to 0.07692308f, "mac7_d2" to 0.5f, "mac7_a1" to 0.375f, "mac7_a2" to 0.53f, "mac8_d1" to 0.3846154f, "mac8_d2" to 0.423076928f, "mac8_a1" to 0.625f, "mac8_a2" to 0.575f),
+        mapOf("macro1" to "Vibrato", "macro2" to "Scoop", "macro3" to "Glide", "macro4" to "Wander", "macro5" to "Belt", "macro6" to "Air", "macro7" to "Bigger", "macro8" to "Slower"),
+        family = "style")
+
+    private fun diction25() = Patch("Diction", "Duo",
+        mapOf("singers" to 0.2f, "spread" to 0.3f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction20() = Patch("Diction", "Choir",
-        mapOf("vibrato" to 0.2f, "attack" to 0.565412f, "release" to 0.696236f, "singers" to 1f),
+    private fun diction26() = Patch("Diction", "Choir",
+        mapOf("vibrato" to 0.2f, "attack" to 0.565412f, "release" to 0.696236f, "singers" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.5465f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4115f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.589f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction21() = Patch("Diction", "Chamber",
-        mapOf("vibrato" to 0.18f, "clean" to 0.5f, "singers" to 0.6f, "spread" to 0.25f),
+    private fun diction27() = Patch("Diction", "Chamber",
+        mapOf("vibrato" to 0.18f, "clean" to 0.5f, "singers" to 0.6f, "spread" to 0.25f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.554f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.543f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4095f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction22() = Patch("Diction", "Crowd",
-        mapOf("drift" to 0.6f, "rasp" to 0.2f, "singers" to 1f, "spread" to 1f),
+    private fun diction28() = Patch("Diction", "Crowd",
+        mapOf("drift" to 0.6f, "rasp" to 0.2f, "singers" to 1f, "spread" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.3f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.536f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4135f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.5395f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Together", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction23() = Patch("Diction", "Chorale",
-        mapOf("vibrato" to 0.15f, "attack" to 0.599823236f, "release" to 0.738351941f, "singers" to 0.4f, "spread" to 0.4f, "harmony" to 1f),
+    private fun diction29() = Patch("Diction", "Chorale",
+        mapOf("vibrato" to 0.15f, "attack" to 0.599823236f, "release" to 0.738351941f, "singers" to 0.4f, "spread" to 0.4f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4115f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.577f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction24() = Patch("Diction", "Harmony",
-        mapOf("singers" to 0.2f, "spread" to 0.2f, "harmony" to 1f),
+    private fun diction30() = Patch("Diction", "Harmony",
+        mapOf("singers" to 0.2f, "spread" to 0.2f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
         family = "choir")
 
-    private fun diction25() = Patch("Diction", "Chipmunk",
-        mapOf("formant" to 0.625f, "track" to 1f),
+    private fun diction31() = Patch("Diction", "Unison",
+        mapOf("vibrato" to 0.15f, "volume" to 0.486666679f, "singers" to 0.4f, "spread" to 0.15f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.5425f, "mac2_d1" to 0.115384616f, "mac2_d2" to 0.5f, "mac2_a1" to 0.7f, "mac2_a2" to 0.536f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4175f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
+        family = "choir")
+
+    private fun diction32() = Patch("Diction", "Far Choir",
+        mapOf("breath" to 0.35f, "attack" to 0.7727632f, "release" to 0.827060044f, "volume" to 0.6933333f, "effort" to 0.3f, "singers" to 1f, "spread" to 0.7f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.65f, "mac2_d1" to 0.115384616f, "mac2_a1" to 0.7f, "mac3_d1" to 0.1923077f, "mac3_d2" to 0.269230783f, "mac3_a1" to 0.675f, "mac3_a2" to 0.45f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.431999981f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.6135f, "mac6_a2" to 0.575f, "mac6_a3" to 0.57f, "mac7_d1" to 0.307692319f, "mac7_a1" to 0.7f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.4385f),
+        mapOf("macro1" to "Spread", "macro2" to "Air", "macro3" to "Vibrato", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Wander", "macro8" to "Brighter"),
+        family = "choir")
+
+    private fun diction33() = Patch("Diction", "Close Harmony",
+        mapOf("vibrato" to 0.2f, "volume" to 0.54399997f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4075f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction34() = Patch("Diction", "Barbershop",
+        mapOf("vibrato" to 0.1f, "drift" to 0.1f, "glide" to 0.05f, "volume" to 0.481333345f, "effort" to 0.65f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.675f, "mac5_a2" to 0.413f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction35() = Patch("Diction", "Gospel",
+        mapOf("volume" to 0.368666649f, "effort" to 0.75f, "scoop" to 0.7f, "singers" to 0.4f, "spread" to 0.35f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_d2" to 0.5f, "mac3_a1" to 0.7f, "mac3_a2" to 0.5375f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.625f, "mac5_a2" to 0.446f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction36() = Patch("Diction", "Pad Voices",
+        mapOf("vowel" to 0.25f, "breath" to 0.3f, "vibrato" to 0.12f, "attack" to 0.827060044f, "release" to 0.869176f, "volume" to 0.656f, "singers" to 0.2f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_a1" to 0.7f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.421f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_a1" to 0.5865f, "mac6_a2" to 0.5655f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction37() = Patch("Diction", "Hymn",
+        mapOf("vibrato" to 0.08f, "drift" to 0.1f, "attack" to 0.641939163f, "release" to 0.7727632f, "volume" to 0.5093333f, "effort" to 0.4f, "singers" to 0.6f, "spread" to 0.3f, "harmony" to 1f, "mac1_d1" to 0.846153855f, "mac1_d2" to 0.5f, "mac1_a1" to 0.7f, "mac1_a2" to 0.5625f, "mac2_d1" to 0.1923077f, "mac2_d2" to 0.269230783f, "mac2_a1" to 0.675f, "mac2_a2" to 0.45f, "mac3_d1" to 0.115384616f, "mac3_a1" to 0.7f, "mac4_d1" to 0.07692308f, "mac4_a1" to 0.375f, "mac5_d1" to 0.615384638f, "mac5_d2" to 0.5f, "mac5_a1" to 0.7f, "mac5_a2" to 0.43f, "mac6_d1" to 0.3846154f, "mac6_d2" to 0.423076928f, "mac6_d3" to 0.5f, "mac6_a1" to 0.625f, "mac6_a2" to 0.575f, "mac6_a3" to 0.5625f, "mac7_d1" to 0.346153855f, "mac7_a1" to 0.6f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Spread", "macro2" to "Vibrato", "macro3" to "Air", "macro4" to "Bigger", "macro5" to "Belt", "macro6" to "Slower", "macro7" to "Glide", "macro8" to "Brighter"),
+        family = "harmony")
+
+    private fun diction38() = Patch("Diction", "Chipmunk",
+        mapOf("formant" to 0.625f, "track" to 1f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.35f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.5575f, "mac3_d1" to 0.7307692f, "mac3_a1" to 0.8f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Against", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction26() = Patch("Diction", "Undertow",
-        mapOf("formant" to 0.333333343f, "glide" to 0.3f, "growl" to 0.4f, "track" to 0f),
+    private fun diction39() = Patch("Diction", "Undertow",
+        mapOf("formant" to 0.333333343f, "glide" to 0.3f, "growl" to 0.4f, "track" to 0f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.536f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.445f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_d2" to 0.5f, "mac7_a1" to 0.25f, "mac7_a2" to 0.4685f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction27() = Patch("Diction", "Fry",
-        mapOf("formant" to 0.375f, "effort" to 0.35f, "growl" to 1f),
+    private fun diction40() = Patch("Diction", "Fry",
+        mapOf("formant" to 0.375f, "effort" to 0.35f, "growl" to 1f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.25f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.431f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.5465f),
+        mapOf("macro1" to "Follow", "macro2" to "Smooth", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction28() = Patch("Diction", "Ghosts",
-        mapOf("release" to 0.827060044f, "volume" to 0.933333337f, "whisper" to 0.7f, "singers" to 0.6f, "spread" to 1f),
+    private fun diction41() = Patch("Diction", "Ghosts",
+        mapOf("release" to 0.827060044f, "volume" to 0.933333337f, "whisper" to 0.7f, "singers" to 0.6f, "spread" to 1f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.75f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.65f, "mac3_a2" to 0.3795f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.5f, "mac5_a1" to 0.375f, "mac5_a2" to 0.5335f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.371500015f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private fun diction29() = Patch("Diction", "Buzz",
-        mapOf("formant" to 0.5833333f, "volume" to 0.333333343f, "effort" to 0.9f, "rasp" to 0.15f, "source" to 1f, "throat" to 0.5f),
+    private fun diction42() = Patch("Diction", "Buzz",
+        mapOf("formant" to 0.5833333f, "volume" to 0.333333343f, "effort" to 0.9f, "rasp" to 0.15f, "source" to 1f, "throat" to 0.5f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.65f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.5335f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.6035f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.5f, "mac5_a1" to 0.375f, "mac5_a2" to 0.527f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.541f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
         family = "strange")
 
-    private val diction: List<Patch> by lazy { listOf(diction0(), diction1(), diction2(), diction3(), diction4(), diction5(), diction6(), diction7(), diction8(), diction9(), diction10(), diction11(), diction12(), diction13(), diction14(), diction15(), diction16(), diction17(), diction18(), diction19(), diction20(), diction21(), diction22(), diction23(), diction24(), diction25(), diction26(), diction27(), diction28(), diction29()) }
+    private fun diction43() = Patch("Diction", "Helium",
+        mapOf("formant" to 0.9166667f, "vibrato" to 0.4f, "vibratorate" to 0.75f, "volume" to 0.454f, "effort" to 0.6f, "track" to 0.75f, "mac1_d1" to 0.8076923f, "mac1_a1" to 0.625f, "mac2_d1" to 0.6923077f, "mac2_d2" to 0.5f, "mac2_a1" to 0.75f, "mac2_a2" to 0.549f, "mac3_d1" to 0.7307692f, "mac3_d2" to 0.5f, "mac3_a1" to 0.8f, "mac3_a2" to 0.569f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_a1" to 0.375f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_a1" to 0.25f, "mac8_d1" to 0.03846154f, "mac8_d2" to 0.5f, "mac8_a1" to 0.65f, "mac8_a2" to 0.5335f),
+        mapOf("macro1" to "Follow", "macro2" to "Growl", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Bigger", "macro6" to "Scoop", "macro7" to "Octave Down", "macro8" to "Brighter"),
+        family = "strange")
+
+    private fun diction44() = Patch("Diction", "Monster",
+        mapOf("formant" to 0f, "octave" to 0.333333343f, "volume" to 0.578f, "effort" to 0.75f, "growl" to 0.8f, "track" to 0.25f, "mac1_d1" to 0.8076923f, "mac1_d2" to 0.5f, "mac1_a1" to 0.65f, "mac1_a2" to 0.543f, "mac2_d1" to 0.6923077f, "mac2_a1" to 0.25f, "mac3_d1" to 0.7307692f, "mac3_a1" to 0.8f, "mac4_d1" to 0.653846145f, "mac4_a1" to 0.7f, "mac5_d1" to 0.07692308f, "mac5_d2" to 0.5f, "mac5_a1" to 0.625f, "mac5_a2" to 0.4655f, "mac6_d1" to 0.7692308f, "mac6_a1" to 0.625f, "mac7_d1" to 1f, "mac7_d2" to 0.5f, "mac7_a1" to 0.75f, "mac7_a2" to 0.5505f, "mac8_d1" to 0.03846154f, "mac8_a1" to 0.65f),
+        mapOf("macro1" to "Follow", "macro2" to "Smooth", "macro3" to "Whisper", "macro4" to "Rasp", "macro5" to "Smaller", "macro6" to "Scoop", "macro7" to "Octave Up", "macro8" to "Brighter"),
+        family = "strange")
+
+    private val diction: List<Patch> by lazy { listOf(diction0(), diction1(), diction2(), diction3(), diction4(), diction5(), diction6(), diction7(), diction8(), diction9(), diction10(), diction11(), diction12(), diction13(), diction14(), diction15(), diction16(), diction17(), diction18(), diction19(), diction20(), diction21(), diction22(), diction23(), diction24(), diction25(), diction26(), diction27(), diction28(), diction29(), diction30(), diction31(), diction32(), diction33(), diction34(), diction35(), diction36(), diction37(), diction38(), diction39(), diction40(), diction41(), diction42(), diction43(), diction44()) }
 
     private fun bias0() = Patch("Bias", "Init", emptyMap(),
         family = "clean")
