@@ -7,6 +7,12 @@ import com.rm.acidulous.util.format
 import androidx.compose.ui.graphics.graphicsLayer
 
 import kotlin.math.roundToInt
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -865,10 +871,13 @@ private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
     // back while you type.
     var typed by remember(bpm) { mutableStateOf(formatBpm(bpm)) }
     val fieldSaid = stringResource(Res.string.a11y_tempo_field)
+    // The tempo as of the latest recomposition, for steps that repeat while held.
+    val latest by androidx.compose.runtime.rememberUpdatedState(bpm)
+    val onDrag by androidx.compose.runtime.rememberUpdatedState(onBpm)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(stringResource(Res.string.tempo_bpm), color = c.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            StepButton("\u2212", stringResource(Res.string.a11y_tempo_down)) { onBpm((bpm - 1f).coerceIn(BPM_MIN, BPM_MAX)) }
+            StepButton("\u2212", stringResource(Res.string.a11y_tempo_down)) { onBpm(stepBpm(latest, -1, it)) }
             OutlinedTextField(
                 value = typed,
                 onValueChange = { text ->
@@ -880,20 +889,90 @@ private fun BpmRow(bpm: Float, onBpm: (Float) -> Unit) {
                 textStyle = LocalTextStyle.current.copy(
                     fontSize = 20.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center,
                 ),
-                modifier = Modifier.typing() then Modifier.width(120.dp).semantics { contentDescription = fieldSaid },
+                modifier = Modifier.typing() then Modifier.dragTempo({ latest }) { onDrag(it) }.width(120.dp).semantics { contentDescription = fieldSaid },
             )
-            StepButton("+", stringResource(Res.string.a11y_tempo_up)) { onBpm((bpm + 1f).coerceIn(BPM_MIN, BPM_MAX)) }
+            StepButton("+", stringResource(Res.string.a11y_tempo_up)) { onBpm(stepBpm(latest, 1, it)) }
         }
     }
 }
 
+/** The next whole tempo [size] bpm from [bpm] in direction [dir]; a fractional tempo first goes to the whole number. */
+private fun stepBpm(bpm: Float, dir: Int, size: Int): Float =
+    (if (dir > 0) kotlin.math.floor(bpm) + size else kotlin.math.ceil(bpm) - size).coerceIn(BPM_MIN, BPM_MAX)
+
+/**
+ * A step button. Pressing steps by 1 (the callback gets the step size); holding repeats
+ * after 400ms every 150ms, then by 5 after 1.5s and by 10 after 3.5s, every 100ms.
+ */
 @Composable
-private fun StepButton(label: String, said: String, onClick: () -> Unit) {
+private fun StepButton(label: String, said: String, onStep: (Int) -> Unit) {
     val c = com.rm.acidulous.ui.theme.Acid.colors
+    val step by androidx.compose.runtime.rememberUpdatedState(onStep)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     Box(
-        Modifier.size(44.dp).clip(RoundedCornerShape(6.dp)).background(c.control).clickable(onClick = onClick).button(said),
+        Modifier.size(44.dp).clip(RoundedCornerShape(6.dp)).background(c.control)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    val hold = scope.launch {
+                        step(1)
+                        kotlinx.coroutines.delay(400)
+                        var held = 400L
+                        while (true) {
+                            step(if (held >= 3500) 10 else if (held >= 1500) 5 else 1)
+                            val gap = if (held >= 1500) 100L else 150L
+                            kotlinx.coroutines.delay(gap)
+                            held += gap
+                        }
+                    }
+                    waitForUpOrCancellation()
+                    hold.cancel()
+                }
+            }
+            .button(said, onClick = { onStep(1) }),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = c.accent, fontSize = 20.sp) }
+}
+
+/**
+ * Dragging sideways on the tempo changes it: one bpm per 8dp when slow, up to
+ * seven times that when fast. Starts after the touch slop; a tap goes through to the field.
+ */
+private fun Modifier.dragTempo(bpm: () -> Float, onBpm: (Float) -> Unit): Modifier = pointerInput(Unit) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val slop = viewConfiguration.touchSlop
+        var moved = 0f
+        var dragging = false
+        var start = 0f
+        var acc = 0f
+        var last = down.position.x
+        var lastT = down.uptimeMillis
+        while (true) {
+            val e = awaitPointerEvent(PointerEventPass.Initial)
+            val ch = e.changes.firstOrNull { it.id == down.id } ?: break
+            if (!ch.pressed) break
+            val dx = ch.position.x - last
+            val dt = (ch.uptimeMillis - lastT).coerceAtLeast(1L)
+            last = ch.position.x
+            lastT = ch.uptimeMillis
+            if (!dragging) {
+                moved = ch.position.x - down.position.x
+                if (kotlin.math.abs(moved) < slop) continue
+                dragging = true
+                start = bpm().roundToInt().toFloat()
+                acc = 0f
+                ch.consume()
+                continue
+            }
+            val dp = dx / density
+            val speed = kotlin.math.abs(dp) * 1000f / dt
+            val gain = 1f + ((speed - 100f) / 150f).coerceIn(0f, 6f)
+            acc += dp / 8f * gain
+            onBpm((start + acc).roundToInt().toFloat().coerceIn(BPM_MIN, BPM_MAX))
+            ch.consume()
+        }
+    }
 }
 
 /**

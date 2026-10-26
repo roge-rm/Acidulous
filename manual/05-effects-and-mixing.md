@@ -251,8 +251,10 @@ tracks, or a bitcrusher for a trashed copy of the mix sitting behind it.
 
 Tap the tempo in the song header to open the song's settings.
 
-- **beats a minute** - type a number or use the buttons either side. **tap**
-  sets it from four taps.
+- **beats a minute** - type a number or use the buttons either side. Hold
+  a button and it keeps stepping, faster the longer you hold. Drag sideways on
+  the number to change it, faster when you drag faster. **tap** sets it from
+  four taps.
 - **bar** - the time signature, from 4/4 to 7/8. A scene can have its own.
 - **swing** - how late the offbeats are. **triplet** is the classic shuffle.
   **swing on** chooses whether it swings sixteenths or eighths.
