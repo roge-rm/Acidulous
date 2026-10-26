@@ -24,21 +24,21 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
 /**
- * What the little bar next to selected notes does. [onPaste] gets the tick a
- * tap chose, or null to paste where the notes came from (or at the keyboard
- * cursor).
+ * What the little bar next to selected notes does. [onPaste] gets the tick
+ * and pitch a tap chose, or nulls to paste where the notes came from (or at the
+ * keyboard cursor).
  */
 class SelectionActions(
     val onDelete: () -> Unit,
     val onCopy: () -> Unit,
     val onDuplicate: () -> Unit,
     val canPaste: Boolean,
-    val onPaste: (tick: Int?) -> Unit,
+    val onPaste: (tick: Int?, pitch: Int?) -> Unit,
 )
 
 /** Delete, copy and duplicate when [hasNotes], and paste when there is something to paste. */
 @Composable
-fun SelectionBar(actions: SelectionActions, hasNotes: Boolean, pasteTick: Int? = null, modifier: Modifier = Modifier) {
+fun SelectionBar(actions: SelectionActions, hasNotes: Boolean, pasteTick: Int? = null, pastePitch: Int? = null, modifier: Modifier = Modifier) {
     val c = Acid.colors
     val shape = RoundedCornerShape(8.dp)
     Row(modifier.clip(shape).background(c.panelAlt).border(1.dp, c.accent, shape)) {
@@ -47,7 +47,7 @@ fun SelectionBar(actions: SelectionActions, hasNotes: Boolean, pasteTick: Int? =
             BarKey("⎘", stringResource(Res.string.a11y_copy_notes)) { actions.onCopy() }
             BarKey("⧉", stringResource(Res.string.a11y_duplicate_notes)) { actions.onDuplicate() }
         }
-        if (actions.canPaste) BarKey("⇩", stringResource(Res.string.a11y_paste_notes)) { actions.onPaste(pasteTick) }
+        if (actions.canPaste) BarKey("⇩", stringResource(Res.string.a11y_paste_notes)) { actions.onPaste(pasteTick, pastePitch) }
     }
 }
 
