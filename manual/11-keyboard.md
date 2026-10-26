@@ -64,6 +64,7 @@ In the editor:
 - quantise - **Q**, or **Alt+U**
 - fold the panel - **P**, or **Alt+V**
 - fold the keyboard - **B**, or **Alt+J**
+- copy / cut / paste / duplicate notes - **Ctrl+C**, **Ctrl+X**, **Ctrl+V**, **Ctrl+D**, or **Alt+C**, **Alt+X**, **Alt+W**, **Alt+E**
 
 The first key is for a full keyboard and the second for a small one. Keys
 without Alt or Ctrl only work as shortcuts when play mode is off.

@@ -117,6 +117,10 @@ fun PianoRoll(
     onZoom: (pitchScale: Float, timeScale: Float) -> Unit = { _, _ -> },
     /** A singer's roll: each note shows its syllable. */
     lyrics: Boolean = false,
+    /** Delete or Backspace with notes selected removes them all. */
+    onDeleteSelection: () -> Unit = {},
+    /** The keyboard cursor's tick while editing by keys, else null; paste goes there. */
+    onCursor: (Int?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -129,6 +133,7 @@ fun PianoRoll(
     val clipState by rememberUpdatedState(clip)
     val modeState by rememberUpdatedState(mode)
     val selectionState by rememberUpdatedState(selection)
+    val deleteState by rememberUpdatedState(onDeleteSelection)
     val lowestState by rememberUpdatedState(lowestPitch)
     val rowsState by rememberUpdatedState(rows)
     val cb by rememberUpdatedState(
@@ -182,6 +187,8 @@ fun PianoRoll(
     var keyEditing by remember { mutableStateOf(false) }
     var curTick by remember { mutableIntStateOf(firstTick) }
     var curPitch by remember { mutableIntStateOf(lowestPitch + rows / 2) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { onCursor(null) } }
+    androidx.compose.runtime.LaunchedEffect(keyEditing, curTick) { onCursor(if (keyEditing) curTick else null) }
     val firstState by rememberUpdatedState(firstTick)
     val visibleState by rememberUpdatedState(visibleTicks)
     val keyMod = Modifier
@@ -194,6 +201,8 @@ fun PianoRoll(
             val enter = code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER ||
                 code == KeyCodes.KEYCODE_DPAD_CENTER
             if (!keyEditing) {
+                val del = code == KeyCodes.KEYCODE_DEL || code == KeyCodes.KEYCODE_FORWARD_DEL
+                if (del && selectionState.isNotEmpty()) { deleteState(); return@onKeyEvent true }
                 if (!enter) return@onKeyEvent false
                 keyEditing = true
                 // Start where the user is looking.
@@ -232,7 +241,8 @@ fun PianoRoll(
                     true
                 }
                 KeyCodes.KEYCODE_DEL, KeyCodes.KEYCODE_FORWARD_DEL -> {
-                    if (under >= 0) cb.onTapNote(under)
+                    if (selectionState.isNotEmpty()) deleteState()
+                    else if (under >= 0) cb.onTapNote(under)
                     true
                 }
                 KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT -> {

@@ -16,6 +16,29 @@ across.
 
 For a drum machine it's a step grid with one row per sound. Tap to add a hit.
 
+## Select mode
+
+The pencil button in the bottom bar switches to the dashed square, select mode.
+Drag on empty space to draw a box round notes, and tap a note to add it to or
+take it off the selection. Drag a selected note to move them all.
+
+With notes selected, these show in the header:
+
+- **Delete** removes them all.
+- **Copy** keeps them, with their timing, length, velocity and any expression
+  they carry. The copies stay when you open another clip.
+- **Duplicate** puts a copy just after the selection, one grid step past its
+  end.
+- **Paste** (shown whenever something is copied) puts the copied notes where
+  they were, or at the keyboard cursor if you are editing by keys. Notes past
+  the end of the clip are left out or shortened.
+
+Duplicate and paste leave the new notes selected, so you can drag them
+straight away. Each one is a single undo step. On a keyboard, **Ctrl+C**,
+**Ctrl+X** (cut), **Ctrl+V** and **Ctrl+D**, and Delete or Backspace removes
+the selection. A drum machine's step grid has no select mode: turn on lock
+steps, choose steps, and the same buttons work on the hits on them.
+
 ## Generating
 
 The die button at the top of the editor writes notes for you. The clip changes

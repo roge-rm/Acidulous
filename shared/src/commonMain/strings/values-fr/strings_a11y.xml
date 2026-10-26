@@ -39,6 +39,10 @@
     <string name="a11y_back">Retour</string>
     <string name="a11y_generate">Générer des notes</string>
     <string name="a11y_quantise">Quantifier les notes</string>
+    <string name="a11y_delete_notes">Supprimer les notes choisies</string>
+    <string name="a11y_copy_notes">Copier les notes choisies</string>
+    <string name="a11y_paste_notes">Coller les notes</string>
+    <string name="a11y_duplicate_notes">Dupliquer les notes choisies</string>
     <string name="a11y_lock">Verrouiller les pas</string>
     <string name="a11y_prev_page">Page précédente</string>
     <string name="a11y_next_page">Page suivante</string>
