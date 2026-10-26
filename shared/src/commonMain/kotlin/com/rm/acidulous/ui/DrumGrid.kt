@@ -24,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.drawscope.translate
@@ -82,6 +83,8 @@ fun DrumGrid(
     /** Steps with a parameter lock, marked in the corner. */
     lockedTicks: Set<Int> = emptySet(),
     onSelectStep: (Int) -> Unit = {},
+    /** The bar next to the chosen steps. Null has none. */
+    actions: SelectionActions? = null,
     modifier: Modifier = Modifier,
 ) {
     val grid = clip.grid.coerceAtLeast(1)
@@ -307,6 +310,28 @@ fun DrumGrid(
                     }
                 }
             }
+        }
+    }
+    // The bar next to the steps chosen in lock mode: over the span of their
+    // hits, following the scroll.
+    if (actions != null && lockMode && selectedTicks.isNotEmpty()) {
+        val chosen = voices.indices.flatMap { v ->
+            selectedTicks.filter { t -> t >= firstTick && (t - firstTick) / grid < steps && clip.notes.any { it.pitch == voices[v].note && it.tick == t } }
+                .map { t -> v to (t - firstTick) / grid }
+        }
+        if (chosen.isNotEmpty()) {
+            val rowPx = with(density) { rowHeight.dp.toPx() }
+            val gapPx = with(density) { RowGap.dp.toPx() }
+            val padPx = with(density) { GridPadding.toPx() }
+            SelectionBar(
+                actions, hasNotes = true,
+                modifier = Modifier.anchoredTo { size ->
+                    val cell = (size.width - gutterPx) / steps
+                    val top = padPx + chosen.minOf { it.first } * (rowPx + gapPx) - scroll.value
+                    val bottom = padPx + chosen.maxOf { it.first } * (rowPx + gapPx) + rowPx - scroll.value
+                    Rect(gutterPx + chosen.minOf { it.second } * cell, top, gutterPx + (chosen.maxOf { it.second } + 1) * cell, bottom)
+                },
+            )
         }
     }
     }

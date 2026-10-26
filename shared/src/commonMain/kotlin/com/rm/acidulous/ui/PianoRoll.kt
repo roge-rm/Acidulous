@@ -1,6 +1,7 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
@@ -121,6 +122,8 @@ fun PianoRoll(
     onDeleteSelection: () -> Unit = {},
     /** The keyboard cursor's tick while editing by keys, else null; paste goes there. */
     onCursor: (Int?) -> Unit = {},
+    /** The bar next to the selection, in select mode. Null has none. */
+    actions: SelectionActions? = null,
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -165,6 +168,11 @@ fun PianoRoll(
 
     var rubberBand by remember { mutableStateOf<Rect?>(null) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
+    // True while a finger moves or boxes notes, so the bar stays out of the way.
+    var busy by remember { mutableStateOf(false) }
+    // Where an empty tap in select mode chose to paste: the tick and the spot.
+    var pasteSpot by remember { mutableStateOf<Pair<Int, Offset>?>(null) }
+    val actionsState by rememberUpdatedState(actions)
 
     // TalkBack gets a summary, since one picture can't be walked note by
     // note. Notes go in by playing the keys while recording.
@@ -280,11 +288,14 @@ fun PianoRoll(
         }
         true
     }
+    androidx.compose.foundation.layout.Box(modifier.clipToBounds()) {
     Canvas(
         // Clipped, or notes just above the window draw over the header.
-        modifier = modifier.clipToBounds().semantics { contentDescription = summary }.then(keyMod).then(wheel).pointerInput(Unit) {
+        modifier = Modifier.fillMaxSize().semantics { contentDescription = summary }.then(keyMod).then(wheel).pointerInput(Unit) {
             awaitEachGesture {
+              try {
                 val down = awaitFirstDown()
+                pasteSpot = null
                 val geo = Geometry(
                     canvasSize, clipState, ticksPerBar, rowsState,
                     GutterWidth.toPx(), RulerHeight.toPx(), rowsState2, firstTick, visibleTicks,
@@ -295,6 +306,7 @@ fun PianoRoll(
                 // a pinch's fingers land a few milliseconds apart and whatever the
                 // first one hit must not act in the meantime.
                 if (currentEvent.changes.count { it.pressed } >= 2) {
+                    busy = true
                     twoFingers(geo, cb)
                     return@awaitEachGesture
                 }
@@ -345,10 +357,12 @@ fun PianoRoll(
 
                 val gate = slopOrSecondFinger(down.id, viewConfiguration.touchSlop, press)
                 if (gate.second) {
+                    busy = true
                     twoFingers(geo, cb)
                     return@awaitEachGesture
                 }
                 val slop = gate.past
+                if (slop != null) busy = true
                 if (slop == null) {
                     // Released before moving: a tap.
                     val released = currentEvent.changes.none { it.pressed }
@@ -358,6 +372,7 @@ fun PianoRoll(
                             cb.onTapEmpty(geo.tickAt(press.x, snap = true), geo.pitchAt(press.y))
                         } else {
                             cb.onSelectionChange(emptySet())
+                            if (actionsState?.canPaste == true) pasteSpot = geo.tickAt(press.x, snap = true) to press
                         }
                         else -> if (modeState == EditMode.Draw) {
                             cb.onTapNote(hit.index)
@@ -420,6 +435,7 @@ fun PianoRoll(
                         rubberBand = null
                     }
                 }
+              } finally { busy = false }
             }
         },
     ) {
@@ -547,6 +563,33 @@ fun PianoRoll(
         drawPitchPosition(geo, c)
         drawBarRuler(geo, size, textMeasurer, playheadTick(), c)
         drawScaleCorner(geo, textMeasurer, scalePitchClasses != null, scaleView, c, scaleWords)
+    }
+    // The bar next to the chosen notes, or at the spot a tap chose for a paste.
+    // Gone while a finger is down on the notes.
+    val act = actions
+    androidx.compose.runtime.LaunchedEffect(act == null) { if (act == null) pasteSpot = null }
+    val gutterPx = with(androidx.compose.ui.platform.LocalDensity.current) { GutterWidth.toPx() }
+    val rulerPx = with(androidx.compose.ui.platform.LocalDensity.current) { RulerHeight.toPx() }
+    if (act != null && !busy) {
+        val chosen = selection.filter { it in clip.notes.indices }
+        val spot = pasteSpot
+        if (chosen.isNotEmpty()) {
+            SelectionBar(
+                act, hasNotes = true,
+                modifier = Modifier.anchoredTo { size ->
+                    val geo = Geometry(size, clip, ticksPerBar, rows, gutterPx, rulerPx, rowPitches, firstTick, visibleTicks)
+                    chosen.map { geo.noteRect(clip.notes[it]) }
+                        .filter { it.right > geo.originX && it.left < size.width && it.bottom > geo.originY && it.top < size.height }
+                        .reduceOrNull { a, b -> Rect(min(a.left, b.left), min(a.top, b.top), max(a.right, b.right), max(a.bottom, b.bottom)) }
+                },
+            )
+        } else if (spot != null && act.canPaste) {
+            SelectionBar(
+                act, hasNotes = false, pasteTick = spot.first,
+                modifier = Modifier.anchoredTo { Rect(spot.second.x, spot.second.y, spot.second.x, spot.second.y) },
+            )
+        }
+    }
     }
 }
 

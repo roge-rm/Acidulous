@@ -216,12 +216,12 @@ fun EditScreen(
     val copyNotes = { NoteClipboard.copy(clip, picked) }
     val cutNotes = { if (picked.isNotEmpty()) { NoteClipboard.copy(clip, picked); deleteNotes() } }
     // The pasted notes end up selected, so they can be dragged.
-    val pasteNotes = {
+    val pasteNotes = { at: Int? ->
         if (NoteClipboard.has && kind != MachineKind.Audio && (onGrid || !steps)) {
             var added = emptySet<Int>()
             var ticks = emptySet<Int>()
             editor.editClip(trackIndex, sceneId) { c ->
-                val (next, idx) = c.withPasted(NoteClipboard.notes, NoteClipboard.origin, cursorTick ?: NoteClipboard.origin, clipLen)
+                val (next, idx) = c.withPasted(NoteClipboard.notes, NoteClipboard.origin, at ?: cursorTick ?: NoteClipboard.origin, clipLen)
                 added = idx
                 ticks = idx.mapNotNull { next.notes.getOrNull(it)?.tick }.toSet()
                 next
@@ -242,6 +242,10 @@ fun EditScreen(
             if (onGrid) lockTicks = made.ifEmpty { lockTicks } else selection = added
         }
     }
+    val barActions = if (selecting) SelectionActions(
+        onDelete = { deleteNotes() }, onCopy = { copyNotes() }, onDuplicate = { duplicateNotes() },
+        canPaste = NoteClipboard.has, onPaste = { pasteNotes(it) },
+    ) else null
     // What the knobs lock onto: a grid step on drums and Reflux, a note's own
     // length in the roll.
     val lockSpans: List<IntRange> = when {
@@ -447,7 +451,7 @@ fun EditScreen(
         },
         KeyAction.Copy to { copyNotes() },
         KeyAction.Cut to { cutNotes() },
-        KeyAction.Paste to { pasteNotes() },
+        KeyAction.Paste to { pasteNotes(null) },
         KeyAction.Duplicate to { duplicateNotes() },
         KeyAction.Generate to { if (kind != MachineKind.Audio) generateDialog = true },
         KeyAction.Quantise to { if (kind != MachineKind.Audio) quantiseDialog = true },
@@ -661,16 +665,6 @@ fun EditScreen(
             // about the clip like the title.
             if (kind != MachineKind.Audio) HeaderButton("\u2684", description = stringResource(Res.string.a11y_generate)) { generateDialog = true }
             if (kind != MachineKind.Audio) HeaderButton("\u229E", description = stringResource(Res.string.a11y_quantise)) { quantiseDialog = true }
-            // Select mode's edits, only while notes are chosen (paste whenever
-            // something is copied), so they cost the roll nothing.
-            if (selecting && picked.isNotEmpty()) {
-                HeaderButton("\u2715", width = 34.dp, description = stringResource(Res.string.a11y_delete_notes)) { deleteNotes() }
-                HeaderButton("\u2398", width = 34.dp, description = stringResource(Res.string.a11y_copy_notes)) { copyNotes() }
-                HeaderButton("\u29C9", width = 34.dp, description = stringResource(Res.string.a11y_duplicate_notes)) { duplicateNotes() }
-            }
-            if (selecting && NoteClipboard.has) {
-                HeaderButton("\u21E9", width = 34.dp, description = stringResource(Res.string.a11y_paste_notes)) { pasteNotes() }
-            }
             // Lock mode, lit while on. Leaving it clears the chosen steps.
             if (kind != MachineKind.Audio) HeaderButton(
                 "\u25C6", color = if (lockMode) Acid.colors.pink else null,
@@ -750,6 +744,7 @@ fun EditScreen(
             selectedTicks = lockTicks,
             lockedTicks = lockedTicks,
             onSelectStep = { t -> lockTicks = if (t in lockTicks) lockTicks - t else lockTicks + t },
+            actions = barActions,
             modifier = Modifier.fillMaxWidth().weight(1f).then(lockEdge),
         ) else if (steps) StepEditor(
             clip = clip,
@@ -784,6 +779,7 @@ fun EditScreen(
             lyrics = sings,
             onDeleteSelection = { deleteNotes() },
             onCursor = { cursorTick = it },
+            actions = barActions,
             scalePitchClasses = Scales.activeFor(song, track),
             noteSpelling = Scales.spellingFor(song, track),
             scaleView = scaleView,
