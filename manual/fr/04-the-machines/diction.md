@@ -10,8 +10,12 @@ fait un chœur.
 
 ## Paroles
 
-Ouvrez le couloir sous la grille et choisissez **paroles**. Touchez une note
-pour taper les paroles à partir de cette note, une syllabe par note :
+Ouvrez le couloir sous la grille et choisissez **paroles**. Chaque note y a sa
+case, sous elle et de sa largeur, qui montre sa syllabe. Touchez une case pour
+taper la syllabe de cette note. Si vous en tapez plus d’une, elles continuent
+sur les notes suivantes, une syllabe par note. Videz la case pour vider la
+note. Quand les notes sont proches, la case montre ce qui y entre, et un
+toucher choisit la note la plus proche. Les paroles se tapent ainsi :
 
 - `hel-lo world` chante *hel* sur la première note, *lo* sur la suivante et
   *world* sur la troisième. Un trait d’union joint les syllabes en un seul mot,
@@ -24,10 +28,10 @@ pour taper les paroles à partir de cette note, une syllabe par note :
 Sous les paroles, on voit ce que chaque note va chanter, en sons. Si un mot
 sort mal, écrivez-le entre crochets.
 
-Pour mettre des paroles sur certaines notes seulement, sélectionnez-les d’abord
-et touchez l’une d’elles dans le couloir : la ligne va sur les notes
-sélectionnées, et les autres gardent les leurs. Chaque note montre aussi sa
-syllabe sur la grille de notes.
+Pour mettre une ligne sur certaines notes seulement, sélectionnez-les d’abord
+et touchez l’une d’elles dans le couloir : la ligne va sur les notes
+sélectionnées, et les autres gardent les leurs. Un accord n’a qu’une case, sur
+sa note du haut. Chaque note montre aussi sa syllabe sur la grille de notes.
 
 Les consonnes avant la voyelle viennent au début de la note, et celles d’après
 quand la note finit.

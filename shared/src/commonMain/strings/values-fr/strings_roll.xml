@@ -34,6 +34,8 @@
     <string name="note_prop_words">paroles</string>
     <string name="words_title">paroles</string>
     <string name="a11y_words_field">les paroles à partir de cette note, une syllabe par note</string>
+    <string name="a11y_words_box">note %1$s, %2$s</string>
+    <string name="a11y_words_box_empty">note %1$s, sans paroles</string>
 
     <!-- ui/PianoKeys.kt: the scale chip and window. Scale names are names and aren't translated. -->
     <string name="scale_chip">gamme</string>

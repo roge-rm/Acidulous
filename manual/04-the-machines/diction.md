@@ -9,8 +9,11 @@ sings them. A note without words sings the **vowel** knob's vowel. Turn on
 
 ## Words
 
-Open the lane under the grid and pick **words**. Tap a note to type the words
-from that note on, a syllable a note:
+Open the lane under the grid and pick **words**. Each note gets a box there,
+under it and as wide as it, showing its syllable. Tap a box to type that
+note's syllable. Type more than one and they carry on over the notes after it,
+a syllable a note. Clear the box to clear the note. When notes are close
+together a box only shows what fits, and a tap picks the nearest note.
 
 - `hel-lo world` sings *hel* on the first note, *lo* on the next and *world*
   on the third. A hyphen joins syllables into one word, so it's said as the
@@ -22,9 +25,10 @@ from that note on, a syllable a note:
 Under the words is what each note will sing, as sounds. If a word comes out
 wrong, write it in brackets.
 
-To put words on some notes only, select them first and tap one of them in the
-lane: the line goes over the selected notes, and the others keep theirs. Each
-note shows its syllable on the roll too.
+To put a line on some notes only, select them first and tap one of them in the
+lane: the line goes over the selected notes, and the others keep theirs. A
+chord has one box, on its top note. Each note shows its syllable on the roll
+too.
 
 Consonants come before the vowel at the start of a note, and the ones after it
 when the note ends.
