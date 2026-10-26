@@ -42,7 +42,9 @@ morceau sans changer sa hauteur, alors un break à 90 bpm entre dans un morceau
 **mesures** est la longueur de la boucle, d’où son tempo est calculé. Sur
 **auto**, il est deviné d’après la longueur de la boucle et la place de ses
 coups, et la ligne sous le nom de la boucle dit ce qu’il a trouvé, comme
-« 2 mesures à 90 bpm ». Si c’est faux, réglez-le vous-même.
+« 2 mesures à 90 bpm ». Le silence avant le premier coup et une cymbale qui
+sonne encore après la dernière mesure ne comptent pas. Si c’est faux,
+réglez-le vous-même.
 
 Une tranche jouée à l’envers n’est pas étirée. Elle est accélérée ou ralentie
 comme une bande, alors elle se désaccorde un peu quand le morceau est loin du

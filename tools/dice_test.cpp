@@ -93,7 +93,7 @@ Render playLoop(const Bank &bank, const BankPatch &patch, const std::string &kin
     Render out;
     if (n <= 0) return out;
     const int32_t first = d.sliceStart(0);
-    const float period = static_cast<float>(d.loopFrames() - first) / kSr / speed;
+    const float period = static_cast<float>(d.barsFrames()) / kSr / speed;
     const int passes = std::max(2, static_cast<int>(std::ceil(7.5f / period)));
     std::vector<std::pair<int64_t, int>> hits;
     for (int k = 0; k < passes; ++k) {

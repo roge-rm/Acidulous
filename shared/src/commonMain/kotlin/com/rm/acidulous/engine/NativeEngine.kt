@@ -126,8 +126,9 @@ object NativeEngine {
 
     /**
      * What a loop file looks like to a machine that follows the song: how
-     * many bars it probably is (0 if no whole number fits) and how long it is
-     * in seconds. Null if the file can't be read. Decodes the file, so call
+     * many bars it probably is (0 if no whole number fits) and how long those
+     * bars are in seconds, leaving out any room before the first hit and any
+     * ringing past the last bar. Null if the file can't be read. Decodes the file, so call
      * it off the main thread.
      */
     suspend fun loopShape(absolutePath: String): Pair<Float, Float>? =

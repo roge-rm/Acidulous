@@ -851,9 +851,9 @@ Phrase dicePhrase(Machine *machine, float bpm, int velocity) {
     const float speed = value("rate") * (follow ? bpm / loopBpm : 1.0f);
     if (n <= 0 || speed <= 0.0f) return p;
     const int32_t first = m->sliceStart(0);
-    // The loop's length is the whole file, so a pass is that long whatever
-    // the first slice skips.
-    const float period = static_cast<float>(m->loopFrames()) / kSr / speed;
+    // A pass is as long as the loop's bars, which leave out any room before
+    // the first hit and any ringing past the last bar.
+    const float period = static_cast<float>(m->barsFrames()) / kSr / speed;
     const int passes = std::max(2, static_cast<int>(std::ceil(7.5f / period)));
     for (int k = 0; k < passes; ++k) {
         for (int32_t i = 0; i < n; ++i) {

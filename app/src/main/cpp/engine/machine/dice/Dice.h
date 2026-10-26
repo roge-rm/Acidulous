@@ -92,6 +92,12 @@ class Dice final : public Machine {
     int32_t sliceStart(int32_t i) const { return i >= 0 && i < slices ? bounds[i] : 0; }
     /** The loop's length in frames, or 0 with no loop. */
     int32_t loopFrames() const { return take != nullptr ? take->frames : 0; }
+    /**
+     * How long the loop's bars are, in frames: the loop less any quiet before
+     * its first hit and any ringing past its last bar. Its tempo comes from
+     * this. 0 with no loop.
+     */
+    int32_t barsFrames() const;
 
   private:
     struct Voice {

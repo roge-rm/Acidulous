@@ -12,16 +12,18 @@
 #include <engine/dsp/Wsola.h>
 #include <engine/machine/dice/Dice.h>
 
+#include "audition_material.h"
+
 using namespace acidulous;
 using namespace acidulous::audio;
 using acidulous::machine::Dice;
 
 namespace {
 int gChecks = 0, gFails = 0;
-void check(bool ok, const char *what) {
+void check(bool ok, const char *what, const char *detail = "") {
     ++gChecks;
-    if (!ok) { ++gFails; std::printf("  FAIL %s\n", what); }
-    else std::printf("  ok   %s\n", what);
+    if (!ok) { ++gFails; std::printf("  FAIL %s %s\n", what, detail); }
+    else std::printf("  ok   %s %s\n", what, detail);
 }
 
 constexpr float kSr = 48000.0f;
@@ -124,6 +126,46 @@ int main() {
         Take d = hits(100.0f, 0.5f, 4);
         check(d.bars == 0.5f, "half a bar at 100 is half a bar");
         std::printf("       (a %.1f, b %.1f, c %.1f, d %.1f)\n", a.bars, b.bars, c.bars, d.bars);
+    }
+
+    std::printf("-- room before the first hit, ringing past the bar\n");
+    {
+        auto bpmOf = [](const Take &t) { return t.bars * 4.0f * 60.0f * kSr / static_cast<float>(t.barsFrames); };
+        // Trimmed to its two bars, so its length gives its tempo as before.
+        const auto clean = audition::breakLoop(120.0f);
+        char line[96];
+        std::snprintf(line, sizeof(line), "(%.0f bars at %.2f bpm from %d)", clean->bars, bpmOf(*clean), clean->barsStart);
+        check(clean->barsStart == 0 && clean->barsFrames == clean->frames, "a trimmed break keeps its whole length", line);
+        Take a = hits(90.0f, 2.0f, 2), c = hits(140.0f, 4.0f, 2);
+        check(a.barsFrames == a.frames && c.barsFrames == c.frames, "and so do trimmed loops of hits");
+        // 150 ms of room tone first and a cymbal 600 ms past the second bar.
+        const auto swing = audition::swingLoop();
+        const float lead = static_cast<float>(swing->barsStart) / kSr;
+        std::snprintf(line, sizeof(line), "(%.0f bars at %.2f bpm from %.1f ms)", swing->bars, bpmOf(*swing), lead * 1000.0f);
+        check(swing->bars == 2.0f && std::fabs(bpmOf(*swing) - 92.0f) < 0.3f, "the swing loop is two bars at 92", line);
+        check(std::fabs(lead - 0.15f) < 0.003f, "starting at its first hit", line);
+        // The same with a 45 Hz rumble 30 dB under its peak and hiss over the
+        // room, so the room isn't quiet.
+        Take dirty = *swing;
+        uint32_t seed = 0x1234u;
+        for (int32_t i = 0; i < dirty.frames; ++i) {
+            seed = seed * 1664525u + 1013904223u;
+            const float hiss = (static_cast<float>(seed >> 8) / 8388608.0f - 1.0f) * 0.004f;
+            const float rumble = 0.027f * std::sin(6.2831853f * 45.0f * static_cast<float>(i) / kSr);
+            dirty.left[static_cast<size_t>(i)] += rumble + hiss;
+            dirty.right[static_cast<size_t>(i)] += rumble + hiss;
+        }
+        dirty.detect(kSr);
+        const float dirtyLead = static_cast<float>(dirty.barsStart) / kSr;
+        std::snprintf(line, sizeof(line), "(%.0f bars at %.2f bpm from %.1f ms)", dirty.bars, bpmOf(dirty), dirtyLead * 1000.0f);
+        check(dirty.bars == 2.0f && std::fabs(bpmOf(dirty) - 92.0f) < 0.3f && std::fabs(dirtyLead - 0.15f) < 0.01f,
+              "and with rumble and hiss under it", line);
+        // Followed by Dice at 120: a pass of the loop is a pass of the song's two bars.
+        Dice d;
+        d.prepare(static_cast<int32_t>(kSr));
+        d.swapObject(0, audition::swingLoop().release());
+        std::snprintf(line, sizeof(line), "(%.2f bpm)", d.loopBpm());
+        check(std::fabs(d.loopBpm() - 92.0f) < 0.3f, "Dice plays it at 92", line);
     }
 
     std::printf("-- following\n");

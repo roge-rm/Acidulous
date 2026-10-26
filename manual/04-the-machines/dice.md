@@ -40,7 +40,8 @@ it down.
 
 **bars** is how long the loop is, which is how its tempo is worked out. On
 **auto** it's guessed from the loop's length and where its hits fall, and the
-line under the loop's name says what it found, like "2 bars at 90 bpm". If
+line under the loop's name says what it found, like "2 bars at 90 bpm". Quiet
+before the first hit and a cymbal ringing past the last bar are left out. If
 that's wrong, set it yourself.
 
 A slice played backwards isn't stretched. It's sped up or slowed down like

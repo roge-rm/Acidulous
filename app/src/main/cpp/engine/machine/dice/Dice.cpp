@@ -232,7 +232,12 @@ float Dice::loopBpm() const {
     const int32_t at = std::clamp(steppedTargetOf(Bars), 0, 6);
     const float bars = at == 0 ? take->bars : kBarsOf[at - 1];
     if (bars <= 0.0f) return 0.0f;
-    return bars * 4.0f * 60.0f * sampleRate / static_cast<float>(take->frames);
+    return bars * 4.0f * 60.0f * sampleRate / static_cast<float>(barsFrames());
+}
+
+int32_t Dice::barsFrames() const {
+    if (take == nullptr) return 0;
+    return take->barsFrames > 0 ? take->barsFrames : take->frames;
 }
 
 /**

@@ -6,5 +6,5 @@ CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
 LIB=$("$ROOT/tools/host_engine.sh") || exit 1
-g++ -O1 -g -std=c++17 -I "$CPP" "$ROOT/tools/dice_follow_test.cpp" "$LIB" -o "$DIR/dice_follow_test" || exit 1
+g++ -O1 -g -std=c++17 -I "$CPP" -I "$ROOT/tools" "$ROOT/tools/dice_follow_test.cpp" "$LIB" -o "$DIR/dice_follow_test" || exit 1
 "$DIR/dice_follow_test"
