@@ -174,7 +174,13 @@ void Forage::prepare(int32_t sampleRate) {
 }
 
 void Forage::reset() {
-    for (auto &p : pads) { p.playing = false; p.amp = 0.0f; p.filter.reset(); }
+    for (auto &p : pads) {
+        p.playing = false;
+        p.amp = 0.0f;
+        p.filter.reset();
+        // The crusher's held sample, which the next hit starts from.
+        p.holdL = p.holdR = p.holdPhase = 0.0f;
+    }
     updateMacros();
 }
 
