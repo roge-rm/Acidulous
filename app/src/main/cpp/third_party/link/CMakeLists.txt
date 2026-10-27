@@ -19,6 +19,9 @@ if(WIN32)
     # addresses, and the multimedia timer Link's clock is steadied by.
     target_compile_definitions(ableton_link INTERFACE LINK_PLATFORM_WINDOWS=1 ASIO_STANDALONE _WIN32_WINNT=0x0A00)
     target_link_libraries(ableton_link INTERFACE ws2_32 iphlpapi winmm)
+elseif(APPLE)
+    # The desktop's macOS build: Link's darwin clock and threads.
+    target_compile_definitions(ableton_link INTERFACE LINK_PLATFORM_MACOSX=1 ASIO_STANDALONE)
 else()
     target_compile_definitions(ableton_link INTERFACE
         LINK_PLATFORM_LINUX=1 # what Android is, to Link
