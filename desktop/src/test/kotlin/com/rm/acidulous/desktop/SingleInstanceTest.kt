@@ -15,10 +15,9 @@ class SingleInstanceTest {
         try {
             val preset = java.io.File(dir, "a bank.acpreset").apply { writeText("x") }
             val song = java.io.File(dir, "song.zip").apply { writeText("x") }
-            assertTrue(SingleInstance.claim(dir))
             val got = CountDownLatch(2)
             var files: List<java.io.File> = emptyList()
-            SingleInstance.onOpen = { files = it; got.countDown() }
+            assertTrue(SingleInstance.claim(dir) { files = it; got.countDown() })
             SingleInstance.onRaise = { got.countDown() }
             // The lock is this process's own, so a second claim here fails like a second launch's.
             assertFalse(SingleInstance.claim(dir))
@@ -26,7 +25,6 @@ class SingleInstanceTest {
             assertTrue(got.await(5, TimeUnit.SECONDS))
             assertEquals(listOf(preset.absolutePath, song.absolutePath), files.map { it.path })
         } finally {
-            SingleInstance.onOpen = null
             SingleInstance.onRaise = null
             dir.deleteRecursively()
         }

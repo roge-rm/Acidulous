@@ -26,7 +26,9 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
     override val checksForUpdates: Boolean get() = !debugBuild
     override fun latestRelease(): String? =
-        com.rm.acidulous.latestReleaseOnGitHub("Acidulous/$VERSION_NAME ($platformName)")
+        com.rm.acidulous.latestReleaseOnGitHub("Acidulous/$VERSION_NAME ($platformName)",
+            // The .dmg files are uploaded some time after the release.
+            if (onMac) { v -> macDmgName(v, System.getProperty("os.arch").orEmpty()) } else null)
     /** On a Mac, the .dmg for this Mac's kind of processor; elsewhere the releases page. */
     override fun downloadFor(version: String): String =
         macDmg(version, System.getProperty("os.arch").orEmpty()) ?: super.downloadFor(version)
@@ -108,10 +110,12 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
 
     companion object {
         /** The release's .dmg for a JVM's os.arch, on a Mac; null elsewhere. */
-        internal fun macDmg(version: String, osArch: String, mac: Boolean = onMac): String? {
-            if (!mac) return null
+        internal fun macDmg(version: String, osArch: String, mac: Boolean = onMac): String? =
+            if (!mac) null else "https://github.com/roge-rm/Acidulous/releases/download/v$version/" + macDmgName(version, osArch)
+
+        internal fun macDmgName(version: String, osArch: String): String {
             val arch = if (osArch == "aarch64" || osArch == "arm64") "arm64" else "x86_64"
-            return "https://github.com/roge-rm/Acidulous/releases/download/v$version/acidulous-$version-macos-$arch.dmg"
+            return "acidulous-$version-macos-$arch.dmg"
         }
 
         /** The system's own language, from before the app set one. */

@@ -23,19 +23,20 @@ import java.nio.file.StandardOpenOption
 internal object SingleInstance {
     /** Called on the socket's thread when another launch asks for the window. */
     @Volatile var onRaise: (() -> Unit)? = null
-    /** Called on the socket's thread with the files another launch was opened with. */
-    @Volatile var onOpen: ((List<File>) -> Unit)? = null
+    private var onOpen: ((List<File>) -> Unit)? = null
 
     // Held for as long as the app runs; the OS lets it go when the process ends, crash or not.
     private var lock: FileLock? = null
 
-    /** True if this is the only copy, which then listens for the next; false if one is running. */
-    fun claim(dir: File): Boolean {
+    /** True if this is the only copy, which then listens for the next; false if one is running.
+     * [onOpen] is set before the listener starts, and is called on the socket's thread with the files another launch was opened with. */
+    fun claim(dir: File, onOpen: (List<File>) -> Unit = {}): Boolean {
         val channel = runCatching {
             FileChannel.open(File(dir, "running.lock").toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         }.getOrNull() ?: return true
         val got = runCatching { channel.tryLock() }.getOrNull() ?: return false
         lock = got
+        this.onOpen = onOpen
         runCatching {
             val socket = socketIn(dir)
             java.nio.file.Files.deleteIfExists(socket)

@@ -123,12 +123,11 @@ fun main(args: Array<String>) {
     OpenFiles.add(OpenFiles.fromArgs(args))
     if (onMac) MacApp.install()
     // A second launch hands its files to the running copy and brings it forward.
-    if (!SingleInstance.claim(data)) {
+    if (!SingleInstance.claim(data) { OpenFiles.add(it) }) {
         val files = OpenFiles.drain() + if (onMac) MacApp.filesSoon(MAC_FILES_WAIT_MS) else emptyList()
         SingleInstance.handOver(data, files)
         kotlin.system.exitProcess(0)
     }
-    SingleInstance.onOpen = { OpenFiles.add(it) }
     // Before anything else can throw, like on Android. Also collects native
     // crashes from earlier runs, which the JVM wrote where the launcher said.
     val crashes = CrashReports(data).apply { install(); collect() }
@@ -227,7 +226,7 @@ fun main(args: Array<String>) {
             // Files handed to the app go to the import one at a time.
             LaunchedEffect(Unit) {
                 OpenFiles.running = true
-                snapshotFlow { com.rm.acidulous.Incoming.doc }.collect { if (it == null) OpenFiles.next() }
+                snapshotFlow { com.rm.acidulous.Incoming.idle() }.collect { if (it) OpenFiles.next() }
             }
             if (onMac) MacMenus(window, toggleFullScreen = {
                 if (window.placement == WindowPlacement.Fullscreen) {

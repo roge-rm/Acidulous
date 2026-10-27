@@ -35,6 +35,8 @@ private fun pressOf(e: androidx.compose.ui.input.key.KeyEvent): KeyPress {
         else -> KeyCodes.ACTION_MULTIPLE to 0
     }
     if (macKeys) {
+        // A key that went down as Home comes up as Home, even if Cmd was let go first.
+        if (type == KeyEventType.KeyUp) mapped.remove(code)?.let { return upAs(e, it) }
         // Cmd does what Ctrl does elsewhere, and the bindings call it ctrl.
         // Cmd+Left and Cmd+Right are Home and End, as on a Mac's text, and
         // Cmd+Down and Cmd+Up the same for a knob's bottom and top.
@@ -45,6 +47,7 @@ private fun pressOf(e: androidx.compose.ui.input.key.KeyEvent): KeyPress {
         }
         val cmd = e.isMetaPressed
         val asHome = cmd && home != null && !e.isCtrlPressed && !e.isAltPressed
+        if (type == KeyEventType.KeyDown && asHome) mapped[code] = home!!
         return KeyPress(
             action = action,
             keyCode = if (asHome) home!! else code,
@@ -67,6 +70,19 @@ private fun pressOf(e: androidx.compose.ui.input.key.KeyEvent): KeyPress {
 }
 
 private val held = HashSet<Int>()
+
+/** Physical keys that went down as another key code, and which, until they come up. */
+private val mapped = HashMap<Int, Int>()
+
+private fun upAs(e: androidx.compose.ui.input.key.KeyEvent, keyCode: Int) = KeyPress(
+    action = KeyCodes.ACTION_UP,
+    keyCode = keyCode,
+    repeatCount = 0,
+    isCtrlPressed = false,
+    isAltPressed = e.isAltPressed,
+    isShiftPressed = e.isShiftPressed,
+    isMetaPressed = e.isCtrlPressed,
+)
 
 /**
  * The key as an Android key code, which is how bindings are saved. Compose

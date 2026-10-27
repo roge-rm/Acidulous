@@ -7,6 +7,6 @@ Exec=acidulous %F
 Icon=acidulous
 Terminal=false
 Categories=AudioVideo;Audio;Music;Midi;
-MimeType=application/x-acidulous-preset;application/zip;
+MimeType=application/x-acidulous-preset;
 Keywords=synthesizer;drum machine;sequencer;music;
 StartupWMClass=com-rm-acidulous-desktop-MainKt

@@ -513,9 +513,17 @@ fun App(modifier: Modifier = Modifier) {
      * takes a while, so it happens off the main thread and [then] is called
      * back on it with the path to store, or not at all after saying why.
      */
+    /** Runs an import; [Incoming.running] counts it until it ends, however it ends. */
+    fun launchImport(block: suspend () -> Unit) {
+        Incoming.running++
+        scope.launch {
+            try { block() } finally { Incoming.running-- }
+        }
+    }
+
     fun bringIn(uri: Doc, fallback: String, maxSeconds: Int = NativeEngine.PAD_SECONDS,
                 then: (String) -> Unit) {
-        scope.launch {
+        launchImport {
             converting = Triple(AppHost.current.docName(uri, fallback), 1, 1)
             val result = try {
                 withContext(Dispatchers.IO) {
@@ -1160,6 +1168,8 @@ fun App(modifier: Modifier = Modifier) {
     }
     /** A MIDI file that's been read and is waiting for its import window: its name and its parts. */
     var midiImport by remember { mutableStateOf<Pair<String, com.rm.acidulous.model.MidiFile.Parsed>?>(null) }
+    // Another file waits until a dialog that wants an answer has been closed.
+    Incoming.dialogOpen = { notice != null || midiImport != null }
 
     /** A song name nothing saved already has: "Squelch", then "Squelch (2)". */
     fun freeSongName(wanted: String): String {
@@ -1173,7 +1183,7 @@ fun App(modifier: Modifier = Modifier) {
     suspend fun importPreset(uri: Doc, name: String, done: () -> Unit = {}) {
         val result = withContext(Dispatchers.IO) {
             runCatching {
-                val tmp = File(EngineAssets.cacheRoot(), "import.acpreset")
+                val tmp = File(EngineAssets.cacheRoot(), Incoming.tempName("import", "acpreset"))
                 AppHost.current.copyFromDoc(uri, tmp)
                 try {
                     com.rm.acidulous.model.PresetFile.read(tmp, EngineAssets.userRoot())
@@ -1204,7 +1214,7 @@ fun App(modifier: Modifier = Modifier) {
         val ext = name.substringAfterLast('.', "").lowercase()
         val stem = name.substringBeforeLast('.').ifBlank { AppStrings.getString(Res.string.app_imported) }
         when (ext) {
-            "mid", "midi", "smf", "kar" -> scope.launch {
+            "mid", "midi", "smf", "kar" -> launchImport {
                 val parsed = withContext(Dispatchers.IO) {
                     runCatching { com.rm.acidulous.model.MidiFile.read(AppHost.current.readDoc(uri)) }
                 }
@@ -1213,14 +1223,14 @@ fun App(modifier: Modifier = Modifier) {
                     else midiImport = stem to p
                 }.onFailure { notice = AppStrings.getString(Res.string.app_open_failed_title) to AppStrings.getString(Res.string.app_open_failed, name, it.message) }
             }
-            "acpreset" -> scope.launch { importPreset(uri, name) }
-            "zip" -> scope.launch {
+            "acpreset" -> launchImport { importPreset(uri, name) }
+            "zip" -> launchImport {
                 // A song bundle, a voice someone shared from the voice page, or a preset file.
                 var voice: String? = null
                 var preset = false
                 val song = withContext(Dispatchers.IO) {
                     runCatching {
-                        val tmp = File(EngineAssets.cacheRoot(), "import.zip")
+                        val tmp = File(EngineAssets.cacheRoot(), Incoming.tempName("import", "zip"))
                         AppHost.current.copyFromDoc(uri, tmp)
                         try {
                             if (com.rm.acidulous.model.PresetFile.isPreset(tmp)) {
@@ -1268,7 +1278,7 @@ fun App(modifier: Modifier = Modifier) {
                     notice = AppStrings.getString(Res.string.app_sound_added_title) to AppStrings.getString(Res.string.app_sound_added, rel.substringAfterLast('/'))
                 }
             // A tuning: checked by reading it, then kept as the file it is.
-            "scl" -> scope.launch {
+            "scl" -> launchImport {
                 val result = withContext(Dispatchers.IO) {
                     runCatching {
                         val text = AppHost.current.readDoc(uri).decodeToString()

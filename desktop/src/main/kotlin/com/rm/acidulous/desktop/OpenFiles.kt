@@ -31,8 +31,8 @@ internal object OpenFiles {
     /** Everything added so far, taken off the list: for a second launch to hand over. */
     fun drain(): List<File> = generateSequence { waiting.poll() }.toList()
 
-    /** Gives [Incoming] the next file once it has taken the last. On the UI thread. */
+    /** Gives [Incoming] the next file once the last is imported, with any dialog it opened closed. On the UI thread. */
     fun next() {
-        if (running && Incoming.doc == null) waiting.poll()?.let { Incoming.doc = Doc(it) }
+        if (running && Incoming.idle()) waiting.poll()?.let { Incoming.doc = Doc(it) }
     }
 }
