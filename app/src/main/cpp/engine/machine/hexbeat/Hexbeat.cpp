@@ -202,7 +202,7 @@ void Hexbeat::noteOn(uint8_t note, uint8_t velocity) {
     if (v < 0 || v >= VoiceCount) return;
     updateMacros(true); // a hit reads where the knobs are going, so renders repeat
     const float acc = velocity >= 100 ? val(Accent, true) : 0.0f;
-    trigger(v, acc, velocityGain(static_cast<float>(velocity) / 127.0f, params_.get(Velocity)));
+    trigger(v, acc, velocityGain(static_cast<float>(velocity) / 127.0f, params_.target(Velocity)));
 }
 
 float Hexbeat::metallic(float tune) {

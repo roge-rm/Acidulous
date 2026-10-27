@@ -138,8 +138,8 @@ Forage::Forage() {
     initParams();
 }
 
-float Forage::val(int32_t p) const {
-    const float v = params_.get(p);
+float Forage::val(int32_t p, bool goal) const {
+    const float v = read(p, goal);
     const int a = destMap().all[p], o = destMap().own[p];
     const float off = (a < 0 ? 0.0f : mac_[a]) + (o < 0 ? 0.0f : mac_[o]);
     if (off == 0.0f) return v;
@@ -147,16 +147,16 @@ float Forage::val(int32_t p) const {
     return def.map(def.unmap(v) + off);
 }
 
-void Forage::updateMacros() {
+void Forage::updateMacros(bool goal) {
     for (float &m : mac_) m = 0.0f;
     for (int k = 0; k < kMacros; ++k) {
         const int32_t b = MacroBase + k * MacroParams;
-        const float knob = params_.get(b);
+        const float knob = read(b, goal);
         if (knob == 0.0f) continue;
         for (int r = 0; r < 4; ++r) {
             // The routes' destinations are steps, so their targets.
             const int dest = static_cast<int>(params_.target(b + 1 + r) + 0.5f);
-            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * params_.get(b + 5 + r);
+            if (dest > McOff && dest < MacroDestCount) mac_[dest] += knob * read(b + 5 + r, goal);
         }
     }
     // Two octaves either way.
@@ -218,34 +218,35 @@ void Forage::trigger(int32_t i, float vel, bool accent) {
     Pad &p = pads[i];
     const SampleData *src = p.sample != nullptr ? p.sample : shared;
     if (src == nullptr || src->frames == 0) return;
-    const float accentAmt = val(globalIndex(Accent));
+    updateMacros(true); // a hit reads where the knobs are going, so renders repeat
+    const float accentAmt = val(globalIndex(Accent), true);
     // Choke: pads in the same non-zero group cut each other.
-    const float group = params_.get(index(i, Choke));
+    const float group = params_.target(index(i, Choke));
     if (group >= 0.5f) {
         for (int32_t j = 0; j < kPads; ++j) {
-            if (j != i && pads[j].playing && std::fabs(params_.get(index(j, Choke)) - group) < 0.5f) {
+            if (j != i && pads[j].playing && std::fabs(params_.target(index(j, Choke)) - group) < 0.5f) {
                 pads[j].ampCoeff = dsp::onePoleCoeff(0.006f, sr); // fast release, avoids a click
                 pads[j].penv = 0.0f;
             }
         }
     }
-    const bool reverse = params_.get(index(i, Reverse)) >= 0.5f;
+    const bool reverse = params_.target(index(i, Reverse)) >= 0.5f;
     const double frames = src->frames;
-    const double start = padVal(i, Start) * frames;
-    const double end = padVal(i, End) * frames;
+    const double start = padVal(i, Start, true) * frames;
+    const double end = padVal(i, End, true) * frames;
     p.pos = reverse ? std::max(start, end) - 1.0 : std::min(start, end);
     p.playing = true;
-    p.gain = velocityGain(vel, val(globalIndex(Velocity))) * (1.0f + (accent ? accentAmt * 0.8f : 0.0f));
-    const float decay = padVal(i, Decay);
+    p.gain = velocityGain(vel, val(globalIndex(Velocity), true)) * (1.0f + (accent ? accentAmt * 0.8f : 0.0f));
+    const float decay = padVal(i, Decay, true);
     // decay 1.0 plays through; below it an exponential release, 20 ms .. 4 s
     p.amp = 1.0f;
     p.ampCoeff = decay >= 0.999f ? 0.0f : dsp::onePoleCoeff(0.02f * std::pow(200.0f, decay), sr);
     p.penv = 1.0f;
-    p.penvCoeff = dsp::onePoleCoeff(padVal(i, PitchDecay) * 0.001f, sr);
+    p.penvCoeff = dsp::onePoleCoeff(padVal(i, PitchDecay, true) * 0.001f, sr);
     p.filter.reset();
     p.holdPhase = 0.0f;
     p.age = 0;
-    const auto mode = static_cast<int32_t>(params_.get(index(i, Play)) + 0.5f);
+    const auto mode = static_cast<int32_t>(params_.target(index(i, Play)) + 0.5f);
     p.held = mode == WhileHeld || mode == Looping;
 }
 

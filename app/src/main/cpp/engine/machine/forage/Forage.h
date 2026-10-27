@@ -87,11 +87,12 @@ class Forage final : public Machine {
     };
 
     void trigger(int32_t pad, float velocity01, bool accent);
-    /** Param [p], smoothed, with the macros' routes to it added. */
-    float val(int32_t p) const;
-    float padVal(int32_t pad, PadParam p) const { return val(index(pad, p)); }
-    /** Fills [mac_] from the smoothed macro knobs and their routes. */
-    void updateMacros();
+    /** Param [p], smoothed or its target if [goal], with the macros' routes to it added. */
+    float val(int32_t p, bool goal = false) const;
+    float padVal(int32_t pad, PadParam p, bool goal = false) const { return val(index(pad, p), goal); }
+    float read(int32_t p, bool goal) const { return goal ? params_.target(p) : params_.get(p); }
+    /** Fills [mac_] from the macro knobs and their routes, smoothed or their targets if [goal]. */
+    void updateMacros(bool goal = false);
     float mac_[MacroDestCount]{};
 
     float sr = 48000.0f;
