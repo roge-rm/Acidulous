@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction, Molt, Cipher and Dice move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction, Molt, Cipher, Dice and Forage move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -34,6 +34,7 @@
 #include <engine/machine/molt/Molt.h>
 #include <engine/machine/cipher/Cipher.h>
 #include <engine/machine/dice/Dice.h>
+#include <engine/machine/forage/Forage.h>
 #include <engine/core/InputBus.h>
 #include "audition_material.h"
 #include <engine/machine/tine/Tine.h>
@@ -110,6 +111,14 @@ void primeDice(const char *type, Machine *m) {
     m->render(L, R, kBlock);
 }
 
+// Forage plays nothing without samples: the thirteen-piece kit on its pads.
+void primeForage(const char *type, Machine *m) {
+    if (std::strcmp(type, "Forage") != 0) return;
+    using acidulous::audition::Piece;
+    for (int32_t pad = 0; pad < static_cast<int32_t>(Piece::Count); ++pad)
+        m->swapObject(pad, acidulous::audition::pieceSample(static_cast<Piece>(pad)).release());
+}
+
 void setNorm(ParamSet &p, const std::string &name, float v) {
     const int32_t i = p.indexOf(name.c_str());
     if (i < 0) { std::printf("  FAIL no parameter %s\n", name.c_str()); ++failures; return; }
@@ -142,6 +151,7 @@ std::vector<float> play(const Route *r) {
     // Molt sings nothing without a take.
     if (std::strcmp(gType, "Molt") == 0) m->swapObject(0, acidulous::audition::voiceUtterance().release());
     primeDice(gType, m);
+    primeForage(gType, m);
     m->allNotesOff();
     m->reset();
     if (gModWheel >= 0) m->controlChange(1, static_cast<uint8_t>(gModWheel));
@@ -474,11 +484,12 @@ void basics(const char *type, int dests, int dstAmp, int dstPitch, int dstOff, i
         ok(peak > 1e-3 && worst < peak * 1e-3 && routed != base, who + "a pitch route matches the transpose knob", buf);
     } else if (std::strcmp(type, "Pollen") == 0 || std::strcmp(type, "Mosaic") == 0 ||
                std::strcmp(type, "Diction") == 0 || std::strcmp(type, "Molt") == 0 ||
-               std::strcmp(type, "Cipher") == 0 || std::strcmp(type, "Dice") == 0) {
+               std::strcmp(type, "Cipher") == 0 || std::strcmp(type, "Dice") == 0 ||
+               std::strcmp(type, "Forage") == 0) {
         // A cloud's zero crossings say nothing, a sample's are its own and a
         // voice wavers, so the route must match the transpose knob. Dice's
         // is called pitch.
-        gUnits = {{std::strcmp(type, "Dice") == 0 ? "pitch" : "transpose", 12.0f}};
+        gUnits = {{std::strcmp(type, "Dice") == 0 ? "pitch" : std::strcmp(type, "Forage") == 0 ? "p00_pitch" : "transpose", 12.0f}};
         const auto tuned = play(nullptr);
         gUnits.clear();
         const auto routed = play(&up);
@@ -1457,6 +1468,7 @@ std::vector<float> playHeld(const char *type, const std::vector<std::pair<std::s
     if (std::strcmp(type, "Mosaic") == 0) m->swapObject(0, acidulous::audition::zoneMap().release());
     if (std::strcmp(type, "Molt") == 0) m->swapObject(0, acidulous::audition::voiceUtterance().release());
     primeDice(type, m);
+    primeForage(type, m);
     m->reset();
     for (uint8_t n : notes) m->noteOn(n, 100);
     std::vector<float> out;
@@ -2170,6 +2182,47 @@ void diceRoutes() {
     }
 }
 
+// Forage: a pad's own routes move that pad alone, and an all-pads route
+// matches setting every pad's knob. The kick is pad 1 (36), the snare pad 3 (38).
+void forageRoutes() {
+    using Fg = acidulous::machine::Forage;
+    const int32_t blocks = 375; // half a second
+    char buf[96];
+    // Tune 1 of 13: a quarter is 12 semitones of the pitch knob's 48.
+    {
+        const auto knob = playHeld("Forage", {{"p00_pitch", 12.0f}}, {36}, blocks);
+        Route r{2, 1, Fg::McTune, 0.25f, 1.0f};
+        const auto routed = playHeld("Forage", {}, {36}, blocks, &r, Fg::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3) && routed != playHeld("Forage", {}, {36}, blocks),
+            "Forage: a route to tune 1 matches the pad's pitch", buf);
+    }
+    // Level 3 at 0.8 of 4: -0.1 is 0.4. The kick doesn't move.
+    {
+        const auto knob = playHeld("Forage", {{"p02_level", 0.4f}}, {38}, blocks);
+        Route r{4, 2, Fg::McPadLevel + 2, -0.1f, 1.0f};
+        const auto routed = playHeld("Forage", {}, {38}, blocks, &r, Fg::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3), "Forage: a route to level 3 matches the pad's level", buf);
+        ok(playHeld("Forage", {}, {36}, blocks, &r, Fg::MacroDestCount) == playHeld("Forage", {}, {36}, blocks),
+           "Forage: a route to level 3 leaves pad 1 alone", "");
+    }
+    // Every cutoff from the top, 40..18000 exponential: -0.5 is 40 * 450^0.5.
+    {
+        const float hz = 40.0f * std::sqrt(450.0f);
+        const auto knob = playHeld("Forage", {{"p00_cutoff", hz}, {"p02_cutoff", hz}}, {36, 38}, blocks);
+        Route r{6, 3, Fg::McCutoff, -0.5f, 1.0f};
+        const auto routed = playHeld("Forage", {}, {36, 38}, blocks, &r, Fg::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3) && routed != playHeld("Forage", {}, {36, 38}, blocks),
+            "Forage: a route to all cutoff matches every pad's", buf);
+    }
+    // Decay 1 from play through: -0.5 is 0.5, read at the hit.
+    {
+        const auto knob = playHeld("Forage", {{"p00_decay", 0.5f}}, {36}, blocks);
+        Route r{8, 4, Fg::McPadDecay, -0.5f, 1.0f};
+        const auto routed = playHeld("Forage", {}, {36}, blocks, &r, Fg::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf), 1e-3), "Forage: a route to decay 1 matches the pad's decay", buf);
+    }
+}
+
 int main() {
     basics("Trinity", T::DestCount, T::DstAmp, T::DstPitch, T::DstOff, T::kMacros);
     stepChecks();
@@ -2285,6 +2338,12 @@ int main() {
     basics("Dice", Dc::MacroDestCount, Dc::McVolume, Dc::McPitch, Dc::McOff, Dc::kMacros, 0.15 / 0.9, 0.525 / 0.9);
     gNote = 57;
     diceRoutes();
+    using Fg = acidulous::machine::Forage;
+    // Volume 0.9 of 1.5, after the clipper: all of -0.5 leaves 0.15, half of it 0.525.
+    gNote = 36;
+    basics("Forage", Fg::MacroDestCount, Fg::McVolume, Fg::McPitch, Fg::McOff, Fg::kMacros, 0.15 / 0.9, 0.525 / 0.9);
+    gNote = 57;
+    forageRoutes();
 
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;

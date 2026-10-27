@@ -44,12 +44,20 @@
     <string name="pw_algo">algo</string>
     <string name="pw_algorithm">algorithm</string>
     <string name="pw_all">all</string>
+    <string name="pw_all_crush">all crush</string>
+    <string name="pw_all_cutoff">all cutoff</string>
     <string name="pw_all_damping">all damping</string>
     <string name="pw_all_decay">all decay</string>
     <string name="pw_all_drive">all drive</string>
+    <string name="pw_all_end">all end</string>
+    <string name="pw_all_env_decay">all env decay</string>
     <string name="pw_all_grit">all grit</string>
     <string name="pw_all_hardness">all hardness</string>
+    <string name="pw_all_level">all level</string>
+    <string name="pw_all_pitch_env">all pitch env</string>
+    <string name="pw_all_reso">all reso</string>
     <string name="pw_all_six">all six</string>
+    <string name="pw_all_start">all start</string>
     <string name="pw_all_stiffness">all stiffness</string>
     <string name="pw_all_where">all where</string>
     <string name="pw_alt">alt</string>
@@ -276,6 +284,7 @@
     <string name="pw_curve">curve</string>
     <string name="pw_cut">cut</string>
     <string name="pw_cutoff">cutoff</string>
+    <string name="pw_cutoff_n">cutoff %d</string>
     <string name="pw_cv">cv</string>
     <string name="pw_cycle">cycle</string>
     <string name="pw_cycles">cycles</string>
@@ -293,6 +302,7 @@
     <string name="pw_dark">dark</string>
     <string name="pw_dec">dec</string>
     <string name="pw_decay">decay</string>
+    <string name="pw_decay_n">decay %d</string>
     <string name="pw_deep">deep</string>
     <string name="pw_degree">degree</string>
     <string name="pw_delay">Delay</string>

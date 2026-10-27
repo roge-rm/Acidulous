@@ -1550,4 +1550,14 @@
     <string name="pw_mod_8">mod 8</string>
     <string name="pw_scan_amount">intensité balayage</string>
     <string name="pw_vel_to_filter">vél. vers filtre</string>
+    <string name="pw_all_start">début (tous)</string>
+    <string name="pw_all_end">fin (tous)</string>
+    <string name="pw_all_level">niveau (tous)</string>
+    <string name="pw_all_cutoff">coupure (tous)</string>
+    <string name="pw_all_reso">réso (tous)</string>
+    <string name="pw_all_crush">écrasé (tous)</string>
+    <string name="pw_all_pitch_env">env hauteur (tous)</string>
+    <string name="pw_all_env_decay">déclin env (tous)</string>
+    <string name="pw_decay_n">déclin %d</string>
+    <string name="pw_cutoff_n">coupure %d</string>
 </resources>

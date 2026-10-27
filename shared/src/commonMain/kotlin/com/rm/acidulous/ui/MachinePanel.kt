@@ -1762,6 +1762,12 @@ private fun HexbeatPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
     )
 }
 
+/** Where a Forage macro route goes, in the engine's MacroDest order. */
+val FORAGE_MACRO_DESTS = listOf(
+    "off", "all start", "all end", "all decay", "all level", "all cutoff", "all reso", "all crush",
+    "all pitch env", "all env decay", "pitch", "accent", "volume", "vel",
+) + (1..13).map { "tune $it" } + (1..13).map { "level $it" } + (1..13).map { "decay $it" } + (1..13).map { "cutoff $it" }
+
 /** Forage: the selected pad's sample and its controls. Tap a pad to select it. */
 @Composable
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
@@ -1814,6 +1820,9 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     val hot = Acid.colors.accent
     var picking by remember { mutableStateOf(false) }
     var clearing by remember { mutableStateOf(false) }
+    var section by rememberSaveable { mutableStateOf(0) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
 
     /**
      * Put a pad's start and end back to the full sample.
@@ -1941,25 +1950,57 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             }
             if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text(stringResource(Res.string.kit_clear_pad), color = Acid.colors.textMid, fontSize = 11.sp) }
         }
-        Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse"); PanelSwitch(b, n("play"), listOf("once", "loop", "hold"), "play") }
-            Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4"), "choke") }
-            Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
-            Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
-            Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume", "volume", hot) }
-            // The kit-wide controls.
-            Group("kit") {
-                PanelActions(
-                    Triple(stringResource(Res.string.kit_kit), hot) { onImportKit(p) },
-                    Triple(stringResource(if (sliceBusy) Res.string.kit_slicing else Res.string.kit_slice), hot) {
-                        if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
-                    },
-                    Triple(stringResource(Res.string.kit_match), Acid.colors.textMid) { matchLevels() },
-                    Triple(stringResource(Res.string.kit_clear_kit), Acid.colors.textMid) { clearing = true },
-                )
+        PanelSections(listOf("pad", "macros"), section, { section = it }) { sec ->
+            if (sec == 1) {
+                for (k in 1..8) key(k) { Group("macro $k") {
+                    TextButton(onClick = { renaming = k }) {
+                        Text(
+                            macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                            color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                            fontSize = 12.sp, maxLines = 1,
+                        )
+                    }
+                    val p = "mac${k}_"
+                    PanelStepKnob(b, p + "d1", FORAGE_MACRO_DESTS, "to 1", PanelAmber)
+                    PanelKnob(b, p + "a1", "by 1")
+                    PanelStepKnob(b, p + "d2", FORAGE_MACRO_DESTS, "to 2", PanelAmber)
+                    PanelKnob(b, p + "a2", "by 2")
+                    PanelStepKnob(b, p + "d3", FORAGE_MACRO_DESTS, "to 3", PanelAmber)
+                    PanelKnob(b, p + "a3", "by 3")
+                    PanelStepKnob(b, p + "d4", FORAGE_MACRO_DESTS, "to 4", PanelAmber)
+                    PanelKnob(b, p + "a4", "by 4")
+                } }
+            } else {
+                Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse"); PanelSwitch(b, n("play"), listOf("once", "loop", "hold"), "play") }
+                Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4"), "choke") }
+                Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
+                Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
+                Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume", "volume", hot) }
+                // The kit-wide controls.
+                Group("kit") {
+                    PanelActions(
+                        Triple(stringResource(Res.string.kit_kit), hot) { onImportKit(p) },
+                        Triple(stringResource(if (sliceBusy) Res.string.kit_slicing else Res.string.kit_slice), hot) {
+                            if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
+                        },
+                        Triple(stringResource(Res.string.kit_match), Acid.colors.textMid) { matchLevels() },
+                        Triple(stringResource(Res.string.kit_clear_kit), Acid.colors.textMid) { clearing = true },
+                    )
+                }
+                Group("macros") {
+                    for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+                }
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(b.trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 /**
