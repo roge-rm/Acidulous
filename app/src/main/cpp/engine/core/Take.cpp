@@ -229,6 +229,9 @@ void Take::guessShape(float sampleRate) {
         origin = (st - step * sk) / n;
         fitted = step * trimmedBars * 16.0;
     }
+    // The fit only refines the length the search found, so a skewed second
+    // pass can't move it more than a few percent.
+    fitted = std::clamp(fitted, trimmedLength * 0.97, trimmedLength * 1.03);
     bars = trimmedBars;
     barsStart = trimmedStart;
     barsFrames = static_cast<int32_t>(std::min(static_cast<double>(frames - trimmedStart), std::round(fitted)));
