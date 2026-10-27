@@ -89,7 +89,7 @@ fun UpdateReminder(modifier: Modifier = Modifier) {
         Text(stringResource(Res.string.update_out, version), color = Acid.colors.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
         Text(
             stringResource(Res.string.update_get), color = Acid.colors.accent, fontSize = 13.sp,
-            modifier = Modifier.clickable { runCatching { uri.openUri(UpdateCheck.RELEASES) } }.button(stringResource(Res.string.update_get))
+            modifier = Modifier.clickable { runCatching { uri.openUri(com.rm.acidulous.AppHost.current.downloadFor(version)) } }.button(stringResource(Res.string.update_get))
                 .padding(horizontal = 6.dp, vertical = 4.dp),
         )
         Text(

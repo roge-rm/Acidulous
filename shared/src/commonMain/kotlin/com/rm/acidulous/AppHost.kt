@@ -25,6 +25,8 @@ interface AppHost {
     val checksForUpdates: Boolean get() = false
     /** The newest released version, like "0.11.3", or null. Slow: call it off the main thread. */
     fun latestRelease(): String? = null
+    /** Where "get it" goes for [version]: the releases page, or the one file for this computer. */
+    fun downloadFor(version: String): String = com.rm.acidulous.ui.UpdateCheck.RELEASES
     /** One of the bundled licence texts by path ("licences/gpl-3.0.txt"), or null. */
     fun licenceText(path: String): String?
     /** The last crash report, or null if there are none. */
