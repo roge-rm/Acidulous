@@ -113,12 +113,21 @@ data class KeyChord(
     }
 }
 
-/** How a chord is written on screen: "Ctrl+Z", "Alt+Z", "Space", "`". */
+/**
+ * Set on a Mac, where the desktop reads Cmd as [KeyChord.ctrl] and Ctrl as
+ * [KeyChord.meta], so the same bindings work. Only changes how keys are named.
+ */
+var macKeys = false
+
+/** The name of the key that [KeyChord.ctrl] means: Cmd on a Mac. */
+internal val ctrlName: String get() = if (macKeys) "Cmd" else "Ctrl"
+
+/** How a chord is written on screen: "Ctrl+Z", "Alt+Z", "Space", "`". On a Mac "Cmd+Z", "Option+Z". */
 fun KeyChord.words(): String = buildString {
-    if (ctrl) append("Ctrl+")
-    if (alt) append("Alt+")
+    if (ctrl) append("$ctrlName+")
+    if (alt) append(if (macKeys) "Option+" else "Alt+")
     if (shift) append(AppStrings.getString(Res.string.keys_name_shift) + "+")
-    if (meta) append("Meta+")
+    if (meta) append(if (macKeys) "Ctrl+" else "Meta+")
     append(keyName(key))
 }
 
@@ -597,7 +606,7 @@ fun KeysOverlay(onDismiss: () -> Unit) {
                 Res.string.keys_full_screen to "F11",
                 Res.string.keys_right_click to stringResource(Res.string.keys_right_click_keys),
                 Res.string.keys_wheel_sideways to stringResource(Res.string.keys_name_shift) + "+" + stringResource(Res.string.keys_name_wheel),
-                Res.string.keys_wheel_zoom to "Ctrl+" + stringResource(Res.string.keys_name_wheel),
+                Res.string.keys_wheel_zoom to "$ctrlName+" + stringResource(Res.string.keys_name_wheel),
             )) {
                 androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth()) {
                     androidx.compose.material3.Text(stringResource(what), color = c.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
