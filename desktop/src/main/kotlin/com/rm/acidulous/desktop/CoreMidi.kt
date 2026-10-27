@@ -27,6 +27,7 @@ internal object CoreMidiNative {
     @JvmStatic external fun nativeLoopback(name: String): Boolean
 
     const val SOURCE = 1
+    /** Any hardware but Bluetooth: USB, or a maker's own driver. Not the IAC bus or a network session. */
     const val USB = 1
     const val BLUETOOTH = 2
 }

@@ -4,7 +4,9 @@
 //
 // One client, made on a thread of its own that runs a CFRunLoop for as long
 // as the app runs, since CoreMIDI only keeps a client's list of devices up
-// to date while the thread that made it runs its loop. Incoming packets
+// to date (plugging in and out) while the thread that made it runs its loop.
+// A timer that never fires keeps that loop from returning for want of
+// anything to wait on. Incoming packets
 // arrive on CoreMIDI's own thread and wait in a queue for nativeRead.
 // Everything else takes the lock.
 
@@ -125,9 +127,14 @@ void describe(MIDIEndpointRef endpoint, int kind, std::vector<std::string> &out)
         key = "d" + std::to_string(intProperty(device, kMIDIPropertyUniqueID, 0));
         deviceName = stringProperty(device, kMIDIPropertyName);
         maker = stringProperty(device, kMIDIPropertyManufacturer);
+        // Hardware is every device but the IAC bus and network sessions, as
+        // on Linux, so a device with its maker's own driver opens by itself too.
         const std::string driver = stringProperty(device, kMIDIPropertyDriverOwner);
-        if (driver.find("USB") != std::string::npos) flags |= 1;
-        if (driver.find("Bluetooth") != std::string::npos || driver.find("BLE") != std::string::npos) flags |= 2;
+        const bool bluetooth = driver.find("Bluetooth") != std::string::npos || driver.find("BLE") != std::string::npos;
+        const bool software = driver.find("IAC") != std::string::npos || driver.find("RTP") != std::string::npos ||
+            driver.find("Network") != std::string::npos;
+        if (bluetooth) flags |= 2;
+        else if (!software) flags |= 1;
     } else {
         // A program's own port, with no device behind it. Its source and
         // destination usually share a name, which pairs them.
@@ -159,6 +166,8 @@ Java_com_rm_acidulous_desktop_CoreMidiNative_nativeOpen(JNIEnv *, jclass) {
         std::mutex m;
         std::condition_variable ready;
         bool done = false;
+        // Set when nativeOpen stopped waiting: a client made after that is thrown away.
+        bool abandoned = false;
         OSStatus status = 1;
     };
     auto start = std::make_shared<Start>();
@@ -170,23 +179,37 @@ Java_com_rm_acidulous_desktop_CoreMidiNative_nativeOpen(JNIEnv *, jclass) {
             received(list, refCon);
         });
         if (s == noErr) s = MIDIOutputPortCreate(made, CFSTR("out"), &out);
-        if (s == noErr) {
-            std::lock_guard<std::mutex> guard(lock);
-            client = made;
-            inPort = in;
-            outPort = out;
-        }
         {
             std::lock_guard<std::mutex> guard(start->m);
+            if (start->abandoned) {
+                // Too late: nativeOpen has given up, and the app went on without CoreMIDI.
+                if (made != 0) MIDIClientDispose(made);
+                LOGW("CoreMIDI answered after the app stopped waiting; that client is closed");
+                return;
+            }
+            if (s == noErr) {
+                std::lock_guard<std::mutex> published(lock);
+                client = made;
+                inPort = in;
+                outPort = out;
+            } else if (made != 0) {
+                MIDIClientDispose(made);
+            }
             start->status = s;
             start->done = true;
         }
         start->ready.notify_one();
-        if (s == noErr) CFRunLoopRun();
+        if (s != noErr) return;
+        CFRunLoopTimerRef keep = CFRunLoopTimerCreate(
+            nullptr, CFAbsoluteTimeGetCurrent() + 1e9, 1e9, 0, 0, [](CFRunLoopTimerRef, void *) {}, nullptr);
+        CFRunLoopAddTimer(CFRunLoopGetCurrent(), keep, kCFRunLoopDefaultMode);
+        CFRunLoopRun();
+        LOGW("CoreMIDI's run loop stopped: devices plugged in or out from now on won't be seen");
     }).detach();
     // MIDIClientCreate can wait on the MIDI server for a few seconds the first time.
     std::unique_lock<std::mutex> wait(start->m);
     if (!start->ready.wait_for(wait, std::chrono::seconds(10), [&] { return start->done; })) {
+        start->abandoned = true;
         LOGW("CoreMIDI did not answer");
         return JNI_FALSE;
     }
@@ -201,8 +224,8 @@ Java_com_rm_acidulous_desktop_CoreMidiNative_nativeOpen(JNIEnv *, jclass) {
 /**
  * Every source and destination as six strings in a row: its unique id, 1 for
  * a source or 2 for a destination, the key of the device it belongs to, the
- * device's name, its maker, and flags (1 USB, 2 Bluetooth, 4 a program's own
- * port). CoreMidi.kt groups them into devices.
+ * device's name, its maker, and flags (1 hardware, 2 Bluetooth, 4 a program's
+ * own port). CoreMidi.kt groups them into devices.
  */
 JNIEXPORT jobjectArray JNICALL
 Java_com_rm_acidulous_desktop_CoreMidiNative_nativeEndpoints(JNIEnv *env, jclass) {
@@ -245,6 +268,8 @@ Java_com_rm_acidulous_desktop_CoreMidiNative_nativeSend(JNIEnv *env, jclass, jin
     if (count <= 0) return JNI_TRUE;
     std::vector<uint8_t> data(static_cast<size_t>(count));
     env->GetByteArrayRegion(bytes, offset, count, reinterpret_cast<jbyte *>(data.data()));
+    // Out of range: the exception is left for Java to throw.
+    if (env->ExceptionCheck()) return JNI_FALSE;
     std::lock_guard<std::mutex> guard(lock);
     if (client == 0) return JNI_FALSE;
     const MIDIEndpointRef destination = endpointById(id);
