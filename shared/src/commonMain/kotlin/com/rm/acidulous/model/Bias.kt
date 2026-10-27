@@ -102,11 +102,18 @@ fun Song.bpmOf(sceneId: String): Float =
     scenes.firstOrNull { it.id == sceneId }?.tempo?.bpm ?: tempo
 
 /**
+ * What `NativeEngine.loopShape` found in a file: how many bars it probably is
+ * (0 if no whole number fits), how long they are and where they start, both
+ * in seconds.
+ */
+data class LoopShape(val bars: Float, val seconds: Float, val start: Float)
+
+/**
  * A whole file as one cell's take, as on import.
  *
  * The caller gets [frames] from the engine, since reading it means opening the
  * file and this is a pure function. [bpm] is the file's own tempo if the caller
- * found one (a loop's, from `NativeEngine.loopShape`), otherwise the scene's.
+ * found one, otherwise the scene's.
  */
 fun Song.takeForWholeFile(sceneId: String, clip: Clip, relative: String, frames: Int, bpm: Float? = null): TakeRef =
     TakeRef(
@@ -114,9 +121,25 @@ fun Song.takeForWholeFile(sceneId: String, clip: Clip, relative: String, frames:
         bpm = bpm ?: bpmOf(sceneId), ticks = cycleTicks(sceneId, clip),
     )
 
+/**
+ * A file as one cell's take, looping if [shape] found it's a loop.
+ *
+ * A loop's take is just its bars, from the first hit to the end of the last
+ * bar, so it repeats on the grid at the tempo [loopTempo] gives. Room before
+ * the first hit and ringing past the last bar are left out, since a take
+ * stops at its end and the next pass starts on the first hit. Anything else
+ * is the whole file at the scene's tempo.
+ */
+fun Song.takeForFile(sceneId: String, clip: Clip, relative: String, frames: Int, shape: LoopShape?): TakeRef {
+    val bpm = loopTempo(shape) ?: return takeForWholeFile(sceneId, clip, relative, frames)
+    val offset = kotlin.math.round(shape!!.start * ENGINE_RATE).toInt().coerceIn(0, (frames - 1).coerceAtLeast(0))
+    val length = kotlin.math.round(shape.seconds * ENGINE_RATE).toInt().coerceIn(1, (frames - offset).coerceAtLeast(1))
+    return takeForWholeFile(sceneId, clip, relative, frames, bpm).copy(offset = offset, frames = length, loop = true)
+}
+
 /** A loop's tempo from `NativeEngine.loopShape`, or null if it couldn't tell. */
-fun loopTempo(shape: Pair<Float, Float>?): Float? =
-    shape?.takeIf { it.first > 0f && it.second > 0f }?.let { (bars, seconds) -> bars * 4f * 60f / seconds }
+fun loopTempo(shape: LoopShape?): Float? =
+    shape?.takeIf { it.bars > 0f && it.seconds > 0f }?.let { it.bars * 4f * 60f / it.seconds }
 
 /** How many of this cell's four lanes hold something. */
 fun Clip.audioLaneCount(): Int = audio?.lanes?.count { it != null } ?: 0

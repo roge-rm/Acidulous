@@ -51,6 +51,7 @@ import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.TakeRef
 import com.rm.acidulous.model.samplesInUse
+import com.rm.acidulous.model.takeForFile
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
 import kotlinx.coroutines.Dispatchers
@@ -533,15 +534,16 @@ fun TakePicker(
                 // follow the song tempo, so a 90 bpm break in a 126 bpm scene
                 // plays at 126 instead of drifting. A file that isn't a loop
                 // gets the scene's tempo.
-                val loopBpm: Float? = withContext(Dispatchers.Default) {
+                val shape = withContext(Dispatchers.Default) {
                     val root = EngineSync.sampleRoot ?: return@withContext null
-                    loopTempo(NativeEngine.loopShape(com.rm.acidulous.io.File(root, rel).absolutePath))
+                    NativeEngine.loopShape(com.rm.acidulous.io.File(root, rel).absolutePath)
                 }
+                val loopBpm = loopTempo(shape)
                 editor.edit(trackIndex) { track ->
                     val clip = track.clips[sceneId] ?: song.emptyClipFor(sceneId)
                     // Loops loop: two bars in a four-bar cell play twice.
-                    val take = song.takeForWholeFile(sceneId, clip, rel, survey.frames, loopBpm)
-                        .copy(peaks = survey.peaks, loop = loopBpm != null)
+                    val take = song.takeForFile(sceneId, clip, rel, survey.frames, shape)
+                        .copy(peaks = survey.peaks)
                     val follow = loopBpm != null && kotlin.math.abs(loopBpm - song.bpmOf(sceneId)) > 0.05f
                     track.copy(
                         clips = track.clips + (sceneId to clip.withTake(lane, take)),

@@ -3757,14 +3757,14 @@ private fun DicePanel(
     val sample = track.machine.settings["sample"].orEmpty()
     // What the loop is to the song: the engine's guess at its bars (the bars
     // knob can override it) and its length, and so its tempo.
-    val shape by produceState<Pair<Float, Float>?>(null, sample) {
+    val shape by produceState<com.rm.acidulous.model.LoopShape?>(null, sample) {
         value = if (sample.isEmpty()) null else withContext(Dispatchers.IO) {
             NativeEngine.loopShape(com.rm.acidulous.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(), sample).absolutePath)
         }
     }
     val barsAt = b.infoOf("bars")?.map(b.value("bars"))?.toInt() ?: 0
-    val loopBars = if (barsAt == 0) shape?.first ?: 0f else DICE_BARS.getOrElse(barsAt - 1) { 0f }
-    val loopBpm = shape?.second?.takeIf { it > 0f && loopBars > 0f }?.let { loopBars * 4f * 60f / it }
+    val loopBars = if (barsAt == 0) shape?.bars ?: 0f else DICE_BARS.getOrElse(barsAt - 1) { 0f }
+    val loopBpm = shape?.seconds?.takeIf { it > 0f && loopBars > 0f }?.let { loopBars * 4f * 60f / it }
     PanelSections(
         listOf("loop", "play", "dice", "slice", "tone", "macros"), section, { section = it },
         above = { sec ->

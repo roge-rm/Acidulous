@@ -888,11 +888,14 @@ std::string EngineHost::loopShape(const std::string &path, std::string &error) c
     take.left = decoded->left;
     take.right = decoded->stereo && !decoded->right.empty() ? decoded->right : decoded->left;
     take.detect(static_cast<float>(kSampleRate));
-    char buf[48];
+    char buf[64];
     // The bars' length, less any room before the first hit or ringing past
-    // the last bar, since that's what the tempo comes from.
-    std::snprintf(buf, sizeof(buf), "%.2f|%.6f", static_cast<double>(take.bars),
-                  static_cast<double>(take.barsFrames > 0 ? take.barsFrames : decoded->frames) / kSampleRate);
+    // the last bar, since that's what the tempo comes from, then where the
+    // bars start.
+    const bool trimmed = take.barsFrames > 0;
+    std::snprintf(buf, sizeof(buf), "%.2f|%.6f|%.6f", static_cast<double>(take.bars),
+                  static_cast<double>(trimmed ? take.barsFrames : decoded->frames) / kSampleRate,
+                  static_cast<double>(trimmed ? take.barsStart : 0) / kSampleRate);
     return buf;
 }
 
