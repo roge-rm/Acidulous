@@ -658,7 +658,9 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
         // Unvoiced: while the modulator is on a consonant or a breath, the
         // carrier gives way to noise at the level the notes are playing, so
         // the bands have hiss to shape where the oscillators have little.
-        if (unvoiced > 0.0f) {
+        // It keeps running while the mix glides down after the knob reaches
+        // 0, so dropping it mid-consonant doesn't step.
+        if (unvoiced > 0.0f || unvoicedMix > 0.0f) {
             const float hi = std::fabs(unvoicedHigh.highpass(external));
             const float lo = std::fabs(unvoicedLow.lowpass(external));
             unvoicedHighEnv += (hi - unvoicedHighEnv) * (hi > unvoicedHighEnv ? unvoicedAttack : unvoicedRelease);
@@ -667,7 +669,15 @@ bool Cipher::render(float *L, float *R, int32_t frames) {
             const float u = clampf((share - kUnvoicedFrom) / (kUnvoicedTo - kUnvoicedFrom), 0.0f, 1.0f);
             unvoicedMix += (u * u * (3.0f - 2.0f * u) * unvoiced - unvoicedMix) * unvoicedGlide;
             // Settled at none rather than decaying into denormals.
-            if (unvoicedMix < 1e-6f) unvoicedMix = 0.0f;
+            if (unvoicedMix < 1e-6f) {
+                unvoicedMix = 0.0f;
+                // Off now, so it starts fresh when the knob comes back up.
+                if (unvoiced <= 0.0f) {
+                    unvoicedHigh.reset();
+                    unvoicedLow.reset();
+                    unvoicedHighEnv = unvoicedLowEnv = 0.0f;
+                }
+            }
             if (unvoicedMix > 0.0f) {
                 unvoicedRng = unvoicedRng * 1664525u + 1013904223u;
                 const float noise = (static_cast<float>((unvoicedRng >> 9) & 0xffff) / 32768.0f) - 1.0f;

@@ -170,6 +170,47 @@ void unvoicedOnConsonants() {
     check(rel < -60.0, "and leaves a vowel alone", fmt("difference %.0f dB under the vowel", rel));
 }
 
+/** [play] from the start of [input], with `unvoiced` jumped to 0 at [dropAt] frames. */
+std::vector<float> playDropping(Machine *m, const std::vector<float> &input, int32_t frames, int32_t dropAt) {
+    std::vector<float> out;
+    float L[kBlock], R[kBlock], in[kBlock * 2];
+    m->noteOn(48, 100);
+    for (int32_t at = 0; at < frames; at += kBlock) {
+        if (at == dropAt) setParam(m, "unvoiced", 0.0f);
+        for (int32_t i = 0; i < kBlock; ++i) {
+            const float v = input[static_cast<size_t>(at + i) % input.size()];
+            in[i * 2] = in[i * 2 + 1] = v;
+        }
+        InputBus::get().publish(in, kBlock);
+        m->onBlock(at, at + 4, 120.0f);
+        std::memset(L, 0, sizeof(L));
+        std::memset(R, 0, sizeof(R));
+        m->render(L, R, kBlock);
+        for (int32_t i = 0; i < kBlock; ++i) out.push_back(0.5f * (L[i] + R[i]));
+    }
+    m->noteOff(48);
+    InputBus::get().publish(nullptr, 0);
+    return out;
+}
+
+void droppingMidConsonant() {
+    // Turned down during the "s": the noise has to fade out, not stop.
+    const std::vector<float> input = vowelThenS();
+    const int32_t drop = (kRate * 3 / 4) / kBlock * kBlock;
+    auto held = cipher(1.0f), dropped = cipher(1.0f);
+    const auto y = play(held.get(), input, 0, kRate);
+    const auto z = playDropping(dropped.get(), input, kRate, drop);
+    // How far it has moved from the held render in the first quarter of a
+    // millisecond after the drop, against the level there.
+    double diff = 0.0, sig = 0.0;
+    for (size_t i = static_cast<size_t>(drop); i < static_cast<size_t>(drop + kRate / 4000); ++i) {
+        diff += static_cast<double>(z[i] - y[i]) * (z[i] - y[i]);
+        sig += static_cast<double>(y[i]) * y[i];
+    }
+    const double rel = 10.0 * std::log10(diff / (sig + 1e-30) + 1e-30);
+    check(rel < -30.0, "turning it down during an \"s\" doesn't step", fmt("%.1f dB of change in 0.25 ms", rel));
+}
+
 } // namespace
 
 int main() {
@@ -177,6 +218,7 @@ int main() {
     resetIsComplete(0.0f);
     resetIsComplete(0.5f);
     unvoicedOnConsonants();
+    droppingMidConsonant();
     std::printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
