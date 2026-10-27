@@ -33,6 +33,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/dice/Dice.h>
 #include <engine/machine/formulate/Program.h>
 #include <engine/machine/nexus/Graph.h>
 #include <engine/machine/nexus/Modules.h>
@@ -791,8 +792,16 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
             mat.samples.push_back(pieceSample(static_cast<Piece>(i)));
             m->swapObject(i, mat.samples.back().release());
         }
+    } else if (kind == "dirtykit") {
+        for (int i = 0; i < static_cast<int>(Piece::Count); ++i) {
+            mat.samples.push_back(dirtyPieceSample(static_cast<Piece>(i)));
+            m->swapObject(i, mat.samples.back().release());
+        }
     } else if (kind == "break") {
         mat.take = breakLoop();
+        m->swapObject(0, mat.take.release());
+    } else if (kind == "swing") {
+        mat.take = swingLoop();
         m->swapObject(0, mat.take.release());
     } else if (kind == "seed") {
         mat.take = musicSeed();
@@ -806,6 +815,9 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
     } else if (kind == "voice") {
         mat.utterance = voiceUtterance();
         m->swapObject(0, mat.utterance.release());
+    } else if (kind == "dirtyvoice") {
+        mat.utterance = dirtyVoiceUtterance();
+        m->swapObject(0, mat.utterance.release());
     } else if (kind == "map") {
         mat.map = zoneMap();
         m->swapObject(0, mat.map.release());
@@ -813,6 +825,52 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
         mat.map = roughMap();
         m->swapObject(0, mat.map.release());
     }
+    // Dice cuts its loop on a render, and the app renders all the time, so
+    // the cut is there before the first note. One block here does the same;
+    // without it a note on the first block finds no slices.
+    if (machine == "Dice") {
+        float L[kBlock], R[kBlock];
+        m->render(L, R, kBlock);
+    }
+}
+
+/**
+ * Dice's demo: the loop played straight through, twice or for about eight
+ * seconds, each slice struck where the machine cut it. Read from the
+ * machine, so it follows the patch's cut, slice count, rate and tempo; the
+ * dice then do what they do to it. The cut has to be made already (see
+ * mountMaterial).
+ */
+Phrase dicePhrase(Machine *machine, float bpm, int velocity) {
+    using ::acidulous::machine::Dice;
+    auto *m = static_cast<Dice *>(machine);
+    Phrase p;
+    const ParamSet &ps = m->params();
+    const auto value = [&](const char *name) {
+        const int32_t i = ps.indexOf(name);
+        return i < 0 ? 0.0f : ps.target(i);
+    };
+    const int32_t n = m->sliceCount();
+    const float loopBpm = m->loopBpm();
+    const bool follow = value("follow") > 0.5f && loopBpm > 0.0f;
+    const float speed = value("rate") * (follow ? bpm / loopBpm : 1.0f);
+    if (n <= 0 || speed <= 0.0f) return p;
+    const int32_t first = m->sliceStart(0);
+    // A pass is as long as the loop's bars, which leave out any room before
+    // the first hit and any ringing past the last bar.
+    const float period = static_cast<float>(m->barsFrames()) / kSr / speed;
+    const int passes = std::max(2, static_cast<int>(std::ceil(7.5f / period)));
+    for (int k = 0; k < passes; ++k) {
+        for (int32_t i = 0; i < n; ++i) {
+            const float at = static_cast<float>(k) * period +
+                             static_cast<float>(m->sliceStart(i) - first) / kSr / speed;
+            p.lastOff = std::max(p.lastOff, hit(p, at, 0.05f, Dice::kBaseNote + i, velocity));
+        }
+    }
+    p.frames = secondsToFrames(static_cast<float>(passes) * period) + secondsToFrames(1.5f);
+    std::stable_sort(p.events.begin(), p.events.end(),
+                     [](const NoteEvent &a, const NoteEvent &b) { return a.frame < b.frame; });
+    return p;
 }
 
 /**
@@ -893,6 +951,8 @@ void loadInput(const std::string &kind, Material &mat) {
         mat.input = t->left;
     } else if (kind == "speech") {
         mat.input = speechPhrase();
+    } else if (kind == "dirtyvoice") {
+        mat.input = dirtyVoiceInput();
     } else if (kind.rfind("file:", 0) == 0) {
         mat.input = fileInput(kind.substr(5), 14.0f);
     }
@@ -1724,6 +1784,8 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
                                : !patch.role.empty() ? patch.role
                                                      : bank.role;
         if (kit != nullptr && (listenKind == "note" || listenKind.empty())) listenKind = "beat";
+        // A slicer's demo is its loop.
+        if (bank.unit == "Dice" && listenKind == "beat") listenKind = "loop";
         if (listenKind == measureKind) {
             take = measureTake;
         } else {
@@ -1735,7 +1797,9 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             // module's default. Without this those knobs go back to zero and
             // the render can be silent.
             dress();
-            take = render(m.get(), buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range), opt.bpm, mat, &chain);
+            const Phrase listen = listenKind == "loop" ? dicePhrase(m.get(), opt.bpm, opt.velocity)
+                                                       : buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range);
+            take = render(m.get(), listen, opt.bpm, mat, &chain);
         }
     }
 
@@ -2219,7 +2283,7 @@ void usage() {
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
-        "  --material kit|break|seed|dirtyseed|voice|voicetake|map|roughmap|none   --input voice|noise|break|none\n"
+        "  --material kit|dirtykit|break|swing|seed|dirtyseed|voice|dirtyvoice|voicetake|map|roughmap|none   --input voice|dirtyvoice|speech|noise|break|none\n"
         "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
         "\n"

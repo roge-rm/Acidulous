@@ -13,11 +13,13 @@
 // It covers every machine in the registry, so new machines are covered
 // automatically.
 
+#include <engine/core/InputBus.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Program.h>
 #include <memory>
+#include "audition_material.h"
 #include "patchbank.h"
 #include <cmath>
 #include <cstdint>
@@ -33,6 +35,40 @@ namespace {
 constexpr int32_t kRate = 48000;
 constexpr int32_t kBlock = 64;
 constexpr int32_t kBlocks = 512; // ~0.68 s
+
+/**
+ * A voice on the input bus, for the machines that listen to it.
+ *
+ * The recording named in tools/local.env if there is one, otherwise the
+ * synthetic phrase. Built once.
+ */
+const std::vector<float> &voiceInput() {
+    static const std::vector<float> v = [] {
+        std::string ignored;
+        std::vector<float> mono = audition::fileMono(std::getenv("ACIDULOUS_INPUT_FILE"), ignored);
+        if (mono.empty()) mono = audition::speechPhrase();
+        return mono;
+    }();
+    return v;
+}
+
+/** The machine being checked reads the input bus. */
+bool g_feedInput = false;
+
+/**
+ * Publishes one block of the voice, read from [frame]. Both passes of the
+ * performance read the same frames; the prelude reads others.
+ */
+void feedInput(int64_t frame) {
+    static float block[kBlock * 2];
+    if (!g_feedInput) return;
+    const std::vector<float> &v = voiceInput();
+    for (int32_t i = 0; i < kBlock; ++i) {
+        const float s = v.empty() ? 0.0f : v[static_cast<size_t>(frame + i) % v.size()];
+        block[i * 2] = block[i * 2 + 1] = s;
+    }
+    InputBus::get().publish(block, kBlock);
+}
 
 /**
  * One identical performance, played twice.
@@ -70,6 +106,7 @@ void performance(Machine *m, std::vector<float> &out) {
         if (b > 0 && b % 11 == 0) m->channelPressure(static_cast<uint8_t>((b * 3) % 128));
         if (b > 0 && b % 23 == 0) m->pitchBend(static_cast<int16_t>((b % 200) - 100));
 
+        feedInput(static_cast<int64_t>(b) * kBlock);
         const int64_t tick = static_cast<int64_t>(b) * 4;
         m->onBlock(tick, tick + 4, 120.0f);
 
@@ -113,6 +150,9 @@ void prelude(Machine *m) {
         // Leave the controllers raised after the notes stop, which a panic
         // has to reset: the performance below opens without sending them.
         if (b == 2000) { m->controlChange(1, 90); m->channelPressure(100); m->pitchBend(3000); }
+        // A different stretch of the voice, ending on it, so the analysis
+        // goes into the panic busy.
+        feedInput(static_cast<int64_t>(b + 977) * kBlock);
         const int64_t tick = static_cast<int64_t>(b) * 4;
         m->onBlock(tick, tick + 4, 120.0f);
         std::memset(L, 0, sizeof(L));
@@ -157,6 +197,26 @@ using Settings = std::vector<std::pair<std::string, std::string>>;
 
 Dressing dress(const char *name, Machine *m, const Settings *settings) {
     Dressing d;
+    // Cipher hears the voice on the input bus.
+    g_feedInput = std::strcmp(name, "Cipher") == 0;
+    // Molt sings an analysed take of the same voice. The analysis is slow, so
+    // it's done once and copied. Molt owns and deletes its copy.
+    if (std::strcmp(name, "Molt") == 0) {
+        static const std::unique_ptr<audio::Utterance> voice = audition::voiceUtterance();
+        delete static_cast<audio::Utterance *>(m->swapObject(0, new audio::Utterance(*voice)));
+    }
+    // Dice slices the two-bar break. The app renders all the time, so the cut
+    // is made before the first note; one block here does the same.
+    if (std::strcmp(name, "Dice") == 0) {
+        delete static_cast<audio::Take *>(m->swapObject(0, audition::breakLoop().release()));
+        float L[kBlock], R[kBlock];
+        m->render(L, R, kBlock);
+    }
+    // Forage plays the thirteen-piece kit, one sample a pad. It owns them.
+    if (std::strcmp(name, "Forage") == 0) {
+        for (int32_t pad = 0; pad < static_cast<int32_t>(audition::Piece::Count); ++pad)
+            delete static_cast<SampleData *>(m->swapObject(pad, audition::pieceSample(static_cast<audition::Piece>(pad)).release()));
+    }
     if (std::strcmp(name, "Cumulus") == 0) {
         auto *cumulus = static_cast<machine::Cumulus *>(m);
         d.cloud = machine::cumulus::buildCloud(cumulus->spec(), kRate);
@@ -195,6 +255,8 @@ Result check(const char *name, const Patch *patch = nullptr, const Settings *set
     // starts a few mantissa bits away from a newly built one. Both renders of
     // an export are panicked, so the export still repeats.
     std::vector<float> a, b, fresh;
+    // The input goes quiet between machines, or one would hear the last.
+    InputBus::get().publish(nullptr, 0);
     panic(m);
     performance(m, a);
     prelude(m);
@@ -212,6 +274,8 @@ Result check(const char *name, const Patch *patch = nullptr, const Settings *set
     panic(m2);
     performance(m2, fresh);
     delete m2;
+    InputBus::get().publish(nullptr, 0);
+    g_feedInput = false;
     r.reproducible = (fresh == a);
 
     if (a.size() != b.size()) return r;
@@ -327,10 +391,13 @@ int registryIsComplete() {
  * check runs on every patch in every bank.
  *
  * Skipped: machines whose sound is a file or a graph, since their patches
- * only mean something with it mounted. Their state is covered above.
+ * only mean something with it mounted. Their state is covered above. Molt
+ * and Cipher run, with the voice mounted or on the input, Forage with the
+ * kit, and Dice with the
+ * break.
  */
 int everyPatch(const std::string &banks) {
-    static const char *const kNeedsMore[] = {"Forage", "Mosaic", "Pollen", "Dice", "Molt", "Bias", "Cipher", "Nexus"};
+    static const char *const kNeedsMore[] = {"Mosaic", "Pollen", "Bias", "Nexus"};
     int checked = 0, failed = 0;
     const auto skip = [](const std::string &unit) {
         for (const char *n : kNeedsMore) if (unit == n) return true;

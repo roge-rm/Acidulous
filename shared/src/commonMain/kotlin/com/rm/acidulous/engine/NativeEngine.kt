@@ -1,5 +1,7 @@
 package com.rm.acidulous.engine
 
+import com.rm.acidulous.model.LoopShape
+
 /**
  * The only way into the native audio engine.
  *
@@ -126,15 +128,17 @@ object NativeEngine {
 
     /**
      * What a loop file looks like to a machine that follows the song: how
-     * many bars it probably is (0 if no whole number fits) and how long it is
-     * in seconds. Null if the file can't be read. Decodes the file, so call
-     * it off the main thread.
+     * many bars it probably is (0 if no whole number fits) and how long those
+     * bars are in seconds, leaving out any room before the first hit and any
+     * ringing past the last bar, and where they start. Null if the file can't
+     * be read. Decodes the file, so call it off the main thread.
      */
-    suspend fun loopShape(absolutePath: String): Pair<Float, Float>? =
-        EngineNative.nativeLoopShape(absolutePath).split('|').takeIf { it.size == 2 }?.let { (b, s) ->
+    suspend fun loopShape(absolutePath: String): LoopShape? =
+        EngineNative.nativeLoopShape(absolutePath).split('|').takeIf { it.size == 3 }?.let { (b, s, f) ->
             val bars = b.toFloatOrNull() ?: return@let null
             val seconds = s.toFloatOrNull() ?: return@let null
-            bars to seconds
+            val start = f.toFloatOrNull() ?: return@let null
+            LoopShape(bars, seconds, start)
         }
 
     /**

@@ -11,15 +11,20 @@ chose de différent arrive sur chacune. C’est bon pour les breaks.
 des divisions égales jusqu’aux coups de la boucle elle-même. Chaque tranche a
 ses propres **niveau**, **pano**, **hauteur**, **déclin** et **jeu**.
 
+Les divisions égales partagent les mesures de la boucle, donc le silence
+avant le premier coup est sauté et les coupes tombent sur les temps. La
+dernière tranche résonne dans ce qui reste après la dernière mesure, sauf si
+elle est jouée à l’envers, bégayée ou écourtée.
+
 ## Les dés
 
 Cinq chances, tirées sur chaque tranche :
 
 - **échanger** - jouer une autre tranche.
 - **inverser** - la jouer à l’envers.
-- **bégaie**, avec **fois** - en répéter une partie.
+- **bégaie**, avec **fois** - répéter son début autant de fois dans sa propre longueur.
 - **omettre** - ne rien jouer.
-- **saut**, avec **jusqu’à** - sauter ailleurs dans la boucle et continuer.
+- **saut**, avec **jusqu’à** - la jouer plus haut ou plus bas d’autant de demi-tons.
 
 **graine** décide des tirages et **dés** sur **tenir** les fige. Montez les dés jusqu’à
 entendre quelque chose qui vous plaît, puis figez-le.
@@ -29,7 +34,9 @@ entendre quelque chose qui vous plaît, puis figez-le.
 Les tranches sont sur la grille comme des sons de batterie, alors vous pouvez
 réordonner la boucle en écrivant un motif. **vitesse**, **gate**, **hauteur**,
 **précis** et **accent** règlent la lecture, suivis d’un filtre et d’une
-saturation.
+saturation. **gate** raccourcit chaque tranche (chaque coup d’un
+bégaiement), d’une attaque de quelques millisecondes en bas à la tranche
+entière en haut, à n’importe quel tempo.
 
 ## Tempo
 
@@ -42,11 +49,31 @@ morceau sans changer sa hauteur, alors un break à 90 bpm entre dans un morceau
 **mesures** est la longueur de la boucle, d’où son tempo est calculé. Sur
 **auto**, il est deviné d’après la longueur de la boucle et la place de ses
 coups, et la ligne sous le nom de la boucle dit ce qu’il a trouvé, comme
-« 2 mesures à 90 bpm ». Si c’est faux, réglez-le vous-même.
+« 2 mesures à 90 bpm ». Le silence avant le premier coup et une cymbale qui
+sonne encore après la dernière mesure ne comptent pas. Si c’est faux,
+réglez-le vous-même.
 
 Une tranche jouée à l’envers n’est pas étirée. Elle est accélérée ou ralentie
 comme une bande, alors elle se désaccorde un peu quand le morceau est loin du
 tempo de la boucle.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Chaos,
+Bégaie, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur fait 24 demi-tons à 1. Les cinq dés,
+fois, jusqu’à, graine et tranches y sont tous, alors un seul bouton peut mener
+une boucle de droite à folle, ou passer d’un motif figé à l’autre. Tout sauf le
+filtre, la saturation, le volume et le pano est lu au début d’une tranche, donc
+ça change à la tranche suivante. Les réglages par tranche, selon, tenir, joue
+au, mesures et le type de filtre ne sont pas accessibles. Touchez le nom d’une
+macro pour la renommer.
 
 ## Astuces
 

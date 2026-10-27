@@ -44,12 +44,20 @@
     <string name="pw_algo">algo</string>
     <string name="pw_algorithm">algorithm</string>
     <string name="pw_all">all</string>
+    <string name="pw_all_crush">all crush</string>
+    <string name="pw_all_cutoff">all cutoff</string>
     <string name="pw_all_damping">all damping</string>
     <string name="pw_all_decay">all decay</string>
     <string name="pw_all_drive">all drive</string>
+    <string name="pw_all_end">all end</string>
+    <string name="pw_all_env_decay">all env decay</string>
     <string name="pw_all_grit">all grit</string>
     <string name="pw_all_hardness">all hardness</string>
+    <string name="pw_all_level">all level</string>
+    <string name="pw_all_pitch_env">all pitch env</string>
+    <string name="pw_all_reso">all reso</string>
     <string name="pw_all_six">all six</string>
+    <string name="pw_all_start">all start</string>
     <string name="pw_all_stiffness">all stiffness</string>
     <string name="pw_all_where">all where</string>
     <string name="pw_alt">alt</string>
@@ -60,7 +68,9 @@
     <string name="pw_amount">amount</string>
     <string name="pw_amp">Amp</string>
     <string name="pw_amp_65f59e">amp</string>
+    <string name="pw_amp_atk">amp atk</string>
     <string name="pw_amp_env">amp env</string>
+    <string name="pw_amp_rel">amp rel</string>
     <string name="pw_angle">angle</string>
     <string name="pw_answers">answers</string>
     <string name="pw_apart">apart</string>
@@ -176,6 +186,7 @@
     <string name="pw_cable_n">cable %d</string>
     <string name="pw_cajon">cajon</string>
     <string name="pw_call">call</string>
+    <string name="pw_car_drive">car drive</string>
     <string name="pw_carrier">carrier</string>
     <string name="pw_cassotto">cassotto</string>
     <string name="pw_caw">caw</string>
@@ -273,6 +284,7 @@
     <string name="pw_curve">curve</string>
     <string name="pw_cut">cut</string>
     <string name="pw_cutoff">cutoff</string>
+    <string name="pw_cutoff_n">cutoff %d</string>
     <string name="pw_cv">cv</string>
     <string name="pw_cycle">cycle</string>
     <string name="pw_cycles">cycles</string>
@@ -290,6 +302,7 @@
     <string name="pw_dark">dark</string>
     <string name="pw_dec">dec</string>
     <string name="pw_decay">decay</string>
+    <string name="pw_decay_n">decay %d</string>
     <string name="pw_deep">deep</string>
     <string name="pw_degree">degree</string>
     <string name="pw_delay">Delay</string>
@@ -420,6 +433,7 @@
     <string name="pw_fan_3_3">fan 3 / 3</string>
     <string name="pw_fast">fast</string>
     <string name="pw_fb">fb</string>
+    <string name="pw_fb_tone">fb tone</string>
     <string name="pw_feedback">feedback</string>
     <string name="pw_feel">feel</string>
     <string name="pw_feg">feg</string>
@@ -1197,6 +1211,7 @@
     <string name="pw_slice">slice</string>
     <string name="pw_slice_n">Slice %d</string>
     <string name="pw_slicer">Slicer</string>
+    <string name="pw_slices">slices</string>
     <string name="pw_slide">slide</string>
     <string name="pw_slit_drum">slit drum</string>
     <string name="pw_slope">slope</string>

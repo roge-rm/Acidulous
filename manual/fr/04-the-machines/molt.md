@@ -17,6 +17,9 @@ la prise est tirée vers ces notes.
 - **vitesse** - à quelle vitesse la note est atteinte. Lent sonne comme un
   glissé naturel, rapide sonne par paliers.
 - **robot** - aplatit complètement la hauteur sur la note.
+- **porta.** - le temps que met une note pour glisser depuis la note la plus
+  proche qui sonne encore. Les notes d’un accord ne glissent pas l’une vers
+  l’autre.
 
 ## La voix
 
@@ -26,6 +29,22 @@ la prise est tirée vers ces notes.
 - **début** et **boucle** - quelle partie de la prise joue, et si elle boucle.
 
 Puis un filtre, une enveloppe d’amplitude et une saturation.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Plus grand,
+Tirer, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur fait 24 demi-tons à 1. Le début et la
+vélocité sont lus au début d’une note, donc ils changent à la note suivante ;
+le reste bouge tout de suite. Robot, boucle, portamento, le type de filtre, le
+bend, l’octave et les demi-tons ne sont pas accessibles. Touchez le nom d’une
+macro pour la renommer.
 
 ## Astuces
 

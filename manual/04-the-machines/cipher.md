@@ -28,7 +28,13 @@ bright sounds come out dark, spread it wider, **freeze** the current shape
 while the carrier keeps playing, or **smear** neighbouring bands together.
 
 **role**, **dry** and **wet** set which side is which and how much of each you
-hear. **unvoiced** handles consonants so the words stay clear.
+hear.
+
+Two controls keep the consonants. **unvoiced** turns the carrier into noise
+while the voice is on an "s", an "f" or a breath, so the bands have hiss to
+shape and the words stay clear. The **consonants** group adds a hiss of its
+own on top whenever the top of the voice gets loud: **detect** sets how
+easily, **above** where, **level** how loud.
 
 **attack**, **release** and **smear** set how quickly each band follows. Fast
 is clear but can chatter, and slow is smooth but can slur.
@@ -44,6 +50,21 @@ example, loudness on **smear** tightens the words up as they get louder.
 The destinations are the map controls (**shift**, **stretch**, **remap**,
 **freeze**, **smear**, **q** and the band edges) plus the carrier's pitch and
 mix.
+
+## Macros
+
+The **play** page has eight macro knobs. A patch can name them (Shift,
+Smear, etc.) and the names show on the knobs, on automation lanes and in the
+controller mapping list. They sit at zero when a patch loads, which is the
+patch as it was made.
+
+The **macros** page sets what each one does. A macro has four routes, a
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
+the knob moves the destination by knob times amount, across that control's
+whole range at 1. Pitch is 24 semitones at 1. The amp attack and release are
+read when a note starts, so they change from the next note; the rest move at
+once. The switches, the band count, the order, the waves, the matrix and its
+envelopes and LFOs can't be reached. Tap a macro's name to rename it.
 
 ## Tips
 

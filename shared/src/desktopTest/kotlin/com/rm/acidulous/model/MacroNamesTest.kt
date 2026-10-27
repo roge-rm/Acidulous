@@ -1,6 +1,7 @@
 package com.rm.acidulous.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** A named macro shows its name in the lane lists, on every machine with macros. */
@@ -236,5 +237,75 @@ class MacroNamesTest {
         val families = bank.map { it.family }.distinct()
         assertEquals(listOf("voices", "colour", "style", "choir", "harmony", "strange"), families)
         assertEquals(listOf(8, 8, 9, 8, 5, 7), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun moltMacrosTakeThePatchNames() {
+        val t = track("Molt", mapOf("macro1" to "Looser"))
+        assertEquals("Looser", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+        assertEquals("formant", laneShortLabel(t, laneKey("machine", "formant")))
+    }
+
+    @Test
+    fun moltBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Molt")
+        assertEquals(38, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("tune", "robot", "size", "tone", "shape", "play"), families)
+        assertEquals(listOf(7, 6, 6, 7, 6, 6), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun cipherMacrosTakeThePatchNames() {
+        val t = track("Cipher", mapOf("macro1" to "Untangle"))
+        assertEquals("Untangle", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+    }
+
+    @Test
+    fun cipherBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Cipher")
+        assertEquals(40, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("classic", "remap", "formant", "hold", "carrier", "extreme"), families)
+        assertEquals(listOf(7, 7, 6, 6, 7, 7), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun diceMacrosTakeThePatchNames() {
+        val t = track("Dice", mapOf("macro1" to "Swap"))
+        assertEquals("Swap", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+    }
+
+    @Test
+    fun diceBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Dice")
+        assertEquals(26, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("straight", "dice", "perform", "tone", "slice"), families)
+        assertEquals(listOf(6, 6, 6, 5, 3), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun forageMacrosTakeThePatchNames() {
+        val t = track("Forage", mapOf("macro1" to "Lower"))
+        assertEquals("Lower", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+    }
+
+    @Test
+    fun forageBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Forage")
+        assertEquals(33, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("straight", "shape", "tone", "motion", "kit"), families)
+        assertEquals(listOf(6, 7, 7, 6, 7), families.map { f -> bank.count { it.family == f } })
+        assertTrue(bank.drop(1).all { p -> (1..8).all { p.settings["macro$it"] != null } })
     }
 }

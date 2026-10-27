@@ -7,6 +7,15 @@ CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
 
+# Cipher's input and Molt's take use the recording named in local.env if
+# there is one, like audition.sh. An empty ACIDULOUS_INPUT_FILE uses the
+# synthetic phrase.
+if [ -z "${ACIDULOUS_INPUT_FILE+set}" ] && [ -f "$ROOT/tools/local.env" ]; then
+    # shellcheck disable=SC1091
+    . "$ROOT/tools/local.env"
+fi
+export ACIDULOUS_INPUT_FILE="${ACIDULOUS_INPUT_FILE:-}"
+
 # Every machine, effect and dsp file, compiled once and cached. See
 # tools/host_engine.sh.
 LIB=$("$ROOT/tools/host_engine.sh") || exit 1

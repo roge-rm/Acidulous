@@ -253,7 +253,7 @@ fun MachinePanel(
             "Trinity" -> TrinityPanel(binding, track, trackIndex, editor)
             "Ratio" -> RatioPanel(binding, track, trackIndex, editor)
             "Manual" -> ManualPanel(binding, track, trackIndex, editor)
-            "Cipher" -> CipherPanel(binding)
+            "Cipher" -> CipherPanel(binding, track, trackIndex, editor)
             "Cumulus" -> CumulusPanel(binding, track, trackIndex, editor)
             "Formulate" -> FormulatePanel(binding, track, trackIndex, editor)
             "Filament" -> FilamentPanel(binding, track, trackIndex, editor)
@@ -1762,6 +1762,12 @@ private fun HexbeatPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
     )
 }
 
+/** Where a Forage macro route goes, in the engine's MacroDest order. */
+val FORAGE_MACRO_DESTS = listOf(
+    "off", "all start", "all end", "all decay", "all level", "all cutoff", "all reso", "all crush",
+    "all pitch env", "all env decay", "pitch", "accent", "volume", "vel",
+) + (1..13).map { "tune $it" } + (1..13).map { "level $it" } + (1..13).map { "decay $it" } + (1..13).map { "cutoff $it" }
+
 /** Forage: the selected pad's sample and its controls. Tap a pad to select it. */
 @Composable
 private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int) -> Unit,
@@ -1814,6 +1820,9 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
     val hot = Acid.colors.accent
     var picking by remember { mutableStateOf(false) }
     var clearing by remember { mutableStateOf(false) }
+    var section by rememberSaveable { mutableStateOf(0) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
 
     /**
      * Put a pad's start and end back to the full sample.
@@ -1941,25 +1950,57 @@ private fun ForagePanel(b: ParamBinding, track: Track, pad: Int, onImport: (Int)
             }
             if (rel != null) TextButton(onClick = { resetTrim(p); onClear(p) }) { Text(stringResource(Res.string.kit_clear_pad), color = Acid.colors.textMid, fontSize = 11.sp) }
         }
-        Row(Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse"); PanelSwitch(b, n("play"), listOf("once", "loop", "hold"), "play") }
-            Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4"), "choke") }
-            Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
-            Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
-            Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume", "volume", hot) }
-            // The kit-wide controls.
-            Group("kit") {
-                PanelActions(
-                    Triple(stringResource(Res.string.kit_kit), hot) { onImportKit(p) },
-                    Triple(stringResource(if (sliceBusy) Res.string.kit_slicing else Res.string.kit_slice), hot) {
-                        if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
-                    },
-                    Triple(stringResource(Res.string.kit_match), Acid.colors.textMid) { matchLevels() },
-                    Triple(stringResource(Res.string.kit_clear_kit), Acid.colors.textMid) { clearing = true },
-                )
+        PanelSections(listOf("pad", "macros"), section, { section = it }) { sec ->
+            if (sec == 1) {
+                for (k in 1..8) key(k) { Group("macro $k") {
+                    TextButton(onClick = { renaming = k }) {
+                        Text(
+                            macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                            color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                            fontSize = 12.sp, maxLines = 1,
+                        )
+                    }
+                    val p = "mac${k}_"
+                    PanelStepKnob(b, p + "d1", FORAGE_MACRO_DESTS, "to 1", PanelAmber)
+                    PanelKnob(b, p + "a1", "by 1")
+                    PanelStepKnob(b, p + "d2", FORAGE_MACRO_DESTS, "to 2", PanelAmber)
+                    PanelKnob(b, p + "a2", "by 2")
+                    PanelStepKnob(b, p + "d3", FORAGE_MACRO_DESTS, "to 3", PanelAmber)
+                    PanelKnob(b, p + "a3", "by 3")
+                    PanelStepKnob(b, p + "d4", FORAGE_MACRO_DESTS, "to 4", PanelAmber)
+                    PanelKnob(b, p + "a4", "by 4")
+                } }
+            } else {
+                Group("sample") { PanelKnob(b, n("start"), "start"); PanelKnob(b, n("end"), "end"); PanelKnob(b, n("pitch"), "pitch", hot); PanelSwitch(b, n("reverse"), listOf("fwd", "rev"), "reverse"); PanelSwitch(b, n("play"), listOf("once", "loop", "hold"), "play") }
+                Group("amp") { PanelKnob(b, n("decay"), "decay"); PanelKnob(b, n("level"), "level"); PanelKnob(b, n("pan"), "pan"); PanelSwitch(b, n("choke"), listOf("-", "1", "2", "3", "4"), "choke") }
+                Group("tone") { PanelKnob(b, n("cutoff"), "cutoff", hot); PanelKnob(b, n("reso"), "reso", hot); PanelSwitch(b, n("mode"), listOf("lp", "bp"), "mode"); PanelKnob(b, n("crush"), "crush", Acid.colors.pink) }
+                Group("punch") { PanelKnob(b, n("penv"), "pitch env"); PanelKnob(b, n("pdecay"), "decay") }
+                Group("play") { PanelKnob(b, "accent"); PanelKnob(b, "velocity", "vel"); PanelKnob(b, "volume", "volume", hot) }
+                // The kit-wide controls.
+                Group("kit") {
+                    PanelActions(
+                        Triple(stringResource(Res.string.kit_kit), hot) { onImportKit(p) },
+                        Triple(stringResource(if (sliceBusy) Res.string.kit_slicing else Res.string.kit_slice), hot) {
+                            if (sliceRel == null) { awaitingPick = true; onImportSlice() } else slicing = true
+                        },
+                        Triple(stringResource(Res.string.kit_match), Acid.colors.textMid) { matchLevels() },
+                        Triple(stringResource(Res.string.kit_clear_kit), Acid.colors.textMid) { clearing = true },
+                    )
+                }
+                Group("macros") {
+                    for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+                }
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(b.trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 /**
@@ -2665,6 +2706,14 @@ private val CIPHER_DESTS = listOf(
 )
 private val CIPHER_SYNC = listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
 
+/** Where a Cipher macro route goes, in the engine's MacroDest order. */
+val CIPHER_MACRO_DESTS = listOf(
+    "off", "low", "high", "width", "attack", "release", "smear", "gate",
+    "shift", "stretch", "remap", "morph", "detect", "track", "feedback", "fb tone",
+    "mix", "detune", "pw", "sub", "noise", "car drive",
+    "dry", "wet", "drive", "volume", "pan", "amp atk", "amp rel", "pitch",
+)
+
 /**
  * The microphone control, for machines that listen. A vocoder or an input
  * exciter with nothing coming in is silent, so the panel has the switch instead
@@ -2699,10 +2748,33 @@ private fun InputListen() {
 }
 
 @Composable
-private fun CipherPanel(b: ParamBinding) {
+private fun CipherPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
-    PanelSections(listOf("bank", "map", "carrier", "voice", "mod", "out"), section, { section = it }) { sec ->
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("bank", "play", "map", "carrier", "voice", "mod", "out", "macros"), section, { section = it }) { sec ->
         when (sec) {
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", CIPHER_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", CIPHER_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", CIPHER_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", CIPHER_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             0 -> {
                 Group("listen") { InputListen() }
                 Group("bank") {
@@ -2727,7 +2799,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "siblevel", "level")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("remap") {
                     PanelStepKnob(b, "remap", CIPHER_REMAP, "order", PanelAmber)
                     PanelKnob(b, "remapamt", "amount", PanelAmber)
@@ -2747,7 +2819,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "fbtone", "tone")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("carrier") {
                     PanelStepKnob(b, "wave a", CIPHER_WAVES, "wave a", PanelAmber)
                     PanelStepKnob(b, "wave b", CIPHER_WAVES, "wave b", PanelAmber)
@@ -2756,9 +2828,8 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "pw", "width")
                     PanelKnob(b, "sub", "sub")
                     PanelKnob(b, "noise", "noise")
-                    // How much of the carrier is replaced by noise when the
-                    // modulator is unvoiced, which turns a sung vowel into a
-                    // whisper.
+                    // How much of the carrier is replaced by noise while the
+                    // modulator is unvoiced (an "s", "f" or breath).
                     PanelKnob(b, "unvoiced", "unvoiced", PanelAmber)
                     PanelKnob(b, "cardrive", "drive", PanelPink)
                 }
@@ -2767,7 +2838,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "ampsus", "sustain"); PanelKnob(b, "amprel", "release")
                 }
             }
-            3 -> {
+            4 -> {
                 Group("roles") {
                     PanelStepKnob(b, "role", CIPHER_ROLE, "input is", PanelAmber)
                     PanelKnob(b, "dry", "dry")
@@ -2787,7 +2858,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "vel", "velocity")
                 }
             }
-            4 -> {
+            5 -> {
                 Group("lfo 1") {
                     PanelStepKnob(b, "lfo1wave", TRINITY_LFO_WAVES, "wave", PanelAmber)
                     PanelKnob(b, "lfo1rate", "rate", PanelAmber)
@@ -2814,7 +2885,7 @@ private fun CipherPanel(b: ParamBinding) {
                     PanelKnob(b, "m${m}_amt", "amount", PanelAmber)
                 } }
             }
-            else -> {
+            6 -> {
                 Group("out") {
                     PanelKnob(b, "drive", "drive", PanelPink)
                     PanelKnob(b, "volume", "volume")
@@ -2823,6 +2894,14 @@ private fun CipherPanel(b: ParamBinding) {
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
 }
 
 // --- Cumulus ---------------------------------------------------------------------
@@ -3508,6 +3587,20 @@ private fun ResonancePanel(b: ParamBinding, pad: Int, track: Track, trackIndex: 
 
 private val DICE_CUTS = listOf("onsets", "grid")
 
+/** Where a Dice macro route goes, in the engine's MacroDest order. */
+val DICE_MACRO_DESTS = listOf(
+    "off", "swap", "reverse", "stutter", "drop", "jump",
+    "times", "up to", "seed", "slices",
+    "gate", "rate", "cutoff", "reso", "drive", "volume", "pan", "accent", "pitch",
+)
+
+/** Where a Molt macro route goes, in the engine's MacroDest order. */
+val MOLT_MACRO_DESTS = listOf(
+    "off", "start", "tune", "rate", "formant", "mega",
+    "cutoff", "reso", "attack", "decay", "sustain", "release",
+    "velocity", "drive", "volume", "pan", "pitch",
+)
+
 /**
  * Molt: the take across the top, then what's done to it.
  *
@@ -3521,6 +3614,8 @@ private fun MoltPanel(
     var section by rememberSaveable { mutableStateOf(0) }
     var picking by remember { mutableStateOf(false) }
     var recording by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val c = Acid.colors
     val sample = track.machine.settings["sample"].orEmpty()
     if (recording) RecorderDialog(
@@ -3533,8 +3628,29 @@ private fun MoltPanel(
         },
         onDismiss = { recording = false },
     )
-    PanelSections(listOf("take", "tune", "voice", "tone"), section, { section = it }) { sec ->
+    PanelSections(listOf("take", "play", "tune", "voice", "tone", "macros"), section, { section = it }) { sec ->
         when (sec) {
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", MOLT_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", MOLT_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", MOLT_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", MOLT_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             0 -> {
                 Group("take") {
                     Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
@@ -3563,7 +3679,7 @@ private fun MoltPanel(
                     PanelSwitch(b, "loop", listOf("loop"))
                 }
             }
-            1 -> {
+            2 -> {
                 Group("pull") {
                     PanelKnob(b, "tune", "amount", PanelAmber)
                     PanelKnob(b, "rate", "rate", PanelAmber)
@@ -3576,7 +3692,7 @@ private fun MoltPanel(
                     PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semi")
                 }
             }
-            2 -> {
+            3 -> {
                 Group("voice") {
                     PanelKnob(b, "formant", "formant", PanelAmber)
                     PanelKnob(b, "mega", "mega", PanelAmber)
@@ -3589,7 +3705,7 @@ private fun MoltPanel(
                     PanelKnob(b, "velocity", "vel")
                 }
             }
-            else -> {
+            4 -> {
                 Group("filter") {
                     PanelKnob(b, "cutoff", "cutoff", PanelAmber)
                     PanelKnob(b, "resonance", "reso", PanelAmber)
@@ -3603,6 +3719,14 @@ private fun MoltPanel(
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
     if (picking) RecorderDialog(
         editor = editor,
         startOn = RecorderPage.Library,
@@ -3625,26 +3749,28 @@ private fun DicePanel(
 ) {
     var section by rememberSaveable { mutableStateOf(0) }
     var picking by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     val c = Acid.colors
-    val p = pad.coerceIn(0, 15)
-    fun n(name: String) = "s%02d_%s".format(p, name)
+    val slot = pad.coerceIn(0, 15)
+    fun n(name: String) = "s%02d_%s".format(slot, name)
     val sample = track.machine.settings["sample"].orEmpty()
     // What the loop is to the song: the engine's guess at its bars (the bars
     // knob can override it) and its length, and so its tempo.
-    val shape by produceState<Pair<Float, Float>?>(null, sample) {
+    val shape by produceState<com.rm.acidulous.model.LoopShape?>(null, sample) {
         value = if (sample.isEmpty()) null else withContext(Dispatchers.IO) {
             NativeEngine.loopShape(com.rm.acidulous.io.File(com.rm.acidulous.engine.EngineAssets.userRoot(), sample).absolutePath)
         }
     }
     val barsAt = b.infoOf("bars")?.map(b.value("bars"))?.toInt() ?: 0
-    val loopBars = if (barsAt == 0) shape?.first ?: 0f else DICE_BARS.getOrElse(barsAt - 1) { 0f }
-    val loopBpm = shape?.second?.takeIf { it > 0f && loopBars > 0f }?.let { loopBars * 4f * 60f / it }
+    val loopBars = if (barsAt == 0) shape?.bars ?: 0f else DICE_BARS.getOrElse(barsAt - 1) { 0f }
+    val loopBpm = shape?.seconds?.takeIf { it > 0f && loopBars > 0f }?.let { loopBars * 4f * 60f / it }
     PanelSections(
-        listOf("loop", "dice", "slice", "tone"), section, { section = it },
+        listOf("loop", "play", "dice", "slice", "tone", "macros"), section, { section = it },
         above = { sec ->
-            if (sec == 2) {
+            if (sec == 3) {
                 Text(
-                    stringResource(Res.string.dice_slice, p + 1),
+                    stringResource(Res.string.dice_slice, slot + 1),
                     color = Acid.colors.accent, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(bottom = 2.dp),
                 )
@@ -3652,6 +3778,27 @@ private fun DicePanel(
         },
     ) { sec ->
         when (sec) {
+            1 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", DICE_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", DICE_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", DICE_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", DICE_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
             0 -> {
                 Group("loop") {
                     Column(Modifier.widthIn(min = 150.dp, max = 280.dp)) {
@@ -3697,7 +3844,7 @@ private fun DicePanel(
                     PanelKnob(b, "accent", "accent")
                 }
             }
-            1 -> {
+            2 -> {
                 Group("the odds") {
                     PanelKnob(b, "swap", "swap", PanelAmber)
                     PanelKnob(b, "reverse", "reverse", PanelAmber)
@@ -3716,7 +3863,7 @@ private fun DicePanel(
                     PanelStepKnob(b, "seed", (0..63).map { "$it" }, "seed")
                 }
             }
-            2 -> {
+            3 -> {
                 // The group title is used in the lane list, so it stays
                 // constant. The selected slice is shown above.
                 Group("slice") {
@@ -3727,7 +3874,7 @@ private fun DicePanel(
                     PanelSwitch(b, n("dir"), listOf("fwd", "rev"), "play")
                 }
             }
-            else -> {
+            4 -> {
                 Group("filter") {
                     PanelKnob(b, "cutoff", "cutoff", PanelAmber)
                     PanelKnob(b, "resonance", "reso", PanelAmber)
@@ -3741,6 +3888,14 @@ private fun DicePanel(
             }
         }
     }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
     if (picking) RecorderDialog(
         editor = editor,
         startOn = RecorderPage.Library,

@@ -29,8 +29,14 @@ large, figez la forme actuelle avec **figer** pendant que la porteuse joue,
 ou fondez les bandes voisines ensemble avec **flou**.
 
 **l’entrée**, **sec** et **traité** règlent quel côté est lequel et combien
-vous entendez de chacun. **sourdes** s’occupe des consonnes pour que les mots
-restent clairs.
+vous entendez de chacun.
+
+Deux réglages gardent les consonnes. **sourdes** change la porteuse en bruit
+pendant que la voix est sur un « s », un « f » ou un souffle, pour que les
+bandes aient du souffle à façonner et que les mots restent clairs. Le groupe
+**consonnes** ajoute son propre souffle par-dessus dès que le haut de la voix
+devient fort : **détecter** règle la facilité, **au-dessus** où, **niveau**
+le volume.
 
 **attaque**, **relâche** et **flou** règlent la vitesse à laquelle chaque bande
 suit. Rapide est clair mais peut crépiter, et lent est doux mais peut
@@ -49,6 +55,22 @@ deviennent plus forts.
 Les destinations sont les commandes de la carte (**décalage**, **étirer**,
 **réassign.**, **figer**, **flou**, **q** et les bords des bandes), plus la
 hauteur et le mélange de la porteuse.
+
+## Macros
+
+La page **jeu** a huit boutons macro. Un patch peut les nommer (Décalage,
+Flou, etc.) et les noms s’affichent sur les boutons, dans les lanes
+d’automation et dans la liste de mappage du contrôleur. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
+Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
+course de cette commande à 1. La hauteur fait 24 demi-tons à 1. L’attaque et
+le relâchement de l’ampli sont lus au début d’une note, donc ils changent à la
+note suivante ; le reste bouge tout de suite. Les interrupteurs, le nombre de
+bandes, l’ordre, les ondes, la matrice et ses enveloppes et LFO ne sont pas
+accessibles. Touchez le nom d’une macro pour la renommer.
 
 ## Astuces
 

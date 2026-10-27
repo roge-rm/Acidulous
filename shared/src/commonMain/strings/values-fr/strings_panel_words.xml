@@ -54,6 +54,8 @@
     <string name="pw_amp">Amp</string>
     <string name="pw_amp_65f59e">ampli</string>
     <string name="pw_amp_env">env ampli</string>
+    <string name="pw_amp_atk">att. ampli</string>
+    <string name="pw_amp_rel">rel. ampli</string>
     <string name="pw_angle">angle</string>
     <string name="pw_answers">réponses</string>
     <string name="pw_apart">écart</string>
@@ -153,6 +155,7 @@
     <string name="pw_cajon">cajón</string>
     <string name="pw_call">appel</string>
     <string name="pw_carrier">porteuse</string>
+    <string name="pw_car_drive">sat. port.</string>
     <string name="pw_cassotto">cassotto</string>
     <string name="pw_caw">croassement</string>
     <string name="pw_ceiling">plafond</string>
@@ -362,6 +365,7 @@
     <string name="pw_fan_3_3">éventail 3 / 3</string>
     <string name="pw_fast">rapide</string>
     <string name="pw_fb">réinj.</string>
+    <string name="pw_fb_tone">ton réinj.</string>
     <string name="pw_feedback">réinjection</string>
     <string name="pw_feel">toucher</string>
     <string name="pw_feg">env f</string>
@@ -1025,6 +1029,7 @@
     <string name="pw_slew">lissage</string>
     <string name="pw_slice">tranche</string>
     <string name="pw_slice_n">Tranche %d</string>
+    <string name="pw_slices">tranches</string>
     <string name="pw_slicer">Slicer</string>
     <string name="pw_slide">glissé</string>
     <string name="pw_slit_drum">tambour à fente</string>
@@ -1545,4 +1550,14 @@
     <string name="pw_mod_8">mod 8</string>
     <string name="pw_scan_amount">intensité balayage</string>
     <string name="pw_vel_to_filter">vél. vers filtre</string>
+    <string name="pw_all_start">début (tous)</string>
+    <string name="pw_all_end">fin (tous)</string>
+    <string name="pw_all_level">niveau (tous)</string>
+    <string name="pw_all_cutoff">coupure (tous)</string>
+    <string name="pw_all_reso">réso (tous)</string>
+    <string name="pw_all_crush">écrasé (tous)</string>
+    <string name="pw_all_pitch_env">env hauteur (tous)</string>
+    <string name="pw_all_env_decay">déclin env (tous)</string>
+    <string name="pw_decay_n">déclin %d</string>
+    <string name="pw_cutoff_n">coupure %d</string>
 </resources>
