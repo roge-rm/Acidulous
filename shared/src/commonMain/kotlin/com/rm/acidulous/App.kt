@@ -1960,17 +1960,15 @@ fun App(modifier: Modifier = Modifier) {
         }
     }
 
-    // Autosave: 1.2 s after the last edit, and again as soon as the app goes
-    // to the background, because Android may kill the process from there.
+    // Autosave: 5 s after the last edit, written off the UI thread. And at
+    // once when the app goes to the background (Android may kill the process
+    // from there) or quits on a desktop, after any save in flight.
     LaunchedEffect(song) {
-        delay(1200)
-        runCatching { SongStore.saveSession(song) }.onFailure { Log.w(TAG, "session autosave failed", it) }
+        delay(5000)
+        com.rm.acidulous.model.saveSessionLater(song)
     }
     val currentSong by rememberUpdatedState(song)
-    OnBackground {
-        runCatching { SongStore.saveSession(currentSong) }
-            .onFailure { Log.w(TAG, "session save on stop failed", it) }
-    }
+    OnBackground { com.rm.acidulous.model.saveSessionNow(currentSong) }
 
     // Load and xruns come first, after the stream's own description, since
     // this line is cut off on a phone and it's the only place they're shown.
