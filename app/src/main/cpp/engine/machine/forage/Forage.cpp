@@ -127,7 +127,9 @@ constexpr int32_t kLoopFade = 32;
 
 /** 0 one shot, 1 loop, 2 while held. */
 enum PlayMode : int32_t { OneShot = 0, Looping = 1, WhileHeld = 2 };
-constexpr float kHouse = 0.83f;
+// The bank's median peak on the audition kit sits at -11.2 dBFS, with
+// Hexbeat and Genesis.
+constexpr float kHouse = 1.12f;
 } // namespace
 
 // Both tables are built here so the audio thread never builds them.
