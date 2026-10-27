@@ -26,7 +26,7 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
     override val checksForUpdates: Boolean get() = !debugBuild
     override fun latestRelease(): String? =
-        com.rm.acidulous.latestReleaseOnGitHub("Acidulous/$VERSION_NAME (${if (onWindows) "Windows" else "Linux"})")
+        com.rm.acidulous.latestReleaseOnGitHub("Acidulous/$VERSION_NAME ($platformName)")
 
     override fun licenceText(path: String): String? =
         javaClass.classLoader.getResourceAsStream(path)?.bufferedReader()?.use { it.readText() }
@@ -72,8 +72,12 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     /** Nothing to do: desktops don't stop a playing app in the background. */
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {}
 
-    override val platformName: String = if (onWindows) "Windows" else "Linux"
-    override val hasAlsa: Boolean = !onWindows
+    override val platformName: String = when {
+        onWindows -> "Windows"
+        onMac -> "macOS"
+        else -> "Linux"
+    }
+    override val hasAlsa: Boolean = !onWindows && !onMac
     override val hasDriverSdk: Boolean = onWindows
     override val usesMouse: Boolean = true
     override val onDesktop: Boolean = true

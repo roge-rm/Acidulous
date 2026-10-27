@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
+# macOS 11 Big Sur is the oldest Mac it runs on. Ignored elsewhere.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "The oldest macOS it runs on")
 project(acidulous_desktop LANGUAGES C CXX)
 
 # The engine for desktop: the same sources as Android (app/src/main/cpp), with
@@ -6,8 +8,9 @@ project(acidulous_desktop LANGUAGES C CXX)
 # platform/desktop comes first on the include path, so EngineHost's
 # <drivers/AudioDriver.h> and <android/log.h> resolve to the desktop versions.
 # The JNI bridge is the same as Android's. Desktop-only calls (the list of
-# inputs) are in desktop_jni.cpp, ALSA sequencer MIDI is in alsa_seq.cpp, and
-# game controllers on Linux are in evdev.cpp.
+# inputs) are in desktop_jni.cpp, ALSA sequencer MIDI is in alsa_seq.cpp,
+# game controllers on Linux are in evdev.cpp, and CoreMIDI on macOS is in
+# coremidi.cpp.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -45,6 +48,10 @@ if(WIN32)
         ${ASIOSDK}/common/asio.cpp
         ${ASIOSDK}/host/asiodrivers.cpp
         ${ASIOSDK}/host/pc/asiolist.cpp)
+elseif(APPLE)
+    # macOS, built on a Mac for one architecture at a time
+    # (CMAKE_OSX_ARCHITECTURES). Audio is miniaudio's CoreAudio backend.
+    set(PLATFORM_SOURCES ${CPP}/platform/link/LinkTimebase.cpp ${CPP}/platform/desktop/coremidi.cpp)
 else()
     set(PLATFORM_SOURCES ${CPP}/platform/link/LinkTimebase.cpp ${CPP}/platform/desktop/alsa_seq.cpp
         ${CPP}/platform/desktop/evdev.cpp)
@@ -113,9 +120,20 @@ if(WIN32)
     target_compile_definitions(launcher PRIVATE _WIN32_WINNT=0x0A00 UNICODE _UNICODE)
     target_link_options(launcher PRIVATE -municode -static)
     target_link_libraries(launcher shell32)
+elseif(APPLE)
+    target_link_libraries(acidulous mp3lame ableton_link Threads::Threads
+        "-framework CoreFoundation" "-framework CoreAudio" "-framework AudioToolbox" "-framework CoreMIDI")
+    # libmp3lame.dylib is found beside the engine, through @rpath.
+    set_target_properties(acidulous PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "@loader_path")
+    # Contents/MacOS/Acidulous in the app bundle, which starts Java in its
+    # own process (desktop/macos/launcher.c).
+    add_executable(launcher ../macos/launcher.c)
+    set_target_properties(launcher PROPERTIES OUTPUT_NAME Acidulous)
 else()
     target_link_libraries(acidulous mp3lame ableton_link Threads::Threads ${CMAKE_DL_LIBS} m)
 endif()
 # Only $ORIGIN, even in the build tree. The packages put the two libraries
 # side by side, and a path into this machine's build folder is useless on a Pi.
-set_target_properties(acidulous PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "$ORIGIN")
+if(NOT APPLE)
+    set_target_properties(acidulous PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "$ORIGIN")
+endif()

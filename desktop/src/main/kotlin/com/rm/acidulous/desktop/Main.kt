@@ -67,9 +67,16 @@ private fun windowIcon(): BitmapPainter? = runCatching {
 /** Running on Windows, where folders, MIDI and library loading differ. */
 internal val onWindows: Boolean = System.getProperty("os.name").orEmpty().startsWith("Windows")
 
+/** Running on macOS, where folders and MIDI differ. */
+internal val onMac: Boolean = System.getProperty("os.name").orEmpty().startsWith("Mac")
+
 /** The XDG folder from [variable], or its default under the home folder. */
 private fun xdg(variable: String, fallback: String): File =
     File(System.getenv(variable)?.takeIf { it.isNotBlank() } ?: (System.getProperty("user.home") + "/" + fallback), "acidulous")
+
+/** macOS folders: settings and songs in Application Support, the cache in Caches. */
+private fun macDir(vararg under: String): File =
+    under.fold(File(System.getProperty("user.home"), "Library")) { dir, name -> File(dir, name) }
 
 /** Windows folders: settings and songs roam with the account, the cache stays on this machine. */
 private fun windowsDir(variable: String, vararg under: String): File =
@@ -84,9 +91,21 @@ fun main() {
     if (steamDeck && System.getenv("SKIKO_RENDER_API") == null && System.getProperty("skiko.renderApi") == null) {
         System.setProperty("skiko.renderApi", "SOFTWARE_FAST")
     }
-    val config = (if (onWindows) windowsDir("APPDATA", "config") else xdg("XDG_CONFIG_HOME", ".config")).apply { mkdirs() }
-    val data = (if (onWindows) windowsDir("APPDATA", "data") else xdg("XDG_DATA_HOME", ".local/share")).apply { mkdirs() }
-    val cache = (if (onWindows) windowsDir("LOCALAPPDATA", "cache") else xdg("XDG_CACHE_HOME", ".cache")).apply { mkdirs() }
+    val config = when {
+        onWindows -> windowsDir("APPDATA", "config")
+        onMac -> macDir("Application Support", "Acidulous", "config")
+        else -> xdg("XDG_CONFIG_HOME", ".config")
+    }.apply { mkdirs() }
+    val data = when {
+        onWindows -> windowsDir("APPDATA", "data")
+        onMac -> macDir("Application Support", "Acidulous", "data")
+        else -> xdg("XDG_DATA_HOME", ".local/share")
+    }.apply { mkdirs() }
+    val cache = when {
+        onWindows -> windowsDir("LOCALAPPDATA", "cache")
+        onMac -> macDir("Caches", "Acidulous")
+        else -> xdg("XDG_CACHE_HOME", ".cache")
+    }.apply { mkdirs() }
     // A second launch brings the running copy forward instead.
     if (!SingleInstance.claim(data)) return
     // Before anything else can throw, like on Android. Also collects native
@@ -103,11 +122,18 @@ fun main() {
     DesktopAudio.chooseOutput(UiPrefs.outputDevice)
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
-    // ALSA's sequencer, which sees every device and program. Java Sound's raw
-    // MIDI if there's no sequencer, and on Windows. See AlsaSeqMidi.
-    MidiHub.start((if (onWindows) null else AlsaSeqMidi.open()) ?: JavaSoundMidi())
+    // ALSA's sequencer on Linux and CoreMIDI on macOS, which see every device
+    // and program. Java Sound's MIDI if those won't open, and on Windows.
+    // See AlsaSeqMidi and CoreMidi.
+    MidiHub.start(
+        when {
+            onWindows -> null
+            onMac -> CoreMidi.open()
+            else -> AlsaSeqMidi.open()
+        } ?: JavaSoundMidi(),
+    )
     // Game controllers, read from /dev/input. Linux only for now.
-    if (!onWindows) {
+    if (!onWindows && !onMac) {
         LinuxControllers.start(object : PadSink {
             override fun button(device: String, keyCode: Int, down: Boolean) =
                 com.rm.acidulous.ui.PadEvents.button(device, keyCode, down)
