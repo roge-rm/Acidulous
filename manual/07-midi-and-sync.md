@@ -9,6 +9,8 @@ USB and Bluetooth MIDI keyboards work straight away. Notes go to whichever
 track is open, or to a track you pin so it stays the same whatever you're
 looking at.
 
+<!-- desktop: On a Mac, pair a Bluetooth MIDI keyboard in **Audio MIDI Setup** first: **Window › Show MIDI Studio**, then the Bluetooth button. -->
+
 If a controller plays everything too loud or too soft, turn **velocity** on the
 **notes** tab. **softer** brings the middle of the range down and **harder**
 brings it up, and the softest and hardest notes stay where they are. The
