@@ -1,0 +1,78 @@
+# The macOS builds, one on each kind of Mac: Apple silicon (arm64) and Intel
+# (x86_64). Each builds the .dmg (./gradlew :desktop:macosDmg), runs the
+# CoreMIDI tests and checks the .dmg (desktop/macos/check.sh). On a version
+# tag, the .dmg files go on that tag's GitHub release once it exists.
+name: macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [mac]
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # :shared has an Android target, which Gradle configures even for the desktop.
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the .dmg
+        run: ./gradlew --stacktrace :desktop:macosDmg
+
+      - name: CoreMIDI and Java Sound MIDI tests
+        run: ./gradlew :desktop:test --tests 'com.rm.acidulous.desktop.CoreMidiTest' --tests 'com.rm.acidulous.desktop.JavaSoundMidiTest'
+
+      - name: Check the .dmg
+        run: desktop/macos/check.sh desktop/build/macos/acidulous-*-macos-${{ matrix.arch }}.dmg ${{ matrix.arch }} checks
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acidulous-macos-${{ matrix.arch }}
+          path: desktop/build/macos/acidulous-*-macos-${{ matrix.arch }}.dmg
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checks-macos-${{ matrix.arch }}
+          path: |
+            checks
+            desktop/build/test-results/test/*.xml
+          if-no-files-found: ignore
+
+      # The release is made by hand after the tag is pushed, so wait for it.
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 60); do
+            if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+              gh release upload "$GITHUB_REF_NAME" desktop/build/macos/acidulous-*-macos-${{ matrix.arch }}.dmg --clobber
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "no release for $GITHUB_REF_NAME after 30 minutes; the .dmg is in this run's artifacts"
