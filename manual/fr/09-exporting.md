@@ -89,3 +89,4 @@ paquet, échantillons compris, pour que quelqu’un d’autre l’ouvre dans Aci
 L’inverse fonctionne aussi. Ouvrez un fichier MIDI, un paquet, une voix partagée
 ou un son avec Acidulous, ou partagez-le vers l’appli, et il va là où
 **Importer…** l’aurait mis; une voix va à la page voix dans **Son**.
+<!-- desktop: Sur un ordinateur, double-cliquez sur un fichier `.acpreset` pour l’ouvrir dans Acidulous, et ouvrez un morceau en zip avec **Ouvrir avec › Acidulous**. Si Acidulous est déjà ouvert, le fichier va dans cette fenêtre. -->

@@ -235,6 +235,7 @@ fun registerDeb(arch: String, runtime: Configuration, engine: TaskProvider<Exec>
             filePermissions { unix("rwxr-xr-x") }
         }
         from(file("deb/acidulous.desktop")) { into("usr/share/applications") }
+        from(file("deb/acidulous-mime.xml")) { into("usr/share/mime/packages"); rename { "acidulous.xml" } }
         from(rootProject.file("branding/acidulous-icon-1024.svg")) {
             into("usr/share/icons/hicolor/scalable/apps")
             rename { "acidulous.svg" }
@@ -359,6 +360,7 @@ fun registerAppImage(
         from(file("src/main/resources/acidulous.png")) { into("usr/lib/acidulous"); rename { "splash.png" } }
         from(file("appimage/AppRun")) { filePermissions { unix("rwxr-xr-x") } }
         from(file("deb/acidulous.desktop"))
+        from(file("deb/acidulous-mime.xml")) { into("usr/share/mime/packages"); rename { "acidulous.xml" } }
         from(rootProject.file("branding/acidulous-icon-1024.svg")) { rename { "acidulous.svg" } }
         from(rootProject.file("NOTICE")) { into("usr/share/doc/acidulous") }
         // The runtime is unpacked here later and replaced each build. Pruning

@@ -12,4 +12,9 @@ import androidx.compose.runtime.setValue
  */
 object Incoming {
     var doc by mutableStateOf<Doc?>(null)
+
+    /** A window the system asked for, like the Mac's app menu: the song screen opens it. */
+    var window by mutableStateOf<AppWindow?>(null)
 }
+
+enum class AppWindow { Settings, About }

@@ -1,0 +1,13 @@
+<resources>
+    <string name="menu_edit">Édition</string>
+    <string name="menu_undo">Annuler</string>
+    <string name="menu_redo">Rétablir</string>
+    <string name="menu_cut">Couper les notes</string>
+    <string name="menu_copy">Copier les notes</string>
+    <string name="menu_paste">Coller les notes</string>
+    <string name="menu_duplicate">Dupliquer les notes</string>
+    <string name="menu_window">Fenêtre</string>
+    <string name="menu_minimise">Placer dans le Dock</string>
+    <string name="menu_zoom">Réduire/agrandir</string>
+    <string name="menu_full_screen">Plein écran</string>
+</resources>

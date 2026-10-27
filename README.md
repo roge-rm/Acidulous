@@ -124,7 +124,7 @@ Either can be kept on its notes page, to play live while you change scenes and c
 
 Export WAV, AIFF, FLAC, MP3 or AAC, as the whole song, one scene or stems, and MIDI files or a song bundle you can share.
 
-Import MIDI files as a new song, with a machine picked for each part and General MIDI drums moved onto a drum machine. Song bundles open with their samples, and sounds go into the library.
+Import MIDI files as a new song, with a machine picked for each part and General MIDI drums moved onto a drum machine. Song bundles open with their samples, and sounds go into the library. On a computer, preset files open from the file manager, and song zips with Open With (not with the AppImage, which doesn't add itself to the file manager).
 
 Exports can go straight to the share sheet, and files shared to the app or opened with it get imported.
 
@@ -181,9 +181,11 @@ its own low-latency driver, pick it in **Settings › audio › output**.
 ### macOS
 
 macOS 11 Big Sur or newer. From the [Releases](https://github.com/roge-rm/Acidulous/releases)
-page, get `acidulous-*-macos-arm64.dmg` for a Mac with Apple silicon (M1 and
-later) or `acidulous-*-macos-x86_64.dmg` for an Intel Mac. Open it and drag
-Acidulous into Applications.
+page, get the .dmg for your Mac: **Apple Silicon (M1 and later)**
+(`acidulous-*-macos-arm64.dmg`) or **Intel** (`acidulous-*-macos-x86_64.dmg`).
+**About This Mac** in the Apple menu says which: a **Chip** line is Apple
+Silicon, a **Processor** line is Intel. Open it and drag Acidulous into
+Applications. Their sums are in `SHA256SUMS-macos`.
 
 It isn't signed by an Apple developer account, so macOS won't open it the
 first time. Try to open it once, then go to **System Settings › Privacy &

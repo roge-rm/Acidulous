@@ -34,6 +34,60 @@
     <string>Acidulous records and samples from your audio inputs.</string>
     <key>NSLocalNetworkUsageDescription</key>
     <string>Acidulous finds other apps playing with Link on your network.</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Acidulous preset</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+            <key>CFBundleTypeIconFile</key>
+            <string>acidulous</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>com.rm.acidulous.preset</string>
+            </array>
+        </dict>
+        <dict>
+            <!-- Song zips: offered under Open With, without taking zips over. -->
+            <key>CFBundleTypeName</key>
+            <string>Acidulous song</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.zip-archive</string>
+            </array>
+        </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.rm.acidulous.preset</string>
+            <key>UTTypeDescription</key>
+            <string>Acidulous preset</string>
+            <key>UTTypeIconFile</key>
+            <string>acidulous</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>acpreset</string>
+                </array>
+                <key>public.mime-type</key>
+                <string>application/x-acidulous-preset</string>
+            </dict>
+        </dict>
+    </array>
     <key>NSHumanReadableCopyright</key>
     <string>GNU General Public License, version 3 or later</string>
 </dict>

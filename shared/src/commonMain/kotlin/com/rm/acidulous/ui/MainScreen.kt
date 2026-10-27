@@ -182,6 +182,14 @@ fun MainScreen(
     modifier: Modifier = Modifier,
 ) {
     var dialog by remember { mutableStateOf<Dialog?>(null) }
+    // Settings or About from outside the app's own menu (a Mac's app menu).
+    androidx.compose.runtime.LaunchedEffect(com.rm.acidulous.Incoming.window) {
+        when (com.rm.acidulous.Incoming.window ?: return@LaunchedEffect) {
+            com.rm.acidulous.AppWindow.Settings -> dialog = Dialog.Settings
+            com.rm.acidulous.AppWindow.About -> dialog = Dialog.About
+        }
+        com.rm.acidulous.Incoming.window = null
+    }
     if (freezeStatus != null) {
         // Modal because the audio stream is down while a render runs.
         PlainDialog(title = stringResource(Res.string.main_freezing), onDismiss = {}, dismissLabel = "") {

@@ -71,6 +71,7 @@ Dans l’éditeur :
 La première touche est pour un clavier complet et la deuxième pour un petit.
 Les touches sans Alt ni Ctrl ne servent de raccourcis que lorsque le mode jeu
 est désactivé.
+<!-- desktop: Sur un Mac, Cmd remplace Ctrl et Option remplace Alt, et la fenêtre des touches les nomme ainsi. Cmd+Gauche et Cmd+Droite font Début et Fin. -->
 
 Dans une fenêtre à onglets, page précédente et page suivante passent d’un
 onglet à l’autre.
