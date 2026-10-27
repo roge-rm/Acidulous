@@ -45,9 +45,29 @@ actual fun rememberOpenFolder(onResult: (Doc?) -> Unit): () -> Unit = {
 @Composable
 actual fun KeepScreenOn(on: Boolean) {}
 
-/** A desktop app isn't killed in the background; the session saves on edits and on close. */
+/**
+ * A desktop app isn't killed in the background, so [action] runs when the app
+ * quits instead: see [OnQuit].
+ */
 @Composable
-actual fun OnBackground(action: () -> Unit) {}
+actual fun OnBackground(action: () -> Unit) {
+    val current = androidx.compose.runtime.rememberUpdatedState(action)
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        val run = { current.value() }
+        OnQuit.actions += run
+        onDispose { OnQuit.actions -= run }
+    }
+}
+
+/** What has to happen before a desktop app exits, like the session's last save. */
+object OnQuit {
+    internal val actions = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
+
+    /** Runs them all, on the UI thread, before the window closes. */
+    fun run() {
+        for (a in actions) runCatching { a() }.onFailure { com.rm.acidulous.util.Log.w("Acidulous.Desktop", "on quit", it) }
+    }
+}
 
 /** A desktop has no back button; Esc is a key binding (KeyAction.Back) like any other. */
 @Composable

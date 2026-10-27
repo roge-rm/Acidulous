@@ -149,8 +149,10 @@ fun main() {
     RightClickHold.install()
 
     application {
-        // The window's close button, and holding B on the song screen.
+        // The window's close button (Alt+F4), holding B on the song screen, and
+        // Quit on a Mac. The session's last edits are saved first.
         fun quit() {
+            com.rm.acidulous.OnQuit.run()
             MidiHub.clearPads()
             MidiHub.releaseLaunchpad()
             exitApplication()
