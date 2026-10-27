@@ -253,6 +253,18 @@ int32_t Dice::barsFrames() const {
 }
 
 /**
+ * Where a following voice's stretcher loops back to: the first bar, so a
+ * slice that runs out near the end doesn't read the room before it. From 0
+ * for a slice that starts in that room, or when what's left is too short to
+ * loop.
+ */
+int32_t Dice::stretchFrom(const Voice &v) const {
+    const int32_t from = take->barsStart;
+    if (from <= 0 || v.start < from || take->frames - from < dsp::StereoStretch::kWindow * 2) return 0;
+    return from;
+}
+
+/**
  * Points a following voice's stretcher at the start of its slice.
  *
  * The stretcher's first hop has nothing to overlap, so it comes out faded in
@@ -271,7 +283,7 @@ void Dice::startStretch(Voice &v) const {
     constexpr int32_t hop = dsp::StereoStretch::kHop;
     float *dst[2] = {v.held[0].data(), v.held[1].data()};
     const float *src[2] = {left, right};
-    const int32_t made = v.stretch.fill(dst, src, 0, take->frames, hop, v.stretchRate);
+    const int32_t made = v.stretch.fill(dst, src, stretchFrom(v), take->frames, hop, v.stretchRate);
     const float *w = dsp::StereoStretch::hann();
     for (int32_t j = 0; j < made && v.start + j < take->frames; ++j) {
         v.held[0][static_cast<size_t>(j)] += left[v.start + j] * (1.0f - w[j]);
@@ -292,7 +304,7 @@ bool Dice::pullStretch(Voice &v, const float *left, const float *right) const {
     if (n <= 0) return true;
     float *dst[2] = {v.held[0].data() + v.heldHave, v.held[1].data() + v.heldHave};
     const float *src[2] = {left, right};
-    const int32_t made = v.stretch.fill(dst, src, 0, take->frames, n, v.stretchRate);
+    const int32_t made = v.stretch.fill(dst, src, stretchFrom(v), take->frames, n, v.stretchRate);
     v.heldHave += made;
     return made > 0;
 }

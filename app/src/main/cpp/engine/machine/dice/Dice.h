@@ -153,6 +153,7 @@ class Dice final : public Machine {
     void updateMacros();
     float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
     void recut();
+    int32_t stretchFrom(const Voice &v) const;
     void startStretch(Voice &v) const;
     bool pullStretch(Voice &v, const float *left, const float *right) const;
     Voice *allocate();
