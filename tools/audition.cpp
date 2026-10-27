@@ -792,6 +792,11 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
             mat.samples.push_back(pieceSample(static_cast<Piece>(i)));
             m->swapObject(i, mat.samples.back().release());
         }
+    } else if (kind == "dirtykit") {
+        for (int i = 0; i < static_cast<int>(Piece::Count); ++i) {
+            mat.samples.push_back(dirtyPieceSample(static_cast<Piece>(i)));
+            m->swapObject(i, mat.samples.back().release());
+        }
     } else if (kind == "break") {
         mat.take = breakLoop();
         m->swapObject(0, mat.take.release());
@@ -2278,7 +2283,7 @@ void usage() {
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"
         "  sweep <Unit> [patch]   every note of the range, one line each\n"
-        "  --material kit|break|swing|seed|dirtyseed|voice|dirtyvoice|voicetake|map|roughmap|none   --input voice|dirtyvoice|speech|noise|break|none\n"
+        "  --material kit|dirtykit|break|swing|seed|dirtyseed|voice|dirtyvoice|voicetake|map|roughmap|none   --input voice|dirtyvoice|speech|noise|break|none\n"
         "  --out DIR one folder per unit under it; the default is build/audition\n"
         "  --ladder  the first twelve harmonics, for machines a centroid cannot describe\n"
         "\n"

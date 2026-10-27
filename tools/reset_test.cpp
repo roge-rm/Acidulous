@@ -212,6 +212,11 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
         float L[kBlock], R[kBlock];
         m->render(L, R, kBlock);
     }
+    // Forage plays the thirteen-piece kit, one sample a pad. It owns them.
+    if (std::strcmp(name, "Forage") == 0) {
+        for (int32_t pad = 0; pad < static_cast<int32_t>(audition::Piece::Count); ++pad)
+            delete static_cast<SampleData *>(m->swapObject(pad, audition::pieceSample(static_cast<audition::Piece>(pad)).release()));
+    }
     if (std::strcmp(name, "Cumulus") == 0) {
         auto *cumulus = static_cast<machine::Cumulus *>(m);
         d.cloud = machine::cumulus::buildCloud(cumulus->spec(), kRate);
@@ -387,11 +392,12 @@ int registryIsComplete() {
  *
  * Skipped: machines whose sound is a file or a graph, since their patches
  * only mean something with it mounted. Their state is covered above. Molt
- * and Cipher run, with the voice mounted or on the input, and Dice with the
+ * and Cipher run, with the voice mounted or on the input, Forage with the
+ * kit, and Dice with the
  * break.
  */
 int everyPatch(const std::string &banks) {
-    static const char *const kNeedsMore[] = {"Forage", "Mosaic", "Pollen", "Bias", "Nexus"};
+    static const char *const kNeedsMore[] = {"Mosaic", "Pollen", "Bias", "Nexus"};
     int checked = 0, failed = 0;
     const auto skip = [](const std::string &unit) {
         for (const char *n : kNeedsMore) if (unit == n) return true;

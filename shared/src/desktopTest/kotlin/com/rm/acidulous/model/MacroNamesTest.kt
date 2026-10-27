@@ -1,6 +1,7 @@
 package com.rm.acidulous.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** A named macro shows its name in the lane lists, on every machine with macros. */
@@ -288,5 +289,23 @@ class MacroNamesTest {
         val families = bank.map { it.family }.distinct()
         assertEquals(listOf("straight", "dice", "perform", "tone", "slice"), families)
         assertEquals(listOf(6, 6, 6, 5, 3), families.map { f -> bank.count { it.family == f } })
+    }
+
+    @Test
+    fun forageMacrosTakeThePatchNames() {
+        val t = track("Forage", mapOf("macro1" to "Lower"))
+        assertEquals("Lower", laneShortLabel(t, laneKey("machine", "mac1")))
+        assertEquals("macro 2", laneShortLabel(t, laneKey("machine", "mac2")))
+    }
+
+    @Test
+    fun forageBankHasItsFamiliesInOrder() {
+        val bank = FactoryBanks.of("Forage")
+        assertEquals(33, bank.size)
+        assertEquals("Init", bank.first().name)
+        val families = bank.map { it.family }.distinct()
+        assertEquals(listOf("straight", "shape", "tone", "motion", "kit"), families)
+        assertEquals(listOf(6, 7, 7, 6, 7), families.map { f -> bank.count { it.family == f } })
+        assertTrue(bank.drop(1).all { p -> (1..8).all { p.settings["macro$it"] != null } })
     }
 }

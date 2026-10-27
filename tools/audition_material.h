@@ -332,6 +332,66 @@ inline std::unique_ptr<SampleData> pieceSample(Piece piece) {
 }
 
 /**
+ * The same kit with the dirt real samples have: 30 ms of room tone ahead of
+ * the kick, the snare on a DC offset, the clap 12 dB under the rest (for
+ * match) and the crash in stereo. Peaks are 0.9 like the clean kit, apart
+ * from the clap. For checking that a patch doesn't fall apart on a kit
+ * nobody trimmed.
+ */
+inline std::unique_ptr<SampleData> dirtyPieceSample(Piece piece) {
+    auto s = pieceSample(piece);
+    std::vector<float> &x = s->left;
+    const auto peakTo = [&](float want) {
+        float peak = 1e-9f;
+        for (float v : x) peak = std::max(peak, std::abs(v));
+        for (float &v : x) v *= want / peak;
+    };
+    switch (piece) {
+    case Piece::Kick: {
+        Rng rng(0x600du);
+        std::vector<float> room(static_cast<size_t>(kMatSr * 0.030f));
+        for (float &v : room) v = rng.next() * 0.002f; // about -54 dB
+        x.insert(x.begin(), room.begin(), room.end());
+        break;
+    }
+    case Piece::Snare:
+        for (float &v : x) v += 0.12f;
+        peakTo(0.9f);
+        break;
+    case Piece::Clap:
+        peakTo(0.9f * 0.25f);
+        break;
+    case Piece::Cymbal: {
+        // The right side a little later and from its own noise, so the two
+        // sides differ the way two mics do.
+        Rng rng(0xc7a5u);
+        std::vector<float> src(x.size()), right(x.size(), 0.0f);
+        for (size_t i = 0; i < src.size(); ++i)
+            src[i] = rng.next() * std::exp(-static_cast<float>(i) / kMatSr / 0.55f);
+        resonate(src, right, 4900.0f, 1.5f, 1.0f);
+        resonate(src, right, 4900.0f * 1.61f, 1.5f, 0.6f);
+        float peak = 1e-9f;
+        for (float v : right) peak = std::max(peak, std::abs(v));
+        for (float &v : right) v *= 0.9f / peak;
+        const size_t lag = static_cast<size_t>(kMatSr * 0.0004f);
+        s->right.assign(x.size(), 0.0f);
+        for (size_t i = lag; i < x.size(); ++i) s->right[i] = right[i - lag];
+        s->stereo = true;
+        break;
+    }
+    default:
+        break;
+    }
+    s->frames = static_cast<int32_t>(x.size());
+    float peak = 0.0f;
+    for (float v : x) peak = std::max(peak, std::abs(v));
+    for (float v : s->right) peak = std::max(peak, std::abs(v));
+    s->peak = peak;
+    s->name = std::string("dirty ") + pieceName(piece);
+    return s;
+}
+
+/**
  * Two bars at 120 bpm of the kit above, as a Take with its onsets detected.
  * Dice slices it and Pollen reads it. The onsets are real so the detector is
  * tested, not the even-split fallback.
