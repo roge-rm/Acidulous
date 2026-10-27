@@ -33,8 +33,10 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # :shared has an Android target, which Gradle configures even for the desktop.
-      - uses: android-actions/setup-android@v3
+      # :shared has an Android target, which Gradle configures even for the
+      # desktop. The runner images have the Android SDK in ANDROID_HOME.
+      - name: Android SDK
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
       - uses: gradle/actions/setup-gradle@v4
 
