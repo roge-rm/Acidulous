@@ -259,8 +259,10 @@ in the mixer.
 
 The mod moves the knob from wherever you set it, so you can still turn it,
 record it or draw a lane for it. The LFO and steps follow the song position,
-so they line up with the bar and an export comes out the same every time. The
-mod's own settings record and lock like knobs, and save with the song, and with
+so they line up with the bar, a scene played on its own or frozen moves as it
+does in the song, and an export comes out the same every time. A looped scene
+takes them back to the scene's start each time round. In the launcher they
+count from when you pressed play. The mod's own settings record and lock like knobs, and save with the song, and with
 a patch for the patch's own effects. Loading an effect preset keeps the mod,
 and choosing another effect clears it.
 

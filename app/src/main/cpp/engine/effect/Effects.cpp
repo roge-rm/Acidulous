@@ -502,8 +502,8 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
     // The pump's own four, which aren't the LFOs' list: 1/16, 1/8, 1/4, 1/2.
     static constexpr float kPumpBeats[4] = {0.25f, 0.5f, 1.0f, 2.0f};
     const float beats = kPumpBeats[std::clamp(static_cast<int>(p.get(PumpRate) + 0.5f), 0, 3)];
-    float phase = Lfo::phaseAt(tick, beats);
     const float inc = Lfo::phaseInc(beats, bpm, sr);
+    float phase = slicePhase(Lfo::phaseAt(tick, beats), inc);
     const float slope = 1.0f - 1.0f / ratio;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
@@ -601,22 +601,17 @@ void Filter::prepare(int32_t sampleRate) {
     for (auto &s : svf) s.setSampleRate(sr);
     reset();
 }
-void Filter::reset() { for (auto &s : svf) s.reset(); follower = 0.0f; fcSet = resoSet = -1.0f; cutoffWas = -1.0f; }
+void Filter::reset() { for (auto &s : svf) s.reset(); follower = 0.0f; fcSet = resoSet = -1.0f; }
 
 bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float cutoff = p.get(Cutoff), reso = p.get(Reso), lfoDepth = p.get(LfoDepth), envDepth = p.get(EnvDepth);
     const int mode = static_cast<int>(p.get(Mode) + 0.5f);
     const float beats = Lfo::beatsOf(static_cast<int>(p.get(LfoRate) + 0.5f));
-    float phase = Lfo::phaseAt(tick, beats);
     const float inc = Lfo::phaseInc(beats, bpm, sr);
+    float phase = slicePhase(Lfo::phaseAt(tick, beats), inc);
     const float atk = dsp::onePoleCoeff(0.004f, sr), rel = dsp::onePoleCoeff(0.12f, sr);
     const int chans = stereoIn ? 2 : 1;
-    // The cutoff walks from last block's to this one's across the block's
-    // coefficient updates, so a moving knob or a mod slot doesn't step it once a block.
-    const float from = cutoffWas > 0.0f ? cutoffWas : cutoff;
-    const float walk = std::log2(cutoff / from) * 16.0f / static_cast<float>(frames > 0 ? frames : 1);
-    cutoffWas = cutoff;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         // The follower listens to the sidechain if there is one, so a negative
@@ -630,7 +625,7 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
             // Both modulators move the cutoff in octaves: the LFO up to +-3, the
             // follower up to 4 (an auto-wah when positive, a duck when negative).
             const float octaves = lfoDepth * 3.0f * Lfo::triangle(phase) + envDepth * 4.0f * clampf(follower, 0.0f, 1.0f);
-            const float fc = from * std::exp2(octaves + walk * static_cast<float>((i >> 4) + 1));
+            const float fc = cutoff * std::exp2(octaves);
             if (fc != fcSet || reso != resoSet) {
                 fcSet = fc;
                 resoSet = reso;
@@ -724,7 +719,8 @@ bool Phaser::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float depth = p.get(Depth), feedback = p.get(Feedback), spread = p.get(Spread), mix = p.get(Mix);
     const int stages = 2 * (static_cast<int>(p.get(Stages) + 0.5f) + 1);
-    const float phase = Lfo::phaseAt(tick, Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f)));
+    const float phaserBeats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
+    const float phase = slicePhase(Lfo::phaseAt(tick, phaserBeats), Lfo::phaseInc(phaserBeats, bpm, sr));
     // Sweep 120 Hz .. 5 kHz, the right channel offset by up to half a cycle.
     for (int c = 0; c < 2; ++c) {
         float ph = phase + (c == 1 ? spread * 0.5f : 0.0f);
@@ -773,8 +769,8 @@ bool Flanger::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float depth = p.get(Depth), spread = p.get(Spread), mix = p.get(Mix);
     const float feedback = p.get(Feedback) * (p.get(Negative) >= 0.5f ? -1.0f : 1.0f);
     const float beats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
-    float phase = Lfo::phaseAt(tick, beats);
     const float inc = Lfo::phaseInc(beats, bpm, sr);
+    float phase = slicePhase(Lfo::phaseAt(tick, beats), inc);
     const float base = 0.0006f * sr, range = depth * 0.008f * sr; // 0.6 ms .. 8.6 ms
     for (int32_t i = 0; i < frames; ++i) {
         const float in[2] = {L[i], stereoIn ? R[i] : L[i]};
@@ -830,15 +826,16 @@ bool Chorus::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float depth = p.get(Depth), spread = p.get(Spread), mix = p.get(Mix);
     const float driftAmt = p.get(Drift);
     const int voices = static_cast<int>(p.get(Voices) + 0.5f) + 2;
-    const float phase = Lfo::phaseAt(tick, Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f)));
+    const float chorusBeats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
+    const float phase = slicePhase(Lfo::phaseAt(tick, chorusBeats), Lfo::phaseInc(chorusBeats, bpm, sr));
 
     // 8 ms at the centre, swept by up to 5 ms either way. Much past 15 ms it
     // stops sounding like a chorus.
     const float centre = sr * 0.008f;
     const float swing = sr * 0.005f * depth;
     // One step of the random walk per block (about 750 Hz), slow enough to
-    // sound like tuning drift instead of noise.
-    for (int v = 0; v < 4; ++v) {
+    // sound like tuning drift instead of noise. Once a block, not once a slice.
+    for (int v = 0; v < 4 && subOffset_ == 0; ++v) {
         rng = rng * 1664525u + 1013904223u;
         const float step = (static_cast<float>(rng >> 9) * (1.0f / 4194304.0f) - 1.0f) * 0.02f;
         drift[v] = clampf(drift[v] * 0.995f + step, -1.0f, 1.0f);
@@ -893,12 +890,13 @@ bool Tremolo::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float depth = p.get(Depth), pan = p.get(Pan), skew = p.get(Skew), mix = p.get(Mix);
     const int shape = static_cast<int>(p.get(Shape) + 0.5f);
     const float beats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
-    const float base = Lfo::phaseAt(tick, beats);
+    const float base0 = Lfo::phaseAt(tick, beats);
     // The phase advances per sample between blocks, using the same table as
     // the block phase so there's no step at block boundaries. `kBeats` is in
     // quarter notes, so a cycle is `beats * 60 / bpm` seconds.
     const float hz = bpm / (60.0f * beats);
     const float inc = hz / sr;
+    const float base = slicePhase(base0, inc);
 
     for (int32_t i = 0; i < frames; ++i) {
         float ph = base + inc * static_cast<float>(i);

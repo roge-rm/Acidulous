@@ -2356,6 +2356,7 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
         if (Effect *e = r.currentEffect(sl)) {
             e->reset();
             e->params().jumpAll();
+            e->resetMod();
         }
     }
     for (int32_t sl = 0; sl < kInputModSlots; ++sl) {
@@ -2698,7 +2699,16 @@ float EngineHost::paramNormalized(int rack, const std::string &unit, const std::
         return m ? m->params().normalized(index) : -1.0f;
     }
     if (u == Unit::Channel) return sEngine.racks[rack].channelNormalized(index);
-    return -1.0f;
+    // The slots that aren't a track's: sends, the master's and groups' inserts, the input's.
+    Effect *fx = nullptr;
+    if (u == Unit::Send1 || u == Unit::Send2) fx = sEngine.master.send(u == Unit::Send1 ? 0 : 1);
+    else if (u == Unit::MasterFx1 || u == Unit::MasterFx2) fx = sEngine.master.insert(u == Unit::MasterFx1 ? 0 : 1);
+    else if (u == Unit::Input1 || u == Unit::Input2) fx = sEngine.inputFx[u == Unit::Input1 ? 0 : 1];
+    else if (u >= Unit::Group1Fx1 && u <= Unit::Group4Fx2) {
+        const int k = static_cast<int>(u) - static_cast<int>(Unit::Group1Fx1);
+        fx = sEngine.master.groupInsert(k / kGroupInsertSlots, k % kGroupInsertSlots);
+    }
+    return fx != nullptr ? fx->normalizedAt(index) : -1.0f;
 }
 
 const char *EngineHost::mountedModifier(int rack, int slot) const {

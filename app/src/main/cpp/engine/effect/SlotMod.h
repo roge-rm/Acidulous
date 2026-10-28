@@ -201,6 +201,7 @@ class SlotMod {
         }
         default: return;
         }
+        snapped_ = snap_;
         const int32_t n = params.size();
         const int32_t t0 = target_[0], t1 = target_[1];
         if (t0 >= 0 && t0 < n) params.offset(t0, m * (depth_[0] + (t1 == t0 ? depth_[1] : 0.0f)), snap_);
@@ -218,6 +219,10 @@ class SlotMod {
     /** A step lock jumped a knob; the offset jumps with it rather than gliding back on. */
     void jumpNext() { snap_ = true; }
     bool targets(int32_t index) const { return index >= 0 && (index == target_[0] || index == target_[1]); }
+    /** Target [j] (0 or 1) as an effect parameter index, or -1. */
+    int32_t target(int32_t j) const { return target_[j]; }
+    /** Whether this block's apply() jumped its targets rather than gliding. */
+    bool snapped() const { return snapped_; }
 
   private:
     static float coeff(float ms) {
@@ -279,6 +284,7 @@ class SlotMod {
     double tick_ = 0.0;
     bool running_ = false;
     bool snap_ = true;
+    bool snapped_ = true;
     float env_ = 0.0f;
     const float *keyBuf_ = nullptr;
     uint32_t seed_ = 0;

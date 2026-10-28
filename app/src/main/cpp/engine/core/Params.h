@@ -56,6 +56,8 @@ class Smoothed {
     }
     void set(float v) { target = v; }
     void jump(float v) { current = target = v; }
+    /** Sets this block's value, leaving the target: for a glide across slices of a block. */
+    void hold(float v) { current = v; }
     // Call once per block; returns the value to use for this block.
     float next() {
         current += (target - current) * coeff;
@@ -107,6 +109,12 @@ class ParamSet {
         if (jumpNow) smooth[index].jump(defs[index].map(v));
         else smooth[index].set(defs[index].map(v));
     }
+    /** Sets this block's value (in the param's units) without moving the target. See Smoothed::hold. */
+    void hold(int32_t index, float v) {
+        if (index >= 0 && index < count) smooth[index].hold(v);
+    }
+    bool isStepped(int32_t index) const { return index >= 0 && index < count && defs[index].curve == Curve::Stepped; }
+    bool isExponential(int32_t index) const { return index >= 0 && index < count && defs[index].curve == Curve::Exponential; }
     void jumpAll() {
         for (int32_t i = 0; i < count; ++i) smooth[i].jump(defs[i].map(norm[i]));
     }

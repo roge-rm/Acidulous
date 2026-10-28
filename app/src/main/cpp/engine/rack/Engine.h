@@ -169,8 +169,14 @@ class Engine : public Rack::ModifiedNoteSink {
      * a send, which hears this block's.
      */
     const float *keyFor(int32_t source, int32_t self) const;
-    /** What an insert's keyed mod follows: [source]'s tap as last block left it (keyPrev), never this block's. */
-    const float *modKeyFor(int32_t source) const;
+    /**
+     * What an insert's keyed mod follows: [source]'s tap as last block left
+     * it, never this block's. [beforeRacks] for the input chain, which runs
+     * before the copy into keyPrev.
+     */
+    const float *modKeyFor(int32_t source, bool beforeRacks = false) const;
+    /** Clock tick to song tick for the inserts' mods (SceneScheduler::songTickOffset). */
+    int64_t modTickOffset = 0;
     /**
      * One rack's share of a block, a job on its own: the events held for it,
      * its keys, its render, and what it cost. Every rack it listens to has

@@ -422,6 +422,15 @@ class SceneScheduler {
     }
     int32_t currentRepeat() const { return repeatIdx; }
     int32_t currentScene() const { return sceneIdx; }
+    /**
+     * What to add to a clock tick to get the song's position, from where the
+     * arranger is now. An insert's mod follows it, so a scene played or
+     * frozen on its own moves as it does in the song. Call before process().
+     */
+    int64_t songTickOffset() const {
+        if (snap == nullptr || snap->scenes.empty()) return 0;
+        return snap->songTickAt(sceneIdx, repeatIdx, 0) - iterationOrigin;
+    }
 
     /** True while clip mode is driving playback. */
     bool launcherActive() const { return transport != nullptr && transport->launcherMode(); }

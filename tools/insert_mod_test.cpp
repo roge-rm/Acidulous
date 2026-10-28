@@ -7,7 +7,9 @@
 // stay put. Then: a modulated song renders the same twice and after a panic,
 // an off slot is bit-identical to no mod at all, the knob under the mod still
 // works, turning the source off puts the knob back, the key is one block late,
-// and the master's inserts have one too.
+// and the master's inserts have one too. A scene played on its own moves as
+// the song moves through it, and a fast mod on every continuous knob of every
+// effect is measured once a block and sliced against a step every sample.
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -318,6 +320,190 @@ void theMasterHasOne() {
     ok("an lfo on a master insert changes the mix", firstDifference(a, b) < a.size());
 }
 
+/**
+ * The mod follows the song's position: scene 2 played on its own (or frozen,
+ * which starts the same way) moves as it does when the song plays through
+ * scene 1 into it. The pad is silent in scene 1, so only the mod has run.
+ */
+void aSceneStartsWhereTheSongHasIt() {
+    printf("- a scene played on its own moves as it does in the song\n");
+    struct Run { std::vector<float> audio, cutoff; };
+    const auto render = [](int32_t shape, int32_t rate, int32_t fromScene, int32_t blocks) {
+        Mod m;
+        m.source = slotmod::Lfo;
+        m.shape = shape;
+        m.rate = rate;
+        Fixture f(m);
+        // Scene 1: three bars, the kick alone. Scene 2: the fixture's two bars.
+        auto snap = std::make_shared<SongSnapshot>(*f.snap);
+        SceneInfo first;
+        first.id = 7;
+        first.bars = 3;
+        first.repeat = 1;
+        first.ticksPerBar = kBar;
+        snap->scenes.insert(snap->scenes.begin(), first);
+        snap->clips.clear();
+        snap->clips.resize(static_cast<size_t>(snap->rackCount) * snap->scenes.size());
+        snap->setClip(kPad, 1, f.keep[0]);
+        snap->setClip(kKick, 1, f.keep[1]);
+        auto kick = std::make_shared<Clip>(*f.keep[1]);
+        kick->bars = 3;
+        kick->rev = 3;
+        f.keep.push_back(kick);
+        snap->setClip(kKick, 0, kick);
+        f.engine.scheduler.swapSnapshot(snap.get());
+        f.snap = snap;
+        f.engine.panicFlag.store(true, std::memory_order_release);
+        float scratch[kBlockFrames * 2];
+        f.engine.renderBlock(nullptr, scratch);
+        f.engine.transport.requestPlay(fromScene);
+        // The pad's own sound after its inserts, so the kick's drift doesn't count.
+        Run r;
+        std::vector<float> mix;
+        for (int32_t b = 0; b < blocks; ++b) {
+            f.run(1, mix, &r.cutoff);
+            r.audio.insert(r.audio.end(), f.engine.racks[kPad].keyBuf, f.engine.racks[kPad].keyBuf + kBlockFrames);
+        }
+        return r;
+    };
+    // Three bars at 120 is 6 s = 4500 blocks (2880 ticks at 0.64 a block).
+    const int32_t firstBlocks = 4500, secondBlocks = 1400;
+    struct Case { const char *name; int32_t shape, rate; };
+    const Case cases[] = {{"two-bar sine", slotmod::Sine, 14}, {"random hold on the beat", slotmod::RandomHold, 8},
+                          {"drift on the beat", slotmod::RandomSmooth, 8}};
+    for (const Case &c : cases) {
+        const Run song = render(c.shape, c.rate, 0, firstBlocks + secondBlocks);
+        const Run alone = render(c.shape, c.rate, 1, secondBlocks);
+        // The cutoff a few blocks in (the smoother has caught up), and the audio from there.
+        const size_t settle = 8;
+        float worst = 0.0f, fromTop = 0.0f;
+        for (size_t b = settle; b < alone.cutoff.size(); ++b) {
+            worst = std::fmax(worst, std::fabs(std::log2(alone.cutoff[b] / song.cutoff[firstBlocks + b])));
+            fromTop = std::fmax(fromTop, std::fabs(std::log2(alone.cutoff[b] / song.cutoff[b])));
+        }
+        double err = 0.0, sig = 0.0;
+        const size_t from = settle * kBlockFrames, base = static_cast<size_t>(firstBlocks) * kBlockFrames;
+        for (size_t i = from; i < alone.audio.size(); ++i) {
+            const double d = alone.audio[i] - song.audio[base + i];
+            err += d * d;
+            sig += static_cast<double>(alone.audio[i]) * alone.audio[i];
+        }
+        const double db = 10.0 * std::log10((err + 1e-30) / (sig + 1e-30));
+        char d[128];
+        std::snprintf(d, sizeof d, "cutoff within %.4f oct (%.2f oct from the top), audio %.1f dB", worst, fromTop, db);
+        ok((std::string(c.name) + ": the cutoff follows the song").c_str(), worst < 0.02f && fromTop > 0.2f, d);
+        ok((std::string(c.name) + ": and so does the sound").c_str(), db < -60.0, d);
+    }
+}
+
+/** A sine and a little noise, stereo, for the zipper renders. */
+void testTone(float *L, float *R, int64_t at) {
+    static uint32_t rng = 1;
+    if (at == 0) rng = 1;
+    for (int32_t i = 0; i < kBlockFrames; ++i) {
+        const double t = static_cast<double>(at + i) / kSampleRate;
+        rng = rng * 1664525u + 1013904223u;
+        const float noise = (static_cast<float>(rng >> 9) * (1.0f / 4194304.0f) - 1.0f) * 0.02f;
+        L[i] = 0.4f * static_cast<float>(std::sin(2.0 * M_PI * 220.0 * t)) + noise;
+        R[i] = 0.4f * static_cast<float>(std::sin(2.0 * M_PI * 220.0 * t + 0.3)) - noise;
+    }
+}
+
+/** One effect with a 1/32 sine on [param] at full depth, [slice] frames a step; interleaved. */
+std::vector<float> zipperRender(const char *type, int32_t param, int32_t slice, int32_t blocks) {
+    Effect *fx = EffectRegistry::create(type);
+    fx->prepare(kSampleRate);
+    fx->reset();
+    fx->params().jumpAll();
+    if (param >= 0) {
+        fx->setParamAt(modIndex(slotmod::Rate), 0.0f); // 1/32
+        fx->setParamAt(modIndex(slotmod::Target1), stepped(param + 1, kSlotModTargets + 1));
+        fx->setParamAt(modIndex(slotmod::Depth1), 1.0f);
+        fx->setParamAt(modIndex(slotmod::Source), stepped(slotmod::Lfo, slotmod::SourceCount));
+    }
+    fx->resetMod();
+    const int32_t was = Effect::modSlice;
+    Effect::modSlice = slice;
+    std::vector<float> out(static_cast<size_t>(blocks) * kBlockFrames * 2);
+    float L[kBlockFrames], R[kBlockFrames];
+    const double perBlock = kBlockFrames * 120.0 * kPPQN / (60.0 * kSampleRate);
+    for (int32_t b = 0; b < blocks; ++b) {
+        testTone(L, R, static_cast<int64_t>(b) * kBlockFrames);
+        const auto t0 = static_cast<int64_t>(b * perBlock), t1 = static_cast<int64_t>((b + 1) * perBlock);
+        fx->block(t0, t1, 120.0f);
+        const bool st = fx->run(L, R, kBlockFrames, true);
+        for (int32_t i = 0; i < kBlockFrames; ++i) {
+            out[(static_cast<size_t>(b) * kBlockFrames + i) * 2] = L[i];
+            out[(static_cast<size_t>(b) * kBlockFrames + i) * 2 + 1] = st ? R[i] : L[i];
+        }
+    }
+    Effect::modSlice = was;
+    delete fx;
+    return out;
+}
+
+/** How far [x] is from [ref], in dB under ref's level; -200 for identical. */
+double errorDb(const std::vector<float> &x, const std::vector<float> &ref) {
+    double e = 0.0, s = 0.0;
+    for (size_t i = 0; i < ref.size(); ++i) {
+        const double d = static_cast<double>(x[i]) - ref[i];
+        if (!std::isfinite(d)) return 999.0;
+        e += d * d;
+        s += static_cast<double>(ref[i]) * ref[i];
+    }
+    return e == 0.0 ? -200.0 : 10.0 * std::log10(e / (s + 1e-30));
+}
+
+/**
+ * Every effect, every continuous knob, a fast mod at full depth: once a block
+ * against a step every sample (the reference) and the slices runModulated
+ * takes. A knob the block steps zipper on comes out far from the reference
+ * once a block; sliced it has to be closer, and never further.
+ */
+void fastModsDoNotZipper() {
+    printf("- a fast mod on every continuous knob: error against a step every sample, once a block -> sliced\n");
+    constexpr int32_t kZipBlocks = 300;
+    constexpr double kAudible = -40.0;
+    int32_t worse = 0, fixed = 0, stillLoud = 0;
+    std::string loud;
+    for (int32_t e = 0; EffectRegistry::name(e)[0] != '\0'; ++e) {
+        const char *type = EffectRegistry::name(e);
+        Effect *probe = EffectRegistry::create(type);
+        int32_t n = 0;
+        const ParamDef *defs = probe->paramDefs(n);
+        delete probe;
+        std::string line;
+        for (int32_t k = 0; k < n; ++k) {
+            if (defs[k].curve == Curve::Stepped) continue;
+            const auto ref = zipperRender(type, k, 1, kZipBlocks);
+            const double block = errorDb(zipperRender(type, k, kBlockFrames, kZipBlocks), ref);
+            const double sliced = errorDb(zipperRender(type, k, Effect::modSlice, kZipBlocks), ref);
+            if (sliced > block + 1.0) ++worse;
+            if (block > kAudible && sliced <= kAudible) ++fixed;
+            if (sliced > kAudible) {
+                ++stillLoud;
+                loud += std::string(" ") + type + "." + defs[k].name;
+            }
+            char c[96];
+            std::snprintf(c, sizeof c, " %s %.0f>%.0f", defs[k].name, block, sliced);
+            line += c;
+        }
+        printf("    %-11s%s\n", type, line.c_str());
+    }
+    char d[64];
+    std::snprintf(d, sizeof d, "%d past %.0f dB brought under it", fixed, kAudible);
+    ok("slicing is never further from the reference", worse == 0, d);
+    printf("    still past %.0f dB sliced:%s\n", kAudible, loud.empty() ? " none" : loud.c_str());
+    (void)stillLoud;
+}
+
+/** With the source off, sliced or not makes no difference. */
+void slicingLeavesOffAlone() {
+    printf("- the slices only run with a mod on\n");
+    const auto a = zipperRender("Filter", -1, 1, 200), b = zipperRender("Filter", -1, kBlockFrames, 200);
+    ok("an effect without a mod is the same either way", errorDb(a, b) == -200.0);
+}
+
 /** A 16-bit stereo WAV of an interleaved render. */
 void writeWav(const std::string &path, const std::vector<float> &x) {
     FILE *f = std::fopen(path.c_str(), "wb");
@@ -335,7 +521,7 @@ void writeWav(const std::string &path, const std::vector<float> &x) {
     std::fclose(f);
 }
 
-/** INSERT_MOD_WAVS=folder: four seconds of each source, numbered, for listening. */
+/** INSERT_MOD_WAVS=folder: four seconds of each source, numbered, for listening, and a fast mod on a distortion. */
 void writeAuditions(const char *dir) {
     printf("- auditions into %s\n", dir);
     Mod off;
@@ -356,11 +542,38 @@ void writeAuditions(const char *dir) {
         f.run(3000, out);
         writeWav(std::string(dir) + "/" + c.first + ".wav", out);
     }
+    // A fast LFO on a knob that isn't a filter's: the distortion's drive at
+    // 1/32, full depth, gliding across each block and then once a block.
+    const std::pair<const char *, int32_t> fast[] = {{"08-drive-thirty-second", Effect::modSlice},
+                                                     {"09-drive-thirty-second-once-a-block", kBlockFrames}};
+    for (const auto &c : fast) {
+        Fixture f(off);
+        Effect *drive = EffectRegistry::create("Distortion");
+        drive->prepare(kSampleRate);
+        drive->reset();
+        drive->params().set(effect::Distortion::Drive, 0.4f);
+        drive->params().jumpAll();
+        delete f.engine.racks[kPad].swapEffect(kSlot, drive);
+        f.filter = nullptr;
+        Mod m;
+        m.source = slotmod::Lfo;
+        m.rate = 0; // 1/32
+        m.depth = 0.6f;
+        setMod(f.engine.racks[kPad], kUnit, m, effect::Distortion::Drive);
+        const int32_t was = Effect::modSlice;
+        Effect::modSlice = c.second;
+        std::vector<float> out;
+        f.start();
+        f.run(3000, out);
+        Effect::modSlice = was;
+        writeWav(std::string(dir) + "/" + c.first + ".wav", out);
+    }
 }
 
 } // namespace
 
 int main() {
+    if (const char *slice = std::getenv("INSERT_MOD_SLICE")) Effect::modSlice = std::atoi(slice);
     if (const char *dir = std::getenv("INSERT_MOD_WAVS")) {
         writeAuditions(dir);
         return 0;
@@ -371,6 +584,9 @@ int main() {
     theKnobStillWorks();
     theKeyIsOneBlockLate();
     theMasterHasOne();
+    aSceneStartsWhereTheSongHasIt();
+    slicingLeavesOffAlone();
+    fastModsDoNotZipper();
     printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

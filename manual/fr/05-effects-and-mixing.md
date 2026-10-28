@@ -278,8 +278,10 @@ généraux, d’envoi et d’entrée du mixage.
 
 La mod part du réglage là où vous l’avez mis, donc vous pouvez encore le
 tourner, l’enregistrer ou lui dessiner une courbe. Le LFO et les pas suivent la
-position dans le morceau, donc ils tombent sur la mesure et un export sort
-pareil à chaque fois. Les réglages de la mod s’enregistrent et se verrouillent
+position dans le morceau, donc ils tombent sur la mesure, une scène jouée seule
+ou figée bouge comme dans le morceau, et un export sort pareil à chaque fois.
+Une scène en boucle les ramène au début de la scène à chaque tour. En lanceur,
+ils comptent depuis le moment où vous avez lancé la lecture. Les réglages de la mod s’enregistrent et se verrouillent
 comme des réglages, et sont gardés avec le morceau, et avec un son pour les
 effets propres au son. Charger un préréglage d’effet garde la mod, et choisir un
 autre effet l’efface.

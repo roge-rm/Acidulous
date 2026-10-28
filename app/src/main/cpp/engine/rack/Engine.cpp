@@ -44,7 +44,7 @@ void Engine::runInputChain() {
     bool stereo = true;
     for (int32_t s = 0; s < kInputSlots; ++s) {
         if (inputFx[s] == nullptr) continue;
-        if (inputFx[s]->modActive()) inputFx[s]->setModKey(modKeyFor(inputFx[s]->modKeyTrack()), 240u + s);
+        if (inputFx[s]->modActive()) inputFx[s]->setModKey(modKeyFor(inputFx[s]->modKeyTrack(), true), 240u + s, modTickOffset);
         inputFx[s]->block(clock.blockStart(), clock.blockEnd(), clock.bpm());
         stereo = inputFx[s]->run(L, R, kBlockFrames, stereo);
     }
@@ -233,7 +233,9 @@ void Engine::renderBlock(const float *in, float *out) {
         scheduler.start(0);
     }
 
+    bool startedInLauncher = false;
     if (startPending) {
+        startedInLauncher = transport.launcherMode();
         if (transport.takeContinued()) {
             scheduler.resume();
         } else {
@@ -302,6 +304,10 @@ void Engine::renderBlock(const float *in, float *out) {
     master.setCountingIn(counting);
     // What the scheduler sends each rack is queued for the rack's own job.
     for (int32_t r = 0; r < kRackCount; ++r) racks[r].queue();
+    // The inserts' mods follow the song's position. Clip mode has none, so
+    // it keeps the one it had: 0 from a stop, or the song's where it took over.
+    if (playing && !counting && !scheduler.launcherActive()) modTickOffset = scheduler.songTickOffset();
+    else if (startedInLauncher) modTickOffset = 0;
     if (playing && !counting) {
         scheduler.setSwingPair(swingPair.load(std::memory_order_relaxed));
         if (!scheduler.process(clock.blockStart(), clock.blockEnd())) {
@@ -462,20 +468,20 @@ void Engine::renderBlock(const float *in, float *out) {
     for (int32_t s = 0; s < kSendSlots; ++s) {
         if (Effect *e = master.send(s)) {
             e->setKey(keyFor(e->sidechainRack(), -1));
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 210u + s);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 210u + s, modTickOffset);
         }
     }
     for (int32_t s = 0; s < kMasterInsertSlots; ++s) {
         if (Effect *e = master.insert(s)) {
             e->setKey(keyFor(e->sidechainRack(), -1));
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 200u + s);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 200u + s, modTickOffset);
         }
     }
     for (int32_t g = 0; g < kGroupSlots; ++g) {
         for (int32_t s = 0; s < kGroupInsertSlots; ++s) {
             if (Effect *e = master.groupInsert(g, s)) {
                 e->setKey(keyFor(e->sidechainRack(), -1));
-                if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 220u + g * kGroupInsertSlots + s);
+                if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 220u + g * kGroupInsertSlots + s, modTickOffset);
             }
         }
     }
@@ -611,7 +617,7 @@ void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (Effect *e = rack.currentEffect(s)) {
             e->setKey(keyFor(e->sidechainRack(), r));
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, modTickOffset);
         }
     }
     // A machine can listen too: Diction mouthing another track's sound.
@@ -645,12 +651,13 @@ const float *Engine::keyFor(int32_t source, int32_t self) const {
     return self < 0 || renderPlace[source] < renderPlace[self] ? racks[source].keyBuf : racks[source].keyPrev;
 }
 
-const float *Engine::modKeyFor(int32_t source) const {
+const float *Engine::modKeyFor(int32_t source, bool beforeRacks) const {
     static const float kSilence[kBlockFrames] = {};
     if (source < 0 || source >= kRackCount || !racks[source].isActive()) return kSilence;
-    // Always last block's: copied before any rack renders, so a rack on any
-    // core can read it while the source renders this block's.
-    return racks[source].keyPrev;
+    // Always last block's. The input chain runs before the racks, when keyBuf
+    // still holds it; after that it's keyPrev, copied before any rack renders,
+    // so a rack on any core can read it while the source renders this block's.
+    return beforeRacks ? racks[source].keyBuf : racks[source].keyPrev;
 }
 
 void Engine::sidechainOrder(int32_t *order) const {

@@ -126,7 +126,6 @@ class Filter final : public Effect {
     dsp::Svf svf[2];
     float follower = 0.0f, sr = 48000.0f, bpm = 120.0f;
     float fcSet = -1.0f, resoSet = -1.0f; // what the filters were last solved for
-    float cutoffWas = -1.0f;               // last block's cutoff, -1 after a reset
     int64_t tick = 0;
 };
 
@@ -146,10 +145,10 @@ class Phaser final : public Effect {
     enum P { Rate, Depth, Feedback, Stages, Spread, Mix, Gain, Count };
     Phaser() { initParams(2.5f); }
     ACIDULOUS_EFFECT_COMMON(Phaser)
-    void onBlock(int64_t tickStart, int64_t, float) override { tick = tickStart; }
+    void onBlock(int64_t tickStart, int64_t, float b) override { tick = tickStart; bpm = b; }
   private:
     dsp::Biquad ap[2][8];
-    float fb[2]{}, sr = 48000.0f;
+    float fb[2]{}, sr = 48000.0f, bpm = 120.0f;
     int64_t tick = 0;
 };
 
@@ -166,10 +165,10 @@ class Chorus final : public Effect {
     enum P { Rate, Depth, Voices, Spread, Drift, Mix, Gain, Count };
     Chorus() { initParams(5.0f); }
     ACIDULOUS_EFFECT_COMMON(Chorus)
-    void onBlock(int64_t tickStart, int64_t, float) override { tick = tickStart; }
+    void onBlock(int64_t tickStart, int64_t, float b) override { tick = tickStart; bpm = b; }
   private:
     dsp::DelayLine line[2];
-    float drift[4]{}, sr = 48000.0f;
+    float drift[4]{}, sr = 48000.0f, bpm = 120.0f;
     uint32_t rng = 0x9e3779b9u;
     int64_t tick = 0;
 };

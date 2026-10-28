@@ -36,20 +36,29 @@ class Effect {
 
     // What the rack calls once a block before run(): the mod slot's clock, then the effect's.
     void block(int64_t tickStart, int64_t tickEnd, float bpm) {
-        if (mod_.active()) mod_.block(tickStart, tickEnd, bpm);
+        if (mod_.active()) mod_.block(tickStart + modOffset_, tickEnd + modOffset_, bpm);
         onBlock(tickStart, tickEnd, bpm);
     }
 
-    // What the rack calls: bypass short-circuits, the mod offsets its
-    // targets, params are ticked here.
+    // What the rack calls: bypass short-circuits, params are ticked here.
     bool run(float *L, float *R, int32_t frames, bool stereoIn) {
-        if (bypass_) return stereoIn;
-        if (mod_.active()) mod_.apply(L, R, frames, stereoIn, params_);
+        if (bypass_) {
+            modFresh_ = true;
+            return stereoIn;
+        }
+        if (mod_.active()) return runModulated(L, R, frames, stereoIn);
         params_.tick();
         const bool stereo = process(L, R, frames, stereoIn);
         applyGain(L, R, frames, stereo || stereoIn);
         return stereo;
     }
+
+    /**
+     * Frames per slice when a mod's target glides across a block (see
+     * runModulated). A test can set 1 for a reference or kBlockFrames for
+     * one step a block.
+     */
+    static inline int32_t modSlice = 8;
 
     // Bypass keeps state (a delay's tail survives being switched back on).
     void setBypass(bool on) { bypass_ = on; }
@@ -80,13 +89,23 @@ class Effect {
         return params_.normalized(index);
     }
     /** After reset() on a panic or a render's start: the mod starts from the top too. */
-    void resetMod() { mod_.reset(); }
+    void resetMod() {
+        mod_.reset();
+        modFresh_ = true;
+    }
     /**
      * The track a keyed mod follows (0-based), or -1. The engine hands its
      * sound over with setModKey before the block.
      */
     int32_t modKeyTrack() const { return mod_.keyTrack(); }
-    void setModKey(const float *key, uint32_t seed) { mod_.setKey(key, seed); }
+    /**
+     * Before block(): the keyed mod's sound, the slot's seed for the random
+     * shapes, and what to add to the clock's tick for the song's position.
+     */
+    void setModKey(const float *key, uint32_t seed, int64_t songOffset) {
+        mod_.setKey(key, seed);
+        modOffset_ = songOffset;
+    }
     bool modActive() const { return mod_.active(); }
 
     /**
@@ -164,10 +183,99 @@ class Effect {
     int32_t mixIndex_ = -1;
     float mixDefault_ = 0.0f;
 
+    /**
+     * The mod offsets its targets, then the block runs in slices of
+     * modSlice frames with each moving continuous target stepping from last
+     * block's value to this one's, so a fast mod doesn't zipper. A step lock,
+     * a jump in the song or the first block after a bypass or a target
+     * change lands at once.
+     */
+    bool runModulated(float *L, float *R, int32_t frames, bool stereoIn) {
+        mod_.apply(L, R, frames, stereoIn, params_);
+        params_.tick();
+        int32_t idx[2];
+        float from[2], to[2];
+        int32_t n = 0;
+        for (int32_t j = 0; j < 2; ++j) {
+            const int32_t t = mod_.target(j);
+            const bool valid = t >= 0 && t < params_.size() && !params_.isStepped(t) && (j == 0 || t != mod_.target(0));
+            const float now = valid ? params_.get(t) : 0.0f;
+            if (valid && !modFresh_ && !mod_.snapped() && glideIndex_[j] == t && glideWas_[j] != now) {
+                idx[n] = t;
+                from[n] = glideWas_[j];
+                to[n] = now;
+                ++n;
+            }
+            glideIndex_[j] = valid ? t : -1;
+            glideWas_[j] = now;
+        }
+        modFresh_ = false;
+        if (n == 0 || modSlice <= 0 || modSlice >= frames) {
+            const bool stereo = process(L, R, frames, stereoIn);
+            applyGain(L, R, frames, stereo || stereoIn);
+            return stereo;
+        }
+        const float *key = key_;
+        bool anyStereo = false, anyMono = false;
+        bool sliceStereo[kBlockFrames];
+        int32_t slices = 0;
+        for (int32_t o = 0; o < frames; o += modSlice) {
+            const int32_t len = std::min(modSlice, frames - o);
+            const float f = static_cast<float>(o + len) / static_cast<float>(frames);
+            for (int32_t k = 0; k < n; ++k) {
+                // An exponential knob (a cutoff) glides in ratio, the rest in a line.
+                const bool ratio = params_.isExponential(idx[k]) && from[k] > 0.0f && to[k] > 0.0f;
+                params_.hold(idx[k], ratio ? from[k] * std::pow(to[k] / from[k], f) : from[k] + (to[k] - from[k]) * f);
+            }
+            subOffset_ = o;
+            subBlock_ = frames;
+            key_ = key != nullptr ? key + o : nullptr;
+            const bool st = process(L + o, R + o, len, stereoIn);
+            applyGain(L + o, R + o, len, st || stereoIn);
+            if (slices < kBlockFrames) sliceStereo[slices++] = st;
+            (st ? anyStereo : anyMono) = true;
+        }
+        key_ = key;
+        subOffset_ = 0;
+        subBlock_ = 0;
+        for (int32_t k = 0; k < n; ++k) params_.hold(idx[k], to[k]);
+        // An effect that came out stereo for some slices and mono for others:
+        // the mono ones get their right channel.
+        if (anyStereo && anyMono && !stereoIn) {
+            for (int32_t j = 0, o = 0; j < slices; ++j, o += modSlice) {
+                if (sliceStereo[j]) continue;
+                const int32_t len = std::min(modSlice, frames - o);
+                std::memcpy(R + o, L + o, sizeof(float) * static_cast<size_t>(len));
+            }
+        }
+        return anyStereo;
+    }
+
   protected:
+    /**
+     * Inside a block split by runModulated, how far into the block this
+     * process() call starts and the whole block's length; 0 and 0 otherwise.
+     * An effect that works out a phase from the block's tick adds the
+     * offset, so its own LFO carries on across the slices.
+     */
+    int32_t subOffset_ = 0;
+    int32_t subBlock_ = 0;
+    /** [phase] at the block's start moved on by [inc] a frame to where this slice starts. */
+    float slicePhase(float phase, float inc) const {
+        if (subOffset_ == 0) return phase;
+        const float p = phase + inc * static_cast<float>(subOffset_);
+        return p - std::floor(p);
+    }
+    /** The frames the block's tick range is spread over: the whole block, even in a slice. */
+    int32_t blockFramesOf(int32_t frames) const { return subBlock_ > 0 ? subBlock_ : frames; }
+
     ParamSet params_;
     bool bypass_ = false;
     SlotMod mod_;
+    int64_t modOffset_ = 0;
+    bool modFresh_ = true; // no glide on the next block: after a bypass, a reset or at the start
+    int32_t glideIndex_[2] = {-1, -1};
+    float glideWas_[2] = {0.0f, 0.0f};
 };
 
 } // namespace acidulous
