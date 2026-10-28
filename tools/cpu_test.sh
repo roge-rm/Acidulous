@@ -7,6 +7,7 @@
 #   cpu_test.sh paired Trinity o1_density=1  one knob, normalised
 #   cpu_test.sh --rate 8.3                  sixteenths at 124 bpm, not the stress rate
 #   cpu_test.sh rack | idle | stretch       a whole rack, silence, the stretcher
+#   cpu_test.sh inserts Reverb 4           every track through four reverbs
 #
 # The default note rate is a stress rate, about three times faster than
 # music, so patches with long releases hold more voices than in a song. It's

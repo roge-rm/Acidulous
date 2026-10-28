@@ -259,6 +259,65 @@ Result timeRack(const std::string &machine, const std::string &fx1, const std::s
     return r;
 }
 
+/** This process's resident memory now and at its peak, in kB, from /proc. */
+std::pair<long, long> residentKb() {
+    std::ifstream in("/proc/self/status");
+    std::string line;
+    long rss = -1, hwm = -1;
+    while (std::getline(in, line)) {
+        if (line.rfind("VmRSS:", 0) == 0) rss = std::atol(line.c_str() + 6);
+        if (line.rfind("VmHWM:", 0) == 0) hwm = std::atol(line.c_str() + 6);
+    }
+    return {rss, hwm};
+}
+
+/**
+ * Every track full: [racks] racks each playing [machine] through [perRack]
+ * copies of [fx], the rest of the slots empty. Times all the racks together,
+ * on one thread, as a block with no workers would. Prints what mounting cost
+ * in resident memory, so run one case per process for the peak to mean
+ * anything.
+ */
+Result timeInserts(const std::string &machine, const std::string &fx, int32_t perRack, int32_t racks) {
+    Result r;
+    r.name = std::to_string(racks) + "x" + std::to_string(perRack) + " " + (fx.empty() ? "empty" : fx);
+    const auto before = residentKb();
+    std::vector<std::unique_ptr<Rack>> set;
+    for (int32_t k = 0; k < racks; ++k) {
+        auto rack = std::make_unique<Rack>();
+        rack->swapMachine(MachineRegistry::create(machine.c_str()));
+        if (Machine *m = rack->currentMachine()) { m->prepare(kSr); m->reset(); m->params().jumpAll(); }
+        for (int32_t sl = 0; sl < perRack && sl < kEffectSlots && !fx.empty(); ++sl) {
+            Effect *e = EffectRegistry::create(fx.c_str());
+            if (e == nullptr) return r;
+            e->prepare(kSr); e->reset(); e->params().jumpAll();
+            rack->swapEffect(sl, e);
+        }
+        set.push_back(std::move(rack));
+    }
+    const auto mounted = residentKb();
+    std::vector<Player> players(static_cast<size_t>(racks));
+    for (int32_t b = 0; b < kBlocks; ++b) {
+        for (int32_t k = 0; k < racks; ++k) players[static_cast<size_t>(k)].tick(set[static_cast<size_t>(k)]->currentMachine(), b);
+        const double t0 = nowUs();
+        for (auto &rack : set) {
+            rack->onBlock(b * 10, (b + 1) * 10, 120.0f);
+            rack->render(kBlock);
+        }
+        const double us = nowUs() - t0;
+        if (b > 8) r.samples.push_back(us);
+    }
+    r.finish();
+    const auto ran = residentKb();
+    printf("  %-22s memory: %ld kB on mounting, %ld kB after running, peak %ld kB\n", r.name.c_str(),
+           mounted.first - before.first, ran.first - before.first, ran.second);
+    for (auto &rack : set) {
+        delete rack->swapMachine(nullptr);
+        for (int32_t sl = 0; sl < kEffectSlots; ++sl) delete rack->swapEffect(sl, nullptr);
+    }
+    return r;
+}
+
 /**
  * What a machine costs with nothing to play, like a track that isn't used in
  * the current scene. Most tracks are idle most of the time, so if idle isn't
@@ -779,6 +838,19 @@ int main(int argc, char **argv) {
         rows.push_back(timeRack("Resonance", "Reverb", "", 0));
         rows.push_back(timeRack("Resonance", "Reverb", "", 1));
         rows.push_back(timeRack("", "", "", 2));
+        report(rows);
+        return 0;
+    }
+    if (only == "inserts") {
+        // cpu_test inserts [effect] [per rack] [racks] [machine]: every track
+        // through the same inserts. One case per run, so the memory peak is its own.
+        const std::string fx = argc > 2 ? argv[2] : "";
+        const int32_t perRack = argc > 3 ? std::atoi(argv[3]) : kEffectSlots;
+        const int32_t racks = argc > 4 ? std::atoi(argv[4]) : kRackCount;
+        const std::string machine = argc > 5 ? argv[5] : "Reflux";
+        printf("%d racks of %s, %d slots each, %d holding %s\n\n", racks, machine.c_str(), kEffectSlots, perRack,
+               fx.empty() ? "nothing" : fx.c_str());
+        rows.push_back(timeInserts(machine, fx, fx.empty() ? 0 : perRack, racks));
         report(rows);
         return 0;
     }
